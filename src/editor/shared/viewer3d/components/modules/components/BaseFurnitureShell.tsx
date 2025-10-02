@@ -277,49 +277,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       renderMode={renderMode}
                       isDragging={isDragging}
                     />
-                    
-                    {/* Type4 상부섹션 바닥판 두께 치수 표시 */}
-                    {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
-                      <group>
-                        {/* 치수 텍스트 */}
-                        <DimensionText
-                          value={actualThickness}
-                          position={[
-                            -innerWidth/2 * 0.3,
-                            lowerTopPanelY - basicThickness/2,
-                            viewMode === '3D' ? depth/2 + 0.5 : depth/2 + 1.5
-                          ]}
-                          viewMode={viewMode}
-                        />
-                        
-                        {/* 치수 가이드 라인 */}
-                        <NativeLine
-                          start={[
-                            -innerWidth/2 * 0.3,
-                            lowerTopPanelY - basicThickness,
-                            viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
-                          ]}
-                          end={[
-                            -innerWidth/2 * 0.3,
-                            lowerTopPanelY,
-                            viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
-                          ]}
-                          color={dimensionColor}
-                        />
-                        
-                        {/* 엔드포인트 (하단) */}
-                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                        
-                        {/* 엔드포인트 (상단) */}
-                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                      </group>
-                    )}
                   </>
                 );
               })()
