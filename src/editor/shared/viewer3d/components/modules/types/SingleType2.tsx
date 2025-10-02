@@ -193,12 +193,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               <React.Fragment key={`side-panels-${index}`}>
                 {/* 왼쪽 측면 판재 - 섹션별로 분할 */}
                 <BoxWithEdges
-                  args={[basicThickness, sectionHeight, viewMode === '3D' ? depth : adjustedDepthForShelves - basicThickness]}
-                  position={[
-                    -width/2 + basicThickness/2, 
-                    sectionCenterY, 
-                    viewMode === '3D' ? 0 : -depth/2 + (adjustedDepthForShelves - basicThickness)/2 + basicThickness
-                  ]}
+                  args={[basicThickness, sectionHeight, depth]}
+                  position={[-width/2 + basicThickness/2, sectionCenterY, 0]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
@@ -207,12 +203,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 
                 {/* 오른쪽 측면 판재 - 섹션별로 분할 */}
                 <BoxWithEdges
-                  args={[basicThickness, sectionHeight, viewMode === '3D' ? depth : adjustedDepthForShelves - basicThickness]}
-                  position={[
-                    width/2 - basicThickness/2, 
-                    sectionCenterY, 
-                    viewMode === '3D' ? 0 : -depth/2 + (adjustedDepthForShelves - basicThickness)/2 + basicThickness
-                  ]}
+                  args={[basicThickness, sectionHeight, depth]}
+                  position={[width/2 - basicThickness/2, sectionCenterY, 0]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
@@ -243,12 +235,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         <>
           {/* 왼쪽 측면 판재 */}
           <BoxWithEdges
-            args={[basicThickness, height, viewMode === '3D' ? depth : adjustedDepthForShelves - basicThickness]}
-            position={[
-              -width/2 + basicThickness/2, 
-              0, 
-              viewMode === '3D' ? 0 : -depth/2 + (adjustedDepthForShelves - basicThickness)/2 + basicThickness
-            ]}
+            args={[basicThickness, height, depth]}
+            position={[-width/2 + basicThickness/2, 0, 0]}
             material={material}
             renderMode={renderMode}
             isDragging={isDragging}
@@ -257,12 +245,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           
           {/* 오른쪽 측면 판재 */}
           <BoxWithEdges
-            args={[basicThickness, height, viewMode === '3D' ? depth : adjustedDepthForShelves - basicThickness]}
-            position={[
-              width/2 - basicThickness/2, 
-              0, 
-              viewMode === '3D' ? 0 : -depth/2 + (adjustedDepthForShelves - basicThickness)/2 + basicThickness
-            ]}
+            args={[basicThickness, height, depth]}
+            position={[width/2 - basicThickness/2, 0, 0]}
             material={material}
             renderMode={renderMode}
             isDragging={isDragging}
@@ -273,12 +257,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       
       {/* 상단 판재 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, viewMode === '3D' ? depth : adjustedDepthForShelves - basicThickness]}
-        position={[
-          0, 
-          height/2 - basicThickness/2, 
-          viewMode === '3D' ? 0 : -depth/2 + (adjustedDepthForShelves - basicThickness)/2 + basicThickness
-        ]}
+        args={[innerWidth, basicThickness, depth]}
+        position={[0, height/2 - basicThickness/2, 0]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -287,12 +267,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       
       {/* 하단 판재 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, viewMode === '3D' ? depth : adjustedDepthForShelves - basicThickness]}
-        position={[
-          0, 
-          -height/2 + basicThickness/2, 
-          viewMode === '3D' ? 0 : -depth/2 + (adjustedDepthForShelves - basicThickness)/2 + basicThickness
-        ]}
+        args={[innerWidth, basicThickness, depth]}
+        position={[0, -height/2 + basicThickness/2, 0]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
