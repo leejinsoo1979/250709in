@@ -70,95 +70,99 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       {isMultiSectionFurniture() ? (
         // 다중 섹션: 섹션별 분할 측면 패널
         <>
-          {getSectionHeights().map((sectionHeight: number, index: number) => {
-            let currentYPosition = -height/2 + basicThickness;
+          {(() => {
+            // 먼저 하부 섹션 상판 Y 위치 계산 (모든 섹션에서 사용)
+            const lowerSectionHeight = getSectionHeights()[0];
+            const lowerSectionCenterY = -height/2 + basicThickness + lowerSectionHeight / 2 - basicThickness;
+            const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 + basicThickness/2 - mmToThreeUnits(9);
             
-            // 현재 섹션까지의 Y 위치 계산
-            for (let i = 0; i < index; i++) {
-              currentYPosition += getSectionHeights()[i];
-            }
-            
-            const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
-            
-            // 하부 섹션 상판 Y 위치 (9mm 내림)
-            const lowerTopPanelY = sectionCenterY + sectionHeight/2 + basicThickness/2 - mmToThreeUnits(9);
-            
-            return (
-              <React.Fragment key={`side-panels-${index}`}>
-                {index === 0 ? (
-                  // 하부 섹션: 원래 높이 그대로
-                  <>
-                    {/* 왼쪽 측면 판재 */}
+            return getSectionHeights().map((sectionHeight: number, index: number) => {
+              let currentYPosition = -height/2 + basicThickness;
+              
+              // 현재 섹션까지의 Y 위치 계산
+              for (let i = 0; i < index; i++) {
+                currentYPosition += getSectionHeights()[i];
+              }
+              
+              const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
+              
+              return (
+                <React.Fragment key={`side-panels-${index}`}>
+                  {index === 0 ? (
+                    // 하부 섹션: 원래 높이 그대로
+                    <>
+                      {/* 왼쪽 측면 판재 */}
+                      <BoxWithEdges
+                        args={[basicThickness, sectionHeight, depth]}
+                        position={[-width/2 + basicThickness/2, sectionCenterY, 0]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                      />
+                      
+                      {/* 오른쪽 측면 판재 */}
+                      <BoxWithEdges
+                        args={[basicThickness, sectionHeight, depth]}
+                        position={[width/2 - basicThickness/2, sectionCenterY, 0]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                      />
+                    </>
+                  ) : (
+                    // 상부 섹션: 바닥판(18mm) 위에서 시작, 18mm 줄어든 높이
+                    <>
+                      {/* 왼쪽 측면 판재 - 바닥판 위에서 시작 */}
+                      <BoxWithEdges
+                        args={[basicThickness, sectionHeight - mmToThreeUnits(18), depth]}
+                        position={[-width/2 + basicThickness/2, lowerTopPanelY + basicThickness + (sectionHeight - mmToThreeUnits(18))/2, 0]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                      />
+                      
+                      {/* 오른쪽 측면 판재 - 바닥판 위에서 시작 */}
+                      <BoxWithEdges
+                        args={[basicThickness, sectionHeight - mmToThreeUnits(18), depth]}
+                        position={[width/2 - basicThickness/2, lowerTopPanelY + basicThickness + (sectionHeight - mmToThreeUnits(18))/2, 0]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                      />
+                    </>
+                  )}
+                  
+                  {/* 중간 구분 패널 (하부 섹션 상판) - 9mm 내림 */}
+                  {index === 0 && (
                     <BoxWithEdges
-                      args={[basicThickness, sectionHeight, depth]}
-                      position={[-width/2 + basicThickness/2, sectionCenterY, 0]}
+                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                      position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
                       isEditMode={isEditMode}
                     />
-                    
-                    {/* 오른쪽 측면 판재 */}
+                  )}
+                  
+                  {/* 상부 섹션의 바닥판 - 하부 섹션 상판 바로 위 */}
+                  {index === 1 && (
                     <BoxWithEdges
-                      args={[basicThickness, sectionHeight, depth]}
-                      position={[width/2 - basicThickness/2, sectionCenterY, 0]}
+                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                      position={[0, lowerTopPanelY + basicThickness, basicThickness/2 + shelfZOffset]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
                       isEditMode={isEditMode}
                     />
-                  </>
-                ) : (
-                  // 상부 섹션: 바닥판(18mm) 위에서 시작, 18mm 줄어든 높이
-                  <>
-                    {/* 왼쪽 측면 판재 - 바닥판 위에서 시작 */}
-                    <BoxWithEdges
-                      args={[basicThickness, sectionHeight - mmToThreeUnits(18), depth]}
-                      position={[-width/2 + basicThickness/2, lowerTopPanelY + basicThickness + (sectionHeight - mmToThreeUnits(18))/2, 0]}
-                      material={material}
-                      renderMode={renderMode}
-                      isDragging={isDragging}
-                      isEditMode={isEditMode}
-                    />
-                    
-                    {/* 오른쪽 측면 판재 - 바닥판 위에서 시작 */}
-                    <BoxWithEdges
-                      args={[basicThickness, sectionHeight - mmToThreeUnits(18), depth]}
-                      position={[width/2 - basicThickness/2, lowerTopPanelY + basicThickness + (sectionHeight - mmToThreeUnits(18))/2, 0]}
-                      material={material}
-                      renderMode={renderMode}
-                      isDragging={isDragging}
-                      isEditMode={isEditMode}
-                    />
-                  </>
-                )}
-                
-                {/* 중간 구분 패널 (하부 섹션 상판) - 9mm 내림 */}
-                {index === 0 && (
-                  <BoxWithEdges
-                    args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                    position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset]}
-                    material={material}
-                    renderMode={renderMode}
-                    isDragging={isDragging}
-                    isEditMode={isEditMode}
-                  />
-                )}
-                
-                {/* 상부 섹션의 바닥판 - 하부 섹션 상판 바로 위 */}
-                {index === 1 && (
-                  <BoxWithEdges
-                    args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                    position={[0, lowerTopPanelY + basicThickness, basicThickness/2 + shelfZOffset]}
-                    material={material}
-                    renderMode={renderMode}
-                    isDragging={isDragging}
-                    isEditMode={isEditMode}
-                  />
-                )}
-              </React.Fragment>
-            );
-          })}
+                  )}
+                </React.Fragment>
+              );
+            });
+          })()}
         </>
       ) : (
         // 단일 섹션: 기존 통짜 측면 패널
