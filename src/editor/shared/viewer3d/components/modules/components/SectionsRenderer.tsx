@@ -113,30 +113,6 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const isType4DrawerSection = furnitureId?.includes('4drawer-hanging') && section.type === 'drawer' && index === 0;
       const sectionCenterY = currentYPosition + sectionHeight / 2 - (isType4DrawerSection ? basicThickness : 0);
       
-      // 디버깅: 섹션 높이 확인
-      if (index === 0) {
-        console.log(`🔍 첫 번째 섹션 정보:`, {
-          index,
-          type: section.type,
-          height: sectionHeight,
-          showDimensions,
-          viewMode,
-          view2DDirection,
-          condition: section.type === 'drawer' || section.type === 'open' || section.type === 'hanging'
-        });
-      }
-      
-      if (section.type === 'open' || section.type === 'drawer') {
-        console.log(`📏 Section ${index} (${section.type}):`, {
-          calculatedHeight: sectionHeight,
-          calculatedHeightMm: Math.round(sectionHeight * 100),
-          totalHeight: height,
-          totalHeightMm: Math.round(height * 100),
-          availableHeight: height - basicThickness * 2,
-          availableHeightMm: Math.round((height - basicThickness * 2) * 100)
-        });
-      }
-      
       let sectionContent = null;
       
       switch (section.type) {

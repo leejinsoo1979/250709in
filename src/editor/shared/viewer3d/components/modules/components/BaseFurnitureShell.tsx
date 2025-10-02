@@ -157,26 +157,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const { theme } = useTheme(); // 테마 정보 가져오기
   const { view2DDirection } = useUIStore(); // UI 스토어에서 view2DDirection 가져오기
   
-  // 디버깅용 로그
-  console.log('🔍🔍🔍 BaseFurnitureShell 실제 렌더링:', {
-    furnitureId: moduleData?.id,
-    width: width * 100 + 'mm',
-    innerWidth: innerWidth * 100 + 'mm',
-    basicThickness: basicThickness * 100 + 'mm',
-    '계산식': `${width * 100} - ${basicThickness * 100 * 2} = ${innerWidth * 100}`,
-    '최종가구너비': (innerWidth + basicThickness * 2) * 100 + 'mm',
-    '왼쪽패널X': (-innerWidth/2 - basicThickness/2) * 100 + 'mm',
-    '오른쪽패널X': (innerWidth/2 + basicThickness/2) * 100 + 'mm',
-    '⚠️': '이 값으로 실제 3D 렌더링됨',
-    '측면패널_좌': `x: ${(-innerWidth/2 - basicThickness/2) * 100}mm`,
-    '측면패널_우': `x: ${(innerWidth/2 + basicThickness/2) * 100}mm`,
-    '전체너비': `${((innerWidth/2 + basicThickness/2) - (-innerWidth/2 - basicThickness/2)) * 100}mm`,
-    isDragging,
-    isEditMode,
-    renderMode,
-    viewMode
-  });
-  
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
   // 그림자 자동 업데이트가 활성화되어 있으므로 수동 업데이트 불필요
   
@@ -191,13 +171,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               // 하부 측판 높이 = 1000mm (바닥판 상단부터 상판 하단까지)
               const drawerSectionHeight = mmToThreeUnits(1000);
               const hangingSectionHeight = getSectionHeights()[1];
-              
-              console.log('🔴🔴🔴 Type4 측판 실제 렌더링 크기:', {
-                '하부측판높이_mm': drawerSectionHeight * 100,
-                '상부측판높이_mm': hangingSectionHeight * 100,
-                'getSectionHeights()[1]_mm': getSectionHeights()[1] * 100,
-                'basicThickness_mm': basicThickness * 100
-              });
               
               // 하부 측판: 바닥부터 1000mm
               const lowerPanelY = -height/2 + drawerSectionHeight/2;
@@ -304,19 +277,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             ) : (
               // 기존 로직
               (() => {
-                console.log('🟦🟦🟦 BaseFurnitureShell 중간 패널 렌더링:', {
-                  furnitureId: moduleData?.id,
-                  isMultiSection: isMultiSectionFurniture(),
-                  sectionCount: getSectionHeights().length,
-                  sectionHeights: getSectionHeights().map(h => h * 100 + 'mm')
-                });
-                
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
-                  console.log(`🟦 섹션 ${index} 처리:`, {
-                    sectionHeight: sectionHeight * 100 + 'mm',
-                    isLastSection: index >= getSectionHeights().length - 1
-                  });
-                  
                   if (index >= getSectionHeights().length - 1) return null;
                 
                 let currentYPosition = -height/2 + basicThickness;
@@ -327,11 +288,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 }
                 
                 const dividerY = currentYPosition - basicThickness/2;
-                
-                console.log(`🟦 섹션 ${index} 중간 패널:`, {
-                  dividerY_mm: dividerY * 100,
-                  currentYPosition_mm: currentYPosition * 100
-                });
                 
                 return (
                   <BoxWithEdges
