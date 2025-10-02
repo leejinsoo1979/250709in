@@ -3,6 +3,7 @@ import * as THREE from 'three';
 
 interface AdjustableFootProps {
   position: [number, number, number];
+  rotation?: number; // Y축 회전 (라디안)
   material?: THREE.Material;
   renderMode?: 'solid' | 'wireframe';
   isHighlighted?: boolean;
@@ -16,6 +17,7 @@ interface AdjustableFootProps {
  */
 export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   position,
+  rotation = 0, // 기본값 0 (회전 없음)
   material,
   renderMode = 'solid',
   isHighlighted = false,
@@ -43,7 +45,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   const finalMaterial = material || defaultMaterial;
   
   return (
-    <group position={position}>
+    <group position={position} rotation={[0, rotation, 0]}>
       {/* 상단 플레이트 (64×64mm, 두께 7mm) - 윗면이 가구 바닥판 아래에 부착 */}
       <mesh position={[0, -plateHeight / 2, 0]}>
         <boxGeometry args={[plateWidth, plateHeight, plateWidth]} />

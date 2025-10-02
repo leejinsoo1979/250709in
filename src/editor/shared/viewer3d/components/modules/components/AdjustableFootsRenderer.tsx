@@ -57,24 +57,34 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     backZ: backZ.toFixed(2) + ' units',
   });
   
-  // X축 위치 (좌우 모서리)
-  const leftX = -furnitureWidth / 2;
-  const rightX = furnitureWidth / 2;
+  // 64×64mm 정사각형 플레이트를 45도 회전했을 때의 대각선 길이
+  const plateSize = mmToThreeUnits(64);
+  const plateDiagonal = plateSize * Math.sqrt(2); // 대각선 길이
+  const plateOffset = plateDiagonal / 2; // 대각선의 절반
+  
+  // X축, Z축 위치 (플레이트 꼭지점이 모서리에 닿도록 대각선 절반만큼 안쪽)
+  const leftX = -furnitureWidth / 2 + plateOffset;
+  const rightX = furnitureWidth / 2 - plateOffset;
+  
+  const frontZ = furnitureDepth / 2 - plateOffset;
+  const backZ = -furnitureDepth / 2 + plateOffset;
   
   // 발통 위치 배열 (네 모서리)
-  const footPositions: [number, number, number][] = [
-    [leftX, yOffset, frontZ],   // 좌측 앞
-    [rightX, yOffset, frontZ],  // 우측 앞
-    [leftX, yOffset, backZ],    // 좌측 뒤
-    [rightX, yOffset, backZ],   // 우측 뒤
+  // 각 위치에 회전 정보 추가 (Y축 45도 회전)
+  const footPositions: Array<{pos: [number, number, number], rot: number}> = [
+    { pos: [leftX, yOffset, frontZ], rot: Math.PI / 4 },   // 좌측 앞
+    { pos: [rightX, yOffset, frontZ], rot: Math.PI / 4 },  // 우측 앞
+    { pos: [leftX, yOffset, backZ], rot: Math.PI / 4 },    // 좌측 뒤
+    { pos: [rightX, yOffset, backZ], rot: Math.PI / 4 },   // 우측 뒤
   ];
   
   return (
     <group>
-      {footPositions.map((position, index) => (
+      {footPositions.map((item, index) => (
         <AdjustableFoot
           key={`foot-${index}`}
-          position={position}
+          position={item.pos}
+          rotation={item.rot}
           material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
