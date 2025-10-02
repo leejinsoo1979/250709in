@@ -185,16 +185,16 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 }
               }
               
+              // Type4 상부섹션은 shelfThicknessElements 자체를 비워둠
+              const isType4Hanging = furnitureId && furnitureId.includes('4drawer-hanging');
+              
               // 선반 프레임 두께 치수 추가
               const shelfThicknessElements = [];
               
+              // Type4 상부섹션이 아닐 때만 선반 두께 표시
+              if (!isType4Hanging) {
               // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
-                // Type4(4drawer-hanging) 상부섹션은 모든 선반 두께 치수 제외 (바닥판 포함)
-                const isType4Hanging = furnitureId && furnitureId.includes('4drawer-hanging');
-                if (isType4Hanging) {
-                  return; // Type4 상부섹션 선반 두께 표시 안함 (바닥판 + 안전선반)
-                }
                 
                 // shelfPos === 0인 경우 바닥판: 섹션 하단에서 basicThickness/2 위
                 const shelfY = shelfPos === 0 
@@ -261,6 +261,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   </group>
                 );
               });
+              } // Type4 체크 종료
               
               // 상단 프레임 두께 표시 추가
               // BaseFurnitureShell에서 상단 프레임은 height/2 - basicThickness/2 위치에 있음
