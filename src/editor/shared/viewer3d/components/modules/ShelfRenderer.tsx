@@ -66,7 +66,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
     return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
   };
   
-  const dimensionColor = viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : getThemeColor());
+  const dimensionColor = viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000');
   const textColor = dimensionColor;
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32; // 3D에서 더 큰 폰트 크기
   
