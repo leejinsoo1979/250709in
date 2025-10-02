@@ -60,6 +60,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   const textColor = dimensionColor;
   const mmToThreeUnits = (mm: number) => mm / 100;
   
+  // drawer 섹션은 치수 표시하지 않음 (바닥판 두께 엔드포인트 제거)
+  if (sectionType === 'drawer') {
+    return null;
+  }
+  
   if (shelfCount <= 0) {
     return null;
   }
