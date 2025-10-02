@@ -16,6 +16,7 @@ import { getEdgeColor } from '../../../utils/edgeColorUtils';
 import { useColumnCResize } from '@/editor/shared/furniture/hooks/useColumnCResize';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import EndPanelWithTexture from '../../modules/components/EndPanelWithTexture';
+import { useTheme } from '@/contexts/ThemeContext';
 
 // 엔드패널 두께 상수
 const END_PANEL_THICKNESS = 18; // mm
@@ -185,7 +186,44 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const { updatePlacedModule } = useFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
   const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id;
-  const selectionHighlightColor = '#FFD54F';
+  const { theme: appTheme } = useTheme();
+  
+  // 테마 색상 매핑
+  const themeColorMap: Record<string, string> = {
+    green: '#10b981',
+    blue: '#3b82f6',
+    purple: '#8b5cf6',
+    vivid: '#a25378',
+    red: '#D2042D',
+    pink: '#ec4899',
+    indigo: '#6366f1',
+    teal: '#14b8a6',
+    yellow: '#eab308',
+    gray: '#6b7280',
+    cyan: '#06b6d4',
+    lime: '#84cc16',
+    black: '#1a1a1a',
+    wine: '#845EC2',
+    gold: '#d97706',
+    navy: '#1e3a8a',
+    emerald: '#059669',
+    violet: '#C128D7',
+    mint: '#0CBA80',
+    neon: '#18CF23',
+    rust: '#FF7438',
+    white: '#D65DB1',
+    plum: '#790963',
+    brown: '#5A2B1D',
+    darkgray: '#2C3844',
+    maroon: '#3F0D0D',
+    turquoise: '#003A7A',
+    slate: '#2E3A47',
+    copper: '#AD4F34',
+    forest: '#1B3924',
+    olive: '#4C462C'
+  };
+  
+  const selectionHighlightColor = themeColorMap[appTheme.color] || '#3b82f6';
   const highlightPadding = 0.02; // ≒2mm 추가 여유
   const highlightMeshRef = React.useRef<THREE.Mesh>(null);
   
