@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
 import { Text, Line } from '@react-three/drei';
 import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps, BoxWithEdges } from '../shared';
+import { useDimensionColor } from '../hooks/useDimensionColor';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
@@ -61,13 +62,10 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
     getSectionHeights
   } = baseFurniture;
 
-  const { renderMode } = useSpace3DView();
-  const { viewMode, view2DDirection } = useUIStore();
-  const showDimensions = useUIStore(state => state.showDimensions);
-  const showDimensionsText = useUIStore(state => state.showDimensionsText);
+  const { renderMode, viewMode } = useSpace3DView();
+  const { view2DDirection, showDimensions } = useUIStore();
   const { theme } = useTheme();
-  const dimensionColor = theme === 'dark' ? '#ffffff' : '#000000';
-  const baseFontSize = viewMode === '3D' ? 0.12 : 0.15;
+  const { dimensionColor, baseFontSize } = useDimensionColor();
 
   return (
     <group>
@@ -208,7 +206,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       />
       
       {/* Type4 상단 상판 두께 치수 표시 */}
-      {showDimensions && (
+      {moduleData?.id?.includes('4drawer-hanging') && showDimensions && (
         <group>
           {/* 상판 두께 텍스트 */}
           {viewMode === '3D' && (
