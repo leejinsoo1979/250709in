@@ -335,20 +335,42 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         currentZoom: controls.object.zoom
       });
       
-      // 저장된 초기 상태로 리셋
-      const savedPosition = initialCameraSetup.current.position2D;
-      const savedUp = initialCameraSetup.current.up2D;
+      // 뷰어 정중앙 리셋
       const savedZoom = initialCameraSetup.current.zoom2D;
       
-      if (!savedPosition || !savedZoom) {
-        console.warn('⚠️ 저장된 초기 카메라 상태 없음');
+      if (!savedZoom) {
+        console.warn('⚠️ 저장된 zoom 없음');
         return;
       }
       
       // target은 항상 뷰어 정중앙 (0, 0, 0)
       const target: [number, number, number] = [0, 0, 0];
-      const position: [number, number, number] = [savedPosition.x, savedPosition.y, savedPosition.z];
-      const up: [number, number, number] = savedUp ? [savedUp.x, savedUp.y, savedUp.z] : [0, 1, 0];
+      
+      // 뷰 방향에 따른 고정 position (뷰어 정중앙을 바라보는 위치)
+      let position: [number, number, number];
+      let up: [number, number, number];
+      
+      switch (view2DDirection) {
+        case 'front':
+          position = [0, 0, 10];
+          up = [0, 1, 0];
+          break;
+        case 'left':
+          position = [-10, 0, 0];
+          up = [0, 1, 0];
+          break;
+        case 'right':
+          position = [10, 0, 0];
+          up = [0, 1, 0];
+          break;
+        case 'top':
+          position = [0, 10, 0];
+          up = [0, 0, -1];
+          break;
+        default:
+          position = [0, 0, 10];
+          up = [0, 1, 0];
+      }
       
       console.log('📸 2D 카메라 리셋 (뷰어 정중앙)', {
         view: view2DDirection,
