@@ -188,19 +188,21 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           })() ? (
         // 다중 섹션: 섹션별 분할 측면 패널
         <>
-          {getSectionHeights().map((sectionHeight: number, index: number) => {
-            console.log(`🟨 SingleType2 섹션 ${index}:`, {
-              sectionHeight: sectionHeight * 100 + 'mm',
-              shouldRenderMiddlePanel: index < getSectionHeights().length - 1
-            });
-            let currentYPosition = -height/2 + basicThickness;
+          {(() => {
+            let accumulatedY = -height/2 + basicThickness;
             
-            // 현재 섹션까지의 Y 위치 계산
-            for (let i = 0; i < index; i++) {
-              currentYPosition += getSectionHeights()[i];
-            }
-            
-            const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
+            return getSectionHeights().map((sectionHeight: number, index: number) => {
+              console.log(`🟨 SingleType2 섹션 ${index}:`, {
+                sectionHeight: sectionHeight * 100 + 'mm',
+                shouldRenderMiddlePanel: index < getSectionHeights().length - 1
+              });
+              
+              // 현재 섹션의 중심 Y 위치
+              const sectionCenterY = accumulatedY + sectionHeight / 2 - basicThickness;
+              
+              // 다음 섹션을 위해 누적
+              const currentYPosition = accumulatedY;
+              accumulatedY += sectionHeight;
             
             return (
               <React.Fragment key={`side-panels-${index}`}>
@@ -248,7 +250,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 })()}
               </React.Fragment>
             );
-          })}
+            });
+          })()}
         </>
       ) : (
         // 단일 섹션: 기존 통짜 측면 패널
