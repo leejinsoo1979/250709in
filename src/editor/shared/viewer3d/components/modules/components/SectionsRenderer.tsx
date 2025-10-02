@@ -240,13 +240,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 첫 번째 섹션: 하부 프레임 상단
                     bottomY = -height/2 + basicThickness;
                   } else {
-                    // hanging 섹션에서 바닥판(shelfPositions: [0])이 있는 경우
+                    // 이전 섹션과의 경계: 상부 섹션 바닥판 상단 (중간 구분 패널 + 바닥판 18mm)
+                    bottomY = sectionBottomY + basicThickness * 2;
+                    
+                    // hanging 섹션에서 안전선반(shelfPositions: [0])이 있는 경우, bottomY를 안전선반 상단 + 9mm로 설정
                     if (section.type === 'hanging' && section.shelfPositions && section.shelfPositions.includes(0)) {
-                      // 바닥판 상단부터 시작
-                      bottomY = sectionBottomY + basicThickness;
-                    } else {
-                      // 바닥판 없으면 섹션 하단부터
-                      bottomY = sectionBottomY;
+                      // 상부 바닥판(18mm) + 안전선반(18mm) + 9mm
+                      bottomY = sectionBottomY + basicThickness * 3 + mmToThreeUnits(9);
                     }
                   }
                   
