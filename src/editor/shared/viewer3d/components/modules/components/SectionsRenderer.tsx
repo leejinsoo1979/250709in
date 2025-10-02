@@ -209,7 +209,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             const shouldShow = !hideSectionDimensions && showDimensions && showDimensionsText && 
                               !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
                               (section.type === 'hanging' || section.type === 'drawer') && 
-                              !(is2HangingFurniture && hasTwoSections && index === 0);
+                              !(is2HangingFurniture && hasTwoSections);
             
             if (is2HangingFurniture && hasTwoSections) {
               console.log(`🔍🔍🔍 2hanging 섹션 ${index} 치수 표시:`, shouldShow ? '✅ 표시함' : '❌ 숨김', {
