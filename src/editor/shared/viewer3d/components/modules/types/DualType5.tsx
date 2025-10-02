@@ -336,8 +336,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   </group>
                 )}
                 
-                {/* 섹션 높이 표시 (모든 섹션 타입) */}
-                {(section.type === 'drawer' || section.type === 'hanging' || section.type === 'shelf') && (
+                {/* 섹션 높이 표시 (drawer 섹션만 - hanging은 ShelfRenderer에서 칸별로 표시) */}
+                {(section.type === 'drawer') && (
                   <group>
                     {/* 서랍 섹션 전체 높이 텍스트 */}
                     {viewMode === '3D' && (

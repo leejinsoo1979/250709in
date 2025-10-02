@@ -532,20 +532,13 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   ];
   
   // 우측 섹션 (스타일러장)에 안전선반 적용
-  // 좌측과 동일한 높이 분할 구조로 변경 (하단 구역 + 상단 구역)
-  const rightBottomHeight = leftDrawerWithFinishHeight; // 좌측 서랍장과 동일한 높이 (600mm)
-  const rightTopHeight = leftHangingHeight; // 좌측 옷장과 동일한 높이
-  
+  // 좌측 섹션들의 총 높이와 동일하게 설정
+  const rightSectionHeight = leftDrawerWithFinishHeight + leftHangingHeight; // 600 + (maxHeight - 600) = maxHeight
   const rightBaseSections: SectionConfig[] = [
     { 
       type: 'hanging', 
       heightType: 'absolute', 
-      height: rightBottomHeight // 하단 구역
-    },
-    { 
-      type: 'hanging', 
-      heightType: 'absolute', 
-      height: rightTopHeight // 상단 구역
+      height: rightSectionHeight
     }
   ];
   
