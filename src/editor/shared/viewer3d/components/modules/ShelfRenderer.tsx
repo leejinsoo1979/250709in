@@ -24,6 +24,7 @@ interface ShelfRendererProps {
   renderMode: 'solid' | 'wireframe'; // 렌더 모드 추가
   furnitureId?: string; // 가구 ID (칸 강조용)
   showTopFrameDimension?: boolean; // 상단 프레임 치수 표시 여부
+  isHighlighted?: boolean; // 가구 강조 여부
 }
 
 /**
@@ -46,6 +47,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   renderMode,
   furnitureId,
   showTopFrameDimension = false,
+  isHighlighted = false,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
@@ -84,6 +86,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           position={[0, topPosition, basicThickness/2 + zOffset]}
           material={material}
           renderMode={renderMode}
+          isHighlighted={isHighlighted}
         />
       </group>
     );
@@ -103,6 +106,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               position={[0, relativeYPosition, basicThickness/2 + zOffset]}
               material={material}
               renderMode={renderMode}
+              isHighlighted={isHighlighted}
             />
           );
         })}
@@ -491,6 +495,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             position={[0, relativeYPosition, basicThickness/2 + zOffset]}
             material={material}
             renderMode={renderMode}
+            isHighlighted={isHighlighted}
           />
         );
       })}

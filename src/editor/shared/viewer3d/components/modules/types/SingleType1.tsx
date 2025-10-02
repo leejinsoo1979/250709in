@@ -126,6 +126,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
               calculateSectionHeight={baseFurniture.calculateSectionHeight}
               renderMode={renderMode}
               furnitureId={moduleData.id}
+              isHighlighted={isHighlighted}
             />
           )}
         </BaseFurnitureShell>

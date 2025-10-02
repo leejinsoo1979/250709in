@@ -8,6 +8,7 @@ import { Html, Text } from '@react-three/drei';
 import NativeLine from '../../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import { useViewerTheme } from '../../../context/ViewerThemeContext';
+import DimensionText from './DimensionText';
 
 // SectionsRenderer Props 인터페이스
 interface SectionsRendererProps {
