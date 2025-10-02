@@ -153,6 +153,11 @@ const applySafetyShelf = (
         safetyPosition >= sectionStart && 
         safetyPosition < sectionEnd) {
       
+      // 이미 shelfPositions가 있으면 덮어쓰지 않음 (Type4 바닥판 보존)
+      if (section.shelfPositions && section.shelfPositions.length > 0) {
+        return section;
+      }
+      
       const safetyPosInSection = safetyPosition - sectionStart;
       
       return {
