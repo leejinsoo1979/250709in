@@ -75,7 +75,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
   };
   
-  const dimensionColor = viewMode === '3D' ? getThemeColor() : (viewerTheme.theme.mode === 'dark' ? '#ffffff' : getThemeColor());
+  const dimensionColor = viewMode === '3D' ? getThemeColor() : (viewerTheme.theme.mode === 'dark' ? '#ffffff' : '#000000');
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32; // 3D에서 더 큰 폰트 크기
   
   // sections 기반 내부 구조 렌더링
