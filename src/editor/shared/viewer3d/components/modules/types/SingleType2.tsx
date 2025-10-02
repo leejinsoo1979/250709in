@@ -278,25 +278,68 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         </>
       )}
       
-      {/* 상단 판재 */}
-      <BoxWithEdges
-        args={[innerWidth, basicThickness, depth]}
-        position={[0, height/2 - basicThickness/2, 0]}
-        material={material}
-        renderMode={renderMode}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-      />
-      
-      {/* 하단 판재 */}
-      <BoxWithEdges
-        args={[innerWidth, basicThickness, depth]}
-        position={[0, -height/2 + basicThickness/2, 0]}
-        material={material}
-        renderMode={renderMode}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-      />
+      {isMultiSectionFurniture() ? (
+        // 다중 섹션: 각 섹션마다 상판과 바닥판
+        <>
+          {(() => {
+            let accumulatedY = -height/2 + basicThickness;
+            
+            return getSectionHeights().map((sectionHeight: number, index: number) => {
+              const topPanelY = accumulatedY + sectionHeight - basicThickness/2;
+              const bottomPanelY = accumulatedY - basicThickness + basicThickness/2;
+              
+              accumulatedY += sectionHeight;
+              
+              return (
+                <React.Fragment key={`section-panels-${index}`}>
+                  {/* 각 섹션의 상판 */}
+                  <BoxWithEdges
+                    args={[innerWidth, basicThickness, depth]}
+                    position={[0, topPanelY, 0]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                  />
+                  
+                  {/* 각 섹션의 바닥판 */}
+                  <BoxWithEdges
+                    args={[innerWidth, basicThickness, depth]}
+                    position={[0, bottomPanelY, 0]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                  />
+                </React.Fragment>
+              );
+            });
+          })()}
+        </>
+      ) : (
+        // 단일 섹션: 전체 가구의 상판과 하판만
+        <>
+          {/* 상단 판재 */}
+          <BoxWithEdges
+            args={[innerWidth, basicThickness, depth]}
+            position={[0, height/2 - basicThickness/2, 0]}
+            material={material}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+          />
+          
+          {/* 하단 판재 */}
+          <BoxWithEdges
+            args={[innerWidth, basicThickness, depth]}
+            position={[0, -height/2 + basicThickness/2, 0]}
+            material={material}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+          />
+        </>
+      )}
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
       <BoxWithEdges
