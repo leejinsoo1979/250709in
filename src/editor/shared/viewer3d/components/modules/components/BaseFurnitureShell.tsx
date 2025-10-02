@@ -5,6 +5,7 @@ import { useThree } from '@react-three/fiber';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import BoxWithEdges from './BoxWithEdges';
+import { AdjustableFootsRenderer } from './AdjustableFootsRenderer';
 
 // 점선을 수동으로 그리는 컴포넌트
 const ManualDashedBox: React.FC<{
@@ -269,6 +270,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       
       {/* 내부 구조 (타입별로 다른 내용) */}
       {children}
+      
+      {/* 조절발통 (네 모서리) */}
+      <AdjustableFootsRenderer
+        width={width}
+        depth={depth}
+        yOffset={-height / 2}
+        material={material}
+        renderMode={renderMode}
+        isHighlighted={isHighlighted}
+      />
     </group>
   );
 };

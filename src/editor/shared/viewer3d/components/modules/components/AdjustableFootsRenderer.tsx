@@ -1,0 +1,66 @@
+import React from 'react';
+import * as THREE from 'three';
+import { AdjustableFoot } from './AdjustableFoot';
+
+interface AdjustableFootsRendererProps {
+  width: number; // 가구 폭 (mm)
+  depth: number; // 가구 깊이 (mm)
+  yOffset?: number; // Y축 오프셋 (가구 하단 위치)
+  material?: THREE.Material;
+  renderMode?: 'solid' | 'wireframe';
+  isHighlighted?: boolean;
+}
+
+/**
+ * 가구 네 모서리에 조절발통 렌더링
+ * - 앞쪽: 앞면에서 27mm 안쪽
+ * - 뒤쪽: 뒷면에서 20mm 안쪽
+ */
+export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = ({
+  width,
+  depth,
+  yOffset = 0,
+  material,
+  renderMode = 'solid',
+  isHighlighted = false,
+}) => {
+  const mmToThreeUnits = (mm: number) => mm * 0.01;
+  
+  const furnitureWidth = mmToThreeUnits(width);
+  const furnitureDepth = mmToThreeUnits(depth);
+  
+  // Z축 위치 계산
+  const frontOffset = mmToThreeUnits(27); // 앞면에서 27mm 안쪽
+  const backOffset = mmToThreeUnits(20);  // 뒷면에서 20mm 안쪽
+  
+  const frontZ = furnitureDepth / 2 - frontOffset;
+  const backZ = -furnitureDepth / 2 + backOffset;
+  
+  // X축 위치 (좌우 모서리)
+  const leftX = -furnitureWidth / 2;
+  const rightX = furnitureWidth / 2;
+  
+  // 발통 위치 배열 (네 모서리)
+  const footPositions: [number, number, number][] = [
+    [leftX, yOffset, frontZ],   // 좌측 앞
+    [rightX, yOffset, frontZ],  // 우측 앞
+    [leftX, yOffset, backZ],    // 좌측 뒤
+    [rightX, yOffset, backZ],   // 우측 뒤
+  ];
+  
+  return (
+    <group>
+      {footPositions.map((position, index) => (
+        <AdjustableFoot
+          key={`foot-${index}`}
+          position={position}
+          material={material}
+          renderMode={renderMode}
+          isHighlighted={isHighlighted}
+        />
+      ))}
+    </group>
+  );
+};
+
+export default AdjustableFootsRenderer;
