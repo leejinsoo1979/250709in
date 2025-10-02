@@ -194,6 +194,10 @@ export const useBaseFurniture = (
                         (viewMode === '2D' && renderMode === 'solid') ? 0.5 : // 2D 모드에서는 항상 0.5
                         (isDragging ? 0.6 : 
                         (isEditMode ? 0.3 : 1.0));
+      
+      // 은선모드에서는 depthWrite를 false로 설정하여 치수 텍스트가 가려지지 않도록
+      material.depthWrite = renderMode !== 'wireframe';
+      
       material.needsUpdate = true;
       
       
