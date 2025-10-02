@@ -218,10 +218,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         <group key={`section-${index}`}>
           {sectionContent}
           
-          {/* 섹션 내경 치수 표시 - 서랍과 선반 없는 hanging 섹션 표시 */}
+          {/* 섹션 내경 치수 표시 - 서랍과 hanging 섹션 표시 */}
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
-           ((section.type === 'drawer') || 
-            (section.type === 'hanging' && (!section.shelfPositions || section.shelfPositions.length === 0))) && (
+           (section.type === 'drawer' || section.type === 'hanging') && (
             <group>
               {(() => {
                 // 섹션의 실제 내경 계산을 위한 가이드선 위치 설정
@@ -242,10 +241,20 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 이전 섹션과의 경계: 중간 구분 패널 상단
                     bottomY = sectionBottomY + basicThickness;
                     
+                    console.log('🟡 섹션 bottomY 계산:', {
+                      index,
+                      type: section.type,
+                      shelfPositions: section.shelfPositions,
+                      'includes(0)': section.shelfPositions?.includes(0),
+                      sectionBottomY: sectionBottomY * 100 + 'mm',
+                      bottomY: bottomY * 100 + 'mm'
+                    });
+                    
                     // hanging 섹션에서 바닥판(shelfPositions: [0])이 있는 경우, bottomY를 바닥판 상단으로 설정
                     if (section.type === 'hanging' && section.shelfPositions && section.shelfPositions.includes(0)) {
-                      // 바닥판 중심이 sectionBottomY + basicThickness/2이므로, 상단은 sectionBottomY + basicThickness
-                      bottomY = sectionBottomY + basicThickness;
+                      // 바닥판 두께만큼 추가로 올림
+                      bottomY = sectionBottomY + basicThickness * 2;
+                      console.log('🔵 바닥판 있음 - bottomY 조정:', bottomY * 100 + 'mm');
                     }
                     // hanging 섹션에서 안전선반이 없는 경우, bottomY를 18mm 아래로 조정
                     else if (section.type === 'hanging' && (!section.shelfPositions || section.shelfPositions.length === 0)) {
