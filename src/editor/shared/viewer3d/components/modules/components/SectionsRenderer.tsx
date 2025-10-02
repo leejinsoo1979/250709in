@@ -265,15 +265,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   // 상단 가이드선 위치 결정
                   if (index === allSections.length - 1) {
                     // hanging 섹션에서 안전선반이 있는 경우: 안전선반 하단까지
-                    if (section.type === 'hanging' && section.shelfPositions && section.shelfPositions.length > 1) {
-                      const safetyShelfPos = section.shelfPositions.find(pos => pos !== 0);
-                      if (safetyShelfPos !== undefined) {
-                        topY = sectionBottomY + mmToThreeUnits(safetyShelfPos) - basicThickness / 2;
-                      } else {
-                        topY = height/2 - basicThickness;
-                      }
+                    if (section.type === 'hanging' && section.shelfPositions && section.shelfPositions.length > 0) {
+                      // 안전선반의 위치를 가져옴 (mm 단위, 섹션 하단 기준)
+                      const safetyShelfPositionMm = section.shelfPositions[0];
+                      // 안전선반 하단 Y 위치 = 섹션 하단 + 바닥판 두께 + 안전선반 위치 - 안전선반 두께/2
+                      topY = sectionBottomY + basicThickness + mmToThreeUnits(safetyShelfPositionMm) - basicThickness / 2;
                     } else {
-                      // 마지막 섹션: 상부 프레임의 하단면을 가리켜야 함
+                      // 안전선반 없으면 상부 프레임 하단까지
                       topY = height/2 - basicThickness;
                     }
                   } else {
