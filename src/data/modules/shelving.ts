@@ -487,7 +487,8 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number, slotWidths?
     { 
       type: 'hanging', 
       heightType: 'absolute', 
-      height: hangingHeight 
+      height: hangingHeight,
+      shelfPositions: [0] // 치수 표시용 (실제 패널은 BaseFurnitureShell에서 렌더링)
     }
   ];
   
