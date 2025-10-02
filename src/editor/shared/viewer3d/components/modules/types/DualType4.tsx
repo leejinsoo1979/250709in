@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
+import { Text } from '@react-three/drei';
 import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps, BoxWithEdges } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from "@/contexts/ThemeContext";
 import DoorModule from '../DoorModule';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { useUIStore } from '@/store/uiStore';
+import NativeLine from '../../elements/NativeLine';
 
 
 /**
@@ -62,7 +64,11 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
   const { renderMode } = useSpace3DView();
   const { viewMode, view2DDirection } = useUIStore();
+  const showDimensions = useUIStore(state => state.showDimensions);
+  const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const { theme } = useTheme();
+  const dimensionColor = theme === 'dark' ? '#ffffff' : '#000000';
+  const baseFontSize = viewMode === '3D' ? 0.12 : 0.15;
 
   return (
     <group>
@@ -73,7 +79,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           {(() => {
             // 하부 측판 높이 = 1000mm
             const drawerSectionHeight = mmToThreeUnits(1000);
-            const hangingSectionHeight = getSectionHeights()[1] - basicThickness;
+            const hangingSectionHeight = getSectionHeights()[1];
             // 중간 패널 위치: 하부 측판 상단(1000mm)에서 패널 두께 절반만 빼기
             const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2;
             const lowerPanelY = -height/2 + drawerSectionHeight/2;
@@ -238,6 +244,123 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           renderMode={renderMode}
           furnitureId={moduleData.id}
         />
+      )}
+      
+      {/* 하부섹션 바닥판 두께 치수 - Type4 전용 (좌우 섹션별) */}
+      {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
+        <>
+          {/* 왼쪽 섹션 바닥판 두께 */}
+          <group position={[-innerWidth/2, 0, 0]}>
+            {viewMode === '3D' && (
+              <Text
+                position={[
+                  -innerWidth/4 * 0.3 - 0.8 + 0.01, 
+                  -height/2 + basicThickness/2 - 0.01, 
+                  depth/2 + 0.1 - 0.01
+                ]}
+                fontSize={baseFontSize}
+                color="rgba(0, 0, 0, 0.3)"
+                anchorX="center"
+                anchorY="middle"
+                rotation={[0, 0, Math.PI / 2]}
+                renderOrder={998}
+              >
+                {Math.round(basicThickness * 100)}
+              </Text>
+            )}
+            <Text
+              position={[
+                viewMode === '3D' ? -innerWidth/4 * 0.3 - 0.8 : -innerWidth/4 * 0.3 - 0.5, 
+                -height/2 + basicThickness/2, 
+                viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
+              ]}
+              fontSize={baseFontSize}
+              color={dimensionColor}
+              anchorX="center"
+              anchorY="middle"
+              rotation={[0, 0, Math.PI / 2]}
+              renderOrder={1000}
+              depthTest={false}
+            >
+              {Math.round(basicThickness * 100)}
+            </Text>
+            
+            <NativeLine
+              points={[
+                [-innerWidth/4 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
+                [-innerWidth/4 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+              ]}
+              color={dimensionColor}
+              lineWidth={1}
+              dashed={false}
+            />
+            
+            <mesh position={[-innerWidth/4 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshBasicMaterial color={dimensionColor} />
+            </mesh>
+            <mesh position={[-innerWidth/4 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshBasicMaterial color={dimensionColor} />
+            </mesh>
+          </group>
+          
+          {/* 오른쪽 섹션 바닥판 두께 */}
+          <group position={[innerWidth/2, 0, 0]}>
+            {viewMode === '3D' && (
+              <Text
+                position={[
+                  -innerWidth/4 * 0.3 - 0.8 + 0.01, 
+                  -height/2 + basicThickness/2 - 0.01, 
+                  depth/2 + 0.1 - 0.01
+                ]}
+                fontSize={baseFontSize}
+                color="rgba(0, 0, 0, 0.3)"
+                anchorX="center"
+                anchorY="middle"
+                rotation={[0, 0, Math.PI / 2]}
+                renderOrder={998}
+              >
+                {Math.round(basicThickness * 100)}
+              </Text>
+            )}
+            <Text
+              position={[
+                viewMode === '3D' ? -innerWidth/4 * 0.3 - 0.8 : -innerWidth/4 * 0.3 - 0.5, 
+                -height/2 + basicThickness/2, 
+                viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
+              ]}
+              fontSize={baseFontSize}
+              color={dimensionColor}
+              anchorX="center"
+              anchorY="middle"
+              rotation={[0, 0, Math.PI / 2]}
+              renderOrder={1000}
+              depthTest={false}
+            >
+              {Math.round(basicThickness * 100)}
+            </Text>
+            
+            <NativeLine
+              points={[
+                [-innerWidth/4 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
+                [-innerWidth/4 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+              ]}
+              color={dimensionColor}
+              lineWidth={1}
+              dashed={false}
+            />
+            
+            <mesh position={[-innerWidth/4 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshBasicMaterial color={dimensionColor} />
+            </mesh>
+            <mesh position={[-innerWidth/4 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshBasicMaterial color={dimensionColor} />
+            </mesh>
+          </group>
+        </>
       )}
       
       {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
