@@ -177,29 +177,25 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   
   return (
     <group>
-      {/* 좌우 측면 판재 - 항상 통짜로 렌더링 (좌/우측 뷰에서는 숨김) */}
+      {/* 좌우 측면 판재 - 항상 통짜로 렌더링 */}
       <>
-        {/* 왼쪽 측면 판재 - 좌/우측 뷰에서 숨김 */}
-        {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-          <BoxWithEdges
-            args={[basicThickness, height, depth]}
-            position={[-innerWidth/2 - basicThickness/2, 0, 0]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-          />
-        )}
+        {/* 왼쪽 측면 판재 */}
+        <BoxWithEdges
+          args={[basicThickness, height, depth]}
+          position={[-innerWidth/2 - basicThickness/2, 0, 0]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+        />
         
-        {/* 오른쪽 측면 판재 - 좌/우측 뷰에서 숨김 */}
-        {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-          <BoxWithEdges
-            args={[basicThickness, height, depth]}
-            position={[innerWidth/2 + basicThickness/2, 0, 0]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-          />
-        )}
+        {/* 오른쪽 측면 판재 */}
+        <BoxWithEdges
+          args={[basicThickness, height, depth]}
+          position={[innerWidth/2 + basicThickness/2, 0, 0]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+        />
         
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
