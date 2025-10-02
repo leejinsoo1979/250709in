@@ -253,7 +253,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 // 섹션 타입별로 가이드선 위치 계산
                 const hasSafetyShelf = section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0);
 
-                if (section.type === 'hanging' || section.type === 'drawer') {
+                if (section.type === 'hanging') {
                   // 섹션의 절대 위치 계산
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
                   const sectionTopY = sectionCenterY + sectionHeight/2;
