@@ -274,9 +274,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             {moduleData?.id?.includes('4drawer-hanging') ? (
               // Type4 전용: 하부 섹션 상판 + 상부 섹션 바닥판 (18mm 아래로)
               (() => {
-                // 하부 측판이 1000mm, 서랍이 18mm 아래 → 상판도 18mm 아래
+                // 하부 측판이 1000mm, 상판을 18mm 아래로
                 const drawerSectionHeight = mmToThreeUnits(1000);
-                const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2 - basicThickness;
+                const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2;
                 
                 return (
                   <>

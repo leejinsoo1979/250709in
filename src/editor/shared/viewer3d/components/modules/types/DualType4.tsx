@@ -74,8 +74,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             // 하부 측판 높이 = 1000mm
             const drawerSectionHeight = mmToThreeUnits(1000);
             const hangingSectionHeight = getSectionHeights()[1] - basicThickness;
-            // 중간 패널 위치: 하부 측판 상단(1000mm) - 18mm 아래
-            const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2 - basicThickness;
+            // 중간 패널 위치: 하부 측판 상단(1000mm)에서 패널 두께 절반만 빼기
+            const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2;
             const lowerPanelY = -height/2 + drawerSectionHeight/2;
             const upperPanelY = -height/2 + drawerSectionHeight + hangingSectionHeight/2;
             
