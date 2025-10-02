@@ -196,6 +196,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   return; // Type4 상부섹션 바닥판 두께는 표시 안함
                 }
                 
+                // drawer 섹션의 바닥판 두께는 표시하지 않음 (전체적으로 제거)
+                if (sectionType === 'drawer') {
+                  return;
+                }
+                
                 // shelfPos === 0인 경우 바닥판: 섹션 하단에서 basicThickness/2 위
                 const shelfY = shelfPos === 0 
                   ? (-innerHeight / 2) + basicThickness / 2
