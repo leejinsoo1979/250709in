@@ -228,9 +228,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 첫 번째 섹션: 하부 프레임 상단
                     bottomY = -height/2 + basicThickness;
                   } else if (isType4HangingSection) {
-                    // Type4 상부 섹션: 하부 1000mm 구간 + 중간 패널을 기준으로 계산
-                    // 하부섹션 상판과 상부섹션 바닥판이 겹치는 지점이 정확한 기준 (18mm 추가 불필요)
-                    bottomY = -height/2 + mmToThreeUnits(1000);
+                    // Type4 상부 섹션: 상부섹션 바닥판 상단부터 (하부 1000mm + 바닥판 18mm)
+                    bottomY = -height/2 + mmToThreeUnits(1000) + basicThickness;
                   } else {
                     // 일반 hanging 섹션: 바닥판 상단부터
                     bottomY = sectionBottomY + basicThickness;
