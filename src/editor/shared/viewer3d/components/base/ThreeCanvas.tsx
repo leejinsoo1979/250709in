@@ -335,48 +335,33 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         currentZoom: controls.object.zoom
       });
       
-      // 현재 뷰 방향에 맞는 초기 위치로 리셋
-      const target: [number, number, number] = [0, 0, 0];
-      let position: [number, number, number];
-      let up: [number, number, number];
+      // 저장된 초기 상태로 리셋 (카메라 위치 버튼 눌렀을 때의 상태)
+      const savedTarget = initialCameraSetup.current.target2D;
+      const savedPosition = initialCameraSetup.current.position2D;
+      const savedUp = initialCameraSetup.current.up2D;
+      const savedZoom = initialCameraSetup.current.zoom2D;
       
-      // view2DDirection에 따라 카메라 위치와 up 벡터 설정
-      switch (view2DDirection) {
-        case 'front':
-          position = [0, 0, 10];
-          up = [0, 1, 0];
-          break;
-        case 'left':
-          position = [-10, 0, 0];
-          up = [0, 1, 0];
-          break;
-        case 'right':
-          position = [10, 0, 0];
-          up = [0, 1, 0];
-          break;
-        case 'top':
-          position = [0, 10, 0];
-          up = [0, 0, -1];
-          break;
-        default:
-          position = [0, 0, 10];
-          up = [0, 1, 0];
+      if (!savedTarget || !savedPosition || !savedZoom) {
+        console.warn('⚠️ 저장된 초기 카메라 상태 없음');
+        return;
       }
       
-      const zoom = 1.0;
+      const target: [number, number, number] = [savedTarget.x, savedTarget.y, savedTarget.z];
+      const position: [number, number, number] = [savedPosition.x, savedPosition.y, savedPosition.z];
+      const up: [number, number, number] = savedUp ? [savedUp.x, savedUp.y, savedUp.z] : [0, 1, 0];
       
-      console.log('📸 2D 카메라 리셋', {
+      console.log('📸 2D 카메라 리셋 (저장된 초기 상태)', {
         view: view2DDirection,
         target,
         position,
         up,
-        zoom
+        zoom: savedZoom
       });
       
       controls.target.set(...target);
       controls.object.position.set(...position);
       controls.object.up.set(...up);
-      controls.object.zoom = zoom;
+      controls.object.zoom = savedZoom;
       controls.object.updateProjectionMatrix();
       controls.object.lookAt(controls.target);
       controls.update();
@@ -880,10 +865,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                     console.log('📸 2D 모드 초기 상태 저장', {
                       position: ref.object.position.toArray(),
                       target: ref.target.toArray(),
+                      up: ref.object.up.toArray(),
                       zoom: ref.object.zoom
                     });
                     initialCameraSetup.current.position2D = ref.object.position.clone();
                     initialCameraSetup.current.target2D = ref.target.clone();
+                    initialCameraSetup.current.up2D = ref.object.up.clone();
                     initialCameraSetup.current.zoom2D = ref.object.zoom;
                   }
                 }, 100);
