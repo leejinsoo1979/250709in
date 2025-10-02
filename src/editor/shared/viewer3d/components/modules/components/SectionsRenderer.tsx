@@ -206,10 +206,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           {(() => {
             const is2HangingFurniture = furnitureId?.includes('2hanging');
             const hasTwoSections = allSections.length === 2;
+            // 2hanging의 상부 섹션에 안전선반이 있으면 치수 표시
+            const hasSafetyShelf = section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0);
             const shouldShow = !hideSectionDimensions && showDimensions && showDimensionsText && 
                               !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
                               (section.type === 'hanging' || section.type === 'drawer') && 
-                              !(is2HangingFurniture && hasTwoSections && index === 1);
+                              !(is2HangingFurniture && hasTwoSections && index === 1 && !hasSafetyShelf);
             
             // 2hanging만 로그
             if (furnitureId?.includes('2hanging')) {
