@@ -7,6 +7,10 @@ import { useUIStore } from '@/store/uiStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import BoxWithEdges from './BoxWithEdges';
 import { AdjustableFootsRenderer } from './AdjustableFootsRenderer';
+import { Text } from '@react-three/drei';
+import NativeLine from '../../elements/NativeLine';
+import DimensionText from './DimensionText';
+import { useDimensionColor } from '../hooks/useDimensionColor';
 
 // 점선을 수동으로 그리는 컴포넌트
 const ManualDashedBox: React.FC<{
@@ -155,7 +159,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { theme } = useTheme(); // 테마 정보 가져오기
-  const { view2DDirection } = useUIStore(); // UI 스토어에서 view2DDirection 가져오기
+  const { view2DDirection, showDimensions, showDimensionsText } = useUIStore(); // UI 스토어에서 view2DDirection 가져오기
+  const dimensionColor = useDimensionColor();
   
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
   // 그림자 자동 업데이트가 활성화되어 있으므로 수동 업데이트 불필요
@@ -251,6 +256,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 하부 측판이 1000mm, 상판을 18mm 아래로
                 const drawerSectionHeight = mmToThreeUnits(1000);
                 const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2;
+                const actualThickness = basicThickness * 100;
                 
                 return (
                   <>
@@ -271,6 +277,49 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       renderMode={renderMode}
                       isDragging={isDragging}
                     />
+                    
+                    {/* Type4 중간 구분 패널 두께 치수 표시 */}
+                    {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
+                      <group>
+                        {/* 치수 텍스트 */}
+                        <DimensionText
+                          value={actualThickness}
+                          position={[
+                            -innerWidth/2 * 0.3,
+                            lowerTopPanelY + basicThickness/2,
+                            viewMode === '3D' ? depth/2 + 0.5 : depth/2 + 1.5
+                          ]}
+                          viewMode={viewMode}
+                        />
+                        
+                        {/* 치수 가이드 라인 */}
+                        <NativeLine
+                          start={[
+                            -innerWidth/2 * 0.3,
+                            lowerTopPanelY,
+                            viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
+                          ]}
+                          end={[
+                            -innerWidth/2 * 0.3,
+                            lowerTopPanelY + basicThickness,
+                            viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
+                          ]}
+                          color={dimensionColor}
+                        />
+                        
+                        {/* 엔드포인트 (하단) */}
+                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                        
+                        {/* 엔드포인트 (상단) */}
+                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                      </group>
+                    )}
                   </>
                 );
               })()
