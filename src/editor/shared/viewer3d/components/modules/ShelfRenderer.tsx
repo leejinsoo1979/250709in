@@ -48,6 +48,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   showTopFrameDimension = false,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
+  const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const view2DTheme = useUIStore(state => state.view2DTheme);
   const highlightedCompartment = useUIStore(state => state.highlightedCompartment);
@@ -106,10 +107,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           );
         })}
         
-        {/* 치수 표시 - showDimensions가 true이고 상단 마감 패널이 아닐 때 표시 */}
+        {/* 치수 표시 - showDimensions와 showDimensionsText가 모두 true이고 상단 마감 패널이 아닐 때 표시 */}
         {/* Type2의 하단 섹션처럼 선반이 1개이고 상단 근처에만 있는 경우는 제외 */}
         {/* 단, 첫 번째 칸의 높이가 100mm 이상이면 표시 */}
-        {showDimensions && !isTopFinishPanel && !(viewMode === '2D' && view2DDirection === 'top') && (
+        {showDimensions && showDimensionsText && !isTopFinishPanel && !(viewMode === '2D' && view2DDirection === 'top') && (
           <group>
             {(() => {
               const compartmentHeights: Array<{ height: number; centerY: number }> = [];
@@ -494,8 +495,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
         );
       })}
       
-      {/* 치수 표시 - showDimensions가 true일 때 표시 */}
-      {showDimensions && !(viewMode === '2D' && view2DDirection === 'top') && (
+      {/* 치수 표시 - showDimensions와 showDimensionsText가 모두 true일 때 표시 */}
+      {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') && (
         <group>
           {Array.from({ length: shelfCount + 1 }, (_, i) => {
             // 각 칸의 높이 계산
