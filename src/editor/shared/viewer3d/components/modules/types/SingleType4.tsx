@@ -85,6 +85,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               calculateSectionHeight={baseFurniture.calculateSectionHeight}
               mmToThreeUnits={baseFurniture.mmToThreeUnits}
               renderMode={renderMode}
+              furnitureId={moduleData.id}
             />
           )}
         </BaseFurnitureShell>
