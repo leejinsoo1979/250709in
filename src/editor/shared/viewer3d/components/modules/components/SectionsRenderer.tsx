@@ -66,8 +66,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
+  const view2DTheme = useUIStore(state => state.view2DTheme);
   const { viewMode } = useSpace3DView();
-  const viewerTheme = useViewerTheme();
   
   // 치수 표시용 색상 설정 - 3D에서는 테마 색상, 2D에서는 고정 색상
   const getThemeColor = () => {
@@ -75,7 +75,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
   };
   
-  const dimensionColor = viewMode === '3D' ? getThemeColor() : (viewerTheme.theme.mode === 'dark' ? '#ffffff' : '#000000');
+  const dimensionColor = viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000');
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32; // 3D에서 더 큰 폰트 크기
   
   // sections 기반 내부 구조 렌더링
