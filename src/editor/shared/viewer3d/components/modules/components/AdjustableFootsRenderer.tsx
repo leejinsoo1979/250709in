@@ -9,6 +9,7 @@ interface AdjustableFootsRendererProps {
   material?: THREE.Material;
   renderMode?: 'solid' | 'wireframe';
   isHighlighted?: boolean;
+  isFloating?: boolean; // 띄움배치 여부
 }
 
 /**
@@ -23,7 +24,12 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   material,
   renderMode = 'solid',
   isHighlighted = false,
+  isFloating = false,
 }) => {
+  // 띄움배치일 때는 발통 렌더링 안 함
+  if (isFloating) {
+    return null;
+  }
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
   const furnitureWidth = mmToThreeUnits(width);

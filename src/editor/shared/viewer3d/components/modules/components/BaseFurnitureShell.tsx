@@ -109,6 +109,9 @@ interface BaseFurnitureShellProps {
   // 백패널 유무
   hasBackPanel?: boolean;
   
+  // 띄움배치 여부
+  isFloating?: boolean;
+  
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -137,6 +140,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   isEditMode = false,
   isHighlighted = false,
   hasBackPanel = true, // 기본값은 true (백패널 있음)
+  isFloating = false, // 기본값은 false (바닥 배치)
   children
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
@@ -271,7 +275,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       {/* 내부 구조 (타입별로 다른 내용) */}
       {children}
       
-      {/* 조절발통 (네 모서리) */}
+      {/* 조절발통 (네 모서리) - 띄움배치가 아닐 때만 */}
       <AdjustableFootsRenderer
         width={width}
         depth={depth}
@@ -279,6 +283,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         material={material}
         renderMode={renderMode}
         isHighlighted={isHighlighted}
+        isFloating={isFloating}
       />
     </group>
   );
