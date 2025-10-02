@@ -332,32 +332,39 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         type: controls.object.type,
         currentPosition: controls.object.position.toArray(),
         currentTarget: controls.target.toArray(),
-        currentZoom: controls.object.zoom
+        currentZoom: controls.object.zoom,
+        savedPosition2D: initialCameraSetup.current.position2D?.toArray(),
+        savedTarget2D: initialCameraSetup.current.target2D?.toArray(),
+        savedZoom2D: initialCameraSetup.current.zoom2D
       });
       
-      // 현재 공간의 정중앙을 타겟으로 설정
-      const spaceHeight = spaceInfo?.height || 2400;
-      const spaceWidth = spaceInfo?.width || 3000;
-      const spaceDepth = spaceInfo?.depth || 600;
-      const target = calculateCameraTargetUtil(spaceHeight);
-      
-      // calculateOptimalDistance와 동일한 방식으로 거리 계산
-      const distance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
-      
-      // useCameraManager와 동일한 줌 계산 공식 사용
-      const initialZoom = 1200 / distance;
-      
-      console.log('📸 2D 모드 초기화', {
-        target,
-        distance,
-        initialZoom
-      });
-      
-      // 항상 계산된 정중앙과 거리/줌 사용
-      controls.target.set(...target);
-      controls.object.position.set(0, target[1], distance);
-      controls.object.zoom = initialZoom;
-      controls.object.updateProjectionMatrix();
+      // 저장된 초기 상태가 있으면 그대로 복원
+      if (initialCameraSetup.current.position2D && 
+          initialCameraSetup.current.target2D && 
+          initialCameraSetup.current.zoom2D !== null) {
+        
+        console.log('📸 저장된 2D 초기 상태로 복원');
+        
+        controls.target.copy(initialCameraSetup.current.target2D);
+        controls.object.position.copy(initialCameraSetup.current.position2D);
+        controls.object.zoom = initialCameraSetup.current.zoom2D;
+        controls.object.updateProjectionMatrix();
+      } else {
+        // 저장된 상태가 없으면 계산
+        console.log('⚠️ 저장된 초기 상태 없음 - 계산값 사용');
+        
+        const spaceHeight = spaceInfo?.height || 2400;
+        const spaceWidth = spaceInfo?.width || 3000;
+        const spaceDepth = spaceInfo?.depth || 600;
+        const target = calculateCameraTargetUtil(spaceHeight);
+        const distance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
+        const initialZoom = 1200 / distance;
+        
+        controls.target.set(...target);
+        controls.object.position.set(0, target[1], distance);
+        controls.object.zoom = initialZoom;
+        controls.object.updateProjectionMatrix();
+      }
       
       controls.object.up.set(0, 1, 0);
       controls.object.lookAt(controls.target);
