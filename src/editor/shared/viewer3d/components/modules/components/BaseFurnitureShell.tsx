@@ -190,12 +190,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               const drawerSectionHeight = mmToThreeUnits(1000); // 하부 서랍 구역 1000mm
               const hangingSectionHeight = getSectionHeights()[1]; // 상부 옷장 구역
               
+              // 하부 측판: 바닥 프레임 위에서 시작
+              const lowerPanelY = -height/2 + basicThickness + drawerSectionHeight/2;
+              
+              // 상부 측판: 중간 구분 패널(바닥 + 하부 높이) 위에서 시작
+              const upperPanelY = -height/2 + basicThickness + drawerSectionHeight + hangingSectionHeight/2;
+              
               return (
                 <>
                   {/* 왼쪽 하부 측판 (서랍 구역 1000mm) */}
                   <BoxWithEdges
                     args={[basicThickness, drawerSectionHeight, depth]}
-                    position={[-innerWidth/2 - basicThickness/2, -height/2 + basicThickness + drawerSectionHeight/2, 0]}
+                    position={[-innerWidth/2 - basicThickness/2, lowerPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
@@ -204,7 +210,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   {/* 왼쪽 상부 측판 (옷장 구역) */}
                   <BoxWithEdges
                     args={[basicThickness, hangingSectionHeight, depth]}
-                    position={[-innerWidth/2 - basicThickness/2, height/2 - basicThickness - hangingSectionHeight/2, 0]}
+                    position={[-innerWidth/2 - basicThickness/2, upperPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
@@ -213,7 +219,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   {/* 오른쪽 하부 측판 (서랍 구역 1000mm) */}
                   <BoxWithEdges
                     args={[basicThickness, drawerSectionHeight, depth]}
-                    position={[innerWidth/2 + basicThickness/2, -height/2 + basicThickness + drawerSectionHeight/2, 0]}
+                    position={[innerWidth/2 + basicThickness/2, lowerPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
@@ -222,7 +228,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   {/* 오른쪽 상부 측판 (옷장 구역) */}
                   <BoxWithEdges
                     args={[basicThickness, hangingSectionHeight, depth]}
-                    position={[innerWidth/2 + basicThickness/2, height/2 - basicThickness - hangingSectionHeight/2, 0]}
+                    position={[innerWidth/2 + basicThickness/2, upperPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
