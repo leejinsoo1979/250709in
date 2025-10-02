@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import * as THREE from 'three';
+import { useSpace3DView } from '../../../context/useSpace3DView';
+import { useUIStore } from '@/store/uiStore';
 
 interface AdjustableFootProps {
   position: [number, number, number];
@@ -23,6 +25,9 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   isHighlighted = false,
   baseHeight = 65, // 기본값 65mm
 }) => {
+  const { viewMode } = useSpace3DView();
+  const { view2DTheme } = useUIStore();
+  
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
   // 플레이트 크기
@@ -35,12 +40,21 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   // 실린더 높이 = 받침대 높이 - 플레이트 두께(7mm)
   const cylinderHeight = mmToThreeUnits(baseHeight - 7);
   
+  // 발통 색상: 3D는 검정색, 2D는 테마에 따라
+  const footColor = useMemo(() => {
+    if (viewMode === '3D') {
+      return '#000000'; // 3D: 항상 검정색
+    }
+    // 2D 모드
+    return view2DTheme === 'dark' ? '#FFFFFF' : '#808080'; // 다크모드: 흰색, 라이트모드: 회색
+  }, [viewMode, view2DTheme]);
+  
   // 기본 재질
-  const defaultMaterial = new THREE.MeshStandardMaterial({
-    color: isHighlighted ? '#ff9800' : '#808080',
+  const defaultMaterial = useMemo(() => new THREE.MeshStandardMaterial({
+    color: isHighlighted ? '#ff9800' : footColor,
     metalness: 0.5,
     roughness: 0.5,
-  });
+  }), [isHighlighted, footColor]);
   
   const finalMaterial = material || defaultMaterial;
   
