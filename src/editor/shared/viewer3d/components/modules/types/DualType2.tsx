@@ -106,13 +106,57 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                 
                 {/* 중간 구분 패널 (마지막 섹션 제외) */}
                 {index < getSectionHeights().length - 1 && (
-                  <BoxWithEdges
-                    args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                    position={[0, sectionCenterY + sectionHeight/2 + basicThickness/2, basicThickness/2 + shelfZOffset]}
-                    material={material}
-                    renderMode={renderMode}
-                    isDragging={isDragging}
-                  />
+                  <>
+                    <BoxWithEdges
+                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                      position={[0, sectionCenterY + sectionHeight/2 + basicThickness/2, basicThickness/2 + shelfZOffset]}
+                      material={material}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                    />
+                    
+                    {/* 중간판 두께 치수 표시 */}
+                    {showDimensions && showDimensionsText && (
+                      <group>
+                        {/* 중간판 두께 텍스트 */}
+                        <Text
+                          position={[
+                            -innerWidth/2 * 0.3 - 0.5,
+                            sectionCenterY + sectionHeight/2 + basicThickness/2,
+                            viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+                          ]}
+                          fontSize={baseFontSize}
+                          color={dimensionColor}
+                          anchorX="center"
+                          anchorY="middle"
+                          rotation={[0, 0, Math.PI / 2]}
+                          renderOrder={999}
+                          depthTest={false}
+                        >
+                          {Math.round(basicThickness * 100)}
+                        </Text>
+                        
+                        {/* 중간판 두께 수직선 */}
+                        <Line
+                          points={[
+                            [-innerWidth/2 * 0.3, sectionCenterY + sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
+                            [-innerWidth/2 * 0.3, sectionCenterY + sectionHeight/2 + basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                          ]}
+                          color={dimensionColor}
+                          lineWidth={1}
+                        />
+                        {/* 수직선 양끝 점 */}
+                        <mesh position={[-innerWidth/2 * 0.3, sectionCenterY + sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                        <mesh position={[-innerWidth/2 * 0.3, sectionCenterY + sectionHeight/2 + basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                      </group>
+                    )}
+                  </>
                 )}
               </React.Fragment>
             );
@@ -257,6 +301,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         isHighlighted={false}
         isFloating={false}
         baseHeight={spaceInfo?.baseConfig?.height || 65}
+        viewMode={viewMode}
+        view2DDirection={view2DDirection}
       />
     </group>
   );
