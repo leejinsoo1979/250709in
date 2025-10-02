@@ -201,11 +201,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 'basicThickness_mm': basicThickness * 100
               });
               
-              // 하부 측판: 바닥판 상단부터 상판 하단까지 (내경 영역)
-              const lowerPanelY = -height/2 + basicThickness + drawerSectionHeight/2;
+              // 하부 측판: 바닥판 상단 + 18mm부터 상판 하단까지
+              const lowerPanelY = -height/2 + basicThickness + basicThickness + drawerSectionHeight/2;
               
-              // 상부 측판: 중간 구분 패널 위부터 시작
-              const upperPanelY = -height/2 + basicThickness + drawerSectionHeight + basicThickness + hangingSectionHeight/2;
+              // 상부 측판: 중간 구분 패널 2개(상판+바닥판) 위부터 시작
+              const upperPanelY = -height/2 + basicThickness + basicThickness + drawerSectionHeight + basicThickness * 2 + hangingSectionHeight/2;
               
               return (
                 <>

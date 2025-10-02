@@ -109,7 +109,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     
     return allSections.map((section: SectionConfig & { calculatedHeight: number }, index: number) => {
       const sectionHeight = section.calculatedHeight;
-      const sectionCenterY = currentYPosition + sectionHeight / 2;
+      // Type4 하부 섹션(drawer)은 측판이 18mm 위로 올라갔으므로 중심도 18mm 위로
+      const isType4DrawerSection = furnitureId?.includes('4drawer-hanging') && section.type === 'drawer' && index === 0;
+      const sectionCenterY = currentYPosition + sectionHeight / 2 + (isType4DrawerSection ? basicThickness : 0);
       
       // 디버깅: 섹션 높이 확인
       if (index === 0) {

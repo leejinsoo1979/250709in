@@ -78,8 +78,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             const lowerSectionHeight = getSectionHeights()[0];
             const lowerSectionCenterY = -height/2 + basicThickness + lowerSectionHeight / 2 - basicThickness;
             const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 + basicThickness/2;
-            const lowerPanelY = -height/2 + basicThickness + drawerSectionHeight/2;
-            const upperPanelY = -height/2 + basicThickness + drawerSectionHeight + basicThickness + hangingSectionHeight/2;
+            const lowerPanelY = -height/2 + basicThickness + basicThickness + drawerSectionHeight/2;
+            const upperPanelY = -height/2 + basicThickness + basicThickness + drawerSectionHeight + basicThickness * 2 + hangingSectionHeight/2;
             
             return getSectionHeights().map((sectionHeight: number, index: number) => {
               let currentYPosition = -height/2 + basicThickness;
