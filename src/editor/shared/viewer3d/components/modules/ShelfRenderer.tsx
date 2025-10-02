@@ -1,7 +1,7 @@
 import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
-import { Text } from '@react-three/drei';
+import { Text, Line } from '@react-three/drei';
 import { NativeLine } from '@/editor/shared/viewer3d/components/elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import { ThreeEvent } from '@react-three/fiber';
@@ -79,6 +79,48 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           renderMode={renderMode}
           isHighlighted={isHighlighted}
         />
+        
+        {/* 상판 두께 치수 표시 */}
+        {showDimensions && showDimensionsText && (
+          <group>
+            {/* 상판 두께 텍스트 */}
+            <Text
+              position={[
+                -innerWidth/2 * 0.3 - 0.5,
+                topPosition,
+                viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
+              ]}
+              fontSize={baseFontSize}
+              color={dimensionColor}
+              anchorX="center"
+              anchorY="middle"
+              rotation={[0, 0, Math.PI / 2]}
+              renderOrder={999}
+              depthTest={false}
+            >
+              {Math.round(basicThickness * 100)}
+            </Text>
+            
+            {/* 상판 두께 수직선 */}
+            <Line
+              points={[
+                [-innerWidth/2 * 0.3, topPosition - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
+                [-innerWidth/2 * 0.3, topPosition + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+              ]}
+              color={dimensionColor}
+              lineWidth={1}
+            />
+            {/* 수직선 양끝 점 */}
+            <mesh position={[-innerWidth/2 * 0.3, topPosition - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshBasicMaterial color={dimensionColor} />
+            </mesh>
+            <mesh position={[-innerWidth/2 * 0.3, topPosition + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshBasicMaterial color={dimensionColor} />
+            </mesh>
+          </group>
+        )}
       </group>
     );
   }
