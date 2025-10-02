@@ -389,6 +389,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     if (isType4Hanging && i === 0) {
                       return null;
                     }
+                    
+                    // Type2 hanging 섹션: 안전선반~상판 칸은 SectionsRenderer에서 내경치수로 표시하므로 제외
+                    const isType2Hanging = furnitureId && (furnitureId.includes('2hanging') || furnitureId.includes('2drawer-hanging')) && sectionType === 'hanging';
+                    if (isType2Hanging && compartmentHeights.length >= 2 && i === compartmentHeights.length - 1) {
+                      return null;
+                    }
                     // 각 칸의 상단과 하단 Y 좌표 계산
                     let compartmentTop, compartmentBottom;
                     
