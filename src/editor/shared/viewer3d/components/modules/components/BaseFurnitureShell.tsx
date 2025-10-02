@@ -286,7 +286,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           value={actualThickness}
                           position={[
                             -innerWidth/2 * 0.3,
-                            lowerTopPanelY + basicThickness - basicThickness,
+                            lowerTopPanelY - basicThickness/2,
                             viewMode === '3D' ? depth/2 + 0.5 : depth/2 + 1.5
                           ]}
                           viewMode={viewMode}
@@ -296,25 +296,25 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         <NativeLine
                           start={[
                             -innerWidth/2 * 0.3,
-                            lowerTopPanelY + basicThickness/2 - basicThickness,
+                            lowerTopPanelY - basicThickness,
                             viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                           ]}
                           end={[
                             -innerWidth/2 * 0.3,
-                            lowerTopPanelY + basicThickness * 1.5 - basicThickness,
+                            lowerTopPanelY,
                             viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                           ]}
                           color={dimensionColor}
                         />
                         
                         {/* 엔드포인트 (하단) */}
-                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness/2 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={dimensionColor} />
                         </mesh>
                         
                         {/* 엔드포인트 (상단) */}
-                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness * 1.5 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={dimensionColor} />
                         </mesh>
