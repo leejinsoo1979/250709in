@@ -222,7 +222,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               color="rgba(0, 0, 0, 0.3)"
               anchorX="center"
               anchorY="middle"
-              rotation={[0, 0, Math.PI / 2 + Math.PI]}
+              rotation={[0, 0, Math.PI / 2]}
               renderOrder={998}
               depthTest={false}
             >
@@ -240,7 +240,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               color={dimensionColor}
               anchorX="center"
               anchorY="middle"
-              rotation={[0, 0, Math.PI / 2 + Math.PI]}
+              rotation={[0, 0, Math.PI / 2]}
               renderOrder={999}
               depthTest={false}
             >
