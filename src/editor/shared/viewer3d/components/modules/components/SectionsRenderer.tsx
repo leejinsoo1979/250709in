@@ -220,9 +220,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         <group key={`section-${index}`}>
           {sectionContent}
           
-          {/* 섹션 내경 치수 표시 - drawer와 hanging 섹션 표시 */}
+          {/* 섹션 내경 치수 표시 - drawer 섹션만 표시 (hanging은 ShelfRenderer에서 처리) */}
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
-           (section.type === 'drawer' || section.type === 'hanging') && (
+           section.type === 'drawer' && (
             <group>
               {(() => {
                 // 섹션의 실제 내경 계산을 위한 가이드선 위치 설정
