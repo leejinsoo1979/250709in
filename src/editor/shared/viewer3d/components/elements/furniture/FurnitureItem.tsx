@@ -1703,6 +1703,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
               slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
               slotWidths={calculatedSlotWidths}
+              isHighlighted={isSelected} // 선택 상태 전달
             />
             
             {/* 가구 너비 디버깅 */}

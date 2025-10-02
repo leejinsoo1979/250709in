@@ -4,6 +4,8 @@ import { useThree } from '@react-three/fiber';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import { useUIStore } from '@/store/uiStore';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Edges } from '@react-three/drei';
 
 interface BoxWithEdgesProps {
   args: [number, number, number];
@@ -15,6 +17,7 @@ interface BoxWithEdgesProps {
   hideEdges?: boolean; // 엣지 숨김 옵션 추가
   isBackPanel?: boolean; // 백패널 여부 추가
   isEndPanel?: boolean; // 엔드패널 여부 추가
+  isHighlighted?: boolean; // 강조 상태 추가
   onClick?: (e: any) => void;
   onPointerOver?: (e: any) => void;
   onPointerOut?: (e: any) => void;
@@ -34,6 +37,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   hideEdges = false,
   isBackPanel = false,
   isEndPanel = false,
+  isHighlighted = false,
   onClick,
   onPointerOver,
   onPointerOut
@@ -43,6 +47,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const { gl } = useThree();
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
+  const { theme: appTheme } = useTheme();
   
   // 기본 material 생성 (material prop이 없을 때 사용)
   const defaultMaterial = React.useMemo(() => {
@@ -103,8 +108,50 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return baseMaterial;
   }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode]);
 
+  // 테마 색상 매핑
+  const themeColorMap: Record<string, string> = {
+    green: '#10b981',
+    blue: '#3b82f6',
+    purple: '#8b5cf6',
+    vivid: '#a25378',
+    red: '#D2042D',
+    pink: '#ec4899',
+    indigo: '#6366f1',
+    teal: '#14b8a6',
+    yellow: '#eab308',
+    gray: '#6b7280',
+    cyan: '#06b6d4',
+    lime: '#84cc16',
+    black: '#1a1a1a',
+    wine: '#845EC2',
+    gold: '#d97706',
+    navy: '#1e3a8a',
+    emerald: '#059669',
+    violet: '#C128D7',
+    mint: '#0CBA80',
+    neon: '#18CF23',
+    rust: '#FF7438',
+    white: '#D65DB1',
+    plum: '#790963',
+    brown: '#5A2B1D',
+    darkgray: '#2C3844',
+    maroon: '#3F0D0D',
+    turquoise: '#003A7A',
+    slate: '#2E3A47',
+    copper: '#AD4F34',
+    forest: '#1B3924',
+    olive: '#4C462C'
+  };
+
+  const highlightColor = themeColorMap[appTheme.color] || '#3b82f6';
+
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
+    // 강조 상태일 때는 테마 색상 사용
+    if (isHighlighted) {
+      return highlightColor;
+    }
+    
     // Cabinet Texture1이 적용된 경우 정확한 색상 사용
     if (baseMaterial instanceof THREE.MeshStandardMaterial) {
       const materialColor = baseMaterial.color;
@@ -131,7 +178,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
       }
     }
-  }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial]);
+  }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor]);
 
   // 디버깅: 2D 솔리드 모드에서 색상 확인
   React.useEffect(() => {
@@ -169,26 +216,39 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       </mesh>
       {/* 윤곽선 렌더링 */}
       {!hideEdges && (
-        <lineSegments>
-          <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-          <lineBasicMaterial 
-            color={edgeColor}
-            transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
-            opacity={
-              isBackPanel && viewMode === '2D' && view2DDirection === 'front' 
-                ? 0.1  // 2D 정면 뷰에서 백패널은 매우 투명하게
-                : viewMode === '3D' 
-                  ? 0.9
-                  : 1
-            }
-            depthTest={viewMode === '3D'}
-            depthWrite={false}
-            polygonOffset={viewMode === '3D'}
-            polygonOffsetFactor={viewMode === '3D' ? -10 : 0}
-            polygonOffsetUnits={viewMode === '3D' ? -10 : 0}
-            linewidth={viewMode === '2D' ? 2 : 1} 
-          />
-        </lineSegments>
+        <>
+          {isHighlighted && (
+            // 강조 상태일 때 추가 발광 효과
+            <Edges
+              color={highlightColor}
+              scale={1.001}
+              threshold={15}
+              linewidth={3}
+            />
+          )}
+          <lineSegments>
+            <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
+            <lineBasicMaterial 
+              color={edgeColor}
+              transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
+              opacity={
+                isHighlighted
+                  ? 1.0  // 강조 상태일 때는 불투명
+                  : isBackPanel && viewMode === '2D' && view2DDirection === 'front' 
+                    ? 0.1  // 2D 정면 뷰에서 백패널은 매우 투명하게
+                    : viewMode === '3D' 
+                      ? 0.9
+                      : 1
+              }
+              depthTest={viewMode === '3D'}
+              depthWrite={false}
+              polygonOffset={viewMode === '3D'}
+              polygonOffsetFactor={viewMode === '3D' ? -10 : 0}
+              polygonOffsetUnits={viewMode === '3D' ? -10 : 0}
+              linewidth={isHighlighted ? 3 : (viewMode === '2D' ? 2 : 1)} 
+            />
+          </lineSegments>
+        </>
       )}
     </group>
   );

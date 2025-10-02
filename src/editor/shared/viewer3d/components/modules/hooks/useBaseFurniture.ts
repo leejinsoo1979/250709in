@@ -199,12 +199,11 @@ export const useBaseFurniture = (
       const shouldDisableDepthWrite = renderMode === 'wireframe' || (viewMode === '2D' && renderMode === 'solid');
       material.depthWrite = !shouldDisableDepthWrite;
       
-      console.log('🎨 Material depthWrite 설정:', {
-        viewMode,
-        renderMode,
-        shouldDisableDepthWrite,
-        depthWrite: material.depthWrite
-      });
+      console.log('🎨 Material depthWrite 설정:');
+      console.log('  - viewMode:', viewMode);
+      console.log('  - renderMode:', renderMode);
+      console.log('  - shouldDisableDepthWrite:', shouldDisableDepthWrite);
+      console.log('  - depthWrite:', material.depthWrite);
       
       material.needsUpdate = true;
       
