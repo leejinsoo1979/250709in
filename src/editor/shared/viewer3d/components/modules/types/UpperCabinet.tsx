@@ -77,7 +77,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                         mmToThreeUnits={baseFurniture.mmToThreeUnits}
                         renderMode={renderMode}
                         furnitureId={moduleData.id}
-                        hideSectionDimensions={true}
+                        hideSectionDimensions={false}
                       />
                     </group>
                     
