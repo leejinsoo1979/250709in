@@ -463,10 +463,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     const spaceDepth = spaceInfo?.depth || 1500;
     
     if (!bounds) {
-      // 가구가 없을 때는 공간 높이의 10% 지점을 중앙으로 사용 (4분할뷰에서 가구가 화면에 잘 보이도록)
+      // 가구가 없을 때는 공간 중심과 크기 사용
+      // calculateCameraTarget과 동일한 계산 사용
       const center = { 
         x: 0, 
-        y: mmToThreeUnits(spaceHeight * 0.1), // 공간 높이의 10% 위치
+        y: mmToThreeUnits(spaceHeight * 0.5), // calculateCameraTarget과 동일
         z: 0 
       };
       const size = { 
@@ -516,8 +517,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       };
     }
     
-    // 4분할뷰에서 가구가 화면에 잘 보이도록 공간 높이의 10% 지점을 중앙으로 사용
-    const center = { x: 0, y: mmToThreeUnits((spaceInfo?.height || 2400) * 0.1), z: 0 };
+    // target은 공간 중심 사용
+    const center = { x: 0, y: mmToThreeUnits((spaceInfo?.height || 2400) * 0.5), z: 0 };
     const size = bounds.size;
     
     // mm 단위로 역변환 (size는 Three.js 단위이므로)
