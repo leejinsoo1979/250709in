@@ -21,9 +21,10 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-4drawer-hanging': getImagePath('dual-4drawer-hanging.png'),
   'dual-2drawer-styler': getImagePath('dual-2drawer-styler.png'),
   'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
-  'upper-cabinet-shelf': getImagePath('upper-cabinet-shelf.png'),
-  'upper-cabinet-open': getImagePath('upper-cabinet-open.png'),
-  'upper-cabinet-mixed': getImagePath('upper-cabinet-mixed.png'),
+  // 상부장은 임시로 하부장 섬네일 사용
+  'upper-cabinet-shelf': getImagePath('single-2drawer-hanging.png'),
+  'upper-cabinet-open': getImagePath('single-2hanging.png'),
+  'upper-cabinet-mixed': getImagePath('single-4drawer-hanging.png'),
 };
 
 const PlacedFurnitureList: React.FC = () => {
