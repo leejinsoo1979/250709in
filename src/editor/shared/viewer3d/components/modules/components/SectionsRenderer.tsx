@@ -409,67 +409,6 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             </group>
           )}
           
-          {/* 중간 구분 패널 두께 표시 */}
-          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && hasDividerPanel && (
-            <group>
-              {/* 중간 패널 두께 텍스트 - 수직선 좌측에 표시 */}
-              {viewMode === '3D' && (
-                <Text
-                  position={[
-                    -innerWidth/2 * 0.3 - 0.8 + 0.01, 
-                    dividerPanelY - 0.01, 
-                    depth/2 + 0.1 - 0.01
-                  ]}
-                  fontSize={baseFontSize}
-                  color="rgba(0, 0, 0, 0.3)"
-                  anchorX="center"
-                  anchorY="middle"
-                  rotation={[0, 0, Math.PI / 2]}
-                  renderOrder={998}
-                >
-                  {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
-                </Text>
-              )}
-              <Text
-                position={[
-                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
-                  dividerPanelY, 
-                  viewMode === '3D' 
-                    ? depth/2 + 0.1 
-                    : depth/2 + 1.0
-                ]}
-                fontSize={baseFontSize}
-                color={dimensionColor}
-                anchorX="center"
-                anchorY="middle"
-                rotation={[0, 0, Math.PI / 2]}
-                renderOrder={999}
-                depthTest={false}
-              >
-                {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
-              </Text>
-              
-              {/* 수직 연결선 - 왼쪽으로 이동 */}
-              <NativeLine
-                points={[
-                  [-innerWidth/2 * 0.3, dividerPanelY + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                  [-innerWidth/2 * 0.3, dividerPanelY - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
-                ]}
-                color={dimensionColor}
-                lineWidth={1}
-                dashed={false}
-              />
-              {/* 수직 연결선 양끝 점 */}
-              <mesh position={[-innerWidth/2 * 0.3, dividerPanelY + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={dimensionColor} />
-              </mesh>
-              <mesh position={[-innerWidth/2 * 0.3, dividerPanelY - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={dimensionColor} />
-              </mesh>
-            </group>
-          )}
           
           {/* 마지막 섹션의 상단 프레임 두께 표시 */}
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === allSections.length - 1 && (
