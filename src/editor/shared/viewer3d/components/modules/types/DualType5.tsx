@@ -62,7 +62,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
   const { view2DDirection, showDimensions, showDimensionsText } = useUIStore();
   const { renderMode, viewMode } = useSpace3DView();
-  const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
+  const { dimensionColor, baseFontSize } = useDimensionColor();
 
   // spaceInfo 가져오기 - 제거됨 (baseFurniture의 material 사용)
   // const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
