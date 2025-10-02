@@ -186,7 +186,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
-                const shelfY = (-innerHeight / 2) + mmToThreeUnits(shelfPos);
+                // positionMm === 0인 경우 바닥판: 섹션 하단에서 basicThickness/2 위
+                const shelfY = shelfPos === 0 
+                  ? (-innerHeight / 2) + basicThickness / 2
+                  : (-innerHeight / 2) + mmToThreeUnits(shelfPos);
                 const shelfTopY = shelfY + basicThickness / 2;
                 const shelfBottomY = shelfY - basicThickness / 2;
                 
