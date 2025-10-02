@@ -83,6 +83,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               shelfZOffset={baseFurniture.shelfZOffset}
               material={baseFurniture.material}
               calculateSectionHeight={baseFurniture.calculateSectionHeight}
+              mmToThreeUnits={baseFurniture.mmToThreeUnits}
               renderMode={renderMode}
             />
           )}

@@ -35,6 +35,7 @@ interface SectionsRendererProps {
   
   // 헬퍼 함수들
   calculateSectionHeight: (section: SectionConfig, availableHeight: number) => number;
+  mmToThreeUnits: (mm: number) => number;
   
   // 가구 ID (칸 강조용)
   furnitureId?: string;
@@ -59,6 +60,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   material,
   renderMode,
   calculateSectionHeight,
+  mmToThreeUnits,
   furnitureId,
   isHighlighted = false
 }) => {
