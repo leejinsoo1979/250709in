@@ -322,8 +322,8 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
     { 
       type: 'hanging', 
       heightType: 'absolute', 
-      height: hangingHeight,
-      shelfPositions: [0] // 상부 섹션 바닥에 바닥판 추가 (서랍장 상판과 맞닿음)
+      height: hangingHeight
+      // 중간 구분 패널이 이미 바닥판 역할을 하므로 shelfPositions 불필요
     }
   ];
   
