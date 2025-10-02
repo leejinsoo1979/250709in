@@ -71,10 +71,14 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         // 다중 섹션: 섹션별 분할 측면 패널
         <>
           {(() => {
-            // 먼저 하부 섹션 상판 Y 위치 계산 (9mm 위로 올림)
+            // SingleType4 구조와 동일하게
+            const drawerSectionHeight = mmToThreeUnits(1000) + basicThickness;
+            const hangingSectionHeight = getSectionHeights()[1] - basicThickness;
             const lowerSectionHeight = getSectionHeights()[0];
             const lowerSectionCenterY = -height/2 + basicThickness + lowerSectionHeight / 2 - basicThickness;
             const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 + basicThickness/2;
+            const lowerPanelY = -height/2 + drawerSectionHeight/2;
+            const upperPanelY = -height/2 + drawerSectionHeight + hangingSectionHeight/2;
             
             return getSectionHeights().map((sectionHeight: number, index: number) => {
               let currentYPosition = -height/2 + basicThickness;
@@ -89,12 +93,12 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               return (
                 <React.Fragment key={`side-panels-${index}`}>
                   {index === 0 ? (
-                    // 하부 섹션: 원래 높이 그대로
+                    // 하부 섹션: 1000mm + 18mm
                     <>
                       {/* 왼쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, sectionHeight, depth]}
-                        position={[-width/2 + basicThickness/2, sectionCenterY, 0]}
+                        args={[basicThickness, drawerSectionHeight, depth]}
+                        position={[-width/2 + basicThickness/2, lowerPanelY, 0]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -103,8 +107,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                       
                       {/* 오른쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, sectionHeight, depth]}
-                        position={[width/2 - basicThickness/2, sectionCenterY, 0]}
+                        args={[basicThickness, drawerSectionHeight, depth]}
+                        position={[width/2 - basicThickness/2, lowerPanelY, 0]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -112,22 +116,22 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                       />
                     </>
                   ) : (
-                    // 상부 섹션: 측판을 Y축으로 18mm 아래로 이동 (높이는 그대로)
+                    // 상부 섹션: 18mm 줄어든 높이
                     <>
-                      {/* 왼쪽 측면 판재 - Y축으로 18mm 아래로 이동 */}
+                      {/* 왼쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, sectionHeight, depth]}
-                        position={[-width/2 + basicThickness/2, lowerTopPanelY + basicThickness + sectionHeight/2 - mmToThreeUnits(9) - mmToThreeUnits(18), 0]}
+                        args={[basicThickness, hangingSectionHeight, depth]}
+                        position={[-width/2 + basicThickness/2, upperPanelY, 0]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                       />
                       
-                      {/* 오른쪽 측면 판재 - Y축으로 18mm 아래로 이동 */}
+                      {/* 오른쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, sectionHeight, depth]}
-                        position={[width/2 - basicThickness/2, lowerTopPanelY + basicThickness + sectionHeight/2 - mmToThreeUnits(9) - mmToThreeUnits(18), 0]}
+                        args={[basicThickness, hangingSectionHeight, depth]}
+                        position={[width/2 - basicThickness/2, upperPanelY, 0]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
