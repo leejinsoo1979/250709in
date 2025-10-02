@@ -335,22 +335,22 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         currentZoom: controls.object.zoom
       });
       
-      // 저장된 초기 상태로 리셋 (카메라 위치 버튼 눌렀을 때의 상태)
-      const savedTarget = initialCameraSetup.current.target2D;
+      // 저장된 초기 상태로 리셋
       const savedPosition = initialCameraSetup.current.position2D;
       const savedUp = initialCameraSetup.current.up2D;
       const savedZoom = initialCameraSetup.current.zoom2D;
       
-      if (!savedTarget || !savedPosition || !savedZoom) {
+      if (!savedPosition || !savedZoom) {
         console.warn('⚠️ 저장된 초기 카메라 상태 없음');
         return;
       }
       
-      const target: [number, number, number] = [savedTarget.x, savedTarget.y, savedTarget.z];
+      // target은 항상 뷰어 정중앙 (0, 0, 0)
+      const target: [number, number, number] = [0, 0, 0];
       const position: [number, number, number] = [savedPosition.x, savedPosition.y, savedPosition.z];
       const up: [number, number, number] = savedUp ? [savedUp.x, savedUp.y, savedUp.z] : [0, 1, 0];
       
-      console.log('📸 2D 카메라 리셋 (저장된 초기 상태)', {
+      console.log('📸 2D 카메라 리셋 (뷰어 정중앙)', {
         view: view2DDirection,
         target,
         position,
