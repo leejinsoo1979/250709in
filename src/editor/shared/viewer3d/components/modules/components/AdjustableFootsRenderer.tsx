@@ -3,8 +3,8 @@ import * as THREE from 'three';
 import { AdjustableFoot } from './AdjustableFoot';
 
 interface AdjustableFootsRendererProps {
-  width: number; // 가구 폭 (mm)
-  depth: number; // 가구 깊이 (mm)
+  width: number; // 가구 폭 (Three.js units)
+  depth: number; // 가구 깊이 (Three.js units)
   yOffset?: number; // Y축 오프셋 (가구 하단 위치)
   material?: THREE.Material;
   renderMode?: 'solid' | 'wireframe';
@@ -35,8 +35,9 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   }
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
-  const furnitureWidth = mmToThreeUnits(width);
-  const furnitureDepth = mmToThreeUnits(depth);
+  // width, depth는 이미 Three.js units
+  const furnitureWidth = width;
+  const furnitureDepth = depth;
   
   // Z축 위치 계산
   const frontOffset = mmToThreeUnits(27); // 앞면에서 27mm 안쪽
@@ -44,6 +45,17 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   
   const frontZ = furnitureDepth / 2 - frontOffset;
   const backZ = -furnitureDepth / 2 + backOffset;
+  
+  console.log('🦶 조절발통 위치 계산:', {
+    'width(units)': width.toFixed(2),
+    'depth(units)': depth.toFixed(2),
+    'width(mm)': (width * 100).toFixed(0) + 'mm',
+    'depth(mm)': (depth * 100).toFixed(0) + 'mm',
+    frontOffset: frontOffset.toFixed(2) + ' units (27mm)',
+    backOffset: backOffset.toFixed(2) + ' units (20mm)',
+    frontZ: frontZ.toFixed(2) + ' units',
+    backZ: backZ.toFixed(2) + ' units',
+  });
   
   // X축 위치 (좌우 모서리)
   const leftX = -furnitureWidth / 2;
