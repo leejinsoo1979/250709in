@@ -270,7 +270,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       const safetyShelfPositionMm = section.shelfPositions.find(pos => pos !== 0);
                       if (safetyShelfPositionMm !== undefined) {
                         // 안전선반 하단 Y 위치 = 섹션 하단 + 안전선반 위치 - 안전선반 두께/2
-                        topY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm) - basicThickness / 2;
+                        topY = sectionBottomY + (safetyShelfPositionMm * 0.01) - basicThickness / 2;
                       } else {
                         topY = height/2 - basicThickness;
                       }
