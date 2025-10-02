@@ -183,11 +183,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 
                 shelfThicknessElements.push(
                   <group key={`shelf-thickness-${i}`}>
-                    {/* 선반 두께 치수 텍스트 - 수직선 좌측에 표시 */}
+                    {/* 선반 두께 치수 텍스트 - 수직선 좌측에 표시 (3D 그림자) */}
                     {viewMode === '3D' && (
                       <Text
-                        renderOrder={1000}
-                        depthTest={false}
                         position={[
                           -innerWidth/2 * 0.3 - 0.8 + 0.01, 
                           shelfY - 0.01, 
@@ -199,13 +197,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         anchorY="middle"
                         rotation={[0, 0, Math.PI / 2]}
                         renderOrder={998}
+                        depthTest={false}
                       >
                         {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
                       </Text>
                     )}
                     <Text
-                        renderOrder={1000}
-                        depthTest={false}
                       position={[
                         viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                         shelfY, 
@@ -216,7 +213,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
-                      renderOrder={999}
+                      renderOrder={1000}
+                      depthTest={false}
                     >
                       {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
                     </Text>
