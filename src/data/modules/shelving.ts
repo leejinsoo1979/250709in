@@ -432,7 +432,6 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number, slotWidths?
       heightType: 'absolute', 
       height: bottomHeight,
       count: 1, // 상판 1개
-      shelfPositions: [0], // 위치 명시 (ShelfRenderer 호출용)
       isTopFinishPanel: true // 최상단 마감 패널 추가 (상부 섹션 하부판과 맞닿음)
     },
     { 
