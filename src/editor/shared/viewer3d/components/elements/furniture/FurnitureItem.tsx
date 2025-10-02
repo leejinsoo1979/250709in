@@ -1616,26 +1616,59 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }}
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
-          <mesh
-            ref={highlightMeshRef}
-            position={[0, 0, 0]}
-            renderOrder={999}
-            userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
-          >
-            <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
-            <meshBasicMaterial
-              color={selectionHighlightColor}
-              transparent
-              opacity={0.12}
-              depthWrite={false}
-              depthTest={false}
-              toneMapped={false}
-            />
+          <>
+            {/* 빛나는 윤곽선 효과 */}
+            <mesh
+              ref={highlightMeshRef}
+              position={[0, 0, 0]}
+              renderOrder={999}
+              userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
+            >
+              <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
+              <meshBasicMaterial
+                color={selectionHighlightColor}
+                transparent
+                opacity={0.08}
+                depthWrite={false}
+                depthTest={false}
+                toneMapped={false}
+              />
+            </mesh>
+            
+            {/* 외곽 빛나는 윤곽선 (더 두껍게) */}
+            <lineSegments>
+              <edgesGeometry args={[new THREE.BoxGeometry(width + highlightPadding * 1.5, height + highlightPadding * 1.5, depth + highlightPadding * 1.5)]} />
+              <lineBasicMaterial 
+                color={selectionHighlightColor}
+                linewidth={3}
+                transparent
+                opacity={0.9}
+              />
+            </lineSegments>
+            
+            {/* 내부 윤곽선 (기본) */}
             <Edges
               color={selectionHighlightColor}
-              scale={1.001}
+              scale={1.002}
+              linewidth={2}
             />
-          </mesh>
+            
+            {/* 발광 효과를 위한 추가 메쉬 */}
+            <mesh
+              position={[0, 0, 0]}
+              renderOrder={998}
+            >
+              <boxGeometry args={[width + highlightPadding * 2, height + highlightPadding * 2, depth + highlightPadding * 2]} />
+              <meshBasicMaterial
+                color={selectionHighlightColor}
+                transparent
+                opacity={0.15}
+                depthWrite={false}
+                side={THREE.BackSide}
+                blending={THREE.AdditiveBlending}
+              />
+            </mesh>
+          </>
         )}
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
         {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && (() => {
