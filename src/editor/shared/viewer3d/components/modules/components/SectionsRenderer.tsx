@@ -258,11 +258,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       bottomY = sectionBottomY + basicThickness * 2 + mmToThreeUnits(9);
                       console.log('🔵 바닥판 있음 - bottomY 조정:', bottomY * 100 + 'mm');
                     }
-                    // hanging 섹션에서 안전선반이 없는 경우, bottomY를 18mm 아래로 조정
-                    else if (section.type === 'hanging' && (!section.shelfPositions || section.shelfPositions.length === 0)) {
-                      // 안전선반이 없으면 18mm(basicThickness) 아래로 연장
-                      bottomY = sectionBottomY;
-                    }
+                    // hanging 섹션에서 안전선반이 없는 경우에도 중간 구분 패널 상단 유지
+                    // (별도 조정 없음 - bottomY = sectionBottomY + basicThickness 그대로 사용)
                   }
                   
                   // 디버깅: hanging 섹션의 치수 계산 확인
