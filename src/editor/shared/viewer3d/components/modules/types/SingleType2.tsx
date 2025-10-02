@@ -6,6 +6,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import DoorModule from '../DoorModule';
+import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 
 // 독립적인 엣지 표시를 위한 박스 컴포넌트
 const BoxWithEdges: React.FC<{
@@ -318,6 +319,17 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           slotIndex={slotIndex}
         />
       )}
+      
+      {/* 조절발통 (네 모서리) */}
+      <AdjustableFootsRenderer
+        width={width}
+        depth={depth}
+        yOffset={-height / 2}
+        renderMode={renderMode}
+        isHighlighted={false}
+        isFloating={false}
+        baseHeight={spaceInfo?.baseConfig?.height || 65}
+      />
     </>
   );
 };
