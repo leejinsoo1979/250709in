@@ -135,19 +135,45 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     prevModuleIdsRef.current = currentIds;
   }, [placedModules]);
 
+  // 좌/우측 뷰에서는 해당 측면에 가장 가까운 가구만 필터링
+  const filteredModules = React.useMemo(() => {
+    if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
+      if (placedModules.length === 0) return [];
+      
+      // 가장 왼쪽/오른쪽 가구 찾기
+      if (view2DDirection === 'left') {
+        // 가장 왼쪽 가구 (position.x가 가장 작은 가구)
+        const leftmost = placedModules.reduce((min, module) => 
+          module.position.x < min.position.x ? module : min
+        );
+        return [leftmost];
+      } else {
+        // 가장 오른쪽 가구 (position.x가 가장 큰 가구)
+        const rightmost = placedModules.reduce((max, module) => 
+          module.position.x > max.position.x ? module : max
+        );
+        return [rightmost];
+      }
+    }
+    return placedModules;
+  }, [placedModules, viewMode, view2DDirection]);
+  
   console.log('🔥🔥 PlacedFurnitureContainer 렌더링 시작:', {
-    가구개수: placedModules.length,
-    가구IDs: placedModules.map(m => m.id),
-    가구상세: placedModules.map(m => ({
+    가구개수: filteredModules.length,
+    가구IDs: filteredModules.map(m => m.id),
+    가구상세: filteredModules.map(m => ({
       id: m.id,
       slotIndex: m.slotIndex,
       position: m.position.x.toFixed(3)
-    }))
+    })),
+    viewMode,
+    view2DDirection,
+    원본가구개수: placedModules.length
   });
 
   return (
     <group>
-      {placedModules.map((placedModule, index) => {
+      {filteredModules.map((placedModule, index) => {
         const isDragMode = selectionState.dragMode;
         const isEditMode = activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
         const isDraggingThis = dragHandlers.draggingModuleId === placedModule.id;
