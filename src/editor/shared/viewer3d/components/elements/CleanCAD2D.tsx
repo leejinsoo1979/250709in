@@ -686,6 +686,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {/* 전체 폭 치수 텍스트 - Text 3D 사용 */}
               {(showDimensionsText || isStep2) && (
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[(actualLeftEdge + actualRightEdge) / 2, topDimensionY + mmToThreeUnits(40), 0.01]}
                   fontSize={largeFontSize}
                   color={textColor}
@@ -764,6 +766,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 좌측 치수 텍스트 */}
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
               position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
               fontSize={baseFontSize}
               color={dimensionColor}
@@ -836,6 +840,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 우측 치수 텍스트 */}
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
               position={[rightEdge - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
               fontSize={baseFontSize}
               color={dimensionColor}
@@ -911,6 +917,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 {(showDimensionsText || isStep2) && (
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[(mainStartX + mainEndX) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
                     fontSize={smallFontSize}
                     color={textColor}
@@ -965,6 +973,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 {(showDimensionsText || isStep2) && (
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[(droppedStartX + droppedEndX) / 2, subDimensionY + mmToThreeUnits(30), 0.01]}
                     fontSize={smallFontSize}
                     color={textColor}
@@ -1119,6 +1129,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {/* 좌측 치수 텍스트 */}
                 {showDimensionsText && (
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[leftOffset + mmToThreeUnits(leftValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
@@ -1177,6 +1189,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 좌측 프레임 치수 텍스트 */}
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
               position={[leftOffset + mmToThreeUnits(frameSize.left) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
               fontSize={baseFontSize}
               color={textColor}
@@ -1274,6 +1288,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 우측 치수 텍스트 */}
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) / 2, topDimensionY - mmToThreeUnits(150), 0.01]}
                   fontSize={baseFontSize}
                   color={dimensionColor}
@@ -1332,6 +1348,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 우측 프레임 치수 텍스트 */}
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
               position={[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right) / 2, topDimensionY - mmToThreeUnits(90), 0.01]}
               fontSize={baseFontSize}
               color={textColor}
@@ -1465,6 +1483,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 단내림 구간 높이 텍스트 */}
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[leftDimensionX + leftOffset - mmToThreeUnits(60), mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight / 2), 0.01]}
                   fontSize={largeFontSize}
                   color={textColor}
@@ -1500,6 +1520,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 전체 높이 텍스트 */}
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[leftDimensionX + leftOffset - mmToThreeUnits(60), spaceHeight / 2, 0.01]}
                   fontSize={largeFontSize}
                   color={textColor}
@@ -1538,6 +1560,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 전체 높이 치수 텍스트 - Text 3D 사용 */}
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
               position={[leftDimensionX + leftOffset - mmToThreeUnits(60), spaceHeight / 2, 0.01]}
               fontSize={largeFontSize}
               color={textColor}
@@ -1622,6 +1646,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={2}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[rightDimensionX + mmToThreeUnits(100) + mmToThreeUnits(30), mmToThreeUnits(floatHeight / 2), 0.01]}
                     fontSize={baseFontSize * 0.9}
                     color={textColor}
@@ -1670,6 +1696,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={0.5}
                 />
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(bottomFrameHeight / 2), 0.01]}
                   fontSize={baseFontSize}
                   color={textColor}
@@ -1700,6 +1728,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={0.5}
                 />
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight / 2), 0.01]}
                   fontSize={baseFontSize}
                   color={textColor}
@@ -1729,6 +1759,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                 />
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(spaceInfo.height - topFrameHeight / 2), 0.01]}
                   fontSize={baseFontSize}
                   color={spaceInfo.surroundType === 'no-surround' ? colors.primary : "black"}
@@ -1894,6 +1926,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 가구 치수 텍스트 - Text 사용 */}
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
               position={[actualPositionX, dimY - mmToThreeUnits(30), 0.01]}
               fontSize={baseFontSize}
               color={dimensionColor}
@@ -1968,6 +2002,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 기둥 치수 텍스트 */}
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
               position={[column.position[0], dimY - mmToThreeUnits(30), 0.01]}
               fontSize={baseFontSize}
               color="#FF0000"
@@ -2057,6 +2093,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 {(showDimensionsText || isStep2) && (
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[(mainStartX + mainEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(30)]}
                     fontSize={smallFontSize}
                     color={textColor}
@@ -2112,6 +2150,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 {(showDimensionsText || isStep2) && (
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[(droppedStartX + droppedEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(30)]}
                     fontSize={smallFontSize}
                     color={textColor}
@@ -2239,6 +2279,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {/* 전체 깊이 치수 텍스트 */}
           {(showDimensionsText || isStep2) && (
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
               position={[leftDimensionX - mmToThreeUnits(60), topDimensionY, spaceZOffset + panelDepth / 2]}
               fontSize={largeFontSize}
               color={textColor}
@@ -2301,6 +2343,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {/* 전체 높이 치수 텍스트 */}
           {(showDimensionsText || isStep2) && (
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
               position={[leftDimensionX - mmToThreeUnits(60), actualSpaceHeight / 2, spaceZOffset - mmToThreeUnits(200)]}
               fontSize={largeFontSize}
               color={textColor}
@@ -2358,6 +2402,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 치수 텍스트 */}
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[0, dimY + mmToThreeUnits(40), furnitureZOffset]}
                   fontSize={baseFontSize}
                   color={textColor}
@@ -2411,6 +2457,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           
           {/* 전체 높이 치수 텍스트 */}
           <Text
+                  renderOrder={1000}
+                  depthTest={false}
             position={[0, actualSpaceHeight / 2, spaceZOffset - mmToThreeUnits(240)]}
             fontSize={largeFontSize}
             color={textColor}
@@ -2489,6 +2537,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={0.5}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[0, mmToThreeUnits(bottomFrameHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
@@ -2519,6 +2569,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={0.5}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[0, bottomFrameTopY + mmToThreeUnits(cabinetPlacementHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
@@ -2548,6 +2600,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[0, cabinetAreaTopY + mmToThreeUnits(topFrameHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
@@ -2642,6 +2696,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               
               {/* 치수 텍스트 */}
               <Text
+                  renderOrder={1000}
+                  depthTest={false}
                 position={[furnitureX, dimY + mmToThreeUnits(40), (furnitureBackZ + furnitureFrontZ) / 2]}
                 fontSize={baseFontSize}
                 color={textColor}
@@ -2691,6 +2747,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           
           {/* 전체 폭 치수 텍스트 */}
           <Text
+                  renderOrder={1000}
+                  depthTest={false}
             position={[0, actualSpaceHeight + mmToThreeUnits(140), 0]}
             fontSize={largeFontSize}
             color={textColor}
@@ -2756,6 +2814,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[(mainStartX + mainEndX) / 2, subDimensionY + mmToThreeUnits(30), 0]}
                     fontSize={smallFontSize}
                     color={textColor}
@@ -2821,6 +2881,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[(droppedStartX + droppedEndX) / 2, subDimensionY + mmToThreeUnits(30), 0]}
                     fontSize={smallFontSize}
                     color={textColor}
@@ -2933,6 +2995,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           {/* 전체 깊이 치수 텍스트 */}
           {(showDimensionsText || isStep2) && (
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
               position={[rightDimensionX + mmToThreeUnits(60), topDimensionY, spaceZOffset + panelDepth / 2]}
               fontSize={largeFontSize}
               color={textColor}
@@ -3001,6 +3065,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {/* 단내림 구간 높이 텍스트 */}
                   {(showDimensionsText || isStep2) && (
                     <Text
+                  renderOrder={1000}
+                  depthTest={false}
                       position={[rightDimensionX + mmToThreeUnits(60), mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight / 2), spaceZOffset - mmToThreeUnits(200)]}
                       fontSize={largeFontSize}
                       color={textColor}
@@ -3038,6 +3104,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {/* 전체 높이 텍스트 */}
                   {(showDimensionsText || isStep2) && (
                     <Text
+                  renderOrder={1000}
+                  depthTest={false}
                       position={[rightDimensionX + mmToThreeUnits(60), actualSpaceHeight / 2, spaceZOffset - mmToThreeUnits(200)]}
                       fontSize={largeFontSize}
                       color={textColor}
@@ -3078,6 +3146,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {/* 전체 높이 치수 텍스트 */}
               {(showDimensionsText || isStep2) && (
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[rightDimensionX + mmToThreeUnits(60), actualSpaceHeight / 2, spaceZOffset - mmToThreeUnits(200)]}
                   fontSize={largeFontSize}
                   color={textColor}
@@ -3167,6 +3237,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={0.5}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[spaceWidth, mmToThreeUnits(bottomFrameHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
@@ -3197,6 +3269,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={0.5}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[spaceWidth, mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
@@ -3226,6 +3300,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[spaceWidth, mmToThreeUnits(spaceInfo.height - topFrameHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
@@ -3303,6 +3379,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               
               {/* 치수 텍스트 */}
               <Text
+                  renderOrder={1000}
+                  depthTest={false}
                 position={[spaceWidth, dimY - mmToThreeUnits(30), spaceZOffset + moduleDepth / 2]}
                 fontSize={baseFontSize}
                 color={dimensionColor}
@@ -3382,6 +3460,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 전체 폭 치수 텍스트 - 상단뷰용 회전 적용 */}
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[0, spaceHeight + 0.1, mainDimZ - mmToThreeUnits(40)]}
                   fontSize={largeFontSize}
                   color={textColor}
@@ -3474,6 +3554,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   
                   {/* 좌측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[spaceXOffset + mmToThreeUnits(leftValue)/2, spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
@@ -3519,6 +3601,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 좌측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[spaceXOffset + mmToThreeUnits(leftValue / 2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
                   fontSize={baseFontSize}
                   color={textColor}
@@ -3582,6 +3666,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   
                   {/* 우측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue/2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
@@ -3627,6 +3713,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 우측 프레임 치수 텍스트 - 상단뷰용 회전 적용 */}
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[spaceXOffset + spaceWidth - mmToThreeUnits(rightValue / 2), spaceHeight + 0.1, frameDimZ - mmToThreeUnits(30)]}
                   fontSize={baseFontSize}
                   color={textColor}
@@ -3694,6 +3782,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={0.5}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[(mainStartX + mainEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(40)]}
                     fontSize={smallFontSize}
                     color={textColor}
@@ -3747,6 +3837,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={0.5}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[(droppedStartX + droppedEndX) / 2, spaceHeight + 0.1, subDimensionZ - mmToThreeUnits(40)]}
                     fontSize={smallFontSize}
                     color={textColor}
@@ -3979,6 +4071,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 캐비넷 깊이 텍스트 */}
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
               position={[leftDimensionX - mmToThreeUnits(40), spaceHeight + 0.1, (deepestBackZ + deepestFrontZ) / 2]}
               fontSize={baseFontSize}
               color={dimensionColor}
@@ -4114,6 +4208,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
               {/* 캐비넷 깊이 텍스트 */}
             <Text
+                  renderOrder={1000}
+                  depthTest={false}
                 position={[rightDimensionX + mmToThreeUnits(40), spaceHeight + 0.1, (deepestBackZ + deepestFrontZ) / 2]}
               fontSize={baseFontSize}
               color={dimensionColor}
@@ -4308,6 +4404,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   
                   {/* 좌측 프레임 앞면에서 가장 깊은 가구 뒷면까지의 거리 표시 */}
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[leftDimensionX - mmToThreeUnits(40), spaceHeight + 0.1, deepestModuleBackZ + (leftFrameFrontZ - deepestModuleBackZ) / 2]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
@@ -4385,6 +4483,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               
               {/* 캐비넷 폭 치수 텍스트 - 상단뷰용 회전 적용 */}
               <Text
+                  renderOrder={1000}
+                  depthTest={false}
                 position={[actualPositionX, spaceHeight + 0.1, dimZ - mmToThreeUnits(30)]}
                 fontSize={baseFontSize}
                 color={dimensionColor}
@@ -4499,6 +4599,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               
               {/* 기둥 치수 텍스트 - 상단뷰용 회전 적용 */}
               <Text
+                  renderOrder={1000}
+                  depthTest={false}
                 position={[column.position[0], spaceHeight + 0.1, dimZ - mmToThreeUnits(30)]}
                 fontSize={baseFontSize}
                 color="#FF0000"
@@ -4652,6 +4754,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               
               {/* 거리 텍스트 */}
               <Text
+                  renderOrder={1000}
+                  depthTest={false}
                 position={[rightDimensionX + mmToThreeUnits(40), spaceHeight + 0.1, (rightmostBackZ + rightFrameFrontZ) / 2]}
                 fontSize={baseFontSize}
                 color={dimensionColor}
@@ -4802,6 +4906,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       lineWidth={0.5}
                     />
                     <Text
+                  renderOrder={1000}
+                  depthTest={false}
                       position={[(leftDoorLeftX + leftDoorRightX) / 2, spaceHeight + 0.1, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
@@ -4841,6 +4947,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       lineWidth={0.5}
                     />
                     <Text
+                  renderOrder={1000}
+                  depthTest={false}
                       position={[(rightDoorLeftX + rightDoorRightX) / 2, spaceHeight + 0.1, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
@@ -4890,6 +4998,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={0.5}
                   />
                   <Text
+                  renderOrder={1000}
+                  depthTest={false}
                     position={[(leftDoorLeftX + rightDoorRightX) / 2, spaceHeight + 0.1, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 120 : 100)]}
                     fontSize={baseFontSize}
                     color={dimensionColor}
@@ -4933,6 +5043,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 {/* 도어 두께 텍스트 (중앙 위치) */}
                 <Text
+                  renderOrder={1000}
+                  depthTest={false}
                   position={[spaceXOffset - mmToThreeUnits(240), spaceHeight + 0.1, -mmToThreeUnits(9)]}
                   fontSize={baseFontSize}
                   color={dimensionColor}
