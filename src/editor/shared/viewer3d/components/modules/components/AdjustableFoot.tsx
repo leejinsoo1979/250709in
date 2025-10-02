@@ -44,14 +44,14 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   
   return (
     <group position={position}>
-      {/* 상단 플레이트 (64×64mm, 두께 7mm) */}
-      <mesh position={[0, plateHeight / 2, 0]}>
+      {/* 상단 플레이트 (64×64mm, 두께 7mm) - 윗면이 가구 바닥판 아래에 부착 */}
+      <mesh position={[0, -plateHeight / 2, 0]}>
         <boxGeometry args={[plateWidth, plateHeight, plateWidth]} />
         <primitive object={finalMaterial} />
       </mesh>
       
-      {/* 원통형 발통 (지름 56mm) */}
-      <mesh position={[0, -cylinderHeight / 2, 0]} rotation={[0, 0, 0]}>
+      {/* 원통형 발통 (지름 56mm) - 플레이트 아래에 위치 */}
+      <mesh position={[0, -plateHeight - cylinderHeight / 2, 0]} rotation={[0, 0, 0]}>
         <cylinderGeometry args={[cylinderRadius, cylinderRadius, cylinderHeight, 32]} />
         <primitive object={finalMaterial} />
       </mesh>
@@ -59,13 +59,13 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
       {renderMode === 'wireframe' && (
         <>
           {/* 플레이트 외곽선 */}
-          <lineSegments>
+          <lineSegments position={[0, -plateHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(plateWidth, plateHeight, plateWidth)]} />
             <lineBasicMaterial attach="material" color="#000000" />
           </lineSegments>
           
           {/* 원통 외곽선 */}
-          <lineSegments position={[0, -cylinderHeight / 2, 0]}>
+          <lineSegments position={[0, -plateHeight - cylinderHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32)]} />
             <lineBasicMaterial attach="material" color="#000000" />
           </lineSegments>
