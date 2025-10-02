@@ -700,10 +700,68 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         args={[innerWidth, basicThickness, depth]}
         position={[0, height/2 - basicThickness/2, 0]}
         material={material}
-        renderMode={useSpace3DView().renderMode}
+        renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
       />
+      
+      {/* 상단 상판 두께 치수 표시 */}
+      {showDimensions && (
+        <group>
+          {/* 상판 두께 텍스트 */}
+          {viewMode === '3D' && (
+            <Text
+              position={[
+                -innerWidth/2 * 0.3 - 0.8 + 0.01, 
+                height/2 - basicThickness/2 - 0.01,
+                adjustedDepthForShelves/2 + 0.1 - 0.01
+              ]}
+              fontSize={baseFontSize}
+              color="rgba(0, 0, 0, 0.3)"
+              anchorX="center"
+              anchorY="middle"
+              rotation={[0, 0, Math.PI / 2]}
+              renderOrder={998}
+            >
+              {Math.round(basicThickness * 100)}
+            </Text>
+          )}
+          <Text
+            position={[
+              viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
+              height/2 - basicThickness/2,
+              viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+            ]}
+            fontSize={baseFontSize}
+            color={dimensionColor}
+            anchorX="center"
+            anchorY="middle"
+            rotation={[0, 0, Math.PI / 2]}
+            renderOrder={999}
+          >
+            {Math.round(basicThickness * 100)}
+          </Text>
+          
+          {/* 상판 두께 수직선 */}
+          <Line
+            points={[
+              [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
+              [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+            ]}
+            color={dimensionColor}
+            lineWidth={1}
+          />
+          {/* 수직선 양끝 점 */}
+          <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+            <sphereGeometry args={[0.03, 8, 8]} />
+            <meshBasicMaterial color={dimensionColor} />
+          </mesh>
+          <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+            <sphereGeometry args={[0.03, 8, 8]} />
+            <meshBasicMaterial color={dimensionColor} />
+          </mesh>
+        </group>
+      )}
       
       {/* 하단 판재 - 좌/우 분리 */}
       <>
