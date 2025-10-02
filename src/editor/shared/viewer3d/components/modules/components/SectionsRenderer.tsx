@@ -294,7 +294,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         centerY, 
                         viewMode === '3D' 
                           ? depth/2 + 0.1
-                          : basicThickness + 0.2
+                          : depth/2 + 1.0
                       ]}
                       rotation={[0, 0, Math.PI / 2]}
                       forceShow={true}
@@ -303,19 +303,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     {/* 수직 연결선 - 왼쪽으로 이동 */}
                     <NativeLine
                       points={[
-                        [-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + 0.15],
-                        [-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + 0.15]
+                        [-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
+                        [-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
                       dashed={false}
                     />
                     {/* 수직 연결선 양끝 점 */}
-                    <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + 0.15]}>
+                    <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={dimensionColor} />
                     </mesh>
-                    <mesh position={[-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : basicThickness + 0.15]}>
+                    <mesh position={[-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={dimensionColor} />
                     </mesh>
