@@ -48,10 +48,10 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const rightX = furnitureWidth / 2 - plateHalf;
   
   // Z축 위치
-  // 앞쪽: 기본 위치에서 50mm 앞으로 (하부프레임 뒷면과 맞닿음)
-  // 뒤쪽: 기본 위치에서 60mm 더 뒤로 (뒷부분 꼭지점과 완전히 맞닿음)
-  const frontZ = furnitureDepth / 2 - plateHalf + mmToThreeUnits(50);
-  const backZ = -furnitureDepth / 2 + plateHalf - mmToThreeUnits(60);
+  // 앞쪽: 하부프레임 뒷면과 맞닿도록 50mm 뒤로
+  // 뒤쪽: 뒷부분 꼭지점과 맞닿도록 plateHalf만큼 안쪽
+  const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(50);
+  const backZ = -furnitureDepth / 2 + plateHalf;
   
   console.log('🦶 조절발통 위치 계산:', {
     'width(units)': width.toFixed(2),
