@@ -339,23 +339,18 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const initialZoom = 1.0;
       const spaceHeight = spaceInfo?.height || 2400;
       const target = calculateCameraTargetUtil(spaceHeight);
-      
-      // 저장된 초기 위치와 줌이 있으면 사용, 없으면 기본값
-      const initialPosition = initialCameraSetup.current.position2D 
-        ? initialCameraSetup.current.position2D.clone() 
-        : new THREE.Vector3(0, target[1], cameraPosition?.[2] || 10);
-      
-      const initialZoomValue = initialCameraSetup.current.zoom2D ?? initialZoom;
+      const initialDistance = cameraPosition?.[2] || 10;
       
       console.log('📸 2D 모드 초기화', {
         target,
-        position: initialPosition.toArray(),
-        zoom: initialZoomValue
+        initialDistance,
+        initialZoom
       });
       
+      // 항상 계산된 정중앙과 초기 거리 사용 (저장된 값 무시)
       controls.target.set(...target);
-      controls.object.position.copy(initialPosition);
-      controls.object.zoom = initialZoomValue;
+      controls.object.position.set(0, target[1], initialDistance);
+      controls.object.zoom = initialZoom;
       controls.object.updateProjectionMatrix();
       
       controls.object.up.set(0, 1, 0);
