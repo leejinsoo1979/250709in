@@ -109,8 +109,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging} 
           isEditMode={isEditMode} 
           isHighlighted={isHighlighted}
-          
-          
+          moduleData={moduleData}
+          spaceInfo={spaceInfo}
         >
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
