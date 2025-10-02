@@ -186,15 +186,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               // 선반 프레임 두께 치수 추가
               const shelfThicknessElements = [];
               
-              // 각 선반의 두께 표시 - 바닥판(position 0)만 표시, 안전선반은 제외
+              // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
-                // 안전선반(position != 0)은 두께 치수 표시 안함
-                if (shelfPos !== 0) {
-                  return;
-                }
-                
                 // positionMm === 0인 경우 바닥판: 섹션 하단에서 basicThickness/2 위
-                const shelfY = (-innerHeight / 2) + basicThickness / 2;
+                const shelfY = shelfPos === 0 
+                  ? (-innerHeight / 2) + basicThickness / 2
+                  : (-innerHeight / 2) + mmToThreeUnits(shelfPos);
                 const shelfTopY = shelfY + basicThickness / 2;
                 const shelfBottomY = shelfY - basicThickness / 2;
                 
