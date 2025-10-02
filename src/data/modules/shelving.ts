@@ -421,7 +421,8 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number, slotWidths?
       type: 'hanging', // 하부장도 옷걸이 구역
       heightType: 'absolute', 
       height: bottomHeight,
-      shelfPositions: [bottomHeight] // 하부 섹션 상단에 상판 추가 (상부 섹션 하부판과 맞닿음)
+      shelfPositions: [], // 중간에는 선반 없음
+      isTopFinishPanel: true // 최상단 마감 패널 추가 (상부 섹션 하부판과 맞닿음)
     },
     { 
       type: 'hanging', 
