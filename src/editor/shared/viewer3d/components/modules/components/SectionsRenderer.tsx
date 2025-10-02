@@ -374,8 +374,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             </group>
           )}
           
-          {/* 첫 번째 섹션의 하단 프레임 두께 표시 - Type4(4drawer-hanging)는 제외 */}
-          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === 0 && !(furnitureId?.includes('4drawer-hanging')) && (
+          {/* 첫 번째 섹션의 하단 프레임 두께 표시 */}
+          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === 0 && (
             <group>
               {/* 하단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
               {viewMode === '3D' && (
@@ -437,7 +437,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           
           
           {/* 마지막 섹션의 상단 프레임 두께 표시 */}
-          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === allSections.length - 1 && (
+          {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === allSections.length - 1 && !(
+            section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0)
+          ) && (
             <group>
               {/* 상단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
               {viewMode === '3D' && (
