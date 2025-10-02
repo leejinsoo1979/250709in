@@ -396,6 +396,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         isHighlighted={isHighlighted}
         isFloating={isFloating}
         baseHeight={spaceInfo?.baseConfig?.height || 65}
+        viewMode={viewMode}
+        view2DDirection={view2DDirection}
       />
     </group>
   );
