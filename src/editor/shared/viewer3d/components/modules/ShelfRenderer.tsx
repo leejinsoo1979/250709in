@@ -188,10 +188,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
-                // positionMm === 0인 경우 바닥판: 섹션 하단에서 basicThickness/2 위
-                const shelfY = shelfPos === 0 
-                  ? (-innerHeight / 2) + basicThickness / 2
-                  : (-innerHeight / 2) + mmToThreeUnits(shelfPos);
+                // Type4 바닥판(position 0)은 치수 표시 안함 (내경 치수 가이드선만 사용)
+                if (shelfPos === 0) {
+                  return;
+                }
+                
+                const shelfY = (-innerHeight / 2) + mmToThreeUnits(shelfPos);
                 const shelfTopY = shelfY + basicThickness / 2;
                 const shelfBottomY = shelfY - basicThickness / 2;
                 
@@ -243,17 +245,15 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       lineWidth={1}
                       dashed={false}
                     />
-                    {/* 선반 두께 수직선 양끝 점 - 바닥판(shelfPos === 0)일 때는 아래쪽 점만 제외 */}
+                    {/* 선반 두께 수직선 양끝 점 */}
                     <mesh position={[-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={dimensionColor} />
                     </mesh>
-                    {shelfPos !== 0 && (
-                      <mesh position={[-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
-                        <sphereGeometry args={[0.05, 8, 8]} />
-                        <meshBasicMaterial color={dimensionColor} />
-                      </mesh>
-                    )}
+                    <mesh position={[-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
+                      <sphereGeometry args={[0.05, 8, 8]} />
+                      <meshBasicMaterial color={dimensionColor} />
+                    </mesh>
                   </group>
                 );
               });
