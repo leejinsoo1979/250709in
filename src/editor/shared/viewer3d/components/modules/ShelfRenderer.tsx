@@ -86,9 +86,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       <group position={[0, yOffset, 0]}>
         {shelfPositions.map((positionMm, i) => {
           // 섹션 하단 기준 위치를 Three.js 좌표로 변환
-          // positionMm이 0이면 바닥판(섹션 하단에 배치)
+          // positionMm이 0이면 바닥판(중간 구분 패널 위에 배치)
           const relativeYPosition = positionMm === 0 
-            ? (-innerHeight / 2) + basicThickness / 2  // 바닥판: 선반 중심이 섹션 하단에서 basicThickness/2 위
+            ? (-innerHeight / 2) + basicThickness / 2 + basicThickness  // 바닥판: 중간 구분 패널 위
             : (-innerHeight / 2) + mmToThreeUnits(positionMm);
           
           return (
