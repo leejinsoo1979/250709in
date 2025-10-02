@@ -325,9 +325,44 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         zoom: controls.object.zoom
       });
     } else if (controlsRef.current && viewMode === '2D') {
-      // 2D 모드에서는 아무것도 하지 않음 - 현재 상태 그대로 유지
-      console.log('🎯 2D 모드에서 스페이스 키 - 아무 동작 안함');
-      // 스페이스 키를 눌러도 카메라 위치, zoom, 각도 모두 현재 상태 유지
+      // 2D 모드에서도 3D와 동일하게 카메라 리셋
+      const controls = controlsRef.current;
+      
+      console.log('🎯 2D 카메라 리셋 시작:', {
+        type: controls.object.type,
+        currentPosition: controls.object.position.toArray(),
+        currentTarget: controls.target.toArray(),
+        currentZoom: controls.object.zoom
+      });
+      
+      const initialZoom = 1.0; // 초기 줌 레벨
+      
+      // 공간 정보 계산
+      const spaceHeight = spaceInfo?.height || 2400;
+      const spaceWidth = spaceInfo?.width || 3000;
+      // 초기 거리: cameraPosition의 Z 값 사용 (기본값 10)
+      const initialDistance = cameraPosition?.[2] || 10;
+      
+      // 타겟 위치 계산
+      const target = calculateCameraTargetUtil(spaceHeight);
+      
+      // 타겟 설정
+      controls.target.set(...target);
+      
+      // 2D는 OrthographicCamera이므로 줌과 거리 모두 초기값으로 리셋
+      controls.object.position.set(0, target[1], initialDistance);
+      controls.object.zoom = initialZoom;
+      controls.object.updateProjectionMatrix();
+      
+      controls.object.up.set(0, 1, 0);
+      controls.object.lookAt(controls.target);
+      controls.update();
+      
+      console.log('🎯 2D 카메라 리셋 완료:', {
+        newPosition: controls.object.position.toArray(),
+        newTarget: controls.target.toArray(),
+        zoom: controls.object.zoom
+      });
     }
   }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode, spaceInfo, cameraMode]);
 
