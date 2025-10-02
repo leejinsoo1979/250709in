@@ -206,7 +206,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       position={[
                         viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
                         shelfY, 
-                        viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5
+                        viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0
                       ]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
@@ -222,19 +222,19 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     {/* 선반 두께 수직선 - 왼쪽으로 이동 */}
                     <NativeLine
                       points={[
-                        [-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5],
-                        [-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]
+                        [-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0],
+                        [-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
                       dashed={false}
                     />
                     {/* 선반 두께 수직선 양끝 점 */}
-                    <mesh position={[-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]}>
+                    <mesh position={[-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={dimensionColor} />
                     </mesh>
-                    <mesh position={[-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness/2 + zOffset + 0.5]}>
+                    <mesh position={[-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
                       <meshBasicMaterial color={dimensionColor} />
                     </mesh>
