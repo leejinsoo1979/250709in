@@ -190,6 +190,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               const drawerSectionHeight = mmToThreeUnits(1000) + basicThickness; // 하부 서랍 구역 1000mm + 바닥판 18mm
               const hangingSectionHeight = getSectionHeights()[1] - basicThickness; // 상부 옷장 구역 (18mm 감소)
               
+              console.log('🔴🔴🔴 Type4 측판 실제 렌더링 크기:', {
+                '하부측판높이_mm': drawerSectionHeight * 100,
+                '상부측판높이_mm': hangingSectionHeight * 100,
+                '하부측판높이_계산': `1000 + ${basicThickness * 100} = ${drawerSectionHeight * 100}mm`,
+                '상부측판높이_계산': `${getSectionHeights()[1] * 100} - ${basicThickness * 100} = ${hangingSectionHeight * 100}mm`,
+                'getSectionHeights()[1]_mm': getSectionHeights()[1] * 100,
+                'basicThickness_mm': basicThickness * 100
+              });
+              
               // 하부 측판: 바닥부터 시작
               const lowerPanelY = -height/2 + drawerSectionHeight/2;
               
