@@ -1445,7 +1445,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
-    const moduleKey = moduleId.replace(/-\d+$/, ''); // 폭 정보 제거
+    const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거 (소수점 포함)
     
     // 상부장의 경우 특별 처리
     if (moduleKey.includes('upper-cabinet')) {
