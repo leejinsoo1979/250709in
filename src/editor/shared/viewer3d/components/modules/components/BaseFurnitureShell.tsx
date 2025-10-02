@@ -188,30 +188,31 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           <>
             {(() => {
               // 1000mm = 상판18 + 내경964 + 바닥판18
-              // 하부 측판 높이 = 내경만 = 1000 - 36 = 964mm
-              const drawerSectionHeight = mmToThreeUnits(1000) - basicThickness * 2;
+              // 하부 측판 높이 = 내경만 = 964mm
+              const drawerInternalHeight = mmToThreeUnits(1000) - basicThickness * 2; // 964mm
               const hangingSectionHeight = getSectionHeights()[1] - basicThickness;
               
               console.log('🔴🔴🔴 Type4 측판 실제 렌더링 크기:', {
-                '하부측판높이_mm': drawerSectionHeight * 100,
+                '하부측판높이_mm': drawerInternalHeight * 100,
                 '상부측판높이_mm': hangingSectionHeight * 100,
-                '하부측판높이_계산': `1000 - ${basicThickness * 100 * 2} = ${drawerSectionHeight * 100}mm`,
+                '하부측판높이_계산': `1000 - ${basicThickness * 100 * 2} = ${drawerInternalHeight * 100}mm`,
                 '상부측판높이_계산': `${getSectionHeights()[1] * 100} - ${basicThickness * 100} = ${hangingSectionHeight * 100}mm`,
                 'getSectionHeights()[1]_mm': getSectionHeights()[1] * 100,
                 'basicThickness_mm': basicThickness * 100
               });
               
-              // 하부 측판: 바닥판 상단 + 18mm부터 상판 하단까지
-              const lowerPanelY = -height/2 + basicThickness + basicThickness + drawerSectionHeight/2;
+              // 하부 측판 Y 위치: 바닥판(18) + 내경 중심
+              // -height/2 = 바닥, +18 = 바닥판 상단, +964/2 = 내경 중심
+              const lowerPanelY = -height/2 + basicThickness + drawerInternalHeight/2;
               
-              // 상부 측판: 중간 구분 패널 2개(상판+바닥판) 위부터 시작
-              const upperPanelY = -height/2 + basicThickness + basicThickness + drawerSectionHeight + basicThickness * 2 + hangingSectionHeight/2;
+              // 상부 측판 Y 위치: 바닥판(18) + 내경(964) + 중간판2개(36) + 상부내경 중심
+              const upperPanelY = -height/2 + basicThickness + drawerInternalHeight + basicThickness * 2 + hangingSectionHeight/2;
               
               return (
                 <>
-                  {/* 왼쪽 하부 측판 (서랍 구역 1000mm) */}
+                  {/* 왼쪽 하부 측판 (내경 964mm) */}
                   <BoxWithEdges
-                    args={[basicThickness, drawerSectionHeight, depth]}
+                    args={[basicThickness, drawerInternalHeight, depth]}
                     position={[-innerWidth/2 - basicThickness/2, lowerPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
@@ -227,9 +228,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     isDragging={isDragging}
                   />
                   
-                  {/* 오른쪽 하부 측판 (서랍 구역 1000mm) */}
+                  {/* 오른쪽 하부 측판 (내경 964mm) */}
                   <BoxWithEdges
-                    args={[basicThickness, drawerSectionHeight, depth]}
+                    args={[basicThickness, drawerInternalHeight, depth]}
                     position={[innerWidth/2 + basicThickness/2, lowerPanelY, 0]}
                     material={material}
                     renderMode={renderMode}

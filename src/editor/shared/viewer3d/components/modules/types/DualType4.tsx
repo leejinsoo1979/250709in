@@ -72,14 +72,14 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         <>
           {(() => {
             // 1000mm = 상판18 + 내경964 + 바닥판18
-            // 하부 측판 높이 = 내경만 = 1000 - 36 = 964mm
-            const drawerSectionHeight = mmToThreeUnits(1000) - basicThickness * 2;
+            // 하부 측판 높이 = 내경만 = 964mm
+            const drawerInternalHeight = mmToThreeUnits(1000) - basicThickness * 2;
             const hangingSectionHeight = getSectionHeights()[1] - basicThickness;
             const lowerSectionHeight = getSectionHeights()[0];
             const lowerSectionCenterY = -height/2 + basicThickness + lowerSectionHeight / 2 - basicThickness;
             const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 + basicThickness/2;
-            const lowerPanelY = -height/2 + basicThickness + basicThickness + drawerSectionHeight/2;
-            const upperPanelY = -height/2 + basicThickness + basicThickness + drawerSectionHeight + basicThickness * 2 + hangingSectionHeight/2;
+            const lowerPanelY = -height/2 + basicThickness + drawerInternalHeight/2;
+            const upperPanelY = -height/2 + basicThickness + drawerInternalHeight + basicThickness * 2 + hangingSectionHeight/2;
             
             return getSectionHeights().map((sectionHeight: number, index: number) => {
               let currentYPosition = -height/2 + basicThickness;
@@ -98,7 +98,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     <>
                       {/* 왼쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, drawerSectionHeight, depth]}
+                        args={[basicThickness, drawerInternalHeight, depth]}
                         position={[-width/2 + basicThickness/2, lowerPanelY, 0]}
                         material={material}
                         renderMode={renderMode}
@@ -108,7 +108,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                       
                       {/* 오른쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, drawerSectionHeight, depth]}
+                        args={[basicThickness, drawerInternalHeight, depth]}
                         position={[width/2 - basicThickness/2, lowerPanelY, 0]}
                         material={material}
                         renderMode={renderMode}
