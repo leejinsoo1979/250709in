@@ -254,8 +254,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       
       {/* 상단 판재 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, depth]}
-        position={[0, height/2 - basicThickness/2, 0]}
+        args={[innerWidth, basicThickness, viewMode === '3D' ? depth : adjustedDepthForShelves - basicThickness]}
+        position={[
+          0, 
+          height/2 - basicThickness/2, 
+          viewMode === '3D' ? 0 : -depth/2 + (adjustedDepthForShelves - basicThickness)/2 + basicThickness
+        ]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -264,8 +268,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       
       {/* 하단 판재 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, depth]}
-        position={[0, -height/2 + basicThickness/2, 0]}
+        args={[innerWidth, basicThickness, viewMode === '3D' ? depth : adjustedDepthForShelves - basicThickness]}
+        position={[
+          0, 
+          -height/2 + basicThickness/2, 
+          viewMode === '3D' ? 0 : -depth/2 + (adjustedDepthForShelves - basicThickness)/2 + basicThickness
+        ]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
