@@ -190,7 +190,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             {(() => {
               // 하부 측판 높이 = 1000mm (바닥판 상단부터 상판 하단까지)
               const drawerSectionHeight = mmToThreeUnits(1000);
-              const hangingSectionHeight = getSectionHeights()[1] - basicThickness;
+              const hangingSectionHeight = getSectionHeights()[1];
               
               console.log('🔴🔴🔴 Type4 측판 실제 렌더링 크기:', {
                 '하부측판높이_mm': drawerSectionHeight * 100,
