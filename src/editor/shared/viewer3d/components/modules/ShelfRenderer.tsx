@@ -85,11 +85,13 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
     return (
       <group position={[0, yOffset, 0]}>
         {shelfPositions.map((positionMm, i) => {
+          // positionMm === 0인 경우는 치수만 표시하고 패널은 렌더링하지 않음 (BaseFurnitureShell에서 렌더링)
+          if (positionMm === 0) {
+            return null;
+          }
+          
           // 섹션 하단 기준 위치를 Three.js 좌표로 변환
-          // positionMm이 0이면 바닥판(섹션 하단에 배치)
-          const relativeYPosition = positionMm === 0 
-            ? (-innerHeight / 2) + basicThickness / 2  // 바닥판: 섹션 하단
-            : (-innerHeight / 2) + mmToThreeUnits(positionMm);
+          const relativeYPosition = (-innerHeight / 2) + mmToThreeUnits(positionMm);
           
           return (
             <BoxWithEdges
@@ -184,6 +186,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               // 선반 프레임 두께 치수 추가
               const shelfThicknessElements = [];
               
+              console.log('🟣 shelfPositions 배열:', shelfPositions);
+              
               // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
                 // positionMm === 0인 경우 바닥판: 섹션 하단에서 basicThickness/2 위
@@ -192,6 +196,13 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   : (-innerHeight / 2) + mmToThreeUnits(shelfPos);
                 const shelfTopY = shelfY + basicThickness / 2;
                 const shelfBottomY = shelfY - basicThickness / 2;
+                
+                console.log('🔵 선반 점 렌더링:', {
+                  shelfPos,
+                  i,
+                  'shelfPos === 0': shelfPos === 0,
+                  '아래점표시여부': shelfPos !== 0
+                });
                 
                 shelfThicknessElements.push(
                   <group key={`shelf-thickness-${i}`}>
