@@ -335,24 +335,15 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         currentZoom: controls.object.zoom
       });
       
-      // 뷰어 정중앙 (0,0,0)으로 리셋
-      const savedPosition = initialCameraSetup.current.position2D;
-      const savedZoom = initialCameraSetup.current.zoom2D;
-      
-      // 타겟은 항상 뷰어 정중앙 (0,0,0)
+      // 뷰어 정중앙 (0,0,0)으로 리셋 + 기본 zoom
       const target: [number, number, number] = [0, 0, 0];
-      
-      // position의 z값만 저장된 값 사용, x,y는 0으로 (정면)
-      const distance = savedPosition?.z || 5;
-      const position: [number, number, number] = [0, 0, distance];
-      
-      const zoom = savedZoom || 1.0;
+      const position: [number, number, number] = [0, 0, 10];
+      const zoom = 1.0;
       
       console.log('📸 2D 카메라 정중앙 리셋', {
         target,
         position,
-        zoom,
-        savedDistance: distance
+        zoom
       });
       
       controls.target.set(...target);
