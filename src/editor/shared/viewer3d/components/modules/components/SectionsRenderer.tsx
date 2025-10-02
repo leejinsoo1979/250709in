@@ -210,7 +210,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 />
                 {/* 바닥판 두께 치수 표시용 ShelfRenderer */}
                 <ShelfRenderer
-                  shelfCount={0}
+                  shelfCount={1}
                   innerWidth={innerWidth}
                   innerHeight={sectionHeight}
                   depth={adjustedDepthForShelves}
