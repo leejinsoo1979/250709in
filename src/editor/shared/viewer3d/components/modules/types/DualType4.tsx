@@ -71,14 +71,15 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         // 다중 섹션: 섹션별 분할 측면 패널
         <>
           {(() => {
-            // SingleType4 구조와 동일하게
-            const drawerSectionHeight = mmToThreeUnits(1000) + basicThickness;
+            // 1000mm = 상판18 + 내경964 + 바닥판18
+            // 하부 측판 높이 = 내경만 = 1000 - 36 = 964mm
+            const drawerSectionHeight = mmToThreeUnits(1000) - basicThickness * 2;
             const hangingSectionHeight = getSectionHeights()[1] - basicThickness;
             const lowerSectionHeight = getSectionHeights()[0];
             const lowerSectionCenterY = -height/2 + basicThickness + lowerSectionHeight / 2 - basicThickness;
             const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 + basicThickness/2;
-            const lowerPanelY = -height/2 + drawerSectionHeight/2;
-            const upperPanelY = -height/2 + drawerSectionHeight + hangingSectionHeight/2;
+            const lowerPanelY = -height/2 + basicThickness + drawerSectionHeight/2;
+            const upperPanelY = -height/2 + basicThickness + drawerSectionHeight + basicThickness + hangingSectionHeight/2;
             
             return getSectionHeights().map((sectionHeight: number, index: number) => {
               let currentYPosition = -height/2 + basicThickness;

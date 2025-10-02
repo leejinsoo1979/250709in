@@ -187,23 +187,25 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           // Type4: 좌우 측판을 상부/하부로 분할 (하부 1000mm 고정)
           <>
             {(() => {
-              const drawerSectionHeight = mmToThreeUnits(1000) + basicThickness; // 하부 서랍 구역 1000mm + 바닥판 18mm
-              const hangingSectionHeight = getSectionHeights()[1] - basicThickness; // 상부 옷장 구역 (18mm 감소)
+              // 1000mm = 상판18 + 내경964 + 바닥판18
+              // 하부 측판 높이 = 내경만 = 1000 - 36 = 964mm
+              const drawerSectionHeight = mmToThreeUnits(1000) - basicThickness * 2;
+              const hangingSectionHeight = getSectionHeights()[1] - basicThickness;
               
               console.log('🔴🔴🔴 Type4 측판 실제 렌더링 크기:', {
                 '하부측판높이_mm': drawerSectionHeight * 100,
                 '상부측판높이_mm': hangingSectionHeight * 100,
-                '하부측판높이_계산': `1000 + ${basicThickness * 100} = ${drawerSectionHeight * 100}mm`,
+                '하부측판높이_계산': `1000 - ${basicThickness * 100 * 2} = ${drawerSectionHeight * 100}mm`,
                 '상부측판높이_계산': `${getSectionHeights()[1] * 100} - ${basicThickness * 100} = ${hangingSectionHeight * 100}mm`,
                 'getSectionHeights()[1]_mm': getSectionHeights()[1] * 100,
                 'basicThickness_mm': basicThickness * 100
               });
               
-              // 하부 측판: 바닥부터 시작
-              const lowerPanelY = -height/2 + drawerSectionHeight/2;
+              // 하부 측판: 바닥판 상단부터 상판 하단까지 (내경 영역)
+              const lowerPanelY = -height/2 + basicThickness + drawerSectionHeight/2;
               
-              // 상부 측판: 중간 구분 패널부터 시작 (높이만 줄임)
-              const upperPanelY = -height/2 + drawerSectionHeight + hangingSectionHeight/2;
+              // 상부 측판: 중간 구분 패널 위부터 시작
+              const upperPanelY = -height/2 + basicThickness + drawerSectionHeight + basicThickness + hangingSectionHeight/2;
               
               return (
                 <>
