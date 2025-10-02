@@ -280,8 +280,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     }
                   } else {
                     // 다음 섹션과의 경계: 상판 하단면
-                    // 상판 중심 = 섹션 상단 + basicThickness/2이므로, 상판 하단 = 섹션 상단 - basicThickness/2
-                    topY = sectionTopY - basicThickness / 2;
+                    // 상판 중심 = 섹션 상단이고, 상판 하단 = 상판 중심 - basicThickness/2
+                    topY = sectionTopY - basicThickness;
                     
                     // isTopFinishPanel이 있는 경우 상판 두께만큼 추가로 감소
                     if (section.isTopFinishPanel) {
