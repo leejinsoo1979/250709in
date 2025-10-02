@@ -336,18 +336,26 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       });
       
       // 현재 공간의 정중앙을 타겟으로 설정
-      const initialZoom = 1.0;
       const spaceHeight = spaceInfo?.height || 2400;
+      const spaceWidth = spaceInfo?.width || 3000;
+      const spaceDepth = spaceInfo?.depth || 600;
       const target = calculateCameraTargetUtil(spaceHeight);
-      const initialDistance = 1.5; // 2D 모드는 매우 가까운 거리 사용
+      
+      // calculateOptimalDistance와 동일한 방식으로 거리 계산
+      const distance = calculateOptimalDistanceUtil(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
+      
+      // useCameraManager와 동일한 줌 계산 공식 사용
+      const initialZoom = 1200 / distance;
+      const initialDistance = cameraPosition?.[2] || distance;
       
       console.log('📸 2D 모드 초기화', {
         target,
+        distance,
         initialDistance,
         initialZoom
       });
       
-      // 항상 계산된 정중앙과 초기 거리 사용 (저장된 값 무시)
+      // 항상 계산된 정중앙과 초기 거리/줌 사용
       controls.target.set(...target);
       controls.object.position.set(0, target[1], initialDistance);
       controls.object.zoom = initialZoom;
