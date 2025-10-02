@@ -177,10 +177,22 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       {showFurniture && (
         <group>
           {/* 좌우 측면 판재 - 섹션별 분할 또는 단일 */}
-          {isMultiSectionFurniture() ? (
+          {(() => {
+            console.log('🟨🟨🟨 SingleType2 렌더링:', {
+              furnitureId: moduleData.id,
+              isMultiSection: isMultiSectionFurniture(),
+              sectionCount: getSectionHeights().length,
+              sectionHeights: getSectionHeights().map(h => h * 100 + 'mm')
+            });
+            return isMultiSectionFurniture();
+          })() ? (
         // 다중 섹션: 섹션별 분할 측면 패널
         <>
           {getSectionHeights().map((sectionHeight: number, index: number) => {
+            console.log(`🟨 SingleType2 섹션 ${index}:`, {
+              sectionHeight: sectionHeight * 100 + 'mm',
+              shouldRenderMiddlePanel: index < getSectionHeights().length - 1
+            });
             let currentYPosition = -height/2 + basicThickness;
             
             // 현재 섹션까지의 Y 위치 계산
