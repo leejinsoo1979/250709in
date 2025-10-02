@@ -384,9 +384,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       return null;
                     }
                     
-                    // Type2 hanging 섹션: 모든 칸 치수 제거 (ShelfRenderer에서는 안전선반 두께만 표시)
+                    // Type2 hanging 섹션: 첫 번째 칸(섹션 하단~안전선반)은 제거, 마지막 칸(안전선반~상단)만 표시
                     const isType2Hanging = furnitureId && (furnitureId.includes('2hanging') || furnitureId.includes('2drawer-hanging')) && sectionType === 'hanging';
-                    if (isType2Hanging) {
+                    if (isType2Hanging && i !== compartmentHeights.length - 1) {
                       return null;
                     }
                     // 각 칸의 상단과 하단 Y 좌표 계산
