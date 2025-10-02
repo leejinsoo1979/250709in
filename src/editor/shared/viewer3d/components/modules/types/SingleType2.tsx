@@ -191,8 +191,15 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           {(() => {
             let accumulatedY = -height/2 + basicThickness;
             
+            console.log('🟨🟨 Type2 섹션 처리 시작:', {
+              height_mm: height * 100,
+              initialAccumulatedY_mm: accumulatedY * 100,
+              basicThickness_mm: basicThickness * 100
+            });
+            
             return getSectionHeights().map((sectionHeight: number, index: number) => {
-              console.log(`🟨 SingleType2 섹션 ${index}:`, {
+              console.log(`🟨 SingleType2 섹션 ${index} 시작:`, {
+                accumulatedY_before_mm: accumulatedY * 100,
                 sectionHeight: sectionHeight * 100 + 'mm',
                 shouldRenderMiddlePanel: index < getSectionHeights().length - 1
               });
@@ -200,9 +207,18 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               // 현재 섹션의 중심 Y 위치
               const sectionCenterY = accumulatedY + sectionHeight / 2 - basicThickness;
               
+              console.log(`🟨 섹션 ${index} 계산:`, {
+                sectionCenterY_mm: sectionCenterY * 100,
+                계산: `${accumulatedY * 100} + ${sectionHeight * 100}/2 - ${basicThickness * 100} = ${sectionCenterY * 100}mm`
+              });
+              
               // 다음 섹션을 위해 누적
               const currentYPosition = accumulatedY;
               accumulatedY += sectionHeight;
+              
+              console.log(`🟨 섹션 ${index} 종료:`, {
+                accumulatedY_after_mm: accumulatedY * 100
+              });
             
             return (
               <React.Fragment key={`side-panels-${index}`}>
