@@ -371,8 +371,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </Html>
         </group>
 
-        {/* 측면도 가구 치수 */}
-        {showFurniture && placedModules.map((module, index) => {
+        {/* 측면도 가구 치수 - 숨김 처리 */}
+        {false && showFurniture && placedModules.map((module, index) => {
           const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
           if (!moduleData) return null;
 
