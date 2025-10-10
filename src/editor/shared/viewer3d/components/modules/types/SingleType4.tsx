@@ -28,7 +28,8 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   slotCenterX,
   adjustedWidth,
   slotInfo,
-  showFurniture = true
+  showFurniture = true,
+  placedFurnitureId
 }) => {
   // 공통 로직 사용
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -86,6 +87,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               mmToThreeUnits={baseFurniture.mmToThreeUnits}
               renderMode={renderMode}
               furnitureId={moduleData.id}
+              placedFurnitureId={placedFurnitureId}
             />
           )}
         </BaseFurnitureShell>

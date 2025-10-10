@@ -29,7 +29,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   slotCenterX,
   showFurniture = true,
   isHighlighted = false,
-  furnitureId
+  furnitureId,
+  placedFurnitureId
 }) => {
   // 간접조명 관련 상태
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -128,6 +129,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           renderMode={renderMode}
           furnitureId={moduleData.id}
           isHighlighted={isHighlighted}
+          placedFurnitureId={placedFurnitureId}
         />
       )}
         </BaseFurnitureShell>

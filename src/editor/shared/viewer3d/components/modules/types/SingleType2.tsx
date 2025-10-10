@@ -126,7 +126,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   adjustedWidth,
   slotInfo,
   showFurniture = true,
-  furnitureId
+  furnitureId,
+  placedFurnitureId
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -385,6 +386,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           calculateSectionHeight={baseFurniture.calculateSectionHeight}
           mmToThreeUnits={baseFurniture.mmToThreeUnits}
           renderMode={renderMode}
+          furnitureId={moduleData.id}
+          placedFurnitureId={placedFurnitureId}
         />
       )}
         </group>

@@ -248,6 +248,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         showFurniture={showFurniture}
         isHighlighted={isHighlighted} // 강조 상태 전달
         furnitureId={furnitureId} // 가구 본체 표시 여부
+        placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
       />
       </>
     );
@@ -277,6 +278,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         showFurniture={showFurniture} // 가구 본체 표시 여부
         isHighlighted={isHighlighted} // 강조 상태 전달
         furnitureId={furnitureId} // 가구 ID 전달
+        placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
       />
       </>
     );
@@ -302,6 +304,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
+        placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture}
         furnitureId={furnitureId} // 가구 본체 표시 여부
