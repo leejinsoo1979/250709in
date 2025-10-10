@@ -2751,37 +2751,39 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const furnitureBackZ = furnitureZ - moduleDepth/2;
           const furnitureFrontZ = furnitureZ + moduleDepth/2;
           
-          // 치수선은 가구의 X 위치에 표시
-          const dimY = spaceHeight + mmToThreeUnits(200);
+          // 치수선은 공간 상단에 표시
+          const dimY = actualSpaceHeight + mmToThreeUnits(150);
           const furnitureX = module.position.x;
-          
+          const furnitureHeight = mmToThreeUnits(module.customHeight || moduleData.dimensions.height);
+          const furnitureTopY = module.position.y + furnitureHeight / 2;
+
           return (
             <group key={`left-module-dim-${index}`}>
-              {/* 가구 깊이 치수선 */}
+              {/* 가구 깊이 치수선 (상단) */}
               <Line
                 points={[[furnitureX, dimY, furnitureBackZ], [furnitureX, dimY, furnitureFrontZ]]}
                 color={dimensionColor}
-                lineWidth={0.5}
+                lineWidth={1}
               />
-              
+
               {/* 화살표들 */}
               <Line
                 points={createArrowHead([furnitureX, dimY, furnitureBackZ], [furnitureX, dimY, furnitureBackZ + 0.02], 0.01)}
                 color={dimensionColor}
-                lineWidth={0.5}
+                lineWidth={1}
               />
               <Line
                 points={createArrowHead([furnitureX, dimY, furnitureFrontZ], [furnitureX, dimY, furnitureFrontZ - 0.02], 0.01)}
                 color={dimensionColor}
-                lineWidth={0.5}
+                lineWidth={1}
               />
-              
+
               {/* 치수 텍스트 */}
               <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                position={[furnitureX, dimY + mmToThreeUnits(40), (furnitureBackZ + furnitureFrontZ) / 2]}
-                fontSize={baseFontSize}
+                renderOrder={1000}
+                depthTest={false}
+                position={[furnitureX, dimY + mmToThreeUnits(50), (furnitureBackZ + furnitureFrontZ) / 2]}
+                fontSize={largeFontSize}
                 color={textColor}
                 anchorX="center"
                 anchorY="middle"
@@ -2789,16 +2791,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {actualDepth}
               </Text>
 
-              {/* 연장선 (가구 상단에서 치수선까지 긴 보조선) */}
+              {/* 연장선 (가구 상단에서 치수선까지) */}
               <Line
-                points={[[furnitureX, actualSpaceHeight + mmToThreeUnits(30), furnitureBackZ], [furnitureX, dimY + mmToThreeUnits(50), furnitureBackZ]]}
+                points={[[furnitureX, furnitureTopY, furnitureBackZ], [furnitureX, dimY + mmToThreeUnits(10), furnitureBackZ]]}
                 color={dimensionColor}
-                lineWidth={0.5}
+                lineWidth={1}
+                dashed={false}
               />
               <Line
-                points={[[furnitureX, actualSpaceHeight + mmToThreeUnits(30), furnitureFrontZ], [furnitureX, dimY + mmToThreeUnits(50), furnitureFrontZ]]}
+                points={[[furnitureX, furnitureTopY, furnitureFrontZ], [furnitureX, dimY + mmToThreeUnits(10), furnitureFrontZ]]}
                 color={dimensionColor}
-                lineWidth={0.5}
+                lineWidth={1}
+                dashed={false}
               />
             </group>
           );
