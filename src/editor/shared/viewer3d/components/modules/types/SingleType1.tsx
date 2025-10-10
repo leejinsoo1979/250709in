@@ -43,8 +43,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     adjustedWidth,
-    isHighlighted,
-    customSections
+    isHighlighted
   });
 
   const {
