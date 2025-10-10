@@ -221,13 +221,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             }
             const sectionHeightMm = sectionHeight / 0.01;
 
-            // 하부섹션(첫 번째)은 18mm 아래로, 상부섹션(마지막)은 18mm 위로 조정
-            const isFirstSection = sectionIndex === 0;
-            const isLastSection = sectionIndex === sections.length - 1;
-            const yOffset = isFirstSection ? -basicThickness : (isLastSection ? basicThickness : 0);
+            // 모든 섹션을 18mm 아래로 조정
+            const yOffset = -basicThickness;
             const sectionStartY = currentY + yOffset;
             const sectionEndY = currentY + sectionHeight + yOffset;
             currentY = sectionEndY - yOffset; // 다음 섹션을 위해 원래 위치로 복원
+
+            // 상부섹션(마지막)은 가이드선을 짧게 해서 상단 끝에 맞춤
+            const isLastSection = sectionIndex === sections.length - 1;
 
             return (
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
@@ -242,11 +243,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100000}
                   depthTest={false}
                 />
-                {/* 보조 가이드 연장선 - 끝 */}
+                {/* 보조 가이드 연장선 - 끝 (상부섹션은 실제 가구 상단까지만) */}
                 <NativeLine
                   points={[
-                    [slotX, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
-                    [slotX, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX, isLastSection ? (sectionEndY + basicThickness) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
+                    [slotX, isLastSection ? (sectionEndY + basicThickness) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={1}
