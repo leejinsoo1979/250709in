@@ -33,7 +33,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   slotCenterX,
   slotWidths,
   adjustedWidth, // adjustedWidth 추가
-  placedFurnitureId
+  placedFurnitureId,
+  showFurniture = true // 가구 본체 표시 여부
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -71,8 +72,11 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   const isMulti = sectionHeights.length >= 2;
 
   return (
-    <group>
-      {/* 좌우 측면 판재 - 섹션별 분할 또는 단일 */}
+    <>
+      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
+      {showFurniture && (
+        <group>
+          {/* 좌우 측면 판재 - 섹션별 분할 또는 단일 */}
       {isMulti ? (
         // 다중 섹션: 섹션별 분할 측면 패널
         <>
@@ -398,8 +402,10 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           placedFurnitureId={placedFurnitureId}
         />
       )}
-      
-      {/* 도어는 항상 렌더링 (가구 식별에 중요) */}
+        </group>
+      )}
+
+      {/* 도어는 showFurniture와 관계없이 항상 렌더링 (도어 도면 출력용) */}
       {hasDoor && spaceInfo && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width}
@@ -429,7 +435,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         viewMode={viewMode}
         view2DDirection={view2DDirection}
       />
-    </group>
+    </>
   );
 };
 
