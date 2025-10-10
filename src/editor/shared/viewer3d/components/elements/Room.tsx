@@ -612,8 +612,8 @@ const Room: React.FC<RoomProps> = ({
   
   // 공통 프레임 재질 생성 함수 (도어와 동일한 재질로 통일)
   const createFrameMaterial = useCallback((frameType?: 'left' | 'right' | 'top' | 'base') => {
-    // 2D 모드에서 상부/하부 프레임은 형광 녹색으로 직접 반환
-    const isNeonFrame = viewMode === '2D' && (frameType === 'top' || frameType === 'base');
+    // 2D 모드에서 모든 프레임(상부/하부/좌우)을 형광 녹색으로 직접 반환
+    const isNeonFrame = viewMode === '2D' && (frameType === 'top' || frameType === 'base' || frameType === 'left' || frameType === 'right');
     if (isNeonFrame) {
       console.log(`✅ 2D 모드 프레임에 형광 녹색 MeshBasicMaterial 적용:`, frameType);
       return new THREE.MeshBasicMaterial({
