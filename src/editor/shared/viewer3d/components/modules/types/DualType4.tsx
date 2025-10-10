@@ -223,7 +223,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       />
       
       {/* Type4 상단 상판 두께 치수 표시 - 정면도에서만 */}
-      {moduleData?.id?.includes('4drawer-hanging') && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && (
+      {moduleData?.id?.includes('4drawer-hanging') && showFurniture && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && (
         <group>
           {/* 상판 두께 텍스트 */}
           <Text

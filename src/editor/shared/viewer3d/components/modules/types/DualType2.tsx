@@ -161,7 +161,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                       />
                     
                     {/* 중간판 두께 치수 표시 */}
-                    {showDimensions && showDimensionsText && (
+                    {showFurniture && showDimensions && showDimensionsText && (
                       <group>
                         {/* 하부 섹션 상판 두께 텍스트 */}
                         <Text
@@ -280,7 +280,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
       />
       
       {/* 상단 상판 두께 치수 표시 - 정면도에서만 */}
-      {showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && (
+      {showFurniture && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && (
         <group>
           {/* 상판 두께 텍스트 */}
           <Text
