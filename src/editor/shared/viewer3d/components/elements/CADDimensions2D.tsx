@@ -418,10 +418,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 </div>
               </Html>
 
-              {/* 높이 연장선 */}
+              {/* 높이 연장선 - 가구 앞단까지만 */}
               <Line
                 points={[
-                  [0, topY, furnitureZ],
+                  [0, topY, frontZ],
                   [0, topY, heightDimZ]
                 ]}
                 color={dimensionColors.furniture}
@@ -430,7 +430,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               />
               <Line
                 points={[
-                  [0, bottomY, furnitureZ],
+                  [0, bottomY, frontZ],
                   [0, bottomY, heightDimZ]
                 ]}
                 color={dimensionColors.furniture}
