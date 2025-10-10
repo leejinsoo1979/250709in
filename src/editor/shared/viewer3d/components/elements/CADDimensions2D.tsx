@@ -519,14 +519,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 depthTest={false}
               />
 
-              {/* 엔드포인트 - 앞쪽 모서리 */}
+              {/* 엔드포인트 - 치수선 앞쪽 모서리 */}
               <mesh position={[slotX, furnitureTopY, furnitureZ + moduleDepth/2]} renderOrder={100001}>
                 <circleGeometry args={[0.015, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
 
-              {/* 엔드포인트 - 뒤쪽 모서리 */}
+              {/* 엔드포인트 - 치수선 뒤쪽 모서리 */}
               <mesh position={[slotX, furnitureTopY, furnitureZ - moduleDepth/2]} renderOrder={100001}>
+                <circleGeometry args={[0.015, 16]} />
+                <meshBasicMaterial color={dimensionColor} depthTest={false} />
+              </mesh>
+
+              {/* 엔드포인트 - 보조선 앞쪽 상단 모서리 */}
+              <mesh position={[slotX, floatHeight + baseFrameHeight + internalHeight, furnitureZ + moduleDepth/2]} renderOrder={100001}>
+                <circleGeometry args={[0.015, 16]} />
+                <meshBasicMaterial color={dimensionColor} depthTest={false} />
+              </mesh>
+
+              {/* 엔드포인트 - 보조선 뒤쪽 상단 모서리 */}
+              <mesh position={[slotX, floatHeight + baseFrameHeight + internalHeight, furnitureZ - moduleDepth/2]} renderOrder={100001}>
                 <circleGeometry args={[0.015, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
