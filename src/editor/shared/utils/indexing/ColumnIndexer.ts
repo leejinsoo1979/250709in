@@ -218,9 +218,9 @@ export class ColumnIndexer {
       
       // 단내림이 있어도 전체 영역의 slotWidths 생성 (호환성을 위해) - 0.5 단위 균등 분할
       // 소수점 2자리까지 정확한 균등분할
-      const exactSlotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
+      const exactSlotWidth = parseFloat((internalWidth / columnCount).toFixed(2));
       const slotWidths: number[] = [];
-      
+
       // 모든 슬롯을 동일한 너비로 설정 (소수점 2자리)
       for (let i = 0; i < columnCount; i++) {
         slotWidths.push(exactSlotWidth);
@@ -347,8 +347,8 @@ export class ColumnIndexer {
     
     if (isNoSurround && spaceInfo.installType === 'freestanding') {
       // 노서라운드 프리스탠딩: 전체너비를 균등 분할 (소수점 2자리)
-      const exactSlotWidth = Math.round((totalWidth / columnCount) * 100) / 100;
-      
+      const exactSlotWidth = parseFloat((totalWidth / columnCount).toFixed(2));
+
       // 모든 슬롯을 동일한 너비로 설정
       for (let i = 0; i < columnCount; i++) {
         slotWidths.push(exactSlotWidth);
@@ -369,9 +369,8 @@ export class ColumnIndexer {
       if (isNoSurround && (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') && optimizedGapConfig) {
         actualInternalWidth = totalWidth - optimizedGapConfig.left - optimizedGapConfig.right;
       }
-      const rawSlotWidth = actualInternalWidth / columnCount;
-      const exactSlotWidth = Math.round(rawSlotWidth * 100) / 100;
-      
+      const exactSlotWidth = parseFloat((actualInternalWidth / columnCount).toFixed(2));
+
       // 슬롯 너비를 소수점 2자리로 반올림하여 사용
       for (let i = 0; i < columnCount; i++) {
         slotWidths.push(exactSlotWidth);
@@ -821,15 +820,15 @@ export class ColumnIndexer {
       
       if (spaceInfo.surroundType === 'no-surround') {
         // 노서라운드: actualInternalWidth를 균등 분할
-        const exactSlotWidth = Math.round((actualInternalWidth / columnCount) * 100) / 100;
-        
+        const exactSlotWidth = parseFloat((actualInternalWidth / columnCount).toFixed(2));
+
         for (let i = 0; i < columnCount; i++) {
           slotWidths.push(exactSlotWidth);
         }
       } else {
         // 서라운드 모드: 소수점 2자리 균등분할
-        const exactSlotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
-        
+        const exactSlotWidth = parseFloat((internalWidth / columnCount).toFixed(2));
+
         for (let i = 0; i < columnCount; i++) {
           slotWidths.push(exactSlotWidth);
         }
