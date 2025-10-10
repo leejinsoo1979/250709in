@@ -304,6 +304,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 // 섹션 타입별로 가이드선 위치 계산
                 const hasSafetyShelf = section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0);
 
+                // 2hanging 디버그
+                if (furnitureId?.includes('2hanging')) {
+                  console.log(`📏 섹션${index} 치수 계산 | type: ${section.type} | shelfPositions:`, section.shelfPositions, `| hasSafetyShelf: ${hasSafetyShelf}`);
+                }
+
                 if (section.type === 'hanging') {
                   // 섹션의 절대 위치 계산
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
@@ -320,8 +325,15 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // Type4 상부 섹션: 상부섹션 바닥판 상단부터 (하부 1000mm + 바닥판 18mm)
                     bottomY = -height/2 + mmToThreeUnits(1000) + basicThickness;
                   } else {
-                    // 일반 hanging 섹션: 바닥판 상단부터
-                    bottomY = sectionBottomY + basicThickness;
+                    // 2hanging 상부 섹션: 바닥판 윗면부터 (sectionBottomY + basicThickness * 2)
+                    const is2HangingUpperSection = furnitureId?.includes('2hanging') && index === 1;
+                    if (is2HangingUpperSection) {
+                      // 상부섹션 바닥판 윗면 = 섹션 하단 + 바닥판 두께
+                      bottomY = sectionBottomY + basicThickness * 2;
+                    } else {
+                      // 일반 hanging 섹션: 바닥판 상단부터
+                      bottomY = sectionBottomY + basicThickness;
+                    }
                   }
                   
                   // 디버깅: hanging 섹션의 치수 계산 확인
