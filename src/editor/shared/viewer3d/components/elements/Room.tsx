@@ -1987,7 +1987,8 @@ const Room: React.FC<RoomProps> = ({
       {/* 상단 패널 - ㄱ자 모양으로 구성 */}
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 노서라운드 모드에서는 전체 너비로 확장하지만 좌우 프레임이 없을 때만 표시 */}
-      {showFrame && topBottomFrameHeightMm > 0 && (
+      {/* 좌우측 뷰에서는 숨김 */}
+      {showFrame && topBottomFrameHeightMm > 0 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
         <>
           {/* 노서라운드 모드에서 상단프레임 폭 디버깅 */}
           {/* spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && console.log(`🔧 [상단프레임] 좌측이격거리${spaceInfo.gapConfig.left}mm, 우측이격거리${spaceInfo.gapConfig.right}mm: 실제폭=${baseFrameMm.width}mm, Three.js=${baseFrame.width.toFixed(2)}`) */}
@@ -2895,9 +2896,10 @@ export default React.memo(Room, (prevProps, nextProps) => {
   if (prevProps.floorColor !== nextProps.floorColor) return false;
   if (prevProps.showFrame !== nextProps.showFrame) return false;
   if (prevProps.showDimensions !== nextProps.showDimensions) return false;
+  if (prevProps.showFurniture !== nextProps.showFurniture) return false;
   if (prevProps.isStep2 !== nextProps.isStep2) return false;
   if (prevProps.activeZone !== nextProps.activeZone) return false;
-  
+
   // spaceInfo 비교 (크기와 재질만 비교, 기둥 제외)
   const prevSpace = prevProps.spaceInfo;
   const nextSpace = nextProps.spaceInfo;
