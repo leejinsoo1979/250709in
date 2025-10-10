@@ -110,15 +110,19 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               color={dimensionColor}
               lineWidth={1}
             />
-            {/* 수직선 양끝 점 */}
-            <mesh position={[-innerWidth/2 * 0.3, topPosition - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-              <sphereGeometry args={[0.05, 8, 8]} />
-              <meshBasicMaterial color={dimensionColor} />
-            </mesh>
-            <mesh position={[-innerWidth/2 * 0.3, topPosition + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-              <sphereGeometry args={[0.05, 8, 8]} />
-              <meshBasicMaterial color={dimensionColor} />
-            </mesh>
+            {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+            {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+              <>
+                <mesh position={[-innerWidth/2 * 0.3, topPosition - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                  <sphereGeometry args={[0.05, 8, 8]} />
+                  <meshBasicMaterial color={dimensionColor} />
+                </mesh>
+                <mesh position={[-innerWidth/2 * 0.3, topPosition + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                  <sphereGeometry args={[0.05, 8, 8]} />
+                  <meshBasicMaterial color={dimensionColor} />
+                </mesh>
+              </>
+            )}
           </group>
         )}
       </group>
@@ -390,15 +394,19 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     lineWidth={1}
                     dashed={false}
                   />
-                  {/* 상단 프레임 두께 수직선 양끝 점 */}
-                  <mesh position={[-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
-                    <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={dimensionColor} />
-                  </mesh>
-                  <mesh position={[-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
-                    <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={dimensionColor} />
-                  </mesh>
+                  {/* 상단 프레임 두께 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                  {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                    <>
+                      <mesh position={[-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={dimensionColor} />
+                      </mesh>
+                      <mesh position={[-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={dimensionColor} />
+                      </mesh>
+                    </>
+                  )}
                 </group>
                 );
               }
@@ -522,15 +530,19 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       lineWidth={isHighlighted ? 2 : 1}
                       dashed={false}
                     />
-                    {/* 수직 연결선 양끝 점 */}
-                    <mesh position={[-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.15]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
-                    </mesh>
-                    <mesh position={[-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.15]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
-                    </mesh>
+                    {/* 수직 연결선 양끝 점 - 측면뷰에서 숨김 */}
+                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                      <>
+                        <mesh position={[-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.15]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
+                        </mesh>
+                        <mesh position={[-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : basicThickness + zOffset + 0.15]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
+                        </mesh>
+                      </>
+                    )}
                   </group>
                     );
                   })}

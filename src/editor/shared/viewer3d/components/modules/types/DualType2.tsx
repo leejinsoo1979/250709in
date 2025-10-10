@@ -190,15 +190,19 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                           color={dimensionColor}
                           lineWidth={1}
                         />
-                        {/* 하부 섹션 상판 수직선 양끝 점 */}
-                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
+                        {/* 하부 섹션 상판 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                        {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                          <>
+                            <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                              <sphereGeometry args={[0.05, 8, 8]} />
+                              <meshBasicMaterial color={dimensionColor} />
+                            </mesh>
+                            <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                              <sphereGeometry args={[0.05, 8, 8]} />
+                              <meshBasicMaterial color={dimensionColor} />
+                            </mesh>
+                          </>
+                        )}
 
                         {/* 상부 섹션 바닥판 두께 텍스트 */}
                         <Text
@@ -227,15 +231,19 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                           color={dimensionColor}
                           lineWidth={1}
                         />
-                        {/* 상부 섹션 바닥판 수직선 양끝 점 */}
-                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
+                        {/* 상부 섹션 바닥판 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                        {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                          <>
+                            <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                              <sphereGeometry args={[0.05, 8, 8]} />
+                              <meshBasicMaterial color={dimensionColor} />
+                            </mesh>
+                            <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                              <sphereGeometry args={[0.05, 8, 8]} />
+                              <meshBasicMaterial color={dimensionColor} />
+                            </mesh>
+                          </>
+                        )}
                       </group>
                     )}
                   </>
@@ -309,15 +317,19 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             color={dimensionColor}
             lineWidth={1}
           />
-          {/* 수직선 양끝 점 */}
-          <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-            <sphereGeometry args={[0.05, 8, 8]} />
-            <meshBasicMaterial color={dimensionColor} />
-          </mesh>
-          <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-            <sphereGeometry args={[0.05, 8, 8]} />
-            <meshBasicMaterial color={dimensionColor} />
-          </mesh>
+          {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+          {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+            <>
+              <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                <sphereGeometry args={[0.05, 8, 8]} />
+                <meshBasicMaterial color={dimensionColor} />
+              </mesh>
+              <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                <sphereGeometry args={[0.05, 8, 8]} />
+                <meshBasicMaterial color={dimensionColor} />
+              </mesh>
+            </>
+          )}
         </group>
       )}
 

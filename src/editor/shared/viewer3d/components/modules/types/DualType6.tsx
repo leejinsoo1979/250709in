@@ -223,15 +223,19 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                       color={dimensionColor}
                       lineWidth={1}
                     />
-                    {/* 수직선 양끝 점 */}
-                    <mesh position={[-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={dimensionColor} />
-                    </mesh>
-                    <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={dimensionColor} />
-                    </mesh>
+                    {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                      <>
+                        <mesh position={[-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                      </>
+                    )}
                   </>
                 ) : section.type === 'hanging' && index === 1 ? (
                   <>
@@ -264,14 +268,18 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                           color={dimensionColor}
                           lineWidth={1}
                         />
-                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
+                        {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                          <>
+                            <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                              <sphereGeometry args={[0.05, 8, 8]} />
+                              <meshBasicMaterial color={dimensionColor} />
+                            </mesh>
+                            <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                              <sphereGeometry args={[0.05, 8, 8]} />
+                              <meshBasicMaterial color={dimensionColor} />
+                            </mesh>
+                          </>
+                        )}
                         
                         {/* 안전선반 상단부터 상단 프레임 하단까지 */}
                         <Text
@@ -299,14 +307,18 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                           color={dimensionColor}
                           lineWidth={1}
                         />
-                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                        <mesh position={[-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
+                        {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                          <>
+                            <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                              <sphereGeometry args={[0.05, 8, 8]} />
+                              <meshBasicMaterial color={dimensionColor} />
+                            </mesh>
+                            <mesh position={[-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                              <sphereGeometry args={[0.05, 8, 8]} />
+                              <meshBasicMaterial color={dimensionColor} />
+                            </mesh>
+                          </>
+                        )}
                       </>
                     ) : (
                       <>
@@ -336,14 +348,18 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                           color={dimensionColor}
                           lineWidth={1}
                         />
-                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                        <mesh position={[-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
+                        {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                          <>
+                            <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                              <sphereGeometry args={[0.05, 8, 8]} />
+                              <meshBasicMaterial color={dimensionColor} />
+                            </mesh>
+                            <mesh position={[-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                              <sphereGeometry args={[0.05, 8, 8]} />
+                              <meshBasicMaterial color={dimensionColor} />
+                            </mesh>
+                          </>
+                        )}
                       </>
                     )}
                   </>
@@ -379,15 +395,19 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                       color={dimensionColor}
                       lineWidth={1}
                     />
-                    {/* 수직선 양끝 점 */}
-                    <mesh position={[-leftWidth/2 * 0.3, -height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={dimensionColor} />
-                    </mesh>
-                    <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={dimensionColor} />
-                    </mesh>
+                    {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                      <>
+                        <mesh position={[-leftWidth/2 * 0.3, -height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                      </>
+                    )}
                   </group>
                 )}
               </group>
@@ -473,14 +493,18 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                       color={dimensionColor}
                       lineWidth={1}
                     />
-                    <mesh position={[-rightWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={dimensionColor} />
-                    </mesh>
-                    <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={dimensionColor} />
-                    </mesh>
+                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                      <>
+                        <mesh position={[-rightWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                        <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                      </>
+                    )}
                   </>
                 )}
               </group>
@@ -559,15 +583,19 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   color={dimensionColor}
                   lineWidth={1}
                 />
-                {/* 수직선 양끝 점 */}
-                <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                  <sphereGeometry args={[0.05, 8, 8]} />
-                  <meshBasicMaterial color={dimensionColor} />
-                </mesh>
-                <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                  <sphereGeometry args={[0.05, 8, 8]} />
-                  <meshBasicMaterial color={dimensionColor} />
-                </mesh>
+                {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                  <>
+                    <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                      <sphereGeometry args={[0.05, 8, 8]} />
+                      <meshBasicMaterial color={dimensionColor} />
+                    </mesh>
+                    <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                      <sphereGeometry args={[0.05, 8, 8]} />
+                      <meshBasicMaterial color={dimensionColor} />
+                    </mesh>
+                  </>
+                )}
               </group>
             )}
           </>
@@ -615,15 +643,19 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   color={dimensionColor}
                   lineWidth={1}
                 />
-                {/* 수직선 양끝 점 */}
-                <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                  <sphereGeometry args={[0.05, 8, 8]} />
-                  <meshBasicMaterial color={dimensionColor} />
-                </mesh>
-                <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                  <sphereGeometry args={[0.05, 8, 8]} />
-                  <meshBasicMaterial color={dimensionColor} />
-                </mesh>
+                {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                  <>
+                    <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                      <sphereGeometry args={[0.05, 8, 8]} />
+                      <meshBasicMaterial color={dimensionColor} />
+                    </mesh>
+                    <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                      <sphereGeometry args={[0.05, 8, 8]} />
+                      <meshBasicMaterial color={dimensionColor} />
+                    </mesh>
+                  </>
+                )}
               </group>
             )}
           </>
@@ -659,15 +691,19 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               color={dimensionColor}
               lineWidth={1}
             />
-            {/* 수직선 양끝 점 */}
-            <mesh position={[-rightWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-              <sphereGeometry args={[0.05, 8, 8]} />
-              <meshBasicMaterial color={dimensionColor} />
-            </mesh>
-            <mesh position={[-rightWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-              <sphereGeometry args={[0.05, 8, 8]} />
-              <meshBasicMaterial color={dimensionColor} />
-            </mesh>
+            {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+            {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+              <>
+                <mesh position={[-rightWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                  <sphereGeometry args={[0.05, 8, 8]} />
+                  <meshBasicMaterial color={dimensionColor} />
+                </mesh>
+                <mesh position={[-rightWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                  <sphereGeometry args={[0.05, 8, 8]} />
+                  <meshBasicMaterial color={dimensionColor} />
+                </mesh>
+              </>
+            )}
           </group>
         )}
       </>
@@ -759,15 +795,19 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               {Math.round(threeUnitsToMm(rightWidth))}
             </Text>
             
-            {/* 수평선 양끝 점 */}
-            <mesh position={[(leftWidth - rightWidth) / 2 + basicThickness/2, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset]}>
-              <sphereGeometry args={[0.05, 8, 8]} />
-              <meshBasicMaterial color={dimensionColor} />
-            </mesh>
-            <mesh position={[width/2 - basicThickness, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset]}>
-              <sphereGeometry args={[0.05, 8, 8]} />
-              <meshBasicMaterial color={dimensionColor} />
-            </mesh>
+            {/* 수평선 양끝 점 - 측면뷰에서 숨김 */}
+            {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+              <>
+                <mesh position={[(leftWidth - rightWidth) / 2 + basicThickness/2, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset]}>
+                  <sphereGeometry args={[0.05, 8, 8]} />
+                  <meshBasicMaterial color={dimensionColor} />
+                </mesh>
+                <mesh position={[width/2 - basicThickness, (-height/2 + basicThickness + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9))) / 2, viewMode === '3D' ? shelfZOffset + adjustedDepthForShelves/2 : shelfZOffset]}>
+                  <sphereGeometry args={[0.05, 8, 8]} />
+                  <meshBasicMaterial color={dimensionColor} />
+                </mesh>
+              </>
+            )}
           </group>
         )}
       </>
