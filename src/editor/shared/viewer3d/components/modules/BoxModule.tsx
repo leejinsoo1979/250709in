@@ -140,6 +140,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           slotIndex={slotIndex} // 슬롯 인덱스 전달
           showFurniture={showFurniture} // 가구 본체 표시 여부
           customSections={customSections} // 사용자 정의 섹션 설정
+          placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
             // 이벤트 핸들러들 전달
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -177,6 +178,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
         isHighlighted={isHighlighted} // 강조 상태 전달
+        placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -214,6 +216,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
         isHighlighted={isHighlighted} // 강조 상태 전달
+        placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
