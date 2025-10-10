@@ -67,8 +67,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const smallFontSize = mmToThreeUnits(30);
 
   // 치수선 오프셋
-  const leftDimOffset = mmToThreeUnits(200);
-  const rightDimOffset = mmToThreeUnits(200);
+  const leftDimOffset = mmToThreeUnits(300);
+  const rightDimOffset = mmToThreeUnits(300);
 
   // 좌측뷰인 경우
   if (currentViewDirection === 'left') {
