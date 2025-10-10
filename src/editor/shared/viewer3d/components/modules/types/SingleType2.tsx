@@ -246,26 +246,42 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                 />
                 
-                {/* 중간 구분 패널 (마지막 섹션 제외) */}
+                {/* 하부 섹션 상판 + 상부 섹션 바닥판 (2단 옷장 구조) */}
                 {index < getSectionHeights().length - 1 && (() => {
                   const middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2;
+                  const lowerTopPanelY = middlePanelY - basicThickness; // 하부 섹션 상판 위치
+
                   console.log(`🟨 섹션 ${index} 중간 패널 위치:`, {
                     middlePanelY_mm: middlePanelY * 100,
+                    lowerTopPanelY_mm: lowerTopPanelY * 100,
                     sectionCenterY_mm: sectionCenterY * 100,
                     sectionHeight_mm: sectionHeight * 100,
                     basicThickness_mm: basicThickness * 100,
                     계산식: `(${sectionCenterY * 100}) + (${sectionHeight * 100}/2) + (${basicThickness * 100}/2) = ${middlePanelY * 100}mm`
                   });
-                  
+
                   return (
-                    <BoxWithEdges
-                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                      position={[0, middlePanelY, basicThickness/2 + shelfZOffset]}
-                      material={material}
-                      renderMode={renderMode}
-                      isDragging={isDragging}
-                      isEditMode={isEditMode}
-                    />
+                    <>
+                      {/* 하부 섹션 상판 */}
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                      />
+
+                      {/* 상부 섹션 바닥판 */}
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                      />
+                    </>
                   );
                 })()}
               </React.Fragment>
