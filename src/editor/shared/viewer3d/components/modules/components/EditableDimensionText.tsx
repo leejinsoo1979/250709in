@@ -190,23 +190,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
 
       {/* 일반 표시 모드 */}
       {!isEditing && (
-        <>
-          {/* 투명한 클릭 영역 (클릭 감지용, hover 감지용) */}
-          <mesh
-            ref={meshRef}
-            position={position}
-            onClick={handleClick}
-            onPointerOver={handlePointerOver}
-            onPointerOut={handlePointerOut}
-          >
-            <planeGeometry args={[fontSize * 4, fontSize * 1.5]} />
-            <meshBasicMaterial
-              transparent
-              opacity={0}
-              depthTest={false}
-            />
-          </mesh>
-
+        <group>
           {/* 치수 텍스트 (hover 시 테마 색상으로 변경) */}
           <Text
             position={position}
@@ -217,10 +201,30 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
             rotation={rotation}
             renderOrder={renderOrder}
             depthTest={depthTest}
+            onClick={handleClick}
+            onPointerOver={handlePointerOver}
+            onPointerOut={handlePointerOut}
           >
             {Math.round(value)}
           </Text>
-        </>
+
+          {/* 클릭 영역 확장용 투명 메시 */}
+          <mesh
+            ref={meshRef}
+            position={position}
+            rotation={rotation}
+            onClick={handleClick}
+            onPointerOver={handlePointerOver}
+            onPointerOut={handlePointerOut}
+          >
+            <planeGeometry args={[fontSize * 6, fontSize * 2]} />
+            <meshBasicMaterial
+              transparent
+              opacity={0}
+              depthTest={false}
+            />
+          </mesh>
+        </group>
       )}
     </>
   );
