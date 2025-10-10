@@ -220,11 +220,21 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             } else {
               sectionHeight = remainingHeight * (section.height / 100);
             }
-            // 치수 표시는 외경 (패널 두께 포함)
-            const sectionHeightMm = sectionHeight / 0.01;
 
             // 상부섹션(마지막)은 가이드선을 짧게 해서 상단 끝에 맞춤
             const isLastSection = sectionIndex === sections.length - 1;
+
+            // 치수 표시값 계산
+            let sectionHeightMm: number;
+            if (isLastSection) {
+              // 상부섹션: 가구 최상단부터 하부섹션 끝점까지의 실제 거리
+              const topY = floatHeight + baseFrameHeight + internalHeight;
+              const bottomY = currentY; // 하부섹션 끝점
+              sectionHeightMm = (topY - bottomY) / 0.01;
+            } else {
+              // 하부섹션 및 기타: 섹션 자체 높이
+              sectionHeightMm = sectionHeight / 0.01;
+            }
 
             // Y 오프셋 없음 - 실제 섹션 위치 그대로 사용
             const sectionStartY = currentY;
