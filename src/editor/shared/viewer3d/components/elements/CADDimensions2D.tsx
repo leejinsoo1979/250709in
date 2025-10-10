@@ -246,19 +246,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {/* 보조 가이드 연장선 - 끝 (상부섹션은 Y축으로 짧게) */}
                 <NativeLine
                   points={[
-                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(100)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
-                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(100)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
+                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={1}
                   renderOrder={100000}
                   depthTest={false}
                 />
-                {/* 치수선 */}
+                {/* 치수선 (상부섹션은 짧게) */}
                 <NativeLine
                   points={[
                     [slotX, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                    [slotX, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={2}
@@ -278,8 +278,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 />
                 <NativeLine
                   points={[
-                    [slotX - 0.03, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                    [slotX + 0.03, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX - 0.03, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
+                    [slotX + 0.03, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={2}
