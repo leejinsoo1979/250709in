@@ -662,12 +662,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   useEffect(() => {
     if (currentPlacedModule && moduleData) {
       const initialDepth = currentPlacedModule.customDepth !== undefined && currentPlacedModule.customDepth !== null
-        ? currentPlacedModule.customDepth 
+        ? currentPlacedModule.customDepth
         : getDefaultDepth(moduleData);
-      
-      const initialWidth = currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null
-        ? currentPlacedModule.customWidth 
-        : moduleData.dimensions.width;
+
+      // 기둥에 의해 조정된 너비가 있으면 우선 사용, 없으면 customWidth, 그것도 없으면 기본 너비
+      const initialWidth = currentPlacedModule.adjustedWidth !== undefined && currentPlacedModule.adjustedWidth !== null
+        ? currentPlacedModule.adjustedWidth
+        : (currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null
+          ? currentPlacedModule.customWidth
+          : moduleData.dimensions.width);
       
       setCustomDepth(initialDepth);
       setDepthInputValue(initialDepth.toString());
