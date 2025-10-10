@@ -311,7 +311,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               </div>
             </Html>
           )}
-
         </group>
 
         {/* 공간 전체 깊이 치수 (상단) */}
