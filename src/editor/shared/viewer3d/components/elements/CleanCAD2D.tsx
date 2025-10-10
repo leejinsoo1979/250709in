@@ -2611,19 +2611,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               />
 
               {/* 치수 텍스트 */}
-              {(showDimensionsText || isStep2) && (
-                <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                  position={[furnitureX, dimY + mmToThreeUnits(50), (furnitureBackZ + furnitureFrontZ) / 2]}
-                  fontSize={largeFontSize}
-                  color={textColor}
-                  anchorX="center"
-                  anchorY="middle"
-                >
-                  {actualDepth}
-                </Text>
-              )}
+              <Text
+                renderOrder={1000}
+                depthTest={false}
+                position={[furnitureX, dimY + mmToThreeUnits(50), (furnitureBackZ + furnitureFrontZ) / 2]}
+                fontSize={largeFontSize}
+                color={textColor}
+                anchorX="center"
+                anchorY="middle"
+              >
+                {actualDepth}
+              </Text>
 
               {/* 연장선 (가구 상단에서 치수선까지) */}
               <Line
