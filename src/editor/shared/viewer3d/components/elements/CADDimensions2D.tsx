@@ -198,28 +198,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 </div>
               </Html>
             )}
-
-            {/* 연장선 - 상단 */}
-            <Line
-              points={[
-                [0, topFrameTopY, 0],
-                [mmToThreeUnits(150), topFrameTopY, 0]
-              ]}
-              color={dimensionColors.primary}
-              lineWidth={1}
-              dashed={true}
-            />
-
-            {/* 연장선 - 하단 */}
-            <Line
-              points={[
-                [0, topFrameBottomY, 0],
-                [mmToThreeUnits(150), topFrameBottomY, 0]
-              ]}
-              color={dimensionColors.primary}
-              lineWidth={1}
-              dashed={true}
-            />
           </group>
         )}
 
