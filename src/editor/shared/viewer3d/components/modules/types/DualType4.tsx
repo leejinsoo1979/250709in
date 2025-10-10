@@ -34,7 +34,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   slotCenterX,
   slotWidths,
   adjustedWidth, // adjustedWidth 추가
-  customSections // 사용자 정의 섹션 설정
+  customSections, // 사용자 정의 섹션 설정
+  placedFurnitureId
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -65,7 +66,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode, viewMode } = useSpace3DView();
-  const { view2DDirection, showDimensions, showDimensionsText } = useUIStore();
+  const { view2DDirection, showDimensions, showDimensionsText, highlightedSection } = useUIStore();
   const { theme } = useTheme();
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
@@ -94,6 +95,9 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               
               const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
               
+              // 섹션별 강조 확인
+              const isSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
+
               return (
                 <React.Fragment key={`side-panels-${index}`}>
                   {index === 0 ? (
@@ -107,8 +111,9 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={isSectionHighlighted}
                       />
-                      
+
                       {/* 오른쪽 측면 판재 */}
                       <BoxWithEdges
                         args={[basicThickness, drawerSectionHeight, depth]}
@@ -117,6 +122,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={isSectionHighlighted}
                       />
                     </>
                   ) : (
@@ -130,8 +136,9 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={isSectionHighlighted}
                       />
-                      
+
                       {/* 오른쪽 측면 판재 */}
                       <BoxWithEdges
                         args={[basicThickness, hangingSectionHeight, depth]}
@@ -140,6 +147,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={isSectionHighlighted}
                       />
                     </>
                   )}
@@ -153,9 +161,10 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                       renderMode={renderMode}
                       isDragging={isDragging}
                       isEditMode={isEditMode}
+                      isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                     />
                   )}
-                  
+
                   {/* 상부 섹션의 바닥판 - 하부 섹션 상판 바로 위 */}
                   {index === 1 && (
                     <BoxWithEdges
@@ -165,6 +174,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                       renderMode={renderMode}
                       isDragging={isDragging}
                       isEditMode={isEditMode}
+                      isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                     />
                   )}
                 </React.Fragment>
@@ -205,6 +215,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
+        isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
       />
       
       {/* Type4 상단 상판 두께 치수 표시 */}
@@ -257,6 +268,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
+        isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
       />
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
@@ -285,6 +297,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           mmToThreeUnits={baseFurniture.mmToThreeUnits}
           renderMode={renderMode}
           furnitureId={moduleData.id}
+          placedFurnitureId={placedFurnitureId}
         />
       )}
       
