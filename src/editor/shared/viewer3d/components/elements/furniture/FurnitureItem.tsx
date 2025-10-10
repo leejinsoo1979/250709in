@@ -158,6 +158,7 @@ interface FurnitureItemProps {
   viewMode: '2D' | '3D';
   view2DDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
   renderMode: 'solid' | 'wireframe';
+  showFurniture?: boolean; // 가구 본체 표시 여부
   onPointerDown: (e: ThreeEvent<PointerEvent>, id: string) => void;
   onPointerMove: (e: ThreeEvent<PointerEvent>) => void;
   onPointerUp: () => void;
@@ -175,6 +176,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   viewMode,
   view2DDirection,
   renderMode,
+  showFurniture = true,
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -182,6 +184,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 }) => {
   // Three.js 컨텍스트 접근
   const { gl, invalidate, scene, camera } = useThree();
+
+  // 디버그: showFurniture 값 확인
+  useEffect(() => {
+    console.log('🎯 FurnitureItem - showFurniture:', showFurniture, 'placedModuleId:', placedModule.id, 'moduleId:', placedModule.moduleId);
+  }, [showFurniture, placedModule.id, placedModule.moduleId]);
   const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId } = useUIStore();
   const { updatePlacedModule } = useFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
@@ -1706,6 +1713,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               isHighlighted={isSelected} // 선택 상태 전달
               placedFurnitureId={placedModule.id} // 배치된 가구 ID 전달 (치수 편집용)
               customSections={placedModule.customSections} // 사용자 정의 섹션 설정
+              showFurniture={showFurniture} // 가구 본체 표시 여부
             />
             
             {/* 가구 너비 디버깅 */}

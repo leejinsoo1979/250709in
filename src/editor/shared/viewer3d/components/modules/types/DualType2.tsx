@@ -71,6 +71,11 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   const sectionHeights = getSectionHeights();
   const isMulti = sectionHeights.length >= 2;
 
+  // 디버그: showFurniture 값 확인
+  useEffect(() => {
+    console.log('🎨 DualType2 - showFurniture:', showFurniture, 'moduleId:', moduleData.id);
+  }, [showFurniture, moduleData.id]);
+
   return (
     <>
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}

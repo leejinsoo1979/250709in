@@ -111,6 +111,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     adjustedWidth,
     isHighlighted
   });
+
+  // 디버그: showFurniture 값 확인
+  useEffect(() => {
+    console.log('📦 BoxModule - showFurniture:', showFurniture, 'moduleId:', moduleData.id, 'placedFurnitureId:', placedFurnitureId);
+  }, [showFurniture, moduleData.id, placedFurnitureId]);
   
   // 모든 간접조명은 UpperCabinetIndirectLight에서 통합 처리하므로 BoxModule에서는 렌더링하지 않음
   const showIndirectLight = false;
