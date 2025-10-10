@@ -309,19 +309,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             depthTest={false}
           />
 
-          {/* 깊이 텍스트 - 좌측 */}
-          <Text
-            position={[-spaceWidth/2 - leftDimOffset, floatHeight - mmToThreeUnits(280), 0]}
-            fontSize={largeFontSize}
-            color={textColor}
-            anchorX="center"
-            anchorY="middle"
-            renderOrder={1000}
-            depthTest={false}
-            rotation={[0, -Math.PI / 2, 0]}
-          >
-            {spaceInfo.depth || 1500}
-          </Text>
         </group>
 
         {/* ===== 가구별 깊이 치수 ===== */}
