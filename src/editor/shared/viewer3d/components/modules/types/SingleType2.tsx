@@ -290,6 +290,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isDragging={isDragging}
                   isEditMode={isEditMode}
                   isBackPanel={true}
+                  isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                 />
 
                 {/* 상부 섹션 백패널 */}
@@ -301,6 +302,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isDragging={isDragging}
                   isEditMode={isEditMode}
                   isBackPanel={true}
+                  isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                 />
               </>
             );

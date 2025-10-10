@@ -483,6 +483,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       renderMode={renderMode}
                       isDragging={isDragging}
                       isBackPanel={true}
+                      isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                     />
 
                     {/* 상부 섹션 백패널 */}
@@ -493,6 +494,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       renderMode={renderMode}
                       isDragging={isDragging}
                       isBackPanel={true}
+                      isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                     />
                   </>
                 );
