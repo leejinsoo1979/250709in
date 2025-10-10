@@ -389,38 +389,38 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         />
       )}
 
-      {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
-      {!isDragging && (
-        <SectionsRenderer
-          modelConfig={baseFurniture.modelConfig}
-          height={baseFurniture.height}
-          innerWidth={baseFurniture.innerWidth}
-          depth={baseFurniture.depth}
-          adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-          basicThickness={baseFurniture.basicThickness}
-          shelfZOffset={baseFurniture.shelfZOffset}
-          material={baseFurniture.material}
-          calculateSectionHeight={baseFurniture.calculateSectionHeight}
-          mmToThreeUnits={baseFurniture.mmToThreeUnits}
-          renderMode={renderMode}
-          furnitureId={moduleData.id}
-          placedFurnitureId={placedFurnitureId}
-        />
-      )}
+        {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
+        {!isDragging && (
+          <SectionsRenderer
+            modelConfig={baseFurniture.modelConfig}
+            height={baseFurniture.height}
+            innerWidth={baseFurniture.innerWidth}
+            depth={baseFurniture.depth}
+            adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+            basicThickness={baseFurniture.basicThickness}
+            shelfZOffset={baseFurniture.shelfZOffset}
+            material={baseFurniture.material}
+            calculateSectionHeight={baseFurniture.calculateSectionHeight}
+            mmToThreeUnits={baseFurniture.mmToThreeUnits}
+            renderMode={renderMode}
+            furnitureId={moduleData.id}
+            placedFurnitureId={placedFurnitureId}
+          />
+        )}
 
-      {/* 조절발통 (네 모서리) */}
-      <AdjustableFootsRenderer
-        width={width}
-        depth={depth}
-        yOffset={-height / 2}
-        renderMode={renderMode}
-        isHighlighted={false}
-        isFloating={false}
-        baseHeight={spaceInfo?.baseConfig?.height || 65}
-        viewMode={viewMode}
-        view2DDirection={view2DDirection}
-      />
-      </group>
+        {/* 조절발통 (네 모서리) */}
+        <AdjustableFootsRenderer
+          width={width}
+          depth={depth}
+          yOffset={-height / 2}
+          renderMode={renderMode}
+          isHighlighted={false}
+          isFloating={false}
+          baseHeight={spaceInfo?.baseConfig?.height || 65}
+          viewMode={viewMode}
+          view2DDirection={view2DDirection}
+        />
+        </group>
       )}
 
       {/* 도어는 showFurniture와 관계없이 항상 렌더링 (도어 도면 출력용) */}
