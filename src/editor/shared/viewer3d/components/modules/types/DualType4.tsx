@@ -156,11 +156,11 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     </>
                   )}
                   
-                  {/* 중간 구분 패널 (하부 섹션 상판) - 원래 위치 */}
+                  {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 앞까지 확장 */}
                   {index === 0 && (
                     <BoxWithEdges
-                      args={[innerWidth, basicThickness, depth]}
-                      position={[0, lowerTopPanelY, 0]}
+                      args={[innerWidth, basicThickness, depth - backPanelThickness - mmToThreeUnits(17)]}
+                      position={[0, lowerTopPanelY, (backPanelThickness + mmToThreeUnits(17)) / 2]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
@@ -169,11 +169,11 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     />
                   )}
 
-                  {/* 상부 섹션의 바닥판 - 하부 섹션 상판 바로 위 */}
+                  {/* 상부 섹션의 바닥판 - 하부 섹션 상판 바로 위, 백패널 앞까지 확장 */}
                   {index === 1 && (
                     <BoxWithEdges
-                      args={[innerWidth, basicThickness, depth]}
-                      position={[0, lowerTopPanelY + basicThickness, 0]}
+                      args={[innerWidth, basicThickness, depth - backPanelThickness - mmToThreeUnits(17)]}
+                      position={[0, lowerTopPanelY + basicThickness, (backPanelThickness + mmToThreeUnits(17)) / 2]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
