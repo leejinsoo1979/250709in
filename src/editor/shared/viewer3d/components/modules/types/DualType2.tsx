@@ -387,24 +387,25 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isBackPanel={true}
         />
-        {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
-        {!isDragging && (
-          <SectionsRenderer
-            modelConfig={baseFurniture.modelConfig}
-            height={baseFurniture.height}
-            innerWidth={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
-            adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-            basicThickness={baseFurniture.basicThickness}
-            shelfZOffset={baseFurniture.shelfZOffset}
-            material={baseFurniture.material}
-            calculateSectionHeight={baseFurniture.calculateSectionHeight}
-            mmToThreeUnits={baseFurniture.mmToThreeUnits}
-            renderMode={renderMode}
-            furnitureId={moduleData.id}
-            placedFurnitureId={placedFurnitureId}
-          />
-        )}
+      )}
+
+      {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
+      {!isDragging && (
+        <SectionsRenderer
+          modelConfig={baseFurniture.modelConfig}
+          height={baseFurniture.height}
+          innerWidth={baseFurniture.innerWidth}
+          depth={baseFurniture.depth}
+          adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+          basicThickness={baseFurniture.basicThickness}
+          shelfZOffset={baseFurniture.shelfZOffset}
+          material={baseFurniture.material}
+          calculateSectionHeight={baseFurniture.calculateSectionHeight}
+          mmToThreeUnits={baseFurniture.mmToThreeUnits}
+          renderMode={renderMode}
+          furnitureId={moduleData.id}
+          placedFurnitureId={placedFurnitureId}
+        />
       )}
         </group>
       )}
