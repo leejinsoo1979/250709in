@@ -425,6 +425,15 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     topCompartmentTopY = height/2 - basicThickness;
                     // 안전선반 위 칸의 내경
                     topCompartmentHeight = (topCompartmentTopY - topCompartmentBottomY) / 0.01;
+
+                    console.log('🔵 안전선반 위 칸 렌더링:', {
+                      furnitureId,
+                      sectionIndex: index,
+                      totalSections: allSections.length,
+                      isLastSection: index === allSections.length - 1,
+                      topCompartmentHeight: Math.round(topCompartmentHeight),
+                      safetyShelfPositionMm
+                    });
                   }
                 }
 
