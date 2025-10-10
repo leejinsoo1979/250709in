@@ -113,9 +113,8 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           targetPanel = panels.upper;
         }
       }
-      // 듀얼 타입5,6 (스타일러, 바지걸이장): leftSections 기준으로 처리
-      else if (moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler')) {
-        // 첫 번째 섹션이 drawer면 하부장, 두 번째가 hanging이면 상부장
+      // 듀얼 타입4,5,6 (서랍+옷장, 스타일러, 바지걸이장): 첫 섹션이 drawer면 하부장, 두 번째가 hanging이면 상부장
+      else if (moduleData.id.includes('dual-4drawer-hanging') || moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler')) {
         if (section.type === 'drawer') {
           sectionName = '하부장';
           targetPanel = panels.lower;
