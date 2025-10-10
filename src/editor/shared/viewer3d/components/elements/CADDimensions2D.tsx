@@ -82,6 +82,30 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       <group>
         {/* ===== 왼쪽: 전체 높이 치수 ===== */}
         <group>
+          {/* 보조 가이드 연장선 - 하단 */}
+          <NativeLine
+            points={[
+              [0, floatHeight, -spaceDepth/2 - leftDimOffset - mmToThreeUnits(400)],
+              [0, floatHeight, -spaceDepth/2 - leftDimOffset]
+            ]}
+            color={dimensionColor}
+            lineWidth={1}
+            renderOrder={100000}
+            depthTest={false}
+          />
+
+          {/* 보조 가이드 연장선 - 상단 */}
+          <NativeLine
+            points={[
+              [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset - mmToThreeUnits(400)],
+              [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]
+            ]}
+            color={dimensionColor}
+            lineWidth={1}
+            renderOrder={100000}
+            depthTest={false}
+          />
+
           {/* 수직 치수선 */}
           <NativeLine
             points={[
