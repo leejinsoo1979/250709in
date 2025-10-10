@@ -249,6 +249,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 받침대 높이 */}
         {baseFrameHeightMm > 0 && (
           <group>
+            {/* 보조 가이드 연장선 - 하단 (바닥) */}
+            <NativeLine
+              points={[
+                [0, floatHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
+                [0, floatHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+              ]}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
+            />
+            {/* 치수선 */}
             <NativeLine
               points={[
                 [0, floatHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
