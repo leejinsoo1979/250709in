@@ -196,6 +196,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         case 'shelf':
           // 선반 구역 (안전선반 포함)
           if (section.count && section.count > 0) {
+            // 섹션별 강조 확인
+            const isSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
+
             sectionContent = (
               <ShelfRenderer
                 shelfCount={section.count}
@@ -211,7 +214,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 showTopFrameDimension={index === 0}
                 renderMode={renderMode}
                 furnitureId={furnitureId}
-                isHighlighted={isHighlighted}
+                isHighlighted={isSectionHighlighted}
               />
             );
           }
@@ -219,6 +222,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           
         case 'hanging':
           // 옷걸이 구역 - 안전선반이 없어도 ShelfRenderer 호출 (치수 표시를 위해)
+          // 섹션별 강조 확인
+          const isHangingSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
+
           sectionContent = (
             <ShelfRenderer
               shelfCount={section.count || (section.shelfPositions ? section.shelfPositions.length : 0)}
@@ -237,7 +243,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               sectionType={section.type}
               sectionInternalHeight={section.internalHeight}
               isLastSection={index === allSections.length - 1}
-              isHighlighted={isHighlighted}
+              isHighlighted={isHangingSectionHighlighted}
             />
           );
           break;
@@ -245,6 +251,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         case 'drawer':
           // 서랍 구역
           if (section.count && section.count > 0) {
+            // 섹션별 강조 확인
+            const isDrawerSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
+
             sectionContent = (
               <DrawerRenderer
                 drawerCount={section.count}
@@ -257,7 +266,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 gapHeight={section.gapHeight}
                 material={material}
                 renderMode={renderMode}
-                isHighlighted={isHighlighted}
+                isHighlighted={isDrawerSectionHighlighted}
               />
             );
           }
