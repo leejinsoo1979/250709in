@@ -2447,60 +2447,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>
         )}
         
-        {/* 캐비넷이 배치된 경우에만 좌측 전체 높이 치수선 표시 */}
-        {placedModules.length > 0 && (
-        <group>
-          {/* 치수선 */}
-          <Line
-            points={[[0, 0, spaceZOffset - mmToThreeUnits(200)], [0, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)]]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 하단 화살표 */}
-          <Line
-            points={createArrowHead([0, 0, spaceZOffset - mmToThreeUnits(200)], [0, 0.05, spaceZOffset - mmToThreeUnits(200)])}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 상단 화살표 */}
-          <Line
-            points={createArrowHead([0, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)], [0, actualSpaceHeight - 0.05, spaceZOffset - mmToThreeUnits(200)])}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 전체 높이 치수 텍스트 */}
-          <Text
-                  renderOrder={1000}
-                  depthTest={false}
-            position={[0, actualSpaceHeight / 2, spaceZOffset - mmToThreeUnits(240)]}
-            fontSize={largeFontSize}
-            color={textColor}
-            anchorX="center"
-            anchorY="middle"
-              rotation={[0, -Math.PI / 2, -Math.PI / 2]}
-          >
-            {spaceInfo.height}
-          </Text>
-          
-          {/* 연장선 (하단) */}
-          <Line
-            points={[[0, 0, spaceZOffset], [0, 0, spaceZOffset - mmToThreeUnits(220)]]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 연장선 (상단) */}
-          <Line
-            points={[[0, spaceHeight, spaceZOffset], [0, spaceHeight, spaceZOffset - mmToThreeUnits(220)]]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-        </group>
-        )}
-
         {/* 캐비넷이 배치된 경우에만 우측 3구간 높이 치수선 표시 */}
         {placedModules.length > 0 && (
         <group>
