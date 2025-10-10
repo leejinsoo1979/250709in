@@ -276,8 +276,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 수평 치수선 */}
           <NativeLine
             points={[
-              [0, floatHeight - mmToThreeUnits(200), -spaceDepth/2],
-              [0, floatHeight - mmToThreeUnits(200), spaceDepth/2]
+              [0, floatHeight - mmToThreeUnits(300), -spaceDepth/2],
+              [0, floatHeight - mmToThreeUnits(300), spaceDepth/2]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -288,8 +288,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 앞쪽 티크 */}
           <NativeLine
             points={[
-              [-0.03, floatHeight - mmToThreeUnits(200), -spaceDepth/2],
-              [0.03, floatHeight - mmToThreeUnits(200), -spaceDepth/2]
+              [-0.03, floatHeight - mmToThreeUnits(300), -spaceDepth/2],
+              [0.03, floatHeight - mmToThreeUnits(300), -spaceDepth/2]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -300,8 +300,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 뒤쪽 티크 */}
           <NativeLine
             points={[
-              [-0.03, floatHeight - mmToThreeUnits(200), spaceDepth/2],
-              [0.03, floatHeight - mmToThreeUnits(200), spaceDepth/2]
+              [-0.03, floatHeight - mmToThreeUnits(300), spaceDepth/2],
+              [0.03, floatHeight - mmToThreeUnits(300), spaceDepth/2]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -311,7 +311,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           {/* 깊이 텍스트 */}
           <Text
-            position={[0, floatHeight - mmToThreeUnits(280), 0]}
+            position={[0, floatHeight - mmToThreeUnits(400), 0]}
             fontSize={largeFontSize}
             color={textColor}
             anchorX="center"
