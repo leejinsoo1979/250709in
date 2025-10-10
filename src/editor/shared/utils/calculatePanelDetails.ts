@@ -270,17 +270,6 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
             material: 'MDF'
           });
         }
-        
-        // 서랍 칸막이 (서랍 사이에만, 마지막 서랍 제외)
-        for (let i = 1; i < section.count; i++) {
-          targetPanel.push({
-            name: `${sectionName} ${t('furniture.drawerDivider')} ${i}`,
-            width: innerWidth,
-            depth: customDepth - backPanelThickness - 17, // 뒷판 공간 고려
-            thickness: basicThickness,
-            material: 'PB'  // 기본 재질
-          });
-        }
       } else if (section.type === 'hanging') {
         // 옷장 섹션 - 안전선반이 있으면 추가 (하나만)
         if (section.shelfPositions && section.shelfPositions.length > 0) {
