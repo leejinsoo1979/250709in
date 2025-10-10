@@ -56,6 +56,11 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
       }))
     });
   }, [placedModules]);
+
+  // showFurniture 변경 감지
+  React.useEffect(() => {
+    console.log('🎨 PlacedFurnitureContainer - showFurniture 변경:', showFurniture);
+  }, [showFurniture]);
   
   
   // mm를 Three.js 단위로 변환
