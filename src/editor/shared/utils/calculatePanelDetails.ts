@@ -71,8 +71,8 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
       let sectionName = '';
       let targetPanel = null;
 
-      // 2단 옷장 (single-2hanging): 첫 번째 섹션(shelf)이 하부장, 두 번째 섹션(hanging)이 상부장
-      if (moduleData.id.includes('2hanging')) {
+      // 2단 옷장 (single-2hanging): 첫 번째 섹션(hanging)이 하부장, 두 번째 섹션(hanging)이 상부장
+      if (moduleData.id.includes('single-2hanging')) {
         if (sectionIndex === 0) {
           sectionName = '하부장';
           targetPanel = panels.lower;
@@ -81,8 +81,8 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           targetPanel = panels.upper;
         }
       }
-      // 듀얼 타입4,5,6 (서랍+옷장, 스타일러, 바지걸이장): 첫 섹션이 drawer면 하부장, 두 번째가 hanging이면 상부장
-      else if (moduleData.id.includes('dual-4drawer-hanging') || moduleData.id.includes('dual-4drawer-pantshanger') || moduleData.id.includes('dual-2drawer-styler')) {
+      // 싱글 서랍+옷장 (single-2drawer-hanging, single-4drawer-hanging): drawer면 하부장, hanging이면 상부장
+      else if (moduleData.id.includes('single-2drawer-hanging') || moduleData.id.includes('single-4drawer-hanging')) {
         if (section.type === 'drawer') {
           sectionName = '하부장';
           targetPanel = panels.lower;
@@ -91,12 +91,25 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           targetPanel = panels.upper;
         }
       }
-      // 일반 서랍장
+      // 듀얼 서랍+옷장 타입 (dual-2drawer-hanging, dual-4drawer-hanging, dual-4drawer-pantshanger, dual-2drawer-styler)
+      else if (moduleData.id.includes('dual-2drawer-hanging') ||
+               moduleData.id.includes('dual-4drawer-hanging') ||
+               moduleData.id.includes('dual-4drawer-pantshanger') ||
+               moduleData.id.includes('dual-2drawer-styler')) {
+        if (section.type === 'drawer') {
+          sectionName = '하부장';
+          targetPanel = panels.lower;
+        } else {
+          sectionName = '상부장';
+          targetPanel = panels.upper;
+        }
+      }
+      // 일반 서랍장 (상하부장 구분 없음)
       else if (section.type === 'drawer') {
         targetPanel = panels.lower;
         sectionName = '';
       }
-      // 기타
+      // 기타 (옷장 등)
       else {
         targetPanel = panels.upper;
         sectionName = '';
