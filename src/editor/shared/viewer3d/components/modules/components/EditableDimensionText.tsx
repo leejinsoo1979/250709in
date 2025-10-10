@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { Text, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { getThemeHex } from '@/theme';
 
 interface EditableDimensionTextProps {
   // 위치 및 표시
@@ -20,6 +21,9 @@ interface EditableDimensionTextProps {
   // 렌더 설정
   renderOrder?: number;
   depthTest?: boolean;
+
+  // Hover 상태 전파
+  onHoverChange?: (isHovered: boolean) => void;
 }
 
 /**
@@ -37,12 +41,17 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   sectionIndex,
   furnitureId,
   renderOrder = 1000,
-  depthTest = false
+  depthTest = false,
+  onHoverChange
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(String(Math.round(value)));
+  const [isHovered, setIsHovered] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const meshRef = useRef<THREE.Mesh>(null);
+
+  // 테마 색상 가져오기
+  const themeColor = getThemeHex();
 
   // 편집 모드 진입
   const handleDoubleClick = useCallback((e: THREE.Event) => {
@@ -107,6 +116,26 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
     }
   }, [handleConfirm, handleCancel]);
 
+  // Hover 이벤트
+  const handlePointerOver = useCallback((e: THREE.Event) => {
+    e.stopPropagation();
+    setIsHovered(true);
+    if (onHoverChange) {
+      onHoverChange(true);
+    }
+  }, [onHoverChange]);
+
+  const handlePointerOut = useCallback((e: THREE.Event) => {
+    e.stopPropagation();
+    setIsHovered(false);
+    if (onHoverChange) {
+      onHoverChange(false);
+    }
+  }, [onHoverChange]);
+
+  // 현재 색상 결정 (hover 시 테마 색상)
+  const currentColor = isHovered ? themeColor : color;
+
   return (
     <>
       {/* 편집 모드 */}
@@ -161,11 +190,13 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
       {/* 일반 표시 모드 */}
       {!isEditing && (
         <>
-          {/* 투명한 클릭 영역 (더블클릭 감지용) */}
+          {/* 투명한 클릭 영역 (더블클릭 감지용, hover 감지용) */}
           <mesh
             ref={meshRef}
             position={position}
             onDoubleClick={handleDoubleClick}
+            onPointerOver={handlePointerOver}
+            onPointerOut={handlePointerOut}
           >
             <planeGeometry args={[fontSize * 4, fontSize * 1.5]} />
             <meshBasicMaterial
@@ -175,11 +206,11 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
             />
           </mesh>
 
-          {/* 치수 텍스트 */}
+          {/* 치수 텍스트 (hover 시 테마 색상으로 변경) */}
           <Text
             position={position}
             fontSize={fontSize}
-            color={color}
+            color={currentColor}
             anchorX="center"
             anchorY="middle"
             rotation={rotation}

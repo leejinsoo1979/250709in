@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import * as THREE from 'three';
 import { SectionConfig } from '@/data/modules/shelving';
 import { useSpace3DView } from '../../../context/useSpace3DView';
@@ -12,6 +12,7 @@ import { useDimensionColor } from '../hooks/useDimensionColor';
 import EditableDimensionText from './EditableDimensionText';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { updateSectionHeight } from '@/editor/shared/utils/sectionHeightUpdater';
+import { getThemeHex } from '@/theme';
 
 // SectionsRenderer Props 인터페이스
 interface SectionsRendererProps {
@@ -83,6 +84,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
   // 가구 스토어 메서드
   const { placedModules, updatePlacedModule } = useFurnitureStore();
+
+  // Hover 상태 관리 (섹션별)
+  const [hoveredSectionIndex, setHoveredSectionIndex] = useState<number | null>(null);
+
+  // 테마 색상
+  const themeColor = getThemeHex();
 
   // 치수 변경 핸들러
   const handleDimensionChange = useCallback((sectionIndex: number, newInternalHeight: number) => {
@@ -377,7 +384,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 }
                 
                 const centerY = (topY + bottomY) / 2;
-                
+
+                // 현재 섹션의 hover 상태에 따른 색상
+                const isHovered = hoveredSectionIndex === index;
+                const currentColor = isHovered ? themeColor : dimensionColor;
+
                 return (
                   <>
                     {/* 치수 텍스트 - 편집 가능 (더블클릭) */}
@@ -396,27 +407,28 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       furnitureId={furnitureId}
                       renderOrder={1000}
                       depthTest={false}
+                      onHoverChange={(hovered) => setHoveredSectionIndex(hovered ? index : null)}
                     />
-                    
-                    {/* 수직 연결선 - 왼쪽으로 이동 */}
+
+                    {/* 수직 연결선 - 왼쪽으로 이동 (hover 시 테마 색상) */}
                     <NativeLine
                       points={[
                         [-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
                         [-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
                       ]}
-                      color={dimensionColor}
+                      color={currentColor}
                       lineWidth={1}
                       dashed={false}
                     />
-                    
-                    {/* 수직선 양끝 엔드포인트 */}
+
+                    {/* 수직선 양끝 엔드포인트 (hover 시 테마 색상) */}
                     <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={dimensionColor} />
+                      <meshBasicMaterial color={currentColor} />
                     </mesh>
                     <mesh position={[-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                       <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={dimensionColor} />
+                      <meshBasicMaterial color={currentColor} />
                     </mesh>
                   </>
                 );
