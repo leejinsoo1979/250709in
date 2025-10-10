@@ -284,8 +284,10 @@ export const useUIStore = create<UIState>()(
       setShowAll: (show) =>
         set({ showAll: show }),
       
-      setShowFurniture: (show) =>
-        set({ showFurniture: show }),
+      setShowFurniture: (show) => {
+        console.log('💾 UIStore - setShowFurniture 호출 - 새로운 값:', show);
+        set({ showFurniture: show });
+      },
       
       setRenderMode: (mode) =>
         set({ renderMode: mode }),
