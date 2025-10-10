@@ -159,6 +159,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { theme } = useTheme(); // 테마 정보 가져오기
   const { view2DDirection, showDimensions, showDimensionsText } = useUIStore(); // UI 스토어에서 view2DDirection 가져오기
+  const highlightedSection = useUIStore(state => state.highlightedSection);
   const { dimensionColor, baseFontSize } = useDimensionColor();
   
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
@@ -191,42 +192,50 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 ? -height/2 + lowerSectionHeight + adjustedUpperHeight/2  // 4단: 하부 바로 위
                 : -height/2 + lowerSectionHeight + basicThickness + adjustedUpperHeight/2; // 2단
 
+              // 섹션 강조 확인
+              const isLowerHighlighted = highlightedSection === `${moduleData?.id}-0`;
+              const isUpperHighlighted = highlightedSection === `${moduleData?.id}-1`;
+
               return (
                 <>
-                  {/* 왼쪽 하부 측판 (18mm 연장) */}
+                  {/* 왼쪽 하부 측판 */}
                   <BoxWithEdges
                     args={[basicThickness, adjustedLowerHeight, depth]}
                     position={[-innerWidth/2 - basicThickness/2, lowerPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
+                    isHighlighted={isLowerHighlighted}
                   />
 
-                  {/* 왼쪽 상부 측판 (18mm 단축) */}
+                  {/* 왼쪽 상부 측판 */}
                   <BoxWithEdges
                     args={[basicThickness, adjustedUpperHeight, depth]}
                     position={[-innerWidth/2 - basicThickness/2, upperPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
+                    isHighlighted={isUpperHighlighted}
                   />
 
-                  {/* 오른쪽 하부 측판 (18mm 연장) */}
+                  {/* 오른쪽 하부 측판 */}
                   <BoxWithEdges
                     args={[basicThickness, adjustedLowerHeight, depth]}
                     position={[innerWidth/2 + basicThickness/2, lowerPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
+                    isHighlighted={isLowerHighlighted}
                   />
 
-                  {/* 오른쪽 상부 측판 (18mm 단축) */}
+                  {/* 오른쪽 상부 측판 */}
                   <BoxWithEdges
                     args={[basicThickness, adjustedUpperHeight, depth]}
                     position={[innerWidth/2 + basicThickness/2, upperPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
+                    isHighlighted={isUpperHighlighted}
                   />
                 </>
               );
@@ -266,6 +275,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2;
                 const actualThickness = basicThickness * 100;
 
+                // 섹션 강조 확인
+                const isLowerHighlighted = highlightedSection === `${moduleData?.id}-0`;
+                const isUpperHighlighted = highlightedSection === `${moduleData?.id}-1`;
+
                 return (
                   <>
                     {/* 하부 섹션 상판 (18mm 아래) */}
@@ -275,6 +288,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
+                      isHighlighted={isLowerHighlighted}
                     />
 
                     {/* 상부 섹션 바닥판 - 하부 섹션 상판 바로 위 */}
@@ -284,6 +298,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
+                      isHighlighted={isUpperHighlighted}
                     />
                   </>
                 );
@@ -305,6 +320,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const middlePanelY = currentYPosition - basicThickness/2 + basicThickness;
                   const lowerTopPanelY = middlePanelY - basicThickness;
 
+                  // 섹션 강조 확인
+                  const isLowerHighlighted = highlightedSection === `${moduleData?.id}-0`;
+                  const isUpperHighlighted = highlightedSection === `${moduleData?.id}-1`;
+
                   return (
                     <React.Fragment key={`divider-${index}`}>
                       {/* 하부 섹션 상판 */}
@@ -314,6 +333,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
+                        isHighlighted={isLowerHighlighted}
                       />
 
                       {/* 상부 섹션 바닥판 */}
@@ -323,6 +343,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
+                        isHighlighted={isUpperHighlighted}
                       />
                     </React.Fragment>
                   );

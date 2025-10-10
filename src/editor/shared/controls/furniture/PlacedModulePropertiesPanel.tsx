@@ -1138,7 +1138,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       type="number"
                       value={lowerHeightInput}
                       onChange={(e) => handleLowerHeightChange(e.target.value)}
-                      onBlur={handleLowerHeightBlur}
+                      onFocus={() => useUIStore.getState().setHighlightedSection(`${currentPlacedModule?.id}-0`)}
+                      onBlur={() => {
+                        handleLowerHeightBlur();
+                        useUIStore.getState().setHighlightedSection(null);
+                      }}
                       className={styles.depthInput}
                       placeholder="1000"
                       style={{
@@ -1160,7 +1164,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       type="number"
                       value={upperHeightInput}
                       onChange={(e) => handleUpperHeightChange(e.target.value)}
-                      onBlur={handleUpperHeightBlur}
+                      onFocus={() => useUIStore.getState().setHighlightedSection(`${currentPlacedModule?.id}-1`)}
+                      onBlur={() => {
+                        handleUpperHeightBlur();
+                        useUIStore.getState().setHighlightedSection(null);
+                      }}
                       className={styles.depthInput}
                       placeholder="1000"
                       style={{

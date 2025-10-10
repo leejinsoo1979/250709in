@@ -78,6 +78,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 }) => {
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);
+  const highlightedSection = useUIStore(state => state.highlightedSection);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
