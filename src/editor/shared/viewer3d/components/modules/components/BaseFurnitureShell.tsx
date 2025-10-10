@@ -291,20 +291,20 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                 return (
                   <>
-                    {/* 하부 섹션 상판 (18mm 아래) */}
+                    {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
                     <BoxWithEdges
-                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                      position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset]}
+                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
+                      position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
                       isHighlighted={isLowerHighlighted}
                     />
 
-                    {/* 상부 섹션 바닥판 - 하부 섹션 상판 바로 위 */}
+                    {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림 */}
                     <BoxWithEdges
-                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                      position={[0, lowerTopPanelY + basicThickness, basicThickness/2 + shelfZOffset]}
+                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(26)]}
+                      position={[0, lowerTopPanelY + basicThickness, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
