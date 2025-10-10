@@ -371,8 +371,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </Html>
         </group>
 
-        {/* 측면도 가구 치수 - 숨김 처리 */}
-        {false && showFurniture && placedModules.map((module, index) => {
+        {/* 측면도 가구 치수 */}
+        {showFurniture && placedModules.map((module, index) => {
           const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
           if (!moduleData) return null;
 
@@ -397,8 +397,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureZOffset = zOffset + (panelDepth - furnitureSpaceDepth) / 2;
           const furnitureZ = furnitureZOffset + furnitureSpaceDepth/2 - doorThickness - furnitureDepth/2;
 
-          // 깊이 치수선 위치 (가구 왼쪽)
-          const depthDimX = -furnitureDepth / 2 - mmToThreeUnits(150);
+          // 깊이 치수선 위치 (가구 왼쪽으로 더 멀리)
+          const depthDimX = -mmToThreeUnits(250); // 고정된 위치로 변경
           const frontZ = furnitureZ + furnitureDepth / 2;
           const backZ = furnitureZ - furnitureDepth / 2;
 
