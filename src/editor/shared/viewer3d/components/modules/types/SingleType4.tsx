@@ -39,8 +39,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth,
-    customSections
+    adjustedWidth
   });
 
   const {
