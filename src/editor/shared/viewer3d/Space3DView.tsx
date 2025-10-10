@@ -51,7 +51,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture } = useUIStore();
+  const { view2DDirection, showDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
   
