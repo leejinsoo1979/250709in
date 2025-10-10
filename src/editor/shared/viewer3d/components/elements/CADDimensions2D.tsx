@@ -708,23 +708,23 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         // FurnitureItem.tsx와 동일한 우선순위 적용
         // 우선순위 1: adjustedWidth (기둥 침범 조정 너비 - 최우선)
         if (module.adjustedWidth !== undefined && module.adjustedWidth !== null) {
-          furnitureWidthMm = module.adjustedWidth;
+          furnitureWidthMm = parseFloat(module.adjustedWidth.toFixed(2));
         }
         // 우선순위 2: customWidth (슬롯 사이즈에 맞춘 너비 - 기둥이 없는 경우)
         else if (module.customWidth !== undefined && module.customWidth !== null) {
-          furnitureWidthMm = module.customWidth;
+          furnitureWidthMm = parseFloat(module.customWidth.toFixed(2));
         }
         // 우선순위 3: 슬롯 너비 직접 계산 (customWidth가 없는 경우)
         else if (indexing.slotWidths && module.slotIndex !== undefined) {
           if (isDualFurniture && module.slotIndex < indexing.slotWidths.length - 1) {
-            furnitureWidthMm = indexing.slotWidths[module.slotIndex] + indexing.slotWidths[module.slotIndex + 1];
+            furnitureWidthMm = parseFloat((indexing.slotWidths[module.slotIndex] + indexing.slotWidths[module.slotIndex + 1]).toFixed(2));
           } else if (indexing.slotWidths[module.slotIndex] !== undefined) {
-            furnitureWidthMm = indexing.slotWidths[module.slotIndex];
+            furnitureWidthMm = parseFloat(indexing.slotWidths[module.slotIndex].toFixed(2));
           }
         }
         // 우선순위 4: 기본값 (모듈 원래 크기)
         else {
-          furnitureWidthMm = moduleData.dimensions.width;
+          furnitureWidthMm = parseFloat(moduleData.dimensions.width.toFixed(2));
         }
         
         // 기둥 침범 시 가구 크기와 위치 재계산
