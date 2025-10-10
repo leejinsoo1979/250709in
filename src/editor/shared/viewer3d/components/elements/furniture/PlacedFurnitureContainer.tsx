@@ -216,4 +216,4 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   );
 };
 
-export default React.memo(PlacedFurnitureContainer); 
+export default PlacedFurnitureContainer; 
