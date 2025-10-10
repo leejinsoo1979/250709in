@@ -5,7 +5,6 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Edges } from '@react-three/drei';
 
 interface BoxWithEdgesProps {
   args: [number, number, number];
@@ -223,15 +222,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       {/* 윤곽선 렌더링 */}
       {!hideEdges && (
         <>
-          {isHighlighted && (
-            // 강조 상태일 때 추가 발광 효과 (2D, 3D 모두)
-            <Edges
-              color={viewMode === '2D' ? "#18CF23" : highlightColor}
-              scale={1.001}
-              threshold={15}
-              linewidth={viewMode === '2D' ? 4 : 3}
-            />
-          )}
           <lineSegments>
             <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
             <lineBasicMaterial
