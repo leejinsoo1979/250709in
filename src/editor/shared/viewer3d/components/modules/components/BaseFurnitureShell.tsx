@@ -290,9 +290,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     currentYPosition += getSectionHeights()[i];
                   }
 
-                  // 4drawer: 하부 상판 18mm 위로, 상부 바닥판 18mm 아래로
-                  const middlePanelY = currentYPosition - basicThickness/2 - mmToThreeUnits(18);
-                  const lowerTopPanelY = currentYPosition - basicThickness - basicThickness/2 + mmToThreeUnits(18);
+                  // 4drawer: 하부 상판 18mm 아래로, 상부 바닥판 18mm 위로
+                  const middlePanelY = currentYPosition - basicThickness/2 + mmToThreeUnits(18);
+                  const lowerTopPanelY = currentYPosition - basicThickness - basicThickness/2 - mmToThreeUnits(18);
 
                   // 섹션 강조 확인 (placedFurnitureId 사용)
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
