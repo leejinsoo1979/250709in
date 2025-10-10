@@ -74,9 +74,16 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
     const shouldHideUpperFloorThickness = moduleData.id.includes('dual-4drawer-hanging');
 
     if (sections.length > 1 && moduleData.id.includes('2hanging')) {
-      // 2단 옷장의 경우 안전선반으로 표시
-      panels.common.push({
-        name: '안전선반 (칸막이)',
+      // 2단 옷장의 경우 하부장 상판과 상부장 바닥판 별도 표시
+      panels.lower.push({
+        name: '하부장 상판',
+        width: innerWidth,
+        depth: customDepth - backPanelThickness - 17, // 실제 렌더링 값
+        thickness: basicThickness,
+        material: 'PB'  // 기본 재질
+      });
+      panels.upper.push({
+        name: '상부장 바닥판',
         width: innerWidth,
         depth: customDepth - backPanelThickness - 17, // 실제 렌더링 값
         thickness: basicThickness,
