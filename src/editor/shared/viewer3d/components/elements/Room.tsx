@@ -40,6 +40,7 @@ interface RoomProps {
   showDimensions?: boolean; // 치수 표시 여부
   isStep2?: boolean; // Step2 여부
   activeZone?: 'normal' | 'dropped'; // 활성 영역
+  showFurniture?: boolean; // 가구 본체 표시 여부
 }
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
@@ -177,7 +178,8 @@ const Room: React.FC<RoomProps> = ({
   showDimensions,
   isStep2,
   renderMode: renderModeProp,
-  activeZone
+  activeZone,
+  showFurniture
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
@@ -2862,7 +2864,7 @@ const Room: React.FC<RoomProps> = ({
               placedModules: filteredModules
             });
             
-            return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} />;
+            return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={showFurniture} />;
           })()}
         </>
       ) : (
@@ -2876,7 +2878,7 @@ const Room: React.FC<RoomProps> = ({
             activeZone,
             timestamp: Date.now()
           })}
-          <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} />
+          <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={showFurniture} />
         </>
       )}
     </group>

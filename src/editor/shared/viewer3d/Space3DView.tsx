@@ -50,7 +50,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme } = useUIStore();
+  const { view2DDirection, showDimensions, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
   
@@ -642,9 +642,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               renderMode={renderMode}
               isSplitView={true}
             >
-              <QuadrantContent 
-                viewDirection="front" 
-                spaceInfo={spaceInfo} 
+              <QuadrantContent
+                viewDirection="front"
+                spaceInfo={spaceInfo}
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
@@ -653,6 +653,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showGuides={showGuides}
                 showAxis={showAxis}
                 isStep2={isStep2}
+                showFurniture={showFurniture}
               />
             </ThreeCanvas>
             <div style={{
@@ -723,9 +724,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               renderMode={renderMode}
               isSplitView={true}
             >
-              <QuadrantContent 
-                viewDirection="top" 
-                spaceInfo={spaceInfo} 
+              <QuadrantContent
+                viewDirection="top"
+                spaceInfo={spaceInfo}
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
@@ -734,6 +735,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showGuides={showGuides}
                 showAxis={showAxis}
                 isStep2={isStep2}
+                showFurniture={showFurniture}
               />
             </ThreeCanvas>
             <div style={{
@@ -804,9 +806,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               renderMode={renderMode}
               isSplitView={true}
             >
-              <QuadrantContent 
-                viewDirection="left" 
-                spaceInfo={spaceInfo} 
+              <QuadrantContent
+                viewDirection="left"
+                spaceInfo={spaceInfo}
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
@@ -815,6 +817,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showGuides={showGuides}
                 showAxis={showAxis}
                 isStep2={isStep2}
+                showFurniture={showFurniture}
               />
             </ThreeCanvas>
             <div style={{
@@ -885,9 +888,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               renderMode={renderMode}
               isSplitView={true}
             >
-              <QuadrantContent 
-                viewDirection="right" 
-                spaceInfo={spaceInfo} 
+              <QuadrantContent
+                viewDirection="right"
+                spaceInfo={spaceInfo}
                 materialConfig={materialConfig}
                 showAll={showAll}
                 showFrame={showFrame}
@@ -896,6 +899,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showGuides={showGuides}
                 showAxis={showAxis}
                 isStep2={isStep2}
+                showFurniture={showFurniture}
               />
             </ThreeCanvas>
             <div style={{
@@ -1015,18 +1019,19 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             
             {/* 기본 요소들 */}
             {console.log('🔴 Space3DView 메인 Room 렌더링')}
-            <Room 
-              spaceInfo={spaceInfo} 
-              viewMode={viewMode} 
+            <Room
+              spaceInfo={spaceInfo}
+              viewMode={viewMode}
               view2DDirection={view2DDirection}
               renderMode={renderMode}
-              materialConfig={materialConfig} 
-              showAll={showAll} 
+              materialConfig={materialConfig}
+              showAll={showAll}
               showFrame={showFrame}
               showDimensions={showDimensions}
               showGuides={showGuides}
               isStep2={isStep2}
               activeZone={activeZone}
+              showFurniture={showFurniture}
             />
             
             {/* 단내림 공간 렌더링 */}
@@ -1296,7 +1301,8 @@ const QuadrantContent: React.FC<{
   showAxis: boolean;
   isStep2?: boolean;
   throttledUpdateColumn?: (id: string, updates: any) => void;
-}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone }) => {
+  showFurniture?: boolean;
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone, showFurniture }) => {
   const { placedModules } = useFurnitureStore();
   const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
   const { activePopup } = useUIStore();
@@ -1397,6 +1403,7 @@ const QuadrantContent: React.FC<{
         showFrame={showFrame}
         materialConfig={materialConfig}
         activeZone={activeZone}
+        showFurniture={showFurniture}
       />
     </React.Suspense>
   );

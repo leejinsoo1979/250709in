@@ -13,6 +13,7 @@ interface PlacedFurnitureContainerProps {
   renderMode: 'solid' | 'wireframe';
   placedModules?: any[];
   activeZone?: 'normal' | 'dropped';
+  showFurniture?: boolean;
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
@@ -20,7 +21,8 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   view2DDirection,
   renderMode,
   placedModules: propPlacedModules,
-  activeZone
+  activeZone,
+  showFurniture
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
@@ -201,6 +203,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
             onPointerMove={dragHandlers.handlePointerMove}
             onPointerUp={dragHandlers.handlePointerUp}
             onDoubleClick={selectionState.handleFurnitureClick}
+            showFurniture={showFurniture}
           />
         );
       })}
