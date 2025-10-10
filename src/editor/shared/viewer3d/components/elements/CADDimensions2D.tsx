@@ -52,6 +52,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const internalSpace = calculateInternalSpace(spaceInfo);
   const internalHeight = mmToThreeUnits(internalSpace.height);
 
+  console.log('🔍 CAD Dimensions Debug:', {
+    baseFrameHeightMm,
+    floatHeightMm,
+    internalSpaceHeightMm: internalSpace.height,
+    internalHeightThreeUnits: internalHeight
+  });
+
   // 내부 공간을 상부/하부 섹션으로 분할 (50%씩)
   const upperSectionHeight = internalHeight / 2;
   const lowerSectionHeight = internalHeight / 2;
@@ -63,7 +70,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   // 프레임 높이
   const topFrameHeightMm = spaceInfo.frameSize?.top || 0;
   const topFrameHeight = mmToThreeUnits(topFrameHeightMm);
-  const baseFrameHeightMm = spaceInfo.baseConfig?.frameHeight || 0;
+  const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
   const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
   const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
 
