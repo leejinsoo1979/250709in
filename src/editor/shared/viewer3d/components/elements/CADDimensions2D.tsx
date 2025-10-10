@@ -250,22 +250,32 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   depthTest={false}
                 />
                 )}
-                {/* 보조 가이드 연장선 - 끝 (상부섹션은 Y축으로 짧게) */}
+                {/* 보조 가이드 연장선 - 끝 (상부섹션은 가구 최상단에서) */}
                 <NativeLine
                   points={[
-                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
-                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX,
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - mmToThreeUnits(39)) : sectionEndY,
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
+                    [slotX,
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - mmToThreeUnits(39)) : sectionEndY,
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={1}
                   renderOrder={100000}
                   depthTest={false}
                 />
-                {/* 치수선 (상부섹션은 짧게, 첫 번째 섹션은 받침대 위부터) */}
+                {/* 치수선 */}
                 <NativeLine
                   points={[
-                    [slotX, sectionIndex === 0 ? (floatHeight + baseFrameHeight) : sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX,
+                      sectionIndex === 0 ? (floatHeight + baseFrameHeight) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - mmToThreeUnits(39)) :
+                      sectionStartY,
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
+                    [slotX,
+                      isLastSection ? sectionStartY : sectionEndY,
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={2}
@@ -311,7 +321,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     slotX,
-                    isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY,
+                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight - mmToThreeUnits(39)) : sectionEndY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)
                   ]}
                   renderOrder={100001}
@@ -321,14 +331,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <meshBasicMaterial color={dimensionColor} depthTest={false} />
                 </mesh>
 
-                {/* 치수 텍스트 (상부섹션은 짧아진 치수선 중앙에 맞춤, 첫 번째 섹션은 받침대 위부터 계산) */}
+                {/* 치수 텍스트 */}
                 <Text
                   position={[
                     slotX,
                     (() => {
-                      const lineStart = sectionIndex === 0 ? (floatHeight + baseFrameHeight) : sectionStartY;
-                      const lineEnd = isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY;
-                      return lineStart + (lineEnd - lineStart) / 2;
+                      if (sectionIndex === 0) {
+                        // 하부섹션: 받침대 위부터 sectionEndY까지
+                        return (floatHeight + baseFrameHeight + sectionEndY) / 2;
+                      } else if (isLastSection) {
+                        // 상부섹션: 가구 최상단부터 하부섹션 끝까지
+                        const lineStart = floatHeight + baseFrameHeight + internalHeight - mmToThreeUnits(39);
+                        return (lineStart + sectionStartY) / 2;
+                      } else {
+                        // 중간 섹션
+                        return (sectionStartY + sectionEndY) / 2;
+                      }
                     })(),
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)
                   ]}
