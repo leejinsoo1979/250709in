@@ -195,14 +195,30 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
 
+          // 실제 렌더링 높이 계산 (useBaseFurniture와 동일한 로직)
+          const basicThickness = mmToThreeUnits(18); // 18mm 패널 두께
+          const availableHeight = internalHeight - basicThickness * 2;
+
+          // 고정 높이 섹션들의 총 높이
+          const fixedSections = sections.filter((s: any) => s.heightType === 'absolute');
+          const totalFixedHeight = fixedSections.reduce((sum: number, section: any) => {
+            return sum + Math.min(mmToThreeUnits(section.height), availableHeight);
+          }, 0);
+
+          // 퍼센트 섹션들에게 남은 높이
+          const remainingHeight = availableHeight - totalFixedHeight;
+
           // 각 섹션의 실제 높이 계산
-          let currentY = floatHeight + baseFrameHeight;
+          let currentY = floatHeight + baseFrameHeight + basicThickness;
 
           return sections.map((section, sectionIndex) => {
-            const sectionHeightMm = section.heightType === 'percentage'
-              ? (internalSpace.height * section.height / 100)
-              : section.height;
-            const sectionHeight = mmToThreeUnits(sectionHeightMm);
+            let sectionHeight: number;
+            if (section.heightType === 'absolute') {
+              sectionHeight = Math.min(mmToThreeUnits(section.height), availableHeight);
+            } else {
+              sectionHeight = remainingHeight * (section.height / 100);
+            }
+            const sectionHeightMm = sectionHeight / 0.01;
 
             const sectionStartY = currentY;
             const sectionEndY = currentY + sectionHeight;
