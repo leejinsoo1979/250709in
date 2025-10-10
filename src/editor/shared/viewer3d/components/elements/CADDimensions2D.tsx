@@ -224,21 +224,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 상부섹션(마지막)은 가이드선을 짧게 해서 상단 끝에 맞춤
             const isLastSection = sectionIndex === sections.length - 1;
 
-            // 치수 표시값 계산
+            // Y 오프셋 없음 - 실제 섹션 위치 그대로 사용
+            const sectionStartY = currentY;
+            const sectionEndY = currentY + sectionHeight;
+
+            // 치수 표시값 계산 (sectionStartY 계산 후에)
             let sectionHeightMm: number;
             if (isLastSection) {
-              // 상부섹션: 가구 최상단부터 하부섹션 끝점까지의 실제 거리
+              // 상부섹션: 가구 최상단부터 하부섹션 끝점(=상부섹션 시작점)까지의 실제 거리
               const topY = floatHeight + baseFrameHeight + internalHeight;
-              const bottomY = currentY; // 하부섹션 끝점
+              const bottomY = sectionStartY; // 상부섹션 시작점 = 하부섹션 끝점
               sectionHeightMm = (topY - bottomY) / 0.01;
             } else {
               // 하부섹션 및 기타: 섹션 자체 높이
               sectionHeightMm = sectionHeight / 0.01;
             }
 
-            // Y 오프셋 없음 - 실제 섹션 위치 그대로 사용
-            const sectionStartY = currentY;
-            const sectionEndY = currentY + sectionHeight;
             currentY = sectionEndY; // 다음 섹션 위치
 
             // 첫 번째 섹션은 하단 가이드선 표시 안 함 (받침대와 겹침)
