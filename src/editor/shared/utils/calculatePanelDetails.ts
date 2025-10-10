@@ -63,39 +63,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
 
     // 나머지 높이 계산 (전체 - 고정높이)
     const remainingHeight = height - totalFixedHeight;
-    
-    
-    // 섹션 사이 구분판 (안전선반/칸막이) - 상부장과 하부장 사이
-    const shouldHideUpperFloorThickness = moduleData.id.includes('dual-4drawer-hanging');
 
-    if (sections.length > 1 && moduleData.id.includes('2hanging')) {
-      // 2단 옷장의 경우 하부장 상판과 상부장 바닥판 별도 표시
-      panels.lower.push({
-        name: '하부장 상판',
-        width: innerWidth,
-        depth: customDepth - backPanelThickness - 17, // 실제 렌더링 값
-        thickness: basicThickness,
-        material: 'PB'  // 기본 재질
-      });
-      panels.upper.push({
-        name: '상부장 바닥판',
-        width: innerWidth,
-        depth: customDepth - backPanelThickness - 17, // 실제 렌더링 값
-        thickness: basicThickness,
-        material: 'PB'  // 기본 재질
-      });
-    } else if (sections.length > 1) {
-      // 다른 가구의 경우 하부장 상판
-      panels.lower.push({
-        name: '하부장 상판',
-        width: innerWidth,
-        depth: customDepth - backPanelThickness - 17, // 실제 렌더링 값
-        thickness: basicThickness,
-        material: 'PB',  // 기본 재질
-        showThickness: shouldHideUpperFloorThickness ? false : undefined
-      });
-    }
-    
     // 각 섹션별 내부 구조 처리
     sections.forEach((section, sectionIndex) => {
       // 상부장/하부장 구분
