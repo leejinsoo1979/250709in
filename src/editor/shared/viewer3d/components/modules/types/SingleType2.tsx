@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import * as THREE from 'three';
 import { useThree } from '@react-three/fiber';
-import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps } from '../shared';
+import { useBaseFurniture, SectionsRenderer, FurnitureTypeProps, BoxWithEdges } from '../shared';
 import { Text, Line } from '@react-three/drei';
 import { useDimensionColor } from '../hooks/useDimensionColor';
 import { useSpace3DView } from '../../../context/useSpace3DView';
@@ -9,98 +9,6 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import DoorModule from '../DoorModule';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
-
-// 독립적인 엣지 표시를 위한 박스 컴포넌트
-const BoxWithEdges: React.FC<{
-  args: [number, number, number];
-  position: [number, number, number];
-  material: THREE.Material;
-  renderMode?: 'solid' | 'wireframe';
-  isDragging?: boolean;
-  isEditMode?: boolean;
-  hideEdges?: boolean; // 엣지 숨김 옵션 추가
-  isBackPanel?: boolean; // 백패널 여부 추가
-}> = ({ args, position, material, renderMode = 'solid', isDragging = false, isEditMode = false, hideEdges = false, isBackPanel = false }) => {
-  const { viewMode } = useSpace3DView();
-  const { view2DDirection, view2DTheme, indirectLightEnabled, indirectLightIntensity, shadowEnabled } = useUIStore(); // view2DDirection, view2DTheme, shadowEnabled 추가
-  const { gl } = useThree();
-  const { theme } = useTheme();
-  
-  // Shadow auto-update enabled - manual shadow updates removed
-
-  // 드래그 중이거나 편집 모드일 때 고스트 효과 적용
-  const processedMaterial = React.useMemo(() => {
-    if (isDragging && material instanceof THREE.MeshStandardMaterial) {
-      const ghostMaterial = material.clone();
-      ghostMaterial.transparent = true;
-      ghostMaterial.opacity = 0.6;
-      // 테마 색상 가져오기
-      const getThemeColor = () => {
-        if (typeof window !== "undefined") {
-          const computedStyle = getComputedStyle(document.documentElement);
-          const primaryColor = computedStyle.getPropertyValue("--theme-primary").trim();
-          if (primaryColor) {
-            return primaryColor;
-          }
-        }
-        return "#10b981"; // 기본값 (green)
-      };
-      
-      ghostMaterial.color = new THREE.Color(getThemeColor());
-      ghostMaterial.needsUpdate = true;
-      return ghostMaterial;
-    }
-    // 편집 모드에서는 원래 재질 그대로 사용
-    return material;
-  }, [material, isDragging, isEditMode]);
-
-  return (
-    <group position={position}>
-      {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
-      <mesh receiveShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled} castShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled}>
-        <boxGeometry args={args} />
-        {renderMode === 'wireframe' ? (
-          // 와이어프레임 모드: 완전히 투명한 재질
-          <meshBasicMaterial transparent={true} opacity={0} />
-        ) : isBackPanel && viewMode === '2D' && view2DDirection === 'front' ? (
-          // 2D 정면뷰에서 백패널은 완전히 투명하게
-          <meshBasicMaterial transparent={true} opacity={0} />
-        ) : (
-          <primitive object={processedMaterial} attach="material" />
-        )}
-      </mesh>
-      {/* 윤곽선 렌더링 */}
-      {!hideEdges && (
-        <lineSegments>
-          <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-          <lineBasicMaterial 
-            color={
-              viewMode === '3D' 
-                ? "#505050"
-                : renderMode === 'wireframe' 
-                  ? (view2DTheme === 'dark' ? "#FF4500" : "#000000")  // 2D wireframe 다크모드는 붉은 주황색, 라이트모드는 검정색
-                  : (view2DTheme === 'dark' ? "#FF4500" : "#444444")  // 2D solid 다크모드는 붉은 주황색, 라이트모드는 회색
-            }
-            transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
-            opacity={
-              isBackPanel && viewMode === '2D' && view2DDirection === 'front' 
-                ? 0.1  // 2D 정면 뷰에서 백패널은 매우 투명하게
-                : viewMode === '3D' 
-                  ? 0.9 
-                  : 1
-            }
-            depthTest={viewMode === '3D'}
-            depthWrite={false}
-            polygonOffset={viewMode === '3D'}
-            polygonOffsetFactor={viewMode === '3D' ? -10 : 0}
-            polygonOffsetUnits={viewMode === '3D' ? -10 : 0}
-            linewidth={viewMode === '2D' ? 2 : 1} 
-          />
-        </lineSegments>
-      )}
-    </group>
-  );
-};
 
 /**
  * SingleType2 컴포넌트
