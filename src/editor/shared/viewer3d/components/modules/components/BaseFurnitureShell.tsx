@@ -324,20 +324,21 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 });
               })()
             ) : moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging') ? (
-              // 2drawer-hanging, 2hanging: 측판 분절선에 맞춤
+              // 2drawer-hanging, 2hanging: 각각 18mm씩 위로
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
                   if (index >= getSectionHeights().length - 1) return null;
 
-                  const lowerSectionHeight = getSectionHeights()[0];
+                  let currentYPosition = -height/2 + basicThickness;
 
-                  // 2drawer: 측판 분절선 Y 위치 = -height/2 + lowerSectionHeight + basicThickness
-                  // (하부 측판이 +18mm 늘어났으므로)
-                  const sidePanelDivisionY = -height/2 + lowerSectionHeight + basicThickness;
+                  // 현재 섹션까지의 Y 위치 계산
+                  for (let i = 0; i <= index; i++) {
+                    currentYPosition += getSectionHeights()[i];
+                  }
 
-                  // 중간 패널들을 측판 분절선에 맞춤
-                  const middlePanelY = sidePanelDivisionY - basicThickness/2;
-                  const lowerTopPanelY = sidePanelDivisionY - basicThickness - basicThickness/2;
+                  // 2drawer: 각각 18mm씩 위로
+                  const middlePanelY = currentYPosition - basicThickness/2 + mmToThreeUnits(18);
+                  const lowerTopPanelY = currentYPosition - basicThickness - basicThickness/2 + mmToThreeUnits(18);
 
                   // 섹션 강조 확인 (placedFurnitureId 사용)
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
