@@ -259,17 +259,65 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
       />
       
-      {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
-      <BoxWithEdges
-        args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-        position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-        material={material}
-        renderMode={renderMode}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-        hideEdges={false} // 엣지는 표시하되
-        isBackPanel={true} // 백패널임을 표시
-      />
+      {/* 뒷면 판재 (9mm 백패널, 섹션별로 분리) */}
+      {isMultiSectionFurniture() ? (
+        // 다중 섹션: 하부/상부 백패널 분리
+        <>
+          {(() => {
+            const sectionHeights = getSectionHeights();
+            const lowerSectionHeight = sectionHeights[0];
+            const upperSectionHeight = sectionHeights[1];
+
+            // 백패널 높이 = 섹션 내경높이 + 10mm
+            // 내경높이 = 섹션높이 - 상하판(36mm)
+            const lowerInnerHeight = lowerSectionHeight - basicThickness * 2;
+            const upperInnerHeight = upperSectionHeight - basicThickness * 2;
+            const lowerBackPanelHeight = lowerInnerHeight + mmToThreeUnits(10);
+            const upperBackPanelHeight = upperInnerHeight + mmToThreeUnits(10);
+
+            // 백패널 Y 위치
+            const lowerBackPanelY = -height/2 + basicThickness + lowerInnerHeight/2;
+            const upperBackPanelY = -height/2 + lowerSectionHeight + basicThickness + upperInnerHeight/2;
+
+            return (
+              <>
+                {/* 하부 섹션 백패널 */}
+                <BoxWithEdges
+                  args={[innerWidth + mmToThreeUnits(10), lowerBackPanelHeight, backPanelThickness]}
+                  position={[0, lowerBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  isBackPanel={true}
+                />
+
+                {/* 상부 섹션 백패널 */}
+                <BoxWithEdges
+                  args={[innerWidth + mmToThreeUnits(10), upperBackPanelHeight, backPanelThickness]}
+                  position={[0, upperBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  isBackPanel={true}
+                />
+              </>
+            );
+          })()}
+        </>
+      ) : (
+        // 단일 섹션: 기존 통짜 백패널
+        <BoxWithEdges
+          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+          position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          isBackPanel={true}
+        />
+      )}
       
       {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
       {!isDragging && (
