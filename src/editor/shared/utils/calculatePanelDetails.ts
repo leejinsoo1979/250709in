@@ -211,17 +211,15 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
       }
 
       // === 백패널 (섹션별로 분리) ===
-      // 백패널 높이 계산:
-      // - 하부 섹션: 측판 높이(sectionHeightMm) + 중간판 두께 절반(9mm) + 하단 확장(5mm) = sectionHeightMm + 9
-      // - 상부 섹션: 측판 높이(sectionHeightMm) + 중간판 두께 절반(9mm) + 상단 확장(5mm) = sectionHeightMm + 9
-      const backPanelHeight = isMultiSection
-        ? sectionHeightMm + 9  // 다중 섹션: 측판 + 중간판 두께 절반 + 확장
-        : sectionHeightMm + 10; // 단일 섹션: 측판 + 상하 확장 10mm
+      // 백패널은 측판 안쪽에 들어가므로 측판보다 작음
+      // - 하부 섹션: 측판 높이 - 10mm (상하 5mm씩 여유)
+      // - 상부 섹션: 측판 높이 - 10mm (상하 5mm씩 여유)
+      const backPanelHeight = sectionHeightMm - 10;
 
       targetPanel.push({
         name: `${sectionName} 백패널`,
         width: innerWidth + 10, // 좌우 5mm씩 확장
-        height: backPanelHeight,
+        height: backPanelHeight, // 측판 - 10mm
         thickness: backPanelThickness, // 9mm
         material: 'PB'
       });
