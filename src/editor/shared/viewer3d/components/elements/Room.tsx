@@ -690,15 +690,19 @@ const Room: React.FC<RoomProps> = ({
       opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : 0.3) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 2D 탑뷰에서 바닥프레임은 완전 투명
     });
 
-    // 프레임 텍스처 적용 (강조되지 않은 경우에만)
-    if (!isHighlighted && materialConfig?.doorTexture) {
+    // 프레임 텍스처 적용 (강조되지 않은 경우 + 2D 모드에서 상부/하부 프레임이 아닌 경우에만)
+    const shouldApplyTexture = !isHighlighted &&
+                                materialConfig?.doorTexture &&
+                                !(viewMode === '2D' && (frameType === 'top' || frameType === 'base'));
+
+    if (shouldApplyTexture) {
       // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
       if (isCabinetTexture1(materialConfig.doorTexture)) {
         console.log('🔧 프레임 Cabinet Texture1 즉시 어둡게 적용 중...');
         applyCabinetTexture1Settings(material);
         console.log('✅ 프레임 Cabinet Texture1 즉시 색상 적용 완료 (공통 설정 사용)');
       }
-      
+
       const textureLoader = new THREE.TextureLoader();
       textureLoader.load(
         materialConfig.doorTexture,
@@ -708,14 +712,14 @@ const Room: React.FC<RoomProps> = ({
           texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1, 1);
           material.map = texture;
-          
+
           // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
           if (!isCabinetTexture1(materialConfig.doorTexture)) {
             material.color.setHex(0xffffff); // 다른 텍스처는 기본 흰색
             material.toneMapped = true; // 기본 톤 매핑 활성화
             material.roughness = 0.6; // 기본 거칠기
           }
-          
+
           material.needsUpdate = true;
         },
         undefined,
