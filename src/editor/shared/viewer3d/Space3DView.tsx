@@ -1232,7 +1232,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               <CADDimensions2D
                 viewDirection={view2DDirection}
                 showDimensions={showDimensions}
-                showDimensionsText={showDimensionsText}
+                isSplitView={true}
               />
             )}
             
@@ -1398,6 +1398,7 @@ const QuadrantContent: React.FC<{
         <CADDimensions2D
           viewDirection={viewDirection}
           showDimensions={showDimensions}
+          isSplitView={false}
         />
       )}
       

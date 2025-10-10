@@ -10,6 +10,7 @@ import { getModuleById } from '@/data/modules';
 interface CADDimensions2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
   showDimensions?: boolean;
+  isSplitView?: boolean;
 }
 
 /**
