@@ -332,11 +332,11 @@ const getFurnitureImagePath = (moduleId: string) => {
         if (section.shelfPositions && section.shelfPositions.length > 0) {
           section.shelfPositions.forEach((pos, i) => {
             // BoxWithEdges args={[innerWidth, basicThickness, depth - basicThickness]}
-            // 실제 선반 깊이 = adjustedDepthForShelves - basicThickness = (depth - 8) - 18 = depth - 26
+            // 실제 선반 깊이 = adjustedDepthForShelves - basicThickness = (depth - 8) - basicThickness
             targetPanel.push({
               name: `${sectionName} 선반 ${i + 1}`,
               width: innerWidth,
-              depth: customDepth - 26, // 실제 렌더링되는 선반 깊이 (600 - 26 = 574mm)
+              depth: customDepth - 8 - basicThickness, // 실제 렌더링되는 선반 깊이
               thickness: basicThickness,
               material: 'PB'  // 기본 재질
             });
@@ -353,12 +353,12 @@ const getFurnitureImagePath = (moduleId: string) => {
         }
       } else if (section.type === 'shelf' && section.count) {
         // 선반 구역 (ShelfRenderer.tsx 참조)
-        // 실제 선반 깊이 = adjustedDepthForShelves - basicThickness = (depth - 8) - 18 = depth - 26
+        // 실제 선반 깊이 = adjustedDepthForShelves - basicThickness = (depth - 8) - basicThickness
         for (let i = 1; i <= section.count; i++) {
           targetPanel.push({
             name: `${sectionName} 선반 ${i}`,
             width: innerWidth,
-            depth: customDepth - 26, // 실제 렌더링되는 선반 깊이 (600 - 26 = 574mm)
+            depth: customDepth - 8 - basicThickness, // 실제 렌더링되는 선반 깊이
             thickness: basicThickness,
             material: 'PB'  // 기본 재질
           });
