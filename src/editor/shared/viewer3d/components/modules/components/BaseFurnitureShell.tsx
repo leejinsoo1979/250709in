@@ -467,35 +467,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const lowerSectionHeight = sectionHeights[0];
                 const upperSectionHeight = sectionHeights[1];
 
-                console.log('🔍 백패널 계산:', {
-                  lowerSectionHeight: lowerSectionHeight / 0.01,
-                  upperSectionHeight: upperSectionHeight / 0.01,
-                  basicThickness: basicThickness / 0.01,
-                  totalHeight: height / 0.01
-                });
-
-                // 백패널 높이 = (섹션높이 - 상하판두께 36mm) + 홈깊이 10mm
-                // 예: 600mm 섹션 → 600 - 36 + 10 = 574mm 백패널
+                // 백패널 높이 = 섹션 내경높이 + 10mm
+                // 내경높이 = 섹션높이 - 상하판(36mm)
                 const lowerInnerHeight = lowerSectionHeight - basicThickness * 2;
                 const upperInnerHeight = upperSectionHeight - basicThickness * 2;
-                const lowerBackPanelHeight = lowerInnerHeight + 0.01; // 10mm = 0.01 Three.js 단위
-                const upperBackPanelHeight = upperInnerHeight + 0.01; // 10mm = 0.01 Three.js 단위
+                const lowerBackPanelHeight = lowerInnerHeight + mmToThreeUnits(10);
+                const upperBackPanelHeight = upperInnerHeight + mmToThreeUnits(10);
 
-                console.log('🔍 백패널 높이:', {
-                  lowerBackPanelHeight: lowerBackPanelHeight / 0.01,
-                  upperBackPanelHeight: upperBackPanelHeight / 0.01
-                });
-
-                // 백패널 Y 위치 (홈 5mm 고려)
-                // 하부: 하판(18mm) 상단에서 5mm 올라간 곳에서 시작 = 하판에서 13mm 위
-                // 상부: 상부섹션 하판(18mm) 상단에서 5mm 올라간 곳에서 시작 = 하판에서 13mm 위
-                const lowerBackPanelY = -height/2 + 0.013 + lowerBackPanelHeight/2; // 13mm = 0.013 Three.js 단위
-                const upperBackPanelY = -height/2 + lowerSectionHeight + 0.013 + upperBackPanelHeight/2; // 13mm = 0.013 Three.js 단위
-
-                console.log('🔍 백패널 Y위치:', {
-                  lowerBackPanelY: lowerBackPanelY / 0.01,
-                  upperBackPanelY: upperBackPanelY / 0.01
-                });
+                // 백패널 Y 위치
+                const lowerBackPanelY = -height/2 + basicThickness + lowerInnerHeight/2;
+                const upperBackPanelY = -height/2 + lowerSectionHeight + basicThickness + upperInnerHeight/2;
 
                 return (
                   <>
