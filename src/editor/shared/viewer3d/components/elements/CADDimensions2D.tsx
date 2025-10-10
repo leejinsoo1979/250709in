@@ -197,6 +197,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
 
+          // 가구 Z 위치 및 깊이
+          const furnitureZ = 0; // 가구는 공간 중앙에 위치
+          const moduleDepth = mmToThreeUnits(moduleData.dimensions.depth);
+          const actualDepthMm = moduleData.dimensions.depth;
+
           // 실제 렌더링 높이 계산
           const basicThickness = mmToThreeUnits(18); // 18mm 패널 두께
           const availableHeight = internalHeight; // internalHeight가 이미 내경임
@@ -371,6 +376,58 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 >
                   {Math.round(sectionHeightMm)}
                 </Text>
+
+                {/* 서랍 섹션인 경우 깊이 치수 표시 */}
+                {section.type === 'drawer' && (
+                  <>
+                    {/* 서랍 깊이 보조선 - 앞 */}
+                    <NativeLine
+                      points={[
+                        [slotX, (sectionStartY + sectionEndY) / 2, furnitureZ + moduleDepth/2],
+                        [slotX, (sectionStartY + sectionEndY) / 2, furnitureZ + moduleDepth/2 + mmToThreeUnits(200)]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+                    {/* 서랍 깊이 보조선 - 뒤 */}
+                    <NativeLine
+                      points={[
+                        [slotX, (sectionStartY + sectionEndY) / 2, furnitureZ - moduleDepth/2],
+                        [slotX, (sectionStartY + sectionEndY) / 2, furnitureZ - moduleDepth/2 + mmToThreeUnits(200)]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+                    {/* 서랍 깊이 치수선 */}
+                    <NativeLine
+                      points={[
+                        [slotX, (sectionStartY + sectionEndY) / 2, furnitureZ + moduleDepth/2 + mmToThreeUnits(200)],
+                        [slotX, (sectionStartY + sectionEndY) / 2, furnitureZ - moduleDepth/2 + mmToThreeUnits(200)]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={2}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+                    {/* 서랍 깊이 텍스트 */}
+                    <Text
+                      position={[slotX, (sectionStartY + sectionEndY) / 2 + mmToThreeUnits(60), furnitureZ + mmToThreeUnits(200)]}
+                      fontSize={largeFontSize}
+                      color={dimensionColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      renderOrder={1000}
+                      depthTest={false}
+                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                    >
+                      {actualDepthMm}
+                    </Text>
+                  </>
+                )}
               </group>
             );
           });
