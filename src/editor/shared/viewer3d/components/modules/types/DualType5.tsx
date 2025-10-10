@@ -947,9 +947,22 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           isBackPanel={true} // 백패널임을 표시
         />
       </>
-      
+
           {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
           {!isDragging && renderAsymmetricSections()}
+
+          {/* 조절발통 (네 모서리) */}
+          <AdjustableFootsRenderer
+            width={width}
+            depth={depth}
+            yOffset={-height / 2}
+            renderMode={renderMode}
+            isHighlighted={false}
+            isFloating={false}
+            baseHeight={spaceInfo?.baseConfig?.height || 65}
+            viewMode={viewMode}
+            view2DDirection={view2DDirection}
+          />
         </>
       )}
 
@@ -970,19 +983,6 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         slotIndex={slotIndex}
         />
       )}
-      
-      {/* 조절발통 (네 모서리) */}
-      <AdjustableFootsRenderer
-        width={width}
-        depth={depth}
-        yOffset={-height / 2}
-        renderMode={renderMode}
-        isHighlighted={false}
-        isFloating={false}
-        baseHeight={spaceInfo?.baseConfig?.height || 65}
-        viewMode={viewMode}
-        view2DDirection={view2DDirection}
-      />
     </>
   );
 };

@@ -351,6 +351,19 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           placedFurnitureId={placedFurnitureId}
         />
       )}
+
+        {/* 조절발통 (네 모서리) */}
+        <AdjustableFootsRenderer
+          width={width}
+          depth={depth}
+          yOffset={-height / 2}
+          renderMode={renderMode}
+          isHighlighted={false}
+          isFloating={false}
+          baseHeight={spaceInfo?.baseConfig?.height || 65}
+          viewMode={viewMode}
+          view2DDirection={view2DDirection}
+        />
         </group>
       )}
 
@@ -371,19 +384,6 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         slotIndex={slotIndex}
         />
       )}
-      
-      {/* 조절발통 (네 모서리) */}
-      <AdjustableFootsRenderer
-        width={width}
-        depth={depth}
-        yOffset={-height / 2}
-        renderMode={renderMode}
-        isHighlighted={false}
-        isFloating={false}
-        baseHeight={spaceInfo?.baseConfig?.height || 65}
-        viewMode={viewMode}
-        view2DDirection={view2DDirection}
-      />
     </>
   );
 };
