@@ -1825,7 +1825,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   depthTest={false}
                   position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(spaceInfo.height - topFrameHeight / 2), 0.01]}
                   fontSize={baseFontSize}
-                  color={spaceInfo.surroundType === 'no-surround' ? colors.primary : "black"}
+                  color={spaceInfo.surroundType === 'no-surround' ? colors.primary : frameDimensionColor}
                   anchorX="center"
                   anchorY="middle"
                   rotation={[0, 0, -Math.PI / 2]}
