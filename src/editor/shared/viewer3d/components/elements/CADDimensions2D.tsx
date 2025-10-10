@@ -775,7 +775,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         }
         
         // 도어가 있는 경우 - 도어의 실제 크기와 위치로 치수 가이드 조정
-        let displayWidth = parseFloat(actualFurnitureWidthMm.toFixed(2));
+        let displayWidth = actualFurnitureWidthMm !== undefined && actualFurnitureWidthMm !== null
+          ? parseFloat(actualFurnitureWidthMm.toFixed(2))
+          : parseFloat(furnitureWidthMm.toFixed(2));
         let displayPositionX = furniturePositionX;
         
         
