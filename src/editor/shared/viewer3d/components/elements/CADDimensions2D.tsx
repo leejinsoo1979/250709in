@@ -243,10 +243,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100000}
                   depthTest={false}
                 />
-                {/* 보조 가이드 연장선 - 끝 (상부섹션은 실제 가구 상단까지만) */}
+                {/* 보조 가이드 연장선 - 끝 (상부섹션은 실제 가구 상단까지만, 연장선 짧게) */}
                 <NativeLine
                   points={[
-                    [slotX, isLastSection ? (sectionEndY + basicThickness) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
+                    [slotX, isLastSection ? (sectionEndY + basicThickness) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - (isLastSection ? mmToThreeUnits(100) : mmToThreeUnits(400))],
                     [slotX, isLastSection ? (sectionEndY + basicThickness) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
@@ -395,7 +395,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 가구 위치 계산 (FurnitureItem.tsx와 동일)
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
-          const furnitureTopY = floatHeight + baseFrameHeight + internalHeight; // 가구 상단 Y 위치
+          const furnitureTopY = floatHeight + baseFrameHeight + internalHeight + mmToThreeUnits(200); // 가구 상단 + 200mm
 
           // Z축 위치 계산 (FurnitureItem.tsx와 동일)
           const panelDepthMm = spaceInfo.depth || 1500;
