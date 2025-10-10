@@ -300,7 +300,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         })}
 
         {/* 발통 높이 (띄움) */}
-        {floatHeightMm > 0 && (
+        {isFloating && floatHeightMm > 0 && (
         <group>
             {/* 보조 가이드 연장선 - 하단 (바닥) */}
             <NativeLine
