@@ -3,7 +3,6 @@ import { ModuleData } from '@/data/modules';
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, customDepth: number, hasDoor: boolean = false, t: any = (key: string) => key) => {
   const panels = {
-    common: [],    // 공통 패널 (좌우측판, 뒷판)
     upper: [],     // 상부장 패널
     lower: [],     // 하부장 패널
     door: []       // 도어 패널
