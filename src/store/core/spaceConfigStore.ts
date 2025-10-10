@@ -161,7 +161,7 @@ export const SPACE_LIMITS = {
   },
   HEIGHT: {
     MIN: 2010,  // 최소 높이
-    MAX: 2410,  // 최대 높이
+    MAX: 2600,  // 최대 높이
   },
   DEPTH: {
     MIN: 130,   // 최소 깊이
