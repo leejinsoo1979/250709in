@@ -113,42 +113,33 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={isSectionHighlighted}
                 />
                 
-                {/* 중간 구분 패널 (하부 섹션 상판) */}
-                {index === 0 && (() => {
-                  const lowerTopPanelY = sectionCenterY + sectionHeight/2 - basicThickness/2;
-
-                  return (
-                    <BoxWithEdges
-                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                      position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset]}
-                      material={material}
-                      renderMode={renderMode}
-                      isDragging={isDragging}
-                      isEditMode={isEditMode}
-                      isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                    />
-                  );
-                })()}
-
-                {/* 상부 섹션의 바닥판 - 하부 섹션 상판 바로 위 */}
-                {index === 1 && (() => {
-                  // 하부 섹션의 높이와 중심 위치 계산
-                  const lowerSectionHeight = sectionHeights[0];
-                  let lowerAccumulatedY = -height/2 + basicThickness;
-                  const lowerSectionCenterY = lowerAccumulatedY + lowerSectionHeight / 2 - basicThickness;
-                  const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 - basicThickness/2;
+                {/* 중간 구분 패널 (하부 섹션 상판 + 상부 섹션 바닥판) */}
+                {index < sectionHeights.length - 1 && (() => {
+                  const middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2;
+                  const lowerTopPanelY = middlePanelY - basicThickness;
 
                   return (
                     <>
-                      {/* 상부 섹션 바닥판 */}
+                      {/* 하부 섹션 상판 */}
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                        position={[0, lowerTopPanelY + basicThickness, basicThickness/2 + shelfZOffset]}
+                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
-                        isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                        isHighlighted={highlightedSection === `${placedFurnitureId}-${index}`}
+                      />
+
+                      {/* 상부 섹션 바닥판 */}
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                        isHighlighted={highlightedSection === `${placedFurnitureId}-${index + 1}`}
                       />
                     
                     {/* 중간판 두께 치수 표시 */}
@@ -175,8 +166,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                         {/* 중간판 두께 수직선 */}
                         <Line
                           points={[
-                            [-innerWidth/2 * 0.3, lowerTopPanelY, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                            [-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                            [-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness/2 - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
+                            [-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness/2 + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
                           ]}
                           color={dimensionColor}
                           lineWidth={1}
@@ -186,7 +177,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={dimensionColor} />
                         </mesh>
-                        <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                        <mesh position={[-innerWidth/2 * 0.3, middlePanelY, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={dimensionColor} />
                         </mesh>
