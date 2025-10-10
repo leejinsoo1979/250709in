@@ -447,12 +447,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureZOffset = zOffset + (panelDepth - furnitureSpaceDepth) / 2;
           const furnitureZ = furnitureZOffset + furnitureSpaceDepth/2 - doorThickness - furnitureDepth/2;
 
-          // 치수선 위치
+          // 치수선 위치 - 좌측뷰에서 보이도록 Z축 조정
           const depthDimX = -mmToThreeUnits(250); // 깊이 치수선 (왼쪽)
           const frontZ = furnitureZ + furnitureDepth / 2;
           const backZ = furnitureZ - furnitureDepth / 2;
 
-          const heightDimZ = frontZ + mmToThreeUnits(75); // 높이 치수선 (앞)
+          const heightDimZ = spaceDepth/2 + mmToThreeUnits(150); // 높이 치수선 (공간 앞쪽)
           const bottomY = furnitureY - furnitureHeight / 2;
           const topY = furnitureY + furnitureHeight / 2;
 
@@ -623,7 +623,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {/* 높이 연장선 - 상단 */}
               <Line
                 points={[
-                  [0, topY, frontZ],
+                  [0, topY, -spaceDepth/2],
                   [0, topY, heightDimZ - mmToThreeUnits(20)]
                 ]}
                 color={dimensionColors.furniture}
@@ -634,7 +634,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {/* 높이 연장선 - 하단 */}
               <Line
                 points={[
-                  [0, bottomY, frontZ],
+                  [0, bottomY, -spaceDepth/2],
                   [0, bottomY, heightDimZ - mmToThreeUnits(20)]
                 ]}
                 color={dimensionColors.furniture}
@@ -646,7 +646,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <Line
                 points={[
                   [depthDimX + mmToThreeUnits(20), furnitureY, frontZ],
-                  [0, furnitureY, frontZ]
+                  [-spaceWidth/2 - mmToThreeUnits(50), furnitureY, frontZ]
                 ]}
                 color={dimensionColors.furniture}
                 lineWidth={1}
@@ -657,7 +657,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <Line
                 points={[
                   [depthDimX + mmToThreeUnits(20), furnitureY, backZ],
-                  [0, furnitureY, backZ]
+                  [-spaceWidth/2 - mmToThreeUnits(50), furnitureY, backZ]
                 ]}
                 color={dimensionColors.furniture}
                 lineWidth={1}
