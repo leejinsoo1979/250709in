@@ -134,8 +134,8 @@ export class FurnitureSpaceAdapter {
           isDualSlot: isDual,
           isValidInCurrentSpace: true,
           zone: module.zone,
-          adjustedWidth: targetZone.columnWidth,
-          customWidth: targetZone.columnWidth
+          adjustedWidth: parseFloat(targetZone.columnWidth.toFixed(2)),
+          customWidth: parseFloat(targetZone.columnWidth.toFixed(2))
         });
         
         return;
@@ -216,7 +216,7 @@ export class FurnitureSpaceAdapter {
               isDualSlot: false,
               isValidInCurrentSpace: true,
               zone,
-              adjustedWidth: singleWidth
+              adjustedWidth: parseFloat(singleWidth.toFixed(2))
             });
           } else {
             removedFurniture.push(module.id);
