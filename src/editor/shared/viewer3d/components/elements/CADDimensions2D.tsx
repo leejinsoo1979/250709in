@@ -775,7 +775,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         }
         
         // 도어가 있는 경우 - 도어의 실제 크기와 위치로 치수 가이드 조정
-        let displayWidth = actualFurnitureWidthMm;
+        let displayWidth = parseFloat(actualFurnitureWidthMm.toFixed(2));
         let displayPositionX = furniturePositionX;
         
         
@@ -812,7 +812,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         //   });
         // }
 
-        const formattedDisplayWidth = parseFloat(displayWidth.toFixed(2));
         const moduleWidth = mmToThreeUnits(displayWidth);
         const leftX = displayPositionX - moduleWidth / 2;
         const rightX = displayPositionX + moduleWidth / 2;
@@ -878,7 +877,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   pointerEvents: 'none'
                 }}
               >
-                {formattedDisplayWidth}mm
+                {displayWidth}mm
               </div>
             </Html>
             
@@ -948,10 +947,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         return indexing.threeUnitBoundaries.slice(0, -1).map((leftX, index) => {
           const rightX = indexing.threeUnitBoundaries[index + 1];
           // slotWidths가 있으면 사용, 없으면 경계에서 계산
-          const columnWidth = indexing.slotWidths && indexing.slotWidths[index]
+          const rawColumnWidth = indexing.slotWidths && indexing.slotWidths[index]
             ? indexing.slotWidths[index]
             : (rightX - leftX) / 0.01; // Three.js 단위를 mm로 변환
-          const formattedColumnWidth = parseFloat(columnWidth.toFixed(2));
+          const columnWidth = parseFloat(rawColumnWidth.toFixed(2));
           const centerX = (leftX + rightX) / 2;
           const dimY = spaceHeight + mmToThreeUnits(80); // 중간 높이 치수선
           
@@ -1010,7 +1009,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     pointerEvents: 'none'
                   }}
                 >
-                  {formattedColumnWidth}mm
+                  {columnWidth}mm
                 </div>
               </Html>
             </group>
