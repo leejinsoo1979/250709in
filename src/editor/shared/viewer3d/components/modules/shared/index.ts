@@ -35,6 +35,7 @@ export interface FurnitureTypeProps {
   isHighlighted?: boolean; // 가구 강조 여부
   furnitureId?: string; // 가구 ID (인접 확인용)
   adjacentCabinets?: { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | null }; // 인접 상하부장 정보
+  placedFurnitureId?: string; // 배치된 가구의 고유 ID (치수 편집용)
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;

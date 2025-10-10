@@ -43,6 +43,7 @@ interface BoxModuleProps {
   showFurniture?: boolean; // 가구 본체 표시 여부 (2D 모드에서 도어만 표시할 때 사용)
   isHighlighted?: boolean; // 가구 강조 여부
   adjacentCabinets?: { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | null }; // 인접 상하부장 정보
+  placedFurnitureId?: string; // 배치된 가구의 고유 ID (치수 편집용)
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -83,6 +84,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   showFurniture = true, // 기본값은 true (가구 표시)
   isHighlighted = false, // 강조 상태
   adjacentCabinets, // 인접 상하부장 정보
+  placedFurnitureId, // 배치된 가구 ID
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
