@@ -2803,55 +2803,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </group>
           );
         })}
-        
-        {/* 좌측뷰 전용: 가로 폭 치수선 추가 */}
-        <group>
-          {/* 상단 전체 폭 치수선 */}
-          <Line
-            points={[[-actualSpaceWidth/2, actualSpaceHeight + mmToThreeUnits(100), 0], [actualSpaceWidth/2, actualSpaceHeight + mmToThreeUnits(100), 0]]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 좌측 화살표 */}
-          <Line
-            points={createArrowHead([-actualSpaceWidth/2, actualSpaceHeight + mmToThreeUnits(100), 0], [-actualSpaceWidth/2 + 0.05, actualSpaceHeight + mmToThreeUnits(100), 0])}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 우측 화살표 */}
-          <Line
-            points={createArrowHead([actualSpaceWidth/2, actualSpaceHeight + mmToThreeUnits(100), 0], [actualSpaceWidth/2 - 0.05, actualSpaceHeight + mmToThreeUnits(100), 0])}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 전체 폭 치수 텍스트 */}
-          <Text
-                  renderOrder={1000}
-                  depthTest={false}
-            position={[0, actualSpaceHeight + mmToThreeUnits(140), 0]}
-            fontSize={largeFontSize}
-            color={textColor}
-            anchorX="center"
-            anchorY="middle"
-          >
-            {spaceInfo.width}
-          </Text>
-          
-          {/* 연장선들 */}
-          <Line
-            points={[[-actualSpaceWidth/2, 0, 0], [-actualSpaceWidth/2, actualSpaceHeight + mmToThreeUnits(120), 0]]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          <Line
-            points={[[actualSpaceWidth/2, 0, 0], [actualSpaceWidth/2, actualSpaceHeight + mmToThreeUnits(120), 0]]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-        </group>
 
         {/* 단내림 구간 치수선 - 좌측뷰 */}
         {spaceInfo.droppedCeiling?.enabled && (
