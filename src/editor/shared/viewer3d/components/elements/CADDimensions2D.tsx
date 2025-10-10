@@ -222,11 +222,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             }
             const sectionHeightMm = sectionHeight / 0.01;
 
-            // 모든 섹션을 18mm 아래로 조정
-            const yOffset = -basicThickness;
+            // 섹션 Y 위치 (오프셋 제거)
+            const yOffset = 0;
             const sectionStartY = currentY + yOffset;
             const sectionEndY = currentY + sectionHeight + yOffset;
-            currentY = sectionEndY - yOffset; // 다음 섹션을 위해 원래 위치로 복원
+            currentY = sectionEndY; // 다음 섹션 위치
 
             // 상부섹션(마지막)은 가이드선을 짧게 해서 상단 끝에 맞춤
             const isLastSection = sectionIndex === sections.length - 1;
