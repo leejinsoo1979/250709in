@@ -689,37 +689,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           setLowerHeightInput(lowerHeight.toString());
           setUpperHeightInput(upperHeight.toString());
         } else {
-          // customSections가 없으면 실제 높이 계산
+          // customSections가 없으면 실제 높이 계산 (useBaseFurniture와 동일한 로직)
           const totalHeight = moduleData.dimensions.height;
-          const basicThickness = moduleData.modelConfig?.basicThickness || 18;
-          const availableHeight = totalHeight - basicThickness * 2;
 
-          // 섹션 높이 타입에 따라 계산
-          const calculateSectionHeight = (section: any) => {
-            if (section.heightType === 'absolute') {
-              return Math.min(section.height || 0, availableHeight);
-            } else {
-              return availableHeight * ((section.height || section.heightRatio || 50) / 100);
-            }
-          };
-
-          // 고정 높이 섹션 먼저 계산
-          const fixedSections = sections.filter((s: any) => s.heightType === 'absolute');
-          const totalFixedHeight = fixedSections.reduce((sum: number, section: any) => {
-            return sum + calculateSectionHeight(section);
-          }, 0);
-
-          const remainingHeight = availableHeight - totalFixedHeight;
-          const flexibleSections = sections.filter((s: any) => s.heightType !== 'absolute');
-          const totalFlexibleRatio = flexibleSections.reduce((sum: number, s: any) => sum + (s.height || s.heightRatio || 50), 0);
-
-          // 각 섹션 높이 계산
+          // 각 섹션의 실제 높이 계산 (절대값은 원래 값 그대로, 비율은 전체에서 계산)
           const lowerHeight = sections[0].heightType === 'absolute'
-            ? calculateSectionHeight(sections[0])
-            : (remainingHeight * ((sections[0].height || sections[0].heightRatio || 50) / totalFlexibleRatio));
+            ? sections[0].height  // 절대값은 그대로 사용 (예: 1000mm)
+            : totalHeight * ((sections[0].height || sections[0].heightRatio || 50) / 100);
+
           const upperHeight = sections[1].heightType === 'absolute'
-            ? calculateSectionHeight(sections[1])
-            : (remainingHeight * ((sections[1].height || sections[1].heightRatio || 50) / totalFlexibleRatio));
+            ? sections[1].height  // 절대값은 그대로 사용
+            : (totalHeight - lowerHeight);  // 상부는 전체에서 하부를 뺀 값
 
           setLowerSectionHeight(Math.round(lowerHeight));
           setUpperSectionHeight(Math.round(upperHeight));
@@ -874,13 +854,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const handleLowerHeightBlur = () => {
     const value = parseInt(lowerHeightInput);
     if (!isNaN(value) && value > 0 && moduleData) {
-      // 전체 가구 높이 (내부 높이)
+      // 전체 가구 높이
       const totalHeight = moduleData.dimensions.height;
-      const basicThickness = moduleData.modelConfig?.basicThickness || 18;
-      const availableHeight = totalHeight - basicThickness * 2; // 상하판 제외
 
-      // 하부 섹션 변경 시 상부 섹션 자동 조정
-      const newUpperHeight = availableHeight - value;
+      // 하부 섹션 변경 시 상부 섹션 자동 조정 (전체 높이 기준)
+      const newUpperHeight = totalHeight - value;
 
       if (newUpperHeight > 0) {
         setLowerSectionHeight(value);
@@ -903,13 +881,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const handleUpperHeightBlur = () => {
     const value = parseInt(upperHeightInput);
     if (!isNaN(value) && value > 0 && moduleData) {
-      // 전체 가구 높이 (내부 높이)
+      // 전체 가구 높이
       const totalHeight = moduleData.dimensions.height;
-      const basicThickness = moduleData.modelConfig?.basicThickness || 18;
-      const availableHeight = totalHeight - basicThickness * 2; // 상하판 제외
 
-      // 상부 섹션 변경 시 하부 섹션 자동 조정
-      const newLowerHeight = availableHeight - value;
+      // 상부 섹션 변경 시 하부 섹션 자동 조정 (전체 높이 기준)
+      const newLowerHeight = totalHeight - value;
 
       if (newLowerHeight > 0) {
         setUpperSectionHeight(value);
