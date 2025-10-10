@@ -315,14 +315,8 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           });
         }
       } else if (section.type === 'hanging') {
-        // 옷장 섹션 - 옷걸이 공간만 표시 (선반 없음)
-        const hangingInternalHeight = Math.round(sectionHeightMm);
-        targetPanel.push({
-          name: `${sectionName} 옷걸이 공간`,
-          description: '내부 높이',
-          height: hangingInternalHeight,
-          isInfo: true
-        });
+        // 옷장 섹션 - 패널 없음 (옷걸이만 있는 빈 공간)
+        // CNC 절단 목록에 추가할 항목 없음
       } else if (section.type === 'shelf' && section.count) {
         // 선반 구역 (ShelfRenderer.tsx 참조)
         for (let i = 1; i <= section.count; i++) {
@@ -335,14 +329,8 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           });
         }
       } else if (section.type === 'open') {
-        // 오픈 섹션 내부 높이 정보
-        const openInternalHeight = Math.round(sectionHeightMm);
-        targetPanel.push({
-          name: `${sectionName} 오픈 공간`,
-          description: '내부 높이',
-          height: openInternalHeight,
-          isInfo: true
-        });
+        // 오픈 섹션 - 패널 없음 (빈 공간)
+        // CNC 절단 목록에 추가할 항목 없음
       }
     });
   }
