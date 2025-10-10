@@ -838,8 +838,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
   return (
     <>
-      {/* 좌측 측면 판재 - 섹션별로 분할 */}
-      {calculateLeftSectionHeights().map((sectionHeight, index) => {
+      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
+      {showFurniture && (
+        <>
+          {/* 좌측 측면 판재 - 섹션별로 분할 */}
+          {calculateLeftSectionHeights().map((sectionHeight, index) => {
         let currentYPosition = -height/2 + basicThickness;
         
         // 현재 섹션까지의 Y 위치 계산
@@ -945,10 +948,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         />
       </>
       
-      {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
-      {!isDragging && renderAsymmetricSections()}
-      
-      {/* 도어 렌더링 */}
+          {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
+          {!isDragging && renderAsymmetricSections()}
+        </>
+      )}
+
+      {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) */}
       {hasDoor && spaceInfo && (
         <DoorModule
           moduleWidth={doorWidth || moduleData.dimensions.width} // 커버도어용 너비 우선 사용
