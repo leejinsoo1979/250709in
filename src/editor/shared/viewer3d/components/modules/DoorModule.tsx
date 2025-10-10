@@ -218,6 +218,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         if (isDragging || isEditMode) {
           // 드래그 중이거나 편집 모드일 때는 항상 테마 색상
           mat.color.set(getThemeColor());
+        } else if (viewMode === '2D') {
+          // 2D 모드에서는 형광 녹색 사용
+          mat.color.set('#18CF23');
+          mat.map = null; // 2D 모드에서는 텍스처 제거
         } else if (!mat.map) {
           // 텍스처가 없을 때만 기본 색상 사용
           mat.color.set(isSelected ? getThemeColor() : doorColor);
