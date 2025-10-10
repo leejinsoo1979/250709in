@@ -192,7 +192,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         width: innerWidth + 10, // 내경폭 + 좌우 5mm씩 확장
         height: backPanelHeight, // 내경높이 + 상하 5mm씩 확장
         thickness: backPanelThickness, // 9mm
-        material: 'PB'
+        material: 'MDF'
       });
       
       // 서랍 섹션 처리 (DrawerRenderer.tsx 참조)
@@ -267,7 +267,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
             width: drawerBodyWidth - 26, // 추가로 26mm 감소
             depth: drawerBodyDepth - 26, // 추가로 26mm 감소
             thickness: drawerBottomThickness,
-            material: 'PB'  // 몸통 자재는 PB
+            material: 'MDF'
           });
         }
         
