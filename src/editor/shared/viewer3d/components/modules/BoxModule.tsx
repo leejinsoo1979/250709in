@@ -44,6 +44,7 @@ interface BoxModuleProps {
   isHighlighted?: boolean; // 가구 강조 여부
   adjacentCabinets?: { hasAdjacentUpperLower: boolean; adjacentSide: 'left' | 'right' | null }; // 인접 상하부장 정보
   placedFurnitureId?: string; // 배치된 가구의 고유 ID (치수 편집용)
+  customSections?: SectionConfig[]; // 사용자 정의 섹션 설정
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -85,6 +86,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   isHighlighted = false, // 강조 상태
   adjacentCabinets, // 인접 상하부장 정보
   placedFurnitureId, // 배치된 가구 ID
+  customSections, // 사용자 정의 섹션 설정
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
@@ -270,6 +272,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         hingePosition={hingePosition}
         spaceInfo={spaceInfo}
         doorWidth={doorWidth}
+        customSections={customSections}
         doorXOffset={0} // 도어 위치 고정 (커버 방식)
         originalSlotWidth={originalSlotWidth}
         slotCenterX={slotCenterX}

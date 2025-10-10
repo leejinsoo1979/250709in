@@ -44,7 +44,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     isEditMode,
     adjustedWidth,
     isHighlighted,
-    
+    customSections
   });
 
   const {

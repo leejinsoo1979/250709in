@@ -21,6 +21,7 @@ interface BaseFurnitureOptions {
   isEditMode?: boolean; // 편집 모드 여부
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
   slotWidths?: number[]; // 듀얼 가구의 개별 슬롯 너비들 (mm)
+  customSections?: SectionConfig[]; // 사용자 정의 섹션 설정
 }
 
 // 가구 기본 설정 반환 타입
@@ -64,14 +65,15 @@ export const useBaseFurniture = (
   moduleData: ModuleData,
   options: BaseFurnitureOptions = {}
 ): BaseFurnitureResult => {
-  const { 
-    color, 
-    internalHeight, 
-    customDepth, 
+  const {
+    color,
+    internalHeight,
+    customDepth,
     isDragging = false,
     isEditMode = false,
     adjustedWidth,
-    slotWidths
+    slotWidths,
+    customSections
   } = options;
   
   // Store에서 재질 설정 가져오기
@@ -320,28 +322,34 @@ export const useBaseFurniture = (
   
   // 섹션별 높이 계산
   const getSectionHeights = () => {
-    const { sections } = modelConfig;
-    
+    // customSections가 있으면 그것을 우선 사용
+    const sections = customSections || modelConfig.sections;
+
     if (!sections || sections.length === 0) {
       return [];
     }
 
+    // customSections가 있고 calculatedHeight가 있으면 그대로 사용
+    if (customSections && customSections.every(s => s.calculatedHeight)) {
+      return customSections.map(s => mmToThreeUnits(s.calculatedHeight!));
+    }
+
     const availableHeight = height - basicThickness * 2;
-    
+
     // 고정 높이 섹션들 분리
     const fixedSections = sections.filter((s: SectionConfig) => s.heightType === 'absolute');
-    
+
     // 고정 섹션들의 총 높이 계산
     const totalFixedHeight = fixedSections.reduce((sum: number, section: SectionConfig) => {
       return sum + calculateSectionHeight(section, availableHeight);
     }, 0);
-    
+
     // 나머지 공간 계산
     const remainingHeight = availableHeight - totalFixedHeight;
-    
+
     // 모든 섹션의 높이 계산
-    return sections.map((section: SectionConfig) => 
-      (section.heightType === 'absolute') 
+    return sections.map((section: SectionConfig) =>
+      (section.heightType === 'absolute')
         ? calculateSectionHeight(section, availableHeight)
         : calculateSectionHeight(section, remainingHeight)
     );

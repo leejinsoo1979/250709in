@@ -166,54 +166,55 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   
   return (
     <group>
-      {/* 좌우 측면 판재 - Type4는 상하 분할, 나머지는 통짜 */}
+      {/* 좌우 측면 판재 - 다중 섹션은 상하 분할, 나머지는 통짜 */}
       <>
-        {moduleData?.id?.includes('4drawer-hanging') && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
-          // Type4: 좌우 측판을 상부/하부로 분할 (하부 1000mm 고정)
+        {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging')) && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
+          // 다중 섹션: 좌우 측판을 상부/하부로 분할
           <>
             {(() => {
-              // 하부 측판 높이 = 1000mm (바닥판 상단부터 상판 하단까지)
-              const drawerSectionHeight = mmToThreeUnits(1000);
-              const hangingSectionHeight = getSectionHeights()[1];
-              
-              // 하부 측판: 바닥부터 1000mm
-              const lowerPanelY = -height/2 + drawerSectionHeight/2;
-              
-              // 상부 측판: 하부 상단부터
-              const upperPanelY = -height/2 + drawerSectionHeight + hangingSectionHeight/2;
-              
+              const lowerSectionHeight = getSectionHeights()[0];
+              const upperSectionHeight = getSectionHeights()[1];
+
+              // 하부 측판: 18mm 늘림 (상판 위로 연장)
+              const adjustedLowerHeight = lowerSectionHeight + basicThickness;
+              const lowerPanelY = -height/2 + adjustedLowerHeight/2;
+
+              // 상부 측판: 18mm 줄임 (하부 상판 위부터 시작)
+              const adjustedUpperHeight = upperSectionHeight - basicThickness;
+              const upperPanelY = -height/2 + lowerSectionHeight + basicThickness + adjustedUpperHeight/2;
+
               return (
                 <>
-                  {/* 왼쪽 하부 측판 (1000mm) */}
+                  {/* 왼쪽 하부 측판 (18mm 연장) */}
                   <BoxWithEdges
-                    args={[basicThickness, drawerSectionHeight, depth]}
+                    args={[basicThickness, adjustedLowerHeight, depth]}
                     position={[-innerWidth/2 - basicThickness/2, lowerPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
                   />
-                  
-                  {/* 왼쪽 상부 측판 (옷장 구역) */}
+
+                  {/* 왼쪽 상부 측판 (18mm 단축) */}
                   <BoxWithEdges
-                    args={[basicThickness, hangingSectionHeight, depth]}
+                    args={[basicThickness, adjustedUpperHeight, depth]}
                     position={[-innerWidth/2 - basicThickness/2, upperPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
                   />
-                  
-                  {/* 오른쪽 하부 측판 (1000mm) */}
+
+                  {/* 오른쪽 하부 측판 (18mm 연장) */}
                   <BoxWithEdges
-                    args={[basicThickness, drawerSectionHeight, depth]}
+                    args={[basicThickness, adjustedLowerHeight, depth]}
                     position={[innerWidth/2 + basicThickness/2, lowerPanelY, 0]}
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
                   />
-                  
-                  {/* 오른쪽 상부 측판 (옷장 구역) */}
+
+                  {/* 오른쪽 상부 측판 (18mm 단축) */}
                   <BoxWithEdges
-                    args={[basicThickness, hangingSectionHeight, depth]}
+                    args={[basicThickness, adjustedUpperHeight, depth]}
                     position={[innerWidth/2 + basicThickness/2, upperPanelY, 0]}
                     material={material}
                     renderMode={renderMode}

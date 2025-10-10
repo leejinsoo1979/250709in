@@ -1705,6 +1705,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               slotWidths={calculatedSlotWidths}
               isHighlighted={isSelected} // 선택 상태 전달
               placedFurnitureId={placedModule.id} // 배치된 가구 ID 전달 (치수 편집용)
+              customSections={placedModule.customSections} // 사용자 정의 섹션 설정
             />
             
             {/* 가구 너비 디버깅 */}
