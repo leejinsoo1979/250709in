@@ -179,8 +179,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       {showFurniture && (
         <>
           {/* 좌우 측면 판재 - 다중 섹션은 상하 분할, 나머지는 통짜 */}
-          <>
-        {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging')) && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
+          {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging')) && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
           // 다중 섹션: 좌우 측판을 상부/하부로 분할
           <>
             {(() => {
