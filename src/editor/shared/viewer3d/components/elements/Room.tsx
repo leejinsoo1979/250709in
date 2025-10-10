@@ -614,12 +614,14 @@ const Room: React.FC<RoomProps> = ({
   const createFrameMaterial = useCallback((frameType?: 'left' | 'right' | 'top' | 'base') => {
     // 2D 다크모드에서는 더 밝은 색상 사용
     const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
-    
-    // 2D에서 베이스프레임은 투명하게 표시
+
+    // 2D에서 상부/하부 프레임을 형광색으로 표시
     let frameColor = materialConfig?.doorColor || defaultColor;
     let baseFrameTransparent = false;
-    if (viewMode === '2D' && frameType === 'base') {
-      baseFrameTransparent = true;
+
+    // 2D 모드에서 상부/하부 프레임은 형광 녹색으로 표시
+    if (viewMode === '2D' && (frameType === 'top' || frameType === 'base')) {
+      frameColor = '#18CF23'; // 형광 녹색 (neon)
     }
     
     const isHighlighted = frameType && highlightedFrame === frameType;
