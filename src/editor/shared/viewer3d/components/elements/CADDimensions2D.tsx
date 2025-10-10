@@ -90,8 +90,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     return null;
   }
 
-  // 측면도(좌/우) 전용 치수
+  // 측면도(좌/우) 전용 치수 - 전부 숨김
   if (currentViewDirection === 'left' || currentViewDirection === 'right') {
+    return null;
     const spaceDepth = mmToThreeUnits(spaceInfo.depth || 1500);
     const spaceDepthMm = spaceInfo.depth || 1500;
     const topFrameHeightMm = spaceInfo.frameSize?.top || 0;
