@@ -181,132 +181,106 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </group>
         )}
 
-        {/* 하부 섹션 높이 */}
-        <group>
-          {/* 보조 가이드 연장선 - 하단 */}
-          <NativeLine
-            points={[
-              [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
-              [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-            ]}
-            color={dimensionColor}
-            lineWidth={1}
-            renderOrder={100000}
-            depthTest={false}
-          />
-          {/* 보조 가이드 연장선 - 중단 */}
-          <NativeLine
-            points={[
-              [0, floatHeight + baseFrameHeight + lowerSectionHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
-              [0, floatHeight + baseFrameHeight + lowerSectionHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-            ]}
-            color={dimensionColor}
-            lineWidth={1}
-            renderOrder={100000}
-            depthTest={false}
-          />
-          {/* 치수선 */}
-          <NativeLine
-            points={[
-              [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-              [0, floatHeight + baseFrameHeight + lowerSectionHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-            ]}
-            color={dimensionColor}
-            lineWidth={2}
-            renderOrder={100000}
-            depthTest={false}
-          />
-          <NativeLine
-            points={[
-              [-0.03, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-              [0.03, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-            ]}
-            color={dimensionColor}
-            lineWidth={2}
-            renderOrder={100000}
-            depthTest={false}
-          />
-          <NativeLine
-            points={[
-              [-0.03, floatHeight + baseFrameHeight + lowerSectionHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-              [0.03, floatHeight + baseFrameHeight + lowerSectionHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-            ]}
-            color={dimensionColor}
-            lineWidth={2}
-            renderOrder={100000}
-            depthTest={false}
-          />
-          <Text
-            position={[0, floatHeight + baseFrameHeight + lowerSectionHeight / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)]}
-            fontSize={smallFontSize}
-            color={textColor}
-            anchorX="center"
-            anchorY="middle"
-            renderOrder={1000}
-            depthTest={false}
-            rotation={[0, -Math.PI / 2, Math.PI / 2]}
-          >
-            하부 {Math.round(internalSpace.height / 2)}
-          </Text>
-        </group>
+        {/* 가구별 섹션 치수 가이드 */}
+        {placedModules.map((module, moduleIndex) => {
+          const moduleData = getModuleById(
+            module.moduleId,
+            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            spaceInfo
+          );
 
-        {/* 상부 섹션 높이 */}
-        <group>
-          {/* 보조 가이드 연장선 - 상단 */}
-          <NativeLine
-            points={[
-              [0, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
-              [0, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-            ]}
-            color={dimensionColor}
-            lineWidth={1}
-            renderOrder={100000}
-            depthTest={false}
-          />
-          {/* 치수선 */}
-          <NativeLine
-            points={[
-              [0, floatHeight + baseFrameHeight + lowerSectionHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-              [0, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-            ]}
-            color={dimensionColor}
-            lineWidth={2}
-            renderOrder={100000}
-            depthTest={false}
-          />
-          <NativeLine
-            points={[
-              [-0.03, floatHeight + baseFrameHeight + lowerSectionHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-              [0.03, floatHeight + baseFrameHeight + lowerSectionHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-            ]}
-            color={dimensionColor}
-            lineWidth={2}
-            renderOrder={100000}
-            depthTest={false}
-          />
-          <NativeLine
-            points={[
-              [-0.03, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-              [0.03, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-            ]}
-            color={dimensionColor}
-            lineWidth={2}
-            renderOrder={100000}
-            depthTest={false}
-          />
-          <Text
-            position={[0, floatHeight + baseFrameHeight + lowerSectionHeight + upperSectionHeight / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)]}
-            fontSize={smallFontSize}
-            color={textColor}
-            anchorX="center"
-            anchorY="middle"
-            renderOrder={1000}
-            depthTest={false}
-            rotation={[0, -Math.PI / 2, Math.PI / 2]}
-          >
-            상부 {Math.round(internalSpace.height / 2)}
-          </Text>
-        </group>
+          if (!moduleData || !moduleData.modelConfig?.sections) return null;
+
+          const sections = moduleData.modelConfig.sections;
+          const indexing = calculateSpaceIndexing(spaceInfo);
+          const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
+
+          // 각 섹션의 실제 높이 계산
+          let currentY = floatHeight + baseFrameHeight;
+
+          return sections.map((section, sectionIndex) => {
+            const sectionHeightMm = section.heightType === 'percentage'
+              ? (internalSpace.height * section.height / 100)
+              : section.height;
+            const sectionHeight = mmToThreeUnits(sectionHeightMm);
+
+            const sectionStartY = currentY;
+            const sectionEndY = currentY + sectionHeight;
+            currentY = sectionEndY;
+
+            return (
+              <group key={`section-${moduleIndex}-${sectionIndex}`}>
+                {/* 보조 가이드 연장선 - 시작 */}
+                <NativeLine
+                  points={[
+                    [slotX, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
+                    [slotX, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                  ]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                {/* 보조 가이드 연장선 - 끝 */}
+                <NativeLine
+                  points={[
+                    [slotX, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
+                    [slotX, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                  ]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                {/* 치수선 */}
+                <NativeLine
+                  points={[
+                    [slotX, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
+                    [slotX, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                  ]}
+                  color={dimensionColor}
+                  lineWidth={2}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                {/* 티크 마크 */}
+                <NativeLine
+                  points={[
+                    [slotX - 0.03, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
+                    [slotX + 0.03, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                  ]}
+                  color={dimensionColor}
+                  lineWidth={2}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine
+                  points={[
+                    [slotX - 0.03, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
+                    [slotX + 0.03, sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                  ]}
+                  color={dimensionColor}
+                  lineWidth={2}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                {/* 치수 텍스트 */}
+                <Text
+                  position={[slotX, sectionStartY + sectionHeight / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)]}
+                  fontSize={mmToThreeUnits(25)}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                  renderOrder={1000}
+                  depthTest={false}
+                  rotation={[0, -Math.PI / 2, 0]}
+                >
+                  {Math.round(sectionHeightMm)}
+                </Text>
+              </group>
+            );
+          });
+        })}
 
         {/* 받침대 높이 */}
         <group>
