@@ -86,12 +86,247 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     ];
   };
 
-  // 정면뷰에서만 치수 표시 (다른 뷰에서는 복잡함 방지)
   // showDimensions가 false이면 치수 표시하지 않음
-  if (currentViewDirection !== 'front' || !showDimensions) {
+  if (!showDimensions) {
     return null;
   }
 
+  // 측면도(좌/우) 전용 치수
+  if (currentViewDirection === 'left' || currentViewDirection === 'right') {
+    return (
+      <group>
+        {/* 측면도 가구 치수 */}
+        {placedModules.map((module, index) => {
+          const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
+          if (!moduleData) return null;
+
+          // 가구 깊이(depth)와 높이(height)
+          const furnitureDepthMm = module.customDepth || moduleData.dimensions.depth;
+          const furnitureHeightMm = module.customHeight || moduleData.dimensions.height;
+          const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+          const furnitureHeight = mmToThreeUnits(furnitureHeightMm);
+
+          // 가구 위치
+          const furnitureY = module.position.y;
+          const furnitureZ = module.position.z || 0;
+
+          // 깊이 치수선 위치 (가구 왼쪽)
+          const depthDimX = -furnitureDepth / 2 - mmToThreeUnits(150);
+          const frontZ = furnitureZ + furnitureDepth / 2;
+          const backZ = furnitureZ - furnitureDepth / 2;
+
+          // 높이 치수선 위치 (가구 오른쪽)
+          const heightDimZ = furnitureZ + furnitureDepth / 2 + mmToThreeUnits(150);
+          const bottomY = furnitureY - furnitureHeight / 2;
+          const topY = furnitureY + furnitureHeight / 2;
+
+          return (
+            <group key={`side-furniture-${index}`}>
+              {/* 깊이 치수선 (Z축) */}
+              <Line
+                points={[
+                  [depthDimX, furnitureY, backZ],
+                  [depthDimX, furnitureY, frontZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+                renderOrder={1000}
+                depthTest={false}
+              />
+
+              {/* 깊이 화살표 - 앞 */}
+              <Line
+                points={[
+                  [depthDimX, furnitureY, frontZ - 0.02],
+                  [depthDimX, furnitureY, frontZ],
+                  [depthDimX, furnitureY - 0.015, frontZ - 0.015]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+              <Line
+                points={[
+                  [depthDimX, furnitureY, frontZ - 0.02],
+                  [depthDimX, furnitureY, frontZ],
+                  [depthDimX, furnitureY + 0.015, frontZ - 0.015]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+
+              {/* 깊이 화살표 - 뒤 */}
+              <Line
+                points={[
+                  [depthDimX, furnitureY, backZ + 0.02],
+                  [depthDimX, furnitureY, backZ],
+                  [depthDimX, furnitureY - 0.015, backZ + 0.015]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+              <Line
+                points={[
+                  [depthDimX, furnitureY, backZ + 0.02],
+                  [depthDimX, furnitureY, backZ],
+                  [depthDimX, furnitureY + 0.015, backZ + 0.015]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+
+              {/* 깊이 텍스트 */}
+              <Html
+                position={[depthDimX - mmToThreeUnits(80), furnitureY, furnitureZ]}
+                center
+                transform={false}
+                occlude={false}
+                zIndexRange={[1000, 1001]}
+                style={{ pointerEvents: 'none' }}
+              >
+                <div
+                  style={{
+                    background: dimensionColors.background,
+                    color: dimensionColors.text,
+                    padding: '4px 8px',
+                    borderRadius: '3px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    border: `1px solid ${dimensionColors.furniture}`,
+                    fontFamily: 'monospace',
+                    whiteSpace: 'nowrap',
+                    userSelect: 'none'
+                  }}
+                >
+                  {furnitureDepthMm}mm
+                </div>
+              </Html>
+
+              {/* 깊이 연장선 */}
+              <Line
+                points={[
+                  [0, furnitureY, frontZ],
+                  [depthDimX, furnitureY, frontZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={1}
+                dashed={true}
+              />
+              <Line
+                points={[
+                  [0, furnitureY, backZ],
+                  [depthDimX, furnitureY, backZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={1}
+                dashed={true}
+              />
+
+              {/* 높이 치수선 (Y축) */}
+              <Line
+                points={[
+                  [0, bottomY, heightDimZ],
+                  [0, topY, heightDimZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+                renderOrder={1000}
+                depthTest={false}
+              />
+
+              {/* 높이 화살표 - 위 */}
+              <Line
+                points={[
+                  [0, topY - 0.02, heightDimZ],
+                  [0, topY, heightDimZ],
+                  [-0.015, topY - 0.015, heightDimZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+              <Line
+                points={[
+                  [0, topY - 0.02, heightDimZ],
+                  [0, topY, heightDimZ],
+                  [0.015, topY - 0.015, heightDimZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+
+              {/* 높이 화살표 - 아래 */}
+              <Line
+                points={[
+                  [0, bottomY + 0.02, heightDimZ],
+                  [0, bottomY, heightDimZ],
+                  [-0.015, bottomY + 0.015, heightDimZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+              <Line
+                points={[
+                  [0, bottomY + 0.02, heightDimZ],
+                  [0, bottomY, heightDimZ],
+                  [0.015, bottomY + 0.015, heightDimZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+
+              {/* 높이 텍스트 */}
+              <Html
+                position={[0, furnitureY, heightDimZ + mmToThreeUnits(80)]}
+                center
+                transform={false}
+                occlude={false}
+                zIndexRange={[1000, 1001]}
+                style={{ pointerEvents: 'none' }}
+              >
+                <div
+                  style={{
+                    background: dimensionColors.background,
+                    color: dimensionColors.text,
+                    padding: '4px 8px',
+                    borderRadius: '3px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    border: `1px solid ${dimensionColors.furniture}`,
+                    fontFamily: 'monospace',
+                    whiteSpace: 'nowrap',
+                    userSelect: 'none'
+                  }}
+                >
+                  {furnitureHeightMm}mm
+                </div>
+              </Html>
+
+              {/* 높이 연장선 */}
+              <Line
+                points={[
+                  [0, topY, furnitureZ],
+                  [0, topY, heightDimZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={1}
+                dashed={true}
+              />
+              <Line
+                points={[
+                  [0, bottomY, furnitureZ],
+                  [0, bottomY, heightDimZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={1}
+                dashed={true}
+              />
+            </group>
+          );
+        })}
+      </group>
+    );
+  }
+
+  // 정면도 전용 치수
   return (
     <group>
       {/* 전체 폭 치수 (상단) */}
