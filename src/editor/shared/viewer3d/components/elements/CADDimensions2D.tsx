@@ -93,8 +93,113 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
   // 측면도(좌/우) 전용 치수
   if (currentViewDirection === 'left' || currentViewDirection === 'right') {
+    const spaceDepth = mmToThreeUnits(spaceInfo.depth || 1500);
+    const spaceDepthMm = spaceInfo.depth || 1500;
+
     return (
       <group>
+        {/* 공간 전체 깊이 치수 (상단) */}
+        <group>
+          {/* 깊이 치수선 */}
+          <Line
+            points={[
+              [0, dimensionOffsetY, -spaceDepth/2],
+              [0, dimensionOffsetY, spaceDepth/2]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+            renderOrder={1000}
+            depthTest={false}
+          />
+
+          {/* 앞쪽 화살표 */}
+          <Line
+            points={[
+              [0, dimensionOffsetY, spaceDepth/2 - 0.02],
+              [0, dimensionOffsetY, spaceDepth/2],
+              [0, dimensionOffsetY - 0.015, spaceDepth/2 - 0.015]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+          <Line
+            points={[
+              [0, dimensionOffsetY, spaceDepth/2 - 0.02],
+              [0, dimensionOffsetY, spaceDepth/2],
+              [0, dimensionOffsetY + 0.015, spaceDepth/2 - 0.015]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+
+          {/* 뒤쪽 화살표 */}
+          <Line
+            points={[
+              [0, dimensionOffsetY, -spaceDepth/2 + 0.02],
+              [0, dimensionOffsetY, -spaceDepth/2],
+              [0, dimensionOffsetY - 0.015, -spaceDepth/2 + 0.015]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+          <Line
+            points={[
+              [0, dimensionOffsetY, -spaceDepth/2 + 0.02],
+              [0, dimensionOffsetY, -spaceDepth/2],
+              [0, dimensionOffsetY + 0.015, -spaceDepth/2 + 0.015]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+
+          {/* 깊이 텍스트 */}
+          <Html
+            position={[0, dimensionOffsetY + mmToThreeUnits(50), 0]}
+            center
+            transform={false}
+            occlude={false}
+            zIndexRange={[1000, 1001]}
+            style={{ pointerEvents: 'none' }}
+          >
+            <div
+              style={{
+                background: dimensionColors.background,
+                color: dimensionColors.primary,
+                padding: '6px 10px',
+                borderRadius: '4px',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                border: `1px solid ${dimensionColors.primary}`,
+                fontFamily: 'monospace',
+                whiteSpace: 'nowrap',
+                userSelect: 'none'
+              }}
+            >
+              {parseFloat(spaceDepthMm.toFixed(2))}mm
+            </div>
+          </Html>
+
+          {/* 연장선 */}
+          <Line
+            points={[
+              [0, floatHeight, spaceDepth/2],
+              [0, dimensionOffsetY + mmToThreeUnits(20), spaceDepth/2]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={1}
+            dashed={false}
+          />
+          <Line
+            points={[
+              [0, floatHeight, -spaceDepth/2],
+              [0, dimensionOffsetY + mmToThreeUnits(20), -spaceDepth/2]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={1}
+            dashed={false}
+          />
+        </group>
+
         {/* 측면도 가구 치수 */}
         {placedModules.map((module, index) => {
           const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
