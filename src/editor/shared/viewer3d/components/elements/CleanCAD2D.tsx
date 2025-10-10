@@ -2398,60 +2398,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             lineWidth={1}
           />
         </group> */}
-        
-        {/* 좌측 전체 높이 치수선 */}
-        <group>
-          {/* 치수선 */}
-          <Line
-            points={[[leftDimensionX, 0, spaceZOffset - mmToThreeUnits(200)], [leftDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)]]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 하단 화살표 */}
-          <Line
-            points={createArrowHead([leftDimensionX, 0, spaceZOffset - mmToThreeUnits(200)], [leftDimensionX, 0.05, spaceZOffset - mmToThreeUnits(200)])}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 상단 화살표 */}
-          <Line
-            points={createArrowHead([leftDimensionX, actualSpaceHeight, spaceZOffset - mmToThreeUnits(200)], [leftDimensionX, actualSpaceHeight - 0.05, spaceZOffset - mmToThreeUnits(200)])}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          
-          {/* 전체 높이 치수 텍스트 */}
-          {(showDimensionsText || isStep2) && (
-            <Text
-                  renderOrder={1000}
-                  depthTest={false}
-              position={[leftDimensionX - mmToThreeUnits(60), actualSpaceHeight / 2, spaceZOffset - mmToThreeUnits(200)]}
-              fontSize={largeFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              rotation={[0, 0, Math.PI / 2]}
-            >
-              {spaceInfo.height}
-            </Text>
-          )}
-          
-          {/* 연장선 */}
-          <Line
-            points={[[0, 0, spaceZOffset], [0, 0, spaceZOffset - mmToThreeUnits(180)]]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-          <Line
-            points={[[0, actualSpaceHeight, spaceZOffset], [0, actualSpaceHeight, spaceZOffset - mmToThreeUnits(180)]]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-        </group>
-
-
 
         {/* 캐비넷이 배치된 경우에만 깊이 치수선 표시 */}
         {placedModules.length > 0 && (
