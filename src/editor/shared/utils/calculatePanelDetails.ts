@@ -236,7 +236,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           
           // 서랍 뒷판
           targetPanel.push({
-            name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.backPanel')}`,
+            name: `${sectionName} ${t('furniture.drawer')}${drawerNum} 뒷판`,
             width: drawerBodyWidth,
             height: drawerBodyHeight,
             thickness: basicThickness,
