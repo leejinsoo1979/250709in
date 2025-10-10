@@ -67,8 +67,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const smallFontSize = mmToThreeUnits(30);
 
   // 치수선 오프셋
-  const leftDimOffset = mmToThreeUnits(300);
-  const rightDimOffset = mmToThreeUnits(300);
+  const leftDimOffset = mmToThreeUnits(150);
+  const rightDimOffset = mmToThreeUnits(150);
 
   // 좌측뷰인 경우
   if (currentViewDirection === 'left') {
@@ -114,7 +114,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           {/* 높이 텍스트 */}
           <Text
-            position={[0, floatHeight + spaceHeight / 2, -spaceDepth/2 - leftDimOffset - mmToThreeUnits(100)]}
+            position={[0, floatHeight + spaceHeight / 2, -spaceDepth/2 - leftDimOffset - mmToThreeUnits(60)]}
             fontSize={largeFontSize}
             color={textColor}
             anchorX="center"
@@ -162,7 +162,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             <Text
-              position={[0, floatHeight + spaceHeight - topFrameHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(100)]}
+              position={[0, floatHeight + spaceHeight - topFrameHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(60)]}
               fontSize={smallFontSize}
               color={textColor}
               anchorX="center"
@@ -208,7 +208,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             depthTest={false}
           />
           <Text
-            position={[0, floatHeight + baseFrameHeight + internalHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(100)]}
+            position={[0, floatHeight + baseFrameHeight + internalHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(60)]}
             fontSize={smallFontSize}
             color={textColor}
             anchorX="center"
@@ -254,7 +254,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             <Text
-              position={[0, floatHeight + baseFrameHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(100)]}
+              position={[0, floatHeight + baseFrameHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(60)]}
               fontSize={smallFontSize}
               color={textColor}
               anchorX="center"
