@@ -247,8 +247,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </group>
 
         {/* 받침대 높이 */}
-        {baseFrameHeightMm > 0 && (
-          <group>
+        <group>
             {/* 보조 가이드 연장선 - 하단 (바닥) */}
             <NativeLine
               points={[
@@ -303,8 +302,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             >
               하판 {baseFrameHeightMm}
             </Text>
-          </group>
-        )}
+        </group>
 
 
         {/* ===== 가구별 깊이 치수 ===== */}
