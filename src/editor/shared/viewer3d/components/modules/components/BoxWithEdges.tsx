@@ -14,6 +14,8 @@ interface BoxWithEdgesProps {
   isDragging?: boolean;
   isEditMode?: boolean; // 편집 모드 여부 추가
   hideEdges?: boolean; // 엣지 숨김 옵션 추가
+  hideTopEdge?: boolean; // 상단 엣지만 숨김
+  hideBottomEdge?: boolean; // 하단 엣지만 숨김
   isBackPanel?: boolean; // 백패널 여부 추가
   isEndPanel?: boolean; // 엔드패널 여부 추가
   isHighlighted?: boolean; // 강조 상태 추가
@@ -26,14 +28,16 @@ interface BoxWithEdgesProps {
  * 공통 BoxWithEdges 컴포넌트
  * 모든 가구 타입에서 재사용되는 엣지 표시 박스
  */
-const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({ 
-  args, 
-  position, 
-  material, 
-  renderMode = 'solid', 
+const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
+  args,
+  position,
+  material,
+  renderMode = 'solid',
   isDragging = false,
   isEditMode = false,
   hideEdges = false,
+  hideTopEdge = false,
+  hideBottomEdge = false,
   isBackPanel = false,
   isEndPanel = false,
   isHighlighted = false,
@@ -220,32 +224,100 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         )}
       </mesh>
       {/* 윤곽선 렌더링 */}
-      {!hideEdges && (
-        <>
-          <lineSegments>
-            <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-            <lineBasicMaterial
-              color={edgeColor}
-              transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
-              opacity={
-                isHighlighted
-                  ? 1.0  // 강조 상태일 때는 불투명
-                  : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
-                    ? 0.1  // 2D 정면 뷰에서 백패널은 매우 투명하게
-                    : viewMode === '3D'
-                      ? 0.9
-                      : 1
-              }
-              depthTest={viewMode === '3D'}
-              depthWrite={false}
-              polygonOffset={viewMode === '3D'}
-              polygonOffsetFactor={viewMode === '3D' ? -10 : 0}
-              polygonOffsetUnits={viewMode === '3D' ? -10 : 0}
-              linewidth={isHighlighted ? (viewMode === '2D' ? 4 : 3) : (isBackPanel && viewMode === '2D' ? 1 : viewMode === '2D' ? 2 : 1)}
-            />
-          </lineSegments>
-        </>
-      )}
+      {!hideEdges && (() => {
+        if (hideTopEdge || hideBottomEdge) {
+          // 특정 엣지만 숨기기: 수동으로 선 그리기
+          const [width, height, depth] = args;
+          const halfW = width / 2;
+          const halfH = height / 2;
+          const halfD = depth / 2;
+
+          const lines: [number, number, number][][] = [];
+
+          // 앞면 사각형 (4개 엣지)
+          if (!hideTopEdge) lines.push([[-halfW, halfH, halfD], [halfW, halfH, halfD]]); // 상단
+          if (!hideBottomEdge) lines.push([[-halfW, -halfH, halfD], [halfW, -halfH, halfD]]); // 하단
+          lines.push([[-halfW, -halfH, halfD], [-halfW, halfH, halfD]]); // 좌측
+          lines.push([[halfW, -halfH, halfD], [halfW, halfH, halfD]]); // 우측
+
+          // 뒷면 사각형 (4개 엣지)
+          if (!hideTopEdge) lines.push([[-halfW, halfH, -halfD], [halfW, halfH, -halfD]]); // 상단
+          if (!hideBottomEdge) lines.push([[-halfW, -halfH, -halfD], [halfW, -halfH, -halfD]]); // 하단
+          lines.push([[-halfW, -halfH, -halfD], [-halfW, halfH, -halfD]]); // 좌측
+          lines.push([[halfW, -halfH, -halfD], [halfW, halfH, -halfD]]); // 우측
+
+          // 연결 엣지 (4개)
+          if (!hideTopEdge) {
+            lines.push([[-halfW, halfH, halfD], [-halfW, halfH, -halfD]]); // 좌상
+            lines.push([[halfW, halfH, halfD], [halfW, halfH, -halfD]]); // 우상
+          }
+          if (!hideBottomEdge) {
+            lines.push([[-halfW, -halfH, halfD], [-halfW, -halfH, -halfD]]); // 좌하
+            lines.push([[halfW, -halfH, halfD], [halfW, -halfH, -halfD]]); // 우하
+          }
+
+          return (
+            <>
+              {lines.map((line, i) => (
+                <line key={i}>
+                  <bufferGeometry>
+                    <bufferAttribute
+                      attach="attributes-position"
+                      count={2}
+                      array={new Float32Array([...line[0], ...line[1]])}
+                      itemSize={3}
+                    />
+                  </bufferGeometry>
+                  <lineBasicMaterial
+                    color={edgeColor}
+                    transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
+                    opacity={
+                      isHighlighted
+                        ? 1.0
+                        : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
+                          ? 0.1
+                          : viewMode === '3D'
+                            ? 0.9
+                            : 1
+                    }
+                    depthTest={viewMode === '3D'}
+                    depthWrite={false}
+                    linewidth={isHighlighted ? (viewMode === '2D' ? 4 : 3) : (isBackPanel && viewMode === '2D' ? 1 : viewMode === '2D' ? 2 : 1)}
+                  />
+                </line>
+              ))}
+            </>
+          );
+        } else {
+          // 전체 엣지 표시
+          return (
+            <>
+              <lineSegments>
+                <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
+                <lineBasicMaterial
+                  color={edgeColor}
+                  transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
+                  opacity={
+                    isHighlighted
+                      ? 1.0
+                      : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
+                        ? 0.1
+                        : viewMode === '3D'
+                          ? 0.9
+                          : 1
+                  }
+                  depthTest={viewMode === '3D'}
+                  depthWrite={false}
+                  polygonOffset={viewMode === '3D'}
+                  polygonOffsetFactor={viewMode === '3D' ? -10 : 0}
+                  polygonOffsetUnits={viewMode === '3D' ? -10 : 0}
+                  linewidth={isHighlighted ? (viewMode === '2D' ? 4 : 3) : (isBackPanel && viewMode === '2D' ? 1 : viewMode === '2D' ? 2 : 1)}
+                />
+              </lineSegments>
+            </>
+          );
+        }
+      })()}
     </group>
   );
 };

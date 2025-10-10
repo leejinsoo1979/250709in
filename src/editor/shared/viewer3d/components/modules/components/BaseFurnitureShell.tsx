@@ -299,6 +299,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       renderMode={renderMode}
                       isDragging={isDragging}
                       isHighlighted={isLowerHighlighted}
+                      hideTopEdge={true}
                     />
 
                     {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림 */}
@@ -344,6 +345,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isLowerHighlighted}
+                        hideTopEdge={true}
                       />
 
                       {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림 */}
