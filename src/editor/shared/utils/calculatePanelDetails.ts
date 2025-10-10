@@ -263,7 +263,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           
           // 서랍 바닥판 (DrawerRenderer의 Drawer Bottom)
           targetPanel.push({
-            name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.bottomPanel')}`,
+            name: `${sectionName} ${t('furniture.drawer')}${drawerNum} 바닥판`,
             width: drawerBodyWidth - 26, // 추가로 26mm 감소
             depth: drawerBodyDepth - 26, // 추가로 26mm 감소
             thickness: drawerBottomThickness,
