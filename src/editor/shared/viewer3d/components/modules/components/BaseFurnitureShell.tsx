@@ -274,7 +274,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             />
           </>
         )}
-        </>
 
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
