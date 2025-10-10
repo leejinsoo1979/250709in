@@ -73,7 +73,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
       return '#505050';
     }
     // 2D 모드
-    return view2DTheme === 'dark' ? '#FF4500' : '#444444';
+    return view2DTheme === 'dark' ? '#FFFFFF' : '#808080';
   }, [viewMode, view2DTheme]);
 
   return (
