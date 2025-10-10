@@ -211,15 +211,20 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
       }
 
       // === 백패널 (섹션별로 분리) ===
-      // 백패널은 측판 안쪽에 들어가므로 측판보다 작음
-      // - 하부 섹션: 측판 높이 - 10mm (상하 5mm씩 여유)
-      // - 상부 섹션: 측판 높이 - 10mm (상하 5mm씩 여유)
-      const backPanelHeight = sectionHeightMm - 10;
+      // 백패널 계산:
+      // - 가로: innerWidth + 10 (내경폭에서 좌우 5mm씩 확장)
+      // - 세로: 섹션 내경높이 + 10 (섹션 내경높이에서 상하 5mm씩 확장)
+      // 예: 가구 586×1000 → 백패널 560×974
+      //     가로: 586-(18+18)+10=560, 세로: 1000-(18+18)+10=974
+
+      // 섹션 내경 높이 = 섹션 측판 높이 - 상하판 두께(18+18)
+      const sectionInnerHeight = sectionHeightMm - basicThickness * 2;
+      const backPanelHeight = sectionInnerHeight + 10;
 
       targetPanel.push({
         name: `${sectionName} 백패널`,
-        width: innerWidth + 10, // 좌우 5mm씩 확장
-        height: backPanelHeight, // 측판 - 10mm
+        width: innerWidth + 10, // 내경폭 + 좌우 5mm씩 확장
+        height: backPanelHeight, // 내경높이 + 상하 5mm씩 확장
         thickness: backPanelThickness, // 9mm
         material: 'PB'
       });
