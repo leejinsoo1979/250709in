@@ -486,9 +486,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   upperBackPanelHeight: upperBackPanelHeight / 0.01
                 });
 
-                // 백패널 Y 위치 (백패널 높이 기준으로 중심 계산)
-                const lowerBackPanelY = -height/2 + basicThickness + lowerBackPanelHeight/2;
-                const upperBackPanelY = -height/2 + lowerSectionHeight + basicThickness + upperBackPanelHeight/2;
+                // 백패널 Y 위치 (홈 5mm 고려)
+                // 하부: 하판(18mm) 상단에서 5mm 올라간 곳에서 시작 = 하판에서 13mm 위
+                // 상부: 중간판(18mm) 상단에서 5mm 올라간 곳에서 시작 = 중간판에서 13mm 위
+                const lowerBackPanelY = -height/2 + 0.13 + lowerBackPanelHeight/2; // 13mm = 0.13
+                const upperBackPanelY = -height/2 + lowerSectionHeight + 0.13 + upperBackPanelHeight/2; // 13mm = 0.13
 
                 console.log('🔍 백패널 Y위치:', {
                   lowerBackPanelY: lowerBackPanelY / 0.01,
