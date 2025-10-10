@@ -179,9 +179,9 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
       // === 상판 또는 중간판 ===
       const isMultiSection = sections.length >= 2;
       if (isMultiSection && sectionIndex < sections.length - 1) {
-        // 다중 섹션이고 마지막이 아니면: 하부섹션 상판 (중간판, depth-8)
+        // 다중 섹션이고 마지막이 아니면: 하부섹션 상판
         targetPanel.push({
-          name: `${sectionName} 상판 (중간판)`,
+          name: `${sectionName} 상판`,
           width: innerWidth,
           depth: customDepth - 8, // adjustedDepthForShelves - basicThickness
           thickness: basicThickness,
@@ -190,9 +190,9 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
       } else if (sectionIndex === sections.length - 1) {
         // 마지막 섹션
         if (isMultiSection) {
-          // 다중 섹션: 상부섹션 바닥판 (중간판) + 상판
+          // 다중 섹션: 상부섹션 바닥판
           targetPanel.push({
-            name: `${sectionName} 바닥판 (중간판)`,
+            name: `${sectionName} 바닥판`,
             width: innerWidth,
             depth: customDepth - 8, // adjustedDepthForShelves - basicThickness
             thickness: basicThickness,
@@ -315,8 +315,18 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           });
         }
       } else if (section.type === 'hanging') {
-        // 옷장 섹션 - 패널 없음 (옷걸이만 있는 빈 공간)
-        // CNC 절단 목록에 추가할 항목 없음
+        // 옷장 섹션 - 안전선반이 있으면 추가
+        if (section.shelfPositions && section.shelfPositions.length > 0) {
+          section.shelfPositions.forEach((pos, i) => {
+            targetPanel.push({
+              name: `${sectionName} 안전선반`,
+              width: innerWidth,
+              depth: customDepth - 8, // adjustedDepthForShelves
+              thickness: basicThickness,
+              material: 'PB'
+            });
+          });
+        }
       } else if (section.type === 'shelf' && section.count) {
         // 선반 구역 (ShelfRenderer.tsx 참조)
         for (let i = 1; i <= section.count; i++) {
