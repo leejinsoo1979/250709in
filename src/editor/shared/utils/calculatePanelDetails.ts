@@ -99,11 +99,11 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
     
     // 각 섹션별 내부 구조 처리
     sections.forEach((section, sectionIndex) => {
-      // 상부장/하부장 구분 
+      // 상부장/하부장 구분
       // 가구 타입에 따른 구분 로직
       let sectionName = '';
       let targetPanel = null;
-      
+
       // 2단 옷장 (single-2hanging): 첫 번째 섹션(shelf)이 하부장, 두 번째 섹션(hanging)이 상부장
       if (moduleData.id.includes('2hanging')) {
         if (sectionIndex === 0) {
@@ -135,7 +135,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         targetPanel = panels.upper;
         sectionName = '';
       }
-      
+
       // 실제 섹션 높이 계산 (전체 높이 기준)
       let sectionHeightMm;
       if (section.heightType === 'absolute') {
@@ -148,6 +148,23 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         const percentage = (section.height || section.heightRatio || 100) / totalPercentage;
         sectionHeightMm = remainingHeight * percentage;
       }
+
+      // === 섹션별 측판 추가 (좌우 2개) ===
+      // 측판은 섹션 높이만큼 만들어짐
+      targetPanel.push({
+        name: `${sectionName} 좌측판`,
+        width: customDepth,
+        height: sectionHeightMm,
+        thickness: basicThickness,
+        material: 'PB'
+      });
+      targetPanel.push({
+        name: `${sectionName} 우측판`,
+        width: customDepth,
+        height: sectionHeightMm,
+        thickness: basicThickness,
+        material: 'PB'
+      });
       
       // 서랍 섹션 처리 (DrawerRenderer.tsx 참조)
       if (section.type === 'drawer' && section.count) {
@@ -282,10 +299,38 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
     });
   }
   
+  // === 공통 패널 (상하판, 백패널) ===
+  // 상판
+  panels.common.unshift({
+    name: '상판',
+    width: innerWidth,
+    height: customDepth,
+    thickness: basicThickness,
+    material: 'PB'
+  });
+
+  // 하판
+  panels.common.push({
+    name: '하판',
+    width: innerWidth,
+    height: customDepth,
+    thickness: basicThickness,
+    material: 'PB'
+  });
+
+  // 백패널 (9mm, 상하좌우 5mm 확장)
+  panels.common.push({
+    name: '백패널',
+    width: innerWidth + 10,
+    height: innerHeight + 10,
+    thickness: backPanelThickness,
+    material: 'PB'
+  });
+
   // === 도어 패널 ===
   if (hasDoor) {
     const doorGap = 2;
-    
+
     if (moduleData.id.includes('dual')) {
       const doorWidth = Math.floor((customWidth - doorGap * 3) / 2);
       panels.door.push({
@@ -313,31 +358,32 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
     }
   }
   
-  // 플랫 배열로 변환하여 반환 (상부장 → 안전선반 → 하부장 순서)
+  // 플랫 배열로 변환하여 반환
   const result = [];
-  
+
+  // 공통 패널 (상판, 하판, 백패널) - 맨 앞에 표시
+  if (panels.common.length > 0) {
+    result.push({ name: `=== 공통 패널 ===` });
+    result.push(...panels.common);
+  }
+
   // 상부장 패널 (상부 섹션)
   if (panels.upper.length > 0) {
     result.push({ name: `=== ${t('furniture.upperSection')} ===` });
     result.push(...panels.upper);
   }
-  
-  // 공통 패널 (안전선반/칸막이) - 상부장과 하부장 사이
-  if (panels.common.length > 0) {
-    result.push(...panels.common);
-  }
-  
+
   // 하부장 패널 (하부 섹션)
   if (panels.lower.length > 0) {
     result.push({ name: `=== ${t('furniture.lowerSection')} ===` });
     result.push(...panels.lower);
   }
-  
+
   // 도어 패널은 필요시 표시
   if (panels.door.length > 0 && hasDoor) {
     result.push({ name: `=== ${t('furniture.door')} ===` });
     result.push(...panels.door);
   }
-  
+
   return result;
 };
