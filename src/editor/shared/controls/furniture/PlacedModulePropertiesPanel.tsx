@@ -731,7 +731,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         finalWidth: initialWidth
       });
     }
-  }, [currentPlacedModule?.id, moduleData?.id]); // id만 의존성으로 하여 모듈 변경 시에만 실행
+  }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth]); // 실제 값이 바뀔 때만 실행
 
   // 가구 편집 팝업이 활성화되지 않았으면 렌더링하지 않음 (조건부 렌더링은 훅 선언 이후에만)
   if (activePopup.type !== 'furnitureEdit' || !activePopup.id) {
