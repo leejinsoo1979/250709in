@@ -286,9 +286,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100000}
                   depthTest={false}
                 />
-                {/* 치수 텍스트 */}
+                {/* 치수 텍스트 (상부섹션은 짧아진 치수선 중앙에 맞춤) */}
                 <Text
-                  position={[slotX, sectionStartY + sectionHeight / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)]}
+                  position={[
+                    slotX,
+                    isLastSection
+                      ? sectionStartY + (sectionEndY - mmToThreeUnits(75) - sectionStartY) / 2
+                      : sectionStartY + sectionHeight / 2,
+                    spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)
+                  ]}
                   fontSize={mmToThreeUnits(25)}
                   color={textColor}
                   anchorX="center"
@@ -409,6 +415,30 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           return (
             <group key={`furniture-depth-${index}`}>
+              {/* 보조 가이드 연장선 - 앞쪽 */}
+              <NativeLine
+                points={[
+                  [slotX, floatHeight + baseFrameHeight + internalHeight, furnitureZ + moduleDepth/2],
+                  [slotX, furnitureTopY, furnitureZ + moduleDepth/2]
+                ]}
+                color={dimensionColor}
+                lineWidth={1}
+                renderOrder={100000}
+                depthTest={false}
+              />
+
+              {/* 보조 가이드 연장선 - 뒤쪽 */}
+              <NativeLine
+                points={[
+                  [slotX, floatHeight + baseFrameHeight + internalHeight, furnitureZ - moduleDepth/2],
+                  [slotX, furnitureTopY, furnitureZ - moduleDepth/2]
+                ]}
+                color={dimensionColor}
+                lineWidth={1}
+                renderOrder={100000}
+                depthTest={false}
+              />
+
               {/* 가구 깊이 치수선 */}
               <NativeLine
                 points={[
