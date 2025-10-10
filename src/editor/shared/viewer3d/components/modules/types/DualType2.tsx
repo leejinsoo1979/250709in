@@ -114,17 +114,32 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                 />
                 
-                {/* 중간 구분 패널 (마지막 섹션 제외) */}
-                {index < sectionHeights.length - 1 && (
-                  <>
-                    {console.log('🟢 중간판 렌더링:', { index, sectionCount: getSectionHeights().length, position: sectionCenterY + sectionHeight/2 + basicThickness/2 })}
-                    <BoxWithEdges
-                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                      position={[0, sectionCenterY + sectionHeight/2 + basicThickness/2, basicThickness/2 + shelfZOffset]}
-                      material={material}
-                      renderMode={renderMode}
-                      isDragging={isDragging}
-                    />
+                {/* 중간 구분 패널 (마지막 섹션 제외) - 하부섹션 상판 + 상부섹션 바닥판 */}
+                {index < getSectionHeights().length - 1 && (() => {
+                  const middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2;
+                  const lowerTopPanelY = middlePanelY - basicThickness;
+
+                  return (
+                    <>
+                      {console.log('🟢 중간판 렌더링:', { index, sectionCount: getSectionHeights().length, middlePanelY, lowerTopPanelY })}
+
+                      {/* 하부 섹션 상판 */}
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                      />
+
+                      {/* 상부 섹션 바닥판 */}
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                      />
                     
                     {/* 중간판 두께 치수 표시 */}
                     {showDimensions && showDimensionsText && (
@@ -168,7 +183,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                       </group>
                     )}
                   </>
-                )}
+                  );
+                })()}
               </React.Fragment>
             );
             });
