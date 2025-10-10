@@ -1,11 +1,11 @@
 import React from 'react';
-import { Line, Html } from '@react-three/drei';
+import { Text } from '@react-three/drei';
+import NativeLine from './NativeLine';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSpaceIndexing, calculateInternalSpace } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
-import * as THREE from 'three';
 
 interface CADDimensions2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -23,15 +23,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
 
-  // 2D 도면 치수 색상 설정
+  // 2D 도면 치수 색상
   const dimensionColor = view2DTheme === 'light' ? '#000000' : '#FFFFFF';
-
-  const dimensionColors = {
-    primary: dimensionColor,
-    furniture: dimensionColor,
-    background: view2DTheme === 'dark' ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-    text: dimensionColor
-  };
+  const textColor = dimensionColor;
 
   // 실제 뷰 방향 결정
   const currentViewDirection = viewDirection || view2DDirection;
@@ -58,6 +52,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const baseFrameHeightMm = spaceInfo.baseConfig?.frameHeight || 0;
   const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
 
+  // 폰트 크기
+  const largeFontSize = mmToThreeUnits(40);
+  const smallFontSize = mmToThreeUnits(30);
+
   // showDimensions가 false이면 치수 표시하지 않음
   if (!showDimensions) {
     return null;
@@ -69,9 +67,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   }
 
   // 치수선 오프셋
-  const leftDimOffset = mmToThreeUnits(200);   // 왼쪽 치수선 간격
-  const rightDimOffset = mmToThreeUnits(200);  // 오른쪽 치수선 간격
-  const textOffset = mmToThreeUnits(100);      // 텍스트 추가 간격
+  const leftDimOffset = mmToThreeUnits(200);
+  const rightDimOffset = mmToThreeUnits(200);
 
   // 좌측뷰인 경우
   if (currentViewDirection === 'left') {
@@ -80,62 +77,54 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* ===== 왼쪽: 전체 높이 치수 ===== */}
         <group>
           {/* 수직 치수선 */}
-          <Line
+          <NativeLine
             points={[
               [0, floatHeight, -spaceDepth/2 - leftDimOffset],
               [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]
             ]}
-            color={dimensionColors.primary}
-            lineWidth={1.5}
-            renderOrder={999999}
+            color={dimensionColor}
+            lineWidth={2}
+            renderOrder={100000}
             depthTest={false}
           />
 
-          {/* 상단 티크 마크 */}
-          <Line
-            points={[[-0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset], [0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]]}
-            color={dimensionColors.primary}
-            lineWidth={1.5}
-            renderOrder={999999}
+          {/* 상단 티크 */}
+          <NativeLine
+            points={[
+              [-0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset],
+              [0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]
+            ]}
+            color={dimensionColor}
+            lineWidth={2}
+            renderOrder={100000}
             depthTest={false}
           />
 
-          {/* 하단 티크 마크 */}
-          <Line
-            points={[[-0.03, floatHeight, -spaceDepth/2 - leftDimOffset], [0.03, floatHeight, -spaceDepth/2 - leftDimOffset]]}
-            color={dimensionColors.primary}
-            lineWidth={1.5}
-            renderOrder={999999}
+          {/* 하단 티크 */}
+          <NativeLine
+            points={[
+              [-0.03, floatHeight, -spaceDepth/2 - leftDimOffset],
+              [0.03, floatHeight, -spaceDepth/2 - leftDimOffset]
+            ]}
+            color={dimensionColor}
+            lineWidth={2}
+            renderOrder={100000}
             depthTest={false}
           />
 
           {/* 높이 텍스트 */}
           {showDimensionsText && (
-            <Html
-              position={[0, floatHeight + spaceHeight / 2, -spaceDepth/2 - leftDimOffset - textOffset]}
-              center
-              transform={false}
-              occlude={false}
-              zIndexRange={[1000, 1001]}
-              style={{ pointerEvents: 'none' }}
+            <Text
+              position={[0, floatHeight + spaceHeight / 2, -spaceDepth/2 - leftDimOffset - mmToThreeUnits(80)]}
+              fontSize={largeFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+              renderOrder={100001}
+              depthTest={false}
             >
-              <div
-                style={{
-                  background: dimensionColors.background,
-                  color: dimensionColors.text,
-                  padding: '6px 12px',
-                  borderRadius: '4px',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  border: `1.5px solid ${dimensionColors.primary}`,
-                  fontFamily: 'monospace',
-                  whiteSpace: 'nowrap',
-                  userSelect: 'none'
-                }}
-              >
-                {spaceInfo.height}
-              </div>
-            </Html>
+              {spaceInfo.height}
+            </Text>
           )}
         </group>
 
@@ -144,159 +133,144 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 상부 프레임 두께 */}
         {topFrameHeightMm > 0 && (
           <group>
-            <Line
-              points={[[0, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset], [0, floatHeight + spaceHeight, spaceDepth/2 + rightDimOffset]]}
-              color={dimensionColors.primary}
-              lineWidth={1.5}
-              renderOrder={999999}
+            <NativeLine
+              points={[
+                [0, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset],
+                [0, floatHeight + spaceHeight, spaceDepth/2 + rightDimOffset]
+              ]}
+              color={dimensionColor}
+              lineWidth={2}
+              renderOrder={100000}
               depthTest={false}
             />
-            <Line
-              points={[[-0.03, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset], [0.03, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset]]}
-              color={dimensionColors.primary}
-              lineWidth={1.5}
-              renderOrder={999999}
+            <NativeLine
+              points={[
+                [-0.03, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset],
+                [0.03, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset]
+              ]}
+              color={dimensionColor}
+              lineWidth={2}
+              renderOrder={100000}
               depthTest={false}
             />
-            <Line
-              points={[[-0.03, floatHeight + spaceHeight, spaceDepth/2 + rightDimOffset], [0.03, floatHeight + spaceHeight, spaceDepth/2 + rightDimOffset]]}
-              color={dimensionColors.primary}
-              lineWidth={1.5}
-              renderOrder={999999}
+            <NativeLine
+              points={[
+                [-0.03, floatHeight + spaceHeight, spaceDepth/2 + rightDimOffset],
+                [0.03, floatHeight + spaceHeight, spaceDepth/2 + rightDimOffset]
+              ]}
+              color={dimensionColor}
+              lineWidth={2}
+              renderOrder={100000}
               depthTest={false}
             />
             {showDimensionsText && (
-              <Html
-                position={[0, floatHeight + spaceHeight - topFrameHeight / 2, spaceDepth/2 + rightDimOffset + textOffset]}
-                center
-                transform={false}
-                occlude={false}
-                zIndexRange={[1000, 1001]}
-                style={{ pointerEvents: 'none' }}
+              <Text
+                position={[0, floatHeight + spaceHeight - topFrameHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(80)]}
+                fontSize={smallFontSize}
+                color={textColor}
+                anchorX="center"
+                anchorY="middle"
+                renderOrder={100001}
+                depthTest={false}
               >
-                <div
-                  style={{
-                    background: dimensionColors.background,
-                    color: dimensionColors.text,
-                    padding: '4px 10px',
-                    borderRadius: '3px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    border: `1.5px solid ${dimensionColors.primary}`,
-                    fontFamily: 'monospace',
-                    whiteSpace: 'nowrap',
-                    userSelect: 'none'
-                  }}
-                >
-                  상판 {topFrameHeightMm}
-                </div>
-              </Html>
+                상판 {topFrameHeightMm}
+              </Text>
             )}
           </group>
         )}
 
         {/* 가구 내부 높이 */}
         <group>
-          <Line
-            points={[[0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset], [0, floatHeight + baseFrameHeight + internalHeight, spaceDepth/2 + rightDimOffset]]}
-            color={dimensionColors.furniture}
-            lineWidth={1.5}
-            renderOrder={999999}
+          <NativeLine
+            points={[
+              [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset],
+              [0, floatHeight + baseFrameHeight + internalHeight, spaceDepth/2 + rightDimOffset]
+            ]}
+            color={dimensionColor}
+            lineWidth={2}
+            renderOrder={100000}
             depthTest={false}
           />
-          <Line
-            points={[[-0.03, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset], [0.03, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset]]}
-            color={dimensionColors.furniture}
-            lineWidth={1.5}
-            renderOrder={999999}
+          <NativeLine
+            points={[
+              [-0.03, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset],
+              [0.03, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset]
+            ]}
+            color={dimensionColor}
+            lineWidth={2}
+            renderOrder={100000}
             depthTest={false}
           />
-          <Line
-            points={[[-0.03, floatHeight + baseFrameHeight + internalHeight, spaceDepth/2 + rightDimOffset], [0.03, floatHeight + baseFrameHeight + internalHeight, spaceDepth/2 + rightDimOffset]]}
-            color={dimensionColors.furniture}
-            lineWidth={1.5}
-            renderOrder={999999}
+          <NativeLine
+            points={[
+              [-0.03, floatHeight + baseFrameHeight + internalHeight, spaceDepth/2 + rightDimOffset],
+              [0.03, floatHeight + baseFrameHeight + internalHeight, spaceDepth/2 + rightDimOffset]
+            ]}
+            color={dimensionColor}
+            lineWidth={2}
+            renderOrder={100000}
             depthTest={false}
           />
           {showDimensionsText && (
-            <Html
-              position={[0, floatHeight + baseFrameHeight + internalHeight / 2, spaceDepth/2 + rightDimOffset + textOffset]}
-              center
-              transform={false}
-              occlude={false}
-              zIndexRange={[1000, 1001]}
-              style={{ pointerEvents: 'none' }}
+            <Text
+              position={[0, floatHeight + baseFrameHeight + internalHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(80)]}
+              fontSize={smallFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+              renderOrder={100001}
+              depthTest={false}
             >
-              <div
-                style={{
-                  background: dimensionColors.background,
-                  color: dimensionColors.furniture,
-                  padding: '4px 10px',
-                  borderRadius: '3px',
-                  fontSize: '14px',
-                  fontWeight: 'bold',
-                  border: `1.5px solid ${dimensionColors.furniture}`,
-                  fontFamily: 'monospace',
-                  whiteSpace: 'nowrap',
-                  userSelect: 'none'
-                }}
-              >
-                내부 {internalSpace.height}
-              </div>
-            </Html>
+              내부 {internalSpace.height}
+            </Text>
           )}
         </group>
 
         {/* 받침대 높이 */}
         {baseFrameHeightMm > 0 && (
           <group>
-            <Line
-              points={[[0, floatHeight, spaceDepth/2 + rightDimOffset], [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset]]}
-              color={dimensionColors.primary}
-              lineWidth={1.5}
-              renderOrder={999999}
+            <NativeLine
+              points={[
+                [0, floatHeight, spaceDepth/2 + rightDimOffset],
+                [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset]
+              ]}
+              color={dimensionColor}
+              lineWidth={2}
+              renderOrder={100000}
               depthTest={false}
             />
-            <Line
-              points={[[-0.03, floatHeight, spaceDepth/2 + rightDimOffset], [0.03, floatHeight, spaceDepth/2 + rightDimOffset]]}
-              color={dimensionColors.primary}
-              lineWidth={1.5}
-              renderOrder={999999}
+            <NativeLine
+              points={[
+                [-0.03, floatHeight, spaceDepth/2 + rightDimOffset],
+                [0.03, floatHeight, spaceDepth/2 + rightDimOffset]
+              ]}
+              color={dimensionColor}
+              lineWidth={2}
+              renderOrder={100000}
               depthTest={false}
             />
-            <Line
-              points={[[-0.03, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset], [0.03, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset]]}
-              color={dimensionColors.primary}
-              lineWidth={1.5}
-              renderOrder={999999}
+            <NativeLine
+              points={[
+                [-0.03, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset],
+                [0.03, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset]
+              ]}
+              color={dimensionColor}
+              lineWidth={2}
+              renderOrder={100000}
               depthTest={false}
             />
             {showDimensionsText && (
-              <Html
-                position={[0, floatHeight + baseFrameHeight / 2, spaceDepth/2 + rightDimOffset + textOffset]}
-                center
-                transform={false}
-                occlude={false}
-                zIndexRange={[1000, 1001]}
-                style={{ pointerEvents: 'none' }}
+              <Text
+                position={[0, floatHeight + baseFrameHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(80)]}
+                fontSize={smallFontSize}
+                color={textColor}
+                anchorX="center"
+                anchorY="middle"
+                renderOrder={100001}
+                depthTest={false}
               >
-                <div
-                  style={{
-                    background: dimensionColors.background,
-                    color: dimensionColors.text,
-                    padding: '4px 10px',
-                    borderRadius: '3px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    border: `1.5px solid ${dimensionColors.primary}`,
-                    fontFamily: 'monospace',
-                    whiteSpace: 'nowrap',
-                    userSelect: 'none'
-                  }}
-                >
-                  하판 {baseFrameHeightMm}
-                </div>
-              </Html>
+                하판 {baseFrameHeightMm}
+              </Text>
             )}
           </group>
         )}
@@ -304,59 +278,54 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* ===== 하단: 전체 깊이 치수 ===== */}
         <group>
           {/* 수평 치수선 */}
-          <Line
-            points={[[0, floatHeight - mmToThreeUnits(200), -spaceDepth/2], [0, floatHeight - mmToThreeUnits(200), spaceDepth/2]]}
-            color={dimensionColors.primary}
-            lineWidth={1.5}
-            renderOrder={999999}
+          <NativeLine
+            points={[
+              [0, floatHeight - mmToThreeUnits(200), -spaceDepth/2],
+              [0, floatHeight - mmToThreeUnits(200), spaceDepth/2]
+            ]}
+            color={dimensionColor}
+            lineWidth={2}
+            renderOrder={100000}
             depthTest={false}
           />
 
-          {/* 왼쪽 티크 마크 */}
-          <Line
-            points={[[0, floatHeight - mmToThreeUnits(200) - 0.03, -spaceDepth/2], [0, floatHeight - mmToThreeUnits(200) + 0.03, -spaceDepth/2]]}
-            color={dimensionColors.primary}
-            lineWidth={1.5}
-            renderOrder={999999}
+          {/* 앞쪽 티크 */}
+          <NativeLine
+            points={[
+              [0, floatHeight - mmToThreeUnits(200) - 0.03, -spaceDepth/2],
+              [0, floatHeight - mmToThreeUnits(200) + 0.03, -spaceDepth/2]
+            ]}
+            color={dimensionColor}
+            lineWidth={2}
+            renderOrder={100000}
             depthTest={false}
           />
 
-          {/* 오른쪽 티크 마크 */}
-          <Line
-            points={[[0, floatHeight - mmToThreeUnits(200) - 0.03, spaceDepth/2], [0, floatHeight - mmToThreeUnits(200) + 0.03, spaceDepth/2]]}
-            color={dimensionColors.primary}
-            lineWidth={1.5}
-            renderOrder={999999}
+          {/* 뒤쪽 티크 */}
+          <NativeLine
+            points={[
+              [0, floatHeight - mmToThreeUnits(200) - 0.03, spaceDepth/2],
+              [0, floatHeight - mmToThreeUnits(200) + 0.03, spaceDepth/2]
+            ]}
+            color={dimensionColor}
+            lineWidth={2}
+            renderOrder={100000}
             depthTest={false}
           />
 
           {/* 깊이 텍스트 */}
           {showDimensionsText && (
-            <Html
-              position={[0, floatHeight - mmToThreeUnits(300), 0]}
-              center
-              transform={false}
-              occlude={false}
-              zIndexRange={[1000, 1001]}
-              style={{ pointerEvents: 'none' }}
+            <Text
+              position={[0, floatHeight - mmToThreeUnits(280), 0]}
+              fontSize={largeFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+              renderOrder={100001}
+              depthTest={false}
             >
-              <div
-                style={{
-                  background: dimensionColors.background,
-                  color: dimensionColors.text,
-                  padding: '6px 12px',
-                  borderRadius: '4px',
-                  fontSize: '16px',
-                  fontWeight: 'bold',
-                  border: `1.5px solid ${dimensionColors.primary}`,
-                  fontFamily: 'monospace',
-                  whiteSpace: 'nowrap',
-                  userSelect: 'none'
-                }}
-              >
-                {spaceInfo.depth || 1500}
-              </div>
-            </Html>
+              {spaceInfo.depth || 1500}
+            </Text>
           )}
         </group>
 
@@ -371,69 +340,74 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           if (!moduleData) return null;
 
           const customDepth = module.customDepth || moduleData.dimensions.depth;
-          const furnitureDepth = mmToThreeUnits(customDepth);
+          const moduleDepth = mmToThreeUnits(customDepth);
 
-          // 가구 위치는 FurnitureItem과 동일하게 계산
+          // 가구 위치 계산 (FurnitureItem.tsx와 동일)
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
           const furnitureY = floatHeight + baseFrameHeight + internalHeight / 2;
 
+          // Z축 위치 계산 (FurnitureItem.tsx와 동일)
+          const panelDepthMm = spaceInfo.depth || 1500;
+          const furnitureDepthMm = 600; // 가구 깊이 고정값
+          const panelDepth = mmToThreeUnits(panelDepthMm);
+          const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+          const doorThickness = mmToThreeUnits(20);
+          const zOffset = -panelDepth / 2;
+          const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+          const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
+
           return (
             <group key={`furniture-depth-${index}`}>
               {/* 가구 깊이 치수선 */}
-              <Line
-                points={[[slotX, furnitureY, -furnitureDepth/2], [slotX, furnitureY, furnitureDepth/2]]}
-                color={dimensionColors.furniture}
+              <NativeLine
+                points={[
+                  [slotX, furnitureY, furnitureZ - moduleDepth/2],
+                  [slotX, furnitureY, furnitureZ + moduleDepth/2]
+                ]}
+                color={dimensionColor}
                 lineWidth={1.5}
-                renderOrder={999999}
+                renderOrder={100000}
                 depthTest={false}
               />
 
-              {/* 앞쪽 티크 마크 */}
-              <Line
-                points={[[slotX - 0.02, furnitureY, -furnitureDepth/2], [slotX + 0.02, furnitureY, -furnitureDepth/2]]}
-                color={dimensionColors.furniture}
+              {/* 앞쪽 티크 */}
+              <NativeLine
+                points={[
+                  [slotX - 0.02, furnitureY, furnitureZ + moduleDepth/2],
+                  [slotX + 0.02, furnitureY, furnitureZ + moduleDepth/2]
+                ]}
+                color={dimensionColor}
                 lineWidth={1.5}
-                renderOrder={999999}
+                renderOrder={100000}
                 depthTest={false}
               />
 
-              {/* 뒤쪽 티크 마크 */}
-              <Line
-                points={[[slotX - 0.02, furnitureY, furnitureDepth/2], [slotX + 0.02, furnitureY, furnitureDepth/2]]}
-                color={dimensionColors.furniture}
+              {/* 뒤쪽 티크 */}
+              <NativeLine
+                points={[
+                  [slotX - 0.02, furnitureY, furnitureZ - moduleDepth/2],
+                  [slotX + 0.02, furnitureY, furnitureZ - moduleDepth/2]
+                ]}
+                color={dimensionColor}
                 lineWidth={1.5}
-                renderOrder={999999}
+                renderOrder={100000}
                 depthTest={false}
               />
 
               {/* 가구 깊이 텍스트 */}
               {showDimensionsText && (
-                <Html
-                  position={[slotX, furnitureY - mmToThreeUnits(100), 0]}
-                  center
-                  transform={false}
-                  occlude={false}
-                  zIndexRange={[1000, 1001]}
-                  style={{ pointerEvents: 'none' }}
+                <Text
+                  position={[slotX, furnitureY - mmToThreeUnits(80), furnitureZ]}
+                  fontSize={mmToThreeUnits(25)}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                  renderOrder={100001}
+                  depthTest={false}
                 >
-                  <div
-                    style={{
-                      background: dimensionColors.background,
-                      color: dimensionColors.furniture,
-                      padding: '3px 8px',
-                      borderRadius: '3px',
-                      fontSize: '12px',
-                      fontWeight: 'bold',
-                      border: `1.5px solid ${dimensionColors.furniture}`,
-                      fontFamily: 'monospace',
-                      whiteSpace: 'nowrap',
-                      userSelect: 'none'
-                    }}
-                  >
-                    {customDepth}
-                  </div>
-                </Html>
+                  {customDepth}
+                </Text>
               )}
             </group>
           );
@@ -442,7 +416,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     );
   }
 
-  // 우측뷰는 좌측뷰와 동일하지만 좌우 반전
+  // 우측뷰는 나중에 구현
   return null;
 };
 
