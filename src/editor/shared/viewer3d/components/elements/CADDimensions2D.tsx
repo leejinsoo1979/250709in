@@ -106,8 +106,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 공간 전체 높이 치수선 */}
             <Line
               points={[
-                [-mmToThreeUnits(150), floatHeight, 0],
-                [-mmToThreeUnits(150), floatHeight + spaceHeight, 0]
+                [-mmToThreeUnits(150), floatHeight, -spaceDepth/2 - mmToThreeUnits(150)],
+                [-mmToThreeUnits(150), floatHeight + spaceHeight, -spaceDepth/2 - mmToThreeUnits(150)]
               ]}
               color={dimensionColors.primary}
               lineWidth={2}
@@ -118,18 +118,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 위쪽 화살표 */}
             <Line
               points={[
-                [-mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, 0],
-                [-mmToThreeUnits(150), floatHeight + spaceHeight, 0],
-                [-mmToThreeUnits(150) - 0.015, floatHeight + spaceHeight - 0.015, 0]
+                [-mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, -spaceDepth/2 - mmToThreeUnits(150)],
+                [-mmToThreeUnits(150), floatHeight + spaceHeight, -spaceDepth/2 - mmToThreeUnits(150)],
+                [-mmToThreeUnits(150) - 0.015, floatHeight + spaceHeight - 0.015, -spaceDepth/2 - mmToThreeUnits(150)]
               ]}
               color={dimensionColors.primary}
               lineWidth={2}
             />
             <Line
               points={[
-                [-mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, 0],
-                [-mmToThreeUnits(150), floatHeight + spaceHeight, 0],
-                [-mmToThreeUnits(150) + 0.015, floatHeight + spaceHeight - 0.015, 0]
+                [-mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, -spaceDepth/2 - mmToThreeUnits(150)],
+                [-mmToThreeUnits(150), floatHeight + spaceHeight, -spaceDepth/2 - mmToThreeUnits(150)],
+                [-mmToThreeUnits(150) + 0.015, floatHeight + spaceHeight - 0.015, -spaceDepth/2 - mmToThreeUnits(150)]
               ]}
               color={dimensionColors.primary}
               lineWidth={2}
@@ -138,18 +138,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 아래쪽 화살표 */}
             <Line
               points={[
-                [-mmToThreeUnits(150), floatHeight + 0.02, 0],
-                [-mmToThreeUnits(150), floatHeight, 0],
-                [-mmToThreeUnits(150) - 0.015, floatHeight + 0.015, 0]
+                [-mmToThreeUnits(150), floatHeight + 0.02, -spaceDepth/2 - mmToThreeUnits(150)],
+                [-mmToThreeUnits(150), floatHeight, -spaceDepth/2 - mmToThreeUnits(150)],
+                [-mmToThreeUnits(150) - 0.015, floatHeight + 0.015, -spaceDepth/2 - mmToThreeUnits(150)]
               ]}
               color={dimensionColors.primary}
               lineWidth={2}
             />
             <Line
               points={[
-                [-mmToThreeUnits(150), floatHeight + 0.02, 0],
-                [-mmToThreeUnits(150), floatHeight, 0],
-                [-mmToThreeUnits(150) + 0.015, floatHeight + 0.015, 0]
+                [-mmToThreeUnits(150), floatHeight + 0.02, -spaceDepth/2 - mmToThreeUnits(150)],
+                [-mmToThreeUnits(150), floatHeight, -spaceDepth/2 - mmToThreeUnits(150)],
+                [-mmToThreeUnits(150) + 0.015, floatHeight + 0.015, -spaceDepth/2 - mmToThreeUnits(150)]
               ]}
               color={dimensionColors.primary}
               lineWidth={2}
@@ -158,7 +158,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 높이 텍스트 */}
             {showDimensionsText && (
               <Html
-                position={[-mmToThreeUnits(250), floatHeight + spaceHeight / 2, 0]}
+                position={[-mmToThreeUnits(250), floatHeight + spaceHeight / 2, -spaceDepth/2 - mmToThreeUnits(150)]}
                 center
                 transform={false}
                 occlude={false}
@@ -194,51 +194,51 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <group>
                 <Line
                   points={[
-                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight, 0],
-                    [mmToThreeUnits(150), floatHeight + spaceHeight, 0]
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150), floatHeight + spaceHeight, spaceDepth/2 + mmToThreeUnits(150)]
                   ]}
                   color={dimensionColors.primary}
                   lineWidth={2}
                 />
                 <Line
                   points={[
-                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight + 0.02, 0],
-                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight, 0],
-                    [mmToThreeUnits(150) - 0.015, floatHeight + spaceHeight - topFrameHeight + 0.015, 0]
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight + 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150) - 0.015, floatHeight + spaceHeight - topFrameHeight + 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                   ]}
                   color={dimensionColors.primary}
                   lineWidth={2}
                 />
                 <Line
                   points={[
-                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight + 0.02, 0],
-                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight, 0],
-                    [mmToThreeUnits(150) + 0.015, floatHeight + spaceHeight - topFrameHeight + 0.015, 0]
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight + 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150) + 0.015, floatHeight + spaceHeight - topFrameHeight + 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                   ]}
                   color={dimensionColors.primary}
                   lineWidth={2}
                 />
                 <Line
                   points={[
-                    [mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, 0],
-                    [mmToThreeUnits(150), floatHeight + spaceHeight, 0],
-                    [mmToThreeUnits(150) - 0.015, floatHeight + spaceHeight - 0.015, 0]
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150), floatHeight + spaceHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150) - 0.015, floatHeight + spaceHeight - 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                   ]}
                   color={dimensionColors.primary}
                   lineWidth={2}
                 />
                 <Line
                   points={[
-                    [mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, 0],
-                    [mmToThreeUnits(150), floatHeight + spaceHeight, 0],
-                    [mmToThreeUnits(150) + 0.015, floatHeight + spaceHeight - 0.015, 0]
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150), floatHeight + spaceHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150) + 0.015, floatHeight + spaceHeight - 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                   ]}
                   color={dimensionColors.primary}
                   lineWidth={2}
                 />
                 {showDimensionsText && (
                   <Html
-                    position={[mmToThreeUnits(250), floatHeight + spaceHeight - topFrameHeight / 2, 0]}
+                    position={[mmToThreeUnits(250), floatHeight + spaceHeight - topFrameHeight / 2, spaceDepth/2 + mmToThreeUnits(150)]}
                     center
                     transform={false}
                     occlude={false}
@@ -270,51 +270,51 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             <group>
               <Line
                 points={[
-                  [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0],
-                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight, 0]
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight, spaceDepth/2 + mmToThreeUnits(150)]
                 ]}
                 color={dimensionColors.furniture}
                 lineWidth={2}
               />
               <Line
                 points={[
-                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + 0.02, 0],
-                  [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0],
-                  [mmToThreeUnits(150) - 0.015, floatHeight + baseFrameHeight + 0.015, 0]
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                  [mmToThreeUnits(150) - 0.015, floatHeight + baseFrameHeight + 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                 ]}
                 color={dimensionColors.furniture}
                 lineWidth={2}
               />
               <Line
                 points={[
-                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + 0.02, 0],
-                  [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0],
-                  [mmToThreeUnits(150) + 0.015, floatHeight + baseFrameHeight + 0.015, 0]
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                  [mmToThreeUnits(150) + 0.015, floatHeight + baseFrameHeight + 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                 ]}
                 color={dimensionColors.furniture}
                 lineWidth={2}
               />
               <Line
                 points={[
-                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight - 0.02, 0],
-                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight, 0],
-                  [mmToThreeUnits(150) - 0.015, floatHeight + baseFrameHeight + internalHeight - 0.015, 0]
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight - 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                  [mmToThreeUnits(150) - 0.015, floatHeight + baseFrameHeight + internalHeight - 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                 ]}
                 color={dimensionColors.furniture}
                 lineWidth={2}
               />
               <Line
                 points={[
-                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight - 0.02, 0],
-                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight, 0],
-                  [mmToThreeUnits(150) + 0.015, floatHeight + baseFrameHeight + internalHeight - 0.015, 0]
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight - 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                  [mmToThreeUnits(150) + 0.015, floatHeight + baseFrameHeight + internalHeight - 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                 ]}
                 color={dimensionColors.furniture}
                 lineWidth={2}
               />
               {showDimensionsText && (
                 <Html
-                  position={[mmToThreeUnits(250), floatHeight + baseFrameHeight + internalHeight / 2, 0]}
+                  position={[mmToThreeUnits(250), floatHeight + baseFrameHeight + internalHeight / 2, spaceDepth/2 + mmToThreeUnits(150)]}
                   center
                   transform={false}
                   occlude={false}
@@ -346,51 +346,51 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <group>
                 <Line
                   points={[
-                    [mmToThreeUnits(150), floatHeight, 0],
-                    [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0]
+                    [mmToThreeUnits(150), floatHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150), floatHeight + baseFrameHeight, spaceDepth/2 + mmToThreeUnits(150)]
                   ]}
                   color={dimensionColors.primary}
                   lineWidth={2}
                 />
                 <Line
                   points={[
-                    [mmToThreeUnits(150), floatHeight + 0.02, 0],
-                    [mmToThreeUnits(150), floatHeight, 0],
-                    [mmToThreeUnits(150) - 0.015, floatHeight + 0.015, 0]
+                    [mmToThreeUnits(150), floatHeight + 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150), floatHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150) - 0.015, floatHeight + 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                   ]}
                   color={dimensionColors.primary}
                   lineWidth={2}
                 />
                 <Line
                   points={[
-                    [mmToThreeUnits(150), floatHeight + 0.02, 0],
-                    [mmToThreeUnits(150), floatHeight, 0],
-                    [mmToThreeUnits(150) + 0.015, floatHeight + 0.015, 0]
+                    [mmToThreeUnits(150), floatHeight + 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150), floatHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150) + 0.015, floatHeight + 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                   ]}
                   color={dimensionColors.primary}
                   lineWidth={2}
                 />
                 <Line
                   points={[
-                    [mmToThreeUnits(150), floatHeight + baseFrameHeight - 0.02, 0],
-                    [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0],
-                    [mmToThreeUnits(150) - 0.015, floatHeight + baseFrameHeight - 0.015, 0]
+                    [mmToThreeUnits(150), floatHeight + baseFrameHeight - 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150), floatHeight + baseFrameHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150) - 0.015, floatHeight + baseFrameHeight - 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                   ]}
                   color={dimensionColors.primary}
                   lineWidth={2}
                 />
                 <Line
                   points={[
-                    [mmToThreeUnits(150), floatHeight + baseFrameHeight - 0.02, 0],
-                    [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0],
-                    [mmToThreeUnits(150) + 0.015, floatHeight + baseFrameHeight - 0.015, 0]
+                    [mmToThreeUnits(150), floatHeight + baseFrameHeight - 0.02, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150), floatHeight + baseFrameHeight, spaceDepth/2 + mmToThreeUnits(150)],
+                    [mmToThreeUnits(150) + 0.015, floatHeight + baseFrameHeight - 0.015, spaceDepth/2 + mmToThreeUnits(150)]
                   ]}
                   color={dimensionColors.primary}
                   lineWidth={2}
                 />
                 {showDimensionsText && (
                   <Html
-                    position={[mmToThreeUnits(250), floatHeight + baseFrameHeight / 2, 0]}
+                    position={[mmToThreeUnits(250), floatHeight + baseFrameHeight / 2, spaceDepth/2 + mmToThreeUnits(150)]}
                     center
                     transform={false}
                     occlude={false}
