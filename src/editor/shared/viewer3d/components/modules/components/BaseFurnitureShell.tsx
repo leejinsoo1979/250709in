@@ -488,9 +488,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                 // 백패널 Y 위치 (홈 5mm 고려)
                 // 하부: 하판(18mm) 상단에서 5mm 올라간 곳에서 시작 = 하판에서 13mm 위
-                // 상부: 중간판(18mm) 상단에서 5mm 올라간 곳에서 시작 = 중간판에서 13mm 위
-                const lowerBackPanelY = -height/2 + 0.13 + lowerBackPanelHeight/2; // 13mm = 0.13
-                const upperBackPanelY = -height/2 + lowerSectionHeight + 0.13 + upperBackPanelHeight/2; // 13mm = 0.13
+                // 상부: 상부섹션 하판(18mm) 상단에서 5mm 올라간 곳에서 시작 = 하판에서 13mm 위
+                const lowerBackPanelY = -height/2 + 0.013 + lowerBackPanelHeight/2; // 13mm = 0.013 Three.js 단위
+                const upperBackPanelY = -height/2 + lowerSectionHeight + 0.013 + upperBackPanelHeight/2; // 13mm = 0.013 Three.js 단위
 
                 console.log('🔍 백패널 Y위치:', {
                   lowerBackPanelY: lowerBackPanelY / 0.01,
