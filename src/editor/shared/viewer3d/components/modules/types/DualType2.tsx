@@ -320,7 +320,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           </mesh>
         </group>
       )}
-      
+
       {/* 하단 판재 */}
       <BoxWithEdges
         args={[innerWidth, basicThickness, depth]}
@@ -330,7 +330,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         isDragging={isDragging}
         isHighlighted={isMulti ? highlightedSection === `${placedFurnitureId}-0` : false}
       />
-      
+
       {/* 뒷면 판재 (9mm 백패널, 섹션별로 분리) */}
       {isMulti ? (
         // 다중 섹션: 하부/상부 백패널 분리
@@ -407,7 +407,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           placedFurnitureId={placedFurnitureId}
         />
       )}
-        </group>
+      </group>
       )}
 
       {/* 도어는 showFurniture와 관계없이 항상 렌더링 (도어 도면 출력용) */}
