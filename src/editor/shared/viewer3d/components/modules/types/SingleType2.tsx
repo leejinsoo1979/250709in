@@ -156,12 +156,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode, viewMode } = useSpace3DView();
-  
+
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === "float";
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
   const showIndirectLight = false;
-  const { view2DDirection, indirectLightEnabled, indirectLightIntensity, showDimensions, showDimensionsText } = useUIStore();
+  const { view2DDirection, indirectLightEnabled, indirectLightIntensity, showDimensions, showDimensionsText, highlightedSection } = useUIStore();
   const { dimensionColor, baseFontSize } = useDimensionColor();
   const { theme } = useTheme();
 
@@ -224,6 +224,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 accumulatedY_after_mm: accumulatedY * 100
               });
             
+            // 섹션별 강조 확인
+              const isSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
+
             return (
               <React.Fragment key={`side-panels-${index}`}>
                 {/* 왼쪽 측면 판재 - 섹션별로 분할 */}
@@ -234,8 +237,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   renderMode={renderMode}
                   isDragging={isDragging}
                   isEditMode={isEditMode}
+                  isHighlighted={isSectionHighlighted}
                 />
-                
+
                 {/* 오른쪽 측면 판재 - 섹션별로 분할 */}
                 <BoxWithEdges
                   args={[basicThickness, sectionHeight, depth]}
@@ -244,6 +248,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   renderMode={renderMode}
                   isDragging={isDragging}
                   isEditMode={isEditMode}
+                  isHighlighted={isSectionHighlighted}
                 />
                 
                 {/* 하부 섹션 상판 + 상부 섹션 바닥판 (2단 옷장 구조) */}
@@ -260,6 +265,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                     계산식: `(${sectionCenterY * 100}) + (${sectionHeight * 100}/2) + (${basicThickness * 100}/2) = ${middlePanelY * 100}mm`
                   });
 
+                  // 중간판 강조: 하부 섹션 상판은 index 섹션에 속함
+                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
+                  const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-${index + 1}`;
+
                   return (
                     <>
                       {/* 하부 섹션 상판 */}
@@ -270,6 +279,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={isLowerHighlighted}
                       />
 
                       {/* 상부 섹션 바닥판 */}
@@ -280,6 +290,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={isUpperHighlighted}
                       />
                     </>
                   );
@@ -322,6 +333,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
+        isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-${getSectionHeights().length - 1}` : false}
       />
       
       {/* 상단 상판 두께 치수 표시 */}
@@ -374,6 +386,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
+        isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
       />
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
