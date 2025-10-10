@@ -402,10 +402,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   // 서랍 깊이 텍스트 Z 위치: 서랍 중심 (가구 중심과 동일)
                   const textZ = furnitureZ;
 
+                  // X 위치: 가구 박스 왼쪽 바깥으로 (가구 폭의 절반 + 100mm)
+                  const textX = slotX - indexing.columnWidth / 2 - mmToThreeUnits(100);
+
                   return (
                     <Text
                       key={`drawer-depth-${sectionIndex}-${drawerIndex}`}
-                      position={[slotX - mmToThreeUnits(300), drawerY, textZ]}
+                      position={[textX, drawerY, textZ]}
                       fontSize={largeFontSize}
                       color="#008B8B"
                       anchorX="center"
