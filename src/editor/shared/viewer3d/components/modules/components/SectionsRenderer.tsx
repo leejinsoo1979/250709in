@@ -301,11 +301,6 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 let bottomY, topY;
                 let actualInternalHeight;
 
-                // 안전선반 위 칸의 내경 변수 선언 (상위 스코프)
-                let topCompartmentHeight = null;
-                let topCompartmentBottomY = null;
-                let topCompartmentTopY = null;
-
                 // 섹션 타입별로 가이드선 위치 계산
                 const hasSafetyShelf = section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0);
 
@@ -394,19 +389,6 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                   // 실제 내경 계산 (가이드선 사이의 거리)
                   actualInternalHeight = (topY - bottomY) / 0.01;
-
-                  // 안전선반 위 칸의 내경 계산 (안전선반이 있는 경우)
-                  if (hasSafetyShelf && index === allSections.length - 1) {
-                    const safetyShelfPositionMm = section.shelfPositions.find(pos => pos > 0);
-                    if (safetyShelfPositionMm !== undefined) {
-                      // 안전선반 윗면
-                      topCompartmentBottomY = sectionBottomY + (safetyShelfPositionMm * 0.01) + basicThickness / 2;
-                      // 상부 프레임 하단
-                      topCompartmentTopY = height/2 - basicThickness;
-                      // 안전선반 위 칸의 내경
-                      topCompartmentHeight = (topCompartmentTopY - topCompartmentBottomY) / 0.01;
-                    }
-                  }
                 } else if (section.type === 'drawer') {
                   // drawer 섹션: 바닥판 상단부터 상판 하단까지
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
@@ -490,81 +472,6 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         <meshBasicMaterial color={currentColor} />
                       </mesh>
                     </>
-
-                    {/* 안전선반 위 칸의 내경 치수 (안전선반이 있는 경우 추가 표시) */}
-                    {topCompartmentHeight !== null && topCompartmentBottomY !== null && topCompartmentTopY !== null &&
-                     !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
-                      <>
-                        {(() => {
-                          const topCenterY = (topCompartmentTopY + topCompartmentBottomY) / 2;
-                          const topSectionIndex = `${index}-top`;
-                          const isTopHovered = hoveredSectionIndex === topSectionIndex;
-                          const topCurrentColor = isTopHovered ? themeColor : dimensionColor;
-
-                          return (
-                            <>
-                              {/* 안전선반 위 칸 치수 텍스트 */}
-                              <EditableDimensionText
-                                position={[
-                                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 1.2 : -innerWidth/2 * 0.3 - 0.9,
-                                  topCenterY,
-                                  viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
-                                ]}
-                                fontSize={baseFontSize * 0.9}
-                                color={dimensionColor}
-                                rotation={[0, 0, Math.PI / 2]}
-                                value={topCompartmentHeight}
-                                onValueChange={(newValue) => handleDimensionChange(index, newValue)}
-                                sectionIndex={index}
-                                furnitureId={furnitureId}
-                                renderOrder={1001}
-                                depthTest={false}
-                                onHoverChange={(hovered) => setHoveredSectionIndex(hovered ? topSectionIndex : null)}
-                              />
-
-                              {/* 안전선반 위 칸 가이드선 */}
-                              <group>
-                                <NativeLine
-                                  points={[
-                                    [-innerWidth/2 * 0.3, topCompartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                                    [-innerWidth/2 * 0.3, topCompartmentBottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
-                                  ]}
-                                  color={topCurrentColor}
-                                  lineWidth={1}
-                                  dashed={true}
-                                />
-
-                                {/* 가이드선 hover 영역 */}
-                                <mesh
-                                  position={[-innerWidth/2 * 0.3, topCenterY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
-                                  onPointerOver={(e) => {
-                                    e.stopPropagation();
-                                    setHoveredSectionIndex(topSectionIndex);
-                                  }}
-                                  onPointerOut={(e) => {
-                                    e.stopPropagation();
-                                    setHoveredSectionIndex(null);
-                                  }}
-                                >
-                                  <planeGeometry args={[0.3, Math.abs(topCompartmentTopY - topCompartmentBottomY)]} />
-                                  <meshBasicMaterial transparent opacity={0} depthTest={false} side={2} />
-                                </mesh>
-                              </group>
-
-                              {/* 안전선반 위 칸 엔드포인트 */}
-                              <mesh position={[-innerWidth/2 * 0.3, topCompartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                                <sphereGeometry args={[0.05, 8, 8]} />
-                                <meshBasicMaterial color={topCurrentColor} />
-                              </mesh>
-                              <mesh position={[-innerWidth/2 * 0.3, topCompartmentBottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                                <sphereGeometry args={[0.05, 8, 8]} />
-                                <meshBasicMaterial color={topCurrentColor} />
-                              </mesh>
-                            </>
-                          );
-                        })()}
-                      </>
-                    )}
                   </>
                 );
               })()}
