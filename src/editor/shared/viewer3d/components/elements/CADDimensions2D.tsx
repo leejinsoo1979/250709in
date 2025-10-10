@@ -125,7 +125,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             anchorY="middle"
             renderOrder={1000}
             depthTest={false}
-            rotation={[0, -Math.PI / 2, 0]}
+            rotation={[0, -Math.PI / 2, Math.PI / 2]}
           >
             {spaceInfo.height}
           </Text>
@@ -174,7 +174,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               anchorY="middle"
               renderOrder={1000}
               depthTest={false}
-              rotation={[0, -Math.PI / 2, 0]}
+              rotation={[0, -Math.PI / 2, Math.PI / 2]}
             >
               상판 {topFrameHeightMm}
             </Text>
@@ -244,7 +244,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             anchorY="middle"
             renderOrder={1000}
             depthTest={false}
-            rotation={[0, -Math.PI / 2, 0]}
+            rotation={[0, -Math.PI / 2, Math.PI / 2]}
           >
             하부 {Math.round(internalSpace.height / 2)}
           </Text>
@@ -302,7 +302,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             anchorY="middle"
             renderOrder={1000}
             depthTest={false}
-            rotation={[0, -Math.PI / 2, 0]}
+            rotation={[0, -Math.PI / 2, Math.PI / 2]}
           >
             상부 {Math.round(internalSpace.height / 2)}
           </Text>
@@ -360,7 +360,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               anchorY="middle"
               renderOrder={1000}
               depthTest={false}
-              rotation={[0, -Math.PI / 2, 0]}
+              rotation={[0, -Math.PI / 2, Math.PI / 2]}
             >
               하판 {baseFrameHeightMm}
             </Text>
