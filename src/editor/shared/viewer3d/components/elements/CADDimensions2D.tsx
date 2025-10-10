@@ -90,11 +90,337 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     return null;
   }
 
-  // 측면도(좌/우)는 치수를 렌더링하지 않음 - Hook 순서 유지를 위해 조건부 렌더링 사용
-  const shouldHideView = (currentViewDirection === 'left' || currentViewDirection === 'right');
+  // 측면도(좌/우) 전용 치수
+  if (currentViewDirection === 'left' || currentViewDirection === 'right') {
+    const spaceDepth = mmToThreeUnits(spaceInfo.depth || 1500);
+    const topFrameHeightMm = spaceInfo.frameSize?.top || 0;
+    const topFrameHeight = mmToThreeUnits(topFrameHeightMm);
+    const baseFrameHeightMm = spaceInfo.baseConfig?.frameHeight || 0;
+    const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
 
-  if (shouldHideView) {
-    return null;
+    return (
+      <group>
+        {/* 좌측뷰: 왼쪽에 공간 전체 높이 */}
+        {currentViewDirection === 'left' && (
+          <group>
+            {/* 공간 전체 높이 치수선 */}
+            <Line
+              points={[
+                [-mmToThreeUnits(150), floatHeight, 0],
+                [-mmToThreeUnits(150), floatHeight + spaceHeight, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={2}
+              renderOrder={1000}
+              depthTest={false}
+            />
+
+            {/* 위쪽 화살표 */}
+            <Line
+              points={[
+                [-mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, 0],
+                [-mmToThreeUnits(150), floatHeight + spaceHeight, 0],
+                [-mmToThreeUnits(150) - 0.015, floatHeight + spaceHeight - 0.015, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={2}
+            />
+            <Line
+              points={[
+                [-mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, 0],
+                [-mmToThreeUnits(150), floatHeight + spaceHeight, 0],
+                [-mmToThreeUnits(150) + 0.015, floatHeight + spaceHeight - 0.015, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={2}
+            />
+
+            {/* 아래쪽 화살표 */}
+            <Line
+              points={[
+                [-mmToThreeUnits(150), floatHeight + 0.02, 0],
+                [-mmToThreeUnits(150), floatHeight, 0],
+                [-mmToThreeUnits(150) - 0.015, floatHeight + 0.015, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={2}
+            />
+            <Line
+              points={[
+                [-mmToThreeUnits(150), floatHeight + 0.02, 0],
+                [-mmToThreeUnits(150), floatHeight, 0],
+                [-mmToThreeUnits(150) + 0.015, floatHeight + 0.015, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={2}
+            />
+
+            {/* 높이 텍스트 */}
+            {showDimensionsText && (
+              <Html
+                position={[-mmToThreeUnits(250), floatHeight + spaceHeight / 2, 0]}
+                center
+                transform={false}
+                occlude={false}
+                zIndexRange={[1000, 1001]}
+                style={{ pointerEvents: 'none' }}
+              >
+                <div
+                  style={{
+                    background: dimensionColors.background,
+                    color: dimensionColors.primary,
+                    padding: '6px 10px',
+                    borderRadius: '4px',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    border: `1px solid ${dimensionColors.primary}`,
+                    fontFamily: 'monospace',
+                    whiteSpace: 'nowrap',
+                    userSelect: 'none'
+                  }}
+                >
+                  {spaceInfo.height}mm
+                </div>
+              </Html>
+            )}
+          </group>
+        )}
+
+        {/* 좌측뷰: 오른쪽에 상부프레임/가구높이/받침대 높이 */}
+        {currentViewDirection === 'left' && (
+          <group>
+            {/* 상부 프레임 두께 */}
+            {topFrameHeightMm > 0 && (
+              <group>
+                <Line
+                  points={[
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight, 0],
+                    [mmToThreeUnits(150), floatHeight + spaceHeight, 0]
+                  ]}
+                  color={dimensionColors.primary}
+                  lineWidth={2}
+                />
+                <Line
+                  points={[
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight + 0.02, 0],
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight, 0],
+                    [mmToThreeUnits(150) - 0.015, floatHeight + spaceHeight - topFrameHeight + 0.015, 0]
+                  ]}
+                  color={dimensionColors.primary}
+                  lineWidth={2}
+                />
+                <Line
+                  points={[
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight + 0.02, 0],
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - topFrameHeight, 0],
+                    [mmToThreeUnits(150) + 0.015, floatHeight + spaceHeight - topFrameHeight + 0.015, 0]
+                  ]}
+                  color={dimensionColors.primary}
+                  lineWidth={2}
+                />
+                <Line
+                  points={[
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, 0],
+                    [mmToThreeUnits(150), floatHeight + spaceHeight, 0],
+                    [mmToThreeUnits(150) - 0.015, floatHeight + spaceHeight - 0.015, 0]
+                  ]}
+                  color={dimensionColors.primary}
+                  lineWidth={2}
+                />
+                <Line
+                  points={[
+                    [mmToThreeUnits(150), floatHeight + spaceHeight - 0.02, 0],
+                    [mmToThreeUnits(150), floatHeight + spaceHeight, 0],
+                    [mmToThreeUnits(150) + 0.015, floatHeight + spaceHeight - 0.015, 0]
+                  ]}
+                  color={dimensionColors.primary}
+                  lineWidth={2}
+                />
+                {showDimensionsText && (
+                  <Html
+                    position={[mmToThreeUnits(250), floatHeight + spaceHeight - topFrameHeight / 2, 0]}
+                    center
+                    transform={false}
+                    occlude={false}
+                    zIndexRange={[1000, 1001]}
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    <div
+                      style={{
+                        background: dimensionColors.background,
+                        color: dimensionColors.primary,
+                        padding: '4px 8px',
+                        borderRadius: '3px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        border: `1px solid ${dimensionColors.primary}`,
+                        fontFamily: 'monospace',
+                        whiteSpace: 'nowrap',
+                        userSelect: 'none'
+                      }}
+                    >
+                      상부프레임 {topFrameHeightMm}mm
+                    </div>
+                  </Html>
+                )}
+              </group>
+            )}
+
+            {/* 가구 높이 (내부 공간) */}
+            <group>
+              <Line
+                points={[
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0],
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight, 0]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+              <Line
+                points={[
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + 0.02, 0],
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0],
+                  [mmToThreeUnits(150) - 0.015, floatHeight + baseFrameHeight + 0.015, 0]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+              <Line
+                points={[
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + 0.02, 0],
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0],
+                  [mmToThreeUnits(150) + 0.015, floatHeight + baseFrameHeight + 0.015, 0]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+              <Line
+                points={[
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight - 0.02, 0],
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight, 0],
+                  [mmToThreeUnits(150) - 0.015, floatHeight + baseFrameHeight + internalHeight - 0.015, 0]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+              <Line
+                points={[
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight - 0.02, 0],
+                  [mmToThreeUnits(150), floatHeight + baseFrameHeight + internalHeight, 0],
+                  [mmToThreeUnits(150) + 0.015, floatHeight + baseFrameHeight + internalHeight - 0.015, 0]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={2}
+              />
+              {showDimensionsText && (
+                <Html
+                  position={[mmToThreeUnits(250), floatHeight + baseFrameHeight + internalHeight / 2, 0]}
+                  center
+                  transform={false}
+                  occlude={false}
+                  zIndexRange={[1000, 1001]}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <div
+                    style={{
+                      background: dimensionColors.background,
+                      color: dimensionColors.furniture,
+                      padding: '4px 8px',
+                      borderRadius: '3px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      border: `1px solid ${dimensionColors.furniture}`,
+                      fontFamily: 'monospace',
+                      whiteSpace: 'nowrap',
+                      userSelect: 'none'
+                    }}
+                  >
+                    가구높이 {internalSpace.height}mm
+                  </div>
+                </Html>
+              )}
+            </group>
+
+            {/* 받침대 높이 */}
+            {baseFrameHeightMm > 0 && (
+              <group>
+                <Line
+                  points={[
+                    [mmToThreeUnits(150), floatHeight, 0],
+                    [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0]
+                  ]}
+                  color={dimensionColors.primary}
+                  lineWidth={2}
+                />
+                <Line
+                  points={[
+                    [mmToThreeUnits(150), floatHeight + 0.02, 0],
+                    [mmToThreeUnits(150), floatHeight, 0],
+                    [mmToThreeUnits(150) - 0.015, floatHeight + 0.015, 0]
+                  ]}
+                  color={dimensionColors.primary}
+                  lineWidth={2}
+                />
+                <Line
+                  points={[
+                    [mmToThreeUnits(150), floatHeight + 0.02, 0],
+                    [mmToThreeUnits(150), floatHeight, 0],
+                    [mmToThreeUnits(150) + 0.015, floatHeight + 0.015, 0]
+                  ]}
+                  color={dimensionColors.primary}
+                  lineWidth={2}
+                />
+                <Line
+                  points={[
+                    [mmToThreeUnits(150), floatHeight + baseFrameHeight - 0.02, 0],
+                    [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0],
+                    [mmToThreeUnits(150) - 0.015, floatHeight + baseFrameHeight - 0.015, 0]
+                  ]}
+                  color={dimensionColors.primary}
+                  lineWidth={2}
+                />
+                <Line
+                  points={[
+                    [mmToThreeUnits(150), floatHeight + baseFrameHeight - 0.02, 0],
+                    [mmToThreeUnits(150), floatHeight + baseFrameHeight, 0],
+                    [mmToThreeUnits(150) + 0.015, floatHeight + baseFrameHeight - 0.015, 0]
+                  ]}
+                  color={dimensionColors.primary}
+                  lineWidth={2}
+                />
+                {showDimensionsText && (
+                  <Html
+                    position={[mmToThreeUnits(250), floatHeight + baseFrameHeight / 2, 0]}
+                    center
+                    transform={false}
+                    occlude={false}
+                    zIndexRange={[1000, 1001]}
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    <div
+                      style={{
+                        background: dimensionColors.background,
+                        color: dimensionColors.primary,
+                        padding: '4px 8px',
+                        borderRadius: '3px',
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        border: `1px solid ${dimensionColors.primary}`,
+                        fontFamily: 'monospace',
+                        whiteSpace: 'nowrap',
+                        userSelect: 'none'
+                      }}
+                    >
+                      받침대 {baseFrameHeightMm}mm
+                    </div>
+                  </Html>
+                )}
+              </group>
+            )}
+          </group>
+        )}
+      </group>
+    );
   }
 
   // 정면도 전용 치수
