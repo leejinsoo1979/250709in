@@ -213,7 +213,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           
           // 서랍 손잡이판 (DrawerRenderer의 HANDLE_PLATE) - PET 재질
           targetPanel.push({
-            name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.handlePlate')}`,
+            name: `${sectionName} ${t('furniture.drawer')}${drawerNum}(마이다)`,
             width: customWidth,
             height: individualDrawerHeight,
             thickness: drawerHandleThickness,
