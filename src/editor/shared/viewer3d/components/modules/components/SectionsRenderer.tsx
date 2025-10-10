@@ -362,11 +362,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     }
                   } else {
                     // 다음 섹션과의 경계
-                    // 2hanging 하부 섹션: 하부 섹션 상판 윗면까지
+                    // 2hanging 하부 섹션: 하부 섹션 상판 아랫면까지
                     const is2HangingLowerSection = furnitureId?.includes('2hanging') && index === 0;
                     if (is2HangingLowerSection && section.isTopFinishPanel) {
-                      // 하부 섹션 상판 윗면까지 = 섹션 상단 - 상판 두께/2
-                      topY = sectionCenterY + sectionHeight/2 - basicThickness/2;
+                      // 하부 섹션 상판 아랫면까지 = 섹션 상단 - 상판 두께 - 상판 두께/2
+                      topY = sectionCenterY + sectionHeight/2 - basicThickness - basicThickness/2;
                     } else {
                       // 일반 케이스: 섹션 데이터의 1000mm는 (상판18 + 내경964 + 바닥판18) 구조
                       // bottomY는 이미 바닥판 상단
