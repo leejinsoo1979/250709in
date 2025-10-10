@@ -267,20 +267,24 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         <group key={`section-${index}`}>
           {sectionContent}
           
-          {/* 섹션 내경 치수 표시 - 2단 옷장은 첫 번째 섹션만 표시, 듀얼 타입 중복 방지 */}
+          {/* 섹션 내경 치수 표시 - 2단 옷장은 하부 섹션만 표시 (상부는 안전선반 있을 때만), 듀얼 타입 중복 방지 */}
           {(() => {
             const is2HangingFurniture = furnitureId?.includes('2hanging');
             const hasTwoSections = allSections.length === 2;
             // 2hanging의 상부 섹션에 안전선반이 있으면 치수 표시
             const hasSafetyShelf = section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0);
-            const shouldShow = !hideSectionDimensions && showDimensions && showDimensionsText && 
-                              !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && 
-                              (section.type === 'hanging' || section.type === 'drawer') && 
-                              !(is2HangingFurniture && hasTwoSections && index === 1 && !hasSafetyShelf);
-            
+
+            // 2단 옷장(2hanging) 특별 처리: 하부만 표시, 상부는 안전선반 있을 때만
+            const shouldHide2HangingUpper = is2HangingFurniture && hasTwoSections && index === 1 && !hasSafetyShelf;
+
+            const shouldShow = !hideSectionDimensions && showDimensions && showDimensionsText &&
+                              !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) &&
+                              (section.type === 'hanging' || section.type === 'drawer') &&
+                              !shouldHide2HangingUpper;
+
             // 2hanging만 로그
             if (furnitureId?.includes('2hanging')) {
-              console.log(`🚨 섹션${index} | furnitureId: ${furnitureId} | shouldShow: ${shouldShow} | 숨김조건: ${is2HangingFurniture && hasTwoSections && index === 1}`);
+              console.log(`🚨 섹션${index} | furnitureId: ${furnitureId} | hasSafetyShelf: ${hasSafetyShelf} | shouldShow: ${shouldShow} | shouldHide2HangingUpper: ${shouldHide2HangingUpper}`);
             }
             
             return shouldShow && (
