@@ -149,7 +149,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               pointerEvents: 'none'
             }}
           >
-            {spaceInfo.width}mm
+            {parseFloat(spaceInfo.width.toFixed(2))}mm
           </div>
         </Html>
         
@@ -251,7 +251,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               pointerEvents: 'none'
             }}
           >
-            {internalSpace.width}mm
+            {parseFloat(internalSpace.width.toFixed(2))}mm
           </div>
         </Html>
         
