@@ -85,9 +85,9 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         material: 'PB'  // 기본 재질
       });
     } else if (sections.length > 1) {
-      // 다른 가구의 경우 중간 칸막이로 표시
-      panels.common.push({
-        name: '중간 칸막이',
+      // 다른 가구의 경우 중간 칸막이로 표시 (하부장 상판)
+      panels.lower.push({
+        name: '중간 칸막이 (하부장 상판)',
         width: innerWidth,
         depth: customDepth - backPanelThickness - 17, // 실제 렌더링 값
         thickness: basicThickness,
@@ -395,12 +395,6 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
   
   // 플랫 배열로 변환하여 반환
   const result = [];
-
-  // 공통 패널 (상판, 하판, 백패널) - 맨 앞에 표시
-  if (panels.common.length > 0) {
-    result.push({ name: `=== 공통 패널 ===` });
-    result.push(...panels.common);
-  }
 
   // 상부장 패널 (상부 섹션)
   if (panels.upper.length > 0) {
