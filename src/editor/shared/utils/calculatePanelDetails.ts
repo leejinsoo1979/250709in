@@ -166,12 +166,12 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         material: 'PB'
       });
 
-      // === 하판 (첫 번째 섹션) ===
+      // === 하판 (첫 번째 섹션만) ===
       if (sectionIndex === 0) {
         targetPanel.push({
-          name: '하판',
+          name: `${sectionName} 하판`,
           width: innerWidth,
-          height: customDepth,
+          height: customDepth, // 측판과 같은 깊이 (full depth)
           thickness: basicThickness,
           material: 'PB'
         });
@@ -180,35 +180,44 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
       // === 상판 또는 중간판 ===
       const isMultiSection = sections.length >= 2;
       if (isMultiSection && sectionIndex < sections.length - 1) {
-        // 다중 섹션이고 마지막이 아니면 중간판 2개 추가 (하부섹션 상판 + 상부섹션 바닥판)
+        // 다중 섹션이고 마지막이 아니면: 하부섹션 상판 (중간판, depth-8)
         targetPanel.push({
-          name: `${sectionName} 상판 (중간판 하부)`,
+          name: `${sectionName} 상판 (중간판)`,
           width: innerWidth,
-          depth: customDepth - 8, // adjustedDepthForShelves
-          thickness: basicThickness,
-          material: 'PB'
-        });
-
-        // 상부 섹션의 바닥판은 상부 패널에 추가
-        const nextSectionName = sectionIndex === 0 ? '상부장' : ''; // 다음 섹션이 상부장
-        const nextTargetPanel = sectionIndex === 0 ? panels.upper : targetPanel;
-        nextTargetPanel.push({
-          name: `${nextSectionName} 바닥판 (중간판 상부)`,
-          width: innerWidth,
-          depth: customDepth - 8, // adjustedDepthForShelves
+          depth: customDepth - 8, // adjustedDepthForShelves - basicThickness
           thickness: basicThickness,
           material: 'PB'
         });
       } else if (sectionIndex === sections.length - 1) {
-        // 마지막 섹션이면 상판 추가
+        // 마지막 섹션
+        if (isMultiSection) {
+          // 다중 섹션: 상부섹션 바닥판 (중간판) + 상판
+          targetPanel.push({
+            name: `${sectionName} 바닥판 (중간판)`,
+            width: innerWidth,
+            depth: customDepth - 8, // adjustedDepthForShelves - basicThickness
+            thickness: basicThickness,
+            material: 'PB'
+          });
+        }
+        // 상판 (측판과 같은 깊이)
         targetPanel.push({
-          name: '상판',
+          name: `${sectionName} 상판`,
           width: innerWidth,
-          height: customDepth,
+          height: customDepth, // 측판과 같은 깊이 (full depth)
           thickness: basicThickness,
           material: 'PB'
         });
       }
+
+      // === 백패널 (섹션별로 분리) ===
+      targetPanel.push({
+        name: `${sectionName} 백패널`,
+        width: innerWidth + 10, // 좌우 5mm씩 확장
+        height: sectionHeightMm + 10, // 상하 5mm씩 확장
+        thickness: backPanelThickness, // 9mm
+        material: 'PB'
+      });
       
       // 서랍 섹션 처리 (DrawerRenderer.tsx 참조)
       if (section.type === 'drawer' && section.count) {
@@ -343,16 +352,6 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
     });
   }
   
-  // === 백패널 (공통) ===
-  // 백패널은 가구 전체를 덮으므로 common에 추가
-  // 9mm 두께, 상하좌우 5mm 확장
-  panels.common.push({
-    name: '백패널',
-    width: innerWidth + 10,
-    height: innerHeight + 10,
-    thickness: backPanelThickness,
-    material: 'PB'
-  });
 
   // === 도어 패널 ===
   if (hasDoor) {
