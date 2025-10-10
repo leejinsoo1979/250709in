@@ -346,10 +346,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         isHighlighted={isLowerHighlighted}
                       />
 
-                      {/* 상부 섹션 바닥판 */}
+                      {/* 상부 섹션 바닥판 - 백패널 방향으로 27mm 늘림 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset]}
+                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(27)]}
+                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(27)/2]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
