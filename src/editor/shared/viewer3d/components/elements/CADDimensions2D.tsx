@@ -142,6 +142,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             depthTest={false}
           />
 
+          {/* 엔드포인트 - 상단 */}
+          <mesh position={[0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]} renderOrder={100001}>
+            <circleGeometry args={[0.025, 16]} />
+            <meshBasicMaterial color={dimensionColor} depthTest={false} />
+          </mesh>
+
+          {/* 엔드포인트 - 하단 */}
+          <mesh position={[0, floatHeight, -spaceDepth/2 - leftDimOffset]} renderOrder={100001}>
+            <circleGeometry args={[0.025, 16]} />
+            <meshBasicMaterial color={dimensionColor} depthTest={false} />
+          </mesh>
+
           {/* 높이 텍스트 */}
           <Text
             position={[0, floatHeight + spaceHeight / 2, -spaceDepth/2 - leftDimOffset - mmToThreeUnits(60)]}
@@ -776,25 +788,25 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
               {/* 엔드포인트 - 치수선 앞쪽 모서리 */}
               <mesh position={[slotX, furnitureTopY, furnitureZ + moduleDepth/2]} renderOrder={100001}>
-                <circleGeometry args={[0.015, 16]} />
+                <circleGeometry args={[0.025, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
 
               {/* 엔드포인트 - 치수선 뒤쪽 모서리 */}
               <mesh position={[slotX, furnitureTopY, furnitureZ - moduleDepth/2]} renderOrder={100001}>
-                <circleGeometry args={[0.015, 16]} />
+                <circleGeometry args={[0.025, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
 
               {/* 엔드포인트 - 보조선 앞쪽 상단 모서리 */}
               <mesh position={[slotX, floatHeight + baseFrameHeight + internalHeight, furnitureZ + moduleDepth/2]} renderOrder={100001}>
-                <circleGeometry args={[0.015, 16]} />
+                <circleGeometry args={[0.025, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
 
               {/* 엔드포인트 - 보조선 뒤쪽 상단 모서리 */}
               <mesh position={[slotX, floatHeight + baseFrameHeight + internalHeight, furnitureZ - moduleDepth/2]} renderOrder={100001}>
-                <circleGeometry args={[0.015, 16]} />
+                <circleGeometry args={[0.025, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
 
