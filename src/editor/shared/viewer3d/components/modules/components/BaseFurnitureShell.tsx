@@ -277,8 +277,54 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
           <>
-            {moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging') ? (
-              // 2drawer-hanging, 2hanging: 하부 섹션 상판 + 상부 섹션 바닥판
+            {moduleData?.id?.includes('4drawer-hanging') ? (
+              // 4drawer-hanging: 하부 섹션 상판 + 상부 섹션 바닥판 (18mm 아래로)
+              (() => {
+                return getSectionHeights().map((sectionHeight: number, index: number) => {
+                  if (index >= getSectionHeights().length - 1) return null;
+
+                  let currentYPosition = -height/2 + basicThickness;
+
+                  // 현재 섹션까지의 Y 위치 계산
+                  for (let i = 0; i <= index; i++) {
+                    currentYPosition += getSectionHeights()[i];
+                  }
+
+                  // 패널 Y 위치 계산 - 각각 18mm씩 아래로 이동
+                  const middlePanelY = currentYPosition - basicThickness/2 - mmToThreeUnits(18);
+                  const lowerTopPanelY = currentYPosition - basicThickness - basicThickness/2 - mmToThreeUnits(18);
+
+                  // 섹션 강조 확인 (placedFurnitureId 사용)
+                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
+                  const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
+
+                  return (
+                    <React.Fragment key={`divider-${index}`}>
+                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), adjustedDepthForShelves - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
+                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isHighlighted={isLowerHighlighted}
+                      />
+
+                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림 */}
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(26)]}
+                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isHighlighted={isUpperHighlighted}
+                      />
+                    </React.Fragment>
+                  );
+                });
+              })()
+            ) : moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging') ? (
+              // 2drawer-hanging, 2hanging: 하부 섹션 상판 + 상부 섹션 바닥판 (18mm 위로)
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
                   if (index >= getSectionHeights().length - 1) return null;
@@ -451,9 +497,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   expected_upper: upperSectionHeight / 0.01 - basicThickness * 2 / 0.01 + 10
                 });
 
-                // 백패널 Y 위치 조정 - 각각 9mm씩 위로 이동
-                const lowerBackPanelY = -height/2 + lowerSectionHeight/2 + mmToThreeUnits(9) - mmToThreeUnits(0.05);
-                const upperBackPanelY = -height/2 + lowerSectionHeight + upperSectionHeight/2 + mmToThreeUnits(9);
+                // 백패널 Y 위치 조정
+                // 4drawer: 9mm 아래로, 2drawer: 9mm 위로
+                const yOffset = moduleData?.id?.includes('4drawer-hanging') ? -mmToThreeUnits(9) : mmToThreeUnits(9);
+                const lowerBackPanelY = -height/2 + lowerSectionHeight/2 + yOffset - mmToThreeUnits(0.05);
+                const upperBackPanelY = -height/2 + lowerSectionHeight + upperSectionHeight/2 + yOffset;
 
                 console.log('🔍🔍🔍 백패널 Y 위치:', {
                   lowerBackPanelYMm: lowerBackPanelY / 0.01,
