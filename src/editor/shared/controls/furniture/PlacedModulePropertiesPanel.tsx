@@ -1085,34 +1085,46 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {isTwoSectionFurniture && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>섹션 높이 설정</h5>
-              <div className={styles.sectionHeightWrapper}>
+              <div style={{ display: 'flex', gap: '12px' }}>
                 {/* 하부 섹션 */}
-                <div className={styles.heightInputGroup}>
-                  <label className={styles.heightLabel}>하부 섹션</label>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>하부 섹션</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="number"
                       value={lowerHeightInput}
                       onChange={(e) => handleLowerHeightChange(e.target.value)}
                       onBlur={handleLowerHeightBlur}
-                      className={styles.heightInput}
+                      className={styles.depthInput}
                       placeholder="1000"
+                      style={{
+                        color: '#000000',
+                        backgroundColor: '#ffffff',
+                        WebkitTextFillColor: '#000000',
+                        opacity: 1
+                      }}
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
                 </div>
 
                 {/* 상부 섹션 */}
-                <div className={styles.heightInputGroup}>
-                  <label className={styles.heightLabel}>상부 섹션</label>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>상부 섹션</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="number"
                       value={upperHeightInput}
                       onChange={(e) => handleUpperHeightChange(e.target.value)}
                       onBlur={handleUpperHeightBlur}
-                      className={styles.heightInput}
+                      className={styles.depthInput}
                       placeholder="1000"
+                      style={{
+                        color: '#000000',
+                        backgroundColor: '#ffffff',
+                        WebkitTextFillColor: '#000000',
+                        opacity: 1
+                      }}
                     />
                     <span className={styles.unit}>mm</span>
                   </div>
