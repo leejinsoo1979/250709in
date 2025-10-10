@@ -2441,18 +2441,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 >
                   {furnitureDepthMm}
                 </Text>
-
-                {/* 연장선들 */}
-                <Line
-                  points={[[0, 0, cabinetDepthStart], [0, dimY + mmToThreeUnits(20), cabinetDepthStart]]}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                <Line
-                  points={[[0, 0, cabinetDepthEnd], [0, dimY + mmToThreeUnits(20), cabinetDepthEnd]]}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
               </>
             );
           })()}
