@@ -506,7 +506,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                               {/* 안전선반 위 칸 치수 텍스트 */}
                               <EditableDimensionText
                                 position={[
-                                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
+                                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 1.2 : -innerWidth/2 * 0.3 - 0.9,
                                   topCenterY,
                                   viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                                 ]}
