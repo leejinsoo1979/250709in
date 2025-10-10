@@ -299,66 +299,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           });
         })}
 
-        {/* 발통 높이 (띄움) */}
-        {isFloating && floatHeightMm > 0 && (
-        <group>
-            {/* 보조 가이드 연장선 - 하단 (바닥) */}
-            <NativeLine
-              points={[
-                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
-                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-              ]}
-              color={dimensionColor}
-              lineWidth={1}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            {/* 치수선 */}
-            <NativeLine
-              points={[
-                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                [0, floatHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-              ]}
-              color={dimensionColor}
-              lineWidth={2}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            <NativeLine
-              points={[
-                [-0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                [0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-              ]}
-              color={dimensionColor}
-              lineWidth={2}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            <NativeLine
-              points={[
-                [-0.03, floatHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                [0.03, floatHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
-              ]}
-              color={dimensionColor}
-              lineWidth={2}
-              renderOrder={100000}
-              depthTest={false}
-            />
-            <Text
-              position={[0, floatHeight / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)]}
-              fontSize={smallFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              renderOrder={1000}
-              depthTest={false}
-              rotation={[0, -Math.PI / 2, Math.PI / 2]}
-            >
-              발통 {floatHeightMm}
-            </Text>
-        </group>
-        )}
-
         {/* 받침대 높이 */}
         {baseFrameHeightMm > 0 && (
         <group>
