@@ -317,13 +317,12 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             <meshBasicMaterial transparent opacity={0} />
           </mesh>
           
-          {/* 옅은 회색 배경 면 */}
+          {/* 투명 배경 (2D에서 메쉬 색상 숨김) */}
           <mesh>
             <boxGeometry args={[width * 0.01, height * 0.01, depth * 0.01]} />
-            <meshBasicMaterial 
-              color={isSelected ? "#e8f5e8" : "#f0f0f0"} 
-              transparent 
-              opacity={0.6}
+            <meshBasicMaterial
+              transparent
+              opacity={0}
             />
           </mesh>
           
