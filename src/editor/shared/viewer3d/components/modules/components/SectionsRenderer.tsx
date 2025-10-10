@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import * as THREE from 'three';
 import { SectionConfig } from '@/data/modules/shelving';
 import { useSpace3DView } from '../../../context/useSpace3DView';
@@ -9,6 +9,9 @@ import NativeLine from '../../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import DimensionText from './DimensionText';
 import { useDimensionColor } from '../hooks/useDimensionColor';
+import EditableDimensionText from './EditableDimensionText';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { updateSectionHeight } from '@/editor/shared/utils/sectionHeightUpdater';
 
 // SectionsRenderer Props 인터페이스
 interface SectionsRendererProps {
@@ -42,9 +45,12 @@ interface SectionsRendererProps {
   
   // 강조 상태
   isHighlighted?: boolean;
-  
+
   // 섹션 내경 치수 숨김 (듀얼 타입 중복 방지용)
   hideSectionDimensions?: boolean;
+
+  // 배치된 가구 ID (치수 편집용)
+  placedFurnitureId?: string;
 }
 
 /**
@@ -66,13 +72,72 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   mmToThreeUnits,
   furnitureId,
   isHighlighted = false,
-  hideSectionDimensions = false
+  hideSectionDimensions = false,
+  placedFurnitureId
 }) => {
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
+
+  // 가구 스토어 메서드
+  const { placedModules, updatePlacedModule } = useFurnitureStore();
+
+  // 치수 변경 핸들러
+  const handleDimensionChange = useCallback((sectionIndex: number, newInternalHeight: number) => {
+    if (!placedFurnitureId) {
+      console.warn('⚠️ placedFurnitureId가 없어서 치수를 수정할 수 없습니다');
+      return;
+    }
+
+    console.log('📏 치수 변경 요청:', {
+      placedFurnitureId,
+      sectionIndex,
+      newInternalHeight
+    });
+
+    // 배치된 가구 찾기
+    const placedModule = placedModules.find(m => m.id === placedFurnitureId);
+    if (!placedModule) {
+      console.error('❌ 배치된 가구를 찾을 수 없습니다:', placedFurnitureId);
+      return;
+    }
+
+    // 섹션 높이 업데이트
+    const result = updateSectionHeight(
+      placedModule,
+      sectionIndex,
+      newInternalHeight,
+      basicThickness
+    );
+
+    if (!result.success) {
+      alert(result.error || '섹션 높이를 업데이트할 수 없습니다');
+      return;
+    }
+
+    console.log('✅ 섹션 높이 업데이트 성공:', result);
+
+    // 가구 스토어 업데이트
+    updatePlacedModule(placedFurnitureId, {
+      customSections: result.updatedSections,
+      // moduleData도 업데이트 (dimensions.height)
+      moduleData: {
+        ...placedModule.moduleData!,
+        dimensions: {
+          ...placedModule.moduleData!.dimensions,
+          height: result.updatedHeight!
+        },
+        modelConfig: {
+          ...placedModule.moduleData!.modelConfig,
+          sections: result.updatedSections
+        }
+      }
+    });
+
+    console.log('🎉 가구 업데이트 완료!');
+  }, [placedFurnitureId, placedModules, updatePlacedModule, basicThickness]);
   
   // 상하부장 여부 확인 (upper-cabinet, lower-cabinet 패턴)
   const isUpperLowerCabinet = furnitureId?.includes('upper-cabinet') || furnitureId?.includes('lower-cabinet');
@@ -316,23 +381,23 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 
                 return (
                   <>
-                    {/* 치수 텍스트 - 수직선 좌측에 표시 */}
-                    <Text
+                    {/* 치수 텍스트 - 편집 가능 (더블클릭) */}
+                    <EditableDimensionText
                       position={[
-                        viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
-                        centerY, 
+                        viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
+                        centerY,
                         viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                       ]}
                       fontSize={baseFontSize}
                       color={dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
+                      value={actualInternalHeight}
+                      onValueChange={(newValue) => handleDimensionChange(index, newValue)}
+                      sectionIndex={index}
+                      furnitureId={furnitureId}
                       renderOrder={1000}
                       depthTest={false}
-                    >
-                      {Math.round(actualInternalHeight)}
-                    </Text>
+                    />
                     
                     {/* 수직 연결선 - 왼쪽으로 이동 */}
                     <NativeLine
