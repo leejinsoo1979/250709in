@@ -299,7 +299,7 @@ export const calculatePanelDetails = (
           targetPanel.push({
             name: `${sectionName} 선반 1`,
             width: innerWidth,
-            depth: customDepth - 8, // adjustedDepthForShelves
+            depth: customDepth - 8 - basicThickness, // 실제 선반 깊이 = adjustedDepthForShelves - basicThickness
             thickness: basicThickness,
             material: 'PB'
           });
@@ -310,7 +310,7 @@ export const calculatePanelDetails = (
           targetPanel.push({
             name: `${sectionName} 선반 ${i}`,
             width: innerWidth,
-            depth: customDepth - 8, // adjustedDepthForShelves
+            depth: customDepth - 8 - basicThickness, // 실제 선반 깊이 = adjustedDepthForShelves - basicThickness
             thickness: basicThickness,
             material: 'PB'  // 기본 재질
           });
