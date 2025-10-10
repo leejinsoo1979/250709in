@@ -315,16 +315,14 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           });
         }
       } else if (section.type === 'hanging') {
-        // 옷장 섹션 - 안전선반이 있으면 추가
+        // 옷장 섹션 - 안전선반이 있으면 추가 (하나만)
         if (section.shelfPositions && section.shelfPositions.length > 0) {
-          section.shelfPositions.forEach((pos, i) => {
-            targetPanel.push({
-              name: `${sectionName} 안전선반`,
-              width: innerWidth,
-              depth: customDepth - 8, // adjustedDepthForShelves
-              thickness: basicThickness,
-              material: 'PB'
-            });
+          targetPanel.push({
+            name: `${sectionName} 선반 1`,
+            width: innerWidth,
+            depth: customDepth - 8, // adjustedDepthForShelves
+            thickness: basicThickness,
+            material: 'PB'
           });
         }
       } else if (section.type === 'shelf' && section.count) {
