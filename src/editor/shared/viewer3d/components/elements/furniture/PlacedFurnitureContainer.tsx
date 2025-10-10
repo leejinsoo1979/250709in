@@ -59,7 +59,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
   // showFurniture 변경 감지
   React.useEffect(() => {
-    console.log('🎨 PlacedFurnitureContainer - showFurniture 변경:', showFurniture);
+    console.log('🎨 PlacedFurnitureContainer - showFurniture changed:', showFurniture);
   }, [showFurniture]);
   
   

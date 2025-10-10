@@ -172,7 +172,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 type="checkbox"
                 checked={showFurniture}
                 onChange={(e) => {
-                  console.log('🔘 가구 체크박스 클릭 - 현재값:', showFurniture, '→ 변경될 값:', !showFurniture);
+                  console.log('🔘 Furniture checkbox clicked - current:', showFurniture, '-> new:', !showFurniture);
                   onShowFurnitureToggle();
                 }}
                 className={styles.checkbox}

@@ -2750,7 +2750,7 @@ const Configurator: React.FC = () => {
             onShowAxisToggle={toggleAxis}
             showFurniture={showFurniture}
             onShowFurnitureToggle={() => {
-              console.log('🎯 Configurator - 가구 토글 - 현재값:', showFurniture, '→ 변경될 값:', !showFurniture);
+              console.log('🎯 Configurator toggle - current:', showFurniture, '-> new:', !showFurniture);
               setShowFurniture(!showFurniture);
             }}
             doorsOpen={doorsOpen}

@@ -285,7 +285,7 @@ export const useUIStore = create<UIState>()(
         set({ showAll: show }),
       
       setShowFurniture: (show) => {
-        console.log('💾 UIStore - setShowFurniture 호출 - 새로운 값:', show);
+        console.log('💾 UIStore.setShowFurniture called - new value:', show);
         set({ showFurniture: show });
       },
       
