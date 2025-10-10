@@ -368,6 +368,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                 const dividerY = currentYPosition - basicThickness/2;
 
+                // 섹션 강조 확인 - 중간판은 하부 섹션에 속함
+                const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
+
                 return (
                   <BoxWithEdges
                     key={`divider-${index}`}
@@ -376,6 +379,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     material={material}
                     renderMode={renderMode}
                     isDragging={isDragging}
+                    isHighlighted={isLowerHighlighted}
                   />
                 );
               });
@@ -392,6 +396,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
+        isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
       />
       
       {/* Type4 상단 상판 두께 치수 표시 */}
@@ -443,6 +448,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
+        isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
       />
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) - hasBackPanel이 true일 때만 렌더링 */}
