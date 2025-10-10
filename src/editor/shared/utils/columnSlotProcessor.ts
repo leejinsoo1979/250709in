@@ -1186,8 +1186,8 @@ export const calculateFurnitureBounds = (
       left: originalSlotBounds.left,
       right: originalSlotBounds.right,
       center: originalSlotBounds.center,
-      width: width * 100, // mm 단위
-      renderWidth: width * 100
+      width: parseFloat((width * 100).toFixed(2)), // mm 단위
+      renderWidth: parseFloat((width * 100).toFixed(2))
     };
   }
   
@@ -1227,8 +1227,8 @@ export const calculateFurnitureBounds = (
         furnitureLeft = originalSlotBounds.left;
         furnitureRight = originalSlotBounds.left + 0.05; // 50mm 강제 설정
       }
-      
-      renderWidth = (furnitureRight - furnitureLeft) * 100;
+
+      renderWidth = parseFloat(((furnitureRight - furnitureLeft) * 100).toFixed(2));
       console.log('🏗️ 왼쪽 침범 - 기둥 충돌 방지 적용:', {
         columnPosition: columnRightX.toFixed(3),
         finalLeft: furnitureLeft.toFixed(3),
@@ -1259,8 +1259,8 @@ export const calculateFurnitureBounds = (
         furnitureRight = originalSlotBounds.right;
         furnitureLeft = originalSlotBounds.right - 0.05; // 50mm 강제 설정
       }
-      
-      renderWidth = (furnitureRight - furnitureLeft) * 100;
+
+      renderWidth = parseFloat(((furnitureRight - furnitureLeft) * 100).toFixed(2));
       console.log('🏗️ 오른쪽 침범 - 기둥 충돌 방지 적용:', {
         columnPosition: columnLeftX.toFixed(3),
         finalLeft: furnitureLeft.toFixed(3),
@@ -1313,8 +1313,8 @@ export const calculateFurnitureBounds = (
         furnitureLeft = originalSlotBounds.left;
         furnitureRight = originalSlotBounds.right;
       }
-      
-      renderWidth = (furnitureRight - furnitureLeft) * 100;
+
+      renderWidth = parseFloat(((furnitureRight - furnitureLeft) * 100).toFixed(2));
       console.log('🏗️ 중앙 침범 - 슬롯 경계 제한 적용:', {
         position: slotInfo.furniturePosition,
         finalLeft: furnitureLeft,
@@ -1326,7 +1326,7 @@ export const calculateFurnitureBounds = (
       break;
       
     default:
-      renderWidth = (originalSlotBounds.right - originalSlotBounds.left) * 100;
+      renderWidth = parseFloat(((originalSlotBounds.right - originalSlotBounds.left) * 100).toFixed(2));
   }
   
   // 침범 방향에 따른 선택적 슬롯 경계 검사 (한쪽 방향만 조정)
@@ -1395,14 +1395,14 @@ export const calculateFurnitureBounds = (
     });
   }
   
-  const totalWidth = (furnitureRight - furnitureLeft) * 100; // mm 단위
-  
+  const totalWidth = parseFloat(((furnitureRight - furnitureLeft) * 100).toFixed(2)); // mm 단위
+
   // 기둥 침범 시에는 가구가 줄어들어야 하므로 최소 크기 보장을 제한적으로 적용
   let finalRenderWidth = totalWidth;
-  
+
   // 기둥이 없는 경우에만 최소 크기 보장
   if (!slotInfo.hasColumn) {
-    finalRenderWidth = Math.max(totalWidth, 150); // 최소 150mm 보장
+    finalRenderWidth = parseFloat(Math.max(totalWidth, 150).toFixed(2)); // 최소 150mm 보장
   } else {
     // 기둥 침범 시에는 실제 계산된 크기 사용 (최소 크기 제한 없음)
     finalRenderWidth = totalWidth;
