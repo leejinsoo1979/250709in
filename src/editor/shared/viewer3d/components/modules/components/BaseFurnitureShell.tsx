@@ -115,13 +115,16 @@ interface BaseFurnitureShellProps {
   
   // 가구 데이터 (ID 확인용)
   moduleData?: { id: string };
-  
+
+  // 배치된 가구 ID (섹션 강조용)
+  placedFurnitureId?: string;
+
   // 띄움배치 여부
   isFloating?: boolean;
-  
+
   // 공간 정보 (받침대 높이 확인용)
   spaceInfo?: SpaceInfo;
-  
+
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -151,6 +154,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   isHighlighted = false,
   hasBackPanel = true, // 기본값은 true (백패널 있음)
   moduleData,
+  placedFurnitureId,
   isFloating = false, // 기본값은 false (바닥 배치)
   spaceInfo,
   children
@@ -192,9 +196,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 ? -height/2 + lowerSectionHeight + adjustedUpperHeight/2  // 4단: 하부 바로 위
                 : -height/2 + lowerSectionHeight + basicThickness + adjustedUpperHeight/2; // 2단
 
-              // 섹션 강조 확인
-              const isLowerHighlighted = highlightedSection === `${moduleData?.id}-0`;
-              const isUpperHighlighted = highlightedSection === `${moduleData?.id}-1`;
+              // 섹션 강조 확인 (placedFurnitureId 사용)
+              const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
+              const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
 
               return (
                 <>
@@ -275,9 +279,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2;
                 const actualThickness = basicThickness * 100;
 
-                // 섹션 강조 확인
-                const isLowerHighlighted = highlightedSection === `${moduleData?.id}-0`;
-                const isUpperHighlighted = highlightedSection === `${moduleData?.id}-1`;
+                // 섹션 강조 확인 (placedFurnitureId 사용)
+                const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
+                const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
 
                 return (
                   <>
@@ -320,9 +324,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const middlePanelY = currentYPosition - basicThickness/2 + basicThickness;
                   const lowerTopPanelY = middlePanelY - basicThickness;
 
-                  // 섹션 강조 확인
-                  const isLowerHighlighted = highlightedSection === `${moduleData?.id}-0`;
-                  const isUpperHighlighted = highlightedSection === `${moduleData?.id}-1`;
+                  // 섹션 강조 확인 (placedFurnitureId 사용)
+                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
+                  const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
 
                   return (
                     <React.Fragment key={`divider-${index}`}>

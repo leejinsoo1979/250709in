@@ -32,7 +32,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   slotIndex,
   slotCenterX,
   slotWidths,
-  adjustedWidth // adjustedWidth 추가
+  adjustedWidth, // adjustedWidth 추가
+  placedFurnitureId
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -298,6 +299,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           mmToThreeUnits={baseFurniture.mmToThreeUnits}
           renderMode={renderMode}
           furnitureId={moduleData.id}
+          placedFurnitureId={placedFurnitureId}
         />
       )}
       

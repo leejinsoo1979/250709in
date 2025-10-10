@@ -147,23 +147,29 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
-    // 강조 상태일 때는 테마 색상 사용
+    // 강조 상태일 때는 2D/3D 모드에 따라 다른 색상 사용
     if (isHighlighted) {
-      return highlightColor;
+      if (viewMode === '2D') {
+        // 2D 모드에서는 형광색 (neon green)
+        return "#18CF23";
+      } else {
+        // 3D 모드에서는 테마 색상
+        return highlightColor;
+      }
     }
-    
+
     // Cabinet Texture1이 적용된 경우 정확한 색상 사용
     if (baseMaterial instanceof THREE.MeshStandardMaterial) {
       const materialColor = baseMaterial.color;
       // RGB 값이 정확히 0.12면 Cabinet Texture1 (오차 허용)
-      if (Math.abs(materialColor.r - 0.12) < 0.01 && 
-          Math.abs(materialColor.g - 0.12) < 0.01 && 
+      if (Math.abs(materialColor.r - 0.12) < 0.01 &&
+          Math.abs(materialColor.g - 0.12) < 0.01 &&
           Math.abs(materialColor.b - 0.12) < 0.01) {
         // Cabinet Texture1과 완전히 동일한 색상 사용 (RGB 0.12, 0.12, 0.12 = #1e1e1e)
         return "#" + new THREE.Color(0.12, 0.12, 0.12).getHexString();
       }
     }
-    
+
     if (viewMode === '3D') {
       return "#505050"; // 3D 모드에서는 회색 엣지
     } else if (renderMode === 'wireframe') {
@@ -220,7 +226,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           {isHighlighted && (
             // 강조 상태일 때 추가 발광 효과 (2D, 3D 모두)
             <Edges
-              color={highlightColor}
+              color={viewMode === '2D' ? "#18CF23" : highlightColor}
               scale={1.001}
               threshold={15}
               linewidth={viewMode === '2D' ? 4 : 3}
