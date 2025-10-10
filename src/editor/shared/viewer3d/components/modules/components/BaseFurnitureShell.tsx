@@ -256,7 +256,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const drawerSectionHeight = mmToThreeUnits(1000);
                 const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2;
                 const actualThickness = basicThickness * 100;
-                
+
                 return (
                   <>
                     {/* 하부 섹션 상판 (18mm 아래) */}
@@ -267,7 +267,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       renderMode={renderMode}
                       isDragging={isDragging}
                     />
-                    
+
                     {/* 상부 섹션 바닥판 - 하부 섹션 상판 바로 위 */}
                     <BoxWithEdges
                       args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
@@ -279,21 +279,60 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   </>
                 );
               })()
-            ) : (
-              // 기존 로직
+            ) : moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging') ? (
+              // 2drawer-hanging, 2hanging: 하부 섹션 상판 + 상부 섹션 바닥판
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
                   if (index >= getSectionHeights().length - 1) return null;
-                
+
+                  let currentYPosition = -height/2 + basicThickness;
+
+                  // 현재 섹션까지의 Y 위치 계산
+                  for (let i = 0; i <= index; i++) {
+                    currentYPosition += getSectionHeights()[i];
+                  }
+
+                  const middlePanelY = currentYPosition - basicThickness/2;
+                  const lowerTopPanelY = middlePanelY - basicThickness;
+
+                  return (
+                    <React.Fragment key={`divider-${index}`}>
+                      {/* 하부 섹션 상판 */}
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                      />
+
+                      {/* 상부 섹션 바닥판 */}
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                      />
+                    </React.Fragment>
+                  );
+                });
+              })()
+            ) : (
+              // 기존 로직 (다른 가구들)
+              (() => {
+                return getSectionHeights().map((sectionHeight: number, index: number) => {
+                  if (index >= getSectionHeights().length - 1) return null;
+
                 let currentYPosition = -height/2 + basicThickness;
-                
+
                 // 현재 섹션까지의 Y 위치 계산
                 for (let i = 0; i <= index; i++) {
                   currentYPosition += getSectionHeights()[i];
                 }
-                
+
                 const dividerY = currentYPosition - basicThickness/2;
-                
+
                 return (
                   <BoxWithEdges
                     key={`divider-${index}`}
