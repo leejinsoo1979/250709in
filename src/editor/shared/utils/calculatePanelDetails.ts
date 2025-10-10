@@ -85,9 +85,9 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         material: 'PB'  // 기본 재질
       });
     } else if (sections.length > 1) {
-      // 다른 가구의 경우 중간 칸막이로 표시 (하부장 상판)
+      // 다른 가구의 경우 하부장 상판
       panels.lower.push({
-        name: '중간 칸막이 (하부장 상판)',
+        name: '하부장 상판',
         width: innerWidth,
         depth: customDepth - backPanelThickness - 17, // 실제 렌더링 값
         thickness: basicThickness,
