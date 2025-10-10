@@ -259,10 +259,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100000}
                   depthTest={false}
                 />
-                {/* 치수선 (상부섹션은 짧게) */}
+                {/* 치수선 (상부섹션은 짧게, 첫 번째 섹션은 받침대 위부터) */}
                 <NativeLine
                   points={[
-                    [slotX, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
+                    [slotX, sectionIndex === 0 ? (floatHeight + baseFrameHeight) : sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
@@ -319,13 +319,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <meshBasicMaterial color={dimensionColor} depthTest={false} />
                 </mesh>
 
-                {/* 치수 텍스트 (상부섹션은 짧아진 치수선 중앙에 맞춤) */}
+                {/* 치수 텍스트 (상부섹션은 짧아진 치수선 중앙에 맞춤, 첫 번째 섹션은 받침대 위부터 계산) */}
                 <Text
                   position={[
                     slotX,
-                    isLastSection
-                      ? sectionStartY + (sectionEndY - mmToThreeUnits(75) - sectionStartY) / 2
-                      : sectionStartY + sectionHeight / 2,
+                    (() => {
+                      const lineStart = sectionIndex === 0 ? (floatHeight + baseFrameHeight) : sectionStartY;
+                      const lineEnd = isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY;
+                      return lineStart + (lineEnd - lineStart) / 2;
+                    })(),
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)
                   ]}
                   fontSize={mmToThreeUnits(25)}
