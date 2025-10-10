@@ -76,6 +76,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   
   // 드래그 중일 때만 고스트 효과 적용 (편집 모드는 제외)
   const processedMaterial = React.useMemo(() => {
+    // MeshBasicMaterial인 경우 (프레임 형광색 등) 그대로 사용
+    if (baseMaterial instanceof THREE.MeshBasicMaterial) {
+      return baseMaterial;
+    }
+
     // 2D 솔리드 모드에서 캐비넷을 투명하게 처리
     if (viewMode === '2D' && renderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const transparentMaterial = baseMaterial.clone();
@@ -85,12 +90,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       transparentMaterial.needsUpdate = true;
       return transparentMaterial;
     }
-    
+
     if (isDragging && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = baseMaterial.clone();
       ghostMaterial.transparent = true;
       ghostMaterial.opacity = 0.6;
-      
+
       // 테마 색상 가져오기
       const getThemeColor = () => {
         if (typeof window !== "undefined") {
@@ -102,7 +107,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         }
         return "#10b981"; // 기본값 (green)
       };
-      
+
       ghostMaterial.color = new THREE.Color(getThemeColor());
       ghostMaterial.needsUpdate = true;
       return ghostMaterial;
