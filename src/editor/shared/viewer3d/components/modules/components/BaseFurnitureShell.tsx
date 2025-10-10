@@ -474,10 +474,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   basicThicknessMm: basicThickness / 0.01
                 });
 
-                // 백패널 높이 조정
-                // 하부: +36mm, 상부: -36mm
-                const lowerBackPanelHeight = lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(10) + mmToThreeUnits(36);
-                const upperBackPanelHeight = upperSectionHeight - basicThickness * 2 + mmToThreeUnits(10) - mmToThreeUnits(36);
+                // 백패널 높이 계산
+                const lowerBackPanelHeight = lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(10);
+                const upperBackPanelHeight = upperSectionHeight - basicThickness * 2 + mmToThreeUnits(10);
 
                 console.log('🔍🔍🔍 백패널 높이:', {
                   lowerBackPanelHeightMm: lowerBackPanelHeight / 0.01,
@@ -487,10 +486,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 });
 
                 // 백패널 Y 위치 조정
-                // 하부: 아래로 36mm 줄임 → Y -18mm
-                // 상부: 위로 36mm 늘림 → Y +18mm
-                const lowerBackPanelY = -height/2 + lowerSectionHeight/2 - mmToThreeUnits(18);
-                const upperBackPanelY = -height/2 + lowerSectionHeight + upperSectionHeight/2 + mmToThreeUnits(18);
+                const lowerBackPanelY = -height/2 + lowerSectionHeight/2;
+                const upperBackPanelY = -height/2 + lowerSectionHeight + upperSectionHeight/2;
 
                 console.log('🔍🔍🔍 백패널 Y 위치:', {
                   lowerBackPanelYMm: lowerBackPanelY / 0.01,
