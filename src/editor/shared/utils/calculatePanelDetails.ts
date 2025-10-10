@@ -71,8 +71,8 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
       let sectionName = '';
       let targetPanel = null;
 
-      // 2단 옷장 (single-2hanging): 첫 번째 섹션(hanging)이 하부장, 두 번째 섹션(hanging)이 상부장
-      if (moduleData.id.includes('single-2hanging')) {
+      // 2단 옷장 (single-2hanging, dual-2hanging): 첫 번째 섹션(hanging)이 하부장, 두 번째 섹션(hanging)이 상부장
+      if (moduleData.id.includes('single-2hanging') || moduleData.id.includes('dual-2hanging')) {
         if (sectionIndex === 0) {
           sectionName = '하부장';
           targetPanel = panels.lower;
