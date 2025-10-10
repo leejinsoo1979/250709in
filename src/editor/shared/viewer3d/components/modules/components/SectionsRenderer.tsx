@@ -362,21 +362,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     }
                   } else {
                     // 다음 섹션과의 경계
-                    // 2hanging 하부 섹션: 하부 섹션 상판 아랫면까지
-                    const is2HangingLowerSection = furnitureId?.includes('2hanging') && index === 0;
-                    if (is2HangingLowerSection && section.isTopFinishPanel) {
-                      // 하부 섹션 상판 아랫면까지 = 섹션 상단 - 상판 두께
-                      topY = sectionCenterY + sectionHeight/2 - basicThickness;
-                    } else {
-                      // 일반 케이스: 섹션 데이터의 1000mm는 (상판18 + 내경964 + 바닥판18) 구조
-                      // bottomY는 이미 바닥판 상단
-                      // 내경 상단 = 바닥판 상단 + 내경 높이 = bottomY + (1000 - 36)
-                      topY = bottomY + (sectionHeight - basicThickness * 2);
+                    // 일반 케이스: 섹션 데이터의 1000mm는 (상판18 + 내경964 + 바닥판18) 구조
+                    // bottomY는 이미 바닥판 상단
+                    // 내경 상단 = 바닥판 상단 + 내경 높이 = bottomY + (1000 - 36)
+                    topY = bottomY + (sectionHeight - basicThickness * 2);
 
-                      // isTopFinishPanel이 있는 경우 상판 두께만큼 추가로 감소
-                      if (section.isTopFinishPanel) {
-                        topY -= basicThickness;
-                      }
+                    // isTopFinishPanel이 있는 경우 상판 아랫면까지 (상판 두께 * 2만큼 감소)
+                    if (section.isTopFinishPanel) {
+                      topY -= basicThickness * 2;
                     }
                   }
                   
