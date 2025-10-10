@@ -392,8 +392,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   const drawerGap = section.gapHeight || 0;
                   const totalDrawerHeight = drawerHeight + drawerGap;
 
-                  // 각 서랍의 Y 위치 계산
-                  let drawerY = sectionStartY;
+                  // 각 서랍의 Y 위치 계산 (DrawerRenderer와 동일한 방식)
+                  // sectionStartY는 받침대 + 하판 위치, 여기에 첫 공백(gapHeight)을 더함
+                  let drawerY = sectionStartY + mmToThreeUnits(drawerGap);
                   for (let i = 0; i < drawerIndex; i++) {
                     drawerY += mmToThreeUnits(section.drawerHeights![i] + drawerGap);
                   }
