@@ -986,10 +986,12 @@ const Room: React.FC<RoomProps> = ({
             installType: spaceInfo.installType,
             wallConfig,
             wallConfigLeft: wallConfig?.left,
-            condition: (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
+            condition: (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
               (spaceInfo.installType === 'semistanding' && wallConfig?.left))
           })}
-          {(spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
+          {/* 2D 측면뷰(좌/우)에서는 좌우벽 숨김 */}
+          {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) &&
+            (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
             (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (() => {
             const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
             const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
@@ -1058,7 +1060,9 @@ const Room: React.FC<RoomProps> = ({
           {/* 오른쪽 외부 벽면 - 단내림 고려 */}
           {/* 프리스탠딩이 아니고 (세미스탠딩에서 오른쪽 벽이 있거나 빌트인)일 때만 표시 */}
           {/* 3D orthographic 모드에서 카메라 각도에 따라 숨김 */}
-          {(spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
+          {/* 2D 측면뷰(좌/우)에서는 좌우벽 숨김 */}
+          {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) &&
+            (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
             (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (() => {
             const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
             const isRightDropped = spaceInfo.droppedCeiling?.position === 'right';
