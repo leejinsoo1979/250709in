@@ -52,7 +52,20 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const { viewMode } = useSpace3DView();
-  
+
+  // 디버그: 측면 뷰에서 렌더링 확인
+  React.useEffect(() => {
+    if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
+      console.log('🔍 DrawerRenderer in side view:', {
+        viewMode,
+        view2DDirection,
+        showDimensions,
+        showDimensionsText,
+        drawerCount
+      });
+    }
+  }, [viewMode, view2DDirection, showDimensions, showDimensionsText, drawerCount]);
+
   if (drawerCount <= 0) {
     return null;
   }

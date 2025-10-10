@@ -58,12 +58,27 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   const { showDimensions, showDimensionsText, view2DDirection, view2DTheme } = useUIStore();
   const { viewMode } = useSpace3DView();
   const [isHovered, setIsHovered] = useState(false);
-  
+
+  // 디버그: forceShow와 측면 뷰 확인
+  React.useEffect(() => {
+    if (forceShow && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
+      console.log('📏 DimensionText forceShow in side view:', {
+        prefix,
+        value,
+        viewMode,
+        view2DDirection,
+        forceShow,
+        showDimensions,
+        showDimensionsText
+      });
+    }
+  }, [forceShow, viewMode, view2DDirection, prefix, value, showDimensions, showDimensionsText]);
+
   // 치수 표시 조건 체크 - 중앙 집중식
   if (!forceShow && (!showDimensions || !showDimensionsText)) {
     return null;
   }
-  
+
   // 2D 모드에서 좌측/우측/탑 뷰에서는 숨김 (정면 뷰에서만 표시) - forceShow가 아닌 경우만
   if (!forceShow && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) {
     return null;
