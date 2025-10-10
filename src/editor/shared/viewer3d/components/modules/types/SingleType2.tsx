@@ -73,13 +73,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   const { dimensionColor, baseFontSize } = useDimensionColor();
   const { theme } = useTheme();
 
-  console.log('🔵 SingleType2 강조 디버그:', {
-    placedFurnitureId,
-    highlightedSection,
-    isMultiSection: isMultiSectionFurniture(),
-    sectionCount: getSectionHeights().length
-  });
-
   return (
     <>
       {/* 띄워서 배치 시 간접조명 효과 */}
@@ -96,48 +89,19 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       {showFurniture && (
         <group>
           {/* 좌우 측면 판재 - 섹션별 분할 또는 단일 */}
-          {(() => {
-            console.log('🟨🟨🟨 SingleType2 렌더링:', {
-              furnitureId: moduleData.id,
-              isMultiSection: isMultiSectionFurniture(),
-              sectionCount: getSectionHeights().length,
-              sectionHeights: getSectionHeights().map(h => h * 100 + 'mm')
-            });
-            return isMultiSectionFurniture();
-          })() ? (
+          {isMultiSectionFurniture() ? (
         // 다중 섹션: 섹션별 분할 측면 패널
         <>
           {(() => {
             let accumulatedY = -height/2 + basicThickness;
-            
-            console.log('🟨🟨 Type2 섹션 처리 시작:', {
-              height_mm: height * 100,
-              initialAccumulatedY_mm: accumulatedY * 100,
-              basicThickness_mm: basicThickness * 100
-            });
-            
+
             return getSectionHeights().map((sectionHeight: number, index: number) => {
-              console.log(`🟨 SingleType2 섹션 ${index} 시작:`, {
-                accumulatedY_before_mm: accumulatedY * 100,
-                sectionHeight: sectionHeight * 100 + 'mm',
-                shouldRenderMiddlePanel: index < getSectionHeights().length - 1
-              });
-              
               // 현재 섹션의 중심 Y 위치
               const sectionCenterY = accumulatedY + sectionHeight / 2 - basicThickness;
-              
-              console.log(`🟨 섹션 ${index} 계산:`, {
-                sectionCenterY_mm: sectionCenterY * 100,
-                계산: `${accumulatedY * 100} + ${sectionHeight * 100}/2 - ${basicThickness * 100} = ${sectionCenterY * 100}mm`
-              });
-              
+
               // 다음 섹션을 위해 누적
               const currentYPosition = accumulatedY;
               accumulatedY += sectionHeight;
-              
-              console.log(`🟨 섹션 ${index} 종료:`, {
-                accumulatedY_after_mm: accumulatedY * 100
-              });
             
             // 섹션별 강조 확인
               const isSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
@@ -170,15 +134,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 {index < getSectionHeights().length - 1 && (() => {
                   const middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2;
                   const lowerTopPanelY = middlePanelY - basicThickness; // 하부 섹션 상판 위치
-
-                  console.log(`🟨 섹션 ${index} 중간 패널 위치:`, {
-                    middlePanelY_mm: middlePanelY * 100,
-                    lowerTopPanelY_mm: lowerTopPanelY * 100,
-                    sectionCenterY_mm: sectionCenterY * 100,
-                    sectionHeight_mm: sectionHeight * 100,
-                    basicThickness_mm: basicThickness * 100,
-                    계산식: `(${sectionCenterY * 100}) + (${sectionHeight * 100}/2) + (${basicThickness * 100}/2) = ${middlePanelY * 100}mm`
-                  });
 
                   // 중간판 강조: 하부 섹션 상판은 index 섹션에 속함
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
