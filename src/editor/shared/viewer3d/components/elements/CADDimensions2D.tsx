@@ -21,29 +21,28 @@ interface CADDimensions2DProps {
 const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDimensions: showDimensionsProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, showFurniture } = useUIStore();
-  const { theme } = useTheme();
-  
+  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, showFurniture, view2DTheme } = useUIStore();
+
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
 
-  // 2D 도면 치수 색상 설정 - 테마 색상 사용하지 않음
+  // 2D 도면 치수 색상 설정 - view2DTheme 사용
   // 라이트 모드: 검정색, 다크 모드: 흰색
-  const dimensionColor = theme?.mode === 'light' ? '#000000' : '#FFFFFF';
+  const dimensionColor = view2DTheme === 'light' ? '#000000' : '#FFFFFF';
   
   console.log('📐 CADDimensions2D 치수 색상:', {
-    themeMode: theme?.mode,
+    view2DTheme,
     dimensionColor,
     expectedLight: '#000000',
     expectedDark: '#FFFFFF'
   });
-  
+
   const dimensionColors = {
     primary: dimensionColor,     // 기본 치수선
     furniture: dimensionColor,   // 가구 치수선
     column: dimensionColor,      // 컬럼 치수선
     float: dimensionColor,       // 띄움 높이
-    background: theme?.mode === 'dark' ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+    background: view2DTheme === 'dark' ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
     text: dimensionColor         // 텍스트
   };
   
@@ -95,9 +94,126 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   if (currentViewDirection === 'left' || currentViewDirection === 'right') {
     const spaceDepth = mmToThreeUnits(spaceInfo.depth || 1500);
     const spaceDepthMm = spaceInfo.depth || 1500;
+    const topFrameHeightMm = spaceInfo.frameSize?.top || 0;
+    const topFrameHeight = mmToThreeUnits(topFrameHeightMm);
+    const internalHeightMm = spaceInfo.internalSpace?.height || 2400;
+    const internalHeight = mmToThreeUnits(internalHeightMm);
+
+    // 상단 프레임 위치 계산
+    const topFrameTopY = floatHeight + internalHeight + topFrameHeight;
+    const topFrameBottomY = floatHeight + internalHeight;
 
     return (
       <group>
+        {/* 상단 프레임 두께 치수 (우측) */}
+        {topFrameHeightMm > 0 && (
+          <group>
+
+            {/* 두께 치수선 (프레임 우측) */}
+            <Line
+              points={[
+                [mmToThreeUnits(150), topFrameBottomY, 0],
+                [mmToThreeUnits(150), topFrameTopY, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={2}
+              renderOrder={1000}
+              depthTest={false}
+            />
+
+            {/* 위쪽 화살표 */}
+            <Line
+              points={[
+                [mmToThreeUnits(150), topFrameTopY - 0.02, 0],
+                [mmToThreeUnits(150), topFrameTopY, 0],
+                [mmToThreeUnits(150) - 0.015, topFrameTopY - 0.015, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={2}
+            />
+            <Line
+              points={[
+                [mmToThreeUnits(150), topFrameTopY - 0.02, 0],
+                [mmToThreeUnits(150), topFrameTopY, 0],
+                [mmToThreeUnits(150) + 0.015, topFrameTopY - 0.015, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={2}
+            />
+
+            {/* 아래쪽 화살표 */}
+            <Line
+              points={[
+                [mmToThreeUnits(150), topFrameBottomY + 0.02, 0],
+                [mmToThreeUnits(150), topFrameBottomY, 0],
+                [mmToThreeUnits(150) - 0.015, topFrameBottomY + 0.015, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={2}
+            />
+            <Line
+              points={[
+                [mmToThreeUnits(150), topFrameBottomY + 0.02, 0],
+                [mmToThreeUnits(150), topFrameBottomY, 0],
+                [mmToThreeUnits(150) + 0.015, topFrameBottomY + 0.015, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={2}
+            />
+
+            {/* 두께 텍스트 */}
+            {showDimensionsText && (
+              <Html
+                position={[mmToThreeUnits(150) + mmToThreeUnits(100), (topFrameTopY + topFrameBottomY) / 2, 0]}
+                center
+                transform={false}
+                occlude={false}
+                zIndexRange={[1000, 1001]}
+                style={{ pointerEvents: 'none' }}
+              >
+                <div
+                  style={{
+                    background: dimensionColors.background,
+                    color: dimensionColors.primary,
+                    padding: '4px 8px',
+                    borderRadius: '3px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    border: `1px solid ${dimensionColors.primary}`,
+                    fontFamily: 'monospace',
+                    whiteSpace: 'nowrap',
+                    userSelect: 'none'
+                  }}
+                >
+                  {topFrameHeightMm}mm
+                </div>
+              </Html>
+            )}
+
+            {/* 연장선 - 상단 */}
+            <Line
+              points={[
+                [0, topFrameTopY, 0],
+                [mmToThreeUnits(150), topFrameTopY, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={1}
+              dashed={true}
+            />
+
+            {/* 연장선 - 하단 */}
+            <Line
+              points={[
+                [0, topFrameBottomY, 0],
+                [mmToThreeUnits(150), topFrameBottomY, 0]
+              ]}
+              color={dimensionColors.primary}
+              lineWidth={1}
+              dashed={true}
+            />
+          </group>
+        )}
+
         {/* 공간 전체 깊이 치수 (상단) */}
         <group>
           {/* 깊이 치수선 */}
