@@ -367,9 +367,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 내경 상단 = 바닥판 상단 + 내경 높이 = bottomY + (1000 - 36)
                     topY = bottomY + (sectionHeight - basicThickness * 2);
 
-                    // isTopFinishPanel이 있는 경우 상판 아랫면까지 (상판 두께 * 2만큼 감소)
+                    // isTopFinishPanel이 있는 경우 상판 아랫면까지 (상판 두께만큼 증가)
                     if (section.isTopFinishPanel) {
-                      topY -= basicThickness * 2;
+                      topY += basicThickness;
                     }
                   }
                   
