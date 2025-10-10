@@ -443,15 +443,26 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   const shelfPositions = section.shelfPositions;
 
                   // 첫 번째 칸 (맨 아래) - 바닥부터 첫 번째 선반 하단까지
-                  if (shelfPositions[0] > 0) {
-                    const firstShelfBottomMm = shelfPositions[0] - basicThickness / 0.01 / 2; // 첫 번째 선반의 하단 (정면뷰와 동일)
-                    const height = mmToThreeUnits(firstShelfBottomMm);
-                    const centerY = sectionStartY + height / 2;
-                    compartmentHeights.push({ height, centerY, heightMm: firstShelfBottomMm });
+                  // 정면뷰(ShelfRenderer.tsx line 171-202)와 동일한 로직
+                  if (shelfPositions.length > 0) {
+                    // positionMm === 0인 경우 (바닥판) - 칸 높이 치수는 표시하지 않음 (선반 두께만 표시)
+                    if (shelfPositions[0] === 0) {
+                      // 바닥판은 표시하지 않음 (정면뷰와 동일)
+                    } else {
+                      const firstShelfBottomMm = shelfPositions[0] - basicThickness / 0.01 / 2; // 첫 번째 선반의 하단
+                      const height = mmToThreeUnits(firstShelfBottomMm);
+                      const centerY = sectionStartY + height / 2;
+                      compartmentHeights.push({ height, centerY, heightMm: firstShelfBottomMm });
+                    }
                   }
 
                   // 중간 칸들 - 현재 선반 상단부터 다음 선반 하단까지
+                  // 정면뷰(ShelfRenderer.tsx line 206-213)와 동일한 로직
                   for (let i = 0; i < shelfPositions.length - 1; i++) {
+                    // 바닥판(shelfPos === 0)이면 이 칸은 건너뜀 (정면뷰와 동일)
+                    if (shelfPositions[i] === 0) {
+                      continue;
+                    }
                     const currentShelfTopMm = shelfPositions[i] + basicThickness / 0.01 / 2;
                     const nextShelfBottomMm = shelfPositions[i + 1] - basicThickness / 0.01 / 2;
                     const heightMm = nextShelfBottomMm - currentShelfTopMm;
