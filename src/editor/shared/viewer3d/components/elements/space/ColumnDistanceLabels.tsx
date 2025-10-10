@@ -15,6 +15,15 @@ interface ColumnDistanceLabelsProps {
 }
 
 const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spaceInfo, onPositionChange, onColumnUpdate, showLabels = true }) => {
+  const formatDistance = (value: number) => {
+    if (!Number.isFinite(value)) return '0';
+    const rounded = Math.round((value + Number.EPSILON) * 100) / 100;
+    const fixed = rounded.toFixed(2);
+    const trimmed = fixed
+      .replace(/(\.\d*[1-9])0+$/, '$1')
+      .replace(/\.00$/, '');
+    return trimmed === '' ? '0' : trimmed;
+  };
   const { viewMode } = useSpace3DView();
   const { theme } = useTheme();
   const [editingDistance, setEditingDistance] = useState<string | null>(null);
@@ -450,7 +459,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                   document.body.style.cursor = 'default';
                 }}
               >
-                {Math.max(0, distanceToLeft)}
+                {formatDistance(Math.max(0, distanceToLeft))}
               </Text>
             </>
           )}
@@ -623,7 +632,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                   document.body.style.cursor = 'default';
                 }}
               >
-                {Math.max(0, distanceToRight)}
+                {formatDistance(Math.max(0, distanceToRight))}
               </Text>
             </>
           )}
@@ -750,7 +759,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
                   document.body.style.cursor = 'default';
                 }}
               >
-                {currentColumn.width}
+                {formatDistance(currentColumn.width)}
               </Text>
             </>
           )}
@@ -790,7 +799,7 @@ const ColumnDistanceLabels: React.FC<ColumnDistanceLabelsProps> = ({ column, spa
             anchorY="middle"
             rotation={[0, 0, 0]}
           >
-            {currentColumn.width}
+            {formatDistance(currentColumn.width)}
           </Text>
           <mesh position={[0, 0, -0.01]}>
             <planeGeometry args={[2.6, 0.9]} />

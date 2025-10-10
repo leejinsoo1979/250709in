@@ -125,6 +125,9 @@ interface BaseFurnitureShellProps {
   // 공간 정보 (받침대 높이 확인용)
   spaceInfo?: SpaceInfo;
 
+  // 가구 본체 표시 여부
+  showFurniture?: boolean;
+
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -157,6 +160,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   placedFurnitureId,
   isFloating = false, // 기본값은 false (바닥 배치)
   spaceInfo,
+  showFurniture = true, // 기본값은 true (가구 본체 표시)
   children
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
@@ -171,8 +175,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   
   return (
     <group>
-      {/* 좌우 측면 판재 - 다중 섹션은 상하 분할, 나머지는 통짜 */}
-      <>
+      {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
+      {showFurniture && (
+        <>
+          {/* 좌우 측면 판재 - 다중 섹션은 상하 분할, 나머지는 통짜 */}
+          <>
         {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging')) && isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
           // 다중 섹션: 좌우 측판을 상부/하부로 분할
           <>
@@ -513,7 +520,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           )}
         </>
       )}
-      
+
       {/* 내부 구조 (타입별로 다른 내용) */}
       {children}
       

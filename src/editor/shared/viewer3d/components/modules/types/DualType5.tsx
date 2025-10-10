@@ -33,7 +33,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   slotIndex,
   slotCenterX,
   slotWidths,
-  adjustedWidth // adjustedWidth 추가
+  adjustedWidth, // adjustedWidth 추가
+  showFurniture = true, // 가구 본체 표시 여부
+  placedFurnitureId
 }) => {
   // 공통 로직 사용 (좌측 깊이만 반영)
   const baseFurniture = useBaseFurniture(moduleData, {

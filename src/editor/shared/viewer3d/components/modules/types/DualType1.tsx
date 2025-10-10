@@ -28,7 +28,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   slotWidths,
   adjustedWidth, // adjustedWidth 추가
   customSections, // 사용자 정의 섹션 설정
-  placedFurnitureId
+  placedFurnitureId,
+  showFurniture = true // 가구 본체 표시 여부
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -45,7 +46,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   const { renderMode } = useSpace3DView();
 
   return (
-    <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId}>
+    <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} showFurniture={showFurniture}>
       {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
       {!isDragging && (
         <SectionsRenderer
