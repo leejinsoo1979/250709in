@@ -221,8 +221,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             }
             const sectionHeightMm = sectionHeight / 0.01;
 
-            // 하부섹션(첫 번째 섹션)은 18mm 아래로 조정
-            const yOffset = sectionIndex === 0 ? -basicThickness : 0;
+            // 하부섹션(첫 번째)은 18mm 아래로, 상부섹션(마지막)은 18mm 위로 조정
+            const isFirstSection = sectionIndex === 0;
+            const isLastSection = sectionIndex === sections.length - 1;
+            const yOffset = isFirstSection ? -basicThickness : (isLastSection ? basicThickness : 0);
             const sectionStartY = currentY + yOffset;
             const sectionEndY = currentY + sectionHeight + yOffset;
             currentY = sectionEndY - yOffset; // 다음 섹션을 위해 원래 위치로 복원
@@ -392,7 +394,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 가구 위치 계산 (FurnitureItem.tsx와 동일)
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
-          const furnitureY = floatHeight + baseFrameHeight + internalHeight / 2;
+          const furnitureTopY = floatHeight + baseFrameHeight + internalHeight; // 가구 상단 Y 위치
 
           // Z축 위치 계산 (FurnitureItem.tsx와 동일)
           const panelDepthMm = spaceInfo.depth || 1500;
@@ -409,8 +411,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {/* 가구 깊이 치수선 */}
               <NativeLine
                 points={[
-                  [slotX, furnitureY, furnitureZ - moduleDepth/2],
-                  [slotX, furnitureY, furnitureZ + moduleDepth/2]
+                  [slotX, furnitureTopY, furnitureZ - moduleDepth/2],
+                  [slotX, furnitureTopY, furnitureZ + moduleDepth/2]
                 ]}
                 color={dimensionColor}
                 lineWidth={1.5}
@@ -421,8 +423,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {/* 앞쪽 티크 */}
               <NativeLine
                 points={[
-                  [slotX - 0.02, furnitureY, furnitureZ + moduleDepth/2],
-                  [slotX + 0.02, furnitureY, furnitureZ + moduleDepth/2]
+                  [slotX - 0.02, furnitureTopY, furnitureZ + moduleDepth/2],
+                  [slotX + 0.02, furnitureTopY, furnitureZ + moduleDepth/2]
                 ]}
                 color={dimensionColor}
                 lineWidth={1.5}
@@ -433,8 +435,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {/* 뒤쪽 티크 */}
               <NativeLine
                 points={[
-                  [slotX - 0.02, furnitureY, furnitureZ - moduleDepth/2],
-                  [slotX + 0.02, furnitureY, furnitureZ - moduleDepth/2]
+                  [slotX - 0.02, furnitureTopY, furnitureZ - moduleDepth/2],
+                  [slotX + 0.02, furnitureTopY, furnitureZ - moduleDepth/2]
                 ]}
                 color={dimensionColor}
                 lineWidth={1.5}
@@ -444,7 +446,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
               {/* 가구 깊이 텍스트 */}
               <Text
-                position={[slotX, furnitureY - mmToThreeUnits(80), furnitureZ]}
+                position={[slotX, furnitureTopY + mmToThreeUnits(80), furnitureZ]}
                 fontSize={mmToThreeUnits(25)}
                 color={textColor}
                 anchorX="center"
