@@ -398,7 +398,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     isLastSection
                   });
 
-                  if (section.type !== 'shelf' || !section.shelfPositions || section.shelfPositions.length === 0) {
+                  // shelf 또는 hanging 타입이면서 shelfPositions가 있는 경우만 처리
+                  if ((section.type !== 'shelf' && section.type !== 'hanging') || !section.shelfPositions || section.shelfPositions.length === 0) {
                     return null;
                   }
 
