@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Text } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
@@ -57,6 +57,7 @@ const DimensionText: React.FC<DimensionTextProps> = ({
 }) => {
   const { showDimensions, showDimensionsText, view2DDirection, view2DTheme } = useUIStore();
   const { viewMode } = useSpace3DView();
+  const [isHovered, setIsHovered] = useState(false);
   
   // 치수 표시 조건 체크 - 중앙 집중식
   if (!forceShow && (!showDimensions || !showDimensionsText)) {
@@ -77,8 +78,10 @@ const DimensionText: React.FC<DimensionTextProps> = ({
     return '#10b981';
   };
   
-  // 색상 결정
-  const textColor = color || (viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000'));
+  // 색상 결정 - 호버 시 형광색
+  const highlightColor = '#00ff00'; // 형광 녹색
+  const normalColor = color || (viewMode === '3D' ? getThemeColor() : (view2DTheme === 'dark' ? '#ffffff' : '#000000'));
+  const textColor = isHovered ? highlightColor : normalColor;
   
   // 폰트 크기
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
@@ -119,6 +122,16 @@ const DimensionText: React.FC<DimensionTextProps> = ({
         anchorX={anchorX}
         anchorY={anchorY}
         rotation={rotation}
+        onPointerOver={(e) => {
+          e.stopPropagation();
+          setIsHovered(true);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={(e) => {
+          e.stopPropagation();
+          setIsHovered(false);
+          document.body.style.cursor = 'default';
+        }}
       >
         {displayText}
       </Text>
