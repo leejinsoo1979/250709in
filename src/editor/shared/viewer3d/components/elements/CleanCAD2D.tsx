@@ -199,9 +199,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
   const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme } = useUIStore();
-  
+
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
+
+  // 실제 뷰 방향 결정
+  const currentViewDirection = viewDirection || view2DDirection;
+
+  // 측면뷰(좌/우)에서는 치수 표시하지 않음
+  if (currentViewDirection === 'left' || currentViewDirection === 'right') {
+    return null;
+  }
   
   // 노서라운드 모드에서 가구 위치별 엔드패널 표시 여부 결정
   const indexing = calculateSpaceIndexing(spaceInfo);
