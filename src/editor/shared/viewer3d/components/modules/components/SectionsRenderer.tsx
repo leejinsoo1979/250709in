@@ -300,7 +300,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 // 섹션의 실제 내경 계산을 위한 가이드선 위치 설정
                 let bottomY, topY;
                 let actualInternalHeight;
-                
+
+                // 안전선반 위 칸의 내경 변수 선언 (상위 스코프)
+                let topCompartmentHeight = null;
+                let topCompartmentBottomY = null;
+                let topCompartmentTopY = null;
+
                 // 섹션 타입별로 가이드선 위치 계산
                 const hasSafetyShelf = section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0);
 
@@ -391,9 +396,6 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   actualInternalHeight = (topY - bottomY) / 0.01;
 
                   // 안전선반 위 칸의 내경 계산 (안전선반이 있는 경우)
-                  let topCompartmentHeight = null;
-                  let topCompartmentBottomY = null;
-                  let topCompartmentTopY = null;
                   if (hasSafetyShelf && index === allSections.length - 1) {
                     const safetyShelfPositionMm = section.shelfPositions.find(pos => pos > 0);
                     if (safetyShelfPositionMm !== undefined) {
