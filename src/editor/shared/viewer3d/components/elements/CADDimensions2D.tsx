@@ -378,6 +378,35 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 >
                   {Math.round(sectionHeightMm)}
                 </Text>
+
+                {/* 서랍 섹션인 경우 각 서랍별 깊이 표시 */}
+                {section.type === 'drawer' && section.drawerHeights && section.drawerHeights.map((drawerHeight, drawerIndex) => {
+                  const drawerGap = section.gapHeight || 0;
+                  const totalDrawerHeight = drawerHeight + drawerGap;
+
+                  // 각 서랍의 Y 위치 계산
+                  let drawerY = sectionStartY;
+                  for (let i = 0; i < drawerIndex; i++) {
+                    drawerY += mmToThreeUnits(section.drawerHeights![i] + drawerGap);
+                  }
+                  drawerY += mmToThreeUnits(drawerHeight / 2); // 서랍 중앙
+
+                  return (
+                    <Text
+                      key={`drawer-depth-${sectionIndex}-${drawerIndex}`}
+                      position={[slotX + mmToThreeUnits(150), drawerY, furnitureZ]}
+                      fontSize={largeFontSize}
+                      color={dimensionColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      renderOrder={1000}
+                      depthTest={false}
+                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                    >
+                      D{drawerDepthMm}
+                    </Text>
+                  );
+                })}
               </group>
             );
           });
