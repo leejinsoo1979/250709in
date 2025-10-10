@@ -388,7 +388,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 </Text>
 
                 {/* 선반 섹션인 경우 각 칸의 내경 높이 표시 */}
-                {section.type === 'shelf' && section.shelfPositions && section.shelfPositions.length > 0 && (() => {
+                {(() => {
+                  // 디버깅: 섹션 정보 출력
+                  console.log('🔍 CADDimensions2D 섹션 체크:', {
+                    sectionIndex,
+                    type: section.type,
+                    hasShelfPositions: !!section.shelfPositions,
+                    shelfPositions: section.shelfPositions,
+                    isLastSection
+                  });
+
+                  if (section.type !== 'shelf' || !section.shelfPositions || section.shelfPositions.length === 0) {
+                    return null;
+                  }
+
                   const compartmentHeights: Array<{ height: number; centerY: number; heightMm: number }> = [];
                   const shelfPositions = section.shelfPositions;
 
