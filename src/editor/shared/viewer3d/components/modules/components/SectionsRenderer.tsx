@@ -337,6 +337,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   
                   // 상단 가이드선 위치 결정
                   if (index === allSections.length - 1) {
+                    // 마지막 섹션 (상부 섹션)
                     // hanging 섹션에서 안전선반이 있는 경우: 안전선반 하단까지
                     if (hasSafetyShelf) {
                       // 안전선반의 위치를 가져옴 (0이 아닌 첫 번째 값 = 안전선반, 섹션 하단 기준)
@@ -348,8 +349,16 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         topY = height/2 - basicThickness;
                       }
                     } else {
-                      // 안전선반 없으면 상부 프레임 하단까지
-                      topY = height/2 - basicThickness;
+                      // 안전선반 없는 경우
+                      // 2hanging의 상부 섹션: 상부섹션 바닥판 윗면까지 (중간 패널 윗면)
+                      const is2HangingUpperSection = furnitureId?.includes('2hanging') && index === 1;
+                      if (is2HangingUpperSection) {
+                        // 상부섹션 바닥판 윗면 = 섹션 하단 + 바닥판 두께/2
+                        topY = sectionBottomY + basicThickness / 2;
+                      } else {
+                        // 일반 케이스: 상부 프레임 하단까지
+                        topY = height/2 - basicThickness;
+                      }
                     }
                   } else {
                     // 다음 섹션과의 경계
@@ -357,7 +366,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // bottomY는 이미 바닥판 상단
                     // 내경 상단 = 바닥판 상단 + 내경 높이 = bottomY + (1000 - 36)
                     topY = bottomY + (sectionHeight - basicThickness * 2);
-                    
+
                     // isTopFinishPanel이 있는 경우 상판 두께만큼 추가로 감소
                     if (section.isTopFinishPanel) {
                       topY -= basicThickness;
