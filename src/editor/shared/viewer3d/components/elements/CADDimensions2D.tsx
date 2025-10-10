@@ -209,8 +209,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 퍼센트 섹션들에게 남은 높이
           const remainingHeight = availableHeight - totalFixedHeight;
 
-          // 각 섹션의 실제 높이 계산 (받침대 위부터 시작)
-          let currentY = floatHeight + baseFrameHeight;
+          // 각 섹션의 실제 높이 계산 (받침대 + 하판(basicThickness) 위부터 시작)
+          let currentY = floatHeight + baseFrameHeight + basicThickness;
 
           return sections.map((section, sectionIndex) => {
             let sectionHeight: number;
