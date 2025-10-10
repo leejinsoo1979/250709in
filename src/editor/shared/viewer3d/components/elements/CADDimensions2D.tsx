@@ -369,26 +369,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               {parseFloat(spaceDepthMm.toFixed(2))}mm
             </div>
           </Html>
-
-          {/* 연장선 */}
-          <Line
-            points={[
-              [0, floatHeight, spaceDepth/2],
-              [0, dimensionOffsetY + mmToThreeUnits(20), spaceDepth/2]
-            ]}
-            color={dimensionColors.primary}
-            lineWidth={1}
-            dashed={false}
-          />
-          <Line
-            points={[
-              [0, floatHeight, -spaceDepth/2],
-              [0, dimensionOffsetY + mmToThreeUnits(20), -spaceDepth/2]
-            ]}
-            color={dimensionColors.primary}
-            lineWidth={1}
-            dashed={false}
-          />
         </group>
 
         {/* 측면도 가구 치수 */}
