@@ -518,6 +518,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           )}
         </>
       )}
+      </>
+      )}
 
       {/* 내부 구조 (타입별로 다른 내용) */}
       {children}
