@@ -169,10 +169,24 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const { view2DDirection, showDimensions, showDimensionsText } = useUIStore(); // UI 스토어에서 view2DDirection 가져오기
   const highlightedSection = useUIStore(state => state.highlightedSection);
   const { dimensionColor, baseFontSize } = useDimensionColor();
-  
+
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
   // 그림자 자동 업데이트가 활성화되어 있으므로 수동 업데이트 불필요
-  
+
+  // 2D 정면뷰에서 좌우 프레임 형광색 material
+  const highlightMaterial = useMemo(() =>
+    new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#00FF00'), // 형광 녹색
+      transparent: true,
+      opacity: 0.8
+    }),
+  []);
+
+  // 좌우 프레임에 사용할 material 결정
+  const sidePanelMaterial = (viewMode === '2D' && view2DDirection === 'front')
+    ? highlightMaterial
+    : material;
+
   return (
     <group>
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
@@ -212,7 +226,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <BoxWithEdges
                     args={[basicThickness, adjustedLowerHeight, depth]}
                     position={[-innerWidth/2 - basicThickness/2, lowerPanelY, 0]}
-                    material={material}
+                    material={sidePanelMaterial}
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerHighlighted}
@@ -222,7 +236,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <BoxWithEdges
                     args={[basicThickness, adjustedUpperHeight, depth]}
                     position={[-innerWidth/2 - basicThickness/2, upperPanelY, 0]}
-                    material={material}
+                    material={sidePanelMaterial}
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isUpperHighlighted}
@@ -232,7 +246,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <BoxWithEdges
                     args={[basicThickness, adjustedLowerHeight, depth]}
                     position={[innerWidth/2 + basicThickness/2, lowerPanelY, 0]}
-                    material={material}
+                    material={sidePanelMaterial}
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerHighlighted}
@@ -242,7 +256,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <BoxWithEdges
                     args={[basicThickness, adjustedUpperHeight, depth]}
                     position={[innerWidth/2 + basicThickness/2, upperPanelY, 0]}
-                    material={material}
+                    material={sidePanelMaterial}
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isUpperHighlighted}
@@ -258,16 +272,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             <BoxWithEdges
               args={[basicThickness, height, depth]}
               position={[-innerWidth/2 - basicThickness/2, 0, 0]}
-              material={material}
+              material={sidePanelMaterial}
               renderMode={renderMode}
               isDragging={isDragging}
             />
-            
+
             {/* 오른쪽 측면 판재 */}
             <BoxWithEdges
               args={[basicThickness, height, depth]}
               position={[innerWidth/2 + basicThickness/2, 0, 0]}
-              material={material}
+              material={sidePanelMaterial}
               renderMode={renderMode}
               isDragging={isDragging}
             />
