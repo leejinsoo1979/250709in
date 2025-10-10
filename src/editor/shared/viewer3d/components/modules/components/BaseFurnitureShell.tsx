@@ -415,7 +415,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       />
       
       {/* Type4 상단 상판 두께 치수 표시 - 정면도에서만 */}
-      {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging')) && showFurniture && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && (
+      {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging')) && showFurniture && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
         <group>
           {/* 상판 두께 텍스트 */}
           <Text
