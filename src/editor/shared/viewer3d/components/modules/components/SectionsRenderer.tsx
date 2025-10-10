@@ -365,7 +365,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 섹션 높이에서 상하판 두께만 빼면 내경
                     // topY = bottomY + (sectionHeight - basicThickness * 2)
                     topY = bottomY + (sectionHeight - basicThickness * 2);
-                  
+                  }
+
                   // 실제 내경 계산 (가이드선 사이의 거리)
                   actualInternalHeight = (topY - bottomY) / 0.01;
                 } else if (section.type === 'drawer') {
