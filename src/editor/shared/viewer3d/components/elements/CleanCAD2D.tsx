@@ -281,10 +281,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       return () => clearTimeout(timer);
     }
   }, [showDimensions, viewDirection, view2DDirection]);
-  
-  // 실제 뷰 방향 결정 (useEffect보다 먼저 정의)
-  const currentViewDirection = viewDirection || view2DDirection;
-  
+
   const { theme } = useViewerTheme();
   const { colors } = useThemeColors();
 
