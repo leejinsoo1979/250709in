@@ -148,15 +148,18 @@ const BoxWithEdges: React.FC<{
       )}
       {/* 모서리 라인 렌더링 - 항상 표시 */}
       <lineSegments geometry={edgesGeometry}>
-        <lineBasicMaterial 
+        <lineBasicMaterial
           color={
-            // 2D 모드에서 엔드패널인 경우 도어와 같은 연두색 사용
-            viewMode === '2D' && isEndPanel 
-              ? "#00FF00" // 연두색 (도어 색상)
-              : renderMode === 'wireframe' 
-                ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") 
-                : (viewMode === '2D' && view2DTheme === 'dark' ? "#FFFFFF" : "#666666")
-          } 
+            // MeshBasicMaterial인 경우 (프레임 형광색) material의 색상 사용
+            material instanceof THREE.MeshBasicMaterial
+              ? "#" + material.color.getHexString()
+              : // 2D 모드에서 엔드패널인 경우 도어와 같은 연두색 사용
+                viewMode === '2D' && isEndPanel
+                  ? "#00FF00" // 연두색 (도어 색상)
+                  : renderMode === 'wireframe'
+                    ? (theme?.mode === 'dark' ? "#ffffff" : "#333333")
+                    : (viewMode === '2D' && view2DTheme === 'dark' ? "#FFFFFF" : "#666666")
+          }
           linewidth={viewMode === '2D' && view2DTheme === 'dark' ? 1.5 : 0.5}
           opacity={1.0}
           transparent={false}
