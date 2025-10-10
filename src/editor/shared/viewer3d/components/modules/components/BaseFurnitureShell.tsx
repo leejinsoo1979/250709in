@@ -395,8 +395,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             )}
           </>
         )}
-      </>
-      
+
       {/* 상단 판재 */}
       <BoxWithEdges
         args={[innerWidth, basicThickness, depth]}
