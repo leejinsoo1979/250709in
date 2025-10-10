@@ -2248,10 +2248,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   return (
     <group>
-      {/* 레이캐스팅용 투명 콜라이더들 */}
+      {/* 레이캐스팅용 투명 콜라이더들 - 좌우측뷰에서는 숨김 */}
       {console.log('🎯 렌더링 슬롯 콜라이더 수:', zoneSlotPositions.length)}
       {console.log('🎯 슬롯 콜라이더 상세 정보:', zoneSlotPositions)}
-      {zoneSlotPositions.map((slotData, slotIndex) => {
+      {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && zoneSlotPositions.map((slotData, slotIndex) => {
         // slotData가 객체인지 숫자인지 확인
         const isZoneData = typeof slotData === 'object' && slotData !== null;
         const slotX = isZoneData ? slotData.position : slotData;
@@ -2329,8 +2329,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         );
       })}
       
-      {/* 바닥 슬롯 시각화 - 가이드라인과 정확히 일치 (2D 정면뷰에서는 숨김) */}
-      {showAll && showDimensions && indexing.threeUnitBoundaries.length > 1 && !(viewMode === '2D' && view2DDirection === 'front') && (() => {
+      {/* 바닥 슬롯 시각화 - 가이드라인과 정확히 일치 (2D 정면/좌측/우측뷰에서는 숨김) */}
+      {showAll && showDimensions && indexing.threeUnitBoundaries.length > 1 && !(viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
         // 단내림 활성화 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
         const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
