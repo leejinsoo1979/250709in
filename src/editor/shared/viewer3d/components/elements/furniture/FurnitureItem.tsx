@@ -1683,7 +1683,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         {moduleData.type === 'box' ? (
           // 박스형 가구 렌더링 (도어 제외)
           <>
-            <BoxModule 
+            <BoxModule
               moduleData={actualModuleData}
               isDragging={isDraggingThis} // 실제로 이 가구를 드래그하는 경우만 true
               color={furnitureColor}
@@ -1704,6 +1704,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
               slotWidths={calculatedSlotWidths}
               isHighlighted={isSelected} // 선택 상태 전달
+              placedFurnitureId={placedModule.id} // 배치된 가구 ID 전달 (치수 편집용)
             />
             
             {/* 가구 너비 디버깅 */}
