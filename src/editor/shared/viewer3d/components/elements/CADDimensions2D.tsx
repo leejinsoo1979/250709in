@@ -221,9 +221,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             }
             const sectionHeightMm = sectionHeight / 0.01;
 
-            const sectionStartY = currentY;
-            const sectionEndY = currentY + sectionHeight;
-            currentY = sectionEndY;
+            // 하부섹션(첫 번째 섹션)은 18mm 아래로 조정
+            const yOffset = sectionIndex === 0 ? -basicThickness : 0;
+            const sectionStartY = currentY + yOffset;
+            const sectionEndY = currentY + sectionHeight + yOffset;
+            currentY = sectionEndY - yOffset; // 다음 섹션을 위해 원래 위치로 복원
 
             return (
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
