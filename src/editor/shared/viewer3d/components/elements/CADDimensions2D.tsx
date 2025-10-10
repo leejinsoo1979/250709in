@@ -220,9 +220,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             } else {
               sectionHeight = remainingHeight * (section.height / 100);
             }
-            // 치수 표시는 내경 (패널 두께 제외)
-            const sectionInnerHeight = sectionHeight - basicThickness * 2;
-            const sectionHeightMm = sectionInnerHeight / 0.01;
+            // 치수 표시는 외경 (패널 두께 포함)
+            const sectionHeightMm = sectionHeight / 0.01;
 
             // 상부섹션(마지막)은 가이드선을 짧게 해서 상단 끝에 맞춤
             const isLastSection = sectionIndex === sections.length - 1;
