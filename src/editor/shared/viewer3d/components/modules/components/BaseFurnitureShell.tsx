@@ -486,7 +486,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 });
 
                 // 백패널 Y 위치 조정
-                const lowerBackPanelY = -height/2 + lowerSectionHeight/2;
+                // 하부 상판이 0.05mm 아래로 이동했으므로 백패널도 0.05mm 아래로
+                const lowerBackPanelY = -height/2 + lowerSectionHeight/2 - mmToThreeUnits(0.05);
                 const upperBackPanelY = -height/2 + lowerSectionHeight + upperSectionHeight/2;
 
                 console.log('🔍🔍🔍 백패널 Y 위치:', {
