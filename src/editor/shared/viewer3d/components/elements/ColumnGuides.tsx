@@ -186,10 +186,10 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
   // 1개 컬럼인 경우 가이드 표시 불필요 (단내림 활성화 시에는 표시)
   if (columnCount <= 1 && !hasDroppedCeiling) return null;
   
-  // 2D 뷰에서는 모든 방향에서 표시 (4분할창 지원)
-  // if (viewMode === '2D' && view2DDirection !== 'front' && view2DDirection !== 'top') {
-  //   return null;
-  // }
+  // 2D 측면뷰(좌/우)에서는 슬롯 가이드 숨김
+  if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
+    return null;
+  }
   
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
