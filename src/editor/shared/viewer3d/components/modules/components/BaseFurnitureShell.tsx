@@ -175,7 +175,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               const lowerSectionHeight = getSectionHeights()[0];
               const upperSectionHeight = getSectionHeights()[1];
 
-              // 4drawer-hanging: 하부 측판 조정 없음, 상부 측판 원래 높이 + Y축 18mm 위로
+              // 4drawer-hanging: 하부 측판 조정 없음, 상부 측판 원래 높이 그대로, Y축만 조정
               // 2drawer-hanging, 2hanging: 하부 측판 +18mm, 상부 측판 -18mm
               const is4Drawer = moduleData?.id?.includes('4drawer-hanging');
 
@@ -188,7 +188,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 ? upperSectionHeight  // 4단: 상부 원래 높이
                 : upperSectionHeight - basicThickness; // 2단: 상부 18mm 줄임
               const upperPanelY = is4Drawer
-                ? -height/2 + lowerSectionHeight + adjustedUpperHeight/2 + basicThickness  // 4단: Y축 18mm 위로
+                ? -height/2 + lowerSectionHeight + adjustedUpperHeight/2  // 4단: 하부 바로 위
                 : -height/2 + lowerSectionHeight + basicThickness + adjustedUpperHeight/2; // 2단
 
               return (
