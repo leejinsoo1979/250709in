@@ -68,52 +68,55 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
         // 프레임 두께 계산
         const frameSize = spaceInfo.frameSize || { top: 50, side: 9 };
         const sideFrameThickness = frameSize.side || 9;
-        
+
         // 내부 공간 계산 (프레임 두께를 제외한 실제 사용 가능한 공간)
         const internalWidth = spaceInfo.width - (sideFrameThickness * 2);
-        
+
         // 내부 치수선 위치 (상단에서 조금 아래)
         const internalY = topY - mmToThreeUnits(100);
         const internalLeft = mmToThreeUnits(sideFrameThickness);
         const internalRight = mmToThreeUnits(spaceInfo.width - sideFrameThickness);
-        
+
+        // 내부 치수 전용 색상 (호버 상태 반영)
+        const internalDimensionColor = isHovered ? highlightColor : normalColor;
+
         return (
           <>
             {/* 내부 폭 치수선 */}
             <NativeLine
               points={[[internalLeft, internalY, zVal], [internalRight, internalY, zVal]]}
-              color={dimensionColor}
+              color={internalDimensionColor}
               lineWidth={2}
               renderOrder={1000}
               depthTest={false}
             />
-            
+
             {/* 내부 폭 좌측 화살표 */}
             <NativeLine
               points={[
-                [internalLeft, internalY + mmToThreeUnits(10), zVal], 
-                [internalLeft, internalY, zVal], 
+                [internalLeft, internalY + mmToThreeUnits(10), zVal],
+                [internalLeft, internalY, zVal],
                 [internalLeft, internalY - mmToThreeUnits(10), zVal]
               ]}
-              color={dimensionColor}
+              color={internalDimensionColor}
               lineWidth={1.5}
               renderOrder={1000}
               depthTest={false}
             />
-            
+
             {/* 내부 폭 우측 화살표 */}
             <NativeLine
               points={[
-                [internalRight, internalY + mmToThreeUnits(10), zVal], 
-                [internalRight, internalY, zVal], 
+                [internalRight, internalY + mmToThreeUnits(10), zVal],
+                [internalRight, internalY, zVal],
                 [internalRight, internalY - mmToThreeUnits(10), zVal]
               ]}
-              color={dimensionColor}
+              color={internalDimensionColor}
               lineWidth={1.5}
               renderOrder={1000}
               depthTest={false}
             />
-            
+
             {/* 내부 폭 텍스트 */}
             <Html
               position={[(internalLeft + internalRight) / 2, internalY + mmToThreeUnits(30), zVal]}
@@ -130,12 +133,12 @@ const DimensionLines2D: React.FC<DimensionLines2DProps> = ({ onTextsChange }) =>
                 onMouseLeave={() => setIsHovered(false)}
                 style={{
                   background: theme?.mode === 'dark' ? 'rgba(31, 41, 55, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-                  color: dimensionColor,
+                  color: internalDimensionColor,
                   padding: '8px 12px',
                   borderRadius: '4px',
                   fontSize: '24px',
                   fontWeight: 'bold',
-                  border: `2px solid ${dimensionColor}`,
+                  border: `2px solid ${internalDimensionColor}`,
                   fontFamily: 'monospace',
                   whiteSpace: 'nowrap',
                   userSelect: 'none',
