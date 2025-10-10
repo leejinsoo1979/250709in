@@ -100,7 +100,7 @@ const FURNITURE_SPECS = {
   
   // 특수 가구 스펙
   STYLER_WIDTH: 694,     // 스타일러 내경폭
-  PANTSHANGER_WIDTH: 564, // 바지걸이 내경폭
+  PANTSHANGER_WIDTH: 586, // 바지걸이 내경폭
   
   // 안전선반 스펙
   SAFETY_SHELF_POSITION: 2050, // 안전선반 위치
