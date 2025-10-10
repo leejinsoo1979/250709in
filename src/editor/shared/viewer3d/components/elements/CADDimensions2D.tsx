@@ -103,6 +103,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     const topFrameTopY = floatHeight + internalHeight + topFrameHeight;
     const topFrameBottomY = floatHeight + internalHeight;
 
+    // 공간 전체 높이
+    const totalSpaceHeightMm = spaceInfo.height || 2400;
+    const totalSpaceHeight = mmToThreeUnits(totalSpaceHeightMm);
+
+    // 좌측뷰는 좌측(-), 우측뷰는 우측(+)에 치수 표시
+    const heightDimX = currentViewDirection === 'left'
+      ? -mmToThreeUnits(150)  // 좌측
+      : mmToThreeUnits(150);   // 우측
+
     return (
       <group>
         {/* 상단 프레임 두께 치수 (우측) */}
@@ -213,6 +222,118 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             />
           </group>
         )}
+
+        {/* 공간 전체 높이 치수 (좌측 또는 우측) */}
+        <group>
+          {/* 높이 치수선 */}
+          <Line
+            points={[
+              [heightDimX, floatHeight, 0],
+              [heightDimX, floatHeight + totalSpaceHeight, 0]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+            renderOrder={1000}
+            depthTest={false}
+          />
+
+          {/* 위쪽 화살표 */}
+          <Line
+            points={[
+              [heightDimX, floatHeight + totalSpaceHeight - 0.02, 0],
+              [heightDimX, floatHeight + totalSpaceHeight, 0],
+              [heightDimX - 0.015, floatHeight + totalSpaceHeight - 0.015, 0]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+          <Line
+            points={[
+              [heightDimX, floatHeight + totalSpaceHeight - 0.02, 0],
+              [heightDimX, floatHeight + totalSpaceHeight, 0],
+              [heightDimX + 0.015, floatHeight + totalSpaceHeight - 0.015, 0]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+
+          {/* 아래쪽 화살표 */}
+          <Line
+            points={[
+              [heightDimX, floatHeight + 0.02, 0],
+              [heightDimX, floatHeight, 0],
+              [heightDimX - 0.015, floatHeight + 0.015, 0]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+          <Line
+            points={[
+              [heightDimX, floatHeight + 0.02, 0],
+              [heightDimX, floatHeight, 0],
+              [heightDimX + 0.015, floatHeight + 0.015, 0]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={2}
+          />
+
+          {/* 높이 텍스트 */}
+          {showDimensionsText && (
+            <Html
+              position={[
+                currentViewDirection === 'left'
+                  ? heightDimX - mmToThreeUnits(100)
+                  : heightDimX + mmToThreeUnits(100),
+                floatHeight + totalSpaceHeight / 2,
+                0
+              ]}
+              center
+              transform={false}
+              occlude={false}
+              zIndexRange={[1000, 1001]}
+              style={{ pointerEvents: 'none' }}
+            >
+              <div
+                style={{
+                  background: dimensionColors.background,
+                  color: dimensionColors.primary,
+                  padding: '6px 10px',
+                  borderRadius: '4px',
+                  fontSize: '18px',
+                  fontWeight: 'bold',
+                  border: `1px solid ${dimensionColors.primary}`,
+                  fontFamily: 'monospace',
+                  whiteSpace: 'nowrap',
+                  userSelect: 'none'
+                }}
+              >
+                {totalSpaceHeightMm}mm
+              </div>
+            </Html>
+          )}
+
+          {/* 연장선 - 상단 */}
+          <Line
+            points={[
+              [0, floatHeight + totalSpaceHeight, 0],
+              [heightDimX, floatHeight + totalSpaceHeight, 0]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={1}
+            dashed={true}
+          />
+
+          {/* 연장선 - 하단 */}
+          <Line
+            points={[
+              [0, floatHeight, 0],
+              [heightDimX, floatHeight, 0]
+            ]}
+            color={dimensionColors.primary}
+            lineWidth={1}
+            dashed={true}
+          />
+        </group>
 
         {/* 공간 전체 깊이 치수 (상단) */}
         <group>
