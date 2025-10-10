@@ -135,7 +135,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
       // === 하판 (첫 번째 섹션만) ===
       if (sectionIndex === 0) {
         targetPanel.push({
-          name: `${sectionName} 하판`,
+          name: `${sectionName} 바닥판`,
           width: innerWidth,
           depth: customDepth, // 측판과 같은 깊이 (full depth)
           thickness: basicThickness,
@@ -150,7 +150,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         targetPanel.push({
           name: `${sectionName} 상판`,
           width: innerWidth,
-          depth: customDepth - 8, // adjustedDepthForShelves - basicThickness
+          depth: customDepth, // 측판과 같은 깊이 (full depth)
           thickness: basicThickness,
           material: 'PB'
         });
@@ -161,7 +161,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           targetPanel.push({
             name: `${sectionName} 바닥판`,
             width: innerWidth,
-            depth: customDepth - 8, // adjustedDepthForShelves - basicThickness
+            depth: customDepth, // 측판과 같은 깊이 (full depth)
             thickness: basicThickness,
             material: 'PB'
           });
