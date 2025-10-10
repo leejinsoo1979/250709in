@@ -113,19 +113,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 높이 텍스트 */}
-          {showDimensionsText && (
-            <Text
-              position={[0, floatHeight + spaceHeight / 2, -spaceDepth/2 - leftDimOffset - mmToThreeUnits(80)]}
-              fontSize={largeFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              renderOrder={100001}
-              depthTest={false}
-            >
-              {spaceInfo.height}
-            </Text>
-          )}
+          <Text
+            position={[0, floatHeight + spaceHeight / 2, -spaceDepth/2 - leftDimOffset - mmToThreeUnits(80)]}
+            fontSize={largeFontSize}
+            color={textColor}
+            anchorX="center"
+            anchorY="middle"
+            renderOrder={100001}
+            depthTest={false}
+          >
+            {spaceInfo.height}
+          </Text>
         </group>
 
         {/* ===== 오른쪽: 상부프레임/가구높이/받침대 ===== */}
@@ -163,19 +161,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               renderOrder={100000}
               depthTest={false}
             />
-            {showDimensionsText && (
-              <Text
-                position={[0, floatHeight + spaceHeight - topFrameHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(80)]}
-                fontSize={smallFontSize}
-                color={textColor}
-                anchorX="center"
-                anchorY="middle"
-                renderOrder={100001}
-                depthTest={false}
-              >
-                상판 {topFrameHeightMm}
-              </Text>
-            )}
+            <Text
+              position={[0, floatHeight + spaceHeight - topFrameHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(80)]}
+              fontSize={smallFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+              renderOrder={100001}
+              depthTest={false}
+            >
+              상판 {topFrameHeightMm}
+            </Text>
           </group>
         )}
 
@@ -211,19 +207,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             renderOrder={100000}
             depthTest={false}
           />
-          {showDimensionsText && (
-            <Text
-              position={[0, floatHeight + baseFrameHeight + internalHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(80)]}
-              fontSize={smallFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              renderOrder={100001}
-              depthTest={false}
-            >
-              내부 {internalSpace.height}
-            </Text>
-          )}
+          <Text
+            position={[0, floatHeight + baseFrameHeight + internalHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(80)]}
+            fontSize={smallFontSize}
+            color={textColor}
+            anchorX="center"
+            anchorY="middle"
+            renderOrder={100001}
+            depthTest={false}
+          >
+            내부 {internalSpace.height}
+          </Text>
         </group>
 
         {/* 받침대 높이 */}
@@ -259,19 +253,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               renderOrder={100000}
               depthTest={false}
             />
-            {showDimensionsText && (
-              <Text
-                position={[0, floatHeight + baseFrameHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(80)]}
-                fontSize={smallFontSize}
-                color={textColor}
-                anchorX="center"
-                anchorY="middle"
-                renderOrder={100001}
-                depthTest={false}
-              >
-                하판 {baseFrameHeightMm}
-              </Text>
-            )}
+            <Text
+              position={[0, floatHeight + baseFrameHeight / 2, spaceDepth/2 + rightDimOffset + mmToThreeUnits(80)]}
+              fontSize={smallFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+              renderOrder={100001}
+              depthTest={false}
+            >
+              하판 {baseFrameHeightMm}
+            </Text>
           </group>
         )}
 
@@ -314,19 +306,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 깊이 텍스트 */}
-          {showDimensionsText && (
-            <Text
-              position={[0, floatHeight - mmToThreeUnits(280), 0]}
-              fontSize={largeFontSize}
-              color={textColor}
-              anchorX="center"
-              anchorY="middle"
-              renderOrder={100001}
-              depthTest={false}
-            >
-              {spaceInfo.depth || 1500}
-            </Text>
-          )}
+          <Text
+            position={[0, floatHeight - mmToThreeUnits(280), 0]}
+            fontSize={largeFontSize}
+            color={textColor}
+            anchorX="center"
+            anchorY="middle"
+            renderOrder={100001}
+            depthTest={false}
+          >
+            {spaceInfo.depth || 1500}
+          </Text>
         </group>
 
         {/* ===== 가구별 깊이 치수 ===== */}
@@ -396,19 +386,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               />
 
               {/* 가구 깊이 텍스트 */}
-              {showDimensionsText && (
-                <Text
-                  position={[slotX, furnitureY - mmToThreeUnits(80), furnitureZ]}
-                  fontSize={mmToThreeUnits(25)}
-                  color={textColor}
-                  anchorX="center"
-                  anchorY="middle"
-                  renderOrder={100001}
-                  depthTest={false}
-                >
-                  {customDepth}
-                </Text>
-              )}
+              <Text
+                position={[slotX, furnitureY - mmToThreeUnits(80), furnitureZ]}
+                fontSize={mmToThreeUnits(25)}
+                color={textColor}
+                anchorX="center"
+                anchorY="middle"
+                renderOrder={100001}
+                depthTest={false}
+              >
+                {customDepth}
+              </Text>
             </group>
           );
         })}
