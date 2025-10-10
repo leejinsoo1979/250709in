@@ -1125,8 +1125,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 섹션 높이 설정 (2섹션 가구만) */}
-          {isTwoSectionFurniture && (
+          {/* 섹션 높이 설정 (2섹션 가구만, 상세보기 아닐 때만) */}
+          {!showDetails && isTwoSectionFurniture && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>섹션 높이 설정</h5>
               <div style={{ display: 'flex', gap: '12px' }}>
@@ -1185,7 +1185,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 깊이 설정 */}
+          {/* 깊이 설정 (상세보기 아닐 때만) */}
+          {!showDetails && (
           <div className={styles.propertySection}>
             <h5 className={styles.sectionTitle}>{t('furniture.depthSettings')}</h5>
             <div className={styles.depthInputWrapper}>
@@ -1213,9 +1214,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
             </div>
           </div>
+          )}
 
-          {/* 도어 설정 (도어 지원 가구만) */}
-          {moduleData.hasDoor && (
+          {/* 도어 설정 (도어 지원 가구만, 상세보기 아닐 때만) */}
+          {!showDetails && moduleData.hasDoor && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>{t('furniture.doorSettings')}</h5>
               <div className={styles.doorTabSelector}>
