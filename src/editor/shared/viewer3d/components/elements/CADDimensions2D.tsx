@@ -21,7 +21,7 @@ interface CADDimensions2DProps {
 const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDimensions: showDimensionsProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions: showDimensionsFromStore } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore, showFurniture } = useUIStore();
   const { theme } = useTheme();
   
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
@@ -993,7 +993,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       )}
 
       {/* 배치된 가구 치수 - 정면도에서만 표시 (측면도에서는 숨김) */}
-      {currentViewDirection === 'front' && React.useMemo(() => placedModules.map((module, index) => {
+      {showFurniture && currentViewDirection === 'front' && React.useMemo(() => placedModules.map((module, index) => {
         // 도어가 있는 가구는 치수 표시하지 않음
         if (module.doorConfig) {
           return null;
@@ -1263,7 +1263,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             />
           </group>
         );
-      }), [placedModules, spaceInfo.columns, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.wallConfig])}
+      }), [placedModules, spaceInfo.columns, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.wallConfig, showFurniture])}
       
       
       {/* 컬럼 치수 표시 */}
