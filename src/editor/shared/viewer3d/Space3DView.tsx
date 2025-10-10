@@ -1398,7 +1398,6 @@ const QuadrantContent: React.FC<{
         <CADDimensions2D
           viewDirection={viewDirection}
           showDimensions={showDimensions}
-          showDimensionsText={showDimensionsText}
         />
       )}
       
