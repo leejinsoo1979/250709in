@@ -2322,7 +2322,8 @@ const Room: React.FC<RoomProps> = ({
       {/* 상단 서브프레임 - 상단 프레임에서 앞쪽으로 내려오는 판 (ㄱ자의 세로 부분, X축 기준 90도 회전) */}
       {/* 상단 프레임 높이가 18mm보다 클 때만 렌더링 (서브프레임 높이 18mm와 비교) */}
       {/* 노서라운드 모드에서는 상부 서브프레임도 숨김 */}
-      {showFrame && topBottomFrameHeightMm > 18 && (
+      {/* 좌우측 뷰에서는 숨김 */}
+      {showFrame && topBottomFrameHeightMm > 18 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
         <>
           {/* 기둥이 있는 경우 상단 서브프레임을 분절하여 렌더링 */}
           {(() => {
@@ -2475,8 +2476,9 @@ const Room: React.FC<RoomProps> = ({
       {/* 왼쪽 서브프레임 - 왼쪽 프레임에서 오른쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
       {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
-      {showFrame && spaceInfo.surroundType !== 'no-surround' &&
-        (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
+      {/* 좌우측 뷰에서는 숨김 */}
+      {showFrame && spaceInfo.surroundType !== 'no-surround' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) &&
+        (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
         (spaceInfo.installType === 'semistanding' && wallConfig?.left)) && (() => {
         
         // 단내림 설정 확인
@@ -2543,8 +2545,9 @@ const Room: React.FC<RoomProps> = ({
       {/* 오른쪽 서브프레임 - 오른쪽 프레임에서 왼쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
       {/* 벽이 있는 경우에만 렌더링 (엔드패널에는 서브프레임 없음) */}
       {/* 노서라운드 모드에서는 서브프레임도 숨김 */}
-      {showFrame && spaceInfo.surroundType !== 'no-surround' &&
-        (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' || 
+      {/* 좌우측 뷰에서는 숨김 */}
+      {showFrame && spaceInfo.surroundType !== 'no-surround' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) &&
+        (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
         (spaceInfo.installType === 'semistanding' && wallConfig?.right)) && (() => {
         
         // 단내림 설정 확인
@@ -2610,7 +2613,8 @@ const Room: React.FC<RoomProps> = ({
       
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 받침대가 있는 경우에만 렌더링 */}
-      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && (() => {
+      {/* 좌우측 뷰에서는 숨김 */}
+      {showFrame && baseFrameHeightMm > 0 && spaceInfo.baseConfig?.type === 'floor' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
         console.log('🎯 베이스프레임 높이 확인:', {
           '최종_높이': baseFrameHeightMm,
           baseFrameHeight_ThreeUnits: baseFrameHeight,
