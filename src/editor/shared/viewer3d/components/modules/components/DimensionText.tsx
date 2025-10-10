@@ -87,8 +87,9 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   const baseFontSize = viewMode === '3D' ? 0.45 : 0.32;
   const fontSize = baseFontSize * sizeMultiplier;
   
-  // 텍스트 내용 (소수점 2자리까지 표시)
-  const displayText = `${prefix}${Math.round(value * 100) / 100}`;
+  // 텍스트 내용 (소수점 2자리까지 표시, 불필요한 0 제거)
+  const formattedValue = parseFloat(value.toFixed(2));
+  const displayText = `${prefix}${formattedValue}`;
   
   return (
     <group>
