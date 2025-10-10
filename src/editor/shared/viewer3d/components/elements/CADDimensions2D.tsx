@@ -197,9 +197,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
 
-          // 실제 렌더링 높이 계산 (useBaseFurniture와 동일한 로직)
+          // 실제 렌더링 높이 계산
           const basicThickness = mmToThreeUnits(18); // 18mm 패널 두께
-          const availableHeight = internalHeight - basicThickness * 2;
+          const availableHeight = internalHeight; // internalHeight가 이미 내경임
 
           // 고정 높이 섹션들의 총 높이
           const fixedSections = sections.filter((s: any) => s.heightType === 'absolute');
