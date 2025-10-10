@@ -410,6 +410,24 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 const isHovered = hoveredSectionIndex === index;
                 const currentColor = isHovered ? themeColor : dimensionColor;
 
+                // 안전선반 위 칸의 내경 계산 (안전선반이 있는 경우)
+                let topCompartmentHeight = null;
+                let topCompartmentBottomY = null;
+                let topCompartmentTopY = null;
+
+                if (hasSafetyShelf && index === allSections.length - 1) {
+                  const safetyShelfPositionMm = section.shelfPositions.find(pos => pos > 0);
+                  if (safetyShelfPositionMm !== undefined) {
+                    const sectionBottomY = sectionCenterY - sectionHeight/2;
+                    // 안전선반 윗면
+                    topCompartmentBottomY = sectionBottomY + (safetyShelfPositionMm * 0.01) + basicThickness / 2;
+                    // 상부 프레임 하단
+                    topCompartmentTopY = height/2 - basicThickness;
+                    // 안전선반 위 칸의 내경
+                    topCompartmentHeight = (topCompartmentTopY - topCompartmentBottomY) / 0.01;
+                  }
+                }
+
                 return (
                   <>
                     {/* 하단 칸 내경 치수 (바닥판 ~ 안전선반 하단 또는 천장) */}
@@ -472,6 +490,80 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         <meshBasicMaterial color={currentColor} />
                       </mesh>
                     </>
+
+                    {/* 안전선반 위 칸의 내경 치수 (안전선반이 있는 경우 추가 표시) */}
+                    {topCompartmentHeight !== null && topCompartmentBottomY !== null && topCompartmentTopY !== null && (
+                      <>
+                        {(() => {
+                          const topCenterY = (topCompartmentTopY + topCompartmentBottomY) / 2;
+                          const topSectionIndex = `${index}-top`;
+                          const isTopHovered = hoveredSectionIndex === topSectionIndex;
+                          const topCurrentColor = isTopHovered ? themeColor : dimensionColor;
+
+                          return (
+                            <>
+                              {/* 안전선반 위 칸 치수 텍스트 */}
+                              <EditableDimensionText
+                                position={[
+                                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
+                                  topCenterY,
+                                  viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
+                                ]}
+                                fontSize={baseFontSize}
+                                color={dimensionColor}
+                                rotation={[0, 0, Math.PI / 2]}
+                                value={topCompartmentHeight}
+                                onValueChange={(newValue) => handleDimensionChange(index, newValue)}
+                                sectionIndex={index}
+                                furnitureId={furnitureId}
+                                renderOrder={1000}
+                                depthTest={false}
+                                onHoverChange={(hovered) => setHoveredSectionIndex(hovered ? topSectionIndex : null)}
+                              />
+
+                              {/* 안전선반 위 칸 수직 연결선 (점선) */}
+                              <group>
+                                <NativeLine
+                                  points={[
+                                    [-innerWidth/2 * 0.3, topCompartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
+                                    [-innerWidth/2 * 0.3, topCompartmentBottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+                                  ]}
+                                  color={topCurrentColor}
+                                  lineWidth={1}
+                                  dashed={true}
+                                />
+
+                                {/* 가이드선 클릭/hover 영역 */}
+                                <mesh
+                                  position={[-innerWidth/2 * 0.3, topCenterY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
+                                  onPointerOver={(e) => {
+                                    e.stopPropagation();
+                                    setHoveredSectionIndex(topSectionIndex);
+                                  }}
+                                  onPointerOut={(e) => {
+                                    e.stopPropagation();
+                                    setHoveredSectionIndex(null);
+                                  }}
+                                >
+                                  <planeGeometry args={[0.3, Math.abs(topCompartmentTopY - topCompartmentBottomY)]} />
+                                  <meshBasicMaterial transparent opacity={0} depthTest={false} side={2} />
+                                </mesh>
+                              </group>
+
+                              {/* 수직선 양끝 엔드포인트 */}
+                              <mesh position={[-innerWidth/2 * 0.3, topCompartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                                <sphereGeometry args={[0.05, 8, 8]} />
+                                <meshBasicMaterial color={topCurrentColor} />
+                              </mesh>
+                              <mesh position={[-innerWidth/2 * 0.3, topCompartmentBottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                                <sphereGeometry args={[0.05, 8, 8]} />
+                                <meshBasicMaterial color={topCurrentColor} />
+                              </mesh>
+                            </>
+                          );
+                        })()}
+                      </>
+                    )}
                   </>
                 );
               })()}
