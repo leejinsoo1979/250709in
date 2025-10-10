@@ -197,9 +197,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
 
-          // 가구 Z 위치 및 깊이
-          const furnitureZ = 0; // 가구는 공간 중앙에 위치
+          // 가구 Z 위치 계산 (실제 가구 위치와 동일하게)
+          const panelDepthMm = spaceInfo.depth || 1500;
+          const furnitureDepthMm = 600;
+          const panelDepth = mmToThreeUnits(panelDepthMm);
+          const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+          const doorThickness = mmToThreeUnits(20);
+          const zOffset = -panelDepth / 2;
+          const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
           const moduleDepth = mmToThreeUnits(moduleData.dimensions.depth);
+          const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
+
           const actualDepthMm = moduleData.dimensions.depth;
           // 서랍 실제 깊이 (전체 깊이 - 뒤판 및 여유)
           const drawerDepthMm = 517;
@@ -391,8 +399,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   }
                   drawerY += mmToThreeUnits(drawerHeight / 2); // 서랍 중앙
 
-                  // 서랍 깊이 텍스트 Z 위치: 가구 중심에서 서랍 안쪽으로
-                  const textZ = furnitureZ - mmToThreeUnits(100);
+                  // 서랍 깊이 텍스트 Z 위치: 서랍 중심 (가구 중심과 동일)
+                  const textZ = furnitureZ;
 
                   return (
                     <Text
