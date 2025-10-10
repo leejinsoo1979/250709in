@@ -183,7 +183,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           <NativeLine
             points={[
               [0, floatHeight + baseFrameHeight, -spaceDepth/2],
-              [0, floatHeight + baseFrameHeight, -spaceDepth/2 + mmToThreeUnits(400)]
+              [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
             ]}
             color={dimensionColor}
             lineWidth={1}
@@ -194,7 +194,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           <NativeLine
             points={[
               [0, floatHeight + spaceHeight - topFrameHeight, -spaceDepth/2],
-              [0, floatHeight + spaceHeight - topFrameHeight, -spaceDepth/2 + mmToThreeUnits(400)]
+              [0, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
             ]}
             color={dimensionColor}
             lineWidth={1}
