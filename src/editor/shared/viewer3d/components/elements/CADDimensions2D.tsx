@@ -462,80 +462,83 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     const compartmentBottom = compartment.centerY - compartment.height / 2;
                     const compartmentTop = compartment.centerY + compartment.height / 2;
 
+                    // X 위치: 가구 박스 왼쪽 안쪽 (가구 폭의 절반 - 100mm)
+                    const lineX = slotX - indexing.columnWidth / 2 + mmToThreeUnits(100);
+
                     return (
                       <group key={`shelf-compartment-${sectionIndex}-${compartmentIndex}`}>
                         {/* 보조 가이드 연장선 - 하단 */}
                         <NativeLine
                           points={[
-                            [slotX, compartmentBottom, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(200)],
-                            [slotX, compartmentBottom, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                            [lineX - mmToThreeUnits(200), compartmentBottom, furnitureZ],
+                            [lineX, compartmentBottom, furnitureZ]
                           ]}
                           color={dimensionColor}
                           lineWidth={1}
-                          renderOrder={100000}
+                          renderOrder={10000}
                           depthTest={false}
                         />
 
                         {/* 보조 가이드 연장선 - 상단 */}
                         <NativeLine
                           points={[
-                            [slotX, compartmentTop, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(200)],
-                            [slotX, compartmentTop, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                            [lineX - mmToThreeUnits(200), compartmentTop, furnitureZ],
+                            [lineX, compartmentTop, furnitureZ]
                           ]}
                           color={dimensionColor}
                           lineWidth={1}
-                          renderOrder={100000}
+                          renderOrder={10000}
                           depthTest={false}
                         />
 
                         {/* 치수선 */}
                         <NativeLine
                           points={[
-                            [slotX, compartmentBottom, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                            [slotX, compartmentTop, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                            [lineX, compartmentBottom, furnitureZ],
+                            [lineX, compartmentTop, furnitureZ]
                           ]}
                           color={dimensionColor}
                           lineWidth={2}
-                          renderOrder={100000}
+                          renderOrder={10000}
                           depthTest={false}
                         />
 
                         {/* 티크 마크 - 하단 */}
                         <NativeLine
                           points={[
-                            [slotX - 0.03, compartmentBottom, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                            [slotX + 0.03, compartmentBottom, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                            [lineX, compartmentBottom, furnitureZ - 0.03],
+                            [lineX, compartmentBottom, furnitureZ + 0.03]
                           ]}
                           color={dimensionColor}
                           lineWidth={2}
-                          renderOrder={100000}
+                          renderOrder={10000}
                           depthTest={false}
                         />
 
                         {/* 티크 마크 - 상단 */}
                         <NativeLine
                           points={[
-                            [slotX - 0.03, compartmentTop, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                            [slotX + 0.03, compartmentTop, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                            [lineX, compartmentTop, furnitureZ - 0.03],
+                            [lineX, compartmentTop, furnitureZ + 0.03]
                           ]}
                           color={dimensionColor}
                           lineWidth={2}
-                          renderOrder={100000}
+                          renderOrder={10000}
                           depthTest={false}
                         />
 
                         {/* 치수 텍스트 */}
                         <Text
                           position={[
-                            slotX,
+                            lineX - mmToThreeUnits(60),
                             compartment.centerY,
-                            spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)
+                            furnitureZ
                           ]}
                           fontSize={largeFontSize}
                           color={textColor}
                           anchorX="center"
                           anchorY="middle"
-                          renderOrder={1000}
+                          renderOrder={10000}
                           depthTest={false}
                           rotation={[0, -Math.PI / 2, Math.PI / 2]}
                         >
