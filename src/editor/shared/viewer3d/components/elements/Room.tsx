@@ -612,20 +612,27 @@ const Room: React.FC<RoomProps> = ({
   
   // 공통 프레임 재질 생성 함수 (도어와 동일한 재질로 통일)
   const createFrameMaterial = useCallback((frameType?: 'left' | 'right' | 'top' | 'base') => {
+    // 2D 모드에서 상부/하부 프레임은 형광 녹색으로 직접 반환
+    const isNeonFrame = viewMode === '2D' && (frameType === 'top' || frameType === 'base');
+    if (isNeonFrame) {
+      console.log(`✅ 2D 모드 프레임에 형광 녹색 MeshBasicMaterial 적용:`, frameType);
+      return new THREE.MeshBasicMaterial({
+        color: new THREE.Color('#18CF23'),
+        transparent: true,
+        opacity: 1.0,
+        depthTest: true,
+        depthWrite: true
+      });
+    }
+
     // 2D 다크모드에서는 더 밝은 색상 사용
     const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
 
-    // 2D에서 상부/하부 프레임을 형광색으로 표시
     let frameColor = materialConfig?.doorColor || defaultColor;
     let baseFrameTransparent = false;
 
-    // 2D 모드에서 상부/하부 프레임은 형광 녹색으로 표시
-    if (viewMode === '2D' && (frameType === 'top' || frameType === 'base')) {
-      frameColor = '#18CF23'; // 형광 녹색 (neon)
-    }
-    
     const isHighlighted = frameType && highlightedFrame === frameType;
-    
+
     console.log(`🎨 Creating frame material for ${frameType}:`, {
       frameType,
       frameColor,
