@@ -467,16 +467,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const lowerSectionHeight = sectionHeights[0];
                 const upperSectionHeight = sectionHeights[1];
 
-                // 백패널 높이 = 섹션 내경높이 + 10mm
-                // 내경높이 = 섹션높이 - 상하판(36mm)
-                const lowerInnerHeight = lowerSectionHeight - basicThickness * 2;
-                const upperInnerHeight = upperSectionHeight - basicThickness * 2;
-                const lowerBackPanelHeight = lowerInnerHeight + mmToThreeUnits(10);
-                const upperBackPanelHeight = upperInnerHeight + mmToThreeUnits(10);
+                // 백패널 높이 = 섹션높이 - 상하판(36mm) + 홈깊이(10mm)
+                // 백패널은 측판 중심에 위치하여 상하 5mm씩 홈에 끼워짐
+                const lowerBackPanelHeight = lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(10);
+                const upperBackPanelHeight = upperSectionHeight - basicThickness * 2 + mmToThreeUnits(10);
 
-                // 백패널 Y 위치
-                const lowerBackPanelY = -height/2 + basicThickness + lowerInnerHeight/2;
-                const upperBackPanelY = -height/2 + lowerSectionHeight + basicThickness + upperInnerHeight/2;
+                // 백패널 Y 위치 = 측판 중심
+                const lowerBackPanelY = -height/2 + lowerSectionHeight/2;
+                const upperBackPanelY = -height/2 + lowerSectionHeight + upperSectionHeight/2;
 
                 return (
                   <>
