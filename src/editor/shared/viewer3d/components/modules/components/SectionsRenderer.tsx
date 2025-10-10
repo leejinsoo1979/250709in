@@ -325,11 +325,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // Type4 상부 섹션: 상부섹션 바닥판 상단부터 (하부 1000mm + 바닥판 18mm)
                     bottomY = -height/2 + mmToThreeUnits(1000) + basicThickness;
                   } else {
-                    // 2hanging 상부 섹션: 바닥판 윗면부터 (sectionBottomY + basicThickness * 2)
+                    // 2hanging 상부 섹션: 바닥판 윗면까지 (sectionBottomY는 이미 바닥판 중간이므로 그대로 사용)
                     const is2HangingUpperSection = furnitureId?.includes('2hanging') && index === 1;
                     if (is2HangingUpperSection) {
-                      // 상부섹션 바닥판 윗면 = 섹션 하단 + 바닥판 두께
-                      bottomY = sectionBottomY + basicThickness * 2;
+                      // 상부섹션 바닥판 윗면 = 섹션 하단 (바닥판 아래쪽)
+                      bottomY = sectionBottomY;
                     } else {
                       // 일반 hanging 섹션: 바닥판 상단부터
                       bottomY = sectionBottomY + basicThickness;
