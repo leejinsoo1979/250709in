@@ -465,16 +465,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   }
 
                   // 중간 칸들 - 현재 선반 상단부터 다음 선반 하단까지
-                  // 정면뷰(ShelfRenderer.tsx line 206-213)와 동일한 로직
+                  // 정면뷰(ShelfRenderer.tsx line 206-213)와 완전히 동일한 로직
                   for (let i = 0; i < shelfPositions.length - 1; i++) {
-                    // 바닥판(shelfPos === 0)이면 이 칸은 건너뜀 (정면뷰와 동일)
-                    if (shelfPositions[i] === 0) {
-                      continue;
-                    }
-                    const currentShelfTopMm = shelfPositions[i] + basicThickness / 0.01 / 2;
-                    const nextShelfBottomMm = shelfPositions[i + 1] - basicThickness / 0.01 / 2;
+                    const currentShelfTopMm = shelfPositions[i] + basicThickness / 0.01 / 2; // 현재 선반의 상단
+                    const nextShelfBottomMm = shelfPositions[i + 1] - basicThickness / 0.01 / 2; // 다음 선반의 하단
                     const heightMm = nextShelfBottomMm - currentShelfTopMm;
-                    const height = mmToThreeUnits(heightMm);
+                    const height = mmToThreeUnits(heightMm); // Three.js 단위로 변환
                     const centerY = sectionStartY + mmToThreeUnits(currentShelfTopMm + heightMm / 2);
 
                     console.log(`🔵 측면뷰 중간 칸 ${i}:`, {
@@ -491,18 +487,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   }
 
                   // 마지막 칸 - 마지막 선반 상단부터 섹션 상단까지
+                  // 정면뷰(ShelfRenderer.tsx line 222-232)와 완전히 동일한 로직
                   if (shelfPositions.length > 0) {
-                    const lastShelfTopMm = shelfPositions[shelfPositions.length - 1] + basicThickness / 0.01 / 2;
-                    const sectionTopMm = sectionHeight / 0.01;
-                    const heightMm = sectionTopMm - lastShelfTopMm - (basicThickness / 0.01) * 2; // 상단 프레임 두께 제외 (정면뷰와 동일)
-                    const height = mmToThreeUnits(heightMm);
+                    const lastShelfPos = shelfPositions[shelfPositions.length - 1];
+                    const lastShelfTopMm = lastShelfPos + basicThickness / 0.01 / 2; // 선반 상단 위치
+                    // 섹션의 상단에서 프레임 두께의 2배만큼 아래가 정확한 위치
+                    const topFrameBottomMm = (sectionHeight / 0.01) - (basicThickness / 0.01) * 2;
+                    const heightMm = topFrameBottomMm - lastShelfTopMm; // 선반 상단부터 상단 프레임 하단까지
+                    const height = mmToThreeUnits(heightMm); // Three.js 단위로 변환
                     const centerY = sectionStartY + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
 
                     console.log('🔵 측면뷰 마지막 칸:', {
-                      lastShelfPos: shelfPositions[shelfPositions.length - 1],
+                      lastShelfPos,
                       basicThickness_mm: basicThickness / 0.01,
                       lastShelfTopMm,
-                      sectionTopMm,
+                      topFrameBottomMm,
+                      sectionHeight_mm: sectionHeight / 0.01,
                       heightMm,
                       표시될값: Math.round(heightMm)
                     });
