@@ -323,7 +323,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100001}
                   rotation={[0, -Math.PI / 2, 0]}
                 >
-                  <circleGeometry args={[0.015, 16]} />
+                  <circleGeometry args={[0.025, 16]} />
                   <meshBasicMaterial color={dimensionColor} depthTest={false} />
                 </mesh>
                 )}
@@ -338,7 +338,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100001}
                   rotation={[0, -Math.PI / 2, 0]}
                 >
-                  <circleGeometry args={[0.015, 16]} />
+                  <circleGeometry args={[0.025, 16]} />
                   <meshBasicMaterial color={dimensionColor} depthTest={false} />
                 </mesh>
 
@@ -361,7 +361,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     })(),
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)
                   ]}
-                  fontSize={mmToThreeUnits(25)}
+                  fontSize={largeFontSize}
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
