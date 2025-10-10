@@ -353,8 +353,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       // 2hanging의 상부 섹션: 상부섹션 바닥판 윗면까지 (중간 패널 윗면)
                       const is2HangingUpperSection = furnitureId?.includes('2hanging') && index === 1;
                       if (is2HangingUpperSection) {
-                        // 상부섹션 바닥판 윗면 = 섹션 하단 + 바닥판 두께 (bottomY와 동일)
-                        topY = sectionBottomY + basicThickness;
+                        // 상부섹션 바닥판 윗면 = 하부 프레임 상단 + 하부섹션 1000mm + 바닥판 두께
+                        topY = -height/2 + mmToThreeUnits(1000) + basicThickness;
                       } else {
                         // 일반 케이스: 상부 프레임 하단까지
                         topY = height/2 - basicThickness;
