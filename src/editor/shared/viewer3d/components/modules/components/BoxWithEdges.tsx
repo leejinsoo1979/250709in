@@ -218,25 +218,25 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       {!hideEdges && (
         <>
           {isHighlighted && (
-            // 강조 상태일 때 추가 발광 효과
+            // 강조 상태일 때 추가 발광 효과 (2D, 3D 모두)
             <Edges
               color={highlightColor}
               scale={1.001}
               threshold={15}
-              linewidth={3}
+              linewidth={viewMode === '2D' ? 4 : 3}
             />
           )}
           <lineSegments>
             <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
-            <lineBasicMaterial 
+            <lineBasicMaterial
               color={edgeColor}
               transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
               opacity={
                 isHighlighted
                   ? 1.0  // 강조 상태일 때는 불투명
-                  : isBackPanel && viewMode === '2D' && view2DDirection === 'front' 
+                  : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
                     ? 0.1  // 2D 정면 뷰에서 백패널은 매우 투명하게
-                    : viewMode === '3D' 
+                    : viewMode === '3D'
                       ? 0.9
                       : 1
               }
@@ -245,7 +245,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
               polygonOffset={viewMode === '3D'}
               polygonOffsetFactor={viewMode === '3D' ? -10 : 0}
               polygonOffsetUnits={viewMode === '3D' ? -10 : 0}
-              linewidth={isHighlighted ? 3 : (isBackPanel && viewMode === '2D' ? 1 : viewMode === '2D' ? 2 : 1)} 
+              linewidth={isHighlighted ? (viewMode === '2D' ? 4 : 3) : (isBackPanel && viewMode === '2D' ? 1 : viewMode === '2D' ? 2 : 1)}
             />
           </lineSegments>
         </>
