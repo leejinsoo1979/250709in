@@ -55,16 +55,19 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   const themeColor = getThemeHex();
 
   // 편집 모드 진입 (클릭으로 변경)
-  const handleClick = useCallback((e: THREE.Event) => {
-    e.stopPropagation();
-    console.log('🖱️ 치수 클릭:', {
+  const handleClick = useCallback((e: any) => {
+    console.log('🖱️ 치수 클릭 이벤트 발생!', {
       furnitureId,
       sectionIndex,
-      currentValue: value
+      currentValue: value,
+      isEditing,
+      eventType: e.type
     });
+    e.stopPropagation();
     setEditValue(String(Math.round(value)));
     setIsEditing(true);
-  }, [value, furnitureId, sectionIndex]);
+    console.log('✅ 편집 모드 활성화 완료');
+  }, [value, furnitureId, sectionIndex, isEditing]);
 
   // 입력창에 포커스
   useEffect(() => {
@@ -118,21 +121,23 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   }, [handleConfirm, handleCancel]);
 
   // Hover 이벤트
-  const handlePointerOver = useCallback((e: THREE.Event) => {
+  const handlePointerOver = useCallback((e: any) => {
+    console.log('🎯 마우스 오버 이벤트:', { sectionIndex, furnitureId });
     e.stopPropagation();
     setIsHovered(true);
     if (onHoverChange) {
       onHoverChange(true);
     }
-  }, [onHoverChange]);
+  }, [onHoverChange, sectionIndex, furnitureId]);
 
-  const handlePointerOut = useCallback((e: THREE.Event) => {
+  const handlePointerOut = useCallback((e: any) => {
+    console.log('👋 마우스 아웃 이벤트:', { sectionIndex, furnitureId });
     e.stopPropagation();
     setIsHovered(false);
     if (onHoverChange) {
       onHoverChange(false);
     }
-  }, [onHoverChange]);
+  }, [onHoverChange, sectionIndex, furnitureId]);
 
   // 현재 색상 결정 (hover 시 테마 색상)
   const currentColor = isHovered ? themeColor : color;
