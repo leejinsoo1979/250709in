@@ -356,8 +356,17 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         topY = height/2 - basicThickness;
                       }
                     } else {
-                      // 안전선반 없는 경우: 상부 프레임 하단까지
-                      topY = height/2 - basicThickness;
+                      // 안전선반 없는 경우
+                      // 2hanging 상부 섹션: 측판 높이에서 최상단 칸과 선반들을 뺀 내경
+                      // topY = bottomY + (sectionHeight - basicThickness * 2) = 바닥판 상단 + 내경
+                      const is2HangingUpperSection = furnitureId?.includes('2hanging') && index === 1;
+                      if (is2HangingUpperSection) {
+                        // 상부 섹션의 경우 섹션 높이에서 상하판만 빼면 내경
+                        topY = bottomY + (sectionHeight - basicThickness * 2);
+                      } else {
+                        // 일반 케이스: 상부 프레임 하단까지
+                        topY = height/2 - basicThickness;
+                      }
                     }
                   } else {
                     // 다음 섹션과의 경계
