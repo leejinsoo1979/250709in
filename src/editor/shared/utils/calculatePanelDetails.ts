@@ -267,7 +267,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
             width: drawerBodyWidth - 26, // 추가로 26mm 감소
             depth: drawerBodyDepth - 26, // 추가로 26mm 감소
             thickness: drawerBottomThickness,
-            material: 'MDF'  // 서랍 바닥판은 MDF 재질
+            material: 'PB'  // 몸통 자재는 PB
           });
         }
         
