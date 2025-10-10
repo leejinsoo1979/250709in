@@ -2021,4 +2021,4 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   );
 };
 
-export default React.memo(FurnitureItem); 
+export default FurnitureItem; 
