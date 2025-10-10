@@ -2557,13 +2557,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>
         )}
 
-        
-        {/* 가구별 치수선 (좌측뷰에서는 깊이 치수) - 좌측뷰에서는 모든 가구 표시 */}
-        {placedModules.length > 0 && placedModules
-          .filter((module) => {
-            // 좌측뷰에서는 모든 가구 표시, 다른 뷰에서는 좌측 배치 가구만
-            return currentViewDirection === 'left' || module.position.x < 0;
-          })
+
+        {/* 가구별 치수선 (좌측뷰에서는 깊이 치수) - 좌측뷰에서는 가장 왼쪽 가구만 표시 */}
+        {placedModules.length > 0 && (() => {
+          // 가장 왼쪽 가구 찾기 (position.x가 가장 작은 가구)
+          const leftmost = placedModules.reduce((min, module) =>
+            module.position.x < min.position.x ? module : min
+          );
+          return [leftmost];
+        })()
           .map((module, index) => {
           const moduleData = getModuleById(
             module.moduleId,
@@ -3232,8 +3234,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })()}
         </group>
         
-        {/* 가구별 치수선 (우측뷰에서는 깊이 치수) */}
-        {placedModules.length > 0 && placedModules.map((module, index) => {
+        {/* 가구별 치수선 (우측뷰에서는 깊이 치수) - 우측뷰에서는 가장 오른쪽 가구만 표시 */}
+        {placedModules.length > 0 && (() => {
+          // 가장 오른쪽 가구 찾기 (position.x가 가장 큰 가구)
+          const rightmost = placedModules.reduce((max, module) =>
+            module.position.x > max.position.x ? module : max
+          );
+          return [rightmost];
+        })().map((module, index) => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },

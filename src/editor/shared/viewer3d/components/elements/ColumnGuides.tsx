@@ -757,8 +757,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             zoneSlotInfo.dropped.slotWidths
           )}
           
-          {/* 투명 메쉬들 - 3D 모드와 2D 뷰에서 표시 (탑뷰에서는 제외) */}
-          {(viewMode === '3D' || (viewMode === '2D' && view2DDirection !== 'top')) && (
+          {/* 투명 메쉬들 - 3D 모드와 2D 정면뷰에서만 표시 */}
+          {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (
             <>
               {/* 메인 영역 뒷면 메쉬 */}
               {renderTransparentMeshes(
@@ -816,8 +816,8 @@ const ColumnGuides: React.FC<ColumnGuidesProps> = ({ viewMode: viewModeProp }) =
             zoneSlotInfo.normal.slotWidths
           )}
           
-          {/* 투명 메쉬들 - 3D 모드와 2D 뷰에서 표시 (탑뷰에서는 제외) */}
-          {(viewMode === '3D' || (viewMode === '2D' && view2DDirection !== 'top')) && (
+          {/* 투명 메쉬들 - 3D 모드와 2D 정면뷰에서만 표시 */}
+          {(viewMode === '3D' || (viewMode === '2D' && view2DDirection === 'front')) && (
             <>
               {/* 뒷면 메쉬 */}
               {renderTransparentMeshes(

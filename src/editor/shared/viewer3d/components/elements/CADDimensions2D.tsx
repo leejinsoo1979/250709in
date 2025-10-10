@@ -290,32 +290,34 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 lineWidth={2}
               />
 
-              {/* 깊이 텍스트 */}
-              <Html
-                position={[depthDimX - mmToThreeUnits(80), furnitureY, furnitureZ]}
-                center
-                transform={false}
-                occlude={false}
-                zIndexRange={[1000, 1001]}
-                style={{ pointerEvents: 'none' }}
-              >
-                <div
-                  style={{
-                    background: dimensionColors.background,
-                    color: dimensionColors.text,
-                    padding: '4px 8px',
-                    borderRadius: '3px',
-                    fontSize: '14px',
-                    fontWeight: 'bold',
-                    border: `1px solid ${dimensionColors.furniture}`,
-                    fontFamily: 'monospace',
-                    whiteSpace: 'nowrap',
-                    userSelect: 'none'
-                  }}
+              {/* 깊이 텍스트 - 가구 상단에 표시 */}
+              {showDimensionsText && (
+                <Html
+                  position={[depthDimX - mmToThreeUnits(80), topY + mmToThreeUnits(50), furnitureZ]}
+                  center
+                  transform={false}
+                  occlude={false}
+                  zIndexRange={[1000, 1001]}
+                  style={{ pointerEvents: 'none' }}
                 >
-                  {furnitureDepthMm}mm
-                </div>
-              </Html>
+                  <div
+                    style={{
+                      background: dimensionColors.background,
+                      color: dimensionColors.text,
+                      padding: '4px 8px',
+                      borderRadius: '3px',
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      border: `1px solid ${dimensionColors.furniture}`,
+                      fontFamily: 'monospace',
+                      whiteSpace: 'nowrap',
+                      userSelect: 'none'
+                    }}
+                  >
+                    {furnitureDepthMm}mm
+                  </div>
+                </Html>
+              )}
 
               {/* 깊이 연장선 */}
               <Line
