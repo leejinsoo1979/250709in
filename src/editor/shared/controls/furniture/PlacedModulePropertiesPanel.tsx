@@ -673,11 +673,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         : (currentPlacedModule.customWidth !== undefined && currentPlacedModule.customWidth !== null
           ? currentPlacedModule.customWidth
           : moduleData.dimensions.width);
-      
-      setCustomDepth(initialDepth);
-      setDepthInputValue(initialDepth.toString());
-      setCustomWidth(initialWidth);
-      setWidthInputValue(initialWidth.toString());
+
+      // customDepth가 이미 설정되어 있고 initialDepth와 같으면 업데이트하지 않음 (입력 중 방해 방지)
+      if (customDepth !== initialDepth) {
+        setCustomDepth(initialDepth);
+        setDepthInputValue(initialDepth.toString());
+      }
+      // customWidth도 동일하게 처리
+      if (customWidth !== initialWidth) {
+        setCustomWidth(initialWidth);
+        setWidthInputValue(initialWidth.toString());
+      }
       setHingePosition(currentPlacedModule.hingePosition || 'right');
       setHasDoor(currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false);
       setHasGapBackPanel(currentPlacedModule.hasGapBackPanel ?? false); // 갭 백패널 초기값 설정
