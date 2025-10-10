@@ -435,25 +435,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 </Html>
               )}
 
-              {/* 깊이 연장선 */}
-              <Line
-                points={[
-                  [0, furnitureY, frontZ],
-                  [depthDimX, furnitureY, frontZ]
-                ]}
-                color={dimensionColors.furniture}
-                lineWidth={1}
-                dashed={true}
-              />
-              <Line
-                points={[
-                  [0, furnitureY, backZ],
-                  [depthDimX, furnitureY, backZ]
-                ]}
-                color={dimensionColors.furniture}
-                lineWidth={1}
-                dashed={true}
-              />
 
               {/* 높이 치수선 (Y축) */}
               <Line
