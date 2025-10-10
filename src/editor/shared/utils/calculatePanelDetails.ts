@@ -39,35 +39,31 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
   
   // === 섹션별 패널 계산 ===
   if (sections && sections.length > 0) {
-    // 실제 사용 가능한 내부 높이 (상하판 제외)
-    const actualAvailableHeight = height - (basicThickness * 2);
-    
-    // 섹션 높이 계산 함수 (3D 렌더링과 동일한 로직)
-    const calculateSectionHeight = (section, availableHeightMm) => {
+    // 섹션 높이 계산 함수 (전체 높이 기준으로 계산)
+    const calculateSectionHeight = (section) => {
       const heightType = section.heightType || 'percentage';
-      
+
       if (heightType === 'absolute') {
-        // 절대값인 경우 section.height는 이미 mm 단위
-        // 하지만 availableHeightMm를 초과하지 않도록 제한
-        return Math.min(section.height || 0, availableHeightMm);
+        // 절대값인 경우 section.height를 그대로 사용
+        return section.height || 0;
       } else {
-        // 비율인 경우
-        return availableHeightMm * ((section.height || section.heightRatio || 100) / 100);
+        // 비율인 경우 (사용되지 않지만 호환성 유지)
+        return height * ((section.height || section.heightRatio || 100) / 100);
       }
     };
-    
-    // 고정 높이 섹션들 분리
+
+    // 고정 높이 섹션들의 총 높이
     const fixedSections = sections.filter(s => s.heightType === 'absolute');
     const totalFixedHeight = fixedSections.reduce((sum, section) => {
-      return sum + calculateSectionHeight(section, actualAvailableHeight);
+      return sum + calculateSectionHeight(section);
     }, 0);
-    
+
     // 중간 칸막이 두께 고려 (섹션 개수 - 1개의 칸막이)
     const dividerCount = sections.length > 1 ? (sections.length - 1) : 0;
     const dividerThickness = dividerCount * basicThickness;
-    
-    // 나머지 높이 계산 (전체 - 고정높이 - 칸막이)
-    const remainingHeight = actualAvailableHeight - totalFixedHeight - dividerThickness;
+
+    // 나머지 높이 계산 (전체 - 고정높이)
+    const remainingHeight = height - totalFixedHeight;
     
     
     // 섹션 사이 구분판 (안전선반/칸막이) - 상부장과 하부장 사이
@@ -140,14 +136,15 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         sectionName = '';
       }
       
-      // 실제 섹션 높이 계산
-      const variableSections = sections.filter(s => s.heightType !== 'absolute');
-      const totalPercentage = variableSections.reduce((sum, s) => sum + (s.height || s.heightRatio || 100), 0);
-      
+      // 실제 섹션 높이 계산 (전체 높이 기준)
       let sectionHeightMm;
       if (section.heightType === 'absolute') {
-        sectionHeightMm = calculateSectionHeight(section, actualAvailableHeight);
+        // 절대값은 정의된 값 그대로 사용
+        sectionHeightMm = section.height || 0;
       } else {
+        // 비율 섹션은 남은 높이에서 계산
+        const variableSections = sections.filter(s => s.heightType !== 'absolute');
+        const totalPercentage = variableSections.reduce((sum, s) => sum + (s.height || s.heightRatio || 100), 0);
         const percentage = (section.height || section.heightRatio || 100) / totalPercentage;
         sectionHeightMm = remainingHeight * percentage;
       }
