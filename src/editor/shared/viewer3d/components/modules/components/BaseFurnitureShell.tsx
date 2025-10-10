@@ -293,7 +293,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     currentYPosition += getSectionHeights()[i];
                   }
 
-                  const middlePanelY = currentYPosition - basicThickness/2;
+                  // 두 패널 모두 18mm(basicThickness) 위로 이동
+                  const middlePanelY = currentYPosition - basicThickness/2 + basicThickness;
                   const lowerTopPanelY = middlePanelY - basicThickness;
 
                   return (
