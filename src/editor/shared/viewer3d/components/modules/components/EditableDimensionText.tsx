@@ -28,7 +28,8 @@ interface EditableDimensionTextProps {
 
 /**
  * 편집 가능한 치수 텍스트 컴포넌트
- * - 더블클릭으로 편집 모드 활성화
+ * - 클릭으로 편집 모드 활성화
+ * - 마우스 오버 시 텍스트와 가이드선이 테마 색상으로 강조
  * - Enter로 값 확정, ESC로 취소
  */
 const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
@@ -53,10 +54,10 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
   // 테마 색상 가져오기
   const themeColor = getThemeHex();
 
-  // 편집 모드 진입
-  const handleDoubleClick = useCallback((e: THREE.Event) => {
+  // 편집 모드 진입 (클릭으로 변경)
+  const handleClick = useCallback((e: THREE.Event) => {
     e.stopPropagation();
-    console.log('🖱️ 치수 더블클릭:', {
+    console.log('🖱️ 치수 클릭:', {
       furnitureId,
       sectionIndex,
       currentValue: value
@@ -190,11 +191,11 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
       {/* 일반 표시 모드 */}
       {!isEditing && (
         <>
-          {/* 투명한 클릭 영역 (더블클릭 감지용, hover 감지용) */}
+          {/* 투명한 클릭 영역 (클릭 감지용, hover 감지용) */}
           <mesh
             ref={meshRef}
             position={position}
-            onDoubleClick={handleDoubleClick}
+            onClick={handleClick}
             onPointerOver={handlePointerOver}
             onPointerOut={handlePointerOut}
           >
