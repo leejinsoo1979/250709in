@@ -290,9 +290,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     currentYPosition += getSectionHeights()[i];
                   }
 
-                  // 패널 Y 위치 계산
-                  const middlePanelY = currentYPosition - basicThickness/2;
-                  const lowerTopPanelY = currentYPosition - basicThickness - basicThickness/2;
+                  // 패널 Y 위치 계산 - 각각 18mm씩 위로 이동
+                  const middlePanelY = currentYPosition - basicThickness/2 + mmToThreeUnits(18);
+                  const lowerTopPanelY = currentYPosition - basicThickness - basicThickness/2 + mmToThreeUnits(18);
 
                   // 섹션 강조 확인 (placedFurnitureId 사용)
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
