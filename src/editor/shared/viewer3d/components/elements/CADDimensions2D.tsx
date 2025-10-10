@@ -230,9 +230,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 상부섹션(마지막)은 가이드선을 짧게 해서 상단 끝에 맞춤
             const isLastSection = sectionIndex === sections.length - 1;
 
+            // 첫 번째 섹션의 시작점이 받침대 위가 아니면 가이드선 표시 안 함
+            const shouldRenderStartGuide = sectionIndex === 0 ? (sectionStartY > floatHeight + baseFrameHeight - mmToThreeUnits(10)) : true;
+
             return (
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
                 {/* 보조 가이드 연장선 - 시작 */}
+                {shouldRenderStartGuide && (
                 <NativeLine
                   points={[
                     [slotX, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
@@ -243,6 +247,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100000}
                   depthTest={false}
                 />
+                )}
                 {/* 보조 가이드 연장선 - 끝 (상부섹션은 Y축으로 짧게) */}
                 <NativeLine
                   points={[
@@ -266,6 +271,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   depthTest={false}
                 />
                 {/* 티크 마크 */}
+                {shouldRenderStartGuide && (
                 <NativeLine
                   points={[
                     [slotX - 0.03, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
@@ -276,6 +282,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100000}
                   depthTest={false}
                 />
+                )}
                 <NativeLine
                   points={[
                     [slotX - 0.03, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
@@ -287,6 +294,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   depthTest={false}
                 />
                 {/* 엔드포인트 - 시작 모서리 */}
+                {shouldRenderStartGuide && (
                 <mesh
                   position={[slotX, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]}
                   renderOrder={100001}
@@ -295,6 +303,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   <circleGeometry args={[0.015, 16]} />
                   <meshBasicMaterial color={dimensionColor} depthTest={false} />
                 </mesh>
+                )}
 
                 {/* 엔드포인트 - 끝 모서리 */}
                 <mesh
