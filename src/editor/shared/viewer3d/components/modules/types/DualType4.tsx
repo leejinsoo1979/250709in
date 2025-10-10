@@ -33,7 +33,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   slotIndex,
   slotCenterX,
   slotWidths,
-  adjustedWidth // adjustedWidth 추가
+  adjustedWidth, // adjustedWidth 추가
+  customSections // 사용자 정의 섹션 설정
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -43,7 +44,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
-    adjustedWidth // adjustedWidth 전달
+    adjustedWidth, // adjustedWidth 전달
+    customSections // 사용자 정의 섹션 설정
   });
 
   const {

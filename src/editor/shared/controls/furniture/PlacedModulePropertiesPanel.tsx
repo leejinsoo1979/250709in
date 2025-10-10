@@ -678,14 +678,54 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setHasGapBackPanel(currentPlacedModule.hasGapBackPanel ?? false); // 갭 백패널 초기값 설정
 
       // 2섹션 가구의 섹션 높이 초기화
-      const sections = moduleData.modelConfig?.sections || [];
+      const sections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
       if (sections.length === 2) {
-        const lowerHeight = sections[0].calculatedHeight || 1000;
-        const upperHeight = sections[1].calculatedHeight || 1000;
-        setLowerSectionHeight(lowerHeight);
-        setUpperSectionHeight(upperHeight);
-        setLowerHeightInput(lowerHeight.toString());
-        setUpperHeightInput(upperHeight.toString());
+        // customSections가 있고 calculatedHeight가 있으면 그대로 사용
+        if (currentPlacedModule.customSections && currentPlacedModule.customSections[0].calculatedHeight) {
+          const lowerHeight = currentPlacedModule.customSections[0].calculatedHeight;
+          const upperHeight = currentPlacedModule.customSections[1].calculatedHeight;
+          setLowerSectionHeight(lowerHeight);
+          setUpperSectionHeight(upperHeight);
+          setLowerHeightInput(lowerHeight.toString());
+          setUpperHeightInput(upperHeight.toString());
+        } else {
+          // customSections가 없으면 실제 높이 계산
+          const totalHeight = moduleData.dimensions.height;
+          const basicThickness = moduleData.modelConfig?.basicThickness || 18;
+          const availableHeight = totalHeight - basicThickness * 2;
+
+          // 섹션 높이 타입에 따라 계산
+          const calculateSectionHeight = (section: any) => {
+            if (section.heightType === 'absolute') {
+              return Math.min(section.height || 0, availableHeight);
+            } else {
+              return availableHeight * ((section.height || section.heightRatio || 50) / 100);
+            }
+          };
+
+          // 고정 높이 섹션 먼저 계산
+          const fixedSections = sections.filter((s: any) => s.heightType === 'absolute');
+          const totalFixedHeight = fixedSections.reduce((sum: number, section: any) => {
+            return sum + calculateSectionHeight(section);
+          }, 0);
+
+          const remainingHeight = availableHeight - totalFixedHeight;
+          const flexibleSections = sections.filter((s: any) => s.heightType !== 'absolute');
+          const totalFlexibleRatio = flexibleSections.reduce((sum: number, s: any) => sum + (s.height || s.heightRatio || 50), 0);
+
+          // 각 섹션 높이 계산
+          const lowerHeight = sections[0].heightType === 'absolute'
+            ? calculateSectionHeight(sections[0])
+            : (remainingHeight * ((sections[0].height || sections[0].heightRatio || 50) / totalFlexibleRatio));
+          const upperHeight = sections[1].heightType === 'absolute'
+            ? calculateSectionHeight(sections[1])
+            : (remainingHeight * ((sections[1].height || sections[1].heightRatio || 50) / totalFlexibleRatio));
+
+          setLowerSectionHeight(Math.round(lowerHeight));
+          setUpperSectionHeight(Math.round(upperHeight));
+          setLowerHeightInput(Math.round(lowerHeight).toString());
+          setUpperHeightInput(Math.round(upperHeight).toString());
+        }
       }
       
       console.log('🔧 팝업 초기값 설정:', {
@@ -833,30 +873,58 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   const handleLowerHeightBlur = () => {
     const value = parseInt(lowerHeightInput);
-    if (!isNaN(value) && value > 0) {
-      setLowerSectionHeight(value);
-      // 실시간 업데이트: sections 배열 업데이트
-      if (currentPlacedModule && moduleData && isTwoSectionFurniture) {
-        const updatedSections = [...sections];
-        updatedSections[0] = { ...updatedSections[0], calculatedHeight: value };
-        updatePlacedModule(currentPlacedModule.id, {
-          customSections: updatedSections
-        });
+    if (!isNaN(value) && value > 0 && moduleData) {
+      // 전체 가구 높이 (내부 높이)
+      const totalHeight = moduleData.dimensions.height;
+      const basicThickness = moduleData.modelConfig?.basicThickness || 18;
+      const availableHeight = totalHeight - basicThickness * 2; // 상하판 제외
+
+      // 하부 섹션 변경 시 상부 섹션 자동 조정
+      const newUpperHeight = availableHeight - value;
+
+      if (newUpperHeight > 0) {
+        setLowerSectionHeight(value);
+        setUpperSectionHeight(newUpperHeight);
+        setUpperHeightInput(newUpperHeight.toString());
+
+        // 실시간 업데이트: sections 배열 업데이트
+        if (currentPlacedModule && isTwoSectionFurniture) {
+          const updatedSections = [...sections];
+          updatedSections[0] = { ...updatedSections[0], calculatedHeight: value };
+          updatedSections[1] = { ...updatedSections[1], calculatedHeight: newUpperHeight };
+          updatePlacedModule(currentPlacedModule.id, {
+            customSections: updatedSections
+          });
+        }
       }
     }
   };
 
   const handleUpperHeightBlur = () => {
     const value = parseInt(upperHeightInput);
-    if (!isNaN(value) && value > 0) {
-      setUpperSectionHeight(value);
-      // 실시간 업데이트: sections 배열 업데이트
-      if (currentPlacedModule && moduleData && isTwoSectionFurniture) {
-        const updatedSections = [...sections];
-        updatedSections[1] = { ...updatedSections[1], calculatedHeight: value };
-        updatePlacedModule(currentPlacedModule.id, {
-          customSections: updatedSections
-        });
+    if (!isNaN(value) && value > 0 && moduleData) {
+      // 전체 가구 높이 (내부 높이)
+      const totalHeight = moduleData.dimensions.height;
+      const basicThickness = moduleData.modelConfig?.basicThickness || 18;
+      const availableHeight = totalHeight - basicThickness * 2; // 상하판 제외
+
+      // 상부 섹션 변경 시 하부 섹션 자동 조정
+      const newLowerHeight = availableHeight - value;
+
+      if (newLowerHeight > 0) {
+        setUpperSectionHeight(value);
+        setLowerSectionHeight(newLowerHeight);
+        setLowerHeightInput(newLowerHeight.toString());
+
+        // 실시간 업데이트: sections 배열 업데이트
+        if (currentPlacedModule && isTwoSectionFurniture) {
+          const updatedSections = [...sections];
+          updatedSections[0] = { ...updatedSections[0], calculatedHeight: newLowerHeight };
+          updatedSections[1] = { ...updatedSections[1], calculatedHeight: value };
+          updatePlacedModule(currentPlacedModule.id, {
+            customSections: updatedSections
+          });
+        }
       }
     }
   };

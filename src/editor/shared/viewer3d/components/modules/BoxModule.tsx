@@ -139,6 +139,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
           slotIndex={slotIndex} // 슬롯 인덱스 전달
           showFurniture={showFurniture} // 가구 본체 표시 여부
+          customSections={customSections} // 사용자 정의 섹션 설정
             // 이벤트 핸들러들 전달
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
