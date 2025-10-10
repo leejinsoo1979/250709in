@@ -300,16 +300,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                   return (
                     <React.Fragment key={`divider-${index}`}>
-                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
-                      <BoxWithEdges
-                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), adjustedDepthForShelves - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
-                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2]}
-                        material={material}
-                        renderMode={renderMode}
-                        isDragging={isDragging}
-                        isHighlighted={isLowerHighlighted}
-                      />
-
                       {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림 */}
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(26)]}
@@ -318,6 +308,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isUpperHighlighted}
+                      />
+
+                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), adjustedDepthForShelves - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
+                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isHighlighted={isLowerHighlighted}
                       />
                     </React.Fragment>
                   );
