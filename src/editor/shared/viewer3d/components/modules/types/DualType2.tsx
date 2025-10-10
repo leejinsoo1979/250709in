@@ -279,8 +279,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         isHighlighted={isMulti ? highlightedSection === `${placedFurnitureId}-${sectionHeights.length - 1}` : false}
       />
       
-      {/* 상단 상판 두께 치수 표시 */}
-      {showDimensions && showDimensionsText && (
+      {/* 상단 상판 두께 치수 표시 - 정면도에서만 */}
+      {showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && (
         <group>
           {/* 상판 두께 텍스트 */}
           <Text
