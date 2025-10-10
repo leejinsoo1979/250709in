@@ -182,8 +182,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </group>
         )}
 
-        {/* 가구별 섹션 치수 가이드 */}
-        {placedModules.map((module, moduleIndex) => {
+        {/* 가구별 섹션 치수 가이드 - 첫 번째 가구만 표시 */}
+        {placedModules.slice(0, 1).map((module, moduleIndex) => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
