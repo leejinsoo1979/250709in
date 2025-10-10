@@ -177,7 +177,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
               rotation={[0, -Math.PI / 2, Math.PI / 2]}
             >
-              상판 {topFrameHeightMm}
+              {topFrameHeightMm}
             </Text>
           </group>
         )}
@@ -325,9 +325,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   anchorY="middle"
                   renderOrder={1000}
                   depthTest={false}
-                  rotation={[0, -Math.PI / 2, 0]}
+                  rotation={[0, -Math.PI / 2, Math.PI / 2]}
                 >
-                  측판높이 {Math.round(sectionHeightMm)}
+                  {Math.round(sectionHeightMm)}
                 </Text>
               </group>
             );
@@ -423,7 +423,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
               rotation={[0, -Math.PI / 2, Math.PI / 2]}
             >
-              하판 {baseFrameHeightMm}
+              {baseFrameHeightMm}
             </Text>
         </group>
         )}
