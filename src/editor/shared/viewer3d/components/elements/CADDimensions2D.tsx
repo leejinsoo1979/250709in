@@ -447,11 +447,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   if (shelfPositions.length > 0) {
                     // positionMm === 0인 경우 (바닥판) - 칸 높이 치수는 표시하지 않음 (선반 두께만 표시)
                     if (shelfPositions[0] === 0) {
-                      // 바닥판은 표시하지 않음 (정면뷰와 동일)
+                      console.log('🔵 측면뷰 첫 번째 칸: 바닥판(0)이므로 표시 안 함');
                     } else {
                       const firstShelfBottomMm = shelfPositions[0] - basicThickness / 0.01 / 2; // 첫 번째 선반의 하단
                       const height = mmToThreeUnits(firstShelfBottomMm);
                       const centerY = sectionStartY + height / 2;
+
+                      console.log('🔵 측면뷰 첫 번째 칸:', {
+                        shelfPos_0: shelfPositions[0],
+                        basicThickness_mm: basicThickness / 0.01,
+                        firstShelfBottomMm,
+                        표시될값: Math.round(firstShelfBottomMm)
+                      });
+
                       compartmentHeights.push({ height, centerY, heightMm: firstShelfBottomMm });
                     }
                   }
@@ -468,6 +476,17 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     const heightMm = nextShelfBottomMm - currentShelfTopMm;
                     const height = mmToThreeUnits(heightMm);
                     const centerY = sectionStartY + mmToThreeUnits(currentShelfTopMm + heightMm / 2);
+
+                    console.log(`🔵 측면뷰 중간 칸 ${i}:`, {
+                      shelfPos_i: shelfPositions[i],
+                      shelfPos_next: shelfPositions[i + 1],
+                      basicThickness_mm: basicThickness / 0.01,
+                      currentShelfTopMm,
+                      nextShelfBottomMm,
+                      heightMm,
+                      표시될값: Math.round(heightMm)
+                    });
+
                     compartmentHeights.push({ height, centerY, heightMm });
                   }
 
@@ -478,6 +497,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     const heightMm = sectionTopMm - lastShelfTopMm - (basicThickness / 0.01) * 2; // 상단 프레임 두께 제외 (정면뷰와 동일)
                     const height = mmToThreeUnits(heightMm);
                     const centerY = sectionStartY + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
+
+                    console.log('🔵 측면뷰 마지막 칸:', {
+                      lastShelfPos: shelfPositions[shelfPositions.length - 1],
+                      basicThickness_mm: basicThickness / 0.01,
+                      lastShelfTopMm,
+                      sectionTopMm,
+                      heightMm,
+                      표시될값: Math.round(heightMm)
+                    });
+
                     compartmentHeights.push({ height, centerY, heightMm });
                   }
 
