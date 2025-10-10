@@ -1,12 +1,22 @@
 import { ModuleData } from '@/data/modules';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
-export const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, customDepth: number, hasDoor: boolean = false, t: any = (key: string) => key) => {
+export const calculatePanelDetails = (
+  moduleData: ModuleData,
+  customWidth: number,
+  customDepth: number,
+  hasDoor: boolean = false,
+  t: any = (key: string) => key,
+  originalWidth?: number // 도어용 원래 너비 (기둥 조정 전)
+) => {
   const panels = {
     upper: [],     // 상부장 패널
     lower: [],     // 하부장 패널
     door: []       // 도어 패널
   };
+
+  // 도어는 커버도어이므로 원래 너비 사용, 없으면 customWidth 사용
+  const doorWidth = originalWidth || customWidth;
   
   // 실제 3D 렌더링과 동일한 두께 값들 (BaseFurnitureShell.tsx와 DrawerRenderer.tsx 참조)
   const basicThickness = moduleData.modelConfig?.basicThickness || 18;
@@ -313,22 +323,22 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
   }
   
 
-  // === 도어 패널 ===
+  // === 도어 패널 (커버도어이므로 원래 너비 사용) ===
   if (hasDoor) {
     const doorGap = 2;
 
     if (moduleData.id.includes('dual')) {
-      const doorWidth = Math.floor((customWidth - doorGap * 3) / 2);
+      const singleDoorWidth = Math.floor((doorWidth - doorGap * 3) / 2);
       panels.door.push({
         name: '좌측 도어',
-        width: doorWidth,
+        width: singleDoorWidth,
         height: height - doorGap * 2,
         thickness: basicThickness,
         material: 'PET'  // 도어는 PET 재질
       });
       panels.door.push({
         name: '우측 도어',
-        width: doorWidth,
+        width: singleDoorWidth,
         height: height - doorGap * 2,
         thickness: basicThickness,
         material: 'PET'  // 도어는 PET 재질
@@ -336,7 +346,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
     } else {
       panels.door.push({
         name: '도어',
-        width: customWidth - doorGap * 2,
+        width: doorWidth - doorGap * 2,
         height: height - doorGap * 2,
         thickness: basicThickness,
         material: 'PET'  // 도어는 PET 재질

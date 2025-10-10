@@ -1043,11 +1043,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           </div>
           
           {/* 상세보기 패널 */}
-          {showDetails && (
-            <div className={styles.detailsSection}>
-              <h5 className={styles.sectionTitle}>{t('furniture.panelDetails')}</h5>
-              <div className={styles.panelList}>
-                {calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor, t).map((panel, index) => {
+          {showDetails && (() => {
+            // 도어용 원래 너비 계산 (adjustedWidth가 없으면 customWidth가 원래 너비)
+            const originalWidth = currentPlacedModule?.customWidth || moduleData.dimensions.width;
+
+            return (
+              <div className={styles.detailsSection}>
+                <h5 className={styles.sectionTitle}>{t('furniture.panelDetails')}</h5>
+                <div className={styles.panelList}>
+                  {calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor, t, originalWidth).map((panel, index) => {
                   // 섹션 구분자인 경우
                   if (panel.name && panel.name.startsWith('===')) {
                     return (
@@ -1092,10 +1096,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </span>
                     </div>
                   );
-                })}
+                  })}
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
           
           {/* 너비 설정 (기둥 C인 경우만 표시) */}
           {isColumnC && (
