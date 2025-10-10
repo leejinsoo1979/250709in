@@ -72,6 +72,18 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
   // 좌측뷰인 경우
   if (currentViewDirection === 'left') {
+    console.log('🎯 CADDimensions2D 렌더링:', {
+      currentViewDirection,
+      showDimensions,
+      spaceHeight: spaceInfo.height,
+      spaceDepth: spaceInfo.depth,
+      floatHeight,
+      baseFrameHeight,
+      topFrameHeight,
+      internalHeight,
+      placedModulesCount: placedModules.length
+    });
+
     return (
       <group>
         {/* ===== 왼쪽: 전체 높이 치수 ===== */}
@@ -119,7 +131,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             color={textColor}
             anchorX="center"
             anchorY="middle"
-            renderOrder={100001}
+            renderOrder={1000}
             depthTest={false}
           >
             {spaceInfo.height}
@@ -167,7 +179,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               color={textColor}
               anchorX="center"
               anchorY="middle"
-              renderOrder={100001}
+              renderOrder={1000}
               depthTest={false}
             >
               상판 {topFrameHeightMm}
@@ -213,7 +225,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             color={textColor}
             anchorX="center"
             anchorY="middle"
-            renderOrder={100001}
+            renderOrder={1000}
             depthTest={false}
           >
             내부 {internalSpace.height}
@@ -259,7 +271,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               color={textColor}
               anchorX="center"
               anchorY="middle"
-              renderOrder={100001}
+              renderOrder={1000}
               depthTest={false}
             >
               하판 {baseFrameHeightMm}
@@ -312,7 +324,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             color={textColor}
             anchorX="center"
             anchorY="middle"
-            renderOrder={100001}
+            renderOrder={1000}
             depthTest={false}
           >
             {spaceInfo.depth || 1500}
@@ -392,7 +404,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 color={textColor}
                 anchorX="center"
                 anchorY="middle"
-                renderOrder={100001}
+                renderOrder={1000}
                 depthTest={false}
               >
                 {customDepth}
