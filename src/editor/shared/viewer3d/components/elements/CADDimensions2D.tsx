@@ -653,7 +653,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
       )}
 
       {/* 배치된 가구 치수 - 정면도에서만 표시 (측면도에서는 숨김) */}
-      {activeViewDirection === 'front' && React.useMemo(() => placedModules.map((module, index) => {
+      {currentViewDirection === 'front' && React.useMemo(() => placedModules.map((module, index) => {
         // 도어가 있는 가구는 치수 표시하지 않음
         if (module.doorConfig) {
           return null;
