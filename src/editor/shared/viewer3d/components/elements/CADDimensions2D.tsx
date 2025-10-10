@@ -387,6 +387,127 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   {Math.round(sectionHeightMm)}
                 </Text>
 
+                {/* 선반 섹션인 경우 각 칸의 내경 높이 표시 */}
+                {section.type === 'shelf' && section.shelfPositions && section.shelfPositions.length > 0 && (() => {
+                  const compartmentHeights: Array<{ height: number; centerY: number; heightMm: number }> = [];
+                  const shelfPositions = section.shelfPositions;
+
+                  // 첫 번째 칸 (맨 아래) - 바닥부터 첫 번째 선반 하단까지
+                  if (shelfPositions[0] > 0) {
+                    const firstShelfBottomMm = shelfPositions[0] - basicThickness * 100 / 2; // 첫 번째 선반의 하단
+                    const height = mmToThreeUnits(firstShelfBottomMm);
+                    const centerY = sectionStartY + height / 2;
+                    compartmentHeights.push({ height, centerY, heightMm: firstShelfBottomMm });
+                  }
+
+                  // 중간 칸들 - 현재 선반 상단부터 다음 선반 하단까지
+                  for (let i = 0; i < shelfPositions.length - 1; i++) {
+                    const currentShelfTopMm = shelfPositions[i] + basicThickness * 100 / 2;
+                    const nextShelfBottomMm = shelfPositions[i + 1] - basicThickness * 100 / 2;
+                    const heightMm = nextShelfBottomMm - currentShelfTopMm;
+                    const height = mmToThreeUnits(heightMm);
+                    const centerY = sectionStartY + mmToThreeUnits(currentShelfTopMm + heightMm / 2);
+                    compartmentHeights.push({ height, centerY, heightMm });
+                  }
+
+                  // 마지막 칸 - 마지막 선반 상단부터 섹션 상단까지
+                  if (shelfPositions.length > 0) {
+                    const lastShelfTopMm = shelfPositions[shelfPositions.length - 1] + basicThickness * 100 / 2;
+                    const sectionTopMm = sectionHeight / 0.01;
+                    const heightMm = sectionTopMm - lastShelfTopMm - basicThickness * 100 * 2; // 상단 프레임 두께 제외
+                    const height = mmToThreeUnits(heightMm);
+                    const centerY = sectionStartY + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
+                    compartmentHeights.push({ height, centerY, heightMm });
+                  }
+
+                  return compartmentHeights.map((compartment, compartmentIndex) => {
+                    const compartmentBottom = compartment.centerY - compartment.height / 2;
+                    const compartmentTop = compartment.centerY + compartment.height / 2;
+
+                    return (
+                      <group key={`shelf-compartment-${sectionIndex}-${compartmentIndex}`}>
+                        {/* 보조 가이드 연장선 - 하단 */}
+                        <NativeLine
+                          points={[
+                            [slotX, compartmentBottom, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(200)],
+                            [slotX, compartmentBottom, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                          ]}
+                          color={dimensionColor}
+                          lineWidth={1}
+                          renderOrder={100000}
+                          depthTest={false}
+                        />
+
+                        {/* 보조 가이드 연장선 - 상단 */}
+                        <NativeLine
+                          points={[
+                            [slotX, compartmentTop, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(200)],
+                            [slotX, compartmentTop, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                          ]}
+                          color={dimensionColor}
+                          lineWidth={1}
+                          renderOrder={100000}
+                          depthTest={false}
+                        />
+
+                        {/* 치수선 */}
+                        <NativeLine
+                          points={[
+                            [slotX, compartmentBottom, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
+                            [slotX, compartmentTop, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                          ]}
+                          color={dimensionColor}
+                          lineWidth={2}
+                          renderOrder={100000}
+                          depthTest={false}
+                        />
+
+                        {/* 티크 마크 - 하단 */}
+                        <NativeLine
+                          points={[
+                            [slotX - 0.03, compartmentBottom, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
+                            [slotX + 0.03, compartmentBottom, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                          ]}
+                          color={dimensionColor}
+                          lineWidth={2}
+                          renderOrder={100000}
+                          depthTest={false}
+                        />
+
+                        {/* 티크 마크 - 상단 */}
+                        <NativeLine
+                          points={[
+                            [slotX - 0.03, compartmentTop, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
+                            [slotX + 0.03, compartmentTop, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                          ]}
+                          color={dimensionColor}
+                          lineWidth={2}
+                          renderOrder={100000}
+                          depthTest={false}
+                        />
+
+                        {/* 치수 텍스트 */}
+                        <Text
+                          position={[
+                            slotX,
+                            compartment.centerY,
+                            spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)
+                          ]}
+                          fontSize={largeFontSize}
+                          color={textColor}
+                          anchorX="center"
+                          anchorY="middle"
+                          renderOrder={1000}
+                          depthTest={false}
+                          rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                        >
+                          {Math.round(compartment.heightMm)}
+                        </Text>
+                      </group>
+                    );
+                  });
+                })()}
+
                 {/* 서랍 섹션인 경우 각 서랍별 깊이 표시 */}
                 {section.type === 'drawer' && section.drawerHeights && section.drawerHeights.map((drawerHeight, drawerIndex) => {
                   const drawerGap = section.gapHeight || 0;
