@@ -2399,54 +2399,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           />
         </group> */}
 
-        {/* 캐비넷이 배치된 경우에만 깊이 치수선 표시 */}
-        {placedModules.length > 0 && (
-        <group>
-          {(() => {
-            const dimY = actualSpaceHeight + mmToThreeUnits(140);
-            const cabinetDepthStart = furnitureZOffset - furnitureDepth/2;
-            const cabinetDepthEnd = furnitureZOffset + furnitureDepth/2;
-            
-            return (
-              <>
-                {/* 치수선 */}
-                <Line
-                  points={[[0, dimY, cabinetDepthStart], [0, dimY, cabinetDepthEnd]]}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                
-                {/* 화살표들 */}
-                <Line
-                  points={createArrowHead([0, dimY, cabinetDepthStart], [0, dimY, cabinetDepthStart + 0.03], 0.015)}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                <Line
-                  points={createArrowHead([0, dimY, cabinetDepthEnd], [0, dimY, cabinetDepthEnd - 0.03], 0.015)}
-                  color={dimensionColor}
-                  lineWidth={0.5}
-                />
-                
-                {/* 치수 텍스트 */}
-                <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                  position={[0, dimY + mmToThreeUnits(40), furnitureZOffset]}
-                  fontSize={baseFontSize}
-                  color={textColor}
-                  anchorX="center"
-                  anchorY="middle"
-                    rotation={[0, -Math.PI / 2, 0]}
-                >
-                  {furnitureDepthMm}
-                </Text>
-              </>
-            );
-          })()}
-        </group>
-        )}
-        
         {/* 캐비넷이 배치된 경우에만 우측 3구간 높이 치수선 표시 */}
         {placedModules.length > 0 && (
         <group>
