@@ -444,7 +444,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
                   // 첫 번째 칸 (맨 아래) - 바닥부터 첫 번째 선반 하단까지
                   if (shelfPositions[0] > 0) {
-                    const firstShelfBottomMm = shelfPositions[0] - basicThickness * 100 / 2; // 첫 번째 선반의 하단
+                    const firstShelfBottomMm = shelfPositions[0] - basicThickness / 0.01 / 2; // 첫 번째 선반의 하단 (정면뷰와 동일)
                     const height = mmToThreeUnits(firstShelfBottomMm);
                     const centerY = sectionStartY + height / 2;
                     compartmentHeights.push({ height, centerY, heightMm: firstShelfBottomMm });
@@ -452,8 +452,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
                   // 중간 칸들 - 현재 선반 상단부터 다음 선반 하단까지
                   for (let i = 0; i < shelfPositions.length - 1; i++) {
-                    const currentShelfTopMm = shelfPositions[i] + basicThickness * 100 / 2;
-                    const nextShelfBottomMm = shelfPositions[i + 1] - basicThickness * 100 / 2;
+                    const currentShelfTopMm = shelfPositions[i] + basicThickness / 0.01 / 2;
+                    const nextShelfBottomMm = shelfPositions[i + 1] - basicThickness / 0.01 / 2;
                     const heightMm = nextShelfBottomMm - currentShelfTopMm;
                     const height = mmToThreeUnits(heightMm);
                     const centerY = sectionStartY + mmToThreeUnits(currentShelfTopMm + heightMm / 2);
@@ -462,9 +462,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
                   // 마지막 칸 - 마지막 선반 상단부터 섹션 상단까지
                   if (shelfPositions.length > 0) {
-                    const lastShelfTopMm = shelfPositions[shelfPositions.length - 1] + basicThickness * 100 / 2;
+                    const lastShelfTopMm = shelfPositions[shelfPositions.length - 1] + basicThickness / 0.01 / 2;
                     const sectionTopMm = sectionHeight / 0.01;
-                    const heightMm = sectionTopMm - lastShelfTopMm - basicThickness * 100 * 2; // 상단 프레임 두께 제외
+                    const heightMm = sectionTopMm - lastShelfTopMm - (basicThickness / 0.01) * 2; // 상단 프레임 두께 제외 (정면뷰와 동일)
                     const height = mmToThreeUnits(heightMm);
                     const centerY = sectionStartY + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
                     compartmentHeights.push({ height, centerY, heightMm });
