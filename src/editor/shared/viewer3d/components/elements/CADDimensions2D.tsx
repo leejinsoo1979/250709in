@@ -811,12 +811,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         //     installType: spaceInfo.installType
         //   });
         // }
-        
+
+        const formattedDisplayWidth = parseFloat(displayWidth.toFixed(2));
         const moduleWidth = mmToThreeUnits(displayWidth);
         const leftX = displayPositionX - moduleWidth / 2;
         const rightX = displayPositionX + moduleWidth / 2;
         const dimY = -mmToThreeUnits(100); // 하단 치수선
-        
+
         // 가구의 상단 Y 좌표 계산
         const furnitureTopY = floatHeight + mmToThreeUnits(moduleData.dimensions.height);
         
@@ -877,7 +878,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   pointerEvents: 'none'
                 }}
               >
-                {displayWidth}mm
+                {formattedDisplayWidth}mm
               </div>
             </Html>
             
@@ -947,9 +948,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         return indexing.threeUnitBoundaries.slice(0, -1).map((leftX, index) => {
           const rightX = indexing.threeUnitBoundaries[index + 1];
           // slotWidths가 있으면 사용, 없으면 경계에서 계산
-          const columnWidth = indexing.slotWidths && indexing.slotWidths[index] 
+          const columnWidth = indexing.slotWidths && indexing.slotWidths[index]
             ? indexing.slotWidths[index]
             : (rightX - leftX) / 0.01; // Three.js 단위를 mm로 변환
+          const formattedColumnWidth = parseFloat(columnWidth.toFixed(2));
           const centerX = (leftX + rightX) / 2;
           const dimY = spaceHeight + mmToThreeUnits(80); // 중간 높이 치수선
           
@@ -1008,7 +1010,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     pointerEvents: 'none'
                   }}
                 >
-                  {columnWidth}mm
+                  {formattedColumnWidth}mm
                 </div>
               </Html>
             </group>
