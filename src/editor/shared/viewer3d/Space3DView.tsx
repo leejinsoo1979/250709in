@@ -14,6 +14,7 @@ import PanelBCreationMarkers from './components/elements/space/PanelBCreationMar
 
 import ColumnGuides from './components/elements/ColumnGuides';
 import CleanCAD2D from './components/elements/CleanCAD2D';
+import CADDimensions2D from './components/elements/CADDimensions2D';
 import CADGrid from './components/elements/CADGrid';
 import DroppedCeilingSpace from './components/elements/DroppedCeilingSpace';
 
@@ -1225,6 +1226,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 isStep2={isStep2}
               />
             )}
+
+            {/* 측면뷰 전용 치수 표시 */}
+            {(view2DDirection === 'left' || view2DDirection === 'right') && (
+              <CADDimensions2D
+                viewDirection={view2DDirection}
+                showDimensions={showDimensions}
+              />
+            )}
             
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
@@ -1380,6 +1389,14 @@ const QuadrantContent: React.FC<{
           viewDirection={viewDirection}
           showDimensions={showDimensions}
           isStep2={isStep2}
+        />
+      )}
+
+      {/* 측면뷰 전용 치수 표시 */}
+      {(viewDirection === 'left' || viewDirection === 'right') && (
+        <CADDimensions2D
+          viewDirection={viewDirection}
+          showDimensions={showDimensions}
         />
       )}
       

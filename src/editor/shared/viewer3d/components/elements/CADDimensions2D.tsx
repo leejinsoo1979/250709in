@@ -85,6 +85,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     ];
   };
 
+  // 디버그: 현재 상태 확인
+  console.log('CADDimensions2D:', {
+    showDimensions,
+    currentViewDirection,
+    viewDirection,
+    view2DDirection
+  });
+
   // showDimensions가 false이면 치수 표시하지 않음
   if (!showDimensions) {
     return null;
