@@ -21,7 +21,7 @@ interface CADDimensions2DProps {
 const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDimensions: showDimensionsProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions: showDimensionsFromStore, showFurniture } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, showFurniture } = useUIStore();
   const { theme } = useTheme();
   
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
