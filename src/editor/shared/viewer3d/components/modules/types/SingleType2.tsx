@@ -165,6 +165,13 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   const { dimensionColor, baseFontSize } = useDimensionColor();
   const { theme } = useTheme();
 
+  console.log('🔵 SingleType2 강조 디버그:', {
+    placedFurnitureId,
+    highlightedSection,
+    isMultiSection: isMultiSectionFurniture(),
+    sectionCount: getSectionHeights().length
+  });
+
   return (
     <>
       {/* 띄워서 배치 시 간접조명 효과 */}

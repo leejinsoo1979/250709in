@@ -72,6 +72,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
 
   console.log('🔥 DualType2 렌더링:', {
     furnitureId: moduleData.id,
+    placedFurnitureId,
+    highlightedSection,
     isMulti,
     sectionCount: sectionHeights.length,
     sections: baseFurniture.modelConfig.sections
