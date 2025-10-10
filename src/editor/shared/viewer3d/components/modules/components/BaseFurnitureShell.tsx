@@ -481,8 +481,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 console.log('🔍🔍🔍 백패널 높이:', {
                   lowerBackPanelHeightMm: lowerBackPanelHeight / 0.01,
                   upperBackPanelHeightMm: upperBackPanelHeight / 0.01,
-                  expected_lower: 600 - 36 + 10,
-                  expected_upper: (height / 0.01 - 75 - 600) - 36 + 10
+                  expected_lower: lowerSectionHeight / 0.01 - basicThickness * 2 / 0.01 + 10,
+                  expected_upper: upperSectionHeight / 0.01 - basicThickness * 2 / 0.01 + 10
                 });
 
                 // 백패널 Y 위치 조정
