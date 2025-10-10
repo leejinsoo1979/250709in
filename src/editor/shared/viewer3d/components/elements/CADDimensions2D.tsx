@@ -211,9 +211,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
           const furnitureHeight = mmToThreeUnits(furnitureHeightMm);
 
-          // 가구 위치
+          // 가구 위치 - FurnitureItem.tsx와 동일한 Z축 계산
           const furnitureY = module.position.y;
-          const furnitureZ = module.position.z || 0;
+
+          // FurnitureItem과 동일한 Z축 위치 계산
+          const panelDepthMm = 1500; // 전체 공간 깊이
+          const furnitureSpaceDepthMm = 600; // 가구 공간 깊이
+          const panelDepth = mmToThreeUnits(panelDepthMm);
+          const furnitureSpaceDepth = mmToThreeUnits(furnitureSpaceDepthMm);
+          const doorThicknessMm = 20;
+          const doorThickness = mmToThreeUnits(doorThicknessMm);
+
+          const zOffset = -panelDepth / 2;
+          const furnitureZOffset = zOffset + (panelDepth - furnitureSpaceDepth) / 2;
+          const furnitureZ = furnitureZOffset + furnitureSpaceDepth/2 - doorThickness - furnitureDepth/2;
 
           // 깊이 치수선 위치 (가구 왼쪽)
           const depthDimX = -furnitureDepth / 2 - mmToThreeUnits(150);
