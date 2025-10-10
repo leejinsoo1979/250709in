@@ -312,27 +312,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             </Html>
           )}
 
-          {/* 연장선 - 상단 */}
-          <Line
-            points={[
-              [0, floatHeight + totalSpaceHeight, 0],
-              [heightDimX, floatHeight + totalSpaceHeight, 0]
-            ]}
-            color={dimensionColors.primary}
-            lineWidth={1}
-            dashed={true}
-          />
-
-          {/* 연장선 - 하단 */}
-          <Line
-            points={[
-              [0, floatHeight, 0],
-              [heightDimX, floatHeight, 0]
-            ]}
-            color={dimensionColors.primary}
-            lineWidth={1}
-            dashed={true}
-          />
         </group>
 
         {/* 공간 전체 깊이 치수 (상단) */}
