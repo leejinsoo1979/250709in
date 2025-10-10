@@ -170,7 +170,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         targetPanel.push({
           name: `${sectionName} 하판`,
           width: innerWidth,
-          height: customDepth, // 측판과 같은 깊이 (full depth)
+          depth: customDepth, // 측판과 같은 깊이 (full depth)
           thickness: basicThickness,
           material: 'PB'
         });
@@ -203,7 +203,7 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         targetPanel.push({
           name: `${sectionName} 상판`,
           width: innerWidth,
-          height: customDepth, // 측판과 같은 깊이 (full depth)
+          depth: customDepth, // 측판과 같은 깊이 (full depth)
           thickness: basicThickness,
           material: 'PB'
         });
@@ -315,28 +315,14 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
           });
         }
       } else if (section.type === 'hanging') {
-        // 옷장 섹션 (ShelfRenderer.tsx 참조)
-        if (section.shelfPositions && section.shelfPositions.length > 0) {
-          section.shelfPositions.forEach((pos, i) => {
-            // BoxWithEdges args={[innerWidth, basicThickness, adjustedDepthForShelves]}
-            targetPanel.push({
-              name: `${sectionName} 선반 ${i + 1}`,
-              width: innerWidth,
-              depth: customDepth - 8, // adjustedDepthForShelves = depth - 8mm
-              thickness: basicThickness,
-              material: 'PB'  // 기본 재질
-            });
-          });
-        } else {
-          // 옷걸이 구역 내부 높이 정보
-          const hangingInternalHeight = Math.round(sectionHeightMm);
-          targetPanel.push({
-            name: `${sectionName} 옷걸이 공간`,
-            description: '내부 높이',
-            height: hangingInternalHeight,
-            isInfo: true
-          });
-        }
+        // 옷장 섹션 - 옷걸이 공간만 표시 (선반 없음)
+        const hangingInternalHeight = Math.round(sectionHeightMm);
+        targetPanel.push({
+          name: `${sectionName} 옷걸이 공간`,
+          description: '내부 높이',
+          height: hangingInternalHeight,
+          isInfo: true
+        });
       } else if (section.type === 'shelf' && section.count) {
         // 선반 구역 (ShelfRenderer.tsx 참조)
         for (let i = 1; i <= section.count; i++) {
