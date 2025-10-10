@@ -243,11 +243,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100000}
                   depthTest={false}
                 />
-                {/* 보조 가이드 연장선 - 끝 (상부섹션은 실제 가구 상단까지만, 연장선 짧게) */}
+                {/* 보조 가이드 연장선 - 끝 (상부섹션은 Y축으로 짧게) */}
                 <NativeLine
                   points={[
-                    [slotX, isLastSection ? (sectionEndY + basicThickness) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - (isLastSection ? mmToThreeUnits(100) : mmToThreeUnits(400))],
-                    [slotX, isLastSection ? (sectionEndY + basicThickness) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(100)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
+                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(100)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={1}
