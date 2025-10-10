@@ -649,11 +649,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // 뷰 방향별 치수선 렌더링
   const renderDimensions = () => {
-    // showDimensions와 showDimensionsText가 모두 true일 때만 렌더링
-    if (!showDimensions || !showDimensionsText) {
+    // showDimensions가 false이면 렌더링 안 함
+    if (!showDimensions) {
       return null;
     }
-    
+
     switch (currentViewDirection) {
       case '3D':
       case 'front':
