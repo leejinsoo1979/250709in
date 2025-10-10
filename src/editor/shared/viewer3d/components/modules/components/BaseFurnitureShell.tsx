@@ -418,18 +418,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           </>
         )}
 
-      {/* 상단 판재 */}
-      <BoxWithEdges
-        args={[innerWidth, basicThickness, depth]}
-        position={[0, height/2 - basicThickness/2, 0]}
-        material={material}
-        renderMode={renderMode}
-        isDragging={isDragging}
-        isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
-      />
-      
-      {/* Type4 상단 상판 두께 치수 표시 - 정면도에서만 */}
-      {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging')) && showFurniture && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+        {/* 상단 판재 */}
+        <BoxWithEdges
+          args={[innerWidth, basicThickness, depth]}
+          position={[0, height/2 - basicThickness/2, 0]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
+        />
+
+        {/* Type4 상단 상판 두께 치수 표시 - 정면도에서만 */}
+        {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging')) && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
         <group>
           {/* 상판 두께 텍스트 */}
           <Text
@@ -472,20 +472,20 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             </>
           )}
         </group>
-      )}
-      
-      {/* 하단 판재 */}
-      <BoxWithEdges
-        args={[innerWidth, basicThickness, depth]}
-        position={[0, -height/2 + basicThickness/2, 0]}
-        material={material}
-        renderMode={renderMode}
-        isDragging={isDragging}
-        isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
-      />
-      
-      {/* 뒷면 판재 (9mm 백패널) - hasBackPanel이 true일 때만 렌더링 */}
-      {hasBackPanel && (
+        )}
+
+        {/* 하단 판재 */}
+        <BoxWithEdges
+          args={[innerWidth, basicThickness, depth]}
+          position={[0, -height/2 + basicThickness/2, 0]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
+        />
+
+        {/* 뒷면 판재 (9mm 백패널) - hasBackPanel이 true일 때만 렌더링 */}
+        {hasBackPanel && (
         <>
           {isMultiSectionFurniture() && getSectionHeights().length === 2 ? (
             // 다중 섹션: 하부/상부 백패널 분리
@@ -565,24 +565,24 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             />
           )}
         </>
-      )}
+        )}
 
-      {/* 내부 구조 (타입별로 다른 내용) */}
-      {children}
+        {/* 내부 구조 (타입별로 다른 내용) */}
+        {children}
 
-      {/* 조절발통 (네 모서리) - 띄움배치가 아닐 때만 */}
-      <AdjustableFootsRenderer
-        width={width}
-        depth={depth}
-        yOffset={-height / 2}
-        material={material}
-        renderMode={renderMode}
-        isHighlighted={isHighlighted}
-        isFloating={isFloating}
-        baseHeight={spaceInfo?.baseConfig?.height || 65}
-        viewMode={viewMode}
-        view2DDirection={view2DDirection}
-      />
+        {/* 조절발통 (네 모서리) - 띄움배치가 아닐 때만 */}
+        <AdjustableFootsRenderer
+          width={width}
+          depth={depth}
+          yOffset={-height / 2}
+          material={material}
+          renderMode={renderMode}
+          isHighlighted={isHighlighted}
+          isFloating={isFloating}
+          baseHeight={spaceInfo?.baseConfig?.height || 65}
+          viewMode={viewMode}
+          view2DDirection={view2DDirection}
+        />
       </>
       )}
     </group>
