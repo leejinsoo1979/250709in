@@ -277,43 +277,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
           <>
-            {moduleData?.id?.includes('4drawer-hanging') ? (
-              // Type4 전용 (Single + Dual): 하부 섹션 상판 + 상부 섹션 바닥판 (18mm 아래로)
-              (() => {
-                const sectionHeights = getSectionHeights();
-                const drawerSectionHeight = sectionHeights[0];
-                const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2;
-                const actualThickness = basicThickness * 100;
-
-                // 섹션 강조 확인 (placedFurnitureId 사용)
-                const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
-                const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
-
-                return (
-                  <>
-                    {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
-                    <BoxWithEdges
-                      args={[innerWidth, basicThickness - mmToThreeUnits(0.1), adjustedDepthForShelves - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
-                      position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2]}
-                      material={material}
-                      renderMode={renderMode}
-                      isDragging={isDragging}
-                      isHighlighted={isLowerHighlighted}
-                    />
-
-                    {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림 */}
-                    <BoxWithEdges
-                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(26)]}
-                      position={[0, lowerTopPanelY + basicThickness, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2]}
-                      material={material}
-                      renderMode={renderMode}
-                      isDragging={isDragging}
-                      isHighlighted={isUpperHighlighted}
-                    />
-                  </>
-                );
-              })()
-            ) : moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging') ? (
+            {moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging') ? (
               // 2drawer-hanging, 2hanging: 하부 섹션 상판 + 상부 섹션 바닥판
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
