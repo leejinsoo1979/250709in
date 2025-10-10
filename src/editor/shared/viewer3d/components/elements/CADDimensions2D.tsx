@@ -577,7 +577,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
     );
   }
 
-  // 정면도 전용 치수
+  // 정면도 전용 치수 - 측면뷰에서는 표시하지 않음
+  if (currentViewDirection === 'left' || currentViewDirection === 'right') {
+    return null;
+  }
+
   return (
     <group>
       {/* 전체 폭 치수 (상단) */}
