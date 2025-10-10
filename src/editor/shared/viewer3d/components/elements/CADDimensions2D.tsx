@@ -619,6 +619,50 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   </div>
                 </Html>
               )}
+
+              {/* 높이 연장선 - 상단 */}
+              <Line
+                points={[
+                  [0, topY, frontZ],
+                  [0, topY, heightDimZ - mmToThreeUnits(20)]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={1}
+                dashed={false}
+              />
+
+              {/* 높이 연장선 - 하단 */}
+              <Line
+                points={[
+                  [0, bottomY, frontZ],
+                  [0, bottomY, heightDimZ - mmToThreeUnits(20)]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={1}
+                dashed={false}
+              />
+
+              {/* 깊이 연장선 - 앞 */}
+              <Line
+                points={[
+                  [depthDimX + mmToThreeUnits(20), furnitureY, frontZ],
+                  [0, furnitureY, frontZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={1}
+                dashed={false}
+              />
+
+              {/* 깊이 연장선 - 뒤 */}
+              <Line
+                points={[
+                  [depthDimX + mmToThreeUnits(20), furnitureY, backZ],
+                  [0, furnitureY, backZ]
+                ]}
+                color={dimensionColors.furniture}
+                lineWidth={1}
+                dashed={false}
+              />
             </group>
           );
         })}
