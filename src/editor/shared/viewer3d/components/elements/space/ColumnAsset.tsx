@@ -335,7 +335,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           {/* 빗살무늬 (뷰별 적절한 면에 표시) */}
           {(() => {
             const color = isSelected ? "#4CAF50" : "#cccccc";
-            const spacing = 0.25; // 덜 촘촘하게
+            const spacing = 0.5; // 2배 덜 촘촘하게
             const widthM = width * 0.01;
             const heightM = height * 0.01;
             const depthM = depth * 0.01;
