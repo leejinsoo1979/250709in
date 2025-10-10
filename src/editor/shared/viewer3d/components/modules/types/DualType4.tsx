@@ -211,7 +211,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           {/* 상판 두께 텍스트 */}
           <Text
             position={[
-              -innerWidth/2 * 0.3 - 0.5, 
+              viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
               height/2 - basicThickness/2,
               viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
             ]}
