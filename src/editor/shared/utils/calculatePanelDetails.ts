@@ -165,6 +165,50 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
         thickness: basicThickness,
         material: 'PB'
       });
+
+      // === 하판 (첫 번째 섹션) ===
+      if (sectionIndex === 0) {
+        targetPanel.push({
+          name: '하판',
+          width: innerWidth,
+          height: customDepth,
+          thickness: basicThickness,
+          material: 'PB'
+        });
+      }
+
+      // === 상판 또는 중간판 ===
+      const isMultiSection = sections.length >= 2;
+      if (isMultiSection && sectionIndex < sections.length - 1) {
+        // 다중 섹션이고 마지막이 아니면 중간판 2개 추가 (하부섹션 상판 + 상부섹션 바닥판)
+        targetPanel.push({
+          name: `${sectionName} 상판 (중간판 하부)`,
+          width: innerWidth,
+          depth: customDepth - 8, // adjustedDepthForShelves
+          thickness: basicThickness,
+          material: 'PB'
+        });
+
+        // 상부 섹션의 바닥판은 상부 패널에 추가
+        const nextSectionName = sectionIndex === 0 ? '상부장' : ''; // 다음 섹션이 상부장
+        const nextTargetPanel = sectionIndex === 0 ? panels.upper : targetPanel;
+        nextTargetPanel.push({
+          name: `${nextSectionName} 바닥판 (중간판 상부)`,
+          width: innerWidth,
+          depth: customDepth - 8, // adjustedDepthForShelves
+          thickness: basicThickness,
+          material: 'PB'
+        });
+      } else if (sectionIndex === sections.length - 1) {
+        // 마지막 섹션이면 상판 추가
+        targetPanel.push({
+          name: '상판',
+          width: innerWidth,
+          height: customDepth,
+          thickness: basicThickness,
+          material: 'PB'
+        });
+      }
       
       // 서랍 섹션 처리 (DrawerRenderer.tsx 참조)
       if (section.type === 'drawer' && section.count) {
@@ -299,26 +343,9 @@ export const calculatePanelDetails = (moduleData: ModuleData, customWidth: numbe
     });
   }
   
-  // === 공통 패널 (상하판, 백패널) ===
-  // 상판
-  panels.common.unshift({
-    name: '상판',
-    width: innerWidth,
-    height: customDepth,
-    thickness: basicThickness,
-    material: 'PB'
-  });
-
-  // 하판
-  panels.common.push({
-    name: '하판',
-    width: innerWidth,
-    height: customDepth,
-    thickness: basicThickness,
-    material: 'PB'
-  });
-
-  // 백패널 (9mm, 상하좌우 5mm 확장)
+  // === 백패널 (공통) ===
+  // 백패널은 가구 전체를 덮으므로 common에 추가
+  // 9mm 두께, 상하좌우 5mm 확장
   panels.common.push({
     name: '백패널',
     width: innerWidth + 10,
