@@ -230,8 +230,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 상부섹션(마지막)은 가이드선을 짧게 해서 상단 끝에 맞춤
             const isLastSection = sectionIndex === sections.length - 1;
 
-            // 첫 번째 섹션의 시작점이 받침대 위가 아니면 가이드선 표시 안 함
-            const shouldRenderStartGuide = sectionIndex === 0 ? (sectionStartY > floatHeight + baseFrameHeight - mmToThreeUnits(10)) : true;
+            // 첫 번째 섹션은 하단 가이드선 표시 안 함 (받침대와 겹침)
+            const shouldRenderStartGuide = sectionIndex !== 0;
 
             return (
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
