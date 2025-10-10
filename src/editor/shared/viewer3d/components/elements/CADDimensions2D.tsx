@@ -391,8 +391,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   }
                   drawerY += mmToThreeUnits(drawerHeight / 2); // 서랍 중앙
 
-                  // 서랍 깊이 텍스트 Z 위치: 가구 중심에서 약간 앞으로
-                  const textZ = furnitureZ + mmToThreeUnits(100);
+                  // 서랍 깊이 텍스트 Z 위치: 가구 중심에서 서랍 안쪽으로
+                  const textZ = furnitureZ - mmToThreeUnits(100);
 
                   return (
                     <Text
