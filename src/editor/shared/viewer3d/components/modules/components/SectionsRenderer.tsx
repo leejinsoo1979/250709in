@@ -428,68 +428,76 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 const isHovered = hoveredSectionIndex === index;
                 const currentColor = isHovered ? themeColor : dimensionColor;
 
+                // 안전선반이 있으면 안전선반 위 칸만 표시, 없으면 전체 내경 표시
+                const showFullDimension = topCompartmentHeight === null;
+
                 return (
                   <>
-                    {/* 치수 텍스트 - 편집 가능 (더블클릭) */}
-                    <EditableDimensionText
-                      position={[
-                        viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
-                        centerY,
-                        viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
-                      ]}
-                      fontSize={baseFontSize}
-                      color={dimensionColor}
-                      rotation={[0, 0, Math.PI / 2]}
-                      value={actualInternalHeight}
-                      onValueChange={(newValue) => handleDimensionChange(index, newValue)}
-                      sectionIndex={index}
-                      furnitureId={furnitureId}
-                      renderOrder={1000}
-                      depthTest={false}
-                      onHoverChange={(hovered) => setHoveredSectionIndex(hovered ? index : null)}
-                    />
+                    {/* 전체 내경 치수 (안전선반이 없는 경우만) */}
+                    {showFullDimension && (
+                      <>
+                        {/* 치수 텍스트 - 편집 가능 */}
+                        <EditableDimensionText
+                          position={[
+                            viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
+                            centerY,
+                            viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
+                          ]}
+                          fontSize={baseFontSize}
+                          color={dimensionColor}
+                          rotation={[0, 0, Math.PI / 2]}
+                          value={actualInternalHeight}
+                          onValueChange={(newValue) => handleDimensionChange(index, newValue)}
+                          sectionIndex={index}
+                          furnitureId={furnitureId}
+                          renderOrder={1000}
+                          depthTest={false}
+                          onHoverChange={(hovered) => setHoveredSectionIndex(hovered ? index : null)}
+                        />
 
-                    {/* 수직 연결선 - 왼쪽으로 이동 (hover 시 테마 색상) */}
-                    <group>
-                      <NativeLine
-                        points={[
-                          [-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                          [-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
-                        ]}
-                        color={currentColor}
-                        lineWidth={1}
-                        dashed={false}
-                      />
+                        {/* 수직 연결선 - 왼쪽으로 이동 (hover 시 테마 색상) */}
+                        <group>
+                          <NativeLine
+                            points={[
+                              [-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
+                              [-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+                            ]}
+                            color={currentColor}
+                            lineWidth={1}
+                            dashed={false}
+                          />
 
-                      {/* 가이드선 클릭/hover 영역 */}
-                      <mesh
-                        position={[-innerWidth/2 * 0.3, (topY + bottomY) / 2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
-                        onPointerOver={(e) => {
-                          e.stopPropagation();
-                          setHoveredSectionIndex(index);
-                        }}
-                        onPointerOut={(e) => {
-                          e.stopPropagation();
-                          setHoveredSectionIndex(null);
-                        }}
-                      >
-                        <planeGeometry args={[0.3, Math.abs(topY - bottomY)]} />
-                        <meshBasicMaterial transparent opacity={0} depthTest={false} side={2} />
-                      </mesh>
-                    </group>
+                          {/* 가이드선 클릭/hover 영역 */}
+                          <mesh
+                            position={[-innerWidth/2 * 0.3, (topY + bottomY) / 2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
+                            onPointerOver={(e) => {
+                              e.stopPropagation();
+                              setHoveredSectionIndex(index);
+                            }}
+                            onPointerOut={(e) => {
+                              e.stopPropagation();
+                              setHoveredSectionIndex(null);
+                            }}
+                          >
+                            <planeGeometry args={[0.3, Math.abs(topY - bottomY)]} />
+                            <meshBasicMaterial transparent opacity={0} depthTest={false} side={2} />
+                          </mesh>
+                        </group>
 
-                    {/* 수직선 양끝 엔드포인트 (hover 시 테마 색상) */}
-                    <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={currentColor} />
-                    </mesh>
-                    <mesh position={[-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                      <sphereGeometry args={[0.05, 8, 8]} />
-                      <meshBasicMaterial color={currentColor} />
-                    </mesh>
+                        {/* 수직선 양끝 엔드포인트 (hover 시 테마 색상) */}
+                        <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={currentColor} />
+                        </mesh>
+                        <mesh position={[-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={currentColor} />
+                        </mesh>
+                      </>
+                    )}
 
-                    {/* 안전선반 위 칸의 내경 치수 (안전선반이 있는 경우) */}
-                    {topCompartmentHeight !== null && topCompartmentBottomY !== null && topCompartmentTopY !== null && (
+                    {/* 안전선반 위 칸의 내경 치수 (안전선반이 있는 경우만) */}
+                    {!showFullDimension && topCompartmentHeight !== null && topCompartmentBottomY !== null && topCompartmentTopY !== null && (
                       <>
                         {(() => {
                           const topCenterY = (topCompartmentTopY + topCompartmentBottomY) / 2;
