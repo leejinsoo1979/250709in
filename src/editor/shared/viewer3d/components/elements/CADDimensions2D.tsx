@@ -233,7 +233,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             if (isLastSection) {
               // 상부섹션: 가구 최상단부터 하부섹션 끝점(=상부섹션 시작점)까지의 실제 거리
               const topY = floatHeight + baseFrameHeight + internalHeight;
-              const bottomY = sectionStartY; // 상부섹션 시작점 = 하부섹션 끝점
+              // sectionStartY는 basicThickness만큼 올라간 상태이므로 원래 위치로 보정
+              const bottomY = sectionStartY - basicThickness;
               sectionHeightMm = (topY - bottomY) / 0.01;
             } else {
               // 하부섹션 및 기타: 섹션 자체 높이
