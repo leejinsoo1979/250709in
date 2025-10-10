@@ -394,14 +394,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   return (
                     <Text
                       key={`drawer-depth-${sectionIndex}-${drawerIndex}`}
-                      position={[slotX + mmToThreeUnits(150), drawerY, furnitureZ]}
+                      position={[slotX - mmToThreeUnits(300), drawerY, furnitureZ]}
                       fontSize={largeFontSize}
-                      color={dimensionColor}
+                      color="#008B8B"
                       anchorX="center"
                       anchorY="middle"
                       renderOrder={1000}
                       depthTest={false}
-                      rotation={[0, -Math.PI / 2, Math.PI / 2]}
+                      rotation={[0, -Math.PI / 2, 0]}
                     >
                       D{drawerDepthMm}
                     </Text>
