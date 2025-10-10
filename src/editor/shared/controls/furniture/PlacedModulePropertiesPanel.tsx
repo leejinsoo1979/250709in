@@ -515,6 +515,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hasDoor, setHasDoor] = useState<boolean>(false);
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
   const [showWarning, setShowWarning] = useState(false);
+
+  // 섹션 높이 상태
+  const [lowerSectionHeight, setLowerSectionHeight] = useState<number>(1000);
+  const [upperSectionHeight, setUpperSectionHeight] = useState<number>(1000);
+  const [lowerHeightInput, setLowerHeightInput] = useState<string>('1000');
+  const [upperHeightInput, setUpperHeightInput] = useState<string>('1000');
   
   // 전체 팝업에서 엔터키 처리 - 조건문 위로 이동
   useEffect(() => {
@@ -670,6 +676,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setHingePosition(currentPlacedModule.hingePosition || 'right');
       setHasDoor(currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false);
       setHasGapBackPanel(currentPlacedModule.hasGapBackPanel ?? false); // 갭 백패널 초기값 설정
+
+      // 2섹션 가구의 섹션 높이 초기화
+      const sections = moduleData.modelConfig?.sections || [];
+      if (sections.length === 2) {
+        const lowerHeight = sections[0].calculatedHeight || 1000;
+        const upperHeight = sections[1].calculatedHeight || 1000;
+        setLowerSectionHeight(lowerHeight);
+        setUpperSectionHeight(upperHeight);
+        setLowerHeightInput(lowerHeight.toString());
+        setUpperHeightInput(upperHeight.toString());
+      }
       
       console.log('🔧 팝업 초기값 설정:', {
         moduleId: currentPlacedModule.moduleId,
@@ -704,6 +721,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // 싱글 가구 여부 확인 (듀얼이 아닌 경우)
   const isSingleFurniture = !isDualFurniture;
+
+  // 2섹션 가구 여부 확인
+  const sections = moduleData?.modelConfig?.sections || [];
+  const isTwoSectionFurniture = sections.length === 2;
 
   // 디버깅용 로그 (개발 모드에서만 출력)
   if (import.meta.env.DEV) {
@@ -794,6 +815,49 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const handleDepthKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleDepthInputBlur();
+    }
+  };
+
+  // 섹션 높이 입력 핸들러
+  const handleLowerHeightChange = (value: string) => {
+    if (value === '' || /^\d+$/.test(value)) {
+      setLowerHeightInput(value);
+    }
+  };
+
+  const handleUpperHeightChange = (value: string) => {
+    if (value === '' || /^\d+$/.test(value)) {
+      setUpperHeightInput(value);
+    }
+  };
+
+  const handleLowerHeightBlur = () => {
+    const value = parseInt(lowerHeightInput);
+    if (!isNaN(value) && value > 0) {
+      setLowerSectionHeight(value);
+      // 실시간 업데이트: sections 배열 업데이트
+      if (currentPlacedModule && moduleData && isTwoSectionFurniture) {
+        const updatedSections = [...sections];
+        updatedSections[0] = { ...updatedSections[0], calculatedHeight: value };
+        updatePlacedModule(currentPlacedModule.id, {
+          customSections: updatedSections
+        });
+      }
+    }
+  };
+
+  const handleUpperHeightBlur = () => {
+    const value = parseInt(upperHeightInput);
+    if (!isNaN(value) && value > 0) {
+      setUpperSectionHeight(value);
+      // 실시간 업데이트: sections 배열 업데이트
+      if (currentPlacedModule && moduleData && isTwoSectionFurniture) {
+        const updatedSections = [...sections];
+        updatedSections[1] = { ...updatedSections[1], calculatedHeight: value };
+        updatePlacedModule(currentPlacedModule.id, {
+          customSections: updatedSections
+        });
+      }
     }
   };
 
@@ -1012,6 +1076,46 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 {widthError && <div className={styles.errorMessage}>{widthError}</div>}
                 <div className={styles.depthRange}>
                   {t('furniture.range')}: 150mm ~ {moduleData.dimensions.width}mm
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 섹션 높이 설정 (2섹션 가구만) */}
+          {isTwoSectionFurniture && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>섹션 높이 설정</h5>
+              <div className={styles.sectionHeightWrapper}>
+                {/* 하부 섹션 */}
+                <div className={styles.heightInputGroup}>
+                  <label className={styles.heightLabel}>하부 섹션</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="number"
+                      value={lowerHeightInput}
+                      onChange={(e) => handleLowerHeightChange(e.target.value)}
+                      onBlur={handleLowerHeightBlur}
+                      className={styles.heightInput}
+                      placeholder="1000"
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                </div>
+
+                {/* 상부 섹션 */}
+                <div className={styles.heightInputGroup}>
+                  <label className={styles.heightLabel}>상부 섹션</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="number"
+                      value={upperHeightInput}
+                      onChange={(e) => handleUpperHeightChange(e.target.value)}
+                      onBlur={handleUpperHeightBlur}
+                      className={styles.heightInput}
+                      placeholder="1000"
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
                 </div>
               </div>
             </div>
