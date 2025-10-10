@@ -155,6 +155,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
+    // MeshBasicMaterial인 경우 (프레임 형광색 등) material의 색상을 그대로 사용
+    if (baseMaterial instanceof THREE.MeshBasicMaterial) {
+      return "#" + baseMaterial.color.getHexString();
+    }
+
     // 강조 상태일 때는 2D/3D 모드에 따라 다른 색상 사용
     if (isHighlighted) {
       if (viewMode === '2D') {
