@@ -275,7 +275,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   depthTest={false}
                   rotation={[0, -Math.PI / 2, 0]}
                 >
-                  {Math.round(sectionHeightMm)}
+                  측판높이 {Math.round(sectionHeightMm)}
                 </Text>
               </group>
             );
@@ -283,6 +283,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         })}
 
         {/* 받침대 높이 */}
+        {baseFrameHeightMm > 0 && (
         <group>
             {/* 보조 가이드 연장선 - 하단 (바닥) */}
             <NativeLine
@@ -339,6 +340,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               하판 {baseFrameHeightMm}
             </Text>
         </group>
+        )}
 
 
         {/* ===== 가구별 깊이 치수 ===== */}
