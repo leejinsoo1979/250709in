@@ -128,8 +128,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
 
                   return (
                     <BoxWithEdges
-                      args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                      position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset]}
+                      args={[innerWidth, basicThickness, depth]}
+                      position={[0, lowerTopPanelY, 0]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
@@ -151,8 +151,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                     <>
                       {/* 상부 섹션 바닥판 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                        position={[0, lowerTopPanelY + basicThickness, basicThickness/2 + shelfZOffset]}
+                        args={[innerWidth, basicThickness, depth]}
+                        position={[0, lowerTopPanelY + basicThickness, 0]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
