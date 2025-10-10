@@ -252,8 +252,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {/* 보조 가이드 연장선 - 끝 (상부섹션은 Y축으로 짧게) */}
                 <NativeLine
                   points={[
-                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
-                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(93)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
+                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(93)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={1}
@@ -264,7 +264,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX, sectionIndex === 0 ? (floatHeight + baseFrameHeight) : sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(93)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={2}
@@ -310,7 +310,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     slotX,
-                    isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY,
+                    isLastSection ? (sectionEndY - mmToThreeUnits(93)) : sectionEndY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)
                   ]}
                   renderOrder={100001}
@@ -326,7 +326,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     slotX,
                     (() => {
                       const lineStart = sectionIndex === 0 ? (floatHeight + baseFrameHeight) : sectionStartY;
-                      const lineEnd = isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY;
+                      const lineEnd = isLastSection ? (sectionEndY - mmToThreeUnits(93)) : sectionEndY;
                       return lineStart + (lineEnd - lineStart) / 2;
                     })(),
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)
