@@ -278,39 +278,37 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 높이 텍스트 */}
-          {showDimensionsText && (
-            <Html
-              position={[
-                currentViewDirection === 'left'
-                  ? heightDimX - mmToThreeUnits(100)
-                  : heightDimX + mmToThreeUnits(100),
-                floatHeight + totalSpaceHeight / 2,
-                0
-              ]}
-              center
-              transform={false}
-              occlude={false}
-              zIndexRange={[1000, 1001]}
-              style={{ pointerEvents: 'none' }}
+          <Html
+            position={[
+              currentViewDirection === 'left'
+                ? heightDimX - mmToThreeUnits(100)
+                : heightDimX + mmToThreeUnits(100),
+              floatHeight + totalSpaceHeight / 2,
+              0
+            ]}
+            center
+            transform={false}
+            occlude={false}
+            zIndexRange={[1000, 1001]}
+            style={{ pointerEvents: 'none' }}
+          >
+            <div
+              style={{
+                background: dimensionColors.background,
+                color: dimensionColors.primary,
+                padding: '6px 10px',
+                borderRadius: '4px',
+                fontSize: '18px',
+                fontWeight: 'bold',
+                border: `1px solid ${dimensionColors.primary}`,
+                fontFamily: 'monospace',
+                whiteSpace: 'nowrap',
+                userSelect: 'none'
+              }}
             >
-              <div
-                style={{
-                  background: dimensionColors.background,
-                  color: dimensionColors.primary,
-                  padding: '6px 10px',
-                  borderRadius: '4px',
-                  fontSize: '18px',
-                  fontWeight: 'bold',
-                  border: `1px solid ${dimensionColors.primary}`,
-                  fontFamily: 'monospace',
-                  whiteSpace: 'nowrap',
-                  userSelect: 'none'
-                }}
-              >
-                {totalSpaceHeightMm}mm
-              </div>
-            </Html>
-          )}
+              {totalSpaceHeightMm}mm
+            </div>
+          </Html>
         </group>
 
         {/* 공간 전체 깊이 치수 (상단) */}
