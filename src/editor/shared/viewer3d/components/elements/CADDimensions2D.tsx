@@ -121,7 +121,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             anchorY="middle"
             renderOrder={1000}
             depthTest={false}
-            rotation={[0, Math.PI / 2, 0]}
+            rotation={[0, -Math.PI / 2, 0]}
           >
             {spaceInfo.height}
           </Text>
@@ -170,7 +170,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               anchorY="middle"
               renderOrder={1000}
               depthTest={false}
-              rotation={[0, Math.PI / 2, 0]}
+              rotation={[0, -Math.PI / 2, 0]}
             >
               상판 {topFrameHeightMm}
             </Text>
@@ -217,7 +217,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             anchorY="middle"
             renderOrder={1000}
             depthTest={false}
-            rotation={[0, Math.PI / 2, 0]}
+            rotation={[0, -Math.PI / 2, 0]}
           >
             내부 {internalSpace.height}
           </Text>
@@ -264,7 +264,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               anchorY="middle"
               renderOrder={1000}
               depthTest={false}
-              rotation={[0, Math.PI / 2, 0]}
+              rotation={[0, -Math.PI / 2, 0]}
             >
               하판 {baseFrameHeightMm}
             </Text>
@@ -318,7 +318,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             anchorY="middle"
             renderOrder={1000}
             depthTest={false}
-            rotation={[0, Math.PI / 2, 0]}
+            rotation={[0, -Math.PI / 2, 0]}
           >
             {spaceInfo.depth || 1500}
           </Text>
@@ -399,7 +399,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 anchorY="middle"
                 renderOrder={1000}
                 depthTest={false}
-                rotation={[0, Math.PI / 2, 0]}
+                rotation={[0, -Math.PI / 2, 0]}
               >
                 {customDepth}
               </Text>
