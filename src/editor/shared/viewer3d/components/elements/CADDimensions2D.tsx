@@ -231,8 +231,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const frontZ = furnitureZ + furnitureDepth / 2;
           const backZ = furnitureZ - furnitureDepth / 2;
 
-          // 높이 치수선 위치 (가구 오른쪽)
-          const heightDimZ = furnitureZ + furnitureDepth / 2 + mmToThreeUnits(150);
+          // 높이 치수선 위치 (가구 앞단)
+          const heightDimZ = frontZ + mmToThreeUnits(150);
           const bottomY = furnitureY - furnitureHeight / 2;
           const topY = furnitureY + furnitureHeight / 2;
 
