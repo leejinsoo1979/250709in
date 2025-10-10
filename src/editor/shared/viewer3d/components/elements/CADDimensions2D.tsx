@@ -225,11 +225,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 상부섹션(마지막)은 가이드선을 짧게 해서 상단 끝에 맞춤
             const isLastSection = sectionIndex === sections.length - 1;
 
-            // 상부섹션만 18mm 아래로 조정
-            const yOffset = isLastSection ? -basicThickness : 0;
-            const sectionStartY = currentY + yOffset;
-            const sectionEndY = currentY + sectionHeight + yOffset;
-            currentY = sectionEndY - yOffset; // 다음 섹션 위치 (오프셋 보정)
+            // Y 오프셋 없음 - 실제 섹션 위치 그대로 사용
+            const sectionStartY = currentY;
+            const sectionEndY = currentY + sectionHeight;
+            currentY = sectionEndY; // 다음 섹션 위치
 
             // 첫 번째 섹션은 하단 가이드선 표시 안 함 (받침대와 겹침)
             const shouldRenderStartGuide = sectionIndex !== 0;
@@ -252,8 +251,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {/* 보조 가이드 연장선 - 끝 (상부섹션은 Y축으로 짧게) */}
                 <NativeLine
                   points={[
-                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(93)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
-                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(93)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
+                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={1}
@@ -264,7 +263,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX, sectionIndex === 0 ? (floatHeight + baseFrameHeight) : sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(93)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={2}
@@ -310,7 +309,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     slotX,
-                    isLastSection ? (sectionEndY - mmToThreeUnits(93)) : sectionEndY,
+                    isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)
                   ]}
                   renderOrder={100001}
@@ -326,7 +325,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     slotX,
                     (() => {
                       const lineStart = sectionIndex === 0 ? (floatHeight + baseFrameHeight) : sectionStartY;
-                      const lineEnd = isLastSection ? (sectionEndY - mmToThreeUnits(93)) : sectionEndY;
+                      const lineEnd = isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY;
                       return lineStart + (lineEnd - lineStart) / 2;
                     })(),
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) + mmToThreeUnits(60)
