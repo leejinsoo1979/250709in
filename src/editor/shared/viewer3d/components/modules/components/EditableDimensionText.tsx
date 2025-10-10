@@ -56,18 +56,10 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
 
   // 편집 모드 진입 (클릭으로 변경)
   const handleClick = useCallback((e: any) => {
-    console.log('🖱️ 치수 클릭 이벤트 발생!', {
-      furnitureId,
-      sectionIndex,
-      currentValue: value,
-      isEditing,
-      eventType: e.type
-    });
     e.stopPropagation();
     setEditValue(String(Math.round(value)));
     setIsEditing(true);
-    console.log('✅ 편집 모드 활성화 완료');
-  }, [value, furnitureId, sectionIndex, isEditing]);
+  }, [value]);
 
   // 입력창에 포커스
   useEffect(() => {
@@ -122,22 +114,20 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
 
   // Hover 이벤트
   const handlePointerOver = useCallback((e: any) => {
-    console.log('🎯 마우스 오버 이벤트:', { sectionIndex, furnitureId });
     e.stopPropagation();
     setIsHovered(true);
     if (onHoverChange) {
       onHoverChange(true);
     }
-  }, [onHoverChange, sectionIndex, furnitureId]);
+  }, [onHoverChange]);
 
   const handlePointerOut = useCallback((e: any) => {
-    console.log('👋 마우스 아웃 이벤트:', { sectionIndex, furnitureId });
     e.stopPropagation();
     setIsHovered(false);
     if (onHoverChange) {
       onHoverChange(false);
     }
-  }, [onHoverChange, sectionIndex, furnitureId]);
+  }, [onHoverChange]);
 
   // 현재 색상 결정 (hover 시 테마 색상)
   const currentColor = isHovered ? themeColor : color;
@@ -196,7 +186,7 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
       {/* 일반 표시 모드 */}
       {!isEditing && (
         <group>
-          {/* 치수 텍스트 (hover 시 테마 색상으로 변경) */}
+          {/* 치수 텍스트 (hover 시 테마 색상으로 변경) - 이벤트 없음 */}
           <Text
             position={position}
             fontSize={fontSize}
@@ -206,14 +196,11 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
             rotation={rotation}
             renderOrder={renderOrder}
             depthTest={depthTest}
-            onClick={handleClick}
-            onPointerOver={handlePointerOver}
-            onPointerOut={handlePointerOut}
           >
             {Math.round(value)}
           </Text>
 
-          {/* 클릭 영역 확장용 투명 메시 */}
+          {/* 클릭 영역 - 투명 메시 */}
           <mesh
             ref={meshRef}
             position={position}
@@ -222,11 +209,12 @@ const EditableDimensionText: React.FC<EditableDimensionTextProps> = ({
             onPointerOver={handlePointerOver}
             onPointerOut={handlePointerOut}
           >
-            <planeGeometry args={[fontSize * 6, fontSize * 2]} />
+            <planeGeometry args={[1.0, 0.5]} />
             <meshBasicMaterial
               transparent
-              opacity={0}
+              opacity={0.01}
               depthTest={false}
+              side={2}
             />
           </mesh>
         </group>
