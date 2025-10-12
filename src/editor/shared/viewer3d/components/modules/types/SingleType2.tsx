@@ -445,19 +445,21 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           slotIndex={slotIndex}
         />
       )}
-      
-      {/* 조절발통 (네 모서리) */}
-      <AdjustableFootsRenderer
-        width={width}
-        depth={depth}
-        yOffset={-height / 2}
-        renderMode={renderMode}
-        isHighlighted={false}
-        isFloating={false}
-        baseHeight={spaceInfo?.baseConfig?.height || 65}
-        viewMode={viewMode}
-        view2DDirection={view2DDirection}
-      />
+
+      {/* 조절발통 (네 모서리) - showFurniture가 true일 때만 렌더링 */}
+      {showFurniture && (
+        <AdjustableFootsRenderer
+          width={width}
+          depth={depth}
+          yOffset={-height / 2}
+          renderMode={renderMode}
+          isHighlighted={false}
+          isFloating={false}
+          baseHeight={spaceInfo?.baseConfig?.height || 65}
+          viewMode={viewMode}
+          view2DDirection={view2DDirection}
+        />
+      )}
     </>
   );
 };
