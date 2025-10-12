@@ -34,8 +34,13 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   adjustedDepthForShelves,
   depth,
 }) => {
-  const { view2DTheme } = useUIStore();
+  const { view2DTheme, view2DDirection } = useUIStore();
   const { viewMode } = useSpace3DView();
+
+  // 탑뷰에서는 렌더링하지 않음
+  if (viewMode === '2D' && view2DDirection === 'top') {
+    return null;
+  }
 
   // 단위 변환 함수
   const mmToThreeUnits = (mm: number): number => mm * 0.01;
