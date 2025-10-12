@@ -6,6 +6,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSpaceIndexing, calculateInternalSpace } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
+import { calculateFurnitureDimensions } from '@/editor/shared/utils/furnitureDimensionCalculator';
 
 interface CADDimensions2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -798,6 +799,137 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </group>
         )}
 
+        {/* ===== 가구별 내경 치수 (정면뷰 치수를 90도 회전) ===== */}
+        {(() => {
+          const furnitureDimensions = calculateFurnitureDimensions(placedModules, spaceInfo);
+
+          return furnitureDimensions.map((furnitureDim, index) => {
+            const { module, innerWidth, innerHeight, innerDepth, isMultiSection, sections } = furnitureDim;
+
+            // 가구 위치 계산
+            const indexing = calculateSpaceIndexing(spaceInfo);
+            const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
+
+            // Z축 중앙 위치 (가구 측면의 중앙)
+            const panelDepthMm = spaceInfo.depth || 1500;
+            const panelDepth = mmToThreeUnits(panelDepthMm);
+            const furnitureDepthMm = module.customDepth || furnitureDim.moduleData.dimensions.depth || 600;
+            const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+            const doorThickness = mmToThreeUnits(20);
+            const zOffset = -panelDepth / 2;
+            const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
+            const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness;
+
+            // 내경 치수 표시 (정면뷰의 가로 치수가 좌측뷰에서는 깊이가 됨)
+            const innerWidthMm = innerWidth;
+            const innerDepthMm = innerDepth;
+            const innerWidthThree = mmToThreeUnits(innerWidthMm);
+
+            if (isMultiSection && sections) {
+              // 멀티 섹션 가구: 각 섹션별로 내경 높이 표시
+              return sections.map(section => {
+                const sectionCenterY = mmToThreeUnits(section.startY + section.height / 2);
+                const innerHeightMm = section.innerHeight;
+
+                return (
+                  <group key={`furniture-inner-${module.id || index}-section-${section.index}`}>
+                    {/* 내경 너비 텍스트 (수평) - 가구 측면 중앙에 표시 */}
+                    <Text
+                      position={[0, sectionCenterY, furnitureZ]}
+                      fontSize={largeFontSize}
+                      color="#FF6B6B" // 내경 치수는 붉은색으로 구분
+                      anchorX="center"
+                      anchorY="middle"
+                      renderOrder={100002}
+                      depthTest={false}
+                      rotation={[0, Math.PI / 2, 0]}
+                    >
+                      W{Math.round(innerWidthMm)}
+                    </Text>
+
+                    {/* 내경 높이 텍스트 (수직) */}
+                    <Text
+                      position={[0, sectionCenterY + mmToThreeUnits(80), furnitureZ]}
+                      fontSize={smallFontSize}
+                      color="#FF6B6B"
+                      anchorX="center"
+                      anchorY="middle"
+                      renderOrder={100002}
+                      depthTest={false}
+                      rotation={[0, Math.PI / 2, 0]}
+                    >
+                      H{Math.round(innerHeightMm)}
+                    </Text>
+
+                    {/* 내경 깊이 텍스트 */}
+                    <Text
+                      position={[0, sectionCenterY - mmToThreeUnits(80), furnitureZ]}
+                      fontSize={smallFontSize}
+                      color="#FF6B6B"
+                      anchorX="center"
+                      anchorY="middle"
+                      renderOrder={100002}
+                      depthTest={false}
+                      rotation={[0, Math.PI / 2, 0]}
+                    >
+                      D{Math.round(innerDepthMm)}
+                    </Text>
+                  </group>
+                );
+              });
+            } else {
+              // 단일 섹션 가구
+              const furnitureCenterY = floatHeight + baseFrameHeight + mmToThreeUnits(furnitureDim.actualHeight) / 2;
+              const innerHeightMm = innerHeight;
+
+              return (
+                <group key={`furniture-inner-${module.id || index}`}>
+                  {/* 내경 너비 텍스트 (수평) - 가구 측면 중앙에 표시 */}
+                  <Text
+                    position={[0, furnitureCenterY, furnitureZ]}
+                    fontSize={largeFontSize}
+                    color="#FF6B6B" // 내경 치수는 붉은색으로 구분
+                    anchorX="center"
+                    anchorY="middle"
+                    renderOrder={100002}
+                    depthTest={false}
+                    rotation={[0, Math.PI / 2, 0]}
+                  >
+                    W{Math.round(innerWidthMm)}
+                  </Text>
+
+                  {/* 내경 높이 텍스트 (수직) */}
+                  <Text
+                    position={[0, furnitureCenterY + mmToThreeUnits(80), furnitureZ]}
+                    fontSize={smallFontSize}
+                    color="#FF6B6B"
+                    anchorX="center"
+                    anchorY="middle"
+                    renderOrder={100002}
+                    depthTest={false}
+                    rotation={[0, Math.PI / 2, 0]}
+                  >
+                    H{Math.round(innerHeightMm)}
+                  </Text>
+
+                  {/* 내경 깊이 텍스트 */}
+                  <Text
+                    position={[0, furnitureCenterY - mmToThreeUnits(80), furnitureZ]}
+                    fontSize={smallFontSize}
+                    color="#FF6B6B"
+                    anchorX="center"
+                    anchorY="middle"
+                    renderOrder={100002}
+                    depthTest={false}
+                    rotation={[0, Math.PI / 2, 0]}
+                  >
+                    D{Math.round(innerDepthMm)}
+                  </Text>
+                </group>
+              );
+            }
+          });
+        })()}
 
         {/* ===== 가구별 깊이 치수 ===== */}
         {placedModules.map((module, index) => {
