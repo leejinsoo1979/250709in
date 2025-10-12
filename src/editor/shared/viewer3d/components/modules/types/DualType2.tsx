@@ -136,14 +136,20 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={isSectionHighlighted}
                 />
                 
-                {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 앞까지 확장 */}
+                {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 방향으로 26mm 확장 */}
                 {index === 0 && (() => {
                   const lowerTopPanelY = sectionCenterY + sectionHeight/2 - basicThickness/2;
 
+                  // 백패널 방향으로 26mm 확장
+                  const originalDepth = adjustedDepthForShelves - basicThickness;
+                  const extendedDepth = originalDepth + mmToThreeUnits(26);
+                  // 중심이 뒤로 이동 (음의 Z 방향으로 26mm의 절반 = -13mm)
+                  const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13);
+
                   return (
                     <BoxWithEdges
-                      args={[innerWidth, basicThickness, depth - backPanelThickness - mmToThreeUnits(17)]}
-                      position={[0, lowerTopPanelY, (backPanelThickness + mmToThreeUnits(17)) / 2]}
+                      args={[innerWidth, basicThickness, extendedDepth]}
+                      position={[0, lowerTopPanelY, extendedZPosition]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
@@ -153,7 +159,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   );
                 })()}
 
-                {/* 상부 섹션의 바닥판 - 하부 섹션 상판 바로 위, 백패널 앞까지 확장 */}
+                {/* 상부 섹션의 바닥판 - 백패널 방향으로 26mm 확장 */}
                 {index === 1 && (() => {
                   // 하부 섹션의 높이와 중심 위치 계산
                   const lowerSectionHeight = sectionHeights[0];
@@ -161,12 +167,18 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   const lowerSectionCenterY = lowerAccumulatedY + lowerSectionHeight / 2 - basicThickness;
                   const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 - basicThickness/2;
 
+                  // 백패널 방향으로 26mm 확장
+                  const originalDepth = adjustedDepthForShelves - basicThickness;
+                  const extendedDepth = originalDepth + mmToThreeUnits(26);
+                  // 중심이 뒤로 이동 (음의 Z 방향으로 26mm의 절반 = -13mm)
+                  const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13);
+
                   return (
                     <>
                       {/* 상부 섹션 바닥판 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, depth - backPanelThickness - mmToThreeUnits(17)]}
-                        position={[0, lowerTopPanelY + basicThickness, (backPanelThickness + mmToThreeUnits(17)) / 2]}
+                        args={[innerWidth, basicThickness, extendedDepth]}
+                        position={[0, lowerTopPanelY + basicThickness, extendedZPosition]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
