@@ -45,14 +45,19 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const bracketDepth = mmToThreeUnits(12);
   const bracketHeight = mmToThreeUnits(75);
 
-  // 봉 크기
-  const rodWidth = innerWidth; // 가구 내경 전체
-  const rodDepth = mmToThreeUnits(10);
-  const rodHeight = mmToThreeUnits(30);
-
   // 브라켓 X 위치 (가구 내부 양 끝)
   const leftBracketX = -innerWidth / 2 + bracketWidth / 2;
   const rightBracketX = innerWidth / 2 - bracketWidth / 2;
+
+  // 옷봉 크기 및 위치: 브라켓 안쪽에서 안쪽까지
+  // 옷봉 시작 = 좌측 브라켓 안쪽 (leftBracketX + bracketWidth/2)
+  // 옷봉 끝 = 우측 브라켓 안쪽 (rightBracketX - bracketWidth/2)
+  const rodStartX = leftBracketX + bracketWidth / 2;
+  const rodEndX = rightBracketX - bracketWidth / 2;
+  const rodWidth = rodEndX - rodStartX; // 브라켓 안쪽 사이 거리
+  const rodCenterX = (rodStartX + rodEndX) / 2; // 옷봉 중심 X
+  const rodDepth = mmToThreeUnits(10);
+  const rodHeight = mmToThreeUnits(30);
 
   // 옷봉 Y 위치: 브라켓 하단에서 5mm 위에 옷봉 하단
   // 브라켓 중심(Y=0) 기준, 브라켓 하단은 -bracketHeight/2
@@ -68,11 +73,11 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const rodMaterial = React.useMemo(() => {
     if (viewMode === '3D') {
       return new THREE.MeshStandardMaterial({
-        color: '#FFFFFF', // 순백색으로 반사 극대화
-        metalness: 1.0,   // 완전한 금속
-        roughness: 0.1,   // 매우 매끄러운 표면 (광택)
-        emissive: '#202020', // 약간의 자체 발광
-        emissiveIntensity: 0.3
+        color: '#D0D0D0', // 밝은 회색
+        metalness: 0.8,   // 높은 금속성
+        roughness: 0.2,   // 낮은 거칠기 (광택)
+        emissive: '#606060', // 자체 발광으로 밝게
+        emissiveIntensity: 0.5
       });
     } else {
       return new THREE.MeshStandardMaterial({
