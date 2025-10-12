@@ -832,7 +832,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             if (isMultiSection && sections) {
               // 멀티 섹션 가구: 각 섹션별로 내경 높이 표시
               return sections.map(section => {
-                const sectionCenterY = mmToThreeUnits(section.startY + section.height / 2);
+                // 내경의 중심 Y 위치 계산 (startY는 이미 바닥판 위, endY는 상판 아래)
+                const sectionCenterY = mmToThreeUnits((section.startY + section.endY) / 2);
                 const innerHeightMm = section.innerHeight;
 
                 return (
