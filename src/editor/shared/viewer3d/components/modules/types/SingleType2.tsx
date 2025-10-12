@@ -139,12 +139,18 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-${index + 1}`;
 
+                  // 백패널 방향으로 26mm 확장
+                  const originalDepth = adjustedDepthForShelves - basicThickness;
+                  const extendedDepth = originalDepth + mmToThreeUnits(26);
+                  // 중심이 뒤로 이동 (음의 Z 방향으로 26mm의 절반 = -13mm)
+                  const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13);
+
                   return (
                     <>
-                      {/* 하부 섹션 상판 */}
+                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 확장 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset]}
+                        args={[innerWidth, basicThickness, extendedDepth]}
+                        position={[0, lowerTopPanelY, extendedZPosition]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -152,10 +158,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isHighlighted={isLowerHighlighted}
                       />
 
-                      {/* 상부 섹션 바닥판 */}
+                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 확장 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
-                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset]}
+                        args={[innerWidth, basicThickness, extendedDepth]}
+                        position={[0, middlePanelY, extendedZPosition]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
