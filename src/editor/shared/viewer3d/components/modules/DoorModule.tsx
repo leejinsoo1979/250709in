@@ -1549,6 +1549,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     0
                   ]}
                   viewDirection="side"
+                  view2DDirection={view2DDirection}
                 />
                 {/* 2번째 경첩: 도어 위에서 700mm */}
                 <Hinge
@@ -1558,6 +1559,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     0
                   ]}
                   viewDirection="side"
+                  view2DDirection={view2DDirection}
                 />
                 {/* 3번째 경첩: 도어 아래에서 149mm */}
                 <Hinge
@@ -1567,6 +1569,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     0
                   ]}
                   viewDirection="side"
+                  view2DDirection={view2DDirection}
                 />
                 {/* 4번째 경첩: 도어 아래에서 749mm */}
                 <Hinge
@@ -1576,6 +1579,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     0
                   ]}
                   viewDirection="side"
+                  view2DDirection={view2DDirection}
                 />
               </>
             )}

@@ -9,6 +9,7 @@ interface HingeProps {
   verticalSpacing?: number;
   smallCircleXOffset?: number; // 작은 원의 X축 오프셋 (측판에서 더 안쪽으로)
   viewDirection?: 'front' | 'side'; // 뷰 방향 (정면 또는 측면)
+  view2DDirection?: 'front' | 'left' | 'right' | 'top'; // DoorModule에서 전달받을 뷰 방향
 }
 
 export const Hinge: React.FC<HingeProps> = ({
@@ -17,9 +18,12 @@ export const Hinge: React.FC<HingeProps> = ({
   smallCircleDiameter = 4, // 작은 원 반지름 4mm
   verticalSpacing = 20, // 작은 원들 사이 간격 (사용 안 함)
   smallCircleXOffset = 9.5, // 작은 원이 메인 원보다 안쪽으로 9.5mm (33.5 - 24)
-  viewDirection = 'front' // 기본값은 정면뷰
+  viewDirection = 'front', // 기본값은 정면뷰
+  view2DDirection: propsView2DDirection // props로 전달받은 view2DDirection
 }) => {
-  const { viewMode, view2DDirection } = useSpace3DView();
+  const { viewMode, view2DDirection: contextView2DDirection } = useSpace3DView();
+  // props로 전달받은 값이 있으면 우선 사용, 없으면 컨텍스트 값 사용
+  const view2DDirection = propsView2DDirection || contextView2DDirection;
 
   // Debug log at component start
   console.log('⭐⭐⭐ Hinge component start:',
