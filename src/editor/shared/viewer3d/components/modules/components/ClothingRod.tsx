@@ -122,9 +122,9 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
         isClothingRod={true}
       />
 
-      {/* 옷봉 렌더링: 2D는 두 개의 평행선, 3D는 박스 */}
+      {/* 옷봉 렌더링: 2D는 가로선 3줄 + 중간선, 3D는 박스 */}
       {viewMode === '2D' ? (
-        // 2D 모드: CAD 표준 방식 - 브라켓 안쪽에서 안쪽까지
+        // 2D 모드: CAD 표준 방식 - 가로선 3줄과 중간 추가선
         <>
           {/* 옷봉 상단선 */}
           <Line
@@ -135,11 +135,38 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
             color={lineColor}
             lineWidth={1}
           />
+          {/* 옷봉 중간선 */}
+          <Line
+            points={[
+              [rodStartX, rodYOffset, rodZOffset],
+              [rodEndX, rodYOffset, rodZOffset]
+            ]}
+            color={lineColor}
+            lineWidth={1}
+          />
           {/* 옷봉 하단선 */}
           <Line
             points={[
               [rodStartX, rodYOffset - rodHeight / 2, rodZOffset],
               [rodEndX, rodYOffset - rodHeight / 2, rodZOffset]
+            ]}
+            color={lineColor}
+            lineWidth={1}
+          />
+          {/* 상단과 중간 사이 추가선 */}
+          <Line
+            points={[
+              [rodStartX, rodYOffset + rodHeight / 4, rodZOffset],
+              [rodEndX, rodYOffset + rodHeight / 4, rodZOffset]
+            ]}
+            color={lineColor}
+            lineWidth={1}
+          />
+          {/* 중간과 하단 사이 추가선 */}
+          <Line
+            points={[
+              [rodStartX, rodYOffset - rodHeight / 4, rodZOffset],
+              [rodEndX, rodYOffset - rodHeight / 4, rodZOffset]
             ]}
             color={lineColor}
             lineWidth={1}
