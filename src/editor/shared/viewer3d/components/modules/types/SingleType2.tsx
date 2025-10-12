@@ -158,10 +158,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isHighlighted={isLowerHighlighted}
                       />
 
-                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 확장 */}
+                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 확장 + 임시 50mm 위로 */}
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, extendedDepth]}
-                        position={[0, middlePanelY, extendedZPosition]}
+                        position={[0, middlePanelY + mmToThreeUnits(50), extendedZPosition]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
