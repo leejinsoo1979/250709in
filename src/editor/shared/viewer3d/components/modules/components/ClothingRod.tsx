@@ -1,9 +1,6 @@
 import React from 'react';
 import * as THREE from 'three';
 import BoxWithEdges from './BoxWithEdges';
-import { Text, Line } from '@react-three/drei';
-import { useUIStore } from '@/store/uiStore';
-import { useSpace3DView } from '../../../context/useSpace3DView';
 
 interface ClothingRodProps {
   innerWidth: number;
@@ -12,8 +9,6 @@ interface ClothingRodProps {
   renderMode: '2d' | '3d';
   isDragging?: boolean;
   isEditMode?: boolean;
-  adjustedDepthForShelves: number;
-  depth: number;
 }
 
 /**
@@ -31,18 +26,9 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   renderMode,
   isDragging = false,
   isEditMode = false,
-  adjustedDepthForShelves,
-  depth,
 }) => {
-  const { showDimensions, showDimensionsText, view2DDirection, view2DTheme } = useUIStore();
-  const { viewMode } = useSpace3DView();
-
   // 단위 변환 함수
   const mmToThreeUnits = (mm: number): number => mm * 0.01;
-
-  // 2D 도면 치수 색상
-  const dimensionColor = view2DTheme === 'light' ? '#000000' : '#FFFFFF';
-  const baseFontSize = 0.15;
 
   // 브라켓 크기 (고정)
   const bracketWidth = mmToThreeUnits(12);
@@ -68,25 +54,14 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   // 브라켓 중심에서 옷봉이 안쪽으로 1mm 들어감
   const rodZOffset = -mmToThreeUnits(1);
 
-  // 옷봉 색상: 2D 모드일 때 view2DTheme에 따라 변경
+  // 옷봉 재질: 크롬 재질
   const rodMaterial = React.useMemo(() => {
-    if (renderMode === '2d') {
-      // 2D 모드: 라이트 테마면 회색, 다크 테마면 흰색
-      const color = view2DTheme === 'light' ? '#808080' : '#FFFFFF';
-      return new THREE.MeshStandardMaterial({
-        color,
-        roughness: 0.8,
-        metalness: 0.1
-      });
-    } else {
-      // 3D 모드: 크롬 재질
-      return new THREE.MeshStandardMaterial({
-        color: '#C0C0C0',
-        metalness: 0.9,
-        roughness: 0.1
-      });
-    }
-  }, [renderMode, view2DTheme]);
+    return new THREE.MeshStandardMaterial({
+      color: '#C0C0C0',
+      metalness: 0.9,
+      roughness: 0.1
+    });
+  }, []);
 
   // cleanup
   React.useEffect(() => {
@@ -129,61 +104,6 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
         isEditMode={isEditMode}
         isClothingRod={true}
       />
-
-      {/* 옷봉 치수 표시 - 정면도/측면도에서만 */}
-      {showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
-        <group>
-          {/* 옷봉 높이 치수 (H30) */}
-          <Text
-            position={[
-              innerWidth / 2 + 0.3,
-              rodYOffset,
-              viewMode === '3D' ? adjustedDepthForShelves / 2 + 0.1 : depth / 2 + 1.0
-            ]}
-            fontSize={baseFontSize}
-            color={dimensionColor}
-            anchorX="left"
-            anchorY="middle"
-          >
-            H30
-          </Text>
-
-          {/* 옷봉 높이 수직선 */}
-          <Line
-            points={[
-              [innerWidth / 2 + 0.2, rodYOffset - rodHeight / 2, viewMode === '3D' ? adjustedDepthForShelves / 2 + 0.1 : depth / 2 + 1.0],
-              [innerWidth / 2 + 0.2, rodYOffset + rodHeight / 2, viewMode === '3D' ? adjustedDepthForShelves / 2 + 0.1 : depth / 2 + 1.0]
-            ]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-
-          {/* 브라켓 높이 치수 (H75) */}
-          <Text
-            position={[
-              -innerWidth / 2 - 0.3,
-              0,
-              viewMode === '3D' ? adjustedDepthForShelves / 2 + 0.1 : depth / 2 + 1.0
-            ]}
-            fontSize={baseFontSize}
-            color={dimensionColor}
-            anchorX="right"
-            anchorY="middle"
-          >
-            H75
-          </Text>
-
-          {/* 브라켓 높이 수직선 */}
-          <Line
-            points={[
-              [-innerWidth / 2 - 0.2, -bracketHeight / 2, viewMode === '3D' ? adjustedDepthForShelves / 2 + 0.1 : depth / 2 + 1.0],
-              [-innerWidth / 2 - 0.2, bracketHeight / 2, viewMode === '3D' ? adjustedDepthForShelves / 2 + 0.1 : depth / 2 + 1.0]
-            ]}
-            color={dimensionColor}
-            lineWidth={1}
-          />
-        </group>
-      )}
     </group>
   );
 };
