@@ -1,6 +1,9 @@
 import React from 'react';
 import * as THREE from 'three';
 import BoxWithEdges from './BoxWithEdges';
+import { Line } from '@react-three/drei';
+import { useUIStore } from '@/store/uiStore';
+import { useSpace3DView } from '../../../context/useSpace3DView';
 
 interface ClothingRodProps {
   innerWidth: number;
@@ -9,6 +12,8 @@ interface ClothingRodProps {
   renderMode: '2d' | '3d';
   isDragging?: boolean;
   isEditMode?: boolean;
+  adjustedDepthForShelves: number;
+  depth: number;
 }
 
 /**
@@ -26,7 +31,12 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   renderMode,
   isDragging = false,
   isEditMode = false,
+  adjustedDepthForShelves,
+  depth,
 }) => {
+  const { view2DTheme } = useUIStore();
+  const { viewMode } = useSpace3DView();
+
   // 단위 변환 함수
   const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
@@ -54,14 +64,27 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   // 브라켓 중심에서 옷봉이 안쪽으로 1mm 들어감
   const rodZOffset = -mmToThreeUnits(1);
 
-  // 옷봉 재질: 크롬 재질
+  // 옷봉 재질: 3D 모드에서는 밝은 크롬 재질, 2D 모드에서는 회색
   const rodMaterial = React.useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: '#C0C0C0',
-      metalness: 0.9,
-      roughness: 0.1
-    });
-  }, []);
+    if (viewMode === '3D') {
+      return new THREE.MeshStandardMaterial({
+        color: '#E0E0E0', // 더 밝은 회색
+        metalness: 0.7,
+        roughness: 0.3,
+        emissive: '#404040', // 약간의 자체 발광 추가
+        emissiveIntensity: 0.2
+      });
+    } else {
+      return new THREE.MeshStandardMaterial({
+        color: '#808080',
+        roughness: 0.8,
+        metalness: 0.1
+      });
+    }
+  }, [viewMode]);
+
+  // 2D 도면용 선 색상
+  const lineColor = view2DTheme === 'light' ? '#808080' : '#FFFFFF';
 
   // cleanup
   React.useEffect(() => {
@@ -94,16 +117,41 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
         isClothingRod={true}
       />
 
-      {/* 중앙 옷봉 (박스) - 브라켓 안쪽에 배치 */}
-      <BoxWithEdges
-        args={[rodWidth, rodHeight, rodDepth]}
-        position={[0, rodYOffset, rodZOffset]}
-        material={rodMaterial}
-        renderMode={renderMode}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-        isClothingRod={true}
-      />
+      {/* 옷봉 렌더링: 2D는 두 개의 평행선, 3D는 박스 */}
+      {viewMode === '2D' ? (
+        // 2D 모드: CAD 표준 방식 - 상단선과 하단선
+        <>
+          {/* 옷봉 상단선 */}
+          <Line
+            points={[
+              [-innerWidth / 2, rodYOffset + rodHeight / 2, rodZOffset],
+              [innerWidth / 2, rodYOffset + rodHeight / 2, rodZOffset]
+            ]}
+            color={lineColor}
+            lineWidth={2}
+          />
+          {/* 옷봉 하단선 */}
+          <Line
+            points={[
+              [-innerWidth / 2, rodYOffset - rodHeight / 2, rodZOffset],
+              [innerWidth / 2, rodYOffset - rodHeight / 2, rodZOffset]
+            ]}
+            color={lineColor}
+            lineWidth={2}
+          />
+        </>
+      ) : (
+        // 3D 모드: 박스로 렌더링
+        <BoxWithEdges
+          args={[rodWidth, rodHeight, rodDepth]}
+          position={[0, rodYOffset, rodZOffset]}
+          material={rodMaterial}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          isClothingRod={true}
+        />
+      )}
     </group>
   );
 };
