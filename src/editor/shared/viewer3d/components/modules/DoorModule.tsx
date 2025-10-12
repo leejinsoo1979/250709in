@@ -1526,9 +1526,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
             {/* Hinges for single door - side view */}
             {/* 경첩이 왼쪽에 있으면 우측뷰에서, 오른쪽에 있으면 좌측뷰에서 보임 */}
-            {viewMode === '2D' &&
-             ((adjustedHingePosition === 'left' && view2DDirection === 'right') ||
-              (adjustedHingePosition === 'right' && view2DDirection === 'left')) && (
+            {(() => {
+              const leftCondition = adjustedHingePosition === 'left' && view2DDirection === 'right';
+              const rightCondition = adjustedHingePosition === 'right' && view2DDirection === 'left';
+              const result = viewMode === '2D' && (leftCondition || rightCondition);
+              console.log('🟡🟡🟡 싱글 도어 측면뷰 경첩 조건:',
+                'viewMode=' + viewMode,
+                'view2DDirection=' + view2DDirection,
+                'adjustedHingePosition=' + adjustedHingePosition,
+                'leftCondition=' + leftCondition,
+                'rightCondition=' + rightCondition,
+                'result=' + result
+              );
+              return result;
+            })() && (
               <>
                 {/* 1번째 경첩: 도어 위에서 100mm */}
                 <Hinge
