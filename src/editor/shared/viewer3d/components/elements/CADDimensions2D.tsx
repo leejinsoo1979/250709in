@@ -73,8 +73,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const smallFontSize = mmToThreeUnits(30);
 
   // 치수선 오프셋
-  const leftDimOffset = mmToThreeUnits(150);
-  const rightDimOffset = mmToThreeUnits(150);
+  const leftDimOffset = mmToThreeUnits(400);
+  const rightDimOffset = mmToThreeUnits(400);
 
   // 좌측뷰인 경우
   if (currentViewDirection === 'left') {
@@ -177,7 +177,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 보조 가이드 연장선 - 하단 (상부 프레임 하단) */}
             <NativeLine
               points={[
-                [0, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
+                [0, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                 [0, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
               ]}
               color={dimensionColor}
@@ -188,7 +188,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 보조 가이드 연장선 - 상단 (가구 최상단) */}
             <NativeLine
               points={[
-                [0, floatHeight + spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
+                [0, floatHeight + spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                 [0, floatHeight + spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
               ]}
               color={dimensionColor}
@@ -343,7 +343,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   points={[
                     [0,
                       is2Drawer ? sectionStartY : (sectionStartY - basicThickness),
-                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                     [0,
                       is2Drawer ? sectionStartY : (sectionStartY - basicThickness),
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
@@ -360,7 +360,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     [0,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       (is2Drawer ? sectionEndY : (sectionEndY - basicThickness)),
-                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                     [0,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       (is2Drawer ? sectionEndY : (sectionEndY - basicThickness)),
@@ -714,7 +714,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 보조 가이드 연장선 - 시작 (바닥) */}
             <NativeLine
               points={[
-                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
+                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
               ]}
               color={dimensionColor}
@@ -725,7 +725,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 보조 가이드 연장선 - 끝 (받침대 상단) */}
             <NativeLine
               points={[
-                [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
+                [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                 [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
               ]}
               color={dimensionColor}
@@ -1026,7 +1026,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 보조 가이드 연장선 - 하단 (상부 프레임 하단) */}
             <NativeLine
               points={[
-                [0, floatHeight + spaceHeight - topFrameHeight, -spaceDepth/2],
+                [0, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
                 [0, floatHeight + spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
               ]}
               color={dimensionColor}
@@ -1037,7 +1037,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             {/* 보조 가이드 연장선 - 상단 (가구 최상단) */}
             <NativeLine
               points={[
-                [0, floatHeight + spaceHeight, -spaceDepth/2],
+                [0, floatHeight + spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
                 [0, floatHeight + spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
               ]}
               color={dimensionColor}
@@ -1174,7 +1174,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   points={[
                     [0,
                       sectionStartY,
-                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                     [0,
                       sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
@@ -1191,7 +1191,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     [0,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? sectionEndY : sectionEndY,
-                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                     [0,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? sectionEndY : sectionEndY,
@@ -1493,7 +1493,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         <group>
             <NativeLine
               points={[
-                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
+                [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
               ]}
               color={dimensionColor}
@@ -1503,7 +1503,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             />
             <NativeLine
               points={[
-                [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(150)],
+                [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                 [0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
               ]}
               color={dimensionColor}
