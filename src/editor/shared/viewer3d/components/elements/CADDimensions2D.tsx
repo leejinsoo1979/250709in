@@ -85,7 +85,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 보조 가이드 연장선 - 하단 */}
           <NativeLine
             points={[
-              [0, floatHeight, -spaceDepth/2 - mmToThreeUnits(150)],
+              [0, floatHeight, -spaceDepth/2 + mmToThreeUnits(150)],
               [0, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
@@ -97,7 +97,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 보조 가이드 연장선 - 상단 */}
           <NativeLine
             points={[
-              [0, floatHeight + spaceHeight, -spaceDepth/2 - mmToThreeUnits(150)],
+              [0, floatHeight + spaceHeight, -spaceDepth/2 + mmToThreeUnits(150)],
               [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
@@ -934,7 +934,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 보조 가이드 연장선 - 하단 */}
           <NativeLine
             points={[
-              [0, floatHeight, -spaceDepth/2 - mmToThreeUnits(150)],
+              [0, floatHeight, -spaceDepth/2 + mmToThreeUnits(150)],
               [0, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
@@ -946,7 +946,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 보조 가이드 연장선 - 상단 */}
           <NativeLine
             points={[
-              [0, floatHeight + spaceHeight, -spaceDepth/2 - mmToThreeUnits(150)],
+              [0, floatHeight + spaceHeight, -spaceDepth/2 + mmToThreeUnits(150)],
               [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
