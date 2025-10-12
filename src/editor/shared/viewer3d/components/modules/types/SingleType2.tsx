@@ -396,6 +396,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   renderMode={renderMode}
                   isDragging={false}
                   isEditMode={isEditMode}
+                  adjustedDepthForShelves={adjustedDepthForShelves}
+                  depth={depth}
                 />
               );
             });
