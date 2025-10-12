@@ -31,7 +31,7 @@ export const Hinge: React.FC<HingeProps> = ({
   // 각 작은 원은 메인 원 중심에서 22.5mm(45/2) 떨어진 위치
   const smallCircleSpacing = mmToThreeUnits(45) / 2; // 22.5mm
   const smallCircleX = mmToThreeUnits(smallCircleXOffset); // X축 오프셋
-  const lineColor = '#FF0000'; // Red color for visibility
+  const lineColor = '#00CCCC'; // Dark cyan color
 
   // Generate circle points
   const generateCirclePoints = (radius: number, segments: number = 64): [number, number, number][] => {
@@ -62,6 +62,7 @@ export const Hinge: React.FC<HingeProps> = ({
     const cupDiameter = mmToThreeUnits(35);  // 컵 직경 35mm
     const armThickness = mmToThreeUnits(3);  // 암 두께 3mm
     const armLength = mmToThreeUnits(12);    // 암 길이 12mm
+    const sideViewColor = '#FF0000'; // 측면뷰 전용 빨간색
 
     return (
       <group position={position}>
@@ -74,7 +75,7 @@ export const Hinge: React.FC<HingeProps> = ({
             [-baseWidth / 2, -baseHeight / 2, 0],
             [-baseWidth / 2, baseHeight / 2, 0]
           ]}
-          color={lineColor}
+          color={sideViewColor}
           lineWidth={5}
         />
 
@@ -84,7 +85,7 @@ export const Hinge: React.FC<HingeProps> = ({
             [0, cupDiameter / 2, 0],
             [0, -cupDiameter / 2, 0]
           ]}
-          color={lineColor}
+          color={sideViewColor}
           lineWidth={5}
         />
 
@@ -97,7 +98,7 @@ export const Hinge: React.FC<HingeProps> = ({
             [baseWidth / 2, -armThickness / 2, 0],
             [baseWidth / 2, armThickness / 2, 0]
           ]}
-          color={lineColor}
+          color={sideViewColor}
           lineWidth={5}
         />
       </group>
