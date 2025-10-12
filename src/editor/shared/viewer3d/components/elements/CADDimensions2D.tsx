@@ -76,6 +76,29 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const leftDimOffset = mmToThreeUnits(400);
   const rightDimOffset = mmToThreeUnits(400);
 
+  // 측면뷰에서 표시할 가구 필터링
+  const getVisibleFurnitureForSideView = () => {
+    if (placedModules.length === 0) return [];
+
+    if (currentViewDirection === 'left') {
+      // 좌측뷰: X 좌표가 가장 작은(왼쪽 끝) 가구
+      const leftmostModule = placedModules.reduce((leftmost, current) =>
+        current.position.x < leftmost.position.x ? current : leftmost
+      );
+      return [leftmostModule];
+    } else if (currentViewDirection === 'right') {
+      // 우측뷰: X 좌표가 가장 큰(오른쪽 끝) 가구
+      const rightmostModule = placedModules.reduce((rightmost, current) =>
+        current.position.x > rightmost.position.x ? current : rightmost
+      );
+      return [rightmostModule];
+    }
+
+    return [];
+  };
+
+  const visibleFurniture = getVisibleFurnitureForSideView();
+
   // 좌측뷰인 경우
   if (currentViewDirection === 'left') {
     return (
@@ -244,8 +267,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </group>
         )}
 
-        {/* 가구별 섹션 치수 가이드 - 첫 번째 가구만 표시 */}
-        {placedModules.slice(0, 1).map((module, moduleIndex) => {
+        {/* 가구별 섹션 치수 가이드 - 측면뷰에서 보이는 가구만 표시 */}
+        {visibleFurniture.map((module, moduleIndex) => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
@@ -804,8 +827,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         )}
 
 
-        {/* ===== 가구별 깊이 치수 ===== */}
-        {placedModules.map((module, index) => {
+        {/* ===== 가구별 깊이 치수 - 측면뷰에서 보이는 가구만 표시 ===== */}
+        {visibleFurniture.map((module, index) => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
@@ -1094,8 +1117,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           </group>
         )}
 
-        {/* 가구별 섹션 치수 가이드 - 첫 번째 가구만 표시 */}
-        {placedModules.slice(0, 1).map((module, moduleIndex) => {
+        {/* 가구별 섹션 치수 가이드 - 측면뷰에서 보이는 가구만 표시 */}
+        {visibleFurniture.map((module, moduleIndex) => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
@@ -1446,8 +1469,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         </group>
         )}
 
-        {/* 가구별 깊이 치수 */}
-        {placedModules.map((module, index) => {
+        {/* 가구별 깊이 치수 - 측면뷰에서 보이는 가구만 표시 */}
+        {visibleFurniture.map((module, index) => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
