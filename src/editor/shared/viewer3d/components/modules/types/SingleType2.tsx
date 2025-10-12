@@ -130,8 +130,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={isSectionHighlighted}
                 />
                 
-                {/* 하부 섹션 상판 + 상부 섹션 바닥판 (2단 옷장 구조) */}
-                {index < getSectionHeights().length - 1 && (() => {
+                {/* 하부 섹션 상판 + 상부 섹션 바닥판 (2단 옷장 구조) - index=0일때만 */}
+                {index === 0 && (() => {
                   const middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2;
                   const lowerTopPanelY = middlePanelY - basicThickness; // 하부 섹션 상판 위치
 
@@ -140,7 +140,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                     middlePanelY,
                     lowerTopPanelY,
                     sectionCenterY,
-                    sectionHeight
+                    sectionHeight,
+                    totalSections: getSectionHeights().length
                   });
 
                   // 중간판 강조: 하부 섹션 상판은 index 섹션에 속함
