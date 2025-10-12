@@ -311,6 +311,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 다중 섹션 가구인 경우 중간 구분 패널 렌더링 */}
         {isMultiSectionFurniture() && getSectionHeights().length > 1 && (
           <>
+            {(() => {
+              console.log('🟢 중간 패널 렌더링 체크:', {
+                moduleId: moduleData?.id,
+                isMultiSection: isMultiSectionFurniture(),
+                sectionLengths: getSectionHeights().length,
+                includes4Drawer: moduleData?.id?.includes('4drawer-hanging'),
+                includes2Drawer: moduleData?.id?.includes('2drawer-hanging'),
+                includes2Hanging: moduleData?.id?.includes('2hanging')
+              });
+              return null;
+            })()}
             {moduleData?.id?.includes('4drawer-hanging') ? (
               // 4drawer-hanging: 상부 바닥판 18mm 위로, 하부 상판 18mm 위로
               (() => {
