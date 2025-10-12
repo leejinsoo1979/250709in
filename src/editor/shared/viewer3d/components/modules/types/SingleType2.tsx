@@ -360,7 +360,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             placedFurnitureId={placedFurnitureId}
           />
 
-          {/* 옷걸이 봉 렌더링 - 모든 섹션 */}
+          {/* 옷걸이 봉 렌더링 - hanging 섹션만 */}
           {(() => {
             const sections = baseFurniture.modelConfig.sections || [];
             let accumulatedY = -height/2 + basicThickness;
@@ -369,6 +369,14 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               const sectionHeight = baseFurniture.calculateSectionHeight(section, height, basicThickness);
               const sectionBottomY = accumulatedY;
               const sectionTopY = accumulatedY + sectionHeight - basicThickness;
+
+              // 누적 Y 위치 업데이트
+              accumulatedY += sectionHeight;
+
+              // hanging 섹션이 아니면 렌더링하지 않음
+              if (section.type !== 'hanging') {
+                return null;
+              }
 
               // 안전선반 위치 찾기 (섹션 하단 기준 mm)
               const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
@@ -384,8 +392,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 rodYPosition = sectionTopY - basicThickness / 2 - mmToThreeUnits(75 / 2);
               }
 
-              // 누적 Y 위치 업데이트
-              accumulatedY += sectionHeight;
+              console.log('🎽 옷걸이 봉 렌더링:', {
+                sectionIndex,
+                sectionType: section.type,
+                rodYPosition,
+                safetyShelfPositionMm
+              });
 
               return (
                 <ClothingRod
