@@ -231,7 +231,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
               const adjustedUpperHeight = is4Drawer
                 ? upperSectionHeight  // 4단: 상부 원래 높이
-                : upperSectionHeight - basicThickness; // 2단: 상부 18mm 줄임 (엔드패널 크기 정상화)
+                : upperSectionHeight; // 2단: 상부 원래 높이 유지
               const upperPanelY = is4Drawer
                 ? -height/2 + lowerSectionHeight + adjustedUpperHeight/2  // 4단: 하부 바로 위
                 : -height/2 + lowerSectionHeight + basicThickness + adjustedUpperHeight/2; // 2단: 하부+18mm 위
@@ -525,8 +525,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 백패널 높이 계산
                 // 하부: 위로만 lowerHeightBonus만큼 늘림
                 const lowerBackPanelHeight = lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension) + mmToThreeUnits(backPanelConfig.lowerHeightBonus);
-                // 상부: 기본 높이 (heightExtension만)
-                const upperBackPanelHeight = upperSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension);
+                // 상부: 기본 높이 (heightExtension만) - 2drawer는 18mm 줄임
+                const upperBackPanelHeight = (moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging'))
+                  ? upperSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension) - basicThickness
+                  : upperSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension);
 
                 console.log('🔍🔍🔍 백패널 높이:', {
                   lowerBackPanelHeightMm: lowerBackPanelHeight / 0.01,
