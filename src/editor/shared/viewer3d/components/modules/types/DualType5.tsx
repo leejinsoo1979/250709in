@@ -11,6 +11,7 @@ import { useUIStore } from '@/store/uiStore';
 import { Text, Line } from '@react-three/drei';
 import { useDimensionColor } from '../hooks/useDimensionColor';
 import { ClothingRod } from '../components/ClothingRod';
+import { VentilationCap } from '../components/VentilationCap';
 
 
 /**
