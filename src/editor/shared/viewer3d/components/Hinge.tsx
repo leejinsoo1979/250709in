@@ -31,7 +31,7 @@ export const Hinge: React.FC<HingeProps> = ({
   // 각 작은 원은 메인 원 중심에서 22.5mm(45/2) 떨어진 위치
   const smallCircleSpacing = mmToThreeUnits(45) / 2; // 22.5mm
   const smallCircleX = mmToThreeUnits(smallCircleXOffset); // X축 오프셋
-  const lineColor = '#00CCCC'; // Dark cyan color
+  const lineColor = '#FF0000'; // Red color for visibility
 
   // Generate circle points
   const generateCirclePoints = (radius: number, segments: number = 64): [number, number, number][] => {
@@ -55,6 +55,7 @@ export const Hinge: React.FC<HingeProps> = ({
 
   // 측면뷰 렌더링 - 실제 컵 힌지 형상
   if ((view2DDirection === 'left' || view2DDirection === 'right') && viewDirection === 'side') {
+    console.log('🔴 Hinge rendering in side view:', { view2DDirection, viewDirection, position });
     // 힌지 치수 (실제 컵 힌지 기준)
     const baseWidth = mmToThreeUnits(18);    // 베이스플레이트 너비 18mm
     const baseHeight = mmToThreeUnits(35);   // 베이스플레이트 높이 35mm
@@ -74,7 +75,7 @@ export const Hinge: React.FC<HingeProps> = ({
             [-baseWidth / 2, baseHeight / 2, 0]
           ]}
           color={lineColor}
-          lineWidth={1}
+          lineWidth={5}
         />
 
         {/* 힌지 컵 (원통형 부분) - 베이스플레이트 중앙에 위치 */}
@@ -84,7 +85,7 @@ export const Hinge: React.FC<HingeProps> = ({
             [0, -cupDiameter / 2, 0]
           ]}
           color={lineColor}
-          lineWidth={2}
+          lineWidth={5}
         />
 
         {/* 힌지 암 (도어로 연장되는 부분) - 베이스플레이트 오른쪽에서 시작 */}
@@ -97,7 +98,7 @@ export const Hinge: React.FC<HingeProps> = ({
             [baseWidth / 2, armThickness / 2, 0]
           ]}
           color={lineColor}
-          lineWidth={1}
+          lineWidth={5}
         />
       </group>
     );
