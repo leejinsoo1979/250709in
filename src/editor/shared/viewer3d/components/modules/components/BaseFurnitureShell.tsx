@@ -404,7 +404,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 });
               })()
             ) : moduleData?.id?.includes('2hanging') ? (
-              // 2hanging: 각각 18mm씩 위로, 중간 패널은 백패널 방향으로 26mm 늘림 + 앞에서 85mm 줄임
+              // 2hanging: 각각 18mm씩 위로, 중간 패널은 맨 위/맨 아래 판과 동일한 크기 (depth 사용)
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
                   if (index >= getSectionHeights().length - 1) return null;
@@ -426,20 +426,20 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                   return (
                     <React.Fragment key={`divider-${index}`}>
-                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
+                      {/* 하부 섹션 상판 - 맨 위/맨 아래 판과 동일한 크기 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), adjustedDepthForShelves - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
-                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2]}
+                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), depth]}
+                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), 0]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isLowerHighlighted}
                       />
 
-                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 (하부 상판과 동일) */}
+                      {/* 상부 섹션 바닥판 - 맨 위/맨 아래 판과 동일한 크기 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
-                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2]}
+                        args={[innerWidth, basicThickness, depth]}
+                        position={[0, middlePanelY, 0]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
