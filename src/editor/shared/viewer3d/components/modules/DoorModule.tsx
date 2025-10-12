@@ -638,10 +638,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const panelThickness = 18;
 
   // 도어는 가구 몸통(측판 앞면)에서 5mm 떨어짐
-  // 캐비닛 앞면 = moduleDepth - panelThickness
+  // Z=0이 가구 뒷면, 캐비닛 앞면 = moduleDepth
   // 도어 뒷면 = 캐비닛 앞면 + 5mm 갭
   // 도어 중심 = 도어 뒷면 + (doorThickness / 2)
-  const cabinetFrontFace = moduleDepth - panelThickness; // 측판 앞면
+  const cabinetFrontFace = moduleDepth; // 측판 앞면
   const doorGap = 5; // 5mm 갭
   const doorBackFace = cabinetFrontFace + doorGap; // 도어 뒷면
   const doorDepthMm = doorBackFace + (doorThickness / 2); // 도어 중심
