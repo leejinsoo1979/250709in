@@ -505,8 +505,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 백패널 높이 계산
                 // 하부: 위로만 18mm 늘림 (높이 +18mm)
                 const lowerBackPanelHeight = lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(10) + mmToThreeUnits(18);
-                // 상부: 위로도 18mm 늘림 (높이 +18mm)
-                const upperBackPanelHeight = upperSectionHeight - basicThickness * 2 + mmToThreeUnits(10) + mmToThreeUnits(18);
+                // 상부: 기본 높이 (+10mm만)
+                const upperBackPanelHeight = upperSectionHeight - basicThickness * 2 + mmToThreeUnits(10);
 
                 console.log('🔍🔍🔍 백패널 높이:', {
                   lowerBackPanelHeightMm: lowerBackPanelHeight / 0.01,
