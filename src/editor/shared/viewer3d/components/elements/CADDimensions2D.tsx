@@ -86,7 +86,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           <NativeLine
             points={[
               [0, floatHeight, -spaceDepth/2],
-              [0, floatHeight, -spaceDepth/2 - leftDimOffset]
+              [0, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={1}
@@ -98,7 +98,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           <NativeLine
             points={[
               [0, floatHeight + spaceHeight, -spaceDepth/2],
-              [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]
+              [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={1}
@@ -109,8 +109,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 수직 치수선 */}
           <NativeLine
             points={[
-              [0, floatHeight, -spaceDepth/2 - leftDimOffset],
-              [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]
+              [0, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
+              [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -121,8 +121,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 상단 티크 */}
           <NativeLine
             points={[
-              [-0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset],
-              [0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]
+              [-0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
+              [0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -133,8 +133,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 하단 티크 */}
           <NativeLine
             points={[
-              [-0.03, floatHeight, -spaceDepth/2 - leftDimOffset],
-              [0.03, floatHeight, -spaceDepth/2 - leftDimOffset]
+              [-0.03, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
+              [0.03, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -143,20 +143,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 엔드포인트 - 상단 (세로선과 연장선 만나는 지점) */}
-          <mesh position={[0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
+          <mesh position={[0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
             <circleGeometry args={[0.06, 16]} />
             <meshBasicMaterial color={dimensionColor} depthTest={false} />
           </mesh>
 
           {/* 엔드포인트 - 하단 (세로선과 연장선 만나는 지점) */}
-          <mesh position={[0, floatHeight, -spaceDepth/2 - leftDimOffset]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
+          <mesh position={[0, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
             <circleGeometry args={[0.06, 16]} />
             <meshBasicMaterial color={dimensionColor} depthTest={false} />
           </mesh>
 
           {/* 높이 텍스트 */}
           <Text
-            position={[0, floatHeight + spaceHeight / 2, -spaceDepth/2 - leftDimOffset - mmToThreeUnits(60)]}
+            position={[0, floatHeight + spaceHeight / 2, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) - mmToThreeUnits(60)]}
             fontSize={largeFontSize}
             color={textColor}
             anchorX="center"
@@ -935,7 +935,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           <NativeLine
             points={[
               [0, floatHeight, -spaceDepth/2],
-              [0, floatHeight, -spaceDepth/2 - leftDimOffset]
+              [0, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={1}
@@ -947,7 +947,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           <NativeLine
             points={[
               [0, floatHeight + spaceHeight, -spaceDepth/2],
-              [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]
+              [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={1}
@@ -958,8 +958,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 수직 치수선 */}
           <NativeLine
             points={[
-              [0, floatHeight, -spaceDepth/2 - leftDimOffset],
-              [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]
+              [0, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
+              [0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -970,8 +970,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 상단 티크 */}
           <NativeLine
             points={[
-              [-0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset],
-              [0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]
+              [-0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
+              [0.03, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -982,8 +982,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           {/* 하단 티크 */}
           <NativeLine
             points={[
-              [-0.03, floatHeight, -spaceDepth/2 - leftDimOffset],
-              [0.03, floatHeight, -spaceDepth/2 - leftDimOffset]
+              [-0.03, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
+              [0.03, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
             ]}
             color={dimensionColor}
             lineWidth={2}
@@ -992,20 +992,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 엔드포인트 - 상단 */}
-          <mesh position={[0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
+          <mesh position={[0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
             <circleGeometry args={[0.06, 16]} />
             <meshBasicMaterial color={dimensionColor} depthTest={false} />
           </mesh>
 
           {/* 엔드포인트 - 하단 */}
-          <mesh position={[0, floatHeight, -spaceDepth/2 - leftDimOffset]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
+          <mesh position={[0, floatHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
             <circleGeometry args={[0.06, 16]} />
             <meshBasicMaterial color={dimensionColor} depthTest={false} />
           </mesh>
 
           {/* 높이 텍스트 */}
           <Text
-            position={[0, floatHeight + spaceHeight / 2, -spaceDepth/2 - leftDimOffset - mmToThreeUnits(60)]}
+            position={[0, floatHeight + spaceHeight / 2, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150) - mmToThreeUnits(60)]}
             fontSize={largeFontSize}
             color={textColor}
             anchorX="center"
