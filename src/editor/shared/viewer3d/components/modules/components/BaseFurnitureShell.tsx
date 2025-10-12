@@ -389,16 +389,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         isDragging={isDragging}
                         isHighlighted={isLowerHighlighted}
                       />
-
-                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림 */}
-                      <BoxWithEdges
-                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(26)]}
-                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2]}
-                        material={material}
-                        renderMode={renderMode}
-                        isDragging={isDragging}
-                        isHighlighted={isUpperHighlighted}
-                      />
                     </React.Fragment>
                   );
                 });
