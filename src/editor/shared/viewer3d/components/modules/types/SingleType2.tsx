@@ -259,7 +259,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       )}
 
       {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
-      {!isDragging && (
+      {!isDragging && showFurniture && (
         <>
           <SectionsRenderer
             modelConfig={baseFurniture.modelConfig}
@@ -414,7 +414,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       )}
 
       {/* 환기캡 렌더링 */}
-      {!isDragging && (
+      {!isDragging && showFurniture && (
         <VentilationCap
           position={[
             innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
