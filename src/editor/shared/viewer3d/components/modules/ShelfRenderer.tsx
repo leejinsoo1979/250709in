@@ -67,9 +67,16 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   // 절대 위치 모드: 마감 패널 또는 절대 위치 지정
   if (isTopFinishPanel && shelfCount === 1) {
     console.log('🔥 isTopFinishPanel 상판 렌더링:', { furnitureId, sectionType, innerHeight, yOffset });
+
+    // 2hanging 가구는 SingleType2에서 직접 렌더링하므로 여기서는 렌더링하지 않음
+    const is2Hanging = furnitureId?.includes('2hanging');
+    if (is2Hanging) {
+      return null;
+    }
+
     // 최상단 마감 패널 모드 (기존 18mm에서 추가로 18mm 위로, 총 0mm)
     const topPosition = innerHeight / 2 - basicThickness / 2;
-    
+
     return (
       <group position={[0, yOffset, 0]}>
         <BoxWithEdges
