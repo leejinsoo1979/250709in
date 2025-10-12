@@ -231,7 +231,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
               const adjustedUpperHeight = is4Drawer
                 ? upperSectionHeight  // 4단: 상부 원래 높이
-                : upperSectionHeight; // 2단: 상부 원래 높이 유지
+                : upperSectionHeight - basicThickness; // 2단: 상부 18mm 줄임
               const upperPanelY = is4Drawer
                 ? -height/2 + lowerSectionHeight + adjustedUpperHeight/2  // 4단: 하부 바로 위
                 : -height/2 + lowerSectionHeight + adjustedUpperHeight/2; // 2단: 하부 바로 위
