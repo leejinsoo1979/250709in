@@ -55,19 +55,22 @@ export const Hinge: React.FC<HingeProps> = ({
 
   // 측면뷰 렌더링 (이미지 참조)
   if (view2DDirection === 'side' && viewDirection === 'side') {
-    const hingeBodyWidth = mmToThreeUnits(9); // 경첩 본체 두께 9mm
+    const hingeBodyThickness = mmToThreeUnits(9); // 경첩 본체 두께 9mm
     const hingeBodyHeight = mmToThreeUnits(35); // 경첩 본체 높이 35mm (17.5mm 반지름 * 2)
 
     return (
       <group position={position}>
-        {/* 경첩 본체 (수직 사각형) */}
+        {/* 경첩 본체 사각형 */}
         <Line
           points={[
-            [0, hingeBodyHeight / 2, 0],
-            [0, -hingeBodyHeight / 2, 0]
+            [-hingeBodyThickness / 2, hingeBodyHeight / 2, 0],
+            [hingeBodyThickness / 2, hingeBodyHeight / 2, 0],
+            [hingeBodyThickness / 2, -hingeBodyHeight / 2, 0],
+            [-hingeBodyThickness / 2, -hingeBodyHeight / 2, 0],
+            [-hingeBodyThickness / 2, hingeBodyHeight / 2, 0]
           ]}
           color={lineColor}
-          lineWidth={2}
+          lineWidth={1}
         />
       </group>
     );
