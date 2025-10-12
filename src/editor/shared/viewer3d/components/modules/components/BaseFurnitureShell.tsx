@@ -173,10 +173,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
   // 그림자 자동 업데이트가 활성화되어 있으므로 수동 업데이트 불필요
 
-  // 2D 정면뷰에서 좌우 프레임 주황색 material
+  // 2D 정면뷰에서 좌우 프레임 형광색 material (BoxWithEdges 강조 색상과 통일)
   const highlightMaterial = useMemo(() =>
     new THREE.MeshBasicMaterial({
-      color: new THREE.Color('#FFA500'), // 주황색
+      color: new THREE.Color('#18CF23'), // 형광 녹색 (neon green)
       transparent: true,
       opacity: 0.8
     }),
