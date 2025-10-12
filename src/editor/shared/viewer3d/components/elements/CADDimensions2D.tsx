@@ -1657,16 +1657,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 depthTest={false}
               />
 
-              <mesh position={[0, furnitureTopY, furnitureZ + moduleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
-                <circleGeometry args={[0.06, 16]} />
-                <meshBasicMaterial color={dimensionColor} depthTest={false} />
-              </mesh>
-
-              <mesh position={[0, furnitureTopY, furnitureZ - moduleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
-                <circleGeometry args={[0.06, 16]} />
-                <meshBasicMaterial color={dimensionColor} depthTest={false} />
-              </mesh>
-
               <mesh position={[0, floatHeight + baseFrameHeight + internalHeight, furnitureZ + moduleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
                 <circleGeometry args={[0.06, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
