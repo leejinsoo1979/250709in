@@ -1,5 +1,5 @@
 import React from 'react';
-import { BoxWithEdges } from './BoxWithEdges';
+import BoxWithEdges from './BoxWithEdges';
 import { Text, Line } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
