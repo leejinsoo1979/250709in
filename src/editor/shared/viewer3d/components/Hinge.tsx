@@ -13,7 +13,7 @@ export const Hinge: React.FC<HingeProps> = ({
   position,
   mainDiameter = 17.5, // 메인 경첩 직경 17.5mm
   smallCircleDiameter = 4, // 작은 원 직경 4mm
-  verticalSpacing = 20 // 작은 원들 사이 간격 (임시값, 이미지에서 정확한 값 확인 필요)
+  verticalSpacing = 20 // 작은 원들 사이 간격
 }) => {
   const { viewMode } = useSpace3DView();
 
@@ -21,7 +21,9 @@ export const Hinge: React.FC<HingeProps> = ({
 
   const mainRadius = mmToThreeUnits(mainDiameter) / 2;
   const smallRadius = mmToThreeUnits(smallCircleDiameter) / 2;
-  const spacing = mmToThreeUnits(verticalSpacing);
+
+  // 작은 원의 위치: 메인 원의 반지름 + 작은 원의 반지름 (바로 붙어있게)
+  const spacing = mainRadius + smallRadius;
   const lineColor = '#00FFFF'; // Cyan color
 
   // Generate circle points
