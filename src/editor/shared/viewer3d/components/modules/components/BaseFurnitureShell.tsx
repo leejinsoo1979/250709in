@@ -10,6 +10,7 @@ import { AdjustableFootsRenderer } from './AdjustableFootsRenderer';
 import { Text, Line } from '@react-three/drei';
 import DimensionText from './DimensionText';
 import { useDimensionColor } from '../hooks/useDimensionColor';
+import { VentilationCap } from './VentilationCap';
 
 // 점선을 수동으로 그리는 컴포넌트
 const ManualDashedBox: React.FC<{
@@ -610,6 +611,19 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             />
           )}
         </>
+        )}
+
+        {/* 환기캡 렌더링 - 백패널이 있을 때만 */}
+        {hasBackPanel && !isDragging && (
+          <VentilationCap
+            position={[
+              innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
+              height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
+              -depth/2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset) + 0.01  // 백패널 앞쪽에 살짝 앞으로
+            ]}
+            diameter={98}
+            renderMode={renderMode}
+          />
         )}
 
         {/* 내부 구조 (타입별로 다른 내용) */}
