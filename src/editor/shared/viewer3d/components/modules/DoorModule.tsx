@@ -962,28 +962,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
                     smallCircleDiameter={4}
-                    verticalSpacing={20}
+                    smallCircleXOffset={9.5}
                   />
                   {/* 2번째 경첩: 상단 1/4 지점 (25% 위치) */}
                   <Hinge
                     position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 4, doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
                     smallCircleDiameter={4}
-                    verticalSpacing={20}
+                    smallCircleXOffset={9.5}
                   />
                   {/* 3번째 경첩: 하단 1/4 지점 (75% 위치) */}
                   <Hinge
                     position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 4, doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
                     smallCircleDiameter={4}
-                    verticalSpacing={20}
+                    smallCircleXOffset={9.5}
                   />
                   {/* 4번째 경첩: 하단에서 100mm */}
                   <Hinge
                     position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
                     smallCircleDiameter={4}
-                    verticalSpacing={20}
+                    smallCircleXOffset={9.5}
                   />
                 </>
               )}
@@ -1165,28 +1165,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
                     smallCircleDiameter={4}
-                    verticalSpacing={20}
+                    smallCircleXOffset={-9.5}
                   />
                   {/* 2번째 경첩: 상단 1/4 지점 (25% 위치) */}
                   <Hinge
                     position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 4, doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
                     smallCircleDiameter={4}
-                    verticalSpacing={20}
+                    smallCircleXOffset={-9.5}
                   />
                   {/* 3번째 경첩: 하단 1/4 지점 (75% 위치) */}
                   <Hinge
                     position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 4, doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
                     smallCircleDiameter={4}
-                    verticalSpacing={20}
+                    smallCircleXOffset={-9.5}
                   />
                   {/* 4번째 경첩: 하단에서 100mm */}
                   <Hinge
                     position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
                     smallCircleDiameter={4}
-                    verticalSpacing={20}
+                    smallCircleXOffset={-9.5}
                   />
                 </>
               )}
@@ -1409,7 +1409,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   ]}
                   mainDiameter={17.5}
                   smallCircleDiameter={4}
-                  verticalSpacing={20}
+                  smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
                 />
                 {/* 2번째 경첩: 상단 1/4 지점 (25% 위치) */}
                 <Hinge
@@ -1420,7 +1420,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   ]}
                   mainDiameter={17.5}
                   smallCircleDiameter={4}
-                  verticalSpacing={20}
+                  smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
                 />
                 {/* 3번째 경첩: 하단 1/4 지점 (75% 위치) */}
                 <Hinge
@@ -1431,7 +1431,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   ]}
                   mainDiameter={17.5}
                   smallCircleDiameter={4}
-                  verticalSpacing={20}
+                  smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
                 />
                 {/* 4번째 경첩: 하단에서 100mm */}
                 <Hinge
@@ -1442,7 +1442,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   ]}
                   mainDiameter={17.5}
                   smallCircleDiameter={4}
-                  verticalSpacing={20}
+                  smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
                 />
               </>
             )}

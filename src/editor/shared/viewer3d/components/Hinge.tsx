@@ -3,17 +3,19 @@ import { Line } from '@react-three/drei';
 import { useSpace3DView } from '../context/useSpace3DView';
 
 interface HingeProps {
-  position: [number, number, number];
+  position: [number, number, number]; // 메인 원의 위치
   mainDiameter?: number;
   smallCircleDiameter?: number;
   verticalSpacing?: number;
+  smallCircleXOffset?: number; // 작은 원의 X축 오프셋 (측판에서 더 안쪽으로)
 }
 
 export const Hinge: React.FC<HingeProps> = ({
   position,
   mainDiameter = 17.5, // 메인 경첩 반지름 17.5mm
   smallCircleDiameter = 4, // 작은 원 반지름 4mm
-  verticalSpacing = 20 // 작은 원들 사이 간격
+  verticalSpacing = 20, // 작은 원들 사이 간격 (사용 안 함)
+  smallCircleXOffset = 9.5 // 작은 원이 메인 원보다 안쪽으로 9.5mm (33.5 - 24)
 }) => {
   const { viewMode } = useSpace3DView();
 
@@ -23,8 +25,10 @@ export const Hinge: React.FC<HingeProps> = ({
   const mainRadius = mmToThreeUnits(mainDiameter);
   const smallRadius = mmToThreeUnits(smallCircleDiameter);
 
-  // 작은 원의 위치: 메인 원의 반지름 + 작은 원의 반지름 (바로 붙어있게)
-  const spacing = mainRadius + smallRadius;
+  // 작은 원 간 세로 간격: 45mm (중심점 간 거리)
+  // 각 작은 원은 메인 원 중심에서 22.5mm(45/2) 떨어진 위치
+  const smallCircleSpacing = mmToThreeUnits(45) / 2; // 22.5mm
+  const smallCircleX = mmToThreeUnits(smallCircleXOffset); // X축 오프셋
   const lineColor = '#00FFFF'; // Cyan color
 
   // Generate circle points
@@ -49,16 +53,16 @@ export const Hinge: React.FC<HingeProps> = ({
 
   return (
     <group position={position}>
-      {/* 메인 경첩 원 (17.5mm) */}
+      {/* 메인 경첩 원 (17.5mm 반지름) - 측판에서 24mm 안쪽 */}
       <Line points={mainCirclePoints} color={lineColor} lineWidth={1} />
 
-      {/* 왼쪽 작은 원 (4mm) */}
-      <group position={[-spacing, 0, 0]}>
+      {/* 위쪽 작은 원 (4mm 반지름) - 측판에서 33.5mm 안쪽, 메인 원 중심에서 위로 22.5mm */}
+      <group position={[smallCircleX, smallCircleSpacing, 0]}>
         <Line points={smallCirclePoints} color={lineColor} lineWidth={1} />
       </group>
 
-      {/* 오른쪽 작은 원 (4mm) */}
-      <group position={[spacing, 0, 0]}>
+      {/* 아래쪽 작은 원 (4mm 반지름) - 측판에서 33.5mm 안쪽, 메인 원 중심에서 아래로 22.5mm */}
+      <group position={[smallCircleX, -smallCircleSpacing, 0]}>
         <Line points={smallCirclePoints} color={lineColor} lineWidth={1} />
       </group>
     </group>
