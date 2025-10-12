@@ -63,22 +63,12 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   // 옷봉 중심 = 옷봉 하단 + rodHeight/2
   const rodYOffset = -bracketHeight / 2 + mmToThreeUnits(5) + rodHeight / 2;
 
-  // 크롬 재질
-  const chromeMaterial = (
-    <meshStandardMaterial
-      color="#C0C0C0"
-      metalness={0.9}
-      roughness={0.1}
-    />
-  );
-
   return (
     <group position={[0, yPosition, zPosition]}>
       {/* 좌측 브라켓 */}
       <BoxWithEdges
         args={[bracketWidth, bracketHeight, bracketDepth]}
         position={[leftBracketX, 0, 0]}
-        material={chromeMaterial}
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
@@ -88,7 +78,6 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
       <BoxWithEdges
         args={[bracketWidth, bracketHeight, bracketDepth]}
         position={[rightBracketX, 0, 0]}
-        material={chromeMaterial}
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
@@ -98,7 +87,6 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
       <BoxWithEdges
         args={[rodWidth, rodHeight, rodDepth]}
         position={[0, rodYOffset, 0]}
-        material={chromeMaterial}
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
