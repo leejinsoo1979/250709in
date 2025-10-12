@@ -142,7 +142,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const { doorsOpen, view2DDirection } = useUIStore();
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
-  
+
+  // 🎯 DoorModule 렌더링 시 viewMode와 view2DDirection 실제 값 로깅
+  console.log('🎯🎯🎯 DoorModule render:', { viewMode, view2DDirection, hingePosition, moduleData: moduleData?.id });
+
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
   const currentSpaceInfo = spaceInfo || storeSpaceInfo;
   const materialConfig = currentSpaceInfo.materialConfig || { 
