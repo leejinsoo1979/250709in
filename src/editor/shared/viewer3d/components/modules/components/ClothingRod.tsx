@@ -1,5 +1,5 @@
 import React from 'react';
-import { BoxWithEdges } from '../../elements/BoxWithEdges';
+import { BoxWithEdges } from './BoxWithEdges';
 import { mmToThreeUnits } from '../../../utils/conversionUtils';
 import { Text, Line } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
