@@ -160,8 +160,8 @@ export const calculateFurnitureDimensions = (
         {
           index: 0,
           height: sectionHeights.lower,
-          startY: floatHeight + baseFrameHeight,
-          endY: floatHeight + baseFrameHeight + sectionHeights.lower,
+          startY: floatHeight + baseFrameHeight + basicThickness, // 바닥판 위
+          endY: floatHeight + baseFrameHeight + sectionHeights.lower - basicThickness, // 상판 아래
           innerWidth,
           innerHeight: sectionHeights.lower - basicThickness * 2, // 상하판 제외
           innerDepth
@@ -170,8 +170,8 @@ export const calculateFurnitureDimensions = (
         {
           index: 1,
           height: sectionHeights.upper,
-          startY: floatHeight + baseFrameHeight + sectionHeights.lower,
-          endY: floatHeight + baseFrameHeight + actualHeight,
+          startY: floatHeight + baseFrameHeight + sectionHeights.lower + basicThickness, // 바닥판 위
+          endY: floatHeight + baseFrameHeight + actualHeight - basicThickness, // 상판 아래
           innerWidth,
           innerHeight: sectionHeights.upper - basicThickness * 2, // 상하판 제외
           innerDepth
