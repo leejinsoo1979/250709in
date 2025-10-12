@@ -406,6 +406,12 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             ) : moduleData?.id?.includes('2hanging') ? (
               // 2hanging: 각각 18mm씩 위로, 중간 패널은 백패널 방향으로 26mm 확장
               (() => {
+                console.log('🔵 2hanging 중간 패널 렌더링:', {
+                  moduleId: moduleData?.id,
+                  depth: depth,
+                  depthMm: depth / 0.01
+                });
+
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
                   if (index >= getSectionHeights().length - 1) return null;
 
@@ -424,6 +430,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const extendedDepth = depth + mmToThreeUnits(26);
                   // 중심이 뒤로 이동 (음의 Z 방향으로 26mm의 절반 = -13mm)
                   const extendedZPosition = -mmToThreeUnits(13);
+
+                  console.log('✅ 2hanging 패널 확장:', {
+                    sectionIndex: index,
+                    originalDepth: depth,
+                    originalDepthMm: depth / 0.01,
+                    extendedDepth,
+                    extendedDepthMm: extendedDepth / 0.01,
+                    extendedZPosition,
+                    extendedZPositionMm: extendedZPosition / 0.01
+                  });
 
                   // 섹션 강조 확인 (placedFurnitureId 사용)
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
