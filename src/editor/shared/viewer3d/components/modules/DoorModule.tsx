@@ -1218,8 +1218,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </>
               )}
 
-              {/* Hinges for right door - side view (좌측뷰에서만 보임) */}
-              {viewMode === '2D' && view2DDirection === 'left' && (
+              {/* Hinges for right door - side view (우측뷰에서만 보임) */}
+              {viewMode === '2D' && view2DDirection === 'right' && (
                 <>
                   {/* 1번째 경첩: 도어 위에서 100mm */}
                   <Hinge
