@@ -153,20 +153,20 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
             color={lineColor}
             lineWidth={1}
           />
-          {/* 상단과 중간 사이 추가선 */}
+          {/* 중간선 위 5mm */}
           <Line
             points={[
-              [rodStartX, rodYOffset + rodHeight / 4, rodZOffset],
-              [rodEndX, rodYOffset + rodHeight / 4, rodZOffset]
+              [rodStartX, rodYOffset + mmToThreeUnits(5), rodZOffset],
+              [rodEndX, rodYOffset + mmToThreeUnits(5), rodZOffset]
             ]}
             color={lineColor}
             lineWidth={1}
           />
-          {/* 중간과 하단 사이 추가선 */}
+          {/* 중간선 아래 5mm */}
           <Line
             points={[
-              [rodStartX, rodYOffset - rodHeight / 4, rodZOffset],
-              [rodEndX, rodYOffset - rodHeight / 4, rodZOffset]
+              [rodStartX, rodYOffset - mmToThreeUnits(5), rodZOffset],
+              [rodEndX, rodYOffset - mmToThreeUnits(5), rodZOffset]
             ]}
             color={lineColor}
             lineWidth={1}
