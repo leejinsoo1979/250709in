@@ -66,20 +66,20 @@ export const Hinge: React.FC<HingeProps> = ({
 
     return (
       <group position={position}>
-        {/* 베이스플레이트 (캐비닛에 고정되는 부분) */}
+        {/* 베이스플레이트 (캐비닛에 고정되는 부분) - Y-Z 평면 */}
         <Line
           points={[
-            [-baseWidth / 2, baseHeight / 2, 0],
-            [baseWidth / 2, baseHeight / 2, 0],
-            [baseWidth / 2, -baseHeight / 2, 0],
-            [-baseWidth / 2, -baseHeight / 2, 0],
-            [-baseWidth / 2, baseHeight / 2, 0]
+            [0, baseHeight / 2, -baseWidth / 2],
+            [0, baseHeight / 2, baseWidth / 2],
+            [0, -baseHeight / 2, baseWidth / 2],
+            [0, -baseHeight / 2, -baseWidth / 2],
+            [0, baseHeight / 2, -baseWidth / 2]
           ]}
           color={sideViewColor}
           lineWidth={5}
         />
 
-        {/* 힌지 컵 (원통형 부분) - 베이스플레이트 중앙에 위치 */}
+        {/* 힌지 컵 (원통형 부분) - 베이스플레이트 중앙에 위치 - Y-Z 평면 */}
         <Line
           points={[
             [0, cupDiameter / 2, 0],
@@ -89,14 +89,14 @@ export const Hinge: React.FC<HingeProps> = ({
           lineWidth={5}
         />
 
-        {/* 힌지 암 (도어로 연장되는 부분) - 베이스플레이트 오른쪽에서 시작 */}
+        {/* 힌지 암 (도어로 연장되는 부분) - 베이스플레이트 오른쪽에서 시작 - Y-Z 평면 */}
         <Line
           points={[
-            [baseWidth / 2, armThickness / 2, 0],
-            [baseWidth / 2 + armLength, armThickness / 2, 0],
-            [baseWidth / 2 + armLength, -armThickness / 2, 0],
-            [baseWidth / 2, -armThickness / 2, 0],
-            [baseWidth / 2, armThickness / 2, 0]
+            [0, armThickness / 2, baseWidth / 2],
+            [0, armThickness / 2, baseWidth / 2 + armLength],
+            [0, -armThickness / 2, baseWidth / 2 + armLength],
+            [0, -armThickness / 2, baseWidth / 2],
+            [0, armThickness / 2, baseWidth / 2]
           ]}
           color={sideViewColor}
           lineWidth={5}
