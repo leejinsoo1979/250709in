@@ -29,7 +29,7 @@ export const Hinge: React.FC<HingeProps> = ({
   // 각 작은 원은 메인 원 중심에서 22.5mm(45/2) 떨어진 위치
   const smallCircleSpacing = mmToThreeUnits(45) / 2; // 22.5mm
   const smallCircleX = mmToThreeUnits(smallCircleXOffset); // X축 오프셋
-  const lineColor = '#00FFFF'; // Cyan color
+  const lineColor = '#00CCCC'; // Dark cyan color
 
   // Generate circle points
   const generateCirclePoints = (radius: number, segments: number = 64): [number, number, number][] => {
