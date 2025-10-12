@@ -12,6 +12,7 @@ import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Line } from '@react-three/drei';
+import { Hinge } from '../Hinge';
 
 // BoxWithEdges 컴포넌트 정의 (독립적인 그림자 업데이트 포함)
 const BoxWithEdges: React.FC<{
@@ -953,6 +954,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
               />
               
+              {/* Hinges for left door - 2 hinges positioned 100mm from top and bottom */}
+              {viewMode === '2D' && view2DDirection === 'front' && (
+                <>
+                  <Hinge
+                    position={[-leftDoorWidthUnits / 2 + hingeOffsetUnits, doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                    diameter={35}
+                  />
+                  <Hinge
+                    position={[-leftDoorWidthUnits / 2 + hingeOffsetUnits, -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                    diameter={35}
+                  />
+                </>
+              )}
+
               {/* Door opening direction for left door (front view) */}
               {viewMode === '2D' && view2DDirection === 'front' && (
                 <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
@@ -1122,6 +1137,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
               />
               
+              {/* Hinges for right door - 2 hinges positioned 100mm from top and bottom */}
+              {viewMode === '2D' && view2DDirection === 'front' && (
+                <>
+                  <Hinge
+                    position={[rightDoorWidthUnits / 2 - hingeOffsetUnits, doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                    diameter={35}
+                  />
+                  <Hinge
+                    position={[rightDoorWidthUnits / 2 - hingeOffsetUnits, -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                    diameter={35}
+                  />
+                </>
+              )}
+
               {/* Door opening direction for right door (front view) */}
               {viewMode === '2D' && view2DDirection === 'front' && (
                 <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
@@ -1317,17 +1346,39 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             {/* 윤곽선 */}
             <lineSegments>
               <edgesGeometry args={[new THREE.BoxGeometry(doorWidthUnits, doorHeight, doorThicknessUnits)]} />
-              <lineBasicMaterial 
+              <lineBasicMaterial
                 color={
                   viewMode === '2D' && renderMode === 'wireframe'
                     ? getThemeColor()
                     : (viewMode === '3D' ? "#505050" : "#666666")
-                } 
+                }
                 transparent={viewMode === '3D'}
                 opacity={viewMode === '3D' ? 0.9 : 1}
               />
             </lineSegments>
-            
+
+            {/* Hinges for single door - 2 hinges positioned 100mm from top and bottom */}
+            {viewMode === '2D' && view2DDirection === 'front' && (
+              <>
+                <Hinge
+                  position={[
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + hingeOffsetUnits : doorWidthUnits / 2 - hingeOffsetUnits,
+                    doorHeight / 2 - mmToThreeUnits(100),
+                    doorThicknessUnits / 2 + 0.001
+                  ]}
+                  diameter={35}
+                />
+                <Hinge
+                  position={[
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + hingeOffsetUnits : doorWidthUnits / 2 - hingeOffsetUnits,
+                    -doorHeight / 2 + mmToThreeUnits(100),
+                    doorThicknessUnits / 2 + 0.001
+                  ]}
+                  diameter={35}
+                />
+              </>
+            )}
+
             {/* 도어 열리는 방향 표시 (2D 정면뷰에서만) */}
             {viewMode === '2D' && view2DDirection === 'front' && (
               <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
