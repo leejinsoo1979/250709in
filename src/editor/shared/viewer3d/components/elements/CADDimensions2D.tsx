@@ -308,8 +308,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             // 치수 표시값 계산 (sectionStartY 계산 후에)
             let sectionHeightMm: number;
 
-            // 4단서랍장 여부 확인
+            // 가구 타입 확인
             const is4Drawer = moduleData.id?.includes('4drawer-hanging');
+            const is2Drawer = moduleData.id?.includes('2drawer-hanging') || moduleData.id?.includes('2hanging');
 
             if (isLastSection) {
               // 상부섹션: 상부섹션 바닥판 아랫면부터 가구 최상단까지
@@ -319,9 +320,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               sectionHeightMm = (lineEnd - lineStart) / 0.01;
             } else if (sectionIndex === 0) {
               // 하부섹션: 받침대 위부터 하부섹션 상판 윗면까지
-              // sectionEndY는 상부섹션 바닥판 위이므로, basicThickness를 빼서 하부섹션 상판 윗면으로
+              // 2단서랍장: 하부 측판이 18mm 늘어났으므로 가이드도 18mm 위로
+              // 4단서랍장: 기본 위치
               const lineStart = floatHeight + baseFrameHeight;
-              const lineEnd = sectionEndY - basicThickness;
+              const lineEnd = is2Drawer
+                ? sectionEndY  // 2단: 측판 끝까지 (측판이 18mm 늘어남)
+                : (sectionEndY - basicThickness); // 4단: 하부 상판 윗면까지
               sectionHeightMm = (lineEnd - lineStart) / 0.01;
             } else {
               // 중간 섹션: 섹션 자체 높이
@@ -357,11 +361,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   points={[
                     [0,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? (sectionEndY - basicThickness) : sectionEndY,
+                      sectionIndex === 0 ? (is2Drawer ? sectionEndY : (sectionEndY - basicThickness)) : sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                     [0,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? (sectionEndY - basicThickness) : sectionEndY,
+                      sectionIndex === 0 ? (is2Drawer ? sectionEndY : (sectionEndY - basicThickness)) : sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
@@ -378,7 +382,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [0,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                      sectionIndex === 0 ? (is2Drawer ? sectionEndY : (sectionEndY - basicThickness)) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
@@ -408,12 +412,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   points={[
                     [0 - 0.03,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                      sectionIndex === 0 ? (is2Drawer ? sectionEndY : (sectionEndY - basicThickness)) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [0 + 0.03,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                      sectionIndex === 0 ? (is2Drawer ? sectionEndY : (sectionEndY - basicThickness)) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
@@ -443,7 +447,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   position={[
                     0,
                     isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                    sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                    sectionIndex === 0 ? (is2Drawer ? sectionEndY : (sectionEndY - basicThickness)) :
                     sectionEndY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)
                   ]}
