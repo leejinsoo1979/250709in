@@ -321,7 +321,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             } else if (sectionIndex === 0) {
               // 하부섹션: 받침대 위부터 하부섹션 상판 윗면까지
               const lineStart = floatHeight + baseFrameHeight;
-              const lineEnd = sectionEndY - basicThickness; // 하부 상판 윗면까지
+              const lineEnd = sectionEndY; // 하부 상판 윗면까지
               sectionHeightMm = (lineEnd - lineStart) / 0.01;
             } else {
               // 중간 섹션: 섹션 자체 높이
@@ -357,11 +357,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   points={[
                     [0,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? (sectionEndY - basicThickness) : sectionEndY,
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                     [0,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? (sectionEndY - basicThickness) : sectionEndY,
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
@@ -378,7 +378,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [0,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
@@ -408,12 +407,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   points={[
                     [0 - 0.03,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [0 + 0.03,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
@@ -443,7 +440,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   position={[
                     0,
                     isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                    sectionIndex === 0 ? (sectionEndY - basicThickness) :
                     sectionEndY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)
                   ]}
