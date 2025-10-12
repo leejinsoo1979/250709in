@@ -56,13 +56,13 @@ export const Hinge: React.FC<HingeProps> = ({
   // 측면뷰 렌더링 - 실제 컵 힌지 형상
   if ((view2DDirection === 'left' || view2DDirection === 'right') && viewDirection === 'side') {
     console.log('🔴 Hinge rendering in side view:', { view2DDirection, viewDirection, position });
-    // 힌지 치수 (실제 컵 힌지 기준)
-    const baseWidth = mmToThreeUnits(18);    // 베이스플레이트 너비 18mm
-    const baseHeight = mmToThreeUnits(35);   // 베이스플레이트 높이 35mm
-    const cupDiameter = mmToThreeUnits(35);  // 컵 직경 35mm
-    const armThickness = mmToThreeUnits(3);  // 암 두께 3mm
-    const armLength = mmToThreeUnits(12);    // 암 길이 12mm
-    const sideViewColor = '#00CCCC'; // 측면뷰도 동일한 색상
+    // 힌지 치수 (실제 컵 힌지 기준) - 10배 크게
+    const baseWidth = mmToThreeUnits(180);    // 베이스플레이트 너비 180mm (10배)
+    const baseHeight = mmToThreeUnits(350);   // 베이스플레이트 높이 350mm (10배)
+    const cupDiameter = mmToThreeUnits(350);  // 컵 직경 350mm (10배)
+    const armThickness = mmToThreeUnits(30);  // 암 두께 30mm (10배)
+    const armLength = mmToThreeUnits(120);    // 암 길이 120mm (10배)
+    const sideViewColor = '#FF0000'; // 빨간색으로 변경
 
     return (
       <group position={position}>
