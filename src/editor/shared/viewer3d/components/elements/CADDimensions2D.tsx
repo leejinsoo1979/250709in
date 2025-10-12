@@ -345,11 +345,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) : sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                     [slotX,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) : sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
@@ -367,7 +367,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [slotX,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
@@ -764,7 +764,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               renderOrder={100001}
               rotation={[0, -Math.PI / 2, 0]}
             >
-              <circleGeometry args={[0.015, 16]} />
+              <circleGeometry args={[0.06, 16]} />
               <meshBasicMaterial color={dimensionColor} depthTest={false} />
             </mesh>
 
@@ -774,7 +774,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               renderOrder={100001}
               rotation={[0, -Math.PI / 2, 0]}
             >
-              <circleGeometry args={[0.015, 16]} />
+              <circleGeometry args={[0.06, 16]} />
               <meshBasicMaterial color={dimensionColor} depthTest={false} />
             </mesh>
 
