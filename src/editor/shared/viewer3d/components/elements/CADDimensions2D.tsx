@@ -336,7 +336,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [slotX,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) : sectionEndY,
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
+                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
@@ -359,8 +361,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 )}
                 <NativeLine
                   points={[
-                    [slotX - 0.03, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                    [slotX + 0.03, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX - 0.03,
+                      isLastSection ? (sectionEndY - mmToThreeUnits(75)) :
+                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                      sectionEndY,
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
+                    [slotX + 0.03,
+                      isLastSection ? (sectionEndY - mmToThreeUnits(75)) :
+                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                      sectionEndY,
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={2}
@@ -383,7 +393,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     slotX,
-                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight) : sectionEndY,
+                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
+                    sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                    sectionEndY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)
                   ]}
                   renderOrder={100001}
@@ -491,8 +503,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   if (shelfPositions.length > 0) {
                     const lastShelfPos = shelfPositions[shelfPositions.length - 1];
                     const lastShelfTopMm = lastShelfPos + basicThickness / 0.01 / 2; // 선반 상단 위치
-                    // 섹션의 상단에서 프레임 두께의 2배만큼 아래가 정확한 위치
-                    const topFrameBottomMm = (sectionHeight / 0.01) - (basicThickness / 0.01) * 2;
+                    // 섹션의 내경 높이 기준으로 계산 (정면뷰와 동일)
+                    // sectionHeight는 외경이므로 내경을 사용해야 함
+                    const sectionInnerHeight = sectionHeight - basicThickness * 2; // 상하판 두께 제외
+                    const topFrameBottomMm = (sectionInnerHeight / 0.01) - (basicThickness / 0.01) * 2;
                     const heightMm = topFrameBottomMm - lastShelfTopMm; // 선반 상단부터 상단 프레임 하단까지
                     const height = mmToThreeUnits(heightMm); // Three.js 단위로 변환
                     const centerY = sectionStartY + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
@@ -1108,7 +1122,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       sectionStartY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)],
                     [slotX,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) : sectionEndY,
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
+                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                      sectionEndY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
@@ -1131,8 +1147,16 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 )}
                 <NativeLine
                   points={[
-                    [slotX - 0.03, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)],
-                    [slotX + 0.03, isLastSection ? (sectionEndY - mmToThreeUnits(75)) : sectionEndY, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)]
+                    [slotX - 0.03,
+                      isLastSection ? (sectionEndY - mmToThreeUnits(75)) :
+                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                      sectionEndY,
+                      -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)],
+                    [slotX + 0.03,
+                      isLastSection ? (sectionEndY - mmToThreeUnits(75)) :
+                      sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                      sectionEndY,
+                      -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={2}
@@ -1155,7 +1179,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     slotX,
-                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight) : sectionEndY,
+                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
+                    sectionIndex === 0 ? (sectionEndY - basicThickness) :
+                    sectionEndY,
                     -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)
                   ]}
                   renderOrder={100001}
@@ -1227,7 +1253,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   if (shelfPositions.length > 0) {
                     const lastShelfPos = shelfPositions[shelfPositions.length - 1];
                     const lastShelfTopMm = lastShelfPos + basicThickness / 0.01 / 2;
-                    const topFrameBottomMm = (sectionHeight / 0.01) - (basicThickness / 0.01) * 2;
+                    // 섹션의 내경 높이 기준으로 계산 (정면뷰와 동일)
+                    const sectionInnerHeight = sectionHeight - basicThickness * 2; // 상하판 두께 제외
+                    const topFrameBottomMm = (sectionInnerHeight / 0.01) - (basicThickness / 0.01) * 2;
                     const heightMm = topFrameBottomMm - lastShelfTopMm;
                     const height = mmToThreeUnits(heightMm);
                     const centerY = sectionStartY + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
