@@ -633,7 +633,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isNoSurroundNoWallLeft = spaceInfo.surroundType === 'no-surround' && !spaceInfo.wallConfig?.left;
   const isNoSurroundNoWallRight = spaceInfo.surroundType === 'no-surround' && !spaceInfo.wallConfig?.right;
   const endPanelThickness = 18; // 엔드패널 두께 18mm
-  
+
+  // 패널 두께 (18mm) - 먼저 선언
+  const panelThickness = 18;
+
   // 도어는 가구 몸통(측판 앞면)에서 5mm 떨어짐
   // 캐비닛 앞면 = moduleDepth - panelThickness
   // 도어 뒷면 = 캐비닛 앞면 + 5mm 갭
@@ -643,9 +646,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const doorBackFace = cabinetFrontFace + doorGap; // 도어 뒷면
   const doorDepthMm = doorBackFace + (doorThickness / 2); // 도어 중심
   const doorDepth = mmToThreeUnits(doorDepthMm);
-  
-  // 패널 두께 (18mm)와 힌지 위치 오프셋(9mm) 상수 정의
-  const panelThickness = 18;
+
+  // 힌지 위치 오프셋(9mm) 상수 정의
   const hingeOffset = panelThickness / 2; // 9mm
   const hingeOffsetUnits = mmToThreeUnits(hingeOffset);
   
