@@ -64,6 +64,14 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const rodDepth = mmToThreeUnits(10);
   const rodHeight = mmToThreeUnits(30);
 
+  console.log('🎽 ClothingRod 렌더링:', {
+    innerWidth: innerWidth * 100,
+    leftBracketX: leftBracketX * 100,
+    rightBracketX: rightBracketX * 100,
+    rodWidth: rodWidth * 100,
+    yPosition: yPosition * 100
+  });
+
   // 옷봉 Y 위치: 브라켓 하단에서 5mm 위에 옷봉 하단
   // 브라켓 중심(Y=0) 기준, 브라켓 하단은 -bracketHeight/2
   // 옷봉 하단 = 브라켓 하단 + 5mm = -bracketHeight/2 + mmToThreeUnits(5)

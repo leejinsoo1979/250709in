@@ -565,7 +565,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               return (
                 <ClothingRod
                   key={`clothing-rod-right-${sectionIndex}`}
-                  innerWidth={rightWidth}
+                  innerWidth={rightWidth}  // 우측 섹션 너비만 사용 (그룹 오프셋 적용됨)
                   yPosition={rodYPosition}
                   zPosition={0}
                   renderMode={renderMode}
