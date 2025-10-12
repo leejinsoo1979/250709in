@@ -254,11 +254,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             // 섹션별 강조 확인
             const isDrawerSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
 
+            // 상부섹션(index > 0)은 하판이 없으므로 innerHeight에서 basicThickness를 뺌
+            const drawerInnerHeight = index > 0 ? sectionHeight - basicThickness : sectionHeight;
+
             sectionContent = (
               <DrawerRenderer
                 drawerCount={section.count}
                 innerWidth={innerWidth}
-                innerHeight={sectionHeight}
+                innerHeight={drawerInnerHeight}
                 depth={depth}
                 basicThickness={basicThickness}
                 yOffset={sectionCenterY}
