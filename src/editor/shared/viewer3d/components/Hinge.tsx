@@ -53,26 +53,6 @@ export const Hinge: React.FC<HingeProps> = ({
     return null;
   }
 
-  // 정면뷰 렌더링
-  if (view2DDirection === 'front' && viewDirection === 'front') {
-    return (
-      <group position={position}>
-        {/* 메인 경첩 원 (17.5mm 반지름) - 측판에서 24mm 안쪽 */}
-        <Line points={mainCirclePoints} color={lineColor} lineWidth={1} />
-
-        {/* 위쪽 작은 원 (4mm 반지름) - 측판에서 33.5mm 안쪽, 메인 원 중심에서 위로 22.5mm */}
-        <group position={[smallCircleX, smallCircleSpacing, 0]}>
-          <Line points={smallCirclePoints} color={lineColor} lineWidth={1} />
-        </group>
-
-        {/* 아래쪽 작은 원 (4mm 반지름) - 측판에서 33.5mm 안쪽, 메인 원 중심에서 아래로 22.5mm */}
-        <group position={[smallCircleX, -smallCircleSpacing, 0]}>
-          <Line points={smallCirclePoints} color={lineColor} lineWidth={1} />
-        </group>
-      </group>
-    );
-  }
-
   // 측면뷰 렌더링 (이미지 참조)
   if (view2DDirection === 'side' && viewDirection === 'side') {
     const hingeBodyWidth = mmToThreeUnits(9); // 경첩 본체 두께 9mm
@@ -89,6 +69,26 @@ export const Hinge: React.FC<HingeProps> = ({
           color={lineColor}
           lineWidth={2}
         />
+      </group>
+    );
+  }
+
+  // 정면뷰 렌더링 (기본값)
+  if (viewDirection === 'front') {
+    return (
+      <group position={position}>
+        {/* 메인 경첩 원 (17.5mm 반지름) - 측판에서 24mm 안쪽 */}
+        <Line points={mainCirclePoints} color={lineColor} lineWidth={1} />
+
+        {/* 위쪽 작은 원 (4mm 반지름) - 측판에서 33.5mm 안쪽, 메인 원 중심에서 위로 22.5mm */}
+        <group position={[smallCircleX, smallCircleSpacing, 0]}>
+          <Line points={smallCirclePoints} color={lineColor} lineWidth={1} />
+        </group>
+
+        {/* 아래쪽 작은 원 (4mm 반지름) - 측판에서 33.5mm 안쪽, 메인 원 중심에서 아래로 22.5mm */}
+        <group position={[smallCircleX, -smallCircleSpacing, 0]}>
+          <Line points={smallCirclePoints} color={lineColor} lineWidth={1} />
+        </group>
       </group>
     );
   }
