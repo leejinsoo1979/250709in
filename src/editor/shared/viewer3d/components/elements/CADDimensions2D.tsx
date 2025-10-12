@@ -350,11 +350,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX,
-                      isLastSection ? sectionEndY :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) : sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                     [slotX,
-                      isLastSection ? sectionEndY :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) : sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
@@ -371,7 +371,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [slotX,
-                      isLastSection ? sectionEndY :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
@@ -401,12 +401,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX - 0.03,
-                      isLastSection ? (sectionEndY - basicThickness) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [slotX + 0.03,
-                      isLastSection ? (sectionEndY - basicThickness) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
@@ -436,7 +436,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     slotX,
-                    isLastSection ? (sectionEndY - basicThickness) :
+                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                     sectionIndex === 0 ? (sectionEndY - basicThickness) :
                     sectionEndY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)
@@ -1236,12 +1236,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX - 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)],
                     [slotX + 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)]
@@ -1271,7 +1271,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     slotX,
-                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
+                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                     sectionIndex === 0 ? (sectionEndY - basicThickness) :
                     sectionEndY,
                     -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)
