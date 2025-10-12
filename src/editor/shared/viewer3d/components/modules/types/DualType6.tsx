@@ -239,132 +239,6 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                       </>
                     )}
                   </>
-                ) : section.type === 'hanging' && index === 1 ? (
-                  <>
-                    {/* 상부 옷장 내경 높이 */}
-                    {hasSharedSafetyShelf ? (
-                      <>
-                        {/* 중간 가로선반 상단부터 안전선반 하단까지 */}
-                        <Text
-                          position={[
-                            -leftWidth/2 * 0.3 - 0.5, 
-                            ((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2) + (-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2)) / 2,
-                            viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
-                          ]}
-                          fontSize={baseFontSize}
-                          color={dimensionColor}
-                          anchorX="center"
-                          anchorY="middle"
-                          rotation={[0, 0, Math.PI / 2]}
-                          renderOrder={999}
-                          depthTest={false}
-                        >
-                          {Math.round(threeUnitsToMm(((-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
-                        </Text>
-                        
-                        <Line
-                          points={[
-                            [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                            [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
-                          ]}
-                          color={dimensionColor}
-                          lineWidth={1}
-                        />
-                        {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                          <>
-                            <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                              <sphereGeometry args={[0.05, 8, 8]} />
-                              <meshBasicMaterial color={dimensionColor} />
-                            </mesh>
-                            <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                              <sphereGeometry args={[0.05, 8, 8]} />
-                              <meshBasicMaterial color={dimensionColor} />
-                            </mesh>
-                          </>
-                        )}
-                        
-                        {/* 안전선반 상단부터 상단 프레임 하단까지 */}
-                        <Text
-                          position={[
-                            -leftWidth/2 * 0.3 - 0.5, 
-                            ((-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2) + (height/2 - basicThickness)) / 2,
-                            viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
-                          ]}
-                          fontSize={baseFontSize}
-                          color={dimensionColor}
-                          anchorX="center"
-                          anchorY="middle"
-                          rotation={[0, 0, Math.PI / 2]}
-                          renderOrder={999}
-                          depthTest={false}
-                        >
-                          {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2))))}
-                        </Text>
-                        
-                        <Line
-                          points={[
-                            [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                            [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
-                          ]}
-                          color={dimensionColor}
-                          lineWidth={1}
-                        />
-                        {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                          <>
-                            <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                              <sphereGeometry args={[0.05, 8, 8]} />
-                              <meshBasicMaterial color={dimensionColor} />
-                            </mesh>
-                            <mesh position={[-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                              <sphereGeometry args={[0.05, 8, 8]} />
-                              <meshBasicMaterial color={dimensionColor} />
-                            </mesh>
-                          </>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {/* 안전선반이 없는 경우 - 중간 가로선반 상단부터 상단 프레임 하단까지 */}
-                        <Text
-                          position={[
-                            -leftWidth/2 * 0.3 - 0.5, 
-                            sectionCenterY,
-                            viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
-                          ]}
-                          fontSize={baseFontSize}
-                          color={dimensionColor}
-                          anchorX="center"
-                          anchorY="middle"
-                          rotation={[0, 0, Math.PI / 2]}
-                          renderOrder={999}
-                          depthTest={false}
-                        >
-                          {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
-                        </Text>
-                        
-                        <Line
-                          points={[
-                            [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                            [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
-                          ]}
-                          color={dimensionColor}
-                          lineWidth={1}
-                        />
-                        {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                          <>
-                            <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                              <sphereGeometry args={[0.05, 8, 8]} />
-                              <meshBasicMaterial color={dimensionColor} />
-                            </mesh>
-                            <mesh position={[-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                              <sphereGeometry args={[0.05, 8, 8]} />
-                              <meshBasicMaterial color={dimensionColor} />
-                            </mesh>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </>
                 ) : null}
                 
                 {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 */}
@@ -886,6 +760,134 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
 
           {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
           {!isDragging && renderAsymmetricSections()}
+
+          {/* 상부 옷장 치수 표시 - 전체 너비 기준 */}
+          {!isDragging && showDimensions && showDimensionsText && (
+            <group>
+              {hasSharedSafetyShelf ? (
+                <>
+                  {/* 중간 가로선반 상단부터 안전선반 하단까지 */}
+                  <Text
+                    position={[
+                      -innerWidth/2 * 0.3 - 0.5,
+                      ((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2) + (-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2)) / 2,
+                      viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+                    ]}
+                    fontSize={baseFontSize}
+                    color={dimensionColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[0, 0, Math.PI / 2]}
+                    renderOrder={999}
+                    depthTest={false}
+                  >
+                    {Math.round(threeUnitsToMm(((-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
+                  </Text>
+
+                  <Line
+                    points={[
+                      [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
+                      [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                    ]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                    <>
+                      <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={dimensionColor} />
+                      </mesh>
+                      <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={dimensionColor} />
+                      </mesh>
+                    </>
+                  )}
+
+                  {/* 안전선반 상단부터 상단 프레임 하단까지 */}
+                  <Text
+                    position={[
+                      -innerWidth/2 * 0.3 - 0.5,
+                      ((-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2) + (height/2 - basicThickness)) / 2,
+                      viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+                    ]}
+                    fontSize={baseFontSize}
+                    color={dimensionColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[0, 0, Math.PI / 2]}
+                    renderOrder={999}
+                    depthTest={false}
+                  >
+                    {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2))))}
+                  </Text>
+
+                  <Line
+                    points={[
+                      [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
+                      [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                    ]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                    <>
+                      <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={dimensionColor} />
+                      </mesh>
+                      <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={dimensionColor} />
+                      </mesh>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* 안전선반이 없는 경우 - 중간 가로선반 상단부터 상단 프레임 하단까지 */}
+                  <Text
+                    position={[
+                      -innerWidth/2 * 0.3 - 0.5,
+                      ((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2) + (height/2 - basicThickness)) / 2,
+                      viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+                    ]}
+                    fontSize={baseFontSize}
+                    color={dimensionColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[0, 0, Math.PI / 2]}
+                    renderOrder={999}
+                    depthTest={false}
+                  >
+                    {Math.round(threeUnitsToMm(((height/2 - basicThickness) - (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2))))}
+                  </Text>
+
+                  <Line
+                    points={[
+                      [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
+                      [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                    ]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                    <>
+                      <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={dimensionColor} />
+                      </mesh>
+                      <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={dimensionColor} />
+                      </mesh>
+                    </>
+                  )}
+                </>
+              )}
+            </group>
+          )}
 
           {/* 조절발통 (네 모서리) */}
           <AdjustableFootsRenderer
