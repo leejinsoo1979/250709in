@@ -138,7 +138,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
               [rodEndX, rodYOffset + rodHeight / 2, rodZOffset]
             ]}
             color={lineColor}
-            lineWidth={1}
+            lineWidth={0.5}
           />
           {/* 옷봉 중간선 */}
           <Line
@@ -147,7 +147,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
               [rodEndX, rodYOffset, rodZOffset]
             ]}
             color={lineColor}
-            lineWidth={1}
+            lineWidth={0.5}
           />
           {/* 옷봉 하단선 */}
           <Line
@@ -156,7 +156,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
               [rodEndX, rodYOffset - rodHeight / 2, rodZOffset]
             ]}
             color={lineColor}
-            lineWidth={1}
+            lineWidth={0.5}
           />
           {/* 중간선 위 5mm */}
           <Line
@@ -165,7 +165,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
               [rodEndX, rodYOffset + mmToThreeUnits(5), rodZOffset]
             ]}
             color={lineColor}
-            lineWidth={1}
+            lineWidth={0.5}
           />
           {/* 중간선 아래 5mm */}
           <Line
@@ -174,7 +174,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
               [rodEndX, rodYOffset - mmToThreeUnits(5), rodZOffset]
             ]}
             color={lineColor}
-            lineWidth={1}
+            lineWidth={0.5}
           />
         </>
       ) : (
