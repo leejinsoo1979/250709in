@@ -988,8 +988,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </>
               )}
 
-              {/* Hinges for left door - side view (4 hinges at same positions) */}
-              {viewMode === '2D' && view2DDirection === 'side' && (
+              {/* Hinges for left door - side view (우측뷰에서만 보임) */}
+              {viewMode === '2D' && view2DDirection === 'right' && (
                 <>
                   {/* 1번째 경첩: 도어 위에서 100mm */}
                   <Hinge
@@ -1217,8 +1217,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </>
               )}
 
-              {/* Hinges for right door - side view (4 hinges at same positions) */}
-              {viewMode === '2D' && view2DDirection === 'side' && (
+              {/* Hinges for right door - side view (좌측뷰에서만 보임) */}
+              {viewMode === '2D' && view2DDirection === 'left' && (
                 <>
                   {/* 1번째 경첩: 도어 위에서 100mm */}
                   <Hinge
@@ -1499,8 +1499,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               </>
             )}
 
-            {/* Hinges for single door - side view (4 hinges at same positions) */}
-            {viewMode === '2D' && view2DDirection === 'side' && (
+            {/* Hinges for single door - side view */}
+            {/* 경첩이 왼쪽에 있으면 우측뷰에서, 오른쪽에 있으면 좌측뷰에서 보임 */}
+            {viewMode === '2D' &&
+             ((adjustedHingePosition === 'left' && view2DDirection === 'right') ||
+              (adjustedHingePosition === 'right' && view2DDirection === 'left')) && (
               <>
                 {/* 1번째 경첩: 도어 위에서 100mm */}
                 <Hinge
