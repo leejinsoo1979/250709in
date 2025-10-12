@@ -536,14 +536,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   }
 
                   // 마지막 칸 - 마지막 선반 상단부터 섹션 상단까지
-                  // 정면뷰(ShelfRenderer.tsx line 222-232)와 완전히 동일한 로직
+                  // 정면뷰(ShelfRenderer.tsx line 222-232)와 동일한 로직
                   if (shelfPositions.length > 0) {
                     const lastShelfPos = shelfPositions[shelfPositions.length - 1];
                     const lastShelfTopMm = lastShelfPos + basicThickness / 0.01 / 2; // 선반 상단 위치
-                    // 섹션의 내경 높이 기준으로 계산 (정면뷰와 동일)
-                    // sectionHeight는 외경이므로 내경을 사용해야 함
-                    const sectionInnerHeight = sectionHeight - basicThickness * 2; // 상하판 두께 제외
-                    const topFrameBottomMm = (sectionInnerHeight / 0.01) - (basicThickness / 0.01) * 2;
+
+                    // 섹션 상단 Y 위치 계산
+                    // isLastSection이면 가구 최상단(floatHeight + baseFrameHeight + internalHeight)
+                    // 아니면 sectionEndY
+                    const sectionTopY = isLastSection ? (floatHeight + baseFrameHeight + internalHeight) : sectionEndY;
+
+                    // 섹션 상단에서 상단판(basicThickness) 2개 두께를 뺀 위치가 내부 상단
+                    const topFrameBottomY = sectionTopY - basicThickness * 2;
+                    const topFrameBottomMm = (topFrameBottomY - sectionStartY) / 0.01;
+
                     const heightMm = topFrameBottomMm - lastShelfTopMm; // 선반 상단부터 상단 프레임 하단까지
                     const height = mmToThreeUnits(heightMm); // Three.js 단위로 변환
                     const centerY = sectionStartY + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
@@ -1327,9 +1333,14 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   if (shelfPositions.length > 0) {
                     const lastShelfPos = shelfPositions[shelfPositions.length - 1];
                     const lastShelfTopMm = lastShelfPos + basicThickness / 0.01 / 2;
-                    // 섹션의 내경 높이 기준으로 계산 (정면뷰와 동일)
-                    const sectionInnerHeight = sectionHeight - basicThickness * 2; // 상하판 두께 제외
-                    const topFrameBottomMm = (sectionInnerHeight / 0.01) - (basicThickness / 0.01) * 2;
+
+                    // 섹션 상단 Y 위치 계산 (좌측뷰와 동일)
+                    const sectionTopY = isLastSection ? (floatHeight + baseFrameHeight + internalHeight) : sectionEndY;
+
+                    // 섹션 상단에서 상단판(basicThickness) 2개 두께를 뺀 위치가 내부 상단
+                    const topFrameBottomY = sectionTopY - basicThickness * 2;
+                    const topFrameBottomMm = (topFrameBottomY - sectionStartY) / 0.01;
+
                     const heightMm = topFrameBottomMm - lastShelfTopMm;
                     const height = mmToThreeUnits(heightMm);
                     const centerY = sectionStartY + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
