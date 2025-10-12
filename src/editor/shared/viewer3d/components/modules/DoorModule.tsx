@@ -634,9 +634,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isNoSurroundNoWallRight = spaceInfo.surroundType === 'no-surround' && !spaceInfo.wallConfig?.right;
   const endPanelThickness = 18; // 엔드패널 두께 18mm
   
-  // 도어는 가구 몸통에서 5mm 떨어짐
+  // 도어는 가구 몸통에서 5mm 떨어짐 (앞쪽으로)
   // 노서라운드와 서라운드 모드에서 동일한 Z축 위치 유지
-  const baseDepthOffset = mmToThreeUnits(5);
+  const baseDepthOffset = mmToThreeUnits(-5);
   const doorDepth = mmToThreeUnits(moduleDepth) + baseDepthOffset; // 서라운드와 노서라운드 동일하게 처리
   
   // 패널 두께 (18mm)와 힌지 위치 오프셋(9mm) 상수 정의
@@ -987,8 +987,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </>
               )}
 
-              {/* Hinges for left door - side view (우측뷰에서만 보임) */}
-              {viewMode === '2D' && view2DDirection === 'right' && (
+              {/* Hinges for left door - side view (좌측뷰에서만 보임) */}
+              {viewMode === '2D' && view2DDirection === 'left' && (
                 <>
                   {/* 1번째 경첩: 도어 위에서 100mm */}
                   <Hinge
