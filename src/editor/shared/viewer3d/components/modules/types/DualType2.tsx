@@ -452,15 +452,15 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                 // 옷걸이 봉 Y 위치 계산
                 let rodYPosition: number;
                 if (safetyShelfPositionMm !== undefined) {
-                  // 안전선반이 있는 경우: 안전선반 바로 아래
+                  // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
                   const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
-                  // 브라켓 상단이 안전선반 하단에 붙음
                   rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
                 } else {
-                  // 안전선반이 없는 경우: 브라켓 상단이 섹션 상판 하단에 붙음
-                  // 섹션 상판 하단 = sectionTopY + basicThickness/2
+                  // 안전선반이 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
+                  // 섹션 상판 하단 = sectionBottomY + sectionHeight - basicThickness/2
+                  const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
                   // 브라켓 중심 = 섹션 상판 하단 - 브라켓높이/2
-                  rodYPosition = (sectionTopY + basicThickness / 2) - mmToThreeUnits(75 / 2);
+                  rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
                 }
 
                 return (
