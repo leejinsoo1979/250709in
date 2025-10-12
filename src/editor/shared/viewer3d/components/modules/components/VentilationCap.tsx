@@ -7,6 +7,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 interface VentilationCapProps {
   position: [number, number, number];
   diameter?: number; // mm 단위
+  thickness?: number; // mm 단위 (기본 9mm)
   renderMode: '2d' | '3d';
 }
 
@@ -14,14 +15,15 @@ interface VentilationCapProps {
  * VentilationCap 컴포넌트
  * 환기캡 표시: 동심원 2개로 표현
  *
- * 기본 크기: 직경 98mm
+ * 기본 크기: 직경 98mm, 두께 9mm
  */
 export const VentilationCap: React.FC<VentilationCapProps> = ({
   position,
   diameter = 98,
+  thickness = 9,
   renderMode
 }) => {
-  const { view2DTheme } = useUIStore();
+  const { view2DTheme, view2DDirection } = useUIStore();
   const { viewMode } = useSpace3DView();
 
   // 단위 변환 함수
@@ -52,50 +54,78 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   const outerCirclePoints = generateCirclePoints(outerRadius);
   const innerCirclePoints = generateCirclePoints(innerRadius);
 
+  // 측면뷰에서 두께 표시 (9mm)
+  const capThickness = mmToThreeUnits(thickness);
+  const isSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+
   console.log('🌀 VentilationCap 렌더링:', {
     position,
     diameter,
+    thickness,
     outerRadius,
     crossLineLength,
     viewMode,
+    view2DDirection,
+    isSideView,
     renderMode
   });
 
   return (
     <group position={position}>
-      {/* 외부 원 */}
-      <Line
-        points={outerCirclePoints}
-        color={lineColor}
-        lineWidth={1}
-      />
+      {isSideView ? (
+        // 측면뷰: 9mm 두께의 사각형으로 표시
+        <>
+          {/* 환기캡 두께 사각형 */}
+          <Line
+            points={[
+              [-outerRadius, -capThickness / 2, 0],
+              [outerRadius, -capThickness / 2, 0],
+              [outerRadius, capThickness / 2, 0],
+              [-outerRadius, capThickness / 2, 0],
+              [-outerRadius, -capThickness / 2, 0]
+            ]}
+            color={lineColor}
+            lineWidth={1}
+          />
+        </>
+      ) : (
+        // 정면뷰/탑뷰: 동심원으로 표시
+        <>
+          {/* 외부 원 */}
+          <Line
+            points={outerCirclePoints}
+            color={lineColor}
+            lineWidth={1}
+          />
 
-      {/* 내부 원 */}
-      <Line
-        points={innerCirclePoints}
-        color={lineColor}
-        lineWidth={1}
-      />
+          {/* 내부 원 */}
+          <Line
+            points={innerCirclePoints}
+            color={lineColor}
+            lineWidth={1}
+          />
 
-      {/* 중심선 - 가로 (150mm) */}
-      <Line
-        points={[
-          [-crossLineLength, 0, 0],
-          [crossLineLength, 0, 0]
-        ]}
-        color={lineColor}
-        lineWidth={0.5}
-      />
+          {/* 중심선 - 가로 (150mm) */}
+          <Line
+            points={[
+              [-crossLineLength, 0, 0],
+              [crossLineLength, 0, 0]
+            ]}
+            color={lineColor}
+            lineWidth={0.5}
+          />
 
-      {/* 중심선 - 세로 (150mm) */}
-      <Line
-        points={[
-          [0, -crossLineLength, 0],
-          [0, crossLineLength, 0]
-        ]}
-        color={lineColor}
-        lineWidth={0.5}
-      />
+          {/* 중심선 - 세로 (150mm) */}
+          <Line
+            points={[
+              [0, -crossLineLength, 0],
+              [0, crossLineLength, 0]
+            ]}
+            color={lineColor}
+            lineWidth={0.5}
+          />
+        </>
+      )}
     </group>
   );
 };
