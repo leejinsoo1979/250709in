@@ -25,14 +25,6 @@ export const Hinge: React.FC<HingeProps> = ({
   // props로 전달받은 값이 있으면 우선 사용, 없으면 컨텍스트 값 사용
   const view2DDirection = propsView2DDirection || contextView2DDirection;
 
-  // Debug log at component start
-  console.log('⭐⭐⭐ Hinge component start:',
-    'viewMode=' + viewMode,
-    'view2DDirection=' + view2DDirection,
-    'viewDirection=' + viewDirection,
-    'position=[' + position.join(',') + ']'
-  );
-
   const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
   // 값이 이미 반지름이므로 그대로 사용
@@ -67,18 +59,13 @@ export const Hinge: React.FC<HingeProps> = ({
 
   // 측면뷰 렌더링 - 실제 컵 힌지 형상
   if ((view2DDirection === 'left' || view2DDirection === 'right') && viewDirection === 'side') {
-    console.log('🔴 Hinge rendering in side view:',
-      'view2DDirection=' + view2DDirection,
-      'viewDirection=' + viewDirection,
-      'position=[' + position.join(',') + ']'
-    );
-    // 힌지 치수 (실제 컵 힌지 기준) - 10배 크게
-    const baseWidth = mmToThreeUnits(180);    // 베이스플레이트 너비 180mm (10배)
-    const baseHeight = mmToThreeUnits(350);   // 베이스플레이트 높이 350mm (10배)
-    const cupDiameter = mmToThreeUnits(350);  // 컵 직경 350mm (10배)
-    const armThickness = mmToThreeUnits(30);  // 암 두께 30mm (10배)
-    const armLength = mmToThreeUnits(120);    // 암 길이 120mm (10배)
-    const sideViewColor = '#FF0000'; // 빨간색으로 변경
+    // 힌지 치수 (실제 컵 힌지 기준)
+    const baseWidth = mmToThreeUnits(18);    // 베이스플레이트 너비 18mm
+    const baseHeight = mmToThreeUnits(35);   // 베이스플레이트 높이 35mm
+    const cupDiameter = mmToThreeUnits(35);  // 컵 직경 35mm
+    const armThickness = mmToThreeUnits(3);  // 암 두께 3mm
+    const armLength = mmToThreeUnits(12);    // 암 길이 12mm
+    const sideViewColor = '#00CCCC'; // 시안색 (정면뷰 경첩 타공점과 동일)
 
     return (
       <group position={position}>
@@ -92,7 +79,7 @@ export const Hinge: React.FC<HingeProps> = ({
             [0, baseHeight / 2, -baseWidth / 2]
           ]}
           color={sideViewColor}
-          lineWidth={5}
+          lineWidth={1}
         />
 
         {/* 힌지 컵 (원통형 부분) - 베이스플레이트 중앙에 위치 - Y-Z 평면 */}
@@ -102,7 +89,7 @@ export const Hinge: React.FC<HingeProps> = ({
             [0, -cupDiameter / 2, 0]
           ]}
           color={sideViewColor}
-          lineWidth={5}
+          lineWidth={1}
         />
 
         {/* 힌지 암 (도어로 연장되는 부분) - 베이스플레이트 오른쪽에서 시작 - Y-Z 평면 */}
@@ -115,7 +102,7 @@ export const Hinge: React.FC<HingeProps> = ({
             [0, armThickness / 2, baseWidth / 2]
           ]}
           color={sideViewColor}
-          lineWidth={5}
+          lineWidth={1}
         />
       </group>
     );

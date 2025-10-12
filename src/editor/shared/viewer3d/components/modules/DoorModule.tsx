@@ -143,14 +143,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
 
-  // 🎯 DoorModule 렌더링 시 viewMode와 view2DDirection 실제 값 로깅
-  console.log('🎯🎯🎯 DoorModule render:',
-    'viewMode=' + viewMode,
-    'view2DDirection=' + view2DDirection,
-    'hingePosition=' + hingePosition,
-    'moduleId=' + moduleData?.id
-  );
-
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
   const currentSpaceInfo = spaceInfo || storeSpaceInfo;
   const materialConfig = currentSpaceInfo.materialConfig || { 
@@ -1526,20 +1518,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
             {/* Hinges for single door - side view */}
             {/* 경첩이 왼쪽에 있으면 우측뷰에서, 오른쪽에 있으면 좌측뷰에서 보임 */}
-            {(() => {
-              const leftCondition = adjustedHingePosition === 'left' && view2DDirection === 'right';
-              const rightCondition = adjustedHingePosition === 'right' && view2DDirection === 'left';
-              const result = viewMode === '2D' && (leftCondition || rightCondition);
-              console.log('🟡🟡🟡 싱글 도어 측면뷰 경첩 조건:',
-                'viewMode=' + viewMode,
-                'view2DDirection=' + view2DDirection,
-                'adjustedHingePosition=' + adjustedHingePosition,
-                'leftCondition=' + leftCondition,
-                'rightCondition=' + rightCondition,
-                'result=' + result
-              );
-              return result;
-            })() && (
+            {viewMode === '2D' && (
+              (adjustedHingePosition === 'left' && view2DDirection === 'right') ||
+              (adjustedHingePosition === 'right' && view2DDirection === 'left')
+            ) && (
               <>
                 {/* 1번째 경첩: 도어 위에서 100mm */}
                 <Hinge
