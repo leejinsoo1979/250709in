@@ -993,22 +993,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 <>
                   {/* 1번째 경첩: 도어 위에서 100mm */}
                   <Hinge
-                    position={[-leftDoorWidthUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
+                    position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), -leftDoorWidthUnits / 2]}
                     viewDirection="side"
                   />
                   {/* 2번째 경첩: 도어 위에서 700mm */}
                   <Hinge
-                    position={[-leftDoorWidthUnits / 2, doorHeight / 2 - mmToThreeUnits(700), 0]}
+                    position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(700), -leftDoorWidthUnits / 2]}
                     viewDirection="side"
                   />
                   {/* 3번째 경첩: 도어 아래에서 149mm */}
                   <Hinge
-                    position={[-leftDoorWidthUnits / 2, -doorHeight / 2 + mmToThreeUnits(149), 0]}
+                    position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(149), -leftDoorWidthUnits / 2]}
                     viewDirection="side"
                   />
                   {/* 4번째 경첩: 도어 아래에서 749mm */}
                   <Hinge
-                    position={[-leftDoorWidthUnits / 2, -doorHeight / 2 + mmToThreeUnits(749), 0]}
+                    position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(749), -leftDoorWidthUnits / 2]}
                     viewDirection="side"
                   />
                 </>
@@ -1222,22 +1222,22 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 <>
                   {/* 1번째 경첩: 도어 위에서 100mm */}
                   <Hinge
-                    position={[rightDoorWidthUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
+                    position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), rightDoorWidthUnits / 2]}
                     viewDirection="side"
                   />
                   {/* 2번째 경첩: 도어 위에서 700mm */}
                   <Hinge
-                    position={[rightDoorWidthUnits / 2, doorHeight / 2 - mmToThreeUnits(700), 0]}
+                    position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(700), rightDoorWidthUnits / 2]}
                     viewDirection="side"
                   />
                   {/* 3번째 경첩: 도어 아래에서 149mm */}
                   <Hinge
-                    position={[rightDoorWidthUnits / 2, -doorHeight / 2 + mmToThreeUnits(149), 0]}
+                    position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(149), rightDoorWidthUnits / 2]}
                     viewDirection="side"
                   />
                   {/* 4번째 경첩: 도어 아래에서 749mm */}
                   <Hinge
-                    position={[rightDoorWidthUnits / 2, -doorHeight / 2 + mmToThreeUnits(749), 0]}
+                    position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(749), rightDoorWidthUnits / 2]}
                     viewDirection="side"
                   />
                 </>
@@ -1505,36 +1505,36 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 {/* 1번째 경첩: 도어 위에서 100mm */}
                 <Hinge
                   position={[
-                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2,
+                    doorThicknessUnits / 2,
                     doorHeight / 2 - mmToThreeUnits(100),
-                    0
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2
                   ]}
                   viewDirection="side"
                 />
                 {/* 2번째 경첩: 도어 위에서 700mm */}
                 <Hinge
                   position={[
-                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2,
+                    doorThicknessUnits / 2,
                     doorHeight / 2 - mmToThreeUnits(700),
-                    0
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2
                   ]}
                   viewDirection="side"
                 />
                 {/* 3번째 경첩: 도어 아래에서 149mm */}
                 <Hinge
                   position={[
-                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2,
+                    doorThicknessUnits / 2,
                     -doorHeight / 2 + mmToThreeUnits(149),
-                    0
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2
                   ]}
                   viewDirection="side"
                 />
                 {/* 4번째 경첩: 도어 아래에서 749mm */}
                 <Hinge
                   position={[
-                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2,
+                    doorThicknessUnits / 2,
                     -doorHeight / 2 + mmToThreeUnits(749),
-                    0
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2
                   ]}
                   viewDirection="side"
                 />
