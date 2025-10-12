@@ -312,26 +312,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const is4Drawer = moduleData.id?.includes('4drawer-hanging');
 
             if (isLastSection) {
-              // 상부섹션: 가구 최상단부터 하부섹션 끝점(=상부섹션 시작점)까지의 실제 거리
-              const topY = floatHeight + baseFrameHeight + internalHeight;
-              // sectionStartY는 basicThickness만큼 올라간 상태이므로 원래 위치로 보정
-              const bottomY = sectionStartY - basicThickness;
-              sectionHeightMm = (topY - bottomY) / 0.01;
-
-              // 4단서랍장: 상부섹션 표시 치수 +18mm
-              if (is4Drawer) {
-                sectionHeightMm += 18;
-              }
-            } else if (sectionIndex === 0) {
-              // 하부섹션: 치수선이 그려지는 실제 거리 (받침대 위 ~ sectionEndY - basicThickness)
-              const lineStart = floatHeight + baseFrameHeight;
-              const lineEnd = sectionEndY - basicThickness;
+              // 상부섹션: 가이드선이 실제로 그려진 거리 (sectionStartY ~ 가구 최상단)
+              const lineStart = sectionStartY;
+              const lineEnd = floatHeight + baseFrameHeight + internalHeight;
               sectionHeightMm = (lineEnd - lineStart) / 0.01;
-
-              // 4단서랍장: 하부섹션 표시 치수 -18mm
-              if (is4Drawer) {
-                sectionHeightMm -= 18;
-              }
+            } else if (sectionIndex === 0) {
+              // 하부섹션: 가이드선이 실제로 그려진 거리 (받침대 위 ~ sectionEndY)
+              const lineStart = floatHeight + baseFrameHeight;
+              const lineEnd = sectionEndY;
+              sectionHeightMm = (lineEnd - lineStart) / 0.01;
             } else {
               // 중간 섹션: 섹션 자체 높이
               sectionHeightMm = sectionHeight / 0.01;
