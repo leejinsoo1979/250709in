@@ -988,6 +988,32 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </>
               )}
 
+              {/* Hinges for left door - side view (4 hinges at same positions) */}
+              {viewMode === '2D' && view2DDirection === 'side' && (
+                <>
+                  {/* 1번째 경첩: 도어 위에서 100mm */}
+                  <Hinge
+                    position={[0, doorHeight / 2 - mmToThreeUnits(100), -leftDoorWidthUnits / 2]}
+                    viewDirection="side"
+                  />
+                  {/* 2번째 경첩: 도어 위에서 700mm */}
+                  <Hinge
+                    position={[0, doorHeight / 2 - mmToThreeUnits(700), -leftDoorWidthUnits / 2]}
+                    viewDirection="side"
+                  />
+                  {/* 3번째 경첩: 도어 아래에서 149mm */}
+                  <Hinge
+                    position={[0, -doorHeight / 2 + mmToThreeUnits(149), -leftDoorWidthUnits / 2]}
+                    viewDirection="side"
+                  />
+                  {/* 4번째 경첩: 도어 아래에서 749mm */}
+                  <Hinge
+                    position={[0, -doorHeight / 2 + mmToThreeUnits(749), -leftDoorWidthUnits / 2]}
+                    viewDirection="side"
+                  />
+                </>
+              )}
+
               {/* Door opening direction for left door (front view) */}
               {viewMode === '2D' && view2DDirection === 'front' && (
                 <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
@@ -1187,6 +1213,32 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     mainDiameter={17.5}
                     smallCircleDiameter={4}
                     smallCircleXOffset={-9.5}
+                  />
+                </>
+              )}
+
+              {/* Hinges for right door - side view (4 hinges at same positions) */}
+              {viewMode === '2D' && view2DDirection === 'side' && (
+                <>
+                  {/* 1번째 경첩: 도어 위에서 100mm */}
+                  <Hinge
+                    position={[0, doorHeight / 2 - mmToThreeUnits(100), rightDoorWidthUnits / 2]}
+                    viewDirection="side"
+                  />
+                  {/* 2번째 경첩: 도어 위에서 700mm */}
+                  <Hinge
+                    position={[0, doorHeight / 2 - mmToThreeUnits(700), rightDoorWidthUnits / 2]}
+                    viewDirection="side"
+                  />
+                  {/* 3번째 경첩: 도어 아래에서 149mm */}
+                  <Hinge
+                    position={[0, -doorHeight / 2 + mmToThreeUnits(149), rightDoorWidthUnits / 2]}
+                    viewDirection="side"
+                  />
+                  {/* 4번째 경첩: 도어 아래에서 749mm */}
+                  <Hinge
+                    position={[0, -doorHeight / 2 + mmToThreeUnits(749), rightDoorWidthUnits / 2]}
+                    viewDirection="side"
                   />
                 </>
               )}
@@ -1443,6 +1495,48 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   mainDiameter={17.5}
                   smallCircleDiameter={4}
                   smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
+                />
+              </>
+            )}
+
+            {/* Hinges for single door - side view (4 hinges at same positions) */}
+            {viewMode === '2D' && view2DDirection === 'side' && (
+              <>
+                {/* 1번째 경첩: 도어 위에서 100mm */}
+                <Hinge
+                  position={[
+                    0,
+                    doorHeight / 2 - mmToThreeUnits(100),
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2
+                  ]}
+                  viewDirection="side"
+                />
+                {/* 2번째 경첩: 도어 위에서 700mm */}
+                <Hinge
+                  position={[
+                    0,
+                    doorHeight / 2 - mmToThreeUnits(700),
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2
+                  ]}
+                  viewDirection="side"
+                />
+                {/* 3번째 경첩: 도어 아래에서 149mm */}
+                <Hinge
+                  position={[
+                    0,
+                    -doorHeight / 2 + mmToThreeUnits(149),
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2
+                  ]}
+                  viewDirection="side"
+                />
+                {/* 4번째 경첩: 도어 아래에서 749mm */}
+                <Hinge
+                  position={[
+                    0,
+                    -doorHeight / 2 + mmToThreeUnits(749),
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2
+                  ]}
+                  viewDirection="side"
                 />
               </>
             )}
