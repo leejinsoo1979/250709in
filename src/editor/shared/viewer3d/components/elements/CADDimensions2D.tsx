@@ -317,21 +317,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               // sectionStartY는 basicThickness만큼 올라간 상태이므로 원래 위치로 보정
               const bottomY = sectionStartY - basicThickness;
               sectionHeightMm = (topY - bottomY) / 0.01;
-
-              // 4단서랍장: 상부섹션 가이드선 +18mm
-              if (is4Drawer) {
-                sectionHeightMm += 18;
-              }
             } else if (sectionIndex === 0) {
               // 하부섹션: 치수선이 그려지는 실제 거리 (받침대 위 ~ sectionEndY - basicThickness)
               const lineStart = floatHeight + baseFrameHeight;
               const lineEnd = sectionEndY - basicThickness;
               sectionHeightMm = (lineEnd - lineStart) / 0.01;
-
-              // 4단서랍장: 하부섹션 가이드선 -18mm
-              if (is4Drawer) {
-                sectionHeightMm -= 18;
-              }
             } else {
               // 중간 섹션: 섹션 자체 높이
               sectionHeightMm = sectionHeight / 0.01;
@@ -365,12 +355,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? sectionEndY : sectionEndY,
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight + (is4Drawer ? basicThickness : 0)) :
+                      sectionIndex === 0 ? (sectionEndY - (is4Drawer ? basicThickness : 0)) : sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                     [0,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? sectionEndY : sectionEndY,
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight + (is4Drawer ? basicThickness : 0)) :
+                      sectionIndex === 0 ? (sectionEndY - (is4Drawer ? basicThickness : 0)) : sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
@@ -386,8 +376,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [0,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? sectionEndY :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight + (is4Drawer ? basicThickness : 0)) :
+                      sectionIndex === 0 ? (sectionEndY - (is4Drawer ? basicThickness : 0)) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
@@ -416,13 +406,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0 - 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? sectionEndY :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight + (is4Drawer ? basicThickness : 0)) :
+                      sectionIndex === 0 ? (sectionEndY - (is4Drawer ? basicThickness : 0)) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [0 + 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      sectionIndex === 0 ? sectionEndY :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight + (is4Drawer ? basicThickness : 0)) :
+                      sectionIndex === 0 ? (sectionEndY - (is4Drawer ? basicThickness : 0)) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
@@ -451,8 +441,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     0,
-                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                    sectionIndex === 0 ? sectionEndY :
+                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight + (is4Drawer ? basicThickness : 0)) :
+                    sectionIndex === 0 ? (sectionEndY - (is4Drawer ? basicThickness : 0)) :
                     sectionEndY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)
                   ]}
