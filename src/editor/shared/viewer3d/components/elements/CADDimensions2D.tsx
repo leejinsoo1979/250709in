@@ -328,8 +328,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {shouldRenderStartGuide && (
                 <NativeLine
                   points={[
-                    [slotX, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
-                    [slotX, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX,
+                      isLastSection ? (sectionStartY + basicThickness) : sectionStartY,
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
+                    [slotX,
+                      isLastSection ? (sectionStartY + basicThickness) : sectionStartY,
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={1}
@@ -358,7 +362,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX,
-                      sectionIndex === 0 ? (floatHeight + baseFrameHeight) : sectionStartY,
+                      sectionIndex === 0 ? (floatHeight + baseFrameHeight) :
+                      isLastSection ? (sectionStartY + basicThickness) :
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [slotX,
                       isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
@@ -375,8 +381,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {shouldRenderStartGuide && (
                 <NativeLine
                   points={[
-                    [slotX - 0.03, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
-                    [slotX + 0.03, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
+                    [slotX - 0.03,
+                      isLastSection ? (sectionStartY + basicThickness) : sectionStartY,
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
+                    [slotX + 0.03,
+                      isLastSection ? (sectionStartY + basicThickness) : sectionStartY,
+                      spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
                   lineWidth={2}
@@ -387,12 +397,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX - 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness - mmToThreeUnits(75)) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [slotX + 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness - mmToThreeUnits(75)) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
@@ -405,7 +415,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 {/* 엔드포인트 - 시작 모서리 */}
                 {shouldRenderStartGuide && (
                 <mesh
-                  position={[slotX, sectionStartY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]}
+                  position={[
+                    slotX,
+                    isLastSection ? (sectionStartY + basicThickness) : sectionStartY,
+                    spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)
+                  ]}
                   renderOrder={100001}
                   rotation={[0, -Math.PI / 2, 0]}
                 >
@@ -1146,10 +1160,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX,
-                      sectionStartY,
+                      isLastSection ? (sectionStartY + basicThickness) : sectionStartY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500) + mmToThreeUnits(400)],
                     [slotX,
-                      sectionStartY,
+                      isLastSection ? (sectionStartY + basicThickness) : sectionStartY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
@@ -1199,10 +1213,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX - 0.03,
-                      sectionStartY,
+                      isLastSection ? (sectionStartY + basicThickness) : sectionStartY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)],
                     [slotX + 0.03,
-                      sectionStartY,
+                      isLastSection ? (sectionStartY + basicThickness) : sectionStartY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
@@ -1214,12 +1228,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX - 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness - mmToThreeUnits(75)) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)],
                     [slotX + 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness - mmToThreeUnits(75)) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)]
@@ -1234,7 +1248,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     slotX,
-                    sectionStartY,
+                    isLastSection ? (sectionStartY + basicThickness) : sectionStartY,
                     -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)
                   ]}
                   renderOrder={100001}
