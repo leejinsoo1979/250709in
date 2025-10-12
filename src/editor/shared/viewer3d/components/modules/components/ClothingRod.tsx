@@ -124,13 +124,13 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
 
       {/* 옷봉 렌더링: 2D는 두 개의 평행선, 3D는 박스 */}
       {viewMode === '2D' ? (
-        // 2D 모드: CAD 표준 방식 - 상단선과 하단선
+        // 2D 모드: CAD 표준 방식 - 브라켓 안쪽에서 안쪽까지
         <>
           {/* 옷봉 상단선 */}
           <Line
             points={[
-              [-innerWidth / 2, rodYOffset + rodHeight / 2, rodZOffset],
-              [innerWidth / 2, rodYOffset + rodHeight / 2, rodZOffset]
+              [rodStartX, rodYOffset + rodHeight / 2, rodZOffset],
+              [rodEndX, rodYOffset + rodHeight / 2, rodZOffset]
             ]}
             color={lineColor}
             lineWidth={1}
@@ -138,18 +138,18 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
           {/* 옷봉 하단선 */}
           <Line
             points={[
-              [-innerWidth / 2, rodYOffset - rodHeight / 2, rodZOffset],
-              [innerWidth / 2, rodYOffset - rodHeight / 2, rodZOffset]
+              [rodStartX, rodYOffset - rodHeight / 2, rodZOffset],
+              [rodEndX, rodYOffset - rodHeight / 2, rodZOffset]
             ]}
             color={lineColor}
             lineWidth={1}
           />
         </>
       ) : (
-        // 3D 모드: 박스로 렌더링
+        // 3D 모드: 박스로 렌더링 - 브라켓 안쪽에서 안쪽까지
         <BoxWithEdges
           args={[rodWidth, rodHeight, rodDepth]}
-          position={[0, rodYOffset, rodZOffset]}
+          position={[rodCenterX, rodYOffset, rodZOffset]}
           material={rodMaterial}
           renderMode={renderMode}
           isDragging={isDragging}
