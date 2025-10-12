@@ -162,9 +162,15 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return view2DTheme === 'light' ? '#808080' : '#FFFFFF';
     }
 
-    // MeshBasicMaterial인 경우 (프레임 형광색 등) material의 색상을 그대로 사용
+    // MeshBasicMaterial인 경우 (프레임 형광색 등)
     if (baseMaterial instanceof THREE.MeshBasicMaterial) {
       const color = "#" + baseMaterial.color.getHexString();
+
+      // 2D 라이트 모드에서는 주황색을 검정색으로 변경
+      if (viewMode === '2D' && view2DTheme === 'light' && color.toLowerCase() === '#ff4500') {
+        return '#000000';
+      }
+
       console.log('🎨 BoxWithEdges - MeshBasicMaterial 엣지 색상:', {
         color,
         viewMode,
