@@ -954,15 +954,31 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
               />
               
-              {/* Hinges for left door - positioned at 24mm from outer edge */}
+              {/* Hinges for left door - 4 hinges positioned at 24mm from outer edge */}
               {viewMode === '2D' && view2DDirection === 'front' && (
                 <>
+                  {/* 상단에서 100mm */}
                   <Hinge
                     position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
                     smallCircleDiameter={4}
                     verticalSpacing={20}
                   />
+                  {/* 상단에서 약 1/3 지점 */}
+                  <Hinge
+                    position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 6, doorThicknessUnits / 2 + 0.001]}
+                    mainDiameter={17.5}
+                    smallCircleDiameter={4}
+                    verticalSpacing={20}
+                  />
+                  {/* 하단에서 약 1/3 지점 */}
+                  <Hinge
+                    position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 6, doorThicknessUnits / 2 + 0.001]}
+                    mainDiameter={17.5}
+                    smallCircleDiameter={4}
+                    verticalSpacing={20}
+                  />
+                  {/* 하단에서 100mm */}
                   <Hinge
                     position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
@@ -1141,15 +1157,31 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
               />
               
-              {/* Hinges for right door - positioned at 24mm from outer edge */}
+              {/* Hinges for right door - 4 hinges positioned at 24mm from outer edge */}
               {viewMode === '2D' && view2DDirection === 'front' && (
                 <>
+                  {/* 상단에서 100mm */}
                   <Hinge
                     position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
                     smallCircleDiameter={4}
                     verticalSpacing={20}
                   />
+                  {/* 상단에서 약 1/3 지점 */}
+                  <Hinge
+                    position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 6, doorThicknessUnits / 2 + 0.001]}
+                    mainDiameter={17.5}
+                    smallCircleDiameter={4}
+                    verticalSpacing={20}
+                  />
+                  {/* 하단에서 약 1/3 지점 */}
+                  <Hinge
+                    position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 6, doorThicknessUnits / 2 + 0.001]}
+                    mainDiameter={17.5}
+                    smallCircleDiameter={4}
+                    verticalSpacing={20}
+                  />
+                  {/* 하단에서 100mm */}
                   <Hinge
                     position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
                     mainDiameter={17.5}
@@ -1365,9 +1397,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               />
             </lineSegments>
 
-            {/* Hinges for single door - positioned at 24mm from outer edge */}
+            {/* Hinges for single door - 4 hinges positioned at 24mm from outer edge */}
             {viewMode === '2D' && view2DDirection === 'front' && (
               <>
+                {/* 상단에서 100mm */}
                 <Hinge
                   position={[
                     adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
@@ -1378,6 +1411,29 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   smallCircleDiameter={4}
                   verticalSpacing={20}
                 />
+                {/* 상단에서 약 1/3 지점 */}
+                <Hinge
+                  position={[
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                    doorHeight / 6,
+                    doorThicknessUnits / 2 + 0.001
+                  ]}
+                  mainDiameter={17.5}
+                  smallCircleDiameter={4}
+                  verticalSpacing={20}
+                />
+                {/* 하단에서 약 1/3 지점 */}
+                <Hinge
+                  position={[
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                    -doorHeight / 6,
+                    doorThicknessUnits / 2 + 0.001
+                  ]}
+                  mainDiameter={17.5}
+                  smallCircleDiameter={4}
+                  verticalSpacing={20}
+                />
+                {/* 하단에서 100mm */}
                 <Hinge
                   position={[
                     adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
