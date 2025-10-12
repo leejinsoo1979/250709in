@@ -954,16 +954,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
               />
               
-              {/* Hinges for left door - 2 hinges positioned 100mm from top and bottom */}
+              {/* Hinges for left door - positioned at 24mm from outer edge */}
               {viewMode === '2D' && view2DDirection === 'front' && (
                 <>
                   <Hinge
-                    position={[-leftDoorWidthUnits / 2 + hingeOffsetUnits, doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
-                    diameter={35}
+                    position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                    mainDiameter={17.5}
+                    smallCircleDiameter={4}
+                    verticalSpacing={20}
                   />
                   <Hinge
-                    position={[-leftDoorWidthUnits / 2 + hingeOffsetUnits, -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
-                    diameter={35}
+                    position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                    mainDiameter={17.5}
+                    smallCircleDiameter={4}
+                    verticalSpacing={20}
                   />
                 </>
               )}
@@ -1137,16 +1141,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
               />
               
-              {/* Hinges for right door - 2 hinges positioned 100mm from top and bottom */}
+              {/* Hinges for right door - positioned at 24mm from outer edge */}
               {viewMode === '2D' && view2DDirection === 'front' && (
                 <>
                   <Hinge
-                    position={[rightDoorWidthUnits / 2 - hingeOffsetUnits, doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
-                    diameter={35}
+                    position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                    mainDiameter={17.5}
+                    smallCircleDiameter={4}
+                    verticalSpacing={20}
                   />
                   <Hinge
-                    position={[rightDoorWidthUnits / 2 - hingeOffsetUnits, -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
-                    diameter={35}
+                    position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                    mainDiameter={17.5}
+                    smallCircleDiameter={4}
+                    verticalSpacing={20}
                   />
                 </>
               )}
@@ -1357,24 +1365,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               />
             </lineSegments>
 
-            {/* Hinges for single door - 2 hinges positioned 100mm from top and bottom */}
+            {/* Hinges for single door - positioned at 24mm from outer edge */}
             {viewMode === '2D' && view2DDirection === 'front' && (
               <>
                 <Hinge
                   position={[
-                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + hingeOffsetUnits : doorWidthUnits / 2 - hingeOffsetUnits,
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
                     doorHeight / 2 - mmToThreeUnits(100),
                     doorThicknessUnits / 2 + 0.001
                   ]}
-                  diameter={35}
+                  mainDiameter={17.5}
+                  smallCircleDiameter={4}
+                  verticalSpacing={20}
                 />
                 <Hinge
                   position={[
-                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + hingeOffsetUnits : doorWidthUnits / 2 - hingeOffsetUnits,
+                    adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
                     -doorHeight / 2 + mmToThreeUnits(100),
                     doorThicknessUnits / 2 + 0.001
                   ]}
-                  diameter={35}
+                  mainDiameter={17.5}
+                  smallCircleDiameter={4}
+                  verticalSpacing={20}
                 />
               </>
             )}
