@@ -221,7 +221,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               const upperSectionHeight = getSectionHeights()[1];
 
               // 4drawer-hanging: 하부 측판 조정 없음, 상부 측판 원래 높이 그대로, Y축만 조정
-              // 2drawer-hanging, 2hanging: 하부 측판 +18mm, 상부 측판 -18mm (엔드패널 크기 정상화)
+              // 2drawer-hanging, 2hanging: 하부 측판 +18mm, 상부 측판 원래 높이 유지
               const is4Drawer = moduleData?.id?.includes('4drawer-hanging');
 
               const adjustedLowerHeight = is4Drawer
@@ -231,7 +231,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
               const adjustedUpperHeight = is4Drawer
                 ? upperSectionHeight  // 4단: 상부 원래 높이
-                : upperSectionHeight - basicThickness; // 2단: 상부 18mm 줄임 (엔드패널 크기 정상화)
+                : upperSectionHeight; // 2단: 상부 원래 높이 유지
               const upperPanelY = is4Drawer
                 ? -height/2 + lowerSectionHeight + adjustedUpperHeight/2  // 4단: 하부 바로 위
                 : -height/2 + lowerSectionHeight + basicThickness + adjustedUpperHeight/2; // 2단: 하부+18mm 위
@@ -370,8 +370,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     currentYPosition += getSectionHeights()[i];
                   }
 
-                  // 2drawer: 각각 18mm씩 위로
-                  const middlePanelY = currentYPosition - basicThickness/2 + mmToThreeUnits(18);
+                  // 2drawer: 상부 바닥판 +27mm, 하부 상판 +18mm (상부 엔드패널 9mm 축소)
+                  const middlePanelY = currentYPosition - basicThickness/2 + mmToThreeUnits(27);
                   const lowerTopPanelY = currentYPosition - basicThickness - basicThickness/2 + mmToThreeUnits(18);
 
                   // 섹션 강조 확인 (placedFurnitureId 사용)
@@ -441,7 +441,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {/* 상단 판재 */}
         <BoxWithEdges
           args={[innerWidth, basicThickness, depth]}
-          position={[0, height/2 - basicThickness/2, 0]}
+          position={[
+            0,
+            (moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging'))
+              ? height/2 - basicThickness/2 - mmToThreeUnits(9)  // 2단: 9mm 내림 (상부 엔드패널 축소)
+              : height/2 - basicThickness/2,
+            0
+          ]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
