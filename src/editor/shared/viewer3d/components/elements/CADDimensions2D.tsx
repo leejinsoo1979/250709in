@@ -144,13 +144,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           {/* 엔드포인트 - 상단 (세로선과 연장선 만나는 지점) */}
           <mesh position={[0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-            <circleGeometry args={[0.025, 16]} />
+            <circleGeometry args={[0.04, 16]} />
             <meshBasicMaterial color={dimensionColor} depthTest={false} />
           </mesh>
 
           {/* 엔드포인트 - 하단 (세로선과 연장선 만나는 지점) */}
           <mesh position={[0, floatHeight, -spaceDepth/2 - leftDimOffset]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-            <circleGeometry args={[0.025, 16]} />
+            <circleGeometry args={[0.04, 16]} />
             <meshBasicMaterial color={dimensionColor} depthTest={false} />
           </mesh>
 
@@ -374,7 +374,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100001}
                   rotation={[0, -Math.PI / 2, 0]}
                 >
-                  <circleGeometry args={[0.025, 16]} />
+                  <circleGeometry args={[0.04, 16]} />
                   <meshBasicMaterial color={dimensionColor} depthTest={false} />
                 </mesh>
                 )}
@@ -389,7 +389,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100001}
                   rotation={[0, -Math.PI / 2, 0]}
                 >
-                  <circleGeometry args={[0.025, 16]} />
+                  <circleGeometry args={[0.04, 16]} />
                   <meshBasicMaterial color={dimensionColor} depthTest={false} />
                 </mesh>
 
@@ -828,13 +828,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
               {/* 엔드포인트 - 앞쪽 (치수선과 연장선 만나는 지점) */}
               <mesh position={[slotX, furnitureTopY, furnitureZ + moduleDepth/2]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-                <circleGeometry args={[0.025, 16]} />
+                <circleGeometry args={[0.04, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
 
               {/* 엔드포인트 - 뒤쪽 (치수선과 연장선 만나는 지점) */}
               <mesh position={[slotX, furnitureTopY, furnitureZ - moduleDepth/2]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-                <circleGeometry args={[0.025, 16]} />
+                <circleGeometry args={[0.04, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
 
@@ -926,13 +926,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           {/* 엔드포인트 - 상단 */}
           <mesh position={[0, floatHeight + spaceHeight, -spaceDepth/2 - leftDimOffset]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-            <circleGeometry args={[0.025, 16]} />
+            <circleGeometry args={[0.04, 16]} />
             <meshBasicMaterial color={dimensionColor} depthTest={false} />
           </mesh>
 
           {/* 엔드포인트 - 하단 */}
           <mesh position={[0, floatHeight, -spaceDepth/2 - leftDimOffset]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
-            <circleGeometry args={[0.025, 16]} />
+            <circleGeometry args={[0.04, 16]} />
             <meshBasicMaterial color={dimensionColor} depthTest={false} />
           </mesh>
 
@@ -1146,7 +1146,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100001}
                   rotation={[0, Math.PI / 2, 0]}
                 >
-                  <circleGeometry args={[0.025, 16]} />
+                  <circleGeometry args={[0.04, 16]} />
                   <meshBasicMaterial color={dimensionColor} depthTest={false} />
                 </mesh>
                 )}
@@ -1161,7 +1161,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   renderOrder={100001}
                   rotation={[0, Math.PI / 2, 0]}
                 >
-                  <circleGeometry args={[0.025, 16]} />
+                  <circleGeometry args={[0.04, 16]} />
                   <meshBasicMaterial color={dimensionColor} depthTest={false} />
                 </mesh>
 
@@ -1529,22 +1529,22 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               />
 
               <mesh position={[slotX, furnitureTopY, furnitureZ + moduleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
-                <circleGeometry args={[0.025, 16]} />
+                <circleGeometry args={[0.04, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
 
               <mesh position={[slotX, furnitureTopY, furnitureZ - moduleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
-                <circleGeometry args={[0.025, 16]} />
+                <circleGeometry args={[0.04, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
 
               <mesh position={[slotX, floatHeight + baseFrameHeight + internalHeight, furnitureZ + moduleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
-                <circleGeometry args={[0.025, 16]} />
+                <circleGeometry args={[0.04, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
 
               <mesh position={[slotX, floatHeight + baseFrameHeight + internalHeight, furnitureZ - moduleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
-                <circleGeometry args={[0.025, 16]} />
+                <circleGeometry args={[0.04, 16]} />
                 <meshBasicMaterial color={dimensionColor} depthTest={false} />
               </mesh>
 
