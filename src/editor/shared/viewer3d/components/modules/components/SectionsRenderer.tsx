@@ -256,6 +256,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
             // 상부섹션(index > 0)은 하판이 없으므로 innerHeight에서 basicThickness를 뺌
             const drawerInnerHeight = index > 0 ? sectionHeight - basicThickness : sectionHeight;
+            // 상부섹션은 yOffset도 basicThickness/2만큼 위로 조정
+            const drawerYOffset = index > 0 ? sectionCenterY + basicThickness/2 : sectionCenterY;
 
             sectionContent = (
               <DrawerRenderer
@@ -264,7 +266,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 innerHeight={drawerInnerHeight}
                 depth={depth}
                 basicThickness={basicThickness}
-                yOffset={sectionCenterY}
+                yOffset={drawerYOffset}
                 drawerHeights={section.drawerHeights}
                 gapHeight={section.gapHeight}
                 material={material}
