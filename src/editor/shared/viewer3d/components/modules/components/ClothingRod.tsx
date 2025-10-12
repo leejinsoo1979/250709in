@@ -54,7 +54,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const rodDepth = mmToThreeUnits(10);
   const rodHeight = mmToThreeUnits(30);
 
-  // 브라켓 X 위치 (좌우 끝)
+  // 브라켓 X 위치 (가구 내부 양 끝)
   const leftBracketX = -innerWidth / 2 + bracketWidth / 2;
   const rightBracketX = innerWidth / 2 - bracketWidth / 2;
 
@@ -63,6 +63,10 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   // 옷봉 하단 = 브라켓 하단 + 5mm = -bracketHeight/2 + mmToThreeUnits(5)
   // 옷봉 중심 = 옷봉 하단 + rodHeight/2
   const rodYOffset = -bracketHeight / 2 + mmToThreeUnits(5) + rodHeight / 2;
+
+  // 옷봉 Z 위치: 브라켓 안쪽에 배치 (브라켓은 D12, 옷봉은 D10)
+  // 브라켓 중심에서 옷봉이 안쪽으로 1mm 들어감
+  const rodZOffset = -mmToThreeUnits(1);
 
   // 옷봉 색상: 2D 모드일 때 view2DTheme에 따라 변경
   const rodMaterial = React.useMemo(() => {
@@ -115,10 +119,10 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
         isClothingRod={true}
       />
 
-      {/* 중앙 옷봉 (박스) */}
+      {/* 중앙 옷봉 (박스) - 브라켓 안쪽에 배치 */}
       <BoxWithEdges
         args={[rodWidth, rodHeight, rodDepth]}
-        position={[0, rodYOffset, 0]}
+        position={[0, rodYOffset, rodZOffset]}
         material={rodMaterial}
         renderMode={renderMode}
         isDragging={isDragging}
