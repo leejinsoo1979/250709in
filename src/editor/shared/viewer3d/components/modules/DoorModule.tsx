@@ -91,8 +91,8 @@ const BoxWithEdges: React.FC<{
       ) : (
         ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
           <lineSegments geometry={edgesGeometry} renderOrder={1001}>
-            <lineBasicMaterial 
-              color={viewMode === '2D' ? "#00FF00" : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (view2DTheme === 'dark' ? "#999999" : "#444444"))} 
+            <lineBasicMaterial
+              color={viewMode === '2D' ? "#18CF23" : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (view2DTheme === 'dark' ? "#999999" : "#444444"))}
               linewidth={viewMode === '2D' ? 3 : 0.5}
               depthTest={false}
               depthWrite={false}
