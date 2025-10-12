@@ -381,10 +381,13 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               if (safetyShelfPositionMm !== undefined) {
                 // 안전선반이 있는 경우: 안전선반 바로 아래
                 const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
-                rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2); // 브라켓 높이의 절반만큼 아래
+                // 브라켓 상단이 안전선반 하단에 붙음
+                rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
               } else {
-                // 안전선반이 없는 경우: 섹션 상판 아래
-                rodYPosition = sectionTopY - basicThickness / 2 - mmToThreeUnits(75 / 2);
+                // 안전선반이 없는 경우: 브라켓 상단이 섹션 상판 하단에 붙음
+                // 섹션 상판 하단 = sectionTopY + basicThickness/2
+                // 브라켓 중심 = 섹션 상판 하단 - 브라켓높이/2
+                rodYPosition = (sectionTopY + basicThickness / 2) - mmToThreeUnits(75 / 2);
               }
 
               return (
