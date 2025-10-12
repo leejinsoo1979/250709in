@@ -21,6 +21,14 @@ export const Hinge: React.FC<HingeProps> = ({
 }) => {
   const { viewMode, view2DDirection } = useSpace3DView();
 
+  // Debug log at component start
+  console.log('⭐⭐⭐ Hinge component start:',
+    'viewMode=' + viewMode,
+    'view2DDirection=' + view2DDirection,
+    'viewDirection=' + viewDirection,
+    'position=[' + position.join(',') + ']'
+  );
+
   const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
   // 값이 이미 반지름이므로 그대로 사용
