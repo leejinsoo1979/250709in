@@ -1176,11 +1176,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [slotX,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) : sectionEndY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500) + mmToThreeUnits(400)],
                     [slotX,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) : sectionEndY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)]
                   ]}
@@ -1198,7 +1198,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       sectionStartY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)],
                     [slotX,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight - basicThickness) :
+                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
                       sectionIndex === 0 ? (sectionEndY - basicThickness) :
                       sectionEndY,
                       -spaceDepth/2 - leftDimOffset + mmToThreeUnits(500)]
