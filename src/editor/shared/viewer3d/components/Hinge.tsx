@@ -62,7 +62,7 @@ export const Hinge: React.FC<HingeProps> = ({
     const cupDiameter = mmToThreeUnits(35);  // 컵 직경 35mm
     const armThickness = mmToThreeUnits(3);  // 암 두께 3mm
     const armLength = mmToThreeUnits(12);    // 암 길이 12mm
-    const sideViewColor = '#FF0000'; // 측면뷰 전용 빨간색
+    const sideViewColor = '#00CCCC'; // 측면뷰도 동일한 색상
 
     return (
       <group position={position}>
