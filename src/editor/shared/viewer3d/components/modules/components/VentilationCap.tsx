@@ -31,6 +31,9 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   const outerRadius = mmToThreeUnits(diameter) / 2;
   const innerRadius = outerRadius * 0.95; // 내부 원은 외부 원의 95% 크기
 
+  // 십자선 길이 (150mm)
+  const crossLineLength = mmToThreeUnits(150) / 2;
+
   // 2D 도면용 선 색상
   const lineColor = view2DTheme === 'light' ? '#FF00FF' : '#FF00FF'; // 마젠타(보라) 색상
 
@@ -49,6 +52,15 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   const outerCirclePoints = generateCirclePoints(outerRadius);
   const innerCirclePoints = generateCirclePoints(innerRadius);
 
+  console.log('🌀 VentilationCap 렌더링:', {
+    position,
+    diameter,
+    outerRadius,
+    crossLineLength,
+    viewMode,
+    renderMode
+  });
+
   return (
     <group position={position}>
       {/* 외부 원 */}
@@ -65,21 +77,21 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
         lineWidth={1}
       />
 
-      {/* 중심선 - 가로 */}
+      {/* 중심선 - 가로 (150mm) */}
       <Line
         points={[
-          [-outerRadius, 0, 0],
-          [outerRadius, 0, 0]
+          [-crossLineLength, 0, 0],
+          [crossLineLength, 0, 0]
         ]}
         color={lineColor}
         lineWidth={0.5}
       />
 
-      {/* 중심선 - 세로 */}
+      {/* 중심선 - 세로 (150mm) */}
       <Line
         points={[
-          [0, -outerRadius, 0],
-          [0, outerRadius, 0]
+          [0, -crossLineLength, 0],
+          [0, crossLineLength, 0]
         ]}
         color={lineColor}
         lineWidth={0.5}
