@@ -307,17 +307,31 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             // 치수 표시값 계산 (sectionStartY 계산 후에)
             let sectionHeightMm: number;
+
+            // 4단서랍장 여부 확인
+            const is4Drawer = moduleData.id?.includes('4drawer-hanging');
+
             if (isLastSection) {
               // 상부섹션: 가구 최상단부터 하부섹션 끝점(=상부섹션 시작점)까지의 실제 거리
               const topY = floatHeight + baseFrameHeight + internalHeight;
               // sectionStartY는 basicThickness만큼 올라간 상태이므로 원래 위치로 보정
               const bottomY = sectionStartY - basicThickness;
               sectionHeightMm = (topY - bottomY) / 0.01;
+
+              // 4단서랍장: 상부섹션 가이드선 +18mm
+              if (is4Drawer) {
+                sectionHeightMm += 18;
+              }
             } else if (sectionIndex === 0) {
               // 하부섹션: 치수선이 그려지는 실제 거리 (받침대 위 ~ sectionEndY - basicThickness)
               const lineStart = floatHeight + baseFrameHeight;
               const lineEnd = sectionEndY - basicThickness;
               sectionHeightMm = (lineEnd - lineStart) / 0.01;
+
+              // 4단서랍장: 하부섹션 가이드선 -18mm
+              if (is4Drawer) {
+                sectionHeightMm -= 18;
+              }
             } else {
               // 중간 섹션: 섹션 자체 높이
               sectionHeightMm = sectionHeight / 0.01;
