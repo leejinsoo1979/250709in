@@ -10,6 +10,7 @@ import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { useUIStore } from '@/store/uiStore';
 import { Text, Line } from '@react-three/drei';
 import { useDimensionColor } from '../hooks/useDimensionColor';
+import { ClothingRod } from '../components/ClothingRod';
 
 
 /**
@@ -827,10 +828,78 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         <group position={[leftXOffset, 0, 0]}>
           {renderLeftSections()}
         </group>
-        
+
         {/* 우측 섹션 그룹 (660mm 깊이 기준 절대 고정) */}
         <group position={[rightXOffset, 0, 0]}>
           {renderRightSections()}
+        </group>
+
+        {/* 옷걸이 봉 렌더링 - 좌측 옷장 섹션에만 */}
+        <group position={[leftXOffset, 0, 0]}>
+          {(() => {
+            const leftSections = modelConfig.leftSections || [];
+            let accumulatedY = -height/2 + basicThickness;
+
+            return leftSections.map((section: any, sectionIndex: number) => {
+              const availableHeight = height - basicThickness * 2;
+              const fixedSections = leftSections.filter((s: any) => s.heightType === 'absolute');
+              const totalFixedHeight = fixedSections.reduce((sum: number, s: any) => {
+                return sum + calculateSectionHeight(s, availableHeight);
+              }, 0);
+              const remainingHeight = availableHeight - totalFixedHeight;
+
+              const sectionHeight = (section.heightType === 'absolute')
+                ? calculateSectionHeight(section, availableHeight)
+                : calculateSectionHeight(section, remainingHeight);
+
+              const sectionBottomY = accumulatedY;
+              accumulatedY += sectionHeight;
+
+              // 스타일러장: 좌측 상부 섹션이 옷장 섹션
+              const isHangingSection = section.type === 'hanging';
+
+              if (!isHangingSection) {
+                return null;
+              }
+
+              // 안전선반 또는 마감 패널 위치 찾기
+              const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
+              const hasFinishPanel = section.isTopFinishPanel && section.count === 1;
+
+              // 옷걸이 봉 Y 위치 계산
+              let rodYPosition: number;
+              if (safetyShelfPositionMm !== undefined) {
+                // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
+                const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
+                rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
+              } else if (hasFinishPanel) {
+                // 마감 패널이 있는 경우: 브라켓 윗면이 마감 패널 하단에서 27mm 아래
+                const finishPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
+                rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
+              } else {
+                // 안전선반도 마감 패널도 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
+                const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
+                rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+              }
+
+              // 좌측 깊이 사용
+              const leftAdjustedDepthForShelves = leftDepth - backPanelThickness - basicThickness;
+
+              return (
+                <ClothingRod
+                  key={`clothing-rod-left-${sectionIndex}`}
+                  innerWidth={leftWidth}
+                  yPosition={rodYPosition}
+                  zPosition={0}
+                  renderMode={renderMode}
+                  isDragging={false}
+                  isEditMode={isEditMode}
+                  adjustedDepthForShelves={leftAdjustedDepthForShelves}
+                  depth={leftDepth}
+                />
+              );
+            });
+          })()}
         </group>
         
         {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용) */}
