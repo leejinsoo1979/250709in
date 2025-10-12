@@ -73,19 +73,16 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   return (
     <group position={position}>
       {isSideView ? (
-        // 측면뷰: 9mm 두께의 사각형으로 표시
+        // 측면뷰: 9mm 두께의 수평선으로 표시 (Y축 위치에 Z축 두께)
         <>
-          {/* 환기캡 두께 사각형 */}
+          {/* 환기캡 두께를 나타내는 수평선 */}
           <Line
             points={[
-              [-outerRadius, -capThickness / 2, 0],
-              [outerRadius, -capThickness / 2, 0],
-              [outerRadius, capThickness / 2, 0],
-              [-outerRadius, capThickness / 2, 0],
-              [-outerRadius, -capThickness / 2, 0]
+              [0, -capThickness / 2, 0],
+              [0, capThickness / 2, 0]
             ]}
             color={lineColor}
-            lineWidth={1}
+            lineWidth={2}
           />
         </>
       ) : (
