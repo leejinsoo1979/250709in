@@ -427,7 +427,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     0,
-                    is2Drawer ? sectionStartY : (sectionStartY - basicThickness),
+                    is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
                   ]}
                   renderOrder={100001}
@@ -443,7 +443,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   position={[
                     0,
                     isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                    (is2Drawer ? sectionEndY : (sectionEndY - basicThickness)),
+                    (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
                   ]}
                   renderOrder={100001}
@@ -1273,7 +1273,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     0,
-                    is2Drawer ? sectionStartY : (sectionStartY - basicThickness),
+                    is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
                   ]}
                   renderOrder={100001}
@@ -1289,7 +1289,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   position={[
                     0,
                     isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                    (is2Drawer ? sectionEndY : (sectionEndY - basicThickness)),
+                    (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
                   ]}
                   renderOrder={100001}
