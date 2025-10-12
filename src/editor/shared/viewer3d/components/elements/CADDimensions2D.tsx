@@ -549,7 +549,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     const sectionTopY = isLastSection ? (floatHeight + baseFrameHeight + internalHeight) : sectionEndY;
 
                     // 섹션 상단에서 상단판(basicThickness) 2개 두께를 뺀 위치가 내부 상단
-                    const topFrameBottomY = sectionTopY - basicThickness * 2;
+                    const topFrameBottomY = sectionTopY - basicThickness;
                     const topFrameBottomMm = (topFrameBottomY - sectionStartY) / 0.01;
 
                     const heightMm = topFrameBottomMm - lastShelfTopMm; // 선반 상단부터 상단 프레임 하단까지
@@ -1342,7 +1342,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     const sectionTopY = isLastSection ? (floatHeight + baseFrameHeight + internalHeight) : sectionEndY;
 
                     // 섹션 상단에서 상단판(basicThickness) 2개 두께를 뺀 위치가 내부 상단
-                    const topFrameBottomY = sectionTopY - basicThickness * 2;
+                    const topFrameBottomY = sectionTopY - basicThickness;
                     const topFrameBottomMm = (topFrameBottomY - sectionStartY) / 0.01;
 
                     const heightMm = topFrameBottomMm - lastShelfTopMm;
