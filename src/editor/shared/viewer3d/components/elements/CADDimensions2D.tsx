@@ -312,8 +312,13 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               // sectionStartY는 basicThickness만큼 올라간 상태이므로 원래 위치로 보정
               const bottomY = sectionStartY - basicThickness;
               sectionHeightMm = (topY - bottomY) / 0.01;
+            } else if (sectionIndex === 0) {
+              // 하부섹션: 치수선이 그려지는 실제 거리 (받침대 위 ~ sectionEndY - basicThickness)
+              const lineStart = floatHeight + baseFrameHeight;
+              const lineEnd = sectionEndY - basicThickness;
+              sectionHeightMm = (lineEnd - lineStart) / 0.01;
             } else {
-              // 하부섹션 및 기타: 섹션 자체 높이
+              // 중간 섹션: 섹션 자체 높이
               sectionHeightMm = sectionHeight / 0.01;
             }
 
@@ -1145,6 +1150,11 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               const topY = floatHeight + baseFrameHeight + internalHeight;
               const bottomY = sectionStartY - basicThickness;
               sectionHeightMm = (topY - bottomY) / 0.01;
+            } else if (sectionIndex === 0) {
+              // 하부섹션: 치수선이 그려지는 실제 거리 (받침대 위 ~ sectionEndY - basicThickness)
+              const lineStart = floatHeight + baseFrameHeight;
+              const lineEnd = sectionEndY - basicThickness;
+              sectionHeightMm = (lineEnd - lineStart) / 0.01;
             } else {
               sectionHeightMm = sectionHeight / 0.01;
             }
