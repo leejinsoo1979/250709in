@@ -2,6 +2,7 @@ import React from 'react';
 import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import DoorModule from '../DoorModule';
+import { ClothingRod } from '../components/ClothingRod';
 
 /**
  * DualType1 컴포넌트
@@ -50,21 +51,74 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
       <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} showFurniture={showFurniture}>
         {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
         {!isDragging && (
-          <SectionsRenderer
-            modelConfig={baseFurniture.modelConfig}
-            height={baseFurniture.height}
-            innerWidth={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
-            adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-            basicThickness={baseFurniture.basicThickness}
-            shelfZOffset={baseFurniture.shelfZOffset}
-            material={baseFurniture.material}
-            calculateSectionHeight={baseFurniture.calculateSectionHeight}
-            mmToThreeUnits={baseFurniture.mmToThreeUnits}
-            renderMode={renderMode}
-            furnitureId={moduleData.id}
-            placedFurnitureId={placedFurnitureId}
-          />
+          <>
+            <SectionsRenderer
+              modelConfig={baseFurniture.modelConfig}
+              height={baseFurniture.height}
+              innerWidth={baseFurniture.innerWidth}
+              depth={baseFurniture.depth}
+              adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+              basicThickness={baseFurniture.basicThickness}
+              shelfZOffset={baseFurniture.shelfZOffset}
+              material={baseFurniture.material}
+              calculateSectionHeight={baseFurniture.calculateSectionHeight}
+              mmToThreeUnits={baseFurniture.mmToThreeUnits}
+              renderMode={renderMode}
+              furnitureId={moduleData.id}
+              placedFurnitureId={placedFurnitureId}
+            />
+
+            {/* 옷걸이 봉 렌더링 - hanging 섹션에만 */}
+            {(() => {
+              const sections = baseFurniture.modelConfig?.structure?.sections || [];
+              const { height, innerWidth, basicThickness, mmToThreeUnits, adjustedDepthForShelves, depth } = baseFurniture;
+
+              return sections.map((section: any, sectionIndex: number) => {
+                if (section.type !== 'hanging') return null;
+
+                // 섹션 높이 계산
+                const sectionHeight = baseFurniture.calculateSectionHeight(section, height);
+                let sectionBottomY = -height / 2 + basicThickness;
+
+                for (let i = 0; i < sectionIndex; i++) {
+                  sectionBottomY += baseFurniture.calculateSectionHeight(sections[i], height);
+                }
+
+                // 옷걸이 봉 Y 위치 계산
+                let rodYPosition: number;
+
+                // 안전선반이 있는 경우
+                if (section.hasSafetyShelf) {
+                  const safetyShelfBottom = sectionBottomY + mmToThreeUnits(section.shelfPositions?.[0] || 0) - basicThickness / 2;
+                  rodYPosition = safetyShelfBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
+                }
+                // 마감 패널이 있는 경우
+                else if (section.isTopFinishPanel) {
+                  const finishPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
+                  rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
+                }
+                // 안전선반도 마감 패널도 없는 경우
+                else {
+                  const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
+                  rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+                }
+
+                return (
+                  <ClothingRod
+                    key={`clothing-rod-${sectionIndex}`}
+                    innerWidth={innerWidth}
+                    yPosition={rodYPosition}
+                    zPosition={0}
+                    renderMode={renderMode}
+                    isDragging={false}
+                    isEditMode={isEditMode}
+                    adjustedDepthForShelves={adjustedDepthForShelves}
+                    depth={depth}
+                  />
+                );
+              });
+            })()}
+          </>
         )}
       </BaseFurnitureShell>
 
