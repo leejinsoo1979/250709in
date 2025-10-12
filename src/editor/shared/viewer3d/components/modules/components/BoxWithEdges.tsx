@@ -19,6 +19,7 @@ interface BoxWithEdgesProps {
   isBackPanel?: boolean; // 백패널 여부 추가
   isEndPanel?: boolean; // 엔드패널 여부 추가
   isHighlighted?: boolean; // 강조 상태 추가
+  isClothingRod?: boolean; // 옷걸이 봉 여부 추가
   onClick?: (e: any) => void;
   onPointerOver?: (e: any) => void;
   onPointerOut?: (e: any) => void;
@@ -41,6 +42,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   isBackPanel = false,
   isEndPanel = false,
   isHighlighted = false,
+  isClothingRod = false,
   onClick,
   onPointerOver,
   onPointerOut
@@ -155,6 +157,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
+    // 옷걸이 봉인 경우: 2D 모드에서 view2DTheme에 따라 색상 변경
+    if (isClothingRod && viewMode === '2D') {
+      return view2DTheme === 'light' ? '#808080' : '#FFFFFF';
+    }
+
     // MeshBasicMaterial인 경우 (프레임 형광색 등) material의 색상을 그대로 사용
     if (baseMaterial instanceof THREE.MeshBasicMaterial) {
       const color = "#" + baseMaterial.color.getHexString();

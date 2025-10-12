@@ -101,6 +101,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
+        isClothingRod={true}
       />
 
       {/* 우측 브라켓 */}
@@ -111,6 +112,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
+        isClothingRod={true}
       />
 
       {/* 중앙 옷봉 (박스) */}
@@ -121,6 +123,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
+        isClothingRod={true}
       />
 
       {/* 옷봉 치수 표시 - 정면도/측면도에서만 */}
