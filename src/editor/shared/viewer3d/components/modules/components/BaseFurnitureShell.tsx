@@ -404,7 +404,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 });
               })()
             ) : moduleData?.id?.includes('2hanging') ? (
-              // 2hanging: 각각 18mm씩 위로, 중간 패널은 맨 위/맨 아래 판과 동일한 크기 (depth 사용)
+              // 2hanging: 각각 18mm씩 위로, 중간 패널은 백패널 방향으로 26mm 확장
               (() => {
                 return getSectionHeights().map((sectionHeight: number, index: number) => {
                   if (index >= getSectionHeights().length - 1) return null;
@@ -420,26 +420,31 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const middlePanelY = currentYPosition - basicThickness/2 + mmToThreeUnits(18);
                   const lowerTopPanelY = currentYPosition - basicThickness - basicThickness/2 + mmToThreeUnits(18);
 
+                  // 백패널 방향으로 26mm 확장
+                  const extendedDepth = depth + mmToThreeUnits(26);
+                  // 중심이 뒤로 이동 (음의 Z 방향으로 26mm의 절반 = -13mm)
+                  const extendedZPosition = -mmToThreeUnits(13);
+
                   // 섹션 강조 확인 (placedFurnitureId 사용)
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
 
                   return (
                     <React.Fragment key={`divider-${index}`}>
-                      {/* 하부 섹션 상판 - 맨 위/맨 아래 판과 동일한 크기 */}
+                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 확장 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), depth]}
-                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), 0]}
+                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), extendedDepth]}
+                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), extendedZPosition]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isLowerHighlighted}
                       />
 
-                      {/* 상부 섹션 바닥판 - 맨 위/맨 아래 판과 동일한 크기 */}
+                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 확장 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, depth]}
-                        position={[0, middlePanelY, 0]}
+                        args={[innerWidth, basicThickness, extendedDepth]}
+                        position={[0, middlePanelY, extendedZPosition]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
