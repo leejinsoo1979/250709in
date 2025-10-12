@@ -234,7 +234,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 : upperSectionHeight; // 2단: 상부 원래 높이 유지
               const upperPanelY = is4Drawer
                 ? -height/2 + lowerSectionHeight + adjustedUpperHeight/2  // 4단: 하부 바로 위
-                : -height/2 + lowerSectionHeight + basicThickness + adjustedUpperHeight/2; // 2단: 하부+18mm 위
+                : -height/2 + lowerSectionHeight + adjustedUpperHeight/2; // 2단: 하부 바로 위
 
               // 섹션 강조 확인 (placedFurnitureId 사용)
               const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
@@ -388,6 +388,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isLowerHighlighted}
+                      />
+
+                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림 */}
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(26)]}
+                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isHighlighted={isUpperHighlighted}
                       />
                     </React.Fragment>
                   );
