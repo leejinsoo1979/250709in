@@ -145,16 +145,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   // 중심이 뒤로 이동 (음의 Z 방향으로 26mm의 절반 = -13mm)
                   const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13);
 
-                  // 각각 18mm씩 위로 이동
-                  const adjustedLowerTopPanelY = lowerTopPanelY + mmToThreeUnits(18);
-                  const adjustedMiddlePanelY = middlePanelY + mmToThreeUnits(18);
-
                   return (
                     <>
-                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 확장 + 18mm 위로 */}
+                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 확장 */}
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, extendedDepth]}
-                        position={[0, adjustedLowerTopPanelY, extendedZPosition]}
+                        position={[0, lowerTopPanelY, extendedZPosition]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -162,10 +158,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isHighlighted={isLowerHighlighted}
                       />
 
-                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 확장 + 18mm 위로 */}
+                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 확장 */}
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, extendedDepth]}
-                        position={[0, adjustedMiddlePanelY, extendedZPosition]}
+                        position={[0, middlePanelY, extendedZPosition]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
