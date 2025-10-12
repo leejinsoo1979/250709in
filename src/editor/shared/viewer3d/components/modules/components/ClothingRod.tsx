@@ -1,6 +1,5 @@
 import React from 'react';
 import { BoxWithEdges } from './BoxWithEdges';
-import { mmToThreeUnits } from '../../../utils/conversionUtils';
 import { Text, Line } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
@@ -36,6 +35,9 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
 }) => {
   const { showDimensions, showDimensionsText, view2DDirection, view2DTheme } = useUIStore();
   const { viewMode } = useSpace3DView();
+
+  // 단위 변환 함수
+  const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
   // 2D 도면 치수 색상
   const dimensionColor = view2DTheme === 'light' ? '#000000' : '#FFFFFF';
