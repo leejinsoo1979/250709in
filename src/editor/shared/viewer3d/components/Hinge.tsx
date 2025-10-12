@@ -53,21 +53,48 @@ export const Hinge: React.FC<HingeProps> = ({
     return null;
   }
 
-  // 측면뷰 렌더링 (이미지 참조)
+  // 측면뷰 렌더링 - 실제 컵 힌지 형상
   if (view2DDirection === 'side' && viewDirection === 'side') {
-    const hingeBodyThickness = mmToThreeUnits(9); // 경첩 본체 두께 9mm
-    const hingeBodyHeight = mmToThreeUnits(35); // 경첩 본체 높이 35mm (17.5mm 반지름 * 2)
+    // 힌지 치수 (실제 컵 힌지 기준)
+    const baseWidth = mmToThreeUnits(18);    // 베이스플레이트 너비 18mm
+    const baseHeight = mmToThreeUnits(35);   // 베이스플레이트 높이 35mm
+    const cupDiameter = mmToThreeUnits(35);  // 컵 직경 35mm
+    const armThickness = mmToThreeUnits(3);  // 암 두께 3mm
+    const armLength = mmToThreeUnits(12);    // 암 길이 12mm
 
     return (
       <group position={position}>
-        {/* 경첩 본체 사각형 */}
+        {/* 베이스플레이트 (캐비닛에 고정되는 부분) */}
         <Line
           points={[
-            [-hingeBodyThickness / 2, hingeBodyHeight / 2, 0],
-            [hingeBodyThickness / 2, hingeBodyHeight / 2, 0],
-            [hingeBodyThickness / 2, -hingeBodyHeight / 2, 0],
-            [-hingeBodyThickness / 2, -hingeBodyHeight / 2, 0],
-            [-hingeBodyThickness / 2, hingeBodyHeight / 2, 0]
+            [-baseWidth / 2, baseHeight / 2, 0],
+            [baseWidth / 2, baseHeight / 2, 0],
+            [baseWidth / 2, -baseHeight / 2, 0],
+            [-baseWidth / 2, -baseHeight / 2, 0],
+            [-baseWidth / 2, baseHeight / 2, 0]
+          ]}
+          color={lineColor}
+          lineWidth={1}
+        />
+
+        {/* 힌지 컵 (원통형 부분) - 베이스플레이트 중앙에 위치 */}
+        <Line
+          points={[
+            [0, cupDiameter / 2, 0],
+            [0, -cupDiameter / 2, 0]
+          ]}
+          color={lineColor}
+          lineWidth={2}
+        />
+
+        {/* 힌지 암 (도어로 연장되는 부분) - 베이스플레이트 오른쪽에서 시작 */}
+        <Line
+          points={[
+            [baseWidth / 2, armThickness / 2, 0],
+            [baseWidth / 2 + armLength, armThickness / 2, 0],
+            [baseWidth / 2 + armLength, -armThickness / 2, 0],
+            [baseWidth / 2, -armThickness / 2, 0],
+            [baseWidth / 2, armThickness / 2, 0]
           ]}
           color={lineColor}
           lineWidth={1}
