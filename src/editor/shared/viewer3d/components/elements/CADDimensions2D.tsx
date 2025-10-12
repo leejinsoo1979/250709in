@@ -334,10 +334,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0,
-                      sectionIndex === 0 ? (sectionStartY + basicThickness) : sectionStartY,
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500) - mmToThreeUnits(400)],
                     [0,
-                      sectionIndex === 0 ? (sectionStartY + basicThickness) : sectionStartY,
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
@@ -367,7 +367,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0,
-                      sectionIndex === 0 ? (floatHeight + baseFrameHeight + basicThickness) :
+                      sectionIndex === 0 ? (floatHeight + baseFrameHeight) :
                       sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [0,
@@ -386,10 +386,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0 - 0.03,
-                      sectionIndex === 0 ? (sectionStartY + basicThickness) : sectionStartY,
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)],
                     [0 + 0.03,
-                      sectionIndex === 0 ? (sectionStartY + basicThickness) : sectionStartY,
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)]
                   ]}
                   color={dimensionColor}
@@ -421,7 +421,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     0,
-                    sectionIndex === 0 ? (sectionStartY + basicThickness) : sectionStartY,
+                    sectionStartY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(500)
                   ]}
                   renderOrder={100001}
