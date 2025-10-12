@@ -52,13 +52,13 @@ export const Hinge: React.FC<HingeProps> = ({
       {/* 메인 경첩 원 (17.5mm) */}
       <Line points={mainCirclePoints} color={lineColor} lineWidth={1} />
 
-      {/* 위쪽 작은 원 (4mm) */}
-      <group position={[0, spacing, 0]}>
+      {/* 왼쪽 작은 원 (4mm) */}
+      <group position={[-spacing, 0, 0]}>
         <Line points={smallCirclePoints} color={lineColor} lineWidth={1} />
       </group>
 
-      {/* 아래쪽 작은 원 (4mm) */}
-      <group position={[0, -spacing, 0]}>
+      {/* 오른쪽 작은 원 (4mm) */}
+      <group position={[spacing, 0, 0]}>
         <Line points={smallCirclePoints} color={lineColor} lineWidth={1} />
       </group>
     </group>
