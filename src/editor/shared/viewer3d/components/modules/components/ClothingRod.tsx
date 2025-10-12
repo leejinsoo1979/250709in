@@ -1,4 +1,5 @@
 import React from 'react';
+import * as THREE from 'three';
 import BoxWithEdges from './BoxWithEdges';
 import { Text, Line } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
@@ -63,12 +64,40 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   // 옷봉 중심 = 옷봉 하단 + rodHeight/2
   const rodYOffset = -bracketHeight / 2 + mmToThreeUnits(5) + rodHeight / 2;
 
+  // 옷봉 색상: 2D 모드일 때 view2DTheme에 따라 변경
+  const rodMaterial = React.useMemo(() => {
+    if (renderMode === '2d') {
+      // 2D 모드: 라이트 테마면 회색, 다크 테마면 흰색
+      const color = view2DTheme === 'light' ? '#808080' : '#FFFFFF';
+      return new THREE.MeshStandardMaterial({
+        color,
+        roughness: 0.8,
+        metalness: 0.1
+      });
+    } else {
+      // 3D 모드: 크롬 재질
+      return new THREE.MeshStandardMaterial({
+        color: '#C0C0C0',
+        metalness: 0.9,
+        roughness: 0.1
+      });
+    }
+  }, [renderMode, view2DTheme]);
+
+  // cleanup
+  React.useEffect(() => {
+    return () => {
+      rodMaterial.dispose();
+    };
+  }, [rodMaterial]);
+
   return (
     <group position={[0, yPosition, zPosition]}>
       {/* 좌측 브라켓 */}
       <BoxWithEdges
         args={[bracketWidth, bracketHeight, bracketDepth]}
         position={[leftBracketX, 0, 0]}
+        material={rodMaterial}
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
@@ -78,6 +107,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
       <BoxWithEdges
         args={[bracketWidth, bracketHeight, bracketDepth]}
         position={[rightBracketX, 0, 0]}
+        material={rodMaterial}
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
@@ -87,6 +117,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
       <BoxWithEdges
         args={[rodWidth, rodHeight, rodDepth]}
         position={[0, rodYOffset, 0]}
+        material={rodMaterial}
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
