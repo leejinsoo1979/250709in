@@ -531,53 +531,51 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           {renderRightSections()}
         </group>
 
-        {/* 옷걸이 봉 렌더링 - 우측 상부 옷장 섹션에만 */}
-        <group position={[rightXOffset, 0, 0]}>
-          {(() => {
-            const rightSections = modelConfig.rightSections || [];
-            let accumulatedY = -height/2 + basicThickness;
+        {/* 옷걸이 봉 렌더링 - 상부 옷장 섹션 (전체 너비) */}
+        {(() => {
+          const rightSections = modelConfig.rightSections || [];
+          let accumulatedY = -height/2 + basicThickness;
 
-            return rightSections.map((section: any, sectionIndex: number) => {
-              const availableHeight = height - basicThickness * 2;
-              const sectionHeight = calculateSectionHeight(section, availableHeight);
-              const sectionBottomY = accumulatedY;
-              accumulatedY += sectionHeight;
+          return rightSections.map((section: any, sectionIndex: number) => {
+            const availableHeight = height - basicThickness * 2;
+            const sectionHeight = calculateSectionHeight(section, availableHeight);
+            const sectionBottomY = accumulatedY;
+            accumulatedY += sectionHeight;
 
-              // 바지걸이장: 우측 상부 섹션(index 1)이 옷장 섹션
-              const isUpperHangingSection = section.type === 'hanging' && sectionIndex === 1;
+            // 바지걸이장: 우측 상부 섹션(index 1)이 옷장 섹션 - 전체 너비 사용
+            const isUpperHangingSection = section.type === 'hanging' && sectionIndex === 1;
 
-              if (!isUpperHangingSection) {
-                return null;
-              }
+            if (!isUpperHangingSection) {
+              return null;
+            }
 
-              // 안전선반 위치 계산
-              let rodYPosition: number;
-              if (hasSharedSafetyShelf && safetyShelfHeight > 0) {
-                // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
-                const safetyShelfY = -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight);
-                rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
-              } else {
-                // 안전선반이 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
-                const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
-                rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
-              }
+            // 안전선반 위치 계산
+            let rodYPosition: number;
+            if (hasSharedSafetyShelf && safetyShelfHeight > 0) {
+              // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
+              const safetyShelfY = -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight);
+              rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
+            } else {
+              // 안전선반이 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
+              const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
+              rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+            }
 
-              return (
-                <ClothingRod
-                  key={`clothing-rod-right-${sectionIndex}`}
-                  innerWidth={rightWidth}  // 우측 섹션 너비만 사용 (그룹 오프셋 적용됨)
-                  yPosition={rodYPosition}
-                  zPosition={0}
-                  renderMode={renderMode}
-                  isDragging={false}
-                  isEditMode={isEditMode}
-                  adjustedDepthForShelves={adjustedDepthForShelves}
-                  depth={depth}
-                />
-              );
-            });
-          })()}
-        </group>
+            return (
+              <ClothingRod
+                key={`clothing-rod-upper-${sectionIndex}`}
+                innerWidth={innerWidth}  // 상부 옷장은 전체 너비 사용 (중앙 칸막이가 없음)
+                yPosition={rodYPosition}
+                zPosition={0}
+                renderMode={renderMode}
+                isDragging={false}
+                isEditMode={isEditMode}
+                adjustedDepthForShelves={adjustedDepthForShelves}
+                depth={depth}
+              />
+            );
+          });
+        })()}
         
         {/* 중간 세로 칸막이 (바닥부터 중단선반까지만) */}
         {hasSharedMiddlePanel && middlePanelHeight > 0 && (
