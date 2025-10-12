@@ -637,15 +637,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 패널 두께 (18mm) - 먼저 선언
   const panelThickness = 18;
 
-  // 도어는 가구 몸통(측판 앞면)에서 5mm 떨어짐
-  // Z=0이 가구 뒷면, 캐비닛 앞면 = moduleDepth
-  // 도어 뒷면 = 캐비닛 앞면 + 5mm 갭
-  // 도어 중심 = 도어 뒷면 + (doorThickness / 2)
-  const cabinetFrontFace = moduleDepth; // 측판 앞면
-  const doorGap = 8; // 8mm 갭 (3mm 보정)
-  const doorBackFace = cabinetFrontFace + doorGap; // 도어 뒷면
-  const doorDepthMm = doorBackFace + (doorThickness / 2); // 도어 중심
-  const doorDepth = mmToThreeUnits(doorDepthMm);
+  // 도어는 가구 몸통 앞면에서 5mm 떨어지고, 도어 두께의 절반만큼 더 앞으로
+  // 총 오프셋 = 5mm (갭) + 10mm (도어 두께 절반) = 15mm
+  const baseDepthOffset = mmToThreeUnits(15);
+  const doorDepth = mmToThreeUnits(moduleDepth) + baseDepthOffset;
 
   // 힌지 위치 오프셋(9mm) 상수 정의
   const hingeOffset = panelThickness / 2; // 9mm
@@ -944,7 +939,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     return (
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
-        <group position={[leftHingeX, doorYPosition, doorDepth]}>
+        <group position={[leftHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualLeftDoorSpring.rotation}>
             <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0.1, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
@@ -1173,7 +1168,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         </group>
 
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
-        <group position={[rightHingeX, doorYPosition, doorDepth]}>
+        <group position={[rightHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualRightDoorSpring.rotation}>
             <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0.1, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
@@ -1426,7 +1421,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
 
     return (
-      <group position={[doorGroupX + hingeAxisOffset, doorYPosition, doorDepth]}>
+      <group position={[doorGroupX + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0.1, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
