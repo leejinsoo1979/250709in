@@ -180,7 +180,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     yOffsetFor4Drawer: 9,
     yOffsetFor2Drawer: 9,
     lowerYAdjustment: 0.05
-  }
+  },
   children
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
