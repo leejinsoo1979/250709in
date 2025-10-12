@@ -11,16 +11,17 @@ interface HingeProps {
 
 export const Hinge: React.FC<HingeProps> = ({
   position,
-  mainDiameter = 17.5, // 메인 경첩 직경 17.5mm
-  smallCircleDiameter = 4, // 작은 원 직경 4mm
+  mainDiameter = 17.5, // 메인 경첩 반지름 17.5mm
+  smallCircleDiameter = 4, // 작은 원 반지름 4mm
   verticalSpacing = 20 // 작은 원들 사이 간격
 }) => {
   const { viewMode } = useSpace3DView();
 
   const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
-  const mainRadius = mmToThreeUnits(mainDiameter) / 2;
-  const smallRadius = mmToThreeUnits(smallCircleDiameter) / 2;
+  // 값이 이미 반지름이므로 그대로 사용
+  const mainRadius = mmToThreeUnits(mainDiameter);
+  const smallRadius = mmToThreeUnits(smallCircleDiameter);
 
   // 작은 원의 위치: 메인 원의 반지름 + 작은 원의 반지름 (바로 붙어있게)
   const spacing = mainRadius + smallRadius;
