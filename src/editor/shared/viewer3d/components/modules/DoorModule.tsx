@@ -944,7 +944,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     return (
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
-        <group position={[leftHingeX, doorYPosition, doorDepth / 2]}>
+        <group position={[leftHingeX, doorYPosition, doorDepth]}>
           <animated.group rotation-y={dualLeftDoorSpring.rotation}>
             <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0.1, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
@@ -1171,9 +1171,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             </group>
           </animated.group>
         </group>
-        
+
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
-        <group position={[rightHingeX, doorYPosition, doorDepth / 2]}>
+        <group position={[rightHingeX, doorYPosition, doorDepth]}>
           <animated.group rotation-y={dualRightDoorSpring.rotation}>
             <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0.1, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
@@ -1426,7 +1426,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorPositionX = -hingeAxisOffset; // 회전축 보정을 위한 도어 위치 조정
 
     return (
-      <group position={[doorGroupX + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
+      <group position={[doorGroupX + hingeAxisOffset, doorYPosition, doorDepth]}>
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
           <group position={[doorPositionX, 0.1, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
