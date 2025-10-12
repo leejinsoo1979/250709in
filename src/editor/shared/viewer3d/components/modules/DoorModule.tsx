@@ -634,10 +634,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const isNoSurroundNoWallRight = spaceInfo.surroundType === 'no-surround' && !spaceInfo.wallConfig?.right;
   const endPanelThickness = 18; // 엔드패널 두께 18mm
   
-  // 도어 깊이는 가구 깊이에서 10mm 바깥쪽으로 나오게 (가구 몸체와 겹침 방지)
-  // 추가로 2mm 더 띄워서 캐비닛과 분리
+  // 도어는 가구 몸통에서 5mm 떨어짐
   // 노서라운드와 서라운드 모드에서 동일한 Z축 위치 유지
-  const baseDepthOffset = mmToThreeUnits(20) + mmToThreeUnits(2);
+  const baseDepthOffset = mmToThreeUnits(5);
   const doorDepth = mmToThreeUnits(moduleDepth) + baseDepthOffset; // 서라운드와 노서라운드 동일하게 처리
   
   // 패널 두께 (18mm)와 힌지 위치 오프셋(9mm) 상수 정의
