@@ -185,16 +185,23 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         const isEditMode = activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
         const isDraggingThis = dragHandlers.draggingModuleId === placedModule.id;
 
+        // 좌측뷰/우측뷰에서는 선택된 가구를 X=0에 렌더링
+        const adjustedModule = (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right'))
+          ? { ...placedModule, position: { ...placedModule.position, x: 0 } }
+          : placedModule;
+
         console.log(`🎯 FurnitureItem ${index} 생성:`, {
           id: placedModule.id,
           key: placedModule.id,
-          slotIndex: placedModule.slotIndex
+          slotIndex: placedModule.slotIndex,
+          originalX: placedModule.position.x,
+          adjustedX: adjustedModule.position.x
         });
 
         return (
           <FurnitureItem
             key={placedModule.id}
-            placedModule={placedModule}
+            placedModule={adjustedModule}
             placedModules={placedModules}
             spaceInfo={spaceInfo}
             furnitureStartY={furnitureStartY}
