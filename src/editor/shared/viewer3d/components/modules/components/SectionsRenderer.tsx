@@ -408,8 +408,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   // drawer 섹션: 바닥판 상단부터 상판 하단까지
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
                   const sectionTopY = sectionCenterY + sectionHeight/2;
-                  
-                  bottomY = sectionBottomY + basicThickness;
+
+                  // 첫 번째 섹션(하부)은 가구 바닥판 윗면부터
+                  bottomY = index === 0 ? (-height/2 + basicThickness) : (sectionBottomY + basicThickness);
                   topY = sectionTopY - basicThickness;
                   actualInternalHeight = (topY - bottomY) / 0.01;
                 } else {
