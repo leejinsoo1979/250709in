@@ -415,72 +415,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 });
               })()
             ) : moduleData?.id?.includes('2hanging') ? (
-              // 2hanging: 각각 18mm씩 위로, 중간 패널은 백패널 방향으로 26mm 확장
-              (() => {
-                console.log('🔵 2hanging 중간 패널 렌더링:', {
-                  moduleId: moduleData?.id,
-                  depth: depth,
-                  depthMm: depth / 0.01
-                });
-
-                return getSectionHeights().map((sectionHeight: number, index: number) => {
-                  if (index >= getSectionHeights().length - 1) return null;
-
-                  let currentYPosition = -height/2 + basicThickness;
-
-                  // 현재 섹션까지의 Y 위치 계산
-                  for (let i = 0; i <= index; i++) {
-                    currentYPosition += getSectionHeights()[i];
-                  }
-
-                  // 2hanging: 각각 18mm씩 위로
-                  const middlePanelY = currentYPosition - basicThickness/2 + mmToThreeUnits(18);
-                  const lowerTopPanelY = currentYPosition - basicThickness - basicThickness/2 + mmToThreeUnits(18);
-
-                  // 백패널 방향으로 26mm 확장
-                  const extendedDepth = depth + mmToThreeUnits(26);
-                  // 중심이 뒤로 이동 (음의 Z 방향으로 26mm의 절반 = -13mm)
-                  const extendedZPosition = -mmToThreeUnits(13);
-
-                  console.log('✅ 2hanging 패널 확장:', {
-                    sectionIndex: index,
-                    originalDepth: depth,
-                    originalDepthMm: depth / 0.01,
-                    extendedDepth,
-                    extendedDepthMm: extendedDepth / 0.01,
-                    extendedZPosition,
-                    extendedZPositionMm: extendedZPosition / 0.01
-                  });
-
-                  // 섹션 강조 확인 (placedFurnitureId 사용)
-                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
-                  const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
-
-                  return (
-                    <React.Fragment key={`divider-${index}`}>
-                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 확장 */}
-                      <BoxWithEdges
-                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), extendedDepth]}
-                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), extendedZPosition]}
-                        material={material}
-                        renderMode={renderMode}
-                        isDragging={isDragging}
-                        isHighlighted={isLowerHighlighted}
-                      />
-
-                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 확장 */}
-                      <BoxWithEdges
-                        args={[innerWidth, basicThickness, extendedDepth]}
-                        position={[0, middlePanelY, extendedZPosition]}
-                        material={material}
-                        renderMode={renderMode}
-                        isDragging={isDragging}
-                        isHighlighted={isUpperHighlighted}
-                      />
-                    </React.Fragment>
-                  );
-                });
-              })()
+              // 2hanging: SingleType2.tsx에서 직접 렌더링하므로 여기서는 렌더링하지 않음
+              null
             ) : (
               // 기존 로직 (다른 가구들)
               (() => {
