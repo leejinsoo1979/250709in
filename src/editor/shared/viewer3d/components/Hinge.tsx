@@ -55,7 +55,11 @@ export const Hinge: React.FC<HingeProps> = ({
 
   // 측면뷰 렌더링 - 실제 컵 힌지 형상
   if ((view2DDirection === 'left' || view2DDirection === 'right') && viewDirection === 'side') {
-    console.log('🔴 Hinge rendering in side view:', { view2DDirection, viewDirection, position });
+    console.log('🔴 Hinge rendering in side view:',
+      'view2DDirection=' + view2DDirection,
+      'viewDirection=' + viewDirection,
+      'position=[' + position.join(',') + ']'
+    );
     // 힌지 치수 (실제 컵 힌지 기준) - 10배 크게
     const baseWidth = mmToThreeUnits(180);    // 베이스플레이트 너비 180mm (10배)
     const baseHeight = mmToThreeUnits(350);   // 베이스플레이트 높이 350mm (10배)

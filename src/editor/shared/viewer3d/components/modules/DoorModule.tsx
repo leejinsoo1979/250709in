@@ -144,7 +144,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const { gl } = useThree(); // Three.js renderer 가져오기
 
   // 🎯 DoorModule 렌더링 시 viewMode와 view2DDirection 실제 값 로깅
-  console.log('🎯🎯🎯 DoorModule render:', { viewMode, view2DDirection, hingePosition, moduleData: moduleData?.id });
+  console.log('🎯🎯🎯 DoorModule render:',
+    'viewMode=' + viewMode,
+    'view2DDirection=' + view2DDirection,
+    'hingePosition=' + hingePosition,
+    'moduleId=' + moduleData?.id
+  );
 
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
   const currentSpaceInfo = spaceInfo || storeSpaceInfo;
@@ -994,8 +999,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
               {/* Hinges for left door - side view (좌측뷰에서만 보임) */}
               {(() => {
-                console.log('🔵🔵🔵 좌측 도어 측면뷰 경첩 조건:', { viewMode, view2DDirection, result: viewMode === '2D' && view2DDirection === 'left' });
-                return viewMode === '2D' && view2DDirection === 'left';
+                const result = viewMode === '2D' && view2DDirection === 'left';
+                console.log('🔵🔵🔵 좌측 도어 측면뷰 경첩 조건:',
+                  'viewMode=' + viewMode,
+                  'view2DDirection=' + view2DDirection,
+                  'result=' + result
+                );
+                return result;
               })() && (
                 <>
                   {/* 1번째 경첩: 도어 위에서 100mm */}
@@ -1226,8 +1236,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
               {/* Hinges for right door - side view (우측뷰에서만 보임) */}
               {(() => {
-                console.log('🟢🟢🟢 우측 도어 측면뷰 경첩 조건:', { viewMode, view2DDirection, result: viewMode === '2D' && view2DDirection === 'right' });
-                return viewMode === '2D' && view2DDirection === 'right';
+                const result = viewMode === '2D' && view2DDirection === 'right';
+                console.log('🟢🟢🟢 우측 도어 측면뷰 경첩 조건:',
+                  'viewMode=' + viewMode,
+                  'view2DDirection=' + view2DDirection,
+                  'result=' + result
+                );
+                return result;
               })() && (
                 <>
                   {/* 1번째 경첩: 도어 위에서 100mm */}
