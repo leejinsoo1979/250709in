@@ -128,6 +128,17 @@ interface BaseFurnitureShellProps {
   // 가구 본체 표시 여부
   showFurniture?: boolean;
 
+  // 백패널 설정 (하드코딩 제거)
+  backPanelConfig?: {
+    widthExtension: number;      // 백패널 너비 연장 (mm) - 기본 10
+    heightExtension: number;      // 백패널 기본 높이 연장 (mm) - 기본 10
+    lowerHeightBonus: number;     // 하부 백패널 추가 높이 (mm) - 기본 18
+    depthOffset: number;          // 백패널 깊이 오프셋 (mm) - 기본 17
+    yOffsetFor4Drawer: number;    // 4단서랍장 Y축 오프셋 (mm) - 기본 9
+    yOffsetFor2Drawer: number;    // 2단서랍장 Y축 오프셋 (mm) - 기본 9
+    lowerYAdjustment: number;     // 하부 백패널 미세 조정 (mm) - 기본 0.05
+  };
+
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -161,6 +172,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   isFloating = false, // 기본값은 false (바닥 배치)
   spaceInfo,
   showFurniture = true, // 기본값은 true (가구 본체 표시)
+  backPanelConfig = {
+    widthExtension: 10,
+    heightExtension: 10,
+    lowerHeightBonus: 18,
+    depthOffset: 17,
+    yOffsetFor4Drawer: 9,
+    yOffsetFor2Drawer: 9,
+    lowerYAdjustment: 0.05
+  }
   children
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
@@ -503,10 +523,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 });
 
                 // 백패널 높이 계산
-                // 하부: 위로만 18mm 늘림 (높이 +18mm)
-                const lowerBackPanelHeight = lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(10) + mmToThreeUnits(18);
-                // 상부: 기본 높이 (+10mm만)
-                const upperBackPanelHeight = upperSectionHeight - basicThickness * 2 + mmToThreeUnits(10);
+                // 하부: 위로만 lowerHeightBonus만큼 늘림
+                const lowerBackPanelHeight = lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension) + mmToThreeUnits(backPanelConfig.lowerHeightBonus);
+                // 상부: 기본 높이 (heightExtension만)
+                const upperBackPanelHeight = upperSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension);
 
                 console.log('🔍🔍🔍 백패널 높이:', {
                   lowerBackPanelHeightMm: lowerBackPanelHeight / 0.01,
@@ -516,13 +536,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 });
 
                 // 백패널 Y 위치 조정
-                // 4drawer: 하부 9mm 아래로, 상부는 위로 9mm (yOffset 없이 +9mm)
-                // 2drawer: 9mm 위로
-                const yOffset = moduleData?.id?.includes('4drawer-hanging') ? -mmToThreeUnits(9) : mmToThreeUnits(9);
-                const lowerBackPanelY = -height/2 + lowerSectionHeight/2 + yOffset - mmToThreeUnits(0.05);
-                // 4drawer-hanging의 상부는 yOffset 적용 안하고 +9mm
+                // 4drawer: 하부 yOffsetFor4Drawer만큼 아래로, 상부는 yOffset 적용 안함 (기본 위치)
+                // 2drawer: yOffsetFor2Drawer만큼 위로
+                const yOffset = moduleData?.id?.includes('4drawer-hanging')
+                  ? -mmToThreeUnits(backPanelConfig.yOffsetFor4Drawer)
+                  : mmToThreeUnits(backPanelConfig.yOffsetFor2Drawer);
+                const lowerBackPanelY = -height/2 + lowerSectionHeight/2 + yOffset - mmToThreeUnits(backPanelConfig.lowerYAdjustment);
+                // 4drawer-hanging의 상부는 yOffset 적용 안함
                 const upperBackPanelY = moduleData?.id?.includes('4drawer-hanging')
-                  ? -height/2 + lowerSectionHeight + upperSectionHeight/2 + mmToThreeUnits(9)
+                  ? -height/2 + lowerSectionHeight + upperSectionHeight/2
                   : -height/2 + lowerSectionHeight + upperSectionHeight/2 + yOffset;
 
                 console.log('🔍🔍🔍 백패널 Y 위치:', {
@@ -534,8 +556,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <>
                     {/* 하부 섹션 백패널 */}
                     <BoxWithEdges
-                      args={[innerWidth + mmToThreeUnits(10), lowerBackPanelHeight, backPanelThickness]}
-                      position={[0, lowerBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+                      args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), lowerBackPanelHeight, backPanelThickness]}
+                      position={[0, lowerBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
@@ -545,8 +567,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                     {/* 상부 섹션 백패널 */}
                     <BoxWithEdges
-                      args={[innerWidth + mmToThreeUnits(10), upperBackPanelHeight, backPanelThickness]}
-                      position={[0, upperBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+                      args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), upperBackPanelHeight, backPanelThickness]}
+                      position={[0, upperBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
@@ -560,8 +582,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           ) : (
             // 단일 섹션: 기존 통짜 백패널
             <BoxWithEdges
-              args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-              position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+              args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), innerHeight + mmToThreeUnits(backPanelConfig.heightExtension), backPanelThickness]}
+              position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
               material={material}
               renderMode={renderMode}
               isDragging={isDragging}
