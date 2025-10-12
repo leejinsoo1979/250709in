@@ -71,20 +71,6 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   const sectionHeights = getSectionHeights();
   const isMulti = sectionHeights.length >= 2;
 
-  // 2D 정면뷰에서 좌우 프레임 형광색 material
-  const highlightMaterial = React.useMemo(() =>
-    new THREE.MeshBasicMaterial({
-      color: new THREE.Color('#00FF00'), // 형광 녹색
-      transparent: true,
-      opacity: 0.8
-    }),
-  []);
-
-  // 좌우 프레임에 사용할 material 결정
-  const sidePanelMaterial = (viewMode === '2D' && view2DDirection === 'front')
-    ? highlightMaterial
-    : material;
-
   // 디버그: showFurniture 값 확인
   useEffect(() => {
     console.log('🎨 DualType2 - showFurniture:', showFurniture, 'moduleId:', moduleData.id);
@@ -118,7 +104,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                 <BoxWithEdges
                   args={[basicThickness, sectionHeight, depth]}
                   position={[-width/2 + basicThickness/2, sectionCenterY, 0]}
-                  material={sidePanelMaterial}
+                  material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
                   isEditMode={isEditMode}
@@ -129,7 +115,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                 <BoxWithEdges
                   args={[basicThickness, sectionHeight, depth]}
                   position={[width/2 - basicThickness/2, sectionCenterY, 0]}
-                  material={sidePanelMaterial}
+                  material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
                   isEditMode={isEditMode}
@@ -287,7 +273,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           <BoxWithEdges
             args={[basicThickness, height, depth]}
             position={[-width/2 + basicThickness/2, 0, 0]}
-            material={sidePanelMaterial}
+            material={material}
             renderMode={renderMode}
             isDragging={isDragging}
           />
@@ -296,7 +282,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           <BoxWithEdges
             args={[basicThickness, height, depth]}
             position={[width/2 - basicThickness/2, 0, 0]}
-            material={sidePanelMaterial}
+            material={material}
             renderMode={renderMode}
             isDragging={isDragging}
           />
