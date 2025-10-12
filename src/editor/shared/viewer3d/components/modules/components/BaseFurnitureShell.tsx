@@ -523,8 +523,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 });
 
                 // 백패널 높이 계산
-                // 하부: 위로만 lowerHeightBonus만큼 늘림
-                const lowerBackPanelHeight = lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension) + mmToThreeUnits(backPanelConfig.lowerHeightBonus);
+                // 하부: 2단만 위로 lowerHeightBonus만큼 늘림, 4단은 기본 높이
+                const is4Drawer = moduleData?.id?.includes('4drawer-hanging');
+                const lowerBackPanelHeight = is4Drawer
+                  ? lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension)
+                  : lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension) + mmToThreeUnits(backPanelConfig.lowerHeightBonus);
                 // 상부: 기본 높이 (heightExtension만) - 2drawer는 18mm 줄임
                 const upperBackPanelHeight = (moduleData?.id?.includes('2drawer-hanging') || moduleData?.id?.includes('2hanging'))
                   ? upperSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension) - basicThickness
@@ -538,10 +541,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 });
 
                 // 백패널 Y 위치 조정
-                // 4drawer: 하부 yOffsetFor4Drawer만큼 아래로, 상부는 yOffset 적용 안함 (기본 위치)
+                // 4drawer: 하부 yOffset 적용 안함 (기본 위치)
                 // 2drawer: yOffsetFor2Drawer만큼 위로
                 const yOffset = moduleData?.id?.includes('4drawer-hanging')
-                  ? -mmToThreeUnits(backPanelConfig.yOffsetFor4Drawer)
+                  ? 0
                   : mmToThreeUnits(backPanelConfig.yOffsetFor2Drawer);
                 const lowerBackPanelY = -height/2 + lowerSectionHeight/2 + yOffset - mmToThreeUnits(backPanelConfig.lowerYAdjustment);
                 // 4drawer-hanging의 상부는 yOffset 적용 안함
