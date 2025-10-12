@@ -1031,7 +1031,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           hideEdges={false} // 엣지는 표시하되
           isBackPanel={true} // 백패널임을 표시
         />
-        
+
         {/* 우측 백패널 (고정 깊이 660mm 기준) */}
         <BoxWithEdges
           args={[rightWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
@@ -1044,6 +1044,19 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           isBackPanel={true} // 백패널임을 표시
         />
       </>
+
+      {/* 환기캡 렌더링 - 좌측 백패널에 */}
+      {!isDragging && (
+        <VentilationCap
+          position={[
+            leftXOffset + leftWidth/2 - mmToThreeUnits(132),  // 좌측 백패널 우측 끝에서 안쪽으로 132mm
+            height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
+            -leftDepth/2 + backPanelThickness + mmToThreeUnits(17) + 0.01  // 좌측 백패널 앞쪽에 살짝 앞으로
+          ]}
+          diameter={98}
+          renderMode={renderMode}
+        />
+      )}
 
           {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
           {!isDragging && renderAsymmetricSections()}

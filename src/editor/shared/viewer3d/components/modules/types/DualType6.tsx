@@ -872,6 +872,19 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         isBackPanel={true} // 백패널임을 표시
       />
 
+      {/* 환기캡 렌더링 */}
+      {!isDragging && (
+        <VentilationCap
+          position={[
+            innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
+            height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
+            -depth/2 + backPanelThickness + mmToThreeUnits(17) + 0.01  // 백패널 앞쪽에 살짝 앞으로
+          ]}
+          diameter={98}
+          renderMode={renderMode}
+        />
+      )}
+
           {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
           {!isDragging && renderAsymmetricSections()}
 
