@@ -417,8 +417,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // mm를 Three.js 단위로 변환
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   
-  // 도어 두께 (요구사항: 20mm)
-  const doorThickness = 20;
+  // 도어 두께 (요구사항: 18mm)
+  const doorThickness = 18;
   const doorThicknessUnits = mmToThreeUnits(doorThickness);
   
   // === 도어 확장 설정 (변수화) ===
