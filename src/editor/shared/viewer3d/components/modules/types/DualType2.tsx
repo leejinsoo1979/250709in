@@ -9,6 +9,7 @@ import DoorModule from '../DoorModule';
 import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 import { Text, Line } from '@react-three/drei';
 import { useDimensionColor } from '../hooks/useDimensionColor';
+import { ClothingRod } from '../components/ClothingRod';
 
 /**
  * DualType2 컴포넌트
@@ -415,21 +416,64 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
 
         {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
         {!isDragging && (
-          <SectionsRenderer
-            modelConfig={baseFurniture.modelConfig}
-            height={baseFurniture.height}
-            innerWidth={baseFurniture.innerWidth}
-            depth={baseFurniture.depth}
-            adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
-            basicThickness={baseFurniture.basicThickness}
-            shelfZOffset={baseFurniture.shelfZOffset}
-            material={baseFurniture.material}
-            calculateSectionHeight={baseFurniture.calculateSectionHeight}
-            mmToThreeUnits={baseFurniture.mmToThreeUnits}
-            renderMode={renderMode}
-            furnitureId={moduleData.id}
-            placedFurnitureId={placedFurnitureId}
-          />
+          <>
+            <SectionsRenderer
+              modelConfig={baseFurniture.modelConfig}
+              height={baseFurniture.height}
+              innerWidth={baseFurniture.innerWidth}
+              depth={baseFurniture.depth}
+              adjustedDepthForShelves={baseFurniture.adjustedDepthForShelves}
+              basicThickness={baseFurniture.basicThickness}
+              shelfZOffset={baseFurniture.shelfZOffset}
+              material={baseFurniture.material}
+              calculateSectionHeight={baseFurniture.calculateSectionHeight}
+              mmToThreeUnits={baseFurniture.mmToThreeUnits}
+              renderMode={renderMode}
+              furnitureId={moduleData.id}
+              placedFurnitureId={placedFurnitureId}
+            />
+
+            {/* 옷걸이 봉 렌더링 - 모든 섹션 */}
+            {(() => {
+              const sections = baseFurniture.modelConfig.sections || [];
+              let accumulatedY = -height/2 + basicThickness;
+
+              return sections.map((section: any, sectionIndex: number) => {
+                const sectionHeight = baseFurniture.calculateSectionHeight(section, height, basicThickness);
+                const sectionBottomY = accumulatedY;
+                const sectionTopY = accumulatedY + sectionHeight - basicThickness;
+
+                // 안전선반 위치 찾기 (섹션 하단 기준 mm)
+                const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
+
+                // 옷걸이 봉 Y 위치 계산
+                let rodYPosition: number;
+                if (safetyShelfPositionMm !== undefined) {
+                  // 안전선반이 있는 경우: 안전선반 바로 아래
+                  const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
+                  rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2); // 브라켓 높이의 절반만큼 아래
+                } else {
+                  // 안전선반이 없는 경우: 섹션 상판 아래
+                  rodYPosition = sectionTopY - basicThickness / 2 - mmToThreeUnits(75 / 2);
+                }
+
+                // 누적 Y 위치 업데이트
+                accumulatedY += sectionHeight;
+
+                return (
+                  <ClothingRod
+                    key={`clothing-rod-${sectionIndex}`}
+                    innerWidth={innerWidth}
+                    yPosition={rodYPosition}
+                    zPosition={0}
+                    renderMode={renderMode}
+                    isDragging={false}
+                    isEditMode={isEditMode}
+                  />
+                );
+              });
+            })()}
+          </>
         )}
 
         {/* 조절발통 (네 모서리) */}
