@@ -516,10 +516,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 });
 
                 // 백패널 Y 위치 조정
-                // 4drawer: 9mm 아래로, 2drawer: 9mm 위로
+                // 4drawer: 하부 9mm 아래로, 상부는 위로 9mm (yOffset 없이 +9mm)
+                // 2drawer: 9mm 위로
                 const yOffset = moduleData?.id?.includes('4drawer-hanging') ? -mmToThreeUnits(9) : mmToThreeUnits(9);
                 const lowerBackPanelY = -height/2 + lowerSectionHeight/2 + yOffset - mmToThreeUnits(0.05);
-                const upperBackPanelY = -height/2 + lowerSectionHeight + upperSectionHeight/2 + yOffset;
+                // 4drawer-hanging의 상부는 yOffset 적용 안하고 +9mm
+                const upperBackPanelY = moduleData?.id?.includes('4drawer-hanging')
+                  ? -height/2 + lowerSectionHeight + upperSectionHeight/2 + mmToThreeUnits(9)
+                  : -height/2 + lowerSectionHeight + upperSectionHeight/2 + yOffset;
 
                 console.log('🔍🔍🔍 백패널 Y 위치:', {
                   lowerBackPanelYMm: lowerBackPanelY / 0.01,
