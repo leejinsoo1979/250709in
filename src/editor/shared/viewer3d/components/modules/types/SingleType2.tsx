@@ -135,6 +135,14 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   const middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2;
                   const lowerTopPanelY = middlePanelY - basicThickness; // 하부 섹션 상판 위치
 
+                  console.log('🟡 SingleType2 중간패널 렌더링:', {
+                    index,
+                    middlePanelY,
+                    lowerTopPanelY,
+                    sectionCenterY,
+                    sectionHeight
+                  });
+
                   // 중간판 강조: 하부 섹션 상판은 index 섹션에 속함
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-${index + 1}`;
