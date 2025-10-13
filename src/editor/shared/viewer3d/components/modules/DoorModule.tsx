@@ -1175,8 +1175,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </group>
               )}
 
-              {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰에서만) */}
-              {viewMode === '2D' && view2DDirection === 'front' && (() => {
+              {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰) */}
+              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && (() => {
                 const extensionLineStart = mmToThreeUnits(70); // 도어 하단에서 70mm 떨어진 곳에서 시작
                 const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
                 const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
@@ -1482,8 +1482,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </group>
               )}
 
-              {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰에서만) */}
-              {viewMode === '2D' && view2DDirection === 'front' && (() => {
+              {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰) */}
+              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && (() => {
                 const extensionLineStart = mmToThreeUnits(70); // 도어 하단에서 70mm 떨어진 곳에서 시작
                 const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
                 const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
@@ -1858,8 +1858,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               </group>
             )}
 
-            {/* 도어 가로 폭 치수 (2D 정면뷰에서만) */}
-            {viewMode === '2D' && view2DDirection === 'front' && (() => {
+            {/* 도어 가로 폭 치수 (2D 정면뷰/탑뷰) */}
+            {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && (() => {
               const extensionLineStart = mmToThreeUnits(70); // 도어 하단에서 70mm 떨어진 곳에서 시작
               const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
               const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
