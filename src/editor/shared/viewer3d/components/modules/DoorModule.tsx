@@ -1860,10 +1860,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   // 첫 번째 대각선 (위에서 아래로) - 조정된 힌지 위치 사용
                   const start1 = isFrontView
                     ? [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, -doorHeight / 2, 0]
-                    : [adjustedHingePosition === 'left' ? doorDepth / 2 : -doorDepth / 2, doorHeight / 2, 0];
+                    : [adjustedHingePosition === 'left' ? doorDepth / 2 : -doorDepth / 2, -doorHeight / 2, 0];
                   const end1 = isFrontView
                     ? [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0]
-                    : [adjustedHingePosition === 'left' ? -doorDepth / 2 : doorDepth / 2, -doorHeight / 2, 0];
+                    : [adjustedHingePosition === 'left' ? -doorDepth / 2 : doorDepth / 2, 0, 0];
                   const segments1 = [];
 
                   // 선분의 총 길이 계산
