@@ -69,6 +69,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   const { renderMode, viewMode } = useSpace3DView();
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
+  // 디버깅: view2DDirection과 edgeOpacity 값 확인
+  React.useEffect(() => {
+    console.log('🔍 DualType5 - view2DDirection:', view2DDirection);
+    console.log('🔍 DualType5 - edgeOpacity 적용 여부:', view2DDirection === 'left' ? 0.3 : undefined);
+  }, [view2DDirection]);
+
   // spaceInfo 가져오기 - 제거됨 (baseFurniture의 material 사용)
   // const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
   // const materialConfig = storeSpaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#E0E0E0' };

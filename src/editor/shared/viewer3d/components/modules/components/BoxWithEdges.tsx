@@ -234,6 +234,18 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
   }, [viewMode, renderMode, edgeColor, view2DTheme, position]);
 
+  // 디버깅: edgeOpacity 값 확인
+  React.useEffect(() => {
+    if (edgeOpacity !== undefined) {
+      console.log('✨ BoxWithEdges - edgeOpacity 적용:', {
+        edgeOpacity,
+        position,
+        viewMode,
+        renderMode
+      });
+    }
+  }, [edgeOpacity, position, viewMode, renderMode]);
+
   return (
     <group position={position}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
