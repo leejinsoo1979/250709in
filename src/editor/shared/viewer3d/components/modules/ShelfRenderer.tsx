@@ -290,9 +290,17 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 선반 프레임 두께 치수 추가
               const shelfThicknessElements = [];
-              
+
+              // 측면뷰에서는 선반 두께 표시 안함 (섹션 외경 치수만 표시)
+              const isSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+
               // 각 선반의 두께 표시
               shelfPositions.forEach((shelfPos, i) => {
+                // 측면뷰에서는 선반 두께 표시 안함
+                if (isSideView) {
+                  return;
+                }
+
                 // drawer 섹션의 바닥판 두께는 표시하지 않음 (전체적으로 제거)
                 if (sectionType === 'drawer') {
                   return;
@@ -394,8 +402,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               const topFrameTopY = topFrameY + basicThickness / 2; // 상단 프레임의 상단
               const topFrameBottomY = topFrameY - basicThickness / 2; // 상단 프레임의 하단
               
-              // 상단 프레임 치수는 showTopFrameDimension이 true일 때만 표시
-              if (showTopFrameDimension) {
+              // 상단 프레임 치수는 showTopFrameDimension이 true이고 측면뷰가 아닐 때만 표시
+              if (showTopFrameDimension && !isSideView) {
                 console.log('🟣 상단 프레임 엔드포인트:', {
                   'topFrameTopY_mm': topFrameTopY * 100,
                   'topFrameBottomY_mm': topFrameBottomY * 100,

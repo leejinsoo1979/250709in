@@ -352,8 +352,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                (!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (visibleSectionIndex === null || visibleSectionIndex === 0))
              ) && (
               <>
-                {/* 섹션 구분 패널 두께 표시 (마지막 섹션 제외) */}
-                {index < allSections.length - 1 && (
+                {/* 섹션 구분 패널 두께 표시 (마지막 섹션 제외, 측면뷰 제외) */}
+                {index < allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                   <group>
                     {/* 구분 패널 두께 텍스트 */}
                     {viewMode === '3D' && (
@@ -414,8 +414,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   </group>
                 )}
                 
-                {/* 상판 두께 표시 (마지막 섹션일 때만) */}
-                {index === allSections.length - 1 && (
+                {/* 상판 두께 표시 (마지막 섹션일 때만, 측면뷰 제외) */}
+                {index === allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                   <group>
                     {/* 상판 두께 텍스트 */}
                     {viewMode === '3D' && (
@@ -542,8 +542,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   );
                 })()}
 
-                {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 */}
-                {index === 0 && section.type === 'drawer' && (
+                {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 (측면뷰 제외) */}
+                {index === 0 && section.type === 'drawer' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                   <group>
                     {/* 하부 프레임 두께 텍스트 */}
                     {viewMode === '3D' && (
@@ -718,8 +718,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                (!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (visibleSectionIndex === null || visibleSectionIndex === 1))
              ) && (
               <group>
-                {/* 첫 번째 섹션일 때만 하부 프레임 두께 표시 */}
-                {index === 0 && (
+                {/* 첫 번째 섹션일 때만 하부 프레임 두께 표시 (측면뷰 제외) */}
+                {index === 0 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                   <>
                     {/* 하부 프레임 두께 텍스트 */}
                     {viewMode === '3D' && (
@@ -780,8 +780,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   </>
                 )}
                 
-                {/* 마지막 섹션일 때 상판 두께 표시 */}
-                {index === allSections.length - 1 && (
+                {/* 마지막 섹션일 때 상판 두께 표시 (측면뷰 제외) */}
+                {index === allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                   <>
                     {/* 상판 두께 텍스트 */}
                     {viewMode === '3D' && (
