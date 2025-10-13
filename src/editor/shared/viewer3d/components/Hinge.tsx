@@ -1,9 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Line } from '@react-three/drei';
 import { useSpace3DView } from '../context/useSpace3DView';
-import * as THREE from 'three';
-import { useLoader } from '@react-three/fiber';
-import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
 
 interface HingeProps {
   position: [number, number, number]; // 메인 원의 위치
@@ -60,35 +57,75 @@ export const Hinge: React.FC<HingeProps> = ({
     return null;
   }
 
-  // 측면뷰 렌더링 - SVG 로드 및 렌더링
+  // 측면뷰 렌더링 - 힌지 측면 형상
   if ((view2DDirection === 'left' || view2DDirection === 'right') && viewDirection === 'side') {
-    const svgData = useLoader(SVGLoader, '/hinge-side.svg');
-
-    const shapes = useMemo(() => {
-      const allShapes: THREE.Shape[] = [];
-      svgData.paths.forEach((path) => {
-        const shapes = SVGLoader.createShapes(path);
-        allShapes.push(...shapes);
-      });
-      return allShapes;
-    }, [svgData]);
-
-    // SVG 크기 조정: 실제 35mm 높이 기준
-    const heightMm = 35;
-    const svgHeight = 156; // viewBox height
-    const scale = mmToThreeUnits(heightMm) / svgHeight;
-
     // 측면뷰 좌표 변환: 정면뷰의 Z를 측면뷰의 X로
     const [x, y, z] = position;
+    const sidePosition: [number, number, number] = [z, y, 0];
+
+    // 힌지 측면 치수
+    const plateWidth = mmToThreeUnits(10);   // 측판 너비
+    const plateHeight = mmToThreeUnits(35);  // 측판 높이
+    const bodyWidth = mmToThreeUnits(50);    // 본체 길이
+    const bodyHeight = mmToThreeUnits(12);   // 본체 높이
+    const jointRadius = mmToThreeUnits(6);   // 조인트 반지름
+
+    const halfPlateH = plateHeight / 2;
+    const halfBodyH = bodyHeight / 2;
+
+    // 타원형 조인트를 원으로 근사
+    const generateCircle = (centerX: number, centerY: number, radius: number, segments: number = 16): [number, number, number][] => {
+      const points: [number, number, number][] = [];
+      for (let i = 0; i <= segments; i++) {
+        const angle = (i / segments) * Math.PI * 2;
+        const px = centerX + Math.cos(angle) * radius;
+        const py = centerY + Math.sin(angle) * radius;
+        points.push([px, py, 0]);
+      }
+      return points;
+    };
 
     return (
-      <group position={[z, y, 0]} scale={[scale, scale, 1]} rotation={[0, 0, 0]}>
-        {shapes.map((shape, index) => (
-          <mesh key={index}>
-            <shapeGeometry args={[shape]} />
-            <meshBasicMaterial color="#00CCCC" side={THREE.DoubleSide} />
-          </mesh>
-        ))}
+      <group position={sidePosition}>
+        {/* 왼쪽 측판 */}
+        <Line
+          points={[
+            [-plateWidth, halfPlateH, 0],
+            [0, halfPlateH, 0],
+            [0, -halfPlateH, 0],
+            [-plateWidth, -halfPlateH, 0],
+            [-plateWidth, halfPlateH, 0]
+          ]}
+          color={lineColor}
+          lineWidth={1}
+        />
+
+        {/* 중앙 본체 */}
+        <Line
+          points={[
+            [0, halfBodyH, 0],
+            [bodyWidth, halfBodyH, 0],
+            [bodyWidth, -halfBodyH, 0],
+            [0, -halfBodyH, 0],
+            [0, halfBodyH, 0]
+          ]}
+          color={lineColor}
+          lineWidth={1}
+        />
+
+        {/* 상단 조인트 원 */}
+        <Line
+          points={generateCircle(bodyWidth * 0.75, halfPlateH * 0.6, jointRadius)}
+          color={lineColor}
+          lineWidth={1}
+        />
+
+        {/* 하단 조인트 원 */}
+        <Line
+          points={generateCircle(bodyWidth * 0.75, -halfPlateH * 0.6, jointRadius)}
+          color={lineColor}
+          lineWidth={1}
+        />
       </group>
     );
   }
