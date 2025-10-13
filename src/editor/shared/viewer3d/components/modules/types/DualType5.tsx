@@ -485,22 +485,36 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
                 {/* 상부섹션(hanging)의 내경 높이 표시 */}
                 {(section.type === 'hanging' && index > 0) && (() => {
-                  // 바닥판 위부터 시작
-                  const internalBottomY = currentYPosition + basicThickness;
+                  // SectionsRenderer와 동일한 로직 적용
+                  // 섹션의 절대 Y 위치
+                  const sectionBottomY = sectionCenterY - sectionHeight/2;
+                  const sectionTopY = sectionCenterY + sectionHeight/2;
+
+                  // 하단 가이드선: 바닥판 윗면 (이전 섹션이 drawer인 경우)
+                  const internalBottomY = sectionBottomY + basicThickness;
 
                   // 안전선반이 있는지 확인
+                  const hasSafetyShelf = section.shelfPositions && section.shelfPositions.some(pos => pos > 0);
                   let internalTopY;
                   let hangingInternalHeight;
 
-                  if (section.shelfPositions && section.shelfPositions.length > 0) {
-                    // 안전선반이 있는 경우: 첫 번째 선반 위치까지 (섹션 하단 기준)
-                    const safetyShelfPosition = section.shelfPositions[0];
-                    internalTopY = currentYPosition + safetyShelfPosition;
-                    hangingInternalHeight = safetyShelfPosition - basicThickness;
+                  if (hasSafetyShelf) {
+                    // 안전선반이 있는 경우: 안전선반 하단까지
+                    const safetyShelfPositionMm = section.shelfPositions!.find(pos => pos > 0);
+                    if (safetyShelfPositionMm !== undefined) {
+                      // 안전선반 하단 Y 위치 = 섹션 하단 + 안전선반 위치(mm를 Three units로 변환) - 안전선반 두께/2
+                      internalTopY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm) - basicThickness / 2;
+                      hangingInternalHeight = (internalTopY - internalBottomY) / mmToThreeUnits(1);
+                    } else {
+                      // 안전선반 위치를 못 찾은 경우
+                      internalTopY = sectionTopY - basicThickness;
+                      hangingInternalHeight = (internalTopY - internalBottomY) / mmToThreeUnits(1);
+                    }
                   } else {
-                    // 안전선반이 없는 경우: 측판 상단까지
-                    internalTopY = currentYPosition + sectionHeight - basicThickness;
-                    hangingInternalHeight = sectionHeight - 2 * basicThickness;
+                    // 안전선반이 없는 경우: 측판 상단까지 (2hanging 상부 섹션 로직)
+                    // topY = bottomY + (sectionHeight - basicThickness * 2)
+                    internalTopY = internalBottomY + (sectionHeight - basicThickness * 2);
+                    hangingInternalHeight = (internalTopY - internalBottomY) / mmToThreeUnits(1);
                   }
 
                   const internalCenterY = (internalBottomY + internalTopY) / 2;
