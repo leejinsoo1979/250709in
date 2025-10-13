@@ -1262,11 +1262,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     <DimensionText
                       value={leftDoorWidth}
                       position={isTopView ?
-                        [xOffset, 0, dimensionLinePos + mmToThreeUnits(15)] :
+                        [xOffset, 0, dimensionLinePos - mmToThreeUnits(15)] :
                         [0, dimensionLinePos + mmToThreeUnits(15), doorThicknessUnits / 2 + 0.001]
                       }
                       anchorX="center"
-                      anchorY={isTopView ? "top" : "bottom"}
+                      anchorY="bottom"
                     />
                   </>
                 );
@@ -1596,11 +1596,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     <DimensionText
                       value={rightDoorWidth}
                       position={isTopView ?
-                        [xOffset, 0, dimensionLinePos + mmToThreeUnits(15)] :
+                        [xOffset, 0, dimensionLinePos - mmToThreeUnits(15)] :
                         [0, dimensionLinePos + mmToThreeUnits(15), doorThicknessUnits / 2 + 0.001]
                       }
                       anchorX="center"
-                      anchorY={isTopView ? "top" : "bottom"}
+                      anchorY="bottom"
                     />
                   </>
                 );
@@ -1999,11 +1999,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   <DimensionText
                     value={doorWidth}
                     position={isTopView ?
-                      [xOffset, 0, dimensionLinePos + mmToThreeUnits(15)] :
+                      [xOffset, 0, dimensionLinePos - mmToThreeUnits(15)] :
                       [0, dimensionLinePos + mmToThreeUnits(15), doorThicknessUnits / 2 + 0.001]
                     }
                     anchorX="center"
-                    anchorY={isTopView ? "top" : "bottom"}
+                    anchorY="bottom"
                   />
                 </>
               );
