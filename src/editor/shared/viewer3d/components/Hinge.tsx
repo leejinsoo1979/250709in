@@ -69,21 +69,32 @@ export const Hinge: React.FC<HingeProps> = ({
     // SVG 데이터 로드 (정확한 치수 기반 80x55mm)
     const svgData = useLoader(SVGLoader, '/hinge_side_exact.svg');
 
-    // SVG 경로를 Three.js shapes로 변환
-    const renderData = useMemo(() => {
-      const data: { shape: THREE.Shape; color: string; userData: any }[] = [];
+    // SVG 경로를 Line 포인트로 변환
+    const lineSegments = useMemo(() => {
+      const segments: [number, number, number][][] = [];
       svgData.paths.forEach((path) => {
         const shapes = SVGLoader.createShapes(path);
         shapes.forEach((shape) => {
-          data.push({
-            shape,
-            color: lineColor, // cyan (#00CCCC)로 변경
-            userData: path.userData
+          // Shape의 모든 점들을 추출
+          const points: [number, number, number][] = [];
+          const curves = shape.curves;
+
+          curves.forEach((curve: any) => {
+            const points2d = curve.getPoints(50);
+            points2d.forEach((pt: any) => {
+              points.push([pt.x, pt.y, 0]);
+            });
           });
+
+          if (points.length > 0) {
+            // 닫힌 경로인 경우 첫 점을 마지막에 추가
+            points.push(points[0]);
+            segments.push(points);
+          }
         });
       });
-      return data;
-    }, [svgData, lineColor]);
+      return segments;
+    }, [svgData]);
 
     // SVG viewBox: 0 0 491 348
     // transform: translate(-179,-143) rotate(-90) translate(-595.32,0)
@@ -105,11 +116,13 @@ export const Hinge: React.FC<HingeProps> = ({
     return (
       <group position={sidePosition}>
         <group position={[offsetX * scale, -offsetY * scale, 0]} scale={[scale, -scale, scale]}>
-          {renderData.map((item, index) => (
-            <mesh key={index}>
-              <shapeGeometry args={[item.shape]} />
-              <meshBasicMaterial color={item.color} side={THREE.DoubleSide} />
-            </mesh>
+          {lineSegments.map((points, index) => (
+            <Line
+              key={index}
+              points={points}
+              color={lineColor}
+              lineWidth={1}
+            />
           ))}
         </group>
       </group>
