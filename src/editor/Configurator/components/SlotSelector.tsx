@@ -10,7 +10,7 @@ import styles from './SlotSelector.module.css';
  * 슬롯 개수만큼 버튼 생성하여 특정 슬롯만 보기 가능
  */
 const SlotSelector: React.FC = () => {
-  const { viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex } = useUIStore();
+  const { viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex, view2DTheme } = useUIStore();
   const { columnCount } = useDerivedSpaceStore();
   const { theme } = useTheme();
 
@@ -59,21 +59,38 @@ const SlotSelector: React.FC = () => {
   // 슬롯 개수 (columnCount가 이미 슬롯 개수를 의미)
   const slotCount = columnCount;
 
+  // 컨테이너 스타일 (다크/라이트 테마 적용)
+  const isDark = view2DTheme === 'dark';
+  const containerStyle: React.CSSProperties = {
+    backgroundColor: isDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+  };
+
   return (
-    <div className={styles.slotSelector}>
+    <div className={styles.slotSelector} style={containerStyle}>
       <div className={styles.slotButtons}>
         {/* 슬롯 선택 버튼들 (1번부터 N번까지) */}
         {Array.from({ length: slotCount }, (_, index) => {
           const isActive = selectedSlotIndex === index;
+
+          // 버튼 스타일 (다크/라이트 테마에 따른 색상)
+          const buttonStyle: React.CSSProperties = isActive
+            ? {
+                backgroundColor: themeColor,
+                borderColor: themeColor,
+                color: 'white',
+              }
+            : {
+                backgroundColor: isDark ? '#2a2a2a' : 'white',
+                borderColor: isDark ? '#404040' : '#d0d0d0',
+                color: isDark ? '#e0e0e0' : '#333',
+              };
+
           return (
             <button
               key={index}
               className={`${styles.slotButton} ${isActive ? styles.active : ''}`}
               onClick={() => setSelectedSlotIndex(index)}
-              style={isActive ? {
-                backgroundColor: themeColor,
-                borderColor: themeColor,
-              } : undefined}
+              style={buttonStyle}
             >
               {index + 1}
             </button>
