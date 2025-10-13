@@ -79,17 +79,22 @@ export const Hinge: React.FC<HingeProps> = ({
       return allShapes;
     }, [svgData]);
 
-    // SVG는 정확한 1:1 스케일 (viewBox: 0 0 80 55)
-    // 80mm x 55mm → Three.js units (1mm = 0.01)
-    const svgWidth = 80;
-    const svgHeight = 55;
+    // SVG viewBox: 0 0 491 348
+    // transform: translate(-179,-143) rotate(-90) translate(-595.32,0)
+    // 실제 힌지 치수를 기준으로 스케일 조정
+    const svgViewBoxWidth = 491;
+    const svgViewBoxHeight = 348;
 
-    // mm to Three.js units: 1mm = 0.01 units
-    const scale = 0.01;
+    // 목표 크기: 35mm 높이 (힌지 실제 크기)
+    const targetHeightMm = 35;
+    const targetHeight = mmToThreeUnits(targetHeightMm);
+
+    // 스케일 계산 (viewBox 높이를 실제 35mm에 맞춤)
+    const scale = targetHeight / svgViewBoxHeight;
 
     // SVG 중심을 원점에 맞추기
-    const offsetX = -svgWidth / 2;
-    const offsetY = -svgHeight / 2;
+    const offsetX = -svgViewBoxWidth / 2;
+    const offsetY = -svgViewBoxHeight / 2;
 
     return (
       <group position={sidePosition}>
