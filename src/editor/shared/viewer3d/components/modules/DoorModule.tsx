@@ -1232,14 +1232,75 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
               {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰에서만) */}
-              {viewMode === '2D' && view2DDirection === 'front' && (
-                <DimensionText
-                  value={leftDoorWidth}
-                  position={[0, -doorHeight / 2 - mmToThreeUnits(80), doorThicknessUnits / 2 + 0.001]}
-                  anchorX="center"
-                  anchorY="middle"
-                />
-              )}
+              {viewMode === '2D' && view2DDirection === 'front' && (() => {
+                const extensionLineStart = mmToThreeUnits(20); // 도어 하단에서 20mm 떨어진 곳에서 시작
+                const extensionLineLength = mmToThreeUnits(60); // 연장선 길이 60mm
+                const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
+                const tickSize = mmToThreeUnits(8); // 틱 마크 크기
+                const lineColor = '#808080'; // 치수선 색상
+
+                return (
+                  <>
+                    {/* 왼쪽 연장선 */}
+                    <Line
+                      points={[
+                        [-leftDoorWidthUnits / 2, -doorHeight / 2 - extensionLineStart, doorThicknessUnits / 2 + 0.001],
+                        [-leftDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
+                      ]}
+                      color={lineColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 오른쪽 연장선 */}
+                    <Line
+                      points={[
+                        [leftDoorWidthUnits / 2, -doorHeight / 2 - extensionLineStart, doorThicknessUnits / 2 + 0.001],
+                        [leftDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
+                      ]}
+                      color={lineColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 치수선 (가로선) */}
+                    <Line
+                      points={[
+                        [-leftDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001],
+                        [leftDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
+                      ]}
+                      color={lineColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 왼쪽 틱 마크 */}
+                    <Line
+                      points={[
+                        [-leftDoorWidthUnits / 2 - tickSize / 2, dimensionLineY + tickSize / 2, doorThicknessUnits / 2 + 0.001],
+                        [-leftDoorWidthUnits / 2 + tickSize / 2, dimensionLineY - tickSize / 2, doorThicknessUnits / 2 + 0.001]
+                      ]}
+                      color={lineColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 오른쪽 틱 마크 */}
+                    <Line
+                      points={[
+                        [leftDoorWidthUnits / 2 - tickSize / 2, dimensionLineY + tickSize / 2, doorThicknessUnits / 2 + 0.001],
+                        [leftDoorWidthUnits / 2 + tickSize / 2, dimensionLineY - tickSize / 2, doorThicknessUnits / 2 + 0.001]
+                      ]}
+                      color={lineColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 치수 텍스트 */}
+                    <DimensionText
+                      value={leftDoorWidth}
+                      position={[0, dimensionLineY + mmToThreeUnits(5), doorThicknessUnits / 2 + 0.001]}
+                      anchorX="center"
+                      anchorY="middle"
+                    />
+                  </>
+                );
+              })()}
             </group>
           </animated.group>
         </group>
@@ -1537,14 +1598,75 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
               {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰에서만) */}
-              {viewMode === '2D' && view2DDirection === 'front' && (
-                <DimensionText
-                  value={rightDoorWidth}
-                  position={[0, -doorHeight / 2 - mmToThreeUnits(80), doorThicknessUnits / 2 + 0.001]}
-                  anchorX="center"
-                  anchorY="middle"
-                />
-              )}
+              {viewMode === '2D' && view2DDirection === 'front' && (() => {
+                const extensionLineStart = mmToThreeUnits(20); // 도어 하단에서 20mm 떨어진 곳에서 시작
+                const extensionLineLength = mmToThreeUnits(60); // 연장선 길이 60mm
+                const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
+                const tickSize = mmToThreeUnits(8); // 틱 마크 크기
+                const lineColor = '#808080'; // 치수선 색상
+
+                return (
+                  <>
+                    {/* 왼쪽 연장선 */}
+                    <Line
+                      points={[
+                        [-rightDoorWidthUnits / 2, -doorHeight / 2 - extensionLineStart, doorThicknessUnits / 2 + 0.001],
+                        [-rightDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
+                      ]}
+                      color={lineColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 오른쪽 연장선 */}
+                    <Line
+                      points={[
+                        [rightDoorWidthUnits / 2, -doorHeight / 2 - extensionLineStart, doorThicknessUnits / 2 + 0.001],
+                        [rightDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
+                      ]}
+                      color={lineColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 치수선 (가로선) */}
+                    <Line
+                      points={[
+                        [-rightDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001],
+                        [rightDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
+                      ]}
+                      color={lineColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 왼쪽 틱 마크 */}
+                    <Line
+                      points={[
+                        [-rightDoorWidthUnits / 2 - tickSize / 2, dimensionLineY + tickSize / 2, doorThicknessUnits / 2 + 0.001],
+                        [-rightDoorWidthUnits / 2 + tickSize / 2, dimensionLineY - tickSize / 2, doorThicknessUnits / 2 + 0.001]
+                      ]}
+                      color={lineColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 오른쪽 틱 마크 */}
+                    <Line
+                      points={[
+                        [rightDoorWidthUnits / 2 - tickSize / 2, dimensionLineY + tickSize / 2, doorThicknessUnits / 2 + 0.001],
+                        [rightDoorWidthUnits / 2 + tickSize / 2, dimensionLineY - tickSize / 2, doorThicknessUnits / 2 + 0.001]
+                      ]}
+                      color={lineColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 치수 텍스트 */}
+                    <DimensionText
+                      value={rightDoorWidth}
+                      position={[0, dimensionLineY + mmToThreeUnits(5), doorThicknessUnits / 2 + 0.001]}
+                      anchorX="center"
+                      anchorY="middle"
+                    />
+                  </>
+                );
+              })()}
             </group>
           </animated.group>
         </group>
@@ -1947,14 +2069,75 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             )}
 
             {/* 도어 가로 폭 치수 (2D 정면뷰에서만) */}
-            {viewMode === '2D' && view2DDirection === 'front' && (
-              <DimensionText
-                value={doorWidth}
-                position={[0, -doorHeight / 2 - mmToThreeUnits(80), doorThicknessUnits / 2 + 0.001]}
-                anchorX="center"
-                anchorY="middle"
-              />
-            )}
+            {viewMode === '2D' && view2DDirection === 'front' && (() => {
+              const extensionLineStart = mmToThreeUnits(20); // 도어 하단에서 20mm 떨어진 곳에서 시작
+              const extensionLineLength = mmToThreeUnits(60); // 연장선 길이 60mm
+              const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
+              const tickSize = mmToThreeUnits(8); // 틱 마크 크기
+              const lineColor = '#808080'; // 치수선 색상
+
+              return (
+                <>
+                  {/* 왼쪽 연장선 */}
+                  <Line
+                    points={[
+                      [-doorWidthUnits / 2, -doorHeight / 2 - extensionLineStart, doorThicknessUnits / 2 + 0.001],
+                      [-doorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
+                    ]}
+                    color={lineColor}
+                    lineWidth={0.5}
+                  />
+
+                  {/* 오른쪽 연장선 */}
+                  <Line
+                    points={[
+                      [doorWidthUnits / 2, -doorHeight / 2 - extensionLineStart, doorThicknessUnits / 2 + 0.001],
+                      [doorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
+                    ]}
+                    color={lineColor}
+                    lineWidth={0.5}
+                  />
+
+                  {/* 치수선 (가로선) */}
+                  <Line
+                    points={[
+                      [-doorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001],
+                      [doorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
+                    ]}
+                    color={lineColor}
+                    lineWidth={0.5}
+                  />
+
+                  {/* 왼쪽 틱 마크 */}
+                  <Line
+                    points={[
+                      [-doorWidthUnits / 2 - tickSize / 2, dimensionLineY + tickSize / 2, doorThicknessUnits / 2 + 0.001],
+                      [-doorWidthUnits / 2 + tickSize / 2, dimensionLineY - tickSize / 2, doorThicknessUnits / 2 + 0.001]
+                    ]}
+                    color={lineColor}
+                    lineWidth={0.5}
+                  />
+
+                  {/* 오른쪽 틱 마크 */}
+                  <Line
+                    points={[
+                      [doorWidthUnits / 2 - tickSize / 2, dimensionLineY + tickSize / 2, doorThicknessUnits / 2 + 0.001],
+                      [doorWidthUnits / 2 + tickSize / 2, dimensionLineY - tickSize / 2, doorThicknessUnits / 2 + 0.001]
+                    ]}
+                    color={lineColor}
+                    lineWidth={0.5}
+                  />
+
+                  {/* 치수 텍스트 */}
+                  <DimensionText
+                    value={doorWidth}
+                    position={[0, dimensionLineY + mmToThreeUnits(5), doorThicknessUnits / 2 + 0.001]}
+                    anchorX="center"
+                    anchorY="middle"
+                  />
+                </>
+              );
+            })()}
           </group>
         </animated.group>
       </group>
