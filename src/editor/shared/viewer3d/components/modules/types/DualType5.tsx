@@ -919,22 +919,22 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
     return (
       <>
-        {/* 좌측 섹션 그룹 - visibleSectionIndex가 null이거나 0일 때만 표시 */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
+        {/* 좌측 섹션 그룹 - 3D 모드에서는 항상 표시, 측면뷰에서는 visibleSectionIndex에 따라 표시 */}
+        {(viewMode === '3D' || visibleSectionIndex === null || visibleSectionIndex === 0) && (
           <group position={[leftXOffset, 0, 0]}>
             {renderLeftSections()}
           </group>
         )}
 
-        {/* 우측 섹션 그룹 (660mm 깊이 기준 절대 고정) - visibleSectionIndex가 null이거나 1일 때만 표시 */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 1) && (
+        {/* 우측 섹션 그룹 (660mm 깊이 기준 절대 고정) - 3D 모드에서는 항상 표시, 측면뷰에서는 visibleSectionIndex에 따라 표시 */}
+        {(viewMode === '3D' || visibleSectionIndex === null || visibleSectionIndex === 1) && (
           <group position={[rightXOffset, 0, 0]}>
             {renderRightSections()}
           </group>
         )}
 
-        {/* 옷걸이 봉 렌더링 - 좌측 옷장 섹션에만 (visibleSectionIndex가 null 또는 0일 때만) */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
+        {/* 옷걸이 봉 렌더링 - 좌측 옷장 섹션에만 (3D 모드에서는 항상 표시, 측면뷰에서는 visibleSectionIndex에 따라 표시) */}
+        {(viewMode === '3D' || visibleSectionIndex === null || visibleSectionIndex === 0) && (
           <group position={[leftXOffset, 0, 0]}>
             {(() => {
             const leftSections = modelConfig.leftSections || [];
@@ -1003,8 +1003,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           </group>
         )}
         
-        {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용, 바닥판 두께 고려) - 전체 보기일 때만 */}
-        {visibleSectionIndex === null && (() => {
+        {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용, 바닥판 두께 고려) - 3D 모드에서는 항상 표시, 측면뷰에서는 전체 보기일 때만 */}
+        {(viewMode === '3D' || visibleSectionIndex === null) && (() => {
           const leftSections = modelConfig.leftSections || [];
 
           // 하부 섹션(drawer) 개수 확인
