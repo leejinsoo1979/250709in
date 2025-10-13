@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
+import { Line } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 
@@ -90,22 +91,99 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
         <primitive object={meshMaterial} />
       </mesh>
 
-      {/* 라인 렌더링 (2D에서 항상, 3D에서 wireframe 모드일 때) */}
-      {(viewMode === '2D' || renderMode === 'wireframe') && (
+      {/* 라인 렌더링 */}
+      {viewMode === '2D' ? (
+        // 2D 모드: 원통 간소화 (상/하 원 + 세로선 4개)
         <>
-          {/* 플레이트 외곽선 */}
+          {/* 플레이트 상단면 외곽선 */}
           <lineSegments position={[0, -plateHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(plateWidth, plateHeight, plateWidth)]} />
             <lineBasicMaterial attach="material" color={edgeColor} />
           </lineSegments>
 
-          {/* 원통 외곽선 - 세그먼트 수를 8개로 줄여서 선 간소화 */}
+          {/* 원통 상단 원 */}
+          <Line
+            points={(() => {
+              const segments = 32;
+              const points: [number, number, number][] = [];
+              const y = -plateHeight;
+              for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                const x = Math.cos(angle) * cylinderRadius;
+                const z = Math.sin(angle) * cylinderRadius;
+                points.push([x, y, z]);
+              }
+              return points;
+            })()}
+            color={edgeColor}
+            lineWidth={1}
+          />
+
+          {/* 원통 하단 원 */}
+          <Line
+            points={(() => {
+              const segments = 32;
+              const points: [number, number, number][] = [];
+              const y = -plateHeight - cylinderHeight;
+              for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                const x = Math.cos(angle) * cylinderRadius;
+                const z = Math.sin(angle) * cylinderRadius;
+                points.push([x, y, z]);
+              }
+              return points;
+            })()}
+            color={edgeColor}
+            lineWidth={1}
+          />
+
+          {/* 세로선 4개 (90도 간격) */}
+          <Line
+            points={[
+              [cylinderRadius, -plateHeight, 0],
+              [cylinderRadius, -plateHeight - cylinderHeight, 0]
+            ]}
+            color={edgeColor}
+            lineWidth={1}
+          />
+          <Line
+            points={[
+              [0, -plateHeight, cylinderRadius],
+              [0, -plateHeight - cylinderHeight, cylinderRadius]
+            ]}
+            color={edgeColor}
+            lineWidth={1}
+          />
+          <Line
+            points={[
+              [-cylinderRadius, -plateHeight, 0],
+              [-cylinderRadius, -plateHeight - cylinderHeight, 0]
+            ]}
+            color={edgeColor}
+            lineWidth={1}
+          />
+          <Line
+            points={[
+              [0, -plateHeight, -cylinderRadius],
+              [0, -plateHeight - cylinderHeight, -cylinderRadius]
+            ]}
+            color={edgeColor}
+            lineWidth={1}
+          />
+        </>
+      ) : renderMode === 'wireframe' ? (
+        // 3D wireframe 모드: 원통 형태 유지
+        <>
+          <lineSegments position={[0, -plateHeight / 2, 0]}>
+            <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(plateWidth, plateHeight, plateWidth)]} />
+            <lineBasicMaterial attach="material" color={edgeColor} />
+          </lineSegments>
           <lineSegments position={[0, -plateHeight - cylinderHeight / 2, 0]}>
-            <edgesGeometry attach="geometry" args={[new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 8)]} />
+            <edgesGeometry attach="geometry" args={[new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32)]} />
             <lineBasicMaterial attach="material" color={edgeColor} />
           </lineSegments>
         </>
-      )}
+      ) : null}
     </group>
   );
 };
