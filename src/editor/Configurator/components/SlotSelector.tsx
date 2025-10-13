@@ -17,8 +17,8 @@ const SlotSelector: React.FC = () => {
     return null;
   }
 
-  // 슬롯 개수 (columnCount + 1)
-  const slotCount = columnCount + 1;
+  // 슬롯 개수 (columnCount가 이미 슬롯 개수를 의미)
+  const slotCount = columnCount;
 
   return (
     <div className={styles.slotSelector}>
