@@ -70,7 +70,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
 
             {/* 옷걸이 봉 렌더링 - hanging 섹션에만 */}
             {(() => {
-              const sections = baseFurniture.modelConfig?.structure?.sections || [];
+              const sections = baseFurniture.modelConfig?.sections || [];
               const { height, innerWidth, basicThickness, mmToThreeUnits, adjustedDepthForShelves, depth } = baseFurniture;
 
               return sections.map((section: any, sectionIndex: number) => {
