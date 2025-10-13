@@ -102,8 +102,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       // 측면뷰: Z축 오른쪽으로 324mm (3.24) 이동
       return depth/2 + 1.0 + 3.24;
     }
-    // 3D 또는 정면뷰: depth에 따라 다른 Z 위치
-    return depth/2 + 0.1;
+    // 3D 또는 정면뷰: 도어 안쪽으로 배치
+    return depth/2 - 0.5;
   };
   
   if (shelfCount <= 0) {
@@ -753,8 +753,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 {/* 위쪽 가이드 보조선 */}
                 <NativeLine
                   points={[
-                    [-innerWidth/2 * 0.8, compartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                    [innerWidth/2 * 0.8, compartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+                    [-innerWidth/2 * 0.8, compartmentTopY, viewMode === '3D' ? depth/2 - 0.5 : depth/2 + 1.0],
+                    [innerWidth/2 * 0.8, compartmentTopY, viewMode === '3D' ? depth/2 - 0.5 : depth/2 + 1.0]
                   ]}
                   color={isHighlighted ? "#FFD700" : dimensionColor}
                   lineWidth={isHighlighted ? 2 : 1}
@@ -766,8 +766,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 {/* 아래쪽 가이드 보조선 */}
                 <NativeLine
                   points={[
-                    [-innerWidth/2 * 0.8, compartmentBottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                    [innerWidth/2 * 0.8, compartmentBottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+                    [-innerWidth/2 * 0.8, compartmentBottomY, viewMode === '3D' ? depth/2 - 0.5 : depth/2 + 1.0],
+                    [innerWidth/2 * 0.8, compartmentBottomY, viewMode === '3D' ? depth/2 - 0.5 : depth/2 + 1.0]
                   ]}
                   color={isHighlighted ? "#FFD700" : dimensionColor}
                   lineWidth={isHighlighted ? 2 : 1}
@@ -779,8 +779,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 {/* 수직 연결선 (치수선) */}
                 <NativeLine
                   points={[
-                    [getDimensionXPosition(false), compartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                    [getDimensionXPosition(false), compartmentBottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+                    [getDimensionXPosition(false), compartmentTopY, viewMode === '3D' ? depth/2 - 0.5 : depth/2 + 1.0],
+                    [getDimensionXPosition(false), compartmentBottomY, viewMode === '3D' ? depth/2 - 0.5 : depth/2 + 1.0]
                   ]}
                   color={isHighlighted ? "#FFD700" : dimensionColor}
                   lineWidth={isHighlighted ? 2 : 1}
