@@ -647,8 +647,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           <group key={`right-section-${index}`}>
             {sectionContent}
             
-            {/* 우측 섹션 치수 표시 - 2D 탑뷰에서는 표시하지 않음 */}
-            {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') && (
+            {/* 우측 섹션 치수 표시 - 2D 탑뷰와 우측뷰에서는 표시하지 않음 */}
+            {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'top' || view2DDirection === 'right')) && (
               <group>
                 {/* 첫 번째 섹션일 때만 하부 프레임 두께 표시 */}
                 {index === 0 && (
