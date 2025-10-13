@@ -195,13 +195,13 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           // 섹션 하단 기준 위치를 Three.js 좌표로 변환
           const relativeYPosition = (-innerHeight / 2) + mmToThreeUnits(positionMm);
 
-          // 스타일러장 우측 섹션의 안전선반: 앞에서 8mm 줄이고 뒤로 1mm 이동
+          // 스타일러장 우측 섹션의 안전선반: 앞에서 8mm 줄이고 뒤로 4mm 이동
           const isStylerRightSection = furnitureId && furnitureId.includes('-right-section');
           const shelfDepth = isStylerRightSection
             ? depth - basicThickness - mmToThreeUnits(8) // 앞에서 8mm 줄임
             : depth - basicThickness;
           const shelfZPosition = isStylerRightSection
-            ? basicThickness/2 + zOffset - mmToThreeUnits(1) // 뒤로 1mm 이동
+            ? basicThickness/2 + zOffset - mmToThreeUnits(4) // 뒤로 4mm 이동 (백패널에 붙임)
             : basicThickness/2 + zOffset;
 
           return (
