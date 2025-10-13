@@ -61,6 +61,22 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
   const textColor = dimensionColor;
   const mmToThreeUnits = (mm: number) => mm / 100;
+
+  // 측면뷰에서 치수 X 위치 계산: 좌측뷰는 왼쪽에, 우측뷰는 오른쪽에 표시
+  const getDimensionXPosition = (forText: boolean = false) => {
+    if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
+      const baseOffset = forText ? 0.5 : 0;
+      if (view2DDirection === 'left') {
+        // 좌측뷰: 왼쪽에 치수 표시
+        return -innerWidth/2 * 0.3 - baseOffset;
+      } else {
+        // 우측뷰: 오른쪽에 치수 표시
+        return innerWidth/2 * 0.3 + baseOffset;
+      }
+    }
+    // 3D 또는 정면뷰: 기본 왼쪽 위치
+    return forText ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3;
+  };
   
   if (shelfCount <= 0) {
     return null;
@@ -95,7 +111,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             {/* 상판 두께 텍스트 */}
             <Text
               position={[
-                -innerWidth/2 * 0.3 - 0.5,
+                getDimensionXPosition(true),
                 topPosition,
                 viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
               ]}
@@ -109,12 +125,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             >
               {Math.round(basicThickness * 100)}
             </Text>
-            
+
             {/* 상판 두께 수직선 */}
             <Line
               points={[
-                [-innerWidth/2 * 0.3, topPosition - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                [-innerWidth/2 * 0.3, topPosition + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+                [getDimensionXPosition(false), topPosition - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
+                [getDimensionXPosition(false), topPosition + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
               ]}
               color={dimensionColor}
               lineWidth={1}
@@ -122,11 +138,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
             {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
               <>
-                <mesh position={[-innerWidth/2 * 0.3, topPosition - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                <mesh position={[getDimensionXPosition(false), topPosition - basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                   <sphereGeometry args={[0.05, 8, 8]} />
                   <meshBasicMaterial color={dimensionColor} />
                 </mesh>
-                <mesh position={[-innerWidth/2 * 0.3, topPosition + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                <mesh position={[getDimensionXPosition(false), topPosition + basicThickness/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                   <sphereGeometry args={[0.05, 8, 8]} />
                   <meshBasicMaterial color={dimensionColor} />
                 </mesh>
@@ -290,8 +306,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     )}
                     <Text
                       position={[
-                        viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
-                        shelfY, 
+                        getDimensionXPosition(true),
+                        shelfY,
                         viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0
                       ]}
                       fontSize={baseFontSize}
@@ -304,12 +320,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     >
                       {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
                     </Text>
-                    
-                    {/* 선반 두께 수직선 - 왼쪽으로 이동 */}
+
+                    {/* 선반 두께 수직선 */}
                     <NativeLine
                       points={[
-                        [-innerWidth/2 * 0.3, shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0],
-                        [-innerWidth/2 * 0.3, shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]
+                        [getDimensionXPosition(false), shelfTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0],
+                        [getDimensionXPosition(false), shelfBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
@@ -381,8 +397,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   )}
                   <Text
                     position={[
-                      viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
-                      topFrameY, 
+                      getDimensionXPosition(true),
+                      topFrameY,
                       viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0
                     ]}
                     fontSize={baseFontSize}
@@ -395,12 +411,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   >
                     {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
                   </Text>
-                  
-                  {/* 상단 프레임 두께 수직선 - 왼쪽으로 이동 */}
+
+                  {/* 상단 프레임 두께 수직선 */}
                   <NativeLine
                     points={[
-                      [-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0],
-                      [-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]
+                      [getDimensionXPosition(false), topFrameTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0],
+                      [getDimensionXPosition(false), topFrameBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]
                     ]}
                     color={dimensionColor}
                     lineWidth={1}
@@ -409,11 +425,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   {/* 상단 프레임 두께 수직선 양끝 점 - 측면뷰에서 숨김 */}
                   {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                     <>
-                      <mesh position={[-innerWidth/2 * 0.3, topFrameTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
+                      <mesh position={[getDimensionXPosition(false), topFrameTopY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
                         <sphereGeometry args={[0.05, 8, 8]} />
                         <meshBasicMaterial color={dimensionColor} />
                       </mesh>
-                      <mesh position={[-innerWidth/2 * 0.3, topFrameBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
+                      <mesh position={[getDimensionXPosition(false), topFrameBottomY, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
                         <sphereGeometry args={[0.05, 8, 8]} />
                         <meshBasicMaterial color={dimensionColor} />
                       </mesh>
@@ -504,7 +520,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         renderOrder={1000}
                         depthTest={false}
                       position={[
-                        viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
+                        getDimensionXPosition(true),
                         compartment.centerY,
                         viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0
                       ]}
@@ -532,11 +548,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       {Math.round(compartment.height * 100)}
                     </Text>
                     
-                    {/* 수직 연결선 (치수선) - 왼쪽으로 이동 */}
+                    {/* 수직 연결선 (치수선) */}
                     <NativeLine
                       points={[
-                        [-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0],
-                        [-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]
+                        [getDimensionXPosition(false), compartmentTop, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0],
+                        [getDimensionXPosition(false), compartmentBottom, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]
                       ]}
                       color={isHighlighted ? "#FFD700" : dimensionColor}
                       lineWidth={isHighlighted ? 2 : 1}
@@ -545,11 +561,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     {/* 수직 연결선 양끝 점 - 측면뷰에서 숨김 */}
                     {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                       <>
-                        <mesh position={[-innerWidth/2 * 0.3, compartmentTop, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
+                        <mesh position={[getDimensionXPosition(false), compartmentTop, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
                         </mesh>
-                        <mesh position={[-innerWidth/2 * 0.3, compartmentBottom, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
+                        <mesh position={[getDimensionXPosition(false), compartmentBottom, viewMode === '3D' ? (furnitureId && furnitureId.includes('-right-section') ? 3.01 : depth/2 + 0.1) : depth/2 + 1.0]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
                         </mesh>
@@ -671,7 +687,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         renderOrder={1000}
                         depthTest={false}
                   position={[
-                    viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
+                    getDimensionXPosition(true),
                     compartmentCenterY,
                     viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                   ]}
@@ -727,8 +743,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 {/* 수직 연결선 (치수선) */}
                 <NativeLine
                   points={[
-                    [-innerWidth/2 * 0.3, compartmentTopY, viewMode === '3D' ? basicThickness + zOffset + 0.15 : depth/2 + 1.0],
-                    [-innerWidth/2 * 0.3, compartmentBottomY, viewMode === '3D' ? basicThickness + zOffset + 0.15 : depth/2 + 1.0]
+                    [getDimensionXPosition(false), compartmentTopY, viewMode === '3D' ? basicThickness + zOffset + 0.15 : depth/2 + 1.0],
+                    [getDimensionXPosition(false), compartmentBottomY, viewMode === '3D' ? basicThickness + zOffset + 0.15 : depth/2 + 1.0]
                   ]}
                   color={isHighlighted ? "#FFD700" : dimensionColor}
                   lineWidth={isHighlighted ? 2 : 1}
