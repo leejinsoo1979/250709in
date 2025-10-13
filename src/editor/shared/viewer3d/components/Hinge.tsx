@@ -105,36 +105,60 @@ export const Hinge: React.FC<HingeProps> = ({
     const bodyX = plateW;
     const padX = bodyX + bodyW * 0.7;
 
+    // 이미지 기준 정확한 좌표 계산
+    const unit = mmToThreeUnits(1);
+    const baseX = 0;
+    const baseY = 0;
+
     return (
       <group position={sidePosition}>
-        {/* 왼쪽 측판 */}
-        <Line points={[[0, plateH/2, 0], [plateW, plateH/2, 0], [plateW, -plateH/2, 0], [0, -plateH/2, 0], [0, plateH/2, 0]]} color={lineColor} lineWidth={1} />
+        {/* 1. 왼쪽 세로 측판 직사각형 */}
+        <Line points={[[baseX + 10*unit, baseY + 17.5*unit, 0], [baseX + 15*unit, baseY + 17.5*unit, 0], [baseX + 15*unit, baseY - 17.5*unit, 0], [baseX + 10*unit, baseY - 17.5*unit, 0], [baseX + 10*unit, baseY + 17.5*unit, 0]]} color={lineColor} lineWidth={1} />
 
-        {/* 중앙 본체 (큰 직사각형) */}
-        <Line points={[[bodyX, bodyH/2, 0], [bodyX + bodyW, bodyH/2, 0], [bodyX + bodyW, -bodyH/2, 0], [bodyX, -bodyH/2, 0], [bodyX, bodyH/2, 0]]} color={lineColor} lineWidth={1} />
+        {/* 2. 중앙 본체 직사각형 */}
+        <Line points={[[baseX + 15*unit, baseY + 6.5*unit, 0], [baseX + 65*unit, baseY + 6.5*unit, 0], [baseX + 65*unit, baseY - 6.5*unit, 0], [baseX + 15*unit, baseY - 6.5*unit, 0], [baseX + 15*unit, baseY + 6.5*unit, 0]]} color={lineColor} lineWidth={1} />
 
-        {/* 본체 내부 작은 직사각형 (나사구멍 - 왼쪽) */}
-        <Line points={[[bodyX + bodyW*0.15, bodyH*0.25, 0], [bodyX + bodyW*0.25, bodyH*0.25, 0], [bodyX + bodyW*0.25, -bodyH*0.25, 0], [bodyX + bodyW*0.15, -bodyH*0.25, 0], [bodyX + bodyW*0.15, bodyH*0.25, 0]]} color={lineColor} lineWidth={0.5} />
+        {/* 3. 본체 왼쪽 십자 나사 */}
+        <Line points={generateCircle(baseX + 24*unit, baseY, 4*unit)} color={lineColor} lineWidth={1} />
+        {createCrossLines(baseX + 24*unit, baseY, 4*unit).map((line, i) => <Line key={`screw-left-${i}`} points={line} color={lineColor} lineWidth={1} />)}
 
-        {/* 본체 내부 타원형 구멍 (중앙) */}
-        <Line points={generateOval(bodyX + bodyW*0.45, 0, bodyW*0.08, bodyH*0.25)} color={lineColor} lineWidth={0.5} />
+        {/* 4. 본체 중앙 긴 타원형 슬롯 */}
+        <Line points={generateOval(baseX + 35*unit, baseY, 8*unit, 3*unit)} color={lineColor} lineWidth={1} />
 
-        {/* 상단 패드 (둥근 사각형) */}
-        <Line points={[[padX - padW/2, padY + padH/2, 0], [padX + padW/2, padY + padH/2, 0], [padX + padW/2, padY - padH/2, 0], [padX - padW/2, padY - padH/2, 0], [padX - padW/2, padY + padH/2, 0]]} color={lineColor} lineWidth={1} />
-        <Line points={generateOval(padX, padY, ovalW/2, ovalH/2)} color={lineColor} lineWidth={1} />
-        <Line points={generateCircle(padX, padY, smallCircleR)} color={lineColor} lineWidth={0.5} />
+        {/* 5. 본체 중앙 오른쪽 십자 나사 */}
+        <Line points={generateCircle(baseX + 48*unit, baseY, 4*unit)} color={lineColor} lineWidth={1} />
+        {createCrossLines(baseX + 48*unit, baseY, 4*unit).map((line, i) => <Line key={`screw-center-${i}`} points={line} color={lineColor} lineWidth={1} />)}
 
-        {/* 하단 패드 (둥근 사각형) */}
-        <Line points={[[padX - padW/2, -padY + padH/2, 0], [padX + padW/2, -padY + padH/2, 0], [padX + padW/2, -padY - padH/2, 0], [padX - padW/2, -padY - padH/2, 0], [padX - padW/2, -padY + padH/2, 0]]} color={lineColor} lineWidth={1} />
-        <Line points={generateOval(padX, -padY, ovalW/2, ovalH/2)} color={lineColor} lineWidth={1} />
-        <Line points={generateCircle(padX, -padY, smallCircleR)} color={lineColor} lineWidth={0.5} />
+        {/* 6. 본체 오른쪽 작은 돌출부 */}
+        <Line points={[[baseX + 65*unit, baseY + 2*unit, 0], [baseX + 68*unit, baseY + 2*unit, 0], [baseX + 68*unit, baseY - 2*unit, 0], [baseX + 65*unit, baseY - 2*unit, 0]]} color={lineColor} lineWidth={1} />
 
-        {/* 오른쪽 십자 나사들 */}
-        <Line points={generateCircle(bodyX + bodyW*0.15, 0, screwR)} color={lineColor} lineWidth={0.5} />
-        {createCrossLines(bodyX + bodyW*0.15, 0, screwR).map((line, i) => <Line key={`cross1-${i}`} points={line} color={lineColor} lineWidth={0.5} />)}
+        {/* 7. 상단 패드 외곽 (둥근 직사각형) */}
+        <Line points={[[baseX + 35*unit, baseY + 17.5*unit, 0], [baseX + 50*unit, baseY + 17.5*unit, 0], [baseX + 50*unit, baseY + 11*unit, 0], [baseX + 35*unit, baseY + 11*unit, 0], [baseX + 35*unit, baseY + 17.5*unit, 0]]} color={lineColor} lineWidth={1} />
 
-        <Line points={generateCircle(bodyX + bodyW*0.9, 0, screwR)} color={lineColor} lineWidth={0.5} />
-        {createCrossLines(bodyX + bodyW*0.9, 0, screwR).map((line, i) => <Line key={`cross2-${i}`} points={line} color={lineColor} lineWidth={0.5} />)}
+        {/* 8. 상단 패드 큰 타원 */}
+        <Line points={generateOval(baseX + 42.5*unit, baseY + 14.5*unit, 6*unit, 5*unit)} color={lineColor} lineWidth={1} />
+
+        {/* 9. 상단 패드 작은 타원 (안쪽) */}
+        <Line points={generateOval(baseX + 42.5*unit, baseY + 14.5*unit, 3.5*unit, 3*unit)} color={lineColor} lineWidth={1} />
+
+        {/* 10. 상단 패드 중심 작은 원 */}
+        <Line points={generateCircle(baseX + 42.5*unit, baseY + 14.5*unit, 1.5*unit)} color={lineColor} lineWidth={1} />
+
+        {/* 11. 하단 패드 외곽 (둥근 직사각형) */}
+        <Line points={[[baseX + 35*unit, baseY - 11*unit, 0], [baseX + 50*unit, baseY - 11*unit, 0], [baseX + 50*unit, baseY - 17.5*unit, 0], [baseX + 35*unit, baseY - 17.5*unit, 0], [baseX + 35*unit, baseY - 11*unit, 0]]} color={lineColor} lineWidth={1} />
+
+        {/* 12. 하단 패드 큰 타원 */}
+        <Line points={generateOval(baseX + 42.5*unit, baseY - 14.5*unit, 6*unit, 5*unit)} color={lineColor} lineWidth={1} />
+
+        {/* 13. 하단 패드 작은 타원 (안쪽) */}
+        <Line points={generateOval(baseX + 42.5*unit, baseY - 14.5*unit, 3.5*unit, 3*unit)} color={lineColor} lineWidth={1} />
+
+        {/* 14. 하단 패드 중심 작은 원 */}
+        <Line points={generateCircle(baseX + 42.5*unit, baseY - 14.5*unit, 1.5*unit)} color={lineColor} lineWidth={1} />
+
+        {/* 15. 본체 오른쪽 끝 십자 나사 */}
+        <Line points={generateCircle(baseX + 60*unit, baseY, 4*unit)} color={lineColor} lineWidth={1} />
+        {createCrossLines(baseX + 60*unit, baseY, 4*unit).map((line, i) => <Line key={`screw-right-${i}`} points={line} color={lineColor} lineWidth={1} />)}
       </group>
     );
   }
