@@ -955,7 +955,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
               />
               
-              {/* Hinges for left door - 상부장 2개, 하부장 2개 */}
+              {/* Hinges for left door - 상부장 2개, 하부장 2개, 키큰장 4개 */}
               {viewMode === '2D' && view2DDirection === 'front' && (
                 <>
                   {isUpperCabinet ? (
@@ -990,7 +990,35 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         smallCircleXOffset={9.5}
                       />
                     </>
-                  ) : null}
+                  ) : (
+                    // 키큰장: 기존 4개 경첩
+                    <>
+                      <Hinge
+                        position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={9.5}
+                      />
+                      <Hinge
+                        position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(700), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={9.5}
+                      />
+                      <Hinge
+                        position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={9.5}
+                      />
+                      <Hinge
+                        position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(749), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={9.5}
+                      />
+                    </>
+                  )}
                 </>
               )}
 
@@ -1029,7 +1057,27 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         viewDirection="side"
                       />
                     </>
-                  ) : null}
+                  ) : (
+                    // 키큰장: 기존 4개 경첩
+                    <>
+                      <Hinge
+                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
+                        viewDirection="side"
+                      />
+                      <Hinge
+                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(700), 0]}
+                        viewDirection="side"
+                      />
+                      <Hinge
+                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(149), 0]}
+                        viewDirection="side"
+                      />
+                      <Hinge
+                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(749), 0]}
+                        viewDirection="side"
+                      />
+                    </>
+                  )}
                 </>
               )}
 
@@ -1202,7 +1250,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
               />
               
-              {/* Hinges for right door - 상부장 2개, 하부장 2개 */}
+              {/* Hinges for right door - 상부장 2개, 하부장 2개, 키큰장 4개 */}
               {viewMode === '2D' && view2DDirection === 'front' && (
                 <>
                   {isUpperCabinet ? (
@@ -1237,7 +1285,35 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         smallCircleXOffset={-9.5}
                       />
                     </>
-                  ) : null}
+                  ) : (
+                    // 키큰장: 기존 4개 경첩
+                    <>
+                      <Hinge
+                        position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={-9.5}
+                      />
+                      <Hinge
+                        position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(700), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={-9.5}
+                      />
+                      <Hinge
+                        position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={-9.5}
+                      />
+                      <Hinge
+                        position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(749), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={-9.5}
+                      />
+                    </>
+                  )}
                 </>
               )}
 
@@ -1276,7 +1352,27 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         viewDirection="side"
                       />
                     </>
-                  ) : null}
+                  ) : (
+                    // 키큰장: 기존 4개 경첩
+                    <>
+                      <Hinge
+                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
+                        viewDirection="side"
+                      />
+                      <Hinge
+                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(700), 0]}
+                        viewDirection="side"
+                      />
+                      <Hinge
+                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(149), 0]}
+                        viewDirection="side"
+                      />
+                      <Hinge
+                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(749), 0]}
+                        viewDirection="side"
+                      />
+                    </>
+                  )}
                 </>
               )}
 
@@ -1486,7 +1582,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               />
             </lineSegments>
 
-            {/* Hinges for single door - 상부장 2개, 하부장 2개 */}
+            {/* Hinges for single door - 상부장 2개, 하부장 2개, 키큰장 4개 */}
             {viewMode === '2D' && view2DDirection === 'front' && (
               <>
                 {isUpperCabinet ? (
@@ -1537,7 +1633,51 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
                     />
                   </>
-                ) : null}
+                ) : (
+                  // 키큰장: 기존 4개 경첩
+                  <>
+                    <Hinge
+                      position={[
+                        adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                        doorHeight / 2 - mmToThreeUnits(100),
+                        doorThicknessUnits / 2 + 0.001
+                      ]}
+                      mainDiameter={17.5}
+                      smallCircleDiameter={4}
+                      smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
+                    />
+                    <Hinge
+                      position={[
+                        adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                        doorHeight / 2 - mmToThreeUnits(700),
+                        doorThicknessUnits / 2 + 0.001
+                      ]}
+                      mainDiameter={17.5}
+                      smallCircleDiameter={4}
+                      smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
+                    />
+                    <Hinge
+                      position={[
+                        adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                        -doorHeight / 2 + mmToThreeUnits(149),
+                        doorThicknessUnits / 2 + 0.001
+                      ]}
+                      mainDiameter={17.5}
+                      smallCircleDiameter={4}
+                      smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
+                    />
+                    <Hinge
+                      position={[
+                        adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                        -doorHeight / 2 + mmToThreeUnits(749),
+                        doorThicknessUnits / 2 + 0.001
+                      ]}
+                      mainDiameter={17.5}
+                      smallCircleDiameter={4}
+                      smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
+                    />
+                  </>
+                )}
               </>
             )}
 
@@ -1592,7 +1732,47 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       view2DDirection={view2DDirection}
                     />
                   </>
-                ) : null}
+                ) : (
+                  // 키큰장: 기존 4개 경첩
+                  <>
+                    <Hinge
+                      position={[
+                        doorThicknessUnits / 2,
+                        doorHeight / 2 - mmToThreeUnits(100),
+                        0
+                      ]}
+                      viewDirection="side"
+                      view2DDirection={view2DDirection}
+                    />
+                    <Hinge
+                      position={[
+                        doorThicknessUnits / 2,
+                        doorHeight / 2 - mmToThreeUnits(700),
+                        0
+                      ]}
+                      viewDirection="side"
+                      view2DDirection={view2DDirection}
+                    />
+                    <Hinge
+                      position={[
+                        doorThicknessUnits / 2,
+                        -doorHeight / 2 + mmToThreeUnits(149),
+                        0
+                      ]}
+                      viewDirection="side"
+                      view2DDirection={view2DDirection}
+                    />
+                    <Hinge
+                      position={[
+                        doorThicknessUnits / 2,
+                        -doorHeight / 2 + mmToThreeUnits(749),
+                        0
+                      ]}
+                      viewDirection="side"
+                      view2DDirection={view2DDirection}
+                    />
+                  </>
+                )}
               </>
             )}
 
