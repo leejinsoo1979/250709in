@@ -107,7 +107,10 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     }
     // 3D 모드: 우측 섹션(스타일러장)은 rightShelfZOffset + rightAdjustedDepthForShelves/2
     if (viewMode === '3D' && sectionDepth === rightDepth) {
-      return rightShelfZOffset + rightAdjustedDepthForShelves/2;
+      // 우측 섹션용 깊이 계산 (660mm 기준 절대 위치 고정)
+      const adjustedDepth = mmToThreeUnits(660 - 18); // 660mm - 18mm (패널 두께)
+      const shelfZOffset = mmToThreeUnits(18) / 2 + (leftDepth - rightDepth) / 2; // 전체 가구 깊이 변화 보정
+      return shelfZOffset + adjustedDepth/2;
     }
     // 3D 또는 정면뷰: 표준 위치 (다른 모듈과 동일)
     return sectionDepth/2 + 0.1;
