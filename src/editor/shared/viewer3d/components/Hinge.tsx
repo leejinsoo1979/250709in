@@ -57,75 +57,84 @@ export const Hinge: React.FC<HingeProps> = ({
     return null;
   }
 
-  // 측면뷰 렌더링 - 힌지 측면 형상
+  // 측면뷰 렌더링 - 힌지 측면 도면 (정확한 형상)
   if ((view2DDirection === 'left' || view2DDirection === 'right') && viewDirection === 'side') {
     // 측면뷰 좌표 변환: 정면뷰의 Z를 측면뷰의 X로
     const [x, y, z] = position;
     const sidePosition: [number, number, number] = [z, y, 0];
 
-    // 힌지 측면 치수
-    const plateWidth = mmToThreeUnits(10);   // 측판 너비
-    const plateHeight = mmToThreeUnits(35);  // 측판 높이
-    const bodyWidth = mmToThreeUnits(50);    // 본체 길이
-    const bodyHeight = mmToThreeUnits(12);   // 본체 높이
-    const jointRadius = mmToThreeUnits(6);   // 조인트 반지름
+    // 힌지 도면 치수 (비율 기준)
+    const plateW = mmToThreeUnits(8);
+    const plateH = mmToThreeUnits(35);
+    const bodyW = mmToThreeUnits(50);
+    const bodyH = mmToThreeUnits(13);
+    const padW = mmToThreeUnits(15);
+    const padH = mmToThreeUnits(12);
+    const ovalW = mmToThreeUnits(8);
+    const ovalH = mmToThreeUnits(10);
+    const smallCircleR = mmToThreeUnits(3);
+    const screwR = mmToThreeUnits(4);
 
-    const halfPlateH = plateHeight / 2;
-    const halfBodyH = bodyHeight / 2;
-
-    // 타원형 조인트를 원으로 근사
-    const generateCircle = (centerX: number, centerY: number, radius: number, segments: number = 16): [number, number, number][] => {
+    // 타원 생성 함수
+    const generateOval = (cx: number, cy: number, rx: number, ry: number, segments: number = 24): [number, number, number][] => {
       const points: [number, number, number][] = [];
       for (let i = 0; i <= segments; i++) {
         const angle = (i / segments) * Math.PI * 2;
-        const px = centerX + Math.cos(angle) * radius;
-        const py = centerY + Math.sin(angle) * radius;
+        const px = cx + Math.cos(angle) * rx;
+        const py = cy + Math.sin(angle) * ry;
         points.push([px, py, 0]);
       }
       return points;
     };
 
+    // 원 생성 함수
+    const generateCircle = (cx: number, cy: number, r: number, segments: number = 16): [number, number, number][] => {
+      return generateOval(cx, cy, r, r, segments);
+    };
+
+    // 십자 나사 생성
+    const createCrossLines = (cx: number, cy: number, size: number): [number, number, number][][] => {
+      const half = size / 2;
+      return [
+        [[cx, cy - half, 0], [cx, cy + half, 0]],
+        [[cx - half, cy, 0], [cx + half, cy, 0]]
+      ];
+    };
+
+    const padY = plateH * 0.3;
+    const bodyX = plateW;
+    const padX = bodyX + bodyW * 0.7;
+
     return (
       <group position={sidePosition}>
         {/* 왼쪽 측판 */}
-        <Line
-          points={[
-            [-plateWidth, halfPlateH, 0],
-            [0, halfPlateH, 0],
-            [0, -halfPlateH, 0],
-            [-plateWidth, -halfPlateH, 0],
-            [-plateWidth, halfPlateH, 0]
-          ]}
-          color={lineColor}
-          lineWidth={1}
-        />
+        <Line points={[[0, plateH/2, 0], [plateW, plateH/2, 0], [plateW, -plateH/2, 0], [0, -plateH/2, 0], [0, plateH/2, 0]]} color={lineColor} lineWidth={1} />
 
-        {/* 중앙 본체 */}
-        <Line
-          points={[
-            [0, halfBodyH, 0],
-            [bodyWidth, halfBodyH, 0],
-            [bodyWidth, -halfBodyH, 0],
-            [0, -halfBodyH, 0],
-            [0, halfBodyH, 0]
-          ]}
-          color={lineColor}
-          lineWidth={1}
-        />
+        {/* 중앙 본체 (큰 직사각형) */}
+        <Line points={[[bodyX, bodyH/2, 0], [bodyX + bodyW, bodyH/2, 0], [bodyX + bodyW, -bodyH/2, 0], [bodyX, -bodyH/2, 0], [bodyX, bodyH/2, 0]]} color={lineColor} lineWidth={1} />
 
-        {/* 상단 조인트 원 */}
-        <Line
-          points={generateCircle(bodyWidth * 0.75, halfPlateH * 0.6, jointRadius)}
-          color={lineColor}
-          lineWidth={1}
-        />
+        {/* 본체 내부 작은 직사각형 (나사구멍 - 왼쪽) */}
+        <Line points={[[bodyX + bodyW*0.15, bodyH*0.25, 0], [bodyX + bodyW*0.25, bodyH*0.25, 0], [bodyX + bodyW*0.25, -bodyH*0.25, 0], [bodyX + bodyW*0.15, -bodyH*0.25, 0], [bodyX + bodyW*0.15, bodyH*0.25, 0]]} color={lineColor} lineWidth={0.5} />
 
-        {/* 하단 조인트 원 */}
-        <Line
-          points={generateCircle(bodyWidth * 0.75, -halfPlateH * 0.6, jointRadius)}
-          color={lineColor}
-          lineWidth={1}
-        />
+        {/* 본체 내부 타원형 구멍 (중앙) */}
+        <Line points={generateOval(bodyX + bodyW*0.45, 0, bodyW*0.08, bodyH*0.25)} color={lineColor} lineWidth={0.5} />
+
+        {/* 상단 패드 (둥근 사각형) */}
+        <Line points={[[padX - padW/2, padY + padH/2, 0], [padX + padW/2, padY + padH/2, 0], [padX + padW/2, padY - padH/2, 0], [padX - padW/2, padY - padH/2, 0], [padX - padW/2, padY + padH/2, 0]]} color={lineColor} lineWidth={1} />
+        <Line points={generateOval(padX, padY, ovalW/2, ovalH/2)} color={lineColor} lineWidth={1} />
+        <Line points={generateCircle(padX, padY, smallCircleR)} color={lineColor} lineWidth={0.5} />
+
+        {/* 하단 패드 (둥근 사각형) */}
+        <Line points={[[padX - padW/2, -padY + padH/2, 0], [padX + padW/2, -padY + padH/2, 0], [padX + padW/2, -padY - padH/2, 0], [padX - padW/2, -padY - padH/2, 0], [padX - padW/2, -padY + padH/2, 0]]} color={lineColor} lineWidth={1} />
+        <Line points={generateOval(padX, -padY, ovalW/2, ovalH/2)} color={lineColor} lineWidth={1} />
+        <Line points={generateCircle(padX, -padY, smallCircleR)} color={lineColor} lineWidth={0.5} />
+
+        {/* 오른쪽 십자 나사들 */}
+        <Line points={generateCircle(bodyX + bodyW*0.15, 0, screwR)} color={lineColor} lineWidth={0.5} />
+        {createCrossLines(bodyX + bodyW*0.15, 0, screwR).map((line, i) => <Line key={`cross1-${i}`} points={line} color={lineColor} lineWidth={0.5} />)}
+
+        <Line points={generateCircle(bodyX + bodyW*0.9, 0, screwR)} color={lineColor} lineWidth={0.5} />
+        {createCrossLines(bodyX + bodyW*0.9, 0, screwR).map((line, i) => <Line key={`cross2-${i}`} points={line} color={lineColor} lineWidth={0.5} />)}
       </group>
     );
   }
