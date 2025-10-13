@@ -88,6 +88,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   adjacentCabinets, // 인접 상하부장 정보
   placedFurnitureId, // 배치된 가구 ID
   customSections, // 사용자 정의 섹션 설정
+  visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
