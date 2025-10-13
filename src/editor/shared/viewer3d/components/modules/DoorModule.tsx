@@ -1234,7 +1234,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰에서만) */}
               {viewMode === '2D' && view2DDirection === 'front' && (() => {
                 const extensionLineStart = mmToThreeUnits(20); // 도어 하단에서 20mm 떨어진 곳에서 시작
-                const extensionLineLength = mmToThreeUnits(60); // 연장선 길이 60mm
+                const extensionLineLength = mmToThreeUnits(160); // 연장선 길이 160mm
                 const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
                 const tickSize = mmToThreeUnits(8); // 틱 마크 크기
                 const lineColor = '#808080'; // 치수선 색상
@@ -1600,7 +1600,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰에서만) */}
               {viewMode === '2D' && view2DDirection === 'front' && (() => {
                 const extensionLineStart = mmToThreeUnits(20); // 도어 하단에서 20mm 떨어진 곳에서 시작
-                const extensionLineLength = mmToThreeUnits(60); // 연장선 길이 60mm
+                const extensionLineLength = mmToThreeUnits(160); // 연장선 길이 160mm
                 const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
                 const tickSize = mmToThreeUnits(8); // 틱 마크 크기
                 const lineColor = '#808080'; // 치수선 색상
@@ -2071,7 +2071,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             {/* 도어 가로 폭 치수 (2D 정면뷰에서만) */}
             {viewMode === '2D' && view2DDirection === 'front' && (() => {
               const extensionLineStart = mmToThreeUnits(20); // 도어 하단에서 20mm 떨어진 곳에서 시작
-              const extensionLineLength = mmToThreeUnits(60); // 연장선 길이 60mm
+              const extensionLineLength = mmToThreeUnits(160); // 연장선 길이 160mm
               const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
               const tickSize = mmToThreeUnits(8); // 틱 마크 크기
               const lineColor = '#808080'; // 치수선 색상
