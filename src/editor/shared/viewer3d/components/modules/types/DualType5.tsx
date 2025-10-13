@@ -869,7 +869,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         position={[
                           0 + 0.01,
                           sectionCenterY + sectionHeight/2 - basicThickness - 1.2 - 0.01,
-                          rightAdjustedDepthForShelves/2 - 0.5 - 1.0
+                          rightAdjustedDepthForShelves/2 - 0.5 - 0.01
                         ]}
                         fontSize={baseFontSize}
                         color="rgba(0, 0, 0, 0.3)"
