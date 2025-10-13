@@ -60,89 +60,65 @@ export const Hinge: React.FC<HingeProps> = ({
     return null;
   }
 
-  // 측면뷰 렌더링 - 힌지 측면 도면
+  // 측면뷰 렌더링 - SVG 파일 로드
   if ((view2DDirection === 'left' || view2DDirection === 'right') && viewDirection === 'side') {
     // 측면뷰 좌표 변환: 정면뷰의 Z를 측면뷰의 X로
     const [x, y, z] = position;
     const sidePosition: [number, number, number] = [z, y, 0];
 
-    const mm = mmToThreeUnits;
+    // SVG 데이터 로드
+    const svgData = useLoader(SVGLoader, '/hinge_side_exact.svg');
 
-    // 타원 생성
-    const oval = (cx: number, cy: number, rx: number, ry: number): [number, number, number][] => {
-      const pts: [number, number, number][] = [];
-      for (let i = 0; i <= 32; i++) {
-        const a = (i / 32) * Math.PI * 2;
-        pts.push([cx + Math.cos(a) * rx, cy + Math.sin(a) * ry, 0]);
-      }
-      return pts;
-    };
+    // SVG 경로를 Line 포인트로 변환
+    const lineSegments = useMemo(() => {
+      const segments: [number, number, number][][] = [];
 
-    // 원 생성
-    const circle = (cx: number, cy: number, r: number): [number, number, number][] => oval(cx, cy, r, r);
+      svgData.paths.forEach((path) => {
+        // path의 subPaths를 순회
+        path.subPaths.forEach((subPath: any) => {
+          const points: [number, number, number][] = [];
 
-    // 둥근 사각형 생성
-    const roundRect = (x: number, y: number, w: number, h: number, r: number): [number, number, number][] => {
-      const pts: [number, number, number][] = [];
-      const x1 = x, x2 = x + w, y1 = y, y2 = y + h;
-      // 우상단 코너
-      for (let i = 0; i <= 8; i++) pts.push([x2 - r + Math.cos(i/8 * Math.PI/2) * r, y2 - r + Math.sin(i/8 * Math.PI/2) * r, 0]);
-      // 좌상단 코너
-      for (let i = 0; i <= 8; i++) pts.push([x1 + r - Math.cos(i/8 * Math.PI/2) * r, y2 - r + Math.sin(i/8 * Math.PI/2) * r, 0]);
-      // 좌하단 코너
-      for (let i = 0; i <= 8; i++) pts.push([x1 + r - Math.cos(i/8 * Math.PI/2) * r, y1 + r - Math.sin(i/8 * Math.PI/2) * r, 0]);
-      // 우하단 코너
-      for (let i = 0; i <= 8; i++) pts.push([x2 - r + Math.cos(i/8 * Math.PI/2) * r, y1 + r - Math.sin(i/8 * Math.PI/2) * r, 0]);
-      pts.push(pts[0]);
-      return pts;
-    };
+          // getPoints로 곡선을 점들로 변환
+          const pts = subPath.getPoints();
+          pts.forEach((pt: any) => {
+            points.push([pt.x, pt.y, 0]);
+          });
+
+          if (points.length > 1) {
+            segments.push(points);
+          }
+        });
+      });
+
+      return segments;
+    }, [svgData]);
+
+    // SVG viewBox: 0 0 491 348 (원본 SVG 좌표계)
+    // 목표 크기: 35mm 높이
+    const svgViewBoxWidth = 491;
+    const svgViewBoxHeight = 348;
+    const targetHeightMm = 35;
+    const targetHeight = mmToThreeUnits(targetHeightMm);
+
+    // 스케일 계산
+    const scale = targetHeight / svgViewBoxHeight;
+
+    // SVG 중심을 원점에 맞추기
+    const offsetX = -svgViewBoxWidth / 2;
+    const offsetY = -svgViewBoxHeight / 2;
 
     return (
       <group position={sidePosition}>
-        {/* 왼쪽 측판 세로 직사각형 */}
-        <Line points={[[mm(-2), mm(17.5), 0], [mm(1), mm(17.5), 0], [mm(1), mm(-17.5), 0], [mm(-2), mm(-17.5), 0], [mm(-2), mm(17.5), 0]]} color={lineColor} lineWidth={1} />
-
-        {/* 중앙 본체 가로 직사각형 */}
-        <Line points={[[mm(1), mm(6.5), 0], [mm(55), mm(6.5), 0], [mm(55), mm(-6.5), 0], [mm(1), mm(-6.5), 0], [mm(1), mm(6.5), 0]]} color={lineColor} lineWidth={1} />
-
-        {/* 본체 안 왼쪽 십자나사 (원+십자) */}
-        <Line points={circle(mm(12), 0, mm(3.5))} color={lineColor} lineWidth={1} />
-        <Line points={[[mm(12), mm(-3.5), 0], [mm(12), mm(3.5), 0]]} color={lineColor} lineWidth={1} />
-        <Line points={[[mm(8.5), 0, 0], [mm(15.5), 0, 0]]} color={lineColor} lineWidth={1} />
-
-        {/* 본체 안 중앙 긴 타원 슬롯 */}
-        <Line points={oval(mm(28), 0, mm(10), mm(2.5))} color={lineColor} lineWidth={1} />
-
-        {/* 본체 안 중앙 오른쪽 십자나사 */}
-        <Line points={circle(mm(42), 0, mm(3.5))} color={lineColor} lineWidth={1} />
-        <Line points={[[mm(42), mm(-3.5), 0], [mm(42), mm(3.5), 0]]} color={lineColor} lineWidth={1} />
-        <Line points={[[mm(38.5), 0, 0], [mm(45.5), 0, 0]]} color={lineColor} lineWidth={1} />
-
-        {/* 본체 오른쪽 작은 돌출부 */}
-        <Line points={[[mm(55), mm(2), 0], [mm(58), mm(2), 0], [mm(58), mm(-2), 0], [mm(55), mm(-2), 0]]} color={lineColor} lineWidth={1} />
-
-        {/* 상단 패드 외곽 둥근사각형 */}
-        <Line points={roundRect(mm(30), mm(9), mm(18), mm(8.5), mm(3))} color={lineColor} lineWidth={1} />
-        {/* 상단 패드 큰 타원 */}
-        <Line points={oval(mm(39), mm(13.5), mm(5.5), mm(4))} color={lineColor} lineWidth={1} />
-        {/* 상단 패드 작은 타원 */}
-        <Line points={oval(mm(39), mm(13.5), mm(3), mm(2.5))} color={lineColor} lineWidth={1} />
-        {/* 상단 패드 중심 원 */}
-        <Line points={circle(mm(39), mm(13.5), mm(1.2))} color={lineColor} lineWidth={1} />
-
-        {/* 하단 패드 외곽 둥근사각형 */}
-        <Line points={roundRect(mm(30), mm(-17.5), mm(18), mm(8.5), mm(3))} color={lineColor} lineWidth={1} />
-        {/* 하단 패드 큰 타원 */}
-        <Line points={oval(mm(39), mm(-13.5), mm(5.5), mm(4))} color={lineColor} lineWidth={1} />
-        {/* 하단 패드 작은 타원 */}
-        <Line points={oval(mm(39), mm(-13.5), mm(3), mm(2.5))} color={lineColor} lineWidth={1} />
-        {/* 하단 패드 중심 원 */}
-        <Line points={circle(mm(39), mm(-13.5), mm(1.2))} color={lineColor} lineWidth={1} />
-
-        {/* 오른쪽 끝 십자나사 */}
-        <Line points={circle(mm(52), 0, mm(3.5))} color={lineColor} lineWidth={1} />
-        <Line points={[[mm(52), mm(-3.5), 0], [mm(52), mm(3.5), 0]]} color={lineColor} lineWidth={1} />
-        <Line points={[[mm(48.5), 0, 0], [mm(55.5), 0, 0]]} color={lineColor} lineWidth={1} />
+        <group position={[offsetX * scale, -offsetY * scale, 0]} scale={[scale, -scale, scale]}>
+          {lineSegments.map((points, index) => (
+            <Line
+              key={index}
+              points={points}
+              color={lineColor}
+              lineWidth={1}
+            />
+          ))}
+        </group>
       </group>
     );
   }
