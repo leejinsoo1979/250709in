@@ -65,7 +65,11 @@ interface UIState {
   
   // 선택된 패널B ID (선택 상태만, 팝업과는 별개)
   selectedPanelBId: string | null;
-  
+
+  // 측면뷰용 선택된 슬롯 인덱스 (null이면 전체 표시)
+  selectedSlotIndex: number | null;
+  setSelectedSlotIndex: (index: number | null) => void;
+
   // 2D 뷰 전용 테마 (다크/라이트)
   view2DTheme: 'dark' | 'light';
   
@@ -187,6 +191,7 @@ const initialUIState = {
   selectedWallId: null,  // 기본값: 가벽 선택 없음
   isPanelBCreationMode: false,  // 기본값: 패널B 생성 모드 비활성화
   selectedPanelBId: null,  // 기본값: 패널B 선택 없음
+  selectedSlotIndex: null,  // 기본값: 전체 슬롯 표시
   isFurnitureDragging: false,  // 기본값: 가구 드래그 비활성화
   isDraggingColumn: false,  // 기본값: 기둥 드래그 비활성화
   isSlotDragging: false,  // 기본값: 슬롯 드래그 비활성화
@@ -426,6 +431,9 @@ export const useUIStore = create<UIState>()(
 
       setSelectedFurnitureId: (id) =>
         set({ selectedFurnitureId: id }),
+
+      setSelectedSlotIndex: (index) =>
+        set({ selectedSlotIndex: index }),
 
       resetUI: () =>
         set(initialUIState),
