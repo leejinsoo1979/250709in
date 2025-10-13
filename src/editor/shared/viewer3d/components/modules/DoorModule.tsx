@@ -1044,7 +1044,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
               {/* Door opening direction for left door (front view and side view) */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
-                <group position={view2DDirection === 'front' ? [0, 0, doorThicknessUnits / 2 + 0.001] : [0, 0, doorThicknessUnits / 2 + 0.001]}>
+                <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
                   {/* 대각선 - 도어 열림 방향 표시 (긴선-짧은선 교차 패턴) */}
                   {(() => {
                     // 정면뷰와 측면뷰에서 다른 좌표 사용
@@ -1408,7 +1408,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
               {/* Door opening direction for right door (front view and side view) */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
-                <group position={view2DDirection === 'front' ? [0, 0, doorThicknessUnits / 2 + 0.001] : [0, 0, doorThicknessUnits / 2 + 0.001]}>
+                <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
                   {/* 대각선 - 도어 열림 방향 표시 (긴선-짧은선 교차 패턴) */}
                   {(() => {
                     // 정면뷰와 측면뷰에서 다른 좌표 사용
