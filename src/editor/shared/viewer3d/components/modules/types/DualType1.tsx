@@ -84,21 +84,22 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                   sectionBottomY += baseFurniture.calculateSectionHeight(sections[i], height);
                 }
 
+                // 안전선반 또는 마감 패널 위치 찾기
+                const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
+                const hasFinishPanel = section.isTopFinishPanel && section.count === 1;
+
                 // 옷걸이 봉 Y 위치 계산
                 let rodYPosition: number;
-
-                // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
-                if (section.hasSafetyShelf) {
-                  const safetyShelfY = sectionBottomY + mmToThreeUnits(section.shelfPositions?.[0] || 0);
+                if (safetyShelfPositionMm !== undefined) {
+                  // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
+                  const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
                   rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
-                }
-                // 마감 패널이 있는 경우: 브라켓 윗면이 마감 패널 하단에서 27mm 아래
-                else if (section.isTopFinishPanel) {
+                } else if (hasFinishPanel) {
+                  // 마감 패널이 있는 경우 (하부섹션): 브라켓 윗면이 마감 패널 하단에서 27mm 아래
                   const finishPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
                   rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
-                }
-                // 안전선반도 마감 패널도 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
-                else {
+                } else {
+                  // 안전선반도 마감 패널도 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
                   const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
                   rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
                 }
