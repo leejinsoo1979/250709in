@@ -418,41 +418,44 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 )}
                 
                 {/* 섹션 높이 표시 (drawer 섹션만 - hanging은 ShelfRenderer에서 칸별로 표시) */}
-                {(section.type === 'drawer') && (
-                  <group>
-                    {/* 서랍 섹션 전체 높이 텍스트 */}
-                    {viewMode === '3D' && (
+                {(section.type === 'drawer') && (() => {
+                  // 좌측 하부섹션(drawer)은 바닥판이 있으므로 내경 높이 계산 시 바닥판 두께 제외
+                  const drawerInternalHeight = sectionHeight - basicThickness;
+                  return (
+                    <group>
+                      {/* 서랍 섹션 내경 높이 텍스트 */}
+                      {viewMode === '3D' && (
+                        <Text
+                          position={[
+                            -leftWidth/2 * 0.3 - 0.8 + 0.01,
+                            sectionCenterY - 0.01,
+                            leftAdjustedDepthForShelves/2 + 0.1 - 0.01
+                          ]}
+                          fontSize={0.45}
+                          color="rgba(0, 0, 0, 0.3)"
+                          anchorX="center"
+                          anchorY="middle"
+                          rotation={[0, 0, Math.PI / 2]}
+                          renderOrder={998}
+                        >
+                          {Math.round(drawerInternalHeight * 100)}
+                        </Text>
+                      )}
                       <Text
                         position={[
-                          -leftWidth/2 * 0.3 - 0.8 + 0.01, 
-                          sectionCenterY - 0.01,
-                          leftAdjustedDepthForShelves/2 + 0.1 - 0.01
+                          viewMode === '3D' ? -leftWidth/2 * 0.3 - 0.8 : -leftWidth/2 * 0.3 - 0.5,
+                          sectionCenterY,
+                          viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0
                         ]}
-                        fontSize={0.45}
-                        color="rgba(0, 0, 0, 0.3)"
+                        fontSize={viewMode === '3D' ? 0.45 : 0.32}
+                        color={dimensionColor}
                         anchorX="center"
                         anchorY="middle"
                         rotation={[0, 0, Math.PI / 2]}
-                        renderOrder={998}
+                        renderOrder={999}
                       >
-                        {Math.round(sectionHeight * 100)}
+                        {Math.round(drawerInternalHeight * 100)}
                       </Text>
-                    )}
-                    <Text
-                      position={[
-                        viewMode === '3D' ? -leftWidth/2 * 0.3 - 0.8 : -leftWidth/2 * 0.3 - 0.5, 
-                        sectionCenterY,
-                        viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0
-                      ]}
-                      fontSize={viewMode === '3D' ? 0.45 : 0.32}
-                      color={dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      rotation={[0, 0, Math.PI / 2]}
-                      renderOrder={999}
-                    >
-                      {Math.round(sectionHeight * 100)}
-                    </Text>
                     
                     {/* 서랍 섹션 높이 수직선 */}
                     <Line
@@ -476,8 +479,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         </mesh>
                       </>
                     )}
-                  </group>
-                )}
+                    </group>
+                  );
+                })()}
                 
                 {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 */}
                 {index === 0 && section.type === 'drawer' && (
