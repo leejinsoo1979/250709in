@@ -295,8 +295,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             {sectionContent}
             {separatorPanel}
             
-            {/* 좌측 섹션 치수 표시 - 2D 탑뷰에서는 표시하지 않음 */}
-            {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') && (
+            {/* 좌측 섹션 치수 표시 - 2D 탑뷰와 좌측뷰에서는 표시하지 않음 */}
+            {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'top' || view2DDirection === 'left')) && (
               <>
                 {/* 섹션 구분 패널 두께 표시 (마지막 섹션 제외) */}
                 {index < allSections.length - 1 && (
