@@ -295,10 +295,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             {sectionContent}
             {separatorPanel}
             
-            {/* 좌측 섹션 치수 표시 - 2D 탑뷰에서만 숨김, 좌측뷰는 슬롯 선택시 표시 */}
-            {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') &&
-             !(viewMode === '2D' && view2DDirection === 'right' && visibleSectionIndex !== 0) &&
-             !(viewMode === '2D' && view2DDirection === 'left' && visibleSectionIndex !== 0) && (
+            {/* 좌측 섹션 치수 표시 - 2D 탑뷰/우측뷰는 숨김, 좌측뷰/정면뷰는 visibleSectionIndex가 null이거나 0일 때 표시 */}
+            {showDimensions && showDimensionsText &&
+             !(viewMode === '2D' && view2DDirection === 'top') &&
+             !(viewMode === '2D' && view2DDirection === 'right') &&
+             (visibleSectionIndex === null || visibleSectionIndex === 0) && (
               <>
                 {/* 섹션 구분 패널 두께 표시 (마지막 섹션 제외) */}
                 {index < allSections.length - 1 && (
@@ -649,10 +650,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           <group key={`right-section-${index}`}>
             {sectionContent}
             
-            {/* 우측 섹션 치수 표시 - 2D 탑뷰에서만 숨김, 우측뷰는 슬롯 선택시 표시 */}
-            {showDimensions && showDimensionsText && !(viewMode === '2D' && view2DDirection === 'top') &&
-             !(viewMode === '2D' && view2DDirection === 'left' && visibleSectionIndex !== 1) &&
-             !(viewMode === '2D' && view2DDirection === 'right' && visibleSectionIndex !== 1) && (
+            {/* 우측 섹션 치수 표시 - 2D 탑뷰/좌측뷰는 숨김, 우측뷰/정면뷰는 visibleSectionIndex가 null이거나 1일 때 표시 */}
+            {showDimensions && showDimensionsText &&
+             !(viewMode === '2D' && view2DDirection === 'top') &&
+             !(viewMode === '2D' && view2DDirection === 'left') &&
+             (visibleSectionIndex === null || visibleSectionIndex === 1) && (
               <group>
                 {/* 첫 번째 섹션일 때만 하부 프레임 두께 표시 */}
                 {index === 0 && (
