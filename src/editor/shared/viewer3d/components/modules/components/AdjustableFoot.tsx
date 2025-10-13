@@ -137,39 +137,23 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
             lineWidth={1}
           />
 
-          {/* 세로선 4개 (90도 간격) */}
-          <Line
-            points={[
-              [cylinderRadius, -plateHeight, 0],
-              [cylinderRadius, -plateHeight - cylinderHeight, 0]
-            ]}
-            color={edgeColor}
-            lineWidth={1}
-          />
-          <Line
-            points={[
-              [0, -plateHeight, cylinderRadius],
-              [0, -plateHeight - cylinderHeight, cylinderRadius]
-            ]}
-            color={edgeColor}
-            lineWidth={1}
-          />
-          <Line
-            points={[
-              [-cylinderRadius, -plateHeight, 0],
-              [-cylinderRadius, -plateHeight - cylinderHeight, 0]
-            ]}
-            color={edgeColor}
-            lineWidth={1}
-          />
-          <Line
-            points={[
-              [0, -plateHeight, -cylinderRadius],
-              [0, -plateHeight - cylinderHeight, -cylinderRadius]
-            ]}
-            color={edgeColor}
-            lineWidth={1}
-          />
+          {/* 세로선 8개 (45도 간격) */}
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => {
+            const radian = (angle * Math.PI) / 180;
+            const x = Math.cos(radian) * cylinderRadius;
+            const z = Math.sin(radian) * cylinderRadius;
+            return (
+              <Line
+                key={angle}
+                points={[
+                  [x, -plateHeight, z],
+                  [x, -plateHeight - cylinderHeight, z]
+                ]}
+                color={edgeColor}
+                lineWidth={1}
+              />
+            );
+          })}
         </>
       ) : renderMode === 'wireframe' ? (
         // 3D wireframe 모드: 원통 형태 유지
