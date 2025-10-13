@@ -1603,8 +1603,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const extensionLineStart = mmToThreeUnits(20); // 도어 하단에서 20mm 떨어진 곳에서 시작
                 const extensionLineLength = mmToThreeUnits(160); // 연장선 길이 160mm
                 const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
-                const tickSize = mmToThreeUnits(8); // 틱 마크 크기
-                const lineColor = '#808080'; // 치수선 색상
+                const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
 
                 return (
                   <>
@@ -1614,8 +1613,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [-rightDoorWidthUnits / 2, -doorHeight / 2 - extensionLineStart, doorThicknessUnits / 2 + 0.001],
                         [-rightDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={lineColor}
-                      lineWidth={0.5}
+                      color={dimensionColor}
+                      lineWidth={1}
                     />
 
                     {/* 오른쪽 연장선 */}
@@ -1624,8 +1623,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [rightDoorWidthUnits / 2, -doorHeight / 2 - extensionLineStart, doorThicknessUnits / 2 + 0.001],
                         [rightDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={lineColor}
-                      lineWidth={0.5}
+                      color={dimensionColor}
+                      lineWidth={1}
                     />
 
                     {/* 치수선 (가로선) */}
@@ -1634,36 +1633,36 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [-rightDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001],
                         [rightDoorWidthUnits / 2, dimensionLineY, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={lineColor}
-                      lineWidth={0.5}
+                      color={dimensionColor}
+                      lineWidth={2}
                     />
 
-                    {/* 왼쪽 틱 마크 */}
+                    {/* 왼쪽 틱 마크 (수평선) */}
                     <Line
                       points={[
-                        [-rightDoorWidthUnits / 2 - tickSize / 2, dimensionLineY + tickSize / 2, doorThicknessUnits / 2 + 0.001],
-                        [-rightDoorWidthUnits / 2 + tickSize / 2, dimensionLineY - tickSize / 2, doorThicknessUnits / 2 + 0.001]
+                        [-rightDoorWidthUnits / 2 - tickSize, dimensionLineY, doorThicknessUnits / 2 + 0.001],
+                        [-rightDoorWidthUnits / 2 + tickSize, dimensionLineY, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={lineColor}
-                      lineWidth={0.5}
+                      color={dimensionColor}
+                      lineWidth={2}
                     />
 
-                    {/* 오른쪽 틱 마크 */}
+                    {/* 오른쪽 틱 마크 (수평선) */}
                     <Line
                       points={[
-                        [rightDoorWidthUnits / 2 - tickSize / 2, dimensionLineY + tickSize / 2, doorThicknessUnits / 2 + 0.001],
-                        [rightDoorWidthUnits / 2 + tickSize / 2, dimensionLineY - tickSize / 2, doorThicknessUnits / 2 + 0.001]
+                        [rightDoorWidthUnits / 2 - tickSize, dimensionLineY, doorThicknessUnits / 2 + 0.001],
+                        [rightDoorWidthUnits / 2 + tickSize, dimensionLineY, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={lineColor}
-                      lineWidth={0.5}
+                      color={dimensionColor}
+                      lineWidth={2}
                     />
 
-                    {/* 치수 텍스트 */}
+                    {/* 치수 텍스트 - 치수선 위에 배치 */}
                     <DimensionText
                       value={rightDoorWidth}
-                      position={[0, dimensionLineY + mmToThreeUnits(5), doorThicknessUnits / 2 + 0.001]}
+                      position={[0, dimensionLineY + mmToThreeUnits(15), doorThicknessUnits / 2 + 0.001]}
                       anchorX="center"
-                      anchorY="middle"
+                      anchorY="bottom"
                     />
                   </>
                 );
