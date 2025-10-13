@@ -73,13 +73,22 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   const getDimensionXPosition = (sectionWidth: number, forText: boolean = false) => {
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
       const textOffset = forText ? 0.3 : 0;
-      if (view2DDirection === 'left') {
-        // 좌측뷰: 섹션 좌측 끝 밖으로 치수 표시
-        return -sectionWidth/2 - textOffset;
-      } else {
-        // 우측뷰: 섹션 우측 끝 밖으로 치수 표시
-        return sectionWidth/2 + textOffset;
-      }
+      const xPos = view2DDirection === 'left'
+        ? -sectionWidth/2 - textOffset  // 좌측뷰: 섹션 좌측 끝 밖으로
+        : sectionWidth/2 + textOffset;  // 우측뷰: 섹션 우측 끝 밖으로
+
+      console.log('📏 DualType5 getDimensionXPosition:', {
+        viewMode,
+        view2DDirection,
+        sectionWidth,
+        forText,
+        textOffset,
+        xPos,
+        moduleId: moduleData.id,
+        visibleSectionIndex
+      });
+
+      return xPos;
     }
     // 3D 또는 정면뷰: 기본 왼쪽 위치
     return forText ? -sectionWidth/2 * 0.3 - 0.8 : -sectionWidth/2 * 0.3;

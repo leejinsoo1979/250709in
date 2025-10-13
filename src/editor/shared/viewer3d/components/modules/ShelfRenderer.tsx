@@ -66,13 +66,21 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   const getDimensionXPosition = (forText: boolean = false) => {
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
       const textOffset = forText ? 0.3 : 0;
-      if (view2DDirection === 'left') {
-        // 좌측뷰: 가구 좌측 끝 밖으로 치수 표시
-        return -innerWidth/2 - textOffset;
-      } else {
-        // 우측뷰: 가구 우측 끝 밖으로 치수 표시
-        return innerWidth/2 + textOffset;
-      }
+      const xPos = view2DDirection === 'left'
+        ? -innerWidth/2 - textOffset  // 좌측뷰: 가구 좌측 끝 밖으로
+        : innerWidth/2 + textOffset;  // 우측뷰: 가구 우측 끝 밖으로
+
+      console.log('📏 ShelfRenderer getDimensionXPosition:', {
+        viewMode,
+        view2DDirection,
+        innerWidth,
+        forText,
+        textOffset,
+        xPos,
+        furnitureId
+      });
+
+      return xPos;
     }
     // 3D 또는 정면뷰: 기본 왼쪽 위치
     return forText ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3;
