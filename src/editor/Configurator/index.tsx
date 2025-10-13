@@ -24,6 +24,7 @@ import RightPanel, { RightPanelTab, DoorCountSlider as DoorSlider } from './comp
 import { ModuleContent } from './components/RightPanel';
 import DashboardFileTree from '@/components/FileTree/DashboardFileTree';
 import { TouchCompatibleControl } from './components/TouchCompatibleControls';
+import SlotSelector from './components/SlotSelector';
 
 
 // 기존 작동하는 컴포넌트들
@@ -2778,7 +2779,7 @@ const Configurator: React.FC = () => {
                 </button>
               </div>
             )}
-            <Space3DView 
+            <Space3DView
               key={`space3d-${spaceInfo.droppedCeiling?.enabled}-${spaceInfo.droppedCeiling?.position}-${spaceInfo.droppedCeiling?.width}-${spaceInfo.droppedCeiling?.dropHeight}`}
               spaceInfo={spaceInfo}
               viewMode={viewMode}
@@ -2789,6 +2790,9 @@ const Configurator: React.FC = () => {
               svgSize={{ width: 800, height: 600 }}
               activeZone={undefined} // 두 구간 모두 배치 가능하도록 undefined 전달
             />
+
+            {/* 측면뷰용 슬롯 선택 버튼 */}
+            <SlotSelector />
           </div>
 
         </div>
