@@ -19,7 +19,7 @@ interface CADDimensions2DProps {
 const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDimensions: showDimensionsProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions: showDimensionsFromStore, view2DTheme } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore, view2DTheme, selectedSlotIndex } = useUIStore();
 
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
@@ -80,15 +80,33 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const getVisibleFurnitureForSideView = () => {
     if (placedModules.length === 0) return [];
 
+    // 선택된 슬롯의 가구만 필터링
+    let filteredBySlot = placedModules;
+    if (selectedSlotIndex !== null) {
+      filteredBySlot = placedModules.filter(module => {
+        if (module.slotIndex === undefined) return false;
+
+        // 듀얼 가구인 경우: 시작 슬롯 또는 다음 슬롯 확인
+        if (module.isDualSlot) {
+          return module.slotIndex === selectedSlotIndex || module.slotIndex + 1 === selectedSlotIndex;
+        }
+
+        // 싱글 가구인 경우: 정확히 일치하는 슬롯만
+        return module.slotIndex === selectedSlotIndex;
+      });
+    }
+
+    if (filteredBySlot.length === 0) return [];
+
     if (currentViewDirection === 'left') {
       // 좌측뷰: X 좌표가 가장 작은(왼쪽 끝) 가구
-      const leftmostModule = placedModules.reduce((leftmost, current) =>
+      const leftmostModule = filteredBySlot.reduce((leftmost, current) =>
         current.position.x < leftmost.position.x ? current : leftmost
       );
       return [leftmostModule];
     } else if (currentViewDirection === 'right') {
       // 우측뷰: X 좌표가 가장 큰(오른쪽 끝) 가구
-      const rightmostModule = placedModules.reduce((rightmost, current) =>
+      const rightmostModule = filteredBySlot.reduce((rightmost, current) =>
         current.position.x > rightmost.position.x ? current : rightmost
       );
       return [rightmostModule];
