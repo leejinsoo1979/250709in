@@ -1268,6 +1268,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       anchorX="center"
                       anchorY="bottom"
                       forceShow={true}
+                      rotation={isTopView ? [-Math.PI / 2, 0, 0] : undefined}
                     />
                   </>
                 );
@@ -1603,6 +1604,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       anchorX="center"
                       anchorY="bottom"
                       forceShow={true}
+                      rotation={isTopView ? [-Math.PI / 2, 0, 0] : undefined}
                     />
                   </>
                 );
@@ -2007,6 +2009,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     anchorX="center"
                     anchorY="bottom"
                     forceShow={true}
+                    rotation={isTopView ? [-Math.PI / 2, 0, 0] : undefined}
                   />
                 </>
               );
