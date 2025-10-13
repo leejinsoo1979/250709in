@@ -523,17 +523,15 @@ const createDualType4 = (dualColumnWidth: number, maxHeight: number, slotWidths?
  * 듀얼 타입5: 서랍+옷장 & 스타일러장 복합형 생성 (좌우 비대칭)
  */
 const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
-  // 하부섹션과 상부섹션 사이에 바닥판(18mm)이 있으므로 서랍장 높이에서 차감
-  const leftDrawerHeight = FURNITURE_SPECS.TYPE1_DRAWER_HEIGHT - FURNITURE_SPECS.BASIC_THICKNESS; // 582mm (600 - 18)
-  const floorPanelThickness = FURNITURE_SPECS.BASIC_THICKNESS; // 18mm
-  const leftHangingHeight = maxHeight - leftDrawerHeight - floorPanelThickness; // 좌측 옷장 높이
+  const leftDrawerWithFinishHeight = FURNITURE_SPECS.TYPE1_DRAWER_HEIGHT; // 좌측 서랍장 + 마감 패널
+  const leftHangingHeight = maxHeight - leftDrawerWithFinishHeight; // 좌측 옷장 높이
 
   // 좌측 섹션 (서랍+옷장)에 안전선반 적용
   const leftBaseSections: SectionConfig[] = [
     {
       type: 'drawer',
       heightType: 'absolute',
-      height: leftDrawerHeight, // 582mm (바닥판 두께 제외)
+      height: leftDrawerWithFinishHeight,
       count: 2,
       drawerHeights: FURNITURE_SPECS.DRAWER_HEIGHTS_2TIER,
       gapHeight: FURNITURE_SPECS.DRAWER_GAP
@@ -544,10 +542,10 @@ const createDualType5 = (dualColumnWidth: number, maxHeight: number, slotWidths?
       height: leftHangingHeight
     }
   ];
-  
+
   // 우측 섹션 (스타일러장)에 안전선반 적용
   // 좌측 섹션들의 총 높이와 동일하게 설정
-  const rightSectionHeight = leftDrawerHeight + floorPanelThickness + leftHangingHeight; // 582 + 18 + (maxHeight - 600) = maxHeight
+  const rightSectionHeight = leftDrawerWithFinishHeight + leftHangingHeight; // 600 + (maxHeight - 600) = maxHeight
   const rightBaseSections: SectionConfig[] = [
     { 
       type: 'hanging', 
