@@ -1182,9 +1182,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
                 const isTopView = view2DDirection === 'top';
 
-                // 정면뷰: Y축 사용 (상하), 탑뷰: Z축 사용 (위아래)
-                const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
-                const extensionStart = -doorHeight / 2 - extensionLineStart;
+                // 정면뷰: doorHeight 사용, 탑뷰: doorDepth 사용
+                const dimensionLinePos = isTopView
+                  ? -doorDepth / 2 - extensionLineStart - extensionLineLength
+                  : -doorHeight / 2 - extensionLineStart - extensionLineLength;
+                const extensionStart = isTopView
+                  ? -doorDepth / 2 - extensionLineStart
+                  : -doorHeight / 2 - extensionLineStart;
 
                 return (
                   <>
@@ -1511,9 +1515,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
                 const isTopView = view2DDirection === 'top';
 
-                // 정면뷰: Y축 사용 (상하), 탑뷰: Z축 사용 (위아래)
-                const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
-                const extensionStart = -doorHeight / 2 - extensionLineStart;
+                // 정면뷰: doorHeight 사용, 탑뷰: doorDepth 사용
+                const dimensionLinePos = isTopView
+                  ? -doorDepth / 2 - extensionLineStart - extensionLineLength
+                  : -doorHeight / 2 - extensionLineStart - extensionLineLength;
+                const extensionStart = isTopView
+                  ? -doorDepth / 2 - extensionLineStart
+                  : -doorHeight / 2 - extensionLineStart;
 
                 return (
                   <>
@@ -1909,9 +1917,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
               const isTopView = view2DDirection === 'top';
 
-              // 정면뷰: Y축 사용 (상하), 탑뷰: Z축 사용 (위아래)
-              const dimensionLinePos = -doorHeight / 2 - extensionLineStart - extensionLineLength;
-              const extensionStart = -doorHeight / 2 - extensionLineStart;
+              // 정면뷰: doorHeight 사용, 탑뷰: doorDepth 사용
+              const dimensionLinePos = isTopView
+                ? -doorDepth / 2 - extensionLineStart - extensionLineLength
+                : -doorHeight / 2 - extensionLineStart - extensionLineLength;
+              const extensionStart = isTopView
+                ? -doorDepth / 2 - extensionLineStart
+                : -doorHeight / 2 - extensionLineStart;
 
               return (
                 <>
