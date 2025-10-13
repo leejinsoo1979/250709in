@@ -2881,7 +2881,17 @@ const Room: React.FC<RoomProps> = ({
 
             // 2. 측면뷰이고 selectedSlotIndex가 있는 경우 slotIndex 기준 필터링
             if ((view2DDirection === 'left' || view2DDirection === 'right') && selectedSlotIndex !== null) {
-              filteredModules = filteredModules.filter(module => module.slotIndex === selectedSlotIndex);
+              filteredModules = filteredModules.filter(module => {
+                if (module.slotIndex === undefined) return false;
+
+                // 듀얼 가구인 경우: 시작 슬롯 또는 다음 슬롯 확인
+                if (module.isDualSlot) {
+                  return module.slotIndex === selectedSlotIndex || module.slotIndex + 1 === selectedSlotIndex;
+                }
+
+                // 싱글 가구인 경우: 정확히 일치하는 슬롯만
+                return module.slotIndex === selectedSlotIndex;
+              });
             }
 
             console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (뷰어 모드):', {
@@ -2908,7 +2918,17 @@ const Room: React.FC<RoomProps> = ({
 
             // 측면뷰이고 selectedSlotIndex가 있는 경우 slotIndex 기준 필터링
             if ((view2DDirection === 'left' || view2DDirection === 'right') && selectedSlotIndex !== null) {
-              filteredModulesEditor = filteredModulesEditor.filter(module => module.slotIndex === selectedSlotIndex);
+              filteredModulesEditor = filteredModulesEditor.filter(module => {
+                if (module.slotIndex === undefined) return false;
+
+                // 듀얼 가구인 경우: 시작 슬롯 또는 다음 슬롯 확인
+                if (module.isDualSlot) {
+                  return module.slotIndex === selectedSlotIndex || module.slotIndex + 1 === selectedSlotIndex;
+                }
+
+                // 싱글 가구인 경우: 정확히 일치하는 슬롯만
+                return module.slotIndex === selectedSlotIndex;
+              });
             }
 
             console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (에디터 모드):', {
