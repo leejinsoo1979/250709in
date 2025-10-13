@@ -1709,9 +1709,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   }
                 } else {
                   // 슬롯이 선택되지 않은 경우: view2DDirection에 따라 자동 선택
+                  // 스타일러장(dual-2drawer-styler)은 좌측뷰에서 우측 섹션 표시
+                  const isStylerCabinet = moduleData.id.includes('dual-2drawer-styler');
+
                   if (view2DDirection === 'left') {
-                    // 좌측뷰 → 첫 번째 슬롯 (좌측 섹션)
-                    visibleSectionIndex = 0;
+                    // 좌측뷰 → 스타일러장은 우측 섹션(1), 일반은 좌측 섹션(0)
+                    visibleSectionIndex = isStylerCabinet ? 1 : 0;
                   } else if (view2DDirection === 'right') {
                     // 우측뷰 → 두 번째 슬롯 (우측 섹션)
                     visibleSectionIndex = 1;
