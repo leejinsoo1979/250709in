@@ -1,0 +1,82 @@
+.slotSelector {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+.slotButtons {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.slotButton {
+  min-width: 40px;
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  background: white;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.slotButton:hover {
+  background: #f5f5f5;
+  border-color: #4a90e2;
+  transform: translateY(-1px);
+}
+
+.slotButton.active {
+  background: #4a90e2;
+  border-color: #4a90e2;
+  color: white;
+  font-weight: 600;
+}
+
+.slotButton.active:hover {
+  background: #3a7bc8;
+  border-color: #3a7bc8;
+}
+
+/* 다크모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .slotSelector {
+    background: rgba(30, 30, 30, 0.95);
+  }
+
+  .slotButton {
+    background: #2a2a2a;
+    border-color: #404040;
+    color: #e0e0e0;
+  }
+
+  .slotButton:hover {
+    background: #3a3a3a;
+    border-color: #4a90e2;
+  }
+
+  .slotButton.active {
+    background: #4a90e2;
+    border-color: #4a90e2;
+    color: white;
+  }
+
+  .slotButton.active:hover {
+    background: #3a7bc8;
+    border-color: #3a7bc8;
+  }
+}
