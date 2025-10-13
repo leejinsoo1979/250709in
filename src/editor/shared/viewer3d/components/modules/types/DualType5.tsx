@@ -77,16 +77,16 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         ? -sectionWidth/2 - textOffset  // 좌측뷰: 섹션 좌측 끝 밖으로
         : sectionWidth/2 + textOffset;  // 우측뷰: 섹션 우측 끝 밖으로
 
-      console.log('📏 DualType5 getDimensionXPosition:', {
-        viewMode,
-        view2DDirection,
-        sectionWidth,
-        forText,
-        textOffset,
-        xPos,
-        moduleId: moduleData.id,
-        visibleSectionIndex
-      });
+      console.log('📏 DualType5 getDimensionXPosition:',
+        `viewMode=${viewMode}`,
+        `view2DDirection=${view2DDirection}`,
+        `sectionWidth=${sectionWidth}`,
+        `forText=${forText}`,
+        `textOffset=${textOffset}`,
+        `xPos=${xPos}`,
+        `moduleId=${moduleData.id}`,
+        `visibleSectionIndex=${visibleSectionIndex}`
+      );
 
       return xPos;
     }
