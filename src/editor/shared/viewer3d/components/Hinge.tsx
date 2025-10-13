@@ -62,65 +62,83 @@ export const Hinge: React.FC<HingeProps> = ({
 
   // 측면뷰 렌더링 - SVG 파일 로드
   if ((view2DDirection === 'left' || view2DDirection === 'right') && viewDirection === 'side') {
-    // 측면뷰 좌표 변환: 정면뷰의 Z를 측면뷰의 X로
-    const [x, y, z] = position;
-    const sidePosition: [number, number, number] = [z, y, 0];
+    try {
+      // 측면뷰 좌표 변환: 정면뷰의 Z를 측면뷰의 X로
+      const [x, y, z] = position;
+      const sidePosition: [number, number, number] = [z, y, 0];
 
-    // SVG 데이터 로드
-    const svgData = useLoader(SVGLoader, '/hinge_side_exact.svg');
+      // SVG 데이터 로드
+      const svgData = useLoader(SVGLoader, '/hinge_side_exact.svg');
 
-    // SVG 경로를 Line 포인트로 변환
-    const lineSegments = useMemo(() => {
-      const segments: [number, number, number][][] = [];
+      // SVG 경로를 Line 포인트로 변환
+      const lineSegments = useMemo(() => {
+        const segments: [number, number, number][][] = [];
 
-      svgData.paths.forEach((path) => {
-        // path의 subPaths를 순회
-        path.subPaths.forEach((subPath: any) => {
-          const points: [number, number, number][] = [];
+        try {
+          svgData.paths.forEach((path) => {
+            // SVGLoader.createShapes 사용
+            const shapes = SVGLoader.createShapes(path);
 
-          // getPoints로 곡선을 점들로 변환
-          const pts = subPath.getPoints();
-          pts.forEach((pt: any) => {
-            points.push([pt.x, pt.y, 0]);
+            shapes.forEach((shape) => {
+              // shape의 모든 점들 추출
+              const points: [number, number, number][] = [];
+
+              // 각 curve에서 점 추출
+              shape.curves.forEach((curve: any) => {
+                const pts = curve.getPoints(20); // 20개의 점으로 곡선 근사
+                pts.forEach((pt: any) => {
+                  points.push([pt.x, pt.y, 0]);
+                });
+              });
+
+              if (points.length > 1) {
+                // 닫힌 경로의 경우 첫 점을 마지막에 추가
+                if (shape.curves.length > 0) {
+                  points.push(points[0]);
+                }
+                segments.push(points);
+              }
+            });
           });
+        } catch (err) {
+          console.error('SVG parsing error:', err);
+        }
 
-          if (points.length > 1) {
-            segments.push(points);
-          }
-        });
-      });
+        return segments;
+      }, [svgData]);
 
-      return segments;
-    }, [svgData]);
+      // SVG viewBox: 0 0 491 348 (원본 SVG 좌표계)
+      // 목표 크기: 35mm 높이
+      const svgViewBoxWidth = 491;
+      const svgViewBoxHeight = 348;
+      const targetHeightMm = 35;
+      const targetHeight = mmToThreeUnits(targetHeightMm);
 
-    // SVG viewBox: 0 0 491 348 (원본 SVG 좌표계)
-    // 목표 크기: 35mm 높이
-    const svgViewBoxWidth = 491;
-    const svgViewBoxHeight = 348;
-    const targetHeightMm = 35;
-    const targetHeight = mmToThreeUnits(targetHeightMm);
+      // 스케일 계산
+      const scale = targetHeight / svgViewBoxHeight;
 
-    // 스케일 계산
-    const scale = targetHeight / svgViewBoxHeight;
+      // SVG 중심을 원점에 맞추기
+      const offsetX = -svgViewBoxWidth / 2;
+      const offsetY = -svgViewBoxHeight / 2;
 
-    // SVG 중심을 원점에 맞추기
-    const offsetX = -svgViewBoxWidth / 2;
-    const offsetY = -svgViewBoxHeight / 2;
-
-    return (
-      <group position={sidePosition}>
-        <group position={[offsetX * scale, -offsetY * scale, 0]} scale={[scale, -scale, scale]}>
-          {lineSegments.map((points, index) => (
-            <Line
-              key={index}
-              points={points}
-              color={lineColor}
-              lineWidth={1}
-            />
-          ))}
+      return (
+        <group position={sidePosition}>
+          <group position={[offsetX * scale, -offsetY * scale, 0]} scale={[scale, -scale, scale]}>
+            {lineSegments.map((points, index) => (
+              <Line
+                key={index}
+                points={points}
+                color={lineColor}
+                lineWidth={1}
+              />
+            ))}
+          </group>
         </group>
-      </group>
-    );
+      );
+    } catch (error) {
+      console.error('Hinge side view rendering error:', error);
+      return null;
+    }
   }
 
   // 정면뷰 렌더링 (기본값)
