@@ -1850,14 +1850,20 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             )}
 
 
-            {/* 도어 열리는 방향 표시 (2D 정면뷰에서만) */}
-            {viewMode === '2D' && view2DDirection === 'front' && (
+            {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰) */}
+            {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
               <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
                 {/* 대각선 - 도어 열림 방향 표시 (긴선-짧은선 교차 패턴) */}
                 {(() => {
+                  const isFrontView = view2DDirection === 'front';
+
                   // 첫 번째 대각선 (위에서 아래로) - 조정된 힌지 위치 사용
-                  const start1 = [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, -doorHeight / 2, 0];
-                  const end1 = [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0];
+                  const start1 = isFrontView
+                    ? [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, -doorHeight / 2, 0]
+                    : [doorThicknessUnits / 2, -doorHeight / 2, 0];
+                  const end1 = isFrontView
+                    ? [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0]
+                    : [-doorThicknessUnits / 2, 0, 0];
                   const segments1 = [];
                   
                   // 선분의 총 길이 계산
@@ -1929,8 +1935,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   }
                   
                   // 두 번째 대각선 (아래에서 위로) - 조정된 힌지 위치 사용
-                  const start2 = [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0];
-                  const end2 = [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, doorHeight / 2, 0];
+                  const start2 = isFrontView
+                    ? [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0]
+                    : [-doorThicknessUnits / 2, 0, 0];
+                  const end2 = isFrontView
+                    ? [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, doorHeight / 2, 0]
+                    : [doorThicknessUnits / 2, doorHeight / 2, 0];
                   const segments2 = [];
                   
                   const dx2 = end2[0] - start2[0];
