@@ -14,6 +14,16 @@ const SlotSelector: React.FC = () => {
   const { columnCount } = useDerivedSpaceStore();
   const { theme } = useTheme();
 
+  // 측면뷰가 아닐 때 selectedSlotIndex를 null로 리셋
+  React.useEffect(() => {
+    if (viewMode !== '2D' || (view2DDirection !== 'left' && view2DDirection !== 'right')) {
+      // 측면뷰가 아닐 때 슬롯 선택 해제
+      if (selectedSlotIndex !== null) {
+        setSelectedSlotIndex(null);
+      }
+    }
+  }, [viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex]);
+
   // 2D 모드이고 좌측/우측 측면뷰일 때만 표시
   if (viewMode !== '2D' || (view2DDirection !== 'left' && view2DDirection !== 'right')) {
     return null;
