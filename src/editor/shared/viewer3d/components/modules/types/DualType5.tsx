@@ -1158,8 +1158,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           const upperBackPanelHeight = upperHeight + mmToThreeUnits(5);
           const upperBackPanelY = -height/2 + basicThickness + lowerHeight + upperHeight/2 + mmToThreeUnits(2.5);
 
-          // 상부 섹션 바닥판 위치 (하부와 상부 사이)
-          const floorPanelY = -height/2 + basicThickness + lowerHeight;
+          // 상부 섹션 바닥판 위치 (하부 마지막 측판 조정과 동일하게 +9mm)
+          const floorPanelY = -height/2 + basicThickness + lowerHeight + basicThickness/2;
 
           return (
             <>
