@@ -30,7 +30,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   adjustedWidth, // adjustedWidth 추가
   customSections, // 사용자 정의 섹션 설정
   placedFurnitureId,
-  showFurniture = true // 가구 본체 표시 여부
+  showFurniture = true, // 가구 본체 표시 여부
+  visibleSectionIndex = null // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {

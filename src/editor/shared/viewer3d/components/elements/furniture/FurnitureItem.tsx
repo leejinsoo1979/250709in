@@ -189,7 +189,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   useEffect(() => {
     console.log('🎯 FurnitureItem - showFurniture:', showFurniture, 'placedModuleId:', placedModule.id, 'moduleId:', placedModule.moduleId);
   }, [showFurniture, placedModule.id, placedModule.moduleId]);
-  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId } = useUIStore();
+  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex } = useUIStore();
   const { updatePlacedModule } = useFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
   const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id;
@@ -1690,31 +1690,54 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         {moduleData.type === 'box' ? (
           // 박스형 가구 렌더링 (도어 제외)
           <>
-            <BoxModule
-              moduleData={actualModuleData}
-              isDragging={isDraggingThis} // 실제로 이 가구를 드래그하는 경우만 true
-              color={furnitureColor}
-              internalHeight={furnitureHeightMm}
-              viewMode={viewMode}
-              renderMode={renderMode}
-              hasDoor={(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
-                ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 또는 엔드패널 조정이 필요한 경우 도어는 별도 렌더링
-                : (placedModule.hasDoor ?? false)}
-              customDepth={actualDepthMm}
-              hingePosition={optimalHingePosition}
-              spaceInfo={zoneSpaceInfo}
-              doorWidth={originalSlotWidthMm + doorWidthExpansion} // 도어 너비에 확장분 추가
-              originalSlotWidth={originalSlotWidthMm}
-              slotCenterX={doorXOffset} // 도어 위치 오프셋 적용
-              adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
-              slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
-              slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
-              slotWidths={calculatedSlotWidths}
-              isHighlighted={isSelected} // 선택 상태 전달
-              placedFurnitureId={placedModule.id} // 배치된 가구 ID 전달 (치수 편집용)
-              customSections={placedModule.customSections} // 사용자 정의 섹션 설정
-              showFurniture={showFurniture} // 가구 본체 표시 여부
-            />
+            {(() => {
+              // 듀얼 가구이고 측면뷰에서 슬롯 선택된 경우, 표시할 섹션 계산
+              let visibleSectionIndex: number | null = null;
+              if (
+                placedModule.isDualSlot &&
+                (view2DDirection === 'left' || view2DDirection === 'right') &&
+                selectedSlotIndex !== null &&
+                placedModule.slotIndex !== undefined
+              ) {
+                // 듀얼 가구는 2개의 슬롯을 차지: slotIndex, slotIndex + 1
+                if (placedModule.slotIndex === selectedSlotIndex) {
+                  // 첫 번째 슬롯 선택 → 좌측 섹션 (인덱스 0)
+                  visibleSectionIndex = 0;
+                } else if (placedModule.slotIndex + 1 === selectedSlotIndex) {
+                  // 두 번째 슬롯 선택 → 우측 섹션 (인덱스 1)
+                  visibleSectionIndex = 1;
+                }
+              }
+
+              return (
+                <BoxModule
+                  moduleData={actualModuleData}
+                  isDragging={isDraggingThis} // 실제로 이 가구를 드래그하는 경우만 true
+                  color={furnitureColor}
+                  internalHeight={furnitureHeightMm}
+                  viewMode={viewMode}
+                  renderMode={renderMode}
+                  hasDoor={(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
+                    ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 또는 엔드패널 조정이 필요한 경우 도어는 별도 렌더링
+                    : (placedModule.hasDoor ?? false)}
+                  customDepth={actualDepthMm}
+                  hingePosition={optimalHingePosition}
+                  spaceInfo={zoneSpaceInfo}
+                  doorWidth={originalSlotWidthMm + doorWidthExpansion} // 도어 너비에 확장분 추가
+                  originalSlotWidth={originalSlotWidthMm}
+                  slotCenterX={doorXOffset} // 도어 위치 오프셋 적용
+                  adjustedWidth={furnitureWidthMm} // 조정된 너비를 adjustedWidth로 전달
+                  slotIndex={placedModule.slotIndex} // 슬롯 인덱스 전달
+                  slotInfo={slotInfo} // 슬롯 정보 전달 (기둥 침범 여부 포함)
+                  slotWidths={calculatedSlotWidths}
+                  isHighlighted={isSelected} // 선택 상태 전달
+                  placedFurnitureId={placedModule.id} // 배치된 가구 ID 전달 (치수 편집용)
+                  customSections={placedModule.customSections} // 사용자 정의 섹션 설정
+                  showFurniture={showFurniture} // 가구 본체 표시 여부
+                  visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
+                />
+              );
+            })()}
             
             {/* 가구 너비 디버깅 */}
             {(() => {
