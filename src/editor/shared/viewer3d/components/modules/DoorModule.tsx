@@ -1042,14 +1042,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
 
-              {/* Door opening direction for left door (front view) */}
-              {viewMode === '2D' && view2DDirection === 'front' && (
-                <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
+              {/* Door opening direction for left door (front view and side view) */}
+              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+                <group position={view2DDirection === 'front' ? [0, 0, doorThicknessUnits / 2 + 0.001] : [0, 0, 0]}>
                   {/* 대각선 - 도어 열림 방향 표시 (긴선-짧은선 교차 패턴) */}
                   {(() => {
+                    // 정면뷰와 측면뷰에서 다른 좌표 사용
+                    const isFrontView = view2DDirection === 'front';
+
                     // 첫 번째 대각선 (위에서 아래로)
-                    const start1 = [leftDoorWidthUnits / 2, -doorHeight / 2, 0];
-                    const end1 = [-leftDoorWidthUnits / 2, 0, 0];
+                    const start1 = isFrontView
+                      ? [leftDoorWidthUnits / 2, -doorHeight / 2, 0]
+                      : [doorDepth / 2, -doorHeight / 2, 0];
+                    const end1 = isFrontView
+                      ? [-leftDoorWidthUnits / 2, 0, 0]
+                      : [-doorDepth / 2, 0, 0];
                     const segments1 = [];
                     
                     // 선분의 총 길이 계산
@@ -1121,8 +1128,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     }
                     
                     // 두 번째 대각선 (아래에서 위로)
-                    const start2 = [-leftDoorWidthUnits / 2, 0, 0];
-                    const end2 = [leftDoorWidthUnits / 2, doorHeight / 2, 0];
+                    const start2 = isFrontView
+                      ? [-leftDoorWidthUnits / 2, 0, 0]
+                      : [-doorDepth / 2, 0, 0];
+                    const end2 = isFrontView
+                      ? [leftDoorWidthUnits / 2, doorHeight / 2, 0]
+                      : [doorDepth / 2, doorHeight / 2, 0];
                     const segments2 = [];
                     
                     const dx2 = end2[0] - start2[0];
@@ -1394,14 +1405,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
 
-              {/* Door opening direction for right door (front view) */}
-              {viewMode === '2D' && view2DDirection === 'front' && (
-                <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
+              {/* Door opening direction for right door (front view and side view) */}
+              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+                <group position={view2DDirection === 'front' ? [0, 0, doorThicknessUnits / 2 + 0.001] : [0, 0, 0]}>
                   {/* 대각선 - 도어 열림 방향 표시 (긴선-짧은선 교차 패턴) */}
                   {(() => {
+                    // 정면뷰와 측면뷰에서 다른 좌표 사용
+                    const isFrontView = view2DDirection === 'front';
+
                     // 첫 번째 대각선 (위에서 아래로)
-                    const start1 = [-rightDoorWidthUnits / 2, -doorHeight / 2, 0];
-                    const end1 = [rightDoorWidthUnits / 2, 0, 0];
+                    const start1 = isFrontView
+                      ? [-rightDoorWidthUnits / 2, -doorHeight / 2, 0]
+                      : [-doorDepth / 2, -doorHeight / 2, 0];
+                    const end1 = isFrontView
+                      ? [rightDoorWidthUnits / 2, 0, 0]
+                      : [doorDepth / 2, 0, 0];
                     const segments1 = [];
                     
                     // 선분의 총 길이 계산
@@ -1473,8 +1491,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     }
                     
                     // 두 번째 대각선 (아래에서 위로)
-                    const start2 = [rightDoorWidthUnits / 2, 0, 0];
-                    const end2 = [-rightDoorWidthUnits / 2, doorHeight / 2, 0];
+                    const start2 = isFrontView
+                      ? [rightDoorWidthUnits / 2, 0, 0]
+                      : [doorDepth / 2, 0, 0];
+                    const end2 = isFrontView
+                      ? [-rightDoorWidthUnits / 2, doorHeight / 2, 0]
+                      : [-doorDepth / 2, doorHeight / 2, 0];
                     const segments2 = [];
                     
                     const dx2 = end2[0] - start2[0];
