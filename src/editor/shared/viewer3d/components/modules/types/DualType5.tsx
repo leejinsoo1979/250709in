@@ -1045,19 +1045,107 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       
       {/* 뒷면 판재 - 좌/우 분리 (9mm 얇은 백패널, 각각 상하좌우 5mm 확장) */}
       <>
-        {/* 좌측 백패널 (visibleSectionIndex가 1이 아닐 때만) */}
-        {visibleSectionIndex !== 1 && (
-          <BoxWithEdges
-            args={[leftWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-            position={[leftXOffset, 0, -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            hideEdges={false} // 엣지는 표시하되
-            isBackPanel={true} // 백패널임을 표시
-          />
-        )}
+        {/* 좌측 백패널 - 하부/상부 분할 (visibleSectionIndex가 1이 아닐 때만) */}
+        {visibleSectionIndex !== 1 && (() => {
+          const leftSections = modelConfig.leftSections || [];
+
+          // 하부 섹션(drawer)와 상부 섹션(hanging/shelf) 구분
+          let lowerHeight = 0;
+          let upperHeight = 0;
+          let lowerSectionCount = 0;
+
+          const availableHeight = height - basicThickness * 2;
+          const fixedSections = leftSections.filter(s => s.heightType === 'absolute');
+          const totalFixedHeight = fixedSections.reduce((sum, section) => {
+            return sum + calculateSectionHeight(section, availableHeight);
+          }, 0);
+          const remainingHeight = availableHeight - totalFixedHeight;
+
+          leftSections.forEach((section) => {
+            const sectionHeight = (section.heightType === 'absolute')
+              ? calculateSectionHeight(section, availableHeight)
+              : calculateSectionHeight(section, remainingHeight);
+
+            if (section.type === 'drawer') {
+              lowerHeight += sectionHeight;
+              lowerSectionCount++;
+            } else {
+              upperHeight += sectionHeight;
+            }
+          });
+
+          // 하부와 상부가 모두 있는 경우에만 분할
+          const shouldSplit = lowerHeight > 0 && upperHeight > 0;
+
+          if (!shouldSplit) {
+            // 분할하지 않고 전체 백패널 렌더링
+            return (
+              <BoxWithEdges
+                key="left-backpanel-full"
+                args={[leftWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+                position={[leftXOffset, 0, -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+                material={material}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                hideEdges={false}
+                isBackPanel={true}
+              />
+            );
+          }
+
+          // 하부 백패널 위치 계산 (하단만 5mm 확장)
+          const lowerBackPanelHeight = lowerHeight + mmToThreeUnits(5);
+          const lowerBackPanelY = -height/2 + basicThickness + lowerHeight/2 - mmToThreeUnits(2.5);
+
+          // 상부 백패널 위치 계산 (상단만 5mm 확장)
+          const upperBackPanelHeight = upperHeight + mmToThreeUnits(5);
+          const upperBackPanelY = -height/2 + basicThickness + lowerHeight + upperHeight/2 + mmToThreeUnits(2.5);
+
+          // 상부 섹션 바닥판 위치 (하부와 상부 사이)
+          const floorPanelY = -height/2 + basicThickness + lowerHeight;
+
+          return (
+            <>
+              {/* 하부 백패널 */}
+              <BoxWithEdges
+                key="left-backpanel-lower"
+                args={[leftWidth + mmToThreeUnits(10), lowerBackPanelHeight, backPanelThickness]}
+                position={[leftXOffset, lowerBackPanelY, -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+                material={material}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                hideEdges={false}
+                isBackPanel={true}
+              />
+
+              {/* 상부 백패널 */}
+              <BoxWithEdges
+                key="left-backpanel-upper"
+                args={[leftWidth + mmToThreeUnits(10), upperBackPanelHeight, backPanelThickness]}
+                position={[leftXOffset, upperBackPanelY, -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+                material={material}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                hideEdges={false}
+                isBackPanel={true}
+              />
+
+              {/* 상부 섹션 바닥판 (하부와 상부 사이) */}
+              <BoxWithEdges
+                key="left-floor-panel"
+                args={[leftWidth, basicThickness, leftDepth - basicThickness]}
+                position={[leftXOffset, floorPanelY, basicThickness/2]}
+                material={material}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+              />
+            </>
+          );
+        })()}
 
         {/* 우측 백패널 (고정 깊이 660mm 기준) (visibleSectionIndex가 0이 아닐 때만) */}
         {visibleSectionIndex !== 0 && (
