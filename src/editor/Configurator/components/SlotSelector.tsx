@@ -23,14 +23,6 @@ const SlotSelector: React.FC = () => {
   return (
     <div className={styles.slotSelector}>
       <div className={styles.slotButtons}>
-        {/* 전체 보기 버튼 */}
-        <button
-          className={`${styles.slotButton} ${selectedSlotIndex === null ? styles.active : ''}`}
-          onClick={() => setSelectedSlotIndex(null)}
-        >
-          전체
-        </button>
-
         {/* 슬롯 선택 버튼들 (1번부터 N번까지) */}
         {Array.from({ length: slotCount }, (_, index) => (
           <button
