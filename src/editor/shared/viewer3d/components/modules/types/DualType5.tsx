@@ -917,33 +917,42 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         )}
         
         {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용) - 전체 보기일 때만 */}
-        {visibleSectionIndex === null && calculateLeftSectionHeights().map((sectionHeight, index) => {
-          let currentYPosition = -height/2 + basicThickness;
+        {(() => {
+          const shouldRenderMiddlePanel = visibleSectionIndex === null;
+          console.log('🔍 중앙 칸막이 렌더링 여부:', shouldRenderMiddlePanel, 'visibleSectionIndex:', visibleSectionIndex);
 
-          // 현재 섹션까지의 Y 위치 계산
-          for (let i = 0; i < index; i++) {
-            currentYPosition += calculateLeftSectionHeights()[i];
+          if (!shouldRenderMiddlePanel) {
+            return null;
           }
 
-          const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
-          const middlePanelDepth = Math.max(leftDepth, rightDepth); // 더 큰 깊이 사용
+          return calculateLeftSectionHeights().map((sectionHeight, index) => {
+            let currentYPosition = -height/2 + basicThickness;
 
-          // 중앙 칸막이 Z 위치: 좌측 깊이가 우측보다 클 때는 좌측 기준, 아니면 우측 기준
-          const middlePanelZOffset = leftDepth > rightDepth ? 0 : (leftDepth - rightDepth) / 2;
+            // 현재 섹션까지의 Y 위치 계산
+            for (let i = 0; i < index; i++) {
+              currentYPosition += calculateLeftSectionHeights()[i];
+            }
 
-          return (
-            <BoxWithEdges
-              key={`middle-panel-${index}`}
-              args={[basicThickness, sectionHeight, middlePanelDepth]}
-              position={[(leftWidth - rightWidth) / 2, sectionCenterY, middlePanelZOffset]}
-              material={material}
-              renderMode={renderMode}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              edgeOpacity={view2DDirection === 'left' ? 0.1 : undefined}
-            />
-          );
-        })}
+            const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
+            const middlePanelDepth = Math.max(leftDepth, rightDepth); // 더 큰 깊이 사용
+
+            // 중앙 칸막이 Z 위치: 좌측 깊이가 우측보다 클 때는 좌측 기준, 아니면 우측 기준
+            const middlePanelZOffset = leftDepth > rightDepth ? 0 : (leftDepth - rightDepth) / 2;
+
+            return (
+              <BoxWithEdges
+                key={`middle-panel-${index}`}
+                args={[basicThickness, sectionHeight, middlePanelDepth]}
+                position={[(leftWidth - rightWidth) / 2, sectionCenterY, middlePanelZOffset]}
+                material={material}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                edgeOpacity={view2DDirection === 'left' ? 0.1 : undefined}
+              />
+            );
+          });
+        })()}
       </>
     );
   };

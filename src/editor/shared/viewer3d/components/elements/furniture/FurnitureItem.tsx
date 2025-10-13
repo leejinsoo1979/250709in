@@ -1719,6 +1719,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 }
               }
 
+              console.log('🔍 FurnitureItem - visibleSectionIndex 계산:', {
+                isDualSlot: placedModule.isDualSlot,
+                view2DDirection,
+                selectedSlotIndex,
+                slotIndex: placedModule.slotIndex,
+                visibleSectionIndex,
+                furnitureId: placedModule.id
+              });
+
               return (
                 <BoxModule
                   moduleData={actualModuleData}
