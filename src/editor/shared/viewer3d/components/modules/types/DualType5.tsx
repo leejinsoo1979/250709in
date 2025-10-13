@@ -910,21 +910,21 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           </group>
         )}
         
-        {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용) */}
-        {calculateLeftSectionHeights().map((sectionHeight, index) => {
+        {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용) - 전체 보기일 때만 */}
+        {visibleSectionIndex === null && calculateLeftSectionHeights().map((sectionHeight, index) => {
           let currentYPosition = -height/2 + basicThickness;
-          
+
           // 현재 섹션까지의 Y 위치 계산
           for (let i = 0; i < index; i++) {
             currentYPosition += calculateLeftSectionHeights()[i];
           }
-          
+
           const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
           const middlePanelDepth = Math.max(leftDepth, rightDepth); // 더 큰 깊이 사용
-          
+
           // 중앙 칸막이 Z 위치: 좌측 깊이가 우측보다 클 때는 좌측 기준, 아니면 우측 기준
           const middlePanelZOffset = leftDepth > rightDepth ? 0 : (leftDepth - rightDepth) / 2;
-          
+
           return (
             <BoxWithEdges
               key={`middle-panel-${index}`}
@@ -934,7 +934,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               isDragging={isDragging}
               isEditMode={isEditMode}
-              edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
+              edgeOpacity={view2DDirection === 'left' ? 0.1 : undefined}
             />
           );
         })}
@@ -1035,31 +1035,34 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       
       {/* 뒷면 판재 - 좌/우 분리 (9mm 얇은 백패널, 각각 상하좌우 5mm 확장) */}
       <>
-        {/* 좌측 백패널 */}
-        <BoxWithEdges
-          args={[leftWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-          position={[leftXOffset, 0, -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-          material={material}
-          renderMode={renderMode}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          hideEdges={false} // 엣지는 표시하되
-          isBackPanel={true} // 백패널임을 표시
-          edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
-        />
+        {/* 좌측 백패널 (visibleSectionIndex가 1이 아닐 때만) */}
+        {visibleSectionIndex !== 1 && (
+          <BoxWithEdges
+            args={[leftWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+            position={[leftXOffset, 0, -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+            material={material}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            hideEdges={false} // 엣지는 표시하되
+            isBackPanel={true} // 백패널임을 표시
+          />
+        )}
 
-        {/* 우측 백패널 (고정 깊이 660mm 기준) */}
-        <BoxWithEdges
-          args={[rightWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-          position={[rightXOffset, 0, -rightDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2]}
-          material={material}
-          renderMode={renderMode}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          hideEdges={false} // 엣지는 표시하되
-          isBackPanel={true} // 백패널임을 표시
-          edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
-        />
+        {/* 우측 백패널 (고정 깊이 660mm 기준) (visibleSectionIndex가 0이 아닐 때만) */}
+        {visibleSectionIndex !== 0 && (
+          <BoxWithEdges
+            args={[rightWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+            position={[rightXOffset, 0, -rightDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2]}
+            material={material}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            hideEdges={false} // 엣지는 표시하되
+            isBackPanel={true} // 백패널임을 표시
+            edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
+          />
+        )}
       </>
 
       {/* 환기캡 렌더링 */}
