@@ -99,9 +99,9 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
             <lineBasicMaterial attach="material" color={edgeColor} />
           </lineSegments>
 
-          {/* 원통 외곽선 - 세그먼트 수를 8개로 줄여서 선 간소화 */}
+          {/* 원통 외곽선 - 세그먼트 수를 6개로 줄여서 선 간소화 */}
           <lineSegments position={[0, -plateHeight - cylinderHeight / 2, 0]}>
-            <edgesGeometry attach="geometry" args={[new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 8)]} />
+            <edgesGeometry attach="geometry" args={[new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 6)]} />
             <lineBasicMaterial attach="material" color={edgeColor} />
           </lineSegments>
         </>
