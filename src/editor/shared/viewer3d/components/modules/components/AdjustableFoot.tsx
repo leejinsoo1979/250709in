@@ -137,8 +137,8 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
             lineWidth={1}
           />
 
-          {/* 세로선 8개 (45도 간격) */}
-          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => {
+          {/* 세로선 16개 (22.5도 간격) */}
+          {Array.from({ length: 16 }, (_, i) => i * 22.5).map((angle) => {
             const radian = (angle * Math.PI) / 180;
             const x = Math.cos(radian) * cylinderRadius;
             const z = Math.sin(radian) * cylinderRadius;
