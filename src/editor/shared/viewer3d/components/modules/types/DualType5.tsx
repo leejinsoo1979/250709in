@@ -271,8 +271,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         if (index < allSections.length - 1) {
           separatorPanel = (
             <BoxWithEdges
-              args={[leftWidth, basicThickness, leftAdjustedDepthForShelves - basicThickness]}
-              position={[0, sectionCenterY + sectionHeight/2 - basicThickness/2, basicThickness/2 + leftShelfZOffset]}
+              args={[leftWidth, basicThickness, leftDepth]}
+              position={[0, sectionCenterY + sectionHeight/2 - basicThickness/2, 0]}
               material={material}
               renderMode={renderMode}
               isDragging={isDragging}
@@ -1198,8 +1198,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               {/* 상부 섹션 바닥판 (하부와 상부 사이) */}
               <BoxWithEdges
                 key="left-floor-panel"
-                args={[leftWidth, basicThickness, leftDepth - basicThickness]}
-                position={[leftXOffset, floorPanelY, basicThickness/2]}
+                args={[leftWidth, basicThickness, leftDepth]}
+                position={[leftXOffset, floorPanelY, 0]}
                 material={material}
                 renderMode={renderMode}
                 isDragging={isDragging}
