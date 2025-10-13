@@ -918,36 +918,64 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           </group>
         )}
         
-        {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용) - 전체 보기일 때만 */}
-        {visibleSectionIndex === null && calculateLeftSectionHeights().map((sectionHeight, index) => {
-          console.log('🔍 중앙 칸막이 렌더링 중:', { index, visibleSectionIndex, moduleId: moduleData.id });
+        {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용, 바닥판 두께 고려) - 전체 보기일 때만 */}
+        {visibleSectionIndex === null && (() => {
+          const leftSections = modelConfig.leftSections || [];
 
-          let currentYPosition = -height/2 + basicThickness;
+          // 하부 섹션(drawer) 개수 확인
+          let drawerCount = 0;
+          leftSections.forEach(section => {
+            if (section.type === 'drawer') drawerCount++;
+          });
 
-          // 현재 섹션까지의 Y 위치 계산
-          for (let i = 0; i < index; i++) {
-            currentYPosition += calculateLeftSectionHeights()[i];
-          }
+          return calculateLeftSectionHeights().map((sectionHeight, index) => {
+            console.log('🔍 중앙 칸막이 렌더링 중:', { index, visibleSectionIndex, moduleId: moduleData.id });
 
-          const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
-          const middlePanelDepth = Math.max(leftDepth, rightDepth); // 더 큰 깊이 사용
+            let currentYPosition = -height/2 + basicThickness;
 
-          // 중앙 칸막이 Z 위치: 좌측 깊이가 우측보다 클 때는 좌측 기준, 아니면 우측 기준
-          const middlePanelZOffset = leftDepth > rightDepth ? 0 : (leftDepth - rightDepth) / 2;
+            // 현재 섹션까지의 Y 위치 계산
+            for (let i = 0; i < index; i++) {
+              currentYPosition += calculateLeftSectionHeights()[i];
+            }
 
-          return (
-            <BoxWithEdges
-              key={`middle-panel-${moduleData.id}-${index}`}
-              args={[basicThickness, sectionHeight, middlePanelDepth]}
-              position={[(leftWidth - rightWidth) / 2, sectionCenterY, middlePanelZOffset]}
-              material={material}
-              renderMode={renderMode}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              edgeOpacity={view2DDirection === 'left' ? 0.1 : undefined}
-            />
-          );
-        })}
+            // 하부/상부 섹션에 따른 높이 및 위치 조정
+            const isLastLowerSection = index === drawerCount - 1;
+            const isUpperSection = index >= drawerCount;
+
+            let adjustedHeight = sectionHeight;
+            let adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
+
+            if (drawerCount > 0 && leftSections.length > drawerCount) {
+              // 하부와 상부가 모두 존재하는 경우
+              if (isLastLowerSection) {
+                // 하부 마지막 칸막이: 높이 +18mm (바닥판 두께만큼 연장)
+                adjustedHeight = sectionHeight + basicThickness;
+                adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness + basicThickness / 2;
+              } else if (isUpperSection) {
+                // 상부 모든 칸막이: Y 위치를 바닥판 두께만큼 위로 이동
+                adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness + basicThickness;
+              }
+            }
+
+            const middlePanelDepth = Math.max(leftDepth, rightDepth); // 더 큰 깊이 사용
+
+            // 중앙 칸막이 Z 위치: 좌측 깊이가 우측보다 클 때는 좌측 기준, 아니면 우측 기준
+            const middlePanelZOffset = leftDepth > rightDepth ? 0 : (leftDepth - rightDepth) / 2;
+
+            return (
+              <BoxWithEdges
+                key={`middle-panel-${moduleData.id}-${index}`}
+                args={[basicThickness, adjustedHeight, middlePanelDepth]}
+                position={[(leftWidth - rightWidth) / 2, adjustedCenterY, middlePanelZOffset]}
+                material={material}
+                renderMode={renderMode}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                edgeOpacity={view2DDirection === 'left' ? 0.1 : undefined}
+              />
+            );
+          });
+        })()}
       </>
     );
   };
@@ -957,30 +985,58 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <>
-          {/* 좌측 측면 판재 - 섹션별로 분할 */}
-          {calculateLeftSectionHeights().map((sectionHeight, index) => {
-        let currentYPosition = -height/2 + basicThickness;
-        
-        // 현재 섹션까지의 Y 위치 계산
-        for (let i = 0; i < index; i++) {
-          currentYPosition += calculateLeftSectionHeights()[i];
-        }
-        
-        const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
-        
-        return (
-          <BoxWithEdges
-            key={`left-side-panel-${index}`}
-            args={[basicThickness, sectionHeight, leftDepth]}
-            position={[-width/2 + basicThickness/2, sectionCenterY, 0]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
-          />
-        );
-      })}
+          {/* 좌측 측면 판재 - 섹션별로 분할 (바닥판 두께 고려) */}
+          {(() => {
+            const leftSections = modelConfig.leftSections || [];
+
+            // 하부 섹션(drawer) 개수 확인
+            let drawerCount = 0;
+            leftSections.forEach(section => {
+              if (section.type === 'drawer') drawerCount++;
+            });
+
+            return calculateLeftSectionHeights().map((sectionHeight, index) => {
+              let currentYPosition = -height/2 + basicThickness;
+
+              // 현재 섹션까지의 Y 위치 계산
+              for (let i = 0; i < index; i++) {
+                currentYPosition += calculateLeftSectionHeights()[i];
+              }
+
+              // 하부/상부 섹션에 따른 높이 및 위치 조정
+              const isLowerSection = index < drawerCount;
+              const isLastLowerSection = index === drawerCount - 1;
+              const isUpperSection = index >= drawerCount;
+
+              let adjustedHeight = sectionHeight;
+              let adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
+
+              if (drawerCount > 0 && leftSections.length > drawerCount) {
+                // 하부와 상부가 모두 존재하는 경우
+                if (isLastLowerSection) {
+                  // 하부 마지막 측판: 높이 +18mm (바닥판 두께만큼 연장)
+                  adjustedHeight = sectionHeight + basicThickness;
+                  adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness + basicThickness / 2;
+                } else if (isUpperSection) {
+                  // 상부 모든 측판: Y 위치를 바닥판 두께만큼 위로 이동
+                  adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness + basicThickness;
+                }
+              }
+
+              return (
+                <BoxWithEdges
+                  key={`left-side-panel-${index}`}
+                  args={[basicThickness, adjustedHeight, leftDepth]}
+                  position={[-width/2 + basicThickness/2, adjustedCenterY, 0]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
+                />
+              );
+            });
+          })()}
 
       {/* 우측 측면 판재 - 전체 높이 (스타일러장은 분할 안됨) */}
       <BoxWithEdges
