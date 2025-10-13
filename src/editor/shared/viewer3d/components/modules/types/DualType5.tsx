@@ -105,6 +105,10 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       // 하부 프레임은 왼쪽으로 6mm (0.06) 추가 이동 (2mm + 4mm)
       return isBottomFrame ? baseZ - 0.06 : baseZ;
     }
+    // 3D 모드: 우측 섹션(스타일러장)은 rightShelfZOffset + rightAdjustedDepthForShelves/2
+    if (viewMode === '3D' && sectionDepth === rightDepth) {
+      return rightShelfZOffset + rightAdjustedDepthForShelves/2;
+    }
     // 3D 또는 정면뷰: 표준 위치 (다른 모듈과 동일)
     return sectionDepth/2 + 0.1;
   };
