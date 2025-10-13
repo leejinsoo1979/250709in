@@ -1178,7 +1178,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외) */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && (() => {
                 const isTopView = view2DDirection === 'top';
-                const extensionLineStart = mmToThreeUnits(isTopView ? -230 : 70); // 탑뷰: -230mm (뒤로), 정면뷰: 70mm
+                const extensionLineStart = mmToThreeUnits(isTopView ? 370 : 70); // 탑뷰: 370mm (뒤로), 정면뷰: 70mm
                 const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
                 const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
 
@@ -1511,7 +1511,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외) */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && (() => {
                 const isTopView = view2DDirection === 'top';
-                const extensionLineStart = mmToThreeUnits(isTopView ? -230 : 70); // 탑뷰: -230mm (뒤로), 정면뷰: 70mm
+                const extensionLineStart = mmToThreeUnits(isTopView ? 370 : 70); // 탑뷰: 370mm (뒤로), 정면뷰: 70mm
                 const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
                 const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
 
@@ -1913,7 +1913,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             {/* 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외) */}
             {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && (() => {
               const isTopView = view2DDirection === 'top';
-              const extensionLineStart = mmToThreeUnits(isTopView ? -230 : 70); // 탑뷰: -230mm (뒤로), 정면뷰: 70mm
+              const extensionLineStart = mmToThreeUnits(isTopView ? 370 : 70); // 탑뷰: 370mm (뒤로), 정면뷰: 70mm
               const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
               const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
 
