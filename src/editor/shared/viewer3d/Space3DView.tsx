@@ -1218,17 +1218,17 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* 컬럼 가이드 표시 - 2D와 3D 모두에서 showDimensions와 showAll(가이드)이 모두 true일 때만 */}
             {showDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
             
-            {/* CAD 스타일 치수/가이드 표시 - 2D와 3D 모두에서 표시 (측면뷰 제외) */}
-            {view2DDirection !== 'left' && view2DDirection !== 'right' && (
+            {/* CAD 스타일 치수/가이드 표시 - 2D 모드에서만 표시 */}
+            {viewMode === '2D' && view2DDirection !== 'left' && view2DDirection !== 'right' && (
               <CleanCAD2D
-                viewDirection={viewMode === '3D' ? '3D' : view2DDirection}
+                viewDirection={view2DDirection}
                 showDimensions={showDimensions}
                 isStep2={isStep2}
               />
             )}
 
-            {/* 측면뷰 전용 치수 표시 */}
-            {(view2DDirection === 'left' || view2DDirection === 'right') && (
+            {/* 측면뷰 전용 치수 표시 - 2D 모드에서만 */}
+            {viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (
               <CADDimensions2D
                 viewDirection={view2DDirection}
                 showDimensions={showDimensions}
