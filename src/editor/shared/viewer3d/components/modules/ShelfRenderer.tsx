@@ -99,8 +99,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   // 측면뷰에서 치수 Z 위치 계산 함수 (통일된 Z 위치)
   const getDimensionZPosition = () => {
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
-      // 측면뷰에서는 depth/2 + 1.0 (다른 모듈과 동일)
-      return depth/2 + 1.0;
+      // 측면뷰: Z축 오른쪽으로 324mm (3.24) 이동
+      return depth/2 + 1.0 + 3.24;
     }
     // 3D 또는 정면뷰: depth에 따라 다른 Z 위치
     return depth/2 + 0.1;

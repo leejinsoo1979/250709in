@@ -100,8 +100,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   // 측면뷰에서 치수 Z 위치 계산 함수 (통일된 Z 위치)
   const getDimensionZPosition = (sectionDepth: number) => {
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
-      // 측면뷰: SectionsRenderer와 동일하게 sectionDepth/2 + 1.0
-      return sectionDepth/2 + 1.0;
+      // 측면뷰: Z축 오른쪽으로 324mm (3.24) 이동
+      return sectionDepth/2 + 1.0 + 3.24;
     }
     // 3D 또는 정면뷰: 각 섹션의 depth에 따라 다른 Z 위치
     return sectionDepth/2 + 0.1;
