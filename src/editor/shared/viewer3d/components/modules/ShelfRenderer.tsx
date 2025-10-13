@@ -65,13 +65,13 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   // 측면뷰에서 치수 X 위치 계산: 좌측뷰는 왼쪽에, 우측뷰는 오른쪽에 표시
   const getDimensionXPosition = (forText: boolean = false) => {
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
-      const baseOffset = forText ? 0.5 : 0;
+      const textOffset = forText ? 0.3 : 0;
       if (view2DDirection === 'left') {
-        // 좌측뷰: 왼쪽에 치수 표시
-        return -innerWidth/2 * 0.3 - baseOffset;
+        // 좌측뷰: 가구 좌측 끝 밖으로 치수 표시
+        return -innerWidth/2 - textOffset;
       } else {
-        // 우측뷰: 오른쪽에 치수 표시
-        return innerWidth/2 * 0.3 + baseOffset;
+        // 우측뷰: 가구 우측 끝 밖으로 치수 표시
+        return innerWidth/2 + textOffset;
       }
     }
     // 3D 또는 정면뷰: 기본 왼쪽 위치
