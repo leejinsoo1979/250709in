@@ -1177,10 +1177,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
               {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외) */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && (() => {
-                const extensionLineStart = mmToThreeUnits(70); // 도어 하단/아래에서 70mm 떨어진 곳에서 시작
+                const isTopView = view2DDirection === 'top';
+                const extensionLineStart = mmToThreeUnits(isTopView ? -230 : 70); // 탑뷰: -230mm (뒤로), 정면뷰: 70mm
                 const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
                 const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
-                const isTopView = view2DDirection === 'top';
 
                 // 정면뷰: doorHeight 사용 (음수 방향), 탑뷰: doorDepth 사용 (양수 방향)
                 const dimensionLinePos = isTopView
@@ -1510,10 +1510,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
               {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외) */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && (() => {
-                const extensionLineStart = mmToThreeUnits(70); // 도어 하단/아래에서 70mm 떨어진 곳에서 시작
+                const isTopView = view2DDirection === 'top';
+                const extensionLineStart = mmToThreeUnits(isTopView ? -230 : 70); // 탑뷰: -230mm (뒤로), 정면뷰: 70mm
                 const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
                 const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
-                const isTopView = view2DDirection === 'top';
 
                 // 정면뷰: doorHeight 사용 (음수 방향), 탑뷰: doorDepth 사용 (양수 방향)
                 const dimensionLinePos = isTopView
@@ -1912,10 +1912,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
             {/* 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외) */}
             {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && (() => {
-              const extensionLineStart = mmToThreeUnits(70); // 도어 하단/아래에서 70mm 떨어진 곳에서 시작
+              const isTopView = view2DDirection === 'top';
+              const extensionLineStart = mmToThreeUnits(isTopView ? -230 : 70); // 탑뷰: -230mm (뒤로), 정면뷰: 70mm
               const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
               const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
-              const isTopView = view2DDirection === 'top';
 
               // 정면뷰: doorHeight 사용 (음수 방향), 탑뷰: doorDepth 사용 (양수 방향)
               const dimensionLinePos = isTopView
