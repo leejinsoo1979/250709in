@@ -975,10 +975,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       />
                     </>
                   ) : isLowerCabinet ? (
-                    // 하부장: 아래에서 100mm, 아래에서 149mm
+                    // 하부장: 위에서 100mm, 아래에서 149mm
                     <>
                       <Hinge
-                        position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                        position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
                         mainDiameter={17.5}
                         smallCircleDiameter={4}
                         smallCircleXOffset={9.5}
@@ -1046,10 +1046,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       />
                     </>
                   ) : isLowerCabinet ? (
-                    // 하부장: 아래에서 100mm, 아래에서 149mm
+                    // 하부장: 위에서 100mm, 아래에서 149mm
                     <>
                       <Hinge
-                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(100), 0]}
+                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
                         viewDirection="side"
                       />
                       <Hinge
@@ -1270,10 +1270,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       />
                     </>
                   ) : isLowerCabinet ? (
-                    // 하부장: 아래에서 100mm, 아래에서 149mm
+                    // 하부장: 위에서 100mm, 아래에서 149mm
                     <>
                       <Hinge
-                        position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                        position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
                         mainDiameter={17.5}
                         smallCircleDiameter={4}
                         smallCircleXOffset={-9.5}
@@ -1341,10 +1341,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       />
                     </>
                   ) : isLowerCabinet ? (
-                    // 하부장: 아래에서 100mm, 아래에서 149mm
+                    // 하부장: 위에서 100mm, 아래에서 149mm
                     <>
                       <Hinge
-                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(100), 0]}
+                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
                         viewDirection="side"
                       />
                       <Hinge
@@ -1610,12 +1610,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     />
                   </>
                 ) : isLowerCabinet ? (
-                  // 하부장: 아래에서 100mm, 아래에서 149mm
+                  // 하부장: 위에서 100mm, 아래에서 149mm
                   <>
                     <Hinge
                       position={[
                         adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
-                        -doorHeight / 2 + mmToThreeUnits(100),
+                        doorHeight / 2 - mmToThreeUnits(100),
                         doorThicknessUnits / 2 + 0.001
                       ]}
                       mainDiameter={17.5}
@@ -1711,12 +1711,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     />
                   </>
                 ) : isLowerCabinet ? (
-                  // 하부장: 아래에서 100mm, 아래에서 149mm
+                  // 하부장: 위에서 100mm, 아래에서 149mm
                   <>
                     <Hinge
                       position={[
                         doorThicknessUnits / 2,
-                        -doorHeight / 2 + mmToThreeUnits(100),
+                        doorHeight / 2 - mmToThreeUnits(100),
                         0
                       ]}
                       viewDirection="side"
