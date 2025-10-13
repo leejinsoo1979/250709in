@@ -1025,64 +1025,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </>
               )}
 
-              {/* Hinges for left door - side view (좌측뷰에서만 보임) */}
-              {(() => {
-                const result = viewMode === '2D' && view2DDirection === 'left';
-                console.log('🔵🔵🔵 좌측 도어 측면뷰 경첩 조건:',
-                  'viewMode=' + viewMode,
-                  'view2DDirection=' + view2DDirection,
-                  'result=' + result
-                );
-                return result;
-              })() && (
-                <>
-                  {isUpperCabinet ? (
-                    // 상부장: 위에서 100mm, 아래에서 100mm
-                    <>
-                      <Hinge
-                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
-                        viewDirection="side"
-                      />
-                      <Hinge
-                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(100), 0]}
-                        viewDirection="side"
-                      />
-                    </>
-                  ) : isLowerCabinet ? (
-                    // 하부장: 위에서 100mm, 아래에서 149mm
-                    <>
-                      <Hinge
-                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
-                        viewDirection="side"
-                      />
-                      <Hinge
-                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(149), 0]}
-                        viewDirection="side"
-                      />
-                    </>
-                  ) : (
-                    // 키큰장: 기존 4개 경첩
-                    <>
-                      <Hinge
-                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
-                        viewDirection="side"
-                      />
-                      <Hinge
-                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(700), 0]}
-                        viewDirection="side"
-                      />
-                      <Hinge
-                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(149), 0]}
-                        viewDirection="side"
-                      />
-                      <Hinge
-                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(749), 0]}
-                        viewDirection="side"
-                      />
-                    </>
-                  )}
-                </>
-              )}
 
               {/* Door opening direction for left door (front view) */}
               {viewMode === '2D' && view2DDirection === 'front' && (
@@ -1236,7 +1178,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰에서만) */}
               {viewMode === '2D' && view2DDirection === 'front' && (() => {
                 const extensionLineStart = mmToThreeUnits(20); // 도어 하단에서 20mm 떨어진 곳에서 시작
-                const extensionLineLength = mmToThreeUnits(160); // 연장선 길이 160mm
+                const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
                 const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
                 const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
 
@@ -1390,64 +1332,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </>
               )}
 
-              {/* Hinges for right door - side view (우측뷰에서만 보임) */}
-              {(() => {
-                const result = viewMode === '2D' && view2DDirection === 'right';
-                console.log('🟢🟢🟢 우측 도어 측면뷰 경첩 조건:',
-                  'viewMode=' + viewMode,
-                  'view2DDirection=' + view2DDirection,
-                  'result=' + result
-                );
-                return result;
-              })() && (
-                <>
-                  {isUpperCabinet ? (
-                    // 상부장: 위에서 100mm, 아래에서 100mm
-                    <>
-                      <Hinge
-                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
-                        viewDirection="side"
-                      />
-                      <Hinge
-                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(100), 0]}
-                        viewDirection="side"
-                      />
-                    </>
-                  ) : isLowerCabinet ? (
-                    // 하부장: 위에서 100mm, 아래에서 149mm
-                    <>
-                      <Hinge
-                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
-                        viewDirection="side"
-                      />
-                      <Hinge
-                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(149), 0]}
-                        viewDirection="side"
-                      />
-                    </>
-                  ) : (
-                    // 키큰장: 기존 4개 경첩
-                    <>
-                      <Hinge
-                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(100), 0]}
-                        viewDirection="side"
-                      />
-                      <Hinge
-                        position={[doorThicknessUnits / 2, doorHeight / 2 - mmToThreeUnits(700), 0]}
-                        viewDirection="side"
-                      />
-                      <Hinge
-                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(149), 0]}
-                        viewDirection="side"
-                      />
-                      <Hinge
-                        position={[doorThicknessUnits / 2, -doorHeight / 2 + mmToThreeUnits(749), 0]}
-                        viewDirection="side"
-                      />
-                    </>
-                  )}
-                </>
-              )}
 
               {/* Door opening direction for right door (front view) */}
               {viewMode === '2D' && view2DDirection === 'front' && (
@@ -1601,7 +1485,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰에서만) */}
               {viewMode === '2D' && view2DDirection === 'front' && (() => {
                 const extensionLineStart = mmToThreeUnits(20); // 도어 하단에서 20mm 떨어진 곳에서 시작
-                const extensionLineLength = mmToThreeUnits(160); // 연장선 길이 160mm
+                const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
                 const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
                 const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
 
@@ -1824,100 +1708,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               </>
             )}
 
-            {/* Hinges for single door - side view */}
-            {/* 경첩이 왼쪽에 있으면 우측뷰에서, 오른쪽에 있으면 좌측뷰에서 보임 */}
-            {viewMode === '2D' && (
-              (adjustedHingePosition === 'left' && view2DDirection === 'right') ||
-              (adjustedHingePosition === 'right' && view2DDirection === 'left')
-            ) && (
-              <>
-                {isUpperCabinet ? (
-                  // 상부장: 위에서 100mm, 아래에서 100mm
-                  <>
-                    <Hinge
-                      position={[
-                        doorThicknessUnits / 2,
-                        doorHeight / 2 - mmToThreeUnits(100),
-                        0
-                      ]}
-                      viewDirection="side"
-                      view2DDirection={view2DDirection}
-                    />
-                    <Hinge
-                      position={[
-                        doorThicknessUnits / 2,
-                        -doorHeight / 2 + mmToThreeUnits(100),
-                        0
-                      ]}
-                      viewDirection="side"
-                      view2DDirection={view2DDirection}
-                    />
-                  </>
-                ) : isLowerCabinet ? (
-                  // 하부장: 위에서 100mm, 아래에서 149mm
-                  <>
-                    <Hinge
-                      position={[
-                        doorThicknessUnits / 2,
-                        doorHeight / 2 - mmToThreeUnits(100),
-                        0
-                      ]}
-                      viewDirection="side"
-                      view2DDirection={view2DDirection}
-                    />
-                    <Hinge
-                      position={[
-                        doorThicknessUnits / 2,
-                        -doorHeight / 2 + mmToThreeUnits(149),
-                        0
-                      ]}
-                      viewDirection="side"
-                      view2DDirection={view2DDirection}
-                    />
-                  </>
-                ) : (
-                  // 키큰장: 기존 4개 경첩
-                  <>
-                    <Hinge
-                      position={[
-                        doorThicknessUnits / 2,
-                        doorHeight / 2 - mmToThreeUnits(100),
-                        0
-                      ]}
-                      viewDirection="side"
-                      view2DDirection={view2DDirection}
-                    />
-                    <Hinge
-                      position={[
-                        doorThicknessUnits / 2,
-                        doorHeight / 2 - mmToThreeUnits(700),
-                        0
-                      ]}
-                      viewDirection="side"
-                      view2DDirection={view2DDirection}
-                    />
-                    <Hinge
-                      position={[
-                        doorThicknessUnits / 2,
-                        -doorHeight / 2 + mmToThreeUnits(149),
-                        0
-                      ]}
-                      viewDirection="side"
-                      view2DDirection={view2DDirection}
-                    />
-                    <Hinge
-                      position={[
-                        doorThicknessUnits / 2,
-                        -doorHeight / 2 + mmToThreeUnits(749),
-                        0
-                      ]}
-                      viewDirection="side"
-                      view2DDirection={view2DDirection}
-                    />
-                  </>
-                )}
-              </>
-            )}
 
             {/* 도어 열리는 방향 표시 (2D 정면뷰에서만) */}
             {viewMode === '2D' && view2DDirection === 'front' && (
@@ -2071,7 +1861,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             {/* 도어 가로 폭 치수 (2D 정면뷰에서만) */}
             {viewMode === '2D' && view2DDirection === 'front' && (() => {
               const extensionLineStart = mmToThreeUnits(20); // 도어 하단에서 20mm 떨어진 곳에서 시작
-              const extensionLineLength = mmToThreeUnits(160); // 연장선 길이 160mm
+              const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
               const dimensionLineY = -doorHeight / 2 - extensionLineStart - extensionLineLength; // 치수선 Y 위치
               const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
 
