@@ -1050,6 +1050,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     // 정면뷰와 측면뷰에서 다른 좌표 사용
                     const isFrontView = view2DDirection === 'front';
 
+                    console.log('🔶 Left door diagonal:', {
+                      viewMode,
+                      view2DDirection,
+                      isFrontView,
+                      leftDoorWidthUnits,
+                      doorHeight,
+                      doorThicknessUnits
+                    });
+
                     // 첫 번째 대각선 (위에서 아래로)
                     // 측면뷰에서는 정면뷰의 Z축이 측면뷰의 X축이 됨
                     const start1 = isFrontView
@@ -1058,6 +1067,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     const end1 = isFrontView
                       ? [-leftDoorWidthUnits / 2, 0, 0]
                       : [-doorThicknessUnits / 2, 0, 0];
+
+                    console.log('🔶 Points:', { start1, end1 });
                     const segments1 = [];
 
                     // 선분의 총 길이 계산
