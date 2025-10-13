@@ -1127,7 +1127,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
                             color="#FF8800"
-                            lineWidth={2}
+                            lineWidth={1}
                             transparent={true}
                             opacity={1.0}
                           />
@@ -1151,7 +1151,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
                             color="#FF8800"
-                            lineWidth={2}
+                            lineWidth={1}
                             transparent={true}
                             opacity={1.0}
                           />
@@ -1193,7 +1193,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
                             color="#FF8800"
-                            lineWidth={2}
+                            lineWidth={1}
                             transparent={true}
                             opacity={1.0}
                           />
@@ -1217,7 +1217,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
                             color="#FF8800"
-                            lineWidth={2}
+                            lineWidth={1}
                             transparent={true}
                             opacity={1.0}
                           />
@@ -1492,7 +1492,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
                             color="#FF8800"
-                            lineWidth={2}
+                            lineWidth={1}
                             transparent={true}
                             opacity={1.0}
                           />
@@ -1516,7 +1516,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
                             color="#FF8800"
-                            lineWidth={2}
+                            lineWidth={1}
                             transparent={true}
                             opacity={1.0}
                           />
@@ -1558,7 +1558,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
                             color="#FF8800"
-                            lineWidth={2}
+                            lineWidth={1}
                             transparent={true}
                             opacity={1.0}
                           />
@@ -1582,7 +1582,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
                             color="#FF8800"
-                            lineWidth={2}
+                            lineWidth={1}
                             transparent={true}
                             opacity={1.0}
                           />
@@ -1962,7 +1962,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
                           color="#FF8800"
-                          lineWidth={2}
+                          lineWidth={1}
                           transparent={true}
                           opacity={1.0}
                         />
@@ -1986,7 +1986,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
                           color="#FF8800"
-                          lineWidth={2}
+                          lineWidth={1}
                           transparent={true}
                           opacity={1.0}
                         />
@@ -2028,7 +2028,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                           ]}
                           color="#FF8800"
-                          lineWidth={2}
+                          lineWidth={1}
                           transparent={true}
                           opacity={1.0}
                         />
@@ -2052,7 +2052,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                           ]}
                           color="#FF8800"
-                          lineWidth={2}
+                          lineWidth={1}
                           transparent={true}
                           opacity={1.0}
                         />
