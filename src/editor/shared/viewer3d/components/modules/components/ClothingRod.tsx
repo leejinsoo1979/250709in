@@ -86,11 +86,9 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const rodMaterial = React.useMemo(() => {
     if (viewMode === '3D') {
       return new THREE.MeshStandardMaterial({
-        color: '#DDDDDD', // 밝은 실버
-        metalness: 0.85,  // 높은 금속성
-        roughness: 0.15,  // 적당한 광택
-        emissive: '#333333', // 약간의 자체 발광
-        emissiveIntensity: 0.1
+        color: '#D4D4D4', // 밝은 은색
+        metalness: 0.7,   // 금속성
+        roughness: 0.2    // 광택
       });
     } else {
       return new THREE.MeshStandardMaterial({
