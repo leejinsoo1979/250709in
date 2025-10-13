@@ -1123,10 +1123,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
-                            color="#CC3300"
+                            color="#993300"
                             lineWidth={0.5}
                             transparent={true}
-                            opacity={0.6}
+                            opacity={1.0}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -1147,10 +1147,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
-                            color="#CC3300"
+                            color="#993300"
                             lineWidth={0.5}
                             transparent={true}
-                            opacity={0.6}
+                            opacity={1.0}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -1189,10 +1189,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
-                            color="#CC3300"
+                            color="#993300"
                             lineWidth={0.5}
                             transparent={true}
-                            opacity={0.6}
+                            opacity={1.0}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -1213,10 +1213,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
-                            color="#CC3300"
+                            color="#993300"
                             lineWidth={0.5}
                             transparent={true}
-                            opacity={0.6}
+                            opacity={1.0}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -1418,10 +1418,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
-                            color="#CC3300"
+                            color="#993300"
                             lineWidth={0.5}
                             transparent={true}
-                            opacity={0.6}
+                            opacity={1.0}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -1442,10 +1442,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                               [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
-                            color="#CC3300"
+                            color="#993300"
                             lineWidth={0.5}
                             transparent={true}
-                            opacity={0.6}
+                            opacity={1.0}
                           />
                         );
                         if (currentPos + dashLength >= totalLength1) break;
@@ -1484,10 +1484,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
-                            color="#CC3300"
+                            color="#993300"
                             lineWidth={0.5}
                             transparent={true}
-                            opacity={0.6}
+                            opacity={1.0}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -1508,10 +1508,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
-                            color="#CC3300"
+                            color="#993300"
                             lineWidth={0.5}
                             transparent={true}
-                            opacity={0.6}
+                            opacity={1.0}
                           />
                         );
                         if (currentPos + dashLength >= totalLength2) break;
@@ -1818,10 +1818,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
-                          color="#CC3300"
+                          color="#993300"
                           lineWidth={0.5}
                           transparent={true}
-                          opacity={0.6}
+                          opacity={1.0}
                         />
                       );
                       if (currentPos + dashLength >= totalLength1) break;
@@ -1842,10 +1842,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                           ]}
-                          color="#CC3300"
+                          color="#993300"
                           lineWidth={0.5}
                           transparent={true}
-                          opacity={0.6}
+                          opacity={1.0}
                         />
                       );
                       if (currentPos + dashLength >= totalLength1) break;
@@ -1884,10 +1884,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                           ]}
-                          color="#CC3300"
+                          color="#993300"
                           lineWidth={0.5}
                           transparent={true}
-                          opacity={0.6}
+                          opacity={1.0}
                         />
                       );
                       if (currentPos + dashLength >= totalLength2) break;
@@ -1908,10 +1908,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                           ]}
-                          color="#CC3300"
+                          color="#993300"
                           lineWidth={0.5}
                           transparent={true}
-                          opacity={0.6}
+                          opacity={1.0}
                         />
                       );
                       if (currentPos + dashLength >= totalLength2) break;
