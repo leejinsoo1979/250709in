@@ -729,9 +729,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     {viewMode === '3D' && (
                       <Text
                         position={[
-                          -rightWidth/2 * 0.3 - 0.8 + 0.01, 
+                          -rightWidth/2 * 0.3 - 0.8 + 0.01,
                           -height/2 + basicThickness/2 - 0.01,
-                          3.01 - 0.01
+                          rightShelfZOffset + rightAdjustedDepthForShelves/2 - 0.01
                         ]}
                         fontSize={baseFontSize}
                         color="rgba(0, 0, 0, 0.3)"
@@ -797,7 +797,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         position={[
                           -rightWidth/2 * 0.3 - 0.8 + 0.01,
                           height/2 - basicThickness/2 - 0.01,
-                          rightDepth/2 + 0.1 - 0.01
+                          rightShelfZOffset + rightAdjustedDepthForShelves/2 - 0.01
                         ]}
                         fontSize={baseFontSize}
                         color="rgba(0, 0, 0, 0.3)"
