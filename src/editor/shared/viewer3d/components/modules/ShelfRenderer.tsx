@@ -26,6 +26,7 @@ interface ShelfRendererProps {
   showTopFrameDimension?: boolean; // 상단 프레임 치수 표시 여부
   isHighlighted?: boolean; // 가구 강조 여부
   sectionType?: 'shelf' | 'hanging' | 'drawer' | 'open'; // 섹션 타입
+  allowSideViewDimensions?: boolean; // 측면뷰에서 치수 표시 허용 (듀얼 가구용)
 }
 
 /**
@@ -50,6 +51,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   showTopFrameDimension = false,
   isHighlighted = false,
   sectionType,
+  allowSideViewDimensions = false,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
@@ -164,7 +166,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
         {/* 치수 표시 - showDimensions와 showDimensionsText가 모두 true이고 상단 마감 패널이 아닐 때 표시 */}
         {/* Type2의 하단 섹션처럼 선반이 1개이고 상단 근처에만 있는 경우는 제외 */}
         {/* 단, 첫 번째 칸의 높이가 100mm 이상이면 표시 */}
-        {showDimensions && showDimensionsText && !isTopFinishPanel && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
+        {/* 듀얼 가구(allowSideViewDimensions=true)는 측면뷰에서도 치수 표시 허용 */}
+        {showDimensions && showDimensionsText && !isTopFinishPanel &&
+         !(viewMode === '2D' && view2DDirection === 'top') &&
+         !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && !allowSideViewDimensions) && (
           <group>
             {(() => {
               const compartmentHeights: Array<{ height: number; centerY: number }> = [];
@@ -584,7 +589,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       })}
       
       {/* 치수 표시 - showDimensions와 showDimensionsText가 모두 true일 때 표시 */}
-      {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
+      {/* 듀얼 가구(allowSideViewDimensions=true)는 측면뷰에서도 치수 표시 허용 */}
+      {showDimensions && showDimensionsText &&
+       !(viewMode === '2D' && view2DDirection === 'top') &&
+       !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && !allowSideViewDimensions) && (
         <group>
           {Array.from({ length: shelfCount + 1 }, (_, i) => {
             // 각 칸의 높이 계산

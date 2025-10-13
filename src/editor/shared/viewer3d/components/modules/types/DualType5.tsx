@@ -216,11 +216,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isTopFinishPanel={section.isTopFinishPanel}
                   renderMode={renderMode}
                   furnitureId={moduleData.id}
+                  allowSideViewDimensions={true}
                 />
               );
             }
             break;
-            
+
           case 'hanging':
             if (section.count && section.count > 0) {
               sectionContent = (
@@ -237,6 +238,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isTopFinishPanel={section.isTopFinishPanel}
                   renderMode={renderMode}
                   furnitureId={moduleData.id}
+                  allowSideViewDimensions={true}
                 />
               );
             } else {
@@ -613,6 +615,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isTopFinishPanel={section.isTopFinishPanel}
                   renderMode={renderMode}
                   furnitureId={rightFurnitureId}
+                  allowSideViewDimensions={true}
                 />
               );
             } else {
@@ -620,7 +623,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               sectionContent = null;
             }
             break;
-            
+
           case 'shelf':
             if (section.count && section.count > 0) {
               sectionContent = (
@@ -637,6 +640,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isTopFinishPanel={section.isTopFinishPanel}
                   renderMode={renderMode}
                   furnitureId={moduleData.id}
+                  allowSideViewDimensions={true}
                 />
               );
             }
