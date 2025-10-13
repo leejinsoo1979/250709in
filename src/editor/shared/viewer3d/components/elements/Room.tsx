@@ -2912,39 +2912,16 @@ const Room: React.FC<RoomProps> = ({
       ) : (
         // placedModules prop이 없는 경우 (에디터 모드)
         <>
-          {(() => {
-            // 에디터 모드에서도 측면뷰 + 선택된 슬롯 필터링 적용
-            let filteredModulesEditor = placedModulesFromStore;
-
-            // 측면뷰이고 selectedSlotIndex가 있는 경우 slotIndex 기준 필터링
-            if ((view2DDirection === 'left' || view2DDirection === 'right') && selectedSlotIndex !== null) {
-              filteredModulesEditor = filteredModulesEditor.filter(module => {
-                if (module.slotIndex === undefined) return false;
-
-                // 듀얼 가구인 경우: 시작 슬롯 또는 다음 슬롯 확인
-                if (module.isDualSlot) {
-                  return module.slotIndex === selectedSlotIndex || module.slotIndex + 1 === selectedSlotIndex;
-                }
-
-                // 싱글 가구인 경우: 정확히 일치하는 슬롯만
-                return module.slotIndex === selectedSlotIndex;
-              });
-            }
-
-            console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (에디터 모드):', {
-              roomId: roomId.substring(0, 20),
-              viewMode,
-              renderMode,
-              view2DDirection,
-              activeZone,
-              selectedSlotIndex,
-              originalCount: placedModulesFromStore?.length || 0,
-              filteredCount: filteredModulesEditor?.length || 0,
-              timestamp: Date.now()
-            });
-
-            return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={showFurniture} placedModules={filteredModulesEditor} />;
-          })()}
+          {console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (에디터 모드):', {
+            roomId: roomId.substring(0, 20),
+            viewMode,
+            renderMode,
+            view2DDirection,
+            activeZone,
+            selectedSlotIndex,
+            timestamp: Date.now()
+          })}
+          <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={showFurniture} />
         </>
       )}
     </group>
