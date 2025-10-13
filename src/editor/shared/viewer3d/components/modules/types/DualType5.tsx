@@ -339,11 +339,16 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             {sectionContent}
             {separatorPanel}
             
-            {/* 좌측 섹션 치수 표시 - 2D 탑뷰/우측뷰는 숨김, 좌측뷰/정면뷰는 visibleSectionIndex가 null이거나 0일 때 표시 */}
+            {/* 좌측 섹션 치수 표시 - 슬롯1 선택시에만 표시 (측면뷰에서는 visibleSectionIndex === 0일 때만) */}
             {showDimensions && showDimensionsText &&
              !(viewMode === '2D' && view2DDirection === 'top') &&
              !(viewMode === '2D' && view2DDirection === 'right') &&
-             (visibleSectionIndex === null || visibleSectionIndex === 0) && (
+             (
+               // 측면뷰(좌측/우측): visibleSectionIndex === 0일 때만 표시
+               (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && visibleSectionIndex === 0) ||
+               // 정면뷰/3D: visibleSectionIndex가 null이거나 0일 때 표시
+               (!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (visibleSectionIndex === null || visibleSectionIndex === 0))
+             ) && (
               <>
                 {/* 섹션 구분 패널 두께 표시 (마지막 섹션 제외) */}
                 {index < allSections.length - 1 && (
@@ -700,11 +705,16 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           <group key={`right-section-${index}`}>
             {sectionContent}
             
-            {/* 우측 섹션 치수 표시 - 2D 탑뷰/좌측뷰는 숨김, 우측뷰/정면뷰는 visibleSectionIndex가 null이거나 1일 때 표시 */}
+            {/* 우측 섹션 치수 표시 - 슬롯2 선택시에만 표시 (측면뷰에서는 visibleSectionIndex === 1일 때만) */}
             {showDimensions && showDimensionsText &&
              !(viewMode === '2D' && view2DDirection === 'top') &&
              !(viewMode === '2D' && view2DDirection === 'left') &&
-             (visibleSectionIndex === null || visibleSectionIndex === 1) && (
+             (
+               // 측면뷰(좌측/우측): visibleSectionIndex === 1일 때만 표시
+               (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && visibleSectionIndex === 1) ||
+               // 정면뷰/3D: visibleSectionIndex가 null이거나 1일 때 표시
+               (!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (visibleSectionIndex === null || visibleSectionIndex === 1))
+             ) && (
               <group>
                 {/* 첫 번째 섹션일 때만 하부 프레임 두께 표시 */}
                 {index === 0 && (
