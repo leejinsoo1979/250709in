@@ -1714,8 +1714,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       mainDiameter={17.5}
                       smallCircleDiameter={4}
                       smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                      viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                      view2DDirection={view2DDirection}
                     />
                     <Hinge
                       position={[
@@ -1726,8 +1724,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       mainDiameter={17.5}
                       smallCircleDiameter={4}
                       smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                      viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                      view2DDirection={view2DDirection}
                     />
                   </>
                 ) : isLowerCabinet ? (
@@ -1742,8 +1738,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       mainDiameter={17.5}
                       smallCircleDiameter={4}
                       smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                      viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                      view2DDirection={view2DDirection}
                     />
                     <Hinge
                       position={[
@@ -1754,8 +1748,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       mainDiameter={17.5}
                       smallCircleDiameter={4}
                       smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                      viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                      view2DDirection={view2DDirection}
                     />
                   </>
                 ) : (
@@ -1770,8 +1762,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       mainDiameter={17.5}
                       smallCircleDiameter={4}
                       smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                      viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                      view2DDirection={view2DDirection}
                     />
                     <Hinge
                       position={[
@@ -1782,8 +1772,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       mainDiameter={17.5}
                       smallCircleDiameter={4}
                       smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                      viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                      view2DDirection={view2DDirection}
                     />
                     <Hinge
                       position={[
@@ -1794,8 +1782,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       mainDiameter={17.5}
                       smallCircleDiameter={4}
                       smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                      viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                      view2DDirection={view2DDirection}
                     />
                     <Hinge
                       position={[
@@ -1806,8 +1792,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       mainDiameter={17.5}
                       smallCircleDiameter={4}
                       smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
-                      viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                      view2DDirection={view2DDirection}
                     />
                   </>
                 )}
