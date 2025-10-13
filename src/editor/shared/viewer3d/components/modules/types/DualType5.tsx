@@ -1290,8 +1290,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           );
         })()}
 
-        {/* 우측 백패널 (고정 깊이 660mm 기준) (visibleSectionIndex가 0이 아닐 때만) */}
-        {visibleSectionIndex !== 0 && (
+        {/* 우측 백패널 (고정 깊이 660mm 기준) - 3D 모드에서는 항상 표시 */}
+        {(viewMode === '3D' || visibleSectionIndex !== 0) && (
           <BoxWithEdges
             args={[rightWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
             position={[rightXOffset, 0, -rightDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2]}
