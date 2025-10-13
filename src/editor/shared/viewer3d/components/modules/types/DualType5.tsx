@@ -482,7 +482,91 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     </group>
                   );
                 })()}
-                
+
+                {/* 상부섹션(hanging)의 내경 높이 표시 */}
+                {(section.type === 'hanging' && index > 0) && (() => {
+                  // 바닥판 위부터 시작
+                  const internalBottomY = currentYPosition + basicThickness;
+
+                  // 안전선반이 있는지 확인
+                  let internalTopY;
+                  let hangingInternalHeight;
+
+                  if (section.shelfPositions && section.shelfPositions.length > 0) {
+                    // 안전선반이 있는 경우: 첫 번째 선반 위치까지 (섹션 하단 기준)
+                    const safetyShelfPosition = section.shelfPositions[0];
+                    internalTopY = currentYPosition + safetyShelfPosition;
+                    hangingInternalHeight = safetyShelfPosition - basicThickness;
+                  } else {
+                    // 안전선반이 없는 경우: 측판 상단까지
+                    internalTopY = currentYPosition + sectionHeight - basicThickness;
+                    hangingInternalHeight = sectionHeight - 2 * basicThickness;
+                  }
+
+                  const internalCenterY = (internalBottomY + internalTopY) / 2;
+
+                  return (
+                    <group>
+                      {/* 상부섹션 내경 높이 텍스트 */}
+                      {viewMode === '3D' && (
+                        <Text
+                          position={[
+                            -leftWidth/2 * 0.3 - 0.8 + 0.01,
+                            internalCenterY - 0.01,
+                            leftAdjustedDepthForShelves/2 + 0.1 - 0.01
+                          ]}
+                          fontSize={0.45}
+                          color="rgba(0, 0, 0, 0.3)"
+                          anchorX="center"
+                          anchorY="middle"
+                          rotation={[0, 0, Math.PI / 2]}
+                          renderOrder={998}
+                        >
+                          {Math.round(hangingInternalHeight * 100)}
+                        </Text>
+                      )}
+                      <Text
+                        position={[
+                          viewMode === '3D' ? -leftWidth/2 * 0.3 - 0.8 : -leftWidth/2 * 0.3 - 0.5,
+                          internalCenterY,
+                          viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0
+                        ]}
+                        fontSize={viewMode === '3D' ? 0.45 : 0.32}
+                        color={dimensionColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        rotation={[0, 0, Math.PI / 2]}
+                        renderOrder={999}
+                      >
+                        {Math.round(hangingInternalHeight * 100)}
+                      </Text>
+
+                      {/* 상부섹션 내경 수직선 (바닥판 위부터 측판 상단까지) */}
+                      <Line
+                        points={[
+                          [-leftWidth/2 * 0.3, internalBottomY, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0],
+                          [-leftWidth/2 * 0.3, internalTopY, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]
+                        ]}
+                        color={dimensionColor}
+                        lineWidth={1}
+                      />
+                      {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                      {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                        <>
+                          <mesh position={[-leftWidth/2 * 0.3, internalBottomY, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]}>
+                            <sphereGeometry args={[0.05, 8, 8]} />
+                            <meshBasicMaterial color={dimensionColor} />
+                          </mesh>
+                          <mesh position={[-leftWidth/2 * 0.3, internalTopY, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]}>
+                            <sphereGeometry args={[0.05, 8, 8]} />
+                            <meshBasicMaterial color={dimensionColor} />
+                          </mesh>
+                        </>
+                      )}
+                    </group>
+                  );
+                })()}
+
                 {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 */}
                 {index === 0 && section.type === 'drawer' && (
                   <group>
