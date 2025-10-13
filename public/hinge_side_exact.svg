@@ -1,97 +1,43 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 55" stroke="#FF00FF" fill="none" stroke-width="1">
-  <defs>
-    <g id="screw_cross">
-      <!-- 십자 나사 헤드 패턴 -->
-      <circle cx="0" cy="0" r="3.5"/>
-      <line x1="0" y1="-3.5" x2="0" y2="3.5"/>
-      <line x1="-3.5" y1="0" x2="3.5" y2="0"/>
-    </g>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="595.32pt" height="841.92007pt" viewBox="0 0 841.92 595.32"><g transform="rotate(-90) translate(-595.32,0)">
 
-  <!-- 좌측 베이스 플레이트 (12mm 돌출 직사각형) -->
-  <rect x="0" y="10" width="12" height="35" rx="1" ry="1"/>
+<path transform="matrix(.75,0,0,.75,329.52,347.88)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0V-212.96L-.16-215.36-1.12-217.76-2.4-220-4.16-221.76-6.4-223.2-8.8-224-11.36-224.32H-125.28L-127.84-224-130.24-223.2-132.48-221.76-134.24-220-135.68-217.76-136.48-215.36-136.8-212.96V0"/>
+<path transform="matrix(.75,0,0,.75,218.40001,356.40003)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 2.56-.32 4.96-1.12 7.2-2.56 8.96-4.32 10.24-6.4 11.2-8.8 11.36-11.36"/>
+<path transform="matrix(.75,0,0,.75,218.40001,356.40003)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0H-83.52L-86.08 .32-88.48 1.12-90.72 2.56-92.48 4.32-93.92 6.4-94.72 8.8-95.04 11.36V102.56L-94.72 105.12-93.92 107.52-92.48 109.76-90.72 111.52-88.48 112.96-86.08 113.76-83.52 114.08H0"/>
+<path transform="matrix(.75,0,0,.75,226.92,450.48)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0-.16-2.56-1.12-4.96-2.4-7.2-4.16-8.96-6.4-10.24-8.8-11.2-11.36-11.36"/>
+<path transform="matrix(.75,0,0,.75,226.92,450.48)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0V91.2L.32 93.76 1.12 96.16 2.56 98.24 4.32 100.16 6.56 101.44 8.96 102.24 11.52 102.56H125.44L128 102.24 130.4 101.44 132.64 100.16 134.4 98.24 135.68 96.16 136.64 93.76 136.8 91.2V0"/>
+<path transform="matrix(.75,0,0,.75,338.16,441.96003)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0-2.56 .16-4.96 1.12-7.2 2.4-8.96 4.16-10.24 6.4-11.2 8.8-11.52 11.36"/>
+<path transform="matrix(.75,0,0,.75,338.16,441.96003)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0H83.52L86.08-.32 88.48-1.12 90.72-2.56 92.48-4.32 93.76-6.56 94.72-8.96 95.04-11.52V-102.72L94.72-105.28 93.76-107.68 92.48-109.76 90.72-111.52 88.48-112.96 86.08-113.76 83.52-114.08H0"/>
+<path transform="matrix(.75,0,0,.75,329.52,347.88)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 .32 2.56 1.28 4.96 2.56 7.04 4.32 8.8 6.56 10.24 8.96 11.04 11.52 11.36"/>
+<path transform="matrix(.75,0,0,.75,187.08,413.40003)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 3.2-.32 6.4-1.12 9.44-2.56 12.16-4.48 14.56-6.72 16.48-9.44 17.76-12.48 18.72-15.68 19.04-19.04 18.72-22.24 17.76-25.44 16.48-28.48 14.56-31.2 12.16-33.6 9.44-35.52 6.4-36.8 3.2-37.76 0-37.92-3.36-37.76-6.56-36.8-9.6-35.52-12.32-33.6-14.56-31.2-16.48-28.48-17.92-25.44-18.72-22.24-19.04-19.04-18.72-15.68-17.92-12.48-16.48-9.44-14.56-6.72-12.32-4.48-9.6-2.56-6.56-1.12-3.36-.32 0 0Z"/>
+<path transform="matrix(.75,0,0,.75,369.48,413.40003)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 3.36-.32 6.56-1.12 9.44-2.56 12.16-4.48 14.56-6.72 16.48-9.44 17.92-12.48 18.72-15.68 19.04-19.04 18.72-22.24 17.92-25.44 16.48-28.48 14.56-31.2 12.16-33.6 9.44-35.52 6.56-36.8 3.36-37.76 0-37.92-3.36-37.76-6.56-36.8-9.44-35.52-12.16-33.6-14.56-31.2-16.48-28.48-17.92-25.44-18.72-22.24-19.04-19.04-18.72-15.68-17.92-12.48-16.48-9.44-14.56-6.72-12.16-4.48-9.44-2.56-6.56-1.12-3.36-.32 0 0Z"/>
+<path transform="matrix(.75,0,0,.75,278.28,213.84)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 3.52-.32 7.04-1.12 10.4-2.4 13.44-4.32 16.16-6.72 18.4-9.44 20.32-12.48 21.6-15.68 22.56-19.2 22.72-22.72 22.56-26.4 21.6-29.76 20.32-33.12 18.4-36.16 16.16-38.88 13.44-41.28 10.4-43.04 7.04-44.48 3.52-45.28 0-45.6-3.52-45.28-7.04-44.48-10.4-43.04-13.44-41.28-16.16-38.88-18.4-36.16-20.32-33.12-21.76-29.76-22.56-26.4-22.88-22.72-22.56-19.2-21.76-15.68-20.32-12.48-18.4-9.44-16.16-6.72-13.44-4.32-10.4-2.4-7.04-1.12-3.52-.32 0 0Z"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M310.24 794.4H431.84"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M139.2 794.4V813.44H602.88V794.4H139.2Z"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M310.24 794.4V362.88H431.84V794.4H310.24Z"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M238.08 813.44V893.28H504V813.44H238.08Z"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M321.6 347.68H420.48"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M321.6 362.88H420.48V336.96H321.6V362.88H420.48"/>
+<path transform="matrix(.75,0,0,.75,264,199.56)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0H15.2V15.2H22.88V0H38.08V-7.52H22.88V-22.72H15.2V-7.52H0V0Z"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M374.88 281.28V266.08"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M397.28 631.04H374.88V608.64"/>
+<path transform="matrix(.75,0,0,.75,297.96,473.27998)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0-.8-4.16-2.4-8-4.64-11.68-7.52-14.88-10.72-17.76-14.4-19.84-18.24-21.44-22.4-22.4"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M374.88 661.28V638.72H397.28"/>
+<path transform="matrix(.75,0,0,.75,281.16,495.96003)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 4.16-.96 8-2.56 11.68-4.8 14.88-7.52 17.76-10.88 20-14.4 21.6-18.4 22.4-22.56"/>
+<path transform="matrix(.75,0,0,.75,301.08003,429)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0V-121.6L-.32-124.16-1.12-126.56-2.56-128.8-4.32-130.56-6.4-132-8.8-132.8-11.36-133.12H-49.44L-52-132.8-54.4-132-56.48-130.56-58.4-128.8-59.68-126.56-60.48-124.16-60.8-121.6V0L-60.48 2.56-59.68 4.96-58.4 7.04-56.48 8.96-54.4 10.24-52 11.04-49.44 11.36H-11.36L-8.8 11.04-6.4 10.24-4.32 8.96-2.56 7.04-1.12 4.96-.32 2.56 0 0Z"/>
+<path transform="matrix(.75,0,0,.75,289.68,377.40003)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 3.52-2.4 6.72-5.28 9.44-8.48 11.68-12.16 13.44-16.16 14.56-20.32 15.2-24.48 15.04-28.8 14.4-33.12 13.12-37.12 11.36-41.12 8.96-44.64 6.08-47.84 2.88-50.72-.8-52.96-4.64-54.72-8.8-56-13.12-56.64H-17.44L-21.6-56-25.76-54.72-29.6-52.96-33.28-50.72-36.64-47.84-39.36-44.64-41.76-41.12-43.52-37.12-44.8-33.12-45.44-28.8-45.6-24.48-44.96-20.32-43.84-16.16-42.24-12.16-39.84-8.48-37.12-5.28-33.92-2.4-30.4 0"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M386.24 503.2V564.32"/>
+<path transform="matrix(.75,0,0,.75,281.16,431.88)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 2.56-.32 4.96-1.28 7.04-2.56 8.8-4.32 10.24-6.56 11.04-8.96 11.36-11.52"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M374.88 575.84H367.2"/>
+<path transform="matrix(.75,0,0,.75,266.88,423.24)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 .32 2.56 1.12 4.96 2.4 7.2 4.32 8.96 6.4 10.24 8.8 11.2 11.36 11.52"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M355.84 564.32V503.2"/>
+<path transform="matrix(.75,0,0,.75,264,360.59999)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0H15.2V15.2H22.88V0H38.08V-7.68H22.88V-22.88H15.2V-7.68H0V0Z"/>
+<path transform="matrix(.75,0,0,.75,278.28,374.76)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 3.52-.16 7.04-1.12 10.4-2.4 13.44-4.32 16.16-6.56 18.4-9.28 20.32-12.32 21.6-15.68 22.56-19.2 22.72-22.72 22.56-26.24 21.6-29.76 20.32-33.12 18.4-36.16 16.16-38.88 13.44-41.12 10.4-43.04 7.04-44.48 3.52-45.28 0-45.6-3.52-45.28-7.04-44.48-10.4-43.04-13.44-41.12-16.16-38.88-18.4-36.16-20.32-33.12-21.76-29.76-22.56-26.24-22.88-22.72-22.56-19.2-21.76-15.68-20.32-12.32-18.4-9.28-16.16-6.56-13.44-4.32-10.4-2.4-7.04-1.12-3.52-.16 0 0Z"/>
+<path transform="matrix(.75,0,0,.75,275.40003,495.96003)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0V-22.56H-22.56L-21.6-18.4-20-14.4-17.76-10.88-15.04-7.52-11.68-4.8-8.16-2.56-4.16-.96 0 0Z"/>
+<path transform="matrix(.75,0,0,.75,258.48,473.27998)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0H22.56V-22.4L18.4-21.44 14.4-19.84 10.88-17.76 7.52-14.88 4.8-11.68 2.56-8 .96-4.16 0 0Z"/>
+<path transform="matrix(.75,0,0,.75,160.79999,405.24)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 26.88 26.88 30.24 29.6 33.92 32 37.76 33.76 41.92 35.04 46.24 35.68H50.56L54.88 35.04 59.04 33.76 63.04 32 66.72 29.6 69.92 26.88 72.8 23.52 75.2 19.84 76.96 16 78.08 11.84 78.72 7.52V3.2L78.08-1.12 76.96-5.28 75.2-9.28 72.8-12.96 69.92-16.16 43.04-43.04 39.84-45.92 36.16-48.16 32.16-50.08 28-51.2 23.68-51.84H19.36L15.04-51.2 10.88-50.08 7.04-48.16 3.36-45.92 0-43.04-2.72-39.84-5.12-36.16-6.88-32.16-8.16-28-8.8-23.68V-19.36L-8.16-15.04-6.88-10.88-5.12-7.04-2.72-3.36 0 0Z"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M527.52 540.32 500.64 567.2"/>
+<path transform="matrix(.75,0,0,.75,343.32,393.12)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0-2.88 3.2-5.28 6.88-7.04 10.88-8.32 15.04-8.96 19.36V23.68L-8.32 28-7.04 32.16-5.28 36-2.88 39.68 0 43.04 3.2 45.76 6.88 48.16 10.88 49.92 15.04 51.2 19.2 51.84H23.68L27.84 51.2 32 49.92 36 48.16 39.68 45.76 42.88 43.04"/>
+<path transform="matrix(.75,0,0,.75,0,0)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M457.76 524.16 484.64 497.28"/>
+<path transform="matrix(.75,0,0,.75,395.64,405.24)" stroke-width=".5" stroke-linecap="round" stroke-linejoin="round" fill="none" stroke="#FF00FF" d="M0 0 2.88-3.36 5.28-7.04 7.04-10.88 8.32-15.04 8.96-19.36V-23.68L8.32-28 7.04-32.16 5.28-36.16 2.88-39.84 0-43.04-3.2-45.92-6.88-48.16-10.88-50.08-15.04-51.2-19.2-51.84H-23.68L-27.84-51.2-32-50.08-36-48.16-39.68-45.92-42.88-43.04"/>
 
-  <!-- 좌측 원형 플레이트 (직경 35mm) -->
-  <circle cx="17.5" cy="27.5" r="17.5"/>
-
-  <!-- 메인 바디 (수평 막대, 두께 16.5mm) -->
-  <rect x="12" y="19.25" width="56" height="16.5" rx="2" ry="2"/>
-
-  <!-- 좌측 나사 디테일 (원 + 십자) -->
-  <use href="#screw_cross" x="20" y="27.5"/>
-
-  <!-- 중앙 타원형 슬롯 -->
-  <ellipse cx="35" cy="27.5" rx="10" ry="2.5"/>
-
-  <!-- 우측 슬롯 (23mm 길이) -->
-  <ellipse cx="57" cy="27.5" rx="11.5" ry="2.5"/>
-
-  <!-- 우측 나사 디테일 -->
-  <use href="#screw_cross" x="57" y="27.5"/>
-
-  <!-- 우측 끝단 캡 -->
-  <rect x="68" y="25.5" width="5" height="4" rx="1" ry="1"/>
-
-  <!-- 상부 패드 (라운드 사각형) -->
-  <g id="upper_pad">
-    <!-- 외곽 -->
-    <rect x="40" y="0" width="18" height="10" rx="3" ry="3"/>
-    <!-- 내부 이중선 -->
-    <rect x="41" y="1" width="16" height="8" rx="2.5" ry="2.5"/>
-    <!-- 중앙 슬롯 -->
-    <ellipse cx="49" cy="5" rx="5.5" ry="2.5"/>
-    <ellipse cx="49" cy="5" rx="3" ry="1.5"/>
-    <!-- 리브 (수평선들) -->
-    <line x1="42" y1="3" x2="47" y2="3"/>
-    <line x1="42" y1="4" x2="47" y2="4"/>
-    <line x1="42" y1="5" x2="47" y2="5"/>
-    <line x1="42" y1="6" x2="47" y2="6"/>
-    <line x1="42" y1="7" x2="47" y2="7"/>
-    <line x1="51" y1="3" x2="56" y2="3"/>
-    <line x1="51" y1="4" x2="56" y2="4"/>
-    <line x1="51" y1="5" x2="56" y2="5"/>
-    <line x1="51" y1="6" x2="56" y2="6"/>
-    <line x1="51" y1="7" x2="56" y2="7"/>
-    <!-- 중심 원 -->
-    <circle cx="49" cy="5" r="1.2"/>
-  </g>
-
-  <!-- 하부 패드 (상부와 대칭) -->
-  <g id="lower_pad">
-    <!-- 외곽 -->
-    <rect x="40" y="45" width="18" height="10" rx="3" ry="3"/>
-    <!-- 내부 이중선 -->
-    <rect x="41" y="46" width="16" height="8" rx="2.5" ry="2.5"/>
-    <!-- 중앙 슬롯 -->
-    <ellipse cx="49" cy="50" rx="5.5" ry="2.5"/>
-    <ellipse cx="49" cy="50" rx="3" ry="1.5"/>
-    <!-- 리브 (수평선들) -->
-    <line x1="42" y1="47" x2="47" y2="47"/>
-    <line x1="42" y1="48" x2="47" y2="48"/>
-    <line x1="42" y1="49" x2="47" y2="49"/>
-    <line x1="42" y1="50" x2="47" y2="50"/>
-    <line x1="42" y1="51" x2="47" y2="51"/>
-    <line x1="42" y1="52" x2="47" y2="52"/>
-    <line x1="51" y1="47" x2="56" y2="47"/>
-    <line x1="51" y1="48" x2="56" y2="48"/>
-    <line x1="51" y1="49" x2="56" y2="49"/>
-    <line x1="51" y1="50" x2="56" y2="50"/>
-    <line x1="51" y1="51" x2="56" y2="51"/>
-    <line x1="51" y1="52" x2="56" y2="52"/>
-    <!-- 중심 원 -->
-    <circle cx="49" cy="50" r="1.2"/>
-  </g>
-
-  <!-- 상부 좌측 플레어 (삼각 보강) -->
-  <polygon points="12,19.25 30,10 40,10 40,19.25"/>
-
-  <!-- 상부 우측 플레어 -->
-  <polygon points="58,10 68,19.25 58,19.25"/>
-
-  <!-- 하부 좌측 플레어 -->
-  <polygon points="12,35.75 30,45 40,45 40,35.75"/>
-
-  <!-- 하부 우측 플레어 -->
-  <polygon points="58,35.75 58,45 68,35.75"/>
-</svg>
+</g></svg>

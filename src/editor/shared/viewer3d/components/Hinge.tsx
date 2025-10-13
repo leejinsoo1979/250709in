@@ -79,17 +79,32 @@ export const Hinge: React.FC<HingeProps> = ({
       return allShapes;
     }, [svgData]);
 
-    // SVG는 이미 정확한 mm 스케일 (viewBox: 0 0 80 55)
-    // Three.js 단위로 변환: 1mm = 0.01 units
-    const scale = 0.01;
+    // SVG viewBox: 0 0 841.92 595.32 (회전 변환 포함)
+    // 실제 힌지 치수: 80mm(가로) x 55mm(세로)
+    // SVG는 이미 회전되어 있으므로 직접 사용
 
-    // SVG 중심점을 맞추기 위한 오프셋 (SVG의 중심이 0,0이 되도록)
-    const svgCenterX = 40; // 80mm / 2
-    const svgCenterY = 27.5; // 55mm / 2
+    // SVG 좌표를 Three.js 좌표로 변환
+    // viewBox 841.92 = 80mm → scale = 80 / 841.92 = 0.095
+    const svgWidth = 841.92;
+    const svgHeight = 595.32;
+    const actualWidthMm = 80;
+    const actualHeightMm = 55;
+
+    // mm to Three.js units: 1mm = 0.01 units
+    const targetWidth = mmToThreeUnits(actualWidthMm);
+    const targetHeight = mmToThreeUnits(actualHeightMm);
+
+    // 스케일 계산
+    const scaleX = targetWidth / svgWidth;
+    const scaleY = targetHeight / svgHeight;
+
+    // SVG 중심을 원점에 맞추기
+    const offsetX = -svgWidth / 2;
+    const offsetY = -svgHeight / 2;
 
     return (
       <group position={sidePosition}>
-        <group scale={[scale, -scale, scale]} position={[-svgCenterX * scale, svgCenterY * scale, 0]}>
+        <group position={[offsetX * scaleX, -offsetY * scaleY, 0]} scale={[scaleX, -scaleY, scaleX]}>
           {shapes.map((shape, index) => (
             <mesh key={index}>
               <shapeGeometry args={[shape]} />
