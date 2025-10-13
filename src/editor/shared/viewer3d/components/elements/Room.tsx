@@ -207,7 +207,7 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
+  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode, selectedSlotIndex } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
   
   // Three.js hooks for camera tracking
@@ -2874,36 +2874,57 @@ const Room: React.FC<RoomProps> = ({
         // placedModules prop이 전달된 경우 (뷰어 모드)
         <>
           {(() => {
-            // activeZone이 있고 단내림이 활성화된 경우 필터링
-            const filteredModules = activeZone && spaceInfo.droppedCeiling?.enabled && placedModules.length > 0
+            // 1. activeZone이 있고 단내림이 활성화된 경우 zone 기준 필터링
+            let filteredModules = activeZone && spaceInfo.droppedCeiling?.enabled && placedModules.length > 0
               ? placedModules.filter(module => module.zone === activeZone)
               : placedModules;
-            
+
+            // 2. 측면뷰이고 selectedSlotIndex가 있는 경우 slotIndex 기준 필터링
+            if ((view2DDirection === 'left' || view2DDirection === 'right') && selectedSlotIndex !== null) {
+              filteredModules = filteredModules.filter(module => module.slotIndex === selectedSlotIndex);
+            }
+
             console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (뷰어 모드):', {
               roomId: roomId.substring(0, 20),
               viewMode,
               renderMode,
               activeZone,
+              selectedSlotIndex,
+              view2DDirection,
               originalCount: placedModules?.length || 0,
               filteredCount: filteredModules?.length || 0,
               placedModules: filteredModules
             });
-            
+
             return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={showFurniture} />;
           })()}
         </>
       ) : (
         // placedModules prop이 없는 경우 (에디터 모드)
         <>
-          {console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (에디터 모드):', {
-            roomId: roomId.substring(0, 20),
-            viewMode,
-            renderMode,
-            view2DDirection,
-            activeZone,
-            timestamp: Date.now()
-          })}
-          <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={showFurniture} />
+          {(() => {
+            // 에디터 모드에서도 측면뷰 + 선택된 슬롯 필터링 적용
+            let filteredModulesEditor = placedModulesFromStore;
+
+            // 측면뷰이고 selectedSlotIndex가 있는 경우 slotIndex 기준 필터링
+            if ((view2DDirection === 'left' || view2DDirection === 'right') && selectedSlotIndex !== null) {
+              filteredModulesEditor = filteredModulesEditor.filter(module => module.slotIndex === selectedSlotIndex);
+            }
+
+            console.log('🔥 Room - PlacedFurnitureContainer 렌더링 (에디터 모드):', {
+              roomId: roomId.substring(0, 20),
+              viewMode,
+              renderMode,
+              view2DDirection,
+              activeZone,
+              selectedSlotIndex,
+              originalCount: placedModulesFromStore?.length || 0,
+              filteredCount: filteredModulesEditor?.length || 0,
+              timestamp: Date.now()
+            });
+
+            return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={showFurniture} placedModules={filteredModulesEditor} />;
+          })()}
         </>
       )}
     </group>
