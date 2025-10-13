@@ -1182,12 +1182,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
                 const isTopView = view2DDirection === 'top';
 
-                // 정면뷰: doorHeight 사용, 탑뷰: doorDepth 사용
+                // 정면뷰: doorHeight 사용 (음수 방향), 탑뷰: doorDepth 사용 (양수 방향)
                 const dimensionLinePos = isTopView
-                  ? -doorDepth / 2 - extensionLineStart - extensionLineLength
+                  ? doorDepth / 2 + extensionLineStart + extensionLineLength
                   : -doorHeight / 2 - extensionLineStart - extensionLineLength;
                 const extensionStart = isTopView
-                  ? -doorDepth / 2 - extensionLineStart
+                  ? doorDepth / 2 + extensionLineStart
                   : -doorHeight / 2 - extensionLineStart;
 
                 return (
@@ -1261,7 +1261,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     <DimensionText
                       value={leftDoorWidth}
                       position={isTopView ?
-                        [0, 0, dimensionLinePos - mmToThreeUnits(15)] :
+                        [0, 0, dimensionLinePos + mmToThreeUnits(15)] :
                         [0, dimensionLinePos + mmToThreeUnits(15), doorThicknessUnits / 2 + 0.001]
                       }
                       anchorX="center"
@@ -1515,12 +1515,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
                 const isTopView = view2DDirection === 'top';
 
-                // 정면뷰: doorHeight 사용, 탑뷰: doorDepth 사용
+                // 정면뷰: doorHeight 사용 (음수 방향), 탑뷰: doorDepth 사용 (양수 방향)
                 const dimensionLinePos = isTopView
-                  ? -doorDepth / 2 - extensionLineStart - extensionLineLength
+                  ? doorDepth / 2 + extensionLineStart + extensionLineLength
                   : -doorHeight / 2 - extensionLineStart - extensionLineLength;
                 const extensionStart = isTopView
-                  ? -doorDepth / 2 - extensionLineStart
+                  ? doorDepth / 2 + extensionLineStart
                   : -doorHeight / 2 - extensionLineStart;
 
                 return (
@@ -1594,7 +1594,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     <DimensionText
                       value={rightDoorWidth}
                       position={isTopView ?
-                        [0, 0, dimensionLinePos - mmToThreeUnits(15)] :
+                        [0, 0, dimensionLinePos + mmToThreeUnits(15)] :
                         [0, dimensionLinePos + mmToThreeUnits(15), doorThicknessUnits / 2 + 0.001]
                       }
                       anchorX="center"
@@ -1917,12 +1917,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               const tickSize = 0.03; // 틱 마크 크기 (CAD 표준)
               const isTopView = view2DDirection === 'top';
 
-              // 정면뷰: doorHeight 사용, 탑뷰: doorDepth 사용
+              // 정면뷰: doorHeight 사용 (음수 방향), 탑뷰: doorDepth 사용 (양수 방향)
               const dimensionLinePos = isTopView
-                ? -doorDepth / 2 - extensionLineStart - extensionLineLength
+                ? doorDepth / 2 + extensionLineStart + extensionLineLength
                 : -doorHeight / 2 - extensionLineStart - extensionLineLength;
               const extensionStart = isTopView
-                ? -doorDepth / 2 - extensionLineStart
+                ? doorDepth / 2 + extensionLineStart
                 : -doorHeight / 2 - extensionLineStart;
 
               return (
@@ -1996,7 +1996,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   <DimensionText
                     value={doorWidth}
                     position={isTopView ?
-                      [0, 0, dimensionLinePos - mmToThreeUnits(15)] :
+                      [0, 0, dimensionLinePos + mmToThreeUnits(15)] :
                       [0, dimensionLinePos + mmToThreeUnits(15), doorThicknessUnits / 2 + 0.001]
                     }
                     anchorX="center"
