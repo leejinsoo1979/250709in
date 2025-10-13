@@ -157,9 +157,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       return null;
     }
 
-    // 좌측 섹션용 깊이 계산 (백패널 안쪽면과 맞닿도록 뒤에서 10mm 축소)
-    const leftAdjustedDepthForShelves = leftDepth - mmToThreeUnits(10);
-    const leftShelfZOffset = mmToThreeUnits(5); // 중심을 앞으로 5mm 이동
+    // 좌측 섹션용 깊이 계산 (백패널 안쪽면과 맞닿도록 뒤에서 8mm 축소)
+    const leftAdjustedDepthForShelves = leftDepth - mmToThreeUnits(8);
+    const leftShelfZOffset = mmToThreeUnits(4); // 중심을 앞으로 4mm 이동
     
     // 우측 섹션용 깊이 계산 (660mm 기준 절대 위치 고정)
     const rightAdjustedDepthForShelves = mmToThreeUnits(660 - 18); // 660mm - 18mm (패널 두께)  
