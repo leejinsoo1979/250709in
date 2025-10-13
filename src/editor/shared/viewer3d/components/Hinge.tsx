@@ -63,12 +63,25 @@ export const Hinge: React.FC<HingeProps> = ({
     const [x, y, z] = position;
     const sidePosition: [number, number, number] = [z, y, 0];
 
+    console.log('Hinge side view rendering:', {
+      view2DDirection,
+      viewDirection,
+      position,
+      sidePosition,
+      pathCount: hingeSidePaths.length
+    });
+
     // 모든 SVG 경로를 파싱
     const lineSegments = useMemo(() => {
-      return hingeSidePaths.map(pathData =>
-        parseSVGPath(pathData.d, pathData.matrix)
-      );
+      const segments = hingeSidePaths.map(pathData => {
+        const points = parseSVGPath(pathData.d, pathData.matrix);
+        console.log('Parsed path:', { d: pathData.d.substring(0, 20), pointCount: points.length, firstPoint: points[0] });
+        return points;
+      });
+      return segments;
     }, []);
+
+    console.log('Total line segments:', lineSegments.length, 'First segment points:', lineSegments[0]?.length);
 
     // SVG viewBox: 0 0 491 348
     // 목표 크기: 35mm 높이
@@ -78,6 +91,8 @@ export const Hinge: React.FC<HingeProps> = ({
     const targetHeight = mmToThreeUnits(targetHeightMm);
     const scale = targetHeight / svgViewBoxHeight;
 
+    console.log('Scale calculation:', { targetHeight, scale });
+
     // SVG 중심을 원점에 맞추기
     const offsetX = -svgViewBoxWidth / 2;
     const offsetY = -svgViewBoxHeight / 2;
@@ -85,14 +100,17 @@ export const Hinge: React.FC<HingeProps> = ({
     return (
       <group position={sidePosition}>
         <group position={[offsetX * scale, -offsetY * scale, 0]} scale={[scale, -scale, scale]}>
-          {lineSegments.map((points, index) => (
-            <Line
-              key={index}
-              points={points}
-              color={lineColor}
-              lineWidth={1}
-            />
-          ))}
+          {lineSegments.map((points, index) => {
+            if (points.length < 2) return null;
+            return (
+              <Line
+                key={index}
+                points={points}
+                color={lineColor}
+                lineWidth={1}
+              />
+            );
+          })}
         </group>
       </group>
     );
