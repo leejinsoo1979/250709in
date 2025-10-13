@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
+import { Line } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 
@@ -90,22 +91,54 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
         <primitive object={meshMaterial} />
       </mesh>
 
-      {/* 라인 렌더링 (2D에서 항상, 3D에서 wireframe 모드일 때) */}
-      {(viewMode === '2D' || renderMode === 'wireframe') && (
+      {/* 라인 렌더링 */}
+      {viewMode === '2D' ? (
+        // 2D 모드: 간단한 선만 표시
         <>
-          {/* 플레이트 외곽선 */}
+          {/* 플레이트 상단면 외곽선 (정사각형) */}
+          <Line
+            points={[
+              [-plateWidth / 2, 0, -plateWidth / 2],
+              [plateWidth / 2, 0, -plateWidth / 2],
+              [plateWidth / 2, 0, plateWidth / 2],
+              [-plateWidth / 2, 0, plateWidth / 2],
+              [-plateWidth / 2, 0, -plateWidth / 2],
+            ]}
+            color={edgeColor}
+            lineWidth={1}
+          />
+
+          {/* 원통 상단 원 (8개 세그먼트로 간소화) */}
+          <Line
+            points={(() => {
+              const segments = 8;
+              const points: [number, number, number][] = [];
+              const y = -plateHeight;
+              for (let i = 0; i <= segments; i++) {
+                const angle = (i / segments) * Math.PI * 2;
+                const x = Math.cos(angle) * cylinderRadius;
+                const z = Math.sin(angle) * cylinderRadius;
+                points.push([x, y, z]);
+              }
+              return points;
+            })()}
+            color={edgeColor}
+            lineWidth={1}
+          />
+        </>
+      ) : renderMode === 'wireframe' ? (
+        // 3D wireframe 모드: 전체 엣지 표시
+        <>
           <lineSegments position={[0, -plateHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(plateWidth, plateHeight, plateWidth)]} />
             <lineBasicMaterial attach="material" color={edgeColor} />
           </lineSegments>
-
-          {/* 원통 외곽선 */}
           <lineSegments position={[0, -plateHeight - cylinderHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32)]} />
             <lineBasicMaterial attach="material" color={edgeColor} />
           </lineSegments>
         </>
-      )}
+      ) : null}
     </group>
   );
 };
