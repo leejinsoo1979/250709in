@@ -69,6 +69,22 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   const { renderMode, viewMode } = useSpace3DView();
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
+  // 측면뷰에서 치수 X 위치 계산 함수 (섹션 너비 기준)
+  const getDimensionXPosition = (sectionWidth: number, forText: boolean = false) => {
+    if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
+      const textOffset = forText ? 0.3 : 0;
+      if (view2DDirection === 'left') {
+        // 좌측뷰: 섹션 좌측 끝 밖으로 치수 표시
+        return -sectionWidth/2 - textOffset;
+      } else {
+        // 우측뷰: 섹션 우측 끝 밖으로 치수 표시
+        return sectionWidth/2 + textOffset;
+      }
+    }
+    // 3D 또는 정면뷰: 기본 왼쪽 위치
+    return forText ? -sectionWidth/2 * 0.3 - 0.8 : -sectionWidth/2 * 0.3;
+  };
+
   // 디버깅: visibleSectionIndex 값 확인
   React.useEffect(() => {
     console.log('🔍 DualType5 - moduleData.id:', moduleData.id, 'visibleSectionIndex:', visibleSectionIndex);
@@ -326,7 +342,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     )}
                     <Text
                       position={[
-                        viewMode === '3D' ? -leftWidth/2 * 0.3 - 0.8 : -leftWidth/2 * 0.3 - 0.5, 
+                        getDimensionXPosition(leftWidth, true), 
                         sectionCenterY + sectionHeight/2 - basicThickness/2,
                         viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0
                       ]}
@@ -343,8 +359,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     {/* 구분 패널 두께 수직선 */}
                     <Line
                       points={[
-                        [-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0],
-                        [-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]
+                        [getDimensionXPosition(leftWidth, false), sectionCenterY + sectionHeight/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0],
+                        [getDimensionXPosition(leftWidth, false), sectionCenterY + sectionHeight/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
@@ -388,7 +404,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     )}
                     <Text
                       position={[
-                        viewMode === '3D' ? -leftWidth/2 * 0.3 - 0.8 : -leftWidth/2 * 0.3 - 0.5, 
+                        getDimensionXPosition(leftWidth, true),
                         height/2 - basicThickness/2,
                         viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0
                       ]}
@@ -401,12 +417,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     >
                       {Math.round(basicThickness * 100)}
                     </Text>
-                    
+
                     {/* 상판 두께 수직선 */}
                     <Line
                       points={[
-                        [-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0],
-                        [-leftWidth/2 * 0.3, height/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]
+                        [getDimensionXPosition(leftWidth, false), height/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0],
+                        [getDimensionXPosition(leftWidth, false), height/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
@@ -414,11 +430,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
                     {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                       <>
-                        <mesh position={[-leftWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]}>
+                        <mesh position={[getDimensionXPosition(leftWidth, false), height/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={dimensionColor} />
                         </mesh>
-                        <mesh position={[-leftWidth/2 * 0.3, height/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]}>
+                        <mesh position={[getDimensionXPosition(leftWidth, false), height/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={dimensionColor} />
                         </mesh>
@@ -453,7 +469,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       )}
                       <Text
                         position={[
-                          viewMode === '3D' ? -leftWidth/2 * 0.3 - 0.8 : -leftWidth/2 * 0.3 - 0.5,
+                          getDimensionXPosition(leftWidth, true),
                           sectionCenterY,
                           viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0
                         ]}
@@ -470,8 +486,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     {/* 서랍 섹션 높이 수직선 */}
                     <Line
                       points={[
-                        [-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0],
-                        [-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]
+                        [getDimensionXPosition(leftWidth, false), sectionCenterY - sectionHeight/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0],
+                        [getDimensionXPosition(leftWidth, false), sectionCenterY + sectionHeight/2 - basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
@@ -516,7 +532,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     )}
                     <Text
                       position={[
-                        viewMode === '3D' ? -leftWidth/2 * 0.3 - 0.8 : -leftWidth/2 * 0.3 - 0.5, 
+                        getDimensionXPosition(leftWidth, true),
                         -height/2 + basicThickness/2,
                         viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0
                       ]}
@@ -529,12 +545,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     >
                       {Math.round(basicThickness * 100)}
                     </Text>
-                    
+
                     {/* 하부 프레임 두께 수직선 */}
                     <Line
                       points={[
-                        [-leftWidth/2 * 0.3, -height/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0],
-                        [-leftWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]
+                        [getDimensionXPosition(leftWidth, false), -height/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0],
+                        [getDimensionXPosition(leftWidth, false), -height/2 + basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
@@ -542,11 +558,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
                     {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                       <>
-                        <mesh position={[-leftWidth/2 * 0.3, -height/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]}>
+                        <mesh position={[getDimensionXPosition(leftWidth, false), -height/2, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={dimensionColor} />
                         </mesh>
-                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]}>
+                        <mesh position={[getDimensionXPosition(leftWidth, false), -height/2 + basicThickness, viewMode === '3D' ? leftAdjustedDepthForShelves/2 + 0.1 : leftDepth/2 + 1.0]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={dimensionColor} />
                         </mesh>
@@ -683,7 +699,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     )}
                     <Text
                       position={[
-                        viewMode === '3D' ? -rightWidth/2 * 0.3 - 0.8 : -rightWidth/2 * 0.3 - 0.5, 
+                        getDimensionXPosition(rightWidth, true), 
                         -height/2 + basicThickness/2,
                         viewMode === '3D' ? 3.01 : rightDepth/2 + 1.0
                       ]}
@@ -700,8 +716,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     {/* 하부 프레임 두께 수직선 */}
                     <Line
                       points={[
-                        [-rightWidth/2 * 0.3, -height/2, viewMode === '3D' ? 3.01 : rightDepth/2 + 1.0],
-                        [-rightWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? 3.01 : rightDepth/2 + 1.0]
+                        [getDimensionXPosition(rightWidth, false), -height/2, viewMode === '3D' ? 3.01 : rightDepth/2 + 1.0],
+                        [getDimensionXPosition(rightWidth, false), -height/2 + basicThickness, viewMode === '3D' ? 3.01 : rightDepth/2 + 1.0]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
@@ -745,7 +761,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     )}
                     <Text
                       position={[
-                        viewMode === '3D' ? -rightWidth/2 * 0.3 - 0.8 : -rightWidth/2 * 0.3 - 0.5, 
+                        getDimensionXPosition(rightWidth, true), 
                         height/2 - basicThickness/2,
                         viewMode === '3D' ? 3.01 : rightDepth/2 + 1.0
                       ]}
@@ -762,8 +778,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     {/* 상판 두께 수직선 */}
                     <Line
                       points={[
-                        [-rightWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? 3.01 : rightDepth/2 + 1.0],
-                        [-rightWidth/2 * 0.3, height/2, viewMode === '3D' ? 3.01 : rightDepth/2 + 1.0]
+                        [getDimensionXPosition(rightWidth, false), height/2 - basicThickness, viewMode === '3D' ? 3.01 : rightDepth/2 + 1.0],
+                        [getDimensionXPosition(rightWidth, false), height/2, viewMode === '3D' ? 3.01 : rightDepth/2 + 1.0]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
