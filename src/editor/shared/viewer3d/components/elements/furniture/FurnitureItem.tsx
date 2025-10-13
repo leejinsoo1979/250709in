@@ -1691,21 +1691,31 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           // 박스형 가구 렌더링 (도어 제외)
           <>
             {(() => {
-              // 듀얼 가구이고 측면뷰에서 슬롯 선택된 경우, 표시할 섹션 계산
+              // 듀얼 가구이고 측면뷰인 경우, 표시할 섹션 계산
               let visibleSectionIndex: number | null = null;
               if (
                 placedModule.isDualSlot &&
                 (view2DDirection === 'left' || view2DDirection === 'right') &&
-                selectedSlotIndex !== null &&
                 placedModule.slotIndex !== undefined
               ) {
-                // 듀얼 가구는 2개의 슬롯을 차지: slotIndex, slotIndex + 1
-                if (placedModule.slotIndex === selectedSlotIndex) {
-                  // 첫 번째 슬롯 선택 → 좌측 섹션 (인덱스 0)
-                  visibleSectionIndex = 0;
-                } else if (placedModule.slotIndex + 1 === selectedSlotIndex) {
-                  // 두 번째 슬롯 선택 → 우측 섹션 (인덱스 1)
-                  visibleSectionIndex = 1;
+                if (selectedSlotIndex !== null) {
+                  // 슬롯이 선택된 경우: 선택된 슬롯에 따라 섹션 표시
+                  if (placedModule.slotIndex === selectedSlotIndex) {
+                    // 첫 번째 슬롯 선택 → 좌측 섹션 (인덱스 0)
+                    visibleSectionIndex = 0;
+                  } else if (placedModule.slotIndex + 1 === selectedSlotIndex) {
+                    // 두 번째 슬롯 선택 → 우측 섹션 (인덱스 1)
+                    visibleSectionIndex = 1;
+                  }
+                } else {
+                  // 슬롯이 선택되지 않은 경우: view2DDirection에 따라 자동 선택
+                  if (view2DDirection === 'left') {
+                    // 좌측뷰 → 첫 번째 슬롯 (좌측 섹션)
+                    visibleSectionIndex = 0;
+                  } else if (view2DDirection === 'right') {
+                    // 우측뷰 → 두 번째 슬롯 (우측 섹션)
+                    visibleSectionIndex = 1;
+                  }
                 }
               }
 

@@ -69,6 +69,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   const { renderMode, viewMode } = useSpace3DView();
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
+  // 디버깅: visibleSectionIndex 값 확인
+  React.useEffect(() => {
+    console.log('🔍 DualType5 - visibleSectionIndex:', visibleSectionIndex);
+    console.log('🔍 DualType5 - 중앙 칸막이 렌더링:', visibleSectionIndex === null);
+  }, [visibleSectionIndex]);
+
   // spaceInfo 가져오기 - 제거됨 (baseFurniture의 material 사용)
   // const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
   // const materialConfig = storeSpaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#E0E0E0' };
