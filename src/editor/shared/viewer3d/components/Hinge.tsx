@@ -70,14 +70,20 @@ export const Hinge: React.FC<HingeProps> = ({
     const svgData = useLoader(SVGLoader, '/hinge_side_exact.svg');
 
     // SVG 경로를 Three.js shapes로 변환
-    const shapes = useMemo(() => {
-      const allShapes: THREE.Shape[] = [];
+    const renderData = useMemo(() => {
+      const data: { shape: THREE.Shape; color: string; userData: any }[] = [];
       svgData.paths.forEach((path) => {
         const shapes = SVGLoader.createShapes(path);
-        allShapes.push(...shapes);
+        shapes.forEach((shape) => {
+          data.push({
+            shape,
+            color: lineColor, // cyan (#00CCCC)로 변경
+            userData: path.userData
+          });
+        });
       });
-      return allShapes;
-    }, [svgData]);
+      return data;
+    }, [svgData, lineColor]);
 
     // SVG viewBox: 0 0 491 348
     // transform: translate(-179,-143) rotate(-90) translate(-595.32,0)
@@ -99,10 +105,10 @@ export const Hinge: React.FC<HingeProps> = ({
     return (
       <group position={sidePosition}>
         <group position={[offsetX * scale, -offsetY * scale, 0]} scale={[scale, -scale, scale]}>
-          {shapes.map((shape, index) => (
+          {renderData.map((item, index) => (
             <mesh key={index}>
-              <shapeGeometry args={[shape]} />
-              <meshBasicMaterial color={lineColor} side={THREE.DoubleSide} />
+              <shapeGeometry args={[item.shape]} />
+              <meshBasicMaterial color={item.color} side={THREE.DoubleSide} />
             </mesh>
           ))}
         </group>
