@@ -71,9 +71,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
   // 디버깅: visibleSectionIndex 값 확인
   React.useEffect(() => {
-    console.log('🔍 DualType5 - visibleSectionIndex:', visibleSectionIndex);
-    console.log('🔍 DualType5 - 중앙 칸막이 렌더링:', visibleSectionIndex === null);
-  }, [visibleSectionIndex]);
+    console.log('🔍 DualType5 - moduleData.id:', moduleData.id, 'visibleSectionIndex:', visibleSectionIndex);
+    console.log('🔍 DualType5 - 중앙 칸막이 렌더링:', visibleSectionIndex === null, 'moduleData.id:', moduleData.id);
+  }, [visibleSectionIndex, moduleData.id]);
 
   // spaceInfo 가져오기 - 제거됨 (baseFurniture의 material 사용)
   // const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
@@ -919,11 +919,14 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용) - 전체 보기일 때만 */}
         {(() => {
           const shouldRenderMiddlePanel = visibleSectionIndex === null;
-          console.log('🔍 중앙 칸막이 렌더링 여부:', shouldRenderMiddlePanel, 'visibleSectionIndex:', visibleSectionIndex);
+          console.log('🔍 중앙 칸막이 렌더링 여부:', shouldRenderMiddlePanel, 'visibleSectionIndex:', visibleSectionIndex, 'moduleData.id:', moduleData.id);
 
           if (!shouldRenderMiddlePanel) {
+            console.log('🔍 중앙 칸막이 렌더링 건너뜀 (visibleSectionIndex !== null), moduleData.id:', moduleData.id);
             return null;
           }
+
+          console.log('🔍 중앙 칸막이 렌더링 시작, moduleData.id:', moduleData.id);
 
           return calculateLeftSectionHeights().map((sectionHeight, index) => {
             let currentYPosition = -height/2 + basicThickness;
