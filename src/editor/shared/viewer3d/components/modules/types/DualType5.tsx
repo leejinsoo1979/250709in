@@ -932,6 +932,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               isDragging={isDragging}
               isEditMode={isEditMode}
+              edgeOpacity={view2DDirection === 'left' ? 0.3 : undefined}
             />
           );
         })}
@@ -976,6 +977,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         renderMode={useSpace3DView().renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
+        edgeOpacity={view2DDirection === 'left' ? 0.3 : undefined}
       />
       
       {/* 상단 판재 - 좌/우 분리 */}
@@ -998,6 +1000,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           renderMode={renderMode}
           isDragging={isDragging}
           isEditMode={isEditMode}
+          edgeOpacity={view2DDirection === 'left' ? 0.3 : undefined}
         />
       </>
       
@@ -1021,6 +1024,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           renderMode={renderMode}
           isDragging={isDragging}
           isEditMode={isEditMode}
+          edgeOpacity={view2DDirection === 'left' ? 0.3 : undefined}
         />
       </>
       
@@ -1048,6 +1052,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           isEditMode={isEditMode}
           hideEdges={false} // 엣지는 표시하되
           isBackPanel={true} // 백패널임을 표시
+          edgeOpacity={view2DDirection === 'left' ? 0.3 : undefined}
         />
       </>
 

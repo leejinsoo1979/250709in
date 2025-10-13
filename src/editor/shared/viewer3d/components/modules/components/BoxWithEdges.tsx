@@ -20,6 +20,7 @@ interface BoxWithEdgesProps {
   isEndPanel?: boolean; // 엔드패널 여부 추가
   isHighlighted?: boolean; // 강조 상태 추가
   isClothingRod?: boolean; // 옷걸이 봉 여부 추가
+  edgeOpacity?: number; // 엣지 투명도 (0.0 ~ 1.0)
   onClick?: (e: any) => void;
   onPointerOver?: (e: any) => void;
   onPointerOut?: (e: any) => void;
@@ -43,6 +44,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   isEndPanel = false,
   isHighlighted = false,
   isClothingRod = false,
+  edgeOpacity,
   onClick,
   onPointerOver,
   onPointerOut
@@ -300,15 +302,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                   </bufferGeometry>
                   <lineBasicMaterial
                     color={edgeColor}
-                    transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
+                    transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front') || edgeOpacity !== undefined}
                     opacity={
-                      isHighlighted
-                        ? 1.0
-                        : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
-                          ? 0.1
-                          : viewMode === '3D'
-                            ? 0.9
-                            : 1
+                      edgeOpacity !== undefined
+                        ? edgeOpacity
+                        : isHighlighted
+                          ? 1.0
+                          : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
+                            ? 0.1
+                            : viewMode === '3D'
+                              ? 0.9
+                              : 1
                     }
                     depthTest={viewMode === '3D'}
                     depthWrite={false}
@@ -326,15 +330,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                 <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
                 <lineBasicMaterial
                   color={edgeColor}
-                  transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front')}
+                  transparent={viewMode === '3D' || (isBackPanel && viewMode === '2D' && view2DDirection === 'front') || edgeOpacity !== undefined}
                   opacity={
-                    isHighlighted
-                      ? 1.0
-                      : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
-                        ? 0.1
-                        : viewMode === '3D'
-                          ? 0.9
-                          : 1
+                    edgeOpacity !== undefined
+                      ? edgeOpacity
+                      : isHighlighted
+                        ? 1.0
+                        : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
+                          ? 0.1
+                          : viewMode === '3D'
+                            ? 0.9
+                            : 1
                   }
                   depthTest={viewMode === '3D'}
                   depthWrite={false}
