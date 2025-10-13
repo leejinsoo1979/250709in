@@ -956,8 +956,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 adjustedHeight = sectionHeight + basicThickness;
                 adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness + basicThickness / 2;
               } else if (isUpperSection) {
-                // 상부 모든 칸막이: Y 위치를 바닥판 두께만큼 위로 이동
-                adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness + basicThickness;
+                // 상부 모든 칸막이: 높이 -18mm (천장에 맞춤), Y 위치 조정
+                adjustedHeight = sectionHeight - basicThickness;
+                adjustedCenterY = currentYPosition + (sectionHeight - basicThickness) / 2 - basicThickness + basicThickness;
               }
             }
 
@@ -1022,8 +1023,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   adjustedHeight = sectionHeight + basicThickness;
                   adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness + basicThickness / 2;
                 } else if (isUpperSection) {
-                  // 상부 모든 측판: Y 위치를 바닥판 두께만큼 위로 이동
-                  adjustedCenterY = currentYPosition + sectionHeight / 2 - basicThickness + basicThickness;
+                  // 상부 모든 측판: 높이 -18mm (천장에 맞춤), Y 위치 조정
+                  adjustedHeight = sectionHeight - basicThickness;
+                  adjustedCenterY = currentYPosition + (sectionHeight - basicThickness) / 2 - basicThickness + basicThickness;
                 }
               }
 
@@ -1158,9 +1160,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           const lowerBackPanelHeight = lowerHeight + mmToThreeUnits(5);
           const lowerBackPanelY = -height/2 + basicThickness + lowerHeight/2 - mmToThreeUnits(2.5);
 
-          // 상부 백패널 위치 계산 (상단만 5mm 확장)
-          const upperBackPanelHeight = upperHeight + mmToThreeUnits(5);
-          const upperBackPanelY = -height/2 + basicThickness + lowerHeight + upperHeight/2 + mmToThreeUnits(2.5);
+          // 상부 백패널 위치 계산: 높이 -18mm (천장에 맞춤) + 상단 5mm 확장
+          const upperBackPanelHeight = (upperHeight - basicThickness) + mmToThreeUnits(5);
+          const upperBackPanelY = -height/2 + basicThickness + lowerHeight + basicThickness + (upperHeight - basicThickness)/2 + mmToThreeUnits(2.5);
 
           // 상부 섹션 바닥판 위치 (하부 마지막 측판 조정과 동일하게 +9mm)
           const floorPanelY = -height/2 + basicThickness + lowerHeight + basicThickness/2;
