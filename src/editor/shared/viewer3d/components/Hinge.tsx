@@ -1,6 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Line } from '@react-three/drei';
 import { useSpace3DView } from '../context/useSpace3DView';
+import * as THREE from 'three';
+import { useLoader } from '@react-three/fiber';
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
 
 interface HingeProps {
   position: [number, number, number]; // 메인 원의 위치
@@ -57,53 +60,35 @@ export const Hinge: React.FC<HingeProps> = ({
     return null;
   }
 
-  // 측면뷰 렌더링 - 실제 컵 힌지 형상
+  // 측면뷰 렌더링 - SVG 로드 및 렌더링
   if ((view2DDirection === 'left' || view2DDirection === 'right') && viewDirection === 'side') {
-    // 힌지 치수 (실제 컵 힌지 기준)
-    const baseWidth = mmToThreeUnits(18);    // 베이스플레이트 너비 18mm
-    const baseHeight = mmToThreeUnits(35);   // 베이스플레이트 높이 35mm
-    const cupDiameter = mmToThreeUnits(35);  // 컵 직경 35mm
-    const armThickness = mmToThreeUnits(3);  // 암 두께 3mm
-    const armLength = mmToThreeUnits(12);    // 암 길이 12mm
-    const sideViewColor = '#00CCCC'; // 시안색 (정면뷰 경첩 타공점과 동일)
+    const svgData = useLoader(SVGLoader, '/hinge-side.svg');
+
+    const shapes = useMemo(() => {
+      const allShapes: THREE.Shape[] = [];
+      svgData.paths.forEach((path) => {
+        const shapes = SVGLoader.createShapes(path);
+        allShapes.push(...shapes);
+      });
+      return allShapes;
+    }, [svgData]);
+
+    // SVG 크기 조정: 실제 35mm 높이 기준
+    const heightMm = 35;
+    const svgHeight = 156; // viewBox height
+    const scale = mmToThreeUnits(heightMm) / svgHeight;
+
+    // 측면뷰 좌표 변환: 정면뷰의 Z를 측면뷰의 X로
+    const [x, y, z] = position;
 
     return (
-      <group position={position}>
-        {/* 베이스플레이트 (캐비닛에 고정되는 부분) - Y-Z 평면 */}
-        <Line
-          points={[
-            [0, baseHeight / 2, -baseWidth / 2],
-            [0, baseHeight / 2, baseWidth / 2],
-            [0, -baseHeight / 2, baseWidth / 2],
-            [0, -baseHeight / 2, -baseWidth / 2],
-            [0, baseHeight / 2, -baseWidth / 2]
-          ]}
-          color={sideViewColor}
-          lineWidth={1}
-        />
-
-        {/* 힌지 컵 (원통형 부분) - 베이스플레이트 중앙에 위치 - Y-Z 평면 */}
-        <Line
-          points={[
-            [0, cupDiameter / 2, 0],
-            [0, -cupDiameter / 2, 0]
-          ]}
-          color={sideViewColor}
-          lineWidth={1}
-        />
-
-        {/* 힌지 암 (도어로 연장되는 부분) - 베이스플레이트 오른쪽에서 시작 - Y-Z 평면 */}
-        <Line
-          points={[
-            [0, armThickness / 2, baseWidth / 2],
-            [0, armThickness / 2, baseWidth / 2 + armLength],
-            [0, -armThickness / 2, baseWidth / 2 + armLength],
-            [0, -armThickness / 2, baseWidth / 2],
-            [0, armThickness / 2, baseWidth / 2]
-          ]}
-          color={sideViewColor}
-          lineWidth={1}
-        />
+      <group position={[z, y, 0]} scale={[scale, scale, 1]} rotation={[0, 0, 0]}>
+        {shapes.map((shape, index) => (
+          <mesh key={index}>
+            <shapeGeometry args={[shape]} />
+            <meshBasicMaterial color="#00CCCC" side={THREE.DoubleSide} />
+          </mesh>
+        ))}
       </group>
     );
   }
