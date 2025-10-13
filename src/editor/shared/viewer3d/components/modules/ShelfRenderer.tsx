@@ -779,8 +779,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 {/* 수직 연결선 (치수선) */}
                 <NativeLine
                   points={[
-                    [getDimensionXPosition(false), compartmentTopY, basicThickness + zOffset + 0.15],
-                    [getDimensionXPosition(false), compartmentBottomY, basicThickness + zOffset + 0.15]
+                    [0, compartmentTopY, basicThickness + zOffset + 0.15],
+                    [0, compartmentBottomY, basicThickness + zOffset + 0.15]
                   ]}
                   color={isHighlighted ? "#FFD700" : dimensionColor}
                   lineWidth={isHighlighted ? 2 : 1}
