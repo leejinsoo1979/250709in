@@ -100,8 +100,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   // 측면뷰에서 치수 Z 위치 계산 함수 (통일된 Z 위치)
   const getDimensionZPosition = (sectionDepth: number) => {
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
-      // 측면뷰에서는 고정된 Z 위치 사용 (모든 치수가 동일한 수직선상에 정렬)
-      return 3.5;
+      // 측면뷰에서는 더 큰 depth를 기준으로 통일된 Z 위치 사용
+      const maxDepth = Math.max(leftDepth, rightDepth);
+      return maxDepth/2 + 1.0;
     }
     // 3D 또는 정면뷰: 각 섹션의 depth에 따라 다른 Z 위치
     return sectionDepth/2 + 0.1;
