@@ -826,19 +826,24 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
     return (
       <>
-        {/* 좌측 섹션 그룹 */}
-        <group position={[leftXOffset, 0, 0]}>
-          {renderLeftSections()}
-        </group>
+        {/* 좌측 섹션 그룹 - visibleSectionIndex가 null이거나 0일 때만 표시 */}
+        {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
+          <group position={[leftXOffset, 0, 0]}>
+            {renderLeftSections()}
+          </group>
+        )}
 
-        {/* 우측 섹션 그룹 (660mm 깊이 기준 절대 고정) */}
-        <group position={[rightXOffset, 0, 0]}>
-          {renderRightSections()}
-        </group>
+        {/* 우측 섹션 그룹 (660mm 깊이 기준 절대 고정) - visibleSectionIndex가 null이거나 1일 때만 표시 */}
+        {(visibleSectionIndex === null || visibleSectionIndex === 1) && (
+          <group position={[rightXOffset, 0, 0]}>
+            {renderRightSections()}
+          </group>
+        )}
 
-        {/* 옷걸이 봉 렌더링 - 좌측 옷장 섹션에만 */}
-        <group position={[leftXOffset, 0, 0]}>
-          {(() => {
+        {/* 옷걸이 봉 렌더링 - 좌측 옷장 섹션에만 (visibleSectionIndex가 null 또는 0일 때만) */}
+        {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
+          <group position={[leftXOffset, 0, 0]}>
+            {(() => {
             const leftSections = modelConfig.leftSections || [];
             let accumulatedY = -height/2 + basicThickness;
 
@@ -901,8 +906,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 />
               );
             });
-          })()}
-        </group>
+            })()}
+          </group>
+        )}
         
         {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용) */}
         {calculateLeftSectionHeights().map((sectionHeight, index) => {
@@ -1059,27 +1065,31 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       {/* 환기캡 렌더링 */}
       {!isDragging && (
         <>
-          {/* 좌측 백패널 환기캡 */}
-          <VentilationCap
-            position={[
-              leftXOffset + leftWidth/2 - mmToThreeUnits(132),  // 좌측 백패널 우측 끝에서 안쪽으로 132mm
-              height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
-              -leftDepth/2 + backPanelThickness + mmToThreeUnits(17) + 0.01  // 좌측 백패널 앞쪽에 살짝 앞으로
-            ]}
-            diameter={98}
-            renderMode={renderMode}
-          />
+          {/* 좌측 백패널 환기캡 (visibleSectionIndex가 null 또는 0일 때만) */}
+          {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
+            <VentilationCap
+              position={[
+                leftXOffset + leftWidth/2 - mmToThreeUnits(132),  // 좌측 백패널 우측 끝에서 안쪽으로 132mm
+                height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
+                -leftDepth/2 + backPanelThickness + mmToThreeUnits(17) + 0.01  // 좌측 백패널 앞쪽에 살짝 앞으로
+              ]}
+              diameter={98}
+              renderMode={renderMode}
+            />
+          )}
 
-          {/* 우측 백패널 환기캡 */}
-          <VentilationCap
-            position={[
-              rightXOffset + rightWidth/2 - mmToThreeUnits(132),  // 우측 백패널 우측 끝에서 안쪽으로 132mm
-              height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
-              -rightDepth/2 + backPanelThickness + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2 + 0.01  // 우측 백패널 앞쪽 (깊이 차이 보정)
-            ]}
-            diameter={98}
-            renderMode={renderMode}
-          />
+          {/* 우측 백패널 환기캡 (visibleSectionIndex가 null 또는 1일 때만) */}
+          {(visibleSectionIndex === null || visibleSectionIndex === 1) && (
+            <VentilationCap
+              position={[
+                rightXOffset + rightWidth/2 - mmToThreeUnits(132),  // 우측 백패널 우측 끝에서 안쪽으로 132mm
+                height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
+                -rightDepth/2 + backPanelThickness + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2 + 0.01  // 우측 백패널 앞쪽 (깊이 차이 보정)
+              ]}
+              diameter={98}
+              renderMode={renderMode}
+            />
+          )}
         </>
       )}
 
