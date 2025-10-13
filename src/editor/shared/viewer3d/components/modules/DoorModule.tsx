@@ -13,6 +13,7 @@ import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Line } from '@react-three/drei';
 import { Hinge } from '../Hinge';
+import DimensionText from './components/DimensionText';
 
 // BoxWithEdges 컴포넌트 정의 (독립적인 그림자 업데이트 포함)
 const BoxWithEdges: React.FC<{
@@ -1229,6 +1230,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   })()}
                 </group>
               )}
+
+              {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰에서만) */}
+              {viewMode === '2D' && view2DDirection === 'front' && (
+                <DimensionText
+                  value={leftDoorWidth}
+                  position={[0, -doorHeight / 2 - mmToThreeUnits(80), doorThicknessUnits / 2 + 0.001]}
+                  anchorX="center"
+                  anchorY="middle"
+                />
+              )}
             </group>
           </animated.group>
         </group>
@@ -1523,6 +1534,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     return [...segments1, ...segments2];
                   })()}
                 </group>
+              )}
+
+              {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰에서만) */}
+              {viewMode === '2D' && view2DDirection === 'front' && (
+                <DimensionText
+                  value={rightDoorWidth}
+                  position={[0, -doorHeight / 2 - mmToThreeUnits(80), doorThicknessUnits / 2 + 0.001]}
+                  anchorX="center"
+                  anchorY="middle"
+                />
               )}
             </group>
           </animated.group>
@@ -1923,6 +1944,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   return [...segments1, ...segments2];
                 })()}
               </group>
+            )}
+
+            {/* 도어 가로 폭 치수 (2D 정면뷰에서만) */}
+            {viewMode === '2D' && view2DDirection === 'front' && (
+              <DimensionText
+                value={doorWidth}
+                position={[0, -doorHeight / 2 - mmToThreeUnits(80), doorThicknessUnits / 2 + 0.001]}
+                anchorX="center"
+                anchorY="middle"
+              />
             )}
           </group>
         </animated.group>
