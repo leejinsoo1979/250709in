@@ -66,8 +66,8 @@ export const Hinge: React.FC<HingeProps> = ({
     const [x, y, z] = position;
     const sidePosition: [number, number, number] = [z, y, 0];
 
-    // SVG 데이터 로드
-    const svgData = useLoader(SVGLoader, '/hinge-side.svg');
+    // SVG 데이터 로드 (정확한 치수 기반 80x55mm)
+    const svgData = useLoader(SVGLoader, '/hinge_side_exact.svg');
 
     // SVG 경로를 Three.js shapes로 변환
     const shapes = useMemo(() => {
@@ -79,21 +79,24 @@ export const Hinge: React.FC<HingeProps> = ({
       return allShapes;
     }, [svgData]);
 
-    // SVG 원본 크기에서 35mm 높이로 스케일 계산
-    // SVG viewBox: 841.92 x 595.32
-    // 목표 높이: 35mm = 0.35 Three.js units
-    const svgHeight = 595.32;
-    const targetHeight = mmToThreeUnits(35);
-    const scale = targetHeight / svgHeight;
+    // SVG는 이미 정확한 mm 스케일 (viewBox: 0 0 80 55)
+    // Three.js 단위로 변환: 1mm = 0.01 units
+    const scale = 0.01;
+
+    // SVG 중심점을 맞추기 위한 오프셋 (SVG의 중심이 0,0이 되도록)
+    const svgCenterX = 40; // 80mm / 2
+    const svgCenterY = 27.5; // 55mm / 2
 
     return (
-      <group position={sidePosition} scale={[scale, -scale, scale]}>
-        {shapes.map((shape, index) => (
-          <mesh key={index}>
-            <shapeGeometry args={[shape]} />
-            <meshBasicMaterial color={lineColor} side={THREE.DoubleSide} />
-          </mesh>
-        ))}
+      <group position={sidePosition}>
+        <group scale={[scale, -scale, scale]} position={[-svgCenterX * scale, svgCenterY * scale, 0]}>
+          {shapes.map((shape, index) => (
+            <mesh key={index}>
+              <shapeGeometry args={[shape]} />
+              <meshBasicMaterial color={lineColor} side={THREE.DoubleSide} />
+            </mesh>
+          ))}
+        </group>
       </group>
     );
   }
