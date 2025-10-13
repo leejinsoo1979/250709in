@@ -826,24 +826,19 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
     return (
       <>
-        {/* 좌측 섹션 그룹 - visibleSectionIndex가 null이거나 0일 때만 표시 */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
-          <group position={[leftXOffset, 0, 0]}>
-            {renderLeftSections()}
-          </group>
-        )}
+        {/* 좌측 섹션 그룹 */}
+        <group position={[leftXOffset, 0, 0]}>
+          {renderLeftSections()}
+        </group>
 
-        {/* 우측 섹션 그룹 (660mm 깊이 기준 절대 고정) - visibleSectionIndex가 null이거나 1일 때만 표시 */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 1) && (
-          <group position={[rightXOffset, 0, 0]}>
-            {renderRightSections()}
-          </group>
-        )}
+        {/* 우측 섹션 그룹 (660mm 깊이 기준 절대 고정) */}
+        <group position={[rightXOffset, 0, 0]}>
+          {renderRightSections()}
+        </group>
 
-        {/* 옷걸이 봉 렌더링 - 좌측 옷장 섹션에만 (visibleSectionIndex가 null 또는 0일 때만) */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
-          <group position={[leftXOffset, 0, 0]}>
-            {(() => {
+        {/* 옷걸이 봉 렌더링 - 좌측 옷장 섹션에만 */}
+        <group position={[leftXOffset, 0, 0]}>
+          {(() => {
             const leftSections = modelConfig.leftSections || [];
             let accumulatedY = -height/2 + basicThickness;
 
@@ -906,9 +901,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 />
               );
             });
-            })()}
-          </group>
-        )}
+          })()}
+        </group>
         
         {/* 중앙 칸막이 (섹션별로 분할, 더 큰 깊이 사용) */}
         {calculateLeftSectionHeights().map((sectionHeight, index) => {
@@ -934,7 +928,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               isDragging={isDragging}
               isEditMode={isEditMode}
-              edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
+              edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
             />
           );
         })}
@@ -947,8 +941,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <>
-          {/* 좌측 측면 판재 - 섹션별로 분할 (visibleSectionIndex가 null 또는 0일 때만) */}
-          {(visibleSectionIndex === null || visibleSectionIndex === 0) && calculateLeftSectionHeights().map((sectionHeight, index) => {
+          {/* 좌측 측면 판재 - 섹션별로 분할 */}
+          {calculateLeftSectionHeights().map((sectionHeight, index) => {
         let currentYPosition = -height/2 + basicThickness;
         
         // 현재 섹션까지의 Y 위치 계산
@@ -967,139 +961,125 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             renderMode={renderMode}
             isDragging={isDragging}
             isEditMode={isEditMode}
+            edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
           />
         );
       })}
 
-      {/* 우측 측면 판재 - 전체 높이 (스타일러장은 분할 안됨) (visibleSectionIndex가 null 또는 1일 때만) */}
-      {(visibleSectionIndex === null || visibleSectionIndex === 1) && (
-        <BoxWithEdges
-          args={[basicThickness, height, rightDepth]}
-          position={[width/2 - basicThickness/2, 0, (leftDepth - rightDepth) / 2]}
-          material={material}
-          renderMode={useSpace3DView().renderMode}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
-        />
-      )}
+      {/* 우측 측면 판재 - 전체 높이 (스타일러장은 분할 안됨) */}
+      <BoxWithEdges
+        args={[basicThickness, height, rightDepth]}
+        position={[width/2 - basicThickness/2, 0, (leftDepth - rightDepth) / 2]}
+        material={material}
+        renderMode={useSpace3DView().renderMode}
+        isDragging={isDragging}
+        isEditMode={isEditMode}
+        edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
+      />
       
       {/* 상단 판재 - 좌/우 분리 */}
       <>
-        {/* 좌측 상단판 (visibleSectionIndex가 null 또는 0일 때만) */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
-          <BoxWithEdges
-            args={[leftWidth, basicThickness, leftDepth]}
-            position={[leftXOffset, height/2 - basicThickness/2, 0]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-          />
-        )}
+        {/* 좌측 상단판 */}
+        <BoxWithEdges
+          args={[leftWidth, basicThickness, leftDepth]}
+          position={[leftXOffset, height/2 - basicThickness/2, 0]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
+        />
 
-        {/* 우측 상단판 (visibleSectionIndex가 null 또는 1일 때만) */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 1) && (
-          <BoxWithEdges
-            args={[rightWidth, basicThickness, rightDepth]}
-            position={[rightXOffset, height/2 - basicThickness/2, (leftDepth - rightDepth) / 2]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
-          />
-        )}
+        {/* 우측 상단판 */}
+        <BoxWithEdges
+          args={[rightWidth, basicThickness, rightDepth]}
+          position={[rightXOffset, height/2 - basicThickness/2, (leftDepth - rightDepth) / 2]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
+        />
       </>
       
       {/* 하단 판재 - 좌/우 분리 */}
       <>
-        {/* 좌측 하단판 (visibleSectionIndex가 null 또는 0일 때만) */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
-          <BoxWithEdges
-            args={[leftWidth, basicThickness, leftDepth]}
-            position={[leftXOffset, -height/2 + basicThickness/2, 0]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-          />
-        )}
+        {/* 좌측 하단판 */}
+        <BoxWithEdges
+          args={[leftWidth, basicThickness, leftDepth]}
+          position={[leftXOffset, -height/2 + basicThickness/2, 0]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
+        />
 
-        {/* 우측 하단판 (visibleSectionIndex가 null 또는 1일 때만) */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 1) && (
-          <BoxWithEdges
-            args={[rightWidth, basicThickness, rightDepth]}
-            position={[rightXOffset, -height/2 + basicThickness/2, (leftDepth - rightDepth) / 2]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
-          />
-        )}
+        {/* 우측 하단판 */}
+        <BoxWithEdges
+          args={[rightWidth, basicThickness, rightDepth]}
+          position={[rightXOffset, -height/2 + basicThickness/2, (leftDepth - rightDepth) / 2]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
+        />
       </>
       
       {/* 뒷면 판재 - 좌/우 분리 (9mm 얇은 백패널, 각각 상하좌우 5mm 확장) */}
       <>
-        {/* 좌측 백패널 (visibleSectionIndex가 null 또는 0일 때만) */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
-          <BoxWithEdges
-            args={[leftWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-            position={[leftXOffset, 0, -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            hideEdges={false} // 엣지는 표시하되
-            isBackPanel={true} // 백패널임을 표시
-          />
-        )}
+        {/* 좌측 백패널 */}
+        <BoxWithEdges
+          args={[leftWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+          position={[leftXOffset, 0, -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          hideEdges={false} // 엣지는 표시하되
+          isBackPanel={true} // 백패널임을 표시
+          edgeOpacity={visibleSectionIndex === 1 ? 0.1 : undefined}
+        />
 
-        {/* 우측 백패널 (고정 깊이 660mm 기준) (visibleSectionIndex가 null 또는 1일 때만) */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 1) && (
-          <BoxWithEdges
-            args={[rightWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
-            position={[rightXOffset, 0, -rightDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            hideEdges={false} // 엣지는 표시하되
-            isBackPanel={true} // 백패널임을 표시
-            edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
-          />
-        )}
+        {/* 우측 백패널 (고정 깊이 660mm 기준) */}
+        <BoxWithEdges
+          args={[rightWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+          position={[rightXOffset, 0, -rightDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2]}
+          material={material}
+          renderMode={renderMode}
+          isDragging={isDragging}
+          isEditMode={isEditMode}
+          hideEdges={false} // 엣지는 표시하되
+          isBackPanel={true} // 백패널임을 표시
+          edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
+        />
       </>
 
       {/* 환기캡 렌더링 */}
       {!isDragging && (
         <>
-          {/* 좌측 백패널 환기캡 (visibleSectionIndex가 null 또는 0일 때만) */}
-          {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
-            <VentilationCap
-              position={[
-                leftXOffset + leftWidth/2 - mmToThreeUnits(132),  // 좌측 백패널 우측 끝에서 안쪽으로 132mm
-                height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
-                -leftDepth/2 + backPanelThickness + mmToThreeUnits(17) + 0.01  // 좌측 백패널 앞쪽에 살짝 앞으로
-              ]}
-              diameter={98}
-              renderMode={renderMode}
-            />
-          )}
+          {/* 좌측 백패널 환기캡 */}
+          <VentilationCap
+            position={[
+              leftXOffset + leftWidth/2 - mmToThreeUnits(132),  // 좌측 백패널 우측 끝에서 안쪽으로 132mm
+              height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
+              -leftDepth/2 + backPanelThickness + mmToThreeUnits(17) + 0.01  // 좌측 백패널 앞쪽에 살짝 앞으로
+            ]}
+            diameter={98}
+            renderMode={renderMode}
+          />
 
-          {/* 우측 백패널 환기캡 (visibleSectionIndex가 null 또는 1일 때만) */}
-          {(visibleSectionIndex === null || visibleSectionIndex === 1) && (
-            <VentilationCap
-              position={[
-                rightXOffset + rightWidth/2 - mmToThreeUnits(132),  // 우측 백패널 우측 끝에서 안쪽으로 132mm
-                height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
-                -rightDepth/2 + backPanelThickness + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2 + 0.01  // 우측 백패널 앞쪽 (깊이 차이 보정)
-              ]}
-              diameter={98}
-              renderMode={renderMode}
-            />
-          )}
+          {/* 우측 백패널 환기캡 */}
+          <VentilationCap
+            position={[
+              rightXOffset + rightWidth/2 - mmToThreeUnits(132),  // 우측 백패널 우측 끝에서 안쪽으로 132mm
+              height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
+              -rightDepth/2 + backPanelThickness + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2 + 0.01  // 우측 백패널 앞쪽 (깊이 차이 보정)
+            ]}
+            diameter={98}
+            renderMode={renderMode}
+          />
         </>
       )}
 
