@@ -102,8 +102,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
       // 측면뷰: Z축 오른쪽으로 324mm (3.24) 이동
       const baseZ = sectionDepth/2 + 1.0 + 3.24;
-      // 하부 프레임은 왼쪽으로 2mm (0.02) 추가 이동
-      return isBottomFrame ? baseZ - 0.02 : baseZ;
+      // 하부 프레임은 왼쪽으로 6mm (0.06) 추가 이동 (2mm + 4mm)
+      return isBottomFrame ? baseZ - 0.06 : baseZ;
     }
     // 3D 또는 정면뷰: 각 섹션의 depth에 따라 다른 Z 위치
     return sectionDepth/2 + 0.1;
@@ -579,11 +579,15 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       {Math.round(basicThickness * 100)}
                     </Text>
 
-                    {/* 하부 프레임 두께 수직선 */}
+                    {/* 하부 프레임 두께 수직선 - 측면뷰에서는 위아래로 18mm씩 연장 */}
                     <Line
                       points={[
-                        [getDimensionXPosition(leftWidth, false, leftXOffset), -height/2, getDimensionZPosition(leftDepth, true)],
-                        [getDimensionXPosition(leftWidth, false, leftXOffset), -height/2 + basicThickness, getDimensionZPosition(leftDepth, true)]
+                        [getDimensionXPosition(leftWidth, false, leftXOffset),
+                         viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') ? -height/2 - 0.18 : -height/2,
+                         getDimensionZPosition(leftDepth, true)],
+                        [getDimensionXPosition(leftWidth, false, leftXOffset),
+                         viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') ? -height/2 + basicThickness + 0.18 : -height/2 + basicThickness,
+                         getDimensionZPosition(leftDepth, true)]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
@@ -755,11 +759,15 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       {Math.round(basicThickness * 100)}
                     </Text>
 
-                    {/* 하부 프레임 두께 수직선 */}
+                    {/* 하부 프레임 두께 수직선 - 측면뷰에서는 위아래로 18mm씩 연장 */}
                     <Line
                       points={[
-                        [getDimensionXPosition(rightWidth, false, rightXOffset), -height/2, getDimensionZPosition(rightDepth, true)],
-                        [getDimensionXPosition(rightWidth, false, rightXOffset), -height/2 + basicThickness, getDimensionZPosition(rightDepth, true)]
+                        [getDimensionXPosition(rightWidth, false, rightXOffset),
+                         viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') ? -height/2 - 0.18 : -height/2,
+                         getDimensionZPosition(rightDepth, true)],
+                        [getDimensionXPosition(rightWidth, false, rightXOffset),
+                         viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') ? -height/2 + basicThickness + 0.18 : -height/2 + basicThickness,
+                         getDimensionZPosition(rightDepth, true)]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
