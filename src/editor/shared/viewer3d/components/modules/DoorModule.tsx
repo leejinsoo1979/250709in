@@ -1267,6 +1267,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
                       anchorX="center"
                       anchorY="bottom"
+                      forceShow={true}
                     />
                   </>
                 );
@@ -1601,6 +1602,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
                       anchorX="center"
                       anchorY="bottom"
+                      forceShow={true}
                     />
                   </>
                 );
@@ -2004,6 +2006,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     }
                     anchorX="center"
                     anchorY="bottom"
+                    forceShow={true}
                   />
                 </>
               );
