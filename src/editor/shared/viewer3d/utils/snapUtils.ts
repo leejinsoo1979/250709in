@@ -101,13 +101,16 @@ export function findNearestVertex(
 
 /**
  * 두 점 사이의 거리 계산 (mm)
- * 3D 거리 계산 지원
+ * 수직/수평 거리만 계산 (가장 큰 변화량의 축만 사용)
  */
 export function calculateDistance(start: MeasurePoint, end: MeasurePoint): number {
-  const dx = end[0] - start[0];
-  const dy = end[1] - start[1];
-  const dz = end[2] - start[2];
-  return Math.sqrt(dx * dx + dy * dy + dz * dz) * 100; // three.js 단위를 mm로 변환
+  const dx = Math.abs(end[0] - start[0]);
+  const dy = Math.abs(end[1] - start[1]);
+  const dz = Math.abs(end[2] - start[2]);
+
+  // 가장 큰 변화량을 가진 축의 거리만 반환 (수직/수평만 허용)
+  const maxDistance = Math.max(dx, dy, dz);
+  return maxDistance * 100; // three.js 단위를 mm로 변환
 }
 
 /**
@@ -151,7 +154,7 @@ export function calculateGuideOffset(
 
 /**
  * 가이드선 점들 계산
- * 3D 좌표를 지원 (X, Y, Z 중 가장 큰 변화량 기준)
+ * 수직/수평 측정만 지원 (대각선 측정 시 수직 또는 수평으로 투영)
  */
 export function calculateGuidePoints(
   start: MeasurePoint,
@@ -162,45 +165,24 @@ export function calculateGuidePoints(
   const dy = Math.abs(end[1] - start[1]);
   const dz = Math.abs(end[2] - start[2]);
 
-  // 가장 큰 변화량을 찾아서 해당 축의 수직 방향으로 오프셋 적용
+  // 가장 큰 변화량을 찾아서 해당 축만 사용 (수직/수평만 허용)
   if (dx >= dy && dx >= dz) {
-    // X축이 주 방향 -> Y 또는 Z 오프셋
-    if (dy > dz) {
-      return {
-        start: [start[0], start[1] + offset, start[2]],
-        end: [end[0], end[1] + offset, end[2]]
-      };
-    } else {
-      return {
-        start: [start[0], start[1], start[2] + offset],
-        end: [end[0], end[1], end[2] + offset]
-      };
-    }
+    // X축이 주 방향 -> Y 좌표를 시작점과 동일하게 (수평선)
+    return {
+      start: [start[0], start[1] + offset, start[2]],
+      end: [end[0], start[1] + offset, start[2]] // Y와 Z를 시작점과 동일하게
+    };
   } else if (dy >= dx && dy >= dz) {
-    // Y축이 주 방향 -> X 또는 Z 오프셋
-    if (dx > dz) {
-      return {
-        start: [start[0] + offset, start[1], start[2]],
-        end: [end[0] + offset, end[1], end[2]]
-      };
-    } else {
-      return {
-        start: [start[0], start[1], start[2] + offset],
-        end: [end[0], end[1], end[2] + offset]
-      };
-    }
+    // Y축이 주 방향 -> X 좌표를 시작점과 동일하게 (수직선)
+    return {
+      start: [start[0] + offset, start[1], start[2]],
+      end: [start[0] + offset, end[1], start[2]] // X와 Z를 시작점과 동일하게
+    };
   } else {
-    // Z축이 주 방향 -> X 또는 Y 오프셋
-    if (dx > dy) {
-      return {
-        start: [start[0] + offset, start[1], start[2]],
-        end: [end[0] + offset, end[1], end[2]]
-      };
-    } else {
-      return {
-        start: [start[0], start[1] + offset, start[2]],
-        end: [end[0], end[1] + offset, end[2]]
-      };
-    }
+    // Z축이 주 방향 -> X 좌표를 시작점과 동일하게 (깊이 방향)
+    return {
+      start: [start[0] + offset, start[1], start[2]],
+      end: [start[0] + offset, start[1], end[2]] // X와 Y를 시작점과 동일하게
+    };
   }
 }
