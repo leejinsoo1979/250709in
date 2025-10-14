@@ -121,6 +121,12 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     // 가이드 조정 모드인 경우
     if (isAdjustingGuide && measurePoints && measurePoints[0] && measurePoints[1]) {
       const offset = calculateGuideOffset(measurePoints[0], measurePoints[1], rawPoint);
+      console.log('🔧 가이드 오프셋 조정:', {
+        start: measurePoints[0],
+        end: measurePoints[1],
+        mousePos: rawPoint,
+        offset
+      });
       setGuideOffset(offset);
       return;
     }
@@ -151,6 +157,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         const end = measurePoints[1];
         const distance = calculateDistance(start, end);
 
+        console.log('📏 측정 라인 추가:', { start, end, distance, offset: guideOffset });
+
         // 측정 라인 추가
         addMeasureLine({
           id: `measure-${Date.now()}`,
@@ -160,7 +168,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
           offset: guideOffset
         });
 
-        // 리셋
+        // 리셋 - 측정 포인트와 오프셋 초기화
+        clearMeasurePoints();
         setGuideOffset(0);
       }
       return;
@@ -297,13 +306,33 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             </mesh>
 
             {/* 화살표 - 시작 */}
-            <mesh position={guidePoints.start} rotation={[0, 0, Math.atan2(guidePoints.end[1] - guidePoints.start[1], guidePoints.end[0] - guidePoints.start[0])]}>
+            <mesh
+              position={guidePoints.start}
+              rotation={[
+                0,
+                0,
+                Math.atan2(
+                  guidePoints.end[1] - guidePoints.start[1],
+                  guidePoints.end[0] - guidePoints.start[0]
+                )
+              ]}
+            >
               <coneGeometry args={[0.08, 0.15, 8]} />
               <meshBasicMaterial color={lineColor} />
             </mesh>
 
             {/* 화살표 - 끝 */}
-            <mesh position={guidePoints.end} rotation={[0, 0, Math.atan2(guidePoints.start[1] - guidePoints.end[1], guidePoints.start[0] - guidePoints.end[0]) + Math.PI]}>
+            <mesh
+              position={guidePoints.end}
+              rotation={[
+                0,
+                0,
+                Math.atan2(
+                  guidePoints.start[1] - guidePoints.end[1],
+                  guidePoints.start[0] - guidePoints.end[0]
+                ) + Math.PI
+              ]}
+            >
               <coneGeometry args={[0.08, 0.15, 8]} />
               <meshBasicMaterial color={lineColor} />
             </mesh>
