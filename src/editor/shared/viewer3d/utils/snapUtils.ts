@@ -116,7 +116,7 @@ export function calculateDistance(start: MeasurePoint, end: MeasurePoint): numbe
 /**
  * 가이드선의 오프셋 계산
  * 두 점을 기준으로 수직/수평 오프셋을 계산
- * 3D 좌표를 지원 (X, Y, Z 중 가장 큰 변화량 기준)
+ * calculateGuidePoints와 동일한 로직으로 오프셋 계산
  */
 export function calculateGuideOffset(
   start: MeasurePoint,
@@ -128,27 +128,16 @@ export function calculateGuideOffset(
   const dz = Math.abs(end[2] - start[2]);
 
   // 가장 큰 변화량을 찾아서 해당 축의 수직 방향으로 오프셋 계산
+  // calculateGuidePoints와 동일한 로직 사용
   if (dx >= dy && dx >= dz) {
-    // X축이 주 방향 -> Y 또는 Z 오프셋
-    if (dy > dz) {
-      return mousePos[1] - start[1]; // Y 오프셋
-    } else {
-      return mousePos[2] - start[2]; // Z 오프셋
-    }
+    // X축이 주 방향 -> Y 오프셋 사용
+    return mousePos[1] - start[1];
   } else if (dy >= dx && dy >= dz) {
-    // Y축이 주 방향 -> X 또는 Z 오프셋
-    if (dx > dz) {
-      return mousePos[0] - start[0]; // X 오프셋
-    } else {
-      return mousePos[2] - start[2]; // Z 오프셋
-    }
+    // Y축이 주 방향 -> X 오프셋 사용
+    return mousePos[0] - start[0];
   } else {
-    // Z축이 주 방향 -> X 또는 Y 오프셋
-    if (dx > dy) {
-      return mousePos[0] - start[0]; // X 오프셋
-    } else {
-      return mousePos[1] - start[1]; // Y 오프셋
-    }
+    // Z축이 주 방향 -> X 오프셋 사용
+    return mousePos[0] - start[0];
   }
 }
 
