@@ -82,30 +82,25 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
     let plane: THREE.Plane;
 
-    // 공간 중심 좌표 계산
-    const centerX = spaceInfo ? spaceInfo.width / 2 / 100 : 0;
-    const centerY = spaceInfo ? spaceInfo.height / 2 / 100 : 0;
-    const centerZ = spaceInfo ? spaceInfo.depth / 2 / 100 : 0;
-
     switch (viewDirection) {
       case 'front':
-        // 정면: Z=중심 평면 (XY 평면)
-        plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -centerZ);
+        // 정면: Z=0 평면 (XY 평면) - 정면 벽
+        plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
         break;
       case 'left':
-        // 좌측: X=0 평면 (YZ 평면) - 왼쪽에서 보므로 X=0
+        // 좌측: X=0 평면 (YZ 평면) - 왼쪽 벽
         plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
         break;
       case 'right':
-        // 우측: X=너비 평면 (YZ 평면) - 오른쪽에서 보므로 X=너비
-        plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), -centerX * 2);
+        // 우측: X=0 평면 (YZ 평면) - 오른쪽에서 보는 것도 같은 평면
+        plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
         break;
       case 'top':
-        // 상단: Y=0 평면 (XZ 평면) - 위에서 아래를 보므로 Y=0 (바닥)
+        // 상단: Y=0 평면 (XZ 평면) - 바닥
         plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
         break;
       default:
-        plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -centerZ);
+        plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
     }
 
     const intersection = new THREE.Vector3();
