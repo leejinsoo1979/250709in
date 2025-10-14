@@ -133,6 +133,43 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   
   // 기본: 한 손가락 회전, 두 손가락 줌+팬
   
+  // 측정 모드일 때 커서 스타일 강제 유지
+  useEffect(() => {
+    if (!isMeasureMode) return;
+
+    const canvas = document.querySelector('canvas');
+    if (!canvas) return;
+
+    const cursorStyle = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21"><line x1="10.5" y1="0" x2="10.5" y2="21" stroke="${cursorColor}" stroke-width="1"/><line x1="0" y1="10.5" x2="21" y2="10.5" stroke="${cursorColor}" stroke-width="1"/><circle cx="10.5" cy="10.5" r="2" fill="none" stroke="${cursorColor}" stroke-width="1"/></svg>') 10 10, crosshair`;
+
+    // 초기 설정
+    canvas.style.cursor = cursorStyle;
+
+    // MutationObserver로 커서 변경 감지 및 복원
+    const observer = new MutationObserver(() => {
+      if (canvas.style.cursor !== cursorStyle) {
+        canvas.style.cursor = cursorStyle;
+      }
+    });
+
+    observer.observe(canvas, {
+      attributes: true,
+      attributeFilter: ['style']
+    });
+
+    // 주기적으로 커서 체크 (OrbitControls가 강제로 변경하는 경우 대비)
+    const interval = setInterval(() => {
+      if (canvas.style.cursor !== cursorStyle) {
+        canvas.style.cursor = cursorStyle;
+      }
+    }, 100);
+
+    return () => {
+      observer.disconnect();
+      clearInterval(interval);
+    };
+  }, [isMeasureMode, cursorColor]);
+
   // viewMode 및 cameraMode 변경 시 그림자 설정 업데이트
   useEffect(() => {
     if (rendererRef.current && viewMode === '3D') {
