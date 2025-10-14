@@ -61,11 +61,11 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   // 씬의 모든 꼭지점 추출 (캐싱)
   const sceneVertices = useMemo(() => {
     if (!isMeasureMode) return [];
-    console.log('📐 씬 꼭지점 추출 중...');
+    console.log(`📐 씬 꼭지점 추출 중... (viewDirection: ${viewDirection})`);
     const vertices = extractVertices(scene);
     console.log(`📐 총 ${vertices.length}개 꼭지점 발견`);
     return vertices;
-  }, [scene, isMeasureMode]);
+  }, [scene, isMeasureMode, viewDirection]);
 
   // 마우스 이동 핸들러
   const handlePointerMove = (event: PointerEvent) => {
@@ -104,9 +104,13 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     const intersection = new THREE.Vector3();
     const hit = raycaster.ray.intersectPlane(plane, intersection);
 
-    if (!hit) return;
+    if (!hit) {
+      console.log('❌ Plane intersection 실패 - viewDirection:', viewDirection);
+      return;
+    }
 
     const rawPoint: MeasurePoint = [intersection.x, intersection.y, intersection.z];
+    console.log('🎯 Intersection:', rawPoint, 'viewDirection:', viewDirection);
 
     // 가이드 조정 모드인 경우
     if (isAdjustingGuide && measurePoints && measurePoints[0] && measurePoints[1]) {
