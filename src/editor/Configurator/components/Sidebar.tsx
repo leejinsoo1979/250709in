@@ -4,6 +4,7 @@ import { LogOut } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { PaletteIcon, StructureIcon } from '@/components/common/Icons';
+import { HiOutlineColorSwatch } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -172,7 +173,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
     {
       id: 'material' as SidebarTab,
-      icon: <PaletteIcon size={20} />,
+      icon: <HiOutlineColorSwatch size={20} />,
       label: t('sidebar.material')
     },
     {
