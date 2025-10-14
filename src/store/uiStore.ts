@@ -7,6 +7,17 @@ export type View2DDirection = 'front' | 'left' | 'right' | 'top' | 'all';
 // 프레임 강조 타입 정의
 export type HighlightedFrame = 'left' | 'right' | 'top' | 'base' | null;
 
+// 측정 포인트 타입
+export type MeasurePoint = [number, number, number];
+
+// 측정 라인 타입
+export interface MeasureLine {
+  id: string;
+  start: MeasurePoint;
+  end: MeasurePoint;
+  distance: number; // mm 단위
+}
+
 // UI 상태 타입
 interface UIState {
   // 뷰어 모드 상태
@@ -108,7 +119,12 @@ interface UIState {
   
   // 그림자 설정
   shadowEnabled: boolean;
-  
+
+  // 측정 모드 상태
+  isMeasureMode: boolean;
+  measurePoints: [MeasurePoint, MeasurePoint | null] | null; // [시작점, 끝점 또는 null]
+  measureLines: MeasureLine[]; // 저장된 측정 라인들
+
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
@@ -165,6 +181,17 @@ interface UIState {
   setCameraZoom: (zoom: number) => void;
   setShadowEnabled: (enabled: boolean) => void;
   setSelectedFurnitureId: (id: string | null) => void;
+
+  // 측정 모드 액션들
+  toggleMeasureMode: () => void;
+  setMeasureMode: (enabled: boolean) => void;
+  setMeasureStartPoint: (point: MeasurePoint) => void;
+  setMeasureEndPoint: (point: MeasurePoint) => void;
+  addMeasureLine: (line: MeasureLine) => void;
+  removeMeasureLine: (id: string) => void;
+  clearMeasurePoints: () => void;
+  clearAllMeasureLines: () => void;
+
   resetUI: () => void;
 }
 
@@ -208,6 +235,9 @@ const initialUIState = {
   cameraFov: 50,  // 기본값: FOV 50도
   cameraZoom: 1,  // 기본값: 줌 배율 1
   shadowEnabled: true,  // 기본값: 그림자 활성화
+  isMeasureMode: false,  // 기본값: 측정 모드 비활성화
+  measurePoints: null,  // 기본값: 측정 포인트 없음
+  measureLines: [],  // 기본값: 저장된 측정 라인 없음
 };
 
 // 앱 테마 가져오기 (ThemeContext와 동일한 방식)
@@ -434,6 +464,48 @@ export const useUIStore = create<UIState>()(
 
       setSelectedSlotIndex: (index) =>
         set({ selectedSlotIndex: index }),
+
+      // 측정 모드 액션들 구현
+      toggleMeasureMode: () =>
+        set((state) => ({
+          isMeasureMode: !state.isMeasureMode,
+          // 측정 모드 비활성화 시 측정 포인트 초기화
+          measurePoints: !state.isMeasureMode ? state.measurePoints : null
+        })),
+
+      setMeasureMode: (enabled) =>
+        set({
+          isMeasureMode: enabled,
+          // 비활성화 시 측정 포인트 초기화
+          measurePoints: enabled ? null : null
+        }),
+
+      setMeasureStartPoint: (point) =>
+        set({ measurePoints: [point, null] }),
+
+      setMeasureEndPoint: (point) =>
+        set((state) => {
+          if (!state.measurePoints) return state;
+          return { measurePoints: [state.measurePoints[0], point] };
+        }),
+
+      addMeasureLine: (line) =>
+        set((state) => ({
+          measureLines: [...state.measureLines, line],
+          // 라인 추가 후 측정 포인트 초기화
+          measurePoints: null
+        })),
+
+      removeMeasureLine: (id) =>
+        set((state) => ({
+          measureLines: state.measureLines.filter(line => line.id !== id)
+        })),
+
+      clearMeasurePoints: () =>
+        set({ measurePoints: null }),
+
+      clearAllMeasureLines: () =>
+        set({ measureLines: [] }),
 
       resetUI: () =>
         set(initialUIState),
