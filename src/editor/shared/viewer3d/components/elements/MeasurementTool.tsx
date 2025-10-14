@@ -129,20 +129,33 @@ export const MeasurementTool: React.FC = () => {
     }
   };
 
-  // ESC 키로 취소
+  // ESC 키로 취소, Ctrl+Z로 마지막 측정 라인 삭제
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isMeasureMode) {
+      if (!isMeasureMode) return;
+
+      // ESC: 현재 측정 취소
+      if (event.key === 'Escape') {
         console.log('❌ ESC: 측정 취소');
         clearMeasurePoints();
         setIsAdjustingGuide(false);
         setGuideOffset(0);
       }
+
+      // Ctrl+Z: 마지막 측정 라인 삭제
+      if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+        event.preventDefault(); // 브라우저 기본 동작 방지
+        if (measureLines.length > 0) {
+          const lastLine = measureLines[measureLines.length - 1];
+          console.log('🔙 Ctrl+Z: 마지막 측정 라인 삭제', lastLine.id);
+          useUIStore.getState().removeMeasureLine(lastLine.id);
+        }
+      }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isMeasureMode, clearMeasurePoints]);
+  }, [isMeasureMode, clearMeasurePoints, measureLines]);
 
   // 이벤트 리스너 등록
   useEffect(() => {
