@@ -85,13 +85,12 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   // 옷봉 재질: 3D 모드에서는 밝은 은색 금속, 2D 모드에서는 회색
   const rodMaterial = React.useMemo(() => {
     if (viewMode === '3D') {
-      // 크롬 금속 재질 - envMap 없이 높은 metalness와 낮은 roughness로 광택 표현
-      return new THREE.MeshStandardMaterial({
-        color: '#E8E8E8',    // 밝은 은색/크롬색
-        metalness: 0.95,     // 매우 높은 금속성
-        roughness: 0,        // 완전 거울 표면
-        emissive: '#444444', // 약간의 자체 발광으로 광택 강조
-        emissiveIntensity: 0.1
+      // 크롬 금속 재질 - MeshPhongMaterial로 specular 하이라이트 구현
+      return new THREE.MeshPhongMaterial({
+        color: '#C0C0C0',      // 은색
+        specular: '#FFFFFF',   // 흰색 하이라이트
+        shininess: 200,        // 매우 높은 광택 (0-1000, 기본값 30)
+        reflectivity: 0.9      // 높은 반사율
       });
     } else {
       return new THREE.MeshStandardMaterial({
