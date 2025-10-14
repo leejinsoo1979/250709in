@@ -115,8 +115,8 @@ export function calculateDistance(start: MeasurePoint, end: MeasurePoint): numbe
 
 /**
  * 가이드선의 오프셋 계산
- * 두 점을 기준으로 수직/수평 오프셋을 계산
- * calculateGuidePoints와 동일한 로직으로 오프셋 계산
+ * 마우스 위치의 절대 좌표를 반환 (상대 거리가 아님)
+ * calculateGuidePoints에서 이 값을 그대로 사용하여 가이드 위치 결정
  */
 export function calculateGuideOffset(
   start: MeasurePoint,
@@ -127,24 +127,24 @@ export function calculateGuideOffset(
   const dy = Math.abs(end[1] - start[1]);
   const dz = Math.abs(end[2] - start[2]);
 
-  // 가장 큰 변화량을 찾아서 해당 축의 수직 방향으로 오프셋 계산
-  // calculateGuidePoints와 동일한 로직 사용
+  // 가장 큰 변화량을 찾아서 해당 축의 수직 방향 좌표를 반환
+  // 마우스 위치의 절대 좌표 반환
   if (dx >= dy && dx >= dz) {
-    // X축이 주 방향 -> Y 오프셋 사용
-    return mousePos[1] - start[1];
+    // X축이 주 방향 -> 마우스 Y 좌표 반환
+    return mousePos[1];
   } else if (dy >= dx && dy >= dz) {
-    // Y축이 주 방향 -> X 오프셋 사용
-    return mousePos[0] - start[0];
+    // Y축이 주 방향 -> 마우스 X 좌표 반환
+    return mousePos[0];
   } else {
-    // Z축이 주 방향 -> X 오프셋 사용
-    return mousePos[0] - start[0];
+    // Z축이 주 방향 -> 마우스 X 좌표 반환
+    return mousePos[0];
   }
 }
 
 /**
  * 가이드선 점들 계산
  * 수직/수평 측정만 지원 (대각선 측정 시 수직 또는 수평으로 투영)
- * offset은 시작점 기준 상대 거리
+ * offset은 절대 좌표 값 (calculateGuideOffset에서 반환된 마우스 위치)
  */
 export function calculateGuidePoints(
   start: MeasurePoint,
@@ -157,25 +157,22 @@ export function calculateGuidePoints(
 
   // 가장 큰 변화량을 찾아서 해당 축만 사용 (수직/수평만 허용)
   if (dx >= dy && dx >= dz) {
-    // X축이 주 방향 -> Y 오프셋으로 가이드 위치 조정 (수평선)
-    const guideY = start[1] + offset;
+    // X축이 주 방향 -> offset은 Y 절대 좌표 (수평선)
     return {
-      start: [start[0], guideY, start[2]],
-      end: [end[0], guideY, start[2]]
+      start: [start[0], offset, start[2]],
+      end: [end[0], offset, start[2]]
     };
   } else if (dy >= dx && dy >= dz) {
-    // Y축이 주 방향 -> X 오프셋으로 가이드 위치 조정 (수직선)
-    const guideX = start[0] + offset;
+    // Y축이 주 방향 -> offset은 X 절대 좌표 (수직선)
     return {
-      start: [guideX, start[1], start[2]],
-      end: [guideX, end[1], start[2]]
+      start: [offset, start[1], start[2]],
+      end: [offset, end[1], start[2]]
     };
   } else {
-    // Z축이 주 방향 -> X 오프셋으로 가이드 위치 조정 (깊이 방향)
-    const guideX = start[0] + offset;
+    // Z축이 주 방향 -> offset은 X 절대 좌표 (깊이 방향)
     return {
-      start: [guideX, start[1], start[2]],
-      end: [guideX, start[1], end[2]]
+      start: [offset, start[1], start[2]],
+      end: [offset, start[1], end[2]]
     };
   }
 }
