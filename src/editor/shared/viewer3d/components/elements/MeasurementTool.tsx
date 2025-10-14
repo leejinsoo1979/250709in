@@ -120,12 +120,13 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
     // 가이드 조정 모드인 경우
     if (isAdjustingGuide && measurePoints && measurePoints[0] && measurePoints[1]) {
-      const offset = calculateGuideOffset(measurePoints[0], measurePoints[1], rawPoint);
+      const offset = calculateGuideOffset(measurePoints[0], measurePoints[1], rawPoint, viewDirection);
       console.log('🔧 가이드 오프셋 조정:', {
         start: measurePoints[0],
         end: measurePoints[1],
         mousePos: rawPoint,
-        offset
+        offset,
+        viewDirection
       });
       setGuideOffset(offset);
       return;
@@ -157,7 +158,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         const end = measurePoints[1];
 
         // 가이드 포인트 계산
-        const guidePoints = calculateGuidePoints(start, end, guideOffset);
+        const guidePoints = calculateGuidePoints(start, end, guideOffset, viewDirection);
 
         // 가이드 라인의 실제 거리 계산
         const dx = Math.abs(guidePoints.end[0] - guidePoints.start[0]);
@@ -170,7 +171,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
           end,
           guidePoints,
           distance: guideDistance,
-          offset: guideOffset
+          offset: guideOffset,
+          viewDirection
         });
 
         // 측정 라인 추가
@@ -285,7 +287,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         }
 
         const offset = (line as any).offset ?? defaultOffset;
-        const guidePoints = calculateGuidePoints(line.start, line.end, offset);
+        const guidePoints = calculateGuidePoints(line.start, line.end, offset, viewDirection);
         const midPoint: MeasurePoint = [
           (guidePoints.start[0] + guidePoints.end[0]) / 2,
           (guidePoints.start[1] + guidePoints.end[1]) / 2,
@@ -401,7 +403,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
           {(() => {
             const start = measurePoints[0];
             const end = measurePoints[1];
-            const guidePoints = calculateGuidePoints(start, end, guideOffset);
+            const guidePoints = calculateGuidePoints(start, end, guideOffset, viewDirection);
             const midPoint: MeasurePoint = [
               (guidePoints.start[0] + guidePoints.end[0]) / 2,
               (guidePoints.start[1] + guidePoints.end[1]) / 2,

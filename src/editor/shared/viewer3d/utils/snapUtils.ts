@@ -121,23 +121,46 @@ export function calculateDistance(start: MeasurePoint, end: MeasurePoint): numbe
 export function calculateGuideOffset(
   start: MeasurePoint,
   end: MeasurePoint,
-  mousePos: MeasurePoint
+  mousePos: MeasurePoint,
+  viewDirection?: 'front' | 'left' | 'right' | 'top'
 ): number {
   const dx = Math.abs(end[0] - start[0]);
   const dy = Math.abs(end[1] - start[1]);
   const dz = Math.abs(end[2] - start[2]);
 
-  // 가장 큰 변화량을 찾아서 해당 축의 수직 방향 좌표를 반환
-  // 마우스 위치의 절대 좌표 반환
-  if (dx >= dy && dx >= dz) {
-    // X축이 주 방향 -> 마우스 Y 좌표 반환
-    return mousePos[1];
-  } else if (dy >= dx && dy >= dz) {
-    // Y축이 주 방향 -> 마우스 X 좌표 반환
-    return mousePos[0];
-  } else {
-    // Z축이 주 방향 -> 마우스 X 좌표 반환
-    return mousePos[0];
+  // 뷰 방향에 따라 측정 가능한 축 결정
+  switch (viewDirection) {
+    case 'front':
+      // 정면: XY 평면 - X축 측정이면 Y offset, Y축 측정이면 X offset
+      if (dx >= dy) {
+        return mousePos[1]; // X축 측정 -> Y offset
+      } else {
+        return mousePos[0]; // Y축 측정 -> X offset
+      }
+    case 'top':
+      // 상단: XZ 평면 - X축 측정이면 Z offset, Z축 측정이면 X offset
+      if (dx >= dz) {
+        return mousePos[2]; // X축 측정 -> Z offset
+      } else {
+        return mousePos[0]; // Z축 측정 -> X offset
+      }
+    case 'left':
+    case 'right':
+      // 측면: YZ 평면 - Y축 측정이면 Z offset, Z축 측정이면 Y offset
+      if (dy >= dz) {
+        return mousePos[2]; // Y축 측정 -> Z offset
+      } else {
+        return mousePos[1]; // Z축 측정 -> Y offset
+      }
+    default:
+      // 기본: 가장 큰 변화량 기준
+      if (dx >= dy && dx >= dz) {
+        return mousePos[1]; // X축 -> Y offset
+      } else if (dy >= dx && dy >= dz) {
+        return mousePos[0]; // Y축 -> X offset
+      } else {
+        return mousePos[0]; // Z축 -> X offset
+      }
   }
 }
 
@@ -149,30 +172,81 @@ export function calculateGuideOffset(
 export function calculateGuidePoints(
   start: MeasurePoint,
   end: MeasurePoint,
-  offset: number
+  offset: number,
+  viewDirection?: 'front' | 'left' | 'right' | 'top'
 ): { start: MeasurePoint; end: MeasurePoint } {
   const dx = Math.abs(end[0] - start[0]);
   const dy = Math.abs(end[1] - start[1]);
   const dz = Math.abs(end[2] - start[2]);
 
-  // 가장 큰 변화량을 찾아서 해당 축만 사용 (수직/수평만 허용)
-  if (dx >= dy && dx >= dz) {
-    // X축이 주 방향 (가로 측정) -> Y축에 offset 적용, Z는 start 값 유지
-    return {
-      start: [start[0], offset, start[2]],
-      end: [end[0], offset, end[2]]
-    };
-  } else if (dy >= dx && dy >= dz) {
-    // Y축이 주 방향 (세로 측정) -> X축에 offset 적용, Z는 start 값 유지
-    return {
-      start: [offset, start[1], start[2]],
-      end: [offset, end[1], end[2]]
-    };
-  } else {
-    // Z축이 주 방향 (깊이 측정) -> X축에 offset 적용, Y는 start 값 유지
-    return {
-      start: [offset, start[1], start[2]],
-      end: [offset, start[1], end[2]]
-    };
+  // 뷰 방향에 따라 측정 축 결정
+  switch (viewDirection) {
+    case 'front':
+      // 정면: XY 평면만 측정
+      if (dx >= dy) {
+        // X축 측정 (가로)
+        return {
+          start: [start[0], offset, start[2]],
+          end: [end[0], offset, start[2]]
+        };
+      } else {
+        // Y축 측정 (세로)
+        return {
+          start: [offset, start[1], start[2]],
+          end: [offset, end[1], start[2]]
+        };
+      }
+    case 'top':
+      // 상단: XZ 평면만 측정
+      if (dx >= dz) {
+        // X축 측정 (가로)
+        return {
+          start: [start[0], start[1], offset],
+          end: [end[0], start[1], offset]
+        };
+      } else {
+        // Z축 측정 (깊이)
+        return {
+          start: [offset, start[1], start[2]],
+          end: [offset, start[1], end[2]]
+        };
+      }
+    case 'left':
+    case 'right':
+      // 측면: YZ 평면만 측정
+      if (dy >= dz) {
+        // Y축 측정 (세로)
+        return {
+          start: [start[0], start[1], offset],
+          end: [start[0], end[1], offset]
+        };
+      } else {
+        // Z축 측정 (깊이)
+        return {
+          start: [start[0], offset, start[2]],
+          end: [start[0], offset, end[2]]
+        };
+      }
+    default:
+      // 기본: 가장 큰 변화량 기준
+      if (dx >= dy && dx >= dz) {
+        // X축 측정
+        return {
+          start: [start[0], offset, start[2]],
+          end: [end[0], offset, end[2]]
+        };
+      } else if (dy >= dx && dy >= dz) {
+        // Y축 측정
+        return {
+          start: [offset, start[1], start[2]],
+          end: [offset, end[1], end[2]]
+        };
+      } else {
+        // Z축 측정
+        return {
+          start: [offset, start[1], start[2]],
+          end: [offset, start[1], end[2]]
+        };
+      }
   }
 }
