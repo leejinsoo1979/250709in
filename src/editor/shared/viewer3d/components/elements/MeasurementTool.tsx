@@ -31,7 +31,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     setMeasureStartPoint,
     setMeasureEndPoint,
     addMeasureLine,
-    clearMeasurePoints
+    clearMeasurePoints,
+    view2DDirection
   } = useUIStore();
 
   const { scene, camera, raycaster, gl } = useThree();
