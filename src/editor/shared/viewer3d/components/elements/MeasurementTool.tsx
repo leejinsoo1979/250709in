@@ -155,16 +155,30 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       if (measurePoints && measurePoints[0] && measurePoints[1]) {
         const start = measurePoints[0];
         const end = measurePoints[1];
-        const distance = calculateDistance(start, end);
 
-        console.log('📏 측정 라인 추가:', { start, end, distance, offset: guideOffset });
+        // 가이드 포인트 계산
+        const guidePoints = calculateGuidePoints(start, end, guideOffset);
+
+        // 가이드 라인의 실제 거리 계산
+        const dx = Math.abs(guidePoints.end[0] - guidePoints.start[0]);
+        const dy = Math.abs(guidePoints.end[1] - guidePoints.start[1]);
+        const dz = Math.abs(guidePoints.end[2] - guidePoints.start[2]);
+        const guideDistance = Math.sqrt(dx * dx + dy * dy + dz * dz) * 100; // mm 단위
+
+        console.log('📏 측정 라인 추가:', {
+          start,
+          end,
+          guidePoints,
+          distance: guideDistance,
+          offset: guideOffset
+        });
 
         // 측정 라인 추가
         addMeasureLine({
           id: `measure-${Date.now()}`,
           start,
           end,
-          distance,
+          distance: guideDistance,
           offset: guideOffset
         });
 
