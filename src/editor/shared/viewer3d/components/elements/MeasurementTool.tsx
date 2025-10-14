@@ -40,6 +40,24 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   const [guideOffset, setGuideOffset] = useState<number>(0);
   const [isAdjustingGuide, setIsAdjustingGuide] = useState(false);
 
+  // 시점에 따른 텍스트 오프셋 계산
+  const getTextOffset = (point: MeasurePoint, offset: number = 0.2): MeasurePoint => {
+    switch (viewDirection) {
+      case 'front':
+        // 정면: Y축 위로 오프셋
+        return [point[0], point[1] + offset, point[2]];
+      case 'left':
+      case 'right':
+        // 측면: Z축 앞으로 오프셋
+        return [point[0], point[1] + offset, point[2]];
+      case 'top':
+        // 상단: Z축 앞으로 오프셋
+        return [point[0], point[1], point[2] - offset];
+      default:
+        return [point[0], point[1] + offset, point[2]];
+    }
+  };
+
   // 씬의 모든 꼭지점 추출 (캐싱)
   const sceneVertices = useMemo(() => {
     if (!isMeasureMode) return [];
@@ -287,7 +305,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
             {/* 거리 텍스트 */}
             <Text
-              position={[midPoint[0], midPoint[1] + 0.2, midPoint[2]]}
+              position={getTextOffset(midPoint, 0.2)}
               fontSize={0.25}
               color={lineColor}
               anchorX="center"
@@ -333,7 +351,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
             return (
               <Text
-                position={[midPoint[0], midPoint[1] + 0.2, midPoint[2]]}
+                position={getTextOffset(midPoint, 0.2)}
                 fontSize={0.25}
                 color={lineColor}
                 anchorX="center"
@@ -404,7 +422,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
                 {/* 거리 텍스트 */}
                 <Text
-                  position={[midPoint[0], midPoint[1] + 0.2, midPoint[2]]}
+                  position={getTextOffset(midPoint, 0.2)}
                   fontSize={0.25}
                   color={snapColor}
                   anchorX="center"
@@ -415,7 +433,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
                 {/* 안내 텍스트 */}
                 <Text
-                  position={[midPoint[0], midPoint[1] - 0.4, midPoint[2]]}
+                  position={getTextOffset(midPoint, -0.4)}
                   fontSize={0.15}
                   color={snapColor}
                   anchorX="center"
