@@ -1171,16 +1171,16 @@ export const generateShelvingModules = (
 ): ModuleData[] => {
   let { height: maxHeight } = internalSpace;
   
-  console.log('🔍 generateShelvingModules - 내부 공간 높이:', {
-    internalSpaceHeight: internalSpace.height,
-    maxHeight,
-    spaceInfo: {
-      height: spaceInfo?.height,
-      baseConfig: spaceInfo?.baseConfig,
-      hasFloorFinish: spaceInfo?.hasFloorFinish,
-      floorFinishHeight: spaceInfo?.floorFinish?.height
-    }
-  });
+  // console.log('🔍 generateShelvingModules - 내부 공간 높이:', {
+  //   internalSpaceHeight: internalSpace.height,
+  //   maxHeight,
+  //   spaceInfo: {
+  //     height: spaceInfo?.height,
+  //     baseConfig: spaceInfo?.baseConfig,
+  //     hasFloorFinish: spaceInfo?.hasFloorFinish,
+  //     floorFinishHeight: spaceInfo?.floorFinish?.height
+  //   }
+  // });
   
   // 단내림 구간의 경우 internalSpace.height가 이미 조정되어 있음
   // (SlotDropZonesSimple에서 처리됨)
@@ -1237,13 +1237,13 @@ export const generateShelvingModules = (
       columnWidth = Math.round(slotWidths[0] * 100) / 100;
     }
     
-    console.log('🎯 _tempSlotWidths 사용:', {
-      slotWidths,
-      columnWidth,
-      '원본첫번째슬롯': slotWidths[0],
-      '정규화된너비': columnWidth,
-      'uniqueWidths': uniqueWidths
-    });
+    // console.log('🎯 _tempSlotWidths 사용:', {
+    //   slotWidths,
+    //   columnWidth,
+    //   '원본첫번째슬롯': slotWidths[0],
+    //   '정규화된너비': columnWidth,
+    //   'uniqueWidths': uniqueWidths
+    // });
   } else {
     // 단내림 구간인지 확인하고 zoneSlotInfo 사용
     zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(indexingSpaceInfo, indexingSpaceInfo.customColumnCount);
@@ -1251,47 +1251,47 @@ export const generateShelvingModules = (
     // 단내림이 활성화되고 zone 정보가 전달된 경우
     if (indexingSpaceInfo.droppedCeiling?.enabled && (indexingSpaceInfo as any).zone) {
       const zone = (indexingSpaceInfo as any).zone;
-      console.log('🎯 [generateShelvingModules] Zone 정보 확인:', {
-        zone,
-        droppedCeilingEnabled: indexingSpaceInfo.droppedCeiling?.enabled,
-        zoneSlotInfo: {
-          dropped: zoneSlotInfo.dropped ? {
-            columnWidth: zoneSlotInfo.dropped.columnWidth,
-            columnCount: zoneSlotInfo.dropped.columnCount,
-            slotWidths: zoneSlotInfo.dropped.slotWidths
-          } : null,
-          normal: zoneSlotInfo.normal ? {
-            columnWidth: zoneSlotInfo.normal.columnWidth,
-            columnCount: zoneSlotInfo.normal.columnCount,
-            slotWidths: zoneSlotInfo.normal.slotWidths
-          } : null
-        }
-      });
+      // console.log('🎯 [generateShelvingModules] Zone 정보 확인:', {
+      //   zone,
+      //   droppedCeilingEnabled: indexingSpaceInfo.droppedCeiling?.enabled,
+      //   zoneSlotInfo: {
+      //     dropped: zoneSlotInfo.dropped ? {
+      //       columnWidth: zoneSlotInfo.dropped.columnWidth,
+      //       columnCount: zoneSlotInfo.dropped.columnCount,
+      //       slotWidths: zoneSlotInfo.dropped.slotWidths
+      //     } : null,
+      //     normal: zoneSlotInfo.normal ? {
+      //       columnWidth: zoneSlotInfo.normal.columnWidth,
+      //       columnCount: zoneSlotInfo.normal.columnCount,
+      //       slotWidths: zoneSlotInfo.normal.slotWidths
+      //     } : null
+      //   }
+      // });
       
       if (zone === 'dropped' && zoneSlotInfo.dropped) {
         columnWidth = Math.round(zoneSlotInfo.dropped.columnWidth * 100) / 100;
         columnCount = zoneSlotInfo.dropped.columnCount;
         slotWidths = zoneSlotInfo.dropped.slotWidths;
-        console.log('✅ [generateShelvingModules] 단내림 영역 사용:', {
-          columnWidth,
-          columnCount,
-          slotWidths,
-          zone: 'dropped',
-          internalSpaceWidth: internalSpace.width,
-          internalSpaceHeight: internalSpace.height
-        });
+        // console.log('✅ [generateShelvingModules] 단내림 영역 사용:', {
+        //   columnWidth,
+        //   columnCount,
+        //   slotWidths,
+        //   zone: 'dropped',
+        //   internalSpaceWidth: internalSpace.width,
+        //   internalSpaceHeight: internalSpace.height
+        // });
       } else if (zone === 'normal' && zoneSlotInfo.normal) {
         columnWidth = Math.round(zoneSlotInfo.normal.columnWidth * 100) / 100;
         columnCount = zoneSlotInfo.normal.columnCount;
         slotWidths = zoneSlotInfo.normal.slotWidths;
-        console.log('✅ [generateShelvingModules] 메인 영역 사용:', {
-          columnWidth,
-          columnCount,
-          slotWidths,
-          zone: 'normal',
-          internalSpaceWidth: internalSpace.width,
-          internalSpaceHeight: internalSpace.height
-        });
+        // console.log('✅ [generateShelvingModules] 메인 영역 사용:', {
+        //   columnWidth,
+        //   columnCount,
+        //   slotWidths,
+        //   zone: 'normal',
+        //   internalSpaceWidth: internalSpace.width,
+        //   internalSpaceHeight: internalSpace.height
+        // });
       } else {
         // zone 정보가 있지만 해당 zone이 없는 경우 fallback
         console.warn('⚠️ [generateShelvingModules] Zone 정보는 있지만 해당 zone이 없음, fallback 사용:', {
@@ -1310,29 +1310,29 @@ export const generateShelvingModules = (
       columnWidth = zoneSlotInfo.normal.columnWidth;
       columnCount = zoneSlotInfo.normal.columnCount;
       slotWidths = zoneSlotInfo.normal.slotWidths;
-      console.log('✅ [generateShelvingModules] 일반 계산 사용:', {
-        columnWidth,
-        columnCount,
-        slotWidths,
-        zone: 'none',
-        internalSpaceWidth: internalSpace.width,
-        internalSpaceHeight: internalSpace.height
-      });
+      // console.log('✅ [generateShelvingModules] 일반 계산 사용:', {
+      //   columnWidth,
+      //   columnCount,
+      //   slotWidths,
+      //   zone: 'none',
+      //   internalSpaceWidth: internalSpace.width,
+      //   internalSpaceHeight: internalSpace.height
+      // });
     }
   }
   
   
-  console.log('🎯 [generateShelvingModules] 계산 결과:', {
-    zone: (indexingSpaceInfo as any).zone,
-    columnWidth,
-    columnCount,
-    slotWidths,
-    zoneSlotInfo,
-    droppedCeilingEnabled: indexingSpaceInfo.droppedCeiling?.enabled,
-    internalSpaceWidth: internalSpace.width,
-    '슬롯별 너비': slotWidths ? slotWidths : '없음',
-    '슬롯 너비 합계': slotWidths ? slotWidths.reduce((sum, w) => sum + w, 0) : 0
-  });
+  // console.log('🎯 [generateShelvingModules] 계산 결과:', {
+  //   zone: (indexingSpaceInfo as any).zone,
+  //   columnWidth,
+  //   columnCount,
+  //   slotWidths,
+  //   zoneSlotInfo,
+  //   droppedCeilingEnabled: indexingSpaceInfo.droppedCeiling?.enabled,
+  //   internalSpaceWidth: internalSpace.width,
+  //   '슬롯별 너비': slotWidths ? slotWidths : '없음',
+  //   '슬롯 너비 합계': slotWidths ? slotWidths.reduce((sum, w) => sum + w, 0) : 0
+  // });
   
   // 700mm 컬럼이 계산되면 에러 발생
   if (columnWidth >= 680 && columnWidth <= 720) {
@@ -1347,23 +1347,23 @@ export const generateShelvingModules = (
   
   const modules: ModuleData[] = [];
   
-  console.log('🎯 슬롯 너비 정보:', {
-    zone: (indexingSpaceInfo as any).zone,
-    columnWidth,
-    columnCount,
-    slotWidths,
-    uniqueWidths: slotWidths ? [...new Set(slotWidths)] : []
-  });
+  // console.log('🎯 슬롯 너비 정보:', {
+  //   zone: (indexingSpaceInfo as any).zone,
+  //   columnWidth,
+  //   columnCount,
+  //   slotWidths,
+  //   uniqueWidths: slotWidths ? [...new Set(slotWidths)] : []
+  // });
   
   // 갤러리 표시용으로는 평균 너비의 가구만 생성 (중복 방지)
   // 가구 높이는 internalSpace.height 사용 (이미 위에서 maxHeight 선언됨)
   
   // === 싱글 가구 생성 ===
-  console.log('🔨 싱글 가구 생성 시작:', {
-    columnWidth,
-    '반올림된너비': Math.round(columnWidth * 100) / 100,
-    '생성될ID예시': `single-2drawer-hanging-${Math.round(columnWidth * 100) / 100}`
-  });
+  // console.log('🔨 싱글 가구 생성 시작:', {
+  //   columnWidth,
+  //   '반올림된너비': Math.round(columnWidth * 100) / 100,
+  //   '생성될ID예시': `single-2drawer-hanging-${Math.round(columnWidth * 100) / 100}`
+  // });
   modules.push(createSingleType1(columnWidth, maxHeight));
   modules.push(createSingleType2(columnWidth, maxHeight));
   modules.push(createSingleType4(columnWidth, maxHeight));
@@ -1380,16 +1380,16 @@ export const generateShelvingModules = (
     dualWidth = Math.round(columnWidth * 2 * 100) / 100;
   }
   
-  console.log('🎯🔥 듀얼 가구 생성 체크:', {
-    dualWidth,
-    '슬롯 너비 배열': slotWidths,
-    '첫번째 슬롯': slotWidths ? slotWidths[0] : null,
-    '두번째 슬롯': slotWidths ? slotWidths[1] : null,
-    '듀얼 너비 계산': slotWidths && slotWidths.length >= 2 ? `${slotWidths[0]} + ${slotWidths[1]} = ${dualWidth}` : `${columnWidth} × 2 = ${dualWidth}`,
-    internalSpaceWidth: internalSpace.width,
-    willCreateDual: dualWidth <= internalSpace.width,
-    zone: (indexingSpaceInfo as any).zone
-  });
+  // console.log('🎯🔥 듀얼 가구 생성 체크:', {
+  //   dualWidth,
+  //   '슬롯 너비 배열': slotWidths,
+  //   '첫번째 슬롯': slotWidths ? slotWidths[0] : null,
+  //   '두번째 슬롯': slotWidths ? slotWidths[1] : null,
+  //   '듀얼 너비 계산': slotWidths && slotWidths.length >= 2 ? `${slotWidths[0]} + ${slotWidths[1]} = ${dualWidth}` : `${columnWidth} × 2 = ${dualWidth}`,
+  //   internalSpaceWidth: internalSpace.width,
+  //   willCreateDual: dualWidth <= internalSpace.width,
+  //   zone: (indexingSpaceInfo as any).zone
+  // });
   
   // 단내림 구간이어도 듀얼 가구는 갤러리에 표시해야 함
   // 실제 배치 가능 여부는 ModuleGallery의 isModuleValid에서 체크
@@ -1401,13 +1401,13 @@ export const generateShelvingModules = (
       [slotWidths[0], slotWidths[1]] : 
       [dualWidth / 2, dualWidth / 2];
     
-    console.log('🔥🔥🔥 듀얼 가구 슬롯 너비 정보:', {
-      dualWidth,
-      dualSlotWidths,
-      '첫번째 슬롯': dualSlotWidths[0],
-      '두번째 슬롯': dualSlotWidths[1],
-      '합계': dualSlotWidths[0] + dualSlotWidths[1]
-    });
+    // console.log('🔥🔥🔥 듀얼 가구 슬롯 너비 정보:', {
+    //   dualWidth,
+    //   dualSlotWidths,
+    //   '첫번째 슬롯': dualSlotWidths[0],
+    //   '두번째 슬롯': dualSlotWidths[1],
+    //   '합계': dualSlotWidths[0] + dualSlotWidths[1]
+    // });
     
     modules.push(createDualType1(dualWidth, maxHeight, dualSlotWidths));
     modules.push(createDualType2(dualWidth, maxHeight, dualSlotWidths));
@@ -1429,14 +1429,14 @@ export const generateShelvingModules = (
   // === 싱글 상부장 가구 생성 ===
   // 상부장은 항상 생성 (단내림 구간에서도 천장 기준으로 배치되므로)
   const upperCabinet1 = createUpperCabinet1(columnWidth);
-  console.log('🔨 상부장 1 생성:', {
-    id: upperCabinet1.id,
-    name: upperCabinet1.name,
-    category: upperCabinet1.category,
-    dimensions: upperCabinet1.dimensions,
-    internalSpaceHeight: internalSpace.height,
-    zone: (indexingSpaceInfo as any).zone
-  });
+  // console.log('🔨 상부장 1 생성:', {
+  //   id: upperCabinet1.id,
+  //   name: upperCabinet1.name,
+  //   category: upperCabinet1.category,
+  //   dimensions: upperCabinet1.dimensions,
+  //   internalSpaceHeight: internalSpace.height,
+  //   zone: (indexingSpaceInfo as any).zone
+  // });
   modules.push(upperCabinet1);
   modules.push(createUpperCabinet2(columnWidth));
   modules.push(createUpperCabinet3(columnWidth));
@@ -1445,34 +1445,34 @@ export const generateShelvingModules = (
   // === 싱글 하부장 가구 생성 ===
   // 하부장도 항상 생성 (배치 가능 여부는 UI에서 판단)
   const lowerCabinet1 = createLowerCabinet1(columnWidth);
-  console.log('🔨 하부장 생성:', {
-    id: lowerCabinet1.id,
-    name: lowerCabinet1.name,
-    category: lowerCabinet1.category,
-    dimensions: lowerCabinet1.dimensions,
-    internalSpaceHeight: internalSpace.height,
-    zone: (indexingSpaceInfo as any).zone
-  });
+  // console.log('🔨 하부장 생성:', {
+  //   id: lowerCabinet1.id,
+  //   name: lowerCabinet1.name,
+  //   category: lowerCabinet1.category,
+  //   dimensions: lowerCabinet1.dimensions,
+  //   internalSpaceHeight: internalSpace.height,
+  //   zone: (indexingSpaceInfo as any).zone
+  // });
   modules.push(lowerCabinet1);
-  
+
   const lowerCabinet2 = createLowerCabinet2(columnWidth);
-  console.log('🔨 하부장 2단형 생성:', {
-    id: lowerCabinet2.id,
-    name: lowerCabinet2.name,
-    category: lowerCabinet2.category,
-    dimensions: lowerCabinet2.dimensions,
-    internalSpaceHeight: internalSpace.height,
-    zone: (indexingSpaceInfo as any).zone
-  });
+  // console.log('🔨 하부장 2단형 생성:', {
+  //   id: lowerCabinet2.id,
+  //   name: lowerCabinet2.name,
+  //   category: lowerCabinet2.category,
+  //   dimensions: lowerCabinet2.dimensions,
+  //   internalSpaceHeight: internalSpace.height,
+  //   zone: (indexingSpaceInfo as any).zone
+  // });
   modules.push(lowerCabinet2);
   
-  console.log('📊 generateShelvingModules 최종 결과:', {
-    totalModulesCount: modules.length,
-    categories: [...new Set(modules.map(m => m.category))],
-    upperCount: modules.filter(m => m.category === 'upper').length,
-    lowerCount: modules.filter(m => m.category === 'lower').length,
-    fullCount: modules.filter(m => m.category === 'full').length
-  });
+  // console.log('📊 generateShelvingModules 최종 결과:', {
+  //   totalModulesCount: modules.length,
+  //   categories: [...new Set(modules.map(m => m.category))],
+  //   upperCount: modules.filter(m => m.category === 'upper').length,
+  //   lowerCount: modules.filter(m => m.category === 'lower').length,
+  //   fullCount: modules.filter(m => m.category === 'full').length
+  // });
   
   return modules;
 };
