@@ -33,7 +33,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     addMeasureLine,
     clearMeasurePoints,
     view2DDirection,
-    setIsMeasureMode
+    setMeasureMode
   } = useUIStore();
 
   const { scene, camera, raycaster, gl } = useThree();
@@ -215,7 +215,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   useEffect(() => {
     if (isMeasureMode) {
       console.log('🔄 시점 변경 감지 - 측정 모드 종료');
-      setIsMeasureMode(false);
+      setMeasureMode(false);
       clearMeasurePoints();
     }
   }, [view2DDirection]);
