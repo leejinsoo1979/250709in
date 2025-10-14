@@ -256,7 +256,21 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     <group>
       {/* 저장된 측정 라인들 */}
       {measureLines.map((line) => {
-        const offset = (line as any).offset || 0;
+        // offset이 없으면 시작점 좌표를 기본값으로 사용
+        const dx = Math.abs(line.end[0] - line.start[0]);
+        const dy = Math.abs(line.end[1] - line.start[1]);
+        const dz = Math.abs(line.end[2] - line.start[2]);
+
+        let defaultOffset: number;
+        if (dx >= dy && dx >= dz) {
+          defaultOffset = line.start[1]; // X축 주방향 -> Y좌표
+        } else if (dy >= dx && dy >= dz) {
+          defaultOffset = line.start[0]; // Y축 주방향 -> X좌표
+        } else {
+          defaultOffset = line.start[0]; // Z축 주방향 -> X좌표
+        }
+
+        const offset = (line as any).offset ?? defaultOffset;
         const guidePoints = calculateGuidePoints(line.start, line.end, offset);
         const midPoint: MeasurePoint = [
           (guidePoints.start[0] + guidePoints.end[0]) / 2,
