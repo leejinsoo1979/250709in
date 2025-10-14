@@ -89,7 +89,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
       return new THREE.MeshStandardMaterial({
         color: '#E8E8E8',    // 밝은 은색/크롬색
         metalness: 0.95,     // 매우 높은 금속성
-        roughness: 0.05,     // 매우 낮은 거칠기 = 거울같은 광택
+        roughness: 0,        // 완전 거울 표면
         emissive: '#444444', // 약간의 자체 발광으로 광택 강조
         emissiveIntensity: 0.1
       });
