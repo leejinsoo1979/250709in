@@ -249,8 +249,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
   if (!isMeasureMode) return null;
 
-  const lineColor = '#FF6600'; // 주황색
-  const snapColor = '#00FF00'; // 초록색 (스냅됨)
+  const lineColor = '#00FF00'; // 형광 초록색
+  const snapColor = '#00FF00'; // 형광 초록색 (스냅됨)
 
   return (
     <group>
@@ -293,47 +293,15 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
               lineWidth={2}
             />
 
-            {/* 시작점 마커 */}
-            <mesh position={line.start}>
+            {/* 가이드 시작점 엔드포인트 (점) */}
+            <mesh position={guidePoints.start}>
               <sphereGeometry args={[0.05, 16, 16]} />
               <meshBasicMaterial color={lineColor} />
             </mesh>
 
-            {/* 끝점 마커 */}
-            <mesh position={line.end}>
+            {/* 가이드 끝점 엔드포인트 (점) */}
+            <mesh position={guidePoints.end}>
               <sphereGeometry args={[0.05, 16, 16]} />
-              <meshBasicMaterial color={lineColor} />
-            </mesh>
-
-            {/* 화살표 - 시작 */}
-            <mesh
-              position={guidePoints.start}
-              rotation={[
-                0,
-                0,
-                Math.atan2(
-                  guidePoints.end[1] - guidePoints.start[1],
-                  guidePoints.end[0] - guidePoints.start[0]
-                )
-              ]}
-            >
-              <coneGeometry args={[0.08, 0.15, 8]} />
-              <meshBasicMaterial color={lineColor} />
-            </mesh>
-
-            {/* 화살표 - 끝 */}
-            <mesh
-              position={guidePoints.end}
-              rotation={[
-                0,
-                0,
-                Math.atan2(
-                  guidePoints.start[1] - guidePoints.end[1],
-                  guidePoints.start[0] - guidePoints.end[0]
-                ) + Math.PI
-              ]}
-            >
-              <coneGeometry args={[0.08, 0.15, 8]} />
               <meshBasicMaterial color={lineColor} />
             </mesh>
 
@@ -442,14 +410,14 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
                   lineWidth={2}
                 />
 
-                {/* 시작점 마커 */}
-                <mesh position={start}>
+                {/* 가이드 시작점 엔드포인트 (점) */}
+                <mesh position={guidePoints.start}>
                   <sphereGeometry args={[0.05, 16, 16]} />
                   <meshBasicMaterial color={snapColor} />
                 </mesh>
 
-                {/* 끝점 마커 */}
-                <mesh position={end}>
+                {/* 가이드 끝점 엔드포인트 (점) */}
+                <mesh position={guidePoints.end}>
                   <sphereGeometry args={[0.05, 16, 16]} />
                   <meshBasicMaterial color={snapColor} />
                 </mesh>
