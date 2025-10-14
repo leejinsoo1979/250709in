@@ -145,6 +145,7 @@ export const MeasurementTool: React.FC = () => {
       // Ctrl+Z: 마지막 측정 라인 삭제
       if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
         event.preventDefault(); // 브라우저 기본 동작 방지
+        event.stopPropagation(); // 이벤트 전파 중단 (OrbitControls 등 다른 핸들러 방지)
         if (measureLines.length > 0) {
           const lastLine = measureLines[measureLines.length - 1];
           console.log('🔙 Ctrl+Z: 마지막 측정 라인 삭제', lastLine.id);
@@ -153,8 +154,8 @@ export const MeasurementTool: React.FC = () => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true); // capture phase에서 먼저 처리
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [isMeasureMode, clearMeasurePoints, measureLines]);
 
   // 이벤트 리스너 등록
