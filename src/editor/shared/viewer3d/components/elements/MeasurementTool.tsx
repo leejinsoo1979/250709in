@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Line, Text } from '@react-three/drei';
 import { useUIStore, MeasurePoint } from '@/store/uiStore';
@@ -70,7 +70,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   }, [scene, isMeasureMode, viewDirection]);
 
   // 마우스 이동 핸들러
-  const handlePointerMove = (event: PointerEvent) => {
+  const handlePointerMove = useCallback((event: PointerEvent) => {
     if (!isMeasureMode) return;
 
     // 마우스 위치를 NDC로 변환
@@ -132,10 +132,10 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       setHoverPoint(rawPoint);
       setIsSnapped(false);
     }
-  };
+  }, [isMeasureMode, gl, raycaster, camera, viewDirection, isAdjustingGuide, measurePoints, sceneVertices]);
 
   // 클릭 핸들러
-  const handleClick = (event: PointerEvent) => {
+  const handleClick = useCallback((event: PointerEvent) => {
     if (!isMeasureMode || !hoverPoint) return;
 
     // 가이드 조정 모드인 경우
@@ -177,7 +177,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       setIsAdjustingGuide(true);
       setGuideOffset(0);
     }
-  };
+  }, [isMeasureMode, hoverPoint, isAdjustingGuide, measurePoints, setMeasureStartPoint, setMeasureEndPoint, addMeasureLine, clearMeasurePoints]);
 
   // ESC 키로 취소, Ctrl+Z로 마지막 측정 라인 삭제
   useEffect(() => {
@@ -224,7 +224,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('click', handleClick);
     };
-  }, [isMeasureMode, measurePoints, hoverPoint, isAdjustingGuide, guideOffset, sceneVertices, viewDirection]);
+  }, [isMeasureMode, handlePointerMove, handleClick, gl]);
 
   if (!isMeasureMode) return null;
 
