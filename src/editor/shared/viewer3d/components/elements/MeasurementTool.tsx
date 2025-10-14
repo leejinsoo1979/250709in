@@ -32,7 +32,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     setMeasureEndPoint,
     addMeasureLine,
     clearMeasurePoints,
-    view2DDirection
+    view2DDirection,
+    setIsMeasureMode
   } = useUIStore();
 
   const { scene, camera, raycaster, gl } = useThree();
@@ -80,9 +81,6 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   const handlePointerMove = useCallback((event: PointerEvent) => {
     if (!isMeasureMode) return;
 
-    // 현재 viewDirection을 직접 읽어옴
-    const currentViewDirection = view2DDirection;
-
     // 마우스 위치를 NDC로 변환
     const rect = gl.domElement.getBoundingClientRect();
     const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
@@ -92,7 +90,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
     let plane: THREE.Plane;
 
-    switch (currentViewDirection) {
+    switch (viewDirection) {
       case 'front':
         // 정면: Z=0 평면 (XY 평면) - 정면 벽
         plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
@@ -116,13 +114,9 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     const intersection = new THREE.Vector3();
     const hit = raycaster.ray.intersectPlane(plane, intersection);
 
-    if (!hit) {
-      console.log('❌ Plane intersection 실패 - viewDirection:', currentViewDirection);
-      return;
-    }
+    if (!hit) return;
 
     const rawPoint: MeasurePoint = [intersection.x, intersection.y, intersection.z];
-    console.log('🎯 Intersection:', rawPoint, 'viewDirection:', currentViewDirection);
 
     // 가이드 조정 모드인 경우
     if (isAdjustingGuide && measurePoints && measurePoints[0] && measurePoints[1]) {
@@ -132,17 +126,16 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     }
 
     // 스냅 기능: 가장 가까운 꼭지점 찾기 (시점별 2D 거리 계산)
-    const nearestSnap = findNearestVertex(rawPoint, sceneVerticesRef.current, currentViewDirection);
+    const nearestSnap = findNearestVertex(rawPoint, sceneVerticesRef.current, viewDirection);
 
     if (nearestSnap) {
       setHoverPoint(nearestSnap.vertex);
       setIsSnapped(true);
-      console.log('✅ 스냅됨:', nearestSnap.vertex, '거리:', nearestSnap.distance.toFixed(3), 'viewDirection:', currentViewDirection);
     } else {
       setHoverPoint(rawPoint);
       setIsSnapped(false);
     }
-  }, [isMeasureMode, gl, raycaster, camera, isAdjustingGuide, measurePoints, view2DDirection]);
+  }, [isMeasureMode, gl, raycaster, camera, viewDirection, isAdjustingGuide, measurePoints]);
 
   // 클릭 핸들러
   const handleClick = useCallback((event: PointerEvent) => {
@@ -218,24 +211,28 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return () => window.removeEventListener('keydown', handleKeyDown, true);
   }, [isMeasureMode, clearMeasurePoints, measureLines]);
 
+  // 시점 변경 시 측정 모드 자동 종료
+  useEffect(() => {
+    if (isMeasureMode) {
+      console.log('🔄 시점 변경 감지 - 측정 모드 종료');
+      setIsMeasureMode(false);
+      clearMeasurePoints();
+    }
+  }, [view2DDirection]);
+
   // 이벤트 리스너 등록
   useEffect(() => {
-    console.log('🔧 이벤트 리스너 등록 useEffect 실행');
-
     if (!isMeasureMode) {
       setHoverPoint(null);
       setIsSnapped(false);
-      console.log('⚠️ isMeasureMode가 false라서 리스너 등록 안 함');
       return;
     }
 
     const canvas = gl.domElement;
-    console.log('✅ 이벤트 리스너 등록 완료');
     canvas.addEventListener('pointermove', handlePointerMove);
     canvas.addEventListener('click', handleClick);
 
     return () => {
-      console.log('🗑️ 이벤트 리스너 제거');
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('click', handleClick);
     };
