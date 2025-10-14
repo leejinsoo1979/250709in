@@ -646,7 +646,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         shadows={viewMode === '3D' && shadowEnabled}
         style={{
           background: viewMode === '2D' && theme.mode === 'dark' ? '#121212' : viewMode === '2D' ? '#ffffff' : CANVAS_SETTINGS.BACKGROUND_COLOR,
-          cursor: isMeasureMode
+          cursor: (isMeasureMode && viewMode === '2D')
             ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21"><line x1="10.5" y1="0" x2="10.5" y2="21" stroke="${cursorColor}" stroke-width="1"/><line x1="0" y1="10.5" x2="21" y2="10.5" stroke="${cursorColor}" stroke-width="1"/><circle cx="10.5" cy="10.5" r="2" fill="none" stroke="${cursorColor}" stroke-width="1"/></svg>') 10 10, crosshair`
             : 'default',
           touchAction: 'none'
