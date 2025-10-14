@@ -3,9 +3,9 @@ import { MeasurePoint } from '@/store/uiStore';
 
 /**
  * 스냅 거리 (three.js 단위)
- * 0.2 = 20mm
+ * 0.4 = 40mm (적당한 값)
  */
-export const SNAP_DISTANCE = 0.2;
+export const SNAP_DISTANCE = 0.4;
 
 /**
  * 객체의 모든 꼭지점을 추출
@@ -48,20 +48,47 @@ export function extractVertices(object: THREE.Object3D): MeasurePoint[] {
 
 /**
  * 가장 가까운 꼭지점 찾기
- * 3D 거리 계산 지원
+ * 시점별로 관련 있는 축만 사용하여 2D 거리 계산
  */
 export function findNearestVertex(
   point: MeasurePoint,
-  vertices: MeasurePoint[]
+  vertices: MeasurePoint[],
+  viewDirection?: 'front' | 'left' | 'right' | 'top'
 ): { vertex: MeasurePoint; distance: number } | null {
   let nearest: MeasurePoint | null = null;
   let minDistance = SNAP_DISTANCE;
 
   for (const vertex of vertices) {
-    const dx = vertex[0] - point[0];
-    const dy = vertex[1] - point[1];
-    const dz = vertex[2] - point[2];
-    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    let distance: number;
+
+    // 시점별로 관련 있는 축만 사용하여 거리 계산
+    switch (viewDirection) {
+      case 'front':
+        // 정면: XY 평면 (Z 무시)
+        const dxFront = vertex[0] - point[0];
+        const dyFront = vertex[1] - point[1];
+        distance = Math.sqrt(dxFront * dxFront + dyFront * dyFront);
+        break;
+      case 'left':
+      case 'right':
+        // 측면: YZ 평면 (X 무시)
+        const dySide = vertex[1] - point[1];
+        const dzSide = vertex[2] - point[2];
+        distance = Math.sqrt(dySide * dySide + dzSide * dzSide);
+        break;
+      case 'top':
+        // 상단: XZ 평면 (Y 무시)
+        const dxTop = vertex[0] - point[0];
+        const dzTop = vertex[2] - point[2];
+        distance = Math.sqrt(dxTop * dxTop + dzTop * dzTop);
+        break;
+      default:
+        // 기본: 3D 거리
+        const dx = vertex[0] - point[0];
+        const dy = vertex[1] - point[1];
+        const dz = vertex[2] - point[2];
+        distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    }
 
     if (distance < minDistance) {
       minDistance = distance;

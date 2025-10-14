@@ -121,18 +121,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       return;
     }
 
-    // 스냅 기능: 가장 가까운 꼭지점 찾기
-    // 디버깅: 가장 가까운 꼭지점까지의 거리 확인
-    let minDist = Infinity;
-    for (const vertex of sceneVertices) {
-      const dx = vertex[0] - rawPoint[0];
-      const dy = vertex[1] - rawPoint[1];
-      const dz = vertex[2] - rawPoint[2];
-      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-      if (dist < minDist) minDist = dist;
-    }
-
-    const nearestSnap = findNearestVertex(rawPoint, sceneVertices);
+    // 스냅 기능: 가장 가까운 꼭지점 찾기 (시점별 2D 거리 계산)
+    const nearestSnap = findNearestVertex(rawPoint, sceneVertices, viewDirection);
 
     if (nearestSnap) {
       setHoverPoint(nearestSnap.vertex);
@@ -141,9 +131,6 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     } else {
       setHoverPoint(rawPoint);
       setIsSnapped(false);
-      if (sceneVertices.length > 0) {
-        console.log('❌ 스냅 실패 - 가장 가까운 거리:', minDist.toFixed(3), 'SNAP_DISTANCE:', SNAP_DISTANCE);
-      }
     }
   };
 
