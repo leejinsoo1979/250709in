@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
 import { Settings, Menu, User, ChevronDown, Camera, Undo, Redo } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
+import { SiConvertio } from 'react-icons/si';
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -502,10 +503,11 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* CNC 옵티마이저 버튼 */}
           <div className={styles.convertButtonContainer} ref={convertMenuRef}>
-            <button 
-              className={styles.convertButton} 
+            <button
+              className={styles.convertButton}
               onClick={() => setIsConvertMenuOpen(!isConvertMenuOpen)}
             >
+              <SiConvertio size={20} />
               {t('common.converting')}
               <ChevronDown size={16} style={{ marginLeft: '4px' }} />
             </button>
