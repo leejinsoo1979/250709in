@@ -17,6 +17,7 @@ import CleanCAD2D from './components/elements/CleanCAD2D';
 import CADDimensions2D from './components/elements/CADDimensions2D';
 import CADGrid from './components/elements/CADGrid';
 import DroppedCeilingSpace from './components/elements/DroppedCeilingSpace';
+import { MeasurementTool } from './components/elements/MeasurementTool';
 
 import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
 import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
@@ -1239,9 +1240,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
             <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} />
-            
+
             {/* 내경 치수 표시 - showDimensions 상태에 따라 표시/숨김 */}
             <InternalDimensionDisplay />
+
+            {/* CAD 측정 도구 - 2D 모드에서만 표시 */}
+            {viewMode === '2D' && <MeasurementTool />}
           </React.Suspense>
         </ThreeCanvas>
 
