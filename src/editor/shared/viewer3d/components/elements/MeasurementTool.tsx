@@ -274,13 +274,13 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
             {/* 시작점 마커 */}
             <mesh position={line.start}>
-              <circleGeometry args={[0.05, 16]} />
+              <sphereGeometry args={[0.05, 16, 16]} />
               <meshBasicMaterial color={lineColor} />
             </mesh>
 
             {/* 끝점 마커 */}
             <mesh position={line.end}>
-              <circleGeometry args={[0.05, 16]} />
+              <sphereGeometry args={[0.05, 16, 16]} />
               <meshBasicMaterial color={lineColor} />
             </mesh>
 
@@ -323,13 +323,13 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
           {/* 시작점 마커 */}
           <mesh position={measurePoints[0]}>
-            <circleGeometry args={[0.05, 16]} />
+            <sphereGeometry args={[0.05, 16, 16]} />
             <meshBasicMaterial color={snapColor} />
           </mesh>
 
           {/* 호버점 마커 */}
           <mesh position={hoverPoint}>
-            <circleGeometry args={[0.05, 16]} />
+            <sphereGeometry args={[0.05, 16, 16]} />
             <meshBasicMaterial color={isSnapped ? snapColor : lineColor} opacity={0.7} transparent />
           </mesh>
 
@@ -403,13 +403,13 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
                 {/* 시작점 마커 */}
                 <mesh position={start}>
-                  <circleGeometry args={[0.05, 16]} />
+                  <sphereGeometry args={[0.05, 16, 16]} />
                   <meshBasicMaterial color={snapColor} />
                 </mesh>
 
                 {/* 끝점 마커 */}
                 <mesh position={end}>
-                  <circleGeometry args={[0.05, 16]} />
+                  <sphereGeometry args={[0.05, 16, 16]} />
                   <meshBasicMaterial color={snapColor} />
                 </mesh>
 
@@ -443,7 +443,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       {/* 호버 커서 (측정 시작 전) */}
       {!measurePoints && hoverPoint && (
         <mesh position={hoverPoint}>
-          <circleGeometry args={[0.05, 16]} />
+          <sphereGeometry args={[0.05, 16, 16]} />
           <meshBasicMaterial color={isSnapped ? snapColor : lineColor} opacity={0.5} transparent />
         </mesh>
       )}
