@@ -5,7 +5,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { PaletteIcon, StructureIcon } from '@/components/common/Icons';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
-import { TbBoxAlignRight } from 'react-icons/tb';
+import { TbBoxAlignRight, TbBrandAsana } from 'react-icons/tb';
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -184,13 +184,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'etc' as SidebarTab,
-      icon: (
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <circle cx="5" cy="12" r="1" stroke="currentColor" strokeWidth="2"/>
-          <circle cx="12" cy="12" r="1" stroke="currentColor" strokeWidth="2"/>
-          <circle cx="19" cy="12" r="1" stroke="currentColor" strokeWidth="2"/>
-        </svg>
-      ),
+      icon: <TbBrandAsana size={20} />,
       label: t('sidebar.etc')
     }
   ];
