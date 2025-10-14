@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Line, Text } from '@react-three/drei';
 import { useUIStore, MeasurePoint } from '@/store/uiStore';
+import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import * as THREE from 'three';
 import {
   extractVertices,
@@ -34,6 +35,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   } = useUIStore();
 
   const { scene, camera, raycaster, gl } = useThree();
+  const spaceInfo = useDerivedSpaceStore((state) => state.spaceInfo);
 
   const [hoverPoint, setHoverPoint] = useState<MeasurePoint | null>(null);
   const [isSnapped, setIsSnapped] = useState(false);
@@ -80,25 +82,30 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
     let plane: THREE.Plane;
 
+    // 공간 중심 좌표 계산
+    const centerX = spaceInfo ? spaceInfo.width / 2 / 100 : 0;
+    const centerY = spaceInfo ? spaceInfo.height / 2 / 100 : 0;
+    const centerZ = spaceInfo ? spaceInfo.depth / 2 / 100 : 0;
+
     switch (viewDirection) {
       case 'front':
-        // 정면: Z=0 평면 (XY 평면)
-        plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+        // 정면: Z=중심 평면 (XY 평면)
+        plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -centerZ);
         break;
       case 'left':
-        // 좌측: X=0 평면 (YZ 평면)
+        // 좌측: X=0 평면 (YZ 평면) - 왼쪽에서 보므로 X=0
         plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
         break;
       case 'right':
-        // 우측: X=0 평면 (YZ 평면)
-        plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+        // 우측: X=너비 평면 (YZ 평면) - 오른쪽에서 보므로 X=너비
+        plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), -centerX * 2);
         break;
       case 'top':
-        // 상단: Y=중간높이 평면 (XZ 평면)
+        // 상단: Y=0 평면 (XZ 평면) - 위에서 아래를 보므로 Y=0 (바닥)
         plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
         break;
       default:
-        plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+        plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -centerZ);
     }
 
     const intersection = new THREE.Vector3();
@@ -235,7 +242,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('click', handleClick);
     };
-  }, [isMeasureMode, measurePoints, hoverPoint, isAdjustingGuide, guideOffset, sceneVertices]);
+  }, [isMeasureMode, measurePoints, hoverPoint, isAdjustingGuide, guideOffset, sceneVertices, viewDirection]);
 
   if (!isMeasureMode) return null;
 
