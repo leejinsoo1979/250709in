@@ -53,8 +53,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 테마 컨텍스트
   const { theme } = useViewerTheme();
   
-  // UIStore에서 2D 뷰 테마와 카메라 설정 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode, cameraFov, shadowEnabled } = useUIStore();
+  // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드 가져오기
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode, cameraFov, shadowEnabled, isMeasureMode } = useUIStore();
   
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
@@ -598,9 +598,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         <Canvas
         key={canvasKey}
         shadows={viewMode === '3D' && shadowEnabled}
-        style={{ 
+        style={{
           background: viewMode === '2D' && theme.mode === 'dark' ? '#121212' : viewMode === '2D' ? '#ffffff' : CANVAS_SETTINGS.BACKGROUND_COLOR,
-          cursor: 'default',
+          cursor: isMeasureMode ? 'crosshair' : 'default',
           touchAction: 'none'
         }}
         dpr={[1, 2]}
