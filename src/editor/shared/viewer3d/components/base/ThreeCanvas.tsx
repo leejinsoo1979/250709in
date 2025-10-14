@@ -135,10 +135,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   
   // 측정 모드일 때 커서 스타일 강제 유지
   useEffect(() => {
-    if (!isMeasureMode) return;
-
     const canvas = document.querySelector('canvas');
     if (!canvas) return;
+
+    if (!isMeasureMode) {
+      // 측정 모드가 아니면 기본 커서로 복원
+      canvas.style.cursor = 'default';
+      return;
+    }
 
     const cursorStyle = `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21"><line x1="10.5" y1="0" x2="10.5" y2="21" stroke="${cursorColor}" stroke-width="1"/><line x1="0" y1="10.5" x2="21" y2="10.5" stroke="${cursorColor}" stroke-width="1"/><circle cx="10.5" cy="10.5" r="2" fill="none" stroke="${cursorColor}" stroke-width="1"/></svg>') 10 10, crosshair`;
 
@@ -167,6 +171,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     return () => {
       observer.disconnect();
       clearInterval(interval);
+      // cleanup 시 기본 커서로 복원
+      canvas.style.cursor = 'default';
     };
   }, [isMeasureMode, cursorColor]);
 
