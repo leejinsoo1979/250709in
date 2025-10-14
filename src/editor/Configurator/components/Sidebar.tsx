@@ -5,7 +5,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { PaletteIcon, StructureIcon } from '@/components/common/Icons';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
-import { RiInsertColumnRight } from 'react-icons/ri';
+import { TbFreezeColumn } from 'react-icons/tb';
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -179,7 +179,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     },
     {
       id: 'structure' as SidebarTab,
-      icon: <RiInsertColumnRight size={20} />,
+      icon: <TbFreezeColumn size={20} />,
       label: '기둥'
     },
     {
