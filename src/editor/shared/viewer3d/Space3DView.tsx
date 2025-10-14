@@ -52,7 +52,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture } = useUIStore();
+  const { view2DDirection, showDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture, isMeasureMode, toggleMeasureMode } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
   
@@ -1294,6 +1294,71 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               <rect x="13" y="3" width="8" height="8" />
               <rect x="3" y="13" width="8" height="8" />
               <rect x="13" y="13" width="8" height="8" />
+            </svg>
+          </button>
+        )}
+
+        {/* 측정 도구 버튼 - 2D 모드에서만 표시 (분할 버튼 바로 아래) */}
+        {viewMode === '2D' && view2DDirection !== 'all' && (
+          <button
+            onClick={() => {
+              console.log('📏 측정 모드 토글:', !isMeasureMode);
+              toggleMeasureMode();
+            }}
+            style={{
+              position: 'absolute',
+              top: '56px', // 분할 버튼(36px) + 간격(10px) + 상단 여백(10px)
+              right: '10px',
+              width: '36px',
+              height: '36px',
+              backgroundColor: isMeasureMode
+                ? (view2DTheme === 'dark' ? 'rgba(59,130,246,0.8)' : 'rgba(59,130,246,0.9)')
+                : (view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)'),
+              border: `1px solid ${isMeasureMode
+                ? 'rgba(59,130,246,1)'
+                : (view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)')}`,
+              borderRadius: '4px',
+              color: isMeasureMode ? '#ffffff' : (view2DTheme === 'dark' ? '#ffffff' : '#000000'),
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+              zIndex: 20,
+              padding: '0',
+              boxShadow: isMeasureMode ? '0 2px 8px rgba(59,130,246,0.3)' : '0 2px 4px rgba(0,0,0,0.1)'
+            }}
+            onMouseEnter={(e) => {
+              if (!isMeasureMode) {
+                e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,1)';
+                e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+              }
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              if (!isMeasureMode) {
+                e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)';
+                e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+              }
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            title="CAD 스타일 치수 측정"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              {/* 진짜 줄자 모양 - 감긴 테이프 + 나온 자 */}
+              {/* 줄자 케이스 (둥근 사각형) */}
+              <rect x="2" y="8" width="10" height="10" rx="2" fill="none"/>
+              {/* 케이스 내부 원 (테이프 감긴 부분) */}
+              <circle cx="7" cy="13" r="2.5" fill="none" strokeWidth="1.5"/>
+              {/* 나온 테이프 */}
+              <path d="M 12 13 L 22 13" strokeWidth="2.5" strokeLinecap="round"/>
+              {/* 테이프의 눈금 표시 */}
+              <line x1="14" y1="11.5" x2="14" y2="14.5" strokeWidth="1"/>
+              <line x1="16" y1="12" x2="16" y2="14" strokeWidth="1"/>
+              <line x1="18" y1="11.5" x2="18" y2="14.5" strokeWidth="1"/>
+              <line x1="20" y1="12" x2="20" y2="14" strokeWidth="1"/>
+              {/* 테이프 끝 고리 */}
+              <rect x="21" y="12" width="2" height="2" rx="0.5" fill="currentColor" stroke="none"/>
             </svg>
           </button>
         )}
