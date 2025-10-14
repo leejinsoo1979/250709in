@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
 import { Settings, Menu, User, ChevronDown, Camera, Undo, Redo } from 'lucide-react';
+import { FaRegKeyboard } from 'react-icons/fa';
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -386,11 +387,7 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* 조작법 버튼 */}
           <button className={styles.actionButton} onClick={handleHelpClick}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-              <path d="M12 16v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <circle cx="12" cy="8" r="0.5" fill="currentColor" stroke="currentColor" strokeWidth="1"/>
-            </svg>
+            <FaRegKeyboard size={20} />
             {t('help.title')}
           </button>
 
