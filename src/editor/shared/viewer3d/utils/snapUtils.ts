@@ -144,6 +144,7 @@ export function calculateGuideOffset(
 /**
  * 가이드선 점들 계산
  * 수직/수평 측정만 지원 (대각선 측정 시 수직 또는 수평으로 투영)
+ * offset은 시작점 기준 상대 거리
  */
 export function calculateGuidePoints(
   start: MeasurePoint,
@@ -156,22 +157,25 @@ export function calculateGuidePoints(
 
   // 가장 큰 변화량을 찾아서 해당 축만 사용 (수직/수평만 허용)
   if (dx >= dy && dx >= dz) {
-    // X축이 주 방향 -> Y 좌표를 시작점과 동일하게 (수평선)
+    // X축이 주 방향 -> Y 오프셋으로 가이드 위치 조정 (수평선)
+    const guideY = start[1] + offset;
     return {
-      start: [start[0], start[1] + offset, start[2]],
-      end: [end[0], start[1] + offset, start[2]] // Y와 Z를 시작점과 동일하게
+      start: [start[0], guideY, start[2]],
+      end: [end[0], guideY, start[2]]
     };
   } else if (dy >= dx && dy >= dz) {
-    // Y축이 주 방향 -> X 좌표를 시작점과 동일하게 (수직선)
+    // Y축이 주 방향 -> X 오프셋으로 가이드 위치 조정 (수직선)
+    const guideX = start[0] + offset;
     return {
-      start: [start[0] + offset, start[1], start[2]],
-      end: [start[0] + offset, end[1], start[2]] // X와 Z를 시작점과 동일하게
+      start: [guideX, start[1], start[2]],
+      end: [guideX, end[1], start[2]]
     };
   } else {
-    // Z축이 주 방향 -> X 좌표를 시작점과 동일하게 (깊이 방향)
+    // Z축이 주 방향 -> X 오프셋으로 가이드 위치 조정 (깊이 방향)
+    const guideX = start[0] + offset;
     return {
-      start: [start[0] + offset, start[1], start[2]],
-      end: [start[0] + offset, start[1], end[2]] // X와 Y를 시작점과 동일하게
+      start: [guideX, start[1], start[2]],
+      end: [guideX, start[1], end[2]]
     };
   }
 }
