@@ -87,11 +87,9 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
     if (viewMode === '3D') {
       // 크롬 금속 재질 - MeshStandardMaterial로 금속 재질 구현
       return new THREE.MeshStandardMaterial({
-        color: '#DDDDDD',      // 밝은 은색
+        color: '#FFFFFF',      // 밝은 흰색/은색
         metalness: 1.0,        // 완전한 금속
-        roughness: 0.2,        // 약간의 거칠기로 광택 표현
-        emissive: '#222222',   // 약간의 자체 발광
-        emissiveIntensity: 0.15
+        roughness: 0.2         // 약간의 거칠기로 광택 표현
       });
     } else {
       return new THREE.MeshStandardMaterial({
