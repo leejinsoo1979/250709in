@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useThree } from '@react-three/fiber';
 import { Line, Text } from '@react-three/drei';
 import { useUIStore, MeasurePoint } from '@/store/uiStore';
@@ -69,6 +69,12 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return vertices;
   }, [scene, isMeasureMode, viewDirection]);
 
+  // sceneVertices를 ref로 관리하여 최신 값 유지
+  const sceneVerticesRef = useRef(sceneVertices);
+  useEffect(() => {
+    sceneVerticesRef.current = sceneVertices;
+  }, [sceneVertices]);
+
   // 마우스 이동 핸들러
   const handlePointerMove = useCallback((event: PointerEvent) => {
     if (!isMeasureMode) return;
@@ -122,7 +128,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     }
 
     // 스냅 기능: 가장 가까운 꼭지점 찾기 (시점별 2D 거리 계산)
-    const nearestSnap = findNearestVertex(rawPoint, sceneVertices, viewDirection);
+    const nearestSnap = findNearestVertex(rawPoint, sceneVerticesRef.current, viewDirection);
 
     if (nearestSnap) {
       setHoverPoint(nearestSnap.vertex);
@@ -132,7 +138,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       setHoverPoint(rawPoint);
       setIsSnapped(false);
     }
-  }, [isMeasureMode, gl, raycaster, camera, viewDirection, isAdjustingGuide, measurePoints, sceneVertices]);
+  }, [isMeasureMode, gl, raycaster, camera, viewDirection, isAdjustingGuide, measurePoints]);
 
   // 클릭 핸들러
   const handleClick = useCallback((event: PointerEvent) => {
