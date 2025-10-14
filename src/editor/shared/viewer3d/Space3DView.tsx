@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { RxDimensions } from 'react-icons/rx';
 import { Space3DViewProps } from './types';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import { ViewerThemeProvider } from './context/ViewerThemeContext';
@@ -1344,22 +1345,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             }}
             title="CAD 스타일 치수 측정"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              {/* 진짜 줄자 모양 - 감긴 테이프 + 나온 자 */}
-              {/* 줄자 케이스 (둥근 사각형) */}
-              <rect x="2" y="8" width="10" height="10" rx="2" fill="none"/>
-              {/* 케이스 내부 원 (테이프 감긴 부분) */}
-              <circle cx="7" cy="13" r="2.5" fill="none" strokeWidth="1.5"/>
-              {/* 나온 테이프 */}
-              <path d="M 12 13 L 22 13" strokeWidth="2.5" strokeLinecap="round"/>
-              {/* 테이프의 눈금 표시 */}
-              <line x1="14" y1="11.5" x2="14" y2="14.5" strokeWidth="1"/>
-              <line x1="16" y1="12" x2="16" y2="14" strokeWidth="1"/>
-              <line x1="18" y1="11.5" x2="18" y2="14.5" strokeWidth="1"/>
-              <line x1="20" y1="12" x2="20" y2="14" strokeWidth="1"/>
-              {/* 테이프 끝 고리 */}
-              <rect x="21" y="12" width="2" height="2" rx="0.5" fill="currentColor" stroke="none"/>
-            </svg>
+            <RxDimensions size={20} />
           </button>
         )}
 
