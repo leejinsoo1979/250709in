@@ -157,19 +157,19 @@ export function calculateGuidePoints(
 
   // 가장 큰 변화량을 찾아서 해당 축만 사용 (수직/수평만 허용)
   if (dx >= dy && dx >= dz) {
-    // X축이 주 방향 -> offset은 Y 절대 좌표 (수평선)
+    // X축이 주 방향 (가로 측정) -> Y축에 offset 적용, Z는 start 값 유지
     return {
       start: [start[0], offset, start[2]],
-      end: [end[0], offset, start[2]]
+      end: [end[0], offset, end[2]]
     };
   } else if (dy >= dx && dy >= dz) {
-    // Y축이 주 방향 -> offset은 X 절대 좌표 (수직선)
+    // Y축이 주 방향 (세로 측정) -> X축에 offset 적용, Z는 start 값 유지
     return {
       start: [offset, start[1], start[2]],
-      end: [offset, end[1], start[2]]
+      end: [offset, end[1], end[2]]
     };
   } else {
-    // Z축이 주 방향 -> offset은 X 절대 좌표 (깊이 방향)
+    // Z축이 주 방향 (깊이 측정) -> X축에 offset 적용, Y는 start 값 유지
     return {
       start: [offset, start[1], start[2]],
       end: [offset, start[1], end[2]]
