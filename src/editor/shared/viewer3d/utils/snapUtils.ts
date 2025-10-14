@@ -48,6 +48,7 @@ export function extractVertices(object: THREE.Object3D): MeasurePoint[] {
 
 /**
  * 가장 가까운 꼭지점 찾기
+ * 3D 거리 계산 지원
  */
 export function findNearestVertex(
   point: MeasurePoint,
@@ -59,7 +60,8 @@ export function findNearestVertex(
   for (const vertex of vertices) {
     const dx = vertex[0] - point[0];
     const dy = vertex[1] - point[1];
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    const dz = vertex[2] - point[2];
+    const distance = Math.sqrt(dx * dx + dy * dy + dz * dz);
 
     if (distance < minDistance) {
       minDistance = distance;
@@ -72,58 +74,106 @@ export function findNearestVertex(
 
 /**
  * 두 점 사이의 거리 계산 (mm)
+ * 3D 거리 계산 지원
  */
 export function calculateDistance(start: MeasurePoint, end: MeasurePoint): number {
   const dx = end[0] - start[0];
   const dy = end[1] - start[1];
-  return Math.sqrt(dx * dx + dy * dy) * 100; // three.js 단위를 mm로 변환
+  const dz = end[2] - start[2];
+  return Math.sqrt(dx * dx + dy * dy + dz * dz) * 100; // three.js 단위를 mm로 변환
 }
 
 /**
  * 가이드선의 오프셋 계산
  * 두 점을 기준으로 수직/수평 오프셋을 계산
+ * 3D 좌표를 지원 (X, Y, Z 중 가장 큰 변화량 기준)
  */
 export function calculateGuideOffset(
   start: MeasurePoint,
   end: MeasurePoint,
   mousePos: MeasurePoint
 ): number {
-  const dx = end[0] - start[0];
-  const dy = end[1] - start[1];
+  const dx = Math.abs(end[0] - start[0]);
+  const dy = Math.abs(end[1] - start[1]);
+  const dz = Math.abs(end[2] - start[2]);
 
-  // 수평선에 가까운 경우 (각도가 45도 미만)
-  if (Math.abs(dx) > Math.abs(dy)) {
-    // Y 오프셋 계산
-    return mousePos[1] - start[1];
+  // 가장 큰 변화량을 찾아서 해당 축의 수직 방향으로 오프셋 계산
+  if (dx >= dy && dx >= dz) {
+    // X축이 주 방향 -> Y 또는 Z 오프셋
+    if (dy > dz) {
+      return mousePos[1] - start[1]; // Y 오프셋
+    } else {
+      return mousePos[2] - start[2]; // Z 오프셋
+    }
+  } else if (dy >= dx && dy >= dz) {
+    // Y축이 주 방향 -> X 또는 Z 오프셋
+    if (dx > dz) {
+      return mousePos[0] - start[0]; // X 오프셋
+    } else {
+      return mousePos[2] - start[2]; // Z 오프셋
+    }
   } else {
-    // 수직선에 가까운 경우
-    // X 오프셋 계산
-    return mousePos[0] - start[0];
+    // Z축이 주 방향 -> X 또는 Y 오프셋
+    if (dx > dy) {
+      return mousePos[0] - start[0]; // X 오프셋
+    } else {
+      return mousePos[1] - start[1]; // Y 오프셋
+    }
   }
 }
 
 /**
  * 가이드선 점들 계산
+ * 3D 좌표를 지원 (X, Y, Z 중 가장 큰 변화량 기준)
  */
 export function calculateGuidePoints(
   start: MeasurePoint,
   end: MeasurePoint,
   offset: number
 ): { start: MeasurePoint; end: MeasurePoint } {
-  const dx = end[0] - start[0];
-  const dy = end[1] - start[1];
+  const dx = Math.abs(end[0] - start[0]);
+  const dy = Math.abs(end[1] - start[1]);
+  const dz = Math.abs(end[2] - start[2]);
 
-  // 수평선에 가까운 경우
-  if (Math.abs(dx) > Math.abs(dy)) {
-    return {
-      start: [start[0], start[1] + offset, 0],
-      end: [end[0], end[1] + offset, 0]
-    };
+  // 가장 큰 변화량을 찾아서 해당 축의 수직 방향으로 오프셋 적용
+  if (dx >= dy && dx >= dz) {
+    // X축이 주 방향 -> Y 또는 Z 오프셋
+    if (dy > dz) {
+      return {
+        start: [start[0], start[1] + offset, start[2]],
+        end: [end[0], end[1] + offset, end[2]]
+      };
+    } else {
+      return {
+        start: [start[0], start[1], start[2] + offset],
+        end: [end[0], end[1], end[2] + offset]
+      };
+    }
+  } else if (dy >= dx && dy >= dz) {
+    // Y축이 주 방향 -> X 또는 Z 오프셋
+    if (dx > dz) {
+      return {
+        start: [start[0] + offset, start[1], start[2]],
+        end: [end[0] + offset, end[1], end[2]]
+      };
+    } else {
+      return {
+        start: [start[0], start[1], start[2] + offset],
+        end: [end[0], end[1], end[2] + offset]
+      };
+    }
   } else {
-    // 수직선에 가까운 경우
-    return {
-      start: [start[0] + offset, start[1], 0],
-      end: [end[0] + offset, end[1], 0]
-    };
+    // Z축이 주 방향 -> X 또는 Y 오프셋
+    if (dx > dy) {
+      return {
+        start: [start[0] + offset, start[1], start[2]],
+        end: [end[0] + offset, end[1], end[2]]
+      };
+    } else {
+      return {
+        start: [start[0], start[1] + offset, start[2]],
+        end: [end[0], end[1] + offset, end[2]]
+      };
+    }
   }
 }

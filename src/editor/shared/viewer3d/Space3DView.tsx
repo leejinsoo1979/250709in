@@ -1245,7 +1245,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             <InternalDimensionDisplay />
 
             {/* CAD 측정 도구 - 2D 모드에서만 표시 */}
-            {viewMode === '2D' && <MeasurementTool />}
+            {viewMode === '2D' && <MeasurementTool viewDirection={view2DDirection} />}
           </React.Suspense>
         </ThreeCanvas>
 

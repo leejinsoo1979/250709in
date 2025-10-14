@@ -12,13 +12,17 @@ import {
   SNAP_DISTANCE
 } from '../../utils/snapUtils';
 
+interface MeasurementToolProps {
+  viewDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
+}
+
 /**
  * CAD 스타일 측정 도구 컴포넌트
  * - 객체 모서리에 자동 스냅
  * - 스냅 시 십자가 색상 변경
  * - 가이드선 위치 조정 가능
  */
-export const MeasurementTool: React.FC = () => {
+export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection = 'front' }) => {
   const {
     isMeasureMode,
     measurePoints,
@@ -54,15 +58,37 @@ export const MeasurementTool: React.FC = () => {
     const x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     const y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
 
-    // Raycaster로 Z=0 평면과의 교차점 찾기
+    // 시점에 따라 다른 평면 사용
     raycaster.setFromCamera(new THREE.Vector2(x, y), camera);
-    const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    let plane: THREE.Plane;
+
+    switch (viewDirection) {
+      case 'front':
+        // 정면: Z=0 평면 (XY 평면)
+        plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+        break;
+      case 'left':
+        // 좌측: X=0 평면 (YZ 평면)
+        plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
+        break;
+      case 'right':
+        // 우측: X=0 평면 (YZ 평면)
+        plane = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+        break;
+      case 'top':
+        // 상단: Y=중간높이 평면 (XZ 평면)
+        plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+        break;
+      default:
+        plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+    }
+
     const intersection = new THREE.Vector3();
     const hit = raycaster.ray.intersectPlane(plane, intersection);
 
     if (!hit) return;
 
-    const rawPoint: MeasurePoint = [intersection.x, intersection.y, 0];
+    const rawPoint: MeasurePoint = [intersection.x, intersection.y, intersection.z];
 
     // 가이드 조정 모드인 경우
     if (isAdjustingGuide && measurePoints && measurePoints[0] && measurePoints[1]) {
@@ -190,7 +216,7 @@ export const MeasurementTool: React.FC = () => {
         const midPoint: MeasurePoint = [
           (guidePoints.start[0] + guidePoints.end[0]) / 2,
           (guidePoints.start[1] + guidePoints.end[1]) / 2,
-          0
+          (guidePoints.start[2] + guidePoints.end[2]) / 2
         ];
 
         return (
@@ -248,7 +274,7 @@ export const MeasurementTool: React.FC = () => {
 
             {/* 거리 텍스트 */}
             <Text
-              position={[midPoint[0], midPoint[1] + 0.2, 0]}
+              position={[midPoint[0], midPoint[1] + 0.2, midPoint[2]]}
               fontSize={0.25}
               color={lineColor}
               anchorX="center"
@@ -289,12 +315,12 @@ export const MeasurementTool: React.FC = () => {
             const midPoint: MeasurePoint = [
               (measurePoints[0][0] + hoverPoint[0]) / 2,
               (measurePoints[0][1] + hoverPoint[1]) / 2,
-              0
+              (measurePoints[0][2] + hoverPoint[2]) / 2
             ];
 
             return (
               <Text
-                position={[midPoint[0], midPoint[1] + 0.2, 0]}
+                position={[midPoint[0], midPoint[1] + 0.2, midPoint[2]]}
                 fontSize={0.25}
                 color={lineColor}
                 anchorX="center"
@@ -318,7 +344,7 @@ export const MeasurementTool: React.FC = () => {
             const midPoint: MeasurePoint = [
               (guidePoints.start[0] + guidePoints.end[0]) / 2,
               (guidePoints.start[1] + guidePoints.end[1]) / 2,
-              0
+              (guidePoints.start[2] + guidePoints.end[2]) / 2
             ];
             const distance = calculateDistance(start, end);
 
@@ -365,7 +391,7 @@ export const MeasurementTool: React.FC = () => {
 
                 {/* 거리 텍스트 */}
                 <Text
-                  position={[midPoint[0], midPoint[1] + 0.2, 0]}
+                  position={[midPoint[0], midPoint[1] + 0.2, midPoint[2]]}
                   fontSize={0.25}
                   color={snapColor}
                   anchorX="center"
@@ -376,7 +402,7 @@ export const MeasurementTool: React.FC = () => {
 
                 {/* 안내 텍스트 */}
                 <Text
-                  position={[midPoint[0], midPoint[1] - 0.4, 0]}
+                  position={[midPoint[0], midPoint[1] - 0.4, midPoint[2]]}
                   fontSize={0.15}
                   color={snapColor}
                   anchorX="center"
