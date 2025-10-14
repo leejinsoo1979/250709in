@@ -369,6 +369,45 @@
 }
 
 /* 테마 토글 버튼 */
+/* 측정 도구 버튼 */
+.measureButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0;
+  flex-shrink: 0;
+  margin-right: 8px;
+}
+
+.measureButton:hover {
+  background: var(--theme-background-secondary);
+  border-color: var(--theme-primary);
+}
+
+.measureButton.active {
+  background: var(--theme-primary);
+  color: var(--theme-surface);
+  border-color: var(--theme-primary);
+}
+
+.measureButton svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s ease;
+}
+
+.measureButton:hover svg {
+  transform: scale(1.1);
+}
+
 .themeToggle {
   width: 24px;
   height: 24px;

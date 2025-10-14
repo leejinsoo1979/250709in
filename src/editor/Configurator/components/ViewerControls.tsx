@@ -73,8 +73,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   hasDoorsInstalled = false,
   onDoorInstallationToggle
 }) => {
-  // UIStore에서 2D 뷰 방향 상태 가져오기
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme } = useUIStore();
+  // UIStore에서 2D 뷰 방향 상태 및 측정 모드 상태 가져오기
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode } = useUIStore();
   
   // 테마 컨텍스트
   const { theme } = useTheme();
@@ -300,6 +300,29 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
 
       {/* 우측 뷰 컨트롤들 */}
       <div className={styles.rightControls}>
+        {/* 측정 도구 버튼 - 2D 모드에서만 표시 */}
+        {viewMode === '2D' && (
+          <button
+            className={`${styles.measureButton} ${isMeasureMode ? styles.active : ''}`}
+            onClick={() => {
+              console.log('📏 측정 모드 토글:', !isMeasureMode);
+              toggleMeasureMode();
+            }}
+            title="CAD 스타일 치수 측정"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              {/* 줄자 아이콘 */}
+              <rect x="2" y="6" width="20" height="12" rx="2" />
+              <line x1="6" y1="6" x2="6" y2="18" />
+              <line x1="10" y1="6" x2="10" y2="18" />
+              <line x1="14" y1="6" x2="14" y2="18" />
+              <line x1="18" y1="6" x2="18" y2="18" />
+              <line x1="6" y1="10" x2="6" y2="14" strokeWidth="3" />
+              <line x1="14" y1="10" x2="14" y2="14" strokeWidth="3" />
+            </svg>
+          </button>
+        )}
+
         {/* 뷰 방향 선택 - 2D 모드에서만 표시 */}
         {viewMode === '2D' && (
           <>
