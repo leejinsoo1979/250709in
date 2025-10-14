@@ -16,6 +16,7 @@ export interface MeasureLine {
   start: MeasurePoint;
   end: MeasurePoint;
   distance: number; // mm 단위
+  offset?: number; // 가이드선 오프셋 (three.js 단위)
 }
 
 // UI 상태 타입
