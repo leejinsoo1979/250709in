@@ -218,47 +218,6 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                             </mesh>
                           </>
                         )}
-
-                        {/* 상부 섹션 바닥판 두께 텍스트 */}
-                        <Text
-                          position={[
-                            -innerWidth/2 * 0.3 - 0.5,
-                            lowerTopPanelY + basicThickness,
-                            viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
-                          ]}
-                          fontSize={baseFontSize}
-                          color={dimensionColor}
-                          anchorX="center"
-                          anchorY="middle"
-                          rotation={[0, 0, Math.PI / 2]}
-                          renderOrder={999}
-                          depthTest={false}
-                        >
-                          {Math.round(basicThickness * 100)}
-                        </Text>
-
-                        {/* 상부 섹션 바닥판 두께 수직선 */}
-                        <Line
-                          points={[
-                            [-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                            [-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
-                          ]}
-                          color={dimensionColor}
-                          lineWidth={1}
-                        />
-                        {/* 상부 섹션 바닥판 수직선 양끝 점 - 측면뷰에서 숨김 */}
-                        {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                          <>
-                            <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                              <sphereGeometry args={[0.05, 8, 8]} />
-                              <meshBasicMaterial color={dimensionColor} />
-                            </mesh>
-                            <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                              <sphereGeometry args={[0.05, 8, 8]} />
-                              <meshBasicMaterial color={dimensionColor} />
-                            </mesh>
-                          </>
-                        )}
                       </group>
                     )}
                   </>
