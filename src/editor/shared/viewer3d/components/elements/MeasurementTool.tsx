@@ -77,9 +77,14 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return SNAP_DISTANCE;
   }, [camera]);
 
-  // 사각형 크기 (화면상 크기 일정하게 유지 - 줌 레벨 반비례, 십자가보다 작게)
+  // 십자가 크기 (화면상 크기 일정하게 유지 - 줌 레벨 반비례)
+  const crosshairSize = useMemo(() => {
+    return 0.15 / currentZoom;
+  }, [currentZoom]);
+
+  // 사각형 크기 (십자가와 같은 크기)
   const snapBoxSize = useMemo(() => {
-    const size = 0.1 / currentZoom; // 십자가보다 작은 크기
+    const size = 0.15 / currentZoom; // 십자가와 동일한 크기
     console.log('📦 사각형 크기:', size, 'zoom:', currentZoom);
     return size;
   }, [currentZoom]);
@@ -440,27 +445,52 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             lineWidth={2}
           />
 
-          {/* 호버점 마커 (스냅 시에만 노란 사각형) */}
-          {isSnapped && (() => {
-            console.log('🟨 노란 사각형 렌더링:', {
-              hoverPoint: hoverPoint.map(v => v.toFixed(2)),
-              snapBoxSize: snapBoxSize.toFixed(3),
-              isSnapped
-            });
-            return (
+          {/* 호버점 마커 - 스냅 안되면 십자가, 스냅되면 노란 네모 */}
+          {isSnapped ? (
+            // 스냅됨: 노란색 네모
+            (() => {
+              console.log('🟨 노란 사각형 렌더링:', {
+                hoverPoint: hoverPoint.map(v => v.toFixed(2)),
+                snapBoxSize: snapBoxSize.toFixed(3),
+                isSnapped
+              });
+              return (
+                <Line
+                  points={[
+                    [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                    [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                    [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                    [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                    [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
+                  ]}
+                  color={snapColor}
+                  lineWidth={3}
+                />
+              );
+            })()
+          ) : (
+            // 스냅 안됨: 초록색 십자가
+            <>
+              {/* 가로선 */}
               <Line
                 points={[
-                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
+                  [hoverPoint[0] - crosshairSize/2, hoverPoint[1], hoverPoint[2]],
+                  [hoverPoint[0] + crosshairSize/2, hoverPoint[1], hoverPoint[2]]
                 ]}
-                color={snapColor}
-                lineWidth={3}
+                color={lineColor}
+                lineWidth={2}
               />
-            );
-          })()}
+              {/* 세로선 */}
+              <Line
+                points={[
+                  [hoverPoint[0], hoverPoint[1] - crosshairSize/2, hoverPoint[2]],
+                  [hoverPoint[0], hoverPoint[1] + crosshairSize/2, hoverPoint[2]]
+                ]}
+                color={lineColor}
+                lineWidth={2}
+              />
+            </>
+          )}
 
           {/* 임시 거리 텍스트 */}
           {(() => {
@@ -583,27 +613,54 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         </group>
       )}
 
-      {/* 호버 커서 (측정 시작 전) - 스냅 시에만 노란 사각형 */}
-      {!measurePoints && hoverPoint && isSnapped && (() => {
-        console.log('🟨 호버 노란 사각형 렌더링:', {
-          hoverPoint: hoverPoint.map(v => v.toFixed(2)),
-          snapBoxSize: snapBoxSize.toFixed(3),
-          isSnapped
-        });
-        return (
-          <Line
-            points={[
-              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-              [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-              [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
-            ]}
-            color={snapColor}
-            lineWidth={3}
-          />
-        );
-      })()}
+      {/* 호버 커서 (측정 시작 전) - 스냅 안되면 십자가, 스냅되면 노란 네모 */}
+      {!measurePoints && hoverPoint && (
+        isSnapped ? (
+          // 스냅됨: 노란색 네모
+          (() => {
+            console.log('🟨 호버 노란 사각형 렌더링:', {
+              hoverPoint: hoverPoint.map(v => v.toFixed(2)),
+              snapBoxSize: snapBoxSize.toFixed(3),
+              isSnapped
+            });
+            return (
+              <Line
+                points={[
+                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
+                ]}
+                color={snapColor}
+                lineWidth={3}
+              />
+            );
+          })()
+        ) : (
+          // 스냅 안됨: 초록색 십자가
+          <>
+            {/* 가로선 */}
+            <Line
+              points={[
+                [hoverPoint[0] - crosshairSize/2, hoverPoint[1], hoverPoint[2]],
+                [hoverPoint[0] + crosshairSize/2, hoverPoint[1], hoverPoint[2]]
+              ]}
+              color={lineColor}
+              lineWidth={2}
+            />
+            {/* 세로선 */}
+            <Line
+              points={[
+                [hoverPoint[0], hoverPoint[1] - crosshairSize/2, hoverPoint[2]],
+                [hoverPoint[0], hoverPoint[1] + crosshairSize/2, hoverPoint[2]]
+              ]}
+              color={lineColor}
+              lineWidth={2}
+            />
+          </>
+        )
+      )}
     </group>
   );
 };
