@@ -17,6 +17,7 @@ export interface MeasureLine {
   end: MeasurePoint;
   distance: number; // mm 단위
   offset?: MeasurePoint; // 가이드선 오프셋 (3D 좌표)
+  viewDirection?: View2DDirection; // 측정한 시점 (해당 시점에서만 표시)
 }
 
 // UI 상태 타입

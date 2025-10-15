@@ -372,13 +372,14 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
           viewDirection
         });
 
-        // 측정 라인 추가 - finalOffset 사용
+        // 측정 라인 추가 - finalOffset과 viewDirection 저장
         addMeasureLine({
           id: `measure-${Date.now()}`,
           start,
           end,
           distance,
-          offset: finalOffset
+          offset: finalOffset,
+          viewDirection // 측정한 시점 저장
         });
 
         // 리셋 - 측정 포인트와 오프셋 초기화
@@ -494,8 +495,10 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
   return (
     <group>
-      {/* 저장된 측정 라인들 */}
-      {measureLines.map((line) => {
+      {/* 저장된 측정 라인들 - 현재 시점과 일치하는 것만 표시 */}
+      {measureLines
+        .filter((line) => !line.viewDirection || line.viewDirection === viewDirection)
+        .map((line) => {
         // offset이 없으면 시작점 좌표를 기본값으로 사용
         const dx = Math.abs(line.end[0] - line.start[0]);
         const dy = Math.abs(line.end[1] - line.start[1]);
