@@ -881,6 +881,13 @@ export class ColumnIndexer {
     const totalWidth = spaceInfo.width;
     const droppedWidth = spaceInfo.droppedCeiling.width || 900;
     const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+
+    console.log('🔍 단내림 구간 너비 설정:', {
+      'spaceInfo.droppedCeiling.width': spaceInfo.droppedCeiling.width,
+      'droppedWidth (최종)': droppedWidth,
+      'droppedPosition': droppedPosition,
+      'totalWidth': totalWidth
+    });
     
     // 전체 내부 너비 (프레임 제외)
     const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -944,32 +951,39 @@ export class ColumnIndexer {
         let leftReduction = 0;
         let rightReduction = 0;
 
-        // freestanding인 경우 엔드패널이 슬롯에 포함되므로 reduction 없음
-        // 단, 단내림 경계에는 엔드패널 1개분만 적용 (양쪽 엔드패널 중복 방지)
+        // freestanding인 경우 슬롯은 엔드패널을 포함한 사이즈
+        // reduction 없이 전체 공간 사용 (가구 배치 시 18mm 빼기는 SlotDropZonesSimple에서 처리)
         if (spaceInfo.installType === 'freestanding') {
-          // 벽없음: 단내림구간 오른쪽 엔드패널만 제외 (일반구간과 경계 공유)
+          // 벽없음: 슬롯은 엔드패널 포함 크기
           leftReduction = 0;
-          rightReduction = END_PANEL_THICKNESS; // 경계 엔드패널 1개분만 제외
+          rightReduction = 0;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: gapConfig의 left 값을 그대로 사용
-          leftReduction = spaceInfo.gapConfig?.left || 0;
+          if (spaceInfo.wallConfig?.left) {
+            leftReduction = spaceInfo.gapConfig?.left || 2;
+          } else {
+            leftReduction = 0;
+          }
 
           if (spaceInfo.wallConfig?.right) {
             rightReduction = spaceInfo.gapConfig?.right || 2;
           } else {
             rightReduction = 0;
           }
+        } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+          // 양쪽벽: 설정된 이격거리 사용
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+          rightReduction = spaceInfo.gapConfig?.right || 2;
         } else {
-          // 왼쪽 처리 (이격거리 무시)
+          // 기타 케이스 (엔드패널)
           if (spaceInfo.wallConfig?.left) {
-            leftReduction = 0;  // 벽이 있으면 이격거리 무시
+            leftReduction = 0;
           } else {
             leftReduction = END_PANEL_THICKNESS;
           }
 
-          // 오른쪽 처리 (이격거리 무시)
           if (spaceInfo.wallConfig?.right) {
-            rightReduction = 0;  // 벽이 있으면 이격거리 무시
+            rightReduction = 0;
           } else {
             rightReduction = END_PANEL_THICKNESS;
           }
@@ -979,9 +993,15 @@ export class ColumnIndexer {
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
         normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
         normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결
-        
+
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
+          '단내림 외부 너비 (droppedAreaOuterWidth)': droppedAreaOuterWidth,
+          '단내림 leftReduction': leftReduction,
+          '단내림 내부 너비 (droppedAreaInternalWidth)': droppedAreaInternalWidth,
           '단내림 끝': droppedStartX + droppedAreaInternalWidth,
+          '메인 외부 너비 (normalAreaOuterWidth)': normalAreaOuterWidth,
+          '메인 rightReduction': rightReduction,
+          '메인 내부 너비 (normalAreaInternalWidth)': normalAreaInternalWidth,
           '메인 시작': normalStartX,
           '갭': normalStartX - (droppedStartX + droppedAreaInternalWidth),
           '프레임 두께': frameThickness,
@@ -1011,32 +1031,39 @@ export class ColumnIndexer {
         let leftReduction = 0;
         let rightReduction = 0;
 
-        // freestanding인 경우 엔드패널이 슬롯에 포함되므로 reduction 없음
-        // 단, 단내림 경계에는 엔드패널 1개분만 적용 (양쪽 엔드패널 중복 방지)
+        // freestanding인 경우 슬롯은 엔드패널을 포함한 사이즈
+        // reduction 없이 전체 공간 사용 (가구 배치 시 18mm 빼기는 SlotDropZonesSimple에서 처리)
         if (spaceInfo.installType === 'freestanding') {
-          // 벽없음: 일반구간 오른쪽 엔드패널만 제외 (단내림구간과 경계 공유)
+          // 벽없음: 슬롯은 엔드패널 포함 크기
           leftReduction = 0;
-          rightReduction = END_PANEL_THICKNESS; // 경계 엔드패널 1개분만 제외
+          rightReduction = 0;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: gapConfig의 left 값을 그대로 사용
-          leftReduction = spaceInfo.gapConfig?.left || 0;
+          if (spaceInfo.wallConfig?.left) {
+            leftReduction = spaceInfo.gapConfig?.left || 2;
+          } else {
+            leftReduction = 0;
+          }
 
           if (spaceInfo.wallConfig?.right) {
             rightReduction = spaceInfo.gapConfig?.right || 2;
           } else {
             rightReduction = 0;
           }
+        } else if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
+          // 양쪽벽: 설정된 이격거리 사용
+          leftReduction = spaceInfo.gapConfig?.left || 2;
+          rightReduction = spaceInfo.gapConfig?.right || 2;
         } else {
-          // 왼쪽 처리
+          // 기타 케이스 (엔드패널)
           if (spaceInfo.wallConfig?.left) {
-            leftReduction = spaceInfo.gapConfig?.left || 2;
+            leftReduction = 0;
           } else {
             leftReduction = END_PANEL_THICKNESS;
           }
 
-          // 오른쪽 처리
           if (spaceInfo.wallConfig?.right) {
-            rightReduction = 0;  // 벽에 바로 붙음 (이격거리 무시)
+            rightReduction = 0;
           } else {
             rightReduction = END_PANEL_THICKNESS;
           }
