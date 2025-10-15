@@ -75,8 +75,21 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               const { height, innerWidth, basicThickness, mmToThreeUnits, adjustedDepthForShelves, depth } = baseFurniture;
               const availableHeight = height - basicThickness * 2;
 
+              console.log('🟢 DualType1 섹션 계산 시작');
+              console.log('  moduleId:', moduleData.id);
+              console.log('  internalHeight:', internalHeight);
+              console.log('  height(Three):', height * 100);
+              console.log('  availableHeight:', availableHeight * 100);
+              console.log('  basicThickness:', basicThickness * 100);
+              console.log('  sectionsCount:', sections.length);
+
               return sections.map((section: any, sectionIndex: number) => {
-                if (section.type !== 'hanging') return null;
+                console.log(`🟡 DualType1 섹션[${sectionIndex}] (${section.type})`);
+
+                if (section.type !== 'hanging') {
+                  console.log('  ⏭️ hanging 섹션이 아니므로 옷봉 렌더링 생략');
+                  return null;
+                }
 
                 // 섹션 높이 계산
                 const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
@@ -85,6 +98,11 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                 for (let i = 0; i < sectionIndex; i++) {
                   sectionBottomY += baseFurniture.calculateSectionHeight(sections[i], availableHeight);
                 }
+
+                console.log('  sectionHeight:', sectionHeight * 100);
+                console.log('  sectionBottomY:', sectionBottomY * 100);
+                console.log('  heightType:', section.heightType);
+                console.log('  heightValue:', section.height);
 
                 // 안전선반 또는 마감 패널 위치 찾기
                 const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
@@ -105,6 +123,16 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                   const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
                   // 브라켓 중심 = 상판 하단 - (브라켓 높이 / 2)
                   rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+
+                  console.log('🔵 DualType1 옷봉 위치 계산');
+                  console.log('  moduleId:', moduleData.id);
+                  console.log('  internalHeight:', internalHeight);
+                  console.log('  height(Three→mm):', height * 100);
+                  console.log('  sectionHeight:', sectionHeight * 100);
+                  console.log('  sectionBottomY:', sectionBottomY * 100);
+                  console.log('  sectionTopPanelBottom:', sectionTopPanelBottom * 100);
+                  console.log('  rodYPosition:', rodYPosition * 100);
+                  console.log('  basicThickness:', basicThickness * 100);
                 }
 
                 return (
