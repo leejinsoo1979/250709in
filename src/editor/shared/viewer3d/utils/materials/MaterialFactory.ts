@@ -335,10 +335,9 @@ export class MaterialFactory {
           opacity: { value: 1.0 }
         },
         side: THREE.DoubleSide,
-        transparent: true,
+        transparent: false,  // 3D 모드에서는 투명 효과 제거
         depthWrite: true,
-        depthTest: true,
-        alphaTest: 0.01  // 아주 작은 투명도는 무시
+        depthTest: true
       });
     }
     
