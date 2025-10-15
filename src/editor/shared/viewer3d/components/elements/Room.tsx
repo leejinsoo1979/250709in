@@ -2233,33 +2233,48 @@ const Room: React.FC<RoomProps> = ({
                 }
               }
               
+              // 경계면 이격거리 계산 (ColumnIndexer와 동일)
+              const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+
+              // zoneSlotInfo에서 실제 계산된 너비 사용
+              const droppedAreaInternalWidthMm = zoneSlotInfo.dropped
+                ? (zoneSlotInfo.dropped.width + (zoneSlotInfo.dropped.startX - (-(spaceInfo.width / 2))))
+                : (spaceInfo.droppedCeiling.width || 900);
+              const normalAreaInternalWidthMm = zoneSlotInfo.normal.width +
+                (zoneSlotInfo.normal.startX - (isLeftDropped
+                  ? (-(spaceInfo.width / 2) + droppedAreaInternalWidthMm)
+                  : -(spaceInfo.width / 2)));
+
               if (isLeftDropped) {
-                // 왼쪽 단내림: 단내림구간은 왼쪽 프레임만, 메인구간은 오른쪽 프레임만 제외
-                // ColumnIndexer 로직과 동일하게 수정
+                // 왼쪽 단내림
                 const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
                 const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || 900));
+
+                // 단내림: 왼쪽만 reduction, 오른쪽(경계면)은 확장
                 droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(leftReduction);
-                normalFrameWidth = normalAreaWidth - mmToThreeUnits(rightReduction);
+
+                // 일반구간: 오른쪽 reduction + 경계면 갭
+                // zoneSlotInfo의 실제 계산된 너비 사용
+                normalFrameWidth = mmToThreeUnits(zoneSlotInfo.normal.width);
               } else {
-                // 오른쪽 단내림: 메인구간은 왼쪽 프레임만, 단내림구간은 오른쪽 프레임만 제외
-                // ColumnIndexer 로직과 동일하게 수정
+                // 오른쪽 단내림
                 const normalAreaWidth = mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || 900));
                 const droppedAreaWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
-                normalFrameWidth = normalAreaWidth - mmToThreeUnits(leftReduction);
+
+                // 일반구간: 왼쪽 reduction + 경계면 갭
+                normalFrameWidth = mmToThreeUnits(zoneSlotInfo.normal.width);
+
+                // 단내림: 오른쪽만 reduction, 왼쪽(경계면)은 확장
                 droppedFrameWidth = droppedAreaWidth - mmToThreeUnits(rightReduction);
               }
-              
+
               // 각 영역의 시작점 계산 (ColumnIndexer와 동일하게)
-              const internalStartX = -(mmToThreeUnits(spaceInfo.width) / 2) + mmToThreeUnits(leftReduction);
-              
-              let normalStartX, droppedStartX;
-              if (isLeftDropped) {
-                droppedStartX = internalStartX;
-                normalStartX = internalStartX + droppedFrameWidth;
-              } else {
-                normalStartX = internalStartX;
-                droppedStartX = internalStartX + normalFrameWidth;
-              }
+              const normalStartXMm = zoneSlotInfo.normal.startX;
+              const droppedStartXMm = zoneSlotInfo.dropped?.startX ||
+                (isLeftDropped ? -(spaceInfo.width / 2) : normalStartXMm + zoneSlotInfo.normal.width);
+
+              const normalStartX = mmToThreeUnits(normalStartXMm);
+              const droppedStartX = mmToThreeUnits(droppedStartXMm);
               
               // 프레임 중심 위치 계산
               const droppedX = droppedStartX + droppedFrameWidth/2;
