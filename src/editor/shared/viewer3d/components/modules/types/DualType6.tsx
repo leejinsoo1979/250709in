@@ -413,13 +413,29 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         {/* 옷걸이 봉 렌더링 - 상부 옷장 섹션 (전체 너비) */}
         {(() => {
           const rightSections = modelConfig.rightSections || [];
-          let accumulatedY = -height/2 + basicThickness;
+          const availableHeight = height - basicThickness * 2;
+
+          // 측판용: modelConfig의 원본 섹션 높이 (항상 고정)
+          let sideAccumulatedY = -height/2 + basicThickness;
 
           return rightSections.map((section: any, sectionIndex: number) => {
-            const availableHeight = height - basicThickness * 2;
-            const sectionHeight = calculateSectionHeight(section, availableHeight);
-            const sectionBottomY = accumulatedY;
-            accumulatedY += sectionHeight;
+            // 옷봉 위치용: 실제 가구 높이 기반 계산 (동적)
+            const sectionBottomY = sideAccumulatedY;
+
+            // 측판용 누적 Y 위치 업데이트 (원본 높이 사용)
+            const originalSectionHeight = mmToThreeUnits(section.height);
+            sideAccumulatedY += originalSectionHeight;
+
+            // 실제 섹션 높이 계산 (현재 가구 높이 기반)
+            let actualSectionHeight: number;
+            if (sectionIndex === 0) {
+              // 하부 섹션: 항상 고정 높이
+              actualSectionHeight = mmToThreeUnits(section.height);
+            } else {
+              // 상부 섹션: 전체 높이에서 하부 섹션 높이를 뺀 나머지
+              const bottomSectionHeight = mmToThreeUnits(rightSections[0].height);
+              actualSectionHeight = availableHeight - bottomSectionHeight;
+            }
 
             // 바지걸이장: 우측 상부 섹션(index 1)이 옷장 섹션 - 전체 너비 사용
             const isUpperHangingSection = section.type === 'hanging' && sectionIndex === 1;
@@ -436,9 +452,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
             } else {
               // 안전선반이 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
-              const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
-              // 브라켓 중심 = 상판 하단 - (브라켓 높이 / 2)
-              rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+              const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
+              rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
             }
 
             return (
