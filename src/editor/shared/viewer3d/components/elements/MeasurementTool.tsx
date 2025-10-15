@@ -77,14 +77,14 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return SNAP_DISTANCE;
   }, [camera]);
 
-  // 십자가 크기 (화면상 크기 일정하게 유지 - 줌 레벨 반비례)
+  // 십자가 크기 (월드 공간 고정 크기 - 0.3 = 30mm)
   const crosshairSize = useMemo(() => {
-    return 0.15 / currentZoom;
-  }, [currentZoom]);
+    return 0.3; // 고정 크기
+  }, []);
 
   // 사각형 크기 (십자가와 같은 크기)
   const snapBoxSize = useMemo(() => {
-    const size = 0.15 / currentZoom; // 십자가와 동일한 크기
+    const size = 0.3; // 고정 크기 (30mm)
     console.log('📦 사각형 크기:', size, 'zoom:', currentZoom);
     return size;
   }, [currentZoom]);
