@@ -67,7 +67,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   }, [camera]);
 
   // 사각형 크기 (고정 - 줌 영향 안 받음)
-  const snapBoxSize = 0.8; // 큰 고정 크기
+  const snapBoxSize = 0.15; // 작은 고정 크기
 
   // 시점에 따른 텍스트 오프셋 계산
   const getTextOffset = (point: MeasurePoint, offset: number = 0.2): MeasurePoint => {
