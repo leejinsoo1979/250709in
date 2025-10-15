@@ -366,6 +366,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault(); // 드롭 허용
+    // 너무 많은 로그를 방지하기 위해 throttle (100ms마다 한 번만 로그)
+    const now = Date.now();
+    if (!window._lastDragOverLog || now - window._lastDragOverLog > 100) {
+      console.log('🔥 [Space3DView] handleDragOver called');
+      window._lastDragOverLog = now;
+    }
   };
   
   // 컴포넌트 언마운트 시 정리
