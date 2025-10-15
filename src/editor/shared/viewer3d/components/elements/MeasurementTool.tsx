@@ -327,8 +327,48 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         const dy = Math.abs(line.end[1] - line.start[1]);
         const dz = Math.abs(line.end[2] - line.start[2]);
 
-        // offset이 없으면 시작점을 기본값으로 사용
-        const offset: MeasurePoint = (line as any).offset ?? line.start;
+        // Legacy offset data conversion (number → MeasurePoint)
+        const offset: MeasurePoint = (() => {
+          const savedOffset = (line as any).offset;
+
+          // Check if offset is legacy number type
+          if (typeof savedOffset === 'number') {
+            // Convert old single-axis offset to MeasurePoint based on measurement direction
+            switch (viewDirection) {
+              case 'front':
+                if (dx >= dy) {
+                  // X-axis measurement - offset was Y coordinate
+                  return [line.start[0], savedOffset, line.start[2]];
+                } else {
+                  // Y-axis measurement - offset was X coordinate
+                  return [savedOffset, line.start[1], line.start[2]];
+                }
+              case 'top':
+                if (dx >= dz) {
+                  // X-axis measurement - offset was Z coordinate
+                  return [line.start[0], line.start[1], savedOffset];
+                } else {
+                  // Z-axis measurement - offset was X coordinate
+                  return [savedOffset, line.start[1], line.start[2]];
+                }
+              case 'left':
+              case 'right':
+                if (dy >= dz) {
+                  // Y-axis measurement - offset was Z coordinate
+                  return [line.start[0], line.start[1], savedOffset];
+                } else {
+                  // Z-axis measurement - offset was Y coordinate
+                  return [line.start[0], savedOffset, line.start[2]];
+                }
+              default:
+                // Default: use start point
+                return line.start;
+            }
+          }
+
+          // If already MeasurePoint or undefined, use it or default to start
+          return savedOffset ?? line.start;
+        })();
         const guidePoints = calculateGuidePoints(line.start, line.end, offset, viewDirection);
         const midPoint: MeasurePoint = [
           (guidePoints.start[0] + guidePoints.end[0]) / 2,
