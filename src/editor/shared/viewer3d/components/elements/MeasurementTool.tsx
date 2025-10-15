@@ -189,9 +189,19 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       return;
     }
 
-    // 스냅 비활성화 - 클릭한 위치 그대로 사용
-    setHoverPoint(rawPoint);
-    setIsSnapped(false);
+    // 스냅 기능: 가장 가까운 꼭지점 찾기
+    const snapDistance = getSnapDistance();
+    const nearestSnap = findNearestVertex(rawPoint, sceneVerticesRef.current, viewDirection, snapDistance);
+
+    if (nearestSnap) {
+      // 꼭지점 근처 - 네모로 표시하고 스냅
+      setHoverPoint(nearestSnap.vertex);
+      setIsSnapped(true);
+    } else {
+      // 자유 위치 - 십자가로 표시
+      setHoverPoint(rawPoint);
+      setIsSnapped(false);
+    }
   }, [isMeasureMode, gl, raycaster, camera, viewDirection, isAdjustingGuide, measurePoints, getSnapDistance]);
 
   // 클릭 핸들러
