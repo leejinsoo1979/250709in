@@ -2098,6 +2098,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // 영역별 슬롯 위치 계산
   const getZoneSlotPositions = () => {
+    console.log('🚨🚨🚨 getZoneSlotPositions 진입:', {
+      hasDroppedCeiling,
+      '단내림활성화': spaceInfo.droppedCeiling?.enabled,
+      'zoneSlotInfo존재': !!zoneSlotInfo,
+      'zoneSlotInfo.dropped존재': !!zoneSlotInfo?.dropped,
+      'surroundType': spaceInfo.surroundType,
+      'installType': spaceInfo.installType
+    });
+
     // 단내림이 없는 경우 기본 위치 사용
     if (!hasDroppedCeiling || !zoneSlotInfo?.dropped) {
       console.log('🎯 getZoneSlotPositions - returning default positions (no dropped ceiling):', {
