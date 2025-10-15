@@ -250,44 +250,21 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     if (slotIndex === null) {
       return false;
     }
-    
-    // 단내림 활성화 시 영역 확인
+
+    // 단내림 활성화 시 영역 확인 - activeDroppedCeilingTab을 직접 zone으로 매핑
     let zone: 'normal' | 'dropped' = 'normal';
     let zoneSlotIndex = slotIndex;
-    
+
     if (spaceInfo.droppedCeiling?.enabled && indexing.zones) {
-      // 레이캐스트된 콜라이더에서 zone 정보 가져오기
-      const raycaster = new THREE.Raycaster();
-      const mouse = new THREE.Vector2();
-      const rect = canvasElement.getBoundingClientRect();
-      mouse.x = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((dragEvent.clientY - rect.top) / rect.height) * 2 + 1;
-      
-      raycaster.setFromCamera(mouse, camera);
-      
-      const slotColliders: THREE.Object3D[] = [];
-      scene.traverse((child) => {
-        if (child.userData?.type === 'slot-collider') {
-          slotColliders.push(child);
-        }
+      // activeDroppedCeilingTab이 'dropped'면 단내림 영역, 'main'이면 일반 영역
+      zone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
+      zoneSlotIndex = slotIndex;
+
+      console.log('🎯 드롭 영역 확인 (activeTab 기반):', {
+        zone,
+        zoneSlotIndex,
+        activeTab: activeDroppedCeilingTab
       });
-      
-      const intersects = raycaster.intersectObjects(slotColliders);
-      
-      if (intersects.length > 0) {
-        const intersectedObject = intersects[0].object;
-        zone = intersectedObject.userData?.zone || 'normal';
-        zoneSlotIndex = intersectedObject.userData?.slotIndex || slotIndex;
-        
-        console.log('🎯 드롭 영역 확인 (레이캐스트):', {
-          zone,
-          zoneSlotIndex,
-          activeTab: activeDroppedCeilingTab
-        });
-      } else {
-        console.warn('⚠️ 영역을 찾을 수 없음');
-        return false;
-      }
     }
     
     // 듀얼/싱글 가구 판별
