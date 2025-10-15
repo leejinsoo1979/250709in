@@ -194,13 +194,13 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       return;
     }
 
-    // 스냅 기능: Shift 키를 눌렀을 때만 가장 가까운 꼭지점 찾기
-    if (event.shiftKey) {
+    // 스냅 기능: 가장 가까운 꼭지점 찾기 (기본 활성화, Shift 키로 비활성화)
+    if (!event.shiftKey) {
       const snapDistance = getSnapDistance();
       const totalVertices = sceneVerticesRef.current.length;
       const zoom = camera instanceof THREE.OrthographicCamera ? camera.zoom : 1;
 
-      console.log(`🔍 스냅 시도 (Shift): point[${rawPoint[0].toFixed(2)}, ${rawPoint[1].toFixed(2)}, ${rawPoint[2].toFixed(2)}] snapDist=${snapDistance.toFixed(3)} vertices=${totalVertices} view=${viewDirection} zoom=${zoom.toFixed(1)}`);
+      console.log(`🔍 스냅 시도: point[${rawPoint[0].toFixed(2)}, ${rawPoint[1].toFixed(2)}, ${rawPoint[2].toFixed(2)}] snapDist=${snapDistance.toFixed(3)} vertices=${totalVertices} view=${viewDirection} zoom=${zoom.toFixed(1)}`);
 
       const nearestSnap = findNearestVertex(rawPoint, sceneVerticesRef.current, viewDirection, snapDistance);
 
@@ -214,7 +214,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         setIsSnapped(false);
       }
     } else {
-      // Shift 키 없으면 스냅 안 함 - 클릭한 위치 그대로 사용
+      // Shift 키 누르면 스냅 비활성화 - 클릭한 위치 그대로 사용
+      console.log('🔓 스냅 비활성화 (Shift)');
       setHoverPoint(rawPoint);
       setIsSnapped(false);
     }
