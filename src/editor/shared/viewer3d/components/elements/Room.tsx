@@ -2692,10 +2692,10 @@ const Room: React.FC<RoomProps> = ({
         // 단내림이 없거나 오른쪽에 있는 경우 (일반구간)
         return (
           <>
-            {/* 세로 서브프레임 (메인 프레임 방향으로 4mm 확장: 40mm → 44mm) */}
+            {/* 세로 서브프레임 (슬롯 가이드 끝선에 맞춤: x축 +1mm 이동) */}
             <group
               position={[
-                xOffset + frameThickness.left - mmToThreeUnits(10),
+                xOffset + frameThickness.left - mmToThreeUnits(9),
                 sideFrameCenterY,
                 furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(28)
               ]}
@@ -2787,10 +2787,10 @@ const Room: React.FC<RoomProps> = ({
         // 단내림이 없거나 왼쪽에 있는 경우 (일반구간)
         return (
           <>
-            {/* 세로 서브프레임 (메인 프레임 방향으로 4mm 확장: 40mm → 44mm) */}
+            {/* 세로 서브프레임 (슬롯 가이드 끝선에 맞춤: x축 -1mm 이동) */}
             <group
               position={[
-                xOffset + width - frameThickness.right + mmToThreeUnits(10),
+                xOffset + width - frameThickness.right + mmToThreeUnits(9),
                 sideFrameCenterY,
                 furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(28)
               ]}
