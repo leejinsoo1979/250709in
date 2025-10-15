@@ -232,13 +232,19 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     }
     
     // 레이캐스팅으로 슬롯 인덱스 찾기
+    // 단내림 활성화 시 현재 활성 탭의 영역만 검색
+    const activeZone = spaceInfo.droppedCeiling?.enabled && activeDroppedCeilingTab === 'dropped' ? 'dropped' :
+                      spaceInfo.droppedCeiling?.enabled && activeDroppedCeilingTab === 'main' ? 'normal' :
+                      undefined;
+
     const slotIndex = getSlotIndexFromRaycast(
-      dragEvent.clientX, 
-      dragEvent.clientY, 
+      dragEvent.clientX,
+      dragEvent.clientY,
       canvasElement,
       camera,
       scene,
-      spaceInfo
+      spaceInfo,
+      activeZone
     );
     
     if (slotIndex === null) {
