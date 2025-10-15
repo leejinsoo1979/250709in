@@ -167,49 +167,49 @@ export function calculateGuidePoints(
   // 뷰 방향에 따라 측정 축 결정
   switch (viewDirection) {
     case 'front':
-      // 정면: XY 평면만 측정
+      // 정면: XY 평면만 측정 (Z=0 강제)
       if (dx >= dy) {
         // X축 측정 (가로) - 마우스 Y 위치에 가로선
         return {
-          start: [start[0], offsetPoint[1], start[2]],
-          end: [end[0], offsetPoint[1], start[2]]
+          start: [start[0], offsetPoint[1], 0],
+          end: [end[0], offsetPoint[1], 0]
         };
       } else {
         // Y축 측정 (세로) - 마우스 X 위치에 세로선
         return {
-          start: [offsetPoint[0], start[1], start[2]],
-          end: [offsetPoint[0], end[1], start[2]]
+          start: [offsetPoint[0], start[1], 0],
+          end: [offsetPoint[0], end[1], 0]
         };
       }
     case 'top':
-      // 상단: XZ 평면만 측정
+      // 상단: XZ 평면만 측정 (Y=0 강제)
       if (dx >= dz) {
         // X축 측정 (가로)
         return {
-          start: [start[0], start[1], offsetPoint[2]],
-          end: [end[0], start[1], offsetPoint[2]]
+          start: [start[0], 0, offsetPoint[2]],
+          end: [end[0], 0, offsetPoint[2]]
         };
       } else {
         // Z축 측정 (깊이)
         return {
-          start: [offsetPoint[0], start[1], start[2]],
-          end: [offsetPoint[0], start[1], end[2]]
+          start: [offsetPoint[0], 0, start[2]],
+          end: [offsetPoint[0], 0, end[2]]
         };
       }
     case 'left':
     case 'right':
-      // 측면: YZ 평면만 측정
+      // 측면: YZ 평면만 측정 (X=0 강제)
       if (dy >= dz) {
         // Y축 측정 (세로)
         return {
-          start: [start[0], start[1], offsetPoint[2]],
-          end: [start[0], end[1], offsetPoint[2]]
+          start: [0, start[1], offsetPoint[2]],
+          end: [0, end[1], offsetPoint[2]]
         };
       } else {
         // Z축 측정 (깊이)
         return {
-          start: [start[0], offsetPoint[1], start[2]],
-          end: [start[0], offsetPoint[1], end[2]]
+          start: [0, offsetPoint[1], start[2]],
+          end: [0, offsetPoint[1], end[2]]
         };
       }
     default:
