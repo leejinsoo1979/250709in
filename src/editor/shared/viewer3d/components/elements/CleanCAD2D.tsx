@@ -728,18 +728,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {/* 단내림 구간 경계선 */}
             <Line
               points={[[droppedStartX, normalHeight, 0.002], [droppedStartX, totalHeight, 0.002]]}
-              color={dimensionColor}
-              lineWidth={1.5}
+              color="#FFD700"
+              lineWidth={0.8}
             />
             <Line
               points={[[droppedEndX, normalHeight, 0.002], [droppedEndX, totalHeight, 0.002]]}
-              color={dimensionColor}
-              lineWidth={1.5}
+              color="#FFD700"
+              lineWidth={0.8}
             />
             <Line
               points={[[droppedStartX, normalHeight, 0.002], [droppedEndX, normalHeight, 0.002]]}
-              color={dimensionColor}
-              lineWidth={1.5}
+              color="#FFD700"
+              lineWidth={0.8}
             />
 
             {/* 해칭 패턴 */}
