@@ -280,8 +280,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           {/* 옷걸이 봉 렌더링 - hanging 섹션만 */}
           {(() => {
             const sections = baseFurniture.modelConfig.sections || [];
-            let accumulatedY = -height/2 + basicThickness;
             const availableHeight = height - basicThickness * 2;
+
+            // 측판용: modelConfig의 원본 섹션 높이 (항상 고정)
+            let sideAccumulatedY = -height/2 + basicThickness;
 
             console.log('🟢 SingleType2 섹션 계산 시작');
             console.log('  moduleId:', moduleData.id);
@@ -292,18 +294,17 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             console.log('  sectionsCount:', sections.length);
 
             return sections.map((section: any, sectionIndex: number) => {
-              const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
-              const sectionBottomY = accumulatedY;
-              const sectionTopY = accumulatedY + sectionHeight - basicThickness;
+              // 옷봉 위치용: 실제 가구 높이 기반 계산 (동적)
+              const sectionBottomY = sideAccumulatedY;
 
               console.log(`🟡 SingleType2 섹션[${sectionIndex}] (${section.type})`);
-              console.log('  sectionHeight:', sectionHeight * 100);
               console.log('  sectionBottomY:', sectionBottomY * 100);
               console.log('  heightType:', section.heightType);
               console.log('  heightValue:', section.height);
 
-              // 누적 Y 위치 업데이트
-              accumulatedY += sectionHeight;
+              // 측판용 누적 Y 위치 업데이트 (원본 높이 사용)
+              const originalSectionHeight = mmToThreeUnits(section.height);
+              sideAccumulatedY += originalSectionHeight;
 
               // hanging 섹션이 아니면 옷걸이봉 렌더링하지 않음
               const isHangingSection = section.type === 'hanging';

@@ -91,15 +91,24 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                   return null;
                 }
 
-                // 섹션 높이 계산
-                const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
+                // 측판용: 원본 섹션 높이 기반 계산
                 let sectionBottomY = -height / 2 + basicThickness;
-
                 for (let i = 0; i < sectionIndex; i++) {
-                  sectionBottomY += baseFurniture.calculateSectionHeight(sections[i], availableHeight);
+                  sectionBottomY += mmToThreeUnits(sections[i].height);
                 }
 
-                console.log('  sectionHeight:', sectionHeight * 100);
+                // 실제 섹션 높이 계산 (현재 가구 높이 기반)
+                let actualSectionHeight: number;
+                if (sectionIndex === 0) {
+                  // 하부 섹션 (서랍): 항상 고정 높이
+                  actualSectionHeight = mmToThreeUnits(section.height);
+                } else {
+                  // 상부 섹션 (옷장): 전체 높이에서 하부 섹션 높이를 뺀 나머지
+                  const bottomSectionHeight = mmToThreeUnits(sections[0].height);
+                  actualSectionHeight = availableHeight - bottomSectionHeight;
+                }
+
+                console.log('  actualSectionHeight:', actualSectionHeight * 100);
                 console.log('  sectionBottomY:', sectionBottomY * 100);
                 console.log('  heightType:', section.heightType);
                 console.log('  heightValue:', section.height);
@@ -116,19 +125,18 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                   rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
                 } else if (hasFinishPanel) {
                   // 마감 패널이 있는 경우 (하부섹션): 브라켓 윗면이 마감 패널 하단에서 27mm 아래
-                  const finishPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
+                  const finishPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                   rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
                 } else {
                   // 안전선반도 마감 패널도 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
-                  const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
-                  // 브라켓 중심 = 상판 하단 - (브라켓 높이 / 2)
+                  const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                   rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
 
                   console.log('🔵 DualType1 옷봉 위치 계산');
                   console.log('  moduleId:', moduleData.id);
                   console.log('  internalHeight:', internalHeight);
                   console.log('  height(Three→mm):', height * 100);
-                  console.log('  sectionHeight:', sectionHeight * 100);
+                  console.log('  actualSectionHeight:', actualSectionHeight * 100);
                   console.log('  sectionBottomY:', sectionBottomY * 100);
                   console.log('  sectionTopPanelBottom:', sectionTopPanelBottom * 100);
                   console.log('  rodYPosition:', rodYPosition * 100);
