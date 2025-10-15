@@ -691,9 +691,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         // 단내림 구간 빗금 해칭 (대각선 패턴)
         const hatchLines: JSX.Element[] = [];
         const hatchSpacing = mmToThreeUnits(80); // 80mm 간격
-        const hatchCount = Math.floor((droppedWidth + droppedHeight) / hatchSpacing);
 
-        for (let i = 0; i <= hatchCount; i++) {
+        // 좌측 모서리부터 시작하도록 음수 오프셋 시작
+        const totalDiagonal = droppedWidth + droppedHeight;
+        const hatchCount = Math.ceil(totalDiagonal / hatchSpacing) + 2;
+
+        for (let i = -2; i <= hatchCount; i++) {
           const offset = i * hatchSpacing;
 
           // 왼쪽 아래에서 오른쪽 위로 올라가는 대각선
