@@ -15,14 +15,22 @@ type ModuleType = 'single' | 'dual';
 type CategoryType = 'full' | 'upper' | 'lower';
 
 const ModuleLibrary: React.FC = () => {
+  console.log('🎨🎨🎨 [ModuleLibrary] 컴포넌트 렌더링 시작');
+
   const { t } = useTranslation();
   // 선택된 탭 상태 (싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('single');
   // 선택된 카테고리 상태 (키큰장/상부장/하부장)
   const [selectedCategory, setSelectedCategory] = useState<'full' | 'upper' | 'lower'>('full');
-  
+
   // 에디터 스토어에서 공간 정보 가져오기
   const { spaceInfo } = useSpaceConfigStore();
+
+  console.log('🔍🔍🔍 [ModuleLibrary] spaceInfo:', {
+    surroundType: spaceInfo.surroundType,
+    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+    installType: spaceInfo.installType
+  });
 
   // 내경 공간 계산
   // 단내림 활성화 시 normal zone의 높이를 사용 (더 높은 쪽 기준으로 가구 표시)
@@ -228,16 +236,19 @@ const ModuleLibrary: React.FC = () => {
 
   // 현재 선택된 탭에 따른 모듈 목록
   const currentModules = selectedType === 'single' ? singleModules : dualModules;
-  
+
   // 디버깅: 최종 모듈 확인
-  console.log('🎯 최종 모듈 표시:', {
+  console.log('🎯🎯🎯 [ModuleLibrary] 최종 모듈 표시:', {
     selectedCategory,
     selectedType,
     singleModulesCount: singleModules.length,
     dualModulesCount: dualModules.length,
     currentModulesCount: currentModules.length,
-    currentModules: currentModules.map(m => ({ id: m.id, name: m.name, category: m.category }))
+    currentModules: currentModules.map(m => ({ id: m.id, name: m.name, category: m.category })),
+    internalSpace
   });
+
+  console.log('🎨🎨🎨 [ModuleLibrary] 렌더링 반환 - currentModules.length:', currentModules.length);
 
   return (
     <div className={styles.container}>
