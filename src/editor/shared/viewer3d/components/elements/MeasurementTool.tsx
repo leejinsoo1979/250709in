@@ -44,6 +44,17 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   const [guideOffset, setGuideOffset] = useState<number>(0);
   const [isAdjustingGuide, setIsAdjustingGuide] = useState(false);
 
+  // 카메라 줌 레벨에 따른 점 크기 계산
+  const getPointSize = useCallback(() => {
+    if (camera instanceof THREE.OrthographicCamera) {
+      // 직교 카메라: zoom 값이 클수록 확대됨
+      const baseSize = 0.05;
+      const zoom = camera.zoom || 1;
+      return baseSize / zoom; // 줌이 커질수록 점은 작아짐
+    }
+    return 0.05; // 기본 크기
+  }, [camera]);
+
   // 시점에 따른 텍스트 오프셋 계산
   const getTextOffset = (point: MeasurePoint, offset: number = 0.2): MeasurePoint => {
     switch (viewDirection) {
@@ -267,6 +278,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
   const lineColor = '#00FF00'; // 형광 초록색
   const snapColor = '#00FF00'; // 형광 초록색 (스냅됨)
+  const pointSize = getPointSize(); // 동적 점 크기
 
   return (
     <group>
@@ -325,13 +337,13 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
             {/* 가이드 시작점 엔드포인트 (점) */}
             <mesh position={guidePoints.start}>
-              <sphereGeometry args={[0.05, 16, 16]} />
+              <sphereGeometry args={[pointSize, 16, 16]} />
               <meshBasicMaterial color={lineColor} />
             </mesh>
 
             {/* 가이드 끝점 엔드포인트 (점) */}
             <mesh position={guidePoints.end}>
-              <sphereGeometry args={[0.05, 16, 16]} />
+              <sphereGeometry args={[pointSize, 16, 16]} />
               <meshBasicMaterial color={lineColor} />
             </mesh>
 
@@ -362,13 +374,13 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
           {/* 시작점 마커 */}
           <mesh position={measurePoints[0]}>
-            <sphereGeometry args={[0.05, 16, 16]} />
+            <sphereGeometry args={[pointSize, 16, 16]} />
             <meshBasicMaterial color={snapColor} />
           </mesh>
 
           {/* 호버점 마커 */}
           <mesh position={hoverPoint}>
-            <sphereGeometry args={[0.05, 16, 16]} />
+            <sphereGeometry args={[pointSize, 16, 16]} />
             <meshBasicMaterial color={isSnapped ? snapColor : lineColor} opacity={0.7} transparent />
           </mesh>
 
@@ -442,13 +454,13 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
                 {/* 가이드 시작점 엔드포인트 (점) */}
                 <mesh position={guidePoints.start}>
-                  <sphereGeometry args={[0.05, 16, 16]} />
+                  <sphereGeometry args={[pointSize, 16, 16]} />
                   <meshBasicMaterial color={snapColor} />
                 </mesh>
 
                 {/* 가이드 끝점 엔드포인트 (점) */}
                 <mesh position={guidePoints.end}>
-                  <sphereGeometry args={[0.05, 16, 16]} />
+                  <sphereGeometry args={[pointSize, 16, 16]} />
                   <meshBasicMaterial color={snapColor} />
                 </mesh>
 
@@ -482,7 +494,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       {/* 호버 커서 (측정 시작 전) */}
       {!measurePoints && hoverPoint && (
         <mesh position={hoverPoint}>
-          <sphereGeometry args={[0.05, 16, 16]} />
+          <sphereGeometry args={[pointSize, 16, 16]} />
           <meshBasicMaterial color={isSnapped ? snapColor : lineColor} opacity={0.5} transparent />
         </mesh>
       )}
