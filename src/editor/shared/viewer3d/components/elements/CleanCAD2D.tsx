@@ -732,7 +732,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               <Line
                 key={`hatch-${i}`}
                 points={[[clippedStartX, clippedStartY, 0.001], [clippedEndX, clippedEndY, 0.001]]}
-                color="#FFD700"
+                color={theme === 'dark' ? '#FFD700' : '#999999'}
                 lineWidth={0.5}
                 opacity={0.6}
               />
@@ -742,28 +742,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
         return (
           <group>
-            {/* 회색 반투명 배경 메쉬 (다크모드에서만) */}
-            {theme === 'dark' && (
-              <mesh position={[(droppedStartX + droppedEndX) / 2, (normalHeight + totalHeight) / 2, 0.0005]}>
-                <planeGeometry args={[droppedWidth, droppedHeight]} />
-                <meshBasicMaterial color="#999999" transparent opacity={0.15} depthTest={false} />
-              </mesh>
-            )}
+            {/* 회색 반투명 배경 메쉬 */}
+            <mesh position={[(droppedStartX + droppedEndX) / 2, (normalHeight + totalHeight) / 2, 0.0005]}>
+              <planeGeometry args={[droppedWidth, droppedHeight]} />
+              <meshBasicMaterial color="#999999" transparent opacity={0.15} depthTest={false} />
+            </mesh>
 
             {/* 단내림 구간 경계선 */}
             <Line
               points={[[droppedStartX, normalHeight, 0.002], [droppedStartX, totalHeight, 0.002]]}
-              color="#FFD700"
+              color={theme === 'dark' ? '#FFD700' : '#999999'}
               lineWidth={0.8}
             />
             <Line
               points={[[droppedEndX, normalHeight, 0.002], [droppedEndX, totalHeight, 0.002]]}
-              color="#FFD700"
+              color={theme === 'dark' ? '#FFD700' : '#999999'}
               lineWidth={0.8}
             />
             <Line
               points={[[droppedStartX, normalHeight, 0.002], [droppedEndX, normalHeight, 0.002]]}
-              color="#FFD700"
+              color={theme === 'dark' ? '#FFD700' : '#999999'}
               lineWidth={0.8}
             />
 
