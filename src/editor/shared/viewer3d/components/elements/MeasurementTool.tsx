@@ -186,6 +186,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         viewDirection
       });
       setGuideOffset(offset);
+      // hoverPoint도 업데이트해야 클릭 시 올바른 위치 저장됨
+      setHoverPoint(normalizedMousePos);
       return;
     }
 
