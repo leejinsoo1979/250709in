@@ -160,37 +160,6 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     }
   };
 
-  // 시점에 따른 슬래시 라인 생성 (엔드포인트 마커)
-  const getSlashLine = (point: MeasurePoint, size: number): [MeasurePoint, MeasurePoint] => {
-    const half = size / 2;
-    switch (viewDirection) {
-      case 'front':
-        // 정면(XY 평면): 대각선 슬래시
-        return [
-          [point[0] - half, point[1] - half, point[2]],
-          [point[0] + half, point[1] + half, point[2]]
-        ];
-      case 'top':
-        // 상단(XZ 평면): 대각선 슬래시
-        return [
-          [point[0] - half, point[1], point[2] - half],
-          [point[0] + half, point[1], point[2] + half]
-        ];
-      case 'left':
-      case 'right':
-        // 측면(YZ 평면): 대각선 슬래시
-        return [
-          [point[0], point[1] - half, point[2] - half],
-          [point[0], point[1] + half, point[2] + half]
-        ];
-      default:
-        return [
-          [point[0] - half, point[1] - half, point[2]],
-          [point[0] + half, point[1] + half, point[2]]
-        ];
-    }
-  };
-
   // 시점에 따른 박스 포인트 생성 (스냅 마커)
   const getBoxPoints = (point: MeasurePoint, size: number): MeasurePoint[] => {
     const half = size / 2;
@@ -553,19 +522,17 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
               lineWidth={2}
             />
 
-            {/* 가이드 시작점 엔드포인트 (슬래시) */}
-            <Line
-              points={getSlashLine(guidePoints.start, snapBoxSize)}
-              color={lineColor}
-              lineWidth={2}
-            />
+            {/* 가이드 시작점 엔드포인트 (원형 점) */}
+            <mesh position={guidePoints.start}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshBasicMaterial color={lineColor} />
+            </mesh>
 
-            {/* 가이드 끝점 엔드포인트 (슬래시) */}
-            <Line
-              points={getSlashLine(guidePoints.end, snapBoxSize)}
-              color={lineColor}
-              lineWidth={2}
-            />
+            {/* 가이드 끝점 엔드포인트 (원형 점) */}
+            <mesh position={guidePoints.end}>
+              <sphereGeometry args={[0.05, 8, 8]} />
+              <meshBasicMaterial color={lineColor} />
+            </mesh>
 
             {/* 거리 텍스트 */}
             <Text
@@ -593,12 +560,11 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             transparent
           />
 
-          {/* 시작점 마커 (슬래시) */}
-          <Line
-            points={getSlashLine(measurePoints[0], snapBoxSize)}
-            color={lineColor}
-            lineWidth={2}
-          />
+          {/* 시작점 마커 (원형 점) */}
+          <mesh position={measurePoints[0]}>
+            <sphereGeometry args={[0.05, 8, 8]} />
+            <meshBasicMaterial color={lineColor} />
+          </mesh>
 
           {/* 호버점 마커 - 스냅되면 노란 네모만 표시 */}
           {isSnapped && (() => {
@@ -682,19 +648,17 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
                   lineWidth={2}
                 />
 
-                {/* 가이드 시작점 엔드포인트 (슬래시) */}
-                <Line
-                  points={getSlashLine(guidePoints.start, snapBoxSize)}
-                  color={snapColor}
-                  lineWidth={2}
-                />
+                {/* 가이드 시작점 엔드포인트 (원형 점) */}
+                <mesh position={guidePoints.start}>
+                  <sphereGeometry args={[0.05, 8, 8]} />
+                  <meshBasicMaterial color={snapColor} />
+                </mesh>
 
-                {/* 가이드 끝점 엔드포인트 (슬래시) */}
-                <Line
-                  points={getSlashLine(guidePoints.end, snapBoxSize)}
-                  color={snapColor}
-                  lineWidth={2}
-                />
+                {/* 가이드 끝점 엔드포인트 (원형 점) */}
+                <mesh position={guidePoints.end}>
+                  <sphereGeometry args={[0.05, 8, 8]} />
+                  <meshBasicMaterial color={snapColor} />
+                </mesh>
 
                 {/* 거리 텍스트 */}
                 <Text
