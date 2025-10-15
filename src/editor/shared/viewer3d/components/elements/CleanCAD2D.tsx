@@ -742,11 +742,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
         return (
           <group>
-            {/* 회색 반투명 배경 메쉬 */}
-            <mesh position={[(droppedStartX + droppedEndX) / 2, (normalHeight + totalHeight) / 2, 0.0005]}>
-              <planeGeometry args={[droppedWidth, droppedHeight]} />
-              <meshBasicMaterial color="#999999" transparent opacity={0.15} depthTest={false} />
-            </mesh>
+            {/* 회색 반투명 배경 메쉬 (다크모드에서만) */}
+            {theme === 'dark' && (
+              <mesh position={[(droppedStartX + droppedEndX) / 2, (normalHeight + totalHeight) / 2, 0.0005]}>
+                <planeGeometry args={[droppedWidth, droppedHeight]} />
+                <meshBasicMaterial color="#999999" transparent opacity={0.15} depthTest={false} />
+              </mesh>
+            )}
 
             {/* 단내림 구간 경계선 */}
             <Line
