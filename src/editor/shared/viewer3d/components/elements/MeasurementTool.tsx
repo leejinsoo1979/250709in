@@ -105,20 +105,39 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     }
   };
 
-  // 시점에 따른 텍스트 회전 (카메라를 향하도록)
-  const getTextRotation = (): [number, number, number] => {
+  // 시점과 측정 방향에 따른 텍스트 회전 (카메라를 향하고 측정선과 평행하도록)
+  const getTextRotation = (start: MeasurePoint, end: MeasurePoint): [number, number, number] => {
+    const dx = Math.abs(end[0] - start[0]);
+    const dy = Math.abs(end[1] - start[1]);
+    const dz = Math.abs(end[2] - start[2]);
+
     switch (viewDirection) {
       case 'front':
-        // 정면: 회전 없음 (Z축 바라봄)
+        // 정면(XY 평면): Y축 측정이면 Z축으로 90도 회전
+        if (dy > dx) {
+          return [0, 0, Math.PI / 2];
+        }
         return [0, 0, 0];
       case 'top':
-        // 상단: X축 90도 회전 (아래를 바라봄)
+        // 상단(XZ 평면): X축 -90도 회전 (아래를 바라봄)
+        // Z축 측정이면 추가로 Z축 90도 회전
+        if (dz > dx) {
+          return [-Math.PI / 2, 0, Math.PI / 2];
+        }
         return [-Math.PI / 2, 0, 0];
       case 'left':
-        // 좌측: Y축 -90도 회전 (왼쪽을 바라봄)
+        // 좌측(YZ 평면): Y축 -90도 회전 (왼쪽을 바라봄)
+        // Y축 측정이면 추가로 Z축 90도 회전
+        if (dy > dz) {
+          return [0, -Math.PI / 2, Math.PI / 2];
+        }
         return [0, -Math.PI / 2, 0];
       case 'right':
-        // 우측: Y축 90도 회전 (오른쪽을 바라봄)
+        // 우측(YZ 평면): Y축 90도 회전 (오른쪽을 바라봄)
+        // Y축 측정이면 추가로 Z축 90도 회전
+        if (dy > dz) {
+          return [0, Math.PI / 2, Math.PI / 2];
+        }
         return [0, Math.PI / 2, 0];
       default:
         return [0, 0, 0];
@@ -532,7 +551,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             {/* 거리 텍스트 */}
             <Text
               position={getTextOffset(midPoint, 0.2)}
-              rotation={getTextRotation()}
+              rotation={getTextRotation(line.start, line.end)}
               fontSize={0.25}
               color={lineColor}
               anchorX="center"
@@ -587,7 +606,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             return (
               <Text
                 position={getTextOffset(midPoint, 0.2)}
-                rotation={getTextRotation()}
+                rotation={getTextRotation(measurePoints[0], hoverPoint)}
                 fontSize={0.25}
                 color={lineColor}
                 anchorX="center"
@@ -661,7 +680,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
                 {/* 거리 텍스트 */}
                 <Text
                   position={getTextOffset(midPoint, 0.2)}
-                  rotation={getTextRotation()}
+                  rotation={getTextRotation(start, end)}
                   fontSize={0.25}
                   color={snapColor}
                   anchorX="center"
@@ -673,7 +692,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
                 {/* 안내 텍스트 */}
                 <Text
                   position={getTextOffset(midPoint, -0.4)}
-                  rotation={getTextRotation()}
+                  rotation={getTextRotation(start, end)}
                   fontSize={0.15}
                   color={snapColor}
                   anchorX="center"
