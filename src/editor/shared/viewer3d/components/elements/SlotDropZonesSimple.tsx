@@ -515,10 +515,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       
       // 디버깅을 위해 조건을 일시적으로 수정
       const targetZoneInfo = zoneToUse === 'dropped' ? zoneInfo.dropped : zoneInfo.normal;
-      if (targetZoneInfo && slotIndex >= targetZoneInfo.columnCount) {
-        console.error('❌ Invalid slot index for zone:', { 
-          zone: zoneToUse, 
-          slotIndex, 
+      if (targetZoneInfo && zoneSlotIndex >= targetZoneInfo.columnCount) {
+        console.error('❌ Invalid slot index for zone:', {
+          zone: zoneToUse,
+          slotIndex,
+          zoneSlotIndex,
           columnCount: targetZoneInfo.columnCount,
           validRange: `0-${targetZoneInfo.columnCount - 1}`,
           allZoneInfo: {
@@ -554,9 +555,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
       
       // 슬롯 인덱스가 0 이상인지 확인
-      if (slotIndex < 0) {
-        console.error('❌ Invalid negative slot index:', slotIndex);
-        slotIndex = 0;
+      if (zoneSlotIndex < 0) {
+        console.error('❌ Invalid negative slot index:', { slotIndex, zoneSlotIndex });
+        zoneSlotIndex = 0;
       }
       
       // 영역별 spaceInfo 생성 (가구 크기 계산용)
