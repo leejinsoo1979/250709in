@@ -245,18 +245,40 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     // 첫 번째 클릭: 시작점 저장
     if (!measurePoints) {
       console.log('📍 시작점 설정:', hoverPoint);
-      setMeasureStartPoint(hoverPoint);
+      // 뷰 방향에 따라 좌표 정규화 (뷰 평면에 강제)
+      const normalizedPoint: MeasurePoint = viewDirection === 'front'
+        ? [hoverPoint[0], hoverPoint[1], 0]  // 정면: Z=0 강제
+        : viewDirection === 'top'
+        ? [hoverPoint[0], 0, hoverPoint[2]]  // 상단: Y=0 강제
+        : viewDirection === 'left'
+        ? [0, hoverPoint[1], hoverPoint[2]]  // 좌측: X=0 강제
+        : viewDirection === 'right'
+        ? [0, hoverPoint[1], hoverPoint[2]]  // 우측: X=0 강제
+        : hoverPoint;
+      console.log('📍 정규화된 시작점:', normalizedPoint);
+      setMeasureStartPoint(normalizedPoint);
       return;
     }
 
     // 두 번째 클릭: 끝점 저장하고 가이드 조정 모드 진입
     if (measurePoints[1] === null) {
       console.log('📍 끝점 설정:', hoverPoint);
-      setMeasureEndPoint(hoverPoint);
+      // 뷰 방향에 따라 좌표 정규화 (뷰 평면에 강제)
+      const normalizedPoint: MeasurePoint = viewDirection === 'front'
+        ? [hoverPoint[0], hoverPoint[1], 0]  // 정면: Z=0 강제
+        : viewDirection === 'top'
+        ? [hoverPoint[0], 0, hoverPoint[2]]  // 상단: Y=0 강제
+        : viewDirection === 'left'
+        ? [0, hoverPoint[1], hoverPoint[2]]  // 좌측: X=0 강제
+        : viewDirection === 'right'
+        ? [0, hoverPoint[1], hoverPoint[2]]  // 우측: X=0 강제
+        : hoverPoint;
+      console.log('📍 정규화된 끝점:', normalizedPoint);
+      setMeasureEndPoint(normalizedPoint);
       setIsAdjustingGuide(true);
       // 가이드 오프셋은 마우스 이동 시 업데이트됨 - 초기값은 끝점과 동일
       // 사용자가 마우스를 움직여서 원하는 위치로 조정 후 클릭
-      setGuideOffset(hoverPoint);
+      setGuideOffset(normalizedPoint);
     }
   }, [isMeasureMode, hoverPoint, isAdjustingGuide, measurePoints, setMeasureStartPoint, setMeasureEndPoint, addMeasureLine, clearMeasurePoints]);
 
