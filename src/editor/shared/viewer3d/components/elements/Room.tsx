@@ -1853,11 +1853,11 @@ const Room: React.FC<RoomProps> = ({
           );
         }
         
-        // 단내림이 없거나 우측 단내림인 경우 기존 렌더링
-        // 우측 단내림이면 왼쪽은 렌더링하지 않음 (단내림 구간에만 가구 배치 가능)
-        const isRightDropped = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'right';
-        if (isRightDropped) {
-          console.log('🚫 왼쪽 엔드패널 렌더링 생략 (우측 단내림이므로)');
+        // 단내림이 있으면 왼쪽 일반 렌더링 생략
+        // - 우측 단내림: 왼쪽이 단내림 구간이 아니므로 일반 렌더링 안 함
+        // - 좌측 단내림: 위에서 이미 처리했으므로 일반 렌더링 안 함
+        if (hasDroppedCeiling) {
+          console.log('🚫 왼쪽 일반 엔드패널 렌더링 생략 (단내림 모드)');
           return null;
         }
 
@@ -2051,11 +2051,11 @@ const Room: React.FC<RoomProps> = ({
           );
         }
         
-        // 단내림이 없거나 좌측 단내림인 경우 기존 렌더링
-        // 좌측 단내림이면 오른쪽은 렌더링하지 않음 (단내림 구간에만 가구 배치 가능)
-        const isLeftDroppedForRight = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'left';
-        if (isLeftDroppedForRight) {
-          console.log('🚫 오른쪽 엔드패널 렌더링 생략 (좌측 단내림이므로)');
+        // 단내림이 있으면 오른쪽 일반 렌더링 생략
+        // - 좌측 단내림: 오른쪽이 단내림 구간이 아니므로 일반 렌더링 안 함
+        // - 우측 단내림: 위에서 이미 처리했으므로 일반 렌더링 안 함
+        if (hasDroppedCeiling) {
+          console.log('🚫 오른쪽 일반 엔드패널 렌더링 생략 (단내림 모드)');
           return null;
         }
 
