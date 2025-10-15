@@ -2120,40 +2120,6 @@ const Room: React.FC<RoomProps> = ({
       })()}
       
       
-      {/* 단내림 경계 수평 프레임 - 서라운드 모드에서만, 좌우 프레임 사이 전체 폭 */}
-      {spaceInfo.droppedCeiling?.enabled && spaceInfo.surroundType !== 'no-surround' && (() => {
-        const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-        const droppedCeilingWidthMm = spaceInfo.droppedCeiling.width || 900;
-        const droppedCeilingWidth = mmToThreeUnits(droppedCeilingWidthMm);
-        const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
-        const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-        const isLeftDropped = spaceInfo.droppedCeiling.position === 'left';
-
-        // 단내림 영역 전체 폭 (좌우 프레임 사이)
-        const horizontalFrameWidth = droppedCeilingWidth - frameThickness.left - frameThickness.right;
-        const horizontalFrameX = isLeftDropped
-          ? xOffset + frameThickness.left + horizontalFrameWidth/2
-          : xOffset + width - frameThickness.right - horizontalFrameWidth/2;
-
-        return (
-          <BoxWithEdges
-            args={[
-              horizontalFrameWidth, // 좌우 프레임 사이 전체 폭
-              frameThickness.left, // 프레임 두께
-              mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 깊이
-            ]}
-            position={[
-              horizontalFrameX, // 단내림 영역 중앙 (좌우 프레임 제외)
-              panelStartY + droppedHeight, // 단내림 높이 위치
-              furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 // 앞면 위치
-            ]}
-            material={createFrameMaterial('top')}
-            renderMode={renderMode}
-            shadowEnabled={shadowEnabled}
-          />
-        );
-      })()}
-
       {/* 상단 패널 - ㄱ자 모양으로 구성 */}
       {/* 수평 상단 프레임 - 좌우 프레임 사이에만 배치 (가구 앞면에 배치, 문 안쪽에 숨김) */}
       {/* 노서라운드 모드에서는 전체 너비로 확장하지만 좌우 프레임이 없을 때만 표시 */}
