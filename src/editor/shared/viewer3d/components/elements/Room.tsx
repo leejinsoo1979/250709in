@@ -350,16 +350,16 @@ const Room: React.FC<RoomProps> = ({
       return isLeft;
     });
     
-  const hasRightFurniture = spaceInfo.surroundType === 'no-surround' && 
+  const hasRightFurniture = spaceInfo.surroundType === 'no-surround' &&
     placedModulesFromStore.some(module => {
       // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
       const isDual = module.isDualSlot || module.moduleId.includes('dual-');
       // 싱글 모듈이 마지막 슬롯에 있거나, 듀얼 모듈이 columnCount - 2 위치에 있는 경우
-      const isRight = module.slotIndex === lastSlotIndex || 
+      const isRight = module.slotIndex === lastSlotIndex ||
         (isDual && module.slotIndex === indexingForCheck.columnCount - 2);
       if (isRight) {
-        console.log('🔴 오른쪽 가구 감지:', { 
-          slotIndex: module.slotIndex, 
+        console.log('🔴 오른쪽 가구 감지:', {
+          slotIndex: module.slotIndex,
           isDualSlot: module.isDualSlot,
           isDual,
           moduleId: module.moduleId,
@@ -370,6 +370,10 @@ const Room: React.FC<RoomProps> = ({
       }
       return isRight;
     });
+
+  // 단내림 구간의 가구 배치 여부 체크
+  const hasDroppedZoneFurniture = spaceInfo.droppedCeiling?.enabled && spaceInfo.surroundType === 'no-surround' &&
+    placedModulesFromStore.some(module => module.zone === 'dropped');
   
   const indexingDebug = calculateSpaceIndexing(spaceInfo);
   
@@ -1757,6 +1761,12 @@ const Room: React.FC<RoomProps> = ({
         
         // 왼쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
         if (hasDroppedCeiling && isLeftDropped) {
+          // 단내림 구간에 가구가 없으면 엔드패널 렌더링 생략
+          if (!hasDroppedZoneFurniture) {
+            console.log('🚫 왼쪽 단내림 엔드패널 렌더링 생략 (단내림 구간에 가구 없음)');
+            return null;
+          }
+
           // 우측(일반구간)에 가구가 있으면 좌측(단내림구간) 엔드패널 렌더링 생략
           if (hasRightFurniture) {
             console.log('🚫 왼쪽 단내림 엔드패널 렌더링 생략 (우측 일반구간에 가구 있음)');
@@ -1955,6 +1965,12 @@ const Room: React.FC<RoomProps> = ({
         
         // 오른쪽이 단내림 영역인 경우
         if (hasDroppedCeiling && isRightDropped) {
+          // 단내림 구간에 가구가 없으면 엔드패널 렌더링 생략
+          if (!hasDroppedZoneFurniture) {
+            console.log('🚫 오른쪽 단내림 엔드패널 렌더링 생략 (단내림 구간에 가구 없음)');
+            return null;
+          }
+
           // 좌측(일반구간)에 가구가 있으면 우측(단내림구간) 엔드패널 렌더링 생략
           if (hasLeftFurniture) {
             console.log('🚫 오른쪽 단내림 엔드패널 렌더링 생략 (좌측 일반구간에 가구 있음)');
