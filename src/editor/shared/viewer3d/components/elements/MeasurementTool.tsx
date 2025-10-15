@@ -3,6 +3,7 @@ import { useThree, useFrame } from '@react-three/fiber';
 import { Line, Text } from '@react-three/drei';
 import { useUIStore, MeasurePoint } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import * as THREE from 'three';
 import {
   extractVertices,
@@ -42,6 +43,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
   const { scene, camera, raycaster, gl } = useThree();
   const spaceInfo = useDerivedSpaceStore((state) => state.spaceInfo);
+  const { colors } = useThemeColors();
 
   const [hoverPoint, setHoverPoint] = useState<MeasurePoint | null>(null);
   const [isSnapped, setIsSnapped] = useState(false);
@@ -524,8 +526,9 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     };
   }, [isMeasureMode, isEraserMode, handlePointerMove, handleClick, gl]);
 
-  const lineColor = '#00FF00'; // 형광 초록색
-  const snapColor = '#FFFF00'; // 노란색 (스냅됨)
+  const lineColor = colors.primary; // 테마 색상
+  const snapColor = colors.warning || '#FFFF00'; // 노란색 (스냅됨)
+  const eraserColor = colors.danger; // 지우개 빨간색
   const pointSize = getPointSize(); // 동적 점 크기
 
   return (
@@ -561,7 +564,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
         // 호버 중인지 확인
         const isHovered = isEraserMode && hoveredMeasureLineId === line.id;
-        const displayLineColor = isHovered ? '#FF0000' : lineColor; // 빨간색으로 강조
+        const displayLineColor = isHovered ? eraserColor : lineColor; // 지우개 색상으로 강조
         const lineWidth = isHovered ? 3 : 2; // 두껍게 표시
 
         return (
