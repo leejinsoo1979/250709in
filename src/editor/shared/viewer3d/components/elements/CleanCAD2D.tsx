@@ -676,6 +676,62 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   
   const renderFrontView = () => (
     <group position={[0, 0, zOffset]} renderOrder={9999}>
+      {/* 단내림 구간 표시 (기둥처럼) */}
+      {spaceInfo.droppedCeiling?.enabled && (() => {
+        const droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
+        const droppedHeight = mmToThreeUnits(spaceInfo.droppedCeiling.height || 200);
+        const totalHeight = mmToThreeUnits(spaceInfo.height);
+        const normalHeight = totalHeight - droppedHeight;
+
+        const droppedStartX = spaceInfo.droppedCeiling.position === 'left'
+          ? leftOffset
+          : leftOffset + mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || 900));
+        const droppedEndX = droppedStartX + droppedWidth;
+
+        // 단내림 구간 세로 해칭 (대각선 패턴)
+        const hatchLines: JSX.Element[] = [];
+        const hatchSpacing = mmToThreeUnits(50); // 50mm 간격
+        const hatchCount = Math.floor(droppedWidth / hatchSpacing);
+
+        for (let i = 0; i <= hatchCount; i++) {
+          const x = droppedStartX + i * hatchSpacing;
+          // 단내림 높이만큼만 세로선 그리기
+          hatchLines.push(
+            <Line
+              key={`hatch-${i}`}
+              points={[[x, normalHeight, 0.001], [x, totalHeight, 0.001]]}
+              color="#999999"
+              lineWidth={0.3}
+              opacity={0.4}
+            />
+          );
+        }
+
+        return (
+          <group>
+            {/* 단내림 구간 경계선 */}
+            <Line
+              points={[[droppedStartX, normalHeight, 0.002], [droppedStartX, totalHeight, 0.002]]}
+              color={dimensionColor}
+              lineWidth={1.5}
+            />
+            <Line
+              points={[[droppedEndX, normalHeight, 0.002], [droppedEndX, totalHeight, 0.002]]}
+              color={dimensionColor}
+              lineWidth={1.5}
+            />
+            <Line
+              points={[[droppedStartX, normalHeight, 0.002], [droppedEndX, normalHeight, 0.002]]}
+              color={dimensionColor}
+              lineWidth={1.5}
+            />
+
+            {/* 해칭 패턴 */}
+            {hatchLines}
+          </group>
+        );
+      })()}
+
       {/* 정면도 치수선들 */}
       {(
         <>
