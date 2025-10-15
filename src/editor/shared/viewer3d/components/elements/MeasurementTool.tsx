@@ -105,6 +105,80 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     }
   };
 
+  // 시점에 따른 슬래시 라인 생성 (엔드포인트 마커)
+  const getSlashLine = (point: MeasurePoint, size: number): [MeasurePoint, MeasurePoint] => {
+    const half = size / 2;
+    switch (viewDirection) {
+      case 'front':
+        // 정면(XY 평면): 대각선 슬래시
+        return [
+          [point[0] - half, point[1] - half, point[2]],
+          [point[0] + half, point[1] + half, point[2]]
+        ];
+      case 'top':
+        // 상단(XZ 평면): 대각선 슬래시
+        return [
+          [point[0] - half, point[1], point[2] - half],
+          [point[0] + half, point[1], point[2] + half]
+        ];
+      case 'left':
+      case 'right':
+        // 측면(YZ 평면): 대각선 슬래시
+        return [
+          [point[0], point[1] - half, point[2] - half],
+          [point[0], point[1] + half, point[2] + half]
+        ];
+      default:
+        return [
+          [point[0] - half, point[1] - half, point[2]],
+          [point[0] + half, point[1] + half, point[2]]
+        ];
+    }
+  };
+
+  // 시점에 따른 박스 포인트 생성 (스냅 마커)
+  const getBoxPoints = (point: MeasurePoint, size: number): MeasurePoint[] => {
+    const half = size / 2;
+    switch (viewDirection) {
+      case 'front':
+        // 정면(XY 평면): XY로 네모
+        return [
+          [point[0] - half, point[1] - half, point[2]],
+          [point[0] + half, point[1] - half, point[2]],
+          [point[0] + half, point[1] + half, point[2]],
+          [point[0] - half, point[1] + half, point[2]],
+          [point[0] - half, point[1] - half, point[2]]
+        ];
+      case 'top':
+        // 상단(XZ 평면): XZ로 네모
+        return [
+          [point[0] - half, point[1], point[2] - half],
+          [point[0] + half, point[1], point[2] - half],
+          [point[0] + half, point[1], point[2] + half],
+          [point[0] - half, point[1], point[2] + half],
+          [point[0] - half, point[1], point[2] - half]
+        ];
+      case 'left':
+      case 'right':
+        // 측면(YZ 평면): YZ로 네모
+        return [
+          [point[0], point[1] - half, point[2] - half],
+          [point[0], point[1] + half, point[2] - half],
+          [point[0], point[1] + half, point[2] + half],
+          [point[0], point[1] - half, point[2] + half],
+          [point[0], point[1] - half, point[2] - half]
+        ];
+      default:
+        return [
+          [point[0] - half, point[1] - half, point[2]],
+          [point[0] + half, point[1] - half, point[2]],
+          [point[0] + half, point[1] + half, point[2]],
+          [point[0] - half, point[1] + half, point[2]],
+          [point[0] - half, point[1] - half, point[2]]
+        ];
+    }
+  };
+
   // 씬의 모든 꼭지점 추출 (캐싱)
   const sceneVertices = useMemo(() => {
     if (!isMeasureMode) return [];
@@ -423,20 +497,14 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
             {/* 가이드 시작점 엔드포인트 (슬래시) */}
             <Line
-              points={[
-                [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]],
-                [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]]
-              ]}
+              points={getSlashLine(guidePoints.start, snapBoxSize)}
               color={lineColor}
               lineWidth={2}
             />
 
             {/* 가이드 끝점 엔드포인트 (슬래시) */}
             <Line
-              points={[
-                [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]],
-                [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]]
-              ]}
+              points={getSlashLine(guidePoints.end, snapBoxSize)}
               color={lineColor}
               lineWidth={2}
             />
@@ -468,10 +536,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
           {/* 시작점 마커 (슬래시) */}
           <Line
-            points={[
-              [measurePoints[0][0] - snapBoxSize/2, measurePoints[0][1] - snapBoxSize/2, measurePoints[0][2]],
-              [measurePoints[0][0] + snapBoxSize/2, measurePoints[0][1] + snapBoxSize/2, measurePoints[0][2]]
-            ]}
+            points={getSlashLine(measurePoints[0], snapBoxSize)}
             color={lineColor}
             lineWidth={2}
           />
@@ -482,13 +547,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
             return (
               <Line
-                points={[
-                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
-                ]}
+                points={getBoxPoints(hoverPoint, snapBoxSize)}
                 color={snapColor}
                 lineWidth={3}
               />
@@ -565,20 +624,14 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
                 {/* 가이드 시작점 엔드포인트 (슬래시) */}
                 <Line
-                  points={[
-                    [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]],
-                    [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]]
-                  ]}
+                  points={getSlashLine(guidePoints.start, snapBoxSize)}
                   color={snapColor}
                   lineWidth={2}
                 />
 
                 {/* 가이드 끝점 엔드포인트 (슬래시) */}
                 <Line
-                  points={[
-                    [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]],
-                    [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]]
-                  ]}
+                  points={getSlashLine(guidePoints.end, snapBoxSize)}
                   color={snapColor}
                   lineWidth={2}
                 />
@@ -616,13 +669,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
         return (
           <Line
-            points={[
-              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-              [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-              [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
-            ]}
+            points={getBoxPoints(hoverPoint, snapBoxSize)}
             color={snapColor}
             lineWidth={3}
           />
