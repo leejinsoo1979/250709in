@@ -140,10 +140,26 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 let accumulatedY = -height/2 + basicThickness;
                 const availableHeight = height - basicThickness * 2;
 
+                console.log('🟢 SingleType1 섹션 계산 시작:', {
+                  moduleId: moduleData.id,
+                  internalHeight,
+                  height: height * 100,
+                  availableHeight: availableHeight * 100,
+                  basicThickness: basicThickness * 100,
+                  sectionsCount: sections.length
+                });
+
                 return sections.map((section: any, sectionIndex: number) => {
                   const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
                   const sectionBottomY = accumulatedY;
                   accumulatedY += sectionHeight;
+
+                  console.log(`🟡 SingleType1 섹션[${sectionIndex}] (${section.type}):`, {
+                    sectionHeight: sectionHeight * 100,
+                    sectionBottomY: sectionBottomY * 100,
+                    heightType: section.heightType,
+                    heightValue: section.height
+                  });
 
                   // 2단서랍장: 하단은 서랍, 상단은 옷장
                   // 옷장 섹션(상부)에만 옷걸이 봉 렌더링
