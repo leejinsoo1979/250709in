@@ -300,8 +300,9 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   if (!isMeasureMode) return null;
 
   const lineColor = '#00FF00'; // 형광 초록색
-  const snapColor = '#00FF00'; // 형광 초록색 (스냅됨)
+  const snapColor = '#FFFF00'; // 노란색 (스냅됨)
   const pointSize = getPointSize(); // 동적 점 크기
+  const snapBoxSize = 0.3; // 스냅 시 표시할 사각형 크기
 
   return (
     <group>
@@ -358,17 +359,31 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
               lineWidth={2}
             />
 
-            {/* 가이드 시작점 엔드포인트 (점) */}
-            <mesh position={guidePoints.start}>
-              <sphereGeometry args={[pointSize, 16, 16]} />
-              <meshBasicMaterial color={lineColor} />
-            </mesh>
+            {/* 가이드 시작점 엔드포인트 (작은 사각형) */}
+            <Line
+              points={[
+                [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]],
+                [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]],
+                [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]],
+                [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]],
+                [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]]
+              ]}
+              color={lineColor}
+              lineWidth={2}
+            />
 
-            {/* 가이드 끝점 엔드포인트 (점) */}
-            <mesh position={guidePoints.end}>
-              <sphereGeometry args={[pointSize, 16, 16]} />
-              <meshBasicMaterial color={lineColor} />
-            </mesh>
+            {/* 가이드 끝점 엔드포인트 (작은 사각형) */}
+            <Line
+              points={[
+                [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]],
+                [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]],
+                [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]],
+                [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]],
+                [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]]
+              ]}
+              color={lineColor}
+              lineWidth={2}
+            />
 
             {/* 거리 텍스트 */}
             <Text
@@ -395,17 +410,54 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             transparent
           />
 
-          {/* 시작점 마커 */}
-          <mesh position={measurePoints[0]}>
-            <sphereGeometry args={[pointSize, 16, 16]} />
-            <meshBasicMaterial color={snapColor} />
-          </mesh>
+          {/* 시작점 마커 (작은 사각형) */}
+          <Line
+            points={[
+              [measurePoints[0][0] - snapBoxSize/2, measurePoints[0][1] - snapBoxSize/2, measurePoints[0][2]],
+              [measurePoints[0][0] + snapBoxSize/2, measurePoints[0][1] - snapBoxSize/2, measurePoints[0][2]],
+              [measurePoints[0][0] + snapBoxSize/2, measurePoints[0][1] + snapBoxSize/2, measurePoints[0][2]],
+              [measurePoints[0][0] - snapBoxSize/2, measurePoints[0][1] + snapBoxSize/2, measurePoints[0][2]],
+              [measurePoints[0][0] - snapBoxSize/2, measurePoints[0][1] - snapBoxSize/2, measurePoints[0][2]]
+            ]}
+            color={lineColor}
+            lineWidth={2}
+          />
 
-          {/* 호버점 마커 */}
-          <mesh position={hoverPoint}>
-            <sphereGeometry args={[pointSize, 16, 16]} />
-            <meshBasicMaterial color={isSnapped ? snapColor : lineColor} opacity={0.7} transparent />
-          </mesh>
+          {/* 호버점 마커 (십자가 + 스냅 시 노란 사각형) */}
+          {isSnapped ? (
+            // 스냅됨: 노란색 사각형
+            <Line
+              points={[
+                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
+              ]}
+              color={snapColor}
+              lineWidth={2}
+            />
+          ) : (
+            // 스냅 안됨: 십자가
+            <>
+              <Line
+                points={[
+                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1], hoverPoint[2]],
+                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1], hoverPoint[2]]
+                ]}
+                color={lineColor}
+                lineWidth={1}
+              />
+              <Line
+                points={[
+                  [hoverPoint[0], hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0], hoverPoint[1] + snapBoxSize/2, hoverPoint[2]]
+                ]}
+                color={lineColor}
+                lineWidth={1}
+              />
+            </>
+          )}
 
           {/* 임시 거리 텍스트 */}
           {(() => {
@@ -475,17 +527,31 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
                   lineWidth={2}
                 />
 
-                {/* 가이드 시작점 엔드포인트 (점) */}
-                <mesh position={guidePoints.start}>
-                  <sphereGeometry args={[pointSize, 16, 16]} />
-                  <meshBasicMaterial color={snapColor} />
-                </mesh>
+                {/* 가이드 시작점 엔드포인트 (작은 사각형) */}
+                <Line
+                  points={[
+                    [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]],
+                    [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]],
+                    [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]],
+                    [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]],
+                    [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]]
+                  ]}
+                  color={snapColor}
+                  lineWidth={2}
+                />
 
-                {/* 가이드 끝점 엔드포인트 (점) */}
-                <mesh position={guidePoints.end}>
-                  <sphereGeometry args={[pointSize, 16, 16]} />
-                  <meshBasicMaterial color={snapColor} />
-                </mesh>
+                {/* 가이드 끝점 엔드포인트 (작은 사각형) */}
+                <Line
+                  points={[
+                    [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]],
+                    [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]],
+                    [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]],
+                    [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]],
+                    [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]]
+                  ]}
+                  color={snapColor}
+                  lineWidth={2}
+                />
 
                 {/* 거리 텍스트 */}
                 <Text
@@ -514,12 +580,44 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         </group>
       )}
 
-      {/* 호버 커서 (측정 시작 전) */}
+      {/* 호버 커서 (측정 시작 전) - 십자가 + 스냅 시 노란 사각형 */}
       {!measurePoints && hoverPoint && (
-        <mesh position={hoverPoint}>
-          <sphereGeometry args={[pointSize, 16, 16]} />
-          <meshBasicMaterial color={isSnapped ? snapColor : lineColor} opacity={0.5} transparent />
-        </mesh>
+        <>
+          {isSnapped ? (
+            // 스냅됨: 노란색 사각형
+            <Line
+              points={[
+                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
+              ]}
+              color={snapColor}
+              lineWidth={2}
+            />
+          ) : (
+            // 스냅 안됨: 십자가
+            <>
+              <Line
+                points={[
+                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1], hoverPoint[2]],
+                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1], hoverPoint[2]]
+                ]}
+                color={lineColor}
+                lineWidth={1}
+              />
+              <Line
+                points={[
+                  [hoverPoint[0], hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0], hoverPoint[1] + snapBoxSize/2, hoverPoint[2]]
+                ]}
+                color={lineColor}
+                lineWidth={1}
+              />
+            </>
+          )}
+        </>
       )}
     </group>
   );
