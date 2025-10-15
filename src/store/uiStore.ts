@@ -273,8 +273,13 @@ export const useUIStore = create<UIState>()(
           showFurniture: mode === '2D' ? true : state.showFurniture
         })),
         
-      setActiveDroppedCeilingTab: (tab) =>
-        set({ activeDroppedCeilingTab: tab }),
+      setActiveDroppedCeilingTab: (tab) => {
+        console.log('🔧 UIStore - setActiveDroppedCeilingTab 호출:', {
+          oldTab: useUIStore.getState().activeDroppedCeilingTab,
+          newTab: tab
+        });
+        set({ activeDroppedCeilingTab: tab });
+      },
       
       setView2DDirection: (direction) =>
         set({ view2DDirection: direction }),

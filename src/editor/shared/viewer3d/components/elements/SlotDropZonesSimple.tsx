@@ -157,8 +157,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // activeDroppedCeilingTab이 'dropped'면 단내림 영역, 'main'이면 일반 영역
       zoneToUse = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
 
-      console.log('🎯 영역 확인 (activeTab 기반):', {
+      console.log('🎯 Drop - 영역 확인 (activeTab 기반):', {
         activeTab: activeDroppedCeilingTab,
+        tabType: typeof activeDroppedCeilingTab,
+        comparison: `'${activeDroppedCeilingTab}' === 'dropped'`,
+        result: activeDroppedCeilingTab === 'dropped',
         detectedZone: zoneToUse
       });
     }
@@ -1877,6 +1880,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       let detectedZone: 'normal' | 'dropped' | null = null;
       if (spaceInfo.droppedCeiling?.enabled) {
         detectedZone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
+        console.log('🔍 Hover - 영역 판단:', {
+          activeDroppedCeilingTab,
+          comparison: `'${activeDroppedCeilingTab}' === 'dropped'`,
+          result: activeDroppedCeilingTab === 'dropped',
+          detectedZone
+        });
       } else {
         detectedZone = 'normal';
       }
