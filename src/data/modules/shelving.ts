@@ -1166,24 +1166,24 @@ const createDualLowerCabinet2 = (dualWidth: number): ModuleData => {
  * - open: 완전 오픈 구역
  */
 export const generateShelvingModules = (
-  internalSpace: { width: number; height: number; depth: number }, 
+  internalSpace: { width: number; height: number; depth: number },
   spaceInfo?: SpaceInfo
 ): ModuleData[] => {
   let { height: maxHeight } = internalSpace;
-  
-  // console.log('🔍 generateShelvingModules - 내부 공간 높이:', {
-  //   internalSpaceHeight: internalSpace.height,
-  //   maxHeight,
-  //   spaceInfo: {
-  //     height: spaceInfo?.height,
-  //     baseConfig: spaceInfo?.baseConfig,
-  //     hasFloorFinish: spaceInfo?.hasFloorFinish,
-  //     floorFinishHeight: spaceInfo?.floorFinish?.height
-  //   }
-  // });
-  
+
+  // 단내림 구간인 경우 로그 출력
+  if (spaceInfo && (spaceInfo as any).zone === 'dropped') {
+    console.log('🟠 generateShelvingModules 단내림 구간 처리:', {
+      zone: (spaceInfo as any).zone,
+      internalSpaceHeight: internalSpace.height,
+      maxHeight,
+      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+      dropHeight: spaceInfo.droppedCeiling?.dropHeight
+    });
+  }
+
   // 단내림 구간의 경우 internalSpace.height가 이미 조정되어 있음
-  // (SlotDropZonesSimple에서 처리됨)
+  // (calculateInternalSpace에서 처리됨)
   
   // 띄워서 배치인 경우 가용 높이에서 띄움 높이를 차감
   if (spaceInfo?.baseConfig?.type === 'stand' && spaceInfo.baseConfig.placementType === 'float') {
