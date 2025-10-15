@@ -3,9 +3,9 @@ import { MeasurePoint } from '@/store/uiStore';
 
 /**
  * 스냅 거리 (three.js 단위)
- * 1.0 = 100mm (모서리 스냅에 적당한 값)
+ * 0.3 = 30mm (모서리 스냅에 적당한 값)
  */
-export const SNAP_DISTANCE = 1.0;
+export const SNAP_DISTANCE = 0.3;
 
 /**
  * 객체의 모든 꼭지점을 추출
