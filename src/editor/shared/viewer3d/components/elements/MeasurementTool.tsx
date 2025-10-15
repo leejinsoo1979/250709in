@@ -252,7 +252,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       console.log('📍 끝점 설정:', hoverPoint);
       setMeasureEndPoint(hoverPoint);
       setIsAdjustingGuide(true);
-      // 현재 마우스 위치를 가이드 오프셋 초기값으로 설정
+      // 가이드 오프셋은 마우스 이동 시 업데이트됨 - 초기값은 끝점과 동일
+      // 사용자가 마우스를 움직여서 원하는 위치로 조정 후 클릭
       setGuideOffset(hoverPoint);
     }
   }, [isMeasureMode, hoverPoint, isAdjustingGuide, measurePoints, setMeasureStartPoint, setMeasureEndPoint, addMeasureLine, clearMeasurePoints]);
