@@ -266,21 +266,19 @@ const createSingleType1 = (columnWidth: number, maxHeight: number): ModuleData =
  */
 const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData => {
   const bottomHeight = FURNITURE_SPECS.TYPE2_BOTTOM_HEIGHT;
-  const topHeight = maxHeight - bottomHeight;
-  
+
   // 기본 섹션 구성
   const baseSections: SectionConfig[] = [
-    { 
+    {
       type: 'hanging', // 하부장도 옷걸이 구역
-      heightType: 'absolute', 
+      heightType: 'absolute',
       height: bottomHeight,
       count: 1, // 상판 1개
       isTopFinishPanel: true // 최상단 마감 패널 추가 (상부 섹션 하부판과 맞닿음)
     },
-    { 
-      type: 'hanging', 
-      heightType: 'absolute', 
-      height: topHeight 
+    {
+      type: 'hanging',
+      heightType: 'fill' // absolute에서 fill로 변경하여 남은 공간을 자동으로 채움
     }
   ];
   
