@@ -135,64 +135,29 @@ export function calculateDistance(
 
 /**
  * 가이드선의 오프셋 계산
- * 마우스 위치의 절대 좌표를 반환 (상대 거리가 아님)
- * calculateGuidePoints에서 이 값을 그대로 사용하여 가이드 위치 결정
+ * 마우스 위치를 그대로 반환 (전체 3D 좌표)
+ * calculateGuidePoints에서 측정 방향에 수직인 평면상의 점으로 투영
  */
 export function calculateGuideOffset(
   start: MeasurePoint,
   end: MeasurePoint,
   mousePos: MeasurePoint,
   viewDirection?: 'front' | 'left' | 'right' | 'top'
-): number {
-  const dx = Math.abs(end[0] - start[0]);
-  const dy = Math.abs(end[1] - start[1]);
-  const dz = Math.abs(end[2] - start[2]);
-
-  // 뷰 방향에 따라 측정 가능한 축 결정
-  switch (viewDirection) {
-    case 'front':
-      // 정면: XY 평면 - X축 측정이면 Y offset, Y축 측정이면 X offset
-      if (dx >= dy) {
-        return mousePos[1]; // X축 측정 -> Y offset
-      } else {
-        return mousePos[0]; // Y축 측정 -> X offset
-      }
-    case 'top':
-      // 상단: XZ 평면 - X축 측정이면 Z offset, Z축 측정이면 X offset
-      if (dx >= dz) {
-        return mousePos[2]; // X축 측정 -> Z offset
-      } else {
-        return mousePos[0]; // Z축 측정 -> X offset
-      }
-    case 'left':
-    case 'right':
-      // 측면: YZ 평면 - Y축 측정이면 Z offset, Z축 측정이면 Y offset
-      if (dy >= dz) {
-        return mousePos[2]; // Y축 측정 -> Z offset
-      } else {
-        return mousePos[1]; // Z축 측정 -> Y offset
-      }
-    default:
-      // 기본: 가장 큰 변화량 기준
-      if (dx >= dy && dx >= dz) {
-        return mousePos[1]; // X축 -> Y offset
-      } else if (dy >= dx && dy >= dz) {
-        return mousePos[0]; // Y축 -> X offset
-      } else {
-        return mousePos[0]; // Z축 -> X offset
-      }
-  }
+): MeasurePoint {
+  // 마우스 위치를 그대로 반환
+  return mousePos;
 }
 
 /**
  * 가이드선 점들 계산
  * 수직/수평 측정만 지원 (대각선 측정 시 수직 또는 수평으로 투영)
- * offset은 절대 좌표 값 (calculateGuideOffset에서 반환된 마우스 위치)
+ * offsetPoint는 마우스 위치 (3D 좌표)
+ * 측정선과 평행하게 가이드선을 그리되, offsetPoint를 지나도록 투영
  */
 export function calculateGuidePoints(
   start: MeasurePoint,
   end: MeasurePoint,
-  offset: number,
+  offsetPoint: MeasurePoint,
   viewDirection?: 'front' | 'left' | 'right' | 'top'
 ): { start: MeasurePoint; end: MeasurePoint } {
   const dx = Math.abs(end[0] - start[0]);
@@ -204,16 +169,16 @@ export function calculateGuidePoints(
     case 'front':
       // 정면: XY 평면만 측정
       if (dx >= dy) {
-        // X축 측정 (가로)
+        // X축 측정 (가로) - 마우스 Y 위치에 가로선
         return {
-          start: [start[0], offset, start[2]],
-          end: [end[0], offset, start[2]]
+          start: [start[0], offsetPoint[1], start[2]],
+          end: [end[0], offsetPoint[1], start[2]]
         };
       } else {
-        // Y축 측정 (세로)
+        // Y축 측정 (세로) - 마우스 X 위치에 세로선
         return {
-          start: [offset, start[1], start[2]],
-          end: [offset, end[1], start[2]]
+          start: [offsetPoint[0], start[1], start[2]],
+          end: [offsetPoint[0], end[1], start[2]]
         };
       }
     case 'top':
@@ -221,14 +186,14 @@ export function calculateGuidePoints(
       if (dx >= dz) {
         // X축 측정 (가로)
         return {
-          start: [start[0], start[1], offset],
-          end: [end[0], start[1], offset]
+          start: [start[0], start[1], offsetPoint[2]],
+          end: [end[0], start[1], offsetPoint[2]]
         };
       } else {
         // Z축 측정 (깊이)
         return {
-          start: [offset, start[1], start[2]],
-          end: [offset, start[1], end[2]]
+          start: [offsetPoint[0], start[1], start[2]],
+          end: [offsetPoint[0], start[1], end[2]]
         };
       }
     case 'left':
@@ -237,14 +202,14 @@ export function calculateGuidePoints(
       if (dy >= dz) {
         // Y축 측정 (세로)
         return {
-          start: [start[0], start[1], offset],
-          end: [start[0], end[1], offset]
+          start: [start[0], start[1], offsetPoint[2]],
+          end: [start[0], end[1], offsetPoint[2]]
         };
       } else {
         // Z축 측정 (깊이)
         return {
-          start: [start[0], offset, start[2]],
-          end: [start[0], offset, end[2]]
+          start: [start[0], offsetPoint[1], start[2]],
+          end: [start[0], offsetPoint[1], end[2]]
         };
       }
     default:
@@ -252,20 +217,20 @@ export function calculateGuidePoints(
       if (dx >= dy && dx >= dz) {
         // X축 측정
         return {
-          start: [start[0], offset, start[2]],
-          end: [end[0], offset, end[2]]
+          start: [start[0], offsetPoint[1], start[2]],
+          end: [end[0], offsetPoint[1], end[2]]
         };
       } else if (dy >= dx && dy >= dz) {
         // Y축 측정
         return {
-          start: [offset, start[1], start[2]],
-          end: [offset, end[1], end[2]]
+          start: [offsetPoint[0], start[1], start[2]],
+          end: [offsetPoint[0], end[1], end[2]]
         };
       } else {
         // Z축 측정
         return {
-          start: [offset, start[1], start[2]],
-          end: [offset, start[1], end[2]]
+          start: [offsetPoint[0], start[1], start[2]],
+          end: [offsetPoint[0], start[1], end[2]]
         };
       }
   }

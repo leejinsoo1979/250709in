@@ -41,7 +41,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
   const [hoverPoint, setHoverPoint] = useState<MeasurePoint | null>(null);
   const [isSnapped, setIsSnapped] = useState(false);
-  const [guideOffset, setGuideOffset] = useState<number>(0);
+  const [guideOffset, setGuideOffset] = useState<MeasurePoint>([0, 0, 0]);
   const [isAdjustingGuide, setIsAdjustingGuide] = useState(false);
   const [currentZoom, setCurrentZoom] = useState(1);
 
@@ -235,7 +235,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
         // 리셋 - 측정 포인트와 오프셋 초기화
         clearMeasurePoints();
-        setGuideOffset(0);
+        setGuideOffset([0, 0, 0]);
       }
       return;
     }
@@ -327,16 +327,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         const dy = Math.abs(line.end[1] - line.start[1]);
         const dz = Math.abs(line.end[2] - line.start[2]);
 
-        let defaultOffset: number;
-        if (dx >= dy && dx >= dz) {
-          defaultOffset = line.start[1]; // X축 주방향 -> Y좌표
-        } else if (dy >= dx && dy >= dz) {
-          defaultOffset = line.start[0]; // Y축 주방향 -> X좌표
-        } else {
-          defaultOffset = line.start[0]; // Z축 주방향 -> X좌표
-        }
-
-        const offset = (line as any).offset ?? defaultOffset;
+        // offset이 없으면 시작점을 기본값으로 사용
+        const offset: MeasurePoint = (line as any).offset ?? line.start;
         const guidePoints = calculateGuidePoints(line.start, line.end, offset, viewDirection);
         const midPoint: MeasurePoint = [
           (guidePoints.start[0] + guidePoints.end[0]) / 2,
