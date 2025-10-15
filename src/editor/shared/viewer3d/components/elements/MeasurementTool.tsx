@@ -166,6 +166,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
     const rawPoint: MeasurePoint = [intersection.x, intersection.y, intersection.z];
 
+    console.log(`🎯 레이캐스트 결과: view=${viewDirection} point=[${rawPoint[0].toFixed(2)}, ${rawPoint[1].toFixed(2)}, ${rawPoint[2].toFixed(2)}]`);
+
     // 가이드 조정 모드인 경우
     if (isAdjustingGuide && measurePoints && measurePoints[0] && measurePoints[1]) {
       const offset = calculateGuideOffset(measurePoints[0], measurePoints[1], rawPoint, viewDirection);
