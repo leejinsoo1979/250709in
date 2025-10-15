@@ -2643,26 +2643,50 @@ const Room: React.FC<RoomProps> = ({
           const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900);
 
           return (
-            <group
-              position={[
-                xOffset + frameThickness.left - mmToThreeUnits(10),
-                droppedCenterY,
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
-              ]}
-              rotation={[0, Math.PI / 2, 0]}
-            >
-              <BoxWithEdges
-                args={[
-                  mmToThreeUnits(40),
-                  droppedHeight,
-                  mmToThreeUnits(END_PANEL_THICKNESS)
+            <>
+              {/* 좌측 세로 서브프레임 */}
+              <group
+                position={[
+                  xOffset + frameThickness.left - mmToThreeUnits(10),
+                  droppedCenterY,
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
                 ]}
-                position={[0, 0, 0]}
-                material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-                renderMode={renderMode}
-                shadowEnabled={shadowEnabled}
-              />
-            </group>
+                rotation={[0, Math.PI / 2, 0]}
+              >
+                <BoxWithEdges
+                  args={[
+                    mmToThreeUnits(40),
+                    droppedHeight,
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ]}
+                  position={[0, 0, 0]}
+                  material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  renderMode={renderMode}
+                  shadowEnabled={shadowEnabled}
+                />
+              </group>
+              {/* 우측 세로 서브프레임 (단내림 너비 끝 지점, 벽 안쪽) */}
+              <group
+                position={[
+                  xOffset + droppedCeilingWidth, // 단내림 너비 끝 지점
+                  droppedCenterY, // 단내림 높이 중앙
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+                ]}
+                rotation={[0, Math.PI / 2, 0]}
+              >
+                <BoxWithEdges
+                  args={[
+                    mmToThreeUnits(40),
+                    droppedHeight, // 세로 높이
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ]}
+                  position={[0, 0, 0]}
+                  material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  renderMode={renderMode}
+                  shadowEnabled={shadowEnabled}
+                />
+              </group>
+            </>
           );
         }
         
@@ -2712,26 +2736,50 @@ const Room: React.FC<RoomProps> = ({
           const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900);
 
           return (
-            <group
-              position={[
-                xOffset + width - frameThickness.right + mmToThreeUnits(10),
-                droppedCenterY,
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
-              ]}
-              rotation={[0, Math.PI / 2, 0]}
-            >
-              <BoxWithEdges
-                args={[
-                  mmToThreeUnits(40),
-                  droppedHeight,
-                  mmToThreeUnits(END_PANEL_THICKNESS)
+            <>
+              {/* 우측 세로 서브프레임 */}
+              <group
+                position={[
+                  xOffset + width - frameThickness.right + mmToThreeUnits(10),
+                  droppedCenterY,
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
                 ]}
-                position={[0, 0, 0]}
-                material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-                renderMode={renderMode}
-                shadowEnabled={shadowEnabled}
-              />
-            </group>
+                rotation={[0, Math.PI / 2, 0]}
+              >
+                <BoxWithEdges
+                  args={[
+                    mmToThreeUnits(40),
+                    droppedHeight,
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ]}
+                  position={[0, 0, 0]}
+                  material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  renderMode={renderMode}
+                  shadowEnabled={shadowEnabled}
+                />
+              </group>
+              {/* 좌측 세로 서브프레임 (단내림 너비 끝 지점, 벽 안쪽) */}
+              <group
+                position={[
+                  xOffset + width - droppedCeilingWidth, // 우측에서 단내림 너비만큼 왼쪽
+                  droppedCenterY,
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+                ]}
+                rotation={[0, Math.PI / 2, 0]}
+              >
+                <BoxWithEdges
+                  args={[
+                    mmToThreeUnits(40),
+                    droppedHeight,
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ]}
+                  position={[0, 0, 0]}
+                  material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  renderMode={renderMode}
+                  shadowEnabled={shadowEnabled}
+                />
+              </group>
+            </>
           );
         }
         
