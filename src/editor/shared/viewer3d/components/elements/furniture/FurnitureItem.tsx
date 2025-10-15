@@ -1008,10 +1008,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 가구 높이는 기본적으로 모듈 데이터의 높이 사용
   let furnitureHeightMm = actualModuleData?.dimensions.height || 0;
-  
+
   // 단내림 구간 높이 디버깅
   if (placedModule.zone === 'dropped') {
-    }
+    console.log('🟢 FurnitureItem 단내림 구간 가구 높이:', {
+      zone: placedModule.zone,
+      moduleId: placedModule.moduleId,
+      furnitureHeightMm,
+      actualModuleDataHeight: actualModuleData?.dimensions.height,
+      internalSpaceHeight: internalSpace.height,
+      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
+      dropHeight: spaceInfo.droppedCeiling?.dropHeight
+    });
+  }
   
   // Column C 가구 너비 디버깅
   if (slotInfo?.columnType === 'medium' && slotInfo?.allowMultipleFurniture) {
