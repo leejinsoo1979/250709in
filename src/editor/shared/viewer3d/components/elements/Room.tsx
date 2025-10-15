@@ -2672,12 +2672,13 @@ const Room: React.FC<RoomProps> = ({
                   droppedCenterY,
                   furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(20)
                 ]}
+                rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
                   args={[
-                    mmToThreeUnits(END_PANEL_THICKNESS),
+                    mmToThreeUnits(40),
                     droppedHeight,
-                    mmToThreeUnits(40)
+                    mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
                   material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
@@ -2713,12 +2714,13 @@ const Room: React.FC<RoomProps> = ({
                   droppedCenterY,
                   furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(20)
                 ]}
+                rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
                   args={[
-                    mmToThreeUnits(END_PANEL_THICKNESS),
+                    mmToThreeUnits(40),
                     droppedHeight,
-                    mmToThreeUnits(40)
+                    mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
                   material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
@@ -2805,12 +2807,13 @@ const Room: React.FC<RoomProps> = ({
                   droppedCenterY,
                   furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(20)
                 ]}
+                rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
                   args={[
-                    mmToThreeUnits(END_PANEL_THICKNESS),
+                    mmToThreeUnits(40),
                     droppedHeight,
-                    mmToThreeUnits(40)
+                    mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
                   material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
@@ -2846,12 +2849,13 @@ const Room: React.FC<RoomProps> = ({
                   droppedCenterY,
                   furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(20)
                 ]}
+                rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
                   args={[
-                    mmToThreeUnits(END_PANEL_THICKNESS),
+                    mmToThreeUnits(40),
                     droppedHeight,
-                    mmToThreeUnits(40)
+                    mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
                   material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
