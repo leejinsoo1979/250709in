@@ -66,15 +66,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return SNAP_DISTANCE;
   }, [camera]);
 
-  // 카메라 줌 레벨에 따른 사각형 크기 계산 (줌 레벨 반영)
-  const getSnapBoxSize = useCallback(() => {
-    if (camera instanceof THREE.OrthographicCamera) {
-      const baseSize = 0.3; // 기본 크기
-      const zoom = camera.zoom || 1;
-      return baseSize / zoom; // 줌이 커질수록 사각형 작아짐
-    }
-    return 0.3;
-  }, [camera]);
+  // 사각형 크기 (고정 - 줌 영향 안 받음)
+  const snapBoxSize = 0.8; // 큰 고정 크기
 
   // 시점에 따른 텍스트 오프셋 계산
   const getTextOffset = (point: MeasurePoint, offset: number = 0.2): MeasurePoint => {
@@ -312,7 +305,6 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   const lineColor = '#00FF00'; // 형광 초록색
   const snapColor = '#FFFF00'; // 노란색 (스냅됨)
   const pointSize = getPointSize(); // 동적 점 크기
-  const snapBoxSize = getSnapBoxSize(); // 동적 사각형 크기 (줌 레벨 반영)
 
   return (
     <group>
