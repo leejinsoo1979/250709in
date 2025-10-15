@@ -2649,7 +2649,7 @@ const Room: React.FC<RoomProps> = ({
                 position={[
                   xOffset + frameThickness.left,
                   droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
+                  furnitureZOffset + furnitureDepth/2 - furnitureDepth/2
                 ]}
                 rotation={[0, Math.PI / 2, 0]}
               >
@@ -2690,7 +2690,7 @@ const Room: React.FC<RoomProps> = ({
                 position={[
                   xOffset + width - frameThickness.right,
                   droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
+                  furnitureZOffset + furnitureDepth/2 - furnitureDepth/2
                 ]}
                 rotation={[0, Math.PI / 2, 0]}
               >
@@ -2782,7 +2782,7 @@ const Room: React.FC<RoomProps> = ({
                 position={[
                   xOffset + width - frameThickness.right,
                   droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
+                  furnitureZOffset + furnitureDepth/2 - furnitureDepth/2
                 ]}
                 rotation={[0, Math.PI / 2, 0]}
               >
@@ -2823,7 +2823,7 @@ const Room: React.FC<RoomProps> = ({
                 position={[
                   xOffset + frameThickness.left,
                   droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
+                  furnitureZOffset + furnitureDepth/2 - furnitureDepth/2
                 ]}
                 rotation={[0, Math.PI / 2, 0]}
               >
