@@ -1307,52 +1307,99 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
         {/* 측정 도구 버튼 - 2D 모드에서만 표시 (분할 버튼 바로 아래) */}
         {viewMode === '2D' && view2DDirection !== 'all' && (
-          <button
-            onClick={() => {
-              console.log('📏 측정 모드 토글:', !isMeasureMode);
-              toggleMeasureMode();
-            }}
-            style={{
-              position: 'absolute',
-              top: '56px', // 분할 버튼(36px) + 간격(10px) + 상단 여백(10px)
-              right: '10px',
-              width: '36px',
-              height: '36px',
-              backgroundColor: isMeasureMode
-                ? (view2DTheme === 'dark' ? 'rgba(59,130,246,0.8)' : 'rgba(59,130,246,0.9)')
-                : (view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)'),
-              border: `1px solid ${isMeasureMode
-                ? 'rgba(59,130,246,1)'
-                : (view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)')}`,
-              borderRadius: '4px',
-              color: isMeasureMode ? '#ffffff' : (view2DTheme === 'dark' ? '#ffffff' : '#000000'),
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease',
-              zIndex: 20,
-              padding: '0',
-              boxShadow: isMeasureMode ? '0 2px 8px rgba(59,130,246,0.3)' : '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-            onMouseEnter={(e) => {
-              if (!isMeasureMode) {
+          <>
+            <button
+              onClick={() => {
+                console.log('📏 측정 모드 토글:', !isMeasureMode);
+                toggleMeasureMode();
+              }}
+              style={{
+                position: 'absolute',
+                top: '56px', // 분할 버튼(36px) + 간격(10px) + 상단 여백(10px)
+                right: '10px',
+                width: '36px',
+                height: '36px',
+                backgroundColor: isMeasureMode
+                  ? (view2DTheme === 'dark' ? 'rgba(59,130,246,0.8)' : 'rgba(59,130,246,0.9)')
+                  : (view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)'),
+                border: `1px solid ${isMeasureMode
+                  ? 'rgba(59,130,246,1)'
+                  : (view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)')}`,
+                borderRadius: '4px',
+                color: isMeasureMode ? '#ffffff' : (view2DTheme === 'dark' ? '#ffffff' : '#000000'),
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                zIndex: 20,
+                padding: '0',
+                boxShadow: isMeasureMode ? '0 2px 8px rgba(59,130,246,0.3)' : '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+              onMouseEnter={(e) => {
+                if (!isMeasureMode) {
+                  e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,1)';
+                  e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+                }
+                e.currentTarget.style.transform = 'scale(1.05)';
+              }}
+              onMouseLeave={(e) => {
+                if (!isMeasureMode) {
+                  e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)';
+                  e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+                }
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              title="CAD 스타일 치수 측정"
+            >
+              <RxDimensions size={20} />
+            </button>
+
+            {/* 치수 지우개 버튼 - 측정 도구 버튼 바로 아래 */}
+            <button
+              onClick={() => {
+                const { clearAllMeasureLines } = useUIStore.getState();
+                console.log('🗑️ 모든 측정 라인 삭제');
+                clearAllMeasureLines();
+              }}
+              style={{
+                position: 'absolute',
+                top: '102px', // 측정 버튼(56px + 36px) + 간격(10px)
+                right: '10px',
+                width: '36px',
+                height: '36px',
+                backgroundColor: view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)',
+                border: `1px solid ${view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
+                borderRadius: '4px',
+                color: view2DTheme === 'dark' ? '#ffffff' : '#000000',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+                zIndex: 20,
+                padding: '0',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+              }}
+              onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,1)';
                 e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
-              }
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              if (!isMeasureMode) {
+                e.currentTarget.style.transform = 'scale(1.05)';
+              }}
+              onMouseLeave={(e) => {
                 e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)';
                 e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
-              }
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-            title="CAD 스타일 치수 측정"
-          >
-            <RxDimensions size={20} />
-          </button>
+                e.currentTarget.style.transform = 'scale(1)';
+              }}
+              title="모든 치수 삭제"
+            >
+              {/* 지우개 아이콘 */}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M16.5 3.5L20.5 7.5L7 21H3V17L16.5 3.5Z" />
+                <path d="M13.5 6.5L17.5 10.5" />
+              </svg>
+            </button>
+          </>
         )}
 
         </div>
