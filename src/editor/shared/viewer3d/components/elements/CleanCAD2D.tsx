@@ -688,23 +688,36 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           : leftOffset + mmToThreeUnits(spaceInfo.width - (spaceInfo.droppedCeiling.width || 900));
         const droppedEndX = droppedStartX + droppedWidth;
 
-        // 단내림 구간 세로 해칭 (대각선 패턴)
+        // 단내림 구간 빗금 해칭 (대각선 패턴)
         const hatchLines: JSX.Element[] = [];
-        const hatchSpacing = mmToThreeUnits(50); // 50mm 간격
-        const hatchCount = Math.floor(droppedWidth / hatchSpacing);
+        const hatchSpacing = mmToThreeUnits(80); // 80mm 간격
+        const hatchCount = Math.floor((droppedWidth + droppedHeight) / hatchSpacing);
 
         for (let i = 0; i <= hatchCount; i++) {
-          const x = droppedStartX + i * hatchSpacing;
-          // 단내림 높이만큼만 세로선 그리기
-          hatchLines.push(
-            <Line
-              key={`hatch-${i}`}
-              points={[[x, normalHeight, 0.001], [x, totalHeight, 0.001]]}
-              color="#999999"
-              lineWidth={0.3}
-              opacity={0.4}
-            />
-          );
+          const offset = i * hatchSpacing;
+
+          // 왼쪽 아래에서 오른쪽 위로 올라가는 대각선
+          const startX = droppedStartX + offset;
+          const endX = startX + droppedHeight; // 45도 각도
+
+          // 단내림 영역 내부만 그리도록 클리핑
+          const clippedStartX = Math.max(droppedStartX, Math.min(droppedEndX, startX));
+          const clippedEndX = Math.max(droppedStartX, Math.min(droppedEndX, endX));
+
+          if (clippedStartX < droppedEndX && clippedEndX > droppedStartX) {
+            const startY = normalHeight + (clippedStartX - startX);
+            const endY = normalHeight + (clippedEndX - startX);
+
+            hatchLines.push(
+              <Line
+                key={`hatch-${i}`}
+                points={[[clippedStartX, startY, 0.001], [clippedEndX, endY, 0.001]]}
+                color="#666666"
+                lineWidth={0.5}
+                opacity={0.6}
+              />
+            );
+          }
         }
 
         return (
