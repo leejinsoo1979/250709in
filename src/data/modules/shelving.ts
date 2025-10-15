@@ -1173,13 +1173,12 @@ export const generateShelvingModules = (
 
   // 단내림 구간인 경우 로그 출력
   if (spaceInfo && (spaceInfo as any).zone === 'dropped') {
-    console.log('🟠 generateShelvingModules 단내림 구간 처리:', {
-      zone: (spaceInfo as any).zone,
-      internalSpaceHeight: internalSpace.height,
-      maxHeight,
-      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-      dropHeight: spaceInfo.droppedCeiling?.dropHeight
-    });
+    console.log('🟠 generateShelvingModules 단내림 구간 처리');
+    console.log('  zone:', (spaceInfo as any).zone);
+    console.log('  internalSpaceHeight:', internalSpace.height);
+    console.log('  maxHeight:', maxHeight);
+    console.log('  droppedCeilingEnabled:', spaceInfo.droppedCeiling?.enabled);
+    console.log('  dropHeight:', spaceInfo.droppedCeiling?.dropHeight);
   }
 
   // 단내림 구간의 경우 internalSpace.height가 이미 조정되어 있음

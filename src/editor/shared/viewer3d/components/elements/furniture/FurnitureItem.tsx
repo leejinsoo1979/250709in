@@ -1011,15 +1011,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 단내림 구간 높이 디버깅
   if (placedModule.zone === 'dropped') {
-    console.log('🟢 FurnitureItem 단내림 구간 가구 높이:', {
-      zone: placedModule.zone,
-      moduleId: placedModule.moduleId,
-      furnitureHeightMm,
-      actualModuleDataHeight: actualModuleData?.dimensions.height,
-      internalSpaceHeight: internalSpace.height,
-      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-      dropHeight: spaceInfo.droppedCeiling?.dropHeight
-    });
+    console.log('🟢 FurnitureItem 단내림 구간 가구 높이');
+    console.log('  zone:', placedModule.zone);
+    console.log('  moduleId:', placedModule.moduleId);
+    console.log('  furnitureHeightMm:', furnitureHeightMm);
+    console.log('  actualModuleDataHeight:', actualModuleData?.dimensions.height);
+    console.log('  internalSpaceHeight:', internalSpace.height);
+    console.log('  droppedCeilingEnabled:', spaceInfo.droppedCeiling?.enabled);
+    console.log('  dropHeight:', spaceInfo.droppedCeiling?.dropHeight);
   }
   
   // Column C 가구 너비 디버깅
