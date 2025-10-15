@@ -77,9 +77,11 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return SNAP_DISTANCE;
   }, [camera]);
 
-  // 사각형 크기 (화면상 크기 일정하게 유지 - 줌 레벨 반비례)
+  // 사각형 크기 (화면상 크기 일정하게 유지 - 줌 레벨 반비례, 십자가보다 작게)
   const snapBoxSize = useMemo(() => {
-    return 0.2 / currentZoom; // 줌이 커지면(확대) world 크기는 작아져야 화면상 크기 일정
+    const size = 0.1 / currentZoom; // 십자가보다 작은 크기
+    console.log('📦 사각형 크기:', size, 'zoom:', currentZoom);
+    return size;
   }, [currentZoom]);
 
   // 시점에 따른 텍스트 오프셋 계산
@@ -439,19 +441,26 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
           />
 
           {/* 호버점 마커 (스냅 시에만 노란 사각형) */}
-          {isSnapped && (
-            <Line
-              points={[
-                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
-              ]}
-              color={snapColor}
-              lineWidth={2}
-            />
-          )}
+          {isSnapped && (() => {
+            console.log('🟨 노란 사각형 렌더링:', {
+              hoverPoint: hoverPoint.map(v => v.toFixed(2)),
+              snapBoxSize: snapBoxSize.toFixed(3),
+              isSnapped
+            });
+            return (
+              <Line
+                points={[
+                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
+                ]}
+                color={snapColor}
+                lineWidth={3}
+              />
+            );
+          })()}
 
           {/* 임시 거리 텍스트 */}
           {(() => {
@@ -575,19 +584,26 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       )}
 
       {/* 호버 커서 (측정 시작 전) - 스냅 시에만 노란 사각형 */}
-      {!measurePoints && hoverPoint && isSnapped && (
-        <Line
-          points={[
-            [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-            [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-            [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-            [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-            [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
-          ]}
-          color={snapColor}
-          lineWidth={2}
-        />
-      )}
+      {!measurePoints && hoverPoint && isSnapped && (() => {
+        console.log('🟨 호버 노란 사각형 렌더링:', {
+          hoverPoint: hoverPoint.map(v => v.toFixed(2)),
+          snapBoxSize: snapBoxSize.toFixed(3),
+          isSnapped
+        });
+        return (
+          <Line
+            points={[
+              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+              [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+              [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
+            ]}
+            color={snapColor}
+            lineWidth={3}
+          />
+        );
+      })()}
     </group>
   );
 };
