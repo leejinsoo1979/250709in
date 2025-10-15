@@ -137,6 +137,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // mm를 Three.js 단위로 변환하는 함수
   const mmToThreeUnits = (mm: number) => mm * 0.01;
+  const threeUnitsToMm = (units: number) => units * 100;
   
   // 드롭 처리 함수
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
