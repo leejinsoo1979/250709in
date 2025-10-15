@@ -380,27 +380,21 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
               lineWidth={2}
             />
 
-            {/* 가이드 시작점 엔드포인트 (작은 사각형) */}
+            {/* 가이드 시작점 엔드포인트 (슬래시) */}
             <Line
               points={[
                 [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]],
-                [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]],
-                [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]],
-                [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]],
-                [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]]
+                [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]]
               ]}
               color={lineColor}
               lineWidth={2}
             />
 
-            {/* 가이드 끝점 엔드포인트 (작은 사각형) */}
+            {/* 가이드 끝점 엔드포인트 (슬래시) */}
             <Line
               points={[
                 [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]],
-                [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]],
-                [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]],
-                [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]],
-                [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]]
+                [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]]
               ]}
               color={lineColor}
               lineWidth={2}
@@ -431,14 +425,11 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             transparent
           />
 
-          {/* 시작점 마커 (작은 사각형) */}
+          {/* 시작점 마커 (슬래시) */}
           <Line
             points={[
               [measurePoints[0][0] - snapBoxSize/2, measurePoints[0][1] - snapBoxSize/2, measurePoints[0][2]],
-              [measurePoints[0][0] + snapBoxSize/2, measurePoints[0][1] - snapBoxSize/2, measurePoints[0][2]],
-              [measurePoints[0][0] + snapBoxSize/2, measurePoints[0][1] + snapBoxSize/2, measurePoints[0][2]],
-              [measurePoints[0][0] - snapBoxSize/2, measurePoints[0][1] + snapBoxSize/2, measurePoints[0][2]],
-              [measurePoints[0][0] - snapBoxSize/2, measurePoints[0][1] - snapBoxSize/2, measurePoints[0][2]]
+              [measurePoints[0][0] + snapBoxSize/2, measurePoints[0][1] + snapBoxSize/2, measurePoints[0][2]]
             ]}
             color={lineColor}
             lineWidth={2}
@@ -531,27 +522,21 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
                   lineWidth={2}
                 />
 
-                {/* 가이드 시작점 엔드포인트 (작은 사각형) */}
+                {/* 가이드 시작점 엔드포인트 (슬래시) */}
                 <Line
                   points={[
                     [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]],
-                    [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]],
-                    [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]],
-                    [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]],
-                    [guidePoints.start[0] - snapBoxSize/2, guidePoints.start[1] - snapBoxSize/2, guidePoints.start[2]]
+                    [guidePoints.start[0] + snapBoxSize/2, guidePoints.start[1] + snapBoxSize/2, guidePoints.start[2]]
                   ]}
                   color={snapColor}
                   lineWidth={2}
                 />
 
-                {/* 가이드 끝점 엔드포인트 (작은 사각형) */}
+                {/* 가이드 끝점 엔드포인트 (슬래시) */}
                 <Line
                   points={[
                     [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]],
-                    [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]],
-                    [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]],
-                    [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]],
-                    [guidePoints.end[0] - snapBoxSize/2, guidePoints.end[1] - snapBoxSize/2, guidePoints.end[2]]
+                    [guidePoints.end[0] + snapBoxSize/2, guidePoints.end[1] + snapBoxSize/2, guidePoints.end[2]]
                   ]}
                   color={snapColor}
                   lineWidth={2}
