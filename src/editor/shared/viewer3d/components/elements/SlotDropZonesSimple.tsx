@@ -47,7 +47,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   // Three.js 컨텍스트 접근
   const { camera, scene } = useThree();
   const { viewMode: contextViewMode } = useSpace3DView();
-  const { view2DDirection, activeDroppedCeilingTab } = useUIStore();
+  const { view2DDirection } = useUIStore();
   
   // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
   const viewMode = viewModeProp || contextViewMode;
@@ -151,17 +151,37 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const mouseX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
     const mouseY = -((dragEvent.clientY - rect.top) / rect.height) * 2 + 1;
     
-    // 단내림이 활성화되어 있는 경우, activeDroppedCeilingTab으로 영역 판단
+    // 단내림이 활성화되어 있는 경우, 마우스 X 좌표로 영역 자동 판단
     let zoneToUse: 'normal' | 'dropped' | undefined;
-    if (spaceInfo.droppedCeiling?.enabled) {
-      // activeDroppedCeilingTab이 'dropped'면 단내림 영역, 'main'이면 일반 영역
-      zoneToUse = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
+    if (spaceInfo.droppedCeiling?.enabled && zoneSlotInfo?.dropped) {
+      // 간이 레이캐스트로 X 위치 추정
+      const raycaster = new THREE.Raycaster();
+      raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
 
-      console.log('🎯 Drop - 영역 확인 (activeTab 기반):', {
-        activeTab: activeDroppedCeilingTab,
-        tabType: typeof activeDroppedCeilingTab,
-        comparison: `'${activeDroppedCeilingTab}' === 'dropped'`,
-        result: activeDroppedCeilingTab === 'dropped',
+      // 레이 방향에서 Z=0 평면과의 교점 계산
+      const ray = raycaster.ray;
+      const t = -ray.origin.z / ray.direction.z;
+      const intersectX = ray.origin.x + ray.direction.x * t;
+      const intersectXMm = threeUnitsToMm(intersectX);
+
+      // 영역 판단
+      const normalEndX = zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width;
+      const droppedStartX = zoneSlotInfo.dropped.startX;
+      const droppedEndX = droppedStartX + zoneSlotInfo.dropped.width;
+
+      if (intersectXMm >= droppedStartX && intersectXMm < droppedEndX) {
+        zoneToUse = 'dropped';
+      } else if (intersectXMm >= zoneSlotInfo.normal.startX && intersectXMm < normalEndX) {
+        zoneToUse = 'normal';
+      }
+
+      console.log('🎯 Drop - 마우스 X 좌표로 영역 자동 판단:', {
+        mouseX: dragEvent.clientX,
+        normalizedMouseX: mouseX,
+        intersectX,
+        intersectXMm,
+        normalRange: `${zoneSlotInfo.normal.startX} ~ ${normalEndX}`,
+        droppedRange: `${droppedStartX} ~ ${droppedEndX}`,
         detectedZone: zoneToUse
       });
     }
@@ -1876,14 +1896,41 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
       });
 
-      // 단내림이 활성화되어 있는 경우, activeDroppedCeilingTab으로 영역 판단
+      // 단내림이 활성화되어 있는 경우, 마우스 X 좌표로 영역 자동 판단
       let detectedZone: 'normal' | 'dropped' | null = null;
-      if (spaceInfo.droppedCeiling?.enabled) {
-        detectedZone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
-        console.log('🔍 Hover - 영역 판단:', {
-          activeDroppedCeilingTab,
-          comparison: `'${activeDroppedCeilingTab}' === 'dropped'`,
-          result: activeDroppedCeilingTab === 'dropped',
+      if (spaceInfo.droppedCeiling?.enabled && zoneSlotInfo?.dropped) {
+        // 마우스 좌표를 3D 공간 좌표로 변환하여 영역 판단
+        const rect = canvas.getBoundingClientRect();
+        const normalizedX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+
+        // 간이 레이캐스트로 X 위치 추정
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(normalizedX, 0), camera);
+
+        // 레이 방향에서 Z=0 평면과의 교점 계산 (간단한 추정)
+        const ray = raycaster.ray;
+        const t = -ray.origin.z / ray.direction.z;
+        const intersectX = ray.origin.x + ray.direction.x * t;
+        const intersectXMm = threeUnitsToMm(intersectX);
+
+        // 영역 판단
+        const normalEndX = zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width;
+        const droppedStartX = zoneSlotInfo.dropped.startX;
+        const droppedEndX = droppedStartX + zoneSlotInfo.dropped.width;
+
+        if (intersectXMm >= droppedStartX && intersectXMm < droppedEndX) {
+          detectedZone = 'dropped';
+        } else if (intersectXMm >= zoneSlotInfo.normal.startX && intersectXMm < normalEndX) {
+          detectedZone = 'normal';
+        }
+
+        console.log('🔍 Hover - 마우스 X 좌표로 영역 자동 판단:', {
+          mouseX: e.clientX,
+          normalizedX,
+          intersectX,
+          intersectXMm,
+          normalRange: `${zoneSlotInfo.normal.startX} ~ ${normalEndX}`,
+          droppedRange: `${droppedStartX} ~ ${droppedEndX}`,
           detectedZone
         });
       } else {
@@ -1903,7 +1950,6 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       console.log('🎯 getSlotIndexFromRaycast 결과 (hover):', {
         slotIndex,
         detectedZone,
-        activeTab: activeDroppedCeilingTab,
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
       });
 
