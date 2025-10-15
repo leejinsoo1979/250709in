@@ -444,12 +444,11 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             lineWidth={2}
           />
 
-          {/* 호버점 마커 - 스냅 안되면 십자가, 스냅되면 노란 네모 */}
-          {(() => {
+          {/* 호버점 마커 - 스냅되면 노란 네모만 표시 */}
+          {isSnapped && (() => {
             console.log(`🎯 측정 중 마커: [${hoverPoint[0].toFixed(2)}, ${hoverPoint[1].toFixed(2)}, ${hoverPoint[2].toFixed(2)}] snapped=${isSnapped}`);
 
-            return isSnapped ? (
-              // 스냅됨: 노란색 네모
+            return (
               <Line
                 points={[
                   [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
@@ -461,28 +460,6 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
                 color={snapColor}
                 lineWidth={3}
               />
-            ) : (
-              // 스냅 안됨: 초록색 십자가
-              <>
-                {/* 가로선 */}
-                <Line
-                  points={[
-                    [hoverPoint[0] - crosshairSize/2, hoverPoint[1], hoverPoint[2]],
-                    [hoverPoint[0] + crosshairSize/2, hoverPoint[1], hoverPoint[2]]
-                  ]}
-                  color={lineColor}
-                  lineWidth={2}
-                />
-                {/* 세로선 */}
-                <Line
-                  points={[
-                    [hoverPoint[0], hoverPoint[1] - crosshairSize/2, hoverPoint[2]],
-                    [hoverPoint[0], hoverPoint[1] + crosshairSize/2, hoverPoint[2]]
-                  ]}
-                  color={lineColor}
-                  lineWidth={2}
-                />
-              </>
             );
           })()}
 
@@ -607,12 +584,11 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         </group>
       )}
 
-      {/* 호버 커서 (측정 시작 전) - 스냅 안되면 십자가, 스냅되면 노란 네모 */}
-      {!measurePoints && hoverPoint && (() => {
-        console.log(`🖱️ 호버 커서: [${hoverPoint[0].toFixed(2)}, ${hoverPoint[1].toFixed(2)}, ${hoverPoint[2].toFixed(2)}] snapped=${isSnapped} boxSize=${snapBoxSize.toFixed(4)} crossSize=${crosshairSize.toFixed(4)}`);
+      {/* 호버 커서 (측정 시작 전) - 스냅되면 노란 네모만 표시 */}
+      {!measurePoints && hoverPoint && isSnapped && (() => {
+        console.log(`🖱️ 호버 커서: [${hoverPoint[0].toFixed(2)}, ${hoverPoint[1].toFixed(2)}, ${hoverPoint[2].toFixed(2)}] snapped=${isSnapped} boxSize=${snapBoxSize.toFixed(4)}`);
 
-        return isSnapped ? (
-          // 스냅됨: 노란색 네모
+        return (
           <Line
             points={[
               [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
@@ -624,28 +600,6 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             color={snapColor}
             lineWidth={3}
           />
-        ) : (
-          // 스냅 안됨: 초록색 십자가
-          <>
-            {/* 가로선 */}
-            <Line
-              points={[
-                [hoverPoint[0] - crosshairSize/2, hoverPoint[1], hoverPoint[2]],
-                [hoverPoint[0] + crosshairSize/2, hoverPoint[1], hoverPoint[2]]
-              ]}
-              color={lineColor}
-              lineWidth={2}
-            />
-            {/* 세로선 */}
-            <Line
-              points={[
-                [hoverPoint[0], hoverPoint[1] - crosshairSize/2, hoverPoint[2]],
-                [hoverPoint[0], hoverPoint[1] + crosshairSize/2, hoverPoint[2]]
-              ]}
-              color={lineColor}
-              lineWidth={2}
-            />
-          </>
         );
       })()}
     </group>
