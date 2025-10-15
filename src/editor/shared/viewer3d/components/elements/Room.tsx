@@ -2738,6 +2738,27 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
+              {/* 우측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
+              <group
+                position={[
+                  xOffset + width - frameThickness.right / 2,
+                  droppedCenterY,
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
+                ]}
+              >
+                <BoxWithEdges
+                  args={[
+                    frameThickness.right,
+                    droppedHeight,
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ]}
+                  position={[0, 0, 0]}
+                  material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  renderMode={renderMode}
+                  shadowEnabled={shadowEnabled}
+                />
+              </group>
+
               {/* 우측 벽 안쪽 세로 서브프레임 (뒤쪽) */}
               <group
                 position={[
