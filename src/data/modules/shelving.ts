@@ -371,22 +371,20 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
  */
 const createDualType1 = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const drawerHeight = FURNITURE_SPECS.TYPE1_DRAWER_HEIGHT;
-  const hangingHeight = maxHeight - drawerHeight;
-  
+
   // 기본 섹션 구성
   const baseSections: SectionConfig[] = [
-    { 
-      type: 'drawer', 
-      heightType: 'absolute', 
-      height: drawerHeight, 
+    {
+      type: 'drawer',
+      heightType: 'absolute',
+      height: drawerHeight,
       count: 2,
       drawerHeights: FURNITURE_SPECS.DRAWER_HEIGHTS_2TIER,
       gapHeight: FURNITURE_SPECS.DRAWER_GAP
     },
-    { 
-      type: 'hanging', 
-      heightType: 'absolute', 
-      height: hangingHeight
+    {
+      type: 'hanging',
+      heightType: 'fill' // absolute에서 fill로 변경하여 남은 공간을 자동으로 채움
     }
   ];
   
