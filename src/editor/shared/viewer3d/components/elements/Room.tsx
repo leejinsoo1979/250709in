@@ -2665,20 +2665,19 @@ const Room: React.FC<RoomProps> = ({
                   shadowEnabled={shadowEnabled}
                 />
               </group>
-              {/* 좌측 벽 안쪽 정면 프레임 (앞뒤 방향) */}
+              {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
               <group
                 position={[
-                  xOffset + frameThickness.left,
+                  xOffset + frameThickness.left / 2,
                   droppedCenterY,
                   furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(20)
                 ]}
-                rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
                   args={[
-                    mmToThreeUnits(40),
+                    frameThickness.left,
                     droppedHeight,
-                    mmToThreeUnits(END_PANEL_THICKNESS)
+                    mmToThreeUnits(40)
                   ]}
                   position={[0, 0, 0]}
                   material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
@@ -2707,20 +2706,19 @@ const Room: React.FC<RoomProps> = ({
                   shadowEnabled={shadowEnabled}
                 />
               </group>
-              {/* 우측 벽 안쪽 정면 프레임 (앞뒤 방향) */}
+              {/* 우측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
               <group
                 position={[
-                  xOffset + width - frameThickness.right,
+                  xOffset + width - frameThickness.right / 2,
                   droppedCenterY,
                   furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(20)
                 ]}
-                rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
                   args={[
-                    mmToThreeUnits(40),
+                    frameThickness.right,
                     droppedHeight,
-                    mmToThreeUnits(END_PANEL_THICKNESS)
+                    mmToThreeUnits(40)
                   ]}
                   position={[0, 0, 0]}
                   material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
@@ -2800,20 +2798,19 @@ const Room: React.FC<RoomProps> = ({
                   shadowEnabled={shadowEnabled}
                 />
               </group>
-              {/* 우측 벽 안쪽 정면 프레임 (앞뒤 방향) */}
+              {/* 우측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
               <group
                 position={[
-                  xOffset + width - frameThickness.right,
+                  xOffset + width - frameThickness.right / 2,
                   droppedCenterY,
                   furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(20)
                 ]}
-                rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
                   args={[
-                    mmToThreeUnits(40),
+                    frameThickness.right,
                     droppedHeight,
-                    mmToThreeUnits(END_PANEL_THICKNESS)
+                    mmToThreeUnits(40)
                   ]}
                   position={[0, 0, 0]}
                   material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
@@ -2842,20 +2839,19 @@ const Room: React.FC<RoomProps> = ({
                   shadowEnabled={shadowEnabled}
                 />
               </group>
-              {/* 좌측 벽 안쪽 정면 프레임 (앞뒤 방향) */}
+              {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
               <group
                 position={[
-                  xOffset + frameThickness.left,
+                  xOffset + frameThickness.left / 2,
                   droppedCenterY,
                   furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(20)
                 ]}
-                rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
                   args={[
-                    mmToThreeUnits(40),
+                    frameThickness.left,
                     droppedHeight,
-                    mmToThreeUnits(END_PANEL_THICKNESS)
+                    mmToThreeUnits(40)
                   ]}
                   position={[0, 0, 0]}
                   material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
