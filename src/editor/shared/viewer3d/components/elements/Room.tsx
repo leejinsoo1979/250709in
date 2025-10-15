@@ -1805,7 +1805,7 @@ const Room: React.FC<RoomProps> = ({
                     : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
-                        : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
+                        : furnitureDepth)  // 서라운드 프레임: 가구 깊이만큼
                 ]}
                 position={[
                   xOffset + frameThickness.left/2,
@@ -1818,13 +1818,12 @@ const Room: React.FC<RoomProps> = ({
                     : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                        : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2)  // 서라운드 프레임
+                        : furnitureZOffset + furnitureDepth/2)  // 서라운드 프레임: 가구 중심
                 ]}
                 material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
-
-          shadowEnabled={shadowEnabled}
-        />
+                shadowEnabled={shadowEnabled}
+              />
               {/* 상부 영역 프레임 (천장까지) */}
               <BoxWithEdges
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
@@ -2009,7 +2008,7 @@ const Room: React.FC<RoomProps> = ({
                     : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
-                        : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
+                        : furnitureDepth)  // 서라운드 프레임: 가구 깊이만큼
                 ]}
                 position={[
                   xOffset + width - frameThickness.right/2,
@@ -2022,13 +2021,12 @@ const Room: React.FC<RoomProps> = ({
                     : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                        : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2)  // 서라운드 프레임
+                        : furnitureZOffset + furnitureDepth/2)  // 서라운드 프레임: 가구 중심
                 ]}
                 material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
-
-          shadowEnabled={shadowEnabled}
-        />
+                shadowEnabled={shadowEnabled}
+              />
               {/* 상부 영역 프레임 (천장까지) */}
               <BoxWithEdges
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
