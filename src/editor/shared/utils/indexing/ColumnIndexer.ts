@@ -1157,17 +1157,29 @@ export class ColumnIndexer {
 
     console.log('🎯 경계면 이격거리 최적화:', {
       선택된갭: boundaryGap,
+      단내림위치: droppedPosition,
       메인구간원래너비: normalAreaInternalWidth,
       단내림구간원래너비: droppedAreaInternalWidth,
       메인구간조정후: normalAreaInternalWidth - boundaryGap,
-      단내림구간조정후: droppedAreaInternalWidth - boundaryGap,
       메인슬롯너비: (normalAreaInternalWidth - boundaryGap) / normalColumnCount,
-      단내림슬롯너비: (droppedAreaInternalWidth - boundaryGap) / droppedColumnCount
+      단내림슬롯너비: droppedAreaInternalWidth / droppedColumnCount,
+      설명: '단내림은 경계면으로 확장, 일반구간은 경계면에서 갭만큼 축소'
     });
 
     // 경계면 이격거리 적용
+    // 일반구간만 갭만큼 축소 (단내림은 경계면 방향으로 확장되므로 너비 유지)
     normalAreaInternalWidth -= boundaryGap;
-    droppedAreaInternalWidth -= boundaryGap;
+
+    // startX 조정: 단내림이 경계면 방향으로 확장
+    if (droppedPosition === 'left') {
+      // 왼쪽 단내림: 단내림은 오른쪽으로 확장 (startX 유지)
+      // 일반구간은 왼쪽에서 갭만큼 시작점 이동
+      normalStartX += boundaryGap;
+    } else {
+      // 오른쪽 단내림: 일반구간은 오른쪽에서 갭만큼 축소 (startX 유지)
+      // 단내림은 왼쪽으로 확장 (startX를 왼쪽으로 이동)
+      droppedStartX -= boundaryGap;
+    }
     
     // 각 영역의 컬럼 너비 계산 - 0.5 단위 균등 분할
     const normalExactWidth = normalAreaInternalWidth / normalColumnCount;
