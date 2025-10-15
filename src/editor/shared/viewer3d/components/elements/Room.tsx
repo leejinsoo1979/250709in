@@ -2644,18 +2644,18 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
-              {/* 좌측 벽 안쪽 세로 서브프레임 (뒤쪽) */}
+              {/* 좌측 벽 안쪽 세로 서브프레임 (단내림 구간: 슬롯 가이드 정렬, 단내림 높이) */}
               <group
                 position={[
-                  xOffset + frameThickness.left - mmToThreeUnits(10),
+                  xOffset + frameThickness.left - mmToThreeUnits(9),
                   droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(28)
                 ]}
                 rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
                   args={[
-                    mmToThreeUnits(40),
+                    mmToThreeUnits(44),
                     droppedHeight,
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
@@ -2759,18 +2759,18 @@ const Room: React.FC<RoomProps> = ({
                 />
               </group>
 
-              {/* 우측 벽 안쪽 세로 서브프레임 (뒤쪽) */}
+              {/* 우측 벽 안쪽 세로 서브프레임 (단내림 구간: 슬롯 가이드 정렬, 단내림 높이) */}
               <group
                 position={[
-                  xOffset + width - frameThickness.right + mmToThreeUnits(10),
+                  xOffset + width - frameThickness.right + mmToThreeUnits(9),
                   droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(28)
                 ]}
                 rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
                   args={[
-                    mmToThreeUnits(40),
+                    mmToThreeUnits(44),
                     droppedHeight,
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
