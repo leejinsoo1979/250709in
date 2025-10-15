@@ -817,9 +817,20 @@ const Room: React.FC<RoomProps> = ({
     mat.depthWrite = true;
     return mat;
   }, []);
-  
+
   const opaqueRightWallMaterial = useMemo(() => {
     const mat = MaterialFactory.createShaderGradientWallMaterial('horizontal-reverse', '3D');
+    if (mat.uniforms) {
+      mat.uniforms.opacity.value = 1.0;
+    }
+    mat.transparent = false;
+    mat.depthWrite = true;
+    return mat;
+  }, []);
+
+  // 단내림 천장을 위한 불투명 material (그라데이션 유지, 투명도 제거)
+  const opaqueTopWallMaterial = useMemo(() => {
+    const mat = MaterialFactory.createShaderGradientWallMaterial('vertical-reverse', '3D');
     if (mat.uniforms) {
       mat.uniforms.opacity.value = 1.0;
     }
@@ -1238,16 +1249,15 @@ const Room: React.FC<RoomProps> = ({
             
             return (
               <>
-                {/* 단내림 영역 천장 (낮은 높이) */}
+                {/* 단내림 영역 천장 (낮은 높이) - 불투명 그라데이션 */}
                 <mesh
                   position={[droppedAreaX, panelStartY + height - droppedCeilingHeight + 0.001, extendedZOffset + extendedPanelDepth/2]}
                   rotation={[Math.PI / 2, 0, 0]}
                   renderOrder={-1}
                 >
                   <planeGeometry args={[droppedAreaWidth, extendedPanelDepth]} />
-                  <primitive 
-                    ref={topWallMaterialRef}
-                    object={topWallMaterial} />
+                  <primitive
+                    object={opaqueTopWallMaterial} />
                 </mesh>
                 
                 {/* 일반 영역 천장 (원래 높이) */}
