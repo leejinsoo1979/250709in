@@ -252,7 +252,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       console.log('📍 끝점 설정:', hoverPoint);
       setMeasureEndPoint(hoverPoint);
       setIsAdjustingGuide(true);
-      setGuideOffset(0);
+      // 현재 마우스 위치를 가이드 오프셋 초기값으로 설정
+      setGuideOffset(hoverPoint);
     }
   }, [isMeasureMode, hoverPoint, isAdjustingGuide, measurePoints, setMeasureStartPoint, setMeasureEndPoint, addMeasureLine, clearMeasurePoints]);
 
@@ -266,7 +267,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         console.log('❌ ESC: 측정 취소');
         clearMeasurePoints();
         setIsAdjustingGuide(false);
-        setGuideOffset(0);
+        setGuideOffset([0, 0, 0]);
       }
 
       // Ctrl+Z: 마지막 측정 라인 삭제
@@ -331,43 +332,14 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         const offset: MeasurePoint = (() => {
           const savedOffset = (line as any).offset;
 
-          // Check if offset is legacy number type
-          if (typeof savedOffset === 'number') {
-            // Convert old single-axis offset to MeasurePoint based on measurement direction
-            switch (viewDirection) {
-              case 'front':
-                if (dx >= dy) {
-                  // X-axis measurement - offset was Y coordinate
-                  return [line.start[0], savedOffset, line.start[2]];
-                } else {
-                  // Y-axis measurement - offset was X coordinate
-                  return [savedOffset, line.start[1], line.start[2]];
-                }
-              case 'top':
-                if (dx >= dz) {
-                  // X-axis measurement - offset was Z coordinate
-                  return [line.start[0], line.start[1], savedOffset];
-                } else {
-                  // Z-axis measurement - offset was X coordinate
-                  return [savedOffset, line.start[1], line.start[2]];
-                }
-              case 'left':
-              case 'right':
-                if (dy >= dz) {
-                  // Y-axis measurement - offset was Z coordinate
-                  return [line.start[0], line.start[1], savedOffset];
-                } else {
-                  // Z-axis measurement - offset was Y coordinate
-                  return [line.start[0], savedOffset, line.start[2]];
-                }
-              default:
-                // Default: use start point
-                return line.start;
-            }
+          // Check if offset is valid MeasurePoint (array of 3 numbers)
+          if (Array.isArray(savedOffset) && savedOffset.length === 3) {
+            return savedOffset as MeasurePoint;
           }
 
-          // If already MeasurePoint or undefined, use it or default to start
-          return savedOffset ?? line.start;
+          // Legacy number type or invalid data - use end point as default
+          // This places the guide at the measurement endpoint
+          return line.end;
         })();
         const guidePoints = calculateGuidePoints(line.start, line.end, offset, viewDirection);
         const midPoint: MeasurePoint = [
