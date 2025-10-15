@@ -1955,8 +1955,17 @@ const Room: React.FC<RoomProps> = ({
         
         // 오른쪽이 단내림 영역인 경우
         if (hasDroppedCeiling && isRightDropped) {
-          // 메인 프레임은 항상 렌더링 (가구 유무와 무관)
-          // 이전에는 단내림 구간에 가구가 없으면 렌더링 생략했으나, 메인 프레임은 항상 표시되어야 함
+          // 단내림 구간에 가구가 없으면 엔드패널 렌더링 생략
+          if (!hasDroppedZoneFurniture) {
+            console.log('🚫 오른쪽 단내림 엔드패널 렌더링 생략 (단내림 구간에 가구 없음)');
+            return null;
+          }
+
+          // 좌측(일반구간)에 가구가 있으면 우측(단내림구간) 엔드패널 렌더링 생략
+          if (hasLeftFurniture) {
+            console.log('🚫 오른쪽 단내림 엔드패널 렌더링 생략 (좌측 일반구간에 가구 있음)');
+            return null;
+          }
 
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
           const droppedCenterY = panelStartY + droppedHeight/2;
@@ -2046,14 +2055,15 @@ const Room: React.FC<RoomProps> = ({
           );
         }
 
+        // 일반 구간 (단내림이 아닌 경우에만 렌더링)
         // 렌더링 카운터 증가
         if (typeof window !== 'undefined' && window.renderCounter) {
           if (!wallConfig?.right) {
             window.renderCounter.rightEndPanel++;
-            console.log('🚨🚨🚨 오른쪽 엔드패널 렌더링!', window.renderCounter.rightEndPanel, '번째');
+            console.log('🚨🚨🚨 [일반] 오른쪽 엔드패널 렌더링!', window.renderCounter.rightEndPanel, '번째');
           } else {
             window.renderCounter.rightFrame++;
-            console.log('🚨🚨🚨 오른쪽 프레임 렌더링!', window.renderCounter.rightFrame, '번째');
+            console.log('🚨🚨🚨 [일반] 오른쪽 프레임 렌더링!', window.renderCounter.rightFrame, '번째');
           }
         }
 
