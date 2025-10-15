@@ -25,8 +25,20 @@ const ModuleLibrary: React.FC = () => {
   const { spaceInfo } = useSpaceConfigStore();
 
   // 내경 공간 계산
-  const internalSpace = calculateInternalSpace(spaceInfo);
-  
+  // 단내림 활성화 시 normal zone의 높이를 사용 (더 높은 쪽 기준으로 가구 표시)
+  const normalZoneSpaceInfo = useMemo(() => {
+    if (spaceInfo.droppedCeiling?.enabled) {
+      // normal zone용 spaceInfo (단내림 비활성화 상태처럼 계산)
+      return {
+        ...spaceInfo,
+        zone: 'normal' as const
+      };
+    }
+    return spaceInfo;
+  }, [spaceInfo]);
+
+  const internalSpace = calculateInternalSpace(normalZoneSpaceInfo);
+
   // 디버깅: 내경 공간 확인
   console.log('🏠 내경 공간 계산 결과:', {
     internalSpace,
@@ -35,7 +47,9 @@ const ModuleLibrary: React.FC = () => {
     floorFinishHeight: spaceInfo?.floorFinish?.height,
     baseConfigHeight: spaceInfo?.baseConfig?.height,
     topFrameHeight: spaceInfo?.topFrame?.height,
-    droppedCeiling: spaceInfo?.droppedCeiling
+    droppedCeiling: spaceInfo?.droppedCeiling,
+    usingNormalZone: !!spaceInfo.droppedCeiling?.enabled,
+    설명: '단내림 활성화 시 normal zone 기준으로 가구 유효성 검사'
   });
   
   // 인덱싱 정보 계산 (컬럼 정보)
