@@ -34,6 +34,7 @@ interface ThreeCanvasProps {
   view2DDirection?: 'front' | 'left' | 'right' | 'top';
   renderMode?: 'solid' | 'wireframe';
   isSplitView?: boolean;
+  style?: React.CSSProperties;
 }
 
 /**
@@ -48,13 +49,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   viewMode = '3D',
   view2DDirection = 'front',
   renderMode = 'wireframe',
+  style,
   isSplitView = false
 }) => {
   // 테마 컨텍스트
   const { theme } = useViewerTheme();
   
-  // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode, cameraFov, shadowEnabled, isMeasureMode } = useUIStore();
+  // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드, 지우개 모드 가져오기
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode, cameraFov, shadowEnabled, isMeasureMode, isEraserMode } = useUIStore();
 
   // 커서 색상 (다크모드: 흰색, 라이트모드: 검정색)
   const cursorColor = view2DTheme === 'dark' ? 'white' : 'black';
@@ -645,8 +647,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         key={canvasKey}
         shadows={viewMode === '3D' && shadowEnabled}
         style={{
+          ...style,
           background: viewMode === '2D' && theme.mode === 'dark' ? '#121212' : viewMode === '2D' ? '#ffffff' : CANVAS_SETTINGS.BACKGROUND_COLOR,
-          cursor: (isMeasureMode && viewMode === '2D')
+          cursor: (isEraserMode && viewMode === '2D')
+            ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path d="M16.5 3.5L20.5 7.5L7 21H3V17L16.5 3.5Z" fill="none" stroke="red" stroke-width="2"/><path d="M13.5 6.5L17.5 10.5" stroke="red" stroke-width="2"/></svg>') 12 12, pointer`
+            : (isMeasureMode && viewMode === '2D')
             ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21"><line x1="10.5" y1="0" x2="10.5" y2="21" stroke="${cursorColor}" stroke-width="1"/><line x1="0" y1="10.5" x2="21" y2="10.5" stroke="${cursorColor}" stroke-width="1"/><circle cx="10.5" cy="10.5" r="2" fill="none" stroke="${cursorColor}" stroke-width="1"/></svg>') 10 10, crosshair`
             : 'default',
           touchAction: 'none'

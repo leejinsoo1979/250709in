@@ -978,7 +978,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         onDragOver={handleDragOver}
         data-viewer-container="true"
       >
-        <ThreeCanvas 
+        <ThreeCanvas
           cameraPosition={cameraPosition}
           cameraTarget={calculateCameraTarget(spaceInfo?.height || 2400)}
           viewMode={viewMode}
