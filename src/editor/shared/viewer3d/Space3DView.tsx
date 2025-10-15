@@ -1359,8 +1359,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* 치수 지우개 버튼 - 측정 도구 버튼 바로 아래 */}
             <button
               onClick={() => {
-                const { toggleEraserMode } = useUIStore.getState();
+                const { toggleEraserMode, setMeasureMode } = useUIStore.getState();
                 console.log('🗑️ 지우개 모드 토글');
+                // 지우개 모드 활성화 시 측정 모드 비활성화
+                setMeasureMode(false);
                 toggleEraserMode();
               }}
               style={{
