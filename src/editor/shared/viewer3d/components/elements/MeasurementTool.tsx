@@ -77,14 +77,17 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return SNAP_DISTANCE;
   }, [camera]);
 
-  // 십자가 크기 (월드 공간 고정 크기 - 0.3 = 30mm)
+  // 십자가 크기 (화면 픽셀 크기로 고정하기 위해 줌의 역수 사용)
   const crosshairSize = useMemo(() => {
-    return 0.3; // 고정 크기
-  }, []);
+    // 화면상 약 20픽셀 정도 크기로 보이도록 조정
+    const baseSize = 200; // 기준 값
+    return baseSize / currentZoom;
+  }, [currentZoom]);
 
-  // 사각형 크기 (십자가와 같은 크기)
+  // 사각형 크기 (2mm = 0.2 three.js 단위, 줌 보정)
   const snapBoxSize = useMemo(() => {
-    const size = 0.3; // 고정 크기 (30mm)
+    const baseSize = 20; // 2mm의 10배 스케일로 계산 (화면상 적당한 크기)
+    const size = baseSize / currentZoom;
     console.log('📦 사각형 크기:', size, 'zoom:', currentZoom);
     return size;
   }, [currentZoom]);
