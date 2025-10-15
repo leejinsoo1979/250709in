@@ -1857,6 +1857,24 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
+              {/* 좌측 단내림 경계 앞면 수평 프레임 - 서라운드 모드에서만 */}
+              {spaceInfo.surroundType !== 'no-surround' && wallConfig?.left && (
+                <BoxWithEdges
+                  args={[
+                    mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900) - frameThickness.left, // 단내림 너비 - 좌측 프레임 두께
+                    frameThickness.left, // 높이는 프레임 두께
+                    mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 깊이
+                  ]}
+                  position={[
+                    xOffset + frameThickness.left + (mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900) - frameThickness.left)/2, // 좌측 프레임 옆부터 시작
+                    panelStartY + droppedHeight, // 단내림 높이 위치
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 // 앞면 위치
+                  ]}
+                  material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  renderMode={renderMode}
+                  shadowEnabled={shadowEnabled}
+                />
+              )}
             </>
           );
         }
@@ -2059,10 +2077,28 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
+              {/* 우측 단내림 경계 앞면 수평 프레임 - 서라운드 모드에서만 */}
+              {spaceInfo.surroundType !== 'no-surround' && wallConfig?.right && (
+                <BoxWithEdges
+                  args={[
+                    mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900) - frameThickness.right, // 단내림 너비 - 우측 프레임 두께
+                    frameThickness.right, // 높이는 프레임 두께
+                    mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 깊이
+                  ]}
+                  position={[
+                    xOffset + width - frameThickness.right - (mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900) - frameThickness.right)/2, // 우측 프레임 옆부터 시작 (왼쪽으로)
+                    panelStartY + droppedHeight, // 단내림 높이 위치
+                    furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 // 앞면 위치
+                  ]}
+                  material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  renderMode={renderMode}
+                  shadowEnabled={shadowEnabled}
+                />
+              )}
             </>
           );
         }
-        
+
         // 단내림이 있으면 오른쪽 일반 렌더링 생략
         // - 좌측 단내림: 오른쪽이 단내림 구간이 아니므로 일반 렌더링 안 함
         // - 우측 단내림: 위에서 이미 처리했으므로 일반 렌더링 안 함
@@ -2351,24 +2387,6 @@ const Room: React.FC<RoomProps> = ({
 
           shadowEnabled={shadowEnabled}
         />
-                  {/* 단내림 경계 앞면 수평 프레임 - 서라운드 모드에서만 */}
-                  {spaceInfo.surroundType !== 'no-surround' && (
-                    <BoxWithEdges
-                      args={[
-                        droppedFrameWidth, // 단내림 프레임과 동일한 너비
-                        topBottomFrameHeight, // 상부 프레임과 동일한 높이
-                        mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 깊이
-                      ]}
-                      position={[
-                        droppedX, // 단내림 영역 중앙
-                        panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight/2, // 단내림 높이 위치
-                        furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 // 앞면 위치
-                      ]}
-                      material={createFrameMaterial('top')}
-                      renderMode={renderMode}
-                      shadowEnabled={shadowEnabled}
-                    />
-                  )}
                 </>
               );
             }
