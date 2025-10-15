@@ -67,15 +67,10 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return 0.5; // 기본 크기
   }, [camera]);
 
-  // 카메라 줌 레벨에 따른 스냅 거리 계산
+  // 고정 스냅 거리 사용
   const getSnapDistance = useCallback(() => {
-    if (camera instanceof THREE.OrthographicCamera) {
-      const baseSnapDistance = SNAP_DISTANCE;
-      const zoom = camera.zoom || 1;
-      return baseSnapDistance / zoom; // 줌이 커질수록 스냅 거리 작아짐
-    }
-    return SNAP_DISTANCE;
-  }, [camera]);
+    return SNAP_DISTANCE; // 3.0 = 300mm 고정
+  }, []);
 
   // 십자가 크기 (화면 픽셀 크기로 고정하기 위해 줌의 역수 사용)
   const crosshairSize = useMemo(() => {
