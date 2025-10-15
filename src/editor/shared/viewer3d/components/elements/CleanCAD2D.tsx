@@ -692,29 +692,46 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const hatchLines: JSX.Element[] = [];
         const hatchSpacing = mmToThreeUnits(40); // 40mm 간격 (2배 촘촘하게)
 
-        // 좌측 모서리부터 시작하도록 음수 오프셋 시작
+        // 좌측 상단 모서리부터 시작하도록 충분한 범위로 계산
         const totalDiagonal = droppedWidth + droppedHeight;
-        const hatchCount = Math.ceil(totalDiagonal / hatchSpacing) + 2;
+        const startOffset = -droppedHeight; // 상단 모서리까지 커버
+        const endOffset = droppedWidth;
+        const hatchCount = Math.ceil((endOffset - startOffset) / hatchSpacing) + 1;
 
-        for (let i = -2; i <= hatchCount; i++) {
-          const offset = i * hatchSpacing;
+        for (let i = 0; i <= hatchCount; i++) {
+          const offset = startOffset + i * hatchSpacing;
 
           // 왼쪽 아래에서 오른쪽 위로 올라가는 대각선
           const startX = droppedStartX + offset;
-          const endX = startX + droppedHeight; // 45도 각도
+          const startY = normalHeight;
+          const endX = startX + droppedHeight;
+          const endY = totalHeight;
 
           // 단내림 영역 내부만 그리도록 클리핑
-          const clippedStartX = Math.max(droppedStartX, Math.min(droppedEndX, startX));
-          const clippedEndX = Math.max(droppedStartX, Math.min(droppedEndX, endX));
+          let clippedStartX = startX;
+          let clippedStartY = startY;
+          let clippedEndX = endX;
+          let clippedEndY = endY;
 
-          if (clippedStartX < droppedEndX && clippedEndX > droppedStartX) {
-            const startY = normalHeight + (clippedStartX - startX);
-            const endY = normalHeight + (clippedEndX - startX);
+          // X축 클리핑
+          if (startX < droppedStartX) {
+            const dy = droppedStartX - startX;
+            clippedStartX = droppedStartX;
+            clippedStartY = startY + dy;
+          }
+          if (endX > droppedEndX) {
+            const dy = endX - droppedEndX;
+            clippedEndX = droppedEndX;
+            clippedEndY = endY - dy;
+          }
 
+          // 유효한 선분인지 확인
+          if (clippedStartX < droppedEndX && clippedEndX > droppedStartX &&
+              clippedStartY < totalHeight && clippedEndY > normalHeight) {
             hatchLines.push(
               <Line
                 key={`hatch-${i}`}
-                points={[[clippedStartX, startY, 0.001], [clippedEndX, endY, 0.001]]}
+                points={[[clippedStartX, clippedStartY, 0.001], [clippedEndX, clippedEndY, 0.001]]}
                 color="#FFD700"
                 lineWidth={0.5}
                 opacity={0.6}
