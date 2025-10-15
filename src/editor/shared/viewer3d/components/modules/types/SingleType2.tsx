@@ -330,9 +330,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
               } else {
                 // 안전선반도 마감 패널도 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
-                const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
-                // 브라켓 중심 = 상판 하단 - (브라켓 높이 / 2)
-                rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+                const sectionTopPanelBottom = actualSectionTopY;
+                // 브라켓 중심 = 상판 하단 - (브라켓 높이 / 2) + 10mm 보정
+                rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(10);
 
                 console.log('🔵 SingleType2 옷봉 위치 계산');
                 console.log('  moduleId:', moduleData.id);
