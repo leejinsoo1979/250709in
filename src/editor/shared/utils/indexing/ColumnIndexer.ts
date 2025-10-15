@@ -1330,7 +1330,8 @@ export class ColumnIndexer {
         columnCount: droppedColumnCount,
         columnWidth: droppedColumnWidth,
         slotWidths: droppedSlotWidths
-      }
+      },
+      boundaryGap // 경계면 이격거리 추가
     };
   }
 

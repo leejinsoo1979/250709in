@@ -11,6 +11,7 @@ import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { getDroppedZoneBounds, getNormalZoneBounds } from '@/editor/shared/utils/space/droppedCeilingUtils';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing/SpaceCalculator';
+import { ColumnIndexer } from '@/editor/shared/utils/indexing/ColumnIndexer';
 import { calculateFrameThickness, END_PANEL_THICKNESS } from '@/editor/shared/viewer3d/utils/geometry';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 
@@ -1126,6 +1127,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
                 {/* 경계면 이격거리 치수선 */}
                 {(() => {
+                  // ColumnIndexer에서 계산된 boundaryGap 사용
+                  const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                  const boundaryGapMm = zoneSlotInfo.boundaryGap || 0;
+
                   const boundaryGapY = subDimensionY - mmToThreeUnits(60); // 구간 치수선 아래
                   let boundaryLeftX: number;
                   let boundaryRightX: number;
@@ -1139,9 +1144,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     boundaryLeftX = mainEndX;
                     boundaryRightX = droppedStartX;
                   }
-
-                  const boundaryGapWidth = Math.abs(boundaryRightX - boundaryLeftX);
-                  const boundaryGapMm = boundaryGapWidth * 100; // three units to mm
 
                   return (
                     <>
@@ -2336,6 +2338,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 경계면 이격거리 치수선 */}
                 {(() => {
+                  // ColumnIndexer에서 계산된 boundaryGap 사용
+                  const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                  const boundaryGapMm = zoneSlotInfo.boundaryGap || 0;
+
                   const boundaryGapZ = subDimensionZ - mmToThreeUnits(60); // 구간 치수선 아래
                   let boundaryLeftX: number;
                   let boundaryRightX: number;
@@ -2349,9 +2355,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     boundaryLeftX = mainEndX;
                     boundaryRightX = droppedStartX;
                   }
-
-                  const boundaryGapWidth = Math.abs(boundaryRightX - boundaryLeftX);
-                  const boundaryGapMm = boundaryGapWidth * 100; // three units to mm
 
                   return (
                     <>
