@@ -310,12 +310,14 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       // Ctrl+Z: 마지막 측정 라인 삭제
       if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
         event.preventDefault(); // 브라우저 기본 동작 방지
-        event.stopPropagation(); // 이벤트 전파 중단 (OrbitControls 등 다른 핸들러 방지)
+        event.stopPropagation(); // 이벤트 전파 중단
+        event.stopImmediatePropagation(); // 같은 레벨의 다른 리스너도 중단
         if (measureLines.length > 0) {
           const lastLine = measureLines[measureLines.length - 1];
           console.log('🔙 Ctrl+Z: 마지막 측정 라인 삭제', lastLine.id);
           useUIStore.getState().removeMeasureLine(lastLine.id);
         }
+        return false; // 완전 차단
       }
     };
 
