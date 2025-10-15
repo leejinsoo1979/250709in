@@ -528,7 +528,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
   const lineColor = '#00FF00'; // 형광 초록색
   const snapColor = '#FFFF00'; // 노란색 (스냅됨)
-  const eraserColor = colors.danger; // 지우개 빨간색
+  const eraserColor = colors.error; // 지우개 빨간색
   const pointSize = getPointSize(); // 동적 점 크기
 
   return (
