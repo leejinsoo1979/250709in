@@ -171,6 +171,17 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                     const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
                     // 브라켓 중심 = 상판 하단 - (브라켓 높이 / 2)
                     rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+
+                    console.log('🔵 SingleType1 옷봉 위치 계산:', {
+                      moduleId: moduleData.id,
+                      internalHeight,
+                      height: height * 100, // Three units to mm
+                      sectionHeight: sectionHeight * 100,
+                      sectionBottomY: sectionBottomY * 100,
+                      sectionTopPanelBottom: sectionTopPanelBottom * 100,
+                      rodYPosition: rodYPosition * 100,
+                      basicThickness: basicThickness * 100
+                    });
                   }
 
                   return (
