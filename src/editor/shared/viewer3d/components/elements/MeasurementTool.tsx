@@ -220,21 +220,34 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         // 실제 측정 거리 계산 (원래 start-end 사이의 거리, viewDirection 고려)
         const distance = calculateDistance(start, end, viewDirection);
 
+        // 현재 호버 포인트를 최종 오프셋으로 사용 (클릭 시점의 마우스 위치)
+        // 뷰 방향에 따라 정규화
+        const finalOffset: MeasurePoint = viewDirection === 'front'
+          ? [hoverPoint[0], hoverPoint[1], 0]
+          : viewDirection === 'top'
+          ? [hoverPoint[0], 0, hoverPoint[2]]
+          : viewDirection === 'left'
+          ? [0, hoverPoint[1], hoverPoint[2]]
+          : viewDirection === 'right'
+          ? [0, hoverPoint[1], hoverPoint[2]]
+          : hoverPoint;
+
         console.log('📏 측정 라인 추가:', {
           start: `[${start[0].toFixed(2)}, ${start[1].toFixed(2)}, ${start[2].toFixed(2)}]`,
           end: `[${end[0].toFixed(2)}, ${end[1].toFixed(2)}, ${end[2].toFixed(2)}]`,
           distance,
-          offset: `[${guideOffset[0].toFixed(2)}, ${guideOffset[1].toFixed(2)}, ${guideOffset[2].toFixed(2)}]`,
+          offset: `[${finalOffset[0].toFixed(2)}, ${finalOffset[1].toFixed(2)}, ${finalOffset[2].toFixed(2)}]`,
+          hoverPoint: `[${hoverPoint[0].toFixed(2)}, ${hoverPoint[1].toFixed(2)}, ${hoverPoint[2].toFixed(2)}]`,
           viewDirection
         });
 
-        // 측정 라인 추가
+        // 측정 라인 추가 - finalOffset 사용
         addMeasureLine({
           id: `measure-${Date.now()}`,
           start,
           end,
           distance,
-          offset: guideOffset
+          offset: finalOffset
         });
 
         // 리셋 - 측정 포인트와 오프셋 초기화
