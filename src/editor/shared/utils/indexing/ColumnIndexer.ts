@@ -1167,8 +1167,8 @@ export class ColumnIndexer {
     });
 
     // 경계면 이격거리 적용
-    // 일반구간만 갭만큼 축소 (단내림은 경계면 방향으로 확장되므로 너비 유지)
     normalAreaInternalWidth -= boundaryGap;
+    droppedAreaInternalWidth += boundaryGap; // 단내림은 경계면 방향으로 확장
 
     // startX 조정: 단내림이 경계면 방향으로 확장
     if (droppedPosition === 'left') {
