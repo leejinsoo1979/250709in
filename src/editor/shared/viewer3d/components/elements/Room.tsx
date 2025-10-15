@@ -1757,11 +1757,17 @@ const Room: React.FC<RoomProps> = ({
         
         // 왼쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
         if (hasDroppedCeiling && isLeftDropped) {
+          // 우측(일반구간)에 가구가 있으면 좌측(단내림구간) 엔드패널 렌더링 생략
+          if (hasRightFurniture) {
+            console.log('🚫 왼쪽 단내림 엔드패널 렌더링 생략 (우측 일반구간에 가구 있음)');
+            return null;
+          }
+
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
           const droppedCenterY = panelStartY + droppedHeight/2;
           const upperPartHeight = height - droppedHeight;
           const upperPartCenterY = panelStartY + droppedHeight + upperPartHeight/2;
-          
+
           // 단내림 영역 렌더링 카운터
           if (typeof window !== 'undefined' && window.renderCounter) {
             if (!wallConfig?.left) {
@@ -1772,7 +1778,7 @@ const Room: React.FC<RoomProps> = ({
               console.log('🚨🚨🚨 [단내림] 왼쪽 프레임 렌더링!', window.renderCounter.leftFrame, '번째');
             }
           }
-          
+
           return (
             <>
               {/* 단내림 영역 프레임 (단내림 높이에 맞춤) */}
@@ -1949,11 +1955,17 @@ const Room: React.FC<RoomProps> = ({
         
         // 오른쪽이 단내림 영역인 경우
         if (hasDroppedCeiling && isRightDropped) {
+          // 좌측(일반구간)에 가구가 있으면 우측(단내림구간) 엔드패널 렌더링 생략
+          if (hasLeftFurniture) {
+            console.log('🚫 오른쪽 단내림 엔드패널 렌더링 생략 (좌측 일반구간에 가구 있음)');
+            return null;
+          }
+
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
           const droppedCenterY = panelStartY + droppedHeight/2;
           const upperPartHeight = droppedCeilingHeight;
           const upperPartCenterY = panelStartY + height - upperPartHeight/2;
-          
+
           // 단내림 영역 렌더링 카운터
           if (typeof window !== 'undefined' && window.renderCounter) {
             if (!wallConfig?.right) {
@@ -1964,7 +1976,7 @@ const Room: React.FC<RoomProps> = ({
               console.log('🚨🚨🚨 [단내림] 오른쪽 프레임 렌더링!', window.renderCounter.rightFrame, '번째');
             }
           }
-          
+
           return (
             <>
               {/* 단내림 영역 프레임 (단내림 높이에 맞춤) */}
