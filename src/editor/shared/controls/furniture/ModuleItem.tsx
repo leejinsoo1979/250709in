@@ -47,15 +47,27 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
   // 네이티브 HTML5 드래그 시작 핸들러
   const handleDragStart = (e: React.DragEvent) => {
+    console.log('🚀 [ModuleItem] handleDragStart 호출:', {
+      moduleId: module.id,
+      moduleName: module.name,
+      isValid,
+      needsWarning,
+      validation,
+      internalSpace
+    });
+
     if (!isValid && !needsWarning) {
+      console.log('❌ [ModuleItem] 드래그 차단됨 (유효하지 않음)');
       e.preventDefault();
       return;
     }
-    
+
+    console.log('✅ [ModuleItem] 드래그 시작 허용');
+
     // 가구 배치 모드 활성화
     setFurniturePlacementMode(true);
     setIsSlotDragging(true); // 슬롯 드래그 시작
-    
+
     // 드래그 데이터 설정 (도어 정보 포함)
     const dragData = {
       type: 'furniture',
@@ -70,12 +82,14 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
         needsWarning: needsWarning // 경고 필요 여부 추가
       }
     };
-    
+
+    console.log('📦 [ModuleItem] 드래그 데이터 설정:', dragData);
+
     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
     e.dataTransfer.setData('text/plain', module.id); // 호환성을 위해 추가
-    
+
     e.dataTransfer.effectAllowed = 'copy';
-    
+
     // 간단한 드래그 아이콘 설정
     const dragIcon = createDragIcon();
     e.dataTransfer.setDragImage(dragIcon, 24, 24);
@@ -83,6 +97,8 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
     // 전역 드래그 상태 설정
     setCurrentDragData(dragData);
+
+    console.log('✅ [ModuleItem] 드래그 초기화 완료');
   };
 
   const handleDragEnd = () => {
