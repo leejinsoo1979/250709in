@@ -170,10 +170,10 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     if (isAdjustingGuide && measurePoints && measurePoints[0] && measurePoints[1]) {
       const offset = calculateGuideOffset(measurePoints[0], measurePoints[1], rawPoint, viewDirection);
       console.log('🔧 가이드 오프셋 조정:', {
-        start: measurePoints[0],
-        end: measurePoints[1],
-        mousePos: rawPoint,
-        offset,
+        start: `[${measurePoints[0][0].toFixed(2)}, ${measurePoints[0][1].toFixed(2)}, ${measurePoints[0][2].toFixed(2)}]`,
+        end: `[${measurePoints[1][0].toFixed(2)}, ${measurePoints[1][1].toFixed(2)}, ${measurePoints[1][2].toFixed(2)}]`,
+        mousePos: `[${rawPoint[0].toFixed(2)}, ${rawPoint[1].toFixed(2)}, ${rawPoint[2].toFixed(2)}]`,
+        offset: `[${offset[0].toFixed(2)}, ${offset[1].toFixed(2)}, ${offset[2].toFixed(2)}]`,
         viewDirection
       });
       setGuideOffset(offset);
@@ -217,10 +217,10 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         const distance = calculateDistance(start, end, viewDirection);
 
         console.log('📏 측정 라인 추가:', {
-          start,
-          end,
+          start: `[${start[0].toFixed(2)}, ${start[1].toFixed(2)}, ${start[2].toFixed(2)}]`,
+          end: `[${end[0].toFixed(2)}, ${end[1].toFixed(2)}, ${end[2].toFixed(2)}]`,
           distance,
-          offset: guideOffset,
+          offset: `[${guideOffset[0].toFixed(2)}, ${guideOffset[1].toFixed(2)}, ${guideOffset[2].toFixed(2)}]`,
           viewDirection
         });
 
