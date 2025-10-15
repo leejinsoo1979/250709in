@@ -2154,9 +2154,18 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 단내림이 없는 경우 slotZone을 'normal'로 설정
         const slotZone = isZoneData ? slotData.zone : 'normal';
         const slotLocalIndex = isZoneData ? slotData.index : slotIndex;
-        // 콜라이더는 전체 깊이 사용 (드래그 앤 드롭 감지 영역 확대)
+
+        // Z축 위치 계산 - Room.tsx와 동일한 로직 사용
+        const panelDepthMm = 1500;
+        const furnitureDepthMm = 600;
+        const panelDepth = mmToThreeUnits(panelDepthMm);
+        const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+        const panelZOffset = -panelDepth / 2;
+        const furnitureZOffset = panelZOffset + (panelDepth - furnitureDepth) / 2;
+
+        // 콜라이더는 전체 깊이 사용하되, 가구 배치 영역의 중심에 위치
         const reducedDepth = slotDimensions.depth;
-        const zOffset = 0; // Z축 오프셋 없음
+        const zOffset = furnitureZOffset; // 가구 배치 영역의 Z 중심
         
         // 영역별 슬롯 너비 계산 - slotWidths 배열 사용
         let slotWidth = slotDimensions.width;
