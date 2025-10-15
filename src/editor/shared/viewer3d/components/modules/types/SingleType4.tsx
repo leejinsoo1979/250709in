@@ -145,7 +145,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
                     rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
                   } else {
                     // 안전선반도 마감 패널도 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
-                    const sectionTopPanelBottom = actualSectionTopY;
+                    const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                     rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
                   }
 
