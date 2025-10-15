@@ -283,13 +283,34 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             let accumulatedY = -height/2 + basicThickness;
             const availableHeight = height - basicThickness * 2;
 
+            console.log('🟢 SingleType2 섹션 계산 시작');
+            console.log('  moduleId:', moduleData.id);
+            console.log('  internalHeight:', internalHeight);
+            console.log('  height(Three):', height * 100);
+            console.log('  availableHeight:', availableHeight * 100);
+            console.log('  basicThickness:', basicThickness * 100);
+            console.log('  sectionsCount:', sections.length);
+
             return sections.map((section: any, sectionIndex: number) => {
               const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
               const sectionBottomY = accumulatedY;
               const sectionTopY = accumulatedY + sectionHeight - basicThickness;
 
+              console.log(`🟡 SingleType2 섹션[${sectionIndex}] (${section.type})`);
+              console.log('  sectionHeight:', sectionHeight * 100);
+              console.log('  sectionBottomY:', sectionBottomY * 100);
+              console.log('  heightType:', section.heightType);
+              console.log('  heightValue:', section.height);
+
               // 누적 Y 위치 업데이트
               accumulatedY += sectionHeight;
+
+              // hanging 섹션이 아니면 옷걸이봉 렌더링하지 않음
+              const isHangingSection = section.type === 'hanging';
+              if (!isHangingSection) {
+                console.log('  ⏭️ hanging 섹션이 아니므로 옷봉 렌더링 생략');
+                return null;
+              }
 
               // 안전선반 또는 마감 패널 위치 찾기
               const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
@@ -311,6 +332,16 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
                 // 브라켓 중심 = 상판 하단 - (브라켓 높이 / 2)
                 rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+
+                console.log('🔵 SingleType2 옷봉 위치 계산');
+                console.log('  moduleId:', moduleData.id);
+                console.log('  internalHeight:', internalHeight);
+                console.log('  height(Three→mm):', height * 100);
+                console.log('  sectionHeight:', sectionHeight * 100);
+                console.log('  sectionBottomY:', sectionBottomY * 100);
+                console.log('  sectionTopPanelBottom:', sectionTopPanelBottom * 100);
+                console.log('  rodYPosition:', rodYPosition * 100);
+                console.log('  basicThickness:', basicThickness * 100);
               }
 
               return (
