@@ -69,11 +69,11 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   // 카메라 줌 레벨에 따른 사각형 크기 계산 (줌 레벨 반영)
   const getSnapBoxSize = useCallback(() => {
     if (camera instanceof THREE.OrthographicCamera) {
-      const baseSize = 0.1; // 작은 기본 크기
+      const baseSize = 0.3; // 기본 크기
       const zoom = camera.zoom || 1;
       return baseSize / zoom; // 줌이 커질수록 사각형 작아짐
     }
-    return 0.1;
+    return 0.3;
   }, [camera]);
 
   // 시점에 따른 텍스트 오프셋 계산
