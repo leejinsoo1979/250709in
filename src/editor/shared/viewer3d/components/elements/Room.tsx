@@ -2647,9 +2647,9 @@ const Room: React.FC<RoomProps> = ({
               {/* 좌측 벽 안쪽 세로 서브프레임 (뒤쪽) */}
               <group
                 position={[
-                  xOffset + frameThickness.left,
+                  xOffset + frameThickness.left - mmToThreeUnits(10),
                   droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+                  furnitureZOffset - furnitureDepth/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(30)
                 ]}
                 rotation={[0, Math.PI / 2, 0]}
               >
@@ -2739,9 +2739,9 @@ const Room: React.FC<RoomProps> = ({
               {/* 우측 벽 안쪽 세로 서브프레임 (뒤쪽) */}
               <group
                 position={[
-                  xOffset + width - frameThickness.right,
+                  xOffset + width - frameThickness.right + mmToThreeUnits(10),
                   droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+                  furnitureZOffset - furnitureDepth/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(30)
                 ]}
                 rotation={[0, Math.PI / 2, 0]}
               >
