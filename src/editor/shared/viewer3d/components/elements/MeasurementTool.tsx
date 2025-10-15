@@ -508,7 +508,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
   // 이벤트 리스너 등록
   useEffect(() => {
-    if (!isMeasureMode) {
+    if (!isMeasureMode && !isEraserMode) {
       setHoverPoint(null);
       setIsSnapped(false);
       return;
@@ -522,9 +522,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       canvas.removeEventListener('pointermove', handlePointerMove);
       canvas.removeEventListener('click', handleClick);
     };
-  }, [isMeasureMode, handlePointerMove, handleClick, gl]);
-
-  if (!isMeasureMode) return null;
+  }, [isMeasureMode, isEraserMode, handlePointerMove, handleClick, gl]);
 
   const lineColor = '#00FF00'; // 형광 초록색
   const snapColor = '#FFFF00'; // 노란색 (스냅됨)
@@ -622,8 +620,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         );
       })}
 
-      {/* 임시 측정 라인 (첫 번째 클릭 후) */}
-      {measurePoints && measurePoints[0] && hoverPoint && !isAdjustingGuide && (
+      {/* 임시 측정 라인 (첫 번째 클릭 후) - 측정 모드일 때만 표시 */}
+      {isMeasureMode && measurePoints && measurePoints[0] && hoverPoint && !isAdjustingGuide && (
         <group>
           <Line
             points={[measurePoints[0], hoverPoint]}
@@ -678,8 +676,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         </group>
       )}
 
-      {/* 가이드 조정 모드 */}
-      {isAdjustingGuide && measurePoints && measurePoints[0] && measurePoints[1] && (
+      {/* 가이드 조정 모드 - 측정 모드일 때만 표시 */}
+      {isMeasureMode && isAdjustingGuide && measurePoints && measurePoints[0] && measurePoints[1] && (
         <group>
           {(() => {
             const start = measurePoints[0];
@@ -762,8 +760,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         </group>
       )}
 
-      {/* 호버 커서 (측정 시작 전) - 스냅되면 노란 네모만 표시 */}
-      {!measurePoints && hoverPoint && isSnapped && (() => {
+      {/* 호버 커서 (측정 시작 전) - 측정 모드일 때만 표시 */}
+      {isMeasureMode && !measurePoints && hoverPoint && isSnapped && (() => {
         console.log(`🖱️ 호버 커서: [${hoverPoint[0].toFixed(2)}, ${hoverPoint[1].toFixed(2)}, ${hoverPoint[2].toFixed(2)}] snapped=${isSnapped} boxSize=${snapBoxSize.toFixed(4)}`);
 
         return (
