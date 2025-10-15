@@ -170,11 +170,23 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
     // 가이드 조정 모드인 경우
     if (isAdjustingGuide && measurePoints && measurePoints[0] && measurePoints[1]) {
-      const offset = calculateGuideOffset(measurePoints[0], measurePoints[1], rawPoint, viewDirection);
+      // 뷰 방향에 따라 마우스 위치를 뷰 평면에 강제
+      const normalizedMousePos: MeasurePoint = viewDirection === 'front'
+        ? [rawPoint[0], rawPoint[1], 0]  // 정면: Z=0 강제
+        : viewDirection === 'top'
+        ? [rawPoint[0], 0, rawPoint[2]]  // 상단: Y=0 강제
+        : viewDirection === 'left'
+        ? [0, rawPoint[1], rawPoint[2]]  // 좌측: X=0 강제
+        : viewDirection === 'right'
+        ? [0, rawPoint[1], rawPoint[2]]  // 우측: X=0 강제
+        : rawPoint;
+
+      const offset = calculateGuideOffset(measurePoints[0], measurePoints[1], normalizedMousePos, viewDirection);
       console.log('🔧 가이드 오프셋 조정:', {
         start: `[${measurePoints[0][0].toFixed(2)}, ${measurePoints[0][1].toFixed(2)}, ${measurePoints[0][2].toFixed(2)}]`,
         end: `[${measurePoints[1][0].toFixed(2)}, ${measurePoints[1][1].toFixed(2)}, ${measurePoints[1][2].toFixed(2)}]`,
         mousePos: `[${rawPoint[0].toFixed(2)}, ${rawPoint[1].toFixed(2)}, ${rawPoint[2].toFixed(2)}]`,
+        normalizedMousePos: `[${normalizedMousePos[0].toFixed(2)}, ${normalizedMousePos[1].toFixed(2)}, ${normalizedMousePos[2].toFixed(2)}]`,
         offset: `[${offset[0].toFixed(2)}, ${offset[1].toFixed(2)}, ${offset[2].toFixed(2)}]`,
         viewDirection
       });
