@@ -60,6 +60,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 커서 색상 (다크모드: 흰색, 라이트모드: 검정색)
   const cursorColor = view2DTheme === 'dark' ? 'white' : 'black';
+
+  // 지우개 커서 색상 (다크모드: 흰색, 라이트모드: 검정색)
+  const eraserCursorColor = view2DTheme === 'dark' ? 'white' : 'black';
   
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
@@ -650,7 +653,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           ...style,
           background: viewMode === '2D' && theme.mode === 'dark' ? '#121212' : viewMode === '2D' ? '#ffffff' : CANVAS_SETTINGS.BACKGROUND_COLOR,
           cursor: (isEraserMode && viewMode === '2D')
-            ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="red"><path d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z"/></svg>') 12 12, pointer`
+            ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="${eraserCursorColor}"><path d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z"/></svg>') 12 12, pointer`
             : (isMeasureMode && viewMode === '2D')
             ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" viewBox="0 0 21 21"><line x1="10.5" y1="0" x2="10.5" y2="21" stroke="${cursorColor}" stroke-width="1"/><line x1="0" y1="10.5" x2="21" y2="10.5" stroke="${cursorColor}" stroke-width="1"/><circle cx="10.5" cy="10.5" r="2" fill="none" stroke="${cursorColor}" stroke-width="1"/></svg>') 10 10, crosshair`
             : 'default',
