@@ -299,12 +299,15 @@ export const useBaseFurniture = (
   // 높이 계산 헬퍼 함수
   const calculateSectionHeight = (section: SectionConfig, availableHeight: number) => {
     const heightType = section.heightType || 'percentage';
-    
+
     switch (heightType) {
       case 'absolute': {
         const absoluteHeightInThreeUnits = mmToThreeUnits(section.height);
         return Math.min(absoluteHeightInThreeUnits, availableHeight);
       }
+      case 'fill':
+        // fill 타입: 남은 공간을 모두 채움
+        return availableHeight;
       case 'percentage':
       default:
         return availableHeight * (section.height / 100);

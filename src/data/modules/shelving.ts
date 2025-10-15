@@ -266,22 +266,19 @@ const createSingleType1 = (columnWidth: number, maxHeight: number): ModuleData =
  */
 const createSingleType2 = (columnWidth: number, maxHeight: number): ModuleData => {
   const bottomHeight = FURNITURE_SPECS.TYPE2_BOTTOM_HEIGHT;
-  const bottomPercentage = (bottomHeight / maxHeight) * 100;
-  const topPercentage = 100 - bottomPercentage;
 
   // 기본 섹션 구성
   const baseSections: SectionConfig[] = [
     {
       type: 'hanging', // 하부장도 옷걸이 구역
-      heightType: 'percentage',
-      height: bottomPercentage,
+      heightType: 'absolute',
+      height: bottomHeight,
       count: 1, // 상판 1개
       isTopFinishPanel: true // 최상단 마감 패널 추가 (상부 섹션 하부판과 맞닿음)
     },
     {
       type: 'hanging',
-      heightType: 'percentage',
-      height: topPercentage
+      heightType: 'fill' // absolute에서 fill로 변경하여 남은 공간을 자동으로 채움
     }
   ];
   
@@ -372,23 +369,20 @@ const createSingleType4 = (columnWidth: number, maxHeight: number): ModuleData =
  */
 const createDualType1 = (dualColumnWidth: number, maxHeight: number, slotWidths?: number[]): ModuleData => {
   const drawerHeight = FURNITURE_SPECS.TYPE1_DRAWER_HEIGHT;
-  const drawerPercentage = (drawerHeight / maxHeight) * 100;
-  const hangingPercentage = 100 - drawerPercentage;
 
   // 기본 섹션 구성
   const baseSections: SectionConfig[] = [
     {
       type: 'drawer',
-      heightType: 'percentage',
-      height: drawerPercentage,
+      heightType: 'absolute',
+      height: drawerHeight,
       count: 2,
       drawerHeights: FURNITURE_SPECS.DRAWER_HEIGHTS_2TIER,
       gapHeight: FURNITURE_SPECS.DRAWER_GAP
     },
     {
       type: 'hanging',
-      heightType: 'percentage',
-      height: hangingPercentage
+      heightType: 'fill' // absolute에서 fill로 변경하여 남은 공간을 자동으로 채움
     }
   ];
   
