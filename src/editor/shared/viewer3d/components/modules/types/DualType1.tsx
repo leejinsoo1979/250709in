@@ -73,16 +73,17 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
             {(() => {
               const sections = baseFurniture.modelConfig?.sections || [];
               const { height, innerWidth, basicThickness, mmToThreeUnits, adjustedDepthForShelves, depth } = baseFurniture;
+              const availableHeight = height - basicThickness * 2;
 
               return sections.map((section: any, sectionIndex: number) => {
                 if (section.type !== 'hanging') return null;
 
                 // 섹션 높이 계산
-                const sectionHeight = baseFurniture.calculateSectionHeight(section, height);
+                const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
                 let sectionBottomY = -height / 2 + basicThickness;
 
                 for (let i = 0; i < sectionIndex; i++) {
-                  sectionBottomY += baseFurniture.calculateSectionHeight(sections[i], height);
+                  sectionBottomY += baseFurniture.calculateSectionHeight(sections[i], availableHeight);
                 }
 
                 // 안전선반 또는 마감 패널 위치 찾기

@@ -452,9 +452,10 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             {(() => {
               const sections = baseFurniture.modelConfig.sections || [];
               let accumulatedY = -height/2 + basicThickness;
+              const availableHeight = height - basicThickness * 2;
 
               return sections.map((section: any, sectionIndex: number) => {
-                const sectionHeight = baseFurniture.calculateSectionHeight(section, height, basicThickness);
+                const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
                 const sectionBottomY = accumulatedY;
                 const sectionTopY = accumulatedY + sectionHeight - basicThickness;
 
