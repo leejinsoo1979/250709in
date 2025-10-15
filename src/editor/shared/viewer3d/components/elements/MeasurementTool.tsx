@@ -115,11 +115,11 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         // 상단: X축 90도 회전 (아래를 바라봄)
         return [-Math.PI / 2, 0, 0];
       case 'left':
-        // 좌측: Y축 90도 회전 (왼쪽을 바라봄)
-        return [0, Math.PI / 2, 0];
-      case 'right':
-        // 우측: Y축 -90도 회전 (오른쪽을 바라봄)
+        // 좌측: Y축 -90도 회전 (왼쪽을 바라봄)
         return [0, -Math.PI / 2, 0];
+      case 'right':
+        // 우측: Y축 90도 회전 (오른쪽을 바라봄)
+        return [0, Math.PI / 2, 0];
       default:
         return [0, 0, 0];
     }
