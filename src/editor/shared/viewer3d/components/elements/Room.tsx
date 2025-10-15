@@ -2290,7 +2290,6 @@ const Room: React.FC<RoomProps> = ({
                 단내림구간프레임너비_mm: droppedFrameWidth / 0.01,
                 단내림위치: isLeftDropped ? '왼쪽' : '오른쪽',
                 위치정보: {
-                  internalStartX_mm: internalStartX / 0.01,
                   normalStartX_mm: normalStartX / 0.01,
                   droppedStartX_mm: droppedStartX / 0.01,
                   경계점_mm: (isLeftDropped ? normalStartX : droppedStartX) / 0.01
