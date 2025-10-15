@@ -1311,7 +1311,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           <>
             <button
               onClick={() => {
+                const { setEraserMode } = useUIStore.getState();
                 console.log('📏 측정 모드 토글:', !isMeasureMode);
+                // 측정 모드 활성화 시 지우개 모드 비활성화
+                setEraserMode(false);
                 toggleMeasureMode();
               }}
               style={{
