@@ -16,15 +16,23 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   const { openFurniturePopup, setIsSlotDragging } = useUIStore();
   const itemRef = useRef<HTMLDivElement>(null);
-  
+
   // 도어 상태 관리 (기본값: false - 도어 없음)
   const [hasDoor, setHasDoor] = useState<boolean>(false);
-  
+
   // 모듈 유효성 검사
   const validation = validateModuleForInternalSpace(module, internalSpace);
   const isValid = validation.isValid;
   const needsWarning = validation.needsWarning || false;
   const isDynamic = module.isDynamic;
+
+  console.log(`🎨 [ModuleItem] ${module.id} 렌더링:`, {
+    isValid,
+    needsWarning,
+    isDynamic,
+    draggable: isValid || needsWarning,
+    internalSpace
+  });
 
   // 도어 버튼 클릭 핸들러
   const handleDoorToggle = (e: React.MouseEvent) => {
