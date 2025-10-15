@@ -1955,17 +1955,8 @@ const Room: React.FC<RoomProps> = ({
         
         // 오른쪽이 단내림 영역인 경우
         if (hasDroppedCeiling && isRightDropped) {
-          // 단내림 구간에 가구가 없으면 엔드패널 렌더링 생략
-          if (!hasDroppedZoneFurniture) {
-            console.log('🚫 오른쪽 단내림 엔드패널 렌더링 생략 (단내림 구간에 가구 없음)');
-            return null;
-          }
-
-          // 좌측(일반구간)에 가구가 있으면 우측(단내림구간) 엔드패널 렌더링 생략
-          if (hasLeftFurniture) {
-            console.log('🚫 오른쪽 단내림 엔드패널 렌더링 생략 (좌측 일반구간에 가구 있음)');
-            return null;
-          }
+          // 메인 프레임은 항상 렌더링 (가구 유무와 무관)
+          // 이전에는 단내림 구간에 가구가 없으면 렌더링 생략했으나, 메인 프레임은 항상 표시되어야 함
 
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
           const droppedCenterY = panelStartY + droppedHeight/2;
