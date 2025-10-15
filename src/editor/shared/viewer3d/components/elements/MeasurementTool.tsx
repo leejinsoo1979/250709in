@@ -189,24 +189,9 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       return;
     }
 
-    // 스냅 기능: 가장 가까운 꼭지점 찾기 (시점별 2D 거리 계산, 줌 레벨 반영)
-    const snapDistance = getSnapDistance();
-    const totalVertices = sceneVerticesRef.current.length;
-    const zoom = camera instanceof THREE.OrthographicCamera ? camera.zoom : 1;
-
-    console.log(`🔍 스냅 시도: point[${rawPoint[0].toFixed(2)}, ${rawPoint[1].toFixed(2)}, ${rawPoint[2].toFixed(2)}] snapDist=${snapDistance.toFixed(3)} vertices=${totalVertices} view=${viewDirection} zoom=${zoom.toFixed(1)}`);
-
-    const nearestSnap = findNearestVertex(rawPoint, sceneVerticesRef.current, viewDirection, snapDistance);
-
-    if (nearestSnap) {
-      console.log(`✅ 스냅 성공! vertex[${nearestSnap.vertex[0].toFixed(2)}, ${nearestSnap.vertex[1].toFixed(2)}, ${nearestSnap.vertex[2].toFixed(2)}] distance=${nearestSnap.distance.toFixed(3)}`);
-      setHoverPoint(nearestSnap.vertex);
-      setIsSnapped(true);
-    } else {
-      console.log(`❌ 스냅 실패: snapDist=${snapDistance.toFixed(3)} vertices=${totalVertices}`);
-      setHoverPoint(rawPoint);
-      setIsSnapped(false);
-    }
+    // 스냅 비활성화 - 클릭한 위치 그대로 사용
+    setHoverPoint(rawPoint);
+    setIsSnapped(false);
   }, [isMeasureMode, gl, raycaster, camera, viewDirection, isAdjustingGuide, measurePoints, getSnapDistance]);
 
   // 클릭 핸들러
