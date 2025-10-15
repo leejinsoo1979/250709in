@@ -994,23 +994,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
+                          // 양쪽벽: 설정된 이격거리 사용
+                          leftReduction = spaceInfo.gapConfig?.left || 2;
+                          rightReduction = spaceInfo.gapConfig?.right || 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = 2;
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
+                          leftReduction = 0;
+                          rightReduction = 0;
                         }
                       }
-                      
-                      return spaceInfo.droppedCeiling.position === 'left' 
+
+                      return spaceInfo.droppedCeiling.position === 'left'
                         ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
                         : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
                     })()}
@@ -1050,23 +1052,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
+                          // 양쪽벽: 설정된 이격거리 사용
+                          leftReduction = spaceInfo.gapConfig?.left || 2;
+                          rightReduction = spaceInfo.gapConfig?.right || 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = 2;
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
+                          leftReduction = 0;
+                          rightReduction = 0;
                         }
                       }
-                      
-                      return spaceInfo.droppedCeiling.position === 'left' 
+
+                      return spaceInfo.droppedCeiling.position === 'left'
                         ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
                         : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
                     })()}
@@ -1119,6 +1123,60 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={subGuideColor}
                   lineWidth={1}
                 />
+
+                {/* 경계면 이격거리 치수선 */}
+                {(() => {
+                  const boundaryGapY = subDimensionY - mmToThreeUnits(60); // 구간 치수선 아래
+                  let boundaryLeftX: number;
+                  let boundaryRightX: number;
+
+                  if (spaceInfo.droppedCeiling.position === 'left') {
+                    // 왼쪽 단내림: 단내림 끝 ~ 메인 시작
+                    boundaryLeftX = droppedEndX;
+                    boundaryRightX = mainStartX;
+                  } else {
+                    // 오른쪽 단내림: 메인 끝 ~ 단내림 시작
+                    boundaryLeftX = mainEndX;
+                    boundaryRightX = droppedStartX;
+                  }
+
+                  const boundaryGapWidth = Math.abs(boundaryRightX - boundaryLeftX);
+                  const boundaryGapMm = boundaryGapWidth * 100; // three units to mm
+
+                  return (
+                    <>
+                      <Line
+                        points={[[boundaryLeftX, boundaryGapY, 0.003], [boundaryRightX, boundaryGapY, 0.003]]}
+                        color={dimensionColor}
+                        lineWidth={0.5}
+                        dashed
+                      />
+                      <Line
+                        points={createArrowHead([boundaryLeftX, boundaryGapY, 0.003], [boundaryLeftX + 0.03, boundaryGapY, 0.003])}
+                        color={dimensionColor}
+                        lineWidth={0.5}
+                      />
+                      <Line
+                        points={createArrowHead([boundaryRightX, boundaryGapY, 0.003], [boundaryRightX - 0.03, boundaryGapY, 0.003])}
+                        color={dimensionColor}
+                        lineWidth={0.5}
+                      />
+                      {(showDimensionsText || isStep2) && (
+                        <Text
+                          renderOrder={1000}
+                          depthTest={false}
+                          position={[(boundaryLeftX + boundaryRightX) / 2, boundaryGapY + mmToThreeUnits(20), 0.01]}
+                          fontSize={smallFontSize * 0.8}
+                          color={textColor}
+                          anchorX="center"
+                          anchorY="middle"
+                        >
+                          {boundaryGapMm.toFixed(1)}
+                        </Text>
+                      )}
+                    </>
+                  );
+                })()}
               </>
             );
           })()}
@@ -2171,23 +2229,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
+                          // 양쪽벽: 설정된 이격거리 사용
+                          leftReduction = spaceInfo.gapConfig?.left || 2;
+                          rightReduction = spaceInfo.gapConfig?.right || 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = 2;
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
+                          leftReduction = 0;
+                          rightReduction = 0;
                         }
                       }
-                      
-                      return spaceInfo.droppedCeiling.position === 'left' 
+
+                      return spaceInfo.droppedCeiling.position === 'left'
                         ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
                         : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
                     })()}
@@ -2228,23 +2288,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
+                          // 양쪽벽: 설정된 이격거리 사용
+                          leftReduction = spaceInfo.gapConfig?.left || 2;
+                          rightReduction = spaceInfo.gapConfig?.right || 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = 2;
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
+                          leftReduction = 0;
+                          rightReduction = 0;
                         }
                       }
-                      
-                      return spaceInfo.droppedCeiling.position === 'left' 
+
+                      return spaceInfo.droppedCeiling.position === 'left'
                         ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
                         : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
                     })()}
@@ -2272,6 +2334,61 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   lineWidth={0.5}
                 />
                 
+                {/* 경계면 이격거리 치수선 */}
+                {(() => {
+                  const boundaryGapZ = subDimensionZ - mmToThreeUnits(60); // 구간 치수선 아래
+                  let boundaryLeftX: number;
+                  let boundaryRightX: number;
+
+                  if (spaceInfo.droppedCeiling.position === 'left') {
+                    // 왼쪽 단내림: 단내림 끝 ~ 메인 시작
+                    boundaryLeftX = droppedEndX;
+                    boundaryRightX = mainStartX;
+                  } else {
+                    // 오른쪽 단내림: 메인 끝 ~ 단내림 시작
+                    boundaryLeftX = mainEndX;
+                    boundaryRightX = droppedStartX;
+                  }
+
+                  const boundaryGapWidth = Math.abs(boundaryRightX - boundaryLeftX);
+                  const boundaryGapMm = boundaryGapWidth * 100; // three units to mm
+
+                  return (
+                    <>
+                      <Line
+                        points={[[boundaryLeftX, spaceHeight, boundaryGapZ], [boundaryRightX, spaceHeight, boundaryGapZ]]}
+                        color={dimensionColor}
+                        lineWidth={0.5}
+                        dashed
+                      />
+                      <Line
+                        points={createArrowHead([boundaryLeftX, spaceHeight, boundaryGapZ], [boundaryLeftX + 0.03, spaceHeight, boundaryGapZ])}
+                        color={dimensionColor}
+                        lineWidth={0.5}
+                      />
+                      <Line
+                        points={createArrowHead([boundaryRightX, spaceHeight, boundaryGapZ], [boundaryRightX - 0.03, spaceHeight, boundaryGapZ])}
+                        color={dimensionColor}
+                        lineWidth={0.5}
+                      />
+                      {(showDimensionsText || isStep2) && (
+                        <Text
+                          renderOrder={1000}
+                          depthTest={false}
+                          position={[(boundaryLeftX + boundaryRightX) / 2, spaceHeight + 0.1, boundaryGapZ - mmToThreeUnits(30)]}
+                          fontSize={smallFontSize * 0.8}
+                          color={textColor}
+                          anchorX="center"
+                          anchorY="middle"
+                          rotation={[-Math.PI / 2, 0, 0]}
+                        >
+                          {boundaryGapMm.toFixed(1)}
+                        </Text>
+                      )}
+                    </>
+                  );
+                })()}
+
                 {/* 연장선 - 단내림 영역 */}
                 <Line
                   points={[
@@ -3717,23 +3834,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
+                          // 양쪽벽: 설정된 이격거리 사용
+                          leftReduction = spaceInfo.gapConfig?.left || 2;
+                          rightReduction = spaceInfo.gapConfig?.right || 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = 2;
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
+                          leftReduction = 0;
+                          rightReduction = 0;
                         }
                       }
-                      
-                      return spaceInfo.droppedCeiling.position === 'left' 
+
+                      return spaceInfo.droppedCeiling.position === 'left'
                         ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
                         : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
                     })()}
@@ -3772,23 +3891,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
-                          leftReduction = 2;
-                          rightReduction = 2;
+                          // 양쪽벽: 설정된 이격거리 사용
+                          leftReduction = spaceInfo.gapConfig?.left || 2;
+                          rightReduction = spaceInfo.gapConfig?.right || 2;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = 2;
+                            leftReduction = spaceInfo.gapConfig?.left || 2;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = 2;
+                            rightReduction = spaceInfo.gapConfig?.right || 2;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
-                          leftReduction = 20;
-                          rightReduction = 20;
+                          // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
+                          leftReduction = 0;
+                          rightReduction = 0;
                         }
                       }
-                      
-                      return spaceInfo.droppedCeiling.position === 'left' 
+
+                      return spaceInfo.droppedCeiling.position === 'left'
                         ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
                         : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
                     })()}
