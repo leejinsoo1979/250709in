@@ -425,9 +425,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             lineWidth={2}
           />
 
-          {/* 호버점 마커 (십자가 + 스냅 시 노란 사각형) */}
-          {isSnapped ? (
-            // 스냅됨: 노란색 사각형
+          {/* 호버점 마커 (스냅 시에만 노란 사각형) */}
+          {isSnapped && (
             <Line
               points={[
                 [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
@@ -439,26 +438,6 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
               color={snapColor}
               lineWidth={2}
             />
-          ) : (
-            // 스냅 안됨: 십자가
-            <>
-              <Line
-                points={[
-                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1], hoverPoint[2]],
-                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1], hoverPoint[2]]
-                ]}
-                color={lineColor}
-                lineWidth={1}
-              />
-              <Line
-                points={[
-                  [hoverPoint[0], hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0], hoverPoint[1] + snapBoxSize/2, hoverPoint[2]]
-                ]}
-                color={lineColor}
-                lineWidth={1}
-              />
-            </>
           )}
 
           {/* 임시 거리 텍스트 */}
@@ -582,44 +561,19 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         </group>
       )}
 
-      {/* 호버 커서 (측정 시작 전) - 십자가 + 스냅 시 노란 사각형 */}
-      {!measurePoints && hoverPoint && (
-        <>
-          {isSnapped ? (
-            // 스냅됨: 노란색 사각형
-            <Line
-              points={[
-                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
-              ]}
-              color={snapColor}
-              lineWidth={2}
-            />
-          ) : (
-            // 스냅 안됨: 십자가
-            <>
-              <Line
-                points={[
-                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1], hoverPoint[2]],
-                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1], hoverPoint[2]]
-                ]}
-                color={lineColor}
-                lineWidth={1}
-              />
-              <Line
-                points={[
-                  [hoverPoint[0], hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0], hoverPoint[1] + snapBoxSize/2, hoverPoint[2]]
-                ]}
-                color={lineColor}
-                lineWidth={1}
-              />
-            </>
-          )}
-        </>
+      {/* 호버 커서 (측정 시작 전) - 스냅 시에만 노란 사각형 */}
+      {!measurePoints && hoverPoint && isSnapped && (
+        <Line
+          points={[
+            [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+            [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+            [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+            [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+            [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
+          ]}
+          color={snapColor}
+          lineWidth={2}
+        />
       )}
     </group>
   );
