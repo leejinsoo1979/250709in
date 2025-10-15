@@ -95,13 +95,33 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         return [point[0], point[1] + offset, point[2]];
       case 'left':
       case 'right':
-        // 측면: Z축 앞으로 오프셋
+        // 측면: Y축 위로 오프셋
         return [point[0], point[1] + offset, point[2]];
       case 'top':
         // 상단: Z축 앞으로 오프셋
         return [point[0], point[1], point[2] - offset];
       default:
         return [point[0], point[1] + offset, point[2]];
+    }
+  };
+
+  // 시점에 따른 텍스트 회전 (카메라를 향하도록)
+  const getTextRotation = (): [number, number, number] => {
+    switch (viewDirection) {
+      case 'front':
+        // 정면: 회전 없음 (Z축 바라봄)
+        return [0, 0, 0];
+      case 'top':
+        // 상단: X축 90도 회전 (아래를 바라봄)
+        return [-Math.PI / 2, 0, 0];
+      case 'left':
+        // 좌측: Y축 90도 회전 (왼쪽을 바라봄)
+        return [0, Math.PI / 2, 0];
+      case 'right':
+        // 우측: Y축 -90도 회전 (오른쪽을 바라봄)
+        return [0, -Math.PI / 2, 0];
+      default:
+        return [0, 0, 0];
     }
   };
 
@@ -512,6 +532,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             {/* 거리 텍스트 */}
             <Text
               position={getTextOffset(midPoint, 0.2)}
+              rotation={getTextRotation()}
               fontSize={0.25}
               color={lineColor}
               anchorX="center"
@@ -566,6 +587,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             return (
               <Text
                 position={getTextOffset(midPoint, 0.2)}
+                rotation={getTextRotation()}
                 fontSize={0.25}
                 color={lineColor}
                 anchorX="center"
@@ -639,6 +661,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
                 {/* 거리 텍스트 */}
                 <Text
                   position={getTextOffset(midPoint, 0.2)}
+                  rotation={getTextRotation()}
                   fontSize={0.25}
                   color={snapColor}
                   anchorX="center"
@@ -650,6 +673,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
                 {/* 안내 텍스트 */}
                 <Text
                   position={getTextOffset(midPoint, -0.4)}
+                  rotation={getTextRotation()}
                   fontSize={0.15}
                   color={snapColor}
                   anchorX="center"
