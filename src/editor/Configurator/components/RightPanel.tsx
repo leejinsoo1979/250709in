@@ -771,7 +771,13 @@ const RightPanel: React.FC<RightPanelProps> = ({
                 onTabChange(tab.id);
                 // 단내림이 활성화된 경우 UIStore 업데이트
                 if (spaceInfo.droppedCeiling?.enabled) {
-                  setActiveDroppedCeilingTab(tab.id === 'placement' ? 'main' : 'dropped');
+                  const newTab = tab.id === 'placement' ? 'main' : 'dropped';
+                  console.log('🎯 RightPanel 탭 클릭 - activeDroppedCeilingTab 설정:', {
+                    clickedTabId: tab.id,
+                    newActiveTab: newTab,
+                    droppedEnabled: spaceInfo.droppedCeiling?.enabled
+                  });
+                  setActiveDroppedCeilingTab(newTab);
                 }
               }}
             >
