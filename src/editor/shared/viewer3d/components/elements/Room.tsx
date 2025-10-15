@@ -2325,12 +2325,12 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       droppedX,
                       panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight/2, // 단내림 천장 위치에서 프레임 높이의 절반만큼 아래
-                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 -
                       mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
                     material={createFrameMaterial('top')}
                     renderMode={renderMode}
-                  
+
           shadowEnabled={shadowEnabled}
         />
                   {/* 일반 영역 상부 프레임 */}
@@ -2343,14 +2343,32 @@ const Room: React.FC<RoomProps> = ({
                     position={[
                       normalX,
                       topElementsY,
-                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 -
                       mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
                     ]}
                     material={createFrameMaterial('top')}
                     renderMode={renderMode}
-                  
+
           shadowEnabled={shadowEnabled}
         />
+                  {/* 단내림 경계 앞면 수평 프레임 - 서라운드 모드에서만 */}
+                  {spaceInfo.surroundType !== 'no-surround' && (
+                    <BoxWithEdges
+                      args={[
+                        droppedFrameWidth, // 단내림 프레임과 동일한 너비
+                        topBottomFrameHeight, // 상부 프레임과 동일한 높이
+                        mmToThreeUnits(END_PANEL_THICKNESS) // 18mm 깊이
+                      ]}
+                      position={[
+                        droppedX, // 단내림 영역 중앙
+                        panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight/2, // 단내림 높이 위치
+                        furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 // 앞면 위치
+                      ]}
+                      material={createFrameMaterial('top')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  )}
                 </>
               );
             }
