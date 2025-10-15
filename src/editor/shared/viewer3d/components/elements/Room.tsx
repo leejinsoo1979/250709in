@@ -1848,6 +1848,13 @@ const Room: React.FC<RoomProps> = ({
         }
         
         // 단내림이 없거나 우측 단내림인 경우 기존 렌더링
+        // 우측 단내림이면 왼쪽은 렌더링하지 않음 (단내림 구간에만 가구 배치 가능)
+        const isRightDropped = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'right';
+        if (isRightDropped) {
+          console.log('🚫 왼쪽 엔드패널 렌더링 생략 (우측 단내림이므로)');
+          return null;
+        }
+
         console.log('🔍 왼쪽 엔드패널 렌더링 디버그:', {
           frameThicknessLeft: frameThickness.left,
           wallConfigLeft: wallConfig?.left,
@@ -1856,7 +1863,7 @@ const Room: React.FC<RoomProps> = ({
           깊이: wallConfig?.left ? '프레임(18mm)' : '엔드패널(전체깊이-18mm)',
           위치: wallConfig?.left ? '프레임위치' : '엔드패널위치'
         });
-        
+
         // 렌더링 카운터 증가
         if (typeof window !== 'undefined' && window.renderCounter) {
           if (!wallConfig?.left) {
@@ -1867,7 +1874,7 @@ const Room: React.FC<RoomProps> = ({
             console.log('🚨🚨🚨 왼쪽 프레임 렌더링!', window.renderCounter.leftFrame, '번째');
           }
         }
-        
+
         return (
           <BoxWithEdges
             isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
@@ -2033,6 +2040,13 @@ const Room: React.FC<RoomProps> = ({
         }
         
         // 단내림이 없거나 좌측 단내림인 경우 기존 렌더링
+        // 좌측 단내림이면 오른쪽은 렌더링하지 않음 (단내림 구간에만 가구 배치 가능)
+        const isLeftDroppedForRight = hasDroppedCeiling && spaceInfo.droppedCeiling?.position === 'left';
+        if (isLeftDroppedForRight) {
+          console.log('🚫 오른쪽 엔드패널 렌더링 생략 (좌측 단내림이므로)');
+          return null;
+        }
+
         // 렌더링 카운터 증가
         if (typeof window !== 'undefined' && window.renderCounter) {
           if (!wallConfig?.right) {
@@ -2043,7 +2057,7 @@ const Room: React.FC<RoomProps> = ({
             console.log('🚨🚨🚨 오른쪽 프레임 렌더링!', window.renderCounter.rightFrame, '번째');
           }
         }
-        
+
         return (
           <BoxWithEdges
             isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
