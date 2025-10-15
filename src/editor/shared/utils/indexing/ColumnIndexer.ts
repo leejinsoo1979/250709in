@@ -943,16 +943,17 @@ export class ColumnIndexer {
         // 노서라운드: 엔드패널 고려
         let leftReduction = 0;
         let rightReduction = 0;
-        
+
         // freestanding인 경우 엔드패널이 슬롯에 포함되므로 reduction 없음
+        // 단, 단내림 경계에는 엔드패널 1개분만 적용 (양쪽 엔드패널 중복 방지)
         if (spaceInfo.installType === 'freestanding') {
-          // 벽없음: 엔드패널이 슬롯에 포함됨
+          // 벽없음: 단내림구간 오른쪽 엔드패널만 제외 (일반구간과 경계 공유)
           leftReduction = 0;
-          rightReduction = 0;
+          rightReduction = END_PANEL_THICKNESS; // 경계 엔드패널 1개분만 제외
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: gapConfig의 left 값을 그대로 사용
           leftReduction = spaceInfo.gapConfig?.left || 0;
-          
+
           if (spaceInfo.wallConfig?.right) {
             rightReduction = spaceInfo.gapConfig?.right || 2;
           } else {
@@ -965,7 +966,7 @@ export class ColumnIndexer {
           } else {
             leftReduction = END_PANEL_THICKNESS;
           }
-          
+
           // 오른쪽 처리 (이격거리 무시)
           if (spaceInfo.wallConfig?.right) {
             rightReduction = 0;  // 벽이 있으면 이격거리 무시
@@ -973,7 +974,7 @@ export class ColumnIndexer {
             rightReduction = END_PANEL_THICKNESS;
           }
         }
-        
+
         droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction;
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
         normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
@@ -1009,16 +1010,17 @@ export class ColumnIndexer {
         // 노서라운드: 엔드패널 고려하여 계산
         let leftReduction = 0;
         let rightReduction = 0;
-        
+
         // freestanding인 경우 엔드패널이 슬롯에 포함되므로 reduction 없음
+        // 단, 단내림 경계에는 엔드패널 1개분만 적용 (양쪽 엔드패널 중복 방지)
         if (spaceInfo.installType === 'freestanding') {
-          // 벽없음: 엔드패널이 슬롯에 포함됨
+          // 벽없음: 일반구간 오른쪽 엔드패널만 제외 (단내림구간과 경계 공유)
           leftReduction = 0;
-          rightReduction = 0;
+          rightReduction = END_PANEL_THICKNESS; // 경계 엔드패널 1개분만 제외
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           // 세미스탠딩: gapConfig의 left 값을 그대로 사용
           leftReduction = spaceInfo.gapConfig?.left || 0;
-          
+
           if (spaceInfo.wallConfig?.right) {
             rightReduction = spaceInfo.gapConfig?.right || 2;
           } else {
@@ -1031,7 +1033,7 @@ export class ColumnIndexer {
           } else {
             leftReduction = END_PANEL_THICKNESS;
           }
-          
+
           // 오른쪽 처리
           if (spaceInfo.wallConfig?.right) {
             rightReduction = 0;  // 벽에 바로 붙음 (이격거리 무시)
@@ -1039,7 +1041,7 @@ export class ColumnIndexer {
             rightReduction = END_PANEL_THICKNESS;
           }
         }
-        
+
         normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
         normalStartX = internalStartX; // 수정된 internalStartX 사용
         droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction;
