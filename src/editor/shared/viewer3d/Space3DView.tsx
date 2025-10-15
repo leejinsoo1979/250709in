@@ -1321,10 +1321,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 width: '36px',
                 height: '36px',
                 backgroundColor: isMeasureMode
-                  ? (view2DTheme === 'dark' ? 'rgba(59,130,246,0.8)' : 'rgba(59,130,246,0.9)')
+                  ? colors.primary
                   : (view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)'),
                 border: `1px solid ${isMeasureMode
-                  ? 'rgba(59,130,246,1)'
+                  ? colors.primary
                   : (view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)')}`,
                 borderRadius: '4px',
                 color: isMeasureMode ? '#ffffff' : (view2DTheme === 'dark' ? '#ffffff' : '#000000'),
@@ -1335,7 +1335,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 transition: 'all 0.2s ease',
                 zIndex: 20,
                 padding: '0',
-                boxShadow: isMeasureMode ? '0 2px 8px rgba(59,130,246,0.3)' : '0 2px 4px rgba(0,0,0,0.1)'
+                boxShadow: isMeasureMode ? `0 2px 8px ${colors.primary}40` : '0 2px 4px rgba(0,0,0,0.1)'
               }}
               onMouseEnter={(e) => {
                 if (!isMeasureMode) {
@@ -1370,10 +1370,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 width: '36px',
                 height: '36px',
                 backgroundColor: isEraserMode
-                  ? (view2DTheme === 'dark' ? 'rgba(239,68,68,0.8)' : 'rgba(239,68,68,0.9)')
+                  ? colors.danger
                   : (view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)'),
                 border: `1px solid ${isEraserMode
-                  ? 'rgba(239,68,68,1)'
+                  ? colors.danger
                   : (view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)')}`,
                 borderRadius: '4px',
                 color: isEraserMode ? '#ffffff' : (view2DTheme === 'dark' ? '#ffffff' : '#000000'),
@@ -1384,7 +1384,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 transition: 'all 0.2s ease',
                 zIndex: 20,
                 padding: '0',
-                boxShadow: isEraserMode ? '0 2px 8px rgba(239,68,68,0.3)' : '0 2px 4px rgba(0,0,0,0.1)'
+                boxShadow: isEraserMode ? `0 2px 8px ${colors.danger}40` : '0 2px 4px rgba(0,0,0,0.1)'
               }}
               onMouseEnter={(e) => {
                 if (!isEraserMode) {
