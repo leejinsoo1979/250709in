@@ -13,9 +13,13 @@ export const SNAP_DISTANCE = 1.0;
 export function extractVertices(object: THREE.Object3D): MeasurePoint[] {
   const vertices: MeasurePoint[] = [];
   const worldMatrix = new THREE.Matrix4();
+  const processedVertices = new Set<string>();
+  let meshCount = 0;
 
   object.traverse((child) => {
-    if (child instanceof THREE.Mesh && child.geometry) {
+    // Mesh, Line, LineSegments 모두 처리
+    if ((child instanceof THREE.Mesh || child instanceof THREE.Line || child instanceof THREE.LineSegments) && child.geometry) {
+      meshCount++;
       const geometry = child.geometry;
 
       // 월드 매트릭스 계산
@@ -24,17 +28,19 @@ export function extractVertices(object: THREE.Object3D): MeasurePoint[] {
 
       // 위치 속성 가져오기
       const positions = geometry.attributes.position;
-      if (!positions) return;
+      if (!positions) {
+        console.warn('⚠️ 위치 속성 없음:', child.name || child.type);
+        return;
+      }
 
       const vertex = new THREE.Vector3();
-      const processedVertices = new Set<string>();
 
       for (let i = 0; i < positions.count; i++) {
         vertex.fromBufferAttribute(positions, i);
         vertex.applyMatrix4(worldMatrix);
 
-        // 중복 제거 (소수점 2자리까지 반올림)
-        const key = `${vertex.x.toFixed(2)},${vertex.y.toFixed(2)},${vertex.z.toFixed(2)}`;
+        // 중복 제거 (소수점 1자리까지 반올림 - 더 많은 꼭지점 포함)
+        const key = `${vertex.x.toFixed(1)},${vertex.y.toFixed(1)},${vertex.z.toFixed(1)}`;
         if (!processedVertices.has(key)) {
           processedVertices.add(key);
           vertices.push([vertex.x, vertex.y, vertex.z]);
@@ -42,6 +48,8 @@ export function extractVertices(object: THREE.Object3D): MeasurePoint[] {
       }
     }
   });
+
+  console.log(`📐 꼭지점 추출 완료: ${meshCount}개 객체에서 ${vertices.length}개 꼭지점 발견`);
 
   return vertices;
 }
