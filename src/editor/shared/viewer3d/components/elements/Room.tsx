@@ -1911,12 +1911,12 @@ const Room: React.FC<RoomProps> = ({
               // 노서라운드 모드에서 엔드패널/프레임 위치 결정
               spaceInfo.surroundType === 'no-surround'
                 ? (wallConfig?.left
-                    ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(10)  // 벽이 있는 경우: 프레임 위치 (가구 앞면에서 10mm 뒤) - 일반 구간은 15mm 더 뒤로
+                    ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(6)  // 벽이 있는 경우: 프레임 위치 (가구 앞면에서 6mm 뒤)
                     : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
                 : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
                    (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                     ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                    : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(10))  // 서라운드 프레임 (가구 앞면에서 10mm 뒤) - 일반 구간은 15mm 더 뒤로
+                    : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(6))  // 서라운드 프레임 (가구 앞면에서 6mm 뒤)
             ]}
             material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
@@ -2104,12 +2104,12 @@ const Room: React.FC<RoomProps> = ({
               // 노서라운드 모드에서 엔드패널/프레임 위치 결정
               spaceInfo.surroundType === 'no-surround'
                 ? (wallConfig?.right
-                    ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(10)  // 벽이 있는 경우: 프레임 위치 (가구 앞면에서 10mm 뒤) - 일반 구간은 15mm 더 뒤로
+                    ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(6)  // 벽이 있는 경우: 프레임 위치 (가구 앞면에서 6mm 뒤)
                     : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
                 : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
                    (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                     ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                    : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(10))  // 서라운드 프레임 (가구 앞면에서 10mm 뒤) - 일반 구간은 15mm 더 뒤로
+                    : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(6))  // 서라운드 프레임 (가구 앞면에서 6mm 뒤)
             ]}
             material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
