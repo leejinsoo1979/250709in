@@ -2665,26 +2665,6 @@ const Room: React.FC<RoomProps> = ({
                   shadowEnabled={shadowEnabled}
                 />
               </group>
-              {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
-              <group
-                position={[
-                  xOffset + frameThickness.left / 2,
-                  droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
-                ]}
-              >
-                <BoxWithEdges
-                  args={[
-                    frameThickness.left,
-                    droppedHeight,
-                    mmToThreeUnits(END_PANEL_THICKNESS)
-                  ]}
-                  position={[0, 0, 0]}
-                  material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-                  renderMode={renderMode}
-                  shadowEnabled={shadowEnabled}
-                />
-              </group>
             </>
           );
         }
@@ -2704,26 +2684,6 @@ const Room: React.FC<RoomProps> = ({
               <BoxWithEdges
                 args={[
                   mmToThreeUnits(40),
-                  adjustedPanelHeight,
-                  mmToThreeUnits(END_PANEL_THICKNESS)
-                ]}
-                position={[0, 0, 0]}
-                material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-                renderMode={renderMode}
-                shadowEnabled={shadowEnabled}
-              />
-            </group>
-            {/* 정면 프레임 (앞쪽) */}
-            <group
-              position={[
-                xOffset + frameThickness.left / 2,
-                sideFrameCenterY,
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
-              ]}
-            >
-              <BoxWithEdges
-                args={[
-                  frameThickness.left,
                   adjustedPanelHeight,
                   mmToThreeUnits(END_PANEL_THICKNESS)
                 ]}
@@ -2779,26 +2739,6 @@ const Room: React.FC<RoomProps> = ({
                   shadowEnabled={shadowEnabled}
                 />
               </group>
-              {/* 우측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
-              <group
-                position={[
-                  xOffset + width - frameThickness.right / 2,
-                  droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
-                ]}
-              >
-                <BoxWithEdges
-                  args={[
-                    frameThickness.right,
-                    droppedHeight,
-                    mmToThreeUnits(END_PANEL_THICKNESS)
-                  ]}
-                  position={[0, 0, 0]}
-                  material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-                  renderMode={renderMode}
-                  shadowEnabled={shadowEnabled}
-                />
-              </group>
             </>
           );
         }
@@ -2818,26 +2758,6 @@ const Room: React.FC<RoomProps> = ({
               <BoxWithEdges
                 args={[
                   mmToThreeUnits(40),
-                  adjustedPanelHeight,
-                  mmToThreeUnits(END_PANEL_THICKNESS)
-                ]}
-                position={[0, 0, 0]}
-                material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-                renderMode={renderMode}
-                shadowEnabled={shadowEnabled}
-              />
-            </group>
-            {/* 정면 프레임 (앞쪽) */}
-            <group
-              position={[
-                xOffset + width - frameThickness.right / 2,
-                sideFrameCenterY,
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
-              ]}
-            >
-              <BoxWithEdges
-                args={[
-                  frameThickness.right,
                   adjustedPanelHeight,
                   mmToThreeUnits(END_PANEL_THICKNESS)
                 ]}
