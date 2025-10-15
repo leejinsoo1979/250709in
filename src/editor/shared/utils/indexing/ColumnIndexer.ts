@@ -1084,10 +1084,13 @@ export class ColumnIndexer {
       }
     }
     
+    // 경계면 이격거리 자동 계산 (2~5mm 사이에서 슬롯 내경이 정수가 되도록)
+    let boundaryGap = 2; // 기본값
+
     // 각 영역의 컬럼 수 계산
     let normalColumnCount: number;
     let droppedColumnCount: number;
-    
+
     // 메인 영역 컬럼 수
     if (spaceInfo.mainDoorCount !== undefined && spaceInfo.mainDoorCount > 0) {
       normalColumnCount = spaceInfo.mainDoorCount;
@@ -1098,14 +1101,14 @@ export class ColumnIndexer {
       // 자동 계산
       normalColumnCount = SpaceCalculator.getDefaultColumnCount(normalAreaInternalWidth);
     }
-    
+
     // 메인 영역 슬롯 너비가 600mm를 초과하지 않도록 검증
     const minRequiredNormalSlots = Math.ceil(normalAreaInternalWidth / MAX_SLOT_WIDTH);
     if (normalColumnCount < minRequiredNormalSlots) {
       normalColumnCount = minRequiredNormalSlots;
       console.warn(`메인 영역 슬롯 너비 제한: ${minRequiredNormalSlots}개 이상의 슬롯이 필요합니다.`);
     }
-    
+
     // 단내림 영역 컬럼 수
     if (spaceInfo.droppedCeilingDoorCount !== undefined && spaceInfo.droppedCeilingDoorCount > 0) {
       droppedColumnCount = spaceInfo.droppedCeilingDoorCount;
@@ -1113,13 +1116,58 @@ export class ColumnIndexer {
       droppedColumnCount = SpaceCalculator.getDefaultColumnCount(droppedAreaInternalWidth);
       console.log('🎯 단내림 컬럼 수 (자동계산):', droppedColumnCount, 'from width:', droppedAreaInternalWidth);
     }
-    
+
     // 단내림 영역 슬롯 너비가 600mm를 초과하지 않도록 검증
     const minRequiredDroppedSlots = Math.ceil(droppedAreaInternalWidth / MAX_SLOT_WIDTH);
     if (droppedColumnCount < minRequiredDroppedSlots) {
       droppedColumnCount = minRequiredDroppedSlots;
       console.warn(`단내림 영역 슬롯 너비 제한: ${minRequiredDroppedSlots}개 이상의 슬롯이 필요합니다.`);
     }
+
+    // 경계면 이격거리 최적화: 2~5mm 사이에서 슬롯 너비가 정수가 되도록 선택
+    let bestGap = 2;
+    let bestScore = Infinity; // 소수점 자릿수가 적을수록 좋음
+
+    for (let gap = 2; gap <= 5; gap += 0.5) {
+      const testNormalWidth = normalAreaInternalWidth - gap;
+      const testDroppedWidth = droppedAreaInternalWidth - gap;
+
+      const normalSlotWidth = testNormalWidth / normalColumnCount;
+      const droppedSlotWidth = testDroppedWidth / droppedColumnCount;
+
+      // 소수점 자릿수 계산 (정수면 0점, 0.5면 1점, 그 외는 2점)
+      const normalDecimal = normalSlotWidth - Math.floor(normalSlotWidth);
+      const droppedDecimal = droppedSlotWidth - Math.floor(droppedSlotWidth);
+
+      const normalScore = Math.abs(normalDecimal) < 0.01 ? 0 : (Math.abs(normalDecimal - 0.5) < 0.01 ? 1 : 2);
+      const droppedScore = Math.abs(droppedDecimal) < 0.01 ? 0 : (Math.abs(droppedDecimal - 0.5) < 0.01 ? 1 : 2);
+
+      const totalScore = normalScore + droppedScore;
+
+      if (totalScore < bestScore) {
+        bestScore = totalScore;
+        bestGap = gap;
+      }
+
+      // 완벽한 정수 조합을 찾으면 즉시 종료
+      if (totalScore === 0) break;
+    }
+
+    boundaryGap = bestGap;
+
+    console.log('🎯 경계면 이격거리 최적화:', {
+      선택된갭: boundaryGap,
+      메인구간원래너비: normalAreaInternalWidth,
+      단내림구간원래너비: droppedAreaInternalWidth,
+      메인구간조정후: normalAreaInternalWidth - boundaryGap,
+      단내림구간조정후: droppedAreaInternalWidth - boundaryGap,
+      메인슬롯너비: (normalAreaInternalWidth - boundaryGap) / normalColumnCount,
+      단내림슬롯너비: (droppedAreaInternalWidth - boundaryGap) / droppedColumnCount
+    });
+
+    // 경계면 이격거리 적용
+    normalAreaInternalWidth -= boundaryGap;
+    droppedAreaInternalWidth -= boundaryGap;
     
     // 각 영역의 컬럼 너비 계산 - 0.5 단위 균등 분할
     const normalExactWidth = normalAreaInternalWidth / normalColumnCount;
