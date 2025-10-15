@@ -33,7 +33,11 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     addMeasureLine,
     clearMeasurePoints,
     view2DDirection,
-    setMeasureMode
+    setMeasureMode,
+    isEraserMode,
+    hoveredMeasureLineId,
+    setHoveredMeasureLineId,
+    removeMeasureLine
   } = useUIStore();
 
   const { scene, camera, raycaster, gl } = useThree();
@@ -218,9 +222,36 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     sceneVerticesRef.current = sceneVertices;
   }, [sceneVertices]);
 
+  // 지우개 모드에서 측정선과의 거리 계산 (호버 감지용)
+  const getDistanceToLine = useCallback((point: MeasurePoint, lineStart: MeasurePoint, lineEnd: MeasurePoint): number => {
+    const dx = lineEnd[0] - lineStart[0];
+    const dy = lineEnd[1] - lineStart[1];
+    const dz = lineEnd[2] - lineStart[2];
+
+    const length = Math.sqrt(dx * dx + dy * dy + dz * dz);
+    if (length === 0) return Infinity;
+
+    // 점에서 선분까지의 최단 거리 계산
+    const t = Math.max(0, Math.min(1, (
+      (point[0] - lineStart[0]) * dx +
+      (point[1] - lineStart[1]) * dy +
+      (point[2] - lineStart[2]) * dz
+    ) / (length * length)));
+
+    const projX = lineStart[0] + t * dx;
+    const projY = lineStart[1] + t * dy;
+    const projZ = lineStart[2] + t * dz;
+
+    const distX = point[0] - projX;
+    const distY = point[1] - projY;
+    const distZ = point[2] - projZ;
+
+    return Math.sqrt(distX * distX + distY * distY + distZ * distZ);
+  }, []);
+
   // 마우스 이동 핸들러
   const handlePointerMove = useCallback((event: PointerEvent) => {
-    if (!isMeasureMode) return;
+    if (!isMeasureMode && !isEraserMode) return;
 
     // 마우스 위치를 NDC로 변환
     const rect = gl.domElement.getBoundingClientRect();
@@ -260,6 +291,33 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     const rawPoint: MeasurePoint = [intersection.x, intersection.y, intersection.z];
 
     console.log(`🎯 레이캐스트 결과: view=${viewDirection} point=[${rawPoint[0].toFixed(2)}, ${rawPoint[1].toFixed(2)}, ${rawPoint[2].toFixed(2)}]`);
+
+    // 지우개 모드인 경우
+    if (isEraserMode) {
+      // 현재 뷰에 표시되는 측정선 필터링
+      const visibleLines = measureLines.filter(
+        (line) => !line.viewDirection || line.viewDirection === viewDirection
+      );
+
+      // 가장 가까운 측정선 찾기
+      let closestLineId: string | null = null;
+      let minDistance = 0.3; // 호버 감지 거리 (three.js 단위, 약 30cm)
+
+      visibleLines.forEach((line) => {
+        const guidePoints = line.offset
+          ? calculateGuidePoints(line.start, line.end, line.offset, viewDirection)
+          : { start: line.start, end: line.end };
+
+        const distance = getDistanceToLine(rawPoint, guidePoints.start, guidePoints.end);
+        if (distance < minDistance) {
+          minDistance = distance;
+          closestLineId = line.id;
+        }
+      });
+
+      setHoveredMeasureLineId(closestLineId);
+      return;
+    }
 
     // 가이드 조정 모드인 경우
     if (isAdjustingGuide && measurePoints && measurePoints[0] && measurePoints[1]) {
@@ -302,10 +360,20 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       setHoverPoint(rawPoint);
       setIsSnapped(false);
     }
-  }, [isMeasureMode, gl, raycaster, camera, viewDirection, isAdjustingGuide, measurePoints, getSnapDistance]);
+  }, [isMeasureMode, isEraserMode, gl, raycaster, camera, viewDirection, isAdjustingGuide, measurePoints, getSnapDistance, measureLines, setHoveredMeasureLineId, getDistanceToLine]);
 
   // 클릭 핸들러
   const handleClick = useCallback((event: PointerEvent) => {
+    // 지우개 모드인 경우
+    if (isEraserMode) {
+      if (hoveredMeasureLineId) {
+        console.log('🗑️ 측정선 삭제:', hoveredMeasureLineId);
+        removeMeasureLine(hoveredMeasureLineId);
+        setHoveredMeasureLineId(null);
+      }
+      return;
+    }
+
     if (!isMeasureMode || !hoverPoint) return;
 
     // 가이드 조정 모드인 경우
@@ -396,7 +464,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       // 사용자가 마우스를 움직여서 원하는 위치로 조정 후 클릭
       setGuideOffset(normalizedPoint);
     }
-  }, [isMeasureMode, hoverPoint, isAdjustingGuide, measurePoints, setMeasureStartPoint, setMeasureEndPoint, addMeasureLine, clearMeasurePoints]);
+  }, [isMeasureMode, isEraserMode, hoverPoint, isAdjustingGuide, measurePoints, setMeasureStartPoint, setMeasureEndPoint, addMeasureLine, clearMeasurePoints, hoveredMeasureLineId, removeMeasureLine, setHoveredMeasureLineId]);
 
   // ESC 키로 취소, Ctrl+Z로 마지막 측정 라인 삭제
   useEffect(() => {
@@ -493,13 +561,18 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
           (guidePoints.start[2] + guidePoints.end[2]) / 2
         ];
 
+        // 호버 중인지 확인
+        const isHovered = isEraserMode && hoveredMeasureLineId === line.id;
+        const displayLineColor = isHovered ? '#FF0000' : lineColor; // 빨간색으로 강조
+        const lineWidth = isHovered ? 3 : 2; // 두껍게 표시
+
         return (
           <group key={line.id}>
             {/* 수직/수평 연장선 (점선) - 시작점 */}
             <Line
               points={[line.start, guidePoints.start]}
-              color={lineColor}
-              lineWidth={1}
+              color={displayLineColor}
+              lineWidth={isHovered ? 2 : 1}
               dashed
               dashSize={0.1}
               gapSize={0.05}
@@ -508,8 +581,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             {/* 수직/수평 연장선 (점선) - 끝점 */}
             <Line
               points={[line.end, guidePoints.end]}
-              color={lineColor}
-              lineWidth={1}
+              color={displayLineColor}
+              lineWidth={isHovered ? 2 : 1}
               dashed
               dashSize={0.1}
               gapSize={0.05}
@@ -518,28 +591,28 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
             {/* 측정 라인 */}
             <Line
               points={[guidePoints.start, guidePoints.end]}
-              color={lineColor}
-              lineWidth={2}
+              color={displayLineColor}
+              lineWidth={lineWidth}
             />
 
             {/* 가이드 시작점 엔드포인트 (원형 점) */}
             <mesh position={guidePoints.start}>
-              <sphereGeometry args={[0.05, 8, 8]} />
-              <meshBasicMaterial color={lineColor} />
+              <sphereGeometry args={[isHovered ? 0.07 : 0.05, 8, 8]} />
+              <meshBasicMaterial color={displayLineColor} />
             </mesh>
 
             {/* 가이드 끝점 엔드포인트 (원형 점) */}
             <mesh position={guidePoints.end}>
-              <sphereGeometry args={[0.05, 8, 8]} />
-              <meshBasicMaterial color={lineColor} />
+              <sphereGeometry args={[isHovered ? 0.07 : 0.05, 8, 8]} />
+              <meshBasicMaterial color={displayLineColor} />
             </mesh>
 
             {/* 거리 텍스트 */}
             <Text
               position={getTextOffset(midPoint, line.start, line.end, 0.2)}
               rotation={getTextRotation(line.start, line.end)}
-              fontSize={0.25}
-              color={lineColor}
+              fontSize={isHovered ? 0.3 : 0.25}
+              color={displayLineColor}
               anchorX="center"
               anchorY="middle"
             >

@@ -127,6 +127,10 @@ interface UIState {
   measurePoints: [MeasurePoint, MeasurePoint | null] | null; // [시작점, 끝점 또는 null]
   measureLines: MeasureLine[]; // 저장된 측정 라인들
 
+  // 지우개 모드 상태
+  isEraserMode: boolean;
+  hoveredMeasureLineId: string | null; // 호버 중인 측정선 ID
+
   // 액션들
   setViewMode: (mode: '2D' | '3D') => void;
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
@@ -194,6 +198,11 @@ interface UIState {
   clearMeasurePoints: () => void;
   clearAllMeasureLines: () => void;
 
+  // 지우개 모드 액션들
+  toggleEraserMode: () => void;
+  setEraserMode: (enabled: boolean) => void;
+  setHoveredMeasureLineId: (id: string | null) => void;
+
   resetUI: () => void;
 }
 
@@ -240,6 +249,8 @@ const initialUIState = {
   isMeasureMode: false,  // 기본값: 측정 모드 비활성화
   measurePoints: null,  // 기본값: 측정 포인트 없음
   measureLines: [],  // 기본값: 저장된 측정 라인 없음
+  isEraserMode: false,  // 기본값: 지우개 모드 비활성화
+  hoveredMeasureLineId: null,  // 기본값: 호버 중인 측정선 없음
 };
 
 // 앱 테마 가져오기 (ThemeContext와 동일한 방식)
@@ -513,6 +524,28 @@ export const useUIStore = create<UIState>()(
 
       clearAllMeasureLines: () =>
         set({ measureLines: [] }),
+
+      // 지우개 모드 액션들 구현
+      toggleEraserMode: () =>
+        set((state) => ({
+          isEraserMode: !state.isEraserMode,
+          // 지우개 모드 활성화 시 측정 모드 비활성화
+          isMeasureMode: !state.isEraserMode ? false : state.isMeasureMode,
+          // 지우개 모드 비활성화 시 호버 초기화
+          hoveredMeasureLineId: !state.isEraserMode ? state.hoveredMeasureLineId : null
+        })),
+
+      setEraserMode: (enabled) =>
+        set({
+          isEraserMode: enabled,
+          // 지우개 모드 활성화 시 측정 모드 비활성화
+          isMeasureMode: enabled ? false : false,
+          // 지우개 모드 비활성화 시 호버 초기화
+          hoveredMeasureLineId: enabled ? null : null
+        }),
+
+      setHoveredMeasureLineId: (id) =>
+        set({ hoveredMeasureLineId: id }),
 
       resetUI: () =>
         set(initialUIState),

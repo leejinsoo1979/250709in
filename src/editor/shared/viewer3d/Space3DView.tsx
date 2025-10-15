@@ -54,7 +54,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture, isMeasureMode, toggleMeasureMode } = useUIStore();
+  const { view2DDirection, showDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture, isMeasureMode, toggleMeasureMode, isEraserMode } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
   
@@ -1359,9 +1359,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* 치수 지우개 버튼 - 측정 도구 버튼 바로 아래 */}
             <button
               onClick={() => {
-                const { clearAllMeasureLines } = useUIStore.getState();
-                console.log('🗑️ 모든 측정 라인 삭제');
-                clearAllMeasureLines();
+                const { toggleEraserMode } = useUIStore.getState();
+                console.log('🗑️ 지우개 모드 토글');
+                toggleEraserMode();
               }}
               style={{
                 position: 'absolute',
@@ -1369,10 +1369,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 right: '10px',
                 width: '36px',
                 height: '36px',
-                backgroundColor: view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)',
-                border: `1px solid ${view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)'}`,
+                backgroundColor: isEraserMode
+                  ? (view2DTheme === 'dark' ? 'rgba(239,68,68,0.8)' : 'rgba(239,68,68,0.9)')
+                  : (view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)'),
+                border: `1px solid ${isEraserMode
+                  ? 'rgba(239,68,68,1)'
+                  : (view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)')}`,
                 borderRadius: '4px',
-                color: view2DTheme === 'dark' ? '#ffffff' : '#000000',
+                color: isEraserMode ? '#ffffff' : (view2DTheme === 'dark' ? '#ffffff' : '#000000'),
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -1380,19 +1384,23 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 transition: 'all 0.2s ease',
                 zIndex: 20,
                 padding: '0',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                boxShadow: isEraserMode ? '0 2px 8px rgba(239,68,68,0.3)' : '0 2px 4px rgba(0,0,0,0.1)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,1)';
-                e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+                if (!isEraserMode) {
+                  e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,1)';
+                  e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
+                }
                 e.currentTarget.style.transform = 'scale(1.05)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)';
-                e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+                if (!isEraserMode) {
+                  e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)';
+                  e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
+                }
                 e.currentTarget.style.transform = 'scale(1)';
               }}
-              title="모든 치수 삭제"
+              title="치수 지우개 (클릭하여 삭제 모드 활성화)"
             >
               <LuEraser size={20} />
             </button>
