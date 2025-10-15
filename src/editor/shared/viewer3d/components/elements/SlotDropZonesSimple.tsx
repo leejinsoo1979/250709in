@@ -151,16 +151,74 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const mouseX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
     const mouseY = -((dragEvent.clientY - rect.top) / rect.height) * 2 + 1;
     
-    // 단내림이 활성화되어 있는 경우, activeDroppedCeilingTab으로 영역 판단
+    // 단내림이 활성화되어 있는 경우, 마우스 X 위치로 영역 판단
     let zoneToUse: 'normal' | 'dropped' | undefined;
     if (spaceInfo.droppedCeiling?.enabled) {
-      // activeDroppedCeilingTab이 'dropped'면 단내림 영역, 'main'이면 일반 영역
-      zoneToUse = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
-
-      console.log('🎯 영역 확인 (activeTab 기반):', {
-        activeTab: activeDroppedCeilingTab,
-        detectedZone: zoneToUse
-      });
+      try {
+        const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+        
+        // zoneInfo.dropped이 null인지 확인
+        if (!zoneInfo.dropped || !zoneInfo.normal) {
+          console.error('❌ Zone info is null:', { dropped: zoneInfo.dropped, normal: zoneInfo.normal });
+          return false;
+        }
+        
+        // Three.js 단위로 영역 경계 계산
+        const droppedStartX = mmToThreeUnits(zoneInfo.dropped.startX);
+        const droppedEndX = mmToThreeUnits(zoneInfo.dropped.startX + zoneInfo.dropped.width);
+        const normalStartX = mmToThreeUnits(zoneInfo.normal.startX);
+        const normalEndX = mmToThreeUnits(zoneInfo.normal.startX + zoneInfo.normal.width);
+        
+        // 카메라와 레이캐스트를 사용하여 월드 좌표 계산
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+        
+        // Y=0 평면과의 교차점 계산 (바닥 평면)
+        const planeY = mmToThreeUnits(internalSpace.startY);
+        const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
+        const intersectPoint = new THREE.Vector3();
+        
+        if (raycaster.ray.intersectPlane(plane, intersectPoint)) {
+          // 단내림 위치에 따라 영역 판단
+          if (spaceInfo.droppedCeiling.position === 'left') {
+            // 단내림이 왼쪽: dropped가 왼쪽, normal이 오른쪽
+            zoneToUse = intersectPoint.x < droppedEndX ? 'dropped' : 'normal';
+          } else {
+            // 단내림이 오른쪽: normal이 왼쪽, dropped가 오른쪽
+            // normal zone이 끝나는 지점 이후가 dropped zone
+            zoneToUse = intersectPoint.x < normalEndX ? 'normal' : 'dropped';
+          }
+          
+          console.log('🎯 자동 영역 판단:', {
+            mouseX,
+            mouseY,
+            worldX: intersectPoint.x,
+            worldX_mm: intersectPoint.x * 100,
+            boundaries: {
+              droppedStartX_mm: droppedStartX * 100,
+              droppedEndX_mm: droppedEndX * 100,
+              normalStartX_mm: normalStartX * 100,
+              normalEndX_mm: normalEndX * 100
+            },
+            droppedPosition: spaceInfo.droppedCeiling.position,
+            detectedZone: zoneToUse,
+            판단기준: spaceInfo.droppedCeiling.position === 'left' 
+              ? `x < ${droppedEndX * 100}mm ? dropped : normal`
+              : `x < ${normalEndX * 100}mm ? normal : dropped`,
+            zoneInfo: {
+              normal: { columnCount: zoneInfo.normal?.columnCount, startX: zoneInfo.normal?.startX, width: zoneInfo.normal?.width },
+              dropped: { columnCount: zoneInfo.dropped?.columnCount, startX: zoneInfo.dropped?.startX, width: zoneInfo.dropped?.width }
+            }
+          });
+        } else {
+          // 교차점을 찾지 못한 경우 기본값 사용
+          zoneToUse = 'normal';
+          console.log('⚠️ 평면과의 교차점을 찾지 못함, 기본값 사용:', zoneToUse);
+        }
+      } catch (error) {
+        console.error('❌ 자동 영역 판단 중 오류:', error);
+        zoneToUse = 'normal'; // 오류 발생 시 기본값
+      }
     }
     
     // 클릭-앤-플레이스 모드와 드래그 모드 모두 지원
@@ -306,8 +364,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         canvasElement,
         camera,
         scene,
-        spaceInfo,  // 원본 spaceInfo 사용
-        zoneToUse   // 활성 탭에 따른 영역 필터링
+        spaceInfo  // 원본 spaceInfo 사용
       );
       
       // 콜라이더에서 zone 정보 가져오기
@@ -1872,35 +1929,92 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
       });
 
-      // 단내림이 활성화되어 있는 경우, activeDroppedCeilingTab으로 영역 판단
-      let detectedZone: 'normal' | 'dropped' | null = null;
-      if (spaceInfo.droppedCeiling?.enabled) {
-        detectedZone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
-      } else {
-        detectedZone = 'normal';
-      }
-
       const slotIndex = getSlotIndexFromRaycast(
-        e.clientX,
-        e.clientY,
+        e.clientX, 
+        e.clientY, 
         canvas,
         camera,
         scene,
-        spaceInfo,
-        detectedZone || undefined
+        spaceInfo
       );
-
-      console.log('🎯 getSlotIndexFromRaycast 결과 (hover):', {
+      
+      console.log('🎯 getSlotIndexFromRaycast 결과:', {
         slotIndex,
-        detectedZone,
-        activeTab: activeDroppedCeilingTab,
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
       });
-
+      
       if (slotIndex === null) {
         setHoveredSlotIndex(null);
         setHoveredZone(null);
         return;
+      }
+
+      // 레이캐스트로 zone 정보 가져오기
+      let detectedZone: 'normal' | 'dropped' | null = null;
+      
+      // 단내림이 활성화된 경우 영역별 처리
+      if (spaceInfo.droppedCeiling?.enabled) {
+        // 마우스 위치로 zone 판단
+        const rect = canvas.getBoundingClientRect();
+        const mouseX = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        const mouseY = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        // 레이캐스터 생성
+        const raycaster = new THREE.Raycaster();
+        raycaster.setFromCamera(new THREE.Vector2(mouseX, mouseY), camera);
+        
+        // 모든 콜라이더 가져오기
+        const allColliders = scene.children
+          .flatMap(child => child.children || [child])
+          .filter(obj => obj.userData?.isSlotCollider);
+        
+        // 레이캐스트 교차점 확인
+        const intersects = raycaster.intersectObjects(allColliders, true);
+        
+        if (intersects.length > 0) {
+          // 가장 가까운 콜라이더의 zone 정보 사용
+          const closestCollider = intersects[0].object;
+          detectedZone = closestCollider.userData?.zone || 'normal';
+          
+          console.log('🔍 Zone 감지 (레이캐스트):', {
+            slotIndex,
+            detectedZone,
+            colliderData: closestCollider.userData,
+            distance: intersects[0].distance
+          });
+        } else {
+          // 레이캐스트 실패 시 마우스 X 위치로 zone 판단
+          const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+          if (zoneInfo.dropped && zoneInfo.normal) {
+            const droppedEndX = mmToThreeUnits(zoneInfo.dropped.startX + zoneInfo.dropped.width);
+            const normalStartX = mmToThreeUnits(zoneInfo.normal.startX);
+            
+            // 마우스의 세계 좌표 계산
+            const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+            const intersectPoint = new THREE.Vector3();
+            
+            if (raycaster.ray.intersectPlane(plane, intersectPoint)) {
+              if (spaceInfo.droppedCeiling.position === 'left') {
+                detectedZone = intersectPoint.x < droppedEndX ? 'dropped' : 'normal';
+              } else {
+                detectedZone = intersectPoint.x >= normalStartX ? 'dropped' : 'normal';
+              }
+            } else {
+              detectedZone = 'normal';
+            }
+          } else {
+            detectedZone = 'normal';
+          }
+        }
+      } else {
+        // 단내림이 없는 경우 normal zone
+        detectedZone = 'normal';
+        console.log('🔍 단내림 없음 - normal zone 설정:', {
+          slotIndex,
+          detectedZone,
+          hoveredSlotIndex,
+          hoveredZone
+        });
       }
       
       // 현재 활성 모듈 확인 (드래그 중이거나 선택된 모듈)
