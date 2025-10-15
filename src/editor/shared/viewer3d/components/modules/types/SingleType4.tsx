@@ -95,13 +95,18 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               {/* 옷걸이 봉 렌더링 - 상부 옷장 섹션에만 */}
               {(() => {
                 const sections = baseFurniture.modelConfig.sections || [];
-                let accumulatedY = -height/2 + basicThickness;
                 const availableHeight = height - basicThickness * 2;
 
+                // 측판용: modelConfig의 원본 섹션 높이 (항상 고정)
+                let sideAccumulatedY = -height/2 + basicThickness;
+
                 return sections.map((section: any, sectionIndex: number) => {
-                  const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
-                  const sectionBottomY = accumulatedY;
-                  accumulatedY += sectionHeight;
+                  // 옷봉 위치용: 실제 가구 높이 기반 계산 (동적)
+                  const sectionBottomY = sideAccumulatedY;
+
+                  // 측판용 누적 Y 위치 업데이트 (원본 높이 사용)
+                  const originalSectionHeight = mmToThreeUnits(section.height);
+                  sideAccumulatedY += originalSectionHeight;
 
                   // 4단서랍장: 하단은 서랍, 상단은 옷장
                   // 옷장 섹션(상부)에만 옷걸이 봉 렌더링
@@ -110,6 +115,19 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
                   if (!isHangingSection) {
                     return null;
                   }
+
+                  // 실제 섹션 높이 계산 (현재 가구 높이 기반)
+                  let actualSectionHeight: number;
+                  if (sectionIndex === 0) {
+                    // 하부 섹션: 항상 고정 높이
+                    actualSectionHeight = mmToThreeUnits(section.height);
+                  } else {
+                    // 상부 섹션: 전체 높이에서 하부 섹션 높이를 뺀 나머지
+                    const bottomSectionHeight = mmToThreeUnits(sections[0].height);
+                    actualSectionHeight = availableHeight - bottomSectionHeight;
+                  }
+
+                  const actualSectionTopY = sectionBottomY + actualSectionHeight - basicThickness;
 
                   // 안전선반 또는 마감 패널 위치 찾기
                   const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
@@ -123,13 +141,12 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
                     rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
                   } else if (hasFinishPanel) {
                     // 마감 패널이 있는 경우: 브라켓 윗면이 마감 패널 하단에서 27mm 아래
-                    const finishPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
+                    const finishPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                     rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
                   } else {
                     // 안전선반도 마감 패널도 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
-                    const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
-                    // 브라켓 중심 = 상판 하단 - (브라켓 높이 / 2)
-                    rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+                    const sectionTopPanelBottom = actualSectionTopY;
+                    rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
                   }
 
                   return (
