@@ -2007,12 +2007,12 @@ const Room: React.FC<RoomProps> = ({
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
-                        ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(5)  // 단내림 구간: 가구 앞면에서 5mm 앞
+                        ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(7)  // 단내림 구간: 가구 앞면에서 7mm 앞
                         : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
                     : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                        : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(5))  // 단내림 구간: 가구 앞면에서 5mm 앞
+                        : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(7))  // 단내림 구간: 가구 앞면에서 7mm 앞
                 ]}
                 material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
@@ -2040,12 +2040,12 @@ const Room: React.FC<RoomProps> = ({
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
-                        ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(5)  // 단내림 상부: 가구 앞면에서 5mm 앞
+                        ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(7)  // 단내림 상부: 가구 앞면에서 7mm 앞
                         : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
                     : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                        : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(5))  // 단내림 상부: 가구 앞면에서 5mm 앞
+                        : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(7))  // 단내림 상부: 가구 앞면에서 7mm 앞
                 ]}
                 material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
                 renderMode={renderMode}
