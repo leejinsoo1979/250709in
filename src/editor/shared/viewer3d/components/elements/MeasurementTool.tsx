@@ -576,7 +576,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
               anchorX="center"
               anchorY="middle"
             >
-              {`${Math.round(line.distance)}mm`}
+              {Math.round(line.distance)}
             </Text>
           </group>
         );
@@ -632,7 +632,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
                 anchorY="middle"
                 opacity={0.7}
               >
-                {`${Math.round(distance)}mm`}
+                {Math.round(distance)}
               </Text>
             );
           })()}
@@ -705,7 +705,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
                   anchorX="center"
                   anchorY="middle"
                 >
-                  {`${Math.round(distance)}mm`}
+                  {Math.round(distance)}
                 </Text>
 
                 {/* 안내 텍스트 */}
