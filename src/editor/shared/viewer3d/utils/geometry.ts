@@ -120,7 +120,15 @@ export const calculateInternalSpace = (spaceInfo: SpaceInfo, hasLeftFurniture: b
   if (spaceInfo.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
     // 단내림 구간: 내경 높이에서 단내림 높이 차이를 추가로 빼기
     const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
+    const beforeHeight = internalHeight;
     internalHeight -= dropHeight;
+    console.log('🔴 calculateInternalSpace 단내림 높이 조정:', {
+      zone: spaceInfo.zone,
+      dropHeight,
+      beforeHeight,
+      afterHeight: internalHeight,
+      reduction: beforeHeight - internalHeight
+    });
   }
   
   // 내경 깊이 = 설정된 공간 깊이 그대로 (백패널은 별도 구조물)
