@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { RxDimensions } from 'react-icons/rx';
+import { LuEraser } from 'react-icons/lu';
 import { Space3DViewProps } from './types';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import { ViewerThemeProvider } from './context/ViewerThemeContext';
@@ -1393,11 +1394,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               }}
               title="모든 치수 삭제"
             >
-              {/* 지우개 아이콘 */}
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M16.5 3.5L20.5 7.5L7 21H3V17L16.5 3.5Z" />
-                <path d="M13.5 6.5L17.5 10.5" />
-              </svg>
+              <LuEraser size={20} />
             </button>
           </>
         )}
