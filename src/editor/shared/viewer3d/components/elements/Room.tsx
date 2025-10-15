@@ -2692,18 +2692,18 @@ const Room: React.FC<RoomProps> = ({
         // 단내림이 없거나 오른쪽에 있는 경우 (일반구간)
         return (
           <>
-            {/* 세로 서브프레임 (뒤쪽) */}
+            {/* 세로 서브프레임 (메인 프레임 방향으로 3mm 확장: 40mm → 43mm) */}
             <group
               position={[
                 xOffset + frameThickness.left - mmToThreeUnits(10),
                 sideFrameCenterY,
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(28.5)
               ]}
               rotation={[0, Math.PI / 2, 0]}
             >
               <BoxWithEdges
                 args={[
-                  mmToThreeUnits(40),
+                  mmToThreeUnits(43),
                   adjustedPanelHeight,
                   mmToThreeUnits(END_PANEL_THICKNESS)
                 ]}
@@ -2787,18 +2787,18 @@ const Room: React.FC<RoomProps> = ({
         // 단내림이 없거나 왼쪽에 있는 경우 (일반구간)
         return (
           <>
-            {/* 세로 서브프레임 (뒤쪽) */}
+            {/* 세로 서브프레임 (메인 프레임 방향으로 3mm 확장: 40mm → 43mm) */}
             <group
               position={[
                 xOffset + width - frameThickness.right + mmToThreeUnits(10),
                 sideFrameCenterY,
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(30)
+                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(28.5)
               ]}
               rotation={[0, Math.PI / 2, 0]}
             >
               <BoxWithEdges
                 args={[
-                  mmToThreeUnits(40),
+                  mmToThreeUnits(43),
                   adjustedPanelHeight,
                   mmToThreeUnits(END_PANEL_THICKNESS)
                 ]}
