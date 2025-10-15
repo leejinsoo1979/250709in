@@ -1860,14 +1860,6 @@ const Room: React.FC<RoomProps> = ({
             </>
           );
         }
-        
-        // 단내림이 있으면 왼쪽 일반 렌더링 생략
-        // - 우측 단내림: 왼쪽이 단내림 구간이 아니므로 일반 렌더링 안 함
-        // - 좌측 단내림: 위에서 이미 처리했으므로 일반 렌더링 안 함
-        if (hasDroppedCeiling) {
-          console.log('🚫 왼쪽 일반 엔드패널 렌더링 생략 (단내림 모드)');
-          return null;
-        }
 
         console.log('🔍 왼쪽 엔드패널 렌더링 디버그:', {
           frameThicknessLeft: frameThickness.left,
@@ -2061,14 +2053,6 @@ const Room: React.FC<RoomProps> = ({
               />
             </>
           );
-        }
-
-        // 단내림이 있으면 오른쪽 일반 렌더링 생략
-        // - 좌측 단내림: 오른쪽이 단내림 구간이 아니므로 일반 렌더링 안 함
-        // - 우측 단내림: 위에서 이미 처리했으므로 일반 렌더링 안 함
-        if (hasDroppedCeiling) {
-          console.log('🚫 오른쪽 일반 엔드패널 렌더링 생략 (단내림 모드)');
-          return null;
         }
 
         // 렌더링 카운터 증가
