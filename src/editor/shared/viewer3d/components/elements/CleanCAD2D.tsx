@@ -690,7 +690,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
         // 단내림 구간 빗금 해칭 (대각선 패턴)
         const hatchLines: JSX.Element[] = [];
-        const hatchSpacing = mmToThreeUnits(80); // 80mm 간격
+        const hatchSpacing = mmToThreeUnits(40); // 40mm 간격 (2배 촘촘하게)
 
         // 좌측 모서리부터 시작하도록 음수 오프셋 시작
         const totalDiagonal = droppedWidth + droppedHeight;
@@ -715,7 +715,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               <Line
                 key={`hatch-${i}`}
                 points={[[clippedStartX, startY, 0.001], [clippedEndX, endY, 0.001]]}
-                color="#666666"
+                color="#FFD700"
                 lineWidth={0.5}
                 opacity={0.6}
               />
