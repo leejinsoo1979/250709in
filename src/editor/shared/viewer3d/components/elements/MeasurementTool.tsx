@@ -49,11 +49,11 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     if (camera instanceof THREE.OrthographicCamera) {
       // 직교 카메라: zoom 값이 클수록 확대됨
       // 2D뷰에서는 고정 크기 사용 (화면 크기 기준)
-      const baseSize = 0.15; // 더 큰 기본 크기
+      const baseSize = 0.5; // 큰 기본 크기
       const zoom = camera.zoom || 1;
       return baseSize / Math.sqrt(zoom); // 제곱근으로 완만하게 조정
     }
-    return 0.15; // 기본 크기
+    return 0.5; // 기본 크기
   }, [camera]);
 
   // 카메라 줌 레벨에 따른 스냅 거리 계산
