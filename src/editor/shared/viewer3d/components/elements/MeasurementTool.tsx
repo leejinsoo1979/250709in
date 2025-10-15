@@ -179,10 +179,18 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
     // 스냅 기능: 가장 가까운 꼭지점 찾기 (시점별 2D 거리 계산, 줌 레벨 반영)
     const snapDistance = getSnapDistance();
+    const totalVertices = sceneVerticesRef.current.length;
+    console.log('🔍 스냅 시도:', {
+      rawPoint: rawPoint.map(v => v.toFixed(2)),
+      snapDistance: snapDistance.toFixed(3),
+      totalVertices,
+      viewDirection
+    });
+
     const nearestSnap = findNearestVertex(rawPoint, sceneVerticesRef.current, viewDirection, snapDistance);
 
     if (nearestSnap) {
-      console.log('✅ 스냅됨:', {
+      console.log('✅ 스냅 성공!', {
         distance: nearestSnap.distance.toFixed(3),
         snapDistance: snapDistance.toFixed(3),
         zoom: camera instanceof THREE.OrthographicCamera ? camera.zoom : 'N/A',
@@ -191,10 +199,11 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       setHoverPoint(nearestSnap.vertex);
       setIsSnapped(true);
     } else {
-      console.log('❌ 스냅 안됨:', {
+      console.log('❌ 스냅 실패:', {
         snapDistance: snapDistance.toFixed(3),
         zoom: camera instanceof THREE.OrthographicCamera ? camera.zoom : 'N/A',
-        nearestVertices: sceneVerticesRef.current.length
+        totalVertices,
+        viewDirection
       });
       setHoverPoint(rawPoint);
       setIsSnapped(false);
@@ -446,51 +455,51 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
           />
 
           {/* 호버점 마커 - 스냅 안되면 십자가, 스냅되면 노란 네모 */}
-          {isSnapped ? (
-            // 스냅됨: 노란색 네모
-            (() => {
-              console.log('🟨 노란 사각형 렌더링:', {
-                hoverPoint: hoverPoint.map(v => v.toFixed(2)),
-                snapBoxSize: snapBoxSize.toFixed(3),
-                isSnapped
-              });
-              return (
+          {(() => {
+            console.log('🎯 측정 중 마커 렌더링:', {
+              hoverPoint: hoverPoint.map(v => v.toFixed(2)),
+              isSnapped,
+              snapBoxSize: snapBoxSize.toFixed(3),
+              crosshairSize: crosshairSize.toFixed(3)
+            });
+
+            return isSnapped ? (
+              // 스냅됨: 노란색 네모
+              <Line
+                points={[
+                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
+                ]}
+                color={snapColor}
+                lineWidth={3}
+              />
+            ) : (
+              // 스냅 안됨: 초록색 십자가
+              <>
+                {/* 가로선 */}
                 <Line
                   points={[
-                    [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                    [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                    [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                    [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                    [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
+                    [hoverPoint[0] - crosshairSize/2, hoverPoint[1], hoverPoint[2]],
+                    [hoverPoint[0] + crosshairSize/2, hoverPoint[1], hoverPoint[2]]
                   ]}
-                  color={snapColor}
-                  lineWidth={3}
+                  color={lineColor}
+                  lineWidth={2}
                 />
-              );
-            })()
-          ) : (
-            // 스냅 안됨: 초록색 십자가
-            <>
-              {/* 가로선 */}
-              <Line
-                points={[
-                  [hoverPoint[0] - crosshairSize/2, hoverPoint[1], hoverPoint[2]],
-                  [hoverPoint[0] + crosshairSize/2, hoverPoint[1], hoverPoint[2]]
-                ]}
-                color={lineColor}
-                lineWidth={2}
-              />
-              {/* 세로선 */}
-              <Line
-                points={[
-                  [hoverPoint[0], hoverPoint[1] - crosshairSize/2, hoverPoint[2]],
-                  [hoverPoint[0], hoverPoint[1] + crosshairSize/2, hoverPoint[2]]
-                ]}
-                color={lineColor}
-                lineWidth={2}
-              />
-            </>
-          )}
+                {/* 세로선 */}
+                <Line
+                  points={[
+                    [hoverPoint[0], hoverPoint[1] - crosshairSize/2, hoverPoint[2]],
+                    [hoverPoint[0], hoverPoint[1] + crosshairSize/2, hoverPoint[2]]
+                  ]}
+                  color={lineColor}
+                  lineWidth={2}
+                />
+              </>
+            );
+          })()}
 
           {/* 임시 거리 텍스트 */}
           {(() => {
@@ -614,29 +623,27 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       )}
 
       {/* 호버 커서 (측정 시작 전) - 스냅 안되면 십자가, 스냅되면 노란 네모 */}
-      {!measurePoints && hoverPoint && (
-        isSnapped ? (
+      {!measurePoints && hoverPoint && (() => {
+        console.log('🖱️ 호버 커서 렌더링:', {
+          hoverPoint: hoverPoint.map(v => v.toFixed(2)),
+          isSnapped,
+          snapBoxSize: snapBoxSize.toFixed(3),
+          crosshairSize: crosshairSize.toFixed(3)
+        });
+
+        return isSnapped ? (
           // 스냅됨: 노란색 네모
-          (() => {
-            console.log('🟨 호버 노란 사각형 렌더링:', {
-              hoverPoint: hoverPoint.map(v => v.toFixed(2)),
-              snapBoxSize: snapBoxSize.toFixed(3),
-              isSnapped
-            });
-            return (
-              <Line
-                points={[
-                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
-                  [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
-                ]}
-                color={snapColor}
-                lineWidth={3}
-              />
-            );
-          })()
+          <Line
+            points={[
+              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+              [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]],
+              [hoverPoint[0] + snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] + snapBoxSize/2, hoverPoint[2]],
+              [hoverPoint[0] - snapBoxSize/2, hoverPoint[1] - snapBoxSize/2, hoverPoint[2]]
+            ]}
+            color={snapColor}
+            lineWidth={3}
+          />
         ) : (
           // 스냅 안됨: 초록색 십자가
           <>
@@ -659,8 +666,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
               lineWidth={2}
             />
           </>
-        )
-      )}
+        );
+      })()}
     </group>
   );
 };
