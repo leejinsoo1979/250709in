@@ -55,6 +55,16 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return 0.05; // 기본 크기
   }, [camera]);
 
+  // 카메라 줌 레벨에 따른 스냅 거리 계산
+  const getSnapDistance = useCallback(() => {
+    if (camera instanceof THREE.OrthographicCamera) {
+      const baseSnapDistance = SNAP_DISTANCE;
+      const zoom = camera.zoom || 1;
+      return baseSnapDistance / zoom; // 줌이 커질수록 스냅 거리 작아짐
+    }
+    return SNAP_DISTANCE;
+  }, [camera]);
+
   // 시점에 따른 텍스트 오프셋 계산
   const getTextOffset = (point: MeasurePoint, offset: number = 0.2): MeasurePoint => {
     switch (viewDirection) {
@@ -143,8 +153,9 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       return;
     }
 
-    // 스냅 기능: 가장 가까운 꼭지점 찾기 (시점별 2D 거리 계산)
-    const nearestSnap = findNearestVertex(rawPoint, sceneVerticesRef.current, viewDirection);
+    // 스냅 기능: 가장 가까운 꼭지점 찾기 (시점별 2D 거리 계산, 줌 레벨 반영)
+    const snapDistance = getSnapDistance();
+    const nearestSnap = findNearestVertex(rawPoint, sceneVerticesRef.current, viewDirection, snapDistance);
 
     if (nearestSnap) {
       setHoverPoint(nearestSnap.vertex);
@@ -153,7 +164,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
       setHoverPoint(rawPoint);
       setIsSnapped(false);
     }
-  }, [isMeasureMode, gl, raycaster, camera, viewDirection, isAdjustingGuide, measurePoints]);
+  }, [isMeasureMode, gl, raycaster, camera, viewDirection, isAdjustingGuide, measurePoints, getSnapDistance]);
 
   // 클릭 핸들러
   const handleClick = useCallback((event: PointerEvent) => {
@@ -386,7 +397,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
           {/* 임시 거리 텍스트 */}
           {(() => {
-            const distance = calculateDistance(measurePoints[0], hoverPoint);
+            const distance = calculateDistance(measurePoints[0], hoverPoint, viewDirection);
             const midPoint: MeasurePoint = [
               (measurePoints[0][0] + hoverPoint[0]) / 2,
               (measurePoints[0][1] + hoverPoint[1]) / 2,
@@ -421,7 +432,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
               (guidePoints.start[1] + guidePoints.end[1]) / 2,
               (guidePoints.start[2] + guidePoints.end[2]) / 2
             ];
-            const distance = calculateDistance(start, end);
+            const distance = calculateDistance(start, end, viewDirection);
 
             return (
               <>

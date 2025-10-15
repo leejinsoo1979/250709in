@@ -1085,6 +1085,75 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           customWidth = zoneIndexing.slotWidths[zoneSlotIndex] + (zoneIndexing.slotWidths[zoneSlotIndex + 1] || zoneIndexing.slotWidths[zoneSlotIndex]);
         } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
           customWidth = zoneIndexing.slotWidths[zoneSlotIndex];
+
+          // 🎯 끝 슬롯 체크: 벽없음 모드에서 끝 슬롯은 엔드패널(18mm) 공간 확보
+          if (spaceInfo.installType === 'freestanding') {
+            const END_PANEL_THICKNESS = 18;
+            const isFirstSlot = zoneSlotIndex === 0;
+            const isLastSlot = zoneSlotIndex === zoneIndexing.columnCount - 1;
+
+            // 단내림이 있는 경우 각 영역별로 처리
+            if (spaceInfo.droppedCeiling?.enabled && zoneIndexing.zones) {
+              const droppedPosition = spaceInfo.droppedCeiling.position;
+
+              if (zoneToUse === 'normal') {
+                // 일반구간: 단내림 반대쪽 끝만 체크
+                if (droppedPosition === 'left' && isLastSlot) {
+                  // 좌측 단내림 → 우측 끝 슬롯
+                  customWidth = customWidth - END_PANEL_THICKNESS;
+                  console.log('🎯 일반구간 우측 끝 슬롯 가구 너비 조정:', {
+                    slotIndex: zoneSlotIndex,
+                    originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
+                    adjustedWidth: customWidth,
+                    endPanelSpace: END_PANEL_THICKNESS
+                  });
+                } else if (droppedPosition === 'right' && isFirstSlot) {
+                  // 우측 단내림 → 좌측 끝 슬롯
+                  customWidth = customWidth - END_PANEL_THICKNESS;
+                  console.log('🎯 일반구간 좌측 끝 슬롯 가구 너비 조정:', {
+                    slotIndex: zoneSlotIndex,
+                    originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
+                    adjustedWidth: customWidth,
+                    endPanelSpace: END_PANEL_THICKNESS
+                  });
+                }
+              } else if (zoneToUse === 'dropped') {
+                // 단내림구간: 단내림 위치와 같은 쪽 끝만 체크
+                if (droppedPosition === 'left' && isFirstSlot) {
+                  // 좌측 단내림 → 좌측 끝 슬롯
+                  customWidth = customWidth - END_PANEL_THICKNESS;
+                  console.log('🎯 단내림구간 좌측 끝 슬롯 가구 너비 조정:', {
+                    slotIndex: zoneSlotIndex,
+                    originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
+                    adjustedWidth: customWidth,
+                    endPanelSpace: END_PANEL_THICKNESS
+                  });
+                } else if (droppedPosition === 'right' && isLastSlot) {
+                  // 우측 단내림 → 우측 끝 슬롯
+                  customWidth = customWidth - END_PANEL_THICKNESS;
+                  console.log('🎯 단내림구간 우측 끝 슬롯 가구 너비 조정:', {
+                    slotIndex: zoneSlotIndex,
+                    originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
+                    adjustedWidth: customWidth,
+                    endPanelSpace: END_PANEL_THICKNESS
+                  });
+                }
+              }
+            } else {
+              // 단내림 없는 경우: 첫 번째 또는 마지막 슬롯
+              if (isFirstSlot || isLastSlot) {
+                customWidth = customWidth - END_PANEL_THICKNESS;
+                console.log('🎯 끝 슬롯 가구 너비 조정:', {
+                  slotIndex: zoneSlotIndex,
+                  isFirstSlot,
+                  isLastSlot,
+                  originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
+                  adjustedWidth: customWidth,
+                  endPanelSpace: END_PANEL_THICKNESS
+                });
+              }
+            }
+          }
         } else {
           customWidth = actualSlotWidth;
         }

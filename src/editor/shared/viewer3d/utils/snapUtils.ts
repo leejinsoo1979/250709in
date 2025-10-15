@@ -53,10 +53,11 @@ export function extractVertices(object: THREE.Object3D): MeasurePoint[] {
 export function findNearestVertex(
   point: MeasurePoint,
   vertices: MeasurePoint[],
-  viewDirection?: 'front' | 'left' | 'right' | 'top'
+  viewDirection?: 'front' | 'left' | 'right' | 'top',
+  snapDistance: number = SNAP_DISTANCE
 ): { vertex: MeasurePoint; distance: number } | null {
   let nearest: MeasurePoint | null = null;
-  let minDistance = SNAP_DISTANCE;
+  let minDistance = snapDistance;
 
   for (const vertex of vertices) {
     let distance: number;
@@ -102,11 +103,22 @@ export function findNearestVertex(
 /**
  * 두 점 사이의 거리 계산 (mm)
  * 수직/수평 거리만 계산 (가장 큰 변화량의 축만 사용)
+ * 정면뷰에서는 Z축 무시
  */
-export function calculateDistance(start: MeasurePoint, end: MeasurePoint): number {
+export function calculateDistance(
+  start: MeasurePoint,
+  end: MeasurePoint,
+  viewDirection?: 'front' | 'left' | 'right' | 'top'
+): number {
   const dx = Math.abs(end[0] - start[0]);
   const dy = Math.abs(end[1] - start[1]);
   const dz = Math.abs(end[2] - start[2]);
+
+  // 정면뷰: X, Y축만 측정 (Z축 무시)
+  if (viewDirection === 'front') {
+    const maxDistance = Math.max(dx, dy);
+    return maxDistance * 100; // three.js 단위를 mm로 변환
+  }
 
   // 가장 큰 변화량을 가진 축의 거리만 반환 (수직/수평만 허용)
   const maxDistance = Math.max(dx, dy, dz);

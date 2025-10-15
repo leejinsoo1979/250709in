@@ -1151,8 +1151,16 @@ const RightPanel: React.FC<RightPanelProps> = ({
                     value={spaceInfo.droppedCeilingDoorCount || 1}
                     onChange={(newValue) => {
                       console.log('🎯 단내림 구간 도어 개수 변경:', newValue);
+
+                      // 슬롯 개수에 맞춰 단내림 너비 자동 계산 (슬롯 1개 = 450mm)
+                      const newWidth = newValue * 450;
+
                       const updates: any = {
-                        droppedCeilingDoorCount: newValue
+                        droppedCeilingDoorCount: newValue,
+                        droppedCeiling: {
+                          ...spaceInfo.droppedCeiling,
+                          width: newWidth
+                        }
                       };
                       updateSpaceInfo(updates);
                     }}
