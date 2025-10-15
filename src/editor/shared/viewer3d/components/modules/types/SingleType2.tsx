@@ -306,6 +306,19 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               const originalSectionHeight = mmToThreeUnits(section.height);
               sideAccumulatedY += originalSectionHeight;
 
+              // 실제 섹션 높이 계산 (현재 가구 높이 기반)
+              let actualSectionHeight: number;
+              if (sectionIndex === 0) {
+                // 하부 섹션: 항상 고정 높이
+                actualSectionHeight = mmToThreeUnits(section.height);
+              } else {
+                // 상부 섹션: 전체 높이에서 하부 섹션 높이를 뺀 나머지
+                const bottomSectionHeight = mmToThreeUnits(sections[0].height);
+                actualSectionHeight = availableHeight - bottomSectionHeight;
+              }
+
+              const actualSectionTopY = sectionBottomY + actualSectionHeight - basicThickness;
+
               // hanging 섹션이 아니면 옷걸이봉 렌더링하지 않음
               const isHangingSection = section.type === 'hanging';
               if (!isHangingSection) {
@@ -337,7 +350,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 console.log('  moduleId:', moduleData.id);
                 console.log('  internalHeight:', internalHeight);
                 console.log('  height(Three→mm):', height * 100);
-                console.log('  sectionHeight:', sectionHeight * 100);
+                console.log('  actualSectionHeight:', actualSectionHeight * 100);
                 console.log('  sectionBottomY:', sectionBottomY * 100);
                 console.log('  sectionTopPanelBottom:', sectionTopPanelBottom * 100);
                 console.log('  rodYPosition:', rodYPosition * 100);
