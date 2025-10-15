@@ -2670,7 +2670,7 @@ const Room: React.FC<RoomProps> = ({
                 position={[
                   xOffset + frameThickness.left / 2,
                   droppedCenterY,
-                  furnitureZOffset - furnitureDepth/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(21)
+                  furnitureZOffset - furnitureDepth/2 - mmToThreeUnits(5)
                 ]}
               >
                 <BoxWithEdges
@@ -2718,7 +2718,7 @@ const Room: React.FC<RoomProps> = ({
               position={[
                 xOffset + frameThickness.left / 2,
                 sideFrameCenterY,
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(21)
+                furnitureZOffset + furnitureDepth/2 + mmToThreeUnits(5)
               ]}
             >
               <BoxWithEdges
@@ -2784,7 +2784,7 @@ const Room: React.FC<RoomProps> = ({
                 position={[
                   xOffset + width - frameThickness.right / 2,
                   droppedCenterY,
-                  furnitureZOffset - furnitureDepth/2 + mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(21)
+                  furnitureZOffset - furnitureDepth/2 - mmToThreeUnits(5)
                 ]}
               >
                 <BoxWithEdges
@@ -2832,7 +2832,7 @@ const Room: React.FC<RoomProps> = ({
               position={[
                 xOffset + width - frameThickness.right / 2,
                 sideFrameCenterY,
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(21)
+                furnitureZOffset + furnitureDepth/2 + mmToThreeUnits(5)
               ]}
             >
               <BoxWithEdges
