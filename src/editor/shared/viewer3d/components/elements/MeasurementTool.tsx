@@ -87,19 +87,35 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return size;
   }, [currentZoom]);
 
-  // 시점에 따른 텍스트 오프셋 계산
-  const getTextOffset = (point: MeasurePoint, offset: number = 0.2): MeasurePoint => {
+  // 시점과 측정 방향에 따른 텍스트 오프셋 계산 (선과 겹치지 않도록)
+  const getTextOffset = (point: MeasurePoint, start: MeasurePoint, end: MeasurePoint, offset: number = 0.2): MeasurePoint => {
+    const dx = Math.abs(end[0] - start[0]);
+    const dy = Math.abs(end[1] - start[1]);
+    const dz = Math.abs(end[2] - start[2]);
+
     switch (viewDirection) {
       case 'front':
-        // 정면: Y축 위로 오프셋
-        return [point[0], point[1] + offset, point[2]];
+        // 정면(XY 평면): 가로 측정이면 Y축 위, 세로 측정이면 X축 오른쪽
+        if (dx > dy) {
+          return [point[0], point[1] + offset, point[2]];
+        } else {
+          return [point[0] + offset, point[1], point[2]];
+        }
+      case 'top':
+        // 상단(XZ 평면): 가로 측정이면 Z축 앞, 세로 측정이면 X축 오른쪽
+        if (dx > dz) {
+          return [point[0], point[1], point[2] - offset];
+        } else {
+          return [point[0] + offset, point[1], point[2]];
+        }
       case 'left':
       case 'right':
-        // 측면: Y축 위로 오프셋
-        return [point[0], point[1] + offset, point[2]];
-      case 'top':
-        // 상단: Z축 앞으로 오프셋
-        return [point[0], point[1], point[2] - offset];
+        // 측면(YZ 평면): Z축 측정이면 Y축 위, Y축 측정이면 Z축 앞
+        if (dz > dy) {
+          return [point[0], point[1] + offset, point[2]];
+        } else {
+          return [point[0], point[1], point[2] + offset];
+        }
       default:
         return [point[0], point[1] + offset, point[2]];
     }
@@ -550,7 +566,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
             {/* 거리 텍스트 */}
             <Text
-              position={getTextOffset(midPoint, 0.2)}
+              position={getTextOffset(midPoint, line.start, line.end, 0.2)}
               rotation={getTextRotation(line.start, line.end)}
               fontSize={0.25}
               color={lineColor}
@@ -605,7 +621,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
             return (
               <Text
-                position={getTextOffset(midPoint, 0.2)}
+                position={getTextOffset(midPoint, measurePoints[0], hoverPoint, 0.2)}
                 rotation={getTextRotation(measurePoints[0], hoverPoint)}
                 fontSize={0.25}
                 color={lineColor}
@@ -679,7 +695,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
                 {/* 거리 텍스트 */}
                 <Text
-                  position={getTextOffset(midPoint, 0.2)}
+                  position={getTextOffset(midPoint, start, end, 0.2)}
                   rotation={getTextRotation(start, end)}
                   fontSize={0.25}
                   color={snapColor}
@@ -691,7 +707,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
                 {/* 안내 텍스트 */}
                 <Text
-                  position={getTextOffset(midPoint, -0.4)}
+                  position={getTextOffset(midPoint, start, end, -0.4)}
                   rotation={getTextRotation(start, end)}
                   fontSize={0.15}
                   color={snapColor}
