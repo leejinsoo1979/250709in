@@ -374,20 +374,12 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         const dz = Math.abs(line.end[2] - line.start[2]);
 
         // Legacy offset data conversion (number → MeasurePoint)
-        // 뷰 평면에 맞게 offset 정규화
         const offset: MeasurePoint = (() => {
           const savedOffset = (line as any).offset;
 
           // Check if offset is valid MeasurePoint (array of 3 numbers)
           if (Array.isArray(savedOffset) && savedOffset.length === 3) {
-            // 뷰 방향에 따라 offset을 뷰 평면에 강제
-            return viewDirection === 'front'
-              ? [savedOffset[0], savedOffset[1], 0]  // 정면: Z=0 강제
-              : viewDirection === 'top'
-              ? [savedOffset[0], 0, savedOffset[2]]  // 상단: Y=0 강제
-              : viewDirection === 'left' || viewDirection === 'right'
-              ? [0, savedOffset[1], savedOffset[2]]  // 측면: X=0 강제
-              : savedOffset as MeasurePoint;
+            return savedOffset as MeasurePoint;
           }
 
           // Legacy number type or invalid data - use end point as default
