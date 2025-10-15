@@ -158,9 +158,20 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     const nearestSnap = findNearestVertex(rawPoint, sceneVerticesRef.current, viewDirection, snapDistance);
 
     if (nearestSnap) {
+      console.log('✅ 스냅됨:', {
+        distance: nearestSnap.distance.toFixed(3),
+        snapDistance: snapDistance.toFixed(3),
+        zoom: camera instanceof THREE.OrthographicCamera ? camera.zoom : 'N/A',
+        vertex: nearestSnap.vertex.map(v => v.toFixed(2))
+      });
       setHoverPoint(nearestSnap.vertex);
       setIsSnapped(true);
     } else {
+      console.log('❌ 스냅 안됨:', {
+        snapDistance: snapDistance.toFixed(3),
+        zoom: camera instanceof THREE.OrthographicCamera ? camera.zoom : 'N/A',
+        nearestVertices: sceneVerticesRef.current.length
+      });
       setHoverPoint(rawPoint);
       setIsSnapped(false);
     }
