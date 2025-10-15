@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { useThree } from '@react-three/fiber';
+import { useThree, useFrame } from '@react-three/fiber';
 import { Line, Text } from '@react-three/drei';
 import { useUIStore, MeasurePoint } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
@@ -43,6 +43,17 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   const [isSnapped, setIsSnapped] = useState(false);
   const [guideOffset, setGuideOffset] = useState<number>(0);
   const [isAdjustingGuide, setIsAdjustingGuide] = useState(false);
+  const [currentZoom, setCurrentZoom] = useState(1);
+
+  // 매 프레임 줌 레벨 체크
+  useFrame(() => {
+    if (camera instanceof THREE.OrthographicCamera) {
+      const zoom = camera.zoom || 1;
+      if (zoom !== currentZoom) {
+        setCurrentZoom(zoom);
+      }
+    }
+  });
 
   // 카메라 줌 레벨에 따른 점 크기 계산
   const getPointSize = useCallback(() => {
@@ -66,8 +77,10 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
     return SNAP_DISTANCE;
   }, [camera]);
 
-  // 사각형 크기 (완전 고정 - 줌/확대 영향 절대 안 받음)
-  const snapBoxSize = 0.2;
+  // 사각형 크기 (화면상 크기 일정하게 유지 - 줌 레벨 반비례)
+  const snapBoxSize = useMemo(() => {
+    return 0.2 / currentZoom; // 줌이 커지면(확대) world 크기는 작아져야 화면상 크기 일정
+  }, [currentZoom]);
 
   // 시점에 따른 텍스트 오프셋 계산
   const getTextOffset = (point: MeasurePoint, offset: number = 0.2): MeasurePoint => {
