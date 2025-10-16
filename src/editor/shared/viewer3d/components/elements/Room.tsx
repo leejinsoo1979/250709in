@@ -2366,8 +2366,7 @@ const Room: React.FC<RoomProps> = ({
               // 단내림 영역과 일반 영역 프레임 렌더링
               return (
                 <>
-                  {/* 단내림 영역 상부 프레임 - 서라운드 모드에서는 측면 프레임이 전체 높이이므로 생략 */}
-                  {spaceInfo.surroundType !== 'surround' && (
+                  {/* 단내림 영역 상부 프레임 */}
                   <BoxWithEdges
                     args={[
                       droppedFrameWidth,
@@ -2384,7 +2383,6 @@ const Room: React.FC<RoomProps> = ({
                     renderMode={renderMode}
                     shadowEnabled={shadowEnabled}
                   />
-                  )}
                   {/* 일반 영역 상부 프레임 */}
                   <BoxWithEdges
                     args={[
