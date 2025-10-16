@@ -1358,14 +1358,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <label className={styles.doorGapLabel}>천장 → 도어상단</label>
                   <div className={styles.inputWithUnit}>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={doorTopGapInput}
                       onChange={(e) => handleDoorTopGapChange(e.target.value)}
                       onBlur={handleDoorTopGapBlur}
                       onKeyDown={handleDoorTopGapKeyDown}
                       className={`${styles.depthInput} furniture-depth-input`}
                       placeholder="5"
-                      min="0"
                       style={{
                         color: '#000000',
                         backgroundColor: '#ffffff',
@@ -1382,14 +1382,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <label className={styles.doorGapLabel}>바닥 → 도어하단</label>
                   <div className={styles.inputWithUnit}>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={doorBottomGapInput}
                       onChange={(e) => handleDoorBottomGapChange(e.target.value)}
                       onBlur={handleDoorBottomGapBlur}
                       onKeyDown={handleDoorBottomGapKeyDown}
                       className={`${styles.depthInput} furniture-depth-input`}
                       placeholder="25"
-                      min="0"
                       style={{
                         color: '#000000',
                         backgroundColor: '#ffffff',
