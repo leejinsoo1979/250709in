@@ -614,8 +614,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                       [-doorWidthThree / 2, middlePanelY, doorDepthThree / 2 + 0.001],
                       [doorWidthThree / 2, middlePanelY, doorDepthThree / 2 + 0.001]
                     ]}
-                    color="#333333"
-                    lineWidth={2}
+                    color="#FF0000"
+                    lineWidth={5}
                     renderOrder={1000}
                   />
                 );
