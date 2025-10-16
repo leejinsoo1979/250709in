@@ -436,38 +436,60 @@ const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* 그림자 토글 버튼 - ON/OFF 형태 */}
-          <button
+          <div
             onClick={() => setShadowEnabled(!shadowEnabled)}
             style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              background: 'transparent',
+              border: `2px solid ${colors.primary}`,
+              color: colors.primary,
               display: 'flex',
               alignItems: 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              backgroundColor: shadowEnabled
-                ? colors.primary
-                : 'transparent',
-              border: `1px solid ${shadowEnabled
-                ? colors.primary
-                : 'rgba(128,128,128,0.3)'}`,
-              borderRadius: '4px',
-              color: shadowEnabled ? '#ffffff' : 'var(--text-primary)',
+              justifyContent: 'center',
               cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              fontSize: '14px',
-              fontWeight: '500',
-              boxShadow: shadowEnabled ? `0 2px 8px ${colors.primary}40` : 'none'
+              transition: 'all 0.2s ease'
             }}
             title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+            }}
           >
-            <span>그림자</span>
-            <span style={{
-              fontSize: '12px',
-              fontWeight: '600',
-              opacity: 0.9
-            }}>
-              {shadowEnabled ? 'ON' : 'OFF'}
-            </span>
-          </button>
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              {shadowEnabled ? (
+                // 그림자 ON 아이콘
+                <>
+                  <circle cx="12" cy="12" r="5" />
+                  <line x1="12" y1="1" x2="12" y2="3" />
+                  <line x1="12" y1="21" x2="12" y2="23" />
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                  <line x1="1" y1="12" x2="3" y2="12" />
+                  <line x1="21" y1="12" x2="23" y2="12" />
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                </>
+              ) : (
+                // 그림자 OFF 아이콘 (빛 발산 없음)
+                <>
+                  <circle cx="12" cy="12" r="5" />
+                </>
+              )}
+            </svg>
+          </div>
         </div>
 
         {/* 우측 액션 버튼들 */}
