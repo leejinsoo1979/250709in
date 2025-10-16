@@ -1869,7 +1869,7 @@ const Room: React.FC<RoomProps> = ({
                         ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
                         : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(7))  // 단내림 구간: 가구 앞면에서 7mm 앞
                 ]}
-                material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                material={createFrameMaterial('left')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
@@ -1968,7 +1968,7 @@ const Room: React.FC<RoomProps> = ({
                     ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
                     : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(3))  // 일반 구간: 가구 앞면에서 3mm 앞
             ]}
-            material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+            material={createFrameMaterial('left')}
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
           />
@@ -2083,7 +2083,7 @@ const Room: React.FC<RoomProps> = ({
                         ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
                         : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(11))  // 단내림 구간: 메인프레임과 맞닿도록 11mm 앞 (추가 2mm)
                 ]}
-                material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                material={createFrameMaterial('right')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
@@ -2172,7 +2172,7 @@ const Room: React.FC<RoomProps> = ({
                     ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
                     : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(3))  // 일반 구간: 가구 앞면에서 3mm 앞
             ]}
-            material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+            material={createFrameMaterial('right')}
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
           />
