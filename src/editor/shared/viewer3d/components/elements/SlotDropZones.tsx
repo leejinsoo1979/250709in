@@ -1595,50 +1595,57 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           const slotFloorZ = (frameEndZ + roomBackZ) / 2; // 바닥 중심 Z 좌표
           
           if (hasDroppedCeiling && zoneSlotInfo.dropped) {
-            // 단내림 활성화된 경우 탭에 따라 분리
-            if (activeDroppedCeilingTab === 'main') {
-              // 메인구간 탭: 메인 영역만 표시
+            // 단내림 활성화된 경우
+            const isSurround = spaceInfo.surroundType === 'surround';
+            const floors = [];
+
+            // 서라운드 모드: 양쪽 영역 모두 표시
+            // 노서라운드 모드: 현재 활성 탭의 영역만 표시
+            if (isSurround || activeDroppedCeilingTab === 'main') {
+              // 메인구간 바닥
               const leftX = mmToThreeUnits(zoneSlotInfo.normal.startX);
               const rightX = mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width);
               const centerX = (leftX + rightX) / 2;
               const width = rightX - leftX;
-              
-              return (
+
+              floors.push(
                 <mesh
                   key="main-zone-floor"
                   position={[centerX, floorY, slotFloorZ]}
                 >
                   <boxGeometry args={[width, 0.001, slotFloorDepth]} />
-                  <meshBasicMaterial 
-                    color={theme?.color || '#10b981'} 
-                    transparent 
-                    opacity={0.1} 
+                  <meshBasicMaterial
+                    color={theme?.color || '#10b981'}
+                    transparent
+                    opacity={0.1}
                   />
                 </mesh>
               );
-            } else if (activeDroppedCeilingTab === 'dropped') {
-              // 단내림 구간 탭: 단내림 영역만 표시
+            }
+
+            if (isSurround || activeDroppedCeilingTab === 'dropped') {
+              // 단내림구간 바닥
               const leftX = mmToThreeUnits(zoneSlotInfo.dropped.startX);
               const rightX = mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width);
               const centerX = (leftX + rightX) / 2;
               const width = rightX - leftX;
-              
-              return (
+
+              floors.push(
                 <mesh
                   key="dropped-zone-floor"
                   position={[centerX, floorY, slotFloorZ]}
                 >
                   <boxGeometry args={[width, 0.001, slotFloorDepth]} />
-                  <meshBasicMaterial 
-                    color={theme?.color || '#10b981'} 
-                    transparent 
-                    opacity={0.1} 
+                  <meshBasicMaterial
+                    color={theme?.color || '#10b981'}
+                    transparent
+                    opacity={0.1}
                   />
                 </mesh>
               );
             }
-            // 탭이 선택되지 않은 경우 아무것도 표시하지 않음
-            return null;
+
+            return floors;
           } else {
             // 단내림이 없는 경우 전체 영역 표시 - zoneSlotInfo 사용
             const leftX = mmToThreeUnits(zoneSlotInfo.normal.startX);
