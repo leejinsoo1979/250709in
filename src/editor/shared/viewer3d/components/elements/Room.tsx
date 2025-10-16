@@ -1283,7 +1283,7 @@ const Room: React.FC<RoomProps> = ({
                     (() => {
                       // ColumnIndexer의 계산과 동일하게 처리
                       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-                      
+
                       if (isLeftDropped) {
                         // 왼쪽 단내림: 단내림 끝 = 메인 시작
                         return mmToThreeUnits(zoneInfo.normal.startX);
@@ -1292,13 +1292,13 @@ const Room: React.FC<RoomProps> = ({
                         return mmToThreeUnits(zoneInfo.dropped.startX);
                       }
                     })(),
-                    panelStartY + height - droppedCeilingHeight/2, 
-                    extendedZOffset + extendedPanelDepth/2
+                    panelStartY + height - droppedCeilingHeight/2,
+                    zOffset + panelDepth/2  // extendedZOffset 대신 zOffset 사용하여 안쪽 벽과 일치
                   ]}
                   rotation={[0, Math.PI / 2, 0]}
                 >
-                  <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
-                  <primitive 
+                  <planeGeometry args={[panelDepth, droppedCeilingHeight]} />
+                  <primitive
                     ref={droppedWallMaterialRef}
                     object={droppedWallMaterial} />
                 </mesh>
