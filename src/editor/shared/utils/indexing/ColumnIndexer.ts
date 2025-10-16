@@ -950,6 +950,7 @@ export class ColumnIndexer {
         // 노서라운드: 엔드패널 고려
         let leftReduction = 0;
         let rightReduction = 0;
+        const BOUNDARY_GAP = 3; // 중간 경계면 이격거리
 
         // freestanding인 경우 슬롯은 엔드패널을 포함한 사이즈
         // reduction 없이 전체 공간 사용 (가구 배치 시 18mm 빼기는 SlotDropZonesSimple에서 처리)
@@ -989,23 +990,28 @@ export class ColumnIndexer {
           }
         }
 
-        droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction;
+        // 단내림구간(좌): 좌측 이격거리 빼고, 중간 경계 이격거리는 더하기
+        droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction + BOUNDARY_GAP;
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
-        normalAreaInternalWidth = normalAreaOuterWidth - rightReduction;
-        normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결
+
+        // 일반구간(우): 우측 이격거리 + 중간 경계 이격거리 빼기
+        normalAreaInternalWidth = normalAreaOuterWidth - rightReduction - BOUNDARY_GAP;
+        normalStartX = droppedStartX + droppedAreaInternalWidth - BOUNDARY_GAP; // 중간 경계 갭만큼 띄워서 시작
 
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
-          '단내림 외부 너비 (droppedAreaOuterWidth)': droppedAreaOuterWidth,
-          '단내림 leftReduction': leftReduction,
-          '단내림 내부 너비 (droppedAreaInternalWidth)': droppedAreaInternalWidth,
-          '단내림 끝': droppedStartX + droppedAreaInternalWidth,
-          '메인 외부 너비 (normalAreaOuterWidth)': normalAreaOuterWidth,
-          '메인 rightReduction': rightReduction,
-          '메인 내부 너비 (normalAreaInternalWidth)': normalAreaInternalWidth,
-          '메인 시작': normalStartX,
-          '갭': normalStartX - (droppedStartX + droppedAreaInternalWidth),
-          '프레임 두께': frameThickness,
-          'SURROUND_FRAME_THICKNESS 제거됨': true
+          '단내림구간 외부너비': droppedAreaOuterWidth,
+          '좌측이격거리': leftReduction,
+          '중간경계이격거리': BOUNDARY_GAP,
+          '단내림구간 내경': droppedAreaInternalWidth,
+          '일반구간 외부너비': normalAreaOuterWidth,
+          '우측이격거리': rightReduction,
+          '일반구간 내경': normalAreaInternalWidth,
+          '단내림 시작X': droppedStartX,
+          '단내림 끝X': droppedStartX + droppedAreaInternalWidth,
+          '메인 시작X': normalStartX,
+          '경계 갭': normalStartX - (droppedStartX + droppedAreaInternalWidth),
+          '검증 총합': droppedAreaInternalWidth + normalAreaInternalWidth + leftReduction + rightReduction + BOUNDARY_GAP,
+          '전체너비': totalWidth
         });
       }
     } else {
@@ -1030,6 +1036,7 @@ export class ColumnIndexer {
         // 노서라운드: 엔드패널 고려하여 계산
         let leftReduction = 0;
         let rightReduction = 0;
+        const BOUNDARY_GAP = 3; // 중간 경계면 이격거리
 
         // freestanding인 경우 슬롯은 엔드패널을 포함한 사이즈
         // reduction 없이 전체 공간 사용 (가구 배치 시 18mm 빼기는 SlotDropZonesSimple에서 처리)
@@ -1069,17 +1076,28 @@ export class ColumnIndexer {
           }
         }
 
-        normalAreaInternalWidth = normalAreaOuterWidth - leftReduction;
+        // 일반구간: 좌측 이격거리 + 중간 경계 이격거리 빼기
+        normalAreaInternalWidth = normalAreaOuterWidth - leftReduction - BOUNDARY_GAP;
         normalStartX = internalStartX; // 수정된 internalStartX 사용
-        droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction;
-        droppedStartX = normalStartX + normalAreaInternalWidth; // 갭 없이 바로 연결
-        
+
+        // 단내림구간: 우측 이격거리 빼고, 중간 경계 이격거리는 더하기 (일반구간에서 뺀 만큼 확보)
+        droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction + BOUNDARY_GAP;
+        droppedStartX = normalStartX + normalAreaInternalWidth + BOUNDARY_GAP; // 중간 경계 갭만큼 띄워서 시작
+
         console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
-          '메인 끝': normalStartX + normalAreaInternalWidth,
-          '단내림 시작': droppedStartX,
-          '갭': droppedStartX - (normalStartX + normalAreaInternalWidth),
-          '프레임 두께': frameThickness,
-          'SURROUND_FRAME_THICKNESS 제거됨': true
+          '일반구간 외부너비': normalAreaOuterWidth,
+          '좌측이격거리': leftReduction,
+          '중간경계이격거리': BOUNDARY_GAP,
+          '일반구간 내경': normalAreaInternalWidth,
+          '단내림구간 외부너비': droppedAreaOuterWidth,
+          '우측이격거리': rightReduction,
+          '단내림구간 내경': droppedAreaInternalWidth,
+          '메인 시작X': normalStartX,
+          '메인 끝X': normalStartX + normalAreaInternalWidth,
+          '단내림 시작X': droppedStartX,
+          '경계 갭': droppedStartX - (normalStartX + normalAreaInternalWidth),
+          '검증 총합': normalAreaInternalWidth + droppedAreaInternalWidth + leftReduction + rightReduction + BOUNDARY_GAP,
+          '전체너비': totalWidth
         });
       }
     }
