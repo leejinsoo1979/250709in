@@ -524,11 +524,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(45); // 원래 값 저장
   const [showWarning, setShowWarning] = useState(false);
 
-  // 섹션 높이 상태
-  const [lowerSectionHeight, setLowerSectionHeight] = useState<number>(1000);
-  const [upperSectionHeight, setUpperSectionHeight] = useState<number>(1000);
-  const [lowerHeightInput, setLowerHeightInput] = useState<string>('1000');
-  const [upperHeightInput, setUpperHeightInput] = useState<string>('1000');
+  // 섹션 깊이 상태
+  const [lowerSectionDepth, setLowerSectionDepth] = useState<number>(580);
+  const [upperSectionDepth, setUpperSectionDepth] = useState<number>(580);
+  const [lowerDepthInput, setLowerDepthInput] = useState<string>('580');
+  const [upperDepthInput, setUpperDepthInput] = useState<string>('580');
   
   // 전체 팝업에서 엔터키 처리 - 조건문 위로 이동
   useEffect(() => {
@@ -544,19 +544,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         }
         return;
       }
+
+      const activeElement = document.activeElement as HTMLElement | null;
+      const isFormElement = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
+      if (isFormElement) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          console.log('✅ ESC키로 팝업 닫기 (입력 필드 포커스)');
+          closeAllPopups();
+        }
+        return;
+      }
       
       // 메인 팝업이 열려있을 때 (furnitureEdit 타입 체크)
       if (activePopup.type === 'furnitureEdit') {
         if (e.key === 'Enter') {
-          // input 필드에 포커스가 있는 경우는 제외 (깊이 입력 필드)
-          const activeElement = document.activeElement;
-          console.log('🎯 액티브 요소:', activeElement?.tagName, activeElement);
-          
-          if (activeElement?.tagName !== 'INPUT') {
-            e.preventDefault();
-            console.log('✅ 엔터키로 팝업 닫기');
-            closeAllPopups(); // 확인 버튼과 동일한 동작
-          }
+          e.preventDefault();
+          console.log('✅ 엔터키로 팝업 닫기');
+          closeAllPopups(); // 확인 버튼과 동일한 동작
         } else if (e.key === 'Escape') {
           e.preventDefault();
           console.log('✅ ESC키로 팝업 닫기');
@@ -708,35 +713,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setOriginalDoorBottomGap(initialBottomGap); // 원래 값 저장
       }
 
-      // 2섹션 가구의 섹션 높이 초기화
+      // 2섹션 가구의 섹션 깊이 초기화
       const sections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
       if (sections.length === 2) {
-        // customSections가 있고 calculatedHeight가 있으면 그대로 사용
-        if (currentPlacedModule.customSections && currentPlacedModule.customSections[0].calculatedHeight) {
-          const lowerHeight = currentPlacedModule.customSections[0].calculatedHeight;
-          const upperHeight = currentPlacedModule.customSections[1].calculatedHeight;
-          setLowerSectionHeight(lowerHeight);
-          setUpperSectionHeight(upperHeight);
-          setLowerHeightInput(lowerHeight.toString());
-          setUpperHeightInput(upperHeight.toString());
-        } else {
-          // customSections가 없으면 실제 높이 계산 (useBaseFurniture와 동일한 로직)
-          const totalHeight = moduleData.dimensions.height;
+        const defaultDepth = moduleData.dimensions.depth;
 
-          // 각 섹션의 실제 높이 계산 (절대값은 원래 값 그대로, 비율은 전체에서 계산)
-          const lowerHeight = sections[0].heightType === 'absolute'
-            ? sections[0].height  // 절대값은 그대로 사용 (예: 1000mm)
-            : totalHeight * ((sections[0].height || sections[0].heightRatio || 50) / 100);
+        // 저장된 섹션별 깊이가 있으면 사용
+        const lowerDepth = currentPlacedModule.lowerSectionDepth ?? defaultDepth;
+        const upperDepth = currentPlacedModule.upperSectionDepth ?? defaultDepth;
 
-          const upperHeight = sections[1].heightType === 'absolute'
-            ? sections[1].height  // 절대값은 그대로 사용
-            : (totalHeight - lowerHeight);  // 상부는 전체에서 하부를 뺀 값
-
-          setLowerSectionHeight(Math.round(lowerHeight));
-          setUpperSectionHeight(Math.round(upperHeight));
-          setLowerHeightInput(Math.round(lowerHeight).toString());
-          setUpperHeightInput(Math.round(upperHeight).toString());
-        }
+        setLowerSectionDepth(lowerDepth);
+        setUpperSectionDepth(upperDepth);
+        setLowerDepthInput(lowerDepth.toString());
+        setUpperDepthInput(upperDepth.toString());
       }
       
       console.log('🔧 팝업 초기값 설정:', {
@@ -998,57 +987,26 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   };
 
-  const handleLowerHeightBlur = () => {
-    const value = parseInt(lowerHeightInput);
-    if (!isNaN(value) && value > 0 && moduleData) {
-      // 전체 가구 높이
-      const totalHeight = moduleData.dimensions.height;
+  // 섹션 깊이 입력 핸들러
+  const handleLowerDepthChange = (value: string) => {
+    setLowerDepthInput(value);
 
-      // 하부 섹션 변경 시 상부 섹션 자동 조정 (전체 높이 기준)
-      const newUpperHeight = totalHeight - value;
-
-      if (newUpperHeight > 0) {
-        setLowerSectionHeight(value);
-        setUpperSectionHeight(newUpperHeight);
-        setUpperHeightInput(newUpperHeight.toString());
-
-        // 실시간 업데이트: sections 배열 업데이트
-        if (currentPlacedModule && isTwoSectionFurniture) {
-          const updatedSections = [...sections];
-          updatedSections[0] = { ...updatedSections[0], calculatedHeight: value };
-          updatedSections[1] = { ...updatedSections[1], calculatedHeight: newUpperHeight };
-          updatePlacedModule(currentPlacedModule.id, {
-            customSections: updatedSections
-          });
-        }
-      }
+    // 유효한 숫자면 즉시 반영
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue > 0 && currentPlacedModule) {
+      setLowerSectionDepth(numValue);
+      updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: numValue });
     }
   };
 
-  const handleUpperHeightBlur = () => {
-    const value = parseInt(upperHeightInput);
-    if (!isNaN(value) && value > 0 && moduleData) {
-      // 전체 가구 높이
-      const totalHeight = moduleData.dimensions.height;
+  const handleUpperDepthChange = (value: string) => {
+    setUpperDepthInput(value);
 
-      // 상부 섹션 변경 시 하부 섹션 자동 조정 (전체 높이 기준)
-      const newLowerHeight = totalHeight - value;
-
-      if (newLowerHeight > 0) {
-        setUpperSectionHeight(value);
-        setLowerSectionHeight(newLowerHeight);
-        setLowerHeightInput(newLowerHeight.toString());
-
-        // 실시간 업데이트: sections 배열 업데이트
-        if (currentPlacedModule && isTwoSectionFurniture) {
-          const updatedSections = [...sections];
-          updatedSections[0] = { ...updatedSections[0], calculatedHeight: newLowerHeight };
-          updatedSections[1] = { ...updatedSections[1], calculatedHeight: value };
-          updatePlacedModule(currentPlacedModule.id, {
-            customSections: updatedSections
-          });
-        }
-      }
+    // 유효한 숫자면 즉시 반영
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue > 0 && currentPlacedModule) {
+      setUpperSectionDepth(numValue);
+      updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: numValue });
     }
   };
 
@@ -1278,10 +1236,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 섹션 높이 설정 (2섹션 가구만, 상세보기 아닐 때만) */}
+          {/* 섹션 깊이 설정 (2섹션 가구만, 상세보기 아닐 때만) */}
           {!showDetails && isTwoSectionFurniture && (
             <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>섹션 높이 설정</h5>
+              <h5 className={styles.sectionTitle}>섹션 깊이 설정</h5>
               <div style={{ display: 'flex', gap: '12px' }}>
                 {/* 하부 섹션 */}
                 <div style={{ flex: 1 }}>
@@ -1290,15 +1248,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={lowerHeightInput}
-                      onChange={(e) => handleLowerHeightChange(e.target.value)}
+                      value={lowerDepthInput}
+                      onChange={(e) => handleLowerDepthChange(e.target.value)}
                       onFocus={() => useUIStore.getState().setHighlightedSection(`${currentPlacedModule?.id}-0`)}
-                      onBlur={() => {
-                        handleLowerHeightBlur();
-                        useUIStore.getState().setHighlightedSection(null);
-                      }}
+                      onBlur={() => useUIStore.getState().setHighlightedSection(null)}
                       className={styles.depthInput}
-                      placeholder="1000"
+                      placeholder="580"
                       style={{
                         color: '#000000',
                         backgroundColor: '#ffffff',
@@ -1317,15 +1272,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                     <input
                       type="text"
                       inputMode="numeric"
-                      value={upperHeightInput}
-                      onChange={(e) => handleUpperHeightChange(e.target.value)}
+                      value={upperDepthInput}
+                      onChange={(e) => handleUpperDepthChange(e.target.value)}
                       onFocus={() => useUIStore.getState().setHighlightedSection(`${currentPlacedModule?.id}-1`)}
-                      onBlur={() => {
-                        handleUpperHeightBlur();
-                        useUIStore.getState().setHighlightedSection(null);
-                      }}
+                      onBlur={() => useUIStore.getState().setHighlightedSection(null)}
                       className={styles.depthInput}
-                      placeholder="1000"
+                      placeholder="580"
                       style={{
                         color: '#000000',
                         backgroundColor: '#ffffff',
