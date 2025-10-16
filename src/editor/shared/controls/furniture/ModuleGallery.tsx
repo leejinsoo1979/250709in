@@ -139,13 +139,16 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         internalWidth: indexing.internalWidth
       });
     }
-    let targetZone: 'normal' | 'dropped' = 'normal';
+    let targetZone: 'normal' | 'dropped' | undefined = undefined;
     const adjustedDimensions = { ...module.dimensions };
     let dragModuleId = module.id; // 드래그에 사용할 모듈 ID
-    
+
     // 단내림이 활성화되어 있는 경우
     if (spaceInfo.droppedCeiling?.enabled) {
-      targetZone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
+      // 서라운드 모드: zone을 undefined로 설정 (드롭 시점에 레이캐스팅으로 결정)
+      // 노서라운드 모드: activeDroppedCeilingTab으로 zone 결정
+      const isSurround = spaceInfo.surroundType === 'surround';
+      targetZone = isSurround ? undefined : (activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal');
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
       
       if (targetZone === 'dropped' && zoneInfo.dropped) {
