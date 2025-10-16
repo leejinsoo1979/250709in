@@ -2719,7 +2719,7 @@ const Room: React.FC<RoomProps> = ({
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
-                  material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  material={createFrameMaterial('left')}
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
@@ -2739,7 +2739,7 @@ const Room: React.FC<RoomProps> = ({
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
-                  material={leftSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  material={createFrameMaterial('left')}
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
@@ -2812,7 +2812,7 @@ const Room: React.FC<RoomProps> = ({
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
-                  material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  material={createFrameMaterial('right')}
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
@@ -2834,7 +2834,7 @@ const Room: React.FC<RoomProps> = ({
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
-                  material={rightSubFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+                  material={createFrameMaterial('right')}
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
