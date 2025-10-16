@@ -656,13 +656,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 가구 하단 위치 (바닥에서)
     const furnitureBottom = baseFrameHeight + floorHeight;
 
-    // 가구 중심 위치 = 도어 중심 위치
+    // 가구 중심 위치
     const furnitureCenter = furnitureBottom + (tallCabinetFurnitureHeight / 2);
 
-    // 도어 중심 = 가구 중심 (확장은 높이에 이미 반영되어 있음)
-    doorYPosition = mmToThreeUnits(furnitureCenter);
+    // 도어 중심 계산
+    // 도어가 위로 doorTopGap, 아래로 doorBottomGap 확장되므로
+    // 도어 중심은 가구 중심에서 (doorBottomGap - doorTopGap)/2 만큼 아래로 이동
+    const centerOffset = (doorBottomGap - doorTopGap) / 2;
+    const doorCenter = furnitureCenter + centerOffset;
+    doorYPosition = mmToThreeUnits(doorCenter);
 
-    console.log('🚪📍 도어 Y 위치 (가구 중심 기준):', {
+    console.log('🚪📍 도어 Y 위치 (가구 중심 기준 + 확장 오프셋):', {
       baseFrameHeight,
       floorHeight,
       furnitureBottom,
@@ -670,9 +674,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       furnitureCenter,
       doorTopGap,
       doorBottomGap,
+      centerOffset,
+      doorCenter,
       doorHeight: actualDoorHeight,
       doorYPosition,
-      설명: `가구중심(${furnitureCenter}mm) = 도어중심, 도어는 중심에서 위로 ${doorTopGap}mm, 아래로 ${doorBottomGap}mm 확장`
+      설명: `가구중심(${furnitureCenter}mm) + 확장차이/2(${centerOffset}mm) = 도어중심(${doorCenter}mm), 도어 상단은 가구보다 ${doorTopGap}mm 위, 하단은 ${doorBottomGap}mm 아래`
     });
     
     // 플로팅 배치 시 Y 위치 조정 - 상단 고정, 하단만 올라가도록
