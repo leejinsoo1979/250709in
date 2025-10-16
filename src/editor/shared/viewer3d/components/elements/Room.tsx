@@ -1786,16 +1786,20 @@ const Room: React.FC<RoomProps> = ({
         
         // 왼쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
         if (hasDroppedCeiling && isLeftDropped) {
-          // 단내림 구간에 가구가 없으면 엔드패널 렌더링 생략
-          if (!hasDroppedZoneFurniture) {
-            console.log('🚫 왼쪽 단내림 엔드패널 렌더링 생략 (단내림 구간에 가구 없음)');
-            return null;
-          }
+          // 노서라운드 모드에서만 가구 여부로 엔드패널 렌더링 결정
+          // 서라운드 모드에서는 엔드패널 깊이가 다르므로 항상 렌더링
+          if (spaceInfo.surroundType === 'no-surround') {
+            // 단내림 구간에 가구가 없으면 엔드패널 렌더링 생략
+            if (!hasDroppedZoneFurniture) {
+              console.log('🚫 [노서라운드] 왼쪽 단내림 엔드패널 렌더링 생략 (단내림 구간에 가구 없음)');
+              return null;
+            }
 
-          // 우측(일반구간)에 가구가 있으면 좌측(단내림구간) 엔드패널 렌더링 생략
-          if (hasRightFurniture) {
-            console.log('🚫 왼쪽 단내림 엔드패널 렌더링 생략 (우측 일반구간에 가구 있음)');
-            return null;
+            // 우측(일반구간)에 가구가 있으면 좌측(단내림구간) 엔드패널 렌더링 생략
+            if (hasRightFurniture) {
+              console.log('🚫 [노서라운드] 왼쪽 단내림 엔드패널 렌더링 생략 (우측 일반구간에 가구 있음)');
+              return null;
+            }
           }
 
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
@@ -1980,16 +1984,20 @@ const Room: React.FC<RoomProps> = ({
         
         // 오른쪽이 단내림 영역인 경우
         if (hasDroppedCeiling && isRightDropped) {
-          // 단내림 구간에 가구가 없으면 엔드패널 렌더링 생략
-          if (!hasDroppedZoneFurniture) {
-            console.log('🚫 오른쪽 단내림 엔드패널 렌더링 생략 (단내림 구간에 가구 없음)');
-            return null;
-          }
+          // 노서라운드 모드에서만 가구 여부로 엔드패널 렌더링 결정
+          // 서라운드 모드에서는 엔드패널 깊이가 다르므로 항상 렌더링
+          if (spaceInfo.surroundType === 'no-surround') {
+            // 단내림 구간에 가구가 없으면 엔드패널 렌더링 생략
+            if (!hasDroppedZoneFurniture) {
+              console.log('🚫 [노서라운드] 오른쪽 단내림 엔드패널 렌더링 생략 (단내림 구간에 가구 없음)');
+              return null;
+            }
 
-          // 좌측(일반구간)에 가구가 있으면 우측(단내림구간) 엔드패널 렌더링 생략
-          if (hasLeftFurniture) {
-            console.log('🚫 오른쪽 단내림 엔드패널 렌더링 생략 (좌측 일반구간에 가구 있음)');
-            return null;
+            // 좌측(일반구간)에 가구가 있으면 우측(단내림구간) 엔드패널 렌더링 생략
+            if (hasLeftFurniture) {
+              console.log('🚫 [노서라운드] 오른쪽 단내림 엔드패널 렌더링 생략 (좌측 일반구간에 가구 있음)');
+              return null;
+            }
           }
 
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
