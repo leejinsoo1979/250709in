@@ -520,6 +520,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [doorBottomGap, setDoorBottomGap] = useState<number>(25); // 바닥→도어하단 갭 (기본 25mm)
   const [doorTopGapInput, setDoorTopGapInput] = useState<string>('5');
   const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>('25');
+  const [originalDoorTopGap, setOriginalDoorTopGap] = useState<number>(5); // 원래 값 저장
+  const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(25); // 원래 값 저장
   const [showWarning, setShowWarning] = useState(false);
 
   // 섹션 높이 상태
@@ -692,13 +694,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setHasDoor(currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false);
       setHasGapBackPanel(currentPlacedModule.hasGapBackPanel ?? false); // 갭 백패널 초기값 설정
 
-      // 도어 상하 갭 초기값 설정
+      // 도어 상하 갭 초기값 설정 (입력 중 방해 방지)
       const initialTopGap = currentPlacedModule.doorTopGap ?? 5;
       const initialBottomGap = currentPlacedModule.doorBottomGap ?? 25;
-      setDoorTopGap(initialTopGap);
-      setDoorBottomGap(initialBottomGap);
-      setDoorTopGapInput(initialTopGap.toString());
-      setDoorBottomGapInput(initialBottomGap.toString());
+      if (doorTopGap !== initialTopGap) {
+        setDoorTopGap(initialTopGap);
+        setDoorTopGapInput(initialTopGap.toString());
+        setOriginalDoorTopGap(initialTopGap); // 원래 값 저장
+      }
+      if (doorBottomGap !== initialBottomGap) {
+        setDoorBottomGap(initialBottomGap);
+        setDoorBottomGapInput(initialBottomGap.toString());
+        setOriginalDoorBottomGap(initialBottomGap); // 원래 값 저장
+      }
 
       // 2섹션 가구의 섹션 높이 초기화
       const sections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
@@ -781,6 +789,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   }
 
   const handleClose = () => {
+    closeAllPopups();
+  };
+
+  const handleCancel = () => {
+    // 취소 시 원래 값으로 복원
+    if (currentPlacedModule) {
+      updatePlacedModule(currentPlacedModule.id, {
+        doorTopGap: originalDoorTopGap,
+        doorBottomGap: originalDoorBottomGap
+      });
+    }
     closeAllPopups();
   };
 
@@ -1448,13 +1467,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
           {/* 확인/취소 버튼 */}
           <div className={styles.confirmButtons}>
-            <button 
+            <button
               className={styles.cancelButton}
-              onClick={handleClose}
+              onClick={handleCancel}
             >
               {t('common.cancel')}
             </button>
-            <button 
+            <button
               className={styles.confirmButton}
               onClick={handleClose}
             >
