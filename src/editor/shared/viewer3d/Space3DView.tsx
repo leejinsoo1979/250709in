@@ -54,7 +54,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, shadowEnabled, setShadowEnabled } = useUIStore();
+  const { view2DDirection, showDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture, isMeasureMode, toggleMeasureMode, isEraserMode } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
   
@@ -1412,83 +1412,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </>
         )}
 
-        {/* 그림자 토글 버튼 - 지우개 버튼 아래 (3D 모드에서만 표시) */}
-        {viewMode === '3D' && (
-          <button
-            onClick={() => {
-              console.log('☀️ 그림자 모드 토글:', !shadowEnabled);
-              setShadowEnabled(!shadowEnabled);
-            }}
-            style={{
-              position: 'absolute',
-              top: viewMode === '2D' && view2DDirection !== 'all' ? '148px' : '56px', // 2D에서는 지우개 버튼 아래, 3D에서는 분할 버튼 아래
-              right: '10px',
-              width: '36px',
-              height: '36px',
-              backgroundColor: shadowEnabled
-                ? colors.primary
-                : (view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)'),
-              border: `1px solid ${shadowEnabled
-                ? colors.primary
-                : (view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)')}`,
-              borderRadius: '4px',
-              color: shadowEnabled ? '#ffffff' : (view2DTheme === 'dark' ? '#ffffff' : '#000000'),
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease',
-              zIndex: 20,
-              padding: '0',
-              boxShadow: shadowEnabled ? `0 2px 8px ${colors.primary}40` : '0 2px 4px rgba(0,0,0,0.1)'
-            }}
-            onMouseEnter={(e) => {
-              if (!shadowEnabled) {
-                e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.9)' : 'rgba(255,255,255,1)';
-                e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)';
-              }
-              e.currentTarget.style.transform = 'scale(1.05)';
-            }}
-            onMouseLeave={(e) => {
-              if (!shadowEnabled) {
-                e.currentTarget.style.backgroundColor = view2DTheme === 'dark' ? 'rgba(18,18,18,0.7)' : 'rgba(255,255,255,0.9)';
-                e.currentTarget.style.borderColor = view2DTheme === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.2)';
-              }
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-            title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              {shadowEnabled ? (
-                // 그림자 ON 아이콘
-                <>
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </>
-              ) : (
-                // 그림자 OFF 아이콘 (흐린 태양)
-                <>
-                  <circle cx="12" cy="12" r="5" opacity="0.5" />
-                  <line x1="12" y1="1" x2="12" y2="3" opacity="0.5" />
-                  <line x1="12" y1="21" x2="12" y2="23" opacity="0.5" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" opacity="0.5" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" opacity="0.5" />
-                  <line x1="1" y1="12" x2="3" y2="12" opacity="0.5" />
-                  <line x1="21" y1="12" x2="23" y2="12" opacity="0.5" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" opacity="0.5" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" opacity="0.5" />
-                </>
-              )}
-            </svg>
-          </button>
-        )}
 
         </div>
       </Space3DViewProvider>

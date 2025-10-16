@@ -433,43 +433,41 @@ const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* 그림자 토글 버튼 */}
-          <button 
-            className={`${styles.actionButton} ${shadowEnabled ? styles.active : ''}`}
-            onClick={() => setShadowEnabled(!shadowEnabled)}
-            title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              {shadowEnabled ? (
-                // 그림자 ON 아이콘
-                <>
-                  <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" strokeWidth="2"/>
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" strokeWidth="2"/>
-                </>
-              ) : (
-                // 그림자 OFF 아이콘 (흐린 태양)
-                <>
-                  <circle cx="12" cy="12" r="5" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-                  <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-                  <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-                  <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-                  <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" strokeWidth="2" opacity="0.5"/>
-                </>
-              )}
-            </svg>
-            그림자
-          </button>
+          {/* 그림자 토글 버튼 - ON/OFF 형태 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>그림자</span>
+            <div
+              onClick={() => setShadowEnabled(!shadowEnabled)}
+              style={{
+                position: 'relative',
+                width: '44px',
+                height: '24px',
+                backgroundColor: shadowEnabled ? 'var(--primary-color)' : '#ccc',
+                borderRadius: '12px',
+                cursor: 'pointer',
+                transition: 'background-color 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '2px'
+              }}
+              title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
+            >
+              <div
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  backgroundColor: '#ffffff',
+                  borderRadius: '50%',
+                  transition: 'transform 0.3s ease',
+                  transform: shadowEnabled ? 'translateX(20px)' : 'translateX(0)',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}
+              />
+            </div>
+            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', minWidth: '30px' }}>
+              {shadowEnabled ? 'ON' : 'OFF'}
+            </span>
+          </div>
         </div>
 
         {/* 우측 액션 버튼들 */}
