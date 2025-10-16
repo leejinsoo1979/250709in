@@ -584,39 +584,24 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 totalSections={2}
               />
 
-              {/* 도어 분할선 - 두 도어 사이 경계에 표시 */}
+              {/* 도어 분할선 - 중간판(하부섹션 상판/상부섹션 바닥판) 위치에 표시 */}
               {(() => {
-                // 도어 분할 계산 (DoorModule과 동일한 로직)
-                const tallCabinetFurnitureHeight = moduleData.dimensions.height || 2000;
-                const lowerSectionHeight = 1000; // 하부 섹션 고정 높이
-                const upperSectionHeight = tallCabinetFurnitureHeight - lowerSectionHeight;
+                // 중간판 Y 위치 계산 (가구 본체 렌더링과 동일한 로직)
+                const sectionHeights = getSectionHeights();
+                const lowerSectionHeight = sectionHeights[0];
 
-                // 하부 도어 계산
-                const furnitureBottom = -tallCabinetFurnitureHeight / 2;
-                const lowerSectionCenter = furnitureBottom + lowerSectionHeight / 2;
-                const lowerCenterOffset = ((lowerDoorTopGap ?? 0) - (lowerDoorBottomGap ?? 45)) / 2;
-                const lowerDoorY = lowerSectionCenter + lowerCenterOffset;
-                const lowerDoorHeight = lowerSectionHeight + (lowerDoorTopGap ?? 0) + (lowerDoorBottomGap ?? 45);
-                const lowerDoorTop = lowerDoorY + lowerDoorHeight / 2;
+                let accumulatedY = -height/2 + basicThickness;
+                const sectionCenterY = accumulatedY + lowerSectionHeight / 2 - basicThickness;
 
-                // 상부 도어 계산
-                const furnitureTop = tallCabinetFurnitureHeight / 2;
-                const upperSectionCenter = furnitureTop - upperSectionHeight / 2;
-                const upperCenterOffset = ((upperDoorTopGap ?? 5) - (upperDoorBottomGap ?? 0)) / 2;
-                const upperDoorY = upperSectionCenter + upperCenterOffset;
-                const upperDoorHeight = upperSectionHeight + (upperDoorTopGap ?? 5) + (upperDoorBottomGap ?? 0);
-                const upperDoorBottom = upperDoorY - upperDoorHeight / 2;
+                // 중간판 Y 위치 = 상부 섹션 바닥판 중심 (하부/상부 섹션 경계)
+                const middlePanelY = sectionCenterY + lowerSectionHeight/2 + basicThickness/2;
 
-                // 분할선 = 두 도어 경계
-                const dividerY = mmToThreeUnits((lowerDoorTop + upperDoorBottom) / 2);
-
-                console.log('🚪📏 도어 분할선 위치 (도어 기준):', {
-                  lowerDoorY,
-                  lowerDoorTop,
-                  upperDoorY,
-                  upperDoorBottom,
-                  dividerY_mm: dividerY / 0.01,
-                  설명: '두 도어 경계'
+                console.log('🚪📏 도어 분할선 위치 (중간판 기준):', {
+                  sectionCenterY,
+                  lowerSectionHeight,
+                  middlePanelY,
+                  middlePanelY_mm: middlePanelY / 0.01,
+                  설명: '중간판(상부섹션 바닥판) 중심'
                 });
 
                 // 도어 너비와 깊이
@@ -626,8 +611,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 return (
                   <Line
                     points={[
-                      [-doorWidthThree / 2, dividerY, doorDepthThree / 2 + 0.001],
-                      [doorWidthThree / 2, dividerY, doorDepthThree / 2 + 0.001]
+                      [-doorWidthThree / 2, middlePanelY, doorDepthThree / 2 + 0.001],
+                      [doorWidthThree / 2, middlePanelY, doorDepthThree / 2 + 0.001]
                     ]}
                     color="#333333"
                     lineWidth={2}
