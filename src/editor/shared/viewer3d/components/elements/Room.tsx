@@ -2142,14 +2142,6 @@ const Room: React.FC<RoomProps> = ({
           }
         }
 
-        console.log('🎨🎨🎨 [우측 프레임 렌더링]:', {
-          rightFrameMaterial,
-          materialConfigDoorColor: materialConfig?.doorColor,
-          hasDroppedCeiling,
-          isRightDropped,
-          '렌더링여부': !(hasDroppedCeiling && isRightDropped)
-        });
-
         return (!(hasDroppedCeiling && isRightDropped) ? (
           <BoxWithEdges
             key={`right-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
