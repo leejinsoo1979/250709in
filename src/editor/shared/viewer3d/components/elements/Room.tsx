@@ -1798,8 +1798,9 @@ const Room: React.FC<RoomProps> = ({
         
         // 왼쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
         if (hasDroppedCeiling && isLeftDropped) {
-          // 서라운드 모드에서는 측면 프레임이 전체 높이이므로 단내림 구간 프레임 생략
-          if (spaceInfo.surroundType === 'surround') {
+          // 서라운드 모드에서 벽이 있으면 측면 프레임이 전체 높이이므로 단내림 구간 프레임 생략
+          // 벽이 없으면 엔드패널 렌더링 필요
+          if (spaceInfo.surroundType === 'surround' && wallConfig?.left) {
             console.log('🚫 [서라운드] 왼쪽 단내림 프레임 렌더링 생략 (측면 프레임이 전체 높이)');
             return null;
           }
@@ -2010,8 +2011,9 @@ const Room: React.FC<RoomProps> = ({
         
         // 오른쪽이 단내림 영역인 경우
         if (hasDroppedCeiling && isRightDropped) {
-          // 서라운드 모드에서는 측면 프레임이 전체 높이이므로 단내림 구간 프레임 생략
-          if (spaceInfo.surroundType === 'surround') {
+          // 서라운드 모드에서 벽이 있으면 측면 프레임이 전체 높이이므로 단내림 구간 프레임 생략
+          // 벽이 없으면 엔드패널 렌더링 필요
+          if (spaceInfo.surroundType === 'surround' && wallConfig?.right) {
             console.log('🚫 [서라운드] 오른쪽 단내림 프레임 렌더링 생략 (측면 프레임이 전체 높이)');
             return null;
           }
