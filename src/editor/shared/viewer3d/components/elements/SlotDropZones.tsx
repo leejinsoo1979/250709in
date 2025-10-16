@@ -1452,23 +1452,26 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           // zoneSlotInfo는 이미 위에서 계산됨
           
           if (hasDroppedCeiling && zoneSlotInfo.dropped) {
-            // 단내림 활성화된 경우 - 현재 활성 탭의 영역만 콜라이더 생성
+            // 단내림 활성화된 경우
             const colliders = [];
-            
-            if (activeDroppedCeilingTab === 'main') {
+            const isSurround = spaceInfo.surroundType === 'surround';
+
+            // 서라운드 모드에서는 양쪽 영역 모두 콜라이더 생성
+            // 노서라운드 모드에서는 현재 활성 탭의 영역만 콜라이더 생성
+            if (isSurround || activeDroppedCeilingTab === 'main') {
               // 메인구간 콜라이더
               const { startX, columnCount, columnWidth } = zoneSlotInfo.normal;
               for (let i = 0; i < columnCount; i++) {
                 const slotCenterMm = startX + (i * columnWidth) + (columnWidth / 2);
                 const slotCenterX = mmToThreeUnits(slotCenterMm);
                 const slotWidthThree = mmToThreeUnits(columnWidth);
-                
+
                 colliders.push(
                   <mesh
                     key={`main-slot-collider-${i}`}
                     position={[slotCenterX, slotStartY + slotDimensions.height / 2, 0]}
-                    userData={{ 
-                      slotIndex: i, 
+                    userData={{
+                      slotIndex: i,
                       isSlotCollider: true,
                       type: 'slot-collider',
                       zone: 'normal'
@@ -1480,20 +1483,22 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
                   </mesh>
                 );
               }
-            } else if (activeDroppedCeilingTab === 'dropped') {
+            }
+
+            if (isSurround || activeDroppedCeilingTab === 'dropped') {
               // 단내림구간 콜라이더
               const { startX, columnCount, columnWidth } = zoneSlotInfo.dropped;
               for (let i = 0; i < columnCount; i++) {
                 const slotCenterMm = startX + (i * columnWidth) + (columnWidth / 2);
                 const slotCenterX = mmToThreeUnits(slotCenterMm);
                 const slotWidthThree = mmToThreeUnits(columnWidth);
-                
+
                 colliders.push(
                   <mesh
                     key={`dropped-slot-collider-${i}`}
                     position={[slotCenterX, slotStartY + slotDimensions.height / 2, 0]}
-                    userData={{ 
-                      slotIndex: i, 
+                    userData={{
+                      slotIndex: i,
                       isSlotCollider: true,
                       type: 'slot-collider',
                       zone: 'dropped'
@@ -1506,7 +1511,7 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
                 );
               }
             }
-            
+
             return colliders;
           } else {
             // 단내림이 없는 경우 - 기존 방식
