@@ -394,39 +394,43 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }
 
+  // 듀얼 가구인지 먼저 확인 - moduleData가 있으면 그것으로 판단, 없으면 너비로 추정
+  const isDualFurniture = moduleData?.isDynamic && moduleData?.id?.includes('dual') ? true :
+    Math.abs(moduleWidth - (effectiveColumnWidth * 2)) < 50;
+
   // 도어 크기 계산 - originalSlotWidth가 있으면 무조건 사용 (커버도어)
-  let actualDoorWidth = originalSlotWidth || moduleWidth || effectiveColumnWidth;
+  // 듀얼 가구인 경우 effectiveColumnWidth * 2 사용
+  let actualDoorWidth = originalSlotWidth || moduleWidth || (isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth);
 
   console.log('🚪📏 도어 너비 계산:', {
     originalSlotWidth,
     moduleWidth,
     indexingColumnWidth: indexing.columnWidth,
     effectiveColumnWidth,
+    isDualFurniture,
+    계산된도어너비: isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth,
     actualDoorWidth,
     zone: (spaceInfo as any).zone,
-    설명: originalSlotWidth ? '커버도어 (원래 슬롯 너비)' : '일반 도어'
+    설명: originalSlotWidth ? '커버도어 (원래 슬롯 너비)' : (isDualFurniture ? '듀얼 도어 (슬롯너비 x 2)' : '싱글 도어')
   });
-  
+
   // 노서라운드 모드에서 도어 크기 처리
   if (spaceInfo.surroundType === 'no-surround') {
     // 노서라운드에서는 항상 원래 슬롯 크기를 사용해야 함
     // originalSlotWidth가 없으면 fallback으로 계산
     if (!originalSlotWidth) {
       // 노서라운드에서는 슬롯 너비를 그대로 사용 (엔드패널이 슬롯에 포함됨)
-      // indexing에서 이미 계산된 슬롯 너비를 사용
-      actualDoorWidth = indexing.columnWidth;
+      // 듀얼 가구면 슬롯 너비 * 2
+      actualDoorWidth = isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth;
       console.log(`🚪 노서라운드 도어 너비 계산:`, {
         전체너비: spaceInfo.width,
-        indexingColumnWidth: indexing.columnWidth,
+        effectiveColumnWidth,
+        isDualFurniture,
         actualDoorWidth,
-        설명: '노서라운드에서는 슬롯 너비를 그대로 사용 (엔드패널 포함)'
+        설명: isDualFurniture ? '노서라운드 듀얼 도어 (슬롯너비 x 2)' : '노서라운드 싱글 도어'
       });
     }
   }
-  
-  // 듀얼 가구인지 확인 - moduleData가 있으면 그것으로 판단, 없으면 너비로 추정
-  const isDualFurniture = moduleData?.isDynamic && moduleData?.id?.includes('dual') ? true :
-    Math.abs(moduleWidth - (effectiveColumnWidth * 2)) < 50;
   
   // 도어 모듈 디버깅
   console.log('🚪 DoorModule 렌더링:', {
