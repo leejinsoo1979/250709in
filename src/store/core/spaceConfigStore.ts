@@ -21,6 +21,7 @@ export interface GapConfig {
 export interface BaseConfig {
   type: 'floor' | 'stand';
   height: number;
+  depth?: number; // 받침대 깊이 (0~300mm, 기본값 0)
   placementType?: 'ground' | 'float'; // 받침대 없음일 때 배치 방식
   floatHeight?: number; // 띄워서 배치 시 띄우는 높이
 }

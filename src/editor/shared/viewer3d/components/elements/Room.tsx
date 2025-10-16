@@ -2980,10 +2980,12 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                     position={[
                       frameX, // 이미 엔드패널이 조정된 위치
-                      panelStartY + baseFrameHeight/2, 
+                      panelStartY + baseFrameHeight/2,
                       // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
-                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
-                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                      // 받침대 깊이만큼 뒤로 이동
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 -
+                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
+                      mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
                     ]}
                     material={createFrameMaterial('base')}
                     renderMode={renderMode}
@@ -3058,10 +3060,12 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                     position={[
                       frameX, // 중앙 정렬
-                      panelStartY + baseFrameHeight/2, 
+                      panelStartY + baseFrameHeight/2,
                       // 노서라운드: 엔드패널이 있으면 18mm+이격거리 뒤로, 서라운드: 18mm 뒤로
-                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - 
-                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                      // 받침대 깊이만큼 뒤로 이동
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 -
+                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) -
+                      mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
                     ]}
                     material={createFrameMaterial('base')}
                     renderMode={renderMode}
@@ -3096,9 +3100,11 @@ const Room: React.FC<RoomProps> = ({
                     ]}
                     position={[
                       segment.x, // 분절된 위치
-                      panelStartY + baseFrameHeight/2, 
+                      panelStartY + baseFrameHeight/2,
                       // 상단 프레임과 같은 z축 위치에서 END_PANEL_THICKNESS 뒤로 이동
-                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS)
+                      // 받침대 깊이만큼 뒤로 이동
+                      furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(END_PANEL_THICKNESS) -
+                      mmToThreeUnits(spaceInfo.baseConfig?.depth ?? 0)
                     ]}
                     material={createFrameMaterial('base')}
                     renderMode={renderMode}

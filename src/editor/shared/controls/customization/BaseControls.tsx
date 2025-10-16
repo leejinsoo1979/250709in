@@ -29,7 +29,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     String(getAdjustedBaseHeight())
   );
   const [baseDepth, setBaseDepth] = useState<string>(
-    String(0)
+    String(spaceInfo.baseConfig?.depth ?? 0)
   );
   const [floatHeight, setFloatHeight] = useState<string>(
     String(spaceInfo.baseConfig?.floatHeight || 60)
@@ -38,7 +38,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
   // baseConfig 또는 바닥마감재 변경 시 로컬 상태 동기화
   useEffect(() => {
     setBaseHeight(String(getAdjustedBaseHeight()));
-    setBaseDepth(String(0));
+    setBaseDepth(String(spaceInfo.baseConfig?.depth ?? 0));
     if (spaceInfo.baseConfig) {
       setFloatHeight(String(spaceInfo.baseConfig.floatHeight || 60));
     }
@@ -250,6 +250,19 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
 
     // 로컬 상태 업데이트
     setBaseDepth(value);
+
+    // baseConfig가 없으면 기본값으로 생성
+    const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
+
+    // 값이 변경된 경우만 업데이트
+    if (value !== (currentBaseConfig.depth ?? 0)) {
+      onUpdate({
+        baseConfig: {
+          ...currentBaseConfig,
+          depth: value,
+        },
+      });
+    }
   };
 
   // 띄움 높이 업데이트 (blur 또는 Enter 시)

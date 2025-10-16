@@ -11,6 +11,7 @@ interface AdjustableFootsRendererProps {
   isHighlighted?: boolean;
   isFloating?: boolean; // 띄움배치 여부
   baseHeight?: number; // 받침대 높이 (mm)
+  baseDepth?: number; // 받침대 깊이 (mm, 0~300)
   viewMode?: '2D' | '3D';
   view2DDirection?: 'front' | 'left' | 'right' | 'top';
 }
@@ -30,6 +31,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   isHighlighted = false,
   isFloating = false,
   baseHeight = 65, // 기본값 65mm
+  baseDepth = 0, // 기본값 0mm
   viewMode = '3D',
   view2DDirection = 'front',
 }) => {
@@ -57,29 +59,31 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const rightX = furnitureWidth / 2 - plateHalf;
   
   // Z축 위치
-  // 앞쪽: 하부프레임 뒷면과 맞닿도록 20mm 뒤로
-  // 뒤쪽: 뒷부분 꼭지점과 맞닿도록 plateHalf만큼 안쪽
-  const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(20);
+  // 앞쪽: 하부프레임 뒷면과 맞닿도록 20mm 뒤로 + 받침대 깊이만큼 뒤로
+  // 뒤쪽: 뒷부분 꼭지점과 맞닿도록 plateHalf만큼 안쪽 (받침대 깊이 영향 없음)
+  const baseDepthOffset = mmToThreeUnits(baseDepth);
+  const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(20) - baseDepthOffset;
   const backZ = -furnitureDepth / 2 + plateHalf;
-  
+
   console.log('🦶 조절발통 위치 계산:', {
     'width(units)': width.toFixed(2),
     'depth(units)': depth.toFixed(2),
     'width(mm)': (width * 100).toFixed(0) + 'mm',
     'depth(mm)': (depth * 100).toFixed(0) + 'mm',
+    'baseDepth(mm)': baseDepth + 'mm',
     'plateHalf': plateHalf.toFixed(2) + ' units (32mm)',
     leftX: leftX.toFixed(2) + ' units',
     rightX: rightX.toFixed(2) + ' units',
-    frontZ: frontZ.toFixed(2) + ' units',
-    backZ: backZ.toFixed(2) + ' units',
+    frontZ: frontZ.toFixed(2) + ' units (받침대 깊이 적용)',
+    backZ: backZ.toFixed(2) + ' units (받침대 깊이 미적용)',
   });
-  
+
   // 발통 위치 배열 (네 모서리, 회전 없음)
   const footPositions: Array<{pos: [number, number, number], rot: number}> = [
-    { pos: [leftX, yOffset, frontZ], rot: 0 },   // 좌측 앞
-    { pos: [rightX, yOffset, frontZ], rot: 0 },  // 우측 앞
-    { pos: [leftX, yOffset, backZ], rot: 0 },    // 좌측 뒤
-    { pos: [rightX, yOffset, backZ], rot: 0 },   // 우측 뒤
+    { pos: [leftX, yOffset, frontZ], rot: 0 },   // 좌측 앞 (받침대 깊이 적용)
+    { pos: [rightX, yOffset, frontZ], rot: 0 },  // 우측 앞 (받침대 깊이 적용)
+    { pos: [leftX, yOffset, backZ], rot: 0 },    // 좌측 뒤 (받침대 깊이 미적용)
+    { pos: [rightX, yOffset, backZ], rot: 0 },   // 우측 뒤 (받침대 깊이 미적용)
   ];
   
   return (
