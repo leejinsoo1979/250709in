@@ -262,8 +262,17 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       width: info.width,
       surroundType: info.surroundType,
       installType: info.installType,
-      gapConfig: info.gapConfig
+      gapConfig: info.gapConfig,
+      baseConfig: info.baseConfig
     });
+
+    // baseConfig.depth 업데이트 감지
+    if (info.baseConfig?.depth !== undefined) {
+      console.log('📏 [Store] baseConfig.depth 업데이트 감지:', {
+        새값: info.baseConfig.depth,
+        전체baseConfig: info.baseConfig
+      });
+    }
     set((state) => {
       // installType 하이픈 문제 수정
       const processedInfo = { ...info };
@@ -322,7 +331,9 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       
       console.log('🏪🏪🏪 [Store] 최종 spaceInfo:', {
         customColumnCount: newState.spaceInfo.customColumnCount,
-        width: newState.spaceInfo.width
+        width: newState.spaceInfo.width,
+        baseConfig: newState.spaceInfo.baseConfig,
+        'baseConfig.depth': newState.spaceInfo.baseConfig?.depth
       });
       
       // wallConfig 업데이트 디버그
