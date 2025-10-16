@@ -168,17 +168,17 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-${index + 1}`;
 
                   // 중간판은 항상 원래 깊이 사용 (섹션 깊이와 무관)
-                  // 백패널 방향으로 26mm 확장
-                  const extendedDepth = depth - basicThickness + mmToThreeUnits(26);
+                  // 백패널 두께(8mm)만큼만 짧음
+                  const middlePanelDepth = depth - backPanelThickness;
 
-                  // Z 위치: 항상 기본 위치 (섹션 깊이 변경과 무관)
-                  const zOffset = basicThickness/2 + shelfZOffset - mmToThreeUnits(13);
+                  // Z 위치: 백패널 두께만큼 앞으로
+                  const zOffset = backPanelThickness / 2;
 
                   return (
                     <>
-                      {/* 하부 섹션 상판 - 원래 깊이 사용 */}
+                      {/* 하부 섹션 상판 - 백패널 두께만큼만 짧음 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, extendedDepth]}
+                        args={[innerWidth, basicThickness, middlePanelDepth]}
                         position={[0, lowerTopPanelY, zOffset]}
                         material={material}
                         renderMode={renderMode}
@@ -187,9 +187,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isHighlighted={isLowerHighlighted}
                       />
 
-                      {/* 상부 섹션 바닥판 - 원래 깊이 사용 */}
+                      {/* 상부 섹션 바닥판 - 백패널 두께만큼만 짧음 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, extendedDepth]}
+                        args={[innerWidth, basicThickness, middlePanelDepth]}
                         position={[0, middlePanelY, zOffset]}
                         material={material}
                         renderMode={renderMode}
