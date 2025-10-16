@@ -2384,7 +2384,7 @@ const Room: React.FC<RoomProps> = ({
                       droppedX,
                       panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight/2, // 단내림 천장 위치에서 프레임 높이의 절반만큼 아래
                       furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 -
-                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo)) + mmToThreeUnits(2) // 서브프레임과 맞닿도록 2mm 앞으로
                     ]}
                     material={createFrameMaterial('top')}
                     renderMode={renderMode}
