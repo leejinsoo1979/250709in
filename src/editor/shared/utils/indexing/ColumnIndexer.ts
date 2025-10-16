@@ -996,7 +996,7 @@ export class ColumnIndexer {
 
         // 일반구간(우): 우측 이격거리 + 중간 경계 이격거리 빼기
         normalAreaInternalWidth = normalAreaOuterWidth - rightReduction - BOUNDARY_GAP;
-        normalStartX = droppedStartX + droppedAreaInternalWidth - BOUNDARY_GAP; // 중간 경계 갭만큼 띄워서 시작
+        normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결 (단내림 내경에 이미 +3mm 포함)
 
         console.log('🔍 노서라운드 왼쪽 단내림 경계 계산:', {
           '단내림구간 외부너비': droppedAreaOuterWidth,
@@ -1082,7 +1082,7 @@ export class ColumnIndexer {
 
         // 단내림구간: 우측 이격거리 빼고, 중간 경계 이격거리는 더하기 (일반구간에서 뺀 만큼 확보)
         droppedAreaInternalWidth = droppedAreaOuterWidth - rightReduction + BOUNDARY_GAP;
-        droppedStartX = normalStartX + normalAreaInternalWidth + BOUNDARY_GAP; // 중간 경계 갭만큼 띄워서 시작
+        droppedStartX = normalStartX + normalAreaInternalWidth; // 갭 없이 바로 연결 (단내림 내경에 이미 +3mm 포함)
 
         console.log('🔍 노서라운드 오른쪽 단내림 경계 계산:', {
           '일반구간 외부너비': normalAreaOuterWidth,
