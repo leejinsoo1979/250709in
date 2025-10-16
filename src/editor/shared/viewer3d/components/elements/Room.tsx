@@ -2713,6 +2713,7 @@ const Room: React.FC<RoomProps> = ({
                 rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
+                  key={`left-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     mmToThreeUnits(44),
                     droppedHeight,
@@ -2733,6 +2734,7 @@ const Room: React.FC<RoomProps> = ({
                 ]}
               >
                 <BoxWithEdges
+                  key={`left-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     frameThickness.left,
                     droppedHeight,
@@ -2747,7 +2749,7 @@ const Room: React.FC<RoomProps> = ({
             </>
           );
         }
-        
+
         // 단내림이 없거나 오른쪽에 있는 경우 (일반구간)
         return (
           <>
@@ -2761,6 +2763,7 @@ const Room: React.FC<RoomProps> = ({
               rotation={[0, Math.PI / 2, 0]}
             >
               <BoxWithEdges
+                key={`left-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 args={[
                   mmToThreeUnits(44),
                   adjustedPanelHeight,
@@ -2806,6 +2809,7 @@ const Room: React.FC<RoomProps> = ({
                 ]}
               >
                 <BoxWithEdges
+                  key={`right-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     frameThickness.right,
                     droppedHeight,
@@ -2828,6 +2832,7 @@ const Room: React.FC<RoomProps> = ({
                 rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
+                  key={`right-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     mmToThreeUnits(44),
                     droppedHeight,
@@ -2842,7 +2847,7 @@ const Room: React.FC<RoomProps> = ({
             </>
           );
         }
-        
+
         // 단내림이 없거나 왼쪽에 있는 경우 (일반구간)
         return (
           <>
@@ -2856,6 +2861,7 @@ const Room: React.FC<RoomProps> = ({
               rotation={[0, Math.PI / 2, 0]}
             >
               <BoxWithEdges
+                key={`right-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 args={[
                   mmToThreeUnits(44),
                   adjustedPanelHeight,
