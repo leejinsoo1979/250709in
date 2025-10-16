@@ -1839,6 +1839,7 @@ const Room: React.FC<RoomProps> = ({
             <>
               {/* 단내림 영역 프레임/엔드패널 */}
               <BoxWithEdges
+                key={`left-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.left,
@@ -2052,6 +2053,7 @@ const Room: React.FC<RoomProps> = ({
             <>
               {/* 단내림 영역 프레임/엔드패널 */}
               <BoxWithEdges
+                key={`right-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.right,
@@ -2139,6 +2141,14 @@ const Room: React.FC<RoomProps> = ({
             }
           }
         }
+
+        console.log('🎨🎨🎨 [우측 프레임 렌더링]:', {
+          rightFrameMaterial,
+          materialConfigDoorColor: materialConfig?.doorColor,
+          hasDroppedCeiling,
+          isRightDropped,
+          '렌더링여부': !(hasDroppedCeiling && isRightDropped)
+        });
 
         return (!(hasDroppedCeiling && isRightDropped) ? (
           <BoxWithEdges
