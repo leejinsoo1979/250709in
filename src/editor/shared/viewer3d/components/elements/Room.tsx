@@ -1939,16 +1939,17 @@ const Room: React.FC<RoomProps> = ({
 
         return (!(hasDroppedCeiling && isLeftDropped) ? (
           <BoxWithEdges
+            key={`left-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
             args={[
-              frameThickness.left, 
-              adjustedPanelHeight, 
+              frameThickness.left,
+              adjustedPanelHeight,
               // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
               spaceInfo.surroundType === 'no-surround'
-                ? (wallConfig?.left 
+                ? (wallConfig?.left
                     ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
                     : noSurroundEndPanelDepth)  // 벽이 없는 경우: 공간 뒷벽부터 가구 앞면-20mm까지
-                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) || 
+                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
                    (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                     ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
                     : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
@@ -2141,16 +2142,17 @@ const Room: React.FC<RoomProps> = ({
 
         return (!(hasDroppedCeiling && isRightDropped) ? (
           <BoxWithEdges
+            key={`right-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
             args={[
-              frameThickness.right, 
-              adjustedPanelHeight, 
+              frameThickness.right,
+              adjustedPanelHeight,
               // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
               spaceInfo.surroundType === 'no-surround'
-                ? (wallConfig?.right 
+                ? (wallConfig?.right
                     ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
                     : noSurroundEndPanelDepth)  // 벽이 없는 경우: 공간 뒷벽부터 가구 앞면-20mm까지
-                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) || 
+                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
                    (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                     ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
                     : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
