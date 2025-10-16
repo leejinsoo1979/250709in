@@ -186,7 +186,19 @@ const Room: React.FC<RoomProps> = ({
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
-  
+
+  // 렌더링 카운터 초기화
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.renderCounter = {
+        leftFrame: 0,
+        rightFrame: 0,
+        leftEndPanel: 0,
+        rightEndPanel: 0
+      };
+    }
+  }, []); // 컴포넌트 마운트 시 한 번만 실행
+
   // Room 컴포넌트 렌더링 추적
   React.useEffect(() => {
     console.log('🏠 Room 컴포넌트 렌더링:', {
