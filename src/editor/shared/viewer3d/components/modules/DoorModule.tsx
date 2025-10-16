@@ -1005,7 +1005,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
         <group position={[leftHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualLeftDoorSpring.rotation}>
-            <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0.1, 0]}>
+            <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
               <BoxWithEdges
                 args={[leftDoorWidthUnits, doorHeight, doorThicknessUnits]}
@@ -1380,7 +1380,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
         <group position={[rightHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualRightDoorSpring.rotation}>
-            <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0.1, 0]}>
+            <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
               <BoxWithEdges
                 args={[rightDoorWidthUnits, doorHeight, doorThicknessUnits]}
@@ -1768,7 +1768,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     return (
       <group position={[doorGroupX + hingeAxisOffset, doorYPosition, doorDepth / 2]}>
         <animated.group rotation-y={adjustedHingePosition === 'left' ? leftHingeDoorSpring.rotation : rightHingeDoorSpring.rotation}>
-          <group position={[doorPositionX, 0.1, 0]}>
+          <group position={[doorPositionX, 0, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
             <BoxWithEdges
               args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
