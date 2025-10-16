@@ -619,14 +619,15 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   설명: '두 도어 경계'
                 });
 
-                // 도어 너비
+                // 도어 너비와 깊이
                 const doorWidthThree = mmToThreeUnits(doorWidth || moduleData.dimensions.width);
+                const doorDepthThree = mmToThreeUnits(baseFurniture.actualDepthMm);
 
                 return (
                   <Line
                     points={[
-                      [-doorWidthThree / 2, dividerY, depth / 2 + 0.02],
-                      [doorWidthThree / 2, dividerY, depth / 2 + 0.02]
+                      [-doorWidthThree / 2, dividerY, doorDepthThree / 2 + 0.001],
+                      [doorWidthThree / 2, dividerY, doorDepthThree / 2 + 0.001]
                     ]}
                     color="#333333"
                     lineWidth={2}
