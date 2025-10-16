@@ -195,19 +195,35 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       }
       rendererRef.current.shadowMap.needsUpdate = true;
 
-      // 씬의 모든 라이트 traverse하여 그림자 설정 강제 업데이트
+      // 씬의 모든 오브젝트와 라이트를 traverse하여 그림자 설정 강제 업데이트
       const canvas = canvasRef.current;
       if (canvas) {
         const r3f = (canvas as any).__r3f;
         if (r3f?.scene) {
           r3f.scene.traverse((child: any) => {
+            // 라이트 설정
             if (child.isLight && child.castShadow !== undefined) {
               child.castShadow = shadowEnabled;
               if (child.shadow) {
                 child.shadow.needsUpdate = true;
               }
             }
+            // 메쉬 설정
+            if (child.isMesh) {
+              child.castShadow = shadowEnabled;
+              child.receiveShadow = shadowEnabled;
+            }
           });
+
+          // 강제 렌더링 트리거
+          if (r3f.gl) {
+            r3f.gl.shadowMap.enabled = shadowEnabled;
+            if (shadowEnabled) {
+              r3f.gl.shadowMap.type = THREE.PCFSoftShadowMap;
+              r3f.gl.shadowMap.autoUpdate = true;
+            }
+            r3f.gl.shadowMap.needsUpdate = true;
+          }
         }
       }
     } else if (rendererRef.current && viewMode === '2D') {
