@@ -84,14 +84,6 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const [mounted, setMounted] = useState(false);
   const [canvasKey, setCanvasKey] = useState(() => `canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const [canvasReady, setCanvasReady] = useState(false);
-
-  // shadowEnabled 변경 시 Canvas 재생성을 위한 key 업데이트
-  useEffect(() => {
-    if (viewMode === '3D') {
-      setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-    }
-  }, [shadowEnabled, viewMode]);
-
   // isFurnitureDragging 상태는 UIStore에서 가져옴
   
   // 캔버스 참조 저장
@@ -202,6 +194,22 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         rendererRef.current.shadowMap.autoUpdate = true;
       }
       rendererRef.current.shadowMap.needsUpdate = true;
+
+      // 씬의 모든 라이트 traverse하여 그림자 설정 강제 업데이트
+      const canvas = canvasRef.current;
+      if (canvas) {
+        const r3f = (canvas as any).__r3f;
+        if (r3f?.scene) {
+          r3f.scene.traverse((child: any) => {
+            if (child.isLight && child.castShadow !== undefined) {
+              child.castShadow = shadowEnabled;
+              if (child.shadow) {
+                child.shadow.needsUpdate = true;
+              }
+            }
+          });
+        }
+      }
     } else if (rendererRef.current && viewMode === '2D') {
       // 2D 모드에서는 그림자 비활성화
       rendererRef.current.shadowMap.enabled = false;
