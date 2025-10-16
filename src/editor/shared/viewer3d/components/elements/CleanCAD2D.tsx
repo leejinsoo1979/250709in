@@ -391,6 +391,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
   // mm를 Three.js 단위로 변환 (furnitureDimensions에서 사용하기 위해 먼저 선언)
   const mmToThreeUnits = (mm: number) => mm * 0.01;
+  const threeUnitsToMm = (units: number) => units * 100;
   
   // 발통 심볼을 그리는 헬퍼 함수
   const renderFootstoolSymbol = (x: number, y: number, z: number, rotation: [number, number, number] = [0, 0, 0]) => {
@@ -1816,31 +1817,48 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
           const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
           
-          const topFrameHeight = frameSize.top; // 상부 프레임 높이
+          const topFrameHeight = frameSize.top ?? 0; // 상부 프레임 높이
           const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
-          const cabinetPlacementHeight = spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight; // 캐비넷 배치 영역 (띄움 높이 제외)
-          
+          const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight, 0); // 캐비넷 배치 영역 (띄움 높이 제외)
+
           const bottomY = mmToThreeUnits(floatHeight); // 프레임 시작점 (띄워서 배치 시 올라감)
           const bottomFrameTopY = mmToThreeUnits(floatHeight + bottomFrameHeight); // 하부 프레임 상단
           const cabinetAreaTopY = mmToThreeUnits(floatHeight + bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
-          
-          // 배치된 가구들의 최대 높이 계산
-          let maxFurnitureTop = cabinetAreaTopY;
-          if (placedModules.length > 0) {
-            placedModules.forEach(module => {
-              const moduleData = getModuleById(module.moduleId);
-              if (moduleData) {
-                const moduleHeight = moduleData.dimensions.height;
-                const moduleBottomY = mmToThreeUnits(floatHeight + bottomFrameHeight);
-                const moduleTopY = moduleBottomY + mmToThreeUnits(moduleHeight);
-                if (moduleTopY > maxFurnitureTop) {
-                  maxFurnitureTop = moduleTopY;
-                }
-              }
-            });
-          }
-          
-          const topY = placedModules.length > 0 ? maxFurnitureTop : spaceHeight; // 가구가 있으면 가구 상단, 없으면 공간 높이
+          const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight); // 상부 프레임 상단 (= 공간 천장 높이)
+
+          // 배치된 가구들의 최대 높이 및 실제 가구 높이 계산
+          let maxFurnitureTop = topFrameTopY;
+          let maxModuleHeightMm = 0;
+          let tallestModuleTopY = cabinetAreaTopY;
+
+          placedModules.forEach(module => {
+            const moduleData = getModuleById(module.moduleId);
+            if (!moduleData) return;
+
+            const moduleHeight = module.customHeight ?? moduleData.dimensions.height;
+            const moduleTopY = bottomFrameTopY + mmToThreeUnits(moduleHeight);
+
+            if (moduleTopY > maxFurnitureTop) {
+              maxFurnitureTop = moduleTopY;
+            }
+
+            if (moduleHeight > maxModuleHeightMm) {
+              maxModuleHeightMm = moduleHeight;
+              tallestModuleTopY = moduleTopY;
+            }
+          });
+
+          const hasFurnitureHeight = maxModuleHeightMm > 0;
+          const furnitureHeightValue = hasFurnitureHeight ? maxModuleHeightMm : cabinetPlacementHeight;
+          const furnitureTopY = hasFurnitureHeight ? tallestModuleTopY : cabinetAreaTopY;
+          const furnitureTextY = bottomFrameTopY + (furnitureTopY - bottomFrameTopY) / 2;
+
+          const topFrameLineTopY = topFrameTopY;
+          const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
+          const extraFurnitureHeightMm = extraFurnitureHeightUnits > 1e-6 ? Math.round(threeUnitsToMm(extraFurnitureHeightUnits)) : 0;
+          const hasExtraFurnitureHeight = extraFurnitureHeightMm > 0;
+          const extraFurnitureX = rightDimensionX + mmToThreeUnits(is3DMode ? 40 : 70);
+          const extraFurnitureTextY = topFrameLineTopY + (maxFurnitureTop - topFrameLineTopY) / 2;
           
           return (
             <>
@@ -1850,17 +1868,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Line
                     points={[[rightDimensionX + mmToThreeUnits(100), 0, 0.002], [rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight), 0.002]]}
                     color={textColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([rightDimensionX + mmToThreeUnits(100), 0, 0.002], [rightDimensionX + mmToThreeUnits(100), -0.03, 0.002])}
                     color={textColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight), 0.002], [rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight) + 0.03, 0.002])}
                     color={textColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
                   <Text
                   renderOrder={1000}
@@ -1900,22 +1918,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Line
                   points={[[rightDimensionX, bottomY, 0.002], [rightDimensionX, bottomFrameTopY, 0.002]]}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
                 />
                 <Line
                   points={createArrowHead([rightDimensionX, bottomY, 0.002], [rightDimensionX, 0.03, 0.002])}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
                 />
                 <Line
                   points={createArrowHead([rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, bottomFrameTopY - 0.03, 0.002])}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
                 />
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(bottomFrameHeight / 2), 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(floatHeight + bottomFrameHeight / 2), 0.01]}
                   fontSize={baseFontSize}
                   color={textColor}
                   anchorX="center"
@@ -1927,53 +1945,53 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </group>
               )}
               
-              {/* 2. 캐비넷 배치 높이 */}
+              {/* 2. 캐비넷/가구 높이 */}
               <group>
                 <Line
-                  points={[[rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, cabinetAreaTopY, 0.002]]}
+                  points={[[rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, furnitureTopY, 0.002]]}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
                 />
                 <Line
                   points={createArrowHead([rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, bottomFrameTopY + 0.03, 0.002])}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
                 />
                 <Line
-                  points={createArrowHead([rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, cabinetAreaTopY - 0.03, 0.002])}
+                  points={createArrowHead([rightDimensionX, furnitureTopY, 0.002], [rightDimensionX, furnitureTopY - 0.03, 0.002])}
                   color={dimensionColor}
-                  lineWidth={0.5}
+                  lineWidth={1}
                 />
                 <Text
                   renderOrder={1000}
                   depthTest={false}
-                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight / 2), 0.01]}
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), furnitureTextY, 0.01]}
                   fontSize={baseFontSize}
                   color={textColor}
                   anchorX="center"
                   anchorY="middle"
                   rotation={[0, 0, -Math.PI / 2]}
                 >
-                  {cabinetPlacementHeight}
+                  {furnitureHeightValue}
                 </Text>
               </group>
               
               {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
               <group>
                 <Line
-                  points={[[rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, topY, 0.002]]}
+                  points={[[rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, topFrameLineTopY, 0.002]]}
                   color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                  lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
+                  lineWidth={1}
                 />
                 <Line
                   points={createArrowHead([rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, cabinetAreaTopY + 0.03, 0.002])}
                   color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                  lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
+                  lineWidth={1}
                 />
                 <Line
-                  points={createArrowHead([rightDimensionX, topY, 0.002], [rightDimensionX, topY - 0.03, 0.002])}
+                  points={createArrowHead([rightDimensionX, topFrameLineTopY, 0.002], [rightDimensionX, topFrameLineTopY - 0.03, 0.002])}
                   color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                  lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
+                  lineWidth={1}
                 />
                 <Text
                   renderOrder={1000}
@@ -1988,6 +2006,39 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {topFrameHeight}
                 </Text>
               </group>
+
+              {/* 4. 상부 프레임 이상으로 올라온 가구 높이 */}
+              {hasExtraFurnitureHeight && (
+              <group>
+                <Line
+                  points={[[extraFurnitureX, topFrameLineTopY, 0.002], [extraFurnitureX, maxFurnitureTop, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([extraFurnitureX, topFrameLineTopY, 0.002], [extraFurnitureX, topFrameLineTopY + 0.03, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Line
+                  points={createArrowHead([extraFurnitureX, maxFurnitureTop, 0.002], [extraFurnitureX, maxFurnitureTop - 0.03, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                />
+                <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                  position={[extraFurnitureX + mmToThreeUnits(30), extraFurnitureTextY, 0.01]}
+                  fontSize={baseFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                  rotation={[0, 0, -Math.PI / 2]}
+                >
+                  {extraFurnitureHeightMm}
+                </Text>
+              </group>
+              )}
               
               {/* 연장선들 */}
               <Line
@@ -2004,15 +2055,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               />
               )}
               <Line
-                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, cabinetAreaTopY, 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), cabinetAreaTopY, 0.001]]}
+                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, furnitureTopY, 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), furnitureTopY, 0.001]]}
                 color={dimensionColor}
                 lineWidth={0.5}
               />
               <Line
-                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, topY, 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), topY, 0.001]]}
+                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, topFrameLineTopY, 0.001], [rightDimensionX + mmToThreeUnits(is3DMode ? 10 : 20), topFrameLineTopY, 0.001]]}
                 color={dimensionColor}
                 lineWidth={0.5}
               />
+              {hasExtraFurnitureHeight && (
+              <Line
+                points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, maxFurnitureTop, 0.001], [extraFurnitureX + mmToThreeUnits(10), maxFurnitureTop, 0.001]]}
+                color={dimensionColor}
+                lineWidth={0.5}
+              />
+              )}
             </>
           );
         })()}
@@ -2618,31 +2676,46 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         <group>
           {(() => {
             const rightDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(120); // 우측 치수선 위치
-            const topFrameHeight = frameSize.top; // 상부 프레임 높이
+            const topFrameHeight = frameSize.top ?? 0; // 상부 프레임 높이
             const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
-            const cabinetPlacementHeight = spaceInfo.height - topFrameHeight - bottomFrameHeight; // 캐비넷 배치 영역
+            const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역
             
             const bottomY = 0; // 바닥
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 하부 프레임 상단
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight); // 캐비넷 영역 상단
+            const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight); // 상부 프레임 상단
             
             // 배치된 가구들의 최대 높이 계산 (좌측뷰)
-            let maxFurnitureTop = cabinetAreaTopY;
+            let maxFurnitureTop = topFrameTopY;
+            let maxModuleHeightMm = 0;
+            let tallestModuleTopY = cabinetAreaTopY;
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
                 const moduleData = getModuleById(module.moduleId);
                 if (moduleData) {
-                  const moduleHeight = moduleData.dimensions.height;
-                  const moduleBottomY = mmToThreeUnits(bottomFrameHeight);
-                  const moduleTopY = moduleBottomY + mmToThreeUnits(moduleHeight);
+                  const moduleHeight = module.customHeight ?? moduleData.dimensions.height;
+                  const moduleTopY = bottomFrameTopY + mmToThreeUnits(moduleHeight);
                   if (moduleTopY > maxFurnitureTop) {
                     maxFurnitureTop = moduleTopY;
+                  }
+                  if (moduleHeight > maxModuleHeightMm) {
+                    maxModuleHeightMm = moduleHeight;
+                    tallestModuleTopY = moduleTopY;
                   }
                 }
               });
             }
             
-            const topY = placedModules.length > 0 ? maxFurnitureTop : actualSpaceHeight; // 가구가 있으면 가구 상단, 없으면 공간 높이
+            const hasFurnitureHeight = maxModuleHeightMm > 0;
+            const furnitureHeightValue = hasFurnitureHeight ? maxModuleHeightMm : cabinetPlacementHeight;
+            const furnitureTopY = hasFurnitureHeight ? tallestModuleTopY : cabinetAreaTopY;
+            const furnitureTextY = bottomFrameTopY + (furnitureTopY - bottomFrameTopY) / 2;
+            const topFrameLineTopY = topFrameTopY;
+            const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
+            const extraFurnitureHeightMm = extraFurnitureHeightUnits > 1e-6 ? Math.round(threeUnitsToMm(extraFurnitureHeightUnits)) : 0;
+            const hasExtraFurnitureHeight = extraFurnitureHeightMm > 0;
+            const extraFurnitureZ = rightDimensionZ + mmToThreeUnits(40);
+            const extraFurnitureTextY = topFrameLineTopY + (maxFurnitureTop - topFrameLineTopY) / 2;
             
             return (
               <>
@@ -2652,22 +2725,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Line
                     points={[[0, bottomY, rightDimensionZ], [0, bottomFrameTopY, rightDimensionZ]]}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([0, bottomY, rightDimensionZ], [0, 0.03, rightDimensionZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY - 0.03, rightDimensionZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
                   />
                   <Text
                   renderOrder={1000}
                   depthTest={false}
-                    position={[0, mmToThreeUnits(bottomFrameHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, bottomFrameTopY / 2, rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -2679,53 +2752,53 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
                 
-                {/* 2. 캐비넷 배치 높이 */}
+                {/* 2. 캐비넷/가구 높이 */}
                 <group>
                   <Line
-                    points={[[0, bottomFrameTopY, rightDimensionZ], [0, cabinetAreaTopY, rightDimensionZ]]}
+                    points={[[0, bottomFrameTopY, rightDimensionZ], [0, furnitureTopY, rightDimensionZ]]}
                     color={dimensionColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY + 0.03, rightDimensionZ])}
                     color={dimensionColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY - 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, furnitureTopY, rightDimensionZ], [0, furnitureTopY - 0.03, rightDimensionZ])}
                     color={dimensionColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
                   <Text
                   renderOrder={1000}
                   depthTest={false}
-                    position={[0, bottomFrameTopY + mmToThreeUnits(cabinetPlacementHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, furnitureTextY, rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {cabinetPlacementHeight}
+                    {furnitureHeightValue}
                   </Text>
                 </group>
                 
                 {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
                 <group>
                   <Line
-                    points={[[0, cabinetAreaTopY, rightDimensionZ], [0, topY, rightDimensionZ]]}
+                    points={[[0, cabinetAreaTopY, rightDimensionZ], [0, topFrameTopY, rightDimensionZ]]}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY + 0.03, rightDimensionZ])}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, topY, rightDimensionZ], [0, topY - 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, topFrameTopY, rightDimensionZ], [0, topFrameTopY - 0.03, rightDimensionZ])}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                    lineWidth={2}
+                    lineWidth={1}
                   />
                   <Text
                   renderOrder={1000}
@@ -2740,6 +2813,39 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {topFrameHeight}
                   </Text>
                 </group>
+
+                {/* 4. 상부 프레임 이상 돌출 구간 */}
+                {hasExtraFurnitureHeight && (
+                <group>
+                  <Line
+                    points={[[0, topFrameTopY, extraFurnitureZ], [0, maxFurnitureTop, extraFurnitureZ]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([0, topFrameTopY, extraFurnitureZ], [0, topFrameTopY + 0.03, extraFurnitureZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([0, maxFurnitureTop, extraFurnitureZ], [0, maxFurnitureTop - 0.03, extraFurnitureZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                    position={[0, extraFurnitureTextY, extraFurnitureZ + mmToThreeUnits(30)]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[0, -Math.PI / 2, -Math.PI / 2]}
+                  >
+                    {extraFurnitureHeightMm}
+                  </Text>
+                </group>
+                )}
 
                 {/* 연장선들 */}
                 <Line
@@ -3295,31 +3401,46 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         <group>
           {(() => {
             const leftDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(120);
-            const topFrameHeight = frameSize.top;
+            const topFrameHeight = frameSize.top ?? 0;
             const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
-            const cabinetPlacementHeight = spaceInfo.height - topFrameHeight - bottomFrameHeight;
+            const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0);
             
             const bottomY = 0;
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight);
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight);
+            const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight);
             
             // 배치된 가구들의 최대 높이 계산 (우측뷰)
-            let maxFurnitureTop = cabinetAreaTopY;
+            let maxFurnitureTop = topFrameTopY;
+            let maxModuleHeightMm = 0;
+            let tallestModuleTopY = cabinetAreaTopY;
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
                 const moduleData = getModuleById(module.moduleId);
                 if (moduleData) {
-                  const moduleHeight = moduleData.dimensions.height;
-                  const moduleBottomY = mmToThreeUnits(bottomFrameHeight);
-                  const moduleTopY = moduleBottomY + mmToThreeUnits(moduleHeight);
+                  const moduleHeight = module.customHeight ?? moduleData.dimensions.height;
+                  const moduleTopY = bottomFrameTopY + mmToThreeUnits(moduleHeight);
                   if (moduleTopY > maxFurnitureTop) {
                     maxFurnitureTop = moduleTopY;
+                  }
+                  if (moduleHeight > maxModuleHeightMm) {
+                    maxModuleHeightMm = moduleHeight;
+                    tallestModuleTopY = moduleTopY;
                   }
                 }
               });
             }
             
-            const topY = placedModules.length > 0 ? maxFurnitureTop : spaceHeight; // 가구가 있으면 가구 상단, 없으면 공간 높이
+            const hasFurnitureHeight = maxModuleHeightMm > 0;
+            const furnitureHeightValue = hasFurnitureHeight ? maxModuleHeightMm : cabinetPlacementHeight;
+            const furnitureTopY = hasFurnitureHeight ? tallestModuleTopY : cabinetAreaTopY;
+            const furnitureTextY = bottomFrameTopY + (furnitureTopY - bottomFrameTopY) / 2;
+            const topFrameLineTopY = topFrameTopY;
+            const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
+            const extraFurnitureHeightMm = extraFurnitureHeightUnits > 1e-6 ? Math.round(threeUnitsToMm(extraFurnitureHeightUnits)) : 0;
+            const hasExtraFurnitureHeight = extraFurnitureHeightMm > 0;
+            const extraFurnitureZ = leftDimensionZ + mmToThreeUnits(40);
+            const extraFurnitureTextY = topFrameLineTopY + (maxFurnitureTop - topFrameLineTopY) / 2;
             
             return (
               <>
@@ -3329,22 +3450,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Line
                     points={[[spaceWidth, bottomY, leftDimensionZ], [spaceWidth, bottomFrameTopY, leftDimensionZ]]}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([spaceWidth, bottomY, leftDimensionZ], [spaceWidth, 0.03, leftDimensionZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, bottomFrameTopY - 0.03, leftDimensionZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
                   />
                   <Text
                   renderOrder={1000}
                   depthTest={false}
-                    position={[spaceWidth, mmToThreeUnits(bottomFrameHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, bottomFrameTopY / 2, leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -3356,53 +3477,53 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
                 )}
                 
-                {/* 2. 캐비넷 배치 높이 */}
+                {/* 2. 캐비넷/가구 높이 */}
                 <group>
                   <Line
-                    points={[[spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, cabinetAreaTopY, leftDimensionZ]]}
+                    points={[[spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, furnitureTopY, leftDimensionZ]]}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, bottomFrameTopY + 0.03, leftDimensionZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, cabinetAreaTopY - 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, furnitureTopY, leftDimensionZ], [spaceWidth, furnitureTopY - 0.03, leftDimensionZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
                   />
                   <Text
                   renderOrder={1000}
                   depthTest={false}
-                    position={[spaceWidth, mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, furnitureTextY, leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, 0, -Math.PI / 2]}
                   >
-                    {cabinetPlacementHeight}
+                    {furnitureHeightValue}
                   </Text>
                 </group>
                 
                 {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
                 <group>
                   <Line
-                    points={[[spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, topY, leftDimensionZ]]}
+                    points={[[spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY, leftDimensionZ]]}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
+                    lineWidth={1}
                   />
                   <Line
                     points={createArrowHead([spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, cabinetAreaTopY + 0.03, leftDimensionZ])}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
+                    lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, topY, leftDimensionZ], [spaceWidth, topY - 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, topFrameLineTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY - 0.03, leftDimensionZ])}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
+                    lineWidth={1}
                   />
                   <Text
                   renderOrder={1000}
@@ -3415,8 +3536,41 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     rotation={[0, 0, -Math.PI / 2]}
                   >
                     {topFrameHeight}
+                </Text>
+              </group>
+
+                {/* 4. 상부 프레임 이상 돌출 구간 */}
+                {hasExtraFurnitureHeight && (
+                <group>
+                  <Line
+                    points={[[spaceWidth, topFrameLineTopY, extraFurnitureZ], [spaceWidth, maxFurnitureTop, extraFurnitureZ]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, topFrameLineTopY, extraFurnitureZ], [spaceWidth, topFrameLineTopY + 0.03, extraFurnitureZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, maxFurnitureTop, extraFurnitureZ], [spaceWidth, maxFurnitureTop - 0.03, extraFurnitureZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                    position={[spaceWidth, extraFurnitureTextY, extraFurnitureZ + mmToThreeUnits(30)]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[0, 0, -Math.PI / 2]}
+                  >
+                    {extraFurnitureHeightMm}
                   </Text>
                 </group>
+                )}
                 
                 {/* 연장선들 */}
                 <Line
@@ -3433,15 +3587,22 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 />
                 )}
                 <Line
-                  points={[[spaceWidth, cabinetAreaTopY, spaceZOffset], [spaceWidth, cabinetAreaTopY, leftDimensionZ + mmToThreeUnits(20)]]}
+                  points={[[spaceWidth, furnitureTopY, spaceZOffset], [spaceWidth, furnitureTopY, leftDimensionZ + mmToThreeUnits(20)]]}
                   color={dimensionColor}
                   lineWidth={0.5}
                 />
                 <Line
-                  points={[[spaceWidth, topY, spaceZOffset + spaceDepth], [spaceWidth, topY, leftDimensionZ + mmToThreeUnits(20)]]}
+                  points={[[spaceWidth, topFrameTopY, spaceZOffset + spaceDepth], [spaceWidth, topFrameTopY, leftDimensionZ + mmToThreeUnits(20)]]}
                   color={dimensionColor}
                   lineWidth={0.5}
                 />
+                {hasExtraFurnitureHeight && (
+                <Line
+                  points={[[spaceWidth, maxFurnitureTop, spaceZOffset + spaceDepth], [spaceWidth, maxFurnitureTop, extraFurnitureZ + mmToThreeUnits(10)]]}
+                  color={dimensionColor}
+                  lineWidth={0.5}
+                />
+                )}
               </>
             );
           })()}
