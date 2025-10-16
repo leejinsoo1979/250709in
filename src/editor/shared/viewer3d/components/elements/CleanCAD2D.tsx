@@ -1946,8 +1946,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </group>
               )}
 
-              {/* 1-1. 받침대 깊이 - 받침대가 있는 경우에만 표시 */}
-              {bottomFrameHeight > 0 && (
+              {/* 1-1. 받침대 깊이 - 받침대가 있고 좌우측면뷰에서만 표시 (정면뷰에서는 숨김) */}
+              {bottomFrameHeight > 0 && view2DDirection !== 'front' && (
               <group>
                 <Text
                   renderOrder={1000}

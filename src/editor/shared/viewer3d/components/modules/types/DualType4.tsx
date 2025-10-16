@@ -454,6 +454,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           isHighlighted={false}
           isFloating={false}
           baseHeight={spaceInfo?.baseConfig?.height || 65}
+          baseDepth={spaceInfo?.baseConfig?.depth || 0}
           viewMode={viewMode}
           view2DDirection={view2DDirection}
         />
