@@ -1292,9 +1292,16 @@ const Room: React.FC<RoomProps> = ({
                         ? mmToThreeUnits(zoneInfo.normal.startX)
                         : mmToThreeUnits(zoneInfo.dropped.startX);
 
+                      // 단내림 안쪽 내벽을 단내림 바깥쪽으로 3mm 이동
+                      const BOUNDARY_OFFSET = 3; // mm
+
                       console.log('🔥 단내림 경계벽 위치:', {
                         isLeftDropped,
-                        '경계 X 위치(mm)': isLeftDropped ? zoneInfo.normal.startX : zoneInfo.dropped.startX,
+                        '기준 경계 X 위치(mm)': isLeftDropped ? zoneInfo.normal.startX : zoneInfo.dropped.startX,
+                        '오프셋(mm)': BOUNDARY_OFFSET,
+                        '최종 경계 X 위치(mm)': isLeftDropped
+                          ? zoneInfo.normal.startX - BOUNDARY_OFFSET
+                          : zoneInfo.dropped.startX + BOUNDARY_OFFSET,
                         '단내림 폭(mm)': spaceInfo.droppedCeiling?.width || 900,
                         droppedCeilingHeight: droppedCeilingHeight / 0.01,
                         '벽 상단 Y': (panelStartY + height) / 0.01,
@@ -1303,11 +1310,11 @@ const Room: React.FC<RoomProps> = ({
                       });
 
                       if (isLeftDropped) {
-                        // 왼쪽 단내림: 단내림 끝 = 메인 시작
-                        return mmToThreeUnits(zoneInfo.normal.startX);
+                        // 왼쪽 단내림: 단내림 끝 = 메인 시작, 단내림 바깥쪽(왼쪽)으로 3mm 이동
+                        return mmToThreeUnits(zoneInfo.normal.startX - BOUNDARY_OFFSET);
                       } else {
-                        // 오른쪽 단내림: 메인 끝 = 단내림 시작
-                        return mmToThreeUnits(zoneInfo.dropped.startX);
+                        // 오른쪽 단내림: 메인 끝 = 단내림 시작, 단내림 바깥쪽(오른쪽)으로 3mm 이동
+                        return mmToThreeUnits(zoneInfo.dropped.startX + BOUNDARY_OFFSET);
                       }
                     })(),
                     panelStartY + height - droppedCeilingHeight/2,
