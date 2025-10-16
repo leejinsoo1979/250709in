@@ -935,6 +935,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         updatePlacedModule(currentPlacedModule.id, { doorTopGap: value });
       }
       (e.target as HTMLInputElement).blur();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const currentValue = parseInt(doorTopGapInput) || 0;
+      const newValue = currentValue + 1;
+      setDoorTopGapInput(newValue.toString());
+      setDoorTopGap(newValue);
+      if (currentPlacedModule) {
+        updatePlacedModule(currentPlacedModule.id, { doorTopGap: newValue });
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const currentValue = parseInt(doorTopGapInput) || 0;
+      const newValue = Math.max(0, currentValue - 1);
+      setDoorTopGapInput(newValue.toString());
+      setDoorTopGap(newValue);
+      if (currentPlacedModule) {
+        updatePlacedModule(currentPlacedModule.id, { doorTopGap: newValue });
+      }
     }
   };
 
@@ -946,6 +964,24 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         updatePlacedModule(currentPlacedModule.id, { doorBottomGap: value });
       }
       (e.target as HTMLInputElement).blur();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const currentValue = parseInt(doorBottomGapInput) || 0;
+      const newValue = currentValue + 1;
+      setDoorBottomGapInput(newValue.toString());
+      setDoorBottomGap(newValue);
+      if (currentPlacedModule) {
+        updatePlacedModule(currentPlacedModule.id, { doorBottomGap: newValue });
+      }
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const currentValue = parseInt(doorBottomGapInput) || 0;
+      const newValue = Math.max(0, currentValue - 1);
+      setDoorBottomGapInput(newValue.toString());
+      setDoorBottomGap(newValue);
+      if (currentPlacedModule) {
+        updatePlacedModule(currentPlacedModule.id, { doorBottomGap: newValue });
+      }
     }
   };
 
