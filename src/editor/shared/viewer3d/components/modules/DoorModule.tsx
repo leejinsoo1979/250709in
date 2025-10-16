@@ -144,6 +144,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   doorTopGap = 5, // 가구 상단에서 위로 갭 기본값 5mm
   doorBottomGap = 45 // 가구 하단에서 아래로 갭 기본값 45mm
 }) => {
+  console.log('🚪🔧 DoorModule Props:', {
+    doorTopGap,
+    doorBottomGap,
+    moduleId: moduleData?.id
+  });
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
   const { doorsOpen, view2DDirection } = useUIStore();
