@@ -74,7 +74,7 @@ const Header: React.FC<HeaderProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t, currentLanguage } = useTranslation();
-  
+
   const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
   const [isFileMenuOpen, setIsFileMenuOpen] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -85,6 +85,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
   // UIStore에서 카메라 및 그림자 설정 가져오기
   const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled } = useUIStore();
+  const { colors } = useThemeColors();
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
@@ -442,7 +443,7 @@ const Header: React.FC<HeaderProps> = ({
                 position: 'relative',
                 width: '44px',
                 height: '24px',
-                backgroundColor: shadowEnabled ? 'var(--primary-color)' : '#ccc',
+                backgroundColor: shadowEnabled ? colors.primary : '#ccc',
                 borderRadius: '12px',
                 cursor: 'pointer',
                 transition: 'background-color 0.3s ease',
