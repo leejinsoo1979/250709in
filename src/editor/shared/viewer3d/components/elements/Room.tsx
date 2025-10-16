@@ -1855,8 +1855,8 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
-              {/* 상부 영역 프레임 (천장까지) - 서라운드 엔드패널은 이미 전체 높이이므로 생략 */}
-              {!(spaceInfo.surroundType === 'surround' && !wallConfig?.left) && (
+              {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
+              {spaceInfo.surroundType !== 'surround' && (
               <BoxWithEdges
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                 args={[
@@ -1894,11 +1894,13 @@ const Room: React.FC<RoomProps> = ({
           );
         }
 
+        // 일반 구간 (단내림 없음)
         console.log('🔍 왼쪽 엔드패널 렌더링 디버그:', {
           frameThicknessLeft: frameThickness.left,
           wallConfigLeft: wallConfig?.left,
           surroundType: spaceInfo.surroundType,
           installType: spaceInfo.installType,
+          hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
           깊이: wallConfig?.left ? '프레임(18mm)' : '엔드패널(전체깊이-18mm)',
           위치: wallConfig?.left ? '프레임위치' : '엔드패널위치'
         });
@@ -1907,10 +1909,10 @@ const Room: React.FC<RoomProps> = ({
         if (typeof window !== 'undefined' && window.renderCounter) {
           if (!wallConfig?.left) {
             window.renderCounter.leftEndPanel++;
-            console.log('🚨🚨🚨 왼쪽 엔드패널 렌더링!', window.renderCounter.leftEndPanel, '번째');
+            console.log('🚨🚨🚨 [일반] 왼쪽 엔드패널 렌더링!', window.renderCounter.leftEndPanel, '번째');
           } else {
             window.renderCounter.leftFrame++;
-            console.log('🚨🚨🚨 왼쪽 프레임 렌더링!', window.renderCounter.leftFrame, '번째');
+            console.log('🚨🚨🚨 [일반] 왼쪽 프레임 렌더링!', window.renderCounter.leftFrame, '번째');
           }
         }
 
@@ -2057,8 +2059,8 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
-              {/* 상부 영역 프레임 (천장까지) - 서라운드 엔드패널은 이미 전체 높이이므로 생략 */}
-              {!(spaceInfo.surroundType === 'surround' && !wallConfig?.right) && (
+              {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
+              {spaceInfo.surroundType !== 'surround' && (
               <BoxWithEdges
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
