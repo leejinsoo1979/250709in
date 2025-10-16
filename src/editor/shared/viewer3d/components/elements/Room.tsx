@@ -1799,8 +1799,13 @@ const Room: React.FC<RoomProps> = ({
 
         // 왼쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
         if (hasDroppedCeiling && isLeftDropped) {
+          // 서라운드 모드에서는 측면 프레임이 전체 높이이므로 단내림 구간 프레임 생략
+          if (spaceInfo.surroundType === 'surround') {
+            console.log('🚫 [서라운드] 왼쪽 단내림 프레임 렌더링 생략 (측면 프레임이 전체 높이)');
+            return null;
+          }
+
           // 노서라운드 모드에서만 가구 여부로 엔드패널 렌더링 결정
-          // 서라운드 모드에서는 엔드패널 깊이가 다르므로 항상 렌더링
           if (spaceInfo.surroundType === 'no-surround') {
             // 단내림 구간에 가구가 없으면 엔드패널 렌더링 생략
             if (!hasDroppedZoneFurniture) {
