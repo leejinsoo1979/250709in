@@ -572,6 +572,32 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 sectionIndex={0}
                 totalSections={2}
               />
+
+              {/* 도어 분할선 - 두 도어 사이에 표시 */}
+              {(() => {
+                const tallCabinetFurnitureHeight = moduleData.dimensions.height || 2000;
+                const lowerSectionHeight = 1000; // 하부 섹션 고정 높이
+                const upperSectionHeight = tallCabinetFurnitureHeight - lowerSectionHeight;
+
+                // 분할선 Y 위치: 하부 섹션 상단 = 가구 하단 + 하부섹션높이
+                const furnitureBottom = -tallCabinetFurnitureHeight / 2;
+                const dividerY = mmToThreeUnits(furnitureBottom + lowerSectionHeight);
+
+                // 도어 너비
+                const doorWidthThree = mmToThreeUnits(doorWidth || moduleData.dimensions.width);
+
+                return (
+                  <Line
+                    points={[
+                      [-doorWidthThree / 2, dividerY, depth / 2 + 0.02],
+                      [doorWidthThree / 2, dividerY, depth / 2 + 0.02]
+                    ]}
+                    color="#333333"
+                    lineWidth={2}
+                    renderOrder={1000}
+                  />
+                );
+              })()}
             </>
           )}
         </>
