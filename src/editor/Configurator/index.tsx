@@ -70,7 +70,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
@@ -2731,8 +2731,9 @@ const Configurator: React.FC = () => {
               if (mode === '2D') {
                 setRenderMode('wireframe');
               } else if (mode === '3D') {
-                // 3D 모드 선택 시 솔리드로 자동 설정
+                // 3D 모드 선택 시 솔리드로 자동 설정하고 그림자 자동 켜기
                 setRenderMode('solid');
+                setShadowEnabled(true);
               }
             }}
             viewDirection={view2DDirection}
