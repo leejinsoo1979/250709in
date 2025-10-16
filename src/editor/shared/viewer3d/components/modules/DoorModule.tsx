@@ -661,8 +661,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     // 도어 중심 계산
     // 도어가 위로 doorTopGap, 아래로 doorBottomGap 확장되므로
-    // 도어 중심은 가구 중심에서 (doorBottomGap - doorTopGap)/2 만큼 아래로 이동
-    const centerOffset = (doorBottomGap - doorTopGap) / 2;
+    // 상단 확장이 작고 하단 확장이 크면 도어 중심이 아래로 이동
+    // 도어 중심 오프셋 = (doorTopGap - doorBottomGap)/2 (위가 작으면 음수 → 아래로 이동)
+    const centerOffset = (doorTopGap - doorBottomGap) / 2;
     const doorCenter = furnitureCenter + centerOffset;
     doorYPosition = mmToThreeUnits(doorCenter);
 
