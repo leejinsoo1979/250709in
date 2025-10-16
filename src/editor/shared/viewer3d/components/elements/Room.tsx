@@ -1213,26 +1213,29 @@ const Room: React.FC<RoomProps> = ({
             
             let droppedAreaWidth: number;
             let normalAreaWidth: number;
-            
+
+            // 천장은 외벽까지 확장 (leftReduction, rightReduction 포함)
+            const totalCeilingWidth = width + mmToThreeUnits(leftReduction + rightReduction);
+
             if (isLeftDropped) {
-              // 왼쪽 단내림: 천장은 전체 너비 사용
-              droppedAreaWidth = droppedWidth;
-              normalAreaWidth = width - droppedWidth;
+              // 왼쪽 단내림: 천장은 왼쪽 외벽부터
+              droppedAreaWidth = droppedWidth + mmToThreeUnits(leftReduction);
+              normalAreaWidth = totalCeilingWidth - droppedAreaWidth;
             } else {
-              // 오른쪽 단내림: 천장은 전체 너비 사용
-              normalAreaWidth = width - droppedWidth;
-              droppedAreaWidth = droppedWidth;
+              // 오른쪽 단내림: 천장은 오른쪽 외벽까지
+              normalAreaWidth = width - droppedWidth + mmToThreeUnits(leftReduction);
+              droppedAreaWidth = droppedWidth + mmToThreeUnits(rightReduction);
             }
-            
-            // 단내림 영역의 X 위치 계산
+
+            // 단내림 영역의 X 위치 계산 (왼쪽 외벽 기준)
             const droppedAreaX = isLeftDropped
-              ? xOffset + droppedAreaWidth/2
-              : xOffset + normalAreaWidth + droppedAreaWidth/2;
-            
-            // 일반 영역의 X 위치 계산
+              ? xOffset - mmToThreeUnits(leftReduction)/2 + droppedAreaWidth/2
+              : xOffset + normalAreaWidth + droppedAreaWidth/2 - mmToThreeUnits(rightReduction)/2;
+
+            // 일반 영역의 X 위치 계산 (왼쪽 외벽 기준)
             const normalAreaX = isLeftDropped
-              ? xOffset + droppedAreaWidth + normalAreaWidth/2
-              : xOffset + normalAreaWidth/2;
+              ? xOffset + droppedAreaWidth + normalAreaWidth/2 - mmToThreeUnits(leftReduction)/2 - mmToThreeUnits(rightReduction)/2
+              : xOffset - mmToThreeUnits(leftReduction)/2 + normalAreaWidth/2;
             
             console.log('🔥 천장 분할 계산:', {
               hasDroppedCeiling,
