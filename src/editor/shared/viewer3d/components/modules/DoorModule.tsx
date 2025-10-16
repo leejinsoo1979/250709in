@@ -523,8 +523,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
 
     const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-    // 가구 높이 계산 (천장 높이 - 바닥재 높이)
-    const furnitureHeight = fullSpaceHeight - floorHeight;
+    const topFrameHeight = spaceInfo.frameSize?.top || 10;
+    const baseHeight = spaceInfo.baseConfig?.height || 65;
+
+    // 가구 높이 계산 (천장 높이 - 상부프레임 - 바닥재 - 받침대)
+    const furnitureHeight = fullSpaceHeight - topFrameHeight - floorHeight - baseHeight;
 
     // 도어 높이 계산
     // doorTopGap: 가구 상단에서 위로 확장 (mm)
@@ -545,12 +548,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     console.log('🚪📏 키큰장 도어 높이 (상하 확장 적용):', {
       fullSpaceHeight,
+      topFrameHeight,
       floorHeight,
+      baseHeight,
       furnitureHeight,
       doorTopGap,
       doorBottomGap,
       actualDoorHeight,
-      설명: `가구 높이(${furnitureHeight}mm) + 상단확장(${doorTopGap}mm) + 하단확장(${doorBottomGap}mm) = ${actualDoorHeight}mm`
+      설명: `천장(${fullSpaceHeight}mm) - 상부프레임(${topFrameHeight}mm) - 바닥재(${floorHeight}mm) - 받침대(${baseHeight}mm) = 가구(${furnitureHeight}mm) + 도어확장(${doorTopGap + doorBottomGap}mm) = 도어(${actualDoorHeight}mm)`
     });
   }
   
