@@ -105,6 +105,7 @@
     "withoutFrame": "프레임 없음",
     "properties": "프레임 속성",
     "baseHeight": "받침대 높이",
+    "baseDepth": "받침대 깊이",
     "floatHeight": "띄움 높이"
   },
   "furniture": {

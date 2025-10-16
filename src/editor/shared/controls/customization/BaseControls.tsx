@@ -28,6 +28,9 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
   const [baseHeight, setBaseHeight] = useState<string>(
     String(getAdjustedBaseHeight())
   );
+  const [baseDepth, setBaseDepth] = useState<string>(
+    String(spaceInfo.depth || 750)
+  );
   const [floatHeight, setFloatHeight] = useState<string>(
     String(spaceInfo.baseConfig?.floatHeight || 60)
   );
@@ -35,10 +38,11 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
   // baseConfig 또는 바닥마감재 변경 시 로컬 상태 동기화
   useEffect(() => {
     setBaseHeight(String(getAdjustedBaseHeight()));
+    setBaseDepth(String(spaceInfo.depth || 750));
     if (spaceInfo.baseConfig) {
       setFloatHeight(String(spaceInfo.baseConfig.floatHeight || 60));
     }
-  }, [spaceInfo.baseConfig, spaceInfo.hasFloorFinish, spaceInfo.floorFinish]);
+  }, [spaceInfo.baseConfig, spaceInfo.hasFloorFinish, spaceInfo.floorFinish, spaceInfo.depth]);
 
   // 받침대 타입 변경 처리
   const handleBaseTypeChange = (type: 'floor' | 'stand') => {
@@ -143,6 +147,29 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     }
   };
 
+  // 깊이 입력 처리
+  const handleDepthChange = (value: string) => {
+    // 숫자와 빈 문자열만 허용
+    if (value === '' || /^\d+$/.test(value)) {
+      setBaseDepth(value);
+
+      // 빈 문자열이면 업데이트하지 않음 (사용자가 입력 중)
+      if (value === '') {
+        return;
+      }
+
+      // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
+      if (!isNaN(Number(value))) {
+        const validatedValue = parseInt(value);
+
+        // 즉시 store 업데이트
+        onUpdate({
+          depth: validatedValue,
+        });
+      }
+    }
+  };
+
   // 띄움 높이 입력 처리
   const handleFloatHeightChange = (value: string) => {
     // 숫자와 빈 문자열만 허용
@@ -217,6 +244,36 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     }
   };
 
+  // 깊이 업데이트 (blur 또는 Enter 시)
+  const handleDepthBlur = () => {
+    let value = baseDepth;
+
+    // 문자열이면 숫자로 변환
+    if (typeof value === 'string') {
+      value = value === '' ? 750 : parseInt(value);
+    }
+
+    // 최소값 (300mm) 보장
+    if (value < 300) {
+      value = 300;
+    }
+
+    // 최대값 (900mm) 보장
+    if (value > 900) {
+      value = 900;
+    }
+
+    // 로컬 상태 업데이트
+    setBaseDepth(value);
+
+    // 값이 변경된 경우만 업데이트
+    if (value !== spaceInfo.depth) {
+      onUpdate({
+        depth: value,
+      });
+    }
+  };
+
   // 띄움 높이 업데이트 (blur 또는 Enter 시)
   const handleFloatHeightBlur = () => {
     // 기존 baseConfig가 없으면 기본값으로 초기화하여 생성
@@ -260,6 +317,13 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     }
   };
 
+  // 깊이 Enter 키 처리
+  const handleDepthKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleDepthBlur();
+    }
+  };
+
   // 띄움 높이 Enter 키 처리
   const handleFloatKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
@@ -280,13 +344,17 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       <PlacementControls
         baseConfig={spaceInfo.baseConfig}
         baseHeight={baseHeight}
+        baseDepth={baseDepth}
         floatHeight={floatHeight}
         onPlacementTypeChange={handlePlacementTypeChange}
         onHeightChange={handleHeightChange}
+        onDepthChange={handleDepthChange}
         onFloatHeightChange={handleFloatHeightChange}
         onHeightBlur={handleHeightBlur}
+        onDepthBlur={handleDepthBlur}
         onFloatHeightBlur={handleFloatHeightBlur}
         onKeyDown={handleKeyDown}
+        onDepthKeyDown={handleDepthKeyDown}
         onFloatKeyDown={handleFloatKeyDown}
         disabled={disabled}
       />

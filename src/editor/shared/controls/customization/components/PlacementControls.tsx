@@ -7,13 +7,17 @@ import styles from '../../styles/common.module.css';
 interface PlacementControlsProps {
   baseConfig?: BaseConfig;
   baseHeight: string;
+  baseDepth: string;
   floatHeight: string;
   onPlacementTypeChange: (placementType: 'ground' | 'float') => void;
   onHeightChange: (value: string) => void;
+  onDepthChange: (value: string) => void;
   onFloatHeightChange: (value: string) => void;
   onHeightBlur: () => void;
+  onDepthBlur: () => void;
   onFloatHeightBlur: () => void;
   onKeyDown: (e: React.KeyboardEvent) => void;
+  onDepthKeyDown: (e: React.KeyboardEvent) => void;
   onFloatKeyDown: (e: React.KeyboardEvent) => void;
   disabled?: boolean;
 }
@@ -21,13 +25,17 @@ interface PlacementControlsProps {
 const PlacementControls: React.FC<PlacementControlsProps> = ({
   baseConfig,
   baseHeight,
+  baseDepth,
   floatHeight,
   onPlacementTypeChange,
   onHeightChange,
+  onDepthChange,
   onFloatHeightChange,
   onHeightBlur,
+  onDepthBlur,
   onFloatHeightBlur,
   onKeyDown,
+  onDepthKeyDown,
   onFloatKeyDown,
   disabled = false
 }) => {
@@ -47,6 +55,12 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
   const handleInputBlur = () => {
     setHighlightedFrame(null);
     onHeightBlur();
+  };
+
+  // 깊이 블러 핸들러
+  const handleDepthInputBlur = () => {
+    setHighlightedFrame(null);
+    onDepthBlur();
   };
 
   // 띄움 높이 블러 핸들러
@@ -81,6 +95,29 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
                 onKeyDown={onKeyDown}
                 className={`${styles.input} ${styles.inputWithUnitField}`}
                 placeholder="65"
+                disabled={disabled}
+              />
+              <span className={styles.unit}>mm</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 받침대 있음 - 깊이 설정 */}
+      {isFloor && (
+        <div className={styles.section}>
+          <span className={styles.label}>{t('frame.baseDepth')}</span>
+          <div className={styles.inputWrapper}>
+            <div className={styles.inputWithUnit}>
+              <input
+                type="text"
+                value={baseDepth}
+                onChange={(e) => onDepthChange(e.target.value)}
+                onFocus={handleInputFocus}
+                onBlur={handleDepthInputBlur}
+                onKeyDown={onDepthKeyDown}
+                className={`${styles.input} ${styles.inputWithUnitField}`}
+                placeholder="750"
                 disabled={disabled}
               />
               <span className={styles.unit}>mm</span>
