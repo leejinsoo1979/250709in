@@ -683,7 +683,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         }}
       >
         <Canvas
-        key={canvasKey}
+        key={`${canvasKey}-shadow-${shadowEnabled}`}
         shadows={viewMode === '3D' && shadowEnabled}
         style={{
           ...style,
