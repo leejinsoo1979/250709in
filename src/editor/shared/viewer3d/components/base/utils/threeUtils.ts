@@ -58,13 +58,12 @@ export const threeUnitsToMm = (threeUnits: number) => threeUnits / MM_TO_THREE_U
 /**
  * 최적화된 카메라 거리 계산 (3D 모드에서 충분히 멀리, 큰 공간도 전체 표시)
  */
-export const calculateOptimalDistance = (width: number, height: number, depth: number, placedModulesCount: number = 0, viewMode: '2D' | '3D' = '3D') => {
+export const calculateOptimalDistance = (width: number, height: number, depth: number, placedModulesCount: number = 0) => {
   // 공간의 3차원 대각선 길이 계산 (모든 차원 고려)
   const diagonal = Math.sqrt(width * width + height * height + depth * depth);
 
   // 적절한 여백으로 조정
-  // 3D 모드만 더 가까이
-  const furnitureMargin = viewMode === '3D' ? 0.65 : 0.95;
+  const furnitureMargin = 0.85;
 
   // FOV 50도 기준으로 거리 계산
   const fov = 50;
@@ -104,9 +103,8 @@ export const calculateCameraPosition = (
   placedModulesCount?: number
 ): [number, number, number] => {
   if (viewMode === '2D' && spaceWidth && spaceHeight) {
-    // 2D 모드: viewMode 파라미터 전달하여 원래 여백 사용
     const depth = spaceDepth || 600; // 기본 깊이 600mm
-    const distance = calculateOptimalDistance(spaceWidth, spaceHeight, depth, placedModulesCount || 0, '2D');
+    const distance = calculateOptimalDistance(spaceWidth, spaceHeight, depth, placedModulesCount || 0);
     const yCenter = mmToThreeUnits(spaceHeight * 0.5);
     return [0, yCenter, distance];
   }
