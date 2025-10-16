@@ -189,7 +189,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       }
       // 3D 모드에서는 shadowEnabled 상태에 따라 그림자 활성화
       rendererRef.current.shadowMap.enabled = shadowEnabled;
-      rendererRef.current.shadowMap.needsUpdate = shadowEnabled;
+      if (shadowEnabled) {
+        rendererRef.current.shadowMap.type = THREE.PCFSoftShadowMap;
+        rendererRef.current.shadowMap.autoUpdate = true;
+      }
+      rendererRef.current.shadowMap.needsUpdate = true;
     } else if (rendererRef.current && viewMode === '2D') {
       // 2D 모드에서는 그림자 비활성화
       rendererRef.current.shadowMap.enabled = false;
