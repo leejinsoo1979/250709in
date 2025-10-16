@@ -117,7 +117,7 @@ const PlacementControls: React.FC<PlacementControlsProps> = ({
                 onBlur={handleDepthInputBlur}
                 onKeyDown={onDepthKeyDown}
                 className={`${styles.input} ${styles.inputWithUnitField}`}
-                placeholder="750"
+                placeholder="0"
                 disabled={disabled}
               />
               <span className={styles.unit}>mm</span>
