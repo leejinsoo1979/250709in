@@ -243,9 +243,9 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
       value = 0;
     }
 
-    // 최대값 (600mm) 보장
-    if (value > 600) {
-      value = 600;
+    // 최대값 (300mm) 보장
+    if (value > 300) {
+      value = 300;
     }
 
     // 로컬 상태 업데이트
