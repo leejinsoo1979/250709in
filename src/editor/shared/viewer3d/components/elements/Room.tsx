@@ -48,6 +48,18 @@ const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
 const END_PANEL_THICKNESS = 18; // 18mm로 통일
 
+// 전역 렌더링 카운터 (컴포넌트 마운트/언마운트에 영향받지 않음)
+if (typeof window !== 'undefined') {
+  if (!window.renderCounter) {
+    window.renderCounter = {
+      leftFrame: 0,
+      rightFrame: 0,
+      leftEndPanel: 0,
+      rightEndPanel: 0
+    };
+  }
+}
+
 // 노서라운드 모드에서 엔드패널과 이격거리를 계산하는 헬퍼 함수
 const calculateNoSurroundOffset = (spaceInfo: SpaceInfo, side: 'left' | 'right'): number => {
   if (spaceInfo.surroundType !== 'no-surround') return 0;
@@ -186,18 +198,6 @@ const Room: React.FC<RoomProps> = ({
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
-
-  // 렌더링 카운터 초기화
-  React.useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.renderCounter = {
-        leftFrame: 0,
-        rightFrame: 0,
-        leftEndPanel: 0,
-        rightEndPanel: 0
-      };
-    }
-  }, []); // 컴포넌트 마운트 시 한 번만 실행
 
   // Room 컴포넌트 렌더링 추적
   React.useEffect(() => {
