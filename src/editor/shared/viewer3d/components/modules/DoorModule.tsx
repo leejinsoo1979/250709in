@@ -650,36 +650,24 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 2. 가구 중심 = 가구 하단 + 가구 높이/2
     // 3. 도어 중심 = 가구 중심 (동일) - 도어는 가구 중심 기준으로 위아래 확장
     //
-    const baseFrameHeight = spaceInfo.baseConfig?.height || 65;
-    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-
-    // 가구 하단 위치 (바닥에서)
-    const furnitureBottom = baseFrameHeight + floorHeight;
-
-    // 가구 중심 위치
-    const furnitureCenter = furnitureBottom + (tallCabinetFurnitureHeight / 2);
-
-    // 도어 중심 계산
-    // 도어가 위로 doorTopGap, 아래로 doorBottomGap 확장되므로
-    // 상단 확장이 작고 하단 확장이 크면 도어 중심이 아래로 이동
-    // 도어 중심 오프셋 = (doorTopGap - doorBottomGap)/2 (위가 작으면 음수 → 아래로 이동)
+    // Three.js에서 가구는 Y=0 중심으로 렌더링됨
+    // 도어도 가구 중심(Y=0) 기준 상대 좌표로 배치해야 함
+    //
+    // 도어 중심 오프셋 계산:
+    // - 도어가 위로 doorTopGap, 아래로 doorBottomGap 확장
+    // - 상단 확장 < 하단 확장이면 도어 중심이 가구 중심보다 아래로 이동
+    // - 오프셋 = (doorTopGap - doorBottomGap)/2 (음수면 아래로)
     const centerOffset = (doorTopGap - doorBottomGap) / 2;
-    const doorCenter = furnitureCenter + centerOffset;
-    doorYPosition = mmToThreeUnits(doorCenter);
+    doorYPosition = mmToThreeUnits(centerOffset);
 
-    console.log('🚪📍 도어 Y 위치 (가구 중심 기준 + 확장 오프셋):', {
-      baseFrameHeight,
-      floorHeight,
-      furnitureBottom,
-      furnitureHeight: tallCabinetFurnitureHeight,
-      furnitureCenter,
+    console.log('🚪📍 도어 Y 위치 (가구 중심 기준 상대 좌표):', {
+      tallCabinetFurnitureHeight,
       doorTopGap,
       doorBottomGap,
       centerOffset,
-      doorCenter,
       doorHeight: actualDoorHeight,
       doorYPosition,
-      설명: `가구중심(${furnitureCenter}mm) + 확장차이/2(${centerOffset}mm) = 도어중심(${doorCenter}mm), 도어 상단은 가구보다 ${doorTopGap}mm 위, 하단은 ${doorBottomGap}mm 아래`
+      설명: `가구 중심(Y=0) 기준, 도어 중심 오프셋 = (${doorTopGap} - ${doorBottomGap})/2 = ${centerOffset}mm, 도어 상단은 가구보다 ${doorTopGap}mm 위, 하단은 ${doorBottomGap}mm 아래`
     });
     
     // 플로팅 배치 시 Y 위치 조정 - 상단 고정, 하단만 올라가도록
