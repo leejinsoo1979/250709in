@@ -64,7 +64,7 @@ export const calculateOptimalDistance = (width: number, height: number, depth: n
   
   // 적절한 여백으로 조정
   // 가구 유무와 관계없이 일정한 여백 사용
-  const furnitureMargin = 0.85; // 카메라를 더 가까이 (0.95 → 0.85)
+  const furnitureMargin = 0.75; // 카메라를 더 가까이 (0.85 → 0.75)
   
   // FOV 50도 기준으로 거리 계산
   const fov = 50;
