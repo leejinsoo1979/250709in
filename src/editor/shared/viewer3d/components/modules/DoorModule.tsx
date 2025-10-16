@@ -370,15 +370,39 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
   // 인덱싱 정보 계산
   const indexing = calculateSpaceIndexing(spaceInfo);
-  
+
+  // 단내림 구간인 경우 영역별 슬롯 정보 계산
+  let effectiveColumnWidth = indexing.columnWidth;
+  if (spaceInfo.droppedCeiling?.enabled && (spaceInfo as any).zone) {
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    const zone = (spaceInfo as any).zone;
+
+    if (zone === 'dropped' && zoneInfo.dropped) {
+      effectiveColumnWidth = zoneInfo.dropped.columnWidth;
+      console.log('🚪📏 단내림 구간 슬롯 너비 사용:', {
+        zone,
+        droppedColumnWidth: zoneInfo.dropped.columnWidth,
+        normalColumnWidth: indexing.columnWidth
+      });
+    } else if (zone === 'normal' && zoneInfo.normal) {
+      effectiveColumnWidth = zoneInfo.normal.columnWidth;
+      console.log('🚪📏 메인 구간 슬롯 너비 사용:', {
+        zone,
+        normalColumnWidth: zoneInfo.normal.columnWidth
+      });
+    }
+  }
+
   // 도어 크기 계산 - originalSlotWidth가 있으면 무조건 사용 (커버도어)
-  let actualDoorWidth = originalSlotWidth || moduleWidth || indexing.columnWidth;
-  
+  let actualDoorWidth = originalSlotWidth || moduleWidth || effectiveColumnWidth;
+
   console.log('🚪📏 도어 너비 계산:', {
     originalSlotWidth,
     moduleWidth,
     indexingColumnWidth: indexing.columnWidth,
+    effectiveColumnWidth,
     actualDoorWidth,
+    zone: (spaceInfo as any).zone,
     설명: originalSlotWidth ? '커버도어 (원래 슬롯 너비)' : '일반 도어'
   });
   
@@ -401,7 +425,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // 듀얼 가구인지 확인 - moduleData가 있으면 그것으로 판단, 없으면 너비로 추정
   const isDualFurniture = moduleData?.isDynamic && moduleData?.id?.includes('dual') ? true :
-    Math.abs(moduleWidth - (indexing.columnWidth * 2)) < 50;
+    Math.abs(moduleWidth - (effectiveColumnWidth * 2)) < 50;
   
   // 도어 모듈 디버깅
   console.log('🚪 DoorModule 렌더링:', {
