@@ -2684,17 +2684,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Line
                     points={[[0, bottomFrameTopY, rightDimensionZ], [0, cabinetAreaTopY, rightDimensionZ]]}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={2}
                   />
                   <Line
                     points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY + 0.03, rightDimensionZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={2}
                   />
                   <Line
                     points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY - 0.03, rightDimensionZ])}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={2}
                   />
                   <Text
                   renderOrder={1000}
@@ -2715,17 +2715,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   <Line
                     points={[[0, cabinetAreaTopY, rightDimensionZ], [0, topY, rightDimensionZ]]}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
+                    lineWidth={2}
                   />
                   <Line
                     points={createArrowHead([0, cabinetAreaTopY, rightDimensionZ], [0, cabinetAreaTopY + 0.03, rightDimensionZ])}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
+                    lineWidth={2}
                   />
                   <Line
                     points={createArrowHead([0, topY, rightDimensionZ], [0, topY - 0.03, rightDimensionZ])}
                     color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
-                    lineWidth={spaceInfo.surroundType === 'no-surround' ? 2 : 1}
+                    lineWidth={2}
                   />
                   <Text
                   renderOrder={1000}

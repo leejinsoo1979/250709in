@@ -68,6 +68,12 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
   const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
 
+  // 단내림 설정
+  const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
+  const dropHeightMm = hasDroppedCeiling ? (spaceInfo.droppedCeiling?.dropHeight || 200) : 0;
+  const dropHeight = mmToThreeUnits(dropHeightMm);
+  const droppedCeilingHeight = spaceHeight - dropHeight; // 단내림 구간 높이
+
   // 폰트 크기
   const largeFontSize = mmToThreeUnits(40);
   const smallFontSize = mmToThreeUnits(30);

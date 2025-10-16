@@ -63,8 +63,8 @@ export const calculateOptimalDistance = (width: number, height: number, depth: n
   const diagonal = Math.sqrt(width * width + height * height + depth * depth);
 
   // 적절한 여백으로 조정
-  // 2D 모드는 원래 여백, 3D 모드는 더 가까이
-  const furnitureMargin = viewMode === '2D' ? 0.95 : 0.75;
+  // 3D 모드만 더 가까이
+  const furnitureMargin = viewMode === '3D' ? 0.65 : 0.95;
 
   // FOV 50도 기준으로 거리 계산
   const fov = 50;
