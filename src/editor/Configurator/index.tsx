@@ -2731,9 +2731,8 @@ const Configurator: React.FC = () => {
               if (mode === '2D') {
                 setRenderMode('wireframe');
               } else if (mode === '3D') {
-                // 3D 모드 선택 시 솔리드로 자동 설정하고 그림자 자동 켜기
+                // 3D 모드 선택 시 솔리드로 자동 설정
                 setRenderMode('solid');
-                setShadowEnabled(true);
               }
             }}
             viewDirection={view2DDirection}
