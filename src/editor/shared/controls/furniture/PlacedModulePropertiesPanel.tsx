@@ -884,11 +884,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const handleDoorTopGapChange = (value: string) => {
     // 백스페이스 포함 모든 입력 허용
     setDoorTopGapInput(value);
+
+    // 유효한 숫자면 즉시 반영
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue >= 0 && currentPlacedModule) {
+      setDoorTopGap(numValue);
+      updatePlacedModule(currentPlacedModule.id, { doorTopGap: numValue });
+    }
   };
 
   const handleDoorBottomGapChange = (value: string) => {
     // 백스페이스 포함 모든 입력 허용
     setDoorBottomGapInput(value);
+
+    // 유효한 숫자면 즉시 반영
+    const numValue = parseInt(value);
+    if (!isNaN(numValue) && numValue >= 0 && currentPlacedModule) {
+      setDoorBottomGap(numValue);
+      updatePlacedModule(currentPlacedModule.id, { doorBottomGap: numValue });
+    }
   };
 
   const handleDoorTopGapBlur = () => {
