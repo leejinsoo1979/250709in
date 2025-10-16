@@ -470,8 +470,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 상부장/하부장인지 확인
   const isUpperCabinet = moduleData?.id?.includes('upper-cabinet') || moduleData?.id?.includes('dual-upper-cabinet');
   const isLowerCabinet = moduleData?.id?.includes('lower-cabinet') || moduleData?.id?.includes('dual-lower-cabinet');
-  
+
   let actualDoorHeight: number;
+  let tallCabinetFurnitureHeight = 0; // 키큰장 가구 높이 (Y 위치 계산에서 사용)
   
   if (isUpperCabinet) {
     // 상부장 도어는 캐비넷보다 아래로 확장, 위쪽 간격
@@ -522,24 +523,24 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       });
     }
 
-    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-    const topFrameHeight = spaceInfo.frameSize?.top || 10;
-    const baseHeight = spaceInfo.baseConfig?.height || 65;
+    const floorHeightValue = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
+    const topFrameHeightValue = spaceInfo.frameSize?.top || 10;
+    const baseHeightValue = spaceInfo.baseConfig?.height || 65;
 
     // 가구 높이 계산 (천장 높이 - 상부프레임 - 바닥재 - 받침대)
-    const furnitureHeight = fullSpaceHeight - topFrameHeight - floorHeight - baseHeight;
+    tallCabinetFurnitureHeight = fullSpaceHeight - topFrameHeightValue - floorHeightValue - baseHeightValue;
 
     // 도어 높이 계산
     // doorTopGap: 가구 상단에서 위로 확장 (mm)
     // doorBottomGap: 가구 하단에서 아래로 확장 (mm)
     // 도어 높이 = 가구 높이 + 상단 확장 + 하단 확장
-    actualDoorHeight = furnitureHeight + doorTopGap + doorBottomGap;
+    actualDoorHeight = tallCabinetFurnitureHeight + doorTopGap + doorBottomGap;
 
     // 플로팅 배치 시 키큰장 도어 높이 조정
     if (floatHeight > 0) {
       actualDoorHeight = actualDoorHeight - floatHeight;
       console.log('🚪📏 플로팅 배치 도어 높이 조정:', {
-        원래높이: furnitureHeight + doorTopGap + doorBottomGap,
+        원래높이: tallCabinetFurnitureHeight + doorTopGap + doorBottomGap,
         플로팅높이: floatHeight,
         조정된높이: actualDoorHeight,
         설명: '플로팅 높이만큼 도어 높이 감소'
@@ -548,14 +549,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     console.log('🚪📏 키큰장 도어 높이 (상하 확장 적용):', {
       fullSpaceHeight,
-      topFrameHeight,
-      floorHeight,
-      baseHeight,
-      furnitureHeight,
+      topFrameHeight: topFrameHeightValue,
+      floorHeight: floorHeightValue,
+      baseHeight: baseHeightValue,
+      furnitureHeight: tallCabinetFurnitureHeight,
       doorTopGap,
       doorBottomGap,
       actualDoorHeight,
-      설명: `천장(${fullSpaceHeight}mm) - 상부프레임(${topFrameHeight}mm) - 바닥재(${floorHeight}mm) - 받침대(${baseHeight}mm) = 가구(${furnitureHeight}mm) + 도어확장(${doorTopGap + doorBottomGap}mm) = 도어(${actualDoorHeight}mm)`
+      설명: `천장(${fullSpaceHeight}mm) - 상부프레임(${topFrameHeightValue}mm) - 바닥재(${floorHeightValue}mm) - 받침대(${baseHeightValue}mm) = 가구(${tallCabinetFurnitureHeight}mm) + 도어확장(${doorTopGap + doorBottomGap}mm) = 도어(${actualDoorHeight}mm)`
     });
   }
   
@@ -656,7 +657,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const furnitureBottom = baseFrameHeight + floorHeight;
 
     // 가구 중심 위치
-    const furnitureCenter = furnitureBottom + (furnitureHeight / 2);
+    const furnitureCenter = furnitureBottom + (tallCabinetFurnitureHeight / 2);
 
     // 도어 중심 = 가구 중심 - (하단확장 - 상단확장)/2
     const doorCenterOffset = (doorBottomGap - doorTopGap) / 2;
@@ -666,13 +667,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       baseFrameHeight,
       floorHeight,
       furnitureBottom,
-      furnitureHeight,
+      furnitureHeight: tallCabinetFurnitureHeight,
       furnitureCenter,
       doorTopGap,
       doorBottomGap,
       doorCenterOffset,
       doorYPosition,
-      설명: `가구하단(${furnitureBottom}mm) + 가구높이/2(${furnitureHeight/2}mm) = 가구중심(${furnitureCenter}mm) - 확장차이/2(${doorCenterOffset}mm) = 도어중심`
+      설명: `가구하단(${furnitureBottom}mm) + 가구높이/2(${tallCabinetFurnitureHeight/2}mm) = 가구중심(${furnitureCenter}mm) - 확장차이/2(${doorCenterOffset}mm) = 도어중심`
     });
     
     // 플로팅 배치 시 Y 위치 조정 - 상단 고정, 하단만 올라가도록
