@@ -15,6 +15,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useHistoryStore } from '@/store/historyStore';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface HeaderProps {
   title: string;
