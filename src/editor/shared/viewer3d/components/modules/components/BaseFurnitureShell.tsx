@@ -630,19 +630,30 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {children}
 
         {/* 조절발통 (네 모서리) - 띄움배치가 아닐 때만 */}
-        <AdjustableFootsRenderer
-          width={width}
-          depth={depth}
-          yOffset={-height / 2}
-          material={material}
-          renderMode={renderMode}
-          isHighlighted={isHighlighted}
-          isFloating={isFloating}
-          baseHeight={spaceInfo?.baseConfig?.height || 65}
-          baseDepth={spaceInfo?.baseConfig?.depth || 0}
-          viewMode={viewMode}
-          view2DDirection={view2DDirection}
-        />
+        {(() => {
+          const baseDepthValue = spaceInfo?.baseConfig?.depth || 0;
+          console.log('🏠 BaseFurnitureShell - baseDepth 전달:', {
+            spaceInfoExists: !!spaceInfo,
+            baseConfigExists: !!spaceInfo?.baseConfig,
+            baseDepthValue,
+            fullBaseConfig: spaceInfo?.baseConfig
+          });
+          return (
+            <AdjustableFootsRenderer
+              width={width}
+              depth={depth}
+              yOffset={-height / 2}
+              material={material}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              isFloating={isFloating}
+              baseHeight={spaceInfo?.baseConfig?.height || 65}
+              baseDepth={baseDepthValue}
+              viewMode={viewMode}
+              view2DDirection={view2DDirection}
+            />
+          );
+        })()}
       </>
       )}
     </group>
