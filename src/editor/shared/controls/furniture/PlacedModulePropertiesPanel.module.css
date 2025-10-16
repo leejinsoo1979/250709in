@@ -652,6 +652,26 @@
   margin: 0 0 8px 0;
 }
 
+/* 도어 상하 갭 스타일 */
+.doorGapContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.doorGapField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.doorGapLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+}
+
 .editGuide {
   margin-top: 24px;
   padding: 16px;
