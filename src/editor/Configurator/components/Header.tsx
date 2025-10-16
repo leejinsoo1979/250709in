@@ -87,6 +87,7 @@ const Header: React.FC<HeaderProps> = ({
   // UIStore에서 카메라 및 그림자 설정 가져오기
   const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled } = useUIStore();
   const { colors } = useThemeColors();
+  const { theme } = useTheme();
   const profileButtonRef = useRef<HTMLDivElement>(null);
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
