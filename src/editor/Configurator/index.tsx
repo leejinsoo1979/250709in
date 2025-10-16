@@ -1351,7 +1351,16 @@ const Configurator: React.FC = () => {
   const handleSpaceInfoUpdate = (updates: Partial<typeof spaceInfo>) => {
     console.log('🔧 handleSpaceInfoUpdate called with:', updates);
     console.log('🔧 Current spaceInfo.wallConfig:', spaceInfo.wallConfig);
-    
+
+    // baseConfig.depth 업데이트 감지
+    if (updates.baseConfig?.depth !== undefined) {
+      console.log('📏 Configurator - baseConfig.depth 업데이트:', {
+        이전값: spaceInfo.baseConfig?.depth,
+        새값: updates.baseConfig.depth,
+        전체baseConfig: updates.baseConfig
+      });
+    }
+
     // mainDoorCount 업데이트 감지
     if (updates.mainDoorCount !== undefined) {
       console.log('🚪 mainDoorCount 업데이트:', {
@@ -1680,8 +1689,21 @@ const Configurator: React.FC = () => {
                                   finalUpdates.installType !== spaceInfo.installType;
     
     console.log('🚨🚨🚨 setSpaceInfo 호출 직전:', finalUpdates);
+    console.log('📏 baseConfig.depth 전달 확인:', {
+      finalUpdates_baseConfig: finalUpdates.baseConfig,
+      depth: finalUpdates.baseConfig?.depth
+    });
     setSpaceInfo(finalUpdates);
     console.log('🚨🚨🚨 setSpaceInfo 호출 완료');
+
+    // Store 업데이트 직후 확인
+    setTimeout(() => {
+      const currentStore = useSpaceConfigStore.getState();
+      console.log('📏 Store 업데이트 후 확인:', {
+        baseConfig: currentStore.baseConfig,
+        depth: currentStore.baseConfig?.depth
+      });
+    }, 0);
     
     // 단내림 설정 변경 시 강제로 3D 뷰 업데이트
     if (isDroppedCeilingUpdate) {
