@@ -1369,6 +1369,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   className={`${styles.doorTab} ${hasDoor && !doorSplit ? styles.activeDoorTab : ''}`}
                   onClick={() => {
                     handleDoorChange(true);
+                    setDoorSplit(false);
                     if (currentPlacedModule) {
                       updatePlacedModule(currentPlacedModule.id, { doorSplit: false });
                     }
@@ -1380,6 +1381,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   className={`${styles.doorTab} ${hasDoor && doorSplit ? styles.activeDoorTab : ''}`}
                   onClick={() => {
                     handleDoorChange(true);
+                    setDoorSplit(true);
                     if (currentPlacedModule) {
                       updatePlacedModule(currentPlacedModule.id, { doorSplit: true });
                     }
