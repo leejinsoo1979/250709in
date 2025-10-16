@@ -933,7 +933,7 @@ const Room: React.FC<RoomProps> = ({
   // 서라운드 엔드패널: 슬롯 깊이 + 20mm (슬롯은 20mm 줄어들어 있으므로)
   const surroundEndPanelDepth = slotFloorDepth + mmToThreeUnits(20);
   // 서라운드 엔드패널 중심 Z 위치
-  const surroundEndPanelZ = roomBackZ + surroundEndPanelDepth/2;
+  const surroundEndPanelZ = roomBackZ + surroundEndPanelDepth/2 + mmToThreeUnits(2); // 서브프레임과 맞닿도록 2mm 앞으로
   
   // 노서라운드 엔드패널: 슬롯 깊이와 동일 (730mm)
   const noSurroundEndPanelDepth = slotFloorDepth;
