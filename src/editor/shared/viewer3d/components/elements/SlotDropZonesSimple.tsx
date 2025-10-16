@@ -1086,8 +1086,23 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[zoneSlotIndex] !== undefined) {
           customWidth = zoneIndexing.slotWidths[zoneSlotIndex];
 
-          // 🎯 끝 슬롯 체크: 벽없음/한쪽벽 모드에서 끝 슬롯은 엔드패널(18mm) 공간 확보
-          if (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
+          // 🎯 끝 슬롯 체크: 엔드패널이 있는 경우 엔드패널(18mm) 공간 확보
+          // 노서라운드: 벽없음/한쪽벽만 적용
+          // 서라운드: 벽이 없는 쪽만 적용 (양쪽벽은 엔드패널 없음)
+          const hasEndPanel = (
+            // 노서라운드 모드
+            (spaceInfo.surroundType === 'no-surround' &&
+             (spaceInfo.installType === 'freestanding' ||
+              spaceInfo.installType === 'semistanding' ||
+              spaceInfo.installType === 'semi-standing')) ||
+            // 서라운드 모드에서 한쪽벽/벽없음
+            (spaceInfo.surroundType === 'surround' &&
+             (spaceInfo.installType === 'freestanding' ||
+              spaceInfo.installType === 'semistanding' ||
+              spaceInfo.installType === 'semi-standing'))
+          );
+
+          if (hasEndPanel) {
             const END_PANEL_THICKNESS = 18;
             const isFirstSlot = zoneSlotIndex === 0;
             const isLastSlot = zoneSlotIndex === zoneIndexing.columnCount - 1;
@@ -1106,6 +1121,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                     customWidth = customWidth - END_PANEL_THICKNESS;
                     console.log('🎯 일반구간 우측 끝 슬롯 가구 너비 조정:', {
                       slotIndex: zoneSlotIndex,
+                      surroundType: spaceInfo.surroundType,
                       originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
                       adjustedWidth: customWidth,
                       endPanelSpace: END_PANEL_THICKNESS
@@ -1119,6 +1135,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                     customWidth = customWidth - END_PANEL_THICKNESS;
                     console.log('🎯 일반구간 좌측 끝 슬롯 가구 너비 조정:', {
                       slotIndex: zoneSlotIndex,
+                      surroundType: spaceInfo.surroundType,
                       originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
                       adjustedWidth: customWidth,
                       endPanelSpace: END_PANEL_THICKNESS
@@ -1135,6 +1152,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                     customWidth = customWidth - END_PANEL_THICKNESS;
                     console.log('🎯 단내림구간 좌측 끝 슬롯 가구 너비 조정:', {
                       slotIndex: zoneSlotIndex,
+                      surroundType: spaceInfo.surroundType,
                       originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
                       adjustedWidth: customWidth,
                       endPanelSpace: END_PANEL_THICKNESS
@@ -1148,6 +1166,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                     customWidth = customWidth - END_PANEL_THICKNESS;
                     console.log('🎯 단내림구간 우측 끝 슬롯 가구 너비 조정:', {
                       slotIndex: zoneSlotIndex,
+                      surroundType: spaceInfo.surroundType,
                       originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
                       adjustedWidth: customWidth,
                       endPanelSpace: END_PANEL_THICKNESS
@@ -1163,6 +1182,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 customWidth = customWidth - END_PANEL_THICKNESS;
                 console.log('🎯 좌측 끝 슬롯 가구 너비 조정:', {
                   slotIndex: zoneSlotIndex,
+                  surroundType: spaceInfo.surroundType,
                   originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
                   adjustedWidth: customWidth,
                   endPanelSpace: END_PANEL_THICKNESS
@@ -1171,6 +1191,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 customWidth = customWidth - END_PANEL_THICKNESS;
                 console.log('🎯 우측 끝 슬롯 가구 너비 조정:', {
                   slotIndex: zoneSlotIndex,
+                  surroundType: spaceInfo.surroundType,
                   originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
                   adjustedWidth: customWidth,
                   endPanelSpace: END_PANEL_THICKNESS
