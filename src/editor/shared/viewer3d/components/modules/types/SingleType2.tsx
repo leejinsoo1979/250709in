@@ -168,15 +168,15 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-${index + 1}`;
 
                   // 중간판은 항상 원래 깊이 사용 (섹션 깊이와 무관)
-                  // 백패널 두께(8mm)만큼만 짧음
-                  const middlePanelDepth = depth - backPanelThickness;
+                  // 측판과 완전히 동일한 깊이
+                  const middlePanelDepth = depth;
 
-                  // Z 위치: 백패널 두께만큼 앞으로
-                  const zOffset = backPanelThickness / 2;
+                  // Z 위치: 중앙
+                  const zOffset = 0;
 
                   return (
                     <>
-                      {/* 하부 섹션 상판 - 백패널 두께만큼만 짧음 */}
+                      {/* 하부 섹션 상판 - 측판과 동일한 깊이 */}
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, middlePanelDepth]}
                         position={[0, lowerTopPanelY, zOffset]}
@@ -187,7 +187,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isHighlighted={isLowerHighlighted}
                       />
 
-                      {/* 상부 섹션 바닥판 - 백패널 두께만큼만 짧음 */}
+                      {/* 상부 섹션 바닥판 - 측판과 동일한 깊이 */}
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, middlePanelDepth]}
                         position={[0, middlePanelY, zOffset]}
