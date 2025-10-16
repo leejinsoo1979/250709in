@@ -76,6 +76,14 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     });
   }, [placedModules]);
 
+  // baseConfig.depth 변경 감지
+  React.useEffect(() => {
+    console.log('📏 PlacedFurnitureContainer - baseConfig.depth 변경 감지:', {
+      depth: spaceInfo.baseConfig?.depth,
+      fullBaseConfig: spaceInfo.baseConfig
+    });
+  }, [spaceInfo.baseConfig?.depth]);
+
   // showFurniture 변경 감지
   React.useEffect(() => {
     console.log('🎨 PlacedFurnitureContainer - showFurniture changed:', showFurniture);
