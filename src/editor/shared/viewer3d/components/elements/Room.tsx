@@ -1894,29 +1894,33 @@ const Room: React.FC<RoomProps> = ({
           );
         }
 
-        // 일반 구간 (단내림 없음)
-        console.log('🔍 왼쪽 엔드패널 렌더링 디버그:', {
-          frameThicknessLeft: frameThickness.left,
-          wallConfigLeft: wallConfig?.left,
-          surroundType: spaceInfo.surroundType,
-          installType: spaceInfo.installType,
-          hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
-          깊이: wallConfig?.left ? '프레임(18mm)' : '엔드패널(전체깊이-18mm)',
-          위치: wallConfig?.left ? '프레임위치' : '엔드패널위치'
-        });
+        // 일반 구간 (단내림이 아닌 경우에만 렌더링)
+        // 단내림 구간에서는 이미 위에서 return했으므로 여기 도달하지 않음
+        // 하지만 명시적으로 체크하여 중복 방지
+        if (!(hasDroppedCeiling && isLeftDropped)) {
+          console.log('🔍 왼쪽 엔드패널 렌더링 디버그:', {
+            frameThicknessLeft: frameThickness.left,
+            wallConfigLeft: wallConfig?.left,
+            surroundType: spaceInfo.surroundType,
+            installType: spaceInfo.installType,
+            hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
+            깊이: wallConfig?.left ? '프레임(18mm)' : '엔드패널(전체깊이-18mm)',
+            위치: wallConfig?.left ? '프레임위치' : '엔드패널위치'
+          });
 
-        // 렌더링 카운터 증가
-        if (typeof window !== 'undefined' && window.renderCounter) {
-          if (!wallConfig?.left) {
-            window.renderCounter.leftEndPanel++;
-            console.log('🚨🚨🚨 [일반] 왼쪽 엔드패널 렌더링!', window.renderCounter.leftEndPanel, '번째');
-          } else {
-            window.renderCounter.leftFrame++;
-            console.log('🚨🚨🚨 [일반] 왼쪽 프레임 렌더링!', window.renderCounter.leftFrame, '번째');
+          // 렌더링 카운터 증가
+          if (typeof window !== 'undefined' && window.renderCounter) {
+            if (!wallConfig?.left) {
+              window.renderCounter.leftEndPanel++;
+              console.log('🚨🚨🚨 [일반] 왼쪽 엔드패널 렌더링!', window.renderCounter.leftEndPanel, '번째');
+            } else {
+              window.renderCounter.leftFrame++;
+              console.log('🚨🚨🚨 [일반] 왼쪽 프레임 렌더링!', window.renderCounter.leftFrame, '번째');
+            }
           }
         }
 
-        return (
+        return (!(hasDroppedCeiling && isLeftDropped) ? (
           <BoxWithEdges
             isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
             args={[
@@ -1947,10 +1951,9 @@ const Room: React.FC<RoomProps> = ({
             ]}
             material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
-          
-          shadowEnabled={shadowEnabled}
-        />
-        );
+            shadowEnabled={shadowEnabled}
+          />
+        ) : null);
       })()}
       
       
@@ -2099,18 +2102,22 @@ const Room: React.FC<RoomProps> = ({
         }
 
         // 일반 구간 (단내림이 아닌 경우에만 렌더링)
-        // 렌더링 카운터 증가
-        if (typeof window !== 'undefined' && window.renderCounter) {
-          if (!wallConfig?.right) {
-            window.renderCounter.rightEndPanel++;
-            console.log('🚨🚨🚨 [일반] 오른쪽 엔드패널 렌더링!', window.renderCounter.rightEndPanel, '번째');
-          } else {
-            window.renderCounter.rightFrame++;
-            console.log('🚨🚨🚨 [일반] 오른쪽 프레임 렌더링!', window.renderCounter.rightFrame, '번째');
+        // 단내림 구간에서는 이미 위에서 return했으므로 여기 도달하지 않음
+        // 하지만 명시적으로 체크하여 중복 방지
+        if (!(hasDroppedCeiling && isRightDropped)) {
+          // 렌더링 카운터 증가
+          if (typeof window !== 'undefined' && window.renderCounter) {
+            if (!wallConfig?.right) {
+              window.renderCounter.rightEndPanel++;
+              console.log('🚨🚨🚨 [일반] 오른쪽 엔드패널 렌더링!', window.renderCounter.rightEndPanel, '번째');
+            } else {
+              window.renderCounter.rightFrame++;
+              console.log('🚨🚨🚨 [일반] 오른쪽 프레임 렌더링!', window.renderCounter.rightFrame, '번째');
+            }
           }
         }
 
-        return (
+        return (!(hasDroppedCeiling && isRightDropped) ? (
           <BoxWithEdges
             isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
             args={[
@@ -2141,10 +2148,9 @@ const Room: React.FC<RoomProps> = ({
             ]}
             material={rightFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
             renderMode={renderMode}
-          
-          shadowEnabled={shadowEnabled}
-        />
-        );
+            shadowEnabled={shadowEnabled}
+          />
+        ) : null);
       })()}
       
       
