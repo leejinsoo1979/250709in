@@ -586,22 +586,24 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
               {/* 도어 분할선 - 중간판(하부섹션 상판/상부섹션 바닥판) 위치에 표시 */}
               {(() => {
-                // 중간판 Y 위치 계산 (가구 본체 렌더링과 동일한 로직)
-                const sectionHeights = getSectionHeights();
-                const lowerSectionHeight = sectionHeights[0];
+                // 도어 좌표계 기준으로 중간판 위치 계산
+                const tallCabinetFurnitureHeight = moduleData.dimensions.height || 2000;
+                const lowerSectionHeightMm = 1000; // 하부 섹션 고정 높이 (mm)
 
-                let accumulatedY = -height/2 + basicThickness;
-                const sectionCenterY = accumulatedY + lowerSectionHeight / 2 - basicThickness;
+                // 가구 하단 (도어 좌표계)
+                const furnitureBottomMm = -tallCabinetFurnitureHeight / 2;
 
-                // 중간판 Y 위치 = 상부 섹션 바닥판 중심 (하부/상부 섹션 경계)
-                const middlePanelY = sectionCenterY + lowerSectionHeight/2 + basicThickness/2;
+                // 중간판 위치 = 가구 하단 + 하부섹션높이 (하부 섹션 상단 = 상부 섹션 하단)
+                const middlePanelYMm = furnitureBottomMm + lowerSectionHeightMm;
+                const middlePanelY = mmToThreeUnits(middlePanelYMm);
 
-                console.log('🚪📏 도어 분할선 위치 (중간판 기준):', {
-                  sectionCenterY,
-                  lowerSectionHeight,
+                console.log('🚪📏 도어 분할선 위치 (도어 좌표계 기준):', {
+                  tallCabinetFurnitureHeight,
+                  furnitureBottomMm,
+                  lowerSectionHeightMm,
+                  middlePanelYMm,
                   middlePanelY,
-                  middlePanelY_mm: middlePanelY / 0.01,
-                  설명: '중간판(상부섹션 바닥판) 중심'
+                  설명: '가구 하단 + 하부섹션높이 = 중간판 위치'
                 });
 
                 // 도어 너비와 깊이
