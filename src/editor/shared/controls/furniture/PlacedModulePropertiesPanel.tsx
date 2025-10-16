@@ -1203,7 +1203,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <div className={styles.depthInputWrapper}>
                 <div className={styles.inputWithUnit}>
                   <input
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     value={widthInputValue}
                     onChange={(e) => handleWidthInputChange(e.target.value)}
                     onBlur={handleWidthInputBlur}
@@ -1237,7 +1238,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>하부 섹션</label>
                   <div className={styles.inputWithUnit}>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={lowerHeightInput}
                       onChange={(e) => handleLowerHeightChange(e.target.value)}
                       onFocus={() => useUIStore.getState().setHighlightedSection(`${currentPlacedModule?.id}-0`)}
@@ -1263,7 +1265,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   <label style={{ display: 'block', marginBottom: '4px', fontSize: '12px', color: '#666' }}>상부 섹션</label>
                   <div className={styles.inputWithUnit}>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       value={upperHeightInput}
                       onChange={(e) => handleUpperHeightChange(e.target.value)}
                       onFocus={() => useUIStore.getState().setHighlightedSection(`${currentPlacedModule?.id}-1`)}
@@ -1294,7 +1297,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             <div className={styles.depthInputWrapper}>
               <div className={styles.inputWithUnit}>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   value={depthInputValue}
                   onChange={(e) => handleDepthInputChange(e.target.value)}
                   onBlur={handleDepthInputBlur}
