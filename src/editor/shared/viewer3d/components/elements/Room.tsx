@@ -1820,12 +1820,13 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
-              {/* 단내림 영역 프레임 (단내림 높이에 맞춤) */}
+              {/* 단내림 영역 프레임/엔드패널 */}
               <BoxWithEdges
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.left,
-                  droppedHeight, // 단내림 구간 높이
+                  // 서라운드 엔드패널: 전체 높이, 노서라운드/프레임: 단내림되지 않은 높이
+                  (spaceInfo.surroundType === 'surround' && !wallConfig?.left) ? height : droppedHeight,
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left
@@ -1838,7 +1839,8 @@ const Room: React.FC<RoomProps> = ({
                 ]}
                 position={[
                   xOffset + frameThickness.left/2,
-                  droppedCenterY, // 단내림 구간 중심
+                  // 서라운드 엔드패널: 전체 높이 중심, 노서라운드/프레임: 단내림 구간 중심
+                  (spaceInfo.surroundType === 'surround' && !wallConfig?.left) ? (panelStartY + height/2) : droppedCenterY,
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left
@@ -1853,7 +1855,8 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
-              {/* 상부 영역 프레임 (천장까지) */}
+              {/* 상부 영역 프레임 (천장까지) - 서라운드 엔드패널은 이미 전체 높이이므로 생략 */}
+              {!(spaceInfo.surroundType === 'surround' && !wallConfig?.left) && (
               <BoxWithEdges
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                 args={[
@@ -1886,6 +1889,7 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
+              )}
             </>
           );
         }
@@ -2018,12 +2022,13 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
-              {/* 단내림 영역 프레임 (단내림 높이에 맞춤) */}
+              {/* 단내림 영역 프레임/엔드패널 */}
               <BoxWithEdges
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.right,
-                  droppedHeight, // 단내림 구간 높이
+                  // 서라운드 엔드패널: 전체 높이, 노서라운드/프레임: 단내림되지 않은 높이
+                  (spaceInfo.surroundType === 'surround' && !wallConfig?.right) ? height : droppedHeight,
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
@@ -2036,7 +2041,8 @@ const Room: React.FC<RoomProps> = ({
                 ]}
                 position={[
                   xOffset + width - frameThickness.right/2,
-                  droppedCenterY, // 단내림 구간 중심
+                  // 서라운드 엔드패널: 전체 높이 중심, 노서라운드/프레임: 단내림 구간 중심
+                  (spaceInfo.surroundType === 'surround' && !wallConfig?.right) ? (panelStartY + height/2) : droppedCenterY,
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
@@ -2051,7 +2057,8 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
-              {/* 상부 영역 프레임 (천장까지) */}
+              {/* 상부 영역 프레임 (천장까지) - 서라운드 엔드패널은 이미 전체 높이이므로 생략 */}
+              {!(spaceInfo.surroundType === 'surround' && !wallConfig?.right) && (
               <BoxWithEdges
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
@@ -2084,6 +2091,7 @@ const Room: React.FC<RoomProps> = ({
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
               />
+              )}
             </>
           );
         }
