@@ -435,60 +435,34 @@ const Header: React.FC<HeaderProps> = ({
             )}
           </div>
 
-          {/* 그림자 토글 버튼 - ON/OFF 형태 */}
+          {/* 그림자 토글 스위치 */}
           <div
             onClick={() => setShadowEnabled(!shadowEnabled)}
             style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              background: 'transparent',
-              border: `2px solid ${colors.primary}`,
-              color: colors.primary,
+              position: 'relative',
+              width: '44px',
+              height: '24px',
+              backgroundColor: shadowEnabled ? colors.primary : 'rgba(128,128,128,0.3)',
+              borderRadius: '12px',
+              cursor: 'pointer',
+              transition: 'background-color 0.3s ease',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              padding: '2px'
             }}
             title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-            }}
           >
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {shadowEnabled ? (
-                // 그림자 ON 아이콘
-                <>
-                  <circle cx="12" cy="12" r="5" />
-                  <line x1="12" y1="1" x2="12" y2="3" />
-                  <line x1="12" y1="21" x2="12" y2="23" />
-                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                  <line x1="1" y1="12" x2="3" y2="12" />
-                  <line x1="21" y1="12" x2="23" y2="12" />
-                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                </>
-              ) : (
-                // 그림자 OFF 아이콘 (빛 발산 없음)
-                <>
-                  <circle cx="12" cy="12" r="5" />
-                </>
-              )}
-            </svg>
+            <div
+              style={{
+                width: '20px',
+                height: '20px',
+                backgroundColor: '#ffffff',
+                borderRadius: '50%',
+                transition: 'transform 0.3s ease',
+                transform: shadowEnabled ? 'translateX(20px)' : 'translateX(0)',
+                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+              }}
+            />
           </div>
         </div>
 
