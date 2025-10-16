@@ -641,43 +641,38 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: '하부장 상단과 일치, 아래로 40mm 확장, 10mm 아래로 조정'
     });
   } else {
-    // 키큰장의 경우 기존 로직 유지
-    // 
-    // 핵심 원리: Three.js 좌표계에서 Y=0은 바닥 기준
-    // 문의 기본 위치는 Y=0 (바닥)에서 시작하여 위로 올라감
-    // 
-    // 조정 로직:
-    // 1. 바닥재가 있으면 바닥재 높이의 절반만큼 위로 (바닥재 중심에서 시작)
-    // 2. 상단 프레임과의 간격을 위해 상단 프레임 높이의 절반만큼 위로
-    // 3. 받침대가 있으면 받침대 높이의 절반만큼 아래로 (받침대 공간 확보)
+    // 키큰장 도어 Y 위치 계산
+    // Y=0은 Three.js 바닥 기준
     //
-    if (spaceInfo.baseConfig?.type === 'floor') {
-      // 받침대 있음: 상단 프레임 높이의 절반만큼 위로 + 받침대 높이의 절반만큼 아래로 조정
-      const topFrameHeight = spaceInfo.frameSize?.top || 50;
-      const baseFrameHeight = spaceInfo.baseConfig.height || 65;
-      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-      doorYPosition = floorHeight > 0
-        ? mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2
-        : mmToThreeUnits(topFrameHeight) / 2 - mmToThreeUnits(baseFrameHeight) / 2;
+    // 계산 로직:
+    // 1. 가구 하단 = 받침대 + 바닥재
+    // 2. 가구 중심 = 가구 하단 + 가구 높이/2
+    // 3. 도어 중심 = 가구 중심 - (doorBottomGap - doorTopGap)/2
+    //
+    const baseFrameHeight = spaceInfo.baseConfig?.height || 65;
+    const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
 
-    } else {
-      // 받침대 없음: 상단 프레임 높이의 절반만큼 위로 조정
-      const topFrameHeight = spaceInfo.frameSize?.top || 50;
-      const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-      doorYPosition = floorHeight > 0 ? mmToThreeUnits(topFrameHeight) / 2 : mmToThreeUnits(topFrameHeight) / 2;
-    }
+    // 가구 하단 위치 (바닥에서)
+    const furnitureBottom = baseFrameHeight + floorHeight;
 
-    // 도어 상하 확장에 따른 Y 위치 조정
-    // 하단 확장이 상단 확장보다 크면 도어 중심이 아래로 이동
+    // 가구 중심 위치
+    const furnitureCenter = furnitureBottom + (furnitureHeight / 2);
+
+    // 도어 중심 = 가구 중심 - (하단확장 - 상단확장)/2
     const doorCenterOffset = (doorBottomGap - doorTopGap) / 2;
-    doorYPosition = doorYPosition - mmToThreeUnits(doorCenterOffset);
+    doorYPosition = mmToThreeUnits(furnitureCenter - doorCenterOffset);
 
-    console.log('🚪📍 도어 Y 위치 (확장 반영):', {
+    console.log('🚪📍 도어 Y 위치 (가구 기준):', {
+      baseFrameHeight,
+      floorHeight,
+      furnitureBottom,
+      furnitureHeight,
+      furnitureCenter,
       doorTopGap,
       doorBottomGap,
       doorCenterOffset,
       doorYPosition,
-      설명: `하단확장(${doorBottomGap}mm) > 상단확장(${doorTopGap}mm) → 중심 ${doorCenterOffset}mm 아래로 이동`
+      설명: `가구하단(${furnitureBottom}mm) + 가구높이/2(${furnitureHeight/2}mm) = 가구중심(${furnitureCenter}mm) - 확장차이/2(${doorCenterOffset}mm) = 도어중심`
     });
     
     // 플로팅 배치 시 Y 위치 조정 - 상단 고정, 하단만 올라가도록
