@@ -41,7 +41,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   doorTopGap = 5,
   doorBottomGap = 45,
   lowerSectionDepth,
-  upperSectionDepth
+  upperSectionDepth,
+  doorSplit,
+  upperDoorTopGap,
+  upperDoorBottomGap,
+  lowerDoorTopGap,
+  lowerDoorBottomGap
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -162,27 +167,19 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-${index + 1}`;
 
-                  // 각 섹션의 깊이 가져오기
-                  const lowerDepth = sectionDepths[0] || depth; // 하부 섹션
-                  const upperDepth = sectionDepths[1] || depth; // 상부 섹션
+                  // 중간판은 항상 원래 깊이 사용 (섹션 깊이와 무관)
+                  // 백패널 방향으로 26mm 확장
+                  const extendedDepth = depth - basicThickness + mmToThreeUnits(26);
 
-                  // 백패널 방향으로 26mm 확장 - 각 섹션 깊이 기준
-                  const lowerExtendedDepth = lowerDepth - basicThickness + mmToThreeUnits(26);
-                  const upperExtendedDepth = upperDepth - basicThickness + mmToThreeUnits(26);
-
-                  // Z 위치: 깊이가 줄어들면 뒤에서 앞으로 이동
-                  const lowerDepthDiff = depth - lowerDepth;
-                  const upperDepthDiff = depth - upperDepth;
-
-                  const lowerZOffset = -lowerDepthDiff / 2 + basicThickness/2 + shelfZOffset - mmToThreeUnits(13);
-                  const upperZOffset = -upperDepthDiff / 2 + basicThickness/2 + shelfZOffset - mmToThreeUnits(13);
+                  // Z 위치: 항상 기본 위치 (섹션 깊이 변경과 무관)
+                  const zOffset = basicThickness/2 + shelfZOffset - mmToThreeUnits(13);
 
                   return (
                     <>
-                      {/* 하부 섹션 상판 - 하부 섹션 깊이 적용 */}
+                      {/* 하부 섹션 상판 - 원래 깊이 사용 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, lowerExtendedDepth]}
-                        position={[0, lowerTopPanelY, lowerZOffset]}
+                        args={[innerWidth, basicThickness, extendedDepth]}
+                        position={[0, lowerTopPanelY, zOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -190,10 +187,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isHighlighted={isLowerHighlighted}
                       />
 
-                      {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 */}
+                      {/* 상부 섹션 바닥판 - 원래 깊이 사용 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, upperExtendedDepth]}
-                        position={[0, middlePanelY, upperZOffset]}
+                        args={[innerWidth, basicThickness, extendedDepth]}
+                        position={[0, middlePanelY, zOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -514,24 +511,70 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         </group>
       )}
       
-      {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) - 단, 기둥 A(deep) 침범 시에는 FurnitureItem에서 별도 렌더링 */}
-      {hasDoor && spaceInfo && 
+      {/* 도어 렌더링 - 병합/분할 모드에 따라 다르게 렌더링 */}
+      {hasDoor && spaceInfo &&
        !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (
-        <DoorModule
-          moduleWidth={doorWidth || moduleData.dimensions.width}
-          moduleDepth={baseFurniture.actualDepthMm}
-          hingePosition={hingePosition}
-          spaceInfo={spaceInfo}
-          color={baseFurniture.doorColor}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          moduleData={moduleData}
-          originalSlotWidth={originalSlotWidth}
-          slotCenterX={slotCenterX || 0}
-          slotIndex={slotIndex}
-          doorTopGap={doorTopGap}
-          doorBottomGap={doorBottomGap}
-        />
+        <>
+          {!doorSplit ? (
+            // 병합 모드: 하나의 통합 도어
+            <DoorModule
+              moduleWidth={doorWidth || moduleData.dimensions.width}
+              moduleDepth={baseFurniture.actualDepthMm}
+              hingePosition={hingePosition}
+              spaceInfo={spaceInfo}
+              color={baseFurniture.doorColor}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              moduleData={moduleData}
+              originalSlotWidth={originalSlotWidth}
+              slotCenterX={slotCenterX || 0}
+              slotIndex={slotIndex}
+              doorTopGap={doorTopGap}
+              doorBottomGap={doorBottomGap}
+            />
+          ) : (
+            // 분할 모드: 상부/하부 섹션별 도어
+            <>
+              {/* 상부 섹션 도어 */}
+              <DoorModule
+                moduleWidth={doorWidth || moduleData.dimensions.width}
+                moduleDepth={baseFurniture.actualDepthMm}
+                hingePosition={hingePosition}
+                spaceInfo={spaceInfo}
+                color={baseFurniture.doorColor}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                moduleData={moduleData}
+                originalSlotWidth={originalSlotWidth}
+                slotCenterX={slotCenterX || 0}
+                slotIndex={slotIndex}
+                doorTopGap={upperDoorTopGap ?? 5}
+                doorBottomGap={upperDoorBottomGap ?? 0}
+                sectionIndex={1}
+                totalSections={2}
+              />
+
+              {/* 하부 섹션 도어 */}
+              <DoorModule
+                moduleWidth={doorWidth || moduleData.dimensions.width}
+                moduleDepth={baseFurniture.actualDepthMm}
+                hingePosition={hingePosition}
+                spaceInfo={spaceInfo}
+                color={baseFurniture.doorColor}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                moduleData={moduleData}
+                originalSlotWidth={originalSlotWidth}
+                slotCenterX={slotCenterX || 0}
+                slotIndex={slotIndex}
+                doorTopGap={lowerDoorTopGap ?? 0}
+                doorBottomGap={lowerDoorBottomGap ?? 45}
+                sectionIndex={0}
+                totalSections={2}
+              />
+            </>
+          )}
+        </>
       )}
 
       {/* 조절발통 (네 모서리) - showFurniture가 true일 때만 렌더링 */}
