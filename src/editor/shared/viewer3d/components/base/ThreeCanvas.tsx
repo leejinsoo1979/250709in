@@ -84,6 +84,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const [mounted, setMounted] = useState(false);
   const [canvasKey, setCanvasKey] = useState(() => `canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const [canvasReady, setCanvasReady] = useState(false);
+
+  // shadowEnabled 변경 시 Canvas 재생성을 위한 key 업데이트
+  useEffect(() => {
+    if (viewMode === '3D') {
+      setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    }
+  }, [shadowEnabled, viewMode]);
+
   // isFurnitureDragging 상태는 UIStore에서 가져옴
   
   // 캔버스 참조 저장
