@@ -54,6 +54,10 @@ export interface PlacedModule {
   
   // Column C 듀얼 배치 관련
   subSlotPosition?: 'left' | 'right'; // Column C에서 서브슬롯 위치
+
+  // 섹션별 깊이 설정 (2섹션 가구용)
+  lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
+  upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
 }
 
 // 네이티브 드래그앤드롭용 현재 드래그 데이터 타입

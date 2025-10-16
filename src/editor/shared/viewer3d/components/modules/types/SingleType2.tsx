@@ -39,7 +39,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   furnitureId,
   placedFurnitureId,
   doorTopGap = 5,
-  doorBottomGap = 45
+  doorBottomGap = 45,
+  lowerSectionDepth,
+  upperSectionDepth
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -77,6 +79,15 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   const { dimensionColor, baseFontSize } = useDimensionColor();
   const { theme } = useTheme();
 
+  // 섹션별 깊이 계산 (기본값: 표준 깊이)
+  const sectionDepths = React.useMemo(() => {
+    const defaultDepth = depth;
+    return [
+      lowerSectionDepth ? mmToThreeUnits(lowerSectionDepth) : defaultDepth, // 하부 섹션
+      upperSectionDepth ? mmToThreeUnits(upperSectionDepth) : defaultDepth  // 상부 섹션
+    ];
+  }, [lowerSectionDepth, upperSectionDepth, depth, mmToThreeUnits]);
+
   return (
     <>
       {/* 띄워서 배치 시 간접조명 효과 */}
@@ -100,22 +111,30 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             let accumulatedY = -height/2 + basicThickness;
 
             return getSectionHeights().map((sectionHeight: number, index: number) => {
+              // 현재 섹션의 깊이
+              const currentDepth = sectionDepths[index] || depth;
+
+              // Z축 위치 조정: 깊이가 줄어들면 뒤에서 앞으로 이동
+              // 기본 깊이 대비 차이의 절반만큼 앞으로 이동
+              const depthDiff = depth - currentDepth;
+              const zOffset = -depthDiff / 2; // 음수는 뒤쪽(뒷벽 방향)
+
               // 현재 섹션의 중심 Y 위치
               const sectionCenterY = accumulatedY + sectionHeight / 2 - basicThickness;
 
               // 다음 섹션을 위해 누적
               const currentYPosition = accumulatedY;
               accumulatedY += sectionHeight;
-            
+
             // 섹션별 강조 확인
               const isSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
 
             return (
               <React.Fragment key={`side-panels-${index}`}>
-                {/* 왼쪽 측면 판재 - 섹션별로 분할 */}
+                {/* 왼쪽 측면 판재 - 섹션별로 분할, 깊이 적용 */}
                 <BoxWithEdges
-                  args={[basicThickness, sectionHeight, depth]}
-                  position={[-width/2 + basicThickness/2, sectionCenterY, 0]}
+                  args={[basicThickness, sectionHeight, currentDepth]}
+                  position={[-width/2 + basicThickness/2, sectionCenterY, zOffset]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
@@ -123,10 +142,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={isSectionHighlighted}
                 />
 
-                {/* 오른쪽 측면 판재 - 섹션별로 분할 */}
+                {/* 오른쪽 측면 판재 - 섹션별로 분할, 깊이 적용 */}
                 <BoxWithEdges
-                  args={[basicThickness, sectionHeight, depth]}
-                  position={[width/2 - basicThickness/2, sectionCenterY, 0]}
+                  args={[basicThickness, sectionHeight, currentDepth]}
+                  position={[width/2 - basicThickness/2, sectionCenterY, zOffset]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
@@ -139,31 +158,31 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   const middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2;
                   const lowerTopPanelY = middlePanelY - basicThickness; // 하부 섹션 상판 위치
 
-                  console.log('🟡 SingleType2 중간패널 렌더링:', {
-                    index,
-                    middlePanelY,
-                    lowerTopPanelY,
-                    sectionCenterY,
-                    sectionHeight,
-                    totalSections: getSectionHeights().length
-                  });
-
                   // 중간판 강조: 하부 섹션 상판은 index 섹션에 속함
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-${index + 1}`;
 
-                  // 백패널 방향으로 26mm 확장
-                  const originalDepth = adjustedDepthForShelves - basicThickness;
-                  const extendedDepth = originalDepth + mmToThreeUnits(26);
-                  // 중심이 뒤로 이동 (음의 Z 방향으로 26mm의 절반 = -13mm)
-                  const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13);
+                  // 각 섹션의 깊이 가져오기
+                  const lowerDepth = sectionDepths[0] || depth; // 하부 섹션
+                  const upperDepth = sectionDepths[1] || depth; // 상부 섹션
+
+                  // 백패널 방향으로 26mm 확장 - 각 섹션 깊이 기준
+                  const lowerExtendedDepth = lowerDepth - basicThickness + mmToThreeUnits(26);
+                  const upperExtendedDepth = upperDepth - basicThickness + mmToThreeUnits(26);
+
+                  // Z 위치: 깊이가 줄어들면 뒤에서 앞으로 이동
+                  const lowerDepthDiff = depth - lowerDepth;
+                  const upperDepthDiff = depth - upperDepth;
+
+                  const lowerZOffset = -lowerDepthDiff / 2 + basicThickness/2 + shelfZOffset - mmToThreeUnits(13);
+                  const upperZOffset = -upperDepthDiff / 2 + basicThickness/2 + shelfZOffset - mmToThreeUnits(13);
 
                   return (
                     <>
-                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 확장 */}
+                      {/* 하부 섹션 상판 - 하부 섹션 깊이 적용 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, extendedDepth]}
-                        position={[0, lowerTopPanelY, extendedZPosition]}
+                        args={[innerWidth, basicThickness, lowerExtendedDepth]}
+                        position={[0, lowerTopPanelY, lowerZOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -171,10 +190,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isHighlighted={isLowerHighlighted}
                       />
 
-                      {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 확장 */}
+                      {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, extendedDepth]}
-                        position={[0, middlePanelY, extendedZPosition]}
+                        args={[innerWidth, basicThickness, upperExtendedDepth]}
+                        position={[0, middlePanelY, upperZOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -277,6 +296,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             renderMode={renderMode}
             furnitureId={moduleData.id}
             placedFurnitureId={placedFurnitureId}
+            sectionDepths={sectionDepths}
           />
 
           {/* 옷걸이 봉 렌더링 - hanging 섹션만 */}
@@ -358,17 +378,25 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 console.log('  basicThickness:', basicThickness * 100);
               }
 
+              // 해당 섹션의 깊이 사용
+              const currentSectionDepth = sectionDepths[sectionIndex] || depth;
+              const currentAdjustedDepthForShelves = currentSectionDepth - basicThickness;
+
+              // Z 위치: 깊이 변화에 따른 오프셋
+              const depthDiff = depth - currentSectionDepth;
+              const rodZOffset = -depthDiff / 2;
+
               return (
                 <ClothingRod
                   key={`clothing-rod-${sectionIndex}`}
                   innerWidth={innerWidth}
                   yPosition={rodYPosition}
-                  zPosition={0}
+                  zPosition={rodZOffset}
                   renderMode={renderMode}
                   isDragging={false}
                   isEditMode={isEditMode}
-                  adjustedDepthForShelves={adjustedDepthForShelves}
-                  depth={depth}
+                  adjustedDepthForShelves={currentAdjustedDepthForShelves}
+                  depth={currentSectionDepth}
                 />
               );
             });
@@ -418,12 +446,23 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             const lowerBackPanelY = -height/2 + basicThickness + lowerInnerHeight/2;
             const upperBackPanelY = -height/2 + lowerSectionHeight + basicThickness + upperInnerHeight/2;
 
+            // 각 섹션의 깊이 가져오기
+            const lowerDepth = sectionDepths[0] || depth;
+            const upperDepth = sectionDepths[1] || depth;
+
+            // Z 위치: 각 섹션의 뒤쪽에서 17mm 앞으로
+            const lowerDepthDiff = depth - lowerDepth;
+            const upperDepthDiff = depth - upperDepth;
+
+            const lowerBackPanelZ = -lowerDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) - lowerDepthDiff/2;
+            const upperBackPanelZ = -upperDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) - upperDepthDiff/2;
+
             return (
               <>
-                {/* 하부 섹션 백패널 */}
+                {/* 하부 섹션 백패널 - 하부 섹션 깊이 적용 */}
                 <BoxWithEdges
                   args={[innerWidth + mmToThreeUnits(10), lowerBackPanelHeight, backPanelThickness]}
-                  position={[0, lowerBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+                  position={[0, lowerBackPanelY, lowerBackPanelZ]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
@@ -432,10 +471,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                 />
 
-                {/* 상부 섹션 백패널 */}
+                {/* 상부 섹션 백패널 - 상부 섹션 깊이 적용 */}
                 <BoxWithEdges
                   args={[innerWidth + mmToThreeUnits(10), upperBackPanelHeight, backPanelThickness]}
-                  position={[0, upperBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+                  position={[0, upperBackPanelY, upperBackPanelZ]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}

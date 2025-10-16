@@ -52,6 +52,9 @@ interface SectionsRendererProps {
 
   // 배치된 가구 ID (치수 편집용)
   placedFurnitureId?: string;
+
+  // 섹션별 깊이 배열 (Three.js 단위)
+  sectionDepths?: number[];
 }
 
 /**
@@ -74,7 +77,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   furnitureId,
   isHighlighted = false,
   hideSectionDimensions = false,
-  placedFurnitureId
+  placedFurnitureId,
+  sectionDepths
 }) => {
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);

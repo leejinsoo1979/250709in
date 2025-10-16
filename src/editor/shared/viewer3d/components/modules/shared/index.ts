@@ -40,6 +40,8 @@ export interface FurnitureTypeProps {
   visibleSectionIndex?: number | null; // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
   doorTopGap?: number; // 가구 상단에서 위로의 갭 (mm, 기본값: 5)
   doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 45)
+  lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
+  upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
