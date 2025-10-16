@@ -46,6 +46,8 @@ interface BoxModuleProps {
   placedFurnitureId?: string; // 배치된 가구의 고유 ID (치수 편집용)
   customSections?: SectionConfig[]; // 사용자 정의 섹션 설정
   visibleSectionIndex?: number | null; // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
+  doorTopGap?: number; // 가구 상단에서 위로의 갭 (mm, 기본값: 5)
+  doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 45)
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -89,6 +91,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   placedFurnitureId, // 배치된 가구 ID
   customSections, // 사용자 정의 섹션 설정
   visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
+  doorTopGap = 5, // 가구 상단에서 위로의 갭 (mm)
+  doorBottomGap = 45, // 가구 하단에서 아래로의 갭 (mm)
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
@@ -157,6 +161,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           onPointerOut={onPointerOut}
           onDoubleClick={onDoubleClick}
         furnitureId={furnitureId}
+        doorTopGap={doorTopGap} // 천장에서 도어 상단까지의 갭
+        doorBottomGap={doorBottomGap} // 바닥에서 도어 하단까지의 갭
         />
       </>
     );
@@ -196,6 +202,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
         furnitureId={furnitureId}
+        doorTopGap={doorTopGap} // 천장에서 도어 상단까지의 갭
+        doorBottomGap={doorBottomGap} // 바닥에서 도어 하단까지의 갭
       />
       </>
     );
@@ -325,6 +333,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture}
         furnitureId={furnitureId} // 가구 본체 표시 여부
+        doorTopGap={doorTopGap} // 천장에서 도어 상단까지의 갭
+        doorBottomGap={doorBottomGap} // 바닥에서 도어 하단까지의 갭
       />
       </>
     );

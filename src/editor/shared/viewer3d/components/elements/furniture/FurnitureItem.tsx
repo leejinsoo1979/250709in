@@ -1762,6 +1762,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   customSections={placedModule.customSections} // 사용자 정의 섹션 설정
                   showFurniture={showFurniture} // 가구 본체 표시 여부
                   visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
+                  doorTopGap={placedModule.doorTopGap} // 천장에서 도어 상단까지의 갭
+                  doorBottomGap={placedModule.doorBottomGap} // 바닥에서 도어 하단까지의 갭
                 />
               );
             })()}

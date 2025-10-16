@@ -31,8 +31,8 @@ export interface PlacedModule {
   hasDoor?: boolean; // 실제 도어 설치 여부 (기본값: false - 도어 없음)
   hasBackPanel?: boolean; // 가구 내부 백패널 유무 (기본값: true)
   hasGapBackPanel?: boolean; // 상하부장 사이 갭 백패널 유무 (기본값: false)
-  doorTopGap?: number; // 천장에서 도어 상단까지의 갭 (mm, 기본값: 5)
-  doorBottomGap?: number; // 바닥에서 도어 하단까지의 갭 (mm, 기본값: 25)
+  doorTopGap?: number; // 가구 상단에서 위로의 갭 (mm, 기본값: 5)
+  doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 45)
   
   // 사용자 정의 속성들
   customDepth?: number; // 사용자가 선택한 깊이 (mm)

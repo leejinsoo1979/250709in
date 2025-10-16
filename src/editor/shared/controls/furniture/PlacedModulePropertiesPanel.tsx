@@ -516,12 +516,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hingePosition, setHingePosition] = useState<'left' | 'right'>('right');
   const [hasDoor, setHasDoor] = useState<boolean>(false);
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
-  const [doorTopGap, setDoorTopGap] = useState<number>(5); // 천장→도어상단 갭 (기본 5mm)
-  const [doorBottomGap, setDoorBottomGap] = useState<number>(25); // 바닥→도어하단 갭 (기본 25mm)
+  const [doorTopGap, setDoorTopGap] = useState<number>(5); // 가구 상단에서 위로 갭 (기본 5mm)
+  const [doorBottomGap, setDoorBottomGap] = useState<number>(45); // 가구 하단에서 아래로 갭 (기본 45mm)
   const [doorTopGapInput, setDoorTopGapInput] = useState<string>('5');
-  const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>('25');
+  const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>('45');
   const [originalDoorTopGap, setOriginalDoorTopGap] = useState<number>(5); // 원래 값 저장
-  const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(25); // 원래 값 저장
+  const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(45); // 원래 값 저장
   const [showWarning, setShowWarning] = useState(false);
 
   // 섹션 높이 상태
@@ -696,7 +696,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
       // 도어 상하 갭 초기값 설정 (입력 중 방해 방지)
       const initialTopGap = currentPlacedModule.doorTopGap ?? 5;
-      const initialBottomGap = currentPlacedModule.doorBottomGap ?? 25;
+      const initialBottomGap = currentPlacedModule.doorBottomGap ?? 45;
       if (doorTopGap !== initialTopGap) {
         setDoorTopGap(initialTopGap);
         setDoorTopGapInput(initialTopGap.toString());
@@ -1376,9 +1376,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>도어 상하 이격거리</h5>
               <div className={styles.doorGapContainer}>
-                {/* 좌측: 천장→도어상단 갭 */}
+                {/* 좌측: 가구 상단에서 위로 갭 */}
                 <div className={styles.doorGapField}>
-                  <label className={styles.doorGapLabel}>천장 → 도어상단</label>
+                  <label className={styles.doorGapLabel}>가구상단 ↑</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -1400,9 +1400,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 우측: 바닥→도어하단 갭 */}
+                {/* 우측: 가구 하단에서 아래로 갭 */}
                 <div className={styles.doorGapField}>
-                  <label className={styles.doorGapLabel}>바닥 → 도어하단</label>
+                  <label className={styles.doorGapLabel}>가구하단 ↓</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -1412,7 +1412,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       onBlur={handleDoorBottomGapBlur}
                       onKeyDown={handleDoorBottomGapKeyDown}
                       className={`${styles.depthInput} furniture-depth-input`}
-                      placeholder="25"
+                      placeholder="45"
                       style={{
                         color: '#000000',
                         backgroundColor: '#ffffff',

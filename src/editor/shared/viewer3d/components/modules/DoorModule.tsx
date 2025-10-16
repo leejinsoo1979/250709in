@@ -122,6 +122,8 @@ interface DoorModuleProps {
   slotWidths?: number[]; // 듀얼 가구의 경우 개별 슬롯 너비 배열 [left, right]
   slotIndex?: number; // 슬롯 인덱스 (노서라운드 모드에서 엔드패널 확장 판단용)
   floatHeight?: number; // 플로팅 높이 (mm) - 띄워서 배치 시 도어 높이 조정용
+  doorTopGap?: number; // 가구 상단에서 위로의 갭 (mm, 기본값: 5)
+  doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 45)
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -138,7 +140,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   isEditMode = false,
   slotWidths,
   slotIndex,
-  floatHeight = 0 // 플로팅 높이 기본값 0
+  floatHeight = 0, // 플로팅 높이 기본값 0
+  doorTopGap = 5, // 가구 상단에서 위로 갭 기본값 5mm
+  doorBottomGap = 45 // 가구 하단에서 아래로 갭 기본값 45mm
 }) => {
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
@@ -498,9 +502,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: '하부장 상단과 일치, 아래로 60mm 확장'
     });
   } else {
-    // 키큰장의 경우 기존 로직 유지 (전체 공간 높이 - 바닥재 높이)
+    // 키큰장의 경우: 가구 높이 기준으로 상단에서 위로, 하단에서 아래로 갭 적용
     let fullSpaceHeight = spaceInfo.height;
-    
+
     // 단내림 구간인 경우 높이 조정
     if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
       const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
@@ -512,26 +516,40 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         zone: (spaceInfo as any).zone
       });
     }
-    
+
     const floorHeight = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-    actualDoorHeight = fullSpaceHeight - floorHeight;
-    
+    // 가구 높이 계산 (천장 높이 - 바닥재 높이)
+    const furnitureHeight = fullSpaceHeight - floorHeight;
+
+    // 도어 높이 = 가구 높이 - 상단 갭 - 하단 갭
+    // 상단 갭: 가구 상단에서 위로
+    // 하단 갭: 가구 하단에서 아래로
+    actualDoorHeight = furnitureHeight - doorTopGap - doorBottomGap;
+
     // 플로팅 배치 시 키큰장 도어 높이 조정
     if (floatHeight > 0) {
       actualDoorHeight = actualDoorHeight - floatHeight;
       console.log('🚪📏 플로팅 배치 도어 높이 조정:', {
-        원래높이: fullSpaceHeight - floorHeight,
+        원래높이: furnitureHeight - doorTopGap - doorBottomGap,
         플로팅높이: floatHeight,
         조정된높이: actualDoorHeight,
         설명: '플로팅 높이만큼 도어 높이 감소'
       });
     }
+
+    console.log('🚪📏 키큰장 도어 높이 (상하 갭 적용):', {
+      fullSpaceHeight,
+      floorHeight,
+      furnitureHeight,
+      doorTopGap,
+      doorBottomGap,
+      actualDoorHeight,
+      설명: `가구 상단↑ ${doorTopGap}mm + 가구 하단↓ ${doorBottomGap}mm 적용`
+    });
   }
   
-  // 상부장은 이미 확장 높이를 계산했으므로 추가로 빼지 않음
-  // 하부장도 전체 높이를 사용하므로 빼지 않음
-  const doorHeightAdjustment = (isUpperCabinet || isLowerCabinet) ? 0 : 30; // 상부장/하부장이 아닌 경우만 30mm 줄임
-  const doorHeight = mmToThreeUnits(actualDoorHeight - doorHeightAdjustment);
+  // 도어 높이에 추가 조정 없음 (사용자 입력 갭이 완전히 제어)
+  const doorHeight = mmToThreeUnits(actualDoorHeight);
   
   // === 문 Y 위치 계산 ===
   let doorYPosition: number;

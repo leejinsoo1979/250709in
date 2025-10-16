@@ -37,7 +37,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   slotInfo,
   showFurniture = true,
   furnitureId,
-  placedFurnitureId
+  placedFurnitureId,
+  doorTopGap = 5,
+  doorBottomGap = 45
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -488,6 +490,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           originalSlotWidth={originalSlotWidth}
           slotCenterX={slotCenterX || 0}
           slotIndex={slotIndex}
+          doorTopGap={doorTopGap}
+          doorBottomGap={doorBottomGap}
         />
       )}
 
