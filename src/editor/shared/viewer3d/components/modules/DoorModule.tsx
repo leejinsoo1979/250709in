@@ -932,18 +932,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       leftDoorWidth = slotWidths[0] - doorGap;
       rightDoorWidth = slotWidths[1] - doorGap;
     } else {
-      // fallback: indexing에서 계산된 값 사용
-      totalWidth = indexing.columnWidth * 2;
-      leftDoorWidth = indexing.columnWidth - doorGap;
-      rightDoorWidth = indexing.columnWidth - doorGap;
+      // fallback: effectiveColumnWidth 사용 (단내림 구간 고려)
+      totalWidth = effectiveColumnWidth * 2;
+      leftDoorWidth = effectiveColumnWidth - doorGap;
+      rightDoorWidth = effectiveColumnWidth - doorGap;
     }
     
     const leftDoorWidthUnits = mmToThreeUnits(leftDoorWidth);
     const rightDoorWidthUnits = mmToThreeUnits(rightDoorWidth);
     
     // 도어 위치 계산 (개별 슬롯 너비 기반)
-    const leftSlotWidth = slotWidths?.[0] || indexing.columnWidth;
-    const rightSlotWidth = slotWidths?.[1] || indexing.columnWidth;
+    const leftSlotWidth = slotWidths?.[0] || effectiveColumnWidth;
+    const rightSlotWidth = slotWidths?.[1] || effectiveColumnWidth;
     
     const leftSlotCenter = -totalWidth / 2 + leftSlotWidth / 2;  // 왼쪽 슬롯 중심
     const rightSlotCenter = -totalWidth / 2 + leftSlotWidth + rightSlotWidth / 2;  // 오른쪽 슬롯 중심
