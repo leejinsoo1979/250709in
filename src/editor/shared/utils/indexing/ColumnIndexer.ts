@@ -931,17 +931,25 @@ export class ColumnIndexer {
     if (droppedPosition === 'left') {
       // 왼쪽 단내림
       if (spaceInfo.surroundType === 'surround') {
-        // 서라운드: 구간 사이에 프레임 없음, 바로 연결
-        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.left;
+        // 서라운드: 중간 경계면 이격거리 3mm 적용
+        const BOUNDARY_GAP = 3;
+
+        // 단내림구간(좌): 좌측 프레임 빼고, 중간 경계 이격거리는 더하기
+        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.left + BOUNDARY_GAP;
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right;
-        normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결
-        
+
+        // 일반구간(우): 우측 프레임 + 중간 경계 이격거리 빼기
+        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.right - BOUNDARY_GAP;
+        normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결 (단내림 내경에 이미 +3mm 포함)
+
         console.log('🔍 서라운드 왼쪽 단내림 경계 계산:', {
           '단내림 끝': droppedStartX + droppedAreaInternalWidth,
           '메인 시작': normalStartX,
           '갭': normalStartX - (droppedStartX + droppedAreaInternalWidth),
+          '중간경계이격거리': BOUNDARY_GAP,
           '프레임 두께': frameThickness,
+          '단내림 내경': droppedAreaInternalWidth,
+          '메인 내경': normalAreaInternalWidth,
           'spaceInfo.gapConfig': spaceInfo.gapConfig,
           'spaceInfo.wallConfig': spaceInfo.wallConfig,
           'spaceInfo.installType': spaceInfo.installType
@@ -1017,17 +1025,25 @@ export class ColumnIndexer {
     } else {
       // 오른쪽 단내림
       if (spaceInfo.surroundType === 'surround') {
-        // 서라운드: 구간 사이에 프레임 없음, 바로 연결
-        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left;
+        // 서라운드: 중간 경계면 이격거리 3mm 적용
+        const BOUNDARY_GAP = 3;
+
+        // 일반구간: 좌측 프레임 + 중간 경계 이격거리 빼기
+        normalAreaInternalWidth = normalAreaOuterWidth - frameThickness.left - BOUNDARY_GAP;
         normalStartX = internalStartX; // 수정된 internalStartX 사용
-        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.right;
-        droppedStartX = normalStartX + normalAreaInternalWidth; // 갭 없이 바로 연결
-        
+
+        // 단내림구간: 우측 프레임 빼고, 중간 경계 이격거리는 더하기 (일반구간에서 뺀 만큼 확보)
+        droppedAreaInternalWidth = droppedAreaOuterWidth - frameThickness.right + BOUNDARY_GAP;
+        droppedStartX = normalStartX + normalAreaInternalWidth; // 갭 없이 바로 연결 (단내림 내경에 이미 +3mm 포함)
+
         console.log('🔍 서라운드 오른쪽 단내림 경계 계산:', {
           '메인 끝': normalStartX + normalAreaInternalWidth,
           '단내림 시작': droppedStartX,
           '갭': droppedStartX - (normalStartX + normalAreaInternalWidth),
+          '중간경계이격거리': BOUNDARY_GAP,
           '프레임 두께': frameThickness,
+          '메인 내경': normalAreaInternalWidth,
+          '단내림 내경': droppedAreaInternalWidth,
           'spaceInfo.gapConfig': spaceInfo.gapConfig,
           'spaceInfo.wallConfig': spaceInfo.wallConfig,
           'spaceInfo.installType': spaceInfo.installType
