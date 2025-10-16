@@ -2614,8 +2614,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           />
         </group> */}
 
-        {/* 캐비넷이 배치된 경우에만 우측 3구간 높이 치수선 표시 */}
-        {placedModules.length > 0 && (
+        {/* 우측 3구간 높이 치수선 표시 */}
         <group>
           {(() => {
             const rightDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(120); // 우측 치수선 위치
@@ -2770,7 +2769,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             );
           })()}
         </group>
-        )}
 
 
         {/* 가구별 치수선 (좌측뷰에서는 깊이 치수) - 좌측뷰에서는 가장 왼쪽 가구만 표시 */}
