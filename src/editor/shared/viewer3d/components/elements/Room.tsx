@@ -1293,11 +1293,11 @@ const Room: React.FC<RoomProps> = ({
                       }
                     })(),
                     panelStartY + height - droppedCeilingHeight/2,
-                    zOffset + panelDepth/2  // extendedZOffset 대신 zOffset 사용하여 안쪽 벽과 일치
+                    extendedZOffset + extendedPanelDepth/2  // 천장면과 동일한 Z 위치 사용
                   ]}
                   rotation={[0, Math.PI / 2, 0]}
                 >
-                  <planeGeometry args={[panelDepth, droppedCeilingHeight]} />
+                  <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
                   <primitive
                     ref={droppedWallMaterialRef}
                     object={droppedWallMaterial} />
