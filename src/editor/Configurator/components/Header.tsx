@@ -436,33 +436,36 @@ const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* 그림자 토글 스위치 */}
-          <div
-            onClick={() => setShadowEnabled(!shadowEnabled)}
-            style={{
-              position: 'relative',
-              width: '44px',
-              height: '24px',
-              backgroundColor: shadowEnabled ? colors.primary : 'rgba(128,128,128,0.3)',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              transition: 'background-color 0.3s ease',
-              display: 'flex',
-              alignItems: 'center',
-              padding: '2px'
-            }}
-            title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
-          >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>그림자</span>
             <div
+              onClick={() => setShadowEnabled(!shadowEnabled)}
               style={{
-                width: '20px',
+                position: 'relative',
+                width: '36px',
                 height: '20px',
-                backgroundColor: '#ffffff',
-                borderRadius: '50%',
-                transition: 'transform 0.3s ease',
-                transform: shadowEnabled ? 'translateX(20px)' : 'translateX(0)',
-                boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                backgroundColor: shadowEnabled ? colors.primary : 'rgba(128,128,128,0.3)',
+                borderRadius: '10px',
+                cursor: 'pointer',
+                transition: 'background-color 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '2px'
               }}
-            />
+              title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
+            >
+              <div
+                style={{
+                  width: '16px',
+                  height: '16px',
+                  backgroundColor: theme.mode === 'dark' ? '#1a1a1a' : '#ffffff',
+                  borderRadius: '50%',
+                  transition: 'transform 0.3s ease',
+                  transform: shadowEnabled ? 'translateX(16px)' : 'translateX(0)',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                }}
+              />
+            </div>
           </div>
         </div>
 
