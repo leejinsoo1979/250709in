@@ -436,40 +436,38 @@ const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* 그림자 토글 버튼 - ON/OFF 형태 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>그림자</span>
-            <div
-              onClick={() => setShadowEnabled(!shadowEnabled)}
-              style={{
-                position: 'relative',
-                width: '44px',
-                height: '24px',
-                backgroundColor: shadowEnabled ? colors.primary : '#ccc',
-                borderRadius: '12px',
-                cursor: 'pointer',
-                transition: 'background-color 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                padding: '2px'
-              }}
-              title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
-            >
-              <div
-                style={{
-                  width: '20px',
-                  height: '20px',
-                  backgroundColor: '#ffffff',
-                  borderRadius: '50%',
-                  transition: 'transform 0.3s ease',
-                  transform: shadowEnabled ? 'translateX(20px)' : 'translateX(0)',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                }}
-              />
-            </div>
-            <span style={{ fontSize: '12px', color: 'var(--text-secondary)', minWidth: '30px' }}>
+          <button
+            onClick={() => setShadowEnabled(!shadowEnabled)}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              backgroundColor: shadowEnabled
+                ? colors.primary
+                : 'transparent',
+              border: `1px solid ${shadowEnabled
+                ? colors.primary
+                : 'rgba(128,128,128,0.3)'}`,
+              borderRadius: '4px',
+              color: shadowEnabled ? '#ffffff' : 'var(--text-primary)',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              fontSize: '14px',
+              fontWeight: '500',
+              boxShadow: shadowEnabled ? `0 2px 8px ${colors.primary}40` : 'none'
+            }}
+            title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
+          >
+            <span>그림자</span>
+            <span style={{
+              fontSize: '12px',
+              fontWeight: '600',
+              opacity: 0.9
+            }}>
               {shadowEnabled ? 'ON' : 'OFF'}
             </span>
-          </div>
+          </button>
         </div>
 
         {/* 우측 액션 버튼들 */}
