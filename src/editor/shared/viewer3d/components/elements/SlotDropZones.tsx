@@ -232,9 +232,10 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
     }
     
     // 레이캐스팅으로 슬롯 인덱스 찾기
-    // 단내림 활성화 시 현재 활성 탭의 영역만 검색
-    const activeZone = spaceInfo.droppedCeiling?.enabled && activeDroppedCeilingTab === 'dropped' ? 'dropped' :
-                      spaceInfo.droppedCeiling?.enabled && activeDroppedCeilingTab === 'main' ? 'normal' :
+    // 서라운드 모드일 때는 모든 영역 검색, 노서라운드 모드일 때는 현재 활성 탭의 영역만 검색
+    const isSurround = spaceInfo.surroundType === 'surround';
+    const activeZone = !isSurround && spaceInfo.droppedCeiling?.enabled && activeDroppedCeilingTab === 'dropped' ? 'dropped' :
+                      !isSurround && spaceInfo.droppedCeiling?.enabled && activeDroppedCeilingTab === 'main' ? 'normal' :
                       undefined;
 
     const slotIndex = getSlotIndexFromRaycast(
@@ -246,24 +247,51 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
       spaceInfo,
       activeZone
     );
-    
+
     if (slotIndex === null) {
       return false;
     }
 
-    // 단내림 활성화 시 영역 확인 - activeDroppedCeilingTab을 직접 zone으로 매핑
+    // 단내림 활성화 시 영역 확인
     let zone: 'normal' | 'dropped' = 'normal';
     let zoneSlotIndex = slotIndex;
 
     if (spaceInfo.droppedCeiling?.enabled && indexing.zones) {
-      // activeDroppedCeilingTab이 'dropped'면 단내림 영역, 'main'이면 일반 영역
-      zone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
+      // 서라운드 모드: 레이캐스팅된 콜라이더의 zone 확인
+      // 노서라운드 모드: activeDroppedCeilingTab으로 zone 결정
+      if (isSurround) {
+        // 레이캐스팅으로 실제 교차된 콜라이더의 zone 찾기
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const rect = canvasElement.getBoundingClientRect();
+        mouse.x = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((dragEvent.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+
+        // 슬롯 콜라이더 찾기
+        const slotColliders: THREE.Object3D[] = [];
+        scene.traverse((child) => {
+          if (child.userData?.type === 'slot-collider' || child.userData?.isSlotCollider) {
+            slotColliders.push(child);
+          }
+        });
+
+        const intersects = raycaster.intersectObjects(slotColliders, false);
+        if (intersects.length > 0) {
+          zone = intersects[0].object.userData?.zone || 'normal';
+        }
+      } else {
+        // 노서라운드 모드: activeDroppedCeilingTab으로 zone 결정
+        zone = activeDroppedCeilingTab === 'dropped' ? 'dropped' : 'normal';
+      }
+
       zoneSlotIndex = slotIndex;
 
-      console.log('🎯 드롭 영역 확인 (activeTab 기반):', {
+      console.log('🎯 드롭 영역 확인:', {
         zone,
         zoneSlotIndex,
-        activeTab: activeDroppedCeilingTab
+        activeTab: activeDroppedCeilingTab,
+        isSurround
       });
     }
     
