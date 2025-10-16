@@ -1102,8 +1102,8 @@ export class ColumnIndexer {
       }
     }
     
-    // 경계면 이격거리 자동 계산 (2~5mm 사이에서 슬롯 내경이 정수가 되도록)
-    let boundaryGap = 2; // 기본값
+    // 경계면 이격거리 (BOUNDARY_GAP과 동일한 값 사용)
+    let boundaryGap = 3; // 고정값
 
     // 각 영역의 컬럼 수 계산
     let normalColumnCount: number;
@@ -1142,62 +1142,17 @@ export class ColumnIndexer {
       console.warn(`단내림 영역 슬롯 너비 제한: ${minRequiredDroppedSlots}개 이상의 슬롯이 필요합니다.`);
     }
 
-    // 경계면 이격거리 최적화: 2~5mm 사이에서 슬롯 너비가 정수가 되도록 선택
-    let bestGap = 2;
-    let bestScore = Infinity; // 소수점 자릿수가 적을수록 좋음
+    // 경계면 이격거리는 이미 위에서 적용됨 (BOUNDARY_GAP 3mm)
+    // 추가 최적화 로직 제거 (중복 적용 방지)
 
-    for (let gap = 2; gap <= 5; gap += 0.5) {
-      const testNormalWidth = normalAreaInternalWidth - gap;
-      const testDroppedWidth = droppedAreaInternalWidth - gap;
-
-      const normalSlotWidth = testNormalWidth / normalColumnCount;
-      const droppedSlotWidth = testDroppedWidth / droppedColumnCount;
-
-      // 소수점 자릿수 계산 (정수면 0점, 0.5면 1점, 그 외는 2점)
-      const normalDecimal = normalSlotWidth - Math.floor(normalSlotWidth);
-      const droppedDecimal = droppedSlotWidth - Math.floor(droppedSlotWidth);
-
-      const normalScore = Math.abs(normalDecimal) < 0.01 ? 0 : (Math.abs(normalDecimal - 0.5) < 0.01 ? 1 : 2);
-      const droppedScore = Math.abs(droppedDecimal) < 0.01 ? 0 : (Math.abs(droppedDecimal - 0.5) < 0.01 ? 1 : 2);
-
-      const totalScore = normalScore + droppedScore;
-
-      if (totalScore < bestScore) {
-        bestScore = totalScore;
-        bestGap = gap;
-      }
-
-      // 완벽한 정수 조합을 찾으면 즉시 종료
-      if (totalScore === 0) break;
-    }
-
-    boundaryGap = bestGap;
-
-    console.log('🎯 경계면 이격거리 최적화:', {
-      선택된갭: boundaryGap,
+    console.log('🎯 경계면 이격거리 (이미 적용됨):', {
       단내림위치: droppedPosition,
-      메인구간원래너비: normalAreaInternalWidth,
-      단내림구간원래너비: droppedAreaInternalWidth,
-      메인구간조정후: normalAreaInternalWidth - boundaryGap,
-      메인슬롯너비: (normalAreaInternalWidth - boundaryGap) / normalColumnCount,
+      메인구간내경: normalAreaInternalWidth,
+      단내림구간내경: droppedAreaInternalWidth,
+      메인슬롯너비: normalAreaInternalWidth / normalColumnCount,
       단내림슬롯너비: droppedAreaInternalWidth / droppedColumnCount,
-      설명: '단내림은 경계면으로 확장, 일반구간은 경계면에서 갭만큼 축소'
+      설명: 'BOUNDARY_GAP 3mm 이미 적용됨'
     });
-
-    // 경계면 이격거리 적용
-    normalAreaInternalWidth -= boundaryGap;
-    droppedAreaInternalWidth += boundaryGap; // 단내림은 경계면 방향으로 확장
-
-    // startX 조정: 단내림이 경계면 방향으로 확장
-    if (droppedPosition === 'left') {
-      // 왼쪽 단내림: 단내림은 오른쪽으로 확장 (startX 유지)
-      // 일반구간은 왼쪽에서 갭만큼 시작점 이동
-      normalStartX += boundaryGap;
-    } else {
-      // 오른쪽 단내림: 일반구간은 오른쪽에서 갭만큼 축소 (startX 유지)
-      // 단내림은 왼쪽으로 확장 (startX를 왼쪽으로 이동)
-      droppedStartX -= boundaryGap;
-    }
     
     // 각 영역의 컬럼 너비 계산 - 0.5 단위 균등 분할
     const normalExactWidth = normalAreaInternalWidth / normalColumnCount;
