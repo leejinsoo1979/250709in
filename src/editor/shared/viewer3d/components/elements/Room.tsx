@@ -2899,6 +2899,11 @@ const Room: React.FC<RoomProps> = ({
             
             // 각 영역에 대해 하부프레임 렌더링
             return renderZones.map((renderZone, zoneIndex) => {
+              // 서라운드 모드에서는 단내림 구간 하부프레임(ㄱ자 메인 프레임) 생략
+              if (renderZone.zone === 'dropped' && spaceInfo.surroundType === 'surround') {
+                return null;
+              }
+
               // mm 단위를 Three.js 단위로 변환 - 노서라운드에서 엔드패널 제외
               let frameStartX = mmToThreeUnits(renderZone.startX);
               let frameEndX = mmToThreeUnits(renderZone.endX);
