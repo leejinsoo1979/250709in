@@ -94,41 +94,43 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     }
     const { width, height, depth = 600 } = spaceInfo; // 기본 깊이 600mm
     
-    // threeUtils의 calculateOptimalDistance 사용 (viewMode에 따라 다른 거리)
-    const distance3D = calculateOptimalDistance(width, height, depth, placedModules.length, '3D');
-    const distance2D = calculateOptimalDistance(width, height, depth, placedModules.length, '2D');
+    // threeUtils의 calculateOptimalDistance 사용 (3D와 동일한 계산)
+    const distance = calculateOptimalDistance(width, height, depth, placedModules.length);
     const centerX = 0;
     const centerY = mmToThreeUnits(height * 0.5);
     const centerZ = 0;
 
-    // 3D 모드에서는 더 가까운 거리 사용
+    // 2D front 위치 계산 - 3D와 동일한 거리 사용
+    const frontPosition = [centerX, centerY, distance] as [number, number, number];
+
+    // 3D 모드에서는 2D front와 완전히 동일한 위치 사용
     if (viewMode === '3D') {
-      return [centerX, centerY, distance3D] as [number, number, number];
+      return frontPosition;
     }
 
     // 2D 모드에서는 방향별 카메라 위치 - 각 방향에 최적화된 거리 사용
     switch (view2DDirection) {
       case 'front':
         // 정면: Z축에서 깊이를 고려한 최적 거리
-        return [centerX, centerY, distance2D] as [number, number, number];
+        return [centerX, centerY, distance] as [number, number, number];
       case 'left':
         // 좌측: X축에서 너비를 고려한 최적 거리
-        const leftDistance = calculateOptimalDistance(depth, height, width, placedModules.length, '2D');
+        const leftDistance = calculateOptimalDistance(depth, height, width, placedModules.length);
         return [-leftDistance, centerY, centerZ] as [number, number, number];
       case 'right':
         // 우측: X축에서 너비를 고려한 최적 거리
-        const rightDistance = calculateOptimalDistance(depth, height, width, placedModules.length, '2D');
+        const rightDistance = calculateOptimalDistance(depth, height, width, placedModules.length);
         return [rightDistance, centerY, centerZ] as [number, number, number];
       case 'top':
         // 상단: Y축에서 너비와 깊이를 고려한 최적 거리
-        const topDistance = calculateOptimalDistance(width, depth, height, placedModules.length, '2D');
+        const topDistance = calculateOptimalDistance(width, depth, height, placedModules.length);
         // 상부뷰는 위에서 아래를 내려다보므로 centerY에 거리를 더함
         return [centerX, centerY + topDistance, centerZ] as [number, number, number];
       case 'all':
         // 전체 뷰에서는 정면 카메라 위치 사용 (4분할은 별도 처리)
-        return [centerX, centerY, distance2D] as [number, number, number];
+        return frontPosition;
       default:
-        return [centerX, centerY, distance2D] as [number, number, number];
+        return frontPosition;
     }
   }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length]);
   
