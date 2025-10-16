@@ -58,29 +58,29 @@ export const threeUnitsToMm = (threeUnits: number) => threeUnits / MM_TO_THREE_U
 /**
  * 최적화된 카메라 거리 계산 (3D 모드에서 충분히 멀리, 큰 공간도 전체 표시)
  */
-export const calculateOptimalDistance = (width: number, height: number, depth: number, placedModulesCount: number = 0) => {
+export const calculateOptimalDistance = (width: number, height: number, depth: number, placedModulesCount: number = 0, viewMode: '2D' | '3D' = '3D') => {
   // 공간의 3차원 대각선 길이 계산 (모든 차원 고려)
   const diagonal = Math.sqrt(width * width + height * height + depth * depth);
-  
+
   // 적절한 여백으로 조정
-  // 가구 유무와 관계없이 일정한 여백 사용
-  const furnitureMargin = 0.75; // 카메라를 더 가까이 (0.85 → 0.75)
-  
+  // 2D 모드는 원래 여백, 3D 모드는 더 가까이
+  const furnitureMargin = viewMode === '2D' ? 0.95 : 0.75;
+
   // FOV 50도 기준으로 거리 계산
   const fov = 50;
   const fovRad = (fov * Math.PI) / 180;
-  
+
   // 가장 큰 차원을 기준으로 기본 거리 계산
   const maxDimension = Math.max(width, height, depth); // depth도 고려
   const baseDistance = (maxDimension / 2) / Math.tan(fovRad / 2);
-  
+
   // 대각선 길이도 고려해서 더 안전한 거리 계산
   const diagonalDistance = (diagonal / 2) / Math.tan(fovRad / 2);
   const safeDistance = Math.max(baseDistance, diagonalDistance);
-  
+
   // Three.js 단위로 변환하고 여백 적용
   const distance = mmToThreeUnits(safeDistance * furnitureMargin);
-  
+
   // 큰 공간에서도 전체가 보이도록 최대 거리 제한 대폭 증가
   return Math.max(7, Math.min(150, distance)); // 적절한 최소 거리
 };
@@ -104,13 +104,13 @@ export const calculateCameraPosition = (
   placedModulesCount?: number
 ): [number, number, number] => {
   if (viewMode === '2D' && spaceWidth && spaceHeight) {
-    // 2D 모드: 3D와 동일한 동적 거리 계산 사용
+    // 2D 모드: viewMode 파라미터 전달하여 원래 여백 사용
     const depth = spaceDepth || 600; // 기본 깊이 600mm
-    const distance = calculateOptimalDistance(spaceWidth, spaceHeight, depth, placedModulesCount || 0);
+    const distance = calculateOptimalDistance(spaceWidth, spaceHeight, depth, placedModulesCount || 0, '2D');
     const yCenter = mmToThreeUnits(spaceHeight * 0.5);
     return [0, yCenter, distance];
   }
-  
+
   // 3D 모드에서는 기본 위치 사용
   return defaultPosition;
 };
