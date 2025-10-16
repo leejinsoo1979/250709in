@@ -16,6 +16,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useHistoryStore } from '@/store/historyStore';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useTheme } from '@/contexts/ThemeContext';
 
 interface HeaderProps {
   title: string;
