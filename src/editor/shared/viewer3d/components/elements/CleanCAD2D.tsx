@@ -1819,6 +1819,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           
           const topFrameHeight = frameSize.top ?? 0; // 상부 프레임 높이
           const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
+          const bottomFrameDepth = spaceInfo.depth; // 받침대 깊이 (공간 깊이와 동일)
           const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight - floatHeight, 0); // 캐비넷 배치 영역 (띄움 높이 제외)
 
           const bottomY = mmToThreeUnits(floatHeight); // 프레임 시작점 (띄워서 배치 시 올라감)
@@ -1941,6 +1942,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   {bottomFrameHeight}
+                </Text>
+              </group>
+              )}
+
+              {/* 1-1. 받침대 깊이 - 받침대가 있는 경우에만 표시 */}
+              {bottomFrameHeight > 0 && (
+              <group>
+                <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(floatHeight + bottomFrameHeight) - mmToThreeUnits(10), 0.01]}
+                  fontSize={baseFontSize * 0.8}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                  rotation={[0, 0, -Math.PI / 2]}
+                >
+                  (D{bottomFrameDepth})
                 </Text>
               </group>
               )}
