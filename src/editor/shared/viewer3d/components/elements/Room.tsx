@@ -1791,12 +1791,11 @@ const Room: React.FC<RoomProps> = ({
         // 단내림 관련 변수
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
         const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
-        const isRightDropped = spaceInfo.droppedCeiling?.position === 'right';
         const dropHeight = hasDroppedCeiling && spaceInfo.droppedCeiling
           ? spaceInfo.droppedCeiling.dropHeight || 200
           : 0;
         const droppedCeilingHeight = mmToThreeUnits(dropHeight);
-
+        
         // 왼쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
         if (hasDroppedCeiling && isLeftDropped) {
           // 서라운드 모드에서는 측면 프레임이 전체 높이이므로 단내림 구간 프레임 생략
@@ -1942,11 +1941,8 @@ const Room: React.FC<RoomProps> = ({
           <BoxWithEdges
             isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
             args={[
-              frameThickness.left,
-              // 오른쪽이 단내림이고 서라운드 모드일 때는 단내림 천장까지만
-              (hasDroppedCeiling && isRightDropped && spaceInfo.surroundType === 'surround')
-                ? (height - droppedCeilingHeight)
-                : adjustedPanelHeight, 
+              frameThickness.left, 
+              adjustedPanelHeight, 
               // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
               spaceInfo.surroundType === 'no-surround'
                 ? (wallConfig?.left 
@@ -1959,10 +1955,7 @@ const Room: React.FC<RoomProps> = ({
             ]}
             position={[
               xOffset + frameThickness.left/2,
-              // 오른쪽이 단내림이고 서라운드 모드일 때는 Y 위치 조정
-              (hasDroppedCeiling && isRightDropped && spaceInfo.surroundType === 'surround')
-                ? (panelStartY + (height - droppedCeilingHeight)/2)
-                : sideFrameCenterY,
+              sideFrameCenterY,
               // 노서라운드 모드에서 엔드패널/프레임 위치 결정
               spaceInfo.surroundType === 'no-surround'
                 ? (wallConfig?.left
