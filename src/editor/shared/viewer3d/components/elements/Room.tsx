@@ -1248,7 +1248,11 @@ const Room: React.FC<RoomProps> = ({
               normalAreaX,
               droppedCeilingHeight: droppedCeilingHeight / 0.01,
               totalWidth: width / 0.01,
-              calculatedTotal: (droppedAreaWidth + normalAreaWidth + mmToThreeUnits(leftReduction) + mmToThreeUnits(rightReduction)) / 0.01
+              calculatedTotal: (droppedAreaWidth + normalAreaWidth + mmToThreeUnits(leftReduction) + mmToThreeUnits(rightReduction)) / 0.01,
+              '일반 천장 Y좌표(mm)': (panelStartY + height) / 0.01,
+              '단내림 천장 Y좌표(mm)': (panelStartY + height - droppedCeilingHeight) / 0.01,
+              '천장 높이 차이(mm)': droppedCeilingHeight / 0.01,
+              '200mm 분절 확인': droppedCeilingHeight / 0.01 === 200 ? '✅' : '❌'
             });
             
             return (
@@ -1283,6 +1287,20 @@ const Room: React.FC<RoomProps> = ({
                     (() => {
                       // ColumnIndexer의 계산과 동일하게 처리
                       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+
+                      const boundaryX = isLeftDropped
+                        ? mmToThreeUnits(zoneInfo.normal.startX)
+                        : mmToThreeUnits(zoneInfo.dropped.startX);
+
+                      console.log('🔥 단내림 경계벽 위치:', {
+                        isLeftDropped,
+                        '경계 X 위치(mm)': isLeftDropped ? zoneInfo.normal.startX : zoneInfo.dropped.startX,
+                        '단내림 폭(mm)': spaceInfo.droppedCeiling?.width || 900,
+                        droppedCeilingHeight: droppedCeilingHeight / 0.01,
+                        '벽 상단 Y': (panelStartY + height) / 0.01,
+                        '벽 하단 Y': (panelStartY + height - droppedCeilingHeight) / 0.01,
+                        '천장에서 거리(mm)': droppedCeilingHeight / 0.01
+                      });
 
                       if (isLeftDropped) {
                         // 왼쪽 단내림: 단내림 끝 = 메인 시작
