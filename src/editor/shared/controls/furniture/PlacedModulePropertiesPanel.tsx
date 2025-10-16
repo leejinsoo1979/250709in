@@ -861,32 +861,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   };
 
-  // 도어 갭 입력 핸들러 - 실시간 업데이트
+  // 도어 갭 입력 핸들러
   const handleDoorTopGapChange = (value: string) => {
+    // 백스페이스 포함 모든 입력 허용
     setDoorTopGapInput(value);
-
-    // 숫자인 경우 실시간 업데이트
-    const numValue = parseInt(value);
-    if (!isNaN(numValue) && numValue >= 0 && currentPlacedModule) {
-      setDoorTopGap(numValue);
-      updatePlacedModule(currentPlacedModule.id, { doorTopGap: numValue });
-    }
   };
 
   const handleDoorBottomGapChange = (value: string) => {
+    // 백스페이스 포함 모든 입력 허용
     setDoorBottomGapInput(value);
-
-    // 숫자인 경우 실시간 업데이트
-    const numValue = parseInt(value);
-    if (!isNaN(numValue) && numValue >= 0 && currentPlacedModule) {
-      setDoorBottomGap(numValue);
-      updatePlacedModule(currentPlacedModule.id, { doorBottomGap: numValue });
-    }
   };
 
   const handleDoorTopGapBlur = () => {
     const value = parseInt(doorTopGapInput);
-    if (isNaN(value) || value < 0) {
+    if (!isNaN(value) && value >= 0 && currentPlacedModule) {
+      setDoorTopGap(value);
+      updatePlacedModule(currentPlacedModule.id, { doorTopGap: value });
+    } else {
       // 유효하지 않은 값이면 이전 값으로 복원
       setDoorTopGapInput(doorTopGap.toString());
     }
@@ -894,7 +885,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   const handleDoorBottomGapBlur = () => {
     const value = parseInt(doorBottomGapInput);
-    if (isNaN(value) || value < 0) {
+    if (!isNaN(value) && value >= 0 && currentPlacedModule) {
+      setDoorBottomGap(value);
+      updatePlacedModule(currentPlacedModule.id, { doorBottomGap: value });
+    } else {
       // 유효하지 않은 값이면 이전 값으로 복원
       setDoorBottomGapInput(doorBottomGap.toString());
     }
@@ -902,13 +896,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   const handleDoorTopGapKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleDoorTopGapBlur();
+      const value = parseInt(doorTopGapInput);
+      if (!isNaN(value) && value >= 0 && currentPlacedModule) {
+        setDoorTopGap(value);
+        updatePlacedModule(currentPlacedModule.id, { doorTopGap: value });
+      }
+      (e.target as HTMLInputElement).blur();
     }
   };
 
   const handleDoorBottomGapKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleDoorBottomGapBlur();
+      const value = parseInt(doorBottomGapInput);
+      if (!isNaN(value) && value >= 0 && currentPlacedModule) {
+        setDoorBottomGap(value);
+        updatePlacedModule(currentPlacedModule.id, { doorBottomGap: value });
+      }
+      (e.target as HTMLInputElement).blur();
     }
   };
 
