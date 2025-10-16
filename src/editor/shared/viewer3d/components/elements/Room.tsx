@@ -1292,12 +1292,12 @@ const Room: React.FC<RoomProps> = ({
                         return mmToThreeUnits(zoneInfo.dropped.startX);
                       }
                     })(),
-                    panelStartY + (height - droppedCeilingHeight)/2,  // 바닥에서 단내림 천장까지의 중심
+                    panelStartY + height - droppedCeilingHeight/2,
                     extendedZOffset + extendedPanelDepth/2  // 천장면과 동일한 Z 위치 사용
                   ]}
                   rotation={[0, Math.PI / 2, 0]}
                 >
-                  <planeGeometry args={[extendedPanelDepth, height - droppedCeilingHeight]} />
+                  <planeGeometry args={[extendedPanelDepth, droppedCeilingHeight]} />
                   <primitive
                     ref={droppedWallMaterialRef}
                     object={droppedWallMaterial} />
