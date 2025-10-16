@@ -573,18 +573,17 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 totalSections={2}
               />
 
-              {/* 도어 분할선 - 중간판(하부 섹션 상판) 위치에 표시 */}
+              {/* 도어 분할선 - 중간판 중심 위치에 표시 */}
               {(() => {
-                // 중간판 Y 위치 계산 (SingleType2의 중간판 로직과 동일)
+                // 중간판 Y 위치 계산 (SingleType2의 중간판 로직과 정확히 동일)
                 const sectionHeights = getSectionHeights();
                 const lowerSectionHeight = sectionHeights[0];
 
                 let accumulatedY = -height/2 + basicThickness;
                 const sectionCenterY = accumulatedY + lowerSectionHeight / 2 - basicThickness;
 
-                // 중간판 Y 위치: 하부 섹션 상판 = 섹션 중심 + 섹션높이/2 + 패널두께/2
+                // middlePanelY = 상부 섹션 바닥판 중심 = 하부/상부 섹션 경계
                 const middlePanelY = sectionCenterY + lowerSectionHeight/2 + basicThickness/2;
-                const dividerY = middlePanelY - basicThickness; // 하부 섹션 상판 상단
 
                 // 도어 너비
                 const doorWidthThree = mmToThreeUnits(doorWidth || moduleData.dimensions.width);
@@ -592,8 +591,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 return (
                   <Line
                     points={[
-                      [-doorWidthThree / 2, dividerY, depth / 2 + 0.02],
-                      [doorWidthThree / 2, dividerY, depth / 2 + 0.02]
+                      [-doorWidthThree / 2, middlePanelY, depth / 2 + 0.02],
+                      [doorWidthThree / 2, middlePanelY, depth / 2 + 0.02]
                     ]}
                     color="#333333"
                     lineWidth={2}
