@@ -152,6 +152,27 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
     // 숫자와 빈 문자열만 허용
     if (value === '' || /^\d+$/.test(value)) {
       setBaseDepth(value);
+
+      // 빈 문자열이면 0으로 즉시 업데이트 (가구 사라지는 것 방지)
+      if (value === '') {
+        const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
+        onUpdate({
+          baseConfig: {
+            ...currentBaseConfig,
+            depth: 0,
+          },
+        });
+      } else {
+        // 실시간 업데이트
+        const validatedValue = parseInt(value);
+        const currentBaseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
+        onUpdate({
+          baseConfig: {
+            ...currentBaseConfig,
+            depth: validatedValue,
+          },
+        });
+      }
     }
   };
 
