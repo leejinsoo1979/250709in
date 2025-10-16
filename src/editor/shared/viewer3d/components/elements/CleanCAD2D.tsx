@@ -1108,9 +1108,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
 
-                      return spaceInfo.droppedCeiling.position === 'left'
-                        ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
-                        : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
+                      // ColumnIndexer의 실제 계산된 너비 사용
+                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      return zoneSlotInfo.normal.width;
                     })()}
                   </Text>
                 )}
@@ -1166,9 +1166,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
 
-                      return spaceInfo.droppedCeiling.position === 'left'
-                        ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
-                        : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
+                      // ColumnIndexer의 실제 계산된 너비 사용
+                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      return zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width;
                     })()}
                   </Text>
                 )}
@@ -2344,9 +2344,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
 
-                      return spaceInfo.droppedCeiling.position === 'left'
-                        ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
-                        : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
+                      // ColumnIndexer의 실제 계산된 너비 사용
+                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      return zoneSlotInfo.normal.width;
                     })()}
                   </Text>
                 )}
@@ -2403,9 +2403,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
 
-                      return spaceInfo.droppedCeiling.position === 'left'
-                        ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
-                        : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
+                      // ColumnIndexer의 실제 계산된 너비 사용
+                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      return zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width;
                     })()}
                   </Text>
                 )}
@@ -3950,9 +3950,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
 
-                      return spaceInfo.droppedCeiling.position === 'left'
-                        ? spaceInfo.width - spaceInfo.droppedCeiling.width - rightReduction // 메인구간은 오른쪽 프레임 제외
-                        : spaceInfo.width - spaceInfo.droppedCeiling.width - leftReduction  // 메인구간은 왼쪽 프레임 제외
+                      // ColumnIndexer의 실제 계산된 너비 사용
+                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      return zoneSlotInfo.normal.width;
                     })()}
                   </Text>
                   
@@ -4007,9 +4007,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                         }
                       }
 
-                      return spaceInfo.droppedCeiling.position === 'left'
-                        ? spaceInfo.droppedCeiling.width - leftReduction // 단내림구간은 왼쪽 프레임 제외
-                        : spaceInfo.droppedCeiling.width - rightReduction  // 단내림구간은 오른쪽 프레임 제외
+                      // ColumnIndexer의 실제 계산된 너비 사용
+                      const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+                      return zoneSlotInfo.dropped?.width || spaceInfo.droppedCeiling.width;
                     })()}
                   </Text>
                   
