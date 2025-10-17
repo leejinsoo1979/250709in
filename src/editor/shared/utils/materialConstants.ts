@@ -58,27 +58,8 @@ export const applyCabinetTexture1Settings = (material: THREE.MeshStandardMateria
  * @returns 'horizontal' | 'vertical'
  */
 export const getDefaultGrainDirection = (panelName?: string): 'horizontal' | 'vertical' => {
-  if (!panelName) return 'horizontal';
-
-  const name = panelName.toLowerCase();
-
-  // 세로 결이 필요한 패널들: 측판(좌측/우측), 백패널, 도어
-  // 마이다는 가로로 긴 판이지만 L방향(긴쪽)에 결이 있어야 하므로 vertical
-  if (name.includes('좌측') ||
-      name.includes('우측') ||
-      name.includes('측판') ||
-      name.includes('side') ||
-      name.includes('백패널') ||
-      name.includes('back') ||
-      name.includes('뒷판') ||
-      name.includes('도어') ||
-      name.includes('door') ||
-      name.includes('마이다')) {
-    return 'vertical';
-  }
-
-  // 나머지는 기본적으로 가로 결 (상판, 바닥, 선반)
-  return 'horizontal';
+  // 기본값은 L 방향 (vertical)
+  return 'vertical';
 };
 
 /**
