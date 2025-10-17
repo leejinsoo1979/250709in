@@ -394,9 +394,6 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         const start = measurePoints[0];
         const end = measurePoints[1];
 
-        // 실제 측정 거리 계산 (원래 start-end 사이의 거리, viewDirection 고려)
-        const distance = calculateDistance(start, end, viewDirection);
-
         // 현재 호버 포인트를 최종 오프셋으로 사용 (클릭 시점의 마우스 위치)
         // 뷰 방향에 따라 정규화
         const finalOffset: MeasurePoint = viewDirection === 'front'
@@ -408,6 +405,10 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
           : viewDirection === 'right'
           ? [0, hoverPoint[1], hoverPoint[2]]
           : hoverPoint;
+
+        // 가이드 포인트 계산하여 실제 측정 축의 거리 계산
+        const guidePoints = calculateGuidePoints(start, end, finalOffset, viewDirection);
+        const distance = calculateDistance(start, end, viewDirection, guidePoints.start, guidePoints.end);
 
         console.log('📏 측정 라인 추가:', {
           start: `[${start[0].toFixed(2)}, ${start[1].toFixed(2)}, ${start[2].toFixed(2)}]`,
@@ -662,9 +663,9 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
           {/* 임시 거리 텍스트 */}
           {(() => {
-            const distance = calculateDistance(measurePoints[0], hoverPoint, viewDirection);
             // 임시 가이드 포인트 계산 (호버점을 기준으로)
             const tempGuidePoints = calculateGuidePoints(measurePoints[0], hoverPoint, hoverPoint, viewDirection);
+            const distance = calculateDistance(measurePoints[0], hoverPoint, viewDirection, tempGuidePoints.start, tempGuidePoints.end);
             const midPoint: MeasurePoint = [
               (tempGuidePoints.start[0] + tempGuidePoints.end[0]) / 2,
               (tempGuidePoints.start[1] + tempGuidePoints.end[1]) / 2,
@@ -700,7 +701,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
               (guidePoints.start[1] + guidePoints.end[1]) / 2,
               (guidePoints.start[2] + guidePoints.end[2]) / 2
             ];
-            const distance = calculateDistance(start, end, viewDirection);
+            const distance = calculateDistance(start, end, viewDirection, guidePoints.start, guidePoints.end);
 
             return (
               <>

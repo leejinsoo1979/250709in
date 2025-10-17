@@ -110,14 +110,27 @@ export function findNearestVertex(
 
 /**
  * 두 점 사이의 거리 계산 (mm)
- * 수직/수평 거리만 계산 (가장 큰 변화량의 축만 사용)
- * 정면뷰에서는 Z축 무시
+ * 가이드 포인트를 기반으로 실제 측정 축의 거리 계산
  */
 export function calculateDistance(
   start: MeasurePoint,
   end: MeasurePoint,
-  viewDirection?: 'front' | 'left' | 'right' | 'top'
+  viewDirection?: 'front' | 'left' | 'right' | 'top',
+  guideStart?: MeasurePoint,
+  guideEnd?: MeasurePoint
 ): number {
+  // guidePoints가 제공된 경우, 가이드 방향을 기준으로 거리 계산
+  if (guideStart && guideEnd) {
+    const guideDx = Math.abs(guideEnd[0] - guideStart[0]);
+    const guideDy = Math.abs(guideEnd[1] - guideStart[1]);
+    const guideDz = Math.abs(guideEnd[2] - guideStart[2]);
+
+    // 가이드가 어느 축 방향인지 판단하여 해당 축의 거리 반환
+    const maxGuideDistance = Math.max(guideDx, guideDy, guideDz);
+    return maxGuideDistance * 100; // three.js 단위를 mm로 변환
+  }
+
+  // guidePoints가 없는 경우 기존 로직 (하위 호환성)
   const dx = Math.abs(end[0] - start[0]);
   const dy = Math.abs(end[1] - start[1]);
   const dz = Math.abs(end[2] - start[2]);

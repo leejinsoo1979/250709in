@@ -315,7 +315,49 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         }
         
         const newModule = newModuleData;
-        
+
+        // 엔드패널 + 가구 = 슬롯 너비 검증 (노서라운드 모드, 끝 슬롯)
+        if (spaceInfo.surroundType === 'no-surround') {
+          const lastSlotIndex = indexing.columnCount - 1;
+          const isEndSlot = dropPosition.column === 0 || dropPosition.column === lastSlotIndex;
+          const END_PANEL_THICKNESS = 18; // mm
+
+          if (isEndSlot) {
+            const wallConfig = spaceInfo.wallConfig || { left: true, right: true };
+            const needsEndPanel = (dropPosition.column === 0 && !wallConfig.left) ||
+                                  (dropPosition.column === lastSlotIndex && !wallConfig.right);
+
+            if (needsEndPanel) {
+              // 가구 너비 계산
+              const furnitureWidth = adjustedWidth || indexing.columnWidth;
+              const totalWidth = END_PANEL_THICKNESS + furnitureWidth;
+              const expectedSlotWidth = indexing.columnWidth;
+
+              console.log('🔍 엔드패널 + 가구 너비 검증:', {
+                slotIndex: dropPosition.column,
+                endPanelWidth: END_PANEL_THICKNESS,
+                furnitureWidth,
+                totalWidth,
+                expectedSlotWidth,
+                isValid: Math.abs(totalWidth - expectedSlotWidth) < 1 // 1mm 허용 오차
+              });
+
+              // 1mm 허용 오차로 검증
+              if (Math.abs(totalWidth - expectedSlotWidth) >= 1) {
+                console.warn('⚠️ 엔드패널 + 가구 너비가 슬롯 너비와 일치하지 않음:', {
+                  totalWidth,
+                  expectedSlotWidth,
+                  difference: totalWidth - expectedSlotWidth
+                });
+                showAlert(
+                  `엔드패널(${END_PANEL_THICKNESS}mm) + 가구(${furnitureWidth}mm) = ${totalWidth}mm\n슬롯 너비: ${expectedSlotWidth}mm\n차이: ${(totalWidth - expectedSlotWidth).toFixed(1)}mm`,
+                  { title: '너비 불일치 경고' }
+                );
+              }
+            }
+          }
+        }
+
         addModule(newModule);
         
         // 가구 배치 완료 이벤트 발생 (카메라 리셋용)
