@@ -6,6 +6,7 @@ interface AdjustableFootsRendererProps {
   width: number; // 가구 폭 (Three.js units)
   depth: number; // 가구 깊이 (Three.js units)
   yOffset?: number; // Y축 오프셋 (가구 하단 위치)
+  backZOffset?: number; // 뒤쪽 조절발 Z축 오프셋 (섹션 깊이 조정용)
   material?: THREE.Material;
   renderMode?: 'solid' | 'wireframe';
   isHighlighted?: boolean;
@@ -26,6 +27,7 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   width,
   depth,
   yOffset = 0,
+  backZOffset = 0,
   material,
   renderMode = 'solid',
   isHighlighted = false,
@@ -82,8 +84,8 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const footPositions: Array<{pos: [number, number, number], rot: number}> = [
     { pos: [leftX, yOffset, frontZ], rot: 0 },   // 좌측 앞 (받침대 깊이 적용)
     { pos: [rightX, yOffset, frontZ], rot: 0 },  // 우측 앞 (받침대 깊이 적용)
-    { pos: [leftX, yOffset, backZ], rot: 0 },    // 좌측 뒤 (받침대 깊이 미적용)
-    { pos: [rightX, yOffset, backZ], rot: 0 },   // 우측 뒤 (받침대 깊이 미적용)
+    { pos: [leftX, yOffset, backZ + backZOffset], rot: 0 },    // 좌측 뒤 (받침대 깊이 미적용 + 섹션 깊이 오프셋)
+    { pos: [rightX, yOffset, backZ + backZOffset], rot: 0 },   // 우측 뒤 (받침대 깊이 미적용 + 섹션 깊이 오프셋)
   ];
   
   return (

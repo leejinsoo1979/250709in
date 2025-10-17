@@ -716,16 +716,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             baseDepthValue,
             fullBaseConfig: spaceInfo?.baseConfig
           });
-          // 다중 섹션이면 하부 섹션 깊이 사용
-          const adjustableFootDepth = isMultiSectionFurniture() && lowerSectionDepthMm !== undefined
-            ? mmToThreeUnits(lowerSectionDepthMm)
-            : depth;
+          // 다중 섹션이면 뒤쪽 조절발 Z 오프셋 계산
+          const backZOffset = isMultiSectionFurniture() && lowerSectionDepthMm !== undefined
+            ? (depth - mmToThreeUnits(lowerSectionDepthMm)) / 2
+            : 0;
 
           return (
             <AdjustableFootsRenderer
               width={width}
-              depth={adjustableFootDepth}
+              depth={depth}
               yOffset={-height / 2}
+              backZOffset={backZOffset}
               material={material}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
