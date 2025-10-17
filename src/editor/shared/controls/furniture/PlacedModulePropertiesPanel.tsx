@@ -1025,22 +1025,26 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // 섹션 깊이 입력 핸들러
   const handleLowerDepthChange = (value: string) => {
+    console.log('⬇️ [하부 섹션 깊이 변경] value=', value);
     setLowerDepthInput(value);
 
     // 유효한 숫자면 즉시 반영
     const numValue = parseInt(value);
     if (!isNaN(numValue) && numValue > 0 && currentPlacedModule) {
+      console.log('✅ [하부 섹션 깊이 적용] numValue=', numValue);
       setLowerSectionDepth(numValue);
       updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: numValue });
     }
   };
 
   const handleUpperDepthChange = (value: string) => {
+    console.log('⬆️ [상부 섹션 깊이 변경] value=', value);
     setUpperDepthInput(value);
 
     // 유효한 숫자면 즉시 반영
     const numValue = parseInt(value);
     if (!isNaN(numValue) && numValue > 0 && currentPlacedModule) {
+      console.log('✅ [상부 섹션 깊이 적용] numValue=', numValue);
       setUpperSectionDepth(numValue);
       updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: numValue });
     }
