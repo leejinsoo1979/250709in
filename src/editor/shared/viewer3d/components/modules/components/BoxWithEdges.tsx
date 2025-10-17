@@ -226,11 +226,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       const isDrawerPanel = panelName && panelName.includes('서랍');
 
       // 가로로 긴 패널 여부 확인 (상판, 바닥판, 선반)
-      const isHorizontalPanel = panelName && (
-        panelName.includes('상판') ||
-        panelName.includes('바닥') ||
-        panelName.includes('선반')
-      );
+      const normalizedPanelName = panelName?.toLowerCase() || '';
+      const isHorizontalPanel =
+        normalizedPanelName.includes('상판') ||
+        normalizedPanelName.includes('top') ||
+        normalizedPanelName.includes('바닥') ||
+        normalizedPanelName.includes('bottom') ||
+        normalizedPanelName.includes('선반') ||
+        normalizedPanelName.includes('shelf');
 
       if (isDrawerPanel) {
         // 서랍 패널: L(vertical) = x축 가로결 = -90도, W(horizontal) = y축 세로결 = 90도
