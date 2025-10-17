@@ -584,29 +584,35 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 totalSections={2}
               />
 
-              {/* 도어 분할선 - 하부/상부 섹션 측판 경계에 표시 */}
+              {/* 도어 분할선 - 하부 도어 상단 = 상부 도어 하단 */}
               {(() => {
                 // 측판 렌더링 로직과 동일하게 계산
                 const sectionHeights = getSectionHeights();
-                const lowerSectionHeight = sectionHeights[0]; // 하부 섹션 높이
+                const lowerSectionHeight = sectionHeights[0]; // 하부 섹션 측판 높이 (1025mm)
 
                 let accumulatedY = -height/2 + basicThickness;
 
                 // 하부 섹션 (index=0)
                 const lowerSectionCenterY = accumulatedY + lowerSectionHeight / 2 - basicThickness;
 
-                // 하부 섹션 측판 상단 = 하부 섹션 중심 + 높이/2
+                // 하부 섹션 측판 상단
                 const lowerSidePanelTop = lowerSectionCenterY + lowerSectionHeight / 2;
 
-                console.log('🚪📏 도어 분할선 위치 (측판 경계 기준):', {
-                  height,
-                  basicThickness,
-                  accumulatedY,
+                // 하부 도어는 하단으로 doorBottomGap만큼 확장되므로
+                // 하부 도어 상단 = 측판 상단 - doorBottomGap
+                const lowerDoorBottomGapMm = lowerDoorBottomGap ?? 45;
+                const dividerY = lowerSidePanelTop - mmToThreeUnits(lowerDoorBottomGapMm);
+
+                console.log('🚪📏 도어 분할선 위치 (도어 경계 기준):', {
                   lowerSectionHeight,
+                  lowerSectionHeight_mm: lowerSectionHeight / 0.01,
                   lowerSectionCenterY,
                   lowerSidePanelTop,
                   lowerSidePanelTop_mm: lowerSidePanelTop / 0.01,
-                  설명: '하부 섹션 측판 상단 = 상부 섹션 측판 하단'
+                  lowerDoorBottomGapMm,
+                  dividerY,
+                  dividerY_mm: dividerY / 0.01,
+                  설명: '하부 도어 상단 = 측판 상단 - 하단 gap'
                 });
 
                 // 도어 너비와 깊이
@@ -616,8 +622,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 return (
                   <Line
                     points={[
-                      [-doorWidthThree / 2, lowerSidePanelTop, doorDepthThree / 2 + 0.001],
-                      [doorWidthThree / 2, lowerSidePanelTop, doorDepthThree / 2 + 0.001]
+                      [-doorWidthThree / 2, dividerY, doorDepthThree / 2 + 0.001],
+                      [doorWidthThree / 2, dividerY, doorDepthThree / 2 + 0.001]
                     ]}
                     color="#FF0000"
                     lineWidth={5}
