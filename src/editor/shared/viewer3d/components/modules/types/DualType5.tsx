@@ -38,7 +38,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   adjustedWidth, // adjustedWidth 추가
   showFurniture = true, // 가구 본체 표시 여부
   placedFurnitureId,
-  visibleSectionIndex = null // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
+  visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
+  textureUrl,
+  panelGrainDirections
 }) => {
   // 공통 로직 사용 (좌측 깊이만 반영)
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -1390,7 +1392,10 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
           isDragging={isDragging}
           isEditMode={isEditMode}
-        slotIndex={slotIndex}
+          slotIndex={slotIndex}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
         />
       )}
     </>
