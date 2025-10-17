@@ -164,10 +164,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
 
-  // 분할 모드이고 furnitureId가 있으면 개별 도어 상태 사용, 아니면 전역 상태 사용
-  const useIndividualState = totalSections > 1 && furnitureId && sectionIndex !== undefined;
+  // furnitureId가 있으면 개별 도어 상태 사용 (분할 여부와 무관), 아니면 전역 상태 사용
+  const useIndividualState = furnitureId !== undefined;
+  const effectiveSectionIndex = sectionIndex !== undefined ? sectionIndex : 0; // 병합 모드는 섹션 0
   const isDoorOpen = useIndividualState
-    ? isIndividualDoorOpen(furnitureId, sectionIndex)
+    ? isIndividualDoorOpen(furnitureId, effectiveSectionIndex)
     : doorsOpen;
 
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
@@ -899,13 +900,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       willBeOpen: !isDoorOpen
     });
 
-    // 분할 모드이고 furnitureId가 있으면 개별 도어 토글, 아니면 전역 토글
+    // furnitureId가 있으면 개별 도어 토글, 아니면 전역 토글
     if (useIndividualState) {
-      toggleIndividualDoor(furnitureId!, sectionIndex!);
+      toggleIndividualDoor(furnitureId!, effectiveSectionIndex);
       console.log('🚪 개별 도어 상태 토글:', {
         furnitureId,
-        sectionIndex,
-        key: `${furnitureId}-${sectionIndex}`
+        sectionIndex: effectiveSectionIndex,
+        key: `${furnitureId}-${effectiveSectionIndex}`
       });
     } else {
       const { toggleDoors } = useUIStore.getState();
@@ -924,7 +925,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 토글 후 상태 확인
     setTimeout(() => {
       if (useIndividualState) {
-        const newState = useUIStore.getState().isIndividualDoorOpen(furnitureId!, sectionIndex!);
+        const newState = useUIStore.getState().isIndividualDoorOpen(furnitureId!, effectiveSectionIndex);
         console.log('🚪 개별 도어 상태 토글 완료, 새로운 상태:', newState);
       } else {
         const newState = useUIStore.getState().doorsOpen;

@@ -75,9 +75,40 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode, viewMode } = useSpace3DView();
+  const { isIndividualDoorOpen, toggleIndividualDoor } = useUIStore();
 
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === "float";
+
+  // 가구 본체 클릭 시 열린 도어 닫기 핸들러
+  const handleCabinetBodyClick = (e: any) => {
+    if (!placedFurnitureId) return;
+
+    e.stopPropagation();
+
+    // 도어 분할 여부에 따라 체크
+    if (doorSplit) {
+      // 분할 모드: 하부(0) 또는 상부(1) 섹션 중 열린 것이 있으면 닫기
+      const isLowerOpen = isIndividualDoorOpen(placedFurnitureId, 0);
+      const isUpperOpen = isIndividualDoorOpen(placedFurnitureId, 1);
+
+      if (isLowerOpen) {
+        toggleIndividualDoor(placedFurnitureId, 0);
+        console.log('🚪 가구 본체 클릭 → 하부 도어 닫기');
+      }
+      if (isUpperOpen) {
+        toggleIndividualDoor(placedFurnitureId, 1);
+        console.log('🚪 가구 본체 클릭 → 상부 도어 닫기');
+      }
+    } else {
+      // 병합 모드: 섹션 0 체크
+      const isDoorOpen = isIndividualDoorOpen(placedFurnitureId, 0);
+      if (isDoorOpen) {
+        toggleIndividualDoor(placedFurnitureId, 0);
+        console.log('🚪 가구 본체 클릭 → 도어 닫기');
+      }
+    }
+  };
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
   const showIndirectLight = false;
   const { view2DDirection, indirectLightEnabled, indirectLightIntensity, showDimensions, showDimensionsText, highlightedSection } = useUIStore();
@@ -154,6 +185,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isDragging={isDragging}
                   isEditMode={isEditMode}
                   isHighlighted={isSectionHighlighted}
+                  onClick={handleCabinetBodyClick}
                 />
 
                 {/* 오른쪽 측면 판재 - 섹션별로 분할, 깊이 적용 */}
@@ -165,6 +197,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isDragging={isDragging}
                   isEditMode={isEditMode}
                   isHighlighted={isSectionHighlighted}
+                  onClick={handleCabinetBodyClick}
                 />
                 
                 {/* 하부 섹션 상판 + 상부 섹션 바닥판 (2단 옷장 구조) - index=0일때만 */}
@@ -212,6 +245,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                         isHighlighted={isLowerHighlighted}
+                        onClick={handleCabinetBodyClick}
                       />
 
                       {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 */}
@@ -223,6 +257,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isDragging={isDragging}
                         isEditMode={isEditMode}
                         isHighlighted={isUpperHighlighted}
+                        onClick={handleCabinetBodyClick}
                       />
                     </>
                   );
@@ -243,8 +278,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             renderMode={renderMode}
             isDragging={isDragging}
             isEditMode={isEditMode}
+            onClick={handleCabinetBodyClick}
           />
-          
+
           {/* 오른쪽 측면 판재 */}
           <BoxWithEdges
             args={[basicThickness, height, depth]}
@@ -253,6 +289,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             renderMode={renderMode}
             isDragging={isDragging}
             isEditMode={isEditMode}
+            onClick={handleCabinetBodyClick}
           />
         </>
       )}
@@ -453,6 +490,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             isDragging={isDragging}
             isEditMode={isEditMode}
             isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-${lastSectionIndex}` : false}
+            onClick={handleCabinetBodyClick}
           />
         );
       })()}
@@ -473,6 +511,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             isDragging={isDragging}
             isEditMode={isEditMode}
             isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
+            onClick={handleCabinetBodyClick}
           />
         );
       })()}
