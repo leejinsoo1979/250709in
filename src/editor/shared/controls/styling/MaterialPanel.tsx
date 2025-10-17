@@ -293,39 +293,18 @@ const MaterialPanel: React.FC = () => {
     
     // 이미지 텍스처인 경우 텍스처 경로도 함께 저장
     if (material?.texture === 'image' && material?.image) {
-      // Cabinet Texture1의 경우 도어와 캐비넷 모두에 동일하게 적용
-      if (name === 'Cabinet Texture1') {
-        const newMaterialConfig = {
-          ...materialConfig,
-          interiorColor: color,
-          doorColor: color,
-          interiorTexture: material.image,
-          doorTexture: material.image
-        };
-        
-        console.log('🎨 Cabinet Texture1 선택 - 도어와 캐비넷 모두 적용:', {
-          interiorTexture: material.image,
-          doorTexture: material.image,
-          color
-        });
-        
-        setSpaceInfo({
-          materialConfig: newMaterialConfig
-        });
-      } else {
-        // 다른 이미지 텍스처는 현재 탭에만 적용
-        const textureProperty = materialTab === 'interior' ? 'interiorTexture' : materialTab === 'door' ? 'doorTexture' : 'frameTexture';
-        const colorProperty = materialTab === 'interior' ? 'interiorColor' : materialTab === 'door' ? 'doorColor' : 'frameColor';
-        const newMaterialConfig = {
-          ...materialConfig,
-          [colorProperty]: color,
-          [textureProperty]: material.image
-        };
-        
-        setSpaceInfo({
-          materialConfig: newMaterialConfig
-        });
-      }
+      // 모든 이미지 텍스처는 현재 선택된 탭에만 적용
+      const textureProperty = materialTab === 'interior' ? 'interiorTexture' : materialTab === 'door' ? 'doorTexture' : 'frameTexture';
+      const colorProperty = materialTab === 'interior' ? 'interiorColor' : materialTab === 'door' ? 'doorColor' : 'frameColor';
+      const newMaterialConfig = {
+        ...materialConfig,
+        [colorProperty]: color,
+        [textureProperty]: material.image
+      };
+
+      setSpaceInfo({
+        materialConfig: newMaterialConfig
+      });
     } else {
       // 일반 색상 재질인 경우 텍스처 제거
       const textureProperty = materialTab === 'interior' ? 'interiorTexture' : materialTab === 'door' ? 'doorTexture' : 'frameTexture';
