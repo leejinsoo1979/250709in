@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Module, PlacedModule } from '@/types/module';
 import { ModuleData } from '@/data/modules';
 import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import styles from './FurnitureInfoModal.module.css';
 
 
@@ -20,7 +21,24 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   placedModule
 }) => {
   const { t } = useTranslation();
-  
+  const { updateModule } = useFurnitureStore();
+
+  // 결 방향 상태 (기본값: horizontal)
+  const [grainDirection, setGrainDirection] = useState<'horizontal' | 'vertical'>(
+    placedModule?.grainDirection || 'horizontal'
+  );
+
+  // 결 방향 토글 핸들러
+  const handleToggleGrainDirection = () => {
+    const newDirection = grainDirection === 'horizontal' ? 'vertical' : 'horizontal';
+    setGrainDirection(newDirection);
+
+    // 가구 정보 업데이트
+    if (placedModule) {
+      updateModule(placedModule.id, { grainDirection: newDirection });
+    }
+  };
+
   if (!isOpen || !moduleData || !placedModule) return null;
 
   // Remove local calculatePanelDetails - now using shared utility
@@ -375,6 +393,16 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
               <div className={styles.infoItem}>
                 <span className={styles.label}>슬롯 위치:</span>
                 <span className={styles.value}>슬롯 {placedModule.slotIndex + 1}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.label}>나무결 방향:</span>
+                <button
+                  className={styles.grainButton}
+                  onClick={handleToggleGrainDirection}
+                  title="나무결 방향 전환"
+                >
+                  {grainDirection === 'horizontal' ? '가로 (→)' : '세로 (↓)'}
+                </button>
               </div>
             </div>
           </div>

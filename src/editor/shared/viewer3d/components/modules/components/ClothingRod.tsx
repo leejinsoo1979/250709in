@@ -14,6 +14,7 @@ interface ClothingRodProps {
   isEditMode?: boolean;
   adjustedDepthForShelves: number;
   depth: number;
+  addFrontFillLight?: boolean;
 }
 
 /**
@@ -33,6 +34,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   isEditMode = false,
   adjustedDepthForShelves,
   depth,
+  addFrontFillLight,
 }) => {
   const { view2DTheme, view2DDirection } = useUIStore();
   const { viewMode } = useSpace3DView();
@@ -87,11 +89,13 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   // 옷봉 재질: 3D 모드에서는 밝은 은색 금속, 2D 모드에서는 회색
   const rodMaterial = React.useMemo(() => {
     if (viewMode === '3D') {
-      // 크롬 금속 재질 - MeshStandardMaterial로 금속 재질 구현
       return new THREE.MeshStandardMaterial({
-        color: '#E0E0E0',      // 밝은 은색
-        metalness: 0.9,        // 높은 금속성
-        roughness: 0.3         // 광택
+        color: '#cfd3db',
+        metalness: 0.88,
+        roughness: 0.2,
+        envMapIntensity: 1.35,
+        emissive: new THREE.Color('#b8bcc2'),
+        emissiveIntensity: 0.12
       });
     } else {
       return new THREE.MeshStandardMaterial({
@@ -112,8 +116,35 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
     };
   }, [rodMaterial]);
 
+  const fillLightRef = React.useRef<THREE.SpotLight | null>(null);
+  const fillLightTargetRef = React.useRef<THREE.Object3D | null>(null);
+
+  React.useEffect(() => {
+    if (fillLightRef.current && fillLightTargetRef.current) {
+      fillLightRef.current.target = fillLightTargetRef.current;
+    }
+  }, [viewMode, addFrontFillLight, yPosition, zPosition]);
+
+  const shouldAddFillLight = viewMode === '3D' && (addFrontFillLight ?? yPosition < 0);
+
   return (
     <group position={[0, yPosition, zPosition]}>
+      {shouldAddFillLight && (
+        <>
+          <spotLight
+            ref={fillLightRef}
+            position={[0, rodYOffset + mmToThreeUnits(80), rodZOffset + mmToThreeUnits(220)]}
+            angle={Math.PI / 5.5}
+            penumbra={0.55}
+            intensity={0.6}
+            distance={mmToThreeUnits(900)}
+            decay={2}
+            color="#f7f8ff"
+            castShadow={false}
+          />
+          <object3D ref={fillLightTargetRef} position={[0, rodYOffset, rodZOffset]} />
+        </>
+      )}
       {/* 좌측 브라켓 */}
       <BoxWithEdges
         args={[bracketWidth, bracketHeight, bracketDepth]}

@@ -24,6 +24,7 @@ interface BaseFurnitureOptions {
   customSections?: SectionConfig[]; // 사용자 정의 섹션 설정
   lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
+  grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (기본값: horizontal)
 }
 
 // 가구 기본 설정 반환 타입
@@ -79,7 +80,8 @@ export const useBaseFurniture = (
     slotWidths,
     customSections,
     lowerSectionDepth,
-    upperSectionDepth
+    upperSectionDepth,
+    grainDirection = 'horizontal' // 기본값: 가로 결
   } = options;
   
   // Store에서 재질 설정 가져오기
@@ -265,11 +267,14 @@ export const useBaseFurniture = (
           texture.repeat.set(1, 1);
           material.map = texture;
 
-          // Oak 텍스처인 경우: 90도 회전 적용 (가로 결 방향)
+          // Oak 텍스처인 경우: grainDirection에 따라 회전 적용
           if (isOakTexture(textureUrl)) {
-            texture.rotation = Math.PI / 2; // 90도 회전
-            texture.center.set(0.5, 0.5); // 중심점 기준 회전
-            applyOakTextureSettings(material, false); // 텍스처는 이미 회전했으므로 false
+            // horizontal(가로 결): 90도 회전, vertical(세로 결): 회전 안함
+            if (grainDirection === 'horizontal') {
+              texture.rotation = Math.PI / 2; // 90도 회전
+              texture.center.set(0.5, 0.5); // 중심점 기준 회전
+            }
+            applyOakTextureSettings(material, false); // 텍스처는 이미 회전 처리했으므로 false
           }
           // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
           else if (!isCabinetTexture1(textureUrl)) {

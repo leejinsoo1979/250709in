@@ -46,7 +46,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   upperDoorTopGap,
   upperDoorBottomGap,
   lowerDoorTopGap,
-  lowerDoorBottomGap
+  lowerDoorBottomGap,
+  grainDirection
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -55,7 +56,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth
+    adjustedWidth,
+    grainDirection
   });
 
   const {

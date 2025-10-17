@@ -62,6 +62,9 @@ export interface PlacedModule {
 
   // 섹션별 깊이 설정 (2섹션 가구용)
   lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
+
+  // 텍스처 결 방향 설정
+  grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (기본값: horizontal)
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
 }
 

@@ -47,6 +47,7 @@ export interface FurnitureTypeProps {
   upperDoorBottomGap?: number; // 상부 섹션 도어 하단 갭 (분할 모드, 기본값: 0)
   lowerDoorTopGap?: number; // 하부 섹션 도어 상단 갭 (분할 모드, 기본값: 0)
   lowerDoorBottomGap?: number; // 하부 섹션 도어 하단 갭 (분할 모드, 기본값: 45)
+  grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (기본값: horizontal)
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;

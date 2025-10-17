@@ -95,6 +95,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return transparentMaterial;
     }
 
+    // 옷봉 전용: 항상 원본 재질 유지 (밝기 보존)
+    if (isClothingRod) {
+      return baseMaterial;
+    }
+
     if (isDragging && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = baseMaterial.clone();
       ghostMaterial.transparent = true;
