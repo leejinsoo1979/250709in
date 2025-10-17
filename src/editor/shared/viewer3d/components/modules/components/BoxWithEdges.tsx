@@ -135,8 +135,24 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 패널별 개별 material 생성 (텍스처 회전 적용)
   const panelSpecificMaterial = React.useMemo(() => {
-    // panelName이 없거나 textureUrl이 없으면 processedMaterial 그대로 사용
-    if (!panelName || !textureUrl || !(processedMaterial instanceof THREE.MeshStandardMaterial)) {
+    console.log('🔍 panelSpecificMaterial useMemo 실행:', {
+      panelName,
+      textureUrl,
+      hasMaterial: !!processedMaterial,
+      isStandardMaterial: processedMaterial instanceof THREE.MeshStandardMaterial,
+      hasMapTexture: processedMaterial instanceof THREE.MeshStandardMaterial ? !!processedMaterial.map : false,
+      panelGrainDirections: panelGrainDirections ? JSON.stringify(panelGrainDirections) : 'null'
+    });
+
+    // panelName이 없으면 processedMaterial 그대로 사용
+    if (!panelName || !(processedMaterial instanceof THREE.MeshStandardMaterial)) {
+      console.log('⚠️ panelName 없음 또는 MeshStandardMaterial 아님 - processedMaterial 반환');
+      return processedMaterial;
+    }
+
+    // 텍스처가 없으면 processedMaterial 그대로 사용 (textureUrl 체크 대신 map 체크)
+    if (!processedMaterial.map) {
+      console.log('⚠️ processedMaterial에 텍스처(map) 없음 - processedMaterial 반환');
       return processedMaterial;
     }
 
@@ -203,7 +219,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     return panelMaterial;
-  }, [processedMaterial, panelName, textureUrl, panelGrainDirections]);
+  }, [processedMaterial, panelName, panelGrainDirections]);
 
   // 디버깅: panelGrainDirections 변경 감지
   React.useEffect(() => {
