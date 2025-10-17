@@ -94,6 +94,21 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
     ? sectionHeights.map(sectionHeight => Math.round(sectionHeight * unitsToMmFactor))
     : undefined;
 
+  // 섹션별 깊이 배열 생성 (Three.js 단위)
+  const sectionDepths = (() => {
+    const { lowerSectionDepthMm, upperSectionDepthMm } = baseFurniture;
+
+    // 2섹션 가구가 아니면 null 반환
+    if (!baseFurniture.modelConfig.sections || baseFurniture.modelConfig.sections.length !== 2) {
+      return undefined;
+    }
+
+    return [
+      lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth,
+      upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth
+    ];
+  })();
+
   // 디버그: showFurniture 값 확인
   useEffect(() => {
     console.log('🎨 DualType2 - showFurniture:', showFurniture, 'moduleId:', moduleData.id);
@@ -425,6 +440,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               furnitureId={moduleData.id}
               placedFurnitureId={placedFurnitureId}
+              sectionDepths={sectionDepths}
             />
 
             {/* 옷걸이 봉 렌더링 - hanging 섹션만 */}

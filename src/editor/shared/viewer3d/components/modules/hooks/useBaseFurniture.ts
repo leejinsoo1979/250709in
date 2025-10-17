@@ -22,6 +22,8 @@ interface BaseFurnitureOptions {
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
   slotWidths?: number[]; // 듀얼 가구의 개별 슬롯 너비들 (mm)
   customSections?: SectionConfig[]; // 사용자 정의 섹션 설정
+  lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
+  upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
 }
 
 // 가구 기본 설정 반환 타입
@@ -29,7 +31,7 @@ interface BaseFurnitureResult {
   // 재질 관련
   material: THREE.MeshStandardMaterial;
   doorColor: string;
-  
+
   // 치수 관련
   width: number;
   height: number;
@@ -37,21 +39,23 @@ interface BaseFurnitureResult {
   innerWidth: number;
   innerHeight: number;
   actualDepthMm: number;
-  
+  lowerSectionDepthMm?: number; // 하부 섹션 깊이 (mm)
+  upperSectionDepthMm?: number; // 상부 섹션 깊이 (mm)
+
   // 계산된 값들
   basicThickness: number;
   backPanelThickness: number;
   adjustedDepthForShelves: number;
   shelfZOffset: number;
-  
+
   // 헬퍼 함수들
   calculateSectionHeight: (section: SectionConfig, availableHeight: number) => number;
   isMultiSectionFurniture: () => boolean;
   getSectionHeights: () => number[];
-  
+
   // 유틸리티
   mmToThreeUnits: (mm: number) => number;
-  
+
   // 설정 데이터
   modelConfig: NonNullable<ModuleData['modelConfig']>;
 }
@@ -73,7 +77,9 @@ export const useBaseFurniture = (
     isEditMode = false,
     adjustedWidth,
     slotWidths,
-    customSections
+    customSections,
+    lowerSectionDepth,
+    upperSectionDepth
   } = options;
   
   // Store에서 재질 설정 가져오기
@@ -362,7 +368,7 @@ export const useBaseFurniture = (
     // 재질 관련
     material,
     doorColor,
-    
+
     // 치수 관련
     width,
     height,
@@ -371,21 +377,23 @@ export const useBaseFurniture = (
     innerHeight,
     actualDepthMm,
     actualWidthMm,  // 실제 가구 너비 (mm 단위) 추가
-    
+    lowerSectionDepthMm: lowerSectionDepth, // 하부 섹션 깊이 (mm)
+    upperSectionDepthMm: upperSectionDepth, // 상부 섹션 깊이 (mm)
+
     // 계산된 값들
     basicThickness,
     backPanelThickness,
     adjustedDepthForShelves,
     shelfZOffset,
-    
+
     // 헬퍼 함수들
     calculateSectionHeight,
     isMultiSectionFurniture,
     getSectionHeights,
-    
+
     // 유틸리티
     mmToThreeUnits,
-    
+
     // 설정 데이터
     modelConfig
   };
