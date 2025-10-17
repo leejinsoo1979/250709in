@@ -1314,8 +1314,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       }
                     }
                   } else if (panel.width && panel.depth) {
-                    // width/depth를 가진 패널 (상판, 하판)
-                    dimensionDisplay = `W ${panel.depth} × L ${panel.width}`;
+                    // width/depth를 가진 패널 (상판, 바닥판, 선반)
+                    // 가로로 긴 패널: width가 긴쪽(L)
+                    if (isVerticalGrain) {
+                      // L 방향: width가 긴쪽
+                      dimensionDisplay = `W ${panel.depth} × L ${panel.width}`;
+                    } else {
+                      // W 방향: depth가 짧은쪽
+                      dimensionDisplay = `W ${panel.width} × L ${panel.depth}`;
+                    }
                   } else if (panel.height && panel.depth) {
                     // height/depth를 가진 패널
                     if (isDrawerPanel) {
