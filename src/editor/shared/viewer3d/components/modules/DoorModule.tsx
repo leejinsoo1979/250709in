@@ -1363,27 +1363,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         isLongDash = !isLongDash;
                       }
                     } else {
-                      // 측면뷰: < 패턴 (아래에서 위로 가는 대각선만)
-                      const start = [-doorDepth / 2, -doorHeight / 2, 0];
-                      const end = [doorDepth / 2, doorHeight / 2, 0];
-                      const dx = end[0] - start[0];
-                      const dy = end[1] - start[1];
-                      const totalLength = Math.sqrt(dx * dx + dy * dy);
+                      // 측면뷰: < 패턴 (두 개의 대각선으로 꺾인 모양)
+                      // 첫 번째 대각선: 위에서 중간으로
+                      const start1 = [-doorDepth / 2, doorHeight / 2, 0];
+                      const end1 = [0, 0, 0];
+                      const dx1 = end1[0] - start1[0];
+                      const dy1 = end1[1] - start1[1];
+                      const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
 
                       let currentPos = 0;
                       let isLongDash = true;
 
-                      while (currentPos < totalLength) {
+                      while (currentPos < totalLength1) {
                         const dashLength = isLongDash ? longDash : shortDash;
-                        const actualLength = Math.min(dashLength, totalLength - currentPos);
-                        const t1 = currentPos / totalLength;
-                        const t2 = (currentPos + actualLength) / totalLength;
+                        const actualLength = Math.min(dashLength, totalLength1 - currentPos);
+                        const t1 = currentPos / totalLength1;
+                        const t2 = (currentPos + actualLength) / totalLength1;
                         segments.push(
                           <Line
-                            key={`seg-${isLongDash ? 'long' : 'short'}-${currentPos}`}
+                            key={`seg1-${isLongDash ? 'long' : 'short'}-${currentPos}`}
                             points={[
-                              [start[0] + dx * t1, start[1] + dy * t1, 0],
-                              [start[0] + dx * t2, start[1] + dy * t2, 0]
+                              [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
+                              [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
                             color="#FF8800"
                             lineWidth={1}
@@ -1391,7 +1392,40 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             opacity={1.0}
                           />
                         );
-                        if (currentPos + actualLength >= totalLength) break;
+                        if (currentPos + actualLength >= totalLength1) break;
+                        currentPos += actualLength + gap;
+                        isLongDash = !isLongDash;
+                      }
+
+                      // 두 번째 대각선: 중간에서 아래로
+                      const start2 = [0, 0, 0];
+                      const end2 = [doorDepth / 2, -doorHeight / 2, 0];
+                      const dx2 = end2[0] - start2[0];
+                      const dy2 = end2[1] - start2[1];
+                      const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+
+                      currentPos = 0;
+                      isLongDash = true;
+
+                      while (currentPos < totalLength2) {
+                        const dashLength = isLongDash ? longDash : shortDash;
+                        const actualLength = Math.min(dashLength, totalLength2 - currentPos);
+                        const t1 = currentPos / totalLength2;
+                        const t2 = (currentPos + actualLength) / totalLength2;
+                        segments.push(
+                          <Line
+                            key={`seg2-${isLongDash ? 'long' : 'short'}-${currentPos}`}
+                            points={[
+                              [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
+                              [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
+                            ]}
+                            color="#FF8800"
+                            lineWidth={1}
+                            transparent={true}
+                            opacity={1.0}
+                          />
+                        );
+                        if (currentPos + actualLength >= totalLength2) break;
                         currentPos += actualLength + gap;
                         isLongDash = !isLongDash;
                       }
@@ -1686,27 +1720,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         isLongDash = !isLongDash;
                       }
                     } else {
-                      // 측면뷰: < 패턴 (아래에서 위로 가는 대각선만)
-                      const start = [doorDepth / 2, -doorHeight / 2, 0];
-                      const end = [-doorDepth / 2, doorHeight / 2, 0];
-                      const dx = end[0] - start[0];
-                      const dy = end[1] - start[1];
-                      const totalLength = Math.sqrt(dx * dx + dy * dy);
+                      // 측면뷰: < 패턴 (두 개의 대각선으로 꺾인 모양)
+                      // 첫 번째 대각선: 위에서 중간으로
+                      const start1 = [doorDepth / 2, doorHeight / 2, 0];
+                      const end1 = [0, 0, 0];
+                      const dx1 = end1[0] - start1[0];
+                      const dy1 = end1[1] - start1[1];
+                      const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
 
                       let currentPos = 0;
                       let isLongDash = true;
 
-                      while (currentPos < totalLength) {
+                      while (currentPos < totalLength1) {
                         const dashLength = isLongDash ? longDash : shortDash;
-                        const actualLength = Math.min(dashLength, totalLength - currentPos);
-                        const t1 = currentPos / totalLength;
-                        const t2 = (currentPos + actualLength) / totalLength;
+                        const actualLength = Math.min(dashLength, totalLength1 - currentPos);
+                        const t1 = currentPos / totalLength1;
+                        const t2 = (currentPos + actualLength) / totalLength1;
                         segments.push(
                           <Line
-                            key={`seg-${isLongDash ? 'long' : 'short'}-${currentPos}`}
+                            key={`seg1-${isLongDash ? 'long' : 'short'}-${currentPos}`}
                             points={[
-                              [start[0] + dx * t1, start[1] + dy * t1, 0],
-                              [start[0] + dx * t2, start[1] + dy * t2, 0]
+                              [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
+                              [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
                             ]}
                             color="#FF8800"
                             lineWidth={1}
@@ -1714,7 +1749,40 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                             opacity={1.0}
                           />
                         );
-                        if (currentPos + actualLength >= totalLength) break;
+                        if (currentPos + actualLength >= totalLength1) break;
+                        currentPos += actualLength + gap;
+                        isLongDash = !isLongDash;
+                      }
+
+                      // 두 번째 대각선: 중간에서 아래로
+                      const start2 = [0, 0, 0];
+                      const end2 = [-doorDepth / 2, -doorHeight / 2, 0];
+                      const dx2 = end2[0] - start2[0];
+                      const dy2 = end2[1] - start2[1];
+                      const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+
+                      currentPos = 0;
+                      isLongDash = true;
+
+                      while (currentPos < totalLength2) {
+                        const dashLength = isLongDash ? longDash : shortDash;
+                        const actualLength = Math.min(dashLength, totalLength2 - currentPos);
+                        const t1 = currentPos / totalLength2;
+                        const t2 = (currentPos + actualLength) / totalLength2;
+                        segments.push(
+                          <Line
+                            key={`seg2-${isLongDash ? 'long' : 'short'}-${currentPos}`}
+                            points={[
+                              [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
+                              [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
+                            ]}
+                            color="#FF8800"
+                            lineWidth={1}
+                            transparent={true}
+                            opacity={1.0}
+                          />
+                        );
+                        if (currentPos + actualLength >= totalLength2) break;
                         currentPos += actualLength + gap;
                         isLongDash = !isLongDash;
                       }
