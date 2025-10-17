@@ -2803,9 +2803,8 @@ const Configurator: React.FC = () => {
                     // 모든 개별 도어를 닫기
                     let closedCount = 0;
                     placedModules.forEach((module) => {
-                      const moduleData = getModuleById(module.moduleId);
-                      console.log(`모듈 ${module.id}: hasDoor=${moduleData?.hasDoor}, doorSplit=${module.doorSplit}`);
-                      if (moduleData?.hasDoor) {
+                      console.log(`모듈 ${module.id}: hasDoor=${module.hasDoor}, doorSplit=${module.doorSplit}`);
+                      if (module.hasDoor) {
                         const sectionCount = module.doorSplit ? 2 : 1;
                         for (let i = 0; i < sectionCount; i++) {
                           const { isIndividualDoorOpen } = useUIStore.getState();
@@ -2840,9 +2839,8 @@ const Configurator: React.FC = () => {
                     // 모든 개별 도어를 열기
                     let openedCount = 0;
                     placedModules.forEach((module) => {
-                      const moduleData = getModuleById(module.moduleId);
-                      console.log(`모듈 ${module.id}: hasDoor=${moduleData?.hasDoor}, doorSplit=${module.doorSplit}`);
-                      if (moduleData?.hasDoor) {
+                      console.log(`모듈 ${module.id}: hasDoor=${module.hasDoor}, doorSplit=${module.doorSplit}`);
+                      if (module.hasDoor) {
                         const sectionCount = module.doorSplit ? 2 : 1;
                         for (let i = 0; i < sectionCount; i++) {
                           const { isIndividualDoorOpen } = useUIStore.getState();
