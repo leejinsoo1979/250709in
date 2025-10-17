@@ -518,12 +518,20 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                 rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
               }
 
+              // 옷봉 Z 위치 계산 (섹션 깊이에 따라 조정)
+              let rodZPosition = 0;
+              if (sectionDepths && sectionDepths[sectionIndex]) {
+                const sectionDepth = sectionDepths[sectionIndex];
+                const depthDiff = depth - sectionDepth;
+                rodZPosition = depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+              }
+
               return (
                 <ClothingRod
                   key={`clothing-rod-${sectionIndex}`}
                   innerWidth={innerWidth}
                   yPosition={rodYPosition}
-                  zPosition={0}
+                  zPosition={rodZPosition}
                   renderMode={renderMode}
                   isDragging={false}
                   isEditMode={isEditMode}
