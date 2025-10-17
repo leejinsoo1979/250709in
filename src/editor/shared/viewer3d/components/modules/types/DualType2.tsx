@@ -98,15 +98,29 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   const sectionDepths = (() => {
     const { lowerSectionDepthMm, upperSectionDepthMm } = baseFurniture;
 
+    console.log('🔍 [DualType2 섹션 깊이 디버깅]', {
+      lowerSectionDepth,
+      upperSectionDepth,
+      lowerSectionDepthMm,
+      upperSectionDepthMm,
+      sections: baseFurniture.modelConfig.sections,
+      sectionsLength: baseFurniture.modelConfig.sections?.length
+    });
+
     // 2섹션 가구가 아니면 null 반환
     if (!baseFurniture.modelConfig.sections || baseFurniture.modelConfig.sections.length !== 2) {
+      console.warn('⚠️ [DualType2] 2섹션 가구가 아님');
       return undefined;
     }
 
-    return [
+    const result = [
       lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth,
       upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth
     ];
+
+    console.log('✅ [DualType2 섹션 깊이 결과]', result);
+
+    return result;
   })();
 
   // 디버그: showFurniture 값 확인
@@ -548,7 +562,15 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
       )}
 
       {/* 도어는 showFurniture와 관계없이 항상 렌더링 (도어 도면 출력용) */}
-      {hasDoor && spaceInfo && (
+      {hasDoor && spaceInfo && (() => {
+        console.log('🚪 [DualType2 도어 렌더링]', {
+          hasDoor,
+          doorSplit,
+          doorSplitType: typeof doorSplit,
+          isUndefined: doorSplit === undefined,
+          renderingMode: doorSplit ? '분할' : '병합'
+        });
+        return (
         <>
           {!doorSplit ? (
             // 병합 모드: 도어 하나
@@ -618,7 +640,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             </>
           )}
         </>
-      )}
+        );
+      })()}
     </>
   );
 };
