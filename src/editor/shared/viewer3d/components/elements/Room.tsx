@@ -6,7 +6,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
-import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
 import { 
   calculateRoomDimensions, 
   calculateFloorFinishHeight,
@@ -737,15 +737,25 @@ const Room: React.FC<RoomProps> = ({
           texture.wrapS = THREE.RepeatWrapping;
           texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1, 1);
-          material.map = texture;
 
+          // Oak 텍스처인 경우: 좌우 프레임은 세로 결, 상하 프레임은 가로 결 (90도 회전)
+          if (isOakTexture(materialConfig.doorTexture)) {
+            const isVerticalFrame = frameType === 'left' || frameType === 'right';
+            if (!isVerticalFrame) {
+              // 상하 프레임(top/base)만 90도 회전
+              texture.rotation = Math.PI / 2;
+              texture.center.set(0.5, 0.5);
+            }
+            applyOakTextureSettings(material, false); // 텍스처는 이미 회전 처리했으므로 false
+          }
           // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
-          if (!isCabinetTexture1(materialConfig.doorTexture)) {
+          else if (!isCabinetTexture1(materialConfig.doorTexture)) {
             material.color.setHex(0xffffff); // 다른 텍스처는 기본 흰색
             material.toneMapped = true; // 기본 톤 매핑 활성화
             material.roughness = 0.6; // 기본 거칠기
           }
 
+          material.map = texture;
           material.needsUpdate = true;
         },
         undefined,

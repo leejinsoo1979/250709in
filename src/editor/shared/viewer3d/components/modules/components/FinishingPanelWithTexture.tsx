@@ -2,7 +2,7 @@ import React, { useMemo, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import BoxWithEdges from './BoxWithEdges';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
 
 interface FinishingPanelWithTextureProps {
   width: number;
@@ -56,7 +56,15 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
           texture.wrapS = THREE.RepeatWrapping;
           texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1, 1);
+
+          // 마감재 패널은 세로 결 방향 유지 - Oak 텍스처 회전 안함
           material.map = texture;
+
+          // Oak 텍스처인 경우: 마감재 패널은 세로 결이므로 회전 안함
+          if (isOakTexture(textureUrl)) {
+            applyOakTextureSettings(material, false); // rotateTexture = false
+          }
+
           material.needsUpdate = true;
           setTextureLoaded(true);
         },
