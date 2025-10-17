@@ -1267,6 +1267,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   const defaultDirection = getDefaultGrainDirection(panel.name);
                   const currentDirection = currentPlacedModule?.panelGrainDirections?.[panel.name] || defaultDirection;
 
+                  // 결 방향에 따라 W/L 레이블 결정
+                  const isVerticalGrain = currentDirection === 'vertical';
+
                   return (
                     <div key={index} className={styles.panelItem} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ flex: 1 }}>
@@ -1275,11 +1278,15 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           {panel.diameter ? (
                             `Φ${panel.diameter}mm × L${panel.width}mm`
                           ) : panel.width && panel.height ? (
-                            `${panel.width} × ${panel.height}mm`
+                            // 세로결(V): height가 긴쪽(L), width가 짧은쪽(W)
+                            // 가로결(H): width가 긴쪽(L), height가 짧은쪽(W)
+                            isVerticalGrain
+                              ? `W${panel.width} × L${panel.height}mm`
+                              : `W${panel.height} × L${panel.width}mm`
                           ) : panel.width && panel.depth ? (
-                            `${panel.width} × ${panel.depth}mm`
+                            `W${panel.depth} × L${panel.width}mm`
                           ) : panel.height && panel.depth ? (
-                            `${panel.height} × ${panel.depth}mm`
+                            `W${panel.depth} × L${panel.height}mm`
                           ) : panel.description ? (
                             panel.description
                           ) : (
