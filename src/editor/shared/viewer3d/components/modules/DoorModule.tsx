@@ -1364,9 +1364,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
                     } else {
                       // 측면뷰: < 패턴 (두 개의 대각선으로 꺾인 모양)
-                      // 첫 번째 대각선: 위에서 중간으로
+                      // 첫 번째 대각선: 위 뒷쪽에서 중간 앞쪽으로
                       const start1 = [-doorDepth / 2, doorHeight / 2, 0];
-                      const end1 = [0, 0, 0];
+                      const end1 = [doorDepth / 2, 0, 0];
                       const dx1 = end1[0] - start1[0];
                       const dy1 = end1[1] - start1[1];
                       const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
@@ -1398,7 +1398,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
 
                       // 두 번째 대각선: 중간에서 아래로
-                      const start2 = [0, 0, 0];
+                      const start2 = [doorDepth / 2, 0, 0];
                       const end2 = [doorDepth / 2, -doorHeight / 2, 0];
                       const dx2 = end2[0] - start2[0];
                       const dy2 = end2[1] - start2[1];
@@ -1723,7 +1723,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       // 측면뷰: < 패턴 (두 개의 대각선으로 꺾인 모양)
                       // 첫 번째 대각선: 위에서 중간으로
                       const start1 = [doorDepth / 2, doorHeight / 2, 0];
-                      const end1 = [0, 0, 0];
+                      const end1 = [-doorDepth / 2, 0, 0];
                       const dx1 = end1[0] - start1[0];
                       const dy1 = end1[1] - start1[1];
                       const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
@@ -1755,7 +1755,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
 
                       // 두 번째 대각선: 중간에서 아래로
-                      const start2 = [0, 0, 0];
+                      const start2 = [-doorDepth / 2, 0, 0];
                       const end2 = [-doorDepth / 2, -doorHeight / 2, 0];
                       const dx2 = end2[0] - start2[0];
                       const dy2 = end2[1] - start2[1];
