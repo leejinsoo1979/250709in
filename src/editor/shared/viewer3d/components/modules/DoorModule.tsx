@@ -1211,32 +1211,65 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {sectionIndex !== undefined ? (
-                    // 분할 모드: 3개 경첩 (싱글 2단 옷장 하부 섹션 기준)
+                    // 분할 모드: 섹션별로 다른 경첩 배치
                     <>
-                      <Hinge
-                        position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
-                        mainDiameter={17.5}
-                        smallCircleDiameter={4}
-                        smallCircleXOffset={9.5}
-                        viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                        view2DDirection={view2DDirection}
-                      />
-                      <Hinge
-                        position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), 0, doorThicknessUnits / 2 + 0.001]}
-                        mainDiameter={17.5}
-                        smallCircleDiameter={4}
-                        smallCircleXOffset={9.5}
-                        viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                        view2DDirection={view2DDirection}
-                      />
-                      <Hinge
-                        position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
-                        mainDiameter={17.5}
-                        smallCircleDiameter={4}
-                        smallCircleXOffset={9.5}
-                        viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                        view2DDirection={view2DDirection}
-                      />
+                      {sectionIndex === 1 ? (
+                        // 상부 섹션 도어: 3개 경첩 (상단 100mm, 중간, 하단 149mm)
+                        <>
+                          <Hinge
+                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                          <Hinge
+                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), 0, doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                          <Hinge
+                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                        </>
+                      ) : (
+                        // 하부 섹션 도어: 3개 경첩 (상단 100mm, 중간, 하단 149mm)
+                        <>
+                          <Hinge
+                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                          <Hinge
+                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), 0, doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                          <Hinge
+                            position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                        </>
+                      )}
                     </>
                   ) : isUpperCabinet ? (
                     // 상부장: 위에서 100mm, 아래에서 100mm
@@ -1598,32 +1631,65 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
                   {sectionIndex !== undefined ? (
-                    // 분할 모드: 3개 경첩 (싱글 2단 옷장 하부 섹션 기준)
+                    // 분할 모드: 섹션별로 다른 경첩 배치
                     <>
-                      <Hinge
-                        position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
-                        mainDiameter={17.5}
-                        smallCircleDiameter={4}
-                        smallCircleXOffset={-9.5}
-                        viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                        view2DDirection={view2DDirection}
-                      />
-                      <Hinge
-                        position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), 0, doorThicknessUnits / 2 + 0.001]}
-                        mainDiameter={17.5}
-                        smallCircleDiameter={4}
-                        smallCircleXOffset={-9.5}
-                        viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                        view2DDirection={view2DDirection}
-                      />
-                      <Hinge
-                        position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
-                        mainDiameter={17.5}
-                        smallCircleDiameter={4}
-                        smallCircleXOffset={-9.5}
-                        viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
-                        view2DDirection={view2DDirection}
-                      />
+                      {sectionIndex === 1 ? (
+                        // 상부 섹션 도어: 3개 경첩 (상단 100mm, 중간, 하단 149mm)
+                        <>
+                          <Hinge
+                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={-9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                          <Hinge
+                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), 0, doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={-9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                          <Hinge
+                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={-9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                        </>
+                      ) : (
+                        // 하부 섹션 도어: 3개 경첩 (상단 100mm, 중간, 하단 149mm)
+                        <>
+                          <Hinge
+                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={-9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                          <Hinge
+                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), 0, doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={-9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                          <Hinge
+                            position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
+                            mainDiameter={17.5}
+                            smallCircleDiameter={4}
+                            smallCircleXOffset={-9.5}
+                            viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                            view2DDirection={view2DDirection}
+                          />
+                        </>
+                      )}
                     </>
                   ) : isUpperCabinet ? (
                     // 상부장: 위에서 100mm, 아래에서 100mm
