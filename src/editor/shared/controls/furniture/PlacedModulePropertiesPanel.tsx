@@ -1391,63 +1391,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
           )}
 
-          {/* 섹션별 깊이 설정 (2섹션 가구만, 상세보기 아닐 때만) */}
-          {!showDetails && isTwoSectionFurniture && (
-            <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>섹션별 깊이 설정</h5>
-              <div className={styles.sectionDepthContainer}>
-                {/* 하부 섹션 깊이 */}
-                <div className={styles.sectionDepthField}>
-                  <label className={styles.sectionDepthLabel}>하부 섹션</label>
-                  <div className={styles.inputWithUnit}>
-                    <input
-                      type="number"
-                      value={lowerSectionDepth ?? ''}
-                      placeholder={customDepth.toString()}
-                      onChange={(e) => {
-                        const value = e.target.value === '' ? undefined : Number(e.target.value);
-                        setLowerSectionDepth(value);
-                        if (currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: value });
-                        }
-                      }}
-                      className={styles.input}
-                      min={FURNITURE_LIMITS.DEPTH.MIN}
-                      max={Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX)}
-                    />
-                    <span className={styles.unit}>mm</span>
-                  </div>
-                </div>
-
-                {/* 상부 섹션 깊이 */}
-                <div className={styles.sectionDepthField}>
-                  <label className={styles.sectionDepthLabel}>상부 섹션</label>
-                  <div className={styles.inputWithUnit}>
-                    <input
-                      type="number"
-                      value={upperSectionDepth ?? ''}
-                      placeholder={customDepth.toString()}
-                      onChange={(e) => {
-                        const value = e.target.value === '' ? undefined : Number(e.target.value);
-                        setUpperSectionDepth(value);
-                        if (currentPlacedModule) {
-                          updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: value });
-                        }
-                      }}
-                      className={styles.input}
-                      min={FURNITURE_LIMITS.DEPTH.MIN}
-                      max={Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX)}
-                    />
-                    <span className={styles.unit}>mm</span>
-                  </div>
-                </div>
-              </div>
-              <div className={styles.sectionDepthNote}>
-                빈 칸으로 두면 전체 깊이({customDepth}mm)가 적용됩니다
-              </div>
-            </div>
-          )}
-
           {/* 경첩 방향 선택 (도어가 있고 싱글 가구인 경우만, 상세보기 아닐 때만) */}
           {!showDetails && moduleData.hasDoor && hasDoor && (
             <div className={styles.propertySection}>
