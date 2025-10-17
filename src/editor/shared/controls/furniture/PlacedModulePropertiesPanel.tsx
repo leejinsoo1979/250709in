@@ -1309,15 +1309,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                       <button
                         style={{
-                          padding: '4px 8px',
+                          padding: '6px 10px',
                           background: currentDirection === 'vertical' ? '#4CAF50' : '#2196F3',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
-                          fontSize: '11px',
-                          fontWeight: '600',
+                          fontSize: '14px',
+                          fontWeight: '700',
                           cursor: 'pointer',
-                          minWidth: '50px'
+                          minWidth: '60px',
+                          lineHeight: '1.2'
                         }}
                         onClick={() => {
                           if (!currentPlacedModule) return;
