@@ -1179,10 +1179,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorGroupX: doorGroupX
     });
 
-    // 측면뷰에서 선택된 슬롯 확인 (0: 왼쪽, 1: 오른쪽)
+    // 측면뷰에서 선택된 슬롯 확인
+    // 듀얼 도어는 전체가 하나의 컴포넌트이므로 slotIndex로 현재 슬롯 판단
     const isSideView = view2DDirection === 'left' || view2DDirection === 'right';
-    const showLeftDoor = !isSideView || selectedSlotIndex === 0;
-    const showRightDoor = !isSideView || selectedSlotIndex === 1;
+
+    // 측면뷰가 아니면 항상 표시, 측면뷰면 항상 표시 (듀얼 도어는 하나의 유닛)
+    const showLeftDoor = true;
+    const showRightDoor = true;
 
     return (
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
