@@ -584,26 +584,29 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 totalSections={2}
               />
 
-              {/* 도어 분할선 - 중간판(하부섹션 상판/상부섹션 바닥판) 위치에 표시 */}
+              {/* 도어 분할선 - 하부/상부 섹션 측판 경계에 표시 */}
               {(() => {
-                // 도어 좌표계 기준으로 중간판 위치 계산
-                const tallCabinetFurnitureHeight = moduleData.dimensions.height || 2000;
-                const lowerSectionHeightMm = 1000; // 하부 섹션 고정 높이 (mm)
+                // 측판 렌더링 로직과 동일하게 계산
+                const sectionHeights = getSectionHeights();
+                const lowerSectionHeight = sectionHeights[0]; // 하부 섹션 높이
 
-                // 가구 하단 (도어 좌표계)
-                const furnitureBottomMm = -tallCabinetFurnitureHeight / 2;
+                let accumulatedY = -height/2 + basicThickness;
 
-                // 중간판 위치 = 가구 하단 + 하부섹션높이 (하부 섹션 상단 = 상부 섹션 하단)
-                const middlePanelYMm = furnitureBottomMm + lowerSectionHeightMm;
-                const middlePanelY = mmToThreeUnits(middlePanelYMm);
+                // 하부 섹션 (index=0)
+                const lowerSectionCenterY = accumulatedY + lowerSectionHeight / 2 - basicThickness;
 
-                console.log('🚪📏 도어 분할선 위치 (도어 좌표계 기준):', {
-                  tallCabinetFurnitureHeight,
-                  furnitureBottomMm,
-                  lowerSectionHeightMm,
-                  middlePanelYMm,
-                  middlePanelY,
-                  설명: '가구 하단 + 하부섹션높이 = 중간판 위치'
+                // 하부 섹션 측판 상단 = 하부 섹션 중심 + 높이/2
+                const lowerSidePanelTop = lowerSectionCenterY + lowerSectionHeight / 2;
+
+                console.log('🚪📏 도어 분할선 위치 (측판 경계 기준):', {
+                  height,
+                  basicThickness,
+                  accumulatedY,
+                  lowerSectionHeight,
+                  lowerSectionCenterY,
+                  lowerSidePanelTop,
+                  lowerSidePanelTop_mm: lowerSidePanelTop / 0.01,
+                  설명: '하부 섹션 측판 상단 = 상부 섹션 측판 하단'
                 });
 
                 // 도어 너비와 깊이
@@ -613,8 +616,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 return (
                   <Line
                     points={[
-                      [-doorWidthThree / 2, middlePanelY, doorDepthThree / 2 + 0.001],
-                      [doorWidthThree / 2, middlePanelY, doorDepthThree / 2 + 0.001]
+                      [-doorWidthThree / 2, lowerSidePanelTop, doorDepthThree / 2 + 0.001],
+                      [doorWidthThree / 2, lowerSidePanelTop, doorDepthThree / 2 + 0.001]
                     ]}
                     color="#FF0000"
                     lineWidth={5}
