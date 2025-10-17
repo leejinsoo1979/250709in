@@ -53,6 +53,29 @@ export const applyCabinetTexture1Settings = (material: THREE.MeshStandardMateria
 };
 
 /**
+ * 패널 이름으로 기본 결 방향 판단
+ * @param panelName - 패널 이름
+ * @returns 'horizontal' | 'vertical'
+ */
+export const getDefaultGrainDirection = (panelName?: string): 'horizontal' | 'vertical' => {
+  if (!panelName) return 'horizontal';
+
+  const name = panelName.toLowerCase();
+
+  // 세로 결이 필요한 패널들
+  if (name.includes('측판') ||
+      name.includes('side') ||
+      name.includes('백패널') ||
+      name.includes('back') ||
+      name.includes('뒷판')) {
+    return 'vertical';
+  }
+
+  // 나머지는 기본적으로 가로 결
+  return 'horizontal';
+};
+
+/**
  * Oak 재질 속성을 적용
  * @param material - 적용할 재질
  * @param rotateTexture - 텍스처를 90도 회전할지 여부 (기본: true, 가로 결 방향)
