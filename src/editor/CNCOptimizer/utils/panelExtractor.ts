@@ -66,7 +66,8 @@ export const calculatePanelDetails = (
         thickness: basicThickness,  // 18mm
         material: 'PB',
         color: 'MW',
-        quantity: 1
+        quantity: 1,
+        grain: 'HORIZONTAL'  // X축 방향이 세로결
       });
     }
     
@@ -100,9 +101,10 @@ export const calculatePanelDetails = (
         thickness: basicThickness,  // 18mm
         material: 'PB',
         color: 'MW',
-        quantity: 1
+        quantity: 1,
+        grain: 'VERTICAL'  // Y축 방향이 세로결
       });
-      
+
       panels.push({
         id: `panel-${panelId++}`,
         name: `${moduleData.name} - 우측판`,
@@ -111,9 +113,10 @@ export const calculatePanelDetails = (
         thickness: basicThickness,  // 18mm
         material: 'PB',
         color: 'MW',
-        quantity: 1
+        quantity: 1,
+        grain: 'VERTICAL'  // Y축 방향이 세로결
       });
-      
+
       // 섹션 상판 (마지막 섹션에만)
       if (sectionIndex === sections.length - 1) {
         panels.push({
@@ -124,10 +127,11 @@ export const calculatePanelDetails = (
           thickness: basicThickness,  // 18mm
           material: 'PB',
           color: 'MW',
-          quantity: 1
+          quantity: 1,
+          grain: 'HORIZONTAL'  // X축 방향이 세로결
         });
       }
-      
+
       // 섹션 하판
       const depthAdjustment = sectionIndex === 0 ? 0 : (backPanelThickness + 17);
       panels.push({
@@ -138,9 +142,10 @@ export const calculatePanelDetails = (
         thickness: basicThickness,  // 18mm
         material: 'PB',
         color: 'MW',
-        quantity: 1
+        quantity: 1,
+        grain: 'HORIZONTAL'  // X축 방향이 세로결
       });
-      
+
       // 섹션 뒷판
       panels.push({
         id: `panel-${panelId++}`,
@@ -150,7 +155,8 @@ export const calculatePanelDetails = (
         thickness: backPanelThickness,  // 9mm
         material: 'MDF',
         color: 'MW',
-        quantity: 1
+        quantity: 1,
+        grain: 'VERTICAL'  // Y축 방향이 세로결
       });
       
       // 서랍 섹션 처리
@@ -276,7 +282,8 @@ export const calculatePanelDetails = (
               thickness: basicThickness,  // 18mm
               material: 'PB',
               color: 'MW',
-              quantity: 1
+              quantity: 1,
+              grain: 'HORIZONTAL'  // X축 방향이 세로결
             });
           });
         }
@@ -292,7 +299,7 @@ export const calculatePanelDetails = (
             material: 'PB',
             color: 'MW',
             quantity: 1,
-            grain: 'VERTICAL'  // 서랍도 세로 결방향
+            grain: 'HORIZONTAL'  // X축 방향이 세로결
           });
         }
       }
@@ -334,9 +341,9 @@ export const calculatePanelDetails = (
       material: 'PB',
       color: 'MW',
       quantity: 1,
-      grain: 'VERTICAL'  // 기본값을 세로로 설정
+      grain: 'HORIZONTAL'  // X축 방향이 세로결
     });
-    
+
     panels.push({
       id: `panel-${panelId++}`,
       name: `${moduleData.name} - 하판`,
@@ -346,9 +353,9 @@ export const calculatePanelDetails = (
       material: 'PB',
       color: 'MW',
       quantity: 1,
-      grain: 'VERTICAL'  // 기본값을 세로로 설정
+      grain: 'HORIZONTAL'  // X축 방향이 세로결
     });
-    
+
     // 뒷판
     panels.push({
       id: `panel-${panelId++}`,
@@ -359,14 +366,14 @@ export const calculatePanelDetails = (
       material: 'MDF',
       color: 'MW',
       quantity: 1,
-      grain: 'VERTICAL'  // 기본값을 세로로 설정
+      grain: 'VERTICAL'  // Y축 방향이 세로결
     });
   }
   
   // 도어 패널 (PET 재질)
   if (hasDoor) {
     const doorGap = 2;
-    
+
     if (moduleData.id.includes('dual')) {
       const doorWidth = Math.floor((customWidth - doorGap * 3) / 2);
       panels.push({
@@ -377,7 +384,8 @@ export const calculatePanelDetails = (
         thickness: basicThickness,  // 18mm
         material: 'PET',  // 도어는 PET 재질
         color: 'MW',
-        quantity: 1
+        quantity: 1,
+        grain: 'VERTICAL'  // Y축 방향이 세로결
       });
       panels.push({
         id: `panel-${panelId++}`,
@@ -387,7 +395,8 @@ export const calculatePanelDetails = (
         thickness: basicThickness,  // 18mm
         material: 'PET',  // 도어는 PET 재질
         color: 'MW',
-        quantity: 1
+        quantity: 1,
+        grain: 'VERTICAL'  // Y축 방향이 세로결
       });
     } else {
       panels.push({
@@ -398,7 +407,8 @@ export const calculatePanelDetails = (
         thickness: basicThickness,  // 18mm
         material: 'PET',  // 도어는 PET 재질
         color: 'MW',
-        quantity: 1
+        quantity: 1,
+        grain: 'VERTICAL'  // Y축 방향이 세로결
       });
     }
   }
