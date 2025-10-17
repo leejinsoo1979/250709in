@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { TextureGenerator } from './TextureGenerator';
-import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '../../utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '../../../utils/materialConstants';
 
 /**
  * 재질 팩토리 클래스 - 기존 materials.ts의 모든 함수를 대체
