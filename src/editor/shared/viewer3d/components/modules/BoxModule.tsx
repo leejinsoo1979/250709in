@@ -135,7 +135,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     isDragging,
     isEditMode,
     adjustedWidth,
-    isHighlighted
+    isHighlighted,
+    grainDirection,
+    panelGrainDirections
   });
 
   // 디버그: showFurniture 값 확인
@@ -529,6 +531,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           isDragging={isDragging} 
           isEditMode={isEditMode} 
           isHighlighted={isHighlighted}
+          placedFurnitureId={placedFurnitureId}
+          panelGrainDirections={panelGrainDirections}
         >
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
@@ -545,6 +549,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               mmToThreeUnits={baseFurniture.mmToThreeUnits}
               renderMode={renderMode || useSpace3DView().renderMode}
               furnitureId={furnitureId}
+              placedFurnitureId={placedFurnitureId}
+              textureUrl={baseFurniture.textureUrl}
+              panelGrainDirections={panelGrainDirections}
             />
           )}
         </BaseFurnitureShell>
