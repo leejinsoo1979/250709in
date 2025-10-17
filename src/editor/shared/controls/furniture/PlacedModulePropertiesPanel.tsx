@@ -1270,28 +1270,39 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   // 결 방향에 따라 W/L 레이블 결정
                   const isVerticalGrain = currentDirection === 'vertical';
 
+                  // W/L 표시 로직
+                  // - 세로결(V): Y축(height)이 긴쪽(L), X축(width)이 짧은쪽(W)
+                  // - 가로결(H): X축(width)이 긴쪽(L), Z축(depth)이 짧은쪽(W)
+                  let dimensionDisplay = '';
+                  if (panel.diameter) {
+                    dimensionDisplay = `Φ ${panel.diameter} × L ${panel.width}`;
+                  } else if (panel.width && panel.height) {
+                    // width/height를 가진 패널 (측판, 상판, 하판 등)
+                    if (isVerticalGrain) {
+                      // 세로결: width=W(짧은쪽), height=L(긴쪽)
+                      dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
+                    } else {
+                      // 가로결: width=L(긴쪽), height=W(짧은쪽)
+                      dimensionDisplay = `W ${panel.height} × L ${panel.width}`;
+                    }
+                  } else if (panel.width && panel.depth) {
+                    // width/depth를 가진 패널 (상판, 하판의 다른 표현)
+                    dimensionDisplay = `W ${panel.depth} × L ${panel.width}`;
+                  } else if (panel.height && panel.depth) {
+                    // height/depth를 가진 패널 (측판의 다른 표현)
+                    dimensionDisplay = `W ${panel.depth} × L ${panel.height}`;
+                  } else if (panel.description) {
+                    dimensionDisplay = panel.description;
+                  } else {
+                    dimensionDisplay = `${panel.width || panel.height || panel.depth}`;
+                  }
+
                   return (
                     <div key={index} className={styles.panelItem} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ flex: 1 }}>
                         <span className={styles.panelName}>{panel.name}:</span>
                         <span className={styles.panelSize}>
-                          {panel.diameter ? (
-                            `Φ ${panel.diameter} × L ${panel.width}`
-                          ) : panel.width && panel.height ? (
-                            // 세로결(V): height가 긴쪽(L), width가 짧은쪽(W)
-                            // 가로결(H): width가 긴쪽(L), height가 짧은쪽(W)
-                            isVerticalGrain
-                              ? `W ${panel.width} × L ${panel.height}`
-                              : `W ${panel.height} × L ${panel.width}`
-                          ) : panel.width && panel.depth ? (
-                            `W ${panel.depth} × L ${panel.width}`
-                          ) : panel.height && panel.depth ? (
-                            `W ${panel.depth} × L ${panel.height}`
-                          ) : panel.description ? (
-                            panel.description
-                          ) : (
-                            `${panel.width || panel.height || panel.depth}`
-                          )}
+                          {dimensionDisplay}
                           {panel.thickness && panel.showThickness !== false && !panel.diameter && ` (T: ${panel.thickness})`}
                           {panel.material && ` [${panel.material}]`}
                         </span>
