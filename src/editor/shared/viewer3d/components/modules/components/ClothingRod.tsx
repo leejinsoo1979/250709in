@@ -69,7 +69,9 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
     leftBracketX: leftBracketX * 100,
     rightBracketX: rightBracketX * 100,
     rodWidth: rodWidth * 100,
-    yPosition: yPosition * 100
+    yPosition: yPosition * 100,
+    zPosition: zPosition * 100,
+    '섹션 깊이 오프셋 적용': zPosition !== 0
   });
 
   // 옷봉 Y 위치: 브라켓 하단에서 5mm 위에 옷봉 하단
