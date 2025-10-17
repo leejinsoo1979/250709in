@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Module, PlacedModule } from '@/types/module';
 import { ModuleData } from '@/data/modules';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -24,9 +24,16 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   const { updateModule } = useFurnitureStore();
 
   // 결 방향 상태 (기본값: horizontal)
-  const [grainDirection, setGrainDirection] = useState<'horizontal' | 'vertical'>(
-    placedModule?.grainDirection || 'horizontal'
-  );
+  const [grainDirection, setGrainDirection] = useState<'horizontal' | 'vertical'>('horizontal');
+
+  // placedModule이 변경될 때 grainDirection 업데이트
+  useEffect(() => {
+    if (placedModule?.grainDirection) {
+      setGrainDirection(placedModule.grainDirection);
+    } else {
+      setGrainDirection('horizontal');
+    }
+  }, [placedModule?.id, placedModule?.grainDirection]);
 
   // 결 방향 토글 핸들러
   const handleToggleGrainDirection = () => {
