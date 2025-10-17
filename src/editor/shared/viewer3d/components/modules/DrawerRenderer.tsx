@@ -145,8 +145,12 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
+          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1}(앞판)` : `서랍${drawerIndex + 1}(앞판)`}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={furnitureId}
         />
-        
+
         {/* 뒷면 - 앞면 판과 높이 맞춤, 폭은 좌우 38mm씩 총 76mm 줄임 */}
         <BoxWithEdges
           args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), basicThickness]}
@@ -154,8 +158,12 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
+          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1}(뒷판)` : `서랍${drawerIndex + 1}(뒷판)`}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={furnitureId}
         />
-        
+
         {/* 왼쪽 면 - 앞뒤 판재 두께(36mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
         <BoxWithEdges
           args={[basicThickness, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - basicThickness * 2]}
@@ -163,8 +171,12 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
+          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1}(좌측판)` : `서랍${drawerIndex + 1}(좌측판)`}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={furnitureId}
         />
-        
+
         {/* 오른쪽 면 - 앞뒤 판재 두께(36mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
         <BoxWithEdges
           args={[basicThickness, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - basicThickness * 2]}
@@ -172,6 +184,10 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
+          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1}(우측판)` : `서랍${drawerIndex + 1}(우측판)`}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={furnitureId}
         />
         
         {/* === 손잡이 판 (앞쪽, 20mm 두께) === */}
