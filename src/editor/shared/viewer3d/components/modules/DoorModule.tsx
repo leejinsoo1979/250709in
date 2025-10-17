@@ -1282,8 +1282,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
 
-              {/* Door opening direction for left door (front view and side view) - 도어가 열렸을 때만 표시 */}
-              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && isDoorOpen && (
+              {/* Door opening direction for left door - 정면뷰는 항상, 측면뷰는 열렸을 때만 */}
+              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (
                 <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
                   {/* 대각선 - 도어 열림 방향 표시 */}
                   {(() => {
@@ -1364,7 +1364,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
                     } else {
                       // 측면뷰: < 패턴 (아래에서 위로 가는 대각선만)
-                      const start = [-doorDepth / 2, 0, 0];
+                      const start = [-doorDepth / 2, -doorHeight / 2, 0];
                       const end = [doorDepth / 2, doorHeight / 2, 0];
                       const dx = end[0] - start[0];
                       const dy = end[1] - start[1];
@@ -1605,8 +1605,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               )}
 
 
-              {/* Door opening direction for right door (front view and side view) - 도어가 열렸을 때만 표시 */}
-              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && isDoorOpen && (
+              {/* Door opening direction for right door - 정면뷰는 항상, 측면뷰는 열렸을 때만 */}
+              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (
                 <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
                   {/* 대각선 - 도어 열림 방향 표시 */}
                   {(() => {
@@ -1687,7 +1687,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
                     } else {
                       // 측면뷰: < 패턴 (아래에서 위로 가는 대각선만)
-                      const start = [doorDepth / 2, 0, 0];
+                      const start = [doorDepth / 2, -doorHeight / 2, 0];
                       const end = [-doorDepth / 2, doorHeight / 2, 0];
                       const dx = end[0] - start[0];
                       const dy = end[1] - start[1];
