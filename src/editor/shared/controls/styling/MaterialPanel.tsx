@@ -37,7 +37,7 @@ const materialSwatches = [
   { id: "i3", name: "Walnut", color: "#755541", position: 3, isInner: true, texture: "wood" },
   { id: "i4", name: "Medium Oak", color: "#b28968", position: 4, isInner: true, texture: "wood" },
   { id: "i5", name: "Natural Oak", color: "#c7ae7f", position: 5, isInner: true, texture: "wood" },
-  { id: "i6", name: "Light Oak", color: "#d4bd94", position: 6, isInner: true, texture: "wood" },
+  { id: "i6", name: "Oak", color: "#d4bd94", position: 6, isInner: true, texture: "image", image: "/materials/oak/Poliigon_WoodVeneerOak_7760_BaseColor.jpg" },
   { id: "i7", name: "Cherry", color: "#6e4239", position: 7, isInner: true, texture: "wood" },
   { id: "i8", name: "Cabinet Texture1", color: "#FFFFFF", position: 8, isInner: true, texture: "image", image: "/materials/solid/cabinet texture1.jpeg" },
 ];
@@ -45,7 +45,7 @@ const materialSwatches = [
 const MaterialPanel: React.FC = () => {
   const { t } = useTranslation();
   const [materialTab, setMaterialTab] = useState<MaterialTab>('interior');
-  const [selectedMaterial, setSelectedMaterial] = useState("Light Oak");
+  const [selectedMaterial, setSelectedMaterial] = useState("Oak");
   const [selectedColor, setSelectedColor] = useState("#FFFFFF");
   const [colorOpacity, setColorOpacity] = useState(50);
   const [savedColors, setSavedColors] = useState([
