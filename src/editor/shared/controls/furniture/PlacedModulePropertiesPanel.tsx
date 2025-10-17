@@ -1222,13 +1222,39 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
             </div>
             
-            {/* 상세보기 버튼 추가 */}
-            <button
-              className={styles.detailsButton}
-              onClick={() => setShowDetails(!showDetails)}
-            >
-              {t('furniture.viewDetails')}
-            </button>
+            {/* 버튼 그룹 */}
+            <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+              {/* 상세보기 버튼 */}
+              <button
+                className={styles.detailsButton}
+                onClick={() => setShowDetails(!showDetails)}
+              >
+                {t('furniture.viewDetails')}
+              </button>
+
+              {/* 나무결 방향 버튼 */}
+              <button
+                style={{
+                  padding: '8px 16px',
+                  background: currentPlacedModule?.grainDirection === 'vertical' ? '#4CAF50' : '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  flex: 1
+                }}
+                onClick={() => {
+                  const newDirection = currentPlacedModule?.grainDirection === 'horizontal' ? 'vertical' : 'horizontal';
+                  console.log('🔄 결 방향 변경:', currentPlacedModule?.grainDirection, '→', newDirection);
+                  updateModule(placedModuleId, { grainDirection: newDirection });
+                }}
+                title="나무결 방향 전환"
+              >
+                나무결: {currentPlacedModule?.grainDirection === 'vertical' ? '세로 ↓' : '가로 →'}
+              </button>
+            </div>
           </div>
           
           {/* 상세보기 패널 */}
