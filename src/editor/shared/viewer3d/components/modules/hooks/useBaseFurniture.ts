@@ -272,14 +272,9 @@ export const useBaseFurniture = (
           texture.repeat.set(1, 1);
           material.map = texture;
 
-          // Oak 텍스처인 경우: grainDirection에 따라 회전 적용
+          // Oak 텍스처인 경우: 회전은 BoxWithEdges에서 패널별로 처리
           if (isOakTexture(textureUrl)) {
-            // horizontal(가로 결): 90도 회전, vertical(세로 결): 회전 안함
-            if (grainDirection === 'horizontal') {
-              texture.rotation = Math.PI / 2; // 90도 회전
-              texture.center.set(0.5, 0.5); // 중심점 기준 회전
-            }
-            applyOakTextureSettings(material, false); // 텍스처는 이미 회전 처리했으므로 false
+            applyOakTextureSettings(material, false);
           }
           // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
           else if (!isCabinetTexture1(textureUrl)) {
