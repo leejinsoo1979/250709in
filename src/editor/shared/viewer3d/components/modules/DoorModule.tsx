@@ -301,6 +301,25 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // Shadow auto-update enabled - manual shadow updates removed
 
+  // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
+  const storePanelGrainDirections = useFurnitureStore(state => {
+    if (!furnitureId) return undefined;
+    const furniture = state.placedModules.find(m => m.id === furnitureId);
+    return furniture?.panelGrainDirections;
+  });
+
+  // 스토어에서 가져온 값 우선, 없으면 props 사용
+  const activePanelGrainDirections = storePanelGrainDirections || panelGrainDirections;
+
+  console.log('🔥 DoorModule - panelGrainDirections 소스:', {
+    furnitureId,
+    fromStore: !!storePanelGrainDirections,
+    fromProps: !!panelGrainDirections,
+    final: activePanelGrainDirections,
+    storePanelGrainDirections,
+    propsPanelGrainDirections: panelGrainDirections
+  });
+
   // 텍스처 적용 함수 (성능 최적화)
   const applyTextureToMaterial = useCallback((material: THREE.MeshStandardMaterial, textureUrl: string | undefined, doorSide: string) => {
     if (textureUrl && material) {
@@ -375,25 +394,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       material.needsUpdate = true;
     }
   }, [doorColor, activePanelGrainDirections]);
-
-  // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
-  const storePanelGrainDirections = useFurnitureStore(state => {
-    if (!furnitureId) return undefined;
-    const furniture = state.placedModules.find(m => m.id === furnitureId);
-    return furniture?.panelGrainDirections;
-  });
-
-  // 스토어에서 가져온 값 우선, 없으면 props 사용
-  const activePanelGrainDirections = storePanelGrainDirections || panelGrainDirections;
-
-  console.log('🔥 DoorModule - panelGrainDirections 소스:', {
-    furnitureId,
-    fromStore: !!storePanelGrainDirections,
-    fromProps: !!panelGrainDirections,
-    final: activePanelGrainDirections,
-    storePanelGrainDirections,
-    propsPanelGrainDirections: panelGrainDirections
-  });
 
   // activePanelGrainDirections 변경 시 기존 텍스처 회전 업데이트
   // JSON.stringify를 사용하여 객체 내부 값 변경을 감지
