@@ -100,12 +100,21 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
     const { lowerSectionDepthMm, upperSectionDepthMm } = baseFurniture;
 
     console.log('🔍 [DualType4 섹션 깊이 디버깅]', {
+      moduleId: moduleData.id,
       lowerSectionDepth,
       upperSectionDepth,
       lowerSectionDepthMm,
       upperSectionDepthMm,
       sections: baseFurniture.modelConfig.sections,
       sectionsLength: baseFurniture.modelConfig.sections?.length
+    });
+
+    console.log('🚪 [DualType4 도어 체크]', {
+      hasDoor,
+      spaceInfo: !!spaceInfo,
+      doorSplit,
+      doorSplitProp: doorSplit,
+      willRenderDoor: hasDoor && !!spaceInfo
     });
 
     // 2섹션 가구가 아니면 null 반환

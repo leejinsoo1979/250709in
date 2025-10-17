@@ -35,9 +35,16 @@ export const useFurnitureKeyboard = ({
   // 키보드 이벤트 처리
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const activeElement = document.activeElement as HTMLElement | null;
+      const isEditingInput = activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.isContentEditable);
+
+      if (isEditingInput) {
+        return;
+      }
+
       // 편집 모드이거나 가구 편집 팝업이 열린 상태일 때 처리
       const targetModuleId = editingModuleId || (activePopup.type === 'furnitureEdit' ? activePopup.id : null);
-      
+
       if ((editMode && editingModuleId) || (activePopup.type === 'furnitureEdit' && activePopup.id)) {
         const editingModule = placedModules.find(m => m.id === targetModuleId);
         if (!editingModule) return;

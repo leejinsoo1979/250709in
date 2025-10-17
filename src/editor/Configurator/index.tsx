@@ -70,7 +70,7 @@ const Configurator: React.FC = () => {
   const { setPlacedModules, placedModules, setAllDoors, clearAllModules } = useFurnitureStore();
   const derivedSpaceStore = useDerivedSpaceStore();
   const { updateFurnitureForNewSpace } = useFurnitureSpaceAdapter({ setPlacedModules });
-  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled } = useUIStore();
+  const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor } = useUIStore();
 
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
@@ -2791,7 +2791,24 @@ const Configurator: React.FC = () => {
                   className={`${styles.viewerDoorButton} ${!doorsOpen ? styles.active : ''}`}
                   onClick={() => {
                     if (doorsOpen) {
-                      toggleDoors(); // 열려있으면 닫기
+                      // 전역 상태 닫기
+                      toggleDoors();
+
+                      // 모든 개별 도어도 닫기
+                      placedModules.forEach((module) => {
+                        const moduleData = getModuleById(module.moduleId);
+                        if (moduleData?.hasDoor) {
+                          // 도어 분할 여부 확인
+                          const sectionCount = module.doorSplit ? 2 : 1;
+                          for (let i = 0; i < sectionCount; i++) {
+                            // 개별 도어가 열려있으면 닫기
+                            const { isIndividualDoorOpen } = useUIStore.getState();
+                            if (isIndividualDoorOpen(module.id, i)) {
+                              toggleIndividualDoor(module.id, i);
+                            }
+                          }
+                        }
+                      });
                     }
                   }}
                 >
@@ -2801,7 +2818,24 @@ const Configurator: React.FC = () => {
                   className={`${styles.viewerDoorButton} ${doorsOpen ? styles.active : ''}`}
                   onClick={() => {
                     if (!doorsOpen) {
-                      toggleDoors(); // 닫혀있으면 열기
+                      // 전역 상태 열기
+                      toggleDoors();
+
+                      // 모든 개별 도어도 열기
+                      placedModules.forEach((module) => {
+                        const moduleData = getModuleById(module.moduleId);
+                        if (moduleData?.hasDoor) {
+                          // 도어 분할 여부 확인
+                          const sectionCount = module.doorSplit ? 2 : 1;
+                          for (let i = 0; i < sectionCount; i++) {
+                            // 개별 도어가 닫혀있으면 열기
+                            const { isIndividualDoorOpen } = useUIStore.getState();
+                            if (!isIndividualDoorOpen(module.id, i)) {
+                              toggleIndividualDoor(module.id, i);
+                            }
+                          }
+                        }
+                      });
                     }
                   }}
                 >
