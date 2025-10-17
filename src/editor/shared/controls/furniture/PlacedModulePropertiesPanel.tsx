@@ -1276,21 +1276,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         <span className={styles.panelName}>{panel.name}:</span>
                         <span className={styles.panelSize}>
                           {panel.diameter ? (
-                            `Φ${panel.diameter}mm × L${panel.width}mm`
+                            `Φ${panel.diameter} × L${panel.width}`
                           ) : panel.width && panel.height ? (
                             // 세로결(V): height가 긴쪽(L), width가 짧은쪽(W)
                             // 가로결(H): width가 긴쪽(L), height가 짧은쪽(W)
                             isVerticalGrain
-                              ? `W${panel.width} × L${panel.height}mm`
-                              : `W${panel.height} × L${panel.width}mm`
+                              ? `W${panel.width} × L${panel.height}`
+                              : `W${panel.height} × L${panel.width}`
                           ) : panel.width && panel.depth ? (
-                            `W${panel.depth} × L${panel.width}mm`
+                            `W${panel.depth} × L${panel.width}`
                           ) : panel.height && panel.depth ? (
-                            `W${panel.depth} × L${panel.height}mm`
+                            `W${panel.depth} × L${panel.height}`
                           ) : panel.description ? (
                             panel.description
                           ) : (
-                            `${panel.width || panel.height || panel.depth}mm`
+                            `${panel.width || panel.height || panel.depth}`
                           )}
                           {panel.thickness && panel.showThickness !== false && !panel.diameter && ` (T:${panel.thickness})`}
                           {panel.material && ` [${panel.material}]`}
