@@ -32,11 +32,11 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   isHighlighted = false,
   furnitureId,
   placedFurnitureId,
-  panelGrainDirections
+  panelGrainDirections: propsPanelGrainDirections
 }) => {
   // 간접조명 관련 상태
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
-  
+
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -46,7 +46,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     isEditMode,
     adjustedWidth,
     isHighlighted,
-    panelGrainDirections
+    panelGrainDirections: propsPanelGrainDirections
   });
 
   const {
