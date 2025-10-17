@@ -537,12 +537,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(45); // 원래 값 저장
   const [showWarning, setShowWarning] = useState(false);
 
-  // 섹션 깊이 상태
-  const [lowerSectionDepth, setLowerSectionDepth] = useState<number>(580);
-  const [upperSectionDepth, setUpperSectionDepth] = useState<number>(580);
-  const [lowerDepthInput, setLowerDepthInput] = useState<string>('580');
-  const [upperDepthInput, setUpperDepthInput] = useState<string>('580');
-  
   // 전체 팝업에서 엔터키 처리 - 조건문 위로 이동
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
