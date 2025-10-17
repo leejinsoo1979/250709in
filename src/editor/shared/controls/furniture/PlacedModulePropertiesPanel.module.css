@@ -672,6 +672,33 @@
   color: var(--theme-text-secondary);
 }
 
+/* 섹션별 깊이 설정 스타일 */
+.sectionDepthContainer {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.sectionDepthField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionDepthLabel {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+}
+
+.sectionDepthNote {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--theme-text-tertiary);
+  font-style: italic;
+}
+
 .editGuide {
   margin-top: 24px;
   padding: 16px;

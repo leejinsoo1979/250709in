@@ -510,6 +510,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [customDepth, setCustomDepth] = useState<number>(580); // 임시 기본값
   const [depthInputValue, setDepthInputValue] = useState<string>('580');
   const [depthError, setDepthError] = useState<string>('');
+  const [lowerSectionDepth, setLowerSectionDepth] = useState<number | undefined>(undefined); // 하부 섹션 깊이
+  const [upperSectionDepth, setUpperSectionDepth] = useState<number | undefined>(undefined); // 상부 섹션 깊이
   const [customWidth, setCustomWidth] = useState<number>(600); // 기본 컬럼 너비로 변경
   const [widthInputValue, setWidthInputValue] = useState<string>('600');
   const [widthError, setWidthError] = useState<string>('');
@@ -701,6 +703,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setCustomDepth(initialDepth);
         setDepthInputValue(initialDepth.toString());
       }
+      // 섹션별 깊이 초기화
+      setLowerSectionDepth(currentPlacedModule.lowerSectionDepth);
+      setUpperSectionDepth(currentPlacedModule.upperSectionDepth);
       // customWidth도 동일하게 처리
       if (customWidth !== initialWidth) {
         setCustomWidth(initialWidth);
@@ -1381,6 +1386,63 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 >
                   분할
                 </button>
+              </div>
+            </div>
+          )}
+
+          {/* 섹션별 깊이 설정 (2섹션 가구만, 상세보기 아닐 때만) */}
+          {!showDetails && isTwoSectionFurniture && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>섹션별 깊이 설정</h5>
+              <div className={styles.sectionDepthContainer}>
+                {/* 하부 섹션 깊이 */}
+                <div className={styles.sectionDepthField}>
+                  <label className={styles.sectionDepthLabel}>하부 섹션</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="number"
+                      value={lowerSectionDepth ?? ''}
+                      placeholder={customDepth.toString()}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? undefined : Number(e.target.value);
+                        setLowerSectionDepth(value);
+                        if (currentPlacedModule) {
+                          updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: value });
+                        }
+                      }}
+                      className={styles.input}
+                      min={FURNITURE_LIMITS.DEPTH.MIN}
+                      max={Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX)}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                </div>
+
+                {/* 상부 섹션 깊이 */}
+                <div className={styles.sectionDepthField}>
+                  <label className={styles.sectionDepthLabel}>상부 섹션</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="number"
+                      value={upperSectionDepth ?? ''}
+                      placeholder={customDepth.toString()}
+                      onChange={(e) => {
+                        const value = e.target.value === '' ? undefined : Number(e.target.value);
+                        setUpperSectionDepth(value);
+                        if (currentPlacedModule) {
+                          updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: value });
+                        }
+                      }}
+                      className={styles.input}
+                      min={FURNITURE_LIMITS.DEPTH.MIN}
+                      max={Math.min(spaceInfo.depth, FURNITURE_LIMITS.DEPTH.MAX)}
+                    />
+                    <span className={styles.unit}>mm</span>
+                  </div>
+                </div>
+              </div>
+              <div className={styles.sectionDepthNote}>
+                빈 칸으로 두면 전체 깊이({customDepth}mm)가 적용됩니다
               </div>
             </div>
           )}
