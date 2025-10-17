@@ -286,7 +286,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               className={`${styles.doorButton} ${hasDoorsInstalled ? styles.active : ''}`}
               onClick={onDoorInstallationToggle}
             >
-              <BiDoorOpen size={20} />
+              <BiDoorOpen size={24} />
               {t('viewer.doorInstallation')}
             </button>
           </div>
