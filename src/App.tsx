@@ -132,6 +132,13 @@ function App() {
   // Initialize theme on app load
   useEffect(() => {
     initializeTheme();
+
+    // 측판/백패널/도어 결 방향을 기본값으로 리셋 (한번만 실행)
+    const hasReset = sessionStorage.getItem('panelGrainDirectionsReset');
+    if (!hasReset) {
+      useFurnitureStore.getState().resetPanelGrainDirections();
+      sessionStorage.setItem('panelGrainDirectionsReset', 'true');
+    }
   }, []);
 
   return (

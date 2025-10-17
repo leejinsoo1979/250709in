@@ -54,6 +54,9 @@ interface FurnitureDataState {
   // 드래그 상태 액션들 (FurnitureDragProvider와 동일한 인터페이스)
   setCurrentDragData: (data: CurrentDragData | null) => void;
   clearDragData: () => void;
+
+  // 패널 결 방향 초기화 (측판/백패널/도어를 기본값으로 리셋)
+  resetPanelGrainDirections: () => void;
 }
 
 // 가구 데이터 Store 생성
@@ -297,18 +300,10 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const newModules = state.placedModules.map(module => {
         if (module.id === id) {
           const updated = { ...module, ...updates };
-          console.log('✏️ 모듈 업데이트 적용:', {
-            id,
-            before: module.panelGrainDirections,
-            after: updated.panelGrainDirections,
-            updates
-          });
           return updated;
         }
         return module;
       });
-
-      console.log('💾 Store 업데이트 완료, 새로운 modules:', newModules.map(m => ({ id: m.id, panelGrainDirections: m.panelGrainDirections })));
 
       return {
         placedModules: newModules
@@ -475,6 +470,41 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // Mark as saved
   markAsSaved: () => {
     set({ hasUnsavedChanges: false });
+  },
+
+  // 패널 결 방향 초기화 (측판/백패널/도어를 기본값으로 리셋)
+  resetPanelGrainDirections: () => {
+    set((state) => {
+      const updatedModules = state.placedModules.map(module => {
+        if (!module.panelGrainDirections) {
+          return module;
+        }
+
+        // 측판, 백패널, 도어 관련 키들을 제거
+        const newDirections = { ...module.panelGrainDirections };
+        Object.keys(newDirections).forEach(key => {
+          const lowerKey = key.toLowerCase();
+          if (lowerKey.includes('측판') ||
+              lowerKey.includes('side') ||
+              lowerKey.includes('백패널') ||
+              lowerKey.includes('back') ||
+              lowerKey.includes('뒷판') ||
+              lowerKey.includes('도어') ||
+              lowerKey.includes('door')) {
+            delete newDirections[key];
+          }
+        });
+
+        return {
+          ...module,
+          panelGrainDirections: Object.keys(newDirections).length > 0 ? newDirections : undefined
+        };
+      });
+
+      return {
+        placedModules: updatedModules
+      };
+    });
   }
 }));
 

@@ -1303,21 +1303,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         }}
                         onClick={() => {
                           if (!currentPlacedModule) return;
-                          console.log('🖱️ 버튼 클릭됨!', panel.name);
                           const newDirection = currentDirection === 'horizontal' ? 'vertical' : 'horizontal';
                           const newDirections = {
                             ...(currentPlacedModule.panelGrainDirections || {}),
                             [panel.name]: newDirection
                           };
-                          console.log('🔄 패널 결 방향 변경:', {
-                            panelName: panel.name,
-                            oldDirection: currentDirection,
-                            newDirection,
-                            allDirections: newDirections
-                          });
-                          console.log('📞 updatePlacedModule 호출 직전:', currentPlacedModule.id, newDirections);
                           updatePlacedModule(currentPlacedModule.id, { panelGrainDirections: newDirections });
-                          console.log('✅ updatePlacedModule 호출 완료');
                         }}
                         title={`${panel.name} 나무결 방향 전환`}
                       >
