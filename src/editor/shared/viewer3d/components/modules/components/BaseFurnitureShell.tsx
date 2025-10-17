@@ -717,8 +717,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             fullBaseConfig: spaceInfo?.baseConfig
           });
           // 다중 섹션이면 뒤쪽 조절발 Z 오프셋 계산
+          // 앞면 고정, 뒷면만 이동하므로 전체 차이만큼 이동
           const backZOffset = isMultiSectionFurniture() && lowerSectionDepthMm !== undefined
-            ? (depth - mmToThreeUnits(lowerSectionDepthMm)) / 2
+            ? (depth - mmToThreeUnits(lowerSectionDepthMm))
             : 0;
 
           return (
