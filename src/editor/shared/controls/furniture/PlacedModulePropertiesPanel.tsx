@@ -1267,35 +1267,59 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   const defaultDirection = getDefaultGrainDirection(panel.name);
                   const currentDirection = currentPlacedModule?.panelGrainDirections?.[panel.name] || defaultDirection;
 
+                  // 디버그: 마이다 패널 정보 출력
+                  if (panel.name.includes('마이다')) {
+                    console.log('🎯 마이다 패널:', {
+                      name: panel.name,
+                      width: panel.width,
+                      height: panel.height,
+                      defaultDirection,
+                      currentDirection,
+                      storedDirection: currentPlacedModule?.panelGrainDirections?.[panel.name]
+                    });
+                  }
+
                   // 결 방향에 따라 W/L 레이블 결정
                   const isVerticalGrain = currentDirection === 'vertical';
 
                   // W/L 표시 로직
-                  // - 일반 패널: height가 긴쪽(L)
-                  // - 서랍 측판 특수 케이스: depth(z축)가 긴쪽(L)
+                  // - 일반 가구 패널: height가 긴쪽(L)
+                  // - 서랍 패널 특수 케이스: width 또는 depth가 긴쪽(L)
                   let dimensionDisplay = '';
 
-                  // 서랍 측판인지 확인
-                  const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판') || panel.name.includes('leftPanel') || panel.name.includes('rightPanel'));
+                  // 서랍 패널인지 확인
+                  const isDrawerPanel = panel.name.includes('서랍');
 
                   if (panel.diameter) {
                     dimensionDisplay = `Φ ${panel.diameter} × L ${panel.width}`;
                   } else if (panel.width && panel.height) {
-                    // width/height를 가진 패널 (마이다, 상판, 하판 등)
-                    if (isVerticalGrain) {
-                      // 세로결: width=W(짧은쪽), height=L(긴쪽)
-                      dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
+                    // width/height를 가진 패널
+                    if (isDrawerPanel) {
+                      // 서랍 패널 (마이다, 앞판, 뒷판): width가 가로(긴쪽 L), height가 세로(짧은쪽 W)
+                      if (isVerticalGrain) {
+                        // L 방향: width가 긴쪽
+                        dimensionDisplay = `W ${panel.height} × L ${panel.width}`;
+                      } else {
+                        // W 방향: height가 짧은쪽
+                        dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
+                      }
                     } else {
-                      // 가로결: width=L(긴쪽), height=W(짧은쪽)
-                      dimensionDisplay = `W ${panel.height} × L ${panel.width}`;
+                      // 일반 가구 패널: height가 세로(긴쪽 L), width가 가로(짧은쪽 W)
+                      if (isVerticalGrain) {
+                        // L 방향: height가 긴쪽
+                        dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
+                      } else {
+                        // W 방향: width가 짧은쪽
+                        dimensionDisplay = `W ${panel.height} × L ${panel.width}`;
+                      }
                     }
                   } else if (panel.width && panel.depth) {
-                    // width/depth를 가진 패널 (상판, 하판의 다른 표현)
+                    // width/depth를 가진 패널 (상판, 하판)
                     dimensionDisplay = `W ${panel.depth} × L ${panel.width}`;
                   } else if (panel.height && panel.depth) {
-                    // height/depth를 가진 패널 (서랍 측판 포함)
-                    if (isDrawerSidePanel) {
-                      // 서랍 측판: depth(z축)가 긴쪽(L), height가 짧은쪽(W)
+                    // height/depth를 가진 패널
+                    if (isDrawerPanel) {
+                      // 서랍 측판: depth가 깊이(긴쪽 L), height가 세로(짧은쪽 W)
                       if (isVerticalGrain) {
                         // L 방향: depth가 긴쪽
                         dimensionDisplay = `W ${panel.height} × L ${panel.depth}`;
@@ -1304,7 +1328,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         dimensionDisplay = `W ${panel.depth} × L ${panel.height}`;
                       }
                     } else {
-                      // 일반 측판: height가 긴쪽(L), depth가 짧은쪽(W)
+                      // 일반 가구 측판: height가 세로(긴쪽 L), depth가 깊이(짧은쪽 W)
                       dimensionDisplay = `W ${panel.depth} × L ${panel.height}`;
                     }
                   } else if (panel.description) {
