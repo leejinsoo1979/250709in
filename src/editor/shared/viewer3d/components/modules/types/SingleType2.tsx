@@ -119,10 +119,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               // 현재 섹션의 깊이
               const currentDepth = sectionDepths[index] || depth;
 
-              // Z축 위치 조정: 깊이가 줄어들면 뒤에서 앞으로 이동
-              // 기본 깊이 대비 차이의 절반만큼 앞으로 이동
+              // Z축 위치 조정: 깊이가 줄어들면 뒤쪽에서 줄어들도록
+              // 앞면 위치는 고정, 뒤쪽에서 줄어듦
               const depthDiff = depth - currentDepth;
-              const zOffset = -depthDiff / 2; // 음수는 뒤쪽(뒷벽 방향)
+              const zOffset = depthDiff / 2; // 양수는 앞쪽으로 이동 (중심 기준)
 
               // 현재 섹션의 중심 Y 위치
               const sectionCenterY = accumulatedY + sectionHeight / 2 - basicThickness;
