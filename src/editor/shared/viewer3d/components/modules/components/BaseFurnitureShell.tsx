@@ -637,12 +637,19 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   upperBackPanelYMm: upperBackPanelY / 0.01
                 });
 
+                // 섹션별 백패널 Z 위치 계산
+                const lowerSectionDepth = lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth;
+                const upperSectionDepth = upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth;
+
+                const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset);
+                const upperBackPanelZ = -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset);
+
                 return (
                   <>
                     {/* 하부 섹션 백패널 */}
                     <BoxWithEdges
                       args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), lowerBackPanelHeight, backPanelThickness]}
-                      position={[0, lowerBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
+                      position={[0, lowerBackPanelY, lowerBackPanelZ]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
@@ -653,7 +660,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     {/* 상부 섹션 백패널 */}
                     <BoxWithEdges
                       args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), upperBackPanelHeight, backPanelThickness]}
-                      position={[0, upperBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
+                      position={[0, upperBackPanelY, upperBackPanelZ]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
