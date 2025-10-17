@@ -598,6 +598,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     if (viewMode === '2D' && controls.object) {
       console.log('🔄 2D 모드 전환 - OrbitControls 각도 리셋');
 
+      // OrbitControls 회전 상태 완전 초기화
+      controls.reset();
+
       // 카메라 위치와 타겟을 현재 설정된 값으로 업데이트
       controls.object.position.set(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
       if (cameraTarget) {
@@ -606,6 +609,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       if (cameraUp) {
         controls.object.up.set(cameraUp[0], cameraUp[1], cameraUp[2]);
       }
+
+      // 카메라 quaternion(회전) 완전 초기화
+      controls.object.quaternion.set(0, 0, 0, 1);
 
       // 카메라가 타겟을 정확히 바라보도록 설정
       controls.object.lookAt(controls.target);
@@ -616,7 +622,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       console.log('✅ 2D 카메라 리셋 완료:', {
         position: controls.object.position.toArray(),
         target: controls.target.toArray(),
-        up: controls.object.up.toArray()
+        up: controls.object.up.toArray(),
+        quaternion: controls.object.quaternion.toArray()
       });
     }
   }, [viewMode, view2DDirection, cameraPosition, cameraTarget, cameraUp]);
