@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { getModuleById } from '@/data/modules';
-import { calculatePanelDetails } from '../utils/panelExtractor';
+import { calculatePanelDetails as calculatePanelDetailsShared } from '@/editor/shared/utils/calculatePanelDetails';
 import { Panel } from '../types';
 import { normalizePanels, NormalizedPanel } from '@/utils/cutlist/normalize';
 
@@ -77,24 +77,49 @@ export function useLivePanelData() {
         const color = placedModule.color || 'MW';
 
 
-        // Extract panel details using the panel extractor
-        const modulePanels = calculatePanelDetails(moduleData, width, depth, hasDoor);
-        console.log(`Module ${moduleIndex}: Extracted ${modulePanels.length} panels`);
-        
-        
-        // Update material, color info and ensure unique IDs
-        modulePanels.forEach((panel, panelIndex) => {
-          // panelExtractor에서 설정한 재질이 있으면 유지, 없으면 placedModule의 재질 사용
-          // MDF(뒷판, 서랍바닥 등)는 panelExtractor에서 이미 설정됨
-          if (!panel.material || panel.material === 'PB') {
-            panel.material = material;
-          }
-          panel.color = color;
-          // 가구 인덱스와 패널 인덱스를 조합하여 고유 ID 생성
-          panel.id = `m${moduleIndex}_p${panelIndex}`;
+        // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
+        const t = (key: string) => key; // 간단한 번역 함수
+        const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t);
+
+        console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
+        console.log(`Module ${moduleIndex}: Total panel count:`, allPanelsList.length);
+
+        // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
+        // 섹션 헤더("=== xxx ===")를 제외하고 실제 패널만 필터링
+        const modulePanels = allPanelsList.filter((item: any) =>
+          item.name && !item.name.startsWith('===')
+        );
+
+        console.log(`Module ${moduleIndex}: Filtered ${modulePanels.length} actual panels (excluding section headers)`);
+
+        // 패널 결방향 정보 가져오기
+        const panelGrainDirections = placedModule.panelGrainDirections || {};
+        console.log(`Module ${moduleIndex}: panelGrainDirections:`, panelGrainDirections);
+
+        // Panel 타입으로 변환하고 고유 ID 할당
+        const convertedPanels: Panel[] = modulePanels.map((panel, panelIndex) => {
+          // 패널 이름으로 결방향 찾기
+          const grainDirection = panelGrainDirections[panel.name];
+          // horizontal -> HORIZONTAL, vertical -> VERTICAL
+          const grainValue = grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
+
+          console.log(`  Panel ${panelIndex}: "${panel.name}" - grain: ${grainDirection} -> ${grainValue}`);
+
+          return {
+            id: `m${moduleIndex}_p${panelIndex}`,
+            name: panel.name,
+            width: panel.width || 0,
+            height: panel.height || panel.depth || 0, // depth가 height로 사용될 수 있음
+            thickness: panel.thickness,
+            material: panel.material || material,
+            color: color,
+            quantity: 1,
+            grain: grainValue
+          };
         });
 
-        allPanels.push(...modulePanels);
+        console.log(`Module ${moduleIndex}: Converted ${convertedPanels.length} panels`);
+        allPanels.push(...convertedPanels);
       });
 
       console.log('Total panels extracted:', allPanels.length);
@@ -190,7 +215,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
     placedModules.forEach((placedModule, moduleIndex) => {
       const moduleId = placedModule.moduleId || placedModule.moduleType;
       if (!moduleId) return;
-      
+
       const moduleData = getModuleById(moduleId, internalSpace, spaceInfo);
       if (!moduleData) return;
 
@@ -200,16 +225,40 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const material = placedModule.material || 'PB';
       const color = placedModule.color || 'MW';
 
-      const modulePanels = calculatePanelDetails(moduleData, width, depth, hasDoor);
-      
-      modulePanels.forEach((panel, panelIndex) => {
-        panel.material = material;
-        panel.color = color;
-        // 가구 인덱스와 패널 인덱스를 조합하여 고유 ID 생성
-        panel.id = `m${moduleIndex}_p${panelIndex}`;
+      // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
+      const t = (key: string) => key; // 간단한 번역 함수
+      const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t);
+
+      // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
+      // 섹션 헤더("=== xxx ===")를 제외하고 실제 패널만 필터링
+      const modulePanels = allPanelsList.filter((item: any) =>
+        item.name && !item.name.startsWith('===')
+      );
+
+      // 패널 결방향 정보 가져오기
+      const panelGrainDirections = placedModule.panelGrainDirections || {};
+
+      // Panel 타입으로 변환하고 고유 ID 할당
+      const convertedPanels: Panel[] = modulePanels.map((panel, panelIndex) => {
+        // 패널 이름으로 결방향 찾기
+        const grainDirection = panelGrainDirections[panel.name];
+        // horizontal -> HORIZONTAL, vertical -> VERTICAL
+        const grainValue = grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
+
+        return {
+          id: `m${moduleIndex}_p${panelIndex}`,
+          name: panel.name,
+          width: panel.width || 0,
+          height: panel.height || panel.depth || 0, // depth가 height로 사용될 수 있음
+          thickness: panel.thickness,
+          material: panel.material || material,
+          color: color,
+          quantity: 1,
+          grain: grainValue
+        };
       });
 
-      allPanels.push(...modulePanels);
+      allPanels.push(...convertedPanels);
     });
 
     callback(allPanels);
