@@ -84,7 +84,7 @@ export const useBaseFurniture = (
     customSections,
     lowerSectionDepth,
     upperSectionDepth,
-    grainDirection = 'horizontal', // 기본값: 가로 결 (하위 호환성)
+    grainDirection = 'vertical', // 기본값: 세로 결 (하위 호환성)
     panelGrainDirections // 패널별 개별 결 방향
   } = options;
   
@@ -230,8 +230,8 @@ export const useBaseFurniture = (
 
   // 텍스처 적용 (별도 useEffect로 처리)
   useEffect(() => {
-    // 드래그 중이거나 편집 모드일 때는 텍스처 적용하지 않음
-    if (isDragging || isEditMode) {
+    // 드래그 중일 때만 텍스처 적용하지 않음 (편집 모드에서는 적용)
+    if (isDragging) {
       if (material) {
         material.map = null;
         material.needsUpdate = true;
@@ -259,8 +259,8 @@ export const useBaseFurniture = (
       textureLoader.load(
         textureUrl, 
         (texture) => {
-          // 편집 모드나 드래그 중이면 텍스처 로드해도 적용하지 않음
-          if (isDragging || isEditMode) {
+          // 드래그 중이면 텍스처 로드해도 적용하지 않음
+          if (isDragging) {
             texture.dispose(); // 메모리 해제
             return;
           }

@@ -132,6 +132,10 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
+          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1}(바닥)` : `서랍${drawerIndex + 1}(바닥)`}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={furnitureId}
         />
         
         {/* 앞면 (얇은 판) - 손잡이 판보다 30mm 작게, 폭은 좌우 38mm씩 총 76mm 줄임 */}
