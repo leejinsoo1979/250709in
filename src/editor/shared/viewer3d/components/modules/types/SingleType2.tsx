@@ -163,6 +163,20 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   const middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2;
                   const lowerTopPanelY = middlePanelY - basicThickness; // 하부 섹션 상판 위치
 
+                  // 중간판 강조: 하부 섹션 상판은 index 섹션에 속함
+                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
+                  const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-${index + 1}`;
+
+                  // 하부 섹션 깊이 (index=0)
+                  const lowerDepth = sectionDepths[0] || depth;
+                  const lowerDepthDiff = depth - lowerDepth;
+                  const lowerZOffset = lowerDepthDiff / 2;
+
+                  // 상부 섹션 깊이 (index=1)
+                  const upperDepth = sectionDepths[1] || depth;
+                  const upperDepthDiff = depth - upperDepth;
+                  const upperZOffset = upperDepthDiff / 2;
+
                   console.log('📦 중간판 실제 렌더링 위치:', {
                     sectionCenterY,
                     sectionHeight,
@@ -171,26 +185,19 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                     middlePanelY_mm: middlePanelY / 0.01,
                     lowerTopPanelY,
                     lowerTopPanelY_mm: lowerTopPanelY / 0.01,
+                    lowerDepth,
+                    lowerDepth_mm: lowerDepth / 0.01,
+                    upperDepth,
+                    upperDepth_mm: upperDepth / 0.01,
                     설명: '상부섹션 바닥판(middlePanelY), 하부섹션 상판(lowerTopPanelY)'
                   });
 
-                  // 중간판 강조: 하부 섹션 상판은 index 섹션에 속함
-                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
-                  const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-${index + 1}`;
-
-                  // 중간판은 항상 원래 깊이 사용 (섹션 깊이와 무관)
-                  // 측판과 완전히 동일한 깊이
-                  const middlePanelDepth = depth;
-
-                  // Z 위치: 중앙
-                  const zOffset = 0;
-
                   return (
                     <>
-                      {/* 하부 섹션 상판 - 측판과 동일한 깊이 */}
+                      {/* 하부 섹션 상판 - 하부 섹션 깊이 적용 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, middlePanelDepth]}
-                        position={[0, lowerTopPanelY, zOffset]}
+                        args={[innerWidth, basicThickness, lowerDepth]}
+                        position={[0, lowerTopPanelY, lowerZOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -198,10 +205,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isHighlighted={isLowerHighlighted}
                       />
 
-                      {/* 상부 섹션 바닥판 - 측판과 동일한 깊이 */}
+                      {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, middlePanelDepth]}
-                        position={[0, middlePanelY, zOffset]}
+                        args={[innerWidth, basicThickness, upperDepth]}
+                        position={[0, middlePanelY, upperZOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -413,26 +420,45 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       )}
 
       {/* 상단 판재 */}
-      <BoxWithEdges
-        args={[innerWidth, basicThickness, depth]}
-        position={[0, height/2 - basicThickness/2, 0]}
-        material={material}
-        renderMode={renderMode}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-        isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-${getSectionHeights().length - 1}` : false}
-      />
+      {(() => {
+        // 상단 판재는 마지막 섹션(상부 섹션)의 깊이 사용
+        const lastSectionIndex = isMultiSectionFurniture() ? getSectionHeights().length - 1 : 0;
+        const topPanelDepth = sectionDepths[lastSectionIndex] || depth;
+        const topPanelDepthDiff = depth - topPanelDepth;
+        const topPanelZOffset = topPanelDepthDiff / 2;
+
+        return (
+          <BoxWithEdges
+            args={[innerWidth, basicThickness, topPanelDepth]}
+            position={[0, height/2 - basicThickness/2, topPanelZOffset]}
+            material={material}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-${lastSectionIndex}` : false}
+          />
+        );
+      })()}
 
       {/* 하단 판재 */}
-      <BoxWithEdges
-        args={[innerWidth, basicThickness, depth]}
-        position={[0, -height/2 + basicThickness/2, 0]}
-        material={material}
-        renderMode={renderMode}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-        isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
-      />
+      {(() => {
+        // 하단 판재는 첫 번째 섹션(하부 섹션)의 깊이 사용
+        const bottomPanelDepth = sectionDepths[0] || depth;
+        const bottomPanelDepthDiff = depth - bottomPanelDepth;
+        const bottomPanelZOffset = bottomPanelDepthDiff / 2;
+
+        return (
+          <BoxWithEdges
+            args={[innerWidth, basicThickness, bottomPanelDepth]}
+            position={[0, -height/2 + basicThickness/2, bottomPanelZOffset]}
+            material={material}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
+          />
+        );
+      })()}
 
       {/* 뒷면 판재 (9mm 백패널, 섹션별로 분리) */}
       {isMultiSectionFurniture() ? (
