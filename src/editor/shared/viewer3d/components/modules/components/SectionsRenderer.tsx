@@ -193,9 +193,21 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       // Type4 하부 섹션(drawer)은 서랍을 18mm 아래로
       const isType4DrawerSection = furnitureId?.includes('4drawer-hanging') && section.type === 'drawer' && index === 0;
       const sectionCenterY = currentYPosition + sectionHeight / 2 - (isType4DrawerSection ? basicThickness : 0);
-      
+
+      // 현재 섹션의 깊이 가져오기 (sectionDepths가 없으면 기본 depth 사용)
+      const currentSectionDepth = (sectionDepths && sectionDepths[index]) ? sectionDepths[index] : depth;
+
+      // adjustedDepthForShelves 계산 (백패널 두께 고려)
+      // depth와 adjustedDepthForShelves의 차이를 계산해서 비율적용
+      const backPanelThickness = depth - adjustedDepthForShelves;
+      const currentAdjustedDepthForShelves = currentSectionDepth - backPanelThickness;
+
+      // Z 오프셋 계산 (섹션 깊이가 줄어들면 앞쪽으로 이동)
+      const depthDiff = depth - currentSectionDepth;
+      const currentShelfZOffset = shelfZOffset + depthDiff / 2;
+
       let sectionContent = null;
-      
+
       switch (section.type) {
         case 'shelf':
           // 선반 구역 (안전선반 포함)
@@ -208,11 +220,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 shelfCount={section.count}
                 innerWidth={innerWidth}
                 innerHeight={sectionHeight}
-                depth={adjustedDepthForShelves}
+                depth={currentAdjustedDepthForShelves}
                 basicThickness={basicThickness}
                 material={material}
                 yOffset={sectionCenterY}
-                zOffset={shelfZOffset}
+                zOffset={currentShelfZOffset}
                 shelfPositions={section.shelfPositions}
                 isTopFinishPanel={section.isTopFinishPanel}
                 showTopFrameDimension={index === 0}
@@ -223,7 +235,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             );
           }
           break;
-          
+
         case 'hanging':
           // 옷걸이 구역 - 안전선반이 없어도 ShelfRenderer 호출 (치수 표시를 위해)
           // 섹션별 강조 확인
@@ -234,11 +246,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               shelfCount={section.count || (section.shelfPositions ? section.shelfPositions.length : 0)}
               innerWidth={innerWidth}
               innerHeight={sectionHeight}
-              depth={adjustedDepthForShelves}
+              depth={currentAdjustedDepthForShelves}
               basicThickness={basicThickness}
               material={material}
               yOffset={sectionCenterY}
-              zOffset={shelfZOffset}
+              zOffset={currentShelfZOffset}
               shelfPositions={section.shelfPositions}
               isTopFinishPanel={section.isTopFinishPanel}
               showTopFrameDimension={index === 0}
@@ -251,7 +263,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             />
           );
           break;
-          
+
         case 'drawer':
           // 서랍 구역
           if (section.count && section.count > 0) {
@@ -268,7 +280,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 drawerCount={section.count}
                 innerWidth={innerWidth}
                 innerHeight={drawerInnerHeight}
-                depth={depth}
+                depth={currentSectionDepth}
                 basicThickness={basicThickness}
                 yOffset={drawerYOffset}
                 drawerHeights={section.drawerHeights}
