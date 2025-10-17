@@ -289,10 +289,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             console.log('  ✅ 서랍바닥 W: 90도');
           }
         } else {
-          // 캐비넷 가로패널: 항상 90도 회전
-          texture.rotation = Math.PI / 2;
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 가로패널: 90도');
+          // 캐비넷 가로패널: L(vertical) = 90도, W(horizontal) = 0도
+          if (grainDirection === 'vertical') {
+            texture.rotation = Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 가로패널 L: 90도');
+          } else {
+            texture.rotation = 0;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 가로패널 W: 0도');
+          }
         }
       } else {
         // 캐비넷 측판, 백패널: 항상 0도, 도어: 항상 90도
@@ -302,20 +308,38 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         const isDoor = panelName && panelName.includes('도어');
 
         if (isFurnitureSidePanel || isBackPanel) {
-          // 캐비넷 측판, 백패널: 항상 0도 (회전 없음)
-          texture.rotation = 0;
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 측판/백패널: 0도');
+          // 캐비넷 측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도
+          if (grainDirection === 'vertical') {
+            texture.rotation = 0;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 측판/백패널 L: 0도');
+          } else {
+            texture.rotation = Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 측판/백패널 W: 90도');
+          }
         } else if (isDoor) {
-          // 도어: 항상 90도
-          texture.rotation = Math.PI / 2;
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 도어: 90도');
+          // 도어: L(vertical) = 90도, W(horizontal) = 0도
+          if (grainDirection === 'vertical') {
+            texture.rotation = Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 도어 L: 90도');
+          } else {
+            texture.rotation = 0;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 도어 W: 0도');
+          }
         } else {
-          // 기타: 회전 없음
-          texture.rotation = 0;
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 기타: 0도');
+          // 기타: L(vertical) = 0도, W(horizontal) = 90도
+          if (grainDirection === 'vertical') {
+            texture.rotation = 0;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 기타 L: 0도');
+          } else {
+            texture.rotation = Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 기타 W: 90도');
+          }
         }
       }
 
