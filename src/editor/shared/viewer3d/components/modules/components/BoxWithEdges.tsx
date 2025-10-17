@@ -243,17 +243,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       });
 
       if (isDrawerPanel) {
-        // 서랍 패널: L(vertical) = x축 가로결 = 90도, W(horizontal) = y축 세로결 = -90도
+        // 서랍 패널: L(vertical) = x축 가로결 = -90도, W(horizontal) = y축 세로결 = 90도
         if (grainDirection === 'vertical') {
-          // L 방향: 가로 결 (90도 회전)
-          texture.rotation = Math.PI / 2;
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 서랍 L: 90도');
-        } else {
-          // W 방향: 세로 결 (-90도 회전)
+          // L 방향: 가로 결 (-90도 회전)
           texture.rotation = -Math.PI / 2;
           texture.center.set(0.5, 0.5);
-          console.log('  ✅ 서랍 W: -90도');
+          console.log('  ✅ 서랍 L: -90도');
+        } else {
+          // W 방향: 세로 결 (90도 회전)
+          texture.rotation = Math.PI / 2;
+          texture.center.set(0.5, 0.5);
+          console.log('  ✅ 서랍 W: 90도');
         }
       } else if (isHorizontalPanel) {
         // 가로로 긴 패널 (상판, 바닥판, 선반): L(vertical) = x축 가로결 = 90도, W(horizontal) = y축 세로결 = 0도
