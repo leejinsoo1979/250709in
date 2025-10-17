@@ -62,7 +62,7 @@ export const getDefaultGrainDirection = (panelName?: string): 'horizontal' | 've
 
   const name = panelName.toLowerCase();
 
-  // 세로 결이 필요한 패널들: 측판(좌측/우측), 백패널, 도어, 서랍 측면
+  // 세로 결이 필요한 패널들: 측판(좌측/우측), 백패널, 도어
   if (name.includes('좌측') ||
       name.includes('우측') ||
       name.includes('측판') ||
@@ -71,9 +71,13 @@ export const getDefaultGrainDirection = (panelName?: string): 'horizontal' | 've
       name.includes('back') ||
       name.includes('뒷판') ||
       name.includes('도어') ||
-      name.includes('door') ||
-      name.includes('마이다')) {
+      name.includes('door')) {
     return 'vertical';
+  }
+
+  // 서랍 앞판(마이다)은 가로로 긴 판이므로 가로결
+  if (name.includes('마이다')) {
+    return 'horizontal';
   }
 
   // 나머지는 기본적으로 가로 결 (상판, 바닥, 선반)
