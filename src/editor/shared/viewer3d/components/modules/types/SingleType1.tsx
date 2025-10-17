@@ -31,7 +31,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   showFurniture = true,
   isHighlighted = false,
   furnitureId,
-  placedFurnitureId
+  placedFurnitureId,
+  panelGrainDirections
 }) => {
   // 간접조명 관련 상태
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -44,7 +45,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     adjustedWidth,
-    isHighlighted
+    isHighlighted,
+    panelGrainDirections
   });
 
   const {
@@ -67,7 +69,17 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
-  
+
+  // 디버깅: SingleType1이 받은 textureUrl과 panelGrainDirections 확인
+  React.useEffect(() => {
+    console.log('🔵 SingleType1 - baseFurniture에서 추출한 값:', {
+      moduleId: moduleData.id,
+      textureUrl,
+      panelGrainDirections: panelGrainDirections ? JSON.stringify(panelGrainDirections) : 'undefined',
+      timestamp: Date.now()
+    });
+  }, [textureUrl, panelGrainDirections, moduleData.id]);
+
   // 띄워서 배치 여부 확인
   const placementType = spaceInfo?.baseConfig?.placementType;
   const isFloating = placementType === 'float';

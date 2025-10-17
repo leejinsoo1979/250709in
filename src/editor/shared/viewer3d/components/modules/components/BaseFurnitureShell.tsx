@@ -203,6 +203,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const highlightedSection = useUIStore(state => state.highlightedSection);
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
+  // 디버깅: BaseFurnitureShell이 받은 props 확인
+  React.useEffect(() => {
+    if (panelGrainDirections && Object.keys(panelGrainDirections).length > 0) {
+      console.log('🏗️ BaseFurnitureShell - panelGrainDirections 받음:', {
+        moduleId: moduleData?.id,
+        textureUrl,
+        panelGrainDirections: JSON.stringify(panelGrainDirections),
+        timestamp: Date.now()
+      });
+    }
+  }, [panelGrainDirections, textureUrl, moduleData?.id]);
+
   // BaseFurnitureShell을 사용하는 가구들의 그림자 업데이트 - 제거
   // 그림자 자동 업데이트가 활성화되어 있으므로 수동 업데이트 불필요
 
