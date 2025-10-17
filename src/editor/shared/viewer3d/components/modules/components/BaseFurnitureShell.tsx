@@ -415,6 +415,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isUpperHighlighted}
+                        panelName="상부장 바닥판"
+                        panelGrainDirections={panelGrainDirections}
+                        textureUrl={textureUrl}
                       />
 
                       {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
@@ -425,6 +428,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isLowerHighlighted}
+                        panelName="하부장 상판"
+                        panelGrainDirections={panelGrainDirections}
+                        textureUrl={textureUrl}
                       />
                     </React.Fragment>
                   );
@@ -461,6 +467,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isLowerHighlighted}
+                        panelName="하부장 상판"
+                        panelGrainDirections={panelGrainDirections}
+                        textureUrl={textureUrl}
                       />
 
                       {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림만 적용 (앞에서 줄이지 않음) */}
@@ -471,6 +480,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isUpperHighlighted}
+                        panelName="상부장 바닥판"
+                        panelGrainDirections={panelGrainDirections}
+                        textureUrl={textureUrl}
                       />
                     </React.Fragment>
                   );
@@ -506,6 +518,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerHighlighted}
+                    panelName="중간판"
+                    panelGrainDirections={panelGrainDirections}
+                    textureUrl={textureUrl}
                   />
                 );
               });
@@ -691,6 +706,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       isDragging={isDragging}
                       isBackPanel={true}
                       isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                      panelName="하부장 백패널"
+                      panelGrainDirections={panelGrainDirections}
+                      textureUrl={textureUrl}
                     />
 
                     {/* 상부 섹션 백패널 */}
@@ -702,6 +720,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       isDragging={isDragging}
                       isBackPanel={true}
                       isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                      panelName="상부장 백패널"
+                      panelGrainDirections={panelGrainDirections}
+                      textureUrl={textureUrl}
                     />
                   </>
                 );
@@ -716,6 +737,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               renderMode={renderMode}
               isDragging={isDragging}
               isBackPanel={true}
+              panelName="백패널"
+              panelGrainDirections={panelGrainDirections}
+              textureUrl={textureUrl}
             />
           )}
         </>
