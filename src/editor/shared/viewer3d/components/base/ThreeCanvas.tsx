@@ -588,6 +588,38 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     };
   }, [viewMode]);
 
+  // viewMode 또는 view2DDirection 변경 시 OrbitControls 리셋
+  useEffect(() => {
+    if (!controlsRef.current) return;
+
+    const controls = controlsRef.current;
+
+    // 2D 모드로 전환 시 카메라 각도 강제 리셋
+    if (viewMode === '2D' && controls.object) {
+      console.log('🔄 2D 모드 전환 - OrbitControls 각도 리셋');
+
+      // 카메라 위치와 타겟을 현재 설정된 값으로 업데이트
+      controls.object.position.set(cameraPosition[0], cameraPosition[1], cameraPosition[2]);
+      if (cameraTarget) {
+        controls.target.set(cameraTarget[0], cameraTarget[1], cameraTarget[2]);
+      }
+      if (cameraUp) {
+        controls.object.up.set(cameraUp[0], cameraUp[1], cameraUp[2]);
+      }
+
+      // 카메라가 타겟을 정확히 바라보도록 설정
+      controls.object.lookAt(controls.target);
+
+      // OrbitControls 업데이트
+      controls.update();
+
+      console.log('✅ 2D 카메라 리셋 완료:', {
+        position: controls.object.position.toArray(),
+        target: controls.target.toArray(),
+        up: controls.object.up.toArray()
+      });
+    }
+  }, [viewMode, view2DDirection, cameraPosition, cameraTarget, cameraUp]);
 
   // OrbitControls 팬 범위 제한 (그리드 영역)
   useEffect(() => {
