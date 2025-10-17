@@ -30,8 +30,10 @@ export interface BaseConfig {
 export interface MaterialConfig {
   interiorColor: string;
   doorColor: string;
+  frameColor: string;        // 프레임 재질 색상
   interiorTexture?: string;  // 내부 재질 텍스처 이미지 경로
   doorTexture?: string;      // 도어 재질 텍스처 이미지 경로
+  frameTexture?: string;     // 프레임 재질 텍스처 이미지 경로
 }
 
 // 단내림 기본값 상수
@@ -152,6 +154,7 @@ export const DEFAULT_BASE_VALUES = {
 export const DEFAULT_MATERIAL_VALUES = {
   INTERIOR_COLOR: '#FFFFFF',
   DOOR_COLOR: '#E0E0E0',  // 기본값을 밝은 회색으로 변경 (흰색 강제 초기화 방지)
+  FRAME_COLOR: '#E0E0E0', // 프레임 기본 색상
 } as const;
 
 // 공간 치수 범위 상수들 (controls에서 사용)
@@ -214,7 +217,8 @@ const createDefaultSpaceConfig = (): SpaceInfo => {
     // 재질 설정 초기값
     materialConfig: {
       interiorColor: DEFAULT_MATERIAL_VALUES.INTERIOR_COLOR,
-      doorColor: DEFAULT_MATERIAL_VALUES.DOOR_COLOR
+      doorColor: DEFAULT_MATERIAL_VALUES.DOOR_COLOR,
+      frameColor: DEFAULT_MATERIAL_VALUES.FRAME_COLOR
     },
     // 단내림 기본값 설정
     droppedCeiling: {
