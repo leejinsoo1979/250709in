@@ -58,7 +58,7 @@ export const applyCabinetTexture1Settings = (material: THREE.MeshStandardMateria
  * @returns 'horizontal' | 'vertical'
  */
 export const getDefaultGrainDirection = (panelName?: string): 'horizontal' | 'vertical' => {
-  // 기본값은 L 방향 (vertical)
+  // 기본값은 L 방향 (vertical) - 모든 패널이 긴 쪽에 결이 있어야 함
   return 'vertical';
 };
 
