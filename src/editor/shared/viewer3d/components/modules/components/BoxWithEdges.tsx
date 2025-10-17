@@ -244,17 +244,31 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       });
 
       if (isDrawerPanel) {
-        // 서랍 패널: L(vertical) = x축 가로결 = -90도, W(horizontal) = y축 세로결 = 90도
-        if (grainDirection === 'vertical') {
-          // L 방향: 가로 결 (-90도 회전)
-          texture.rotation = -Math.PI / 2;
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 서랍 L: -90도');
+        // 서랍 마이다만 정상 (-90도/90도), 나머지는 반대
+        const isDrawerFront = panelName && panelName.includes('마이다');
+
+        if (isDrawerFront) {
+          // 서랍 마이다: L(vertical) = x축 가로결 = -90도, W(horizontal) = y축 세로결 = 90도
+          if (grainDirection === 'vertical') {
+            texture.rotation = -Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 서랍마이다 L: -90도');
+          } else {
+            texture.rotation = Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 서랍마이다 W: 90도');
+          }
         } else {
-          // W 방향: 세로 결 (90도 회전)
-          texture.rotation = Math.PI / 2;
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 서랍 W: 90도');
+          // 서랍 앞판/뒷판/측판: 반대
+          if (grainDirection === 'vertical') {
+            texture.rotation = Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 서랍기타 L: 90도');
+          } else {
+            texture.rotation = -Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 서랍기타 W: -90도');
+          }
         }
       } else if (isHorizontalPanel) {
         // 가로로 긴 패널 (상판, 바닥판, 선반)
@@ -292,32 +306,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
           (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
 
-        if (isFurnitureSidePanel) {
-          // 가구 측판: z축이 긴 방향 - L(vertical) = z축 깊이결 = 90도, W(horizontal) = y축 세로결 = 0도
-          if (grainDirection === 'vertical') {
-            // L 방향: 깊이 결 (90도 회전)
-            texture.rotation = Math.PI / 2;
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 가구측판 L: 90도');
-          } else {
-            // W 방향: 세로 결 (회전 없음)
-            texture.rotation = 0;
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 가구측판 W: 0도');
-          }
+        // 가구 측판, 백패널, 도어 모두 동일: L(vertical) = y축 세로결 = 0도, W(horizontal) = x축 가로결 = 90도
+        if (grainDirection === 'vertical') {
+          // L 방향: 세로 결 (회전 없음)
+          texture.rotation = 0;
+          texture.center.set(0.5, 0.5);
+          console.log('  ✅ 세로패널 L: 0도');
         } else {
-          // 백패널, 도어: y축이 긴 방향 - L(vertical) = y축 세로결 = 0도, W(horizontal) = x축 가로결 = 90도
-          if (grainDirection === 'vertical') {
-            // L 방향: 세로 결 (회전 없음)
-            texture.rotation = 0;
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 백패널/도어 L: 0도');
-          } else {
-            // W 방향: 가로 결 (90도 회전)
-            texture.rotation = Math.PI / 2;
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 백패널/도어 W: 90도');
-          }
+          // W 방향: 가로 결 (90도 회전)
+          texture.rotation = Math.PI / 2;
+          texture.center.set(0.5, 0.5);
+          console.log('  ✅ 세로패널 W: 90도');
         }
       }
 
