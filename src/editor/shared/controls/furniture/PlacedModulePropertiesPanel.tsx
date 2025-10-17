@@ -1334,8 +1334,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         }}
                         title={`${panel.name} 나무결 방향 전환`}
                       >
-                        <span style={{ fontSize: '11px' }}>{currentDirection === 'vertical' ? 'L' : 'W'}</span>
-                        <span style={{ fontSize: '18px', lineHeight: '1' }}>{currentDirection === 'vertical' ? '↓' : '→'}</span>
+                        <span style={{ fontSize: '11px', lineHeight: '18px' }}>{currentDirection === 'vertical' ? 'L' : 'W'}</span>
+                        <span style={{ fontSize: '18px', lineHeight: '18px' }}>{currentDirection === 'vertical' ? '↓' : '→'}</span>
                       </button>
                     </div>
                   );
