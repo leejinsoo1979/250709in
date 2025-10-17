@@ -133,6 +133,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return baseMaterial;
   }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode]);
 
+  // panelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
+  const panelGrainDirectionsStr = panelGrainDirections ? JSON.stringify(panelGrainDirections) : '';
+
   // 패널별 개별 material 생성 (텍스처 회전 적용)
   const panelSpecificMaterial = React.useMemo(() => {
     console.log('🔍 panelSpecificMaterial useMemo 실행:', {
@@ -141,7 +144,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       hasMaterial: !!processedMaterial,
       isStandardMaterial: processedMaterial instanceof THREE.MeshStandardMaterial,
       hasMapTexture: processedMaterial instanceof THREE.MeshStandardMaterial ? !!processedMaterial.map : false,
-      panelGrainDirections: panelGrainDirections ? JSON.stringify(panelGrainDirections) : 'null'
+      panelGrainDirectionsStr
     });
 
     // panelName이 없으면 processedMaterial 그대로 사용
@@ -186,7 +189,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       textureUrl,
       hasTexture: !!processedMaterial.map,
       panelGrainDirectionsKeys: panelGrainDirections ? Object.keys(panelGrainDirections) : [],
-      panelGrainDirectionsValues: panelGrainDirections ? JSON.stringify(panelGrainDirections) : 'null'
+      panelGrainDirectionsStr
     });
 
     // processedMaterial을 복제하여 개별 material 생성
@@ -219,12 +222,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     return panelMaterial;
-  }, [processedMaterial, panelName, panelGrainDirections]);
+  }, [processedMaterial, panelName, panelGrainDirectionsStr]);
 
   // panelGrainDirections 변경 시 실시간 텍스처 회전 업데이트
-  // JSON.stringify를 사용하여 객체 내부 값 변경을 감지
-  const panelGrainDirectionsStr = panelGrainDirections ? JSON.stringify(panelGrainDirections) : '';
-
   React.useEffect(() => {
     if (!panelName || !panelGrainDirections || !(panelSpecificMaterial instanceof THREE.MeshStandardMaterial)) {
       return;
