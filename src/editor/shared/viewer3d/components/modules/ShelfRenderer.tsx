@@ -142,6 +142,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           panelName="선반"
           textureUrl={textureUrl}
           panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
         />
         
         {/* 상판 두께 치수 표시 */}
@@ -226,6 +227,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               panelName="선반"
               textureUrl={textureUrl}
               panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
             />
           );
         })}
@@ -662,6 +664,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             panelName="선반"
             textureUrl={textureUrl}
             panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
           />
         );
       })}
