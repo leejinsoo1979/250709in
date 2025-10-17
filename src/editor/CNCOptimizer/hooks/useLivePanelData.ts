@@ -86,11 +86,14 @@ export function useLivePanelData() {
 
         // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
         // 섹션 헤더("=== xxx ===")를 제외하고 실제 패널만 필터링
-        const modulePanels = allPanelsList.filter((item: any) =>
-          item.name && !item.name.startsWith('===')
-        );
+        // 또한 width나 depth 속성이 있어야 실제 패널로 간주
+        const modulePanels = allPanelsList.filter((item: any) => {
+          const isNotHeader = item.name && !item.name.includes('===');
+          const hasValidDimensions = item.width !== undefined || item.depth !== undefined;
+          return isNotHeader && hasValidDimensions;
+        });
 
-        console.log(`Module ${moduleIndex}: Filtered ${modulePanels.length} actual panels (excluding section headers)`);
+        console.log(`Module ${moduleIndex}: Filtered ${modulePanels.length} actual panels (excluding ${allPanelsList.length - modulePanels.length} section headers)`);
 
         // 패널 결방향 정보 가져오기
         const panelGrainDirections = placedModule.panelGrainDirections || {};
@@ -231,9 +234,12 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
       // 섹션 헤더("=== xxx ===")를 제외하고 실제 패널만 필터링
-      const modulePanels = allPanelsList.filter((item: any) =>
-        item.name && !item.name.startsWith('===')
-      );
+      // 또한 width나 depth 속성이 있어야 실제 패널로 간주
+      const modulePanels = allPanelsList.filter((item: any) => {
+        const isNotHeader = item.name && !item.name.includes('===');
+        const hasValidDimensions = item.width !== undefined || item.depth !== undefined;
+        return isNotHeader && hasValidDimensions;
+      });
 
       // 패널 결방향 정보 가져오기
       const panelGrainDirections = placedModule.panelGrainDirections || {};

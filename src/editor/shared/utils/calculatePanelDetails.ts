@@ -237,7 +237,7 @@ export const calculatePanelDetails = (
           
           // 서랍 손잡이판 (DrawerRenderer의 HANDLE_PLATE) - PET 재질
           targetPanel.push({
-            name: `${sectionPrefix}${t('furniture.drawer')}${drawerNum}(마이다)`,
+            name: `${sectionPrefix}서랍${drawerNum}(마이다)`,
             width: customWidth,
             height: individualDrawerHeight,
             thickness: drawerHandleThickness,
@@ -251,7 +251,7 @@ export const calculatePanelDetails = (
 
           // 서랍 앞판
           targetPanel.push({
-            name: `${sectionPrefix}${t('furniture.drawer')}${drawerNum} ${t('furniture.frontPanel')}`,
+            name: `${sectionPrefix}서랍${drawerNum} 앞판`,
             width: drawerBodyWidth,
             height: drawerBodyHeight,
             thickness: basicThickness,
@@ -260,7 +260,7 @@ export const calculatePanelDetails = (
 
           // 서랍 뒷판
           targetPanel.push({
-            name: `${sectionPrefix}${t('furniture.drawer')}${drawerNum} 뒷판`,
+            name: `${sectionPrefix}서랍${drawerNum} 뒷판`,
             width: drawerBodyWidth,
             height: drawerBodyHeight,
             thickness: basicThickness,
@@ -269,8 +269,8 @@ export const calculatePanelDetails = (
 
           // 서랍 좌측판
           targetPanel.push({
-            name: `${sectionPrefix}${t('furniture.drawer')}${drawerNum} ${t('furniture.leftPanel')}`,
-            depth: drawerBodyDepth - basicThickness * 2, // 앞뒤 판재 두께 제외
+            name: `${sectionPrefix}서랍${drawerNum} 좌측판`,
+            width: drawerBodyDepth - basicThickness * 2, // 앞뒤 판재 두께 제외
             height: drawerBodyHeight,
             thickness: basicThickness,
             material: 'PB'  // 서랍 본체는 PB 재질
@@ -278,8 +278,8 @@ export const calculatePanelDetails = (
 
           // 서랍 우측판
           targetPanel.push({
-            name: `${sectionPrefix}${t('furniture.drawer')}${drawerNum} ${t('furniture.rightPanel')}`,
-            depth: drawerBodyDepth - basicThickness * 2, // 앞뒤 판재 두께 제외
+            name: `${sectionPrefix}서랍${drawerNum} 우측판`,
+            width: drawerBodyDepth - basicThickness * 2, // 앞뒤 판재 두께 제외
             height: drawerBodyHeight,
             thickness: basicThickness,
             material: 'PB'  // 서랍 본체는 PB 재질
@@ -287,7 +287,7 @@ export const calculatePanelDetails = (
 
           // 서랍 바닥판 (DrawerRenderer의 Drawer Bottom)
           targetPanel.push({
-            name: `${sectionPrefix}${t('furniture.drawer')}${drawerNum} 바닥`,
+            name: `${sectionPrefix}서랍${drawerNum} 바닥`,
             width: drawerBodyWidth - 26, // 추가로 26mm 감소
             depth: drawerBodyDepth - 26, // 추가로 26mm 감소
             thickness: drawerBottomThickness,
