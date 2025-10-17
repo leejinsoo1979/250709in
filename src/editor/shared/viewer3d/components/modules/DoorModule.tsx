@@ -1207,10 +1207,30 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
               />
               
-              {/* Hinges for left door - 상부장 2개, 하부장 2개, 키큰장 4개 */}
+              {/* Hinges for left door - 분할 모드, 상부장, 하부장, 키큰장 */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
-                  {isUpperCabinet ? (
+                  {sectionIndex !== undefined ? (
+                    // 분할 모드: 2개 경첩 (하부장 기준)
+                    <>
+                      <Hinge
+                        position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={9.5}
+                        viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                        view2DDirection={view2DDirection}
+                      />
+                      <Hinge
+                        position={[-leftDoorWidthUnits / 2 + mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={9.5}
+                        viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                        view2DDirection={view2DDirection}
+                      />
+                    </>
+                  ) : isUpperCabinet ? (
                     // 상부장: 위에서 100mm, 아래에서 100mm
                     <>
                       <Hinge
@@ -1566,10 +1586,30 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
               />
               
-              {/* Hinges for right door - 상부장 2개, 하부장 2개, 키큰장 4개 */}
+              {/* Hinges for right door - 분할 모드, 상부장, 하부장, 키큰장 */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
                 <>
-                  {isUpperCabinet ? (
+                  {sectionIndex !== undefined ? (
+                    // 분할 모드: 2개 경첩 (하부장 기준)
+                    <>
+                      <Hinge
+                        position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), doorHeight / 2 - mmToThreeUnits(100), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={-9.5}
+                        viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                        view2DDirection={view2DDirection}
+                      />
+                      <Hinge
+                        position={[rightDoorWidthUnits / 2 - mmToThreeUnits(24), -doorHeight / 2 + mmToThreeUnits(149), doorThicknessUnits / 2 + 0.001]}
+                        mainDiameter={17.5}
+                        smallCircleDiameter={4}
+                        smallCircleXOffset={-9.5}
+                        viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                        view2DDirection={view2DDirection}
+                      />
+                    </>
+                  ) : isUpperCabinet ? (
                     // 상부장: 위에서 100mm, 아래에서 100mm
                     <>
                       <Hinge
