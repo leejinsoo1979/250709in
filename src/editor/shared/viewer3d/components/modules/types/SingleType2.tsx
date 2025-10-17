@@ -619,52 +619,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 totalSections={2}
               />
 
-              {/* 도어 분할선 - 하부 도어 상단 = 상부 도어 하단 = 측판 경계 */}
-              {(() => {
-                // 측판 렌더링 로직과 동일하게 계산
-                const sectionHeights = getSectionHeights();
-                const lowerSectionHeight = sectionHeights[0]; // 하부 섹션 측판 높이 (1025mm)
-
-                let accumulatedY = -height/2 + basicThickness;
-
-                // 하부 섹션 (index=0)
-                const lowerSectionCenterY = accumulatedY + lowerSectionHeight / 2 - basicThickness;
-
-                // 하부 섹션 측판 상단 = 상부 섹션 측판 하단 = 도어 분할 위치
-                const lowerSidePanelTop = lowerSectionCenterY + lowerSectionHeight / 2;
-
-                // 하부 도어는 하단으로만 확장되고, 상단은 측판 상단과 동일
-                // 상부 도어도 하단이 측판 하단(=하부 측판 상단)과 동일
-                // 따라서 분할선 = 측판 경계
-                const dividerY = lowerSidePanelTop;
-
-                console.log('🚪📏 도어 분할선 위치 (측판 경계):', {
-                  lowerSectionHeight,
-                  lowerSectionHeight_mm: lowerSectionHeight / 0.01,
-                  lowerSectionCenterY,
-                  lowerSidePanelTop,
-                  lowerSidePanelTop_mm: lowerSidePanelTop / 0.01,
-                  dividerY,
-                  dividerY_mm: dividerY / 0.01,
-                  설명: '하부 도어 상단 = 상부 도어 하단 = 측판 경계'
-                });
-
-                // 도어 너비와 깊이
-                const doorWidthThree = mmToThreeUnits(doorWidth || moduleData.dimensions.width);
-                const doorDepthThree = mmToThreeUnits(baseFurniture.actualDepthMm);
-
-                return (
-                  <Line
-                    points={[
-                      [-doorWidthThree / 2, dividerY, doorDepthThree / 2 + 0.001],
-                      [doorWidthThree / 2, dividerY, doorDepthThree / 2 + 0.001]
-                    ]}
-                    color="#FF0000"
-                    lineWidth={5}
-                    renderOrder={1000}
-                  />
-                );
-              })()}
             </>
           )}
         </>
