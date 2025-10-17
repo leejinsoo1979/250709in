@@ -141,13 +141,35 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     // 패널의 결 방향 결정 (설정값 또는 기본값)
-    const grainDirection = panelGrainDirections?.[panelName] || getDefaultGrainDirection(panelName);
+    // panelGrainDirections 객체에서 부분 매칭으로 찾기
+    let grainDirection: 'horizontal' | 'vertical' | undefined;
+
+    if (panelGrainDirections) {
+      // 정확히 일치하는 키가 있는지 먼저 확인
+      if (panelGrainDirections[panelName]) {
+        grainDirection = panelGrainDirections[panelName];
+      } else {
+        // 부분 매칭: panelGrainDirections의 키가 panelName에 포함되어 있는지 확인
+        const matchingKey = Object.keys(panelGrainDirections).find(key =>
+          panelName.includes(key) || key.includes(panelName)
+        );
+        if (matchingKey) {
+          grainDirection = panelGrainDirections[matchingKey];
+        }
+      }
+    }
+
+    // 설정값이 없으면 기본값 사용
+    if (!grainDirection) {
+      grainDirection = getDefaultGrainDirection(panelName);
+    }
 
     console.log('🎨 BoxWithEdges - 패널별 material 생성:', {
       panelName,
       grainDirection,
       textureUrl,
-      hasTexture: !!processedMaterial.map
+      hasTexture: !!processedMaterial.map,
+      panelGrainDirections: panelGrainDirections ? Object.keys(panelGrainDirections) : []
     });
 
     // processedMaterial을 복제하여 개별 material 생성
