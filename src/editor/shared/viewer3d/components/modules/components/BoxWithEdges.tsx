@@ -227,14 +227,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
       // 서랍 패널은 회전 로직이 반대
       if (isDrawerPanel) {
-        // 서랍 패널: L(vertical) = x축 가로결 = -90도, W(horizontal) = y축 세로결 = 0도
+        // 서랍 패널: L(vertical) = x축 가로결 = -90도, W(horizontal) = y축 세로결 = 90도
         if (grainDirection === 'vertical') {
           // L 방향: 가로 결 (-90도 회전, 텍스처가 원래 세로로 되어있음)
           texture.rotation = -Math.PI / 2;
           texture.center.set(0.5, 0.5);
         } else {
-          // W 방향: 세로 결 (회전 없음)
-          texture.rotation = 0;
+          // W 방향: 세로 결 (90도 회전)
+          texture.rotation = Math.PI / 2;
           texture.center.set(0.5, 0.5);
         }
       } else {
