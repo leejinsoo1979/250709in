@@ -220,7 +220,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     // 텍스처가 있는 경우 회전 적용
     if (panelMaterial.map) {
-      const texture = panelMaterial.map;
+      // 텍스처도 clone하여 각 패널마다 독립적인 텍스처 인스턴스 생성
+      const texture = panelMaterial.map.clone();
+      panelMaterial.map = texture;
 
       // 서랍 패널 여부 확인 (마이다, 앞판, 뒷판, 좌우측판) - 서랍 바닥은 제외
       const isDrawerPanel = panelName && panelName.includes('서랍') &&
