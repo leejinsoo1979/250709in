@@ -2033,8 +2033,93 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       view2DDirection={view2DDirection}
                     />
                   </>
+                ) : totalSections > 1 && sectionIndex !== undefined ? (
+                  // 분할 모드: 섹션별로 다른 경첩 배치
+                  <>
+                    {sectionIndex === 1 ? (
+                      // 상부 섹션 도어: 위에서 두번째 경첩 제거 (3개 경첩)
+                      <>
+                        <Hinge
+                          position={[
+                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                            doorHeight / 2 - mmToThreeUnits(100),
+                            doorThicknessUnits / 2 + 0.001
+                          ]}
+                          mainDiameter={17.5}
+                          smallCircleDiameter={4}
+                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
+                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                          view2DDirection={view2DDirection}
+                        />
+                        <Hinge
+                          position={[
+                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                            -doorHeight / 2 + mmToThreeUnits(149),
+                            doorThicknessUnits / 2 + 0.001
+                          ]}
+                          mainDiameter={17.5}
+                          smallCircleDiameter={4}
+                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
+                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                          view2DDirection={view2DDirection}
+                        />
+                        <Hinge
+                          position={[
+                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                            -doorHeight / 2 + mmToThreeUnits(749),
+                            doorThicknessUnits / 2 + 0.001
+                          ]}
+                          mainDiameter={17.5}
+                          smallCircleDiameter={4}
+                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
+                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                          view2DDirection={view2DDirection}
+                        />
+                      </>
+                    ) : (
+                      // 하부 섹션 도어: 위에서 두번째, 아래서 두번째 제거하고 중간에 추가 (3개 경첩)
+                      <>
+                        <Hinge
+                          position={[
+                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                            doorHeight / 2 - mmToThreeUnits(100),
+                            doorThicknessUnits / 2 + 0.001
+                          ]}
+                          mainDiameter={17.5}
+                          smallCircleDiameter={4}
+                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
+                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                          view2DDirection={view2DDirection}
+                        />
+                        <Hinge
+                          position={[
+                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                            0,
+                            doorThicknessUnits / 2 + 0.001
+                          ]}
+                          mainDiameter={17.5}
+                          smallCircleDiameter={4}
+                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
+                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                          view2DDirection={view2DDirection}
+                        />
+                        <Hinge
+                          position={[
+                            adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
+                            -doorHeight / 2 + mmToThreeUnits(149),
+                            doorThicknessUnits / 2 + 0.001
+                          ]}
+                          mainDiameter={17.5}
+                          smallCircleDiameter={4}
+                          smallCircleXOffset={adjustedHingePosition === 'left' ? 9.5 : -9.5}
+                          viewDirection={view2DDirection === 'left' || view2DDirection === 'right' ? 'side' : 'front'}
+                          view2DDirection={view2DDirection}
+                        />
+                      </>
+                    )}
+                  </>
                 ) : (
-                  // 키큰장: 기존 4개 경첩
+                  // 키큰장 병합 모드: 기존 4개 경첩
                   <>
                     <Hinge
                       position={[
