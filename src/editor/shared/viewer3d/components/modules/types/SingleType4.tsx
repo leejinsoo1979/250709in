@@ -31,6 +31,8 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   slotInfo,
   showFurniture = true,
   placedFurnitureId,
+  textureUrl,
+  panelGrainDirections,
   doorTopGap = 5,
   doorBottomGap = 45,
   doorSplit,
@@ -236,6 +238,9 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               originalSlotWidth={originalSlotWidth}
               slotCenterX={slotCenterX || 0}
               slotIndex={slotIndex}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
               furnitureId={placedFurnitureId}
@@ -256,6 +261,9 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               originalSlotWidth={originalSlotWidth}
               slotCenterX={slotCenterX || 0}
               slotIndex={slotIndex}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
               sectionHeightsMm={sectionHeightsMm}
               sectionIndex={1}
               totalSections={2}
@@ -277,6 +285,9 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               originalSlotWidth={originalSlotWidth}
               slotCenterX={slotCenterX || 0}
               slotIndex={slotIndex}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
               sectionHeightsMm={sectionHeightsMm}
               sectionIndex={0}
               totalSections={2}

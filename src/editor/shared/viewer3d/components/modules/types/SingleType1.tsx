@@ -266,6 +266,9 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData}
           originalSlotWidth={originalSlotWidth || doorWidth}
           slotIndex={slotIndex}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
           slotCenterX={slotCenterX}
         />
       )}

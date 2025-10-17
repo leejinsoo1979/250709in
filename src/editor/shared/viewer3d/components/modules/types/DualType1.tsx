@@ -204,6 +204,9 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           slotIndex={slotIndex}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
           panelGrainDirections={panelGrainDirections} // 패널별 개별 결 방향
         />
       )}

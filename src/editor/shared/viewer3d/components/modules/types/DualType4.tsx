@@ -39,7 +39,9 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   customSections, // 사용자 정의 섹션 설정
   placedFurnitureId,
   showFurniture = true, // 가구 본체 표시 여부
-  visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
+  visibleSectionIndex = null,
+  textureUrl,
+  panelGrainDirections, // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
   doorTopGap = 5,
   doorBottomGap = 45,
   doorSplit,
@@ -589,6 +591,9 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               isDragging={isDragging}
               isEditMode={isEditMode}
               slotIndex={slotIndex}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
               furnitureId={placedFurnitureId}
@@ -610,6 +615,9 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 slotIndex={slotIndex}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
                 sectionHeightsMm={sectionHeightsMm}
                 sectionIndex={1}
                 totalSections={2}
@@ -632,6 +640,9 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                 isDragging={isDragging}
                 isEditMode={isEditMode}
                 slotIndex={slotIndex}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
                 sectionHeightsMm={sectionHeightsMm}
                 sectionIndex={0}
                 totalSections={2}

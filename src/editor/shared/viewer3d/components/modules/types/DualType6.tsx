@@ -36,7 +36,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   slotWidths,
   adjustedWidth, // adjustedWidth 추가
   showFurniture = true, // 가구 본체 표시 여부
-  visibleSectionIndex = null // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
+  visibleSectionIndex = null,
+  textureUrl,
+  panelGrainDirections // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -947,6 +949,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
         slotIndex={slotIndex}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={placedFurnitureId}
         />
       )}
     </group>
