@@ -37,7 +37,16 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   adjustedWidth, // adjustedWidth 추가
   placedFurnitureId,
   showFurniture = true, // 가구 본체 표시 여부
-  visibleSectionIndex = null // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
+  visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
+  doorTopGap = 5,
+  doorBottomGap = 45,
+  doorSplit,
+  upperDoorTopGap,
+  upperDoorBottomGap,
+  lowerDoorTopGap,
+  lowerDoorBottomGap,
+  lowerSectionDepth,
+  upperSectionDepth
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -47,7 +56,9 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
-    adjustedWidth // adjustedWidth 전달
+    adjustedWidth, // adjustedWidth 전달
+    lowerSectionDepth,
+    upperSectionDepth
   });
 
   const {
@@ -73,6 +84,15 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
 
   const sectionHeights = getSectionHeights();
   const isMulti = sectionHeights.length >= 2;
+
+  // sectionHeightsMm 계산 (도어 분할용)
+  const unitsToMmFactor = (() => {
+    const unit = mmToThreeUnits(1);
+    return unit === 0 ? 100 : 1 / unit;
+  })();
+  const sectionHeightsMm = sectionHeights.length
+    ? sectionHeights.map(sectionHeight => Math.round(sectionHeight * unitsToMmFactor))
+    : undefined;
 
   // 디버그: showFurniture 값 확인
   useEffect(() => {
@@ -479,20 +499,75 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
 
       {/* 도어는 showFurniture와 관계없이 항상 렌더링 (도어 도면 출력용) */}
       {hasDoor && spaceInfo && (
-        <DoorModule
-          moduleWidth={doorWidth || moduleData.dimensions.width}
-          moduleDepth={baseFurniture.actualDepthMm}
-          hingePosition={hingePosition}
-          spaceInfo={spaceInfo}
-          color={baseFurniture.doorColor}
-          moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
-          originalSlotWidth={originalSlotWidth}
-          slotCenterX={slotCenterX || 0} // slotCenterX가 전달되면 사용, 아니면 0
-          slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-        slotIndex={slotIndex}
-        />
+        <>
+          {!doorSplit ? (
+            // 병합 모드: 도어 하나
+            <DoorModule
+              moduleWidth={doorWidth || moduleData.dimensions.width}
+              moduleDepth={baseFurniture.actualDepthMm}
+              hingePosition={hingePosition}
+              spaceInfo={spaceInfo}
+              color={baseFurniture.doorColor}
+              moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
+              originalSlotWidth={originalSlotWidth}
+              slotCenterX={slotCenterX || 0} // slotCenterX가 전달되면 사용, 아니면 0
+              slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              slotIndex={slotIndex}
+              doorTopGap={doorTopGap}
+              doorBottomGap={doorBottomGap}
+              furnitureId={placedFurnitureId}
+            />
+          ) : (
+            // 분할 모드: 상하부 도어 각각
+            <>
+              {/* 상부 섹션 도어 (옷장) */}
+              <DoorModule
+                moduleWidth={doorWidth || moduleData.dimensions.width}
+                moduleDepth={baseFurniture.actualDepthMm}
+                hingePosition={hingePosition}
+                spaceInfo={spaceInfo}
+                color={baseFurniture.doorColor}
+                moduleData={moduleData}
+                originalSlotWidth={originalSlotWidth}
+                slotCenterX={slotCenterX || 0}
+                slotWidths={slotWidths}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                slotIndex={slotIndex}
+                sectionHeightsMm={sectionHeightsMm}
+                sectionIndex={1}
+                totalSections={2}
+                doorTopGap={upperDoorTopGap ?? doorTopGap}
+                doorBottomGap={upperDoorBottomGap ?? 0}
+                furnitureId={placedFurnitureId}
+              />
+
+              {/* 하부 섹션 도어 */}
+              <DoorModule
+                moduleWidth={doorWidth || moduleData.dimensions.width}
+                moduleDepth={baseFurniture.actualDepthMm}
+                hingePosition={hingePosition}
+                spaceInfo={spaceInfo}
+                color={baseFurniture.doorColor}
+                moduleData={moduleData}
+                originalSlotWidth={originalSlotWidth}
+                slotCenterX={slotCenterX || 0}
+                slotWidths={slotWidths}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                slotIndex={slotIndex}
+                sectionHeightsMm={sectionHeightsMm}
+                sectionIndex={0}
+                totalSections={2}
+                doorTopGap={lowerDoorTopGap ?? 0}
+                doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
+                furnitureId={placedFurnitureId}
+              />
+            </>
+          )}
+        </>
       )}
     </>
   );
