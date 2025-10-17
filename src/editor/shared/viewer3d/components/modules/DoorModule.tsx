@@ -127,6 +127,7 @@ interface DoorModuleProps {
   sectionHeightsMm?: number[]; // 섹션별 실제 측판 높이 (mm)
   sectionIndex?: number; // 섹션 인덱스 (분할 모드용, 0: 하부, 1: 상부)
   totalSections?: number; // 전체 섹션 수 (분할 모드용, 기본값: 1)
+  furnitureId?: string; // 가구 ID (개별 도어 제어용)
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -148,7 +149,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   doorBottomGap = 45, // 가구 하단에서 아래로 갭 기본값 45mm
   sectionHeightsMm,
   sectionIndex, // 섹션 인덱스 (분할 모드용)
-  totalSections = 1 // 전체 섹션 수 (분할 모드용)
+  totalSections = 1, // 전체 섹션 수 (분할 모드용)
+  furnitureId // 가구 ID
 }) => {
   console.log('🚪🔧 DoorModule Props:', {
     doorTopGap,
@@ -157,10 +159,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   });
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
-  const { doorsOpen, view2DDirection } = useUIStore();
+  const { doorsOpen, view2DDirection, isIndividualDoorOpen, toggleIndividualDoor } = useUIStore();
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
+
+  // 분할 모드이고 furnitureId가 있으면 개별 도어 상태 사용, 아니면 전역 상태 사용
+  const useIndividualState = totalSections > 1 && furnitureId && sectionIndex !== undefined;
+  const isDoorOpen = useIndividualState
+    ? isIndividualDoorOpen(furnitureId, sectionIndex)
+    : doorsOpen;
 
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
   const currentSpaceInfo = spaceInfo || storeSpaceInfo;
@@ -851,14 +859,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }, [isEditMode, doorsOpen, moduleData?.id]);
 
   // 도어 열림 상태 계산 - 성능 최적화
-  const shouldOpenDoors = useMemo(() => doorsOpen || isEditMode, [doorsOpen, isEditMode]);
+  const shouldOpenDoors = useMemo(() => isDoorOpen || isEditMode, [isDoorOpen, isEditMode]);
   
   // 도어 애니메이션 상태 추적
   const [isAnimating, setIsAnimating] = useState(false);
   
   // 도어 상태 변경 시 애니메이션 시작
   useEffect(() => {
-    if (doorsOpen !== undefined) {
+    if (isDoorOpen !== undefined) {
       setIsAnimating(true);
       // 애니메이션이 끝나면 (약 1.2초 후) 상태 업데이트 (기존 1.5초에서 1.2초로 감소)
       const timer = setTimeout(() => {
@@ -866,7 +874,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       }, 1200);
       return () => clearTimeout(timer);
     }
-  }, [doorsOpen]);
+  }, [isDoorOpen]);
   
   // 애니메이션 중일 때 프레임마다 렌더링
   useFrame(() => {
@@ -878,24 +886,33 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   });
   
-  // 도어 클릭 핸들러
+  // 도어 클릭 핸들러 - 개별 또는 전역 상태 토글
   const handleDoorClick = (event: ThreeEvent<MouseEvent>) => {
     event.stopPropagation();
-    
+
     console.log('🚪 도어 클릭 이벤트 발생:', {
       moduleId: moduleData?.id,
-      doorsOpen,
-      isEditMode,
-      eventType: event.type,
-      target: event.target,
-      currentDoorsOpen: doorsOpen,
-      willBeOpen: !doorsOpen
+      furnitureId,
+      sectionIndex,
+      useIndividualState,
+      currentDoorOpen: isDoorOpen,
+      willBeOpen: !isDoorOpen
     });
-    
-    // 도어 상태 토글
-    const { toggleDoors } = useUIStore.getState();
-    toggleDoors();
-    
+
+    // 분할 모드이고 furnitureId가 있으면 개별 도어 토글, 아니면 전역 토글
+    if (useIndividualState) {
+      toggleIndividualDoor(furnitureId!, sectionIndex!);
+      console.log('🚪 개별 도어 상태 토글:', {
+        furnitureId,
+        sectionIndex,
+        key: `${furnitureId}-${sectionIndex}`
+      });
+    } else {
+      const { toggleDoors } = useUIStore.getState();
+      toggleDoors();
+      console.log('🚪 전역 도어 상태 토글');
+    }
+
     // Three.js 렌더러에 다시 그리기 요청 (react-three-fiber의 invalidate 사용)
     if (gl) {
       // invalidate 함수가 있으면 사용, 없으면 직접 렌더
@@ -903,11 +920,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         (gl as any).invalidate();
       }
     }
-    
+
     // 토글 후 상태 확인
     setTimeout(() => {
-      const newState = useUIStore.getState().doorsOpen;
-      console.log('🚪 도어 상태 토글 완료, 새로운 상태:', newState);
+      if (useIndividualState) {
+        const newState = useUIStore.getState().isIndividualDoorOpen(furnitureId!, sectionIndex!);
+        console.log('🚪 개별 도어 상태 토글 완료, 새로운 상태:', newState);
+      } else {
+        const newState = useUIStore.getState().doorsOpen;
+        console.log('🚪 전역 도어 상태 토글 완료, 새로운 상태:', newState);
+      }
     }, 100);
   };
 

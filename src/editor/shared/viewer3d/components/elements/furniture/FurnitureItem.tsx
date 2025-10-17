@@ -1766,6 +1766,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   doorBottomGap={placedModule.doorBottomGap} // 바닥에서 도어 하단까지의 갭
                   lowerSectionDepth={placedModule.lowerSectionDepth} // 하부 섹션 깊이 (mm)
                   upperSectionDepth={placedModule.upperSectionDepth} // 상부 섹션 깊이 (mm)
+                  doorSplit={placedModule.doorSplit}
+                  upperDoorTopGap={placedModule.upperDoorTopGap}
+                  upperDoorBottomGap={placedModule.upperDoorBottomGap}
+                  lowerDoorTopGap={placedModule.lowerDoorTopGap}
+                  lowerDoorBottomGap={placedModule.lowerDoorBottomGap}
                 />
               );
             })()}

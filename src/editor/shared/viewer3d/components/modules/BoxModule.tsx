@@ -50,6 +50,11 @@ interface BoxModuleProps {
   doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 45)
   lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
+  doorSplit?: boolean; // 도어 분할 여부
+  upperDoorTopGap?: number; // 상부 섹션 도어 상단 갭
+  upperDoorBottomGap?: number; // 상부 섹션 도어 하단 갭
+  lowerDoorTopGap?: number; // 하부 섹션 도어 상단 갭
+  lowerDoorBottomGap?: number; // 하부 섹션 도어 하단 갭
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -97,6 +102,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   doorBottomGap = 45, // 가구 하단에서 아래로의 갭 (mm)
   lowerSectionDepth, // 하부 섹션 깊이 (mm)
   upperSectionDepth, // 상부 섹션 깊이 (mm)
+  doorSplit,
+  upperDoorTopGap,
+  upperDoorBottomGap,
+  lowerDoorTopGap,
+  lowerDoorBottomGap,
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
@@ -341,6 +351,11 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         doorBottomGap={doorBottomGap} // 바닥에서 도어 하단까지의 갭
         lowerSectionDepth={lowerSectionDepth} // 하부 섹션 깊이 (mm)
         upperSectionDepth={upperSectionDepth} // 상부 섹션 깊이 (mm)
+        doorSplit={doorSplit}
+        upperDoorTopGap={upperDoorTopGap}
+        upperDoorBottomGap={upperDoorBottomGap}
+        lowerDoorTopGap={lowerDoorTopGap}
+        lowerDoorBottomGap={lowerDoorBottomGap}
       />
       </>
     );

@@ -93,6 +93,15 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
     ];
   }, [lowerSectionDepth, upperSectionDepth, depth, mmToThreeUnits]);
 
+  const sectionHeightsUnits = getSectionHeights();
+  const unitsToMmFactor = (() => {
+    const unit = mmToThreeUnits(1);
+    return unit === 0 ? 100 : 1 / unit;
+  })();
+  const sectionHeightsMm = sectionHeightsUnits.length
+    ? sectionHeightsUnits.map(sectionHeight => Math.round(sectionHeight * unitsToMmFactor))
+    : undefined;
+
   return (
     <>
       {/* 띄워서 배치 시 간접조명 효과 */}
@@ -577,6 +586,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               slotIndex={slotIndex}
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
+              furnitureId={placedFurnitureId}
             />
           ) : (
             // 분할 모드: 상부/하부 섹션별 도어
@@ -594,10 +604,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 originalSlotWidth={originalSlotWidth}
                 slotCenterX={slotCenterX || 0}
                 slotIndex={slotIndex}
+                sectionHeightsMm={sectionHeightsMm}
                 doorTopGap={upperDoorTopGap ?? 5}
                 doorBottomGap={upperDoorBottomGap ?? 0}
                 sectionIndex={1}
                 totalSections={2}
+                furnitureId={placedFurnitureId}
               />
 
               {/* 하부 섹션 도어 */}
@@ -613,10 +625,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 originalSlotWidth={originalSlotWidth}
                 slotCenterX={slotCenterX || 0}
                 slotIndex={slotIndex}
+                sectionHeightsMm={sectionHeightsMm}
                 doorTopGap={lowerDoorTopGap ?? 0}
                 doorBottomGap={lowerDoorBottomGap ?? 45}
                 sectionIndex={0}
                 totalSections={2}
+                furnitureId={placedFurnitureId}
               />
 
             </>

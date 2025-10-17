@@ -28,8 +28,11 @@ interface UIState {
   // 2D 뷰 방향 상태
   view2DDirection: View2DDirection;
   
-  // 문 열림/닫힘 상태
+  // 문 열림/닫힘 상태 (전역 - 모든 도어)
   doorsOpen: boolean;
+
+  // 개별 도어 열림 상태 (furnitureId-sectionIndex 키로 관리)
+  individualDoorsOpen: Record<string, boolean>;
   
   // 치수 표시 상태
   showDimensions: boolean;
@@ -136,6 +139,8 @@ interface UIState {
   setActiveDroppedCeilingTab: (tab: 'main' | 'dropped') => void;
   setView2DDirection: (direction: View2DDirection) => void;
   toggleDoors: () => void;
+  toggleIndividualDoor: (furnitureId: string, sectionIndex: number) => void;
+  isIndividualDoorOpen: (furnitureId: string, sectionIndex: number) => boolean;
   toggleDimensions: () => void;
   toggleDimensionsText: () => void;
   toggleGuides: () => void;
@@ -211,6 +216,7 @@ const initialUIState = {
   viewMode: '3D' as const,  // 기본값은 3D
   view2DDirection: 'front' as const,  // 기본값은 정면 뷰
   doorsOpen: false,  // 기본값: 문 닫힘 상태 (미리보기에서는 독립적으로 관리)
+  individualDoorsOpen: {} as Record<string, boolean>,  // 개별 도어 열림 상태
   showDimensions: true,  // 기본값: 치수 표시
   showDimensionsText: true,  // 기본값: 치수 텍스트 표시
   showGuides: true, // 기본값: 그리드(가이드) 표시
@@ -298,7 +304,22 @@ export const useUIStore = create<UIState>()(
       
       toggleDoors: () =>
         set((state) => ({ doorsOpen: !state.doorsOpen })),
-      
+
+      toggleIndividualDoor: (furnitureId: string, sectionIndex: number) => {
+        const key = `${furnitureId}-${sectionIndex}`;
+        set((state) => ({
+          individualDoorsOpen: {
+            ...state.individualDoorsOpen,
+            [key]: !state.individualDoorsOpen[key]
+          }
+        }));
+      },
+
+      isIndividualDoorOpen: (furnitureId: string, sectionIndex: number) => {
+        const key = `${furnitureId}-${sectionIndex}`;
+        return get().individualDoorsOpen[key] || false;
+      },
+
       toggleDimensions: () =>
         set((state) => {
           console.log('🎯 toggleDimensions - 이전 상태:', state.showDimensions, '새 상태:', !state.showDimensions);
