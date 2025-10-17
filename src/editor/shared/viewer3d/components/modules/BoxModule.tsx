@@ -169,6 +169,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           customSections={customSections} // 사용자 정의 섹션 설정
           placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
           visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
+          lowerSectionDepth={lowerSectionDepth} // 하부 섹션 깊이 (mm)
+          upperSectionDepth={upperSectionDepth} // 상부 섹션 깊이 (mm)
+          doorSplit={doorSplit} // 도어 분할 여부
             // 이벤트 핸들러들 전달
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
