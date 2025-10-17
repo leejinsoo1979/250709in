@@ -5,7 +5,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTranslation } from '@/i18n/useTranslation';
 import styles from './MaterialPanel.module.css';
 
-type MaterialTab = 'interior' | 'door';
+type MaterialTab = 'interior' | 'door' | 'frame';
 
 // cn utility 함수
 const cn = (...classes: (string | undefined | null | false)[]) => {
@@ -64,7 +64,7 @@ const MaterialPanel: React.FC = () => {
 
   // Store에서 재질 설정과 업데이트 함수 가져오기
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const materialConfig = spaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#E0E0E0' }; // Changed default doorColor from #FFFFFF to light gray
+  const materialConfig = spaceInfo.materialConfig || { interiorColor: '#FFFFFF', doorColor: '#E0E0E0', frameColor: '#E0E0E0' };
   
   // UI Store에서 도어 상태 가져오기
   const { doorsOpen, toggleDoors } = useUIStore();
@@ -74,13 +74,15 @@ const MaterialPanel: React.FC = () => {
   const hasAnyDoor = placedModules.some(module => module.hasDoor);
 
   // 현재 스토어의 색상
-  const currentStoreColor = materialTab === 'interior' 
+  const currentStoreColor = materialTab === 'interior'
     ? (materialConfig.interiorColor || '#FFFFFF')
-    : (materialConfig.doorColor || '#E0E0E0'); // Changed default from #FFFFFF to light gray
+    : materialTab === 'door'
+    ? (materialConfig.doorColor || '#E0E0E0')
+    : (materialConfig.frameColor || '#E0E0E0');
 
   // 스토어 업데이트 함수
   const updateStoreColor = (color: string) => {
-    const propertyKey = materialTab === 'interior' ? 'interiorColor' : 'doorColor';
+    const propertyKey = materialTab === 'interior' ? 'interiorColor' : materialTab === 'door' ? 'doorColor' : 'frameColor';
     const newMaterialConfig = {
       ...materialConfig,
       [propertyKey]: color
@@ -312,10 +314,11 @@ const MaterialPanel: React.FC = () => {
         });
       } else {
         // 다른 이미지 텍스처는 현재 탭에만 적용
-        const textureProperty = materialTab === 'interior' ? 'interiorTexture' : 'doorTexture';
+        const textureProperty = materialTab === 'interior' ? 'interiorTexture' : materialTab === 'door' ? 'doorTexture' : 'frameTexture';
+        const colorProperty = materialTab === 'interior' ? 'interiorColor' : materialTab === 'door' ? 'doorColor' : 'frameColor';
         const newMaterialConfig = {
           ...materialConfig,
-          [materialTab === 'interior' ? 'interiorColor' : 'doorColor']: color,
+          [colorProperty]: color,
           [textureProperty]: material.image
         };
         
@@ -325,10 +328,11 @@ const MaterialPanel: React.FC = () => {
       }
     } else {
       // 일반 색상 재질인 경우 텍스처 제거
-      const textureProperty = materialTab === 'interior' ? 'interiorTexture' : 'doorTexture';
+      const textureProperty = materialTab === 'interior' ? 'interiorTexture' : materialTab === 'door' ? 'doorTexture' : 'frameTexture';
+      const colorProperty = materialTab === 'interior' ? 'interiorColor' : materialTab === 'door' ? 'doorColor' : 'frameColor';
       const newMaterialConfig = {
         ...materialConfig,
-        [materialTab === 'interior' ? 'interiorColor' : 'doorColor']: color,
+        [colorProperty]: color,
         [textureProperty]: undefined
       };
       
@@ -463,6 +467,15 @@ const MaterialPanel: React.FC = () => {
           }}
         >
           <span className={styles.tabLabel}>{t('material.door')}</span>
+        </button>
+        <button
+          className={cn(styles.tab, materialTab === 'frame' && styles.activeTab)}
+          onClick={() => {
+            setMaterialTab('frame');
+            // 프레임 탭에서는 도어 상태 변경 없음
+          }}
+        >
+          <span className={styles.tabLabel}>프레임</span>
         </button>
       </div>
 
