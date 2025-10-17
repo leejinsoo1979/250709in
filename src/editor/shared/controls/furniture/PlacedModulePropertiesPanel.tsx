@@ -1425,7 +1425,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <div className={styles.doorGapContainer}>
                 {/* 좌측: 가구 상단에서 위로 갭 */}
                 <div className={styles.doorGapField}>
-                  <label className={styles.doorGapLabel}>가구상단 ↑</label>
+                  <label className={styles.doorGapLabel}>위로 ↑</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -1449,7 +1449,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
                 {/* 우측: 가구 하단에서 아래로 갭 */}
                 <div className={styles.doorGapField}>
-                  <label className={styles.doorGapLabel}>가구하단 ↓</label>
+                  <label className={styles.doorGapLabel}>아래로 ↓</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -1483,7 +1483,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <h6 className={styles.subSectionTitle}>상부 도어</h6>
               <div className={styles.doorGapContainer}>
                 <div className={styles.doorGapField}>
-                  <label className={styles.doorGapLabel}>상단 ↑</label>
+                  <label className={styles.doorGapLabel}>위로 ↑</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -1505,7 +1505,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                 </div>
                 <div className={styles.doorGapField}>
-                  <label className={styles.doorGapLabel}>하단 ↓</label>
+                  <label className={styles.doorGapLabel}>아래로 ↓</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -1532,7 +1532,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               <h6 className={styles.subSectionTitle} style={{marginTop: '12px'}}>하부 도어</h6>
               <div className={styles.doorGapContainer}>
                 <div className={styles.doorGapField}>
-                  <label className={styles.doorGapLabel}>상단 ↑</label>
+                  <label className={styles.doorGapLabel}>위로 ↑</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"
@@ -1554,7 +1554,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                 </div>
                 <div className={styles.doorGapField}>
-                  <label className={styles.doorGapLabel}>하단 ↓</label>
+                  <label className={styles.doorGapLabel}>아래로 ↓</label>
                   <div className={styles.inputWithUnit}>
                     <input
                       type="text"

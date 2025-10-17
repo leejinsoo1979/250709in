@@ -73,6 +73,15 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
   const showIndirectLight = false;
 
+  const sectionHeightsUnits = getSectionHeights();
+  const unitsToMmFactor = (() => {
+    const unit = mmToThreeUnits(1);
+    return unit === 0 ? 100 : 1 / unit;
+  })();
+  const sectionHeightsMm = sectionHeightsUnits.length
+    ? sectionHeightsUnits.map(sectionHeight => Math.round(sectionHeight * unitsToMmFactor))
+    : undefined;
+
   return (
     <>
       {/* 간접조명은 BoxModule에서 처리 */}
@@ -207,18 +216,19 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
                 moduleDepth={baseFurniture.actualDepthMm}
                 hingePosition={hingePosition}
                 spaceInfo={spaceInfo}
-                color={baseFurniture.doorColor}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                moduleData={moduleData}
-                originalSlotWidth={originalSlotWidth}
-                slotCenterX={slotCenterX || 0}
-                slotIndex={slotIndex}
-                sectionIndex={1}
-                totalSections={2}
-                doorTopGap={upperDoorTopGap ?? doorTopGap}
-                doorBottomGap={upperDoorBottomGap ?? 0}
-                furnitureId={placedFurnitureId}
+              color={baseFurniture.doorColor}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              moduleData={moduleData}
+              originalSlotWidth={originalSlotWidth}
+              slotCenterX={slotCenterX || 0}
+              slotIndex={slotIndex}
+              sectionHeightsMm={sectionHeightsMm}
+              sectionIndex={1}
+              totalSections={2}
+              doorTopGap={upperDoorTopGap ?? doorTopGap}
+              doorBottomGap={upperDoorBottomGap ?? 0}
+              furnitureId={placedFurnitureId}
               />
 
               {/* 하부 섹션 도어 (4단 서랍) */}
@@ -227,18 +237,19 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
                 moduleDepth={baseFurniture.actualDepthMm}
                 hingePosition={hingePosition}
                 spaceInfo={spaceInfo}
-                color={baseFurniture.doorColor}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                moduleData={moduleData}
-                originalSlotWidth={originalSlotWidth}
-                slotCenterX={slotCenterX || 0}
-                slotIndex={slotIndex}
-                sectionIndex={0}
-                totalSections={2}
-                doorTopGap={lowerDoorTopGap ?? 0}
-                doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
-                furnitureId={placedFurnitureId}
+              color={baseFurniture.doorColor}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              moduleData={moduleData}
+              originalSlotWidth={originalSlotWidth}
+              slotCenterX={slotCenterX || 0}
+              slotIndex={slotIndex}
+              sectionHeightsMm={sectionHeightsMm}
+              sectionIndex={0}
+              totalSections={2}
+              doorTopGap={lowerDoorTopGap ?? 0}
+              doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
+              furnitureId={placedFurnitureId}
               />
             </>
           )}
