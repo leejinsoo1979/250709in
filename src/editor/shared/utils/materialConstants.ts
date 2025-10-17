@@ -62,12 +62,14 @@ export const getDefaultGrainDirection = (panelName?: string): 'horizontal' | 've
 
   const name = panelName.toLowerCase();
 
-  // 세로 결이 필요한 패널들
+  // 세로 결이 필요한 패널들: 측판, 백패널, 도어
   if (name.includes('측판') ||
       name.includes('side') ||
       name.includes('백패널') ||
       name.includes('back') ||
-      name.includes('뒷판')) {
+      name.includes('뒷판') ||
+      name.includes('도어') ||
+      name.includes('door')) {
     return 'vertical';
   }
 
