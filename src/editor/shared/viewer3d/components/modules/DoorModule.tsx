@@ -376,10 +376,37 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     }
   }, [doorColor, panelGrainDirections]);
 
+  // panelGrainDirections 변경 시 기존 텍스처 회전 업데이트
+  useEffect(() => {
+    const panelName = '도어';
+    const grainDirection = panelGrainDirections?.[panelName] || 'vertical';
+    const rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
+
+    console.log('🔄 도어 결 방향 변경 감지:', {
+      panelName,
+      grainDirection,
+      rotation,
+      panelGrainDirections
+    });
+
+    // 모든 도어 재질의 텍스처 회전 업데이트
+    [doorMaterial, leftDoorMaterial, rightDoorMaterial].forEach(mat => {
+      if (mat && mat.map) {
+        console.log('🔄 텍스처 회전 업데이트:', {
+          oldRotation: mat.map.rotation,
+          newRotation: rotation
+        });
+        mat.map.rotation = rotation;
+        mat.map.needsUpdate = true;
+        mat.needsUpdate = true;
+      }
+    });
+  }, [panelGrainDirections, doorMaterial, leftDoorMaterial, rightDoorMaterial]);
+
   // 도어 텍스처 적용 (텍스처 URL 변경 시에만)
   useEffect(() => {
     const textureUrl = materialConfig.doorTexture;
-    
+
     console.log('🚪 DoorModule 텍스처 적용 시작:', {
       textureUrl,
       hasDoorMaterial: !!doorMaterial,
@@ -389,7 +416,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       isDragging,
       materialConfig
     });
-    
+
     // 드래그 중이거나 편집 모드가 아닐 때만 텍스처 적용 (성능 최적화)
     if (!isDragging && !isEditMode) {
       // 텍스처 변경 시에만 실행 (material 참조 변경은 무시)
@@ -403,7 +430,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         applyTextureToMaterial(rightDoorMaterial, textureUrl, '오른쪽');
       }
     }
-    
+
     // Three.js가 자동으로 업데이트하도록 함
   }, [materialConfig.doorTexture, materialConfig, applyTextureToMaterial, doorMaterial, leftDoorMaterial, rightDoorMaterial, isDragging, isEditMode]); // 필요한 의존성 추가
   
