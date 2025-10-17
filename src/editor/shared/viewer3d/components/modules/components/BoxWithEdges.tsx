@@ -244,30 +244,30 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       });
 
       if (isDrawerPanel) {
-        // 서랍 마이다만 정상 (-90도/90도), 나머지는 반대
+        // 서랍 마이다: 회전 없음 (0도/90도), 나머지: 회전 (-90도/90도)
         const isDrawerFront = panelName && panelName.includes('마이다');
 
         if (isDrawerFront) {
-          // 서랍 마이다: L(vertical) = x축 가로결 = -90도, W(horizontal) = y축 세로결 = 90도
+          // 서랍 마이다: L(vertical) = x축 가로결 = 0도, W(horizontal) = y축 세로결 = 90도
           if (grainDirection === 'vertical') {
-            texture.rotation = -Math.PI / 2;
+            texture.rotation = 0;
             texture.center.set(0.5, 0.5);
-            console.log('  ✅ 서랍마이다 L: -90도');
+            console.log('  ✅ 서랍마이다 L: 0도');
           } else {
             texture.rotation = Math.PI / 2;
             texture.center.set(0.5, 0.5);
             console.log('  ✅ 서랍마이다 W: 90도');
           }
         } else {
-          // 서랍 앞판/뒷판/측판: 반대
+          // 서랍 앞판/뒷판/측판: L(vertical) = x축 가로결 = -90도, W(horizontal) = y축 세로결 = 90도
           if (grainDirection === 'vertical') {
-            texture.rotation = Math.PI / 2;
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 서랍기타 L: 90도');
-          } else {
             texture.rotation = -Math.PI / 2;
             texture.center.set(0.5, 0.5);
-            console.log('  ✅ 서랍기타 W: -90도');
+            console.log('  ✅ 서랍측/뒷판 L: -90도');
+          } else {
+            texture.rotation = Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 서랍측/뒷판 W: 90도');
           }
         }
       } else if (isHorizontalPanel) {
