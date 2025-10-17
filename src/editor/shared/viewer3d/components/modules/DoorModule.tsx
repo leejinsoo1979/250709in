@@ -159,7 +159,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   });
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
-  const { doorsOpen, view2DDirection, isIndividualDoorOpen, toggleIndividualDoor } = useUIStore();
+  const { doorsOpen, view2DDirection, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex } = useUIStore();
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
@@ -1179,9 +1179,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorGroupX: doorGroupX
     });
 
+    // 측면뷰에서 선택된 슬롯 확인 (0: 왼쪽, 1: 오른쪽)
+    const isSideView = view2DDirection === 'left' || view2DDirection === 'right';
+    const showLeftDoor = !isSideView || selectedSlotIndex === 0;
+    const showRightDoor = !isSideView || selectedSlotIndex === 1;
+
     return (
       <group position={[doorGroupX, 0, 0]}> {/* 듀얼 캐비넷도 원래 슬롯 중심에 배치 */}
         {/* 왼쪽 도어 - 왼쪽 힌지 (왼쪽 가장자리에서 회전) */}
+        {showLeftDoor && (
         <group position={[leftHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualLeftDoorSpring.rotation}>
             <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0, 0]}>
@@ -1537,8 +1543,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             </group>
           </animated.group>
         </group>
+        )}
 
         {/* 오른쪽 도어 - 오른쪽 힌지 (오른쪽 가장자리에서 회전) */}
+        {showRightDoor && (
         <group position={[rightHingeX, doorYPosition, doorDepth / 2]}>
           <animated.group rotation-y={dualRightDoorSpring.rotation}>
             <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0, 0]}>
@@ -1894,6 +1902,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             </group>
           </animated.group>
         </group>
+        )}
       </group>
     );
   } else {
