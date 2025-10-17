@@ -4,6 +4,7 @@ import { useThree } from '@react-three/fiber';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import { useUIStore } from '@/store/uiStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useTexture } from '@react-three/drei';
@@ -27,8 +28,9 @@ interface BoxWithEdgesProps {
   onPointerOver?: (e: any) => void;
   onPointerOut?: (e: any) => void;
   panelName?: string; // 패널 이름 (예: "좌측판", "선반1")
-  panelGrainDirections?: { [key: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향
+  panelGrainDirections?: { [key: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향 (fallback)
   textureUrl?: string; // 텍스처 URL
+  furnitureId?: string; // 가구 ID - 스토어에서 직접 panelGrainDirections 가져오기 위함
 }
 
 /**
@@ -48,6 +50,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   isBackPanel = false,
   isEndPanel = false,
   isHighlighted = false,
+  furnitureId,
   isClothingRod = false,
   edgeOpacity,
   onClick,
@@ -63,6 +66,26 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const { theme } = useViewerTheme();
   const { view2DTheme } = useUIStore();
   const { theme: appTheme } = useTheme();
+
+  // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
+  const storePanelGrainDirections = useFurnitureStore(state => {
+    if (!furnitureId) return undefined;
+    const furniture = state.placedModules.find(m => m.id === furnitureId);
+    return furniture?.panelGrainDirections;
+  });
+
+  // 스토어에서 가져온 값 우선, 없으면 props 사용
+  const activePanelGrainDirections = storePanelGrainDirections || panelGrainDirections;
+
+  console.log('🔥 BoxWithEdges - panelGrainDirections 소스:', {
+    panelName,
+    furnitureId,
+    fromStore: !!storePanelGrainDirections,
+    fromProps: !!panelGrainDirections,
+    final: activePanelGrainDirections,
+    storePanelGrainDirections,
+    propsPanelGrainDirections: panelGrainDirections
+  });
   
   // 기본 material 생성 (material prop이 없을 때 사용)
   const defaultMaterial = React.useMemo(() => {
@@ -133,8 +156,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return baseMaterial;
   }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode]);
 
-  // panelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
-  const panelGrainDirectionsStr = panelGrainDirections ? JSON.stringify(panelGrainDirections) : '';
+  // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
+  const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
 
   // 패널별 개별 material 생성 (텍스처 회전 적용)
   const panelSpecificMaterial = React.useMemo(() => {
@@ -144,7 +167,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       hasMaterial: !!processedMaterial,
       isStandardMaterial: processedMaterial instanceof THREE.MeshStandardMaterial,
       hasMapTexture: processedMaterial instanceof THREE.MeshStandardMaterial ? !!processedMaterial.map : false,
-      panelGrainDirectionsStr
+      activePanelGrainDirectionsStr
     });
 
     // panelName이 없으면 processedMaterial 그대로 사용
@@ -160,20 +183,20 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     // 패널의 결 방향 결정 (설정값 또는 기본값)
-    // panelGrainDirections 객체에서 부분 매칭으로 찾기
+    // activePanelGrainDirections 객체에서 부분 매칭으로 찾기
     let grainDirection: 'horizontal' | 'vertical' | undefined;
 
-    if (panelGrainDirections) {
+    if (activePanelGrainDirections) {
       // 정확히 일치하는 키가 있는지 먼저 확인
-      if (panelGrainDirections[panelName]) {
-        grainDirection = panelGrainDirections[panelName];
+      if (activePanelGrainDirections[panelName]) {
+        grainDirection = activePanelGrainDirections[panelName];
       } else {
-        // 부분 매칭: panelGrainDirections의 키가 panelName에 포함되어 있는지 확인
-        const matchingKey = Object.keys(panelGrainDirections).find(key =>
+        // 부분 매칭: activePanelGrainDirections의 키가 panelName에 포함되어 있는지 확인
+        const matchingKey = Object.keys(activePanelGrainDirections).find(key =>
           panelName.includes(key) || key.includes(panelName)
         );
         if (matchingKey) {
-          grainDirection = panelGrainDirections[matchingKey];
+          grainDirection = activePanelGrainDirections[matchingKey];
         }
       }
     }
@@ -188,8 +211,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       grainDirection,
       textureUrl,
       hasTexture: !!processedMaterial.map,
-      panelGrainDirectionsKeys: panelGrainDirections ? Object.keys(panelGrainDirections) : [],
-      panelGrainDirectionsStr
+      activePanelGrainDirectionsKeys: activePanelGrainDirections ? Object.keys(activePanelGrainDirections) : [],
+      activePanelGrainDirectionsStr
     });
 
     // processedMaterial을 복제하여 개별 material 생성
@@ -222,11 +245,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     return panelMaterial;
-  }, [processedMaterial, panelName, panelGrainDirectionsStr]);
+  }, [processedMaterial, panelName, activePanelGrainDirectionsStr]);
 
-  // panelGrainDirections 변경 시 실시간 텍스처 회전 업데이트
+  // activePanelGrainDirections 변경 시 실시간 텍스처 회전 업데이트
   React.useEffect(() => {
-    if (!panelName || !panelGrainDirections || !(panelSpecificMaterial instanceof THREE.MeshStandardMaterial)) {
+    if (!panelName || !activePanelGrainDirections || !(panelSpecificMaterial instanceof THREE.MeshStandardMaterial)) {
       return;
     }
 
@@ -239,15 +262,15 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     let grainDirection: 'horizontal' | 'vertical' | undefined;
 
     // 정확히 일치하는 키가 있는지 먼저 확인
-    if (panelGrainDirections[panelName]) {
-      grainDirection = panelGrainDirections[panelName];
+    if (activePanelGrainDirections[panelName]) {
+      grainDirection = activePanelGrainDirections[panelName];
     } else {
       // 부분 매칭
-      const matchingKey = Object.keys(panelGrainDirections).find(key =>
+      const matchingKey = Object.keys(activePanelGrainDirections).find(key =>
         panelName.includes(key) || key.includes(panelName)
       );
       if (matchingKey) {
-        grainDirection = panelGrainDirections[matchingKey];
+        grainDirection = activePanelGrainDirections[matchingKey];
       }
     }
 
@@ -265,7 +288,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         grainDirection,
         oldRotation: material.map.rotation,
         newRotation,
-        panelGrainDirectionsStr,
+        activePanelGrainDirectionsStr,
         timestamp: Date.now()
       });
 
@@ -274,7 +297,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       material.map.needsUpdate = true;
       material.needsUpdate = true;
     }
-  }, [panelName, panelGrainDirectionsStr, panelSpecificMaterial]);
+  }, [panelName, activePanelGrainDirectionsStr, panelSpecificMaterial]);
 
   // 테마 색상 매핑
   const themeColorMap: Record<string, string> = {
