@@ -288,17 +288,35 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           }
         }
       } else {
-        // 세로로 긴 패널 (측판, 백패널, 도어): L(vertical) = y축 세로결 = 0도, W(horizontal) = x축 가로결 = 90도
-        if (grainDirection === 'vertical') {
-          // L 방향: 세로 결 (회전 없음)
-          texture.rotation = 0;
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 세로패널 L: 0도');
+        // 측판, 백패널, 도어 구분
+        const isSidePanel = panelName && (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
+
+        if (isSidePanel) {
+          // 측판: z축이 긴 방향 - L(vertical) = z축 깊이결 = 90도, W(horizontal) = y축 세로결 = 0도
+          if (grainDirection === 'vertical') {
+            // L 방향: 깊이 결 (90도 회전)
+            texture.rotation = Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 측판 L: 90도');
+          } else {
+            // W 방향: 세로 결 (회전 없음)
+            texture.rotation = 0;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 측판 W: 0도');
+          }
         } else {
-          // W 방향: 가로 결 (90도 회전)
-          texture.rotation = Math.PI / 2;
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 세로패널 W: 90도');
+          // 백패널, 도어: y축이 긴 방향 - L(vertical) = y축 세로결 = 0도, W(horizontal) = x축 가로결 = 90도
+          if (grainDirection === 'vertical') {
+            // L 방향: 세로 결 (회전 없음)
+            texture.rotation = 0;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 백패널/도어 L: 0도');
+          } else {
+            // W 방향: 가로 결 (90도 회전)
+            texture.rotation = Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 백패널/도어 W: 90도');
+          }
         }
       }
 
