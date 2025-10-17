@@ -37,6 +37,7 @@ interface BoxModuleProps {
   adjustedWidth?: number; // 기둥/엔드판넬에 의해 조정된 폭 (mm)
   slotWidths?: number[]; // 듀얼 가구의 개별 슬롯 너비들 (mm)
   slotIndex?: number; // 슬롯 인덱스 (노서라운드 모드에서 엔드패널 확장 판단용)
+  slotInfo?: any; // 슬롯 정보 (기둥 침범 등)
   viewMode?: '2D' | '3D';
   renderMode?: 'solid' | 'wireframe';
   furnitureId?: string; // 가구 ID (칸 강조용)
@@ -89,6 +90,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   adjustedWidth,
   slotWidths,
   slotIndex,
+  slotInfo,
   viewMode,
   renderMode,
   furnitureId,
