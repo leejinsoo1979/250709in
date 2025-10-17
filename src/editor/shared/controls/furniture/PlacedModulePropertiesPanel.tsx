@@ -1485,105 +1485,48 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               {/* 상부 섹션 도어 이격거리 */}
               <h6 className={styles.subSectionTitle}>상부 섹션</h6>
               <div className={styles.doorGapContainer}>
-                <div className={styles.doorGapField} style={{flexDirection: 'column', gap: '8px', width: '100%'}}>
-                  {/* 상/하 선택 버튼 */}
-                  <div style={{display: 'flex', gap: '8px'}}>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (currentPlacedModule) {
-                          // 위로 줄이기: 상단 갭만 적용
-                          const topGap = parseInt(upperDoorTopGapInput) || 5;
-                          setUpperDoorTopGap(topGap);
-                          setUpperDoorBottomGap(0);
-                          setUpperDoorBottomGapInput('0');
-                          updatePlacedModule(currentPlacedModule.id, {
-                            upperDoorTopGap: topGap,
-                            upperDoorBottomGap: 0
-                          });
+                <div className={styles.doorGapField}>
+                  <label className={styles.doorGapLabel}>상단 ↑</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={upperDoorTopGapInput}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setUpperDoorTopGapInput(value);
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue) && numValue >= 0 && currentPlacedModule) {
+                          setUpperDoorTopGap(numValue);
+                          updatePlacedModule(currentPlacedModule.id, { upperDoorTopGap: numValue });
                         }
                       }}
-                      className={styles.gapDirectionButton}
-                      style={{
-                        flex: 1,
-                        padding: '8px',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        background: (upperDoorTopGap > 0 && upperDoorBottomGap === 0) ? '#e3f2fd' : '#fff',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: (upperDoorTopGap > 0 && upperDoorBottomGap === 0) ? 'bold' : 'normal'
-                      }}
-                    >
-                      위로 줄이기 ↑
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (currentPlacedModule) {
-                          // 아래로 줄이기: 하단 갭만 적용
-                          const bottomGap = parseInt(upperDoorTopGapInput) || 5;
-                          setUpperDoorTopGap(5);
-                          setUpperDoorTopGapInput('5');
-                          setUpperDoorBottomGap(bottomGap);
-                          updatePlacedModule(currentPlacedModule.id, {
-                            upperDoorTopGap: 5,
-                            upperDoorBottomGap: bottomGap
-                          });
-                        }
-                      }}
-                      className={styles.gapDirectionButton}
-                      style={{
-                        flex: 1,
-                        padding: '8px',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        background: (upperDoorBottomGap > 0) ? '#e3f2fd' : '#fff',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: (upperDoorBottomGap > 0) ? 'bold' : 'normal'
-                      }}
-                    >
-                      아래로 줄이기 ↓
-                    </button>
+                      className={`${styles.depthInput} furniture-depth-input`}
+                      placeholder="5"
+                    />
+                    <span className={styles.unit}>mm</span>
                   </div>
-
-                  {/* 이격거리 입력 */}
-                  <div style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
-                    <label className={styles.doorGapLabel} style={{minWidth: '80px'}}>이격거리</label>
-                    <div className={styles.inputWithUnit} style={{flex: 1}}>
-                      <input
-                        type="text"
-                        inputMode="numeric"
-                        value={upperDoorTopGapInput}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          setUpperDoorTopGapInput(value);
-                          const numValue = parseInt(value);
-                          if (!isNaN(numValue) && numValue >= 0 && currentPlacedModule) {
-                            // 현재 선택된 방향에 따라 갭 적용
-                            if (upperDoorBottomGap > 0) {
-                              // 아래로 줄이기 모드
-                              setUpperDoorBottomGap(numValue);
-                              updatePlacedModule(currentPlacedModule.id, {
-                                upperDoorTopGap: 5,
-                                upperDoorBottomGap: numValue
-                              });
-                            } else {
-                              // 위로 줄이기 모드 (기본)
-                              setUpperDoorTopGap(numValue);
-                              updatePlacedModule(currentPlacedModule.id, {
-                                upperDoorTopGap: numValue,
-                                upperDoorBottomGap: 0
-                              });
-                            }
-                          }
-                        }}
-                        className={`${styles.depthInput} furniture-depth-input`}
-                        placeholder="5"
-                      />
-                      <span className={styles.unit}>mm</span>
-                    </div>
+                </div>
+                <div className={styles.doorGapField}>
+                  <label className={styles.doorGapLabel}>하단 ↓</label>
+                  <div className={styles.inputWithUnit}>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      value={upperDoorBottomGapInput}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setUpperDoorBottomGapInput(value);
+                        const numValue = parseInt(value);
+                        if (!isNaN(numValue) && numValue >= 0 && currentPlacedModule) {
+                          setUpperDoorBottomGap(numValue);
+                          updatePlacedModule(currentPlacedModule.id, { upperDoorBottomGap: numValue });
+                        }
+                      }}
+                      className={`${styles.depthInput} furniture-depth-input`}
+                      placeholder="0"
+                    />
+                    <span className={styles.unit}>mm</span>
                   </div>
                 </div>
               </div>
