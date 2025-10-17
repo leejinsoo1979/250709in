@@ -641,8 +641,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const lowerSectionDepth = lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth;
                 const upperSectionDepth = upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth;
 
-                const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset);
-                const upperBackPanelZ = -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset);
+                // 깊이 차이에 따른 Z 오프셋 (앞쪽 고정, 뒤쪽 줄어듦)
+                const lowerDepthDiff = depth - lowerSectionDepth;
+                const upperDepthDiff = depth - upperSectionDepth;
+                const lowerZOffset = lowerDepthDiff / 2;
+                const upperZOffset = upperDepthDiff / 2;
+
+                const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset) + lowerZOffset;
+                const upperBackPanelZ = -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset) + upperZOffset;
 
                 return (
                   <>
