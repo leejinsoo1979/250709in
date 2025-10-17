@@ -238,14 +238,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           texture.center.set(0.5, 0.5);
         }
       } else {
-        // 일반 가구 패널: L(vertical) = y축 세로결 = 90도, W(horizontal) = x축 가로결 = 0도
+        // 일반 가구 패널: L(vertical) = y축 세로결 = 0도, W(horizontal) = x축 가로결 = 90도
         if (grainDirection === 'vertical') {
-          // L 방향: 세로 결 (90도 회전)
-          texture.rotation = Math.PI / 2;
+          // L 방향: 세로 결 (회전 없음)
+          texture.rotation = 0;
           texture.center.set(0.5, 0.5);
         } else {
-          // W 방향: 가로 결 (회전 없음)
-          texture.rotation = 0;
+          // W 방향: 가로 결 (90도 회전)
+          texture.rotation = Math.PI / 2;
           texture.center.set(0.5, 0.5);
         }
       }
