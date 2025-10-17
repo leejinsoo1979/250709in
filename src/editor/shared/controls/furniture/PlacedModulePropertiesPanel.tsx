@@ -1354,21 +1354,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           </div>
           )}
 
-          {/* 도어 설정 (도어 지원 가구만, 상세보기 아닐 때만) */}
-          {!showDetails && moduleData.hasDoor && (
+          {/* 도어 병합/분할 (2섹션 가구만, 도어가 있을 때만, 상세보기 아닐 때만) */}
+          {!showDetails && moduleData.hasDoor && hasDoor && isTwoSectionFurniture && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>도어 병합/분할</h5>
               <div className={styles.doorTabSelector}>
                 <button
-                  className={`${styles.doorTab} ${!hasDoor ? styles.activeDoorTab : ''}`}
-                  onClick={() => handleDoorChange(false)}
-                >
-                  {t('common.none')}
-                </button>
-                <button
-                  className={`${styles.doorTab} ${hasDoor && !doorSplit ? styles.activeDoorTab : ''}`}
+                  className={`${styles.doorTab} ${!doorSplit ? styles.activeDoorTab : ''}`}
                   onClick={() => {
-                    handleDoorChange(true);
                     setDoorSplit(false);
                     if (currentPlacedModule) {
                       updatePlacedModule(currentPlacedModule.id, { doorSplit: false });
@@ -1378,9 +1371,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   병합
                 </button>
                 <button
-                  className={`${styles.doorTab} ${hasDoor && doorSplit ? styles.activeDoorTab : ''}`}
+                  className={`${styles.doorTab} ${doorSplit ? styles.activeDoorTab : ''}`}
                   onClick={() => {
-                    handleDoorChange(true);
                     setDoorSplit(true);
                     if (currentPlacedModule) {
                       updatePlacedModule(currentPlacedModule.id, { doorSplit: true });
@@ -1390,7 +1382,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   분할
                 </button>
               </div>
-              
+            </div>
+          )}
+
+          {/* 경첩 방향 선택 (도어가 있고 싱글 가구인 경우만, 상세보기 아닐 때만) */}
+          {!showDetails && moduleData.hasDoor && hasDoor && (
+            <div className={styles.propertySection}>
               {/* 경첩 방향 선택 (도어가 있고 싱글 가구인 경우만) */}
               {hasDoor && isSingleFurniture && (
                 <div className={styles.hingeSubSection}>
