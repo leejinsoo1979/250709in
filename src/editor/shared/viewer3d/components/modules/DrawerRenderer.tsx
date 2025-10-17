@@ -26,6 +26,7 @@ interface DrawerRendererProps {
   textureUrl?: string; // 텍스처 URL
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향
   furnitureId?: string; // 가구 ID
+  sectionName?: string; // 섹션 이름 (예: "(상)", "(하)")
 }
 
 /**
@@ -48,6 +49,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   yOffset = 0,
   zOffset = 0,
   drawerHeights,
+  sectionName = '',
   gapHeight = 0,
   material,
   renderMode,
@@ -175,7 +177,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
-          panelName="서랍 앞판"
+          panelName={sectionName ? `${sectionName}서랍${i + 1}(마이다)` : `서랍${i + 1}(마이다)`}
           textureUrl={textureUrl}
           panelGrainDirections={panelGrainDirections}
           furnitureId={furnitureId}

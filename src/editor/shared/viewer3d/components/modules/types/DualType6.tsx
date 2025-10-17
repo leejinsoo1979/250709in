@@ -147,6 +147,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         switch (section.type) {
           case 'drawer':
             if (section.count && section.count > 0) {
+              // 서랍 섹션은 항상 하부장
+              const sectionName = '(하)';
               sectionContent = (
                 <DrawerRenderer
                   drawerCount={section.count}
@@ -159,6 +161,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   gapHeight={section.gapHeight}
                   material={material}
                   renderMode={useSpace3DView().renderMode}
+                  sectionName={sectionName}
+                  textureUrl={textureUrl}
+                  panelGrainDirections={panelGrainDirections}
+                  furnitureId={placedFurnitureId}
                 />
               );
             }
