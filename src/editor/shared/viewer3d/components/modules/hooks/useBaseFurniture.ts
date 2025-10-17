@@ -3,7 +3,7 @@ import { useMemo, useEffect, useState } from 'react';
 import { ModuleData, SectionConfig } from '@/data/modules/shelving';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
-import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
 import { useTheme } from '@/contexts/ThemeContext';
 
 // 백패널 두께 상수
@@ -264,14 +264,20 @@ export const useBaseFurniture = (
           texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1, 1);
           material.map = texture;
-          
+
+          // Oak 텍스처인 경우: 90도 회전 적용 (가로 결 방향)
+          if (isOakTexture(textureUrl)) {
+            texture.rotation = Math.PI / 2; // 90도 회전
+            texture.center.set(0.5, 0.5); // 중심점 기준 회전
+            applyOakTextureSettings(material, false); // 텍스처는 이미 회전했으므로 false
+          }
           // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
-          if (!isCabinetTexture1(textureUrl)) {
+          else if (!isCabinetTexture1(textureUrl)) {
             material.color.setHex(0xffffff); // 다른 텍스처는 기본 흰색
             material.toneMapped = true; // 기본 톤 매핑 활성화
             material.roughness = 0.6; // 기본 거칠기
           }
-          
+
           material.needsUpdate = true;
           
           // 강제 리렌더링을 위해 다음 프레임에서 한번 더 업데이트
