@@ -103,7 +103,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const topSupportPanelZ = depth/2 - topSupportPanelDepth/2 - mmToThreeUnits(85); // 앞쪽 85mm 후퇴
   
   // 개별 서랍 렌더링 함수 (본체 + 손잡이 판)
-  const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string, isTopDrawer: boolean = false) => {
+  const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string, isTopDrawer: boolean = false, drawerIndex: number = 0) => {
     const [centerX, centerY, centerZ] = centerPosition;
     
     // 서랍 실제 깊이 계산: 가구 앞면에서 30mm 후퇴, 뒷면에서 17mm 전진 = 총 47mm 감소
@@ -177,7 +177,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
-          panelName={sectionName ? `${sectionName}서랍${i + 1}(마이다)` : `서랍${i + 1}(마이다)`}
+          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1}(마이다)` : `서랍${drawerIndex + 1}(마이다)`}
           textureUrl={textureUrl}
           panelGrainDirections={panelGrainDirections}
           furnitureId={furnitureId}
@@ -235,14 +235,15 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         {drawerHeights.map((drawerHeight, i) => {
           // 서랍 중심 위치 계산
           const drawerCenter = currentY + mmToThreeUnits(drawerHeight) / 2;
-          
+
           const drawer = renderDrawer(
             innerWidth - mmToThreeUnits(24), // 서랍 폭 = 내경 - 24mm (좌우 각각 12mm 간격)
             mmToThreeUnits(drawerHeight) - basicThickness/2,
             depth - basicThickness,
             [0, drawerCenter, basicThickness/2],
             `custom-drawer-${i}`,
-            i === drawerHeights.length - 1 // 마지막 인덱스가 최상단 서랍
+            i === drawerHeights.length - 1, // 마지막 인덱스가 최상단 서랍
+            i // 서랍 인덱스 전달
           );
           
           // 다음 서랍을 위해 Y 위치 업데이트
@@ -260,14 +261,15 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
       <group position={[0, yOffset, drawerZOffset + zOffset]}>
         {Array.from({ length: drawerCount }, (_, i) => {
           const relativeYPosition = (-innerHeight / 2) + (i + 0.5) * drawerHeight;
-          
+
           return renderDrawer(
             innerWidth - mmToThreeUnits(24), // 서랍 폭 = 내경 - 24mm (좌우 각각 12mm 간격)
             drawerHeight - basicThickness/2,
             depth - basicThickness,
             [0, relativeYPosition, basicThickness/2],
             `drawer-${i}`,
-            i === drawerCount - 1 // 마지막 인덱스가 최상단 서랍
+            i === drawerCount - 1, // 마지막 인덱스가 최상단 서랍
+            i // 서랍 인덱스 전달
           );
         })}
       </group>
