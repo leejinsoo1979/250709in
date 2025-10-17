@@ -30,7 +30,14 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   adjustedWidth,
   slotInfo,
   showFurniture = true,
-  placedFurnitureId
+  placedFurnitureId,
+  doorTopGap = 5,
+  doorBottomGap = 45,
+  doorSplit,
+  upperDoorTopGap,
+  upperDoorBottomGap,
+  lowerDoorTopGap,
+  lowerDoorBottomGap
 }) => {
   // 공통 로직 사용
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -170,21 +177,72 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
       )}
       
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) - 단, 기둥 A(deep) 침범 시에는 FurnitureItem에서 별도 렌더링 */}
-      {hasDoor && spaceInfo && 
+      {hasDoor && spaceInfo &&
        !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (
-        <DoorModule
-          moduleWidth={doorWidth || moduleData.dimensions.width}
-          moduleDepth={baseFurniture.actualDepthMm}
-          hingePosition={hingePosition}
-          spaceInfo={spaceInfo}
-          color={baseFurniture.doorColor}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          moduleData={moduleData}
-          originalSlotWidth={originalSlotWidth}
-          slotCenterX={slotCenterX || 0}
-        slotIndex={slotIndex}
-        />
+        <>
+          {!doorSplit ? (
+            // 병합 모드: 도어 하나
+            <DoorModule
+              moduleWidth={doorWidth || moduleData.dimensions.width}
+              moduleDepth={baseFurniture.actualDepthMm}
+              hingePosition={hingePosition}
+              spaceInfo={spaceInfo}
+              color={baseFurniture.doorColor}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              moduleData={moduleData}
+              originalSlotWidth={originalSlotWidth}
+              slotCenterX={slotCenterX || 0}
+              slotIndex={slotIndex}
+              doorTopGap={doorTopGap}
+              doorBottomGap={doorBottomGap}
+              furnitureId={placedFurnitureId}
+            />
+          ) : (
+            // 분할 모드: 상하부 도어 각각
+            <>
+              {/* 상부 섹션 도어 (옷장) */}
+              <DoorModule
+                moduleWidth={doorWidth || moduleData.dimensions.width}
+                moduleDepth={baseFurniture.actualDepthMm}
+                hingePosition={hingePosition}
+                spaceInfo={spaceInfo}
+                color={baseFurniture.doorColor}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                moduleData={moduleData}
+                originalSlotWidth={originalSlotWidth}
+                slotCenterX={slotCenterX || 0}
+                slotIndex={slotIndex}
+                sectionIndex={1}
+                totalSections={2}
+                doorTopGap={upperDoorTopGap ?? doorTopGap}
+                doorBottomGap={upperDoorBottomGap ?? 0}
+                furnitureId={placedFurnitureId}
+              />
+
+              {/* 하부 섹션 도어 (4단 서랍) */}
+              <DoorModule
+                moduleWidth={doorWidth || moduleData.dimensions.width}
+                moduleDepth={baseFurniture.actualDepthMm}
+                hingePosition={hingePosition}
+                spaceInfo={spaceInfo}
+                color={baseFurniture.doorColor}
+                isDragging={isDragging}
+                isEditMode={isEditMode}
+                moduleData={moduleData}
+                originalSlotWidth={originalSlotWidth}
+                slotCenterX={slotCenterX || 0}
+                slotIndex={slotIndex}
+                sectionIndex={0}
+                totalSections={2}
+                doorTopGap={lowerDoorTopGap ?? 0}
+                doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
+                furnitureId={placedFurnitureId}
+              />
+            </>
+          )}
+        </>
       )}
     </>
   );
