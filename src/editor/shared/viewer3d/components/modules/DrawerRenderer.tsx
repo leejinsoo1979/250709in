@@ -16,6 +16,7 @@ interface DrawerRendererProps {
   depth: number;
   basicThickness: number;
   yOffset?: number; // 전체 서랍 그룹의 Y축 오프셋
+  zOffset?: number; // 전체 서랍 그룹의 Z축 오프셋 (섹션 깊이 조정용)
   // 타입4 가구 전용: 개별 서랍 높이 지원
   drawerHeights?: number[]; // 각 서랍 높이 배열 [176, 176, 256, 256]
   gapHeight?: number; // 서랍 간 공백 높이 (23.6mm)
@@ -42,6 +43,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   depth,
   basicThickness,
   yOffset = 0,
+  zOffset = 0,
   drawerHeights,
   gapHeight = 0,
   material,
@@ -217,7 +219,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     currentY += mmToThreeUnits(gapHeight);
     
     return (
-      <group position={[0, yOffset, drawerZOffset]}>
+      <group position={[0, yOffset, drawerZOffset + zOffset]}>
         {drawerHeights.map((drawerHeight, i) => {
           // 서랍 중심 위치 계산
           const drawerCenter = currentY + mmToThreeUnits(drawerHeight) / 2;
@@ -243,7 +245,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     const drawerHeight = innerHeight / drawerCount;
     
     return (
-      <group position={[0, yOffset, drawerZOffset]}>
+      <group position={[0, yOffset, drawerZOffset + zOffset]}>
         {Array.from({ length: drawerCount }, (_, i) => {
           const relativeYPosition = (-innerHeight / 2) + (i + 0.5) * drawerHeight;
           

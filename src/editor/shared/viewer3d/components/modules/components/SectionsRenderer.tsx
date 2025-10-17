@@ -275,6 +275,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             // 상부섹션은 yOffset도 basicThickness/2만큼 위로 조정
             const drawerYOffset = index > 0 ? sectionCenterY + basicThickness/2 : sectionCenterY;
 
+            // 섹션 깊이에 따른 Z 오프셋 계산
+            const drawerZOffset = depth - currentSectionDepth !== 0 ? (depth - currentSectionDepth) / 2 : 0;
+
             sectionContent = (
               <DrawerRenderer
                 drawerCount={section.count}
@@ -283,6 +286,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 depth={currentSectionDepth}
                 basicThickness={basicThickness}
                 yOffset={drawerYOffset}
+                zOffset={drawerZOffset}
                 drawerHeights={section.drawerHeights}
                 gapHeight={section.gapHeight}
                 material={material}
