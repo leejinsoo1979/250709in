@@ -316,11 +316,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           texture.wrapS = THREE.RepeatWrapping;
           texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1, 1);
-
-          // 도어는 세로 방향(vertical)으로 나무결이 가도록 90도 회전
-          texture.rotation = Math.PI / 2; // 90도 회전
-          texture.center.set(0.5, 0.5); // 중심점 기준 회전
-
           material.map = texture;
 
           // Oak 또는 Cabinet Texture1인 경우 전용 설정 적용
