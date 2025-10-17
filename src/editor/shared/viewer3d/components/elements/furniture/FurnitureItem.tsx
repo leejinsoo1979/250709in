@@ -1772,7 +1772,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   lowerDoorTopGap={placedModule.lowerDoorTopGap}
                   lowerDoorBottomGap={placedModule.lowerDoorBottomGap}
                   grainDirection={placedModule.grainDirection} // 텍스처 결 방향 (하위 호환성)
-                  panelGrainDirections={placedModule.panelGrainDirections} // 패널별 개별 결 방향
+                  panelGrainDirections={(() => {
+                    console.log('🚨 FurnitureItem - placedModule 체크:', {
+                      id: placedModule.id,
+                      hasPanelGrainDirections: !!placedModule.panelGrainDirections,
+                      panelGrainDirections: placedModule.panelGrainDirections,
+                      panelGrainDirectionsType: typeof placedModule.panelGrainDirections,
+                      panelGrainDirectionsKeys: placedModule.panelGrainDirections ? Object.keys(placedModule.panelGrainDirections) : []
+                    });
+                    return placedModule.panelGrainDirections;
+                  })()} // 패널별 개별 결 방향
                 />
               );
             })()}
