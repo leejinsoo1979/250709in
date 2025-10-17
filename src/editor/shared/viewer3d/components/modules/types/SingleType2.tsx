@@ -397,9 +397,17 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               const currentSectionDepth = sectionDepths[sectionIndex] || depth;
               const currentAdjustedDepthForShelves = currentSectionDepth - basicThickness;
 
-              // Z 위치: 깊이 변화에 따른 오프셋
+              // Z 위치: 깊이 변화에 따른 오프셋 (앞면 고정)
               const depthDiff = depth - currentSectionDepth;
-              const rodZOffset = -depthDiff / 2;
+              const rodZOffset = depthDiff / 2;
+
+              console.log(`🎽 ClothingRod Z 오프셋 계산 (섹션${sectionIndex}):`, {
+                depth_mm: depth / 0.01,
+                currentSectionDepth_mm: currentSectionDepth / 0.01,
+                depthDiff_mm: depthDiff / 0.01,
+                rodZOffset_mm: rodZOffset / 0.01,
+                설명: '섹션 깊이 중앙 = 0, 앞으로 이동 = +양수'
+              });
 
               return (
                 <ClothingRod
@@ -485,11 +493,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             const upperDepth = sectionDepths[1] || depth;
 
             // Z 위치: 각 섹션의 뒤쪽에서 17mm 앞으로
+            // 앞면 고정이므로 depthDiff/2만큼 앞으로 이동
             const lowerDepthDiff = depth - lowerDepth;
             const upperDepthDiff = depth - upperDepth;
 
-            const lowerBackPanelZ = -lowerDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) - lowerDepthDiff/2;
-            const upperBackPanelZ = -upperDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) - upperDepthDiff/2;
+            const lowerBackPanelZ = -lowerDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + lowerDepthDiff/2;
+            const upperBackPanelZ = -upperDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + upperDepthDiff/2;
 
             return (
               <>
