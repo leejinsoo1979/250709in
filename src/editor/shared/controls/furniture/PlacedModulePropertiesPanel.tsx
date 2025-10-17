@@ -512,6 +512,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [depthError, setDepthError] = useState<string>('');
   const [lowerSectionDepth, setLowerSectionDepth] = useState<number | undefined>(undefined); // 하부 섹션 깊이
   const [upperSectionDepth, setUpperSectionDepth] = useState<number | undefined>(undefined); // 상부 섹션 깊이
+  const [lowerDepthInput, setLowerDepthInput] = useState<string>(''); // 하부 섹션 깊이 입력 필드
+  const [upperDepthInput, setUpperDepthInput] = useState<string>(''); // 상부 섹션 깊이 입력 필드
   const [customWidth, setCustomWidth] = useState<number>(600); // 기본 컬럼 너비로 변경
   const [widthInputValue, setWidthInputValue] = useState<string>('600');
   const [widthError, setWidthError] = useState<string>('');
@@ -700,6 +702,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 섹션별 깊이 초기화
       setLowerSectionDepth(currentPlacedModule.lowerSectionDepth);
       setUpperSectionDepth(currentPlacedModule.upperSectionDepth);
+      // 섹션별 깊이 입력 필드 초기화
+      setLowerDepthInput(currentPlacedModule.lowerSectionDepth?.toString() ?? '');
+      setUpperDepthInput(currentPlacedModule.upperSectionDepth?.toString() ?? '');
       // customWidth도 동일하게 처리
       if (customWidth !== initialWidth) {
         setCustomWidth(initialWidth);
