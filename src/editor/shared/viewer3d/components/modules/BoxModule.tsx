@@ -283,10 +283,20 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotIndex={slotIndex} // 슬롯 인덱스 전달
+        slotInfo={slotInfo} // 슬롯 정보 전달
         showFurniture={showFurniture}
         isHighlighted={isHighlighted} // 강조 상태 전달
         furnitureId={furnitureId} // 가구 본체 표시 여부
         placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
+        doorTopGap={doorTopGap}
+        doorBottomGap={doorBottomGap}
+        lowerSectionDepth={lowerSectionDepth}
+        upperSectionDepth={upperSectionDepth}
+        doorSplit={doorSplit}
+        upperDoorTopGap={upperDoorTopGap}
+        upperDoorBottomGap={upperDoorBottomGap}
+        lowerDoorTopGap={lowerDoorTopGap}
+        lowerDoorBottomGap={lowerDoorBottomGap}
       />
       </>
     );

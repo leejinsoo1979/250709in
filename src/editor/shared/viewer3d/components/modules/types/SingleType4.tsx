@@ -37,7 +37,9 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   upperDoorTopGap,
   upperDoorBottomGap,
   lowerDoorTopGap,
-  lowerDoorBottomGap
+  lowerDoorBottomGap,
+  lowerSectionDepth,
+  upperSectionDepth
 }) => {
   // 공통 로직 사용
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -47,7 +49,9 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth
+    adjustedWidth,
+    lowerSectionDepth,
+    upperSectionDepth
   });
 
   const {
