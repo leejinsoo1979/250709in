@@ -56,6 +56,8 @@ interface BoxModuleProps {
   upperDoorBottomGap?: number; // 상부 섹션 도어 하단 갭
   lowerDoorTopGap?: number; // 하부 섹션 도어 상단 갭
   lowerDoorBottomGap?: number; // 하부 섹션 도어 하단 갭
+  grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (하위 호환성)
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -109,6 +111,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   upperDoorBottomGap,
   lowerDoorTopGap,
   lowerDoorBottomGap,
+  grainDirection, // 텍스처 결 방향
+  panelGrainDirections, // 패널별 개별 결 방향
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,
@@ -213,6 +217,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         isHighlighted={isHighlighted} // 강조 상태 전달
         placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
         visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
+        grainDirection={grainDirection} // 텍스처 결 방향 (하위 호환성)
+        panelGrainDirections={panelGrainDirections} // 패널별 개별 결 방향
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
