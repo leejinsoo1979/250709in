@@ -302,7 +302,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 material={material}
                 renderMode={renderMode}
                 isHighlighted={isDrawerSectionHighlighted}
-              />
+                textureUrl={textureUrl}
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={furnitureId}              />
             );
           }
           break;

@@ -23,6 +23,9 @@ interface DrawerRendererProps {
   material: THREE.Material; // 가구 모듈과 동일한 재질 사용
   renderMode: 'solid' | 'wireframe'; // 렌더 모드 추가
   isHighlighted?: boolean; // 가구 강조 여부
+  textureUrl?: string; // 텍스처 URL
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향
+  furnitureId?: string; // 가구 ID
 }
 
 /**
@@ -49,6 +52,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   material,
   renderMode,
   isHighlighted = false,
+  textureUrl,
+  panelGrainDirections,
+  furnitureId,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
@@ -169,6 +175,10 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
+          panelName="서랍 앞판"
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
+          furnitureId={furnitureId}
         />
         
         {/* 상단면은 제외 (서랍이 열려있어야 함) */}
