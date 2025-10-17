@@ -5,6 +5,8 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { useTheme } from '@/contexts/ThemeContext';
+import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
+import { useTexture } from '@react-three/drei';
 
 interface BoxWithEdgesProps {
   args: [number, number, number];
@@ -24,6 +26,9 @@ interface BoxWithEdgesProps {
   onClick?: (e: any) => void;
   onPointerOver?: (e: any) => void;
   onPointerOut?: (e: any) => void;
+  panelName?: string; // 패널 이름 (예: "좌측판", "선반1")
+  panelGrainDirections?: { [key: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향
+  textureUrl?: string; // 텍스처 URL
 }
 
 /**
@@ -47,7 +52,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   edgeOpacity,
   onClick,
   onPointerOver,
-  onPointerOut
+  onPointerOut,
+  panelName,
+  panelGrainDirections,
+  textureUrl
 }) => {
   const { viewMode } = useSpace3DView();
   const { view2DDirection, shadowEnabled } = useUIStore(); // view2DDirection, shadowEnabled 추가
@@ -124,6 +132,55 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     // 편집 모드에서는 원래 재질 그대로 사용
     return baseMaterial;
   }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode]);
+
+  // 패널별 개별 material 생성 (텍스처 회전 적용)
+  const panelSpecificMaterial = React.useMemo(() => {
+    // panelName이 없거나 textureUrl이 없으면 processedMaterial 그대로 사용
+    if (!panelName || !textureUrl || !(processedMaterial instanceof THREE.MeshStandardMaterial)) {
+      return processedMaterial;
+    }
+
+    // 패널의 결 방향 결정 (설정값 또는 기본값)
+    const grainDirection = panelGrainDirections?.[panelName] || getDefaultGrainDirection(panelName);
+
+    console.log('🎨 BoxWithEdges - 패널별 material 생성:', {
+      panelName,
+      grainDirection,
+      textureUrl,
+      hasTexture: !!processedMaterial.map
+    });
+
+    // processedMaterial을 복제하여 개별 material 생성
+    const panelMaterial = processedMaterial.clone();
+
+    // 텍스처가 있는 경우 회전 적용
+    if (panelMaterial.map) {
+      const texture = panelMaterial.map.clone();
+
+      // 가로 결 방향일 때 90도 회전
+      if (grainDirection === 'horizontal') {
+        texture.rotation = Math.PI / 2;
+        texture.center.set(0.5, 0.5);
+      } else {
+        // 세로 결 방향일 때는 회전 없음
+        texture.rotation = 0;
+        texture.center.set(0.5, 0.5);
+      }
+
+      texture.needsUpdate = true;
+      panelMaterial.map = texture;
+      panelMaterial.needsUpdate = true;
+
+      console.log('✅ 텍스처 회전 적용:', {
+        panelName,
+        grainDirection,
+        rotation: texture.rotation,
+        rotationDegrees: (texture.rotation * 180 / Math.PI).toFixed(0) + '°'
+      });
+    }
+
+    return panelMaterial;
+  }, [processedMaterial, panelName, textureUrl, panelGrainDirections]);
 
   // 테마 색상 매핑
   const themeColorMap: Record<string, string> = {
@@ -252,12 +309,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         <boxGeometry args={args} />
         {renderMode === 'wireframe' ? (
           // 와이어프레임 모드: 완전히 투명한 재질
-          <meshBasicMaterial 
-            transparent={true} 
+          <meshBasicMaterial
+            transparent={true}
             opacity={0}
           />
         ) : (
-          <primitive key={processedMaterial.uuid} object={processedMaterial} attach="material" />
+          <primitive key={panelSpecificMaterial.uuid} object={panelSpecificMaterial} attach="material" />
         )}
       </mesh>
       {/* 윤곽선 렌더링 */}

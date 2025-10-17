@@ -24,7 +24,8 @@ interface BaseFurnitureOptions {
   customSections?: SectionConfig[]; // 사용자 정의 섹션 설정
   lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
-  grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (기본값: horizontal)
+  grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (기본값: horizontal) - 하위 호환성
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
 }
 
 // 가구 기본 설정 반환 타입
@@ -32,6 +33,8 @@ interface BaseFurnitureResult {
   // 재질 관련
   material: THREE.MeshStandardMaterial;
   doorColor: string;
+  textureUrl?: string; // 텍스처 URL
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향
 
   // 치수 관련
   width: number;
@@ -81,7 +84,8 @@ export const useBaseFurniture = (
     customSections,
     lowerSectionDepth,
     upperSectionDepth,
-    grainDirection = 'horizontal' // 기본값: 가로 결
+    grainDirection = 'horizontal', // 기본값: 가로 결 (하위 호환성)
+    panelGrainDirections // 패널별 개별 결 방향
   } = options;
   
   // Store에서 재질 설정 가져오기
@@ -379,6 +383,8 @@ export const useBaseFurniture = (
     // 재질 관련
     material,
     doorColor,
+    textureUrl, // 텍스처 URL 추가
+    panelGrainDirections, // 패널별 결 방향 추가
 
     // 치수 관련
     width,

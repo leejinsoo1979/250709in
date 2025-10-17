@@ -47,7 +47,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   upperDoorBottomGap,
   lowerDoorTopGap,
   lowerDoorBottomGap,
-  grainDirection
+  grainDirection,
+  panelGrainDirections
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -57,7 +58,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
     isDragging,
     isEditMode,
     adjustedWidth,
-    grainDirection
+    grainDirection,
+    panelGrainDirections
   });
 
   const {
@@ -71,6 +73,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
     adjustedDepthForShelves,
     shelfZOffset,
     material,
+    textureUrl,
+    panelGrainDirections: hookPanelGrainDirections,
     mmToThreeUnits,
     isMultiSectionFurniture,
     getSectionHeights
@@ -188,6 +192,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   isHighlighted={isSectionHighlighted}
                   onClick={handleCabinetBodyClick}
+                  panelName="좌측판"
+                  panelGrainDirections={hookPanelGrainDirections}
+                  textureUrl={textureUrl}
                 />
 
                 {/* 오른쪽 측면 판재 - 섹션별로 분할, 깊이 적용 */}
@@ -200,6 +207,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   isHighlighted={isSectionHighlighted}
                   onClick={handleCabinetBodyClick}
+                  panelName="우측판"
+                  panelGrainDirections={hookPanelGrainDirections}
+                  textureUrl={textureUrl}
                 />
                 
                 {/* 하부 섹션 상판 + 상부 섹션 바닥판 (2단 옷장 구조) - index=0일때만 */}
@@ -248,6 +258,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isEditMode={isEditMode}
                         isHighlighted={isLowerHighlighted}
                         onClick={handleCabinetBodyClick}
+                        panelName="중간판"
+                        panelGrainDirections={hookPanelGrainDirections}
+                        textureUrl={textureUrl}
                       />
 
                       {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 */}
@@ -260,6 +273,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         isEditMode={isEditMode}
                         isHighlighted={isUpperHighlighted}
                         onClick={handleCabinetBodyClick}
+                        panelName="중간판"
+                        panelGrainDirections={hookPanelGrainDirections}
+                        textureUrl={textureUrl}
                       />
                     </>
                   );
