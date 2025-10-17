@@ -254,8 +254,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               // 깊이 차이 계산 (뒤쪽으로만 줄어들도록)
               const lowerDepthDiff = depth - lowerDepth;
               const upperDepthDiff = depth - upperDepth;
-              const lowerZOffset = -lowerDepthDiff / 2;
-              const upperZOffset = -upperDepthDiff / 2;
+              const lowerZOffset = lowerDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+              const upperZOffset = upperDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
 
               return (
                 <>
@@ -360,12 +360,33 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
 
+                  // 섹션별 깊이 가져오기
+                  const lowerSectionDepth = lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth;
+                  const upperSectionDepth = upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth;
+
+                  // 하부 섹션 깊이 차이 (뒤쪽으로만 줄어듦)
+                  const lowerDepthDiff = depth - lowerSectionDepth;
+                  const lowerZOffset = lowerDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+
+                  // 상부 섹션 깊이 차이
+                  const upperDepthDiff = depth - upperSectionDepth;
+                  const upperZOffset = upperDepthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+
+                  // 백패널 두께
+                  const backPanelThickness = depth - adjustedDepthForShelves;
+
+                  // 하부 섹션 조정된 깊이
+                  const lowerAdjustedDepth = lowerSectionDepth - backPanelThickness;
+
+                  // 상부 섹션 조정된 깊이
+                  const upperAdjustedDepth = upperSectionDepth - backPanelThickness;
+
                   return (
                     <React.Fragment key={`divider-${index}`}>
                       {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(26)]}
-                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2]}
+                        args={[innerWidth, basicThickness, upperAdjustedDepth - basicThickness + mmToThreeUnits(26)]}
+                        position={[0, middlePanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 + upperZOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -374,8 +395,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                       {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), adjustedDepthForShelves - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
-                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2]}
+                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
+                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 + lowerZOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -471,8 +492,22 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
         {/* 상단 판재 */}
         <BoxWithEdges
-          args={[innerWidth, basicThickness, depth]}
-          position={[0, height/2 - basicThickness/2, 0]}
+          args={[innerWidth, basicThickness, (() => {
+            // 다중 섹션이고 상부 깊이가 있으면 상부 섹션 깊이 사용
+            if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
+              return mmToThreeUnits(upperSectionDepthMm);
+            }
+            return depth;
+          })()]}
+          position={[0, height/2 - basicThickness/2, (() => {
+            // 다중 섹션이고 상부 깊이가 있으면 Z 오프셋 적용
+            if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
+              const upperDepth = mmToThreeUnits(upperSectionDepthMm);
+              const depthDiff = depth - upperDepth;
+              return depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+            }
+            return 0;
+          })()]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -527,8 +562,22 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
         {/* 하단 판재 */}
         <BoxWithEdges
-          args={[innerWidth, basicThickness, depth]}
-          position={[0, -height/2 + basicThickness/2, 0]}
+          args={[innerWidth, basicThickness, (() => {
+            // 다중 섹션이고 하부 깊이가 있으면 하부 섹션 깊이 사용
+            if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
+              return mmToThreeUnits(lowerSectionDepthMm);
+            }
+            return depth;
+          })()]}
+          position={[0, -height/2 + basicThickness/2, (() => {
+            // 다중 섹션이고 하부 깊이가 있으면 Z 오프셋 적용
+            if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
+              const lowerDepth = mmToThreeUnits(lowerSectionDepthMm);
+              const depthDiff = depth - lowerDepth;
+              return depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+            }
+            return 0;
+          })()]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}

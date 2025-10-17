@@ -146,7 +146,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
               // 깊이 차이 계산 (뒤쪽으로만 줄어들도록)
               const depthDiff = depth - currentSectionDepth;
-              const zOffset = -depthDiff / 2;
+              const zOffset = depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
 
               return (
                 <React.Fragment key={`side-panels-${index}`}>
@@ -207,7 +207,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
                     const lowerDepthDiff = depth - lowerSectionDepth;
                     const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26) - mmToThreeUnits(85);
-                    const panelZOffset = -lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2;
+                    const panelZOffset = lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2;
 
                     return (
                       <BoxWithEdges
@@ -227,7 +227,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
                     const lowerDepthDiff = depth - lowerSectionDepth;
                     const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26);
-                    const panelZOffset = -lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2;
+                    const panelZOffset = lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2;
 
                     return (
                       <BoxWithEdges

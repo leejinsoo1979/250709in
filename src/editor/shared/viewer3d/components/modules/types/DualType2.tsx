@@ -142,8 +142,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               // 깊이 차이 계산 (기본 깊이 대비)
               const depthDiff = depth - currentSectionDepth;
 
-              // Z 위치 오프셋: 뒤쪽으로만 줄어들도록 (음의 Z 방향)
-              const zOffset = -depthDiff / 2;
+              // Z 위치 오프셋: 뒤쪽으로만 줄어들도록 (양수: 앞쪽 고정, 뒤쪽 줄어듦)
+              const zOffset = depthDiff / 2;
 
             return (
               <React.Fragment key={`side-panels-${index}`}>
@@ -183,8 +183,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   const originalDepth = lowerAdjustedDepth - basicThickness;
                   const extendedDepth = originalDepth + mmToThreeUnits(26);
 
-                  // Z 위치: 뒤쪽으로만 줄어들도록 + 26mm 확장 고려
-                  const zOffset = -lowerDepthDiff / 2;
+                  // Z 위치: 뒤쪽으로만 줄어들도록 + 26mm 확장 고려 (양수: 앞쪽 고정, 뒤쪽 줄어듦)
+                  const zOffset = lowerDepthDiff / 2;
                   const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13) + zOffset;
 
                   return (
@@ -218,8 +218,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   const originalDepth = lowerAdjustedDepth - basicThickness;
                   const extendedDepth = originalDepth + mmToThreeUnits(26);
 
-                  // Z 위치: 뒤쪽으로만 줄어들도록 + 26mm 확장 고려
-                  const zOffset = -lowerDepthDiff / 2;
+                  // Z 위치: 뒤쪽으로만 줄어들도록 + 26mm 확장 고려 (양수: 앞쪽 고정, 뒤쪽 줄어듦)
+                  const zOffset = lowerDepthDiff / 2;
                   const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13) + zOffset;
 
                   return (
