@@ -1320,6 +1320,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           minWidth: '50px',
                           display: 'flex',
                           alignItems: 'center',
+                          justifyContent: 'center',
                           gap: '2px'
                         }}
                         onClick={() => {
