@@ -37,8 +37,10 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
 
   // 결 방향 토글 핸들러
   const handleToggleGrainDirection = () => {
+    console.log('🔄 결 방향 토글 클릭! 현재:', grainDirection);
     const newDirection = grainDirection === 'horizontal' ? 'vertical' : 'horizontal';
     setGrainDirection(newDirection);
+    console.log('✅ 새로운 방향:', newDirection);
 
     // 가구 정보 업데이트
     if (placedModule) {
@@ -47,6 +49,13 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   };
 
   if (!isOpen || !moduleData || !placedModule) return null;
+
+  console.log('📋 FurnitureInfoModal 렌더링:', {
+    isOpen,
+    placedModuleId: placedModule?.id,
+    grainDirection,
+    hasUpdateModule: !!updateModule
+  });
 
   // Remove local calculatePanelDetails - now using shared utility
   /* const calculatePanelDetails = (moduleData: ModuleData, customWidth: number, customDepth: number, hasDoor: boolean = false, t: any = (key: string) => key) => {
