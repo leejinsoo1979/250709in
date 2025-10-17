@@ -1856,7 +1856,10 @@ const Room: React.FC<RoomProps> = ({
                         : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
                 ]}
                 position={[
-                  xOffset + frameThickness.left/2,
+                  // 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
+                  hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0
+                    ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left/2
+                    : xOffset + frameThickness.left/2,
                   // 서라운드: 단내림 천장까지의 중심, 노서라운드: 단내림 구간 중심
                   spaceInfo.surroundType === 'surround' ? (panelStartY + (height - droppedCeilingHeight)/2) : droppedCenterY,
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
@@ -1891,7 +1894,10 @@ const Room: React.FC<RoomProps> = ({
                         : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
                 ]}
                 position={[
-                  xOffset + frameThickness.left/2,
+                  // 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
+                  hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0
+                    ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left/2
+                    : xOffset + frameThickness.left/2,
                   upperPartCenterY, // 상부 구간 중심
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
@@ -1956,7 +1962,10 @@ const Room: React.FC<RoomProps> = ({
                     : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
             ]}
             position={[
-              xOffset + frameThickness.left/2,
+              // 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
+              hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0
+                ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left/2
+                : xOffset + frameThickness.left/2,
               sideFrameCenterY,
               // 노서라운드 모드에서 엔드패널/프레임 위치 결정
               spaceInfo.surroundType === 'no-surround'
@@ -2070,7 +2079,10 @@ const Room: React.FC<RoomProps> = ({
                         : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
                 ]}
                 position={[
-                  xOffset + width - frameThickness.right/2,
+                  // 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
+                  hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
+                    ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right/2
+                    : xOffset + width - frameThickness.right/2,
                   // 서라운드: 단내림 천장까지의 중심, 노서라운드: 단내림 구간 중심
                   spaceInfo.surroundType === 'surround' ? (panelStartY + (height - droppedCeilingHeight)/2) : droppedCenterY,
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
@@ -2105,7 +2117,10 @@ const Room: React.FC<RoomProps> = ({
                         : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
                 ]}
                 position={[
-                  xOffset + width - frameThickness.right/2,
+                  // 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
+                  hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
+                    ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right/2
+                    : xOffset + width - frameThickness.right/2,
                   upperPartCenterY, // 상부 구간 중심
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
@@ -2160,7 +2175,10 @@ const Room: React.FC<RoomProps> = ({
                     : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
             ]}
             position={[
-              xOffset + width - frameThickness.right/2,
+              // 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
+              hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
+                ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right/2
+                : xOffset + width - frameThickness.right/2,
               sideFrameCenterY,
               // 노서라운드 모드에서 엔드패널/프레임 위치 결정
               spaceInfo.surroundType === 'no-surround'
