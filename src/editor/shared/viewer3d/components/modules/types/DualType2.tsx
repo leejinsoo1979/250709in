@@ -533,7 +533,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         {/* 조절발통 (네 모서리) */}
         <AdjustableFootsRenderer
           width={width}
-          depth={depth}
+          depth={sectionDepths && sectionDepths[0] ? sectionDepths[0] : depth}
           yOffset={-height / 2}
           renderMode={renderMode}
           isHighlighted={false}

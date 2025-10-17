@@ -716,10 +716,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             baseDepthValue,
             fullBaseConfig: spaceInfo?.baseConfig
           });
+          // 다중 섹션이면 하부 섹션 깊이 사용
+          const adjustableFootDepth = isMultiSectionFurniture() && lowerSectionDepthMm !== undefined
+            ? mmToThreeUnits(lowerSectionDepthMm)
+            : depth;
+
           return (
             <AdjustableFootsRenderer
               width={width}
-              depth={depth}
+              depth={adjustableFootDepth}
               yOffset={-height / 2}
               material={material}
               renderMode={renderMode}
