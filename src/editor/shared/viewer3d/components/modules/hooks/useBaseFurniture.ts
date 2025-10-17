@@ -225,6 +225,9 @@ export const useBaseFurniture = (
     }
   }, [material, furnitureColor, renderMode, viewMode, isDragging, isEditMode]);
 
+  // 텍스처 URL 추출 (useEffect 밖에서)
+  const textureUrl = materialConfig.interiorTexture;
+
   // 텍스처 적용 (별도 useEffect로 처리)
   useEffect(() => {
     // 드래그 중이거나 편집 모드일 때는 텍스처 적용하지 않음
@@ -235,8 +238,6 @@ export const useBaseFurniture = (
       }
       return;
     }
-    
-    const textureUrl = materialConfig.interiorTexture;
     
     
     
