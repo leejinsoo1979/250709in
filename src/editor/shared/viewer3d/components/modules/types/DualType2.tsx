@@ -536,6 +536,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               furnitureId={moduleData.id}
               placedFurnitureId={placedFurnitureId}
               sectionDepths={sectionDepths}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
             />
 
             {/* 옷걸이 봉 렌더링 - hanging 섹션만 */}

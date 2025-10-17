@@ -148,6 +148,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 furnitureId={moduleData.id}
                 isHighlighted={isHighlighted}
                 placedFurnitureId={placedFurnitureId}
+                textureUrl={textureUrl}
+                panelGrainDirections={panelGrainDirections}
               />
 
               {/* 옷걸이 봉 렌더링 - 상부 옷장 섹션에만 */}

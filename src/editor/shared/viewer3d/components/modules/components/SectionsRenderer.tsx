@@ -55,6 +55,10 @@ interface SectionsRendererProps {
 
   // 섹션별 깊이 배열 (Three.js 단위)
   sectionDepths?: number[];
+
+  // 텍스처 URL과 패널별 결 방향
+  textureUrl?: string;
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
 }
 
 /**
@@ -78,7 +82,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   isHighlighted = false,
   hideSectionDimensions = false,
   placedFurnitureId,
-  sectionDepths
+  sectionDepths,
+  textureUrl,
+  panelGrainDirections
 }) => {
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);
@@ -231,6 +237,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 renderMode={renderMode}
                 furnitureId={furnitureId}
                 isHighlighted={isSectionHighlighted}
+                textureUrl={textureUrl}
+                panelGrainDirections={panelGrainDirections}
               />
             );
           }
@@ -260,6 +268,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               sectionInternalHeight={section.internalHeight}
               isLastSection={index === allSections.length - 1}
               isHighlighted={isHangingSectionHighlighted}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
             />
           );
           break;

@@ -91,6 +91,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               furnitureId={moduleData.id}
               placedFurnitureId={placedFurnitureId}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
             />
 
             {/* 옷걸이 봉 렌더링 - hanging 섹션에만 */}

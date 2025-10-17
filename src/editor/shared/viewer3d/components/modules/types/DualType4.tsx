@@ -460,6 +460,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             renderMode={renderMode}
             furnitureId={moduleData.id}
             placedFurnitureId={placedFurnitureId}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
             sectionDepths={sectionDepths}
           />
 

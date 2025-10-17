@@ -381,6 +381,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             renderMode={renderMode}
             furnitureId={moduleData.id}
             placedFurnitureId={placedFurnitureId}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
             sectionDepths={sectionDepths}
           />
 
