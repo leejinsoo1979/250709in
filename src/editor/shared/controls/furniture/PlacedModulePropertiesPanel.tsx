@@ -1479,8 +1479,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>도어 상하 이격거리 (분할)</h5>
 
-              {/* 상부 섹션 도어 이격거리 */}
-              <h6 className={styles.subSectionTitle}>상부 섹션</h6>
+              {/* 상부 도어 이격거리 */}
+              <h6 className={styles.subSectionTitle}>상부 도어</h6>
               <div className={styles.doorGapContainer}>
                 <div className={styles.doorGapField}>
                   <label className={styles.doorGapLabel}>상단 ↑</label>
@@ -1528,8 +1528,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 </div>
               </div>
 
-              {/* 하부 섹션 도어 이격거리 */}
-              <h6 className={styles.subSectionTitle} style={{marginTop: '12px'}}>하부 섹션</h6>
+              {/* 하부 도어 이격거리 */}
+              <h6 className={styles.subSectionTitle} style={{marginTop: '12px'}}>하부 도어</h6>
               <div className={styles.doorGapContainer}>
                 <div className={styles.doorGapField}>
                   <label className={styles.doorGapLabel}>상단 ↑</label>
