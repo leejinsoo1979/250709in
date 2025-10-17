@@ -221,16 +221,56 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelMaterial;
   }, [processedMaterial, panelName, panelGrainDirections]);
 
-  // 디버깅: panelGrainDirections 변경 감지
+  // panelGrainDirections 변경 시 실시간 텍스처 회전 업데이트
   React.useEffect(() => {
-    if (panelName && panelGrainDirections) {
-      console.log('🔄 BoxWithEdges useEffect - panelGrainDirections 변경 감지:', {
+    if (!panelName || !panelGrainDirections || !(panelSpecificMaterial instanceof THREE.MeshStandardMaterial)) {
+      return;
+    }
+
+    const material = panelSpecificMaterial;
+    if (!material.map) {
+      return;
+    }
+
+    // 패널의 결 방향 결정
+    let grainDirection: 'horizontal' | 'vertical' | undefined;
+
+    // 정확히 일치하는 키가 있는지 먼저 확인
+    if (panelGrainDirections[panelName]) {
+      grainDirection = panelGrainDirections[panelName];
+    } else {
+      // 부분 매칭
+      const matchingKey = Object.keys(panelGrainDirections).find(key =>
+        panelName.includes(key) || key.includes(panelName)
+      );
+      if (matchingKey) {
+        grainDirection = panelGrainDirections[matchingKey];
+      }
+    }
+
+    // 설정값이 없으면 기본값 사용
+    if (!grainDirection) {
+      grainDirection = getDefaultGrainDirection(panelName);
+    }
+
+    // 텍스처 회전 업데이트
+    const newRotation = grainDirection === 'horizontal' ? Math.PI / 2 : 0;
+
+    if (material.map.rotation !== newRotation) {
+      console.log('🔄 실시간 텍스처 회전 업데이트:', {
         panelName,
-        panelGrainDirections: JSON.stringify(panelGrainDirections),
+        grainDirection,
+        oldRotation: material.map.rotation,
+        newRotation,
         timestamp: Date.now()
       });
+
+      material.map.rotation = newRotation;
+      material.map.center.set(0.5, 0.5);
+      material.map.needsUpdate = true;
+      material.needsUpdate = true;
     }
-  }, [panelName, panelGrainDirections]);
+  }, [panelName, panelGrainDirections, panelSpecificMaterial]);
 
   // 테마 색상 매핑
   const themeColorMap: Record<string, string> = {
