@@ -1274,16 +1274,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   // - 세로결(V): Y축(height)이 긴쪽(L), X축(width)이 짧은쪽(W)
                   // - 가로결(H): X축(width)이 긴쪽(L), Z축(depth)이 짧은쪽(W)
                   let dimensionDisplay = '';
+
+                  // 서랍 마이다는 특수 케이스: width가 실제 긴쪽(가로), height가 짧은쪽(세로)
+                  const isDrawerHandle = panel.name.includes('마이다');
+
                   if (panel.diameter) {
                     dimensionDisplay = `Φ ${panel.diameter} × L ${panel.width}`;
                   } else if (panel.width && panel.height) {
                     // width/height를 가진 패널 (측판, 상판, 하판 등)
-                    if (isVerticalGrain) {
-                      // 세로결: width=W(짧은쪽), height=L(긴쪽)
-                      dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
+                    if (isDrawerHandle) {
+                      // 서랍 마이다: width=가로(긴쪽), height=세로(짧은쪽)
+                      // vertical(L) 설정 = 긴쪽에 결 = width 방향에 결
+                      if (isVerticalGrain) {
+                        // L 방향: width가 긴쪽(L)
+                        dimensionDisplay = `W ${panel.height} × L ${panel.width}`;
+                      } else {
+                        // W 방향: height가 짧은쪽(W)
+                        dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
+                      }
                     } else {
-                      // 가로결: width=L(긴쪽), height=W(짧은쪽)
-                      dimensionDisplay = `W ${panel.height} × L ${panel.width}`;
+                      // 일반 패널 (측판, 상판 등)
+                      if (isVerticalGrain) {
+                        // 세로결: width=W(짧은쪽), height=L(긴쪽)
+                        dimensionDisplay = `W ${panel.width} × L ${panel.height}`;
+                      } else {
+                        // 가로결: width=L(긴쪽), height=W(짧은쪽)
+                        dimensionDisplay = `W ${panel.height} × L ${panel.width}`;
+                      }
                     }
                   } else if (panel.width && panel.depth) {
                     // width/depth를 가진 패널 (상판, 하판의 다른 표현)
