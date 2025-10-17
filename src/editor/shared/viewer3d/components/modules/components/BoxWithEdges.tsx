@@ -273,7 +273,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       } else if (isHorizontalPanel) {
         // 가로로 긴 패널 (상판, 바닥판, 선반)
         // 서랍 바닥판: L(vertical) = x축 가로결 = -90도, W(horizontal) = y축 세로결 = 90도
-        // 일반 가구 상판/바닥판: L(vertical) = x축 가로결 = 90도, W(horizontal) = y축 세로결 = 0도
+        // 일반 가구 상판/바닥판: L(vertical) = x축 가로결 = 0도, W(horizontal) = y축 세로결 = 90도
         const isDrawerBottom = panelName && panelName.includes('서랍') && panelName.includes('바닥');
 
         if (isDrawerBottom) {
@@ -290,15 +290,15 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           }
         } else {
           if (grainDirection === 'vertical') {
-            // L 방향: 가로 결 (90도 회전)
-            texture.rotation = Math.PI / 2;
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 가로패널 L: 90도');
-          } else {
-            // W 방향: 세로 결 (회전 없음)
+            // L 방향: 가로 결 (회전 없음)
             texture.rotation = 0;
             texture.center.set(0.5, 0.5);
-            console.log('  ✅ 가로패널 W: 0도');
+            console.log('  ✅ 가로패널 L: 0도');
+          } else {
+            // W 방향: 세로 결 (90도 회전)
+            texture.rotation = Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 가로패널 W: 90도');
           }
         }
       } else {
