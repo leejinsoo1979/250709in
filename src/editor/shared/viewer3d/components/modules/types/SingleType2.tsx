@@ -297,6 +297,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             isDragging={isDragging}
             isEditMode={isEditMode}
             onClick={handleCabinetBodyClick}
+            panelName="좌측판"
+            panelGrainDirections={hookPanelGrainDirections}
+            textureUrl={textureUrl}
           />
 
           {/* 오른쪽 측면 판재 */}
@@ -308,6 +311,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             isDragging={isDragging}
             isEditMode={isEditMode}
             onClick={handleCabinetBodyClick}
+            panelName="우측판"
+            panelGrainDirections={hookPanelGrainDirections}
+            textureUrl={textureUrl}
           />
         </>
       )}
@@ -509,6 +515,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             isEditMode={isEditMode}
             isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-${lastSectionIndex}` : false}
             onClick={handleCabinetBodyClick}
+            panelName="상판"
+            panelGrainDirections={hookPanelGrainDirections}
+            textureUrl={textureUrl}
           />
         );
       })()}
@@ -530,6 +539,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             isEditMode={isEditMode}
             isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
             onClick={handleCabinetBodyClick}
+            panelName="하판"
+            panelGrainDirections={hookPanelGrainDirections}
+            textureUrl={textureUrl}
           />
         );
       })()}
@@ -578,6 +590,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   isBackPanel={true}
                   isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                  panelName="백패널"
+                  panelGrainDirections={hookPanelGrainDirections}
+                  textureUrl={textureUrl}
                 />
 
                 {/* 상부 섹션 백패널 - 상부 섹션 깊이 적용 */}
@@ -590,6 +605,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isEditMode={isEditMode}
                   isBackPanel={true}
                   isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                  panelName="백패널"
+                  panelGrainDirections={hookPanelGrainDirections}
+                  textureUrl={textureUrl}
                 />
               </>
             );
@@ -605,6 +623,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           isBackPanel={true}
+          panelName="백패널"
+          panelGrainDirections={hookPanelGrainDirections}
+          textureUrl={textureUrl}
         />
       )}
 
