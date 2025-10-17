@@ -33,6 +33,8 @@ interface RoomProps {
   materialConfig?: {
     doorColor: string;
     doorTexture?: string;
+    frameColor: string;
+    frameTexture?: string;
   };
   showAll?: boolean;
   placedModules?: any[]; // 뷰어 모드용 가구 데이터
@@ -647,7 +649,7 @@ const Room: React.FC<RoomProps> = ({
     // 2D 다크모드에서는 더 밝은 색상 사용
     const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
 
-    let frameColor = materialConfig?.doorColor || defaultColor;
+    let frameColor = materialConfig?.frameColor || materialConfig?.doorColor || defaultColor;
     let baseFrameTransparent = false;
 
     const isHighlighted = frameType && highlightedFrame === frameType;
@@ -716,14 +718,17 @@ const Room: React.FC<RoomProps> = ({
       opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : 0.3) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 2D 탑뷰에서 바닥프레임은 완전 투명
     });
 
-    // 프레임 텍스처 적용 (강조되지 않은 경우 + 2D 모드에서 상부/하부 프레임이 아닌 경우에만)
+    // 프레임 텍스처 적용 (frameTexture 우선, 없으면 doorTexture 사용)
+    const frameTextureUrl = materialConfig?.frameTexture || materialConfig?.doorTexture;
     const shouldApplyTexture = !isHighlighted &&
-                                materialConfig?.doorTexture &&
+                                frameTextureUrl &&
                                 !(viewMode === '2D' && (frameType === 'top' || frameType === 'base'));
 
     if (shouldApplyTexture) {
       // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
-      if (isCabinetTexture1(materialConfig.doorTexture)) {
+      if (isOakTexture(frameTextureUrl)) {
+        applyOakTextureSettings(material);
+      } else if (isCabinetTexture1(frameTextureUrl)) {
         console.log('🔧 프레임 Cabinet Texture1 즉시 어둡게 적용 중...');
         applyCabinetTexture1Settings(material);
         console.log('✅ 프레임 Cabinet Texture1 즉시 색상 적용 완료 (공통 설정 사용)');
@@ -731,26 +736,30 @@ const Room: React.FC<RoomProps> = ({
 
       const textureLoader = new THREE.TextureLoader();
       textureLoader.load(
-        materialConfig.doorTexture,
+        frameTextureUrl,
         (texture) => {
-          console.log('🔧 프레임 텍스처 로딩 성공:', materialConfig.doorTexture);
+          console.log('🔧 프레임 텍스처 로딩 성공:', frameTextureUrl);
           texture.wrapS = THREE.RepeatWrapping;
           texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1, 1);
 
           // Oak 텍스처인 경우: 좌우 프레임은 세로 결, 상하 프레임은 가로 결 (90도 회전)
-          if (isOakTexture(materialConfig.doorTexture)) {
+          if (isOakTexture(frameTextureUrl)) {
             const isVerticalFrame = frameType === 'left' || frameType === 'right';
             if (!isVerticalFrame) {
               // 상하 프레임(top/base)만 90도 회전
               texture.rotation = Math.PI / 2;
               texture.center.set(0.5, 0.5);
             }
-            applyOakTextureSettings(material, false); // 텍스처는 이미 회전 처리했으므로 false
+            applyOakTextureSettings(material);
           }
-          // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
-          else if (!isCabinetTexture1(materialConfig.doorTexture)) {
-            material.color.setHex(0xffffff); // 다른 텍스처는 기본 흰색
+          // Cabinet Texture1인 경우 설정 적용
+          else if (isCabinetTexture1(frameTextureUrl)) {
+            applyCabinetTexture1Settings(material);
+          }
+          // 그 외 텍스처는 기본 설정
+          else {
+            material.color.setHex(0xffffff); // 기본 흰색
             material.toneMapped = true; // 기본 톤 매핑 활성화
             material.roughness = 0.6; // 기본 거칠기
           }
@@ -760,13 +769,13 @@ const Room: React.FC<RoomProps> = ({
         },
         undefined,
         (error) => {
-          console.error('❌ 프레임 텍스처 로딩 실패:', materialConfig.doorTexture, error);
+          console.error('❌ 프레임 텍스처 로딩 실패:', frameTextureUrl, error);
         }
       );
     }
     
     return material;
-  }, [materialConfig?.doorColor, materialConfig?.doorTexture, renderMode, viewMode, view2DTheme, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig, appTheme.color]);
+  }, [materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, renderMode, viewMode, view2DTheme, highlightedFrame, spaceInfo.frameSize, spaceInfo.baseConfig, appTheme.color]);
 
   const columnsDeps = JSON.stringify(spaceInfo.columns ?? []);
 
@@ -784,37 +793,37 @@ const Room: React.FC<RoomProps> = ({
     const mat = createFrameMaterial('base');
     setBaseFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame]);
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
   useEffect(() => {
     const mat = createFrameMaterial('left');
     setLeftFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame]);
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
   useEffect(() => {
     const mat = createFrameMaterial('left');
     setLeftSubFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame]);
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
   useEffect(() => {
     const mat = createFrameMaterial('right');
     setRightFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame]);
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
   useEffect(() => {
     const mat = createFrameMaterial('right');
     setRightSubFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame]);
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
   useEffect(() => {
     const mat = createFrameMaterial('top');
     setTopFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame]);
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
   useEffect(() => {
     const mat = createFrameMaterial('top');
     setTopSubFrameMaterial(mat);
     return () => mat.dispose();
-  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, highlightedFrame]);
+  }, [createFrameMaterial, columnsDeps, viewMode, materialConfig?.doorColor, materialConfig?.doorTexture, materialConfig?.frameColor, materialConfig?.frameTexture, highlightedFrame]);
   // 하단 서브프레임 제거됨
   // useEffect(() => {
   //   const mat = createFrameMaterial('base');
