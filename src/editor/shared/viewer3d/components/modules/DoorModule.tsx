@@ -10,7 +10,7 @@ import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
-import { isCabinetTexture1, applyCabinetTexture1Settings } from '@/editor/shared/utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Line } from '@react-three/drei';
 import { Hinge } from '../Hinge';
@@ -303,37 +303,42 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const applyTextureToMaterial = useCallback((material: THREE.MeshStandardMaterial, textureUrl: string | undefined, doorSide: string) => {
     if (textureUrl && material) {
       // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
-      if (isCabinetTexture1(textureUrl)) {
+      if (isOakTexture(textureUrl)) {
+        applyOakTextureSettings(material);
+      } else if (isCabinetTexture1(textureUrl)) {
         applyCabinetTexture1Settings(material);
       }
-      
+
       const textureLoader = new THREE.TextureLoader();
       textureLoader.load(
-        textureUrl, 
+        textureUrl,
         (texture) => {
           texture.wrapS = THREE.RepeatWrapping;
           texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1, 1);
           material.map = texture;
-          
-          // Cabinet Texture1이 아닌 경우에만 기본 설정 적용
-          if (!isCabinetTexture1(textureUrl)) {
-            material.color.setHex(0xffffff); // 다른 텍스처는 기본 흰색
+
+          // Oak 또는 Cabinet Texture1인 경우 전용 설정 적용
+          if (isOakTexture(textureUrl)) {
+            applyOakTextureSettings(material);
+          } else if (isCabinetTexture1(textureUrl)) {
+            applyCabinetTexture1Settings(material);
+          } else {
+            // 다른 텍스처는 기본 설정
+            material.color.setHex(0xffffff); // 기본 흰색
             material.toneMapped = true; // 기본 톤 매핑 활성화
             material.roughness = 0.6; // 기본 거칠기
-          } else {
-            // Cabinet Texture 1인 경우 다시 한번 설정 적용 (텍스처 로드 후)
-            applyCabinetTexture1Settings(material);
           }
-          
+
           material.needsUpdate = true;
-          
+
           console.log(`🚪 ${doorSide} 텍스처 로드 완료:`, {
             hasMap: !!material.map,
             mapImage: material.map?.image?.src,
             color: material.color.getHexString(),
             toneMapped: material.toneMapped,
             roughness: material.roughness,
+            isOakTexture: isOakTexture(textureUrl),
             isCabinetTexture1: isCabinetTexture1(textureUrl)
           });
           
