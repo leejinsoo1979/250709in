@@ -1309,16 +1309,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                       <button
                         style={{
-                          padding: '6px 10px',
+                          padding: '4px 8px',
                           background: currentDirection === 'vertical' ? '#4CAF50' : '#2196F3',
                           color: 'white',
                           border: 'none',
                           borderRadius: '4px',
-                          fontSize: '14px',
-                          fontWeight: '700',
+                          fontSize: '11px',
+                          fontWeight: '600',
                           cursor: 'pointer',
-                          minWidth: '60px',
-                          lineHeight: '1.2'
+                          minWidth: '50px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '2px'
                         }}
                         onClick={() => {
                           if (!currentPlacedModule) return;
@@ -1331,7 +1333,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                         }}
                         title={`${panel.name} 나무결 방향 전환`}
                       >
-                        {currentDirection === 'vertical' ? 'L↓' : 'W→'}
+                        <span style={{ fontSize: '11px' }}>{currentDirection === 'vertical' ? 'L' : 'W'}</span>
+                        <span style={{ fontSize: '18px', lineHeight: '1' }}>{currentDirection === 'vertical' ? '↓' : '→'}</span>
                       </button>
                     </div>
                   );
