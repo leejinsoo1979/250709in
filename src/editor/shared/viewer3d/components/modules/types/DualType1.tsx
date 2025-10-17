@@ -31,7 +31,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   customSections, // 사용자 정의 섹션 설정
   placedFurnitureId,
   showFurniture = true, // 가구 본체 표시 여부
-  visibleSectionIndex = null // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
+  visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
+  panelGrainDirections: propsPanelGrainDirections
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -42,14 +43,37 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
     isEditMode,
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
     adjustedWidth, // adjustedWidth 전달
-    customSections // 사용자 정의 섹션 설정
+    customSections, // 사용자 정의 섹션 설정
+    panelGrainDirections: propsPanelGrainDirections
   });
+
+  const {
+    textureUrl,
+    panelGrainDirections
+  } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
 
+  console.log('🔵 DualType1에서 추출한 값:', {
+    moduleId: moduleData.id,
+    textureUrl,
+    panelGrainDirections: panelGrainDirections ? JSON.stringify(panelGrainDirections) : 'undefined',
+    timestamp: Date.now()
+  });
+
   return (
     <>
-      <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} showFurniture={showFurniture}>
+      <BaseFurnitureShell
+        {...baseFurniture}
+        isDragging={isDragging}
+        isEditMode={isEditMode}
+        spaceInfo={spaceInfo}
+        moduleData={moduleData}
+        placedFurnitureId={placedFurnitureId}
+        showFurniture={showFurniture}
+        textureUrl={textureUrl}
+        panelGrainDirections={panelGrainDirections}
+      >
         {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
         {!isDragging && (
           <>
