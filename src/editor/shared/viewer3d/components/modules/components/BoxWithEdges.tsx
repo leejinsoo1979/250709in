@@ -205,6 +205,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     return panelMaterial;
   }, [processedMaterial, panelName, textureUrl, panelGrainDirections]);
 
+  // 디버깅: panelGrainDirections 변경 감지
+  React.useEffect(() => {
+    if (panelName && panelGrainDirections) {
+      console.log('🔄 BoxWithEdges useEffect - panelGrainDirections 변경 감지:', {
+        panelName,
+        panelGrainDirections: JSON.stringify(panelGrainDirections),
+        timestamp: Date.now()
+      });
+    }
+  }, [panelName, panelGrainDirections]);
+
   // 테마 색상 매핑
   const themeColorMap: Record<string, string> = {
     green: '#10b981',
