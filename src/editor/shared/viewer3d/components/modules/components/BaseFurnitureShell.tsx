@@ -285,7 +285,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerHighlighted}
-                    panelName="좌측판"
+                    panelName="하부장 좌측판"
                     panelGrainDirections={panelGrainDirections}
                     textureUrl={textureUrl}
                   />
@@ -298,7 +298,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isUpperHighlighted}
-                    panelName="좌측판"
+                    panelName="상부장 좌측판"
                     panelGrainDirections={panelGrainDirections}
                     textureUrl={textureUrl}
                   />
@@ -311,7 +311,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerHighlighted}
-                    panelName="우측판"
+                    panelName="하부장 우측판"
                     panelGrainDirections={panelGrainDirections}
                     textureUrl={textureUrl}
                   />
@@ -324,7 +324,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isUpperHighlighted}
-                    panelName="우측판"
+                    panelName="상부장 우측판"
                     panelGrainDirections={panelGrainDirections}
                     textureUrl={textureUrl}
                   />
