@@ -2787,15 +2787,23 @@ const Configurator: React.FC = () => {
             {/* 도어가 설치된 경우에만 뷰어 상단에 Close/Open 토글 버튼 표시 */}
             {hasDoorsInstalled && (
               <div className={styles.viewerDoorToggle}>
-                <button 
+                <button
                   className={`${styles.viewerDoorButton} ${!doorsOpen ? styles.active : ''}`}
-                  onClick={() => !doorsOpen || toggleDoors()}
+                  onClick={() => {
+                    if (doorsOpen) {
+                      toggleDoors(); // 열려있으면 닫기
+                    }
+                  }}
                 >
                   Close
                 </button>
-                <button 
+                <button
                   className={`${styles.viewerDoorButton} ${doorsOpen ? styles.active : ''}`}
-                  onClick={() => doorsOpen || toggleDoors()}
+                  onClick={() => {
+                    if (!doorsOpen) {
+                      toggleDoors(); // 닫혀있으면 열기
+                    }
+                  }}
                 >
                   Open
                 </button>
