@@ -222,14 +222,32 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (panelMaterial.map) {
       const texture = panelMaterial.map.clone();
 
-      // 세로 결 방향일 때 90도 회전 (텍스처를 세로로 세움)
-      if (grainDirection === 'vertical') {
-        texture.rotation = Math.PI / 2;
-        texture.center.set(0.5, 0.5);
+      // 서랍 패널 여부 확인 (마이다, 앞판, 뒷판, 측판)
+      const isDrawerPanel = panelName && panelName.includes('서랍');
+
+      // 서랍 패널은 회전 로직이 반대
+      if (isDrawerPanel) {
+        // 서랍 패널: L(vertical) = x축 가로결 = 0도, W(horizontal) = y축 세로결 = 90도
+        if (grainDirection === 'vertical') {
+          // L 방향: 가로 결 (회전 없음)
+          texture.rotation = 0;
+          texture.center.set(0.5, 0.5);
+        } else {
+          // W 방향: 세로 결 (90도 회전)
+          texture.rotation = Math.PI / 2;
+          texture.center.set(0.5, 0.5);
+        }
       } else {
-        // 가로 결 방향일 때는 회전 없음 (텍스처 기본 방향)
-        texture.rotation = 0;
-        texture.center.set(0.5, 0.5);
+        // 일반 가구 패널: L(vertical) = y축 세로결 = 90도, W(horizontal) = x축 가로결 = 0도
+        if (grainDirection === 'vertical') {
+          // L 방향: 세로 결 (90도 회전)
+          texture.rotation = Math.PI / 2;
+          texture.center.set(0.5, 0.5);
+        } else {
+          // W 방향: 가로 결 (회전 없음)
+          texture.rotation = 0;
+          texture.center.set(0.5, 0.5);
+        }
       }
 
       texture.needsUpdate = true;
@@ -238,6 +256,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
       console.log('✅ 텍스처 회전 적용:', {
         panelName,
+        isDrawerPanel,
         grainDirection,
         rotation: texture.rotation,
         rotationDegrees: (texture.rotation * 180 / Math.PI).toFixed(0) + '°'
