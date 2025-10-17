@@ -183,7 +183,9 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
 
   // 배치된 모듈 속성 업데이트 함수 (기존 Context 로직과 동일)
   updatePlacedModule: (id: string, updates: Partial<PlacedModule>) => {
+    console.log('🏪 furnitureStore.updatePlacedModule 호출됨:', { id, updates });
     const currentModule = get().placedModules.find(m => m.id === id);
+    console.log('📦 현재 모듈:', currentModule);
 
     set((state) => {
       const beforeCount = state.placedModules.length;
@@ -292,11 +294,21 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       }
       
       // 충돌이 없으면 일반 업데이트
-      const newModules = state.placedModules.map(module => 
-        module.id === id 
-          ? { ...module, ...updates } 
-          : module
-      );
+      const newModules = state.placedModules.map(module => {
+        if (module.id === id) {
+          const updated = { ...module, ...updates };
+          console.log('✏️ 모듈 업데이트 적용:', {
+            id,
+            before: module.panelGrainDirections,
+            after: updated.panelGrainDirections,
+            updates
+          });
+          return updated;
+        }
+        return module;
+      });
+
+      console.log('💾 Store 업데이트 완료, 새로운 modules:', newModules.map(m => ({ id: m.id, panelGrainDirections: m.panelGrainDirections })));
 
       return {
         placedModules: newModules
