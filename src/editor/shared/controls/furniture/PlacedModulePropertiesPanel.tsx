@@ -8,6 +8,7 @@ import { analyzeColumnSlots } from '../../utils/columnSlotProcessor';
 import { calculateSpaceIndexing } from '../../utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
 import { calculatePanelDetails } from '@/editor/shared/utils/calculatePanelDetails';
+import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import styles from './PlacedModulePropertiesPanel.module.css';
 
 // 가구 썸네일 이미지 경로
@@ -1263,7 +1264,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   }
 
                   // 일반 패널
-                  const currentDirection = currentPlacedModule?.panelGrainDirections?.[panel.name] || 'horizontal';
+                  const defaultDirection = getDefaultGrainDirection(panel.name);
+                  const currentDirection = currentPlacedModule?.panelGrainDirections?.[panel.name] || defaultDirection;
 
                   return (
                     <div key={index} className={styles.panelItem} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
