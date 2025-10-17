@@ -1818,8 +1818,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 </group>
               )}
 
-              {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외) */}
-              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && (() => {
+              {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외, 분할 모드 상부 섹션 제외) */}
+              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && !(totalSections > 1 && sectionIndex === 1) && (() => {
                 const isTopView = view2DDirection === 'top';
                 const extensionLineStart = mmToThreeUnits(isTopView ? -230 : 70); // 탑뷰: -230mm (도어 쪽으로), 정면뷰: 70mm
                 const extensionLineLength = mmToThreeUnits(110); // 연장선 길이 110mm
