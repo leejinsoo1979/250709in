@@ -140,6 +140,10 @@ interface BaseFurnitureShellProps {
     lowerYAdjustment: number;     // 하부 백패널 미세 조정 (mm) - 기본 0.05
   };
 
+  // 섹션별 깊이 (mm)
+  lowerSectionDepthMm?: number;
+  upperSectionDepthMm?: number;
+
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -182,6 +186,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     yOffsetFor2Drawer: 9,
     lowerYAdjustment: 0.05
   },
+  lowerSectionDepthMm,
+  upperSectionDepthMm,
   children
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
@@ -241,12 +247,22 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
               const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
 
+              // 섹션별 깊이 가져오기
+              const lowerDepth = lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth;
+              const upperDepth = upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth;
+
+              // 깊이 차이 계산 (뒤쪽으로만 줄어들도록)
+              const lowerDepthDiff = depth - lowerDepth;
+              const upperDepthDiff = depth - upperDepth;
+              const lowerZOffset = -lowerDepthDiff / 2;
+              const upperZOffset = -upperDepthDiff / 2;
+
               return (
                 <>
                   {/* 왼쪽 하부 측판 */}
                   <BoxWithEdges
-                    args={[basicThickness, adjustedLowerHeight, depth]}
-                    position={[-innerWidth/2 - basicThickness/2, lowerPanelY, 0]}
+                    args={[basicThickness, adjustedLowerHeight, lowerDepth]}
+                    position={[-innerWidth/2 - basicThickness/2, lowerPanelY, lowerZOffset]}
                     material={sidePanelMaterial}
                     renderMode={renderMode}
                     isDragging={isDragging}
@@ -255,8 +271,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                   {/* 왼쪽 상부 측판 */}
                   <BoxWithEdges
-                    args={[basicThickness, adjustedUpperHeight, depth]}
-                    position={[-innerWidth/2 - basicThickness/2, upperPanelY, 0]}
+                    args={[basicThickness, adjustedUpperHeight, upperDepth]}
+                    position={[-innerWidth/2 - basicThickness/2, upperPanelY, upperZOffset]}
                     material={sidePanelMaterial}
                     renderMode={renderMode}
                     isDragging={isDragging}
@@ -265,8 +281,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                   {/* 오른쪽 하부 측판 */}
                   <BoxWithEdges
-                    args={[basicThickness, adjustedLowerHeight, depth]}
-                    position={[innerWidth/2 + basicThickness/2, lowerPanelY, 0]}
+                    args={[basicThickness, adjustedLowerHeight, lowerDepth]}
+                    position={[innerWidth/2 + basicThickness/2, lowerPanelY, lowerZOffset]}
                     material={sidePanelMaterial}
                     renderMode={renderMode}
                     isDragging={isDragging}
@@ -275,8 +291,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                   {/* 오른쪽 상부 측판 */}
                   <BoxWithEdges
-                    args={[basicThickness, adjustedUpperHeight, depth]}
-                    position={[innerWidth/2 + basicThickness/2, upperPanelY, 0]}
+                    args={[basicThickness, adjustedUpperHeight, upperDepth]}
+                    position={[innerWidth/2 + basicThickness/2, upperPanelY, upperZOffset]}
                     material={sidePanelMaterial}
                     renderMode={renderMode}
                     isDragging={isDragging}

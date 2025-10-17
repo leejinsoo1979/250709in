@@ -130,16 +130,23 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             
             return getSectionHeights().map((sectionHeight: number, index: number) => {
               let currentYPosition = -height/2 + basicThickness;
-              
+
               // 현재 섹션까지의 Y 위치 계산
               for (let i = 0; i < index; i++) {
                 currentYPosition += getSectionHeights()[i];
               }
-              
+
               const sectionCenterY = currentYPosition + sectionHeight / 2 - basicThickness;
-              
+
               // 섹션별 강조 확인
               const isSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
+
+              // 현재 섹션의 깊이 가져오기
+              const currentSectionDepth = (sectionDepths && sectionDepths[index]) ? sectionDepths[index] : depth;
+
+              // 깊이 차이 계산 (뒤쪽으로만 줄어들도록)
+              const depthDiff = depth - currentSectionDepth;
+              const zOffset = -depthDiff / 2;
 
               return (
                 <React.Fragment key={`side-panels-${index}`}>
@@ -148,8 +155,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     <>
                       {/* 왼쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, drawerSectionHeight, depth]}
-                        position={[-width/2 + basicThickness/2, lowerPanelY, 0]}
+                        args={[basicThickness, drawerSectionHeight, currentSectionDepth]}
+                        position={[-width/2 + basicThickness/2, lowerPanelY, zOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -159,8 +166,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
                       {/* 오른쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, drawerSectionHeight, depth]}
-                        position={[width/2 - basicThickness/2, lowerPanelY, 0]}
+                        args={[basicThickness, drawerSectionHeight, currentSectionDepth]}
+                        position={[width/2 - basicThickness/2, lowerPanelY, zOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -173,8 +180,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     <>
                       {/* 왼쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, hangingSectionHeight, depth]}
-                        position={[-width/2 + basicThickness/2, upperPanelY, 0]}
+                        args={[basicThickness, hangingSectionHeight, currentSectionDepth]}
+                        position={[-width/2 + basicThickness/2, upperPanelY, zOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -184,8 +191,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
                       {/* 오른쪽 측면 판재 */}
                       <BoxWithEdges
-                        args={[basicThickness, hangingSectionHeight, depth]}
-                        position={[width/2 - basicThickness/2, upperPanelY, 0]}
+                        args={[basicThickness, hangingSectionHeight, currentSectionDepth]}
+                        position={[width/2 - basicThickness/2, upperPanelY, zOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -196,30 +203,44 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                   )}
                   
                   {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
-                  {index === 0 && (
-                    <BoxWithEdges
-                      args={[innerWidth, basicThickness, depth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26) - mmToThreeUnits(85)]}
-                      position={[0, lowerTopPanelY, (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2]}
-                      material={material}
-                      renderMode={renderMode}
-                      isDragging={isDragging}
-                      isEditMode={isEditMode}
-                      isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
-                    />
-                  )}
+                  {index === 0 && (() => {
+                    const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
+                    const lowerDepthDiff = depth - lowerSectionDepth;
+                    const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26) - mmToThreeUnits(85);
+                    const panelZOffset = -lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2;
+
+                    return (
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness, panelDepth]}
+                        position={[0, lowerTopPanelY, panelZOffset]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                        isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                      />
+                    );
+                  })()}
 
                   {/* 상부 섹션의 바닥판 - 백패널 방향으로 26mm 늘림 */}
-                  {index === 1 && (
-                    <BoxWithEdges
-                      args={[innerWidth, basicThickness, depth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26)]}
-                      position={[0, lowerTopPanelY + basicThickness, (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2]}
-                      material={material}
-                      renderMode={renderMode}
-                      isDragging={isDragging}
-                      isEditMode={isEditMode}
-                      isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                    />
-                  )}
+                  {index === 1 && (() => {
+                    const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
+                    const lowerDepthDiff = depth - lowerSectionDepth;
+                    const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26);
+                    const panelZOffset = -lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2;
+
+                    return (
+                      <BoxWithEdges
+                        args={[innerWidth, basicThickness, panelDepth]}
+                        position={[0, lowerTopPanelY + basicThickness, panelZOffset]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isEditMode={isEditMode}
+                        isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                      />
+                    );
+                  })()}
                 </React.Fragment>
               );
             });
