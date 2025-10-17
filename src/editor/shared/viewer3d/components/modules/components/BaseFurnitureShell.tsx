@@ -287,6 +287,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     isHighlighted={isLowerHighlighted}
                     panelName="하부장 좌측판"
                     panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
                   />
 
@@ -300,6 +301,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     isHighlighted={isUpperHighlighted}
                     panelName="상부장 좌측판"
                     panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
                   />
 
@@ -313,6 +315,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     isHighlighted={isLowerHighlighted}
                     panelName="하부장 우측판"
                     panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
                   />
 
@@ -326,6 +329,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     isHighlighted={isUpperHighlighted}
                     panelName="상부장 우측판"
                     panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
                   />
                 </>
@@ -344,6 +348,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               isDragging={isDragging}
               panelName="좌측판"
               panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
               textureUrl={textureUrl}
             />
 
@@ -356,6 +361,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               isDragging={isDragging}
               panelName="우측판"
               panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
               textureUrl={textureUrl}
             />
           </>
@@ -429,6 +435,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         isHighlighted={isUpperHighlighted}
                         panelName="상부장 바닥판"
                         panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
                         textureUrl={textureUrl}
                       />
 
@@ -442,6 +449,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         isHighlighted={isLowerHighlighted}
                         panelName="하부장 상판"
                         panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
                         textureUrl={textureUrl}
                       />
                     </React.Fragment>
@@ -481,6 +489,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         isHighlighted={isLowerHighlighted}
                         panelName="하부장 상판"
                         panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
                         textureUrl={textureUrl}
                       />
 
@@ -494,6 +503,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         isHighlighted={isUpperHighlighted}
                         panelName="상부장 바닥판"
                         panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
                         textureUrl={textureUrl}
                       />
                     </React.Fragment>
@@ -532,6 +542,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     isHighlighted={isLowerHighlighted}
                     panelName="중간판"
                     panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
                   />
                 );
@@ -565,6 +576,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
           panelName="상판"
           panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
           textureUrl={textureUrl}
         />
 
@@ -638,6 +650,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
           panelName="바닥판"
           panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
           textureUrl={textureUrl}
         />
 
@@ -720,6 +733,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                       panelName="하부장 백패널"
                       panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
                     />
 
@@ -734,6 +748,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                       panelName="상부장 백패널"
                       panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
                     />
                   </>
@@ -751,6 +766,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               isBackPanel={true}
               panelName="백패널"
               panelGrainDirections={panelGrainDirections}
+                    furnitureId={placedFurnitureId}
               textureUrl={textureUrl}
             />
           )}
