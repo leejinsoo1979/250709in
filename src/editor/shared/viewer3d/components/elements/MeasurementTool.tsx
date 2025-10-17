@@ -94,21 +94,27 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   }, [currentZoom]);
 
   // 시점과 측정 방향에 따른 텍스트 오프셋 계산 (선과 겹치지 않도록)
-  const getTextOffset = (point: MeasurePoint, start: MeasurePoint, end: MeasurePoint, offset: number = 0.2): MeasurePoint => {
-    const dx = Math.abs(end[0] - start[0]);
-    const dy = Math.abs(end[1] - start[1]);
-    const dz = Math.abs(end[2] - start[2]);
+  // guideStart/guideEnd를 기반으로 가이드 방향을 판단
+  const getTextOffset = (
+    point: MeasurePoint,
+    guideStart: MeasurePoint,
+    guideEnd: MeasurePoint,
+    offset: number = 0.2
+  ): MeasurePoint => {
+    const dx = Math.abs(guideEnd[0] - guideStart[0]);
+    const dy = Math.abs(guideEnd[1] - guideStart[1]);
+    const dz = Math.abs(guideEnd[2] - guideStart[2]);
 
     switch (viewDirection) {
       case 'front':
-        // 정면(XY 평면): 가로 측정이면 Y축 위, 세로 측정이면 X축 오른쪽
+        // 정면(XY 평면): 가로 가이드면 Y축 위, 세로 가이드면 X축 오른쪽
         if (dx > dy) {
           return [point[0], point[1] + offset, point[2]];
         } else {
           return [point[0] + offset, point[1], point[2]];
         }
       case 'top':
-        // 상단(XZ 평면): 가로 측정이면 Z축 앞, 세로 측정이면 X축 오른쪽
+        // 상단(XZ 평면): 가로 가이드면 Z축 앞, 세로 가이드면 X축 오른쪽
         if (dx > dz) {
           return [point[0], point[1], point[2] - offset];
         } else {
@@ -116,7 +122,7 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
         }
       case 'left':
       case 'right':
-        // 측면(YZ 평면): Z축 측정이면 Y축 위, Y축 측정이면 Z축 앞
+        // 측면(YZ 평면): Z축 가이드면 Y축 위, Y축 가이드면 Z축 앞
         if (dz > dy) {
           return [point[0], point[1] + offset, point[2]];
         } else {
@@ -128,35 +134,36 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
   };
 
   // 시점과 측정 방향에 따른 텍스트 회전 (카메라를 향하고 측정선과 평행하도록)
-  const getTextRotation = (start: MeasurePoint, end: MeasurePoint): [number, number, number] => {
-    const dx = Math.abs(end[0] - start[0]);
-    const dy = Math.abs(end[1] - start[1]);
-    const dz = Math.abs(end[2] - start[2]);
+  // guideStart/guideEnd를 기반으로 가이드 방향을 판단
+  const getTextRotation = (guideStart: MeasurePoint, guideEnd: MeasurePoint): [number, number, number] => {
+    const dx = Math.abs(guideEnd[0] - guideStart[0]);
+    const dy = Math.abs(guideEnd[1] - guideStart[1]);
+    const dz = Math.abs(guideEnd[2] - guideStart[2]);
 
     switch (viewDirection) {
       case 'front':
-        // 정면(XY 평면): Y축 측정이면 Z축으로 90도 회전
+        // 정면(XY 평면): Y축 가이드면 Z축으로 90도 회전
         if (dy > dx) {
           return [0, 0, Math.PI / 2];
         }
         return [0, 0, 0];
       case 'top':
         // 상단(XZ 평면): X축 -90도 회전 (아래를 바라봄)
-        // Z축 측정이면 추가로 Z축 90도 회전
+        // Z축 가이드면 추가로 Z축 90도 회전
         if (dz > dx) {
           return [-Math.PI / 2, 0, Math.PI / 2];
         }
         return [-Math.PI / 2, 0, 0];
       case 'left':
         // 좌측(YZ 평면): Y축 -90도 회전 (왼쪽을 바라봄)
-        // Y축 측정이면 추가로 Z축 90도 회전
+        // Y축 가이드면 추가로 Z축 90도 회전
         if (dy > dz) {
           return [0, -Math.PI / 2, Math.PI / 2];
         }
         return [0, -Math.PI / 2, 0];
       case 'right':
         // 우측(YZ 평면): Y축 90도 회전 (오른쪽을 바라봄)
-        // Y축 측정이면 추가로 Z축 90도 회전
+        // Y축 가이드면 추가로 Z축 90도 회전
         if (dy > dz) {
           return [0, Math.PI / 2, Math.PI / 2];
         }
@@ -610,8 +617,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
             {/* 거리 텍스트 */}
             <Text
-              position={getTextOffset(midPoint, line.start, line.end, 0.2)}
-              rotation={getTextRotation(line.start, line.end)}
+              position={getTextOffset(midPoint, guidePoints.start, guidePoints.end, 0.2)}
+              rotation={getTextRotation(guidePoints.start, guidePoints.end)}
               fontSize={isHovered ? 0.3 : 0.25}
               color={displayLineColor}
               anchorX="center"
@@ -656,16 +663,18 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
           {/* 임시 거리 텍스트 */}
           {(() => {
             const distance = calculateDistance(measurePoints[0], hoverPoint, viewDirection);
+            // 임시 가이드 포인트 계산 (호버점을 기준으로)
+            const tempGuidePoints = calculateGuidePoints(measurePoints[0], hoverPoint, hoverPoint, viewDirection);
             const midPoint: MeasurePoint = [
-              (measurePoints[0][0] + hoverPoint[0]) / 2,
-              (measurePoints[0][1] + hoverPoint[1]) / 2,
-              (measurePoints[0][2] + hoverPoint[2]) / 2
+              (tempGuidePoints.start[0] + tempGuidePoints.end[0]) / 2,
+              (tempGuidePoints.start[1] + tempGuidePoints.end[1]) / 2,
+              (tempGuidePoints.start[2] + tempGuidePoints.end[2]) / 2
             ];
 
             return (
               <Text
-                position={getTextOffset(midPoint, measurePoints[0], hoverPoint, 0.2)}
-                rotation={getTextRotation(measurePoints[0], hoverPoint)}
+                position={getTextOffset(midPoint, tempGuidePoints.start, tempGuidePoints.end, 0.2)}
+                rotation={getTextRotation(tempGuidePoints.start, tempGuidePoints.end)}
                 fontSize={0.25}
                 color={lineColor}
                 anchorX="center"
@@ -736,8 +745,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
                 {/* 거리 텍스트 */}
                 <Text
-                  position={getTextOffset(midPoint, start, end, 0.2)}
-                  rotation={getTextRotation(start, end)}
+                  position={getTextOffset(midPoint, guidePoints.start, guidePoints.end, 0.2)}
+                  rotation={getTextRotation(guidePoints.start, guidePoints.end)}
                   fontSize={0.25}
                   color={snapColor}
                   anchorX="center"
@@ -748,8 +757,8 @@ export const MeasurementTool: React.FC<MeasurementToolProps> = ({ viewDirection 
 
                 {/* 안내 텍스트 */}
                 <Text
-                  position={getTextOffset(midPoint, start, end, -0.4)}
-                  rotation={getTextRotation(start, end)}
+                  position={getTextOffset(midPoint, guidePoints.start, guidePoints.end, -0.4)}
+                  rotation={getTextRotation(guidePoints.start, guidePoints.end)}
                   fontSize={0.15}
                   color={snapColor}
                   anchorX="center"

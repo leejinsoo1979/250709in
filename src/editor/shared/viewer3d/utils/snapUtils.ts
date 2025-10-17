@@ -153,6 +153,7 @@ export function calculateGuideOffset(
  * 수직/수평 측정만 지원 (대각선 측정 시 수직 또는 수평으로 투영)
  * offsetPoint는 마우스 위치 (3D 좌표)
  * 측정선과 평행하게 가이드선을 그리되, offsetPoint를 지나도록 투영
+ * 가이드 방향은 마우스 오프셋 방향으로 결정 (상하 이동 → 가로선, 좌우 이동 → 세로선)
  */
 export function calculateGuidePoints(
   start: MeasurePoint,
@@ -160,78 +161,118 @@ export function calculateGuidePoints(
   offsetPoint: MeasurePoint,
   viewDirection?: 'front' | 'left' | 'right' | 'top'
 ): { start: MeasurePoint; end: MeasurePoint } {
-  const dx = Math.abs(end[0] - start[0]);
-  const dy = Math.abs(end[1] - start[1]);
-  const dz = Math.abs(end[2] - start[2]);
+  // 측정선의 중점
+  const midX = (start[0] + end[0]) / 2;
+  const midY = (start[1] + end[1]) / 2;
+  const midZ = (start[2] + end[2]) / 2;
 
   // 뷰 방향에 따라 측정 축 결정
   switch (viewDirection) {
-    case 'front':
+    case 'front': {
       // 정면: XY 평면만 측정 (Z=0 강제)
-      if (dx >= dy) {
-        // X축 측정 (가로) - 마우스 Y 위치에 가로선
+      // 마우스 오프셋 방향 계산 (측정선 중점 기준)
+      const offsetX = Math.abs(offsetPoint[0] - midX);
+      const offsetY = Math.abs(offsetPoint[1] - midY);
+
+      if (offsetY >= offsetX) {
+        // 상하 오프셋 → X축 측정 (가로) - 마우스 Y 위치에 가로선
         return {
           start: [start[0], offsetPoint[1], 0],
           end: [end[0], offsetPoint[1], 0]
         };
       } else {
-        // Y축 측정 (세로) - 마우스 X 위치에 세로선
+        // 좌우 오프셋 → Y축 측정 (세로) - 마우스 X 위치에 세로선
         return {
           start: [offsetPoint[0], start[1], 0],
           end: [offsetPoint[0], end[1], 0]
         };
       }
-    case 'top':
+    }
+    case 'top': {
       // 상단: XZ 평면만 측정 (Y=0 강제)
-      if (dx >= dz) {
-        // X축 측정 (가로)
+      const offsetX = Math.abs(offsetPoint[0] - midX);
+      const offsetZ = Math.abs(offsetPoint[2] - midZ);
+
+      if (offsetZ >= offsetX) {
+        // 앞뒤 오프셋 → X축 측정 (가로)
         return {
           start: [start[0], 0, offsetPoint[2]],
           end: [end[0], 0, offsetPoint[2]]
         };
       } else {
-        // Z축 측정 (깊이)
+        // 좌우 오프셋 → Z축 측정 (깊이)
         return {
           start: [offsetPoint[0], 0, start[2]],
           end: [offsetPoint[0], 0, end[2]]
         };
       }
+    }
     case 'left':
-    case 'right':
+    case 'right': {
       // 측면: YZ 평면만 측정 (X=0 강제)
-      if (dy >= dz) {
-        // Y축 측정 (세로)
+      const offsetY = Math.abs(offsetPoint[1] - midY);
+      const offsetZ = Math.abs(offsetPoint[2] - midZ);
+
+      if (offsetZ >= offsetY) {
+        // 앞뒤 오프셋 → Y축 측정 (세로)
         return {
           start: [0, start[1], offsetPoint[2]],
           end: [0, end[1], offsetPoint[2]]
         };
       } else {
-        // Z축 측정 (깊이)
+        // 상하 오프셋 → Z축 측정 (깊이)
         return {
           start: [0, offsetPoint[1], start[2]],
           end: [0, offsetPoint[1], end[2]]
         };
       }
-    default:
-      // 기본: 가장 큰 변화량 기준
-      if (dx >= dy && dx >= dz) {
-        // X축 측정
-        return {
-          start: [start[0], offsetPoint[1], start[2]],
-          end: [end[0], offsetPoint[1], end[2]]
-        };
-      } else if (dy >= dx && dy >= dz) {
-        // Y축 측정
-        return {
-          start: [offsetPoint[0], start[1], start[2]],
-          end: [offsetPoint[0], end[1], end[2]]
-        };
+    }
+    default: {
+      // 기본: 마우스 오프셋 방향 기준
+      const offsetX = Math.abs(offsetPoint[0] - midX);
+      const offsetY = Math.abs(offsetPoint[1] - midY);
+      const offsetZ = Math.abs(offsetPoint[2] - midZ);
+
+      if (offsetX >= offsetY && offsetX >= offsetZ) {
+        // X 방향 오프셋 → Y 또는 Z축 측정
+        if (offsetY >= offsetZ) {
+          return {
+            start: [offsetPoint[0], start[1], start[2]],
+            end: [offsetPoint[0], end[1], end[2]]
+          };
+        } else {
+          return {
+            start: [offsetPoint[0], start[1], start[2]],
+            end: [offsetPoint[0], start[1], end[2]]
+          };
+        }
+      } else if (offsetY >= offsetX && offsetY >= offsetZ) {
+        // Y 방향 오프셋 → X 또는 Z축 측정
+        if (offsetX >= offsetZ) {
+          return {
+            start: [start[0], offsetPoint[1], start[2]],
+            end: [end[0], offsetPoint[1], end[2]]
+          };
+        } else {
+          return {
+            start: [offsetPoint[0], offsetPoint[1], start[2]],
+            end: [offsetPoint[0], offsetPoint[1], end[2]]
+          };
+        }
       } else {
-        // Z축 측정
-        return {
-          start: [offsetPoint[0], start[1], start[2]],
-          end: [offsetPoint[0], start[1], end[2]]
-        };
+        // Z 방향 오프셋 → X 또는 Y축 측정
+        if (offsetX >= offsetY) {
+          return {
+            start: [start[0], offsetPoint[1], offsetPoint[2]],
+            end: [end[0], offsetPoint[1], offsetPoint[2]]
+          };
+        } else {
+          return {
+            start: [offsetPoint[0], start[1], offsetPoint[2]],
+            end: [offsetPoint[0], end[1], offsetPoint[2]]
+          };
+        }
       }
+    }
   }
 }
