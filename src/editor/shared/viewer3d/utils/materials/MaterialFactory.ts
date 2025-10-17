@@ -261,6 +261,10 @@ export class MaterialFactory {
         if (isOakTexture(textureUrl)) {
           applyOakTextureSettings(material);
         }
+        // Cabinet Texture1 전용 설정 적용
+        else if (isCabinetTexture1(textureUrl)) {
+          applyCabinetTexture1Settings(material);
+        }
 
         material.needsUpdate = true;
       });
