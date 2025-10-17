@@ -296,8 +296,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       
       {/* 상단 판재 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, depth]}
-        position={[0, height/2 - basicThickness/2, 0]}
+        args={[innerWidth, basicThickness, sectionDepths && sectionDepths[1] ? sectionDepths[1] : depth]}
+        position={[0, height/2 - basicThickness/2, sectionDepths && sectionDepths[1] ? (depth - sectionDepths[1]) / 2 : 0]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -353,8 +353,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       
       {/* 하단 판재 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, depth]}
-        position={[0, -height/2 + basicThickness/2, 0]}
+        args={[innerWidth, basicThickness, sectionDepths && sectionDepths[0] ? sectionDepths[0] : depth]}
+        position={[0, -height/2 + basicThickness/2, sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) / 2 : 0]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -381,12 +381,22 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             const lowerBackPanelY = -height/2 + basicThickness + lowerInnerHeight/2;
             const upperBackPanelY = -height/2 + lowerSectionHeight + basicThickness + upperInnerHeight/2;
 
+            // 하부 섹션 깊이 및 Z 오프셋
+            const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
+            const lowerDepthDiff = depth - lowerSectionDepth;
+            const lowerZOffset = lowerDepthDiff / 2;
+
+            // 상부 섹션 깊이 및 Z 오프셋
+            const upperSectionDepth = (sectionDepths && sectionDepths[1]) ? sectionDepths[1] : depth;
+            const upperDepthDiff = depth - upperSectionDepth;
+            const upperZOffset = upperDepthDiff / 2;
+
             return (
               <>
                 {/* 하부 섹션 백패널 */}
                 <BoxWithEdges
                   args={[innerWidth + mmToThreeUnits(10), lowerBackPanelHeight, backPanelThickness]}
-                  position={[0, lowerBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+                  position={[0, lowerBackPanelY, -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + lowerZOffset]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
@@ -397,7 +407,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                 {/* 상부 섹션 백패널 */}
                 <BoxWithEdges
                   args={[innerWidth + mmToThreeUnits(10), upperBackPanelHeight, backPanelThickness]}
-                  position={[0, upperBackPanelY, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+                  position={[0, upperBackPanelY, -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + upperZOffset]}
                   material={material}
                   renderMode={renderMode}
                   isDragging={isDragging}
