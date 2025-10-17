@@ -387,22 +387,79 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       grainDirection = getDefaultGrainDirection(panelName);
     }
 
-    // 텍스처 회전 업데이트
-    const newRotation = grainDirection === 'horizontal' ? Math.PI / 2 : 0;
+    // 텍스처 회전 업데이트 - 패널별 복잡한 로직 적용
+    const texture = material.map;
 
-    if (material.map.rotation !== newRotation) {
+    // 서랍 패널 여부 확인 (마이다, 앞판, 뒷판, 좌우측판) - 서랍 바닥은 제외
+    const isDrawerPanel = panelName && panelName.includes('서랍') &&
+      !(panelName.includes('바닥') || panelName.includes('상판') || panelName.includes('선반'));
+
+    // 가로로 긴 패널 여부 확인 (상판, 바닥판, 선반) - 서랍 포함
+    const normalizedPanelName = panelName?.toLowerCase() || '';
+    const isHorizontalPanel =
+      normalizedPanelName.includes('상판') ||
+      normalizedPanelName.includes('top') ||
+      normalizedPanelName.includes('바닥') ||
+      normalizedPanelName.includes('bottom') ||
+      normalizedPanelName.includes('선반') ||
+      normalizedPanelName.includes('shelf');
+
+    let newRotation = 0;
+
+    if (isDrawerPanel) {
+      const isDrawerFront = panelName && panelName.includes('마이다');
+
+      if (isDrawerFront) {
+        // 서랍 마이다: L(vertical) = 90도, W(horizontal) = 0도 (반대로)
+        newRotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
+      } else {
+        // 서랍 앞판/뒷판/측판: L(vertical) = 90도, W(horizontal) = -90도 (반대로)
+        newRotation = grainDirection === 'vertical' ? Math.PI / 2 : -Math.PI / 2;
+      }
+    } else if (isHorizontalPanel) {
+      const isDrawerBottom = panelName && panelName.includes('서랍') && panelName.includes('바닥');
+
+      if (isDrawerBottom) {
+        // 서랍 바닥판: L(vertical) = 90도, W(horizontal) = -90도 (반대로)
+        newRotation = grainDirection === 'vertical' ? Math.PI / 2 : -Math.PI / 2;
+      } else {
+        // 캐비넷 가로패널: L(vertical) = 0도, W(horizontal) = 90도 (반대로)
+        newRotation = grainDirection === 'vertical' ? 0 : Math.PI / 2;
+      }
+    } else {
+      const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
+        (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
+      const isBackPanel = panelName && panelName.includes('백패널');
+      const isDoor = panelName && panelName.includes('도어');
+
+      if (isFurnitureSidePanel || isBackPanel) {
+        // 캐비넷 측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도 (유지)
+        newRotation = grainDirection === 'vertical' ? 0 : Math.PI / 2;
+      } else if (isDoor) {
+        // 도어: L(vertical) = 0도, W(horizontal) = 90도 (반대로)
+        newRotation = grainDirection === 'vertical' ? 0 : Math.PI / 2;
+      } else {
+        // 기타: L(vertical) = 90도, W(horizontal) = 0도 (반대로)
+        newRotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
+      }
+    }
+
+    if (texture.rotation !== newRotation) {
       console.log('🔄 실시간 텍스처 회전 업데이트:', {
         panelName,
         grainDirection,
-        oldRotation: material.map.rotation,
+        isDrawerPanel,
+        isHorizontalPanel,
+        oldRotation: texture.rotation,
         newRotation,
+        newRotationDegrees: (newRotation * 180 / Math.PI).toFixed(0) + '°',
         activePanelGrainDirectionsStr,
         timestamp: Date.now()
       });
 
-      material.map.rotation = newRotation;
-      material.map.center.set(0.5, 0.5);
-      material.map.needsUpdate = true;
+      texture.rotation = newRotation;
+      texture.center.set(0.5, 0.5);
+      texture.needsUpdate = true;
       material.needsUpdate = true;
     }
   }, [panelName, activePanelGrainDirectionsStr, panelSpecificMaterial]);
