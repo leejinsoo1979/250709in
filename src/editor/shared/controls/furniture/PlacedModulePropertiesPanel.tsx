@@ -1273,7 +1273,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
 
           {/* 섹션 깊이 설정 (2섹션 가구만, 상세보기 아닐 때만) */}
-          {!showDetails && isTwoSectionFurniture && (
+          {!showDetails && isTwoSectionFurniture && (() => {
+            console.log('🎨 [섹션 깊이 UI 렌더링] lowerDepthInput=', lowerDepthInput, 'upperDepthInput=', upperDepthInput);
+            return (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>섹션 깊이 설정</h5>
               <div style={{ display: 'flex', gap: '12px' }}>
@@ -1326,7 +1328,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 </div>
               </div>
             </div>
-          )}
+            );
+          })()}
 
           {/* 깊이 설정 (상세보기 아닐 때만) */}
           {!showDetails && (
