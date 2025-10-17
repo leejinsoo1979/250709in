@@ -2146,7 +2146,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   // 분할 모드: 섹션별로 다른 경첩 배치
                   <>
                     {sectionIndex === 1 ? (
-                      // 상부 섹션 도어: 위에서 두번째 경첩 제거 (3개 경첩)
+                      // 상부 섹션 도어: 3개 경첩 (상단 100mm, 중간, 하단 149mm)
                       <>
                         <Hinge
                           position={[
@@ -2163,7 +2163,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         <Hinge
                           position={[
                             adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
-                            -doorHeight / 2 + mmToThreeUnits(149),
+                            0,
                             doorThicknessUnits / 2 + 0.001
                           ]}
                           mainDiameter={17.5}
@@ -2175,7 +2175,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         <Hinge
                           position={[
                             adjustedHingePosition === 'left' ? -doorWidthUnits / 2 + mmToThreeUnits(24) : doorWidthUnits / 2 - mmToThreeUnits(24),
-                            -doorHeight / 2 + mmToThreeUnits(749),
+                            -doorHeight / 2 + mmToThreeUnits(149),
                             doorThicknessUnits / 2 + 0.001
                           ]}
                           mainDiameter={17.5}
