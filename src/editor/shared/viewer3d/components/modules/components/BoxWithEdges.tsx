@@ -169,7 +169,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       grainDirection,
       textureUrl,
       hasTexture: !!processedMaterial.map,
-      panelGrainDirections: panelGrainDirections ? Object.keys(panelGrainDirections) : []
+      panelGrainDirectionsKeys: panelGrainDirections ? Object.keys(panelGrainDirections) : [],
+      panelGrainDirectionsValues: panelGrainDirections ? JSON.stringify(panelGrainDirections) : 'null'
     });
 
     // processedMaterial을 복제하여 개별 material 생성
