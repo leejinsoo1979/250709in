@@ -222,6 +222,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [processedMaterial, panelName, panelGrainDirections]);
 
   // panelGrainDirections 변경 시 실시간 텍스처 회전 업데이트
+  // JSON.stringify를 사용하여 객체 내부 값 변경을 감지
+  const panelGrainDirectionsStr = panelGrainDirections ? JSON.stringify(panelGrainDirections) : '';
+
   React.useEffect(() => {
     if (!panelName || !panelGrainDirections || !(panelSpecificMaterial instanceof THREE.MeshStandardMaterial)) {
       return;
@@ -262,6 +265,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         grainDirection,
         oldRotation: material.map.rotation,
         newRotation,
+        panelGrainDirectionsStr,
         timestamp: Date.now()
       });
 
@@ -270,7 +274,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       material.map.needsUpdate = true;
       material.needsUpdate = true;
     }
-  }, [panelName, panelGrainDirections, panelSpecificMaterial]);
+  }, [panelName, panelGrainDirectionsStr, panelSpecificMaterial]);
 
   // 테마 색상 매핑
   const themeColorMap: Record<string, string> = {

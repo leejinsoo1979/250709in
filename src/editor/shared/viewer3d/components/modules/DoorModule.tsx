@@ -377,6 +377,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }, [doorColor, panelGrainDirections]);
 
   // panelGrainDirections 변경 시 기존 텍스처 회전 업데이트
+  // JSON.stringify를 사용하여 객체 내부 값 변경을 감지
+  const panelGrainDirectionsStr = panelGrainDirections ? JSON.stringify(panelGrainDirections) : '';
+
   useEffect(() => {
     const panelName = '도어';
     const grainDirection = panelGrainDirections?.[panelName] || 'vertical';
@@ -386,7 +389,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       panelName,
       grainDirection,
       rotation,
-      panelGrainDirections
+      panelGrainDirectionsStr
     });
 
     // 모든 도어 재질의 텍스처 회전 업데이트
@@ -401,7 +404,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         mat.needsUpdate = true;
       }
     });
-  }, [panelGrainDirections, doorMaterial, leftDoorMaterial, rightDoorMaterial]);
+  }, [panelGrainDirectionsStr, doorMaterial, leftDoorMaterial, rightDoorMaterial]);
 
   // 도어 텍스처 적용 (텍스처 URL 변경 시에만)
   useEffect(() => {
