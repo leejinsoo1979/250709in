@@ -128,6 +128,7 @@ interface DoorModuleProps {
   sectionIndex?: number; // 섹션 인덱스 (분할 모드용, 0: 하부, 1: 상부)
   totalSections?: number; // 전체 섹션 수 (분할 모드용, 기본값: 1)
   furnitureId?: string; // 가구 ID (개별 도어 제어용)
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -150,7 +151,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   sectionHeightsMm,
   sectionIndex, // 섹션 인덱스 (분할 모드용)
   totalSections = 1, // 전체 섹션 수 (분할 모드용)
-  furnitureId // 가구 ID
+  furnitureId, // 가구 ID
+  panelGrainDirections // 패널별 개별 결 방향
 }) => {
   console.log('🚪🔧 DoorModule Props:', {
     doorTopGap,
@@ -317,8 +319,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1, 1);
 
-          // 도어 나무결을 세로 방향으로 회전
-          texture.rotation = Math.PI / 2; // 90도 회전
+          // 도어 나무결 방향 결정 (panelGrainDirections 우선)
+          const panelName = '도어';
+          const grainDirection = panelGrainDirections?.[panelName] || 'vertical'; // 기본값: vertical (세로)
+
+          // vertical(세로)이면 90도 회전, horizontal(가로)이면 회전 없음
+          texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
           texture.center.set(0.5, 0.5); // 중심점 기준 회전
 
           material.map = texture;
@@ -368,7 +374,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       material.roughness = 0.6; // 기본 거칠기 복원
       material.needsUpdate = true;
     }
-  }, [doorColor]);
+  }, [doorColor, panelGrainDirections]);
 
   // 도어 텍스처 적용 (텍스처 URL 변경 시에만)
   useEffect(() => {
