@@ -144,6 +144,10 @@ interface BaseFurnitureShellProps {
   lowerSectionDepthMm?: number;
   upperSectionDepthMm?: number;
 
+  // 텍스처 URL과 패널별 결 방향
+  textureUrl?: string;
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
+
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -188,6 +192,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   },
   lowerSectionDepthMm,
   upperSectionDepthMm,
+  textureUrl,
+  panelGrainDirections,
   children
 }) => {
   const { renderMode, viewMode } = useSpace3DView(); // context에서 renderMode와 viewMode 가져오기
@@ -267,6 +273,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerHighlighted}
+                    panelName="좌측판"
+                    panelGrainDirections={panelGrainDirections}
+                    textureUrl={textureUrl}
                   />
 
                   {/* 왼쪽 상부 측판 */}
@@ -277,6 +286,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isUpperHighlighted}
+                    panelName="좌측판"
+                    panelGrainDirections={panelGrainDirections}
+                    textureUrl={textureUrl}
                   />
 
                   {/* 오른쪽 하부 측판 */}
@@ -287,6 +299,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerHighlighted}
+                    panelName="우측판"
+                    panelGrainDirections={panelGrainDirections}
+                    textureUrl={textureUrl}
                   />
 
                   {/* 오른쪽 상부 측판 */}
@@ -297,6 +312,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isUpperHighlighted}
+                    panelName="우측판"
+                    panelGrainDirections={panelGrainDirections}
+                    textureUrl={textureUrl}
                   />
                 </>
               );
@@ -312,6 +330,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               material={sidePanelMaterial}
               renderMode={renderMode}
               isDragging={isDragging}
+              panelName="좌측판"
+              panelGrainDirections={panelGrainDirections}
+              textureUrl={textureUrl}
             />
 
             {/* 오른쪽 측면 판재 */}
@@ -321,6 +342,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               material={sidePanelMaterial}
               renderMode={renderMode}
               isDragging={isDragging}
+              panelName="우측판"
+              panelGrainDirections={panelGrainDirections}
+              textureUrl={textureUrl}
             />
           </>
         )}
@@ -512,6 +536,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           renderMode={renderMode}
           isDragging={isDragging}
           isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
+          panelName="상판"
+          panelGrainDirections={panelGrainDirections}
+          textureUrl={textureUrl}
         />
 
         {/* Type4 상단 상판 두께 치수 표시 - 정면도에서만 */}
@@ -582,6 +609,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           renderMode={renderMode}
           isDragging={isDragging}
           isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
+          panelName="바닥판"
+          panelGrainDirections={panelGrainDirections}
+          textureUrl={textureUrl}
         />
 
         {/* 뒷면 판재 (9mm 백패널) - hasBackPanel이 true일 때만 렌더링 */}

@@ -61,7 +61,9 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     mmToThreeUnits,
     isMultiSectionFurniture,
     getSectionHeights,
-    actualDepthMm
+    actualDepthMm,
+    textureUrl,
+    panelGrainDirections
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
@@ -113,6 +115,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData}
           placedFurnitureId={placedFurnitureId}
           spaceInfo={spaceInfo}
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
         >
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
