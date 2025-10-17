@@ -154,6 +154,8 @@ export function calculateGuideOffset(
  * offsetPoint는 마우스 위치 (3D 좌표)
  * 측정선과 평행하게 가이드선을 그리되, offsetPoint를 지나도록 투영
  * 가이드 방향은 마우스 오프셋 방향으로 결정 (상하 이동 → 가로선, 좌우 이동 → 세로선)
+ *
+ * 실시간으로 가이드 방향이 바뀌도록, 측정선에서 마우스까지의 수직 거리를 기준으로 방향 결정
  */
 export function calculateGuidePoints(
   start: MeasurePoint,
@@ -161,27 +163,28 @@ export function calculateGuidePoints(
   offsetPoint: MeasurePoint,
   viewDirection?: 'front' | 'left' | 'right' | 'top'
 ): { start: MeasurePoint; end: MeasurePoint } {
-  // 측정선의 중점
-  const midX = (start[0] + end[0]) / 2;
-  const midY = (start[1] + end[1]) / 2;
-  const midZ = (start[2] + end[2]) / 2;
-
   // 뷰 방향에 따라 측정 축 결정
   switch (viewDirection) {
     case 'front': {
       // 정면: XY 평면만 측정 (Z=0 강제)
-      // 마우스 오프셋 방향 계산 (측정선 중점 기준)
-      const offsetX = Math.abs(offsetPoint[0] - midX);
-      const offsetY = Math.abs(offsetPoint[1] - midY);
+      // 측정선을 X축 가로선과 Y축 세로선으로 가정하고 각각 마우스까지 거리 계산
 
-      if (offsetY >= offsetX) {
-        // 상하 오프셋 → X축 측정 (가로) - 마우스 Y 위치에 가로선
+      // X축 가로선 (start/end의 Y 평균값에 수평선) 기준으로 마우스까지 Y 거리
+      const horizontalLineY = (start[1] + end[1]) / 2;
+      const distanceToHorizontal = Math.abs(offsetPoint[1] - horizontalLineY);
+
+      // Y축 세로선 (start/end의 X 평균값에 수직선) 기준으로 마우스까지 X 거리
+      const verticalLineX = (start[0] + end[0]) / 2;
+      const distanceToVertical = Math.abs(offsetPoint[0] - verticalLineX);
+
+      if (distanceToHorizontal >= distanceToVertical) {
+        // Y 방향으로 더 멀리 떨어져 있음 → X축 측정 (가로)
         return {
           start: [start[0], offsetPoint[1], 0],
           end: [end[0], offsetPoint[1], 0]
         };
       } else {
-        // 좌우 오프셋 → Y축 측정 (세로) - 마우스 X 위치에 세로선
+        // X 방향으로 더 멀리 떨어져 있음 → Y축 측정 (세로)
         return {
           start: [offsetPoint[0], start[1], 0],
           end: [offsetPoint[0], end[1], 0]
@@ -190,17 +193,20 @@ export function calculateGuidePoints(
     }
     case 'top': {
       // 상단: XZ 평면만 측정 (Y=0 강제)
-      const offsetX = Math.abs(offsetPoint[0] - midX);
-      const offsetZ = Math.abs(offsetPoint[2] - midZ);
+      const horizontalLineZ = (start[2] + end[2]) / 2;
+      const distanceToHorizontal = Math.abs(offsetPoint[2] - horizontalLineZ);
 
-      if (offsetZ >= offsetX) {
-        // 앞뒤 오프셋 → X축 측정 (가로)
+      const verticalLineX = (start[0] + end[0]) / 2;
+      const distanceToVertical = Math.abs(offsetPoint[0] - verticalLineX);
+
+      if (distanceToHorizontal >= distanceToVertical) {
+        // Z 방향으로 더 멀리 → X축 측정 (가로)
         return {
           start: [start[0], 0, offsetPoint[2]],
           end: [end[0], 0, offsetPoint[2]]
         };
       } else {
-        // 좌우 오프셋 → Z축 측정 (깊이)
+        // X 방향으로 더 멀리 → Z축 측정 (깊이)
         return {
           start: [offsetPoint[0], 0, start[2]],
           end: [offsetPoint[0], 0, end[2]]
@@ -210,17 +216,20 @@ export function calculateGuidePoints(
     case 'left':
     case 'right': {
       // 측면: YZ 평면만 측정 (X=0 강제)
-      const offsetY = Math.abs(offsetPoint[1] - midY);
-      const offsetZ = Math.abs(offsetPoint[2] - midZ);
+      const horizontalLineZ = (start[2] + end[2]) / 2;
+      const distanceToHorizontal = Math.abs(offsetPoint[2] - horizontalLineZ);
 
-      if (offsetZ >= offsetY) {
-        // 앞뒤 오프셋 → Y축 측정 (세로)
+      const verticalLineY = (start[1] + end[1]) / 2;
+      const distanceToVertical = Math.abs(offsetPoint[1] - verticalLineY);
+
+      if (distanceToHorizontal >= distanceToVertical) {
+        // Z 방향으로 더 멀리 → Y축 측정 (세로)
         return {
           start: [0, start[1], offsetPoint[2]],
           end: [0, end[1], offsetPoint[2]]
         };
       } else {
-        // 상하 오프셋 → Z축 측정 (깊이)
+        // Y 방향으로 더 멀리 → Z축 측정 (깊이)
         return {
           start: [0, offsetPoint[1], start[2]],
           end: [0, offsetPoint[1], end[2]]
@@ -228,7 +237,11 @@ export function calculateGuidePoints(
       }
     }
     default: {
-      // 기본: 마우스 오프셋 방향 기준
+      // 기본: 3D 공간에서 거리 기준
+      const midX = (start[0] + end[0]) / 2;
+      const midY = (start[1] + end[1]) / 2;
+      const midZ = (start[2] + end[2]) / 2;
+
       const offsetX = Math.abs(offsetPoint[0] - midX);
       const offsetY = Math.abs(offsetPoint[1] - midY);
       const offsetZ = Math.abs(offsetPoint[2] - midZ);
