@@ -29,6 +29,8 @@ interface ShelfRendererProps {
   allowSideViewDimensions?: boolean; // 측면뷰에서 치수 표시 허용 (듀얼 가구용)
   sideViewTextX?: number; // 측면뷰 텍스트용 X 좌표 오버라이드
   sideViewLineX?: number; // 측면뷰 라인용 X 좌표 오버라이드
+  textureUrl?: string; // 텍스처 URL
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
 }
 
 /**
@@ -56,6 +58,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   allowSideViewDimensions = false,
   sideViewTextX,
   sideViewLineX,
+  textureUrl,
+  panelGrainDirections,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
@@ -135,6 +139,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           material={material}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
+          panelName="선반"
+          textureUrl={textureUrl}
+          panelGrainDirections={panelGrainDirections}
         />
         
         {/* 상판 두께 치수 표시 */}
@@ -216,6 +223,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               material={material}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
+              panelName="선반"
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
             />
           );
         })}
@@ -649,6 +659,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             material={material}
             renderMode={renderMode}
             isHighlighted={isHighlighted}
+            panelName="선반"
+            textureUrl={textureUrl}
+            panelGrainDirections={panelGrainDirections}
           />
         );
       })}
