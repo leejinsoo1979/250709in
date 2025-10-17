@@ -649,7 +649,7 @@ const Room: React.FC<RoomProps> = ({
     // 2D 다크모드에서는 더 밝은 색상 사용
     const defaultColor = (viewMode === '2D' && view2DTheme === 'dark') ? '#F0F0F0' : '#E0E0E0';
 
-    let frameColor = materialConfig?.frameColor || materialConfig?.doorColor || defaultColor;
+    let frameColor = materialConfig?.frameColor || defaultColor;
     let baseFrameTransparent = false;
 
     const isHighlighted = frameType && highlightedFrame === frameType;
@@ -718,8 +718,8 @@ const Room: React.FC<RoomProps> = ({
       opacity: baseFrameTransparent ? 0 : renderMode === 'wireframe' ? (isHighlighted ? highlightOpacity : 0.3) : (viewMode === '2D' && renderMode === 'solid') ? 0.8 : isHighlighted ? 0.6 : 1.0,  // 2D 탑뷰에서 바닥프레임은 완전 투명
     });
 
-    // 프레임 텍스처 적용 (frameTexture 우선, 없으면 doorTexture 사용)
-    const frameTextureUrl = materialConfig?.frameTexture || materialConfig?.doorTexture;
+    // 프레임 텍스처 적용 (frameTexture만 사용)
+    const frameTextureUrl = materialConfig?.frameTexture;
     const shouldApplyTexture = !isHighlighted &&
                                 frameTextureUrl &&
                                 !(viewMode === '2D' && (frameType === 'top' || frameType === 'base'));
