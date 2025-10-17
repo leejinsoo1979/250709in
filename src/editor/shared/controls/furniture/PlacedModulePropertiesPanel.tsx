@@ -1287,28 +1287,57 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       </div>
                     );
                   }
-                  
+
                   // 일반 패널
+                  const currentDirection = currentPlacedModule?.panelGrainDirections?.[panel.name] || 'horizontal';
+
                   return (
-                    <div key={index} className={styles.panelItem}>
-                      <span className={styles.panelName}>{panel.name}:</span>
-                      <span className={styles.panelSize}>
-                        {panel.diameter ? (
-                          `Φ${panel.diameter}mm × L${panel.width}mm`
-                        ) : panel.width && panel.height ? (
-                          `${panel.width} × ${panel.height}mm`
-                        ) : panel.width && panel.depth ? (
-                          `${panel.width} × ${panel.depth}mm`
-                        ) : panel.height && panel.depth ? (
-                          `${panel.height} × ${panel.depth}mm`
-                        ) : panel.description ? (
-                          panel.description
-                        ) : (
-                          `${panel.width || panel.height || panel.depth}mm`
-                        )}
-                        {panel.thickness && panel.showThickness !== false && !panel.diameter && ` (T:${panel.thickness})`}
-                        {panel.material && ` [${panel.material}]`}
-                      </span>
+                    <div key={index} className={styles.panelItem} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ flex: 1 }}>
+                        <span className={styles.panelName}>{panel.name}:</span>
+                        <span className={styles.panelSize}>
+                          {panel.diameter ? (
+                            `Φ${panel.diameter}mm × L${panel.width}mm`
+                          ) : panel.width && panel.height ? (
+                            `${panel.width} × ${panel.height}mm`
+                          ) : panel.width && panel.depth ? (
+                            `${panel.width} × ${panel.depth}mm`
+                          ) : panel.height && panel.depth ? (
+                            `${panel.height} × ${panel.depth}mm`
+                          ) : panel.description ? (
+                            panel.description
+                          ) : (
+                            `${panel.width || panel.height || panel.depth}mm`
+                          )}
+                          {panel.thickness && panel.showThickness !== false && !panel.diameter && ` (T:${panel.thickness})`}
+                          {panel.material && ` [${panel.material}]`}
+                        </span>
+                      </div>
+                      <button
+                        style={{
+                          padding: '4px 8px',
+                          background: currentDirection === 'vertical' ? '#4CAF50' : '#2196F3',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          fontSize: '11px',
+                          fontWeight: '600',
+                          cursor: 'pointer',
+                          minWidth: '50px'
+                        }}
+                        onClick={() => {
+                          const newDirection = currentDirection === 'horizontal' ? 'vertical' : 'horizontal';
+                          const newDirections = {
+                            ...(currentPlacedModule?.panelGrainDirections || {}),
+                            [panel.name]: newDirection
+                          };
+                          console.log('🔄 패널 결 방향 변경:', panel.name, currentDirection, '→', newDirection);
+                          updateModule(placedModuleId, { panelGrainDirections: newDirections });
+                        }}
+                        title={`${panel.name} 나무결 방향 전환`}
+                      >
+                        {currentDirection === 'vertical' ? '↓' : '→'}
+                      </button>
                     </div>
                   );
                   })}

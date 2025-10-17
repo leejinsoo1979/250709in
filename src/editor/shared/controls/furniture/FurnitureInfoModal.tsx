@@ -379,11 +379,21 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1 }}>
             <h2 className={styles.title}>가구 상세 정보</h2>
             <button
-              className={styles.grainButton}
               onClick={handleToggleGrainDirection}
               title="나무결 방향 전환"
+              style={{
+                padding: '10px 20px',
+                background: '#FF0000',
+                color: 'white',
+                border: '3px solid #000',
+                borderRadius: '8px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                minWidth: '150px'
+              }}
             >
-              나무결: {grainDirection === 'horizontal' ? '가로 (→)' : '세로 (↓)'}
+              나무결: {grainDirection === 'horizontal' ? '가로 →' : '세로 ↓'}
             </button>
           </div>
           <button className={styles.closeButton} onClick={onClose}>
