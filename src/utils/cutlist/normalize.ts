@@ -67,24 +67,36 @@ export function convertFromMm(value: number, toUnit: Unit): number {
 
 /**
  * Normalize panel dimensions - ensure width <= length
+ * Returns swapped flag to adjust grain direction if needed
  */
-export function normalizeDimensions(width: number, length: number): { width: number; length: number } {
+export function normalizeDimensions(width: number, length: number): { width: number; length: number; swapped: boolean } {
   // CutList Optimizer convention: Length is always the longer dimension
   if (width > length) {
-    return { width: length, length: width };
+    return { width: length, length: width, swapped: true };
   }
-  return { width, length };
+  return { width, length, swapped: false };
 }
 
 /**
  * Normalize grain direction
+ * If dimensions were swapped, grain direction should also swap (H <-> V)
  */
-export function normalizeGrain(grain?: Grain, canRotate?: boolean): 'H' | 'V' | 'NONE' {
+export function normalizeGrain(grain?: Grain, canRotate?: boolean, dimensionsSwapped?: boolean): 'H' | 'V' | 'NONE' {
+  let normalizedGrain: 'H' | 'V' | 'NONE';
+
   if (canRotate === false && !grain) {
     // If rotation is not allowed and no grain specified, default to horizontal
-    return 'H';
+    normalizedGrain = 'H';
+  } else {
+    normalizedGrain = grain || 'NONE';
   }
-  return grain || 'NONE';
+
+  // If dimensions were swapped, swap grain direction too
+  if (dimensionsSwapped && normalizedGrain !== 'NONE') {
+    return normalizedGrain === 'H' ? 'V' : 'H';
+  }
+
+  return normalizedGrain;
 }
 
 /**
@@ -106,15 +118,15 @@ export function normalizePanel(panel: RawPanel, targetUnit: Unit = 'mm'): Normal
   // Get dimensions
   const rawWidth = panel.width || 0;
   const rawLength = panel.length || panel.height || panel.depth || 0;
-  
+
   // Normalize dimensions (ensure width <= length)
-  const { width, length } = normalizeDimensions(rawWidth, rawLength);
-  
+  const { width, length, swapped } = normalizeDimensions(rawWidth, rawLength);
+
   // Convert units if needed (assuming input is in mm)
   const convertedWidth = convertFromMm(width, targetUnit);
   const convertedLength = convertFromMm(length, targetUnit);
   const convertedThickness = convertFromMm(panel.thickness || 18, targetUnit);
-  
+
   return {
     id: panel.id,
     label: sanitizeLabel(panel.label || panel.name || `Panel_${panel.id}`),
@@ -123,7 +135,7 @@ export function normalizePanel(panel: RawPanel, targetUnit: Unit = 'mm'): Normal
     thickness: Math.round(convertedThickness * 10) / 10,
     quantity: panel.quantity || 1,
     material: panel.material || 'PB',
-    grain: normalizeGrain(panel.grain, panel.canRotate),
+    grain: normalizeGrain(panel.grain, panel.canRotate, swapped),
     canRotate: panel.canRotate !== false
   };
 }
