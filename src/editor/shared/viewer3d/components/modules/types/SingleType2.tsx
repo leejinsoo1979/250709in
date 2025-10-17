@@ -584,7 +584,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 totalSections={2}
               />
 
-              {/* 도어 분할선 - 하부 도어 상단 = 상부 도어 하단 */}
+              {/* 도어 분할선 - 하부 도어 상단 = 상부 도어 하단 = 측판 경계 */}
               {(() => {
                 // 측판 렌더링 로직과 동일하게 계산
                 const sectionHeights = getSectionHeights();
@@ -595,24 +595,23 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 // 하부 섹션 (index=0)
                 const lowerSectionCenterY = accumulatedY + lowerSectionHeight / 2 - basicThickness;
 
-                // 하부 섹션 측판 상단
+                // 하부 섹션 측판 상단 = 상부 섹션 측판 하단 = 도어 분할 위치
                 const lowerSidePanelTop = lowerSectionCenterY + lowerSectionHeight / 2;
 
-                // 하부 도어는 하단으로 doorBottomGap만큼 확장되므로
-                // 하부 도어 상단 = 측판 상단 - doorBottomGap
-                const lowerDoorBottomGapMm = lowerDoorBottomGap ?? 45;
-                const dividerY = lowerSidePanelTop - mmToThreeUnits(lowerDoorBottomGapMm);
+                // 하부 도어는 하단으로만 확장되고, 상단은 측판 상단과 동일
+                // 상부 도어도 하단이 측판 하단(=하부 측판 상단)과 동일
+                // 따라서 분할선 = 측판 경계
+                const dividerY = lowerSidePanelTop;
 
-                console.log('🚪📏 도어 분할선 위치 (도어 경계 기준):', {
+                console.log('🚪📏 도어 분할선 위치 (측판 경계):', {
                   lowerSectionHeight,
                   lowerSectionHeight_mm: lowerSectionHeight / 0.01,
                   lowerSectionCenterY,
                   lowerSidePanelTop,
                   lowerSidePanelTop_mm: lowerSidePanelTop / 0.01,
-                  lowerDoorBottomGapMm,
                   dividerY,
                   dividerY_mm: dividerY / 0.01,
-                  설명: '하부 도어 상단 = 측판 상단 - 하단 gap'
+                  설명: '하부 도어 상단 = 상부 도어 하단 = 측판 경계'
                 });
 
                 // 도어 너비와 깊이
