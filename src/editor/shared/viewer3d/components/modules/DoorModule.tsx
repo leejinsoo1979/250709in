@@ -10,7 +10,7 @@ import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
-import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings } from '@/editor/shared/utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Line } from '@react-three/drei';
 import { Hinge } from '../Hinge';
@@ -28,7 +28,11 @@ const BoxWithEdges: React.FC<{
   onClick?: (event: ThreeEvent<MouseEvent>) => void;
   onPointerOver?: (event: ThreeEvent<PointerEvent>) => void;
   onPointerOut?: (event: ThreeEvent<PointerEvent>) => void;
-}> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false, onClick, onPointerOver, onPointerOut }) => {
+  panelName?: string;
+  textureUrl?: string;
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
+  furnitureId?: string;
+}> = ({ args, position, material, renderMode, isDragging = false, isEditMode = false, onClick, onPointerOver, onPointerOut, panelName, textureUrl, panelGrainDirections, furnitureId }) => {
   const { theme } = useViewerTheme();
   const { view2DTheme, shadowEnabled } = useUIStore();
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args]);
@@ -51,16 +55,42 @@ const BoxWithEdges: React.FC<{
   
   // Shadow auto-update enabled - manual shadow updates removed
 
-  // 재질을 그대로 사용 (복제하지 않음)
-  const processedMaterial = material;
-  
-  // 재질 텍스처 확인 (성능 최적화로 로그 제거)
-  useEffect(() => {
-    if (material && 'map' in material) {
-      const mat = material as THREE.MeshStandardMaterial;
-      // 로그 제거로 성능 향상
+  // 결 방향에 따라 텍스처 회전된 재질 생성
+  const processedMaterial = useMemo(() => {
+    if (!panelName) return material;
+
+    // 결 방향 결정
+    let grainDirection: 'horizontal' | 'vertical' = getDefaultGrainDirection(panelName);
+
+    // 저장된 결 방향이 있으면 사용
+    if (panelGrainDirections && panelName && panelGrainDirections[panelName]) {
+      grainDirection = panelGrainDirections[panelName];
     }
-  }, [material]);
+
+    // 재질 복제하여 개별 텍스처 적용
+    const doorMaterial = material.clone() as THREE.MeshStandardMaterial;
+
+    // 텍스처가 있는 경우 회전 적용
+    if (doorMaterial.map) {
+      const texture = doorMaterial.map.clone();
+
+      // 세로 결 방향일 때 90도 회전 (텍스처를 세로로 세움)
+      if (grainDirection === 'vertical') {
+        texture.rotation = Math.PI / 2;
+        texture.center.set(0.5, 0.5);
+      } else {
+        // 가로 결 방향일 때는 회전 없음 (텍스처 기본 방향)
+        texture.rotation = 0;
+        texture.center.set(0.5, 0.5);
+      }
+
+      texture.needsUpdate = true;
+      doorMaterial.map = texture;
+      doorMaterial.needsUpdate = true;
+    }
+
+    return doorMaterial;
+  }, [material, panelName, panelGrainDirections]);
   
   return (
     <group position={position}>
@@ -128,7 +158,8 @@ interface DoorModuleProps {
   sectionIndex?: number; // 섹션 인덱스 (분할 모드용, 0: 하부, 1: 상부)
   totalSections?: number; // 전체 섹션 수 (분할 모드용, 기본값: 1)
   furnitureId?: string; // 가구 ID (개별 도어 제어용)
-  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
+  textureUrl?: string; // 텍스처 URL
+  panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -152,7 +183,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   sectionIndex, // 섹션 인덱스 (분할 모드용)
   totalSections = 1, // 전체 섹션 수 (분할 모드용)
   furnitureId, // 가구 ID
-  panelGrainDirections // 패널별 개별 결 방향
+  textureUrl, // 텍스처 URL
+  panelGrainDirections // 패널별 결 방향
 }) => {
   console.log('🚪🔧 DoorModule Props:', {
     doorTopGap,
@@ -1271,6 +1303,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onClick={handleDoorClick}
                 onPointerOver={handleDoorPointerOver}
                 onPointerOut={handleDoorPointerOut}
+                panelName={sectionIndex === 1 ? "(상)도어(좌)" : sectionIndex === 0 ? "(하)도어(좌)" : "도어(좌)"}
+                textureUrl={textureUrl}
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={furnitureId}
               />
               
               {/* Hinges for left door - 분할 모드, 상부장, 하부장, 키큰장 */}
@@ -1691,6 +1727,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onClick={handleDoorClick}
                 onPointerOver={handleDoorPointerOver}
                 onPointerOut={handleDoorPointerOut}
+                panelName={sectionIndex === 1 ? "(상)도어(우)" : sectionIndex === 0 ? "(하)도어(우)" : "도어(우)"}
+                textureUrl={textureUrl}
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={furnitureId}
               />
               
               {/* Hinges for right door - 분할 모드, 상부장, 하부장, 키큰장 */}
@@ -2134,6 +2174,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               onClick={handleDoorClick}
               onPointerOver={handleDoorPointerOver}
               onPointerOut={handleDoorPointerOut}
+              panelName={sectionIndex === 1 ? "(상)도어" : sectionIndex === 0 ? "(하)도어" : "도어"}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
             />
             {/* 윤곽선 */}
             <lineSegments>
