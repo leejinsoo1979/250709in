@@ -222,12 +222,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (panelMaterial.map) {
       const texture = panelMaterial.map.clone();
 
-      // 가로 결 방향일 때 90도 회전
-      if (grainDirection === 'horizontal') {
+      // 세로 결 방향일 때 90도 회전 (텍스처를 세로로 세움)
+      if (grainDirection === 'vertical') {
         texture.rotation = Math.PI / 2;
         texture.center.set(0.5, 0.5);
       } else {
-        // 세로 결 방향일 때는 회전 없음
+        // 가로 결 방향일 때는 회전 없음 (텍스처 기본 방향)
         texture.rotation = 0;
         texture.center.set(0.5, 0.5);
       }
