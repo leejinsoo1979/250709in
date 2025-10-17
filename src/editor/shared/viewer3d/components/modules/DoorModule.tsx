@@ -319,9 +319,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           texture.wrapT = THREE.RepeatWrapping;
           texture.repeat.set(1, 1);
 
-          // 도어 나무결 방향 결정 (panelGrainDirections 우선)
+          // 도어 나무결 방향 결정 (activePanelGrainDirections 우선)
           const panelName = '도어';
-          const grainDirection = panelGrainDirections?.[panelName] || 'vertical'; // 기본값: vertical (세로)
+          const grainDirection = activePanelGrainDirections?.[panelName] || 'vertical'; // 기본값: vertical (세로)
 
           // vertical(세로)이면 90도 회전, horizontal(가로)이면 회전 없음
           texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
@@ -374,22 +374,42 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       material.roughness = 0.6; // 기본 거칠기 복원
       material.needsUpdate = true;
     }
-  }, [doorColor, panelGrainDirections]);
+  }, [doorColor, activePanelGrainDirections]);
 
-  // panelGrainDirections 변경 시 기존 텍스처 회전 업데이트
+  // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
+  const storePanelGrainDirections = useFurnitureStore(state => {
+    if (!furnitureId) return undefined;
+    const furniture = state.placedModules.find(m => m.id === furnitureId);
+    return furniture?.panelGrainDirections;
+  });
+
+  // 스토어에서 가져온 값 우선, 없으면 props 사용
+  const activePanelGrainDirections = storePanelGrainDirections || panelGrainDirections;
+
+  console.log('🔥 DoorModule - panelGrainDirections 소스:', {
+    furnitureId,
+    fromStore: !!storePanelGrainDirections,
+    fromProps: !!panelGrainDirections,
+    final: activePanelGrainDirections,
+    storePanelGrainDirections,
+    propsPanelGrainDirections: panelGrainDirections
+  });
+
+  // activePanelGrainDirections 변경 시 기존 텍스처 회전 업데이트
   // JSON.stringify를 사용하여 객체 내부 값 변경을 감지
-  const panelGrainDirectionsStr = panelGrainDirections ? JSON.stringify(panelGrainDirections) : '';
+  const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
 
   useEffect(() => {
     const panelName = '도어';
-    const grainDirection = panelGrainDirections?.[panelName] || 'vertical';
+    const grainDirection = activePanelGrainDirections?.[panelName] || 'vertical';
     const rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
 
     console.log('🔄 도어 결 방향 변경 감지:', {
       panelName,
       grainDirection,
       rotation,
-      panelGrainDirectionsStr
+      activePanelGrainDirectionsStr,
+      furnitureId
     });
 
     // 모든 도어 재질의 텍스처 회전 업데이트
@@ -404,7 +424,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         mat.needsUpdate = true;
       }
     });
-  }, [panelGrainDirectionsStr, doorMaterial, leftDoorMaterial, rightDoorMaterial]);
+  }, [activePanelGrainDirectionsStr, doorMaterial, leftDoorMaterial, rightDoorMaterial]);
 
   // 도어 텍스처 적용 (텍스처 URL 변경 시에만)
   useEffect(() => {
