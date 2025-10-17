@@ -537,6 +537,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>('45');
   const [originalDoorTopGap, setOriginalDoorTopGap] = useState<number>(5); // 원래 값 저장
   const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(45); // 원래 값 저장
+
+  // 취소 시 복원을 위한 모든 초기값 저장
+  const [originalCustomDepth, setOriginalCustomDepth] = useState<number>(580);
+  const [originalCustomWidth, setOriginalCustomWidth] = useState<number>(600);
+  const [originalLowerSectionDepth, setOriginalLowerSectionDepth] = useState<number | undefined>(undefined);
+  const [originalUpperSectionDepth, setOriginalUpperSectionDepth] = useState<number | undefined>(undefined);
+  const [originalHingePosition, setOriginalHingePosition] = useState<'left' | 'right'>('right');
+  const [originalHasDoor, setOriginalHasDoor] = useState<boolean>(false);
+  const [originalDoorSplit, setOriginalDoorSplit] = useState<boolean>(false);
+  const [originalHasGapBackPanel, setOriginalHasGapBackPanel] = useState<boolean>(false);
+  const [originalUpperDoorTopGap, setOriginalUpperDoorTopGap] = useState<number>(5);
+  const [originalUpperDoorBottomGap, setOriginalUpperDoorBottomGap] = useState<number>(0);
+  const [originalLowerDoorTopGap, setOriginalLowerDoorTopGap] = useState<number>(0);
+  const [originalLowerDoorBottomGap, setOriginalLowerDoorBottomGap] = useState<number>(45);
+
   const [showWarning, setShowWarning] = useState(false);
 
   // 전체 팝업에서 엔터키 처리 - 조건문 위로 이동
@@ -698,22 +713,36 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       if (customDepth !== initialDepth) {
         setCustomDepth(initialDepth);
         setDepthInputValue(initialDepth.toString());
+        setOriginalCustomDepth(initialDepth); // 원래 값 저장
       }
       // 섹션별 깊이 초기화
-      setLowerSectionDepth(currentPlacedModule.lowerSectionDepth);
-      setUpperSectionDepth(currentPlacedModule.upperSectionDepth);
+      const lowerDepth = currentPlacedModule.lowerSectionDepth;
+      const upperDepth = currentPlacedModule.upperSectionDepth;
+      setLowerSectionDepth(lowerDepth);
+      setUpperSectionDepth(upperDepth);
+      setOriginalLowerSectionDepth(lowerDepth); // 원래 값 저장
+      setOriginalUpperSectionDepth(upperDepth); // 원래 값 저장
       // 섹션별 깊이 입력 필드 초기화
-      setLowerDepthInput(currentPlacedModule.lowerSectionDepth?.toString() ?? '');
-      setUpperDepthInput(currentPlacedModule.upperSectionDepth?.toString() ?? '');
+      setLowerDepthInput(lowerDepth?.toString() ?? '');
+      setUpperDepthInput(upperDepth?.toString() ?? '');
       // customWidth도 동일하게 처리
       if (customWidth !== initialWidth) {
         setCustomWidth(initialWidth);
         setWidthInputValue(initialWidth.toString());
+        setOriginalCustomWidth(initialWidth); // 원래 값 저장
       }
-      setHingePosition(currentPlacedModule.hingePosition || 'right');
-      setHasDoor(currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false);
-      setDoorSplit(currentPlacedModule.doorSplit ?? false); // 도어 분할 초기값
-      setHasGapBackPanel(currentPlacedModule.hasGapBackPanel ?? false); // 갭 백패널 초기값 설정
+      const hingePos = currentPlacedModule.hingePosition || 'right';
+      const hasDoorVal = currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false;
+      const doorSplitVal = currentPlacedModule.doorSplit ?? false;
+      const hasGapVal = currentPlacedModule.hasGapBackPanel ?? false;
+      setHingePosition(hingePos);
+      setHasDoor(hasDoorVal);
+      setDoorSplit(doorSplitVal);
+      setHasGapBackPanel(hasGapVal);
+      setOriginalHingePosition(hingePos); // 원래 값 저장
+      setOriginalHasDoor(hasDoorVal); // 원래 값 저장
+      setOriginalDoorSplit(doorSplitVal); // 원래 값 저장
+      setOriginalHasGapBackPanel(hasGapVal); // 원래 값 저장
 
       // 도어 상하 갭 초기값 설정 (입력 중 방해 방지)
       const initialTopGap = currentPlacedModule.doorTopGap ?? 5;
@@ -730,22 +759,26 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       }
 
       // 분할 모드용 섹션별 이격거리 초기화
-      if (currentPlacedModule.upperDoorTopGap !== undefined) {
-        setUpperDoorTopGap(currentPlacedModule.upperDoorTopGap);
-        setUpperDoorTopGapInput(currentPlacedModule.upperDoorTopGap.toString());
-      }
-      if (currentPlacedModule.upperDoorBottomGap !== undefined) {
-        setUpperDoorBottomGap(currentPlacedModule.upperDoorBottomGap);
-        setUpperDoorBottomGapInput(currentPlacedModule.upperDoorBottomGap.toString());
-      }
-      if (currentPlacedModule.lowerDoorTopGap !== undefined) {
-        setLowerDoorTopGap(currentPlacedModule.lowerDoorTopGap);
-        setLowerDoorTopGapInput(currentPlacedModule.lowerDoorTopGap.toString());
-      }
-      if (currentPlacedModule.lowerDoorBottomGap !== undefined) {
-        setLowerDoorBottomGap(currentPlacedModule.lowerDoorBottomGap);
-        setLowerDoorBottomGapInput(currentPlacedModule.lowerDoorBottomGap.toString());
-      }
+      const upperTopGap = currentPlacedModule.upperDoorTopGap ?? 5;
+      const upperBottomGap = currentPlacedModule.upperDoorBottomGap ?? 0;
+      const lowerTopGap = currentPlacedModule.lowerDoorTopGap ?? 0;
+      const lowerBottomGap = currentPlacedModule.lowerDoorBottomGap ?? 45;
+
+      setUpperDoorTopGap(upperTopGap);
+      setUpperDoorTopGapInput(upperTopGap.toString());
+      setOriginalUpperDoorTopGap(upperTopGap); // 원래 값 저장
+
+      setUpperDoorBottomGap(upperBottomGap);
+      setUpperDoorBottomGapInput(upperBottomGap.toString());
+      setOriginalUpperDoorBottomGap(upperBottomGap); // 원래 값 저장
+
+      setLowerDoorTopGap(lowerTopGap);
+      setLowerDoorTopGapInput(lowerTopGap.toString());
+      setOriginalLowerDoorTopGap(lowerTopGap); // 원래 값 저장
+
+      setLowerDoorBottomGap(lowerBottomGap);
+      setLowerDoorBottomGapInput(lowerBottomGap.toString());
+      setOriginalLowerDoorBottomGap(lowerBottomGap); // 원래 값 저장
 
       // 2섹션 가구의 섹션 깊이 초기화
       const sections = currentPlacedModule.customSections || moduleData.modelConfig?.sections || [];
@@ -818,11 +851,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   };
 
   const handleCancel = () => {
-    // 취소 시 원래 값으로 복원
+    // 취소 시 모든 값을 원래 값으로 복원
     if (currentPlacedModule) {
       updatePlacedModule(currentPlacedModule.id, {
+        customDepth: originalCustomDepth,
+        customWidth: originalCustomWidth,
+        lowerSectionDepth: originalLowerSectionDepth,
+        upperSectionDepth: originalUpperSectionDepth,
+        hingePosition: originalHingePosition,
+        hasDoor: originalHasDoor,
+        doorSplit: originalDoorSplit,
+        hasGapBackPanel: originalHasGapBackPanel,
         doorTopGap: originalDoorTopGap,
-        doorBottomGap: originalDoorBottomGap
+        doorBottomGap: originalDoorBottomGap,
+        upperDoorTopGap: originalUpperDoorTopGap,
+        upperDoorBottomGap: originalUpperDoorBottomGap,
+        lowerDoorTopGap: originalLowerDoorTopGap,
+        lowerDoorBottomGap: originalLowerDoorBottomGap
       });
     }
     closeAllPopups();
