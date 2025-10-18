@@ -1955,6 +1955,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             hingePosition={optimalHingePosition}
             spaceInfo={spaceInfo}
             color={isDraggingThis ? '#ff6600' : actualModuleData?.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
+            textureUrl={spaceInfo.materialConfig?.doorTexture}
             originalSlotWidth={originalSlotWidthForDoor}
             slotCenterX={doorXOffset}
             moduleData={actualModuleData}
