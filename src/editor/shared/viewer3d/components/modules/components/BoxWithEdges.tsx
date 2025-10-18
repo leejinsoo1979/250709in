@@ -338,44 +338,19 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       normalizedPanelName.includes('선반') ||
       normalizedPanelName.includes('shelf');
 
+    // 백패널과 캐비넷 측판은 제외 (유지)
+    const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
+      (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
+    const isBackPanel = panelName && panelName.includes('백패널');
+
     let newRotation = 0;
 
-    if (isDrawerPanel) {
-      const isDrawerFront = panelName && panelName.includes('마이다');
-
-      if (isDrawerFront) {
-        // 서랍 마이다: L(vertical) = 0도, W(horizontal) = -90도
-        newRotation = grainDirection === 'vertical' ? 0 : -Math.PI / 2;
-      } else {
-        // 서랍 앞판/뒷판/측판: L(vertical) = 180도, W(horizontal) = 0도
-        newRotation = grainDirection === 'vertical' ? Math.PI : 0;
-      }
-    } else if (isHorizontalPanel) {
-      const isDrawerBottom = panelName && panelName.includes('서랍') && panelName.includes('바닥');
-
-      if (isDrawerBottom) {
-        // 서랍 바닥판: L(vertical) = 180도, W(horizontal) = 0도
-        newRotation = grainDirection === 'vertical' ? Math.PI : 0;
-      } else {
-        // 캐비넷 가로패널: L(vertical) = -90도, W(horizontal) = 0도
-        newRotation = grainDirection === 'vertical' ? -Math.PI / 2 : 0;
-      }
+    if (isFurnitureSidePanel || isBackPanel) {
+      // 캐비넷 측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도 (유지)
+      newRotation = grainDirection === 'vertical' ? 0 : Math.PI / 2;
     } else {
-      const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
-        (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
-      const isBackPanel = panelName && panelName.includes('백패널');
-      const isDoor = panelName && panelName.includes('도어');
-
-      if (isFurnitureSidePanel || isBackPanel) {
-        // 캐비넷 측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도 (유지)
-        newRotation = grainDirection === 'vertical' ? 0 : Math.PI / 2;
-      } else if (isDoor) {
-        // 도어: L(vertical) = 0도, W(horizontal) = 90도 (반대로)
-        newRotation = grainDirection === 'vertical' ? 0 : Math.PI / 2;
-      } else {
-        // 기타: L(vertical) = 90도, W(horizontal) = 0도 (반대로)
-        newRotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
-      }
+      // 나머지 모든 패널: L(vertical) = 90도, W(horizontal) = 180도 (90도 회전)
+      newRotation = grainDirection === 'vertical' ? Math.PI / 2 : Math.PI;
     }
 
     if (texture.rotation !== newRotation) {
