@@ -228,14 +228,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     }),
   []);
 
-  // 패널 비활성화용 material (어두운 회색, 투명)
-  const panelDimmedMaterial = useMemo(() =>
-    new THREE.MeshBasicMaterial({
+  // 패널 비활성화용 material - highlightedPanel 변경 시마다 새로 생성
+  const panelDimmedMaterial = useMemo(() => {
+    const mat = new THREE.MeshBasicMaterial({
       color: new THREE.Color('#666666'),
       transparent: true,
       opacity: 0.5
-    }),
-  []);
+    });
+    mat.needsUpdate = true;
+    return mat;
+  }, [highlightedPanel]); // highlightedPanel 변경 시 재생성
 
   // 패널이 강조되어야 하는지 확인하는 함수
   const isPanelHighlighted = (panelName: string) => {
@@ -249,8 +251,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     return highlightedPanel !== `${placedFurnitureId}-${panelName}` && highlightedPanel.startsWith(`${placedFurnitureId}-`);
   };
 
-  // 패널용 material 결정 함수
-  const getPanelMaterial = (panelName: string) => {
+  // 패널용 material 결정 함수 - useCallback로 최적화
+  const getPanelMaterial = useCallback((panelName: string) => {
     const isHighlighted = isPanelHighlighted(panelName);
     const isDimmed = isPanelDimmed(panelName);
 
@@ -274,7 +276,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       return panelDimmedMaterial;
     }
     return material;
-  };
+  }, [highlightedPanel, placedFurnitureId, material, panelDimmedMaterial]);
 
   // 좌우 프레임에 사용할 material 결정 함수
   const getSidePanelMaterial = (panelName: string) => {
