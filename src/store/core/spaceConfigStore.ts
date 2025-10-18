@@ -293,9 +293,17 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
           dropHeight: processedInfo.droppedCeiling.dropHeight || 200
         };
       }
-      
+
       // 임시 spaceInfo 생성
-      let tempSpaceInfo = { ...state.spaceInfo, ...processedInfo };
+      // materialConfig는 명시적으로 병합하여 기존 텍스처 값 보존
+      let tempSpaceInfo = {
+        ...state.spaceInfo,
+        ...processedInfo,
+        materialConfig: {
+          ...state.spaceInfo.materialConfig,
+          ...processedInfo.materialConfig
+        }
+      };
       
       // 슬롯 개수나 공간 크기가 변경된 경우 정수 슬롯 너비를 위한 자동 조정
       const shouldAdjust = 
