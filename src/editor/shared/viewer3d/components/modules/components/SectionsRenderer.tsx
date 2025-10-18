@@ -89,6 +89,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);
   const highlightedSection = useUIStore(state => state.highlightedSection);
+  const highlightedPanel = useUIStore(state => state.highlightedPanel);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
@@ -101,6 +102,40 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
   // 테마 색상
   const themeColor = getThemeHex();
+
+  // 패널 비활성화용 material
+  const panelDimmedMaterial = React.useMemo(() =>
+    new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#666666'),
+      transparent: true,
+      opacity: 0.5
+    }),
+  []);
+
+  // 패널이 강조되어야 하는지 확인
+  const isPanelHighlighted = (panelName: string) => {
+    if (!highlightedPanel || !placedFurnitureId) return false;
+    return highlightedPanel === `${placedFurnitureId}-${panelName}`;
+  };
+
+  // 패널이 비활성화되어야 하는지 확인
+  const isPanelDimmed = (panelName: string) => {
+    if (!highlightedPanel || !placedFurnitureId) return false;
+    return highlightedPanel !== `${placedFurnitureId}-${panelName}` && highlightedPanel.startsWith(`${placedFurnitureId}-`);
+  };
+
+  // 패널용 material 결정
+  const getPanelMaterial = (panelName: string) => {
+    // 선택된 패널은 원래 material 유지
+    if (isPanelHighlighted(panelName)) {
+      return material;
+    }
+    // 선택되지 않은 패널만 투명하게
+    if (isPanelDimmed(panelName)) {
+      return panelDimmedMaterial;
+    }
+    return material;
+  };
 
   // 치수 변경 핸들러
   const handleDimensionChange = useCallback((sectionIndex: number, newInternalHeight: number) => {
@@ -212,6 +247,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
       const depthDiff = depth - currentSectionDepth;
       const currentShelfZOffset = shelfZOffset + depthDiff / 2;
 
+      // 섹션 이름 결정 (상부/하부 구분)
+      const sectionName = allSections.length >= 2
+        ? (index === 0 ? '(하)' : '(상)')
+        : '';
+
       let sectionContent = null;
 
       switch (section.type) {
@@ -239,6 +279,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 isHighlighted={isSectionHighlighted}
                 textureUrl={textureUrl}
                 panelGrainDirections={panelGrainDirections}
+                sectionName={sectionName}
               />
             );
           }
@@ -270,6 +311,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               isHighlighted={isHangingSectionHighlighted}
               textureUrl={textureUrl}
               panelGrainDirections={panelGrainDirections}
+              sectionName={sectionName}
             />
           );
           break;
@@ -304,7 +346,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 isHighlighted={isDrawerSectionHighlighted}
                 textureUrl={textureUrl}
                 panelGrainDirections={panelGrainDirections}
-                furnitureId={furnitureId}              />
+                furnitureId={furnitureId}
+                sectionName={sectionName}
+              />
             );
           }
           break;

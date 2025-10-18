@@ -481,7 +481,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, upperAdjustedDepth - basicThickness + mmToThreeUnits(26)]}
                         position={[0, middlePanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 + upperZOffset]}
-                        material={material}
+                        material={getPanelMaterial('(상)바닥')}
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isUpperHighlighted}
@@ -495,7 +495,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
                         position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 + lowerZOffset]}
-                        material={material}
+                        material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isLowerHighlighted}
@@ -535,7 +535,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         args={[innerWidth, basicThickness - mmToThreeUnits(0.1), adjustedDepthForShelves - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
                         position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2]}
-                        material={material}
+                        material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isLowerHighlighted}
@@ -549,7 +549,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(26)]}
                         position={[0, middlePanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2]}
-                        material={material}
+                        material={getPanelMaterial('(상)바닥')}
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isHighlighted={isUpperHighlighted}
@@ -588,11 +588,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     key={`divider-${index}`}
                     args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
                     position={[0, dividerY, basicThickness/2 + shelfZOffset]}
-                    material={material}
+                    material={getPanelMaterial(index === 0 ? '(하)상판' : '(상)바닥')}
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerHighlighted}
-                    panelName="중간판"
+                    panelName={index === 0 ? '(하)상판' : '(상)바닥'}
                     panelGrainDirections={panelGrainDirections}
                     furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
