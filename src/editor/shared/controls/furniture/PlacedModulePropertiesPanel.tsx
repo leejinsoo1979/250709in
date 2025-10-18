@@ -1186,7 +1186,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     <div className={styles.overlay}>
       <div className={styles.panel}>
         <div className={styles.header}>
-          <h3 className={styles.title}>{t('furniture.editFurniture')}</h3>
+          <div className={styles.headerTabs}>
+            <button
+              className={`${styles.tabButton} ${!showDetails ? styles.activeTab : ''}`}
+              onClick={() => setShowDetails(false)}
+            >
+              {t('furniture.editFurniture')}
+            </button>
+            <button
+              className={`${styles.tabButton} ${showDetails ? styles.activeTab : ''}`}
+              onClick={() => setShowDetails(true)}
+            >
+              {t('furniture.viewDetails')}
+            </button>
+          </div>
           <div className={styles.headerButtons}>
             <button className={styles.closeButton} onClick={handleClose}>
               ✕
@@ -1232,14 +1245,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 </span>
               </div>
             </div>
-            
-            {/* 상세보기 버튼 */}
-            <button
-              className={styles.detailsButton}
-              onClick={() => setShowDetails(!showDetails)}
-            >
-              {t('furniture.viewDetails')}
-            </button>
           </div>
           
           {/* 상세보기 패널 */}
