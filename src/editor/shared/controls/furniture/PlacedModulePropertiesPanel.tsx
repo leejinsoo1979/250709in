@@ -834,6 +834,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const sections = moduleData?.modelConfig?.sections || [];
   const isTwoSectionFurniture = sections.length === 2;
 
+  // 도어용 원래 너비 계산 (adjustedWidth가 없으면 customWidth가 원래 너비)
+  const doorOriginalWidth = currentPlacedModule?.customWidth || moduleData?.dimensions.width;
+
+  // 패널 상세정보 계산 (hasDoor 변경 시 자동 재계산)
+  // ⚠️ IMPORTANT: useMemo는 조건부 return 전에 호출되어야 함 (React hooks 규칙)
+  const panelDetails = React.useMemo(() => {
+    if (!moduleData) return [];
+    return calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth]);
+
   // 디버깅용 로그 (개발 모드에서만 출력)
   if (import.meta.env.DEV) {
     console.log(`🔍 [가구 타입 확인] ${moduleData?.id}: 듀얼=${isDualFurniture}, 싱글=${isSingleFurniture}, 커버도어=${isCoverDoor}`);
@@ -848,14 +858,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   if (!currentPlacedModule || !moduleData) {
     return null;
   }
-
-  // 도어용 원래 너비 계산 (adjustedWidth가 없으면 customWidth가 원래 너비)
-  const doorOriginalWidth = currentPlacedModule?.customWidth || moduleData.dimensions.width;
-
-  // 패널 상세정보 계산 (hasDoor 변경 시 자동 재계산)
-  const panelDetails = React.useMemo(() => {
-    return calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth);
-  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth]);
 
   const handleClose = () => {
     closeAllPopups();
