@@ -157,20 +157,44 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
 
-  // 패널별 개별 material 생성 (텍스처 회전 적용) - 항상 새로 생성
+  // 이전 activePanelGrainDirectionsStr 값 저장
+  const prevGrainDirectionsRef = React.useRef<string>(activePanelGrainDirectionsStr);
+  const panelMaterialRef = React.useRef<THREE.Material | null>(null);
+
+  // 패널별 개별 material 생성 (텍스처 회전 적용)
   const panelSpecificMaterial = React.useMemo(() => {
     // panelName이 없으면 processedMaterial 그대로 사용
     if (!panelName || !(processedMaterial instanceof THREE.MeshStandardMaterial)) {
       return processedMaterial;
     }
 
-    // 텍스처가 없으면 processedMaterial 그대로 사용 (textureUrl 체크 대신 map 체크)
+    // 텍스처가 없으면 processedMaterial 그대로 사용
     if (!processedMaterial.map) {
       return processedMaterial;
     }
 
+    // grainDirections가 변경되지 않았으면 기존 material 재사용
+    const grainDirectionsChanged = prevGrainDirectionsRef.current !== activePanelGrainDirectionsStr;
+
+    if (!grainDirectionsChanged && panelMaterialRef.current) {
+      // processedMaterial의 속성만 업데이트 (드래그 등)
+      if (panelMaterialRef.current instanceof THREE.MeshStandardMaterial) {
+        panelMaterialRef.current.transparent = processedMaterial.transparent;
+        panelMaterialRef.current.opacity = processedMaterial.opacity;
+        panelMaterialRef.current.depthWrite = processedMaterial.depthWrite;
+        // color는 드래그 시에만 변경됨
+        if (isDragging) {
+          panelMaterialRef.current.color = processedMaterial.color.clone();
+        }
+        panelMaterialRef.current.needsUpdate = true;
+      }
+      return panelMaterialRef.current;
+    }
+
+    // grainDirections가 변경되었으면 새로운 회전값 계산
+    prevGrainDirectionsRef.current = activePanelGrainDirectionsStr;
+
     // 패널의 결 방향 결정 (설정값 또는 기본값)
-    // activePanelGrainDirections 객체에서 부분 매칭으로 찾기
     let grainDirection: 'horizontal' | 'vertical' | undefined;
 
     if (activePanelGrainDirections) {
@@ -178,7 +202,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       if (activePanelGrainDirections[panelName]) {
         grainDirection = activePanelGrainDirections[panelName];
       } else {
-        // 부분 매칭: activePanelGrainDirections의 키가 panelName에 포함되어 있는지 확인
+        // 부분 매칭
         const matchingKey = Object.keys(activePanelGrainDirections).find(key =>
           panelName.includes(key) || key.includes(panelName)
         );
@@ -193,52 +217,51 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       grainDirection = getDefaultGrainDirection(panelName);
     }
 
-    // processedMaterial을 복제하여 개별 material 생성 (항상 새로 생성)
+    // processedMaterial을 복제하여 개별 material 생성
     const panelMaterial = processedMaterial.clone();
 
-    // 텍스처가 있는 경우 회전 적용
-    if (panelMaterial.map) {
-      // 텍스처도 clone하여 각 패널마다 독립적인 텍스처 인스턴스 생성
-      const texture = panelMaterial.map.clone();
+    // 텍스처 clone하여 회전 적용
+    const texture = processedMaterial.map.clone();
 
-      // clone된 텍스처의 rotation을 0으로 리셋 (clone은 기존 rotation을 복사함)
-      texture.rotation = 0;
-      texture.center.set(0.5, 0.5);
+    // clone된 텍스처의 rotation을 0으로 리셋
+    texture.rotation = 0;
+    texture.center.set(0.5, 0.5);
 
-      texture.needsUpdate = true;
-      panelMaterial.map = texture;
+    panelMaterial.map = texture;
 
-      // 백패널과 캐비넷 측판 (정상 - 유지)
-      const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
-        (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
-      const isBackPanel = panelName && panelName.includes('백패널');
+    // 백패널과 캐비넷 측판 (정상 - 유지)
+    const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
+      (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
+    const isBackPanel = panelName && panelName.includes('백패널');
 
-      if (isFurnitureSidePanel || isBackPanel) {
-        // 좌우측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도 (정상 유지)
-        if (grainDirection === 'vertical') {
-          texture.rotation = 0;
-          texture.center.set(0.5, 0.5);
-        } else {
-          texture.rotation = Math.PI / 2;
-          texture.center.set(0.5, 0.5);
-        }
+    if (isFurnitureSidePanel || isBackPanel) {
+      // 좌우측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도
+      if (grainDirection === 'vertical') {
+        texture.rotation = 0;
+        texture.center.set(0.5, 0.5);
       } else {
-        // 나머지 모든 패널: L(vertical) = 90도, W(horizontal) = 0도
-        if (grainDirection === 'vertical') {
-          texture.rotation = Math.PI / 2; // 90도
-          texture.center.set(0.5, 0.5);
-        } else {
-          texture.rotation = 0;
-          texture.center.set(0.5, 0.5);
-        }
+        texture.rotation = Math.PI / 2;
+        texture.center.set(0.5, 0.5);
       }
-
-      texture.needsUpdate = true;
-      panelMaterial.needsUpdate = true;
+    } else {
+      // 나머지 모든 패널: L(vertical) = 90도, W(horizontal) = 0도
+      if (grainDirection === 'vertical') {
+        texture.rotation = Math.PI / 2;
+        texture.center.set(0.5, 0.5);
+      } else {
+        texture.rotation = 0;
+        texture.center.set(0.5, 0.5);
+      }
     }
 
+    texture.needsUpdate = true;
+    panelMaterial.needsUpdate = true;
+
+    // ref에 저장
+    panelMaterialRef.current = panelMaterial;
+
     return panelMaterial;
-  }, [processedMaterial, textureUrl, panelName, activePanelGrainDirectionsStr]);
+  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
