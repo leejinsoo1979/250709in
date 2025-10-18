@@ -69,8 +69,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
   const storePanelGrainDirections = useFurnitureStore(state => {
-    if (!furnitureId) return undefined;
+    if (!furnitureId) {
+      console.log('❌ furnitureId 없음');
+      return undefined;
+    }
     const furniture = state.placedModules.find(m => m.id === furnitureId);
+    console.log('🔍 스토어 검색:', {
+      furnitureId,
+      found: !!furniture,
+      panelGrainDirections: furniture?.panelGrainDirections,
+      allIds: state.placedModules.map(m => m.id)
+    });
     return furniture?.panelGrainDirections;
   });
 
