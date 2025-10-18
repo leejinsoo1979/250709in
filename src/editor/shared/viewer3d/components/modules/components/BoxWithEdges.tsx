@@ -106,7 +106,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   
   // 실제 사용할 material (prop이 없으면 기본값 사용)
   const baseMaterial = material || defaultMaterial;
-  
+
   // 드래그 중일 때만 고스트 효과 적용 (편집 모드는 제외)
   const processedMaterial = React.useMemo(() => {
     // MeshBasicMaterial인 경우
@@ -118,6 +118,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (옷봉 제외)
     if (viewMode === '2D' && renderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial && !isClothingRod) {
+      // baseMaterial을 직접 수정하지 않고 clone
       const transparentMaterial = baseMaterial.clone();
       transparentMaterial.transparent = true;
       transparentMaterial.opacity = 0.1;  // 매우 투명하게 (10% 불투명도)
