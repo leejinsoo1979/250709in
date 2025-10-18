@@ -1349,6 +1349,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             <group position={[leftDoorWidthUnits / 2 - hingeOffsetUnits, 0, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
               <BoxWithEdges
+                key={`left-door-${leftDoorMaterial.uuid}`}
                 args={[leftDoorWidthUnits, doorHeight, doorThicknessUnits]}
                 position={[0, 0, 0]}
                 material={leftDoorMaterial}
@@ -1773,6 +1774,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             <group position={[-rightDoorWidthUnits / 2 + hingeOffsetUnits, 0, 0]}>
               {/* BoxWithEdges 사용하여 도어 렌더링 */}
               <BoxWithEdges
+                key={`right-door-${rightDoorMaterial.uuid}`}
                 args={[rightDoorWidthUnits, doorHeight, doorThicknessUnits]}
                 position={[0, 0, 0]}
                 material={rightDoorMaterial}
@@ -2220,6 +2222,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           <group position={[doorPositionX, 0, 0]}>
             {/* BoxWithEdges 사용하여 도어 렌더링 */}
             <BoxWithEdges
+              key={`single-door-${doorMaterial.uuid}`}
               args={[doorWidthUnits, doorHeight, doorThicknessUnits]}
               position={[0, 0, 0]}
               material={doorMaterial}
