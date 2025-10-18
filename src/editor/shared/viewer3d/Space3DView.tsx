@@ -108,24 +108,25 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       return frontPosition;
     }
 
-    // 2D 모드에서는 방향별 카메라 위치 - 각 방향에 최적화된 거리 사용
+    // 2D 모드에서는 방향별 카메라 위치 - 각 방향에 최적화된 거리 사용 (1.5배 더 멀리)
+    const distanceMultiplier = 1.5;
     switch (view2DDirection) {
       case 'front':
         // 정면: Z축에서 깊이를 고려한 최적 거리
-        return [centerX, centerY, distance] as [number, number, number];
+        return [centerX, centerY, distance * distanceMultiplier] as [number, number, number];
       case 'left':
         // 좌측: X축에서 너비를 고려한 최적 거리
         const leftDistance = calculateOptimalDistance(depth, height, width, placedModules.length);
-        return [-leftDistance, centerY, centerZ] as [number, number, number];
+        return [-leftDistance * distanceMultiplier, centerY, centerZ] as [number, number, number];
       case 'right':
         // 우측: X축에서 너비를 고려한 최적 거리
         const rightDistance = calculateOptimalDistance(depth, height, width, placedModules.length);
-        return [rightDistance, centerY, centerZ] as [number, number, number];
+        return [rightDistance * distanceMultiplier, centerY, centerZ] as [number, number, number];
       case 'top':
         // 상단: Y축에서 너비와 깊이를 고려한 최적 거리
         const topDistance = calculateOptimalDistance(width, depth, height, placedModules.length);
         // 상부뷰는 위에서 아래를 내려다보므로 centerY에 거리를 더함
-        return [centerX, centerY + topDistance, centerZ] as [number, number, number];
+        return [centerX, centerY + topDistance * distanceMultiplier, centerZ] as [number, number, number];
       case 'all':
         // 전체 뷰에서는 정면 카메라 위치 사용 (4분할은 별도 처리)
         return frontPosition;
