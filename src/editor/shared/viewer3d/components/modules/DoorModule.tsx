@@ -57,6 +57,28 @@ const BoxWithEdges: React.FC<{
 
   // 결 방향에 따라 텍스처 회전된 재질 생성
   const processedMaterial = useMemo(() => {
+    // 2D 솔리드 모드에서 도어를 투명하게 처리
+    if (viewMode === '2D' && renderMode === 'solid' && material instanceof THREE.MeshStandardMaterial) {
+      const transparentMaterial = material.clone();
+      transparentMaterial.transparent = true;
+      transparentMaterial.opacity = 0.1;  // 매우 투명하게 (10% 불투명도)
+      transparentMaterial.depthWrite = false;
+      transparentMaterial.needsUpdate = true;
+
+      // 텍스처 회전 적용
+      if (panelName && transparentMaterial.map) {
+        const resolvedDirection = resolvePanelGrainDirection(panelName, panelGrainDirections);
+        const grainDirection: 'horizontal' | 'vertical' = resolvedDirection || getDefaultGrainDirection(panelName);
+        const texture = transparentMaterial.map.clone();
+        texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
+        texture.center.set(0.5, 0.5);
+        texture.needsUpdate = true;
+        transparentMaterial.map = texture;
+      }
+
+      return transparentMaterial;
+    }
+
     if (!panelName) return material;
 
     const resolvedDirection = resolvePanelGrainDirection(panelName, panelGrainDirections);
@@ -75,7 +97,7 @@ const BoxWithEdges: React.FC<{
     }
 
     return doorMaterial;
-  }, [material, panelName, panelGrainDirections]);
+  }, [material, panelName, panelGrainDirections, viewMode, renderMode]);
 
   return (
     <group position={position}>
