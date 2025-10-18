@@ -39,6 +39,7 @@ const BoxWithEdges: React.FC<{
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
 
   const { viewMode } = useSpace3DView();
+  const { gl } = useThree();
 
   // BoxWithEdges 컴포넌트 내부에 getThemeColor 함수 정의
   const getThemeColor = () => {
@@ -1151,43 +1152,37 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 부드럽고 자연스러운 애니메이션을 위해 tension/friction 조정
   const leftHingeDoorSpring = useSpring({
     // 왼쪽 힌지: 반시계방향으로 열림 (오른쪽으로 열림) - 80도
-    // 2D 모드에서는 회전 없음 (직교 뷰 유지)
-    rotation: viewMode === '2D' ? 0 : (shouldOpenDoors ? -4 * Math.PI / 9 : 0),
-    config: {
+    rotation: shouldOpenDoors ? -4 * Math.PI / 9 : 0,
+    config: { 
       tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
       friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
       clamp: true    // 오버슈팅 방지
     },
   });
-
+  
   const rightHingeDoorSpring = useSpring({
     // 오른쪽 힌지: 시계방향으로 열림 (왼쪽으로 열림) - 80도
-    // 2D 모드에서는 회전 없음 (직교 뷰 유지)
-    rotation: viewMode === '2D' ? 0 : (shouldOpenDoors ? 4 * Math.PI / 9 : 0),
-    config: {
+    rotation: shouldOpenDoors ? 4 * Math.PI / 9 : 0,
+    config: { 
       tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
       friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
       clamp: true    // 오버슈팅 방지
     },
   });
-
+  
   // 듀얼 가구용 애니메이션 설정 (80도 열림) - 적당한 속도
   const dualLeftDoorSpring = useSpring({
-    // 왼쪽 문: 반시계방향 (바깥쪽으로) - 80도
-    // 2D 모드에서는 회전 없음 (직교 뷰 유지)
-    rotation: viewMode === '2D' ? 0 : (shouldOpenDoors ? -4 * Math.PI / 9 : 0),
-    config: {
+    rotation: shouldOpenDoors ? -4 * Math.PI / 9 : 0, // 왼쪽 문: 반시계방향 (바깥쪽으로) - 80도
+    config: { 
       tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
       friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
       clamp: true    // 오버슈팅 방지
     },
   });
-
+  
   const dualRightDoorSpring = useSpring({
-    // 오른쪽 문: 시계방향 (바깥쪽으로) - 80도
-    // 2D 모드에서는 회전 없음 (직교 뷰 유지)
-    rotation: viewMode === '2D' ? 0 : (shouldOpenDoors ? 4 * Math.PI / 9 : 0),
-    config: {
+    rotation: shouldOpenDoors ? 4 * Math.PI / 9 : 0, // 오른쪽 문: 시계방향 (바깥쪽으로) - 80도
+    config: { 
       tension: 90,   // 적당한 반응 (기존 60에서 90으로 증가)
       friction: 16,  // 적당한 감속 (기존 20에서 16으로 감소)
       clamp: true    // 오버슈팅 방지
