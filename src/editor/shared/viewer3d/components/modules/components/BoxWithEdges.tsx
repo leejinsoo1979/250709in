@@ -159,7 +159,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
 
-  // 패널별 개별 material 생성 (텍스처 회전 적용)
+  // 패널별 개별 material 생성 (텍스처 회전 적용) - processedMaterial이 변경되어도 회전값 유지
+  const panelSpecificMaterialRef = React.useRef<THREE.MeshStandardMaterial | null>(null);
+
   const panelSpecificMaterial = React.useMemo(() => {
     console.log('🔍 panelSpecificMaterial useMemo 실행:', {
       panelName,
@@ -167,7 +169,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       hasMaterial: !!processedMaterial,
       isStandardMaterial: processedMaterial instanceof THREE.MeshStandardMaterial,
       hasMapTexture: processedMaterial instanceof THREE.MeshStandardMaterial ? !!processedMaterial.map : false,
-      activePanelGrainDirectionsStr
+      activePanelGrainDirectionsStr,
+      hasExistingMaterial: !!panelSpecificMaterialRef.current
     });
 
     // panelName이 없으면 processedMaterial 그대로 사용
@@ -215,6 +218,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       activePanelGrainDirectionsStr
     });
 
+    // 기존 material이 있고 processedMaterial의 기본 속성만 업데이트하는 경우
+    // 텍스처 회전값 유지
+    let previousRotation = 0;
+    if (panelSpecificMaterialRef.current?.map) {
+      previousRotation = panelSpecificMaterialRef.current.map.rotation;
+      console.log('💾 이전 회전값 저장:', previousRotation, '(', (previousRotation * 180 / Math.PI).toFixed(0), '도)');
+    }
+
     // processedMaterial을 복제하여 개별 material 생성
     const panelMaterial = processedMaterial.clone();
 
@@ -224,53 +235,45 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       const texture = panelMaterial.map.clone();
       panelMaterial.map = texture;
 
-      // 서랍 패널 여부 확인 (마이다, 앞판, 뒷판, 좌우측판) - 서랍 바닥은 제외
-      const isDrawerPanel = panelName && panelName.includes('서랍') &&
-        !(panelName.includes('바닥') || panelName.includes('상판') || panelName.includes('선반'));
-
-      // 가로로 긴 패널 여부 확인 (상판, 바닥판, 선반) - 서랍 포함
-      const normalizedPanelName = panelName?.toLowerCase() || '';
-      const isHorizontalPanel =
-        normalizedPanelName.includes('상판') ||
-        normalizedPanelName.includes('top') ||
-        normalizedPanelName.includes('바닥') ||
-        normalizedPanelName.includes('bottom') ||
-        normalizedPanelName.includes('선반') ||
-        normalizedPanelName.includes('shelf');
-
-      console.log('🔄 텍스처 회전 적용:', {
-        panelName,
-        grainDirection,
-        isDrawerPanel,
-        isHorizontalPanel
-      });
-
-      // 백패널과 캐비넷 측판은 제외 (유지)
-      const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
-        (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
-      const isBackPanel = panelName && panelName.includes('백패널');
-
-      if (isFurnitureSidePanel || isBackPanel) {
-        // 캐비넷 측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도 (유지)
-        if (grainDirection === 'vertical') {
-          texture.rotation = 0;
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 측판/백패널 L: 0도 (유지)');
-        } else {
-          texture.rotation = Math.PI / 2;
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 측판/백패널 W: 90도 (유지)');
-        }
+      // 이전 회전값이 있으면 먼저 적용 (덮어쓰기 방지)
+      if (previousRotation !== 0) {
+        texture.rotation = previousRotation;
+        texture.center.set(0.5, 0.5);
+        console.log('🔄 이전 회전값 복원:', previousRotation);
       } else {
-        // 나머지 모든 패널: L(vertical) = 90도, W(horizontal) = 180도 (90도 회전)
-        if (grainDirection === 'vertical') {
-          texture.rotation = Math.PI / 2; // 90도
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 패널 L: 90도 회전');
+        // 이전 회전값이 없으면 새로운 회전값 계산
+        console.log('🔄 텍스처 회전 적용:', {
+          panelName,
+          grainDirection
+        });
+
+        // 백패널과 캐비넷 측판은 제외 (유지)
+        const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
+          (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
+        const isBackPanel = panelName && panelName.includes('백패널');
+
+        if (isFurnitureSidePanel || isBackPanel) {
+          // 캐비넷 측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도 (유지)
+          if (grainDirection === 'vertical') {
+            texture.rotation = 0;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 측판/백패널 L: 0도 (유지)');
+          } else {
+            texture.rotation = Math.PI / 2;
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 측판/백패널 W: 90도 (유지)');
+          }
         } else {
-          texture.rotation = Math.PI; // 180도
-          texture.center.set(0.5, 0.5);
-          console.log('  ✅ 패널 W: 180도 회전');
+          // 나머지 모든 패널: L(vertical) = 90도, W(horizontal) = 180도 (90도 회전)
+          if (grainDirection === 'vertical') {
+            texture.rotation = Math.PI / 2; // 90도
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 패널 L: 90도 회전');
+          } else {
+            texture.rotation = Math.PI; // 180도
+            texture.center.set(0.5, 0.5);
+            console.log('  ✅ 패널 W: 180도 회전');
+          }
         }
       }
 
@@ -285,6 +288,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         rotationDegrees: (texture.rotation * 180 / Math.PI).toFixed(0) + '°'
       });
     }
+
+    // ref에 material 저장하여 다음 렌더링 시 회전값 복원 가능하도록 함
+    panelSpecificMaterialRef.current = panelMaterial;
 
     return panelMaterial;
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr]);
