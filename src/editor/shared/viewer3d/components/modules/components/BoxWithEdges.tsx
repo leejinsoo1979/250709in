@@ -84,19 +84,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 스토어에서 가져온 값 우선, 없으면 props 사용
   const activePanelGrainDirections = storePanelGrainDirections || panelGrainDirections;
-
-  // 디버그 로그
-  if (panelName && (panelName.includes('상판') || panelName.includes('하판') || panelName.includes('선반'))) {
-    console.log('🔥 BoxWithEdges - panelGrainDirections 소스:', {
-      panelName,
-      furnitureId,
-      fromStore: !!storePanelGrainDirections,
-      fromProps: !!panelGrainDirections,
-      final: activePanelGrainDirections,
-      storeValue: storePanelGrainDirections,
-      propsValue: panelGrainDirections
-    });
-  }
   
   // 기본 material 생성 (material prop이 없을 때 사용)
   const defaultMaterial = React.useMemo(() => {
@@ -172,24 +159,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 패널별 개별 material 생성 (텍스처 회전 적용) - 항상 새로 생성
   const panelSpecificMaterial = React.useMemo(() => {
-    console.log('🔍 panelSpecificMaterial useMemo 실행:', {
-      panelName,
-      textureUrl,
-      hasMaterial: !!processedMaterial,
-      isStandardMaterial: processedMaterial instanceof THREE.MeshStandardMaterial,
-      hasMapTexture: processedMaterial instanceof THREE.MeshStandardMaterial ? !!processedMaterial.map : false,
-      activePanelGrainDirectionsStr
-    });
-
     // panelName이 없으면 processedMaterial 그대로 사용
     if (!panelName || !(processedMaterial instanceof THREE.MeshStandardMaterial)) {
-      console.log('⚠️ panelName 없음 또는 MeshStandardMaterial 아님 - processedMaterial 반환');
       return processedMaterial;
     }
 
     // 텍스처가 없으면 processedMaterial 그대로 사용 (textureUrl 체크 대신 map 체크)
     if (!processedMaterial.map) {
-      console.log('⚠️ processedMaterial에 텍스처(map) 없음 - processedMaterial 반환');
       return processedMaterial;
     }
 
@@ -213,21 +189,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     // 설정값이 없으면 기본값 사용
-    const usedDefault = !grainDirection;
     if (!grainDirection) {
       grainDirection = getDefaultGrainDirection(panelName);
-    }
-
-    if (panelName && (panelName.includes('상판') || panelName.includes('하판') || panelName.includes('선반'))) {
-      console.log('🎨 BoxWithEdges - 패널별 material 생성:', {
-        panelName,
-        grainDirection,
-        usedDefault,
-        textureUrl,
-        hasTexture: !!processedMaterial.map,
-        activePanelGrainDirectionsKeys: activePanelGrainDirections ? Object.keys(activePanelGrainDirections) : [],
-        activePanelGrainDirectionsStr
-      });
     }
 
     // processedMaterial을 복제하여 개별 material 생성 (항상 새로 생성)
@@ -245,12 +208,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       texture.needsUpdate = true;
       panelMaterial.map = texture;
 
-      // 항상 새로운 회전값 계산 (패널별 올바른 회전 적용)
-      console.log('🔄 텍스처 회전 적용:', {
-        panelName,
-        grainDirection
-      });
-
       // 백패널과 캐비넷 측판 (정상 - 유지)
       const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
         (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
@@ -261,34 +218,23 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         if (grainDirection === 'vertical') {
           texture.rotation = 0;
           texture.center.set(0.5, 0.5);
-          console.log('  ✅ 측판/백패널 L: 0도 (정상)');
         } else {
           texture.rotation = Math.PI / 2;
           texture.center.set(0.5, 0.5);
-          console.log('  ✅ 측판/백패널 W: 90도 (정상)');
         }
       } else {
         // 나머지 모든 패널: L(vertical) = 90도, W(horizontal) = 0도
         if (grainDirection === 'vertical') {
           texture.rotation = Math.PI / 2; // 90도
           texture.center.set(0.5, 0.5);
-          console.log('  ✅ 패널 L: 90도');
         } else {
           texture.rotation = 0;
           texture.center.set(0.5, 0.5);
-          console.log('  ✅ 패널 W: 0도');
         }
       }
 
       texture.needsUpdate = true;
       panelMaterial.needsUpdate = true;
-
-      console.log('✅ 텍스처 회전 적용:', {
-        panelName,
-        grainDirection,
-        rotation: texture.rotation,
-        rotationDegrees: (texture.rotation * 180 / Math.PI).toFixed(0) + '°'
-      });
     }
 
     return panelMaterial;
@@ -349,12 +295,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return '#000000';
       }
 
-      console.log('🎨 BoxWithEdges - MeshBasicMaterial 엣지 색상:', {
-        color,
-        viewMode,
-        renderMode,
-        position
-      });
       return color;
     }
 
@@ -396,19 +336,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       }
     }
   }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor]);
-
-  // 디버깅: 2D 솔리드 모드에서 색상 확인
-  React.useEffect(() => {
-    if (viewMode === '2D' && renderMode === 'solid') {
-      console.log('🎨 BoxWithEdges 2D 솔리드 모드:', {
-        edgeColor,
-        view2DTheme,
-        transparent: viewMode === '3D',
-        opacity: viewMode === '3D' ? 0.9 : 1,
-        position
-      });
-    }
-  }, [viewMode, renderMode, edgeColor, view2DTheme, position]);
 
   return (
     <group position={position}>
