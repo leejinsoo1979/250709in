@@ -1488,12 +1488,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
                     } else {
                       // 측면뷰: < 패턴 (두 개의 대각선으로 꺾인 모양)
+                      // 측면 뷰에서 도어는 Z축(깊이) 방향으로 열림
                       // 첫 번째 대각선: 위 앞쪽에서 중간 뒷쪽으로
-                      const start1 = [leftDoorWidthUnits / 2, doorHeight / 2, 0];
-                      const end1 = [-leftDoorWidthUnits / 2, 0, 0];
-                      const dx1 = end1[0] - start1[0];
+                      const start1 = [0, doorHeight / 2, doorThicknessUnits / 2];
+                      const end1 = [0, 0, doorThicknessUnits / 2 - leftDoorWidthUnits];
+                      const dz1 = end1[2] - start1[2];
                       const dy1 = end1[1] - start1[1];
-                      const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+                      const totalLength1 = Math.sqrt(dz1 * dz1 + dy1 * dy1);
 
                       let currentPos = 0;
                       let isLongDash = true;
@@ -1507,8 +1508,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                           <Line
                             key={`seg1-${isLongDash ? 'long' : 'short'}-${currentPos}`}
                             points={[
-                              [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
-                              [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
+                              [0, start1[1] + dy1 * t1, start1[2] + dz1 * t1],
+                              [0, start1[1] + dy1 * t2, start1[2] + dz1 * t2]
                             ]}
                             color="#FF8800"
                             lineWidth={1}
@@ -1522,11 +1523,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
 
                       // 두 번째 대각선: 중간 뒷쪽에서 아래 앞쪽으로
-                      const start2 = [-leftDoorWidthUnits / 2, 0, 0];
-                      const end2 = [leftDoorWidthUnits / 2, -doorHeight / 2, 0];
-                      const dx2 = end2[0] - start2[0];
+                      const start2 = [0, 0, doorThicknessUnits / 2 - leftDoorWidthUnits];
+                      const end2 = [0, -doorHeight / 2, doorThicknessUnits / 2];
+                      const dz2 = end2[2] - start2[2];
                       const dy2 = end2[1] - start2[1];
-                      const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                      const totalLength2 = Math.sqrt(dz2 * dz2 + dy2 * dy2);
 
                       currentPos = 0;
                       isLongDash = true;
@@ -1540,8 +1541,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                           <Line
                             key={`seg2-${isLongDash ? 'long' : 'short'}-${currentPos}`}
                             points={[
-                              [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
-                              [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
+                              [0, start2[1] + dy2 * t1, start2[2] + dz2 * t1],
+                              [0, start2[1] + dy2 * t2, start2[2] + dz2 * t2]
                             ]}
                             color="#FF8800"
                             lineWidth={1}
@@ -1913,12 +1914,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
                     } else {
                       // 측면뷰: > 패턴 (두 개의 대각선으로 꺾인 모양)
+                      // 측면 뷰에서 오른쪽 도어는 Z축(깊이) 방향으로 열림 (왼쪽 도어와 반대)
                       // 첫 번째 대각선: 위 뒷쪽에서 중간 앞쪽으로
-                      const start1 = [-rightDoorWidthUnits / 2, doorHeight / 2, 0];
-                      const end1 = [rightDoorWidthUnits / 2, 0, 0];
-                      const dx1 = end1[0] - start1[0];
+                      const start1 = [0, doorHeight / 2, doorThicknessUnits / 2 - rightDoorWidthUnits];
+                      const end1 = [0, 0, doorThicknessUnits / 2];
+                      const dz1 = end1[2] - start1[2];
                       const dy1 = end1[1] - start1[1];
-                      const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+                      const totalLength1 = Math.sqrt(dz1 * dz1 + dy1 * dy1);
 
                       let currentPos = 0;
                       let isLongDash = true;
@@ -1932,8 +1934,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                           <Line
                             key={`seg1-${isLongDash ? 'long' : 'short'}-${currentPos}`}
                             points={[
-                              [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
-                              [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
+                              [0, start1[1] + dy1 * t1, start1[2] + dz1 * t1],
+                              [0, start1[1] + dy1 * t2, start1[2] + dz1 * t2]
                             ]}
                             color="#FF8800"
                             lineWidth={1}
@@ -1947,11 +1949,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
 
                       // 두 번째 대각선: 중간 앞쪽에서 아래 뒷쪽으로
-                      const start2 = [rightDoorWidthUnits / 2, 0, 0];
-                      const end2 = [-rightDoorWidthUnits / 2, -doorHeight / 2, 0];
-                      const dx2 = end2[0] - start2[0];
+                      const start2 = [0, 0, doorThicknessUnits / 2];
+                      const end2 = [0, -doorHeight / 2, doorThicknessUnits / 2 - rightDoorWidthUnits];
+                      const dz2 = end2[2] - start2[2];
                       const dy2 = end2[1] - start2[1];
-                      const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                      const totalLength2 = Math.sqrt(dz2 * dz2 + dy2 * dy2);
 
                       currentPos = 0;
                       isLongDash = true;
@@ -1965,8 +1967,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                           <Line
                             key={`seg2-${isLongDash ? 'long' : 'short'}-${currentPos}`}
                             points={[
-                              [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
-                              [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
+                              [0, start2[1] + dy2 * t1, start2[2] + dz2 * t1],
+                              [0, start2[1] + dy2 * t2, start2[2] + dz2 * t2]
                             ]}
                             color="#FF8800"
                             lineWidth={1}
@@ -2348,8 +2350,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
             )}
 
 
-            {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰) */}
-            {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (
+            {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰) - 정면은 항상, 측면은 열렸을 때만 */}
+            {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (
               <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
                 {/* 대각선 - 도어 열림 방향 표시 (긴선-짧은선 교차 패턴) */}
                 {(() => {
@@ -2358,16 +2360,19 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   // 첫 번째 대각선 (위에서 아래로) - 조정된 힌지 위치 사용
                   const start1 = isFrontView
                     ? [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, -doorHeight / 2, 0]
-                    : [adjustedHingePosition === 'left' ? doorDepth / 2 : -doorDepth / 2, -doorHeight / 2, 0];
+                    : [0, -doorHeight / 2, adjustedHingePosition === 'left' ? doorThicknessUnits / 2 : doorThicknessUnits / 2 - doorWidthUnits];
                   const end1 = isFrontView
                     ? [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0]
-                    : [adjustedHingePosition === 'left' ? -doorDepth / 2 : doorDepth / 2, 0, 0];
+                    : [0, 0, adjustedHingePosition === 'left' ? doorThicknessUnits / 2 - doorWidthUnits : doorThicknessUnits / 2];
                   const segments1 = [];
 
                   // 선분의 총 길이 계산
                   const dx1 = end1[0] - start1[0];
                   const dy1 = end1[1] - start1[1];
-                  const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+                  const dz1 = end1[2] - start1[2];
+                  const totalLength1 = isFrontView
+                    ? Math.sqrt(dx1 * dx1 + dy1 * dy1)
+                    : Math.sqrt(dz1 * dz1 + dy1 * dy1);
                   
                   // 패턴 정의: [긴 대시, 공백, 짧은 대시, 공백]의 반복
                   const longDash = 2.4;   // 긴 대시 (6배)
@@ -2390,9 +2395,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       segments1.push(
                         <Line
                           key={`seg1-long-${currentPos}`}
-                          points={[
+                          points={isFrontView ? [
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
+                          ] : [
+                            [0, start1[1] + dy1 * t1, start1[2] + dz1 * t1],
+                            [0, start1[1] + dy1 * t2, start1[2] + dz1 * t2]
                           ]}
                           color="#FF8800"
                           lineWidth={1}
@@ -2412,9 +2420,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       segments1.push(
                         <Line
                           key={`seg1-short-${currentPos}`}
-                          points={[
+                          points={isFrontView ? [
                             [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
                             [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
+                          ] : [
+                            [0, start1[1] + dy1 * t1, start1[2] + dz1 * t1],
+                            [0, start1[1] + dy1 * t2, start1[2] + dz1 * t2]
                           ]}
                           color="#FF8800"
                           lineWidth={1}
@@ -2431,15 +2442,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   // 두 번째 대각선 (아래에서 위로) - 조정된 힌지 위치 사용
                   const start2 = isFrontView
                     ? [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0]
-                    : [adjustedHingePosition === 'left' ? -doorDepth / 2 : doorDepth / 2, 0, 0];
+                    : [0, 0, adjustedHingePosition === 'left' ? doorThicknessUnits / 2 - doorWidthUnits : doorThicknessUnits / 2];
                   const end2 = isFrontView
                     ? [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, doorHeight / 2, 0]
-                    : [adjustedHingePosition === 'left' ? doorDepth / 2 : -doorDepth / 2, doorHeight / 2, 0];
+                    : [0, doorHeight / 2, adjustedHingePosition === 'left' ? doorThicknessUnits / 2 : doorThicknessUnits / 2 - doorWidthUnits];
                   const segments2 = [];
 
                   const dx2 = end2[0] - start2[0];
                   const dy2 = end2[1] - start2[1];
-                  const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                  const dz2 = end2[2] - start2[2];
+                  const totalLength2 = isFrontView
+                    ? Math.sqrt(dx2 * dx2 + dy2 * dy2)
+                    : Math.sqrt(dz2 * dz2 + dy2 * dy2);
 
                   currentPos = 0;
                   isLongDash = true;
@@ -2456,9 +2470,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       segments2.push(
                         <Line
                           key={`seg2-long-${currentPos}`}
-                          points={[
+                          points={isFrontView ? [
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
+                          ] : [
+                            [0, start2[1] + dy2 * t1, start2[2] + dz2 * t1],
+                            [0, start2[1] + dy2 * t2, start2[2] + dz2 * t2]
                           ]}
                           color="#FF8800"
                           lineWidth={1}
@@ -2478,9 +2495,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       segments2.push(
                         <Line
                           key={`seg2-short-${currentPos}`}
-                          points={[
+                          points={isFrontView ? [
                             [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                             [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
+                          ] : [
+                            [0, start2[1] + dy2 * t1, start2[2] + dz2 * t1],
+                            [0, start2[1] + dy2 * t2, start2[2] + dz2 * t2]
                           ]}
                           color="#FF8800"
                           lineWidth={1}
