@@ -55,18 +55,13 @@ const BoxWithEdges: React.FC<{
 
   // Shadow auto-update enabled - manual shadow updates removed
 
-  // 재질은 DoorModule의 applyTextureToMaterial에서만 처리하므로 여기서는 단순히 clone만
-  const processedMaterial = useMemo(() => {
-    return material.clone() as THREE.MeshStandardMaterial;
-  }, [material]);
-
   return (
     <group position={position}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
         <mesh
           geometry={geometry}
-          material={processedMaterial}
+          material={material}
           receiveShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           castShadow={viewMode === '3D' && !isEditMode && shadowEnabled}
           renderOrder={isEditMode ? 999 : 0} // 편집 모드에서는 맨 위에 렌더링
