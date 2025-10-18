@@ -1591,11 +1591,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         isLongDash = !isLongDash;
                       }
                     } else {
-                      // 측면뷰: < 패턴 (두 개의 대각선으로 꺾인 모양)
+                      // 측면뷰: > 패턴 (왼쪽 힌지는 오른쪽으로 열림)
                       // 측면 뷰에서 도어는 Z축(깊이) 방향으로 열림
-                      // 첫 번째 대각선: 위 앞쪽에서 중간 뒷쪽으로
-                      const start1 = [0, doorHeight / 2, doorThicknessUnits / 2];
-                      const end1 = [0, 0, doorThicknessUnits / 2 - leftDoorWidthUnits];
+                      // 첫 번째 대각선: 위 뒷쪽에서 중간 앞쪽으로
+                      const start1 = [0, doorHeight / 2, doorThicknessUnits / 2 - leftDoorWidthUnits];
+                      const end1 = [0, 0, doorThicknessUnits / 2];
                       const dz1 = end1[2] - start1[2];
                       const dy1 = end1[1] - start1[1];
                       const totalLength1 = Math.sqrt(dz1 * dz1 + dy1 * dy1);
@@ -1626,9 +1626,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         isLongDash = !isLongDash;
                       }
 
-                      // 두 번째 대각선: 중간 뒷쪽에서 아래 앞쪽으로
-                      const start2 = [0, 0, doorThicknessUnits / 2 - leftDoorWidthUnits];
-                      const end2 = [0, -doorHeight / 2, doorThicknessUnits / 2];
+                      // 두 번째 대각선: 중간 앞쪽에서 아래 뒷쪽으로
+                      const start2 = [0, 0, doorThicknessUnits / 2];
+                      const end2 = [0, -doorHeight / 2, doorThicknessUnits / 2 - leftDoorWidthUnits];
                       const dz2 = end2[2] - start2[2];
                       const dy2 = end2[1] - start2[1];
                       const totalLength2 = Math.sqrt(dz2 * dz2 + dy2 * dy2);
@@ -2017,11 +2017,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         isLongDash = !isLongDash;
                       }
                     } else {
-                      // 측면뷰: > 패턴 (두 개의 대각선으로 꺾인 모양)
+                      // 측면뷰: < 패턴 (오른쪽 힌지는 왼쪽으로 열림)
                       // 측면 뷰에서 오른쪽 도어는 Z축(깊이) 방향으로 열림 (왼쪽 도어와 반대)
-                      // 첫 번째 대각선: 위 뒷쪽에서 중간 앞쪽으로
-                      const start1 = [0, doorHeight / 2, doorThicknessUnits / 2 - rightDoorWidthUnits];
-                      const end1 = [0, 0, doorThicknessUnits / 2];
+                      // 첫 번째 대각선: 위 앞쪽에서 중간 뒷쪽으로
+                      const start1 = [0, doorHeight / 2, doorThicknessUnits / 2];
+                      const end1 = [0, 0, doorThicknessUnits / 2 - rightDoorWidthUnits];
                       const dz1 = end1[2] - start1[2];
                       const dy1 = end1[1] - start1[1];
                       const totalLength1 = Math.sqrt(dz1 * dz1 + dy1 * dy1);
@@ -2052,9 +2052,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         isLongDash = !isLongDash;
                       }
 
-                      // 두 번째 대각선: 중간 앞쪽에서 아래 뒷쪽으로
-                      const start2 = [0, 0, doorThicknessUnits / 2];
-                      const end2 = [0, -doorHeight / 2, doorThicknessUnits / 2 - rightDoorWidthUnits];
+                      // 두 번째 대각선: 중간 뒷쪽에서 아래 앞쪽으로
+                      const start2 = [0, 0, doorThicknessUnits / 2 - rightDoorWidthUnits];
+                      const end2 = [0, -doorHeight / 2, doorThicknessUnits / 2];
                       const dz2 = end2[2] - start2[2];
                       const dy2 = end2[1] - start2[1];
                       const totalLength2 = Math.sqrt(dz2 * dz2 + dy2 * dy2);
