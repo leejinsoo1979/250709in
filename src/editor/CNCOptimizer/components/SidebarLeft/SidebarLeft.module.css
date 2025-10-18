@@ -257,6 +257,16 @@
   background: hsl(var(--theme));
 }
 
+/* 선택된 패널이 있을 때 다른 패널들을 깔끔하게 dimmed 처리 */
+.table:has(tr.selected) tbody tr:not(.selected) {
+  opacity: 0.35;
+  transition: opacity 0.2s ease;
+}
+
+.table:has(tr.selected) tbody tr:not(.selected):hover {
+  opacity: 0.6;
+}
+
 .table tbody tr.newPanel {
   background: hsl(var(--theme) / 0.08);
   animation: highlight 1s ease-in-out;
