@@ -2,7 +2,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  width: 400px;
+  width: auto; /* 패널 크기만큼만 차지 */
   height: 100vh;
   background-color: transparent; /* 회색 반투명 오버레이 제거 */
   display: flex;
@@ -10,7 +10,7 @@
   justify-content: center;
   z-index: 1000;
   padding-top: 60px;
-  pointer-events: none; /* 뷰어 조작을 위해 이벤트 통과 */
+  padding-right: 25px; /* 우측 여백 */
 }
 
 .panel {
@@ -23,7 +23,6 @@
   display: flex;
   flex-direction: column;
   animation: slideIn 0.2s ease-out;
-  pointer-events: auto; /* 패널은 클릭 가능하도록 */
 }
 
 @keyframes slideIn {
