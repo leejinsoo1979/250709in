@@ -69,7 +69,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     new THREE.MeshBasicMaterial({
       color: new THREE.Color('#666666'),
       transparent: true,
-      opacity: 0.2
+      opacity: 0.5
     }),
   []);
 
