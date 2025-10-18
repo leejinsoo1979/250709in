@@ -228,15 +228,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     }),
   []);
 
-  // 패널 강조용 material (밝은 파란색)
-  const panelHighlightMaterial = useMemo(() =>
-    new THREE.MeshBasicMaterial({
-      color: new THREE.Color('#3B82F6'), // 파란색
-      transparent: true,
-      opacity: 0.5
-    }),
-  []);
-
   // 패널 비활성화용 material (어두운 회색, 투명)
   const panelDimmedMaterial = useMemo(() =>
     new THREE.MeshBasicMaterial({
@@ -274,9 +265,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       });
     }
 
+    // 선택된 패널은 원래 material 유지
     if (isHighlighted) {
-      return panelHighlightMaterial;
+      return material;
     }
+    // 선택되지 않은 패널만 투명하게
     if (isDimmed) {
       return panelDimmedMaterial;
     }
