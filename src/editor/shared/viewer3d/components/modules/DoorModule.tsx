@@ -2051,10 +2051,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
                     } else {
                       // 측면뷰: 오른쪽 힌지 도어
-                      // 좌측뷰와 우측뷰 모두 > 패턴 (뒤에서 앞으로)
+                      // 좌측뷰: < 패턴 (앞→뒤)
+                      // 우측뷰: > 패턴 (뒤→앞)
                       // 첫 번째 대각선
-                      const start1 = [-rightDoorWidthUnits / 2, doorHeight / 2, 0];  // 뒤에서 시작
-                      const end1 = [rightDoorWidthUnits / 2, 0, 0];  // 앞으로 끝
+                      const start1 = view2DDirection === 'left'
+                        ? [rightDoorWidthUnits / 2, doorHeight / 2, 0]  // 좌측뷰: 앞에서 시작 (<)
+                        : [-rightDoorWidthUnits / 2, doorHeight / 2, 0];  // 우측뷰: 뒤에서 시작 (>)
+                      const end1 = view2DDirection === 'left'
+                        ? [-rightDoorWidthUnits / 2, 0, 0]  // 좌측뷰: 뒤로 끝 (<)
+                        : [rightDoorWidthUnits / 2, 0, 0];  // 우측뷰: 앞으로 끝 (>)
                       const dx1 = end1[0] - start1[0];
                       const dy1 = end1[1] - start1[1];
                       const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
@@ -2086,8 +2091,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
 
                       // 두 번째 대각선
-                      const start2 = [rightDoorWidthUnits / 2, 0, 0];  // 앞에서 시작
-                      const end2 = [-rightDoorWidthUnits / 2, -doorHeight / 2, 0];  // 뒤로 끝
+                      const start2 = view2DDirection === 'left'
+                        ? [-rightDoorWidthUnits / 2, 0, 0]  // 좌측뷰: 뒤에서 시작 (<)
+                        : [rightDoorWidthUnits / 2, 0, 0];  // 우측뷰: 앞에서 시작 (>)
+                      const end2 = view2DDirection === 'left'
+                        ? [rightDoorWidthUnits / 2, -doorHeight / 2, 0]  // 좌측뷰: 앞으로 끝 (<)
+                        : [-rightDoorWidthUnits / 2, -doorHeight / 2, 0];  // 우측뷰: 뒤로 끝 (>)
                       const dx2 = end2[0] - start2[0];
                       const dy2 = end2[1] - start2[1];
                       const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
