@@ -68,18 +68,19 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const { theme: appTheme } = useTheme();
 
   // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
-  const storePanelGrainDirections = useFurnitureStore(
-    React.useCallback(
-      (state) => {
-        if (!furnitureId) {
-          return undefined;
-        }
-        const furniture = state.placedModules.find(m => m.id === furnitureId);
-        return furniture?.panelGrainDirections;
-      },
-      [furnitureId]
-    )
-  );
+  // Zustand는 selector 함수의 참조가 바뀌면 재구독하므로, furnitureId별로 안정적인 selector 필요
+  const storePanelGrainDirections = useFurnitureStore((state) => {
+    if (!furnitureId) {
+      return undefined;
+    }
+    const furniture = state.placedModules.find(m => m.id === furnitureId);
+    return furniture?.panelGrainDirections;
+  }, (a, b) => {
+    // 커스텀 equality 함수: panelGrainDirections 객체의 내용이 같으면 리렌더링 방지
+    if (a === b) return true;
+    if (!a || !b) return a === b;
+    return JSON.stringify(a) === JSON.stringify(b);
+  });
 
   // 스토어에서 가져온 값 우선, 없으면 props 사용
   const activePanelGrainDirections = storePanelGrainDirections || panelGrainDirections;
