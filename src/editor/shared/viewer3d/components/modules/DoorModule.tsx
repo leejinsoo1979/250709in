@@ -55,61 +55,10 @@ const BoxWithEdges: React.FC<{
 
   // Shadow auto-update enabled - manual shadow updates removed
 
-  // 결 방향에 따라 텍스처 회전된 재질 생성
+  // 재질은 DoorModule의 applyTextureToMaterial에서만 처리하므로 여기서는 단순히 clone만
   const processedMaterial = useMemo(() => {
-    const doorMaterial = material.clone() as THREE.MeshStandardMaterial;
-
-    console.log('🔍 BoxWithEdges processedMaterial:', {
-      panelName,
-      textureUrl,
-      hasMaterialMap: !!doorMaterial.map,
-      viewMode
-    });
-
-    // textureUrl이 있고 panelName이 있으면 텍스처 적용
-    if (textureUrl && panelName && viewMode === '3D') {
-      console.log('✅ 텍스처 로드 시작:', textureUrl);
-      const resolvedDirection = resolvePanelGrainDirection(panelName, panelGrainDirections);
-      const grainDirection: 'horizontal' | 'vertical' = resolvedDirection || getDefaultGrainDirection(panelName);
-
-      // 텍스처 로드
-      const textureLoader = new THREE.TextureLoader();
-      const texture = textureLoader.load(
-        textureUrl,
-        (loadedTexture) => {
-          console.log('✅ 텍스처 로드 성공:', panelName, textureUrl);
-        },
-        undefined,
-        (error) => {
-          console.error('❌ 텍스처 로드 실패:', panelName, textureUrl, error);
-        }
-      );
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.wrapT = THREE.RepeatWrapping;
-      texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
-      texture.center.set(0.5, 0.5);
-
-      doorMaterial.map = texture;
-      doorMaterial.needsUpdate = true;
-    } else if (panelName && doorMaterial.map) {
-      // textureUrl은 없지만 기존 texture가 있으면 회전만 적용
-      console.log('🔄 기존 텍스처 회전 적용:', panelName);
-      const resolvedDirection = resolvePanelGrainDirection(panelName, panelGrainDirections);
-      const grainDirection: 'horizontal' | 'vertical' = resolvedDirection || getDefaultGrainDirection(panelName);
-
-      const texture = doorMaterial.map.clone();
-      texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
-      texture.center.set(0.5, 0.5);
-      texture.needsUpdate = true;
-
-      doorMaterial.map = texture;
-      doorMaterial.needsUpdate = true;
-    } else {
-      console.log('⚠️ 텍스처 적용 안됨:', { textureUrl, panelName, viewMode, hasMaterialMap: !!doorMaterial.map });
-    }
-
-    return doorMaterial;
-  }, [material, panelName, panelGrainDirections, textureUrl, viewMode]);
+    return material.clone() as THREE.MeshStandardMaterial;
+  }, [material]);
 
   return (
     <group position={position}>
