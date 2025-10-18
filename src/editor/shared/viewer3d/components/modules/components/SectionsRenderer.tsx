@@ -103,7 +103,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   // 테마 색상
   const themeColor = getThemeHex();
 
-  // 패널 비활성화용 material - highlightedPanel 변경 시마다 새로 생성
+  // 패널 비활성화용 material - 한 번만 생성하고 재사용
   const panelDimmedMaterial = React.useMemo(() => {
     const mat = new THREE.MeshBasicMaterial({
       color: new THREE.Color('#666666'),
@@ -112,7 +112,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     });
     mat.needsUpdate = true;
     return mat;
-  }, [highlightedPanel]); // highlightedPanel 변경 시 재생성
+  }, []); // 한 번만 생성
 
   // 패널이 강조되어야 하는지 확인
   const isPanelHighlighted = (panelName: string) => {

@@ -73,7 +73,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   const textColor = dimensionColor;
   const mmToThreeUnits = (mm: number) => mm / 100;
 
-  // 패널 비활성화용 material - highlightedPanel 변경 시마다 새로 생성
+  // 패널 비활성화용 material - 한 번만 생성하고 재사용
   const panelDimmedMaterial = React.useMemo(() => {
     const mat = new THREE.MeshBasicMaterial({
       color: new THREE.Color('#666666'),
@@ -82,7 +82,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
     });
     mat.needsUpdate = true;
     return mat;
-  }, [highlightedPanel]); // highlightedPanel 변경 시 재생성
+  }, []); // 한 번만 생성
 
   // 패널이 강조되어야 하는지 확인
   const isPanelHighlighted = (panelName: string) => {

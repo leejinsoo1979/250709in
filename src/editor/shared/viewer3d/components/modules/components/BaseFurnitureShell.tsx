@@ -228,7 +228,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     }),
   []);
 
-  // 패널 비활성화용 material - highlightedPanel 변경 시마다 새로 생성
+  // 패널 비활성화용 material - 한 번만 생성하고 재사용
   const panelDimmedMaterial = useMemo(() => {
     const mat = new THREE.MeshBasicMaterial({
       color: new THREE.Color('#666666'),
@@ -237,7 +237,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     });
     mat.needsUpdate = true;
     return mat;
-  }, [highlightedPanel]); // highlightedPanel 변경 시 재생성
+  }, []); // 한 번만 생성
 
   // 패널이 강조되어야 하는지 확인하는 함수
   const isPanelHighlighted = (panelName: string) => {
