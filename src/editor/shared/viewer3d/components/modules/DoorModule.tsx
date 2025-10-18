@@ -461,10 +461,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 도어 텍스처 적용 (텍스처 URL 변경 시에만)
   useEffect(() => {
-    const textureUrl = materialConfig.doorTexture;
+    // prop으로 받은 textureUrl 우선 사용, 없으면 materialConfig.doorTexture 사용
+    const effectiveTextureUrl = textureUrl || materialConfig.doorTexture;
 
     console.log('🚪 DoorModule 텍스처 적용 시작:', {
-      textureUrl,
+      propTextureUrl: textureUrl,
+      configTextureUrl: materialConfig.doorTexture,
+      effectiveTextureUrl,
       hasDoorMaterial: !!doorMaterial,
       hasLeftDoorMaterial: !!leftDoorMaterial,
       hasRightDoorMaterial: !!rightDoorMaterial,
@@ -477,18 +480,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     if (!isDragging && !isEditMode) {
       // 텍스처 변경 시에만 실행 (material 참조 변경은 무시)
       if (doorMaterial) {
-        applyTextureToMaterial(doorMaterial, textureUrl, '싱글');
+        applyTextureToMaterial(doorMaterial, effectiveTextureUrl, '싱글');
       }
       if (leftDoorMaterial) {
-        applyTextureToMaterial(leftDoorMaterial, textureUrl, '왼쪽');
+        applyTextureToMaterial(leftDoorMaterial, effectiveTextureUrl, '왼쪽');
       }
       if (rightDoorMaterial) {
-        applyTextureToMaterial(rightDoorMaterial, textureUrl, '오른쪽');
+        applyTextureToMaterial(rightDoorMaterial, effectiveTextureUrl, '오른쪽');
       }
     }
 
     // Three.js가 자동으로 업데이트하도록 함
-  }, [materialConfig.doorTexture, materialConfig, applyTextureToMaterial, doorMaterial, leftDoorMaterial, rightDoorMaterial, isDragging, isEditMode]); // 필요한 의존성 추가
+  }, [textureUrl, materialConfig.doorTexture, materialConfig, applyTextureToMaterial, doorMaterial, leftDoorMaterial, rightDoorMaterial, isDragging, isEditMode]); // textureUrl 의존성 추가
   
   // 투명도 설정: renderMode에 따라 조정 (2D solid 모드에서도 투명하게)
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
