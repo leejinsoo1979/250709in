@@ -107,7 +107,10 @@ interface UIState {
 
   // 강조된 섹션 (가구ID-섹션인덱스 형식: "furnitureId-0" 또는 "furnitureId-1")
   highlightedSection: string | null;
-  
+
+  // 강조된 패널 (가구ID-패널이름 형식: "furnitureId-패널명")
+  highlightedPanel: string | null;
+
   // 클릭 배치 상태 (Click & Place)
   selectedModuleForPlacement: string | null;
   hoveredSlotForPlacement: number | null;
@@ -182,6 +185,7 @@ interface UIState {
   setIsSlotDragging: (isDragging: boolean) => void;
   setHighlightedCompartment: (compartmentId: string | null) => void;
   setHighlightedSection: (sectionId: string | null) => void;
+  setHighlightedPanel: (panelId: string | null) => void;
   setSelectedModuleForPlacement: (moduleId: string | null) => void;
   setHoveredSlotForPlacement: (slotIndex: number | null) => void;
   setIndirectLightEnabled: (enabled: boolean) => void;
@@ -243,6 +247,7 @@ const initialUIState = {
   highlightedCompartment: null,  // 기본값: 강조된 칸 없음
   selectedFurnitureId: null,
   highlightedSection: null,  // 기본값: 강조된 섹션 없음
+  highlightedPanel: null,  // 기본값: 강조된 패널 없음
   selectedModuleForPlacement: null,  // 기본값: 선택된 모듈 없음
   hoveredSlotForPlacement: null,  // 기본값: 호버된 슬롯 없음
   indirectLightEnabled: false,  // 기본값: 간접조명 비활성화 (띄워서 배치 포함)
@@ -470,6 +475,9 @@ export const useUIStore = create<UIState>()(
 
       setHighlightedSection: (sectionId) =>
         set({ highlightedSection: sectionId }),
+
+      setHighlightedPanel: (panelId) =>
+        set({ highlightedPanel: panelId }),
 
       setSelectedModuleForPlacement: (moduleId) =>
         set({ selectedModuleForPlacement: moduleId }),

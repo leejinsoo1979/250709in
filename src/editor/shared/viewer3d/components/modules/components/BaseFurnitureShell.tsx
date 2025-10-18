@@ -201,6 +201,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const { theme } = useTheme(); // 테마 정보 가져오기
   const { view2DDirection, showDimensions, showDimensionsText } = useUIStore(); // UI 스토어에서 view2DDirection 가져오기
   const highlightedSection = useUIStore(state => state.highlightedSection);
+  const highlightedPanel = useUIStore(state => state.highlightedPanel);
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
   // 디버깅: BaseFurnitureShell이 받은 props 확인
@@ -227,10 +228,51 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     }),
   []);
 
+  // 패널 강조용 material (밝은 파란색)
+  const panelHighlightMaterial = useMemo(() =>
+    new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#3B82F6'), // 파란색
+      transparent: true,
+      opacity: 0.5
+    }),
+  []);
+
+  // 패널 비활성화용 material (어두운 회색, 투명)
+  const panelDimmedMaterial = useMemo(() =>
+    new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#666666'),
+      transparent: true,
+      opacity: 0.2
+    }),
+  []);
+
+  // 패널이 강조되어야 하는지 확인하는 함수
+  const isPanelHighlighted = (panelName: string) => {
+    if (!highlightedPanel || !placedFurnitureId) return false;
+    return highlightedPanel === `${placedFurnitureId}-${panelName}`;
+  };
+
+  // 패널이 비활성화되어야 하는지 확인하는 함수
+  const isPanelDimmed = (panelName: string) => {
+    if (!highlightedPanel || !placedFurnitureId) return false;
+    return highlightedPanel !== `${placedFurnitureId}-${panelName}` && highlightedPanel.startsWith(`${placedFurnitureId}-`);
+  };
+
+  // 패널용 material 결정 함수
+  const getPanelMaterial = (panelName: string) => {
+    if (isPanelHighlighted(panelName)) {
+      return panelHighlightMaterial;
+    }
+    if (isPanelDimmed(panelName)) {
+      return panelDimmedMaterial;
+    }
+    return material;
+  };
+
   // 좌우 프레임에 사용할 material 결정
   const sidePanelMaterial = (viewMode === '2D' && view2DDirection === 'front')
     ? highlightMaterial
-    : material;
+    : getPanelMaterial('측판');
 
   return (
     <group>
@@ -570,7 +612,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             }
             return 0;
           })()]}
-          material={material}
+          material={getPanelMaterial('상판')}
           renderMode={renderMode}
           isDragging={isDragging}
           isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
@@ -644,7 +686,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             }
             return 0;
           })()]}
-          material={material}
+          material={getPanelMaterial('바닥판')}
           renderMode={renderMode}
           isDragging={isDragging}
           isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
@@ -726,7 +768,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     <BoxWithEdges
                       args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), lowerBackPanelHeight, backPanelThickness]}
                       position={[0, lowerBackPanelY, lowerBackPanelZ]}
-                      material={material}
+                      material={getPanelMaterial('(하)백패널')}
                       renderMode={renderMode}
                       isDragging={isDragging}
                       isBackPanel={true}
@@ -741,7 +783,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     <BoxWithEdges
                       args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), upperBackPanelHeight, backPanelThickness]}
                       position={[0, upperBackPanelY, upperBackPanelZ]}
-                      material={material}
+                      material={getPanelMaterial('(상)백패널')}
                       renderMode={renderMode}
                       isDragging={isDragging}
                       isBackPanel={true}
@@ -760,7 +802,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             <BoxWithEdges
               args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), innerHeight + mmToThreeUnits(backPanelConfig.heightExtension), backPanelThickness]}
               position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
-              material={material}
+              material={getPanelMaterial('백패널')}
               renderMode={renderMode}
               isDragging={isDragging}
               isBackPanel={true}
@@ -827,4 +869,40 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   );
 };
 
-export default BaseFurnitureShell; 
+// React.memo로 최적화: materialConfig 변경 시 불필요한 리렌더링 방지
+export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
+  // spaceInfo의 materialConfig가 변경되어도 interiorColor/interiorTexture만 관련 있음
+  const prevMaterialConfig = prevProps.spaceInfo?.materialConfig;
+  const nextMaterialConfig = nextProps.spaceInfo?.materialConfig;
+
+  // 가구 본체 관련 속성만 비교
+  const materialPropsEqual =
+    prevMaterialConfig?.interiorColor === nextMaterialConfig?.interiorColor &&
+    prevMaterialConfig?.interiorTexture === nextMaterialConfig?.interiorTexture;
+
+  // 기타 중요 props 비교 (textureUrl은 이미 interiorTexture로 비교했으므로 제외)
+  const otherPropsEqual =
+    prevProps.width === nextProps.width &&
+    prevProps.height === nextProps.height &&
+    prevProps.depth === nextProps.depth &&
+    prevProps.innerWidth === nextProps.innerWidth &&
+    prevProps.innerHeight === nextProps.innerHeight &&
+    prevProps.basicThickness === nextProps.basicThickness &&
+    prevProps.isDragging === nextProps.isDragging &&
+    prevProps.isEditMode === nextProps.isEditMode &&
+    prevProps.placedFurnitureId === nextProps.placedFurnitureId &&
+    JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);
+
+  console.log('🏠 BaseFurnitureShell React.memo 비교:', {
+    materialPropsEqual,
+    otherPropsEqual,
+    prevInteriorTexture: prevMaterialConfig?.interiorTexture,
+    nextInteriorTexture: nextMaterialConfig?.interiorTexture,
+    prevDoorTexture: prevMaterialConfig?.doorTexture,
+    nextDoorTexture: nextMaterialConfig?.doorTexture,
+    willRerender: !(materialPropsEqual && otherPropsEqual)
+  });
+
+  // 모든 중요 props가 같으면 true 반환 (리렌더링 방지)
+  return materialPropsEqual && otherPropsEqual;
+}); 

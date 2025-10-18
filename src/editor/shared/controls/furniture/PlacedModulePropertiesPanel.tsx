@@ -442,6 +442,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const { t } = useTranslation();
   const [showDetails, setShowDetails] = useState(false);
   const [selectedPanelIndex, setSelectedPanelIndex] = useState<number | null>(null);
+  const { setHighlightedPanel } = useUIStore();
   
   // 컴포넌트 마운트 시 스타일 강제 적용 (다크모드 대응)
   useEffect(() => {
@@ -1266,7 +1267,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       <div
                         key={index}
                         className={`${styles.panelItem} ${selectedPanelIndex === index ? styles.panelItemSelected : selectedPanelIndex !== null ? styles.panelItemDimmed : ''}`}
-                        onClick={() => setSelectedPanelIndex(selectedPanelIndex === index ? null : index)}
+                        onClick={() => {
+                          const newIndex = selectedPanelIndex === index ? null : index;
+                          setSelectedPanelIndex(newIndex);
+
+                          // 3D 뷰어 강조용: 패널 정보를 uiStore에 저장
+                          if (newIndex !== null && currentPlacedModule && panel.name) {
+                            setHighlightedPanel(`${currentPlacedModule.id}-${panel.name}`);
+                          } else {
+                            setHighlightedPanel(null);
+                          }
+                        }}
                       >
                         <span className={styles.panelName}>{panel.name}:</span>
                         <span className={styles.panelSize}>
@@ -1362,7 +1373,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                       key={index}
                       className={`${styles.panelItem} ${selectedPanelIndex === index ? styles.panelItemSelected : selectedPanelIndex !== null ? styles.panelItemDimmed : ''}`}
                       style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                      onClick={() => setSelectedPanelIndex(selectedPanelIndex === index ? null : index)}
+                      onClick={() => {
+                        const newIndex = selectedPanelIndex === index ? null : index;
+                        setSelectedPanelIndex(newIndex);
+
+                        // 3D 뷰어 강조용: 패널 정보를 uiStore에 저장
+                        if (newIndex !== null && currentPlacedModule && panel.name) {
+                          setHighlightedPanel(`${currentPlacedModule.id}-${panel.name}`);
+                        } else {
+                          setHighlightedPanel(null);
+                        }
+                      }}
                     >
                       <div style={{ flex: 1 }}>
                         <span className={styles.panelName}>{panel.name}:</span>
