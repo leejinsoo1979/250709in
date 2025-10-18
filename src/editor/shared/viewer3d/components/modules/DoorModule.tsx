@@ -519,8 +519,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 도어 텍스처 적용 (텍스처 URL 변경 시에만)
   useEffect(() => {
-    // materialConfig.doorTexture만 사용 (textureUrl은 interiorTexture이므로 사용하지 않음)
-    const effectiveTextureUrl = materialConfig.doorTexture;
+    // materialConfig.doorTexture 또는 textureUrl 사용
+    const effectiveTextureUrl = materialConfig.doorTexture || textureUrl;
 
     console.log('🚪🚪🚪 DoorModule 텍스처 적용 useEffect 실행:', {
       propTextureUrl: textureUrl,
