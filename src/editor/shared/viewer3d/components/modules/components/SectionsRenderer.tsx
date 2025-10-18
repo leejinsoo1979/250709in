@@ -306,7 +306,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               isTopFinishPanel={section.isTopFinishPanel}
               showTopFrameDimension={index === 0}
               renderMode={renderMode}
-              furnitureId={furnitureId}
+              furnitureId={placedFurnitureId || furnitureId}
               sectionType={section.type}
               sectionInternalHeight={section.internalHeight}
               isLastSection={index === allSections.length - 1}
