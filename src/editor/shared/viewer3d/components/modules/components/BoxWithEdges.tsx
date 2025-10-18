@@ -279,33 +279,15 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           grainDirection
         });
 
-        // 백패널과 캐비넷 측판은 제외 (유지)
-        const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
-          (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
-        const isBackPanel = panelName && panelName.includes('백패널');
-
-        if (isFurnitureSidePanel || isBackPanel) {
-          // 캐비넷 측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도 (유지)
-          if (grainDirection === 'vertical') {
-            texture.rotation = 0;
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 측판/백패널 L: 0도 (유지)');
-          } else {
-            texture.rotation = Math.PI / 2;
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 측판/백패널 W: 90도 (유지)');
-          }
+        // 모든 패널 동일: L(vertical) = 0도, W(horizontal) = 90도
+        if (grainDirection === 'vertical') {
+          texture.rotation = 0;
+          texture.center.set(0.5, 0.5);
+          console.log('  ✅ 패널 L: 0도');
         } else {
-          // 나머지 모든 패널: L(vertical) = 90도, W(horizontal) = 180도 (90도 회전)
-          if (grainDirection === 'vertical') {
-            texture.rotation = Math.PI / 2; // 90도
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 패널 L: 90도 회전');
-          } else {
-            texture.rotation = Math.PI; // 180도
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 패널 W: 180도 회전');
-          }
+          texture.rotation = Math.PI / 2;
+          texture.center.set(0.5, 0.5);
+          console.log('  ✅ 패널 W: 90도');
         }
       }
 
