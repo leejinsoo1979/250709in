@@ -164,7 +164,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         <BoxWithEdges
           args={[drawerWidth - mmToThreeUnits(76) - mmToThreeUnits(26), mmToThreeUnits(5), drawerBodyDepth - mmToThreeUnits(26)]}
           position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(15) + mmToThreeUnits(5)/2, drawerBodyCenterZ]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1} 바닥` : `서랍${drawerIndex + 1} 바닥`)}
+          material={getPanelMaterial(sectionName ? `${sectionName} 서랍${drawerIndex + 1} 바닥` : `서랍${drawerIndex + 1} 바닥`)}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
           panelName={sectionName ? `${sectionName} 서랍${drawerIndex + 1} 바닥` : `서랍${drawerIndex + 1} 바닥`}
@@ -177,7 +177,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         <BoxWithEdges
           args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), basicThickness]}
           position={[centerX, centerY, drawerBodyCenterZ + drawerBodyDepth/2 - basicThickness/2]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1} 앞판` : `서랍${drawerIndex + 1} 앞판`)}
+          material={getPanelMaterial(sectionName ? `${sectionName} 서랍${drawerIndex + 1} 앞판` : `서랍${drawerIndex + 1} 앞판`)}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
           panelName={sectionName ? `${sectionName} 서랍${drawerIndex + 1} 앞판` : `서랍${drawerIndex + 1} 앞판`}
@@ -190,7 +190,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         <BoxWithEdges
           args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), basicThickness]}
           position={[centerX, centerY, drawerBodyCenterZ - drawerBodyDepth/2 + basicThickness/2]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`)}
+          material={getPanelMaterial(sectionName ? `${sectionName} 서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`)}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
           panelName={sectionName ? `${sectionName} 서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`}
@@ -203,7 +203,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         <BoxWithEdges
           args={[basicThickness, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - basicThickness * 2]}
           position={[centerX - drawerWidth/2 + basicThickness/2 + mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1} 좌측판` : `서랍${drawerIndex + 1} 좌측판`)}
+          material={getPanelMaterial(sectionName ? `${sectionName} 서랍${drawerIndex + 1} 좌측판` : `서랍${drawerIndex + 1} 좌측판`)}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
           panelName={sectionName ? `${sectionName} 서랍${drawerIndex + 1} 좌측판` : `서랍${drawerIndex + 1} 좌측판`}
@@ -216,7 +216,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         <BoxWithEdges
           args={[basicThickness, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - basicThickness * 2]}
           position={[centerX + drawerWidth/2 - basicThickness/2 - mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1} 우측판` : `서랍${drawerIndex + 1} 우측판`)}
+          material={getPanelMaterial(sectionName ? `${sectionName} 서랍${drawerIndex + 1} 우측판` : `서랍${drawerIndex + 1} 우측판`)}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
           panelName={sectionName ? `${sectionName} 서랍${drawerIndex + 1} 우측판` : `서랍${drawerIndex + 1} 우측판`}
@@ -229,7 +229,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         <BoxWithEdges
           args={[drawerWidth, drawerHeight, HANDLE_PLATE_THICKNESS]}
           position={[centerX, centerY, centerZ + actualDrawerDepth/2 - HANDLE_PLATE_THICKNESS/2]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1}(마이다)` : `서랍${drawerIndex + 1}(마이다)`)}
+          material={getPanelMaterial(sectionName ? `${sectionName} 서랍${drawerIndex + 1}(마이다)` : `서랍${drawerIndex + 1}(마이다)`)}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
           panelName={sectionName ? `${sectionName} 서랍${drawerIndex + 1}(마이다)` : `서랍${drawerIndex + 1}(마이다)`}

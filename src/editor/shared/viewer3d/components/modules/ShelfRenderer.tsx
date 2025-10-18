@@ -31,6 +31,7 @@ interface ShelfRendererProps {
   sideViewLineX?: number; // 측면뷰 라인용 X 좌표 오버라이드
   textureUrl?: string; // 텍스처 URL
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
+  sectionName?: string; // 섹션 이름 (예: "(상)", "(하)")
 }
 
 /**
@@ -60,15 +61,51 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   sideViewLineX,
   textureUrl,
   panelGrainDirections,
+  sectionName = '',
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const highlightedCompartment = useUIStore(state => state.highlightedCompartment);
   const setHighlightedCompartment = useUIStore(state => state.setHighlightedCompartment);
+  const highlightedPanel = useUIStore(state => state.highlightedPanel);
   const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
   const textColor = dimensionColor;
   const mmToThreeUnits = (mm: number) => mm / 100;
+
+  // 패널 비활성화용 material
+  const panelDimmedMaterial = React.useMemo(() =>
+    new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#666666'),
+      transparent: true,
+      opacity: 0.5
+    }),
+  []);
+
+  // 패널이 강조되어야 하는지 확인
+  const isPanelHighlighted = (panelName: string) => {
+    if (!highlightedPanel || !furnitureId) return false;
+    return highlightedPanel === `${furnitureId}-${panelName}`;
+  };
+
+  // 패널이 비활성화되어야 하는지 확인
+  const isPanelDimmed = (panelName: string) => {
+    if (!highlightedPanel || !furnitureId) return false;
+    return highlightedPanel !== `${furnitureId}-${panelName}` && highlightedPanel.startsWith(`${furnitureId}-`);
+  };
+
+  // 패널용 material 결정
+  const getPanelMaterial = (panelName: string) => {
+    // 선택된 패널은 원래 material 유지
+    if (isPanelHighlighted(panelName)) {
+      return material;
+    }
+    // 선택되지 않은 패널만 투명하게
+    if (isPanelDimmed(panelName)) {
+      return panelDimmedMaterial;
+    }
+    return material;
+  };
 
   // 측면뷰에서 치수 X 위치 계산: 좌측뷰는 왼쪽에, 우측뷰는 오른쪽에 표시
   const getDimensionXPosition = (forText: boolean = false) => {
@@ -136,10 +173,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
         <BoxWithEdges
           args={[innerWidth, basicThickness, depth - basicThickness]}
           position={[0, topPosition, basicThickness/2 + zOffset]}
-          material={material}
+          material={getPanelMaterial(sectionName ? `${sectionName}선반 1` : `선반 1`)}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
-          panelName="선반"
+          panelName={sectionName ? `${sectionName}선반 1` : `선반 1`}
           textureUrl={textureUrl}
           panelGrainDirections={panelGrainDirections}
               furnitureId={furnitureId}
@@ -221,10 +258,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               key={`shelf-${i}`}
               args={[innerWidth, basicThickness, shelfDepth]}
               position={[0, relativeYPosition, shelfZPosition]}
-              material={material}
+              material={getPanelMaterial(sectionName ? `${sectionName}선반 ${i}` : `선반 ${i}`)}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
-              panelName="선반"
+              panelName={sectionName ? `${sectionName}선반 ${i}` : `선반 ${i}`}
               textureUrl={textureUrl}
               panelGrainDirections={panelGrainDirections}
               furnitureId={furnitureId}
@@ -658,10 +695,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             key={`shelf-${i}`}
             args={[innerWidth, basicThickness, depth - basicThickness]}
             position={[0, relativeYPosition, basicThickness/2 + zOffset]}
-            material={material}
+            material={getPanelMaterial(sectionName ? `${sectionName}선반 ${i + 1}` : `선반 ${i + 1}`)}
             renderMode={renderMode}
             isHighlighted={isHighlighted}
-            panelName="선반"
+            panelName={sectionName ? `${sectionName}선반 ${i + 1}` : `선반 ${i + 1}`}
             textureUrl={textureUrl}
             panelGrainDirections={panelGrainDirections}
               furnitureId={furnitureId}
