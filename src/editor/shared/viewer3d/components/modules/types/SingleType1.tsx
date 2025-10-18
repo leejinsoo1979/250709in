@@ -127,7 +127,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData}
           placedFurnitureId={placedFurnitureId}
           spaceInfo={spaceInfo}
-          textureUrl={textureUrl}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
         >
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
@@ -148,7 +148,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 furnitureId={moduleData.id}
                 isHighlighted={isHighlighted}
                 placedFurnitureId={placedFurnitureId}
-                textureUrl={textureUrl}
+                textureUrl={spaceInfo.materialConfig?.doorTexture}
                 panelGrainDirections={panelGrainDirections}
               />
 
@@ -266,7 +266,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData}
           originalSlotWidth={originalSlotWidth || doorWidth}
           slotIndex={slotIndex}
-          textureUrl={textureUrl}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
           slotCenterX={slotCenterX}

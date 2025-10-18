@@ -317,7 +317,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   material={material}
                   renderMode={renderMode}
                   sectionName={sectionName}
-                  textureUrl={textureUrl}
+                  textureUrl={spaceInfo.materialConfig?.doorTexture}
                   panelGrainDirections={panelGrainDirections}
                   furnitureId={placedFurnitureId}
                 />
@@ -1393,7 +1393,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           slotIndex={slotIndex}
-          textureUrl={textureUrl}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
         />

@@ -194,7 +194,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   onClick={handleCabinetBodyClick}
                   panelName="좌측판"
                   panelGrainDirections={hookPanelGrainDirections}
-                  textureUrl={textureUrl}
+                  textureUrl={spaceInfo.materialConfig?.doorTexture}
                 />
 
                 {/* 오른쪽 측면 판재 - 섹션별로 분할, 깊이 적용 */}
@@ -209,7 +209,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   onClick={handleCabinetBodyClick}
                   panelName="우측판"
                   panelGrainDirections={hookPanelGrainDirections}
-                  textureUrl={textureUrl}
+                  textureUrl={spaceInfo.materialConfig?.doorTexture}
                 />
                 
                 {/* 하부 섹션 상판 + 상부 섹션 바닥판 (2단 옷장 구조) - index=0일때만 */}
@@ -260,7 +260,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         onClick={handleCabinetBodyClick}
                         panelName="중간판"
                         panelGrainDirections={hookPanelGrainDirections}
-                        textureUrl={textureUrl}
+                        textureUrl={spaceInfo.materialConfig?.doorTexture}
                       />
 
                       {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 */}
@@ -275,7 +275,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         onClick={handleCabinetBodyClick}
                         panelName="중간판"
                         panelGrainDirections={hookPanelGrainDirections}
-                        textureUrl={textureUrl}
+                        textureUrl={spaceInfo.materialConfig?.doorTexture}
                       />
                     </>
                   );
@@ -299,7 +299,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             onClick={handleCabinetBodyClick}
             panelName="좌측판"
             panelGrainDirections={hookPanelGrainDirections}
-            textureUrl={textureUrl}
+            textureUrl={spaceInfo.materialConfig?.doorTexture}
           />
 
           {/* 오른쪽 측면 판재 */}
@@ -313,7 +313,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             onClick={handleCabinetBodyClick}
             panelName="우측판"
             panelGrainDirections={hookPanelGrainDirections}
-            textureUrl={textureUrl}
+            textureUrl={spaceInfo.materialConfig?.doorTexture}
           />
         </>
       )}
@@ -381,7 +381,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             renderMode={renderMode}
             furnitureId={moduleData.id}
             placedFurnitureId={placedFurnitureId}
-              textureUrl={textureUrl}
+              textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
             sectionDepths={sectionDepths}
           />
@@ -519,7 +519,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             onClick={handleCabinetBodyClick}
             panelName="상판"
             panelGrainDirections={hookPanelGrainDirections}
-            textureUrl={textureUrl}
+            textureUrl={spaceInfo.materialConfig?.doorTexture}
           />
         );
       })()}
@@ -543,7 +543,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             onClick={handleCabinetBodyClick}
             panelName="하판"
             panelGrainDirections={hookPanelGrainDirections}
-            textureUrl={textureUrl}
+            textureUrl={spaceInfo.materialConfig?.doorTexture}
           />
         );
       })()}
@@ -594,7 +594,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                   panelName="백패널"
                   panelGrainDirections={hookPanelGrainDirections}
-                  textureUrl={textureUrl}
+                  textureUrl={spaceInfo.materialConfig?.doorTexture}
                 />
 
                 {/* 상부 섹션 백패널 - 상부 섹션 깊이 적용 */}
@@ -609,7 +609,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                   panelName="백패널"
                   panelGrainDirections={hookPanelGrainDirections}
-                  textureUrl={textureUrl}
+                  textureUrl={spaceInfo.materialConfig?.doorTexture}
                 />
               </>
             );
@@ -627,7 +627,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           isBackPanel={true}
           panelName="백패널"
           panelGrainDirections={hookPanelGrainDirections}
-          textureUrl={textureUrl}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
         />
       )}
 
@@ -664,7 +664,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               originalSlotWidth={originalSlotWidth}
               slotCenterX={slotCenterX || 0}
               slotIndex={slotIndex}
-          textureUrl={textureUrl}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
               doorTopGap={doorTopGap}
@@ -687,7 +687,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 originalSlotWidth={originalSlotWidth}
                 slotCenterX={slotCenterX || 0}
                 slotIndex={slotIndex}
-          textureUrl={textureUrl}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
                 sectionHeightsMm={sectionHeightsMm}
@@ -711,7 +711,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 originalSlotWidth={originalSlotWidth}
                 slotCenterX={slotCenterX || 0}
                 slotIndex={slotIndex}
-          textureUrl={textureUrl}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
                 sectionHeightsMm={sectionHeightsMm}

@@ -109,7 +109,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
-        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} lowerSectionDepthMm={baseFurniture.lowerSectionDepthMm} upperSectionDepthMm={baseFurniture.upperSectionDepthMm} textureUrl={textureUrl} panelGrainDirections={panelGrainDirections}>
+        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} lowerSectionDepthMm={baseFurniture.lowerSectionDepthMm} upperSectionDepthMm={baseFurniture.upperSectionDepthMm} textureUrl={spaceInfo.materialConfig?.doorTexture} panelGrainDirections={panelGrainDirections}>
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
             <>
@@ -127,7 +127,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
                 renderMode={renderMode}
                 furnitureId={moduleData.id}
                 placedFurnitureId={placedFurnitureId}
-              textureUrl={textureUrl}
+              textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
                 sectionDepths={sectionDepths}
               />
@@ -236,7 +236,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               originalSlotWidth={originalSlotWidth}
               slotCenterX={slotCenterX || 0}
               slotIndex={slotIndex}
-          textureUrl={textureUrl}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
               doorTopGap={doorTopGap}
@@ -259,7 +259,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               originalSlotWidth={originalSlotWidth}
               slotCenterX={slotCenterX || 0}
               slotIndex={slotIndex}
-          textureUrl={textureUrl}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
               sectionHeightsMm={sectionHeightsMm}
@@ -283,7 +283,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               originalSlotWidth={originalSlotWidth}
               slotCenterX={slotCenterX || 0}
               slotIndex={slotIndex}
-          textureUrl={textureUrl}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
               sectionHeightsMm={sectionHeightsMm}

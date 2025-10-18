@@ -71,7 +71,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
         moduleData={moduleData}
         placedFurnitureId={placedFurnitureId}
         showFurniture={showFurniture}
-        textureUrl={textureUrl}
+        textureUrl={spaceInfo.materialConfig?.doorTexture}
         panelGrainDirections={panelGrainDirections}
       >
         {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
@@ -91,7 +91,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
               furnitureId={moduleData.id}
               placedFurnitureId={placedFurnitureId}
-              textureUrl={textureUrl}
+              textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
             />
 
@@ -205,7 +205,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
           isEditMode={isEditMode}
           slotIndex={slotIndex}
-          textureUrl={textureUrl}
+          textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
           panelGrainDirections={panelGrainDirections} // 패널별 개별 결 방향
