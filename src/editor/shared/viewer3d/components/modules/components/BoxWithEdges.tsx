@@ -242,13 +242,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return panelSpecificMaterialRef.current;
     }
 
-    // 기존 material이 있고 결방향 정보가 변경되지 않은 경우에만 텍스처 회전값 유지
-    let previousRotation = 0;
-    if (!grainDirectionsChanged && panelSpecificMaterialRef.current?.map) {
-      previousRotation = panelSpecificMaterialRef.current.map.rotation;
-      console.log('💾 이전 회전값 저장:', previousRotation, '(', (previousRotation * 180 / Math.PI).toFixed(0), '도)', '(grainDirections 변경 안됨)');
-    }
-
     // processedMaterial을 복제하여 개별 material 생성
     const panelMaterial = processedMaterial.clone();
 
@@ -264,48 +257,38 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       texture.needsUpdate = true;
       panelMaterial.map = texture;
 
-      // 결방향 정보가 변경되지 않았고 이전 회전값이 있으면 복원
-      if (!grainDirectionsChanged && previousRotation !== 0) {
-        texture.rotation = previousRotation;
-        texture.center.set(0.5, 0.5);
-        console.log('🔄 이전 회전값 복원:', previousRotation);
-      } else {
-        // 결방향 정보가 변경되었거나 이전 회전값이 없으면 새로운 회전값 계산
-        if (grainDirectionsChanged) {
-          console.log('🆕 결방향 정보 변경됨 - 새로운 회전값 계산');
-        }
-        console.log('🔄 텍스처 회전 적용:', {
-          panelName,
-          grainDirection
-        });
+      // 항상 새로운 회전값 계산 (패널별 올바른 회전 적용)
+      console.log('🔄 텍스처 회전 적용:', {
+        panelName,
+        grainDirection
+      });
 
-        // 백패널과 캐비넷 측판 (정상 - 유지)
-        const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
-          (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
-        const isBackPanel = panelName && panelName.includes('백패널');
+      // 백패널과 캐비넷 측판 (정상 - 유지)
+      const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
+        (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
+      const isBackPanel = panelName && panelName.includes('백패널');
 
-        if (isFurnitureSidePanel || isBackPanel) {
-          // 좌우측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도 (정상 유지)
-          if (grainDirection === 'vertical') {
-            texture.rotation = 0;
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 측판/백패널 L: 0도 (정상)');
-          } else {
-            texture.rotation = Math.PI / 2;
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 측판/백패널 W: 90도 (정상)');
-          }
+      if (isFurnitureSidePanel || isBackPanel) {
+        // 좌우측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도 (정상 유지)
+        if (grainDirection === 'vertical') {
+          texture.rotation = 0;
+          texture.center.set(0.5, 0.5);
+          console.log('  ✅ 측판/백패널 L: 0도 (정상)');
         } else {
-          // 나머지 모든 패널: L(vertical) = 90도, W(horizontal) = 0도
-          if (grainDirection === 'vertical') {
-            texture.rotation = Math.PI / 2; // 90도
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 패널 L: 90도');
-          } else {
-            texture.rotation = 0;
-            texture.center.set(0.5, 0.5);
-            console.log('  ✅ 패널 W: 0도');
-          }
+          texture.rotation = Math.PI / 2;
+          texture.center.set(0.5, 0.5);
+          console.log('  ✅ 측판/백패널 W: 90도 (정상)');
+        }
+      } else {
+        // 나머지 모든 패널: L(vertical) = 90도, W(horizontal) = 0도
+        if (grainDirection === 'vertical') {
+          texture.rotation = Math.PI / 2; // 90도
+          texture.center.set(0.5, 0.5);
+          console.log('  ✅ 패널 L: 90도');
+        } else {
+          texture.rotation = 0;
+          texture.center.set(0.5, 0.5);
+          console.log('  ✅ 패널 W: 0도');
         }
       }
 
