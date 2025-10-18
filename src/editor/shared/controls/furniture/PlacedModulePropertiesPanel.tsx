@@ -1200,9 +1200,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               {t('furniture.viewDetails')}
             </button>
           </div>
-          <button className={styles.closeButton} onClick={handleClose}>
-            ✕
-          </button>
+          <button className={styles.closeButton} onClick={handleClose} aria-label="닫기"></button>
         </div>
         
         <div className={styles.content}>
