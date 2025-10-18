@@ -277,7 +277,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 isTopFinishPanel={section.isTopFinishPanel}
                 showTopFrameDimension={index === 0}
                 renderMode={renderMode}
-                furnitureId={furnitureId}
+                furnitureId={placedFurnitureId || furnitureId}
                 isHighlighted={isSectionHighlighted}
                 textureUrl={textureUrl}
                 panelGrainDirections={panelGrainDirections}
@@ -348,7 +348,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 isHighlighted={isDrawerSectionHighlighted}
                 textureUrl={textureUrl}
                 panelGrainDirections={panelGrainDirections}
-                furnitureId={furnitureId}
+                furnitureId={placedFurnitureId || furnitureId}
                 sectionName={sectionName}
               />
             );
