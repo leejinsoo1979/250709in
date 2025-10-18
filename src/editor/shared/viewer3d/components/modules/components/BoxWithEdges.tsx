@@ -109,7 +109,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   
   // 드래그 중일 때만 고스트 효과 적용 (편집 모드는 제외)
   const processedMaterial = React.useMemo(() => {
-    // MeshBasicMaterial인 경우 (프레임 형광색 등) 그대로 사용
+    // MeshBasicMaterial인 경우
+    // - 패널 하이라이팅용 dimmed material (opacity 0.5)은 그대로 사용
+    // - 프레임 형광색 등도 그대로 사용
     if (baseMaterial instanceof THREE.MeshBasicMaterial) {
       return baseMaterial;
     }
