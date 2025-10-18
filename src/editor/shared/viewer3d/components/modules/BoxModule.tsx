@@ -578,6 +578,9 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               moduleData={moduleData} // 실제 듀얼캐비넷 분할 정보
               isDragging={isDragging}
               isEditMode={isEditMode}
+              textureUrl={baseFurniture.textureUrl} // 텍스처 URL 전달
+              panelGrainDirections={baseFurniture.panelGrainDirections} // 결방향 정보 전달
+              furnitureId={placedFurnitureId} // 가구 ID 전달
             />
           );
         }

@@ -74,13 +74,13 @@ const BoxWithEdges: React.FC<{
     if (doorMaterial.map) {
       const texture = doorMaterial.map.clone();
 
-      // 세로 결 방향일 때 90도 회전 (텍스처를 세로로 세움)
+      // 백패널과 측판 제외한 모든 패널과 동일한 회전 로직
+      // L(vertical): 90도, W(horizontal): 180도
       if (grainDirection === 'vertical') {
         texture.rotation = Math.PI / 2;
         texture.center.set(0.5, 0.5);
       } else {
-        // 가로 결 방향일 때는 회전 없음 (텍스처 기본 방향)
-        texture.rotation = 0;
+        texture.rotation = Math.PI;
         texture.center.set(0.5, 0.5);
       }
 
@@ -374,8 +374,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           const panelName = '도어';
           const grainDirection = activePanelGrainDirections?.[panelName] || 'vertical'; // 기본값: vertical (세로)
 
-          // vertical(세로)이면 90도 회전, horizontal(가로)이면 회전 없음
-          texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
+          // 백패널과 측판 제외한 모든 패널과 동일한 회전 로직
+          // L(vertical): 90도, W(horizontal): 180도
+          texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : Math.PI;
           texture.center.set(0.5, 0.5); // 중심점 기준 회전
 
           material.map = texture;
