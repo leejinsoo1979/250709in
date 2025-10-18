@@ -233,6 +233,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (panelMaterial.map) {
       // 텍스처도 clone하여 각 패널마다 독립적인 텍스처 인스턴스 생성
       const texture = panelMaterial.map.clone();
+      texture.needsUpdate = true;
       panelMaterial.map = texture;
 
       // 이전 회전값이 있으면 먼저 적용 (덮어쓰기 방지)
@@ -282,7 +283,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
       console.log('✅ 텍스처 회전 적용:', {
         panelName,
-        isDrawerPanel,
         grainDirection,
         rotation: texture.rotation,
         rotationDegrees: (texture.rotation * 180 / Math.PI).toFixed(0) + '°'
