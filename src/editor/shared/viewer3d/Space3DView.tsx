@@ -108,8 +108,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       return frontPosition;
     }
 
-    // 2D 모드에서는 방향별 카메라 위치 - 각 방향에 최적화된 거리 사용 (1.5배 더 멀리)
-    const distanceMultiplier = 1.5;
+    // 2D 모드에서는 방향별 카메라 위치 - 각 방향에 최적화된 거리 사용 (2배 더 멀리)
+    const distanceMultiplier = 2.0;
     switch (view2DDirection) {
       case 'front':
         // 정면: Z축에서 깊이를 고려한 최적 거리
@@ -490,7 +490,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       let distance;
       let position;
       let up: [number, number, number] = [0, 1, 0];
-      const distanceMultiplier = 1.5; // 2D 모드 카메라 거리를 1.5배로
+      const distanceMultiplier = 2.0; // 2D 모드 카메라 거리를 2배로
 
       switch (viewDirection) {
         case 'front':
@@ -543,7 +543,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     let distance;
     let position;
     let up: [number, number, number] = [0, 1, 0]; // 기본 up vector
-    const distanceMultiplier = 1.5; // 2D 모드 카메라 거리를 1.5배로
+    const distanceMultiplier = 2.0; // 2D 모드 카메라 거리를 2배로
 
     switch (viewDirection) {
       case 'front':
