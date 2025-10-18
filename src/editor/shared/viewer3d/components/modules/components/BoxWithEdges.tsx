@@ -154,7 +154,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
     // 편집 모드에서는 원래 재질 그대로 사용
     return baseMaterial;
-  }, [baseMaterial, isDragging, isEditMode, viewMode, renderMode]);
+  }, [baseMaterial, isDragging, viewMode, renderMode, isClothingRod]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
