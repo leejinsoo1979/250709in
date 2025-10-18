@@ -255,7 +255,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             ? basicThickness/2 + zOffset - mmToThreeUnits(5) // 뒤로 5mm 이동 (백패널에 붙임)
             : basicThickness/2 + zOffset;
 
-          const panelName = sectionName ? `${sectionName} 선반 ${i + 1}` : `선반 ${i + 1}`;
+          const panelName = sectionName ? `${sectionName}선반 ${i + 1}` : `선반 ${i + 1}`;
           const shelfMat = getPanelMaterial(panelName);
           return (
             <BoxWithEdges
