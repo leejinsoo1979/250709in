@@ -849,6 +849,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     return null;
   }
 
+  // 도어용 원래 너비 계산 (adjustedWidth가 없으면 customWidth가 원래 너비)
+  const doorOriginalWidth = currentPlacedModule?.customWidth || moduleData.dimensions.width;
+
+  // 패널 상세정보 계산 (hasDoor 변경 시 자동 재계산)
+  const panelDetails = React.useMemo(() => {
+    return calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth);
+  }, [moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth]);
+
   const handleClose = () => {
     closeAllPopups();
   };
@@ -1234,14 +1242,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           
           {/* 상세보기 패널 */}
           {showDetails && (() => {
-            // 도어용 원래 너비 계산 (adjustedWidth가 없으면 customWidth가 원래 너비)
-            const originalWidth = currentPlacedModule?.customWidth || moduleData.dimensions.width;
-
             return (
               <div className={styles.detailsSection}>
                 <h5 className={styles.sectionTitle}>{t('furniture.panelDetails')}</h5>
                 <div className={styles.panelList}>
-                  {calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor, t, originalWidth).map((panel, index) => {
+                  {panelDetails.map((panel, index) => {
                   // 섹션 구분자인 경우
                   if (panel.name && panel.name.startsWith('===')) {
                     return (
