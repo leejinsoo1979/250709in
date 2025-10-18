@@ -64,14 +64,16 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
   const { viewMode } = useSpace3DView();
 
-  // 패널 비활성화용 material
-  const panelDimmedMaterial = React.useMemo(() =>
-    new THREE.MeshBasicMaterial({
+  // 패널 비활성화용 material - highlightedPanel 변경 시마다 새로 생성
+  const panelDimmedMaterial = React.useMemo(() => {
+    const mat = new THREE.MeshBasicMaterial({
       color: new THREE.Color('#666666'),
       transparent: true,
       opacity: 0.5
-    }),
-  []);
+    });
+    mat.needsUpdate = true;
+    return mat;
+  }, [highlightedPanel]); // highlightedPanel 변경 시 재생성
 
   // 패널이 강조되어야 하는지 확인
   const isPanelHighlighted = (panelName: string) => {
@@ -85,8 +87,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     return highlightedPanel !== `${furnitureId}-${panelName}` && highlightedPanel.startsWith(`${furnitureId}-`);
   };
 
-  // 패널용 material 결정
-  const getPanelMaterial = (panelName: string) => {
+  // 패널용 material 결정 - useMemo로 캐싱하여 불필요한 재렌더링 방지
+  const getPanelMaterial = React.useCallback((panelName: string) => {
     const fullPanelId = `${furnitureId}-${panelName}`;
     const isHighlighted = isPanelHighlighted(panelName);
     const isDimmed = isPanelDimmed(panelName);
@@ -112,7 +114,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
       return panelDimmedMaterial;
     }
     return material;
-  };
+  }, [highlightedPanel, furnitureId, material, panelDimmedMaterial]);
 
   // 디버그: 측면 뷰에서 렌더링 확인
   React.useEffect(() => {
