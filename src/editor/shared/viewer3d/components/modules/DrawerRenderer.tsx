@@ -87,6 +87,18 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
   // 패널용 material 결정
   const getPanelMaterial = (panelName: string) => {
+    const fullPanelId = `${furnitureId}-${panelName}`;
+
+    if (highlightedPanel) {
+      console.log('🎨 DrawerRenderer getPanelMaterial:', {
+        panelName,
+        fullPanelId,
+        highlightedPanel,
+        isHighlighted: isPanelHighlighted(panelName),
+        isDimmed: isPanelDimmed(panelName)
+      });
+    }
+
     // 선택된 패널은 원래 material 유지
     if (isPanelHighlighted(panelName)) {
       return material;
