@@ -162,6 +162,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 패널별 개별 material 생성 (텍스처 회전 적용) - processedMaterial이 변경되어도 회전값 유지
   const panelSpecificMaterialRef = React.useRef<THREE.MeshStandardMaterial | null>(null);
   const prevGrainDirectionsStrRef = React.useRef<string>('');
+  const prevProcessedMaterialRef = React.useRef<THREE.Material | null>(null);
 
   const panelSpecificMaterial = React.useMemo(() => {
     console.log('🔍 panelSpecificMaterial useMemo 실행:', {
@@ -222,8 +223,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     // activePanelGrainDirections가 변경되었는지 확인
     const grainDirectionsChanged = prevGrainDirectionsStrRef.current !== activePanelGrainDirectionsStr;
 
-    // 기존 material이 있고 processedMaterial의 기본 속성만 업데이트하는 경우
-    // 그리고 결방향 정보가 변경되지 않은 경우에만 텍스처 회전값 유지
+    // processedMaterial이 변경되었는지 확인 (객체 참조 비교)
+    const processedMaterialChanged = prevProcessedMaterialRef.current !== processedMaterial;
+
+    // 기존 material이 있고, processedMaterial과 결방향 정보가 모두 변경되지 않은 경우
+    // 기존 material을 그대로 반환하여 불필요한 재생성 방지
+    if (!grainDirectionsChanged && !processedMaterialChanged && panelSpecificMaterialRef.current) {
+      console.log('✅ 기존 material 재사용 (변경사항 없음)');
+      return panelSpecificMaterialRef.current;
+    }
+
+    // 기존 material이 있고 결방향 정보가 변경되지 않은 경우에만 텍스처 회전값 유지
     let previousRotation = 0;
     if (!grainDirectionsChanged && panelSpecificMaterialRef.current?.map) {
       previousRotation = panelSpecificMaterialRef.current.map.rotation;
@@ -299,11 +309,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     // ref에 material 저장하여 다음 렌더링 시 회전값 복원 가능하도록 함
     panelSpecificMaterialRef.current = panelMaterial;
 
-    // 현재 결방향 정보 저장
+    // 현재 결방향 정보 및 processedMaterial 저장
     prevGrainDirectionsStrRef.current = activePanelGrainDirectionsStr;
+    prevProcessedMaterialRef.current = processedMaterial;
 
     return panelMaterial;
-  }, [processedMaterial, panelName, activePanelGrainDirectionsStr]);
+  }, [processedMaterial, textureUrl, panelName, activePanelGrainDirectionsStr]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
