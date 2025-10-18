@@ -260,10 +260,24 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
   // 패널용 material 결정 함수
   const getPanelMaterial = (panelName: string) => {
-    if (isPanelHighlighted(panelName)) {
+    const isHighlighted = isPanelHighlighted(panelName);
+    const isDimmed = isPanelDimmed(panelName);
+
+    if (highlightedPanel) {
+      console.log('🔍 패널 material 체크:', {
+        panelName,
+        placedFurnitureId,
+        highlightedPanel,
+        targetId: `${placedFurnitureId}-${panelName}`,
+        isHighlighted,
+        isDimmed
+      });
+    }
+
+    if (isHighlighted) {
       return panelHighlightMaterial;
     }
-    if (isPanelDimmed(panelName)) {
+    if (isDimmed) {
       return panelDimmedMaterial;
     }
     return material;

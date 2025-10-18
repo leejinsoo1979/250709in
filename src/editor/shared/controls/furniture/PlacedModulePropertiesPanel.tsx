@@ -1273,8 +1273,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
                           // 3D 뷰어 강조용: 패널 정보를 uiStore에 저장
                           if (newIndex !== null && currentPlacedModule && panel.name) {
-                            setHighlightedPanel(`${currentPlacedModule.id}-${panel.name}`);
+                            const panelId = `${currentPlacedModule.id}-${panel.name}`;
+                            console.log('🎯 패널 강조 설정 (정보성):', panelId);
+                            setHighlightedPanel(panelId);
                           } else {
+                            console.log('🎯 패널 강조 해제');
                             setHighlightedPanel(null);
                           }
                         }}
@@ -1379,8 +1382,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
                         // 3D 뷰어 강조용: 패널 정보를 uiStore에 저장
                         if (newIndex !== null && currentPlacedModule && panel.name) {
-                          setHighlightedPanel(`${currentPlacedModule.id}-${panel.name}`);
+                          const panelId = `${currentPlacedModule.id}-${panel.name}`;
+                          console.log('🎯 패널 강조 설정 (일반):', panelId);
+                          setHighlightedPanel(panelId);
                         } else {
+                          console.log('🎯 패널 강조 해제');
                           setHighlightedPanel(null);
                         }
                       }}
