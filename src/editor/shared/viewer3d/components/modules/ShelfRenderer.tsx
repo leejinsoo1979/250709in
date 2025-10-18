@@ -84,26 +84,23 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
     return mat;
   }, []); // 한 번만 생성
 
-  // 패널이 강조되어야 하는지 확인
-  const isPanelHighlighted = (panelName: string) => {
-    if (!highlightedPanel || !furnitureId) return false;
-    return highlightedPanel === `${furnitureId}-${panelName}`;
-  };
-
-  // 패널이 비활성화되어야 하는지 확인
-  const isPanelDimmed = (panelName: string) => {
-    if (!highlightedPanel || !furnitureId) return false;
-    return highlightedPanel !== `${furnitureId}-${panelName}` && highlightedPanel.startsWith(`${furnitureId}-`);
-  };
-
   // 패널용 material 결정 - useCallback로 최적화
   const getPanelMaterial = React.useCallback((panelName: string) => {
+    // 패널 ID 생성
+    const panelId = `${furnitureId}-${panelName}`;
+
+    // 패널이 강조되어야 하는지 확인
+    const isHighlighted = highlightedPanel === panelId;
+
+    // 패널이 비활성화되어야 하는지 확인
+    const isDimmed = highlightedPanel && highlightedPanel !== panelId && highlightedPanel.startsWith(`${furnitureId}-`);
+
     // 선택된 패널은 원래 material 유지
-    if (isPanelHighlighted(panelName)) {
+    if (isHighlighted) {
       return material;
     }
     // 선택되지 않은 패널만 투명하게
-    if (isPanelDimmed(panelName)) {
+    if (isDimmed) {
       return panelDimmedMaterial;
     }
     return material;

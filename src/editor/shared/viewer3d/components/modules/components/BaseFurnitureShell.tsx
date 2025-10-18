@@ -239,31 +239,26 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     return mat;
   }, []); // 한 번만 생성
 
-  // 패널이 강조되어야 하는지 확인하는 함수
-  const isPanelHighlighted = (panelName: string) => {
-    if (!highlightedPanel || !placedFurnitureId) return false;
-    return highlightedPanel === `${placedFurnitureId}-${panelName}`;
-  };
-
-  // 패널이 비활성화되어야 하는지 확인하는 함수
-  const isPanelDimmed = (panelName: string) => {
-    if (!highlightedPanel || !placedFurnitureId) return false;
-    return highlightedPanel !== `${placedFurnitureId}-${panelName}` && highlightedPanel.startsWith(`${placedFurnitureId}-`);
-  };
-
   // 패널용 material 결정 함수 - useCallback로 최적화
   const getPanelMaterial = useCallback((panelName: string) => {
-    const isHighlighted = isPanelHighlighted(panelName);
-    const isDimmed = isPanelDimmed(panelName);
+    // 패널 ID 생성
+    const panelId = `${placedFurnitureId}-${panelName}`;
+
+    // 패널이 강조되어야 하는지 확인
+    const isHighlighted = highlightedPanel === panelId;
+
+    // 패널이 비활성화되어야 하는지 확인
+    const isDimmed = highlightedPanel && highlightedPanel !== panelId && highlightedPanel.startsWith(`${placedFurnitureId}-`);
 
     if (highlightedPanel) {
       console.log('🔍 패널 material 체크:', {
         panelName,
         placedFurnitureId,
         highlightedPanel,
-        targetId: `${placedFurnitureId}-${panelName}`,
+        panelId,
         isHighlighted,
-        isDimmed
+        isDimmed,
+        returningMaterial: isHighlighted ? 'normal' : isDimmed ? 'dimmed' : 'normal'
       });
     }
 

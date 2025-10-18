@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import * as THREE from 'three';
 import { CAMERA_SETTINGS } from '../utils/constants';
-import { useUIStore } from '@/store/uiStore';
 
 export interface OrbitControlsConfig {
   enabled: boolean;
@@ -31,18 +30,18 @@ export interface OrbitControlsConfig {
 
 /**
  * OrbitControls 설정을 관리하는 훅
- *
+ * 
  * 맥북 트랙패드 제스처:
  * - 한 손가락 클릭 후 드래그: 카메라 회전 (3D 모드) / 팬 (2D 모드)
  * - 두 손가락 스크롤: 줌 인/아웃
  * - 두 손가락 클릭 후 드래그: 화면 팬 이동
- *
+ * 
  * 마우스 컨트롤:
  * - 왼쪽 버튼: 비활성화
  * - 중간 버튼(휠 클릭/드래그): 카메라 회전 (3D 모드) / 팬 (2D 모드)
  * - 휠 스크롤: 줌 인/아웃
  * - 오른쪽 버튼: 팬
- *
+ * 
  * @param cameraTarget 카메라 타겟 위치
  * @param viewMode 뷰 모드 (2D 또는 3D)
  * @param spaceWidth 공간 폭 (mm) - 동적 거리 계산용
@@ -55,9 +54,6 @@ export const useOrbitControlsConfig = (
   spaceWidth?: number,
   spaceHeight?: number
 ): OrbitControlsConfig => {
-
-  // 가구 편집 팝업이 열려있는지 확인
-  const activePopup = useUIStore(state => state.activePopup);
   
   // 공간 크기에 따른 동적 거리 계산
   const calculateDynamicDistances = useMemo(() => {
@@ -92,12 +88,9 @@ export const useOrbitControlsConfig = (
   const config = useMemo(() => {
     // 2D 모드에서는 회전 비활성화
     const is2DMode = viewMode === '2D';
-
-    // 가구 편집 팝업이 열려있으면 카메라 컨트롤 비활성화
-    const isEditPopupOpen = activePopup.type === 'furnitureEdit';
-
+    
     return {
-      enabled: !isEditPopupOpen,
+      enabled: true,
       target: cameraTarget,
       minPolarAngle: is2DMode ? undefined : CAMERA_SETTINGS.POLAR_ANGLE_MIN,
       maxPolarAngle: is2DMode ? undefined : CAMERA_SETTINGS.POLAR_ANGLE_MAX,
@@ -122,7 +115,7 @@ export const useOrbitControlsConfig = (
         TWO: THREE.TOUCH.DOLLY_PAN, // 두 손가락: 줌+팬 (핀치 줌)
       },
     };
-  }, [cameraTarget, viewMode, calculateDynamicDistances, activePopup.type]);
+  }, [cameraTarget, viewMode, calculateDynamicDistances]);
 
   return config;
 }; 
