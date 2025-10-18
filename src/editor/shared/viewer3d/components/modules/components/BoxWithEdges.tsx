@@ -68,32 +68,29 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const { theme: appTheme } = useTheme();
 
   // 스토어에서 직접 panelGrainDirections 가져오기 (실시간 업데이트 보장)
-  const storePanelGrainDirections = useFurnitureStore(state => {
-    if (!furnitureId) {
-      console.log('❌ furnitureId 없음');
-      return undefined;
-    }
-    const furniture = state.placedModules.find(m => m.id === furnitureId);
-    console.log('🔍 스토어 검색:', {
-      furnitureId,
-      found: !!furniture,
-      panelGrainDirections: furniture?.panelGrainDirections,
-      allIds: state.placedModules.map(m => m.id)
-    });
-    return furniture?.panelGrainDirections;
-  });
+  const storePanelGrainDirections = useFurnitureStore(
+    React.useCallback(
+      (state) => {
+        if (!furnitureId) {
+          return undefined;
+        }
+        const furniture = state.placedModules.find(m => m.id === furnitureId);
+        return furniture?.panelGrainDirections;
+      },
+      [furnitureId]
+    )
+  );
 
   // 스토어에서 가져온 값 우선, 없으면 props 사용
   const activePanelGrainDirections = storePanelGrainDirections || panelGrainDirections;
 
+  // 디버그 로그
   console.log('🔥 BoxWithEdges - panelGrainDirections 소스:', {
     panelName,
     furnitureId,
     fromStore: !!storePanelGrainDirections,
     fromProps: !!panelGrainDirections,
-    final: activePanelGrainDirections,
-    storePanelGrainDirections,
-    propsPanelGrainDirections: panelGrainDirections
+    final: activePanelGrainDirections
   });
   
   // 기본 material 생성 (material prop이 없을 때 사용)
