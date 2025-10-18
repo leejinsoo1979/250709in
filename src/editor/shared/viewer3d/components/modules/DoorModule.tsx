@@ -57,14 +57,28 @@ const BoxWithEdges: React.FC<{
 
   // 결 방향에 따라 텍스처 회전된 재질 생성
   const processedMaterial = useMemo(() => {
-    if (!panelName) return material;
-
-    const resolvedDirection = resolvePanelGrainDirection(panelName, panelGrainDirections);
-    const grainDirection: 'horizontal' | 'vertical' = resolvedDirection || getDefaultGrainDirection(panelName);
-
     const doorMaterial = material.clone() as THREE.MeshStandardMaterial;
 
-    if (doorMaterial.map) {
+    // textureUrl이 있고 panelName이 있으면 텍스처 적용
+    if (textureUrl && panelName) {
+      const resolvedDirection = resolvePanelGrainDirection(panelName, panelGrainDirections);
+      const grainDirection: 'horizontal' | 'vertical' = resolvedDirection || getDefaultGrainDirection(panelName);
+
+      // 텍스처 로드
+      const textureLoader = new THREE.TextureLoader();
+      const texture = textureLoader.load(textureUrl);
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.wrapT = THREE.RepeatWrapping;
+      texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
+      texture.center.set(0.5, 0.5);
+
+      doorMaterial.map = texture;
+      doorMaterial.needsUpdate = true;
+    } else if (panelName && doorMaterial.map) {
+      // textureUrl은 없지만 기존 texture가 있으면 회전만 적용
+      const resolvedDirection = resolvePanelGrainDirection(panelName, panelGrainDirections);
+      const grainDirection: 'horizontal' | 'vertical' = resolvedDirection || getDefaultGrainDirection(panelName);
+
       const texture = doorMaterial.map.clone();
       texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
       texture.center.set(0.5, 0.5);
