@@ -256,6 +256,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     if (panelMaterial.map) {
       // 텍스처도 clone하여 각 패널마다 독립적인 텍스처 인스턴스 생성
       const texture = panelMaterial.map.clone();
+
+      // clone된 텍스처의 rotation을 0으로 리셋 (clone은 기존 rotation을 복사함)
+      texture.rotation = 0;
+      texture.center.set(0.5, 0.5);
+
       texture.needsUpdate = true;
       panelMaterial.map = texture;
 
