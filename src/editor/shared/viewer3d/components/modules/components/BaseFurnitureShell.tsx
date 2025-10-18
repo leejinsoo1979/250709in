@@ -328,6 +328,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 <>
                   {/* 왼쪽 하부 측판 */}
                   <BoxWithEdges
+                    key={`lower-left-panel-${getSidePanelMaterial('(하)좌측').uuid}`}
                     args={[basicThickness, adjustedLowerHeight, lowerDepth]}
                     position={[-innerWidth/2 - basicThickness/2, lowerPanelY, lowerZOffset]}
                     material={getSidePanelMaterial('(하)좌측')}
@@ -342,6 +343,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                   {/* 왼쪽 상부 측판 */}
                   <BoxWithEdges
+                    key={`upper-left-panel-${getSidePanelMaterial('(상)좌측').uuid}`}
                     args={[basicThickness, adjustedUpperHeight, upperDepth]}
                     position={[-innerWidth/2 - basicThickness/2, upperPanelY, upperZOffset]}
                     material={getSidePanelMaterial('(상)좌측')}
@@ -356,6 +358,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                   {/* 오른쪽 하부 측판 */}
                   <BoxWithEdges
+                    key={`lower-right-panel-${getSidePanelMaterial('(하)우측').uuid}`}
                     args={[basicThickness, adjustedLowerHeight, lowerDepth]}
                     position={[innerWidth/2 + basicThickness/2, lowerPanelY, lowerZOffset]}
                     material={getSidePanelMaterial('(하)우측')}
@@ -370,6 +373,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                   {/* 오른쪽 상부 측판 */}
                   <BoxWithEdges
+                    key={`upper-right-panel-${getSidePanelMaterial('(상)우측').uuid}`}
                     args={[basicThickness, adjustedUpperHeight, upperDepth]}
                     position={[innerWidth/2 + basicThickness/2, upperPanelY, upperZOffset]}
                     material={getSidePanelMaterial('(상)우측')}
@@ -390,6 +394,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           <>
             {/* 왼쪽 측면 판재 */}
             <BoxWithEdges
+              key={`left-panel-${getSidePanelMaterial('좌측판').uuid}`}
               args={[basicThickness, height, depth]}
               position={[-innerWidth/2 - basicThickness/2, 0, 0]}
               material={getSidePanelMaterial('좌측판')}
@@ -403,6 +408,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
             {/* 오른쪽 측면 판재 */}
             <BoxWithEdges
+              key={`right-panel-${getSidePanelMaterial('우측판').uuid}`}
               args={[basicThickness, height, depth]}
               position={[innerWidth/2 + basicThickness/2, 0, 0]}
               material={getSidePanelMaterial('우측판')}
@@ -476,6 +482,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     <React.Fragment key={`divider-${index}`}>
                       {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림 */}
                       <BoxWithEdges
+                        key={`upper-floor-${getPanelMaterial('(상)바닥').uuid}`}
                         args={[innerWidth, basicThickness, upperAdjustedDepth - basicThickness + mmToThreeUnits(26)]}
                         position={[0, middlePanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 + upperZOffset]}
                         material={getPanelMaterial('(상)바닥')}
@@ -490,6 +497,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                       {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
                       <BoxWithEdges
+                        key={`lower-top-${getPanelMaterial('(하)상판').uuid}`}
                         args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
                         position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 + lowerZOffset]}
                         material={getPanelMaterial('(하)상판')}
@@ -530,6 +538,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     <React.Fragment key={`divider-${index}`}>
                       {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
                       <BoxWithEdges
+                        key={`lower-top-2drawer-${getPanelMaterial('(하)상판').uuid}`}
                         args={[innerWidth, basicThickness - mmToThreeUnits(0.1), adjustedDepthForShelves - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
                         position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2]}
                         material={getPanelMaterial('(하)상판')}
@@ -544,6 +553,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                       {/* 상부 섹션 바닥판 - 백패널 방향으로 26mm 늘림만 적용 (앞에서 줄이지 않음) */}
                       <BoxWithEdges
+                        key={`upper-floor-2drawer-${getPanelMaterial('(상)바닥').uuid}`}
                         args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness + mmToThreeUnits(26)]}
                         position={[0, middlePanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2]}
                         material={getPanelMaterial('(상)바닥')}
@@ -580,16 +590,18 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 // 섹션 강조 확인 - 중간판은 하부 섹션에 속함
                 const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
 
+                const panelName = index === 0 ? '(하)상판' : '(상)바닥';
+                const panelMat = getPanelMaterial(panelName);
                 return (
                   <BoxWithEdges
-                    key={`divider-${index}`}
+                    key={`divider-${index}-${panelMat.uuid}`}
                     args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
                     position={[0, dividerY, basicThickness/2 + shelfZOffset]}
-                    material={getPanelMaterial(index === 0 ? '(하)상판' : '(상)바닥')}
+                    material={panelMat}
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerHighlighted}
-                    panelName={index === 0 ? '(하)상판' : '(상)바닥'}
+                    panelName={panelName}
                     panelGrainDirections={panelGrainDirections}
                     furnitureId={placedFurnitureId}
                     textureUrl={textureUrl}
@@ -602,32 +614,39 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         )}
 
         {/* 상단 판재 */}
-        <BoxWithEdges
-          args={[innerWidth, basicThickness, (() => {
-            // 다중 섹션이고 상부 깊이가 있으면 상부 섹션 깊이 사용
-            if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
-              return mmToThreeUnits(upperSectionDepthMm);
-            }
-            return depth;
-          })()]}
-          position={[0, height/2 - basicThickness/2, (() => {
-            // 다중 섹션이고 상부 깊이가 있으면 Z 오프셋 적용
-            if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
-              const upperDepth = mmToThreeUnits(upperSectionDepthMm);
-              const depthDiff = depth - upperDepth;
-              return depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
-            }
-            return 0;
-          })()]}
-          material={getPanelMaterial(isMultiSectionFurniture() ? '(상)상판' : '상판')}
-          renderMode={renderMode}
-          isDragging={isDragging}
-          isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
-          panelName="상판"
-          panelGrainDirections={panelGrainDirections}
-                    furnitureId={placedFurnitureId}
-          textureUrl={textureUrl}
-        />
+        {(() => {
+          const panelName = isMultiSectionFurniture() ? '(상)상판' : '상판';
+          const topPanelMat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`top-panel-${topPanelMat.uuid}`}
+              args={[innerWidth, basicThickness, (() => {
+                // 다중 섹션이고 상부 깊이가 있으면 상부 섹션 깊이 사용
+                if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
+                  return mmToThreeUnits(upperSectionDepthMm);
+                }
+                return depth;
+              })()]}
+              position={[0, height/2 - basicThickness/2, (() => {
+                // 다중 섹션이고 상부 깊이가 있으면 Z 오프셋 적용
+                if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
+                  const upperDepth = mmToThreeUnits(upperSectionDepthMm);
+                  const depthDiff = depth - upperDepth;
+                  return depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+                }
+                return 0;
+              })()]}
+              material={topPanelMat}
+              renderMode={renderMode}
+              isDragging={isDragging}
+              isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
+              panelName="상판"
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+              textureUrl={textureUrl}
+            />
+          );
+        })()}
 
         {/* Type4 상단 상판 두께 치수 표시 - 정면도에서만 */}
         {(moduleData?.id?.includes('4drawer-hanging') || moduleData?.id?.includes('2drawer-hanging')) && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
@@ -676,32 +695,39 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         )}
 
         {/* 하단 판재 */}
-        <BoxWithEdges
-          args={[innerWidth, basicThickness, (() => {
-            // 다중 섹션이고 하부 깊이가 있으면 하부 섹션 깊이 사용
-            if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
-              return mmToThreeUnits(lowerSectionDepthMm);
-            }
-            return depth;
-          })()]}
-          position={[0, -height/2 + basicThickness/2, (() => {
-            // 다중 섹션이고 하부 깊이가 있으면 Z 오프셋 적용
-            if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
-              const lowerDepth = mmToThreeUnits(lowerSectionDepthMm);
-              const depthDiff = depth - lowerDepth;
-              return depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
-            }
-            return 0;
-          })()]}
-          material={getPanelMaterial(isMultiSectionFurniture() ? '(하)바닥' : '바닥판')}
-          renderMode={renderMode}
-          isDragging={isDragging}
-          isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
-          panelName="바닥판"
-          panelGrainDirections={panelGrainDirections}
-                    furnitureId={placedFurnitureId}
-          textureUrl={textureUrl}
-        />
+        {(() => {
+          const panelName = isMultiSectionFurniture() ? '(하)바닥' : '바닥판';
+          const bottomPanelMat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`bottom-panel-${bottomPanelMat.uuid}`}
+              args={[innerWidth, basicThickness, (() => {
+                // 다중 섹션이고 하부 깊이가 있으면 하부 섹션 깊이 사용
+                if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
+                  return mmToThreeUnits(lowerSectionDepthMm);
+                }
+                return depth;
+              })()]}
+              position={[0, -height/2 + basicThickness/2, (() => {
+                // 다중 섹션이고 하부 깊이가 있으면 Z 오프셋 적용
+                if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
+                  const lowerDepth = mmToThreeUnits(lowerSectionDepthMm);
+                  const depthDiff = depth - lowerDepth;
+                  return depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+                }
+                return 0;
+              })()]}
+              material={bottomPanelMat}
+              renderMode={renderMode}
+              isDragging={isDragging}
+              isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
+              panelName="바닥판"
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+              textureUrl={textureUrl}
+            />
+          );
+        })()}
 
         {/* 뒷면 판재 (9mm 백패널) - hasBackPanel이 true일 때만 렌더링 */}
         {hasBackPanel && (
@@ -773,6 +799,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <>
                     {/* 하부 섹션 백패널 */}
                     <BoxWithEdges
+                      key={`lower-back-${getPanelMaterial('(하)백패널').uuid}`}
                       args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), lowerBackPanelHeight, backPanelThickness]}
                       position={[0, lowerBackPanelY, lowerBackPanelZ]}
                       material={getPanelMaterial('(하)백패널')}
@@ -788,6 +815,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                     {/* 상부 섹션 백패널 */}
                     <BoxWithEdges
+                      key={`upper-back-${getPanelMaterial('(상)백패널').uuid}`}
                       args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), upperBackPanelHeight, backPanelThickness]}
                       position={[0, upperBackPanelY, upperBackPanelZ]}
                       material={getPanelMaterial('(상)백패널')}
@@ -807,6 +835,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           ) : (
             // 단일 섹션: 기존 통짜 백패널
             <BoxWithEdges
+              key={`back-panel-${getPanelMaterial('백패널').uuid}`}
               args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), innerHeight + mmToThreeUnits(backPanelConfig.heightExtension), backPanelThickness]}
               position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
               material={getPanelMaterial('백패널')}

@@ -167,15 +167,18 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
     // 최상단 마감 패널 모드 (기존 18mm에서 추가로 18mm 위로, 총 0mm)
     const topPosition = innerHeight / 2 - basicThickness / 2;
 
+    const panelName = sectionName ? `${sectionName}선반 1` : `선반 1`;
+    const topFinishMat = getPanelMaterial(panelName);
     return (
       <group position={[0, yOffset, 0]}>
         <BoxWithEdges
+          key={`top-finish-${topFinishMat.uuid}`}
           args={[innerWidth, basicThickness, depth - basicThickness]}
           position={[0, topPosition, basicThickness/2 + zOffset]}
-          material={getPanelMaterial(sectionName ? `${sectionName}선반 1` : `선반 1`)}
+          material={topFinishMat}
           renderMode={renderMode}
           isHighlighted={isHighlighted}
-          panelName={sectionName ? `${sectionName}선반 1` : `선반 1`}
+          panelName={panelName}
           textureUrl={textureUrl}
           panelGrainDirections={panelGrainDirections}
               furnitureId={furnitureId}
@@ -252,15 +255,17 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             ? basicThickness/2 + zOffset - mmToThreeUnits(5) // 뒤로 5mm 이동 (백패널에 붙임)
             : basicThickness/2 + zOffset;
 
+          const panelName = sectionName ? `${sectionName} 선반 ${i + 1}` : `선반 ${i + 1}`;
+          const shelfMat = getPanelMaterial(panelName);
           return (
             <BoxWithEdges
-              key={`shelf-${i}`}
+              key={`shelf-${i}-${shelfMat.uuid}`}
               args={[innerWidth, basicThickness, shelfDepth]}
               position={[0, relativeYPosition, shelfZPosition]}
-              material={getPanelMaterial(sectionName ? `${sectionName} 선반 ${i + 1}` : `선반 ${i + 1}`)}
+              material={shelfMat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
-              panelName={sectionName ? `${sectionName} 선반 ${i + 1}` : `선반 ${i + 1}`}
+              panelName={panelName}
               textureUrl={textureUrl}
               panelGrainDirections={panelGrainDirections}
               furnitureId={furnitureId}
@@ -689,15 +694,17 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       {Array.from({ length: shelfCount }, (_, i) => {
         // 섹션 내에서의 상대적 Y 위치 계산
         const relativeYPosition = (-innerHeight / 2) + shelfSpacing * (i + 1);
+        const panelName = sectionName ? `${sectionName}선반 ${i + 1}` : `선반 ${i + 1}`;
+        const shelfMat = getPanelMaterial(panelName);
         return (
           <BoxWithEdges
-            key={`shelf-${i}`}
+            key={`shelf-${i}-${shelfMat.uuid}`}
             args={[innerWidth, basicThickness, depth - basicThickness]}
             position={[0, relativeYPosition, basicThickness/2 + zOffset]}
-            material={getPanelMaterial(sectionName ? `${sectionName}선반 ${i + 1}` : `선반 ${i + 1}`)}
+            material={shelfMat}
             renderMode={renderMode}
             isHighlighted={isHighlighted}
-            panelName={sectionName ? `${sectionName}선반 ${i + 1}` : `선반 ${i + 1}`}
+            panelName={panelName}
             textureUrl={textureUrl}
             panelGrainDirections={panelGrainDirections}
               furnitureId={furnitureId}

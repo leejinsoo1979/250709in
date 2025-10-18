@@ -172,82 +172,124 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         /> */}
         
         {/* 서랍밑판 (Drawer Bottom) - 5mm 두께, 사방 판재에 끼워짐 (폭은 76mm 더 줄이고, 깊이는 26mm 짧음) */}
-        <BoxWithEdges
-          args={[drawerWidth - mmToThreeUnits(76) - mmToThreeUnits(26), mmToThreeUnits(5), drawerBodyDepth - mmToThreeUnits(26)]}
-          position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(15) + mmToThreeUnits(5)/2, drawerBodyCenterZ]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1} 바닥` : `서랍${drawerIndex + 1} 바닥`)}
-          renderMode={renderMode}
-          isHighlighted={isHighlighted}
-          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1} 바닥` : `서랍${drawerIndex + 1} 바닥`}
-          textureUrl={textureUrl}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={furnitureId}
-        />
-        
+        {(() => {
+          const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 바닥` : `서랍${drawerIndex + 1} 바닥`;
+          const mat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`drawer-${drawerIndex}-bottom-${mat.uuid}`}
+              args={[drawerWidth - mmToThreeUnits(76) - mmToThreeUnits(26), mmToThreeUnits(5), drawerBodyDepth - mmToThreeUnits(26)]}
+              position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(15) + mmToThreeUnits(5)/2, drawerBodyCenterZ]}
+              material={mat}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+          );
+        })()}
+
         {/* 앞면 (얇은 판) - 손잡이 판보다 30mm 작게, 폭은 좌우 38mm씩 총 76mm 줄임 */}
-        <BoxWithEdges
-          args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), basicThickness]}
-          position={[centerX, centerY, drawerBodyCenterZ + drawerBodyDepth/2 - basicThickness/2]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1} 앞판` : `서랍${drawerIndex + 1} 앞판`)}
-          renderMode={renderMode}
-          isHighlighted={isHighlighted}
-          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1} 앞판` : `서랍${drawerIndex + 1} 앞판`}
-          textureUrl={textureUrl}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={furnitureId}
-        />
+        {(() => {
+          const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 앞판` : `서랍${drawerIndex + 1} 앞판`;
+          const mat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`drawer-${drawerIndex}-front-${mat.uuid}`}
+              args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), basicThickness]}
+              position={[centerX, centerY, drawerBodyCenterZ + drawerBodyDepth/2 - basicThickness/2]}
+              material={mat}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+          );
+        })()}
 
         {/* 뒷면 - 앞면 판과 높이 맞춤, 폭은 좌우 38mm씩 총 76mm 줄임 */}
-        <BoxWithEdges
-          args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), basicThickness]}
-          position={[centerX, centerY, drawerBodyCenterZ - drawerBodyDepth/2 + basicThickness/2]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`)}
-          renderMode={renderMode}
-          isHighlighted={isHighlighted}
-          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`}
-          textureUrl={textureUrl}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={furnitureId}
-        />
+        {(() => {
+          const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`;
+          const mat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`drawer-${drawerIndex}-back-${mat.uuid}`}
+              args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), basicThickness]}
+              position={[centerX, centerY, drawerBodyCenterZ - drawerBodyDepth/2 + basicThickness/2]}
+              material={mat}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+          );
+        })()}
 
         {/* 왼쪽 면 - 앞뒤 판재 두께(36mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
-        <BoxWithEdges
-          args={[basicThickness, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - basicThickness * 2]}
-          position={[centerX - drawerWidth/2 + basicThickness/2 + mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1} 좌측판` : `서랍${drawerIndex + 1} 좌측판`)}
-          renderMode={renderMode}
-          isHighlighted={isHighlighted}
-          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1} 좌측판` : `서랍${drawerIndex + 1} 좌측판`}
-          textureUrl={textureUrl}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={furnitureId}
-        />
+        {(() => {
+          const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 좌측판` : `서랍${drawerIndex + 1} 좌측판`;
+          const mat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`drawer-${drawerIndex}-left-${mat.uuid}`}
+              args={[basicThickness, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - basicThickness * 2]}
+              position={[centerX - drawerWidth/2 + basicThickness/2 + mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
+              material={mat}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+          );
+        })()}
 
         {/* 오른쪽 면 - 앞뒤 판재 두께(36mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
-        <BoxWithEdges
-          args={[basicThickness, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - basicThickness * 2]}
-          position={[centerX + drawerWidth/2 - basicThickness/2 - mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1} 우측판` : `서랍${drawerIndex + 1} 우측판`)}
-          renderMode={renderMode}
-          isHighlighted={isHighlighted}
-          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1} 우측판` : `서랍${drawerIndex + 1} 우측판`}
-          textureUrl={textureUrl}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={furnitureId}
-        />
+        {(() => {
+          const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 우측판` : `서랍${drawerIndex + 1} 우측판`;
+          const mat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`drawer-${drawerIndex}-right-${mat.uuid}`}
+              args={[basicThickness, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - basicThickness * 2]}
+              position={[centerX + drawerWidth/2 - basicThickness/2 - mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
+              material={mat}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+          );
+        })()}
 
         {/* === 손잡이 판 (앞쪽, 20mm 두께) === */}
-        <BoxWithEdges
-          args={[drawerWidth, drawerHeight, HANDLE_PLATE_THICKNESS]}
-          position={[centerX, centerY, centerZ + actualDrawerDepth/2 - HANDLE_PLATE_THICKNESS/2]}
-          material={getPanelMaterial(sectionName ? `${sectionName}서랍${drawerIndex + 1}(마이다)` : `서랍${drawerIndex + 1}(마이다)`)}
-          renderMode={renderMode}
-          isHighlighted={isHighlighted}
-          panelName={sectionName ? `${sectionName}서랍${drawerIndex + 1}(마이다)` : `서랍${drawerIndex + 1}(마이다)`}
-          textureUrl={textureUrl}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={furnitureId}
-        />
+        {(() => {
+          const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1}(마이다)` : `서랍${drawerIndex + 1}(마이다)`;
+          const mat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`drawer-${drawerIndex}-handle-${mat.uuid}`}
+              args={[drawerWidth, drawerHeight, HANDLE_PLATE_THICKNESS]}
+              position={[centerX, centerY, centerZ + actualDrawerDepth/2 - HANDLE_PLATE_THICKNESS/2]}
+              material={mat}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+          );
+        })()}
         
         {/* 상단면은 제외 (서랍이 열려있어야 함) */}
         
