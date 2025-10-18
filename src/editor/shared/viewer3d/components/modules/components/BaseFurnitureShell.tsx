@@ -283,10 +283,13 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     return material;
   };
 
-  // 좌우 프레임에 사용할 material 결정
-  const sidePanelMaterial = (viewMode === '2D' && view2DDirection === 'front')
-    ? highlightMaterial
-    : getPanelMaterial('측판');
+  // 좌우 프레임에 사용할 material 결정 함수
+  const getSidePanelMaterial = (panelName: string) => {
+    if (viewMode === '2D' && view2DDirection === 'front') {
+      return highlightMaterial;
+    }
+    return getPanelMaterial(panelName);
+  };
 
   return (
     <group>
@@ -337,7 +340,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <BoxWithEdges
                     args={[basicThickness, adjustedLowerHeight, lowerDepth]}
                     position={[-innerWidth/2 - basicThickness/2, lowerPanelY, lowerZOffset]}
-                    material={sidePanelMaterial}
+                    material={getSidePanelMaterial('(하)좌측')}
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerHighlighted}
@@ -351,7 +354,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <BoxWithEdges
                     args={[basicThickness, adjustedUpperHeight, upperDepth]}
                     position={[-innerWidth/2 - basicThickness/2, upperPanelY, upperZOffset]}
-                    material={sidePanelMaterial}
+                    material={getSidePanelMaterial('(상)좌측')}
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isUpperHighlighted}
@@ -365,7 +368,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <BoxWithEdges
                     args={[basicThickness, adjustedLowerHeight, lowerDepth]}
                     position={[innerWidth/2 + basicThickness/2, lowerPanelY, lowerZOffset]}
-                    material={sidePanelMaterial}
+                    material={getSidePanelMaterial('(하)우측')}
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerHighlighted}
@@ -379,7 +382,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   <BoxWithEdges
                     args={[basicThickness, adjustedUpperHeight, upperDepth]}
                     position={[innerWidth/2 + basicThickness/2, upperPanelY, upperZOffset]}
-                    material={sidePanelMaterial}
+                    material={getSidePanelMaterial('(상)우측')}
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isUpperHighlighted}
@@ -399,7 +402,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             <BoxWithEdges
               args={[basicThickness, height, depth]}
               position={[-innerWidth/2 - basicThickness/2, 0, 0]}
-              material={sidePanelMaterial}
+              material={getSidePanelMaterial('좌측판')}
               renderMode={renderMode}
               isDragging={isDragging}
               panelName="좌측판"
@@ -412,7 +415,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             <BoxWithEdges
               args={[basicThickness, height, depth]}
               position={[innerWidth/2 + basicThickness/2, 0, 0]}
-              material={sidePanelMaterial}
+              material={getSidePanelMaterial('우측판')}
               renderMode={renderMode}
               isDragging={isDragging}
               panelName="우측판"
@@ -626,7 +629,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             }
             return 0;
           })()]}
-          material={getPanelMaterial('상판')}
+          material={getPanelMaterial(isMultiSectionFurniture() ? '(상)상판' : '상판')}
           renderMode={renderMode}
           isDragging={isDragging}
           isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
@@ -700,7 +703,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             }
             return 0;
           })()]}
-          material={getPanelMaterial('바닥판')}
+          material={getPanelMaterial(isMultiSectionFurniture() ? '(하)바닥' : '바닥판')}
           renderMode={renderMode}
           isDragging={isDragging}
           isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-0` : false}
