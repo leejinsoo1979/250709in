@@ -1186,6 +1186,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     <div className={styles.overlay}>
       <div className={styles.panel}>
         <div className={styles.header}>
+          <div className={styles.headerTop}>
+            <button className={styles.closeButton} onClick={handleClose}>
+              ✕
+            </button>
+          </div>
           <div className={styles.headerTabs}>
             <button
               className={`${styles.tabButton} ${!showDetails ? styles.activeTab : ''}`}
@@ -1198,11 +1203,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               onClick={() => setShowDetails(true)}
             >
               {t('furniture.viewDetails')}
-            </button>
-          </div>
-          <div className={styles.headerButtons}>
-            <button className={styles.closeButton} onClick={handleClose}>
-              ✕
             </button>
           </div>
         </div>
