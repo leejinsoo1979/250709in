@@ -54,9 +54,9 @@ export const useCameraManager = (
     const distance = calculateOptimalDistance(spaceInfo.width, spaceInfo.height, spaceInfo.depth || 600, placedModules.length);
 
     // 거리를 적절한 zoom으로 변환 (거리가 클수록 zoom이 작아져야 함)
-    // 2D 모드에서는 거리가 2배이므로 zoom을 0.6배로 조정
-    // 4분할 뷰에서는 화면이 1/4 크기이므로 zoom을 0.3배로 조정
-    const zoomMultiplier = isSplitView ? 0.3 : (is2DMode ? 0.6 : 1.0);
+    // 2D 모드에서는 거리가 2배이므로 zoom을 0.65배로 조정
+    // 4분할 뷰에서는 화면이 1/4 크기이므로 zoom을 0.325배로 조정
+    const zoomMultiplier = isSplitView ? 0.325 : (is2DMode ? 0.65 : 1.0);
     const zoom = (1200 / distance) * zoomMultiplier;
     
     const canvasAspectRatio = window.innerWidth / window.innerHeight;
