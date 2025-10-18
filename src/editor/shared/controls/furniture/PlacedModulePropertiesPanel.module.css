@@ -37,45 +37,44 @@
 
 .header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  background-color: var(--theme-primary);
-  color: var(--theme-surface);
-  border-bottom: 1px solid var(--theme-border);
+  align-items: stretch;
+  position: relative;
+  border-bottom: 2px solid var(--theme-border);
 }
 
 .headerTabs {
   display: flex;
-  gap: 6px;
-  background: rgba(0, 0, 0, 0.15);
-  padding: 4px;
-  border-radius: 8px;
+  flex: 1;
 }
 
 .tabButton {
-  padding: 8px 18px;
+  flex: 1;
+  padding: 16px 20px;
   border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
+  background: var(--theme-surface-variant);
+  color: var(--theme-text-secondary);
+  font-size: 14px;
   font-weight: 500;
   cursor: pointer;
-  border-radius: 6px;
+  border-bottom: 3px solid transparent;
   transition: all 0.2s ease;
-  white-space: nowrap;
+  position: relative;
+}
+
+.tabButton:first-child {
+  border-top-left-radius: 12px;
 }
 
 .tabButton:hover:not(.activeTab) {
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.9);
+  background: var(--theme-surface-hover);
+  color: var(--theme-text);
 }
 
 .tabButton.activeTab {
-  background: white;
-  color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: white;
   font-weight: 600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border-bottom-color: var(--theme-primary);
 }
 
 .title {
@@ -149,22 +148,23 @@
 }
 
 .closeButton {
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  min-width: 40px;
   border: none;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
+  background: var(--theme-surface-variant);
+  border-top-right-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 16px;
-  color: var(--theme-surface);
+  font-size: 18px;
+  color: var(--theme-text-secondary);
   transition: all 0.2s ease;
 }
 
 .closeButton:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--theme-error);
+  color: white;
 }
 
 .content {
