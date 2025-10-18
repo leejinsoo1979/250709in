@@ -171,12 +171,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   }, [processedMaterial]);
   const prevTextureSignatureRef = React.useRef<string | null>(textureSignature);
 
+  // processedMaterial 타입이 변경되면 ref 초기화
+  React.useEffect(() => {
+    if (!(processedMaterial instanceof THREE.MeshStandardMaterial)) {
+      panelMaterialRef.current = null;
+    }
+  }, [processedMaterial]);
+
   // 패널별 개별 material 생성 (텍스처 회전 적용)
   const panelSpecificMaterial = React.useMemo(() => {
     if (!panelName || !(processedMaterial instanceof THREE.MeshStandardMaterial)) {
-      panelMaterialRef.current = null;
-      prevGrainDirectionsRef.current = activePanelGrainDirectionsStr;
-      prevTextureSignatureRef.current = textureSignature;
       return processedMaterial;
     }
 
