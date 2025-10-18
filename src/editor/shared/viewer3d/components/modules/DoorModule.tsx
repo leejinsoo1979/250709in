@@ -75,7 +75,7 @@ const BoxWithEdges: React.FC<{
     }
 
     return doorMaterial;
-  }, [material, panelName, panelGrainDirections, viewMode, renderMode]);
+  }, [material, panelName, panelGrainDirections, textureUrl]);
 
   return (
     <group position={position}>
