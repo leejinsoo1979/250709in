@@ -37,49 +37,45 @@
 
 .header {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
   background-color: var(--theme-primary);
   color: var(--theme-surface);
   border-bottom: 1px solid var(--theme-border);
 }
 
-.headerTop {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 12px 20px 8px 20px;
-}
-
 .headerTabs {
   display: flex;
-  gap: 0;
-  padding: 0 20px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  border-radius: 8px;
 }
 
 .tabButton {
-  padding: 10px 20px;
+  padding: 8px 18px;
   border: none;
   background: transparent;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
+  border-radius: 6px;
   transition: all 0.2s ease;
   white-space: nowrap;
-  position: relative;
 }
 
-.tabButton:hover {
+.tabButton:hover:not(.activeTab) {
+  background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.9);
 }
 
 .tabButton.activeTab {
-  color: white;
+  background: white;
+  color: var(--theme-primary);
   font-weight: 600;
-  border-bottom-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .title {
