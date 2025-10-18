@@ -15,6 +15,7 @@ interface ClothingRodProps {
   adjustedDepthForShelves: number;
   depth: number;
   addFrontFillLight?: boolean;
+  furnitureId?: string; // 패널 하이라이팅용 가구 ID
 }
 
 /**
@@ -35,9 +36,13 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   adjustedDepthForShelves,
   depth,
   addFrontFillLight,
+  furnitureId,
 }) => {
-  const { view2DTheme, view2DDirection } = useUIStore();
+  const { view2DTheme, view2DDirection, highlightedPanel } = useUIStore();
   const { viewMode } = useSpace3DView();
+
+  // 패널 하이라이팅이 활성화되어 있으면 옷봉을 투명하게 처리
+  const shouldDim = highlightedPanel && furnitureId && highlightedPanel.startsWith(`${furnitureId}-`);
 
   // 탑뷰에서는 렌더링하지 않음
   if (viewMode === '2D' && view2DDirection === 'top') {
@@ -87,7 +92,16 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const rodZOffset = -mmToThreeUnits(1);
 
   // 옷봉 재질: 3D 모드에서는 밝은 은색 금속, 2D 모드에서는 회색
+  // 패널 하이라이팅 시 투명하게 처리
   const rodMaterial = React.useMemo(() => {
+    if (shouldDim) {
+      return new THREE.MeshBasicMaterial({
+        color: new THREE.Color('#666666'),
+        transparent: true,
+        opacity: 0.5
+      });
+    }
+
     if (viewMode === '3D') {
       return new THREE.MeshStandardMaterial({
         color: '#cfd3db',
@@ -104,7 +118,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
         metalness: 0.1
       });
     }
-  }, [viewMode]);
+  }, [viewMode, shouldDim]);
 
   // 2D 도면용 선 색상
   const lineColor = view2DTheme === 'light' ? '#808080' : '#FFFFFF';
