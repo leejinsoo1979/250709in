@@ -808,22 +808,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         finalWidth: initialWidth
       });
     }
-  }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth]); // 실제 값이 바뀔 때만 실행
+  }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor]); // 실제 값이 바뀔 때만 실행
 
-  // 가구 편집 팝업이 활성화되지 않았으면 렌더링하지 않음 (조건부 렌더링은 훅 선언 이후에만)
-  if (activePopup.type !== 'furnitureEdit' || !activePopup.id) {
-    console.log('📝 PlacedModulePropertiesPanel 렌더링 안 함:', {
-      type: activePopup.type,
-      id: activePopup.id
-    });
-    return null;
-  }
-  
-  console.log('📝 PlacedModulePropertiesPanel 렌더링됨:', {
-    type: activePopup.type,
-    id: activePopup.id
-  });
-
+  // ⚠️ CRITICAL: 모든 hooks는 조건부 return 전에 호출되어야 함 (React hooks 규칙)
   // 듀얼 가구 여부 확인 (moduleId 기반)
   const isDualFurniture = moduleData ? moduleData.id.startsWith('dual-') : false;
 
@@ -838,7 +825,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const doorOriginalWidth = currentPlacedModule?.customWidth || moduleData?.dimensions.width;
 
   // 패널 상세정보 계산 (hasDoor 변경 시 자동 재계산)
-  // ⚠️ IMPORTANT: useMemo는 조건부 return 전에 호출되어야 함 (React hooks 규칙)
   const panelDetails = React.useMemo(() => {
     if (!moduleData) return [];
     return calculatePanelDetails(moduleData, customWidth, customDepth, hasDoor, t, doorOriginalWidth);
@@ -853,6 +839,20 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     console.log(`🔧 [도어 분할 UI 표시 조건] !showDetails=${!showDetails}, moduleData.hasDoor=${moduleData.hasDoor}, hasDoor=${hasDoor}, isTwoSectionFurniture=${isTwoSectionFurniture}, 최종표시=${!showDetails && moduleData.hasDoor && hasDoor && isTwoSectionFurniture}`);
     console.log(`📋 [전체 modelConfig]`, moduleData?.modelConfig);
   }
+
+  // 가구 편집 팝업이 활성화되지 않았으면 렌더링하지 않음
+  if (activePopup.type !== 'furnitureEdit' || !activePopup.id) {
+    console.log('📝 PlacedModulePropertiesPanel 렌더링 안 함:', {
+      type: activePopup.type,
+      id: activePopup.id
+    });
+    return null;
+  }
+
+  console.log('📝 PlacedModulePropertiesPanel 렌더링됨:', {
+    type: activePopup.type,
+    id: activePopup.id
+  });
 
   // 모듈 데이터가 없으면 렌더링하지 않음
   if (!currentPlacedModule || !moduleData) {
