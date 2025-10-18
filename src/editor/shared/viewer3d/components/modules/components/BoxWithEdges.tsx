@@ -168,11 +168,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
 
-  // 패널별 개별 material 생성 (텍스처 회전 적용) - processedMaterial이 변경되어도 회전값 유지
-  const panelSpecificMaterialRef = React.useRef<THREE.MeshStandardMaterial | null>(null);
-  const prevGrainDirectionsStrRef = React.useRef<string>('');
-  const prevProcessedMaterialRef = React.useRef<THREE.Material | null>(null);
-
+  // 패널별 개별 material 생성 (텍스처 회전 적용) - 항상 새로 생성
   const panelSpecificMaterial = React.useMemo(() => {
     console.log('🔍 panelSpecificMaterial useMemo 실행:', {
       panelName,
@@ -180,8 +176,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       hasMaterial: !!processedMaterial,
       isStandardMaterial: processedMaterial instanceof THREE.MeshStandardMaterial,
       hasMapTexture: processedMaterial instanceof THREE.MeshStandardMaterial ? !!processedMaterial.map : false,
-      activePanelGrainDirectionsStr,
-      hasExistingMaterial: !!panelSpecificMaterialRef.current
+      activePanelGrainDirectionsStr
     });
 
     // panelName이 없으면 processedMaterial 그대로 사용
@@ -229,20 +224,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       activePanelGrainDirectionsStr
     });
 
-    // activePanelGrainDirections가 변경되었는지 확인
-    const grainDirectionsChanged = prevGrainDirectionsStrRef.current !== activePanelGrainDirectionsStr;
-
-    // processedMaterial이 변경되었는지 확인 (객체 참조 비교)
-    const processedMaterialChanged = prevProcessedMaterialRef.current !== processedMaterial;
-
-    // 기존 material이 있고, processedMaterial과 결방향 정보가 모두 변경되지 않은 경우
-    // 기존 material을 그대로 반환하여 불필요한 재생성 방지
-    if (!grainDirectionsChanged && !processedMaterialChanged && panelSpecificMaterialRef.current) {
-      console.log('✅ 기존 material 재사용 (변경사항 없음)');
-      return panelSpecificMaterialRef.current;
-    }
-
-    // processedMaterial을 복제하여 개별 material 생성
+    // processedMaterial을 복제하여 개별 material 생성 (항상 새로 생성)
     const panelMaterial = processedMaterial.clone();
 
     // 텍스처가 있는 경우 회전 적용
@@ -302,13 +284,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         rotationDegrees: (texture.rotation * 180 / Math.PI).toFixed(0) + '°'
       });
     }
-
-    // ref에 material 저장하여 다음 렌더링 시 회전값 복원 가능하도록 함
-    panelSpecificMaterialRef.current = panelMaterial;
-
-    // 현재 결방향 정보 및 processedMaterial 저장
-    prevGrainDirectionsStrRef.current = activePanelGrainDirectionsStr;
-    prevProcessedMaterialRef.current = processedMaterial;
 
     return panelMaterial;
   }, [processedMaterial, textureUrl, panelName, activePanelGrainDirectionsStr]);
