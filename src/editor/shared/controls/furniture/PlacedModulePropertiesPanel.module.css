@@ -278,10 +278,24 @@
   padding: 6px 0;
   border-bottom: 1px solid var(--theme-border);
   font-size: 12px;
+  transition: all 0.2s ease;
 }
 
 .panelItem:last-child {
   border-bottom: none;
+}
+
+.panelItemSelected {
+  background: var(--theme-primary-light, rgba(59, 130, 246, 0.1));
+  padding: 8px 12px;
+  margin: 0 -12px;
+  border-radius: 6px;
+  opacity: 1 !important;
+  font-weight: 600;
+}
+
+.panelItemDimmed {
+  opacity: 0.35;
 }
 
 .panelName {

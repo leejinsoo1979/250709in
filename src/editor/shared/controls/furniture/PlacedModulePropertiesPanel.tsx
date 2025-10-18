@@ -441,6 +441,7 @@ const getFurnitureImagePath = (moduleId: string) => {
 const PlacedModulePropertiesPanel: React.FC = () => {
   const { t } = useTranslation();
   const [showDetails, setShowDetails] = useState(false);
+  const [selectedPanelIndex, setSelectedPanelIndex] = useState<number | null>(null);
   
   // 컴포넌트 마운트 시 스타일 강제 적용 (다크모드 대응)
   useEffect(() => {
@@ -1262,7 +1263,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   // 정보성 항목인 경우 (오픈 공간 등)
                   if (panel.isInfo) {
                     return (
-                      <div key={index} className={styles.panelItem}>
+                      <div
+                        key={index}
+                        className={`${styles.panelItem} ${selectedPanelIndex === index ? styles.panelItemSelected : selectedPanelIndex !== null ? styles.panelItemDimmed : ''}`}
+                        onClick={() => setSelectedPanelIndex(selectedPanelIndex === index ? null : index)}
+                      >
                         <span className={styles.panelName}>{panel.name}:</span>
                         <span className={styles.panelSize}>
                           {panel.description && panel.height ? `${panel.description} ${panel.height}mm` : panel.description || ''}
@@ -1353,7 +1358,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   }
 
                   return (
-                    <div key={index} className={styles.panelItem} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div
+                      key={index}
+                      className={`${styles.panelItem} ${selectedPanelIndex === index ? styles.panelItemSelected : selectedPanelIndex !== null ? styles.panelItemDimmed : ''}`}
+                      style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                      onClick={() => setSelectedPanelIndex(selectedPanelIndex === index ? null : index)}
+                    >
                       <div style={{ flex: 1 }}>
                         <span className={styles.panelName}>{panel.name}:</span>
                         <span className={styles.panelSize}>
@@ -1378,7 +1388,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                           justifyContent: 'center',
                           gap: '2px'
                         }}
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation(); // 패널 선택 방지
                           if (!currentPlacedModule) return;
                           const newDirection = currentDirection === 'horizontal' ? 'vertical' : 'horizontal';
                           const newDirections = {
