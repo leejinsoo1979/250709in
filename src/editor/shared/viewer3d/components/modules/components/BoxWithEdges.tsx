@@ -161,6 +161,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 패널별 개별 material 생성 (텍스처 회전 적용) - processedMaterial이 변경되어도 회전값 유지
   const panelSpecificMaterialRef = React.useRef<THREE.MeshStandardMaterial | null>(null);
+  const prevGrainDirectionsStrRef = React.useRef<string>('');
 
   const panelSpecificMaterial = React.useMemo(() => {
     console.log('🔍 panelSpecificMaterial useMemo 실행:', {
@@ -218,12 +219,15 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       activePanelGrainDirectionsStr
     });
 
+    // activePanelGrainDirections가 변경되었는지 확인
+    const grainDirectionsChanged = prevGrainDirectionsStrRef.current !== activePanelGrainDirectionsStr;
+
     // 기존 material이 있고 processedMaterial의 기본 속성만 업데이트하는 경우
-    // 텍스처 회전값 유지
+    // 그리고 결방향 정보가 변경되지 않은 경우에만 텍스처 회전값 유지
     let previousRotation = 0;
-    if (panelSpecificMaterialRef.current?.map) {
+    if (!grainDirectionsChanged && panelSpecificMaterialRef.current?.map) {
       previousRotation = panelSpecificMaterialRef.current.map.rotation;
-      console.log('💾 이전 회전값 저장:', previousRotation, '(', (previousRotation * 180 / Math.PI).toFixed(0), '도)');
+      console.log('💾 이전 회전값 저장:', previousRotation, '(', (previousRotation * 180 / Math.PI).toFixed(0), '도)', '(grainDirections 변경 안됨)');
     }
 
     // processedMaterial을 복제하여 개별 material 생성
@@ -236,13 +240,16 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       texture.needsUpdate = true;
       panelMaterial.map = texture;
 
-      // 이전 회전값이 있으면 먼저 적용 (덮어쓰기 방지)
-      if (previousRotation !== 0) {
+      // 결방향 정보가 변경되지 않았고 이전 회전값이 있으면 복원
+      if (!grainDirectionsChanged && previousRotation !== 0) {
         texture.rotation = previousRotation;
         texture.center.set(0.5, 0.5);
         console.log('🔄 이전 회전값 복원:', previousRotation);
       } else {
-        // 이전 회전값이 없으면 새로운 회전값 계산
+        // 결방향 정보가 변경되었거나 이전 회전값이 없으면 새로운 회전값 계산
+        if (grainDirectionsChanged) {
+          console.log('🆕 결방향 정보 변경됨 - 새로운 회전값 계산');
+        }
         console.log('🔄 텍스처 회전 적용:', {
           panelName,
           grainDirection
@@ -291,6 +298,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     // ref에 material 저장하여 다음 렌더링 시 회전값 복원 가능하도록 함
     panelSpecificMaterialRef.current = panelMaterial;
+
+    // 현재 결방향 정보 저장
+    prevGrainDirectionsStrRef.current = activePanelGrainDirectionsStr;
 
     return panelMaterial;
   }, [processedMaterial, panelName, activePanelGrainDirectionsStr]);
