@@ -443,7 +443,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [selectedPanelIndex, setSelectedPanelIndex] = useState<number | null>(null);
   const { setHighlightedPanel } = useUIStore();
-  
+
+  // 컴포넌트 언마운트 시 패널 강조 해제
+  useEffect(() => {
+    return () => {
+      setHighlightedPanel(null);
+    };
+  }, [setHighlightedPanel]);
+
   // 컴포넌트 마운트 시 스타일 강제 적용 (다크모드 대응)
   useEffect(() => {
     const style = document.createElement('style');
@@ -862,10 +869,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   }
 
   const handleClose = () => {
+    // 패널 강조 해제
+    setHighlightedPanel(null);
+    setSelectedPanelIndex(null);
     closeAllPopups();
   };
 
   const handleCancel = () => {
+    // 패널 강조 해제
+    setHighlightedPanel(null);
+    setSelectedPanelIndex(null);
+
     // 취소 시 모든 값을 원래 값으로 복원
     if (currentPlacedModule) {
       updatePlacedModule(currentPlacedModule.id, {
