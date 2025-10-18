@@ -1360,6 +1360,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
                 furnitureId={furnitureId}
                 panelName="좌측 도어"
+                textureUrl={textureUrl}
+                panelGrainDirections={panelGrainDirections}
               />
               
               {/* Hinges for left door - 분할 모드, 상부장, 하부장, 키큰장 */}
@@ -1782,6 +1784,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onPointerOut={handleDoorPointerOut}
                 furnitureId={furnitureId}
                 panelName="우측 도어"
+                textureUrl={textureUrl}
+                panelGrainDirections={panelGrainDirections}
               />
               
               {/* Hinges for right door - 분할 모드, 상부장, 하부장, 키큰장 */}
@@ -2227,6 +2231,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               onPointerOut={handleDoorPointerOut}
               furnitureId={furnitureId}
               panelName="도어"
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
             />
             {/* 윤곽선 */}
             <lineSegments>
