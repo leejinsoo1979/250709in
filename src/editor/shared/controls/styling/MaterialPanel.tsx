@@ -290,7 +290,7 @@ const MaterialPanel: React.FC = () => {
 
   const handleSelectMaterial = (name: string, color: string, material?: any) => {
     setSelectedMaterial(name);
-    
+
     // 이미지 텍스처인 경우 텍스처 경로도 함께 저장
     if (material?.texture === 'image' && material?.image) {
       // 모든 이미지 텍스처는 현재 선택된 탭에만 적용
@@ -301,6 +301,15 @@ const MaterialPanel: React.FC = () => {
         [colorProperty]: color,
         [textureProperty]: material.image
       };
+
+      console.log('🎨 MaterialPanel 재질 선택 (텍스처):', {
+        materialTab,
+        name,
+        textureProperty,
+        textureValue: material.image,
+        prevTexture: materialConfig[textureProperty],
+        newMaterialConfig
+      });
 
       setSpaceInfo({
         materialConfig: newMaterialConfig
@@ -314,7 +323,16 @@ const MaterialPanel: React.FC = () => {
         [colorProperty]: color,
         [textureProperty]: undefined
       };
-      
+
+      console.log('🎨 MaterialPanel 재질 선택 (색상):', {
+        materialTab,
+        name,
+        colorProperty,
+        colorValue: color,
+        textureProperty,
+        newMaterialConfig
+      });
+
       setSpaceInfo({
         materialConfig: newMaterialConfig
       });

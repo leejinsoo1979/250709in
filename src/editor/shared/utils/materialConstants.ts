@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 
+export type PanelGrainMap = { [panelName: string]: 'horizontal' | 'vertical' };
+
 /**
  * 재질 처리 관련 공통 상수
  */
@@ -99,4 +101,91 @@ export const applyOakTextureSettings = (
   }
 
   material.needsUpdate = true;
-}; 
+};
+
+const normalizePanelNameForCompare = (name: string) => {
+  return name
+    .replace(/\s+/g, '')
+    .replace(/[\(\)\[\]]/g, '')
+    .replace(/상부/g, '상')
+    .replace(/하부/g, '하')
+    .replace(/좌측/g, '좌')
+    .replace(/우측/g, '우')
+    .replace(/왼쪽/g, '좌')
+    .replace(/오른쪽/g, '우')
+    .replace(/-/g, '')
+    .toLowerCase();
+};
+
+const extractDoorInfo = (name: string) => {
+  if (!name.includes('도어')) {
+    return null;
+  }
+
+  const normalized = normalizePanelNameForCompare(name);
+  const hasLeft = normalized.includes('좌');
+  const hasRight = normalized.includes('우');
+  const hasUpper = normalized.includes('상');
+  const hasLower = normalized.includes('하');
+
+  return {
+    hasLeft,
+    hasRight,
+    hasUpper,
+    hasLower
+  };
+};
+
+export const resolvePanelGrainDirection = (
+  panelName?: string,
+  directions?: PanelGrainMap
+): 'horizontal' | 'vertical' | undefined => {
+  if (!panelName || !directions) {
+    return undefined;
+  }
+
+  if (directions[panelName]) {
+    return directions[panelName];
+  }
+
+  const entries = Object.entries(directions);
+
+  const directInclude = entries.find(([key]) => panelName.includes(key) || key.includes(panelName));
+  if (directInclude) {
+    return directInclude[1];
+  }
+
+  const normalizedPanel = normalizePanelNameForCompare(panelName);
+  const normalizedInclude = entries.find(([key]) => {
+    const normalizedKey = normalizePanelNameForCompare(key);
+    return normalizedPanel.includes(normalizedKey) || normalizedKey.includes(normalizedPanel);
+  });
+  if (normalizedInclude) {
+    return normalizedInclude[1];
+  }
+
+  if (panelName.includes('도어')) {
+    const panelDoorInfo = extractDoorInfo(panelName);
+    for (const [key, value] of entries) {
+      if (!key.includes('도어')) continue;
+      const keyDoorInfo = extractDoorInfo(key);
+      if (!panelDoorInfo || !keyDoorInfo) continue;
+
+      if (panelDoorInfo.hasLeft !== keyDoorInfo.hasLeft && (panelDoorInfo.hasLeft || keyDoorInfo.hasLeft)) {
+        continue;
+      }
+      if (panelDoorInfo.hasRight !== keyDoorInfo.hasRight && (panelDoorInfo.hasRight || keyDoorInfo.hasRight)) {
+        continue;
+      }
+      if (panelDoorInfo.hasUpper && keyDoorInfo.hasLower) {
+        continue;
+      }
+      if (panelDoorInfo.hasLower && keyDoorInfo.hasUpper) {
+        continue;
+      }
+      return value;
+    }
+  }
+
+  return undefined;
+};

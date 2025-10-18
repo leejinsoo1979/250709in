@@ -6,7 +6,7 @@ import { useViewerTheme } from '../../../context/ViewerThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
+import { getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useTexture } from '@react-three/drei';
 
 interface BoxWithEdgesProps {
@@ -160,108 +160,88 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 이전 activePanelGrainDirectionsStr 값 저장
   const prevGrainDirectionsRef = React.useRef<string>(activePanelGrainDirectionsStr);
   const panelMaterialRef = React.useRef<THREE.Material | null>(null);
+  const textureSignature = React.useMemo(() => {
+    if (processedMaterial instanceof THREE.MeshStandardMaterial && processedMaterial.map) {
+      return processedMaterial.map.uuid;
+    }
+    return null;
+  }, [processedMaterial]);
+  const prevTextureSignatureRef = React.useRef<string | null>(textureSignature);
 
   // 패널별 개별 material 생성 (텍스처 회전 적용)
   const panelSpecificMaterial = React.useMemo(() => {
-    // panelName이 없으면 processedMaterial 그대로 사용
     if (!panelName || !(processedMaterial instanceof THREE.MeshStandardMaterial)) {
+      panelMaterialRef.current = null;
+      prevGrainDirectionsRef.current = activePanelGrainDirectionsStr;
+      prevTextureSignatureRef.current = textureSignature;
       return processedMaterial;
     }
 
-    // 텍스처가 없으면 processedMaterial 그대로 사용
-    if (!processedMaterial.map) {
+    const sourceMap = processedMaterial.map;
+    if (!sourceMap) {
+      panelMaterialRef.current = null;
+      prevGrainDirectionsRef.current = activePanelGrainDirectionsStr;
+      prevTextureSignatureRef.current = textureSignature;
       return processedMaterial;
     }
 
-    // grainDirections가 변경되지 않았으면 기존 material 재사용
-    const grainDirectionsChanged = prevGrainDirectionsRef.current !== activePanelGrainDirectionsStr;
+    const grainDirection = resolvePanelGrainDirection(panelName, activePanelGrainDirections) || getDefaultGrainDirection(panelName);
 
-    if (!grainDirectionsChanged && panelMaterialRef.current) {
-      // processedMaterial의 속성만 업데이트 (드래그 등)
-      if (panelMaterialRef.current instanceof THREE.MeshStandardMaterial) {
-        panelMaterialRef.current.transparent = processedMaterial.transparent;
-        panelMaterialRef.current.opacity = processedMaterial.opacity;
-        panelMaterialRef.current.depthWrite = processedMaterial.depthWrite;
-        // color는 드래그 시에만 변경됨
-        if (isDragging) {
-          panelMaterialRef.current.color = processedMaterial.color.clone();
-        }
-        panelMaterialRef.current.needsUpdate = true;
-      }
-      return panelMaterialRef.current;
-    }
-
-    // grainDirections가 변경되었으면 새로운 회전값 계산
-    prevGrainDirectionsRef.current = activePanelGrainDirectionsStr;
-
-    // 패널의 결 방향 결정 (설정값 또는 기본값)
-    let grainDirection: 'horizontal' | 'vertical' | undefined;
-
-    if (activePanelGrainDirections) {
-      // 정확히 일치하는 키가 있는지 먼저 확인
-      if (activePanelGrainDirections[panelName]) {
-        grainDirection = activePanelGrainDirections[panelName];
-      } else {
-        // 부분 매칭
-        const matchingKey = Object.keys(activePanelGrainDirections).find(key =>
-          panelName.includes(key) || key.includes(panelName)
-        );
-        if (matchingKey) {
-          grainDirection = activePanelGrainDirections[matchingKey];
-        }
-      }
-    }
-
-    // 설정값이 없으면 기본값 사용
-    if (!grainDirection) {
-      grainDirection = getDefaultGrainDirection(panelName);
-    }
-
-    // processedMaterial을 복제하여 개별 material 생성
-    const panelMaterial = processedMaterial.clone();
-
-    // 텍스처 clone하여 회전 적용
-    const texture = processedMaterial.map.clone();
-
-    // clone된 텍스처의 rotation을 0으로 리셋
-    texture.rotation = 0;
-    texture.center.set(0.5, 0.5);
-
-    panelMaterial.map = texture;
-
-    // 백패널과 캐비넷 측판 (정상 - 유지)
     const isFurnitureSidePanel = panelName && !panelName.includes('서랍') &&
       (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
     const isBackPanel = panelName && panelName.includes('백패널');
 
-    if (isFurnitureSidePanel || isBackPanel) {
-      // 좌우측판, 백패널: L(vertical) = 0도, W(horizontal) = 90도
-      if (grainDirection === 'vertical') {
-        texture.rotation = 0;
-        texture.center.set(0.5, 0.5);
-      } else {
-        texture.rotation = Math.PI / 2;
-        texture.center.set(0.5, 0.5);
+    const targetRotation = (() => {
+      if (isFurnitureSidePanel || isBackPanel) {
+        return grainDirection === 'vertical' ? 0 : Math.PI / 2;
       }
-    } else {
-      // 나머지 모든 패널: L(vertical) = 90도, W(horizontal) = 0도
-      if (grainDirection === 'vertical') {
-        texture.rotation = Math.PI / 2;
-        texture.center.set(0.5, 0.5);
-      } else {
-        texture.rotation = 0;
-        texture.center.set(0.5, 0.5);
+      return grainDirection === 'vertical' ? Math.PI / 2 : 0;
+    })();
+
+    const grainDirectionsChanged = prevGrainDirectionsRef.current !== activePanelGrainDirectionsStr;
+    const textureChanged = prevTextureSignatureRef.current !== textureSignature;
+
+    if (!grainDirectionsChanged && !textureChanged && panelMaterialRef.current instanceof THREE.MeshStandardMaterial && panelMaterialRef.current.map) {
+      const existingTexture = panelMaterialRef.current.map;
+      if (existingTexture.rotation !== targetRotation) {
+        existingTexture.rotation = targetRotation;
+        existingTexture.center.set(0.5, 0.5);
+        existingTexture.needsUpdate = true;
+        panelMaterialRef.current.needsUpdate = true;
       }
+
+      panelMaterialRef.current.transparent = processedMaterial.transparent;
+      panelMaterialRef.current.opacity = processedMaterial.opacity;
+      panelMaterialRef.current.depthWrite = processedMaterial.depthWrite;
+
+      if (isDragging) {
+        panelMaterialRef.current.color = processedMaterial.color.clone();
+      }
+
+      return panelMaterialRef.current;
     }
 
-    texture.needsUpdate = true;
-    panelMaterial.needsUpdate = true;
+    prevGrainDirectionsRef.current = activePanelGrainDirectionsStr;
+    prevTextureSignatureRef.current = textureSignature;
 
-    // ref에 저장
+    const panelMaterial = processedMaterial.clone();
+    const texture = sourceMap.clone();
+
+    texture.rotation = targetRotation;
+    texture.center.set(0.5, 0.5);
+
+    panelMaterial.map = texture;
+    panelMaterial.transparent = processedMaterial.transparent;
+    panelMaterial.opacity = processedMaterial.opacity;
+    panelMaterial.depthWrite = processedMaterial.depthWrite;
+
+    panelMaterial.needsUpdate = true;
+    texture.needsUpdate = true;
+
     panelMaterialRef.current = panelMaterial;
 
     return panelMaterial;
-  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging]);
+  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, textureSignature]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 

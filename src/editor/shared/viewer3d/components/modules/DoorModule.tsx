@@ -10,7 +10,7 @@ import { useSpace3DView } from '../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import { useThree, useFrame } from '@react-three/fiber';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
-import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, getDefaultGrainDirection } from '@/editor/shared/utils/materialConstants';
+import { isCabinetTexture1, applyCabinetTexture1Settings, isOakTexture, applyOakTextureSettings, getDefaultGrainDirection, resolvePanelGrainDirection } from '@/editor/shared/utils/materialConstants';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { Line } from '@react-three/drei';
 import { Hinge } from '../Hinge';
@@ -59,32 +59,17 @@ const BoxWithEdges: React.FC<{
   const processedMaterial = useMemo(() => {
     if (!panelName) return material;
 
-    // 결 방향 결정
-    let grainDirection: 'horizontal' | 'vertical' = getDefaultGrainDirection(panelName);
+    const resolvedDirection = resolvePanelGrainDirection(panelName, panelGrainDirections);
+    const grainDirection: 'horizontal' | 'vertical' = resolvedDirection || getDefaultGrainDirection(panelName);
 
-    // 저장된 결 방향이 있으면 사용
-    if (panelGrainDirections && panelName && panelGrainDirections[panelName]) {
-      grainDirection = panelGrainDirections[panelName];
-    }
-
-    // 재질 복제하여 개별 텍스처 적용
     const doorMaterial = material.clone() as THREE.MeshStandardMaterial;
 
-    // 텍스처가 있는 경우 회전 적용
     if (doorMaterial.map) {
       const texture = doorMaterial.map.clone();
-
-      // 백패널과 측판 제외한 모든 패널과 동일한 회전 로직
-      // L(vertical): 90도, W(horizontal): 180도
-      if (grainDirection === 'vertical') {
-        texture.rotation = Math.PI / 2;
-        texture.center.set(0.5, 0.5);
-      } else {
-        texture.rotation = Math.PI;
-        texture.center.set(0.5, 0.5);
-      }
-
+      texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
+      texture.center.set(0.5, 0.5);
       texture.needsUpdate = true;
+
       doorMaterial.map = texture;
       doorMaterial.needsUpdate = true;
     }
@@ -186,11 +171,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   textureUrl, // 텍스처 URL
   panelGrainDirections // 패널별 결 방향
 }) => {
-  console.log('🚪🔧 DoorModule Props:', {
-    doorTopGap,
-    doorBottomGap,
-    moduleId: moduleData?.id
-  });
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
   const { doorsOpen, view2DDirection, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex } = useUIStore();
@@ -207,10 +187,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // props로 받은 spaceInfo를 우선 사용, 없으면 store에서 가져오기
   const currentSpaceInfo = spaceInfo || storeSpaceInfo;
-  const materialConfig = currentSpaceInfo.materialConfig || { 
-    interiorColor: '#FFFFFF', 
+  const materialConfig = currentSpaceInfo.materialConfig || {
+    interiorColor: '#FFFFFF',
     doorColor: '#E0E0E0'  // 기본값 변경
   };
+
+  console.log('🎨🎨🎨 DoorModule materialConfig:', {
+    doorTexture: materialConfig.doorTexture,
+    doorColor: materialConfig.doorColor,
+    propTextureUrl: textureUrl
+  });
 
   // 색상 설정: color prop이 있으면 사용, 없으면 현재 spaceInfo의 도어 색상 사용
   let doorColor = color || materialConfig.doorColor;
@@ -272,43 +258,41 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     return createDoorMaterial();
   }, [createDoorMaterial]);
 
+  // material ref 저장
+  const doorMaterialRef = React.useRef(doorMaterial);
+  const leftDoorMaterialRef = React.useRef(leftDoorMaterial);
+  const rightDoorMaterialRef = React.useRef(rightDoorMaterial);
+
+  React.useEffect(() => {
+    doorMaterialRef.current = doorMaterial;
+    leftDoorMaterialRef.current = leftDoorMaterial;
+    rightDoorMaterialRef.current = rightDoorMaterial;
+  }, [doorMaterial, leftDoorMaterial, rightDoorMaterial]);
+
   // 재질 속성 업데이트 (재생성 없이) - 성능 최적화
+  // 중요: mat.map은 절대 건드리지 않음! 텍스처는 별도 useEffect에서만 관리
   useEffect(() => {
-    const materials = [doorMaterial, leftDoorMaterial, rightDoorMaterial];
-    materials.forEach(mat => {
+    const materials = [doorMaterialRef.current, leftDoorMaterialRef.current, rightDoorMaterialRef.current];
+    materials.forEach((mat) => {
       if (mat) {
-        // 색상 설정
-        if (isDragging || isEditMode) {
-          // 드래그 중이거나 편집 모드일 때는 항상 테마 색상
-          mat.color.set(getThemeColor());
-        } else if (viewMode === '2D') {
-          // 2D 모드에서는 형광 녹색 사용
-          mat.color.set('#18CF23');
-          mat.map = null; // 2D 모드에서는 텍스처 제거
-        } else if (!mat.map) {
-          // 텍스처가 없을 때만 기본 색상 사용
-          mat.color.set(isSelected ? getThemeColor() : doorColor);
-        }
-        
-        // 편집 모드일 때 설정 (드래그와 분리)
+        // 편집 모드일 때 설정
         if (isEditMode) {
           mat.transparent = true;
-          mat.opacity = 0.15; // 매우 투명하게 (고스트 효과)
+          mat.opacity = 0.15;
           mat.color.set(getThemeColor());
-          mat.map = null; // 편집 모드에는 텍스처 제거
-          mat.depthWrite = false; // 깊이 버퍼 쓰기 비활성화
-          mat.depthTest = true; // 깊이 테스트는 활성화
-          mat.side = THREE.DoubleSide; // 양면 렌더링
-          mat.emissive = new THREE.Color(getThemeColor()); // 발광 효과
-          mat.emissiveIntensity = 0.1; // 약한 발광
+          mat.depthWrite = false;
+          mat.depthTest = true;
+          mat.side = THREE.DoubleSide;
+          mat.emissive = new THREE.Color(getThemeColor());
+          mat.emissiveIntensity = 0.1;
         } else if (isDragging) {
           mat.transparent = true;
           mat.opacity = 0.3;
           mat.color.set(getThemeColor());
-          mat.map = null;
           mat.depthWrite = false;
           mat.side = THREE.DoubleSide;
-        } else if (viewMode === '2D' && renderMode === 'solid') {
+        } else if (viewMode === '2D') {
+          mat.color.set('#18CF23');
           mat.transparent = false;
           mat.opacity = 1.0;
           mat.depthWrite = true;
@@ -316,20 +300,41 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           mat.transparent = true;
           mat.opacity = 0.3;
           mat.depthWrite = true;
+          if (!mat.map) {
+            mat.color.set(isSelected ? getThemeColor() : doorColor);
+          }
         } else if (isSelected) {
           mat.transparent = true;
           mat.opacity = 0.5;
           mat.depthWrite = true;
+          if (!mat.map) {
+            mat.color.set(getThemeColor());
+          }
         } else {
           mat.transparent = false;
           mat.opacity = 1.0;
           mat.depthWrite = true;
+          if (!mat.map) {
+            mat.color.set(doorColor);
+          }
         }
-        
+
         mat.needsUpdate = true;
       }
     });
-  }, [doorColor, isSelected, isDragging, isEditMode, viewMode, renderMode, doorMaterial, leftDoorMaterial, rightDoorMaterial]);
+  }, [doorColor, isSelected, isDragging, isEditMode, viewMode, renderMode]);
+
+  // 편집/드래그/2D 모드일 때 텍스처 제거
+  useEffect(() => {
+    if (isEditMode || isDragging || viewMode === '2D') {
+      [doorMaterialRef.current, leftDoorMaterialRef.current, rightDoorMaterialRef.current].forEach(mat => {
+        if (mat && mat.map) {
+          mat.map = null;
+          mat.needsUpdate = true;
+        }
+      });
+    }
+  }, [isEditMode, isDragging, viewMode]);
 
   // Shadow auto-update enabled - manual shadow updates removed
 
@@ -353,7 +358,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   });
 
   // 텍스처 적용 함수 (성능 최적화)
-  const applyTextureToMaterial = useCallback((material: THREE.MeshStandardMaterial, textureUrl: string | undefined, doorSide: string) => {
+  const getDoorPanelName = useCallback((doorSide: 'single' | 'left' | 'right') => {
+    const sectionLabel = sectionIndex === 1 ? '(상)' : sectionIndex === 0 ? '(하)' : '';
+    if (doorSide === 'single') {
+      return sectionLabel ? `${sectionLabel}도어` : '도어';
+    }
+    const sideLabel = doorSide === 'left' ? '(좌)' : '(우)';
+    return sectionLabel ? `${sectionLabel}도어${sideLabel}` : `도어${sideLabel}`;
+  }, [sectionIndex]);
+
+  const applyTextureToMaterial = useCallback((material: THREE.MeshStandardMaterial, textureUrl: string | undefined, doorSide: string, panelNameHint?: string) => {
     if (textureUrl && material) {
       // 즉시 재질 업데이트를 위해 텍스처 로딩 전에 색상 설정
       if (isOakTexture(textureUrl)) {
@@ -371,12 +385,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
           texture.repeat.set(1, 1);
 
           // 도어 나무결 방향 결정 (activePanelGrainDirections 우선)
-          const panelName = '도어';
-          const grainDirection = activePanelGrainDirections?.[panelName] || 'vertical'; // 기본값: vertical (세로)
+          const defaultPanelName = doorSide === '왼쪽'
+            ? getDoorPanelName('left')
+            : doorSide === '오른쪽'
+              ? getDoorPanelName('right')
+              : getDoorPanelName('single');
+          const resolvedPanelName = panelNameHint || defaultPanelName;
+          const grainDirection = resolvePanelGrainDirection(resolvedPanelName, activePanelGrainDirections) || 'vertical';
 
-          // 백패널과 측판 제외한 모든 패널과 동일한 회전 로직
-          // L(vertical): 90도, W(horizontal): 180도
-          texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : Math.PI;
+          texture.rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
           texture.center.set(0.5, 0.5); // 중심점 기준 회전
 
           material.map = texture;
@@ -426,45 +443,52 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       material.roughness = 0.6; // 기본 거칠기 복원
       material.needsUpdate = true;
     }
-  }, [doorColor, activePanelGrainDirections]);
+  }, [doorColor, activePanelGrainDirections, getDoorPanelName]);
 
   // activePanelGrainDirections 변경 시 기존 텍스처 회전 업데이트
   // JSON.stringify를 사용하여 객체 내부 값 변경을 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
 
   useEffect(() => {
-    const panelName = '도어';
-    const grainDirection = activePanelGrainDirections?.[panelName] || 'vertical';
-    const rotation = grainDirection === 'vertical' ? Math.PI / 2 : 0;
+    const panelNames = {
+      single: getDoorPanelName('single'),
+      left: getDoorPanelName('left'),
+      right: getDoorPanelName('right')
+    };
 
-    console.log('🔄 도어 결 방향 변경 감지:', {
-      panelName,
-      grainDirection,
-      rotation,
-      activePanelGrainDirectionsStr,
-      furnitureId
-    });
+    const resolveRotation = (panelNameHint: string) => {
+      const direction = resolvePanelGrainDirection(panelNameHint, activePanelGrainDirections) || 'vertical';
+      return direction === 'vertical' ? Math.PI / 2 : 0;
+    };
 
-    // 모든 도어 재질의 텍스처 회전 업데이트
-    [doorMaterial, leftDoorMaterial, rightDoorMaterial].forEach(mat => {
-      if (mat && mat.map) {
-        console.log('🔄 텍스처 회전 업데이트:', {
-          oldRotation: mat.map.rotation,
-          newRotation: rotation
-        });
-        mat.map.rotation = rotation;
-        mat.map.needsUpdate = true;
-        mat.needsUpdate = true;
-      }
-    });
-  }, [activePanelGrainDirectionsStr, doorMaterial, leftDoorMaterial, rightDoorMaterial]);
+    if (doorMaterial && doorMaterial.map) {
+      doorMaterial.map.rotation = resolveRotation(panelNames.single);
+      doorMaterial.map.center.set(0.5, 0.5);
+      doorMaterial.map.needsUpdate = true;
+      doorMaterial.needsUpdate = true;
+    }
+
+    if (leftDoorMaterial && leftDoorMaterial.map) {
+      leftDoorMaterial.map.rotation = resolveRotation(panelNames.left);
+      leftDoorMaterial.map.center.set(0.5, 0.5);
+      leftDoorMaterial.map.needsUpdate = true;
+      leftDoorMaterial.needsUpdate = true;
+    }
+
+    if (rightDoorMaterial && rightDoorMaterial.map) {
+      rightDoorMaterial.map.rotation = resolveRotation(panelNames.right);
+      rightDoorMaterial.map.center.set(0.5, 0.5);
+      rightDoorMaterial.map.needsUpdate = true;
+      rightDoorMaterial.needsUpdate = true;
+    }
+  }, [activePanelGrainDirectionsStr, doorMaterial, leftDoorMaterial, rightDoorMaterial, getDoorPanelName]);
 
   // 도어 텍스처 적용 (텍스처 URL 변경 시에만)
   useEffect(() => {
-    // prop으로 받은 textureUrl 우선 사용, 없으면 materialConfig.doorTexture 사용
-    const effectiveTextureUrl = textureUrl || materialConfig.doorTexture;
+    // materialConfig.doorTexture만 사용 (textureUrl은 interiorTexture이므로 사용하지 않음)
+    const effectiveTextureUrl = materialConfig.doorTexture;
 
-    console.log('🚪 DoorModule 텍스처 적용 시작:', {
+    console.log('🚪🚪🚪 DoorModule 텍스처 적용 useEffect 실행:', {
       propTextureUrl: textureUrl,
       configTextureUrl: materialConfig.doorTexture,
       effectiveTextureUrl,
@@ -473,25 +497,52 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       hasRightDoorMaterial: !!rightDoorMaterial,
       doorColor,
       isDragging,
-      materialConfig
+      isEditMode,
+      willApplyTexture: !isDragging && !isEditMode && !!effectiveTextureUrl,
+      fullMaterialConfig: materialConfig
     });
 
-    // 드래그 중이거나 편집 모드가 아닐 때만 텍스처 적용 (성능 최적화)
-    if (!isDragging && !isEditMode) {
-      // 텍스처 변경 시에만 실행 (material 참조 변경은 무시)
-      if (doorMaterial) {
-        applyTextureToMaterial(doorMaterial, effectiveTextureUrl, '싱글');
-      }
-      if (leftDoorMaterial) {
-        applyTextureToMaterial(leftDoorMaterial, effectiveTextureUrl, '왼쪽');
-      }
-      if (rightDoorMaterial) {
-        applyTextureToMaterial(rightDoorMaterial, effectiveTextureUrl, '오른쪽');
-      }
-    }
+    const panelNames = {
+      single: getDoorPanelName('single'),
+      left: getDoorPanelName('left'),
+      right: getDoorPanelName('right')
+    };
 
-    // Three.js가 자동으로 업데이트하도록 함
-  }, [textureUrl, materialConfig.doorTexture, materialConfig, applyTextureToMaterial, doorMaterial, leftDoorMaterial, rightDoorMaterial, isDragging, isEditMode]); // textureUrl 의존성 추가
+    // 드래그 중이거나 편집 모드가 아닐 때 텍스처 처리
+    if (!isDragging && !isEditMode) {
+      if (effectiveTextureUrl) {
+        // 텍스처가 있으면 적용
+        console.log('🎨 도어 텍스처 적용 시작:', effectiveTextureUrl);
+
+        if (doorMaterialRef.current) {
+          console.log('🎨 싱글 도어에 텍스처 적용');
+          applyTextureToMaterial(doorMaterialRef.current, effectiveTextureUrl, '싱글', panelNames.single);
+        }
+        if (leftDoorMaterialRef.current) {
+          console.log('🎨 왼쪽 도어에 텍스처 적용');
+          applyTextureToMaterial(leftDoorMaterialRef.current, effectiveTextureUrl, '왼쪽', panelNames.left);
+        }
+        if (rightDoorMaterialRef.current) {
+          console.log('🎨 오른쪽 도어에 텍스처 적용');
+          applyTextureToMaterial(rightDoorMaterialRef.current, effectiveTextureUrl, '오른쪽', panelNames.right);
+        }
+      } else {
+        // 텍스처가 없으면 제거 (색상 재질로 변경)
+        console.log('🗑️ 도어 텍스처 제거 (색상 재질로 변경)');
+        [doorMaterialRef.current, leftDoorMaterialRef.current, rightDoorMaterialRef.current].forEach(mat => {
+          if (mat && mat.map) {
+            mat.map = null;
+            mat.color.set(doorColor);
+            mat.needsUpdate = true;
+          }
+        });
+      }
+    } else {
+      console.log('⏭️ 도어 텍스처 적용 스킵:', {
+        reason: isDragging ? '드래그 중' : isEditMode ? '편집 모드' : '알 수 없음'
+      });
+    }
+  }, [materialConfig.doorTexture, doorColor, applyTextureToMaterial, isDragging, isEditMode, getDoorPanelName]);
   
   // 투명도 설정: renderMode에 따라 조정 (2D solid 모드에서도 투명하게)
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
@@ -1307,9 +1358,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onClick={handleDoorClick}
                 onPointerOver={handleDoorPointerOver}
                 onPointerOut={handleDoorPointerOut}
-                panelName={sectionIndex === 1 ? "(상)도어(좌)" : sectionIndex === 0 ? "(하)도어(좌)" : "도어(좌)"}
-                textureUrl={textureUrl}
-                panelGrainDirections={panelGrainDirections}
                 furnitureId={furnitureId}
               />
               
@@ -1731,9 +1779,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 onClick={handleDoorClick}
                 onPointerOver={handleDoorPointerOver}
                 onPointerOut={handleDoorPointerOut}
-                panelName={sectionIndex === 1 ? "(상)도어(우)" : sectionIndex === 0 ? "(하)도어(우)" : "도어(우)"}
-                textureUrl={textureUrl}
-                panelGrainDirections={panelGrainDirections}
                 furnitureId={furnitureId}
               />
               
@@ -2178,9 +2223,6 @@ const DoorModule: React.FC<DoorModuleProps> = ({
               onClick={handleDoorClick}
               onPointerOver={handleDoorPointerOver}
               onPointerOut={handleDoorPointerOut}
-              panelName={sectionIndex === 1 ? "(상)도어" : sectionIndex === 0 ? "(하)도어" : "도어"}
-              textureUrl={textureUrl}
-              panelGrainDirections={panelGrainDirections}
               furnitureId={furnitureId}
             />
             {/* 윤곽선 */}
@@ -2654,4 +2696,54 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 };
 
-export default DoorModule; 
+// React.memo로 최적화: spaceInfo의 materialConfig 중 doorColor/doorTexture만 변경되었을 때만 리렌더링
+export default React.memo(DoorModule, (prevProps, nextProps) => {
+  // spaceInfo의 materialConfig.doorColor와 doorTexture만 비교
+  const prevMaterialConfig = prevProps.spaceInfo?.materialConfig;
+  const nextMaterialConfig = nextProps.spaceInfo?.materialConfig;
+
+  // 도어 관련 속성만 비교
+  const doorPropsEqual =
+    prevProps.color === nextProps.color &&
+    prevProps.textureUrl === nextProps.textureUrl &&
+    prevMaterialConfig?.doorColor === nextMaterialConfig?.doorColor &&
+    prevMaterialConfig?.doorTexture === nextMaterialConfig?.doorTexture;
+
+  console.log('🔍 DoorModule React.memo 비교:', {
+    prevDoorTexture: prevMaterialConfig?.doorTexture,
+    nextDoorTexture: nextMaterialConfig?.doorTexture,
+    doorTextureChanged: prevMaterialConfig?.doorTexture !== nextMaterialConfig?.doorTexture,
+    doorPropsEqual,
+    willRerender: !doorPropsEqual
+  });
+
+  // 기타 중요한 props 비교
+  const otherPropsEqual =
+    prevProps.moduleWidth === nextProps.moduleWidth &&
+    prevProps.moduleDepth === nextProps.moduleDepth &&
+    prevProps.hingePosition === nextProps.hingePosition &&
+    prevProps.isDragging === nextProps.isDragging &&
+    prevProps.isEditMode === nextProps.isEditMode &&
+    prevProps.hasDoor === nextProps.hasDoor &&
+    prevProps.doorWidth === nextProps.doorWidth &&
+    prevProps.originalSlotWidth === nextProps.originalSlotWidth &&
+    prevProps.slotCenterX === nextProps.slotCenterX &&
+    prevProps.slotIndex === nextProps.slotIndex &&
+    prevProps.doorTopGap === nextProps.doorTopGap &&
+    prevProps.doorBottomGap === nextProps.doorBottomGap &&
+    prevProps.doorSplit === nextProps.doorSplit &&
+    prevProps.sectionHeightsMm === nextProps.sectionHeightsMm &&
+    prevProps.sectionIndex === nextProps.sectionIndex &&
+    prevProps.totalSections === nextProps.totalSections &&
+    prevProps.upperDoorTopGap === nextProps.upperDoorTopGap &&
+    prevProps.upperDoorBottomGap === nextProps.upperDoorBottomGap &&
+    prevProps.lowerDoorTopGap === nextProps.lowerDoorTopGap &&
+    prevProps.lowerDoorBottomGap === nextProps.lowerDoorBottomGap &&
+    prevProps.furnitureId === nextProps.furnitureId;
+
+  // panelGrainDirections 객체 비교
+  const panelGrainDirectionsEqual = JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);
+
+  // 모든 중요 props가 같으면 true 반환 (리렌더링 방지)
+  return doorPropsEqual && otherPropsEqual && panelGrainDirectionsEqual;
+}); 
