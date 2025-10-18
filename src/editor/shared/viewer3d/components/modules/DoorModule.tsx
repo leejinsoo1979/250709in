@@ -1649,9 +1649,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         isLongDash = !isLongDash;
                       }
 
-                      // 두 번째 대각선
-                      const start2 = [leftDoorWidthUnits / 2, 0, 0];  // 양수X에서 시작
-                      const end2 = [-leftDoorWidthUnits / 2, -doorHeight / 2, 0];  // 음수X로 끝
+                      // 두 번째 대각선 (반대 방향)
+                      const start2 = [-leftDoorWidthUnits / 2, 0, 0];  // 음수X에서 시작
+                      const end2 = [leftDoorWidthUnits / 2, -doorHeight / 2, 0];  // 양수X로 끝
                       const dx2 = end2[0] - start2[0];
                       const dy2 = end2[1] - start2[1];
                       const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
@@ -2076,9 +2076,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         isLongDash = !isLongDash;
                       }
 
-                      // 두 번째 대각선
-                      const start2 = [rightDoorWidthUnits / 2, 0, 0];  // 양수X에서 시작
-                      const end2 = [-rightDoorWidthUnits / 2, -doorHeight / 2, 0];  // 음수X로 끝
+                      // 두 번째 대각선 (반대 방향)
+                      const start2 = [-rightDoorWidthUnits / 2, 0, 0];  // 음수X에서 시작
+                      const end2 = [rightDoorWidthUnits / 2, -doorHeight / 2, 0];  // 양수X로 끝
                       const dx2 = end2[0] - start2[0];
                       const dy2 = end2[1] - start2[1];
                       const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
@@ -2559,14 +2559,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     isLongDash = !isLongDash;
                   }
                   
-                  // 두 번째 대각선 (아래에서 위로)
-                  // 측면뷰는 항상 양수X → 음수X 방향
+                  // 두 번째 대각선 (아래에서 위로) - 반대 방향
+                  // 측면뷰는 음수X → 양수X 방향 (첫 번째와 반대)
                   const start2 = isFrontView
                     ? [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0]
-                    : [doorWidthUnits / 2, 0, 0];  // 측면뷰: 양수X에서 시작
+                    : [-doorWidthUnits / 2, 0, 0];  // 측면뷰: 음수X에서 시작
                   const end2 = isFrontView
                     ? [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, doorHeight / 2, 0]
-                    : [-doorWidthUnits / 2, doorHeight / 2, 0];  // 측면뷰: 음수X로 끝
+                    : [doorWidthUnits / 2, doorHeight / 2, 0];  // 측면뷰: 양수X로 끝
                   const segments2 = [];
 
                   const dx2 = end2[0] - start2[0];
