@@ -1613,18 +1613,12 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         isLongDash = !isLongDash;
                       }
                     } else {
-                      // 측면뷰: 좌측뷰에서 < 패턴 (왼쪽 힌지)
-                      // 회전하는 animated.group 안에 있으므로 회전 전 X축 좌표 사용
-                      // 도어가 Y축 회전하면 X축이 Z축으로 투영됨
-                      // view2DDirection이 'left'면 좌측뷰, 'right'면 우측뷰
-                      // 좌측뷰에서는 < 패턴 (앞에서 뒤로)
-                      // 첫 번째 대각선: 위 앞쪽에서 중간 뒤쪽(힌지)으로
-                      const start1 = view2DDirection === 'left'
-                        ? [leftDoorWidthUnits / 2, doorHeight / 2, 0]
-                        : [-leftDoorWidthUnits / 2, doorHeight / 2, 0];
-                      const end1 = view2DDirection === 'left'
-                        ? [-leftDoorWidthUnits / 2, 0, 0]
-                        : [leftDoorWidthUnits / 2, 0, 0];
+                      // 측면뷰: 왼쪽 힌지 도어
+                      // 좌측뷰: < 패턴 (앞→뒤) = 양수X → 음수X
+                      // 우측뷰: > 패턴 (뒤→앞) = 양수X → 음수X (카메라가 반대편이므로 동일한 방향이 반대로 보임)
+                      // 첫 번째 대각선
+                      const start1 = [leftDoorWidthUnits / 2, doorHeight / 2, 0];  // 양수X에서 시작
+                      const end1 = [-leftDoorWidthUnits / 2, 0, 0];  // 음수X로 끝
                       const dx1 = end1[0] - start1[0];
                       const dy1 = end1[1] - start1[1];
                       const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
@@ -1655,13 +1649,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         isLongDash = !isLongDash;
                       }
 
-                      // 두 번째 대각선: 중간 뒤쪽(힌지)에서 아래 앞쪽으로
-                      const start2 = view2DDirection === 'left'
-                        ? [-leftDoorWidthUnits / 2, 0, 0]
-                        : [leftDoorWidthUnits / 2, 0, 0];
-                      const end2 = view2DDirection === 'left'
-                        ? [leftDoorWidthUnits / 2, -doorHeight / 2, 0]
-                        : [-leftDoorWidthUnits / 2, -doorHeight / 2, 0];
+                      // 두 번째 대각선
+                      const start2 = [leftDoorWidthUnits / 2, 0, 0];  // 양수X에서 시작
+                      const end2 = [-leftDoorWidthUnits / 2, -doorHeight / 2, 0];  // 음수X로 끝
                       const dx2 = end2[0] - start2[0];
                       const dy2 = end2[1] - start2[1];
                       const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
@@ -2051,15 +2041,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
                     } else {
                       // 측면뷰: 오른쪽 힌지 도어
-                      // 좌측뷰: < 패턴 (앞→뒤)
-                      // 우측뷰: > 패턴 (뒤→앞)
+                      // 좌측뷰: < 패턴 (앞→뒤) = 양수X → 음수X
+                      // 우측뷰: > 패턴 (뒤→앞) = 양수X → 음수X (카메라가 반대편이므로 동일한 방향이 반대로 보임)
                       // 첫 번째 대각선
-                      const start1 = view2DDirection === 'left'
-                        ? [rightDoorWidthUnits / 2, doorHeight / 2, 0]  // 좌측뷰: 앞에서 시작 (<)
-                        : [-rightDoorWidthUnits / 2, doorHeight / 2, 0];  // 우측뷰: 뒤에서 시작 (>)
-                      const end1 = view2DDirection === 'left'
-                        ? [-rightDoorWidthUnits / 2, 0, 0]  // 좌측뷰: 뒤로 끝 (<)
-                        : [rightDoorWidthUnits / 2, 0, 0];  // 우측뷰: 앞으로 끝 (>)
+                      const start1 = [rightDoorWidthUnits / 2, doorHeight / 2, 0];  // 양수X에서 시작
+                      const end1 = [-rightDoorWidthUnits / 2, 0, 0];  // 음수X로 끝
                       const dx1 = end1[0] - start1[0];
                       const dy1 = end1[1] - start1[1];
                       const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
@@ -2091,12 +2077,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       }
 
                       // 두 번째 대각선
-                      const start2 = view2DDirection === 'left'
-                        ? [-rightDoorWidthUnits / 2, 0, 0]  // 좌측뷰: 뒤에서 시작 (<)
-                        : [rightDoorWidthUnits / 2, 0, 0];  // 우측뷰: 앞에서 시작 (>)
-                      const end2 = view2DDirection === 'left'
-                        ? [rightDoorWidthUnits / 2, -doorHeight / 2, 0]  // 좌측뷰: 앞으로 끝 (<)
-                        : [-rightDoorWidthUnits / 2, -doorHeight / 2, 0];  // 우측뷰: 뒤로 끝 (>)
+                      const start2 = [rightDoorWidthUnits / 2, 0, 0];  // 양수X에서 시작
+                      const end2 = [-rightDoorWidthUnits / 2, -doorHeight / 2, 0];  // 음수X로 끝
                       const dx2 = end2[0] - start2[0];
                       const dy2 = end2[1] - start2[1];
                       const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
@@ -2503,24 +2485,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 {(() => {
                   const isFrontView = view2DDirection === 'front';
 
-                  // 첫 번째 대각선 (위에서 아래로) - 조정된 힌지 위치 사용
-                  // 회전하는 animated.group 안에 있으므로 측면뷰에서도 X축 좌표 사용
-                  // 좌측뷰: 왼쪽힌지 < (앞→뒤), 오른쪽힌지 > (뒤→앞)
-                  // 우측뷰: 왼쪽힌지 > (뒤→앞), 오른쪽힌지 < (앞→뒤)
+                  // 첫 번째 대각선 (위에서 아래로)
+                  // 측면뷰는 항상 양수X → 음수X 방향 (좌측뷰에서 <, 우측뷰에서 >로 보임)
                   const start1 = isFrontView
                     ? [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, -doorHeight / 2, 0]
-                    : (
-                      (view2DDirection === 'left' && adjustedHingePosition === 'left') || (view2DDirection === 'right' && adjustedHingePosition === 'right')
-                        ? [doorWidthUnits / 2, -doorHeight / 2, 0]  // < 패턴: 앞에서 시작
-                        : [-doorWidthUnits / 2, -doorHeight / 2, 0]  // > 패턴: 뒤에서 시작
-                    );
+                    : [doorWidthUnits / 2, -doorHeight / 2, 0];  // 측면뷰: 양수X에서 시작
                   const end1 = isFrontView
                     ? [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0]
-                    : (
-                      (view2DDirection === 'left' && adjustedHingePosition === 'left') || (view2DDirection === 'right' && adjustedHingePosition === 'right')
-                        ? [-doorWidthUnits / 2, 0, 0]  // < 패턴: 뒤로 끝
-                        : [doorWidthUnits / 2, 0, 0]  // > 패턴: 앞으로 끝
-                    );
+                    : [-doorWidthUnits / 2, 0, 0];  // 측면뷰: 음수X로 끝
                   const segments1 = [];
 
                   // 선분의 총 길이 계산
@@ -2587,21 +2559,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     isLongDash = !isLongDash;
                   }
                   
-                  // 두 번째 대각선 (아래에서 위로) - 조정된 힌지 위치 사용
+                  // 두 번째 대각선 (아래에서 위로)
+                  // 측면뷰는 항상 양수X → 음수X 방향
                   const start2 = isFrontView
                     ? [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0]
-                    : (
-                      (view2DDirection === 'left' && adjustedHingePosition === 'left') || (view2DDirection === 'right' && adjustedHingePosition === 'right')
-                        ? [-doorWidthUnits / 2, 0, 0]  // < 패턴: 뒤에서 시작
-                        : [doorWidthUnits / 2, 0, 0]  // > 패턴: 앞에서 시작
-                    );
+                    : [doorWidthUnits / 2, 0, 0];  // 측면뷰: 양수X에서 시작
                   const end2 = isFrontView
                     ? [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, doorHeight / 2, 0]
-                    : (
-                      (view2DDirection === 'left' && adjustedHingePosition === 'left') || (view2DDirection === 'right' && adjustedHingePosition === 'right')
-                        ? [doorWidthUnits / 2, doorHeight / 2, 0]  // < 패턴: 앞으로 끝
-                        : [-doorWidthUnits / 2, doorHeight / 2, 0]  // > 패턴: 뒤로 끝
-                    );
+                    : [-doorWidthUnits / 2, doorHeight / 2, 0];  // 측면뷰: 음수X로 끝
                   const segments2 = [];
 
                   const dx2 = end2[0] - start2[0];
