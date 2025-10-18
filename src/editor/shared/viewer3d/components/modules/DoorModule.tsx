@@ -576,7 +576,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         reason: isDragging ? '드래그 중' : isEditMode ? '편집 모드' : '알 수 없음'
       });
     }
-  }, [materialConfig.doorTexture, doorColor, applyTextureToMaterial, isDragging, isEditMode, getDoorPanelName]);
+  }, [materialConfig.doorTexture, textureUrl, doorColor, applyTextureToMaterial, isDragging, isEditMode, getDoorPanelName]);
   
   // 투명도 설정: renderMode에 따라 조정 (2D solid 모드에서도 투명하게)
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
