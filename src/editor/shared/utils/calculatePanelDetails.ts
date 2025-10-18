@@ -156,6 +156,27 @@ export const calculatePanelDetails = (
         material: 'PB'
       });
 
+      // === 좌우측판 (첫 번째 섹션만, 전체 가구 높이) ===
+      if (sectionIndex === 0) {
+        // 좌측판
+        targetPanel.push({
+          name: '좌측판',
+          width: customDepth,
+          height: height,
+          thickness: basicThickness,
+          material: 'PB'
+        });
+
+        // 우측판
+        targetPanel.push({
+          name: '우측판',
+          width: customDepth,
+          height: height,
+          thickness: basicThickness,
+          material: 'PB'
+        });
+      }
+
       // === 하판 (첫 번째 섹션만) ===
       if (sectionIndex === 0) {
         targetPanel.push({
