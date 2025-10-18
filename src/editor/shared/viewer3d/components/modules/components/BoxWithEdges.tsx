@@ -85,13 +85,17 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   const activePanelGrainDirections = storePanelGrainDirections || panelGrainDirections;
 
   // 디버그 로그
-  console.log('🔥 BoxWithEdges - panelGrainDirections 소스:', {
-    panelName,
-    furnitureId,
-    fromStore: !!storePanelGrainDirections,
-    fromProps: !!panelGrainDirections,
-    final: activePanelGrainDirections
-  });
+  if (panelName && (panelName.includes('상판') || panelName.includes('하판') || panelName.includes('선반'))) {
+    console.log('🔥 BoxWithEdges - panelGrainDirections 소스:', {
+      panelName,
+      furnitureId,
+      fromStore: !!storePanelGrainDirections,
+      fromProps: !!panelGrainDirections,
+      final: activePanelGrainDirections,
+      storeValue: storePanelGrainDirections,
+      propsValue: panelGrainDirections
+    });
+  }
   
   // 기본 material 생성 (material prop이 없을 때 사용)
   const defaultMaterial = React.useMemo(() => {
@@ -208,18 +212,22 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
 
     // 설정값이 없으면 기본값 사용
+    const usedDefault = !grainDirection;
     if (!grainDirection) {
       grainDirection = getDefaultGrainDirection(panelName);
     }
 
-    console.log('🎨 BoxWithEdges - 패널별 material 생성:', {
-      panelName,
-      grainDirection,
-      textureUrl,
-      hasTexture: !!processedMaterial.map,
-      activePanelGrainDirectionsKeys: activePanelGrainDirections ? Object.keys(activePanelGrainDirections) : [],
-      activePanelGrainDirectionsStr
-    });
+    if (panelName && (panelName.includes('상판') || panelName.includes('하판') || panelName.includes('선반'))) {
+      console.log('🎨 BoxWithEdges - 패널별 material 생성:', {
+        panelName,
+        grainDirection,
+        usedDefault,
+        textureUrl,
+        hasTexture: !!processedMaterial.map,
+        activePanelGrainDirectionsKeys: activePanelGrainDirections ? Object.keys(activePanelGrainDirections) : [],
+        activePanelGrainDirectionsStr
+      });
+    }
 
     // processedMaterial을 복제하여 개별 material 생성 (항상 새로 생성)
     const panelMaterial = processedMaterial.clone();
