@@ -257,14 +257,41 @@
   background: hsl(var(--theme));
 }
 
-/* 선택된 패널이 있을 때 다른 패널들을 깔끔하게 dimmed 처리 */
+/* 선택된 패널이 있을 때 다른 패널들을 은선 형식으로 표시 */
 .table:has(tr.selected) tbody tr:not(.selected) {
-  opacity: 0.35;
-  transition: opacity 0.2s ease;
+  position: relative;
+  transition: all 0.2s ease;
 }
 
-.table:has(tr.selected) tbody tr:not(.selected):hover {
-  opacity: 0.6;
+/* 은선 효과: 점선 테두리 오버레이 */
+.table:has(tr.selected) tbody tr:not(.selected)::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px dashed #d0d0d0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* 은선 효과: 내용을 흐리게 */
+.table:has(tr.selected) tbody tr:not(.selected) td {
+  opacity: 0.25;
+  color: #999;
+  transition: all 0.2s ease;
+}
+
+/* 호버 시 은선 효과 약화 */
+.table:has(tr.selected) tbody tr:not(.selected):hover::after {
+  border-color: #999;
+  border-style: solid;
+}
+
+.table:has(tr.selected) tbody tr:not(.selected):hover td {
+  opacity: 0.5;
+  color: #666;
 }
 
 .table tbody tr.newPanel {
