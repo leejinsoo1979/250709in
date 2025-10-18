@@ -58,8 +58,21 @@ export const applyCabinetTexture1Settings = (material: THREE.MeshStandardMateria
  * @returns 'horizontal' | 'vertical'
  */
 export const getDefaultGrainDirection = (panelName?: string): 'horizontal' | 'vertical' => {
-  // 기본값은 L 방향 (vertical) - 모든 패널이 긴 쪽에 결이 있어야 함
-  return 'vertical';
+  if (!panelName) {
+    return 'vertical';
+  }
+
+  // 백패널과 캐비넷 측판: vertical (L 방향) = 0도
+  const isFurnitureSidePanel = !panelName.includes('서랍') &&
+    (panelName.includes('측판') || panelName.includes('좌측') || panelName.includes('우측'));
+  const isBackPanel = panelName.includes('백패널');
+
+  if (isFurnitureSidePanel || isBackPanel) {
+    return 'vertical'; // 0도
+  }
+
+  // 나머지 모든 패널 (상판, 하판, 선반, 서랍 마이다 등): horizontal (W 방향) = 0도
+  return 'horizontal';
 };
 
 /**
