@@ -73,14 +73,16 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   const textColor = dimensionColor;
   const mmToThreeUnits = (mm: number) => mm / 100;
 
-  // 패널 비활성화용 material
-  const panelDimmedMaterial = React.useMemo(() =>
-    new THREE.MeshBasicMaterial({
+  // 패널 비활성화용 material - highlightedPanel 변경 시마다 새로 생성
+  const panelDimmedMaterial = React.useMemo(() => {
+    const mat = new THREE.MeshBasicMaterial({
       color: new THREE.Color('#666666'),
       transparent: true,
       opacity: 0.5
-    }),
-  []);
+    });
+    mat.needsUpdate = true;
+    return mat;
+  }, [highlightedPanel]); // highlightedPanel 변경 시 재생성
 
   // 패널이 강조되어야 하는지 확인
   const isPanelHighlighted = (panelName: string) => {
@@ -94,8 +96,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
     return highlightedPanel !== `${furnitureId}-${panelName}` && highlightedPanel.startsWith(`${furnitureId}-`);
   };
 
-  // 패널용 material 결정
-  const getPanelMaterial = (panelName: string) => {
+  // 패널용 material 결정 - useCallback로 최적화
+  const getPanelMaterial = React.useCallback((panelName: string) => {
     // 선택된 패널은 원래 material 유지
     if (isPanelHighlighted(panelName)) {
       return material;
@@ -105,7 +107,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       return panelDimmedMaterial;
     }
     return material;
-  };
+  }, [highlightedPanel, furnitureId, material, panelDimmedMaterial]);
 
   // 측면뷰에서 치수 X 위치 계산: 좌측뷰는 왼쪽에, 우측뷰는 오른쪽에 표시
   const getDimensionXPosition = (forText: boolean = false) => {
