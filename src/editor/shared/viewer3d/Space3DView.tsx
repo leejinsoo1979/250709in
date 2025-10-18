@@ -490,32 +490,33 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       let distance;
       let position;
       let up: [number, number, number] = [0, 1, 0];
-      
+      const distanceMultiplier = 1.5; // 2D 모드 카메라 거리를 1.5배로
+
       switch (viewDirection) {
         case 'front':
           // calculateOptimalDistance와 동일한 방식으로 거리 계산
-          distance = calculateOptimalDistance(spaceWidth, spaceHeight, spaceDepth, placedModules.length);
+          distance = calculateOptimalDistance(spaceWidth, spaceHeight, spaceDepth, placedModules.length) * distanceMultiplier;
           position = [center.x, center.y, center.z + distance];
           up = [0, 1, 0];
           break;
-          
+
         case 'top':
           // calculateOptimalDistance와 동일한 방식으로 거리 계산
-          distance = calculateOptimalDistance(spaceWidth, spaceDepth, spaceHeight, placedModules.length);
+          distance = calculateOptimalDistance(spaceWidth, spaceDepth, spaceHeight, placedModules.length) * distanceMultiplier;
           position = [center.x, center.y + distance, center.z];
           up = [0, 0, -1];
           break;
-          
+
         case 'left':
           // calculateOptimalDistance와 동일한 방식으로 거리 계산
-          distance = calculateOptimalDistance(spaceDepth, spaceHeight, spaceWidth, placedModules.length);
+          distance = calculateOptimalDistance(spaceDepth, spaceHeight, spaceWidth, placedModules.length) * distanceMultiplier;
           position = [center.x - distance, center.y, center.z];
           up = [0, 1, 0];
           break;
-          
+
         case 'right':
           // calculateOptimalDistance와 동일한 방식으로 거리 계산
-          distance = calculateOptimalDistance(spaceDepth, spaceHeight, spaceWidth, placedModules.length);
+          distance = calculateOptimalDistance(spaceDepth, spaceHeight, spaceWidth, placedModules.length) * distanceMultiplier;
           position = [center.x + distance, center.y, center.z];
           up = [0, 1, 0];
           break;
@@ -542,32 +543,33 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     let distance;
     let position;
     let up: [number, number, number] = [0, 1, 0]; // 기본 up vector
-    
+    const distanceMultiplier = 1.5; // 2D 모드 카메라 거리를 1.5배로
+
     switch (viewDirection) {
       case 'front':
         // calculateOptimalDistance와 동일한 방식으로 거리 계산
-        distance = calculateOptimalDistance(sizeInMm.width, sizeInMm.height, sizeInMm.depth, placedModules.length);
+        distance = calculateOptimalDistance(sizeInMm.width, sizeInMm.height, sizeInMm.depth, placedModules.length) * distanceMultiplier;
         position = [center.x, center.y, center.z + distance];
         up = [0, 1, 0]; // Y축이 위
         break;
-        
+
       case 'top':
         // calculateOptimalDistance와 동일한 방식으로 거리 계산
-        distance = calculateOptimalDistance(sizeInMm.width, sizeInMm.depth, sizeInMm.height, placedModules.length);
+        distance = calculateOptimalDistance(sizeInMm.width, sizeInMm.depth, sizeInMm.height, placedModules.length) * distanceMultiplier;
         position = [center.x, center.y + distance, center.z];
         up = [0, 0, -1]; // 상부뷰에서는 -Z축이 위 (앞쪽이 위)
         break;
-        
+
       case 'left':
         // calculateOptimalDistance와 동일한 방식으로 거리 계산
-        distance = calculateOptimalDistance(sizeInMm.depth, sizeInMm.height, sizeInMm.width, placedModules.length);
+        distance = calculateOptimalDistance(sizeInMm.depth, sizeInMm.height, sizeInMm.width, placedModules.length) * distanceMultiplier;
         position = [center.x - distance, center.y, center.z];
         up = [0, 1, 0]; // Y축이 위
         break;
-        
+
       case 'right':
         // calculateOptimalDistance와 동일한 방식으로 거리 계산
-        distance = calculateOptimalDistance(sizeInMm.depth, sizeInMm.height, sizeInMm.width, placedModules.length);
+        distance = calculateOptimalDistance(sizeInMm.depth, sizeInMm.height, sizeInMm.width, placedModules.length) * distanceMultiplier;
         position = [center.x + distance, center.y, center.z];
         up = [0, 1, 0]; // Y축이 위
         break;
