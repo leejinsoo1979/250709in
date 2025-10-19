@@ -911,7 +911,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             minDistance={controlsConfig.minDistance}
             maxDistance={controlsConfig.maxDistance}
             viewMode={viewMode}
-            zoomSpeed={0.3}
+            zoomSpeed={0.1}
           />
         )}
         
@@ -1000,9 +1000,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           touches={controlsConfig.touches}
           panSpeed={0.8}
           rotateSpeed={0.3}
-          zoomSpeed={viewMode === '2D' ? 0.05 : 1.2}
+          zoomSpeed={viewMode === '2D' ? 0.02 : 1.2}
           enableDamping={true}
-          dampingFactor={viewMode === '2D' ? 0.15 : 0.04}
+          dampingFactor={viewMode === '2D' ? 0.2 : 0.04}
           screenSpacePanning={true}
           zoomToCursor={true}
           makeDefault
