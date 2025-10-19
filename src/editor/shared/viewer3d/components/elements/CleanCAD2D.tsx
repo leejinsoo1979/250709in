@@ -1670,8 +1670,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })}
       
-      {/* 좌측 전체 높이 치수선 - 항상 표시 */}
-      <group>
+      {/* 좌측 전체 높이 치수선 - 비활성화 (호버 반응 없는 치수) */}
+      {false && <group>
         {/* 단내림이 있는 경우 높이 치수선 표시 */}
         {spaceInfo.droppedCeiling?.enabled ? (
           <>
@@ -1805,8 +1805,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           color={dimensionColor}
           lineWidth={1}
         />
-      </group>
-      
+      </group>}
+
       {/* 우측 3구간 높이 치수선 (상부프레임 + 캐비넷배치영역 + 하부프레임) */}
       {!isStep2 && (
       <group>
@@ -3263,8 +3263,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           />
         </group> */}
         
-        {/* 우측 전체 높이 치수선 */}
-        <group>
+        {/* 우측 전체 높이 치수선 - 비활성화 (호버 반응 없는 치수) */}
+        {false && <group>
           {/* 단내림이 있는 경우 높이 치수선 표시 */}
           {spaceInfo.droppedCeiling?.enabled ? (
             <>
@@ -3414,7 +3414,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               lineWidth={1}
             />
           )}
-        </group>
+        </group>}
 
         {/* 좌측 3구간 높이 치수선 */}
         <group>
