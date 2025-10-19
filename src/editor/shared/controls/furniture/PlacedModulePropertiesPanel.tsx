@@ -1261,9 +1261,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           
           {/* 상세보기 패널 */}
           {showDetails && (() => {
+            // 실제 패널 개수 계산 (섹션 구분자와 정보성 항목 제외)
+            const actualPanelCount = panelDetails.filter(panel =>
+              !panel.name?.startsWith('===') && !panel.isInfo
+            ).length;
+
             return (
               <div className={styles.detailsSection}>
-                <h5 className={styles.sectionTitle}>{t('furniture.panelDetails')}</h5>
+                <h5 className={styles.sectionTitle}>
+                  {t('furniture.panelDetails')} ({actualPanelCount})
+                </h5>
                 <div className={styles.panelList}>
                   {panelDetails.map((panel, index) => {
                   // 섹션 구분자인 경우
