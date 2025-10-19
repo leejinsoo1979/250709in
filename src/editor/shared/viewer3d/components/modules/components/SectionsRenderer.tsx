@@ -615,7 +615,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     </>
 
                     {/* 안전선반 위 칸의 내경 치수 (안전선반이 있는 경우 추가 표시) */}
-                    {topCompartmentHeight !== null && topCompartmentBottomY !== null && topCompartmentTopY !== null && !isDualFurniture && (
+                    {topCompartmentHeight !== null && topCompartmentBottomY !== null && topCompartmentTopY !== null && (
                       <>
                         {(() => {
                           const topCenterY = (topCompartmentTopY + topCompartmentBottomY) / 2;
