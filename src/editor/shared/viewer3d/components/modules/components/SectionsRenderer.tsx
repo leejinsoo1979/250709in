@@ -380,8 +380,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             // 2hanging의 상부 섹션에 안전선반이 있으면 치수 표시
             const hasSafetyShelf = section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0);
 
-            // 2단 옷장(2hanging) 특별 처리: 하부만 표시, 상부는 안전선반 있을 때만
-            const shouldHide2HangingUpper = is2HangingFurniture && hasTwoSections && index === 1 && !hasSafetyShelf;
+            // 2단 옷장(2hanging) 특별 처리: 안전선반 있으면 상부도 표시
+            const shouldHide2HangingUpper = false; // 안전선반 윗칸 내경도 표시하도록 수정
 
             // 섹션 내경 치수 표시 조건
             const shouldShow = !hideSectionDimensions && showDimensions && showDimensionsText &&
