@@ -368,6 +368,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           {(() => {
             const is2HangingFurniture = furnitureId?.includes('2hanging');
             const isDualFurniture = furnitureId?.includes('dual');
+
+            // 듀얼 가구 디버깅
+            if (isDualFurniture) {
+              console.log('🔴 듀얼 가구 감지:', { furnitureId, index, isDualFurniture });
+            }
             const hasTwoSections = allSections.length === 2;
             // 2hanging의 상부 섹션에 안전선반이 있으면 치수 표시
             const hasSafetyShelf = section.type === 'hanging' && section.shelfPositions && section.shelfPositions.some(pos => pos > 0);
