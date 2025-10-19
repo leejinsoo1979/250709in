@@ -519,13 +519,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 const currentColor = isHovered ? themeColor : dimensionColor;
 
                 // 안전선반 위 칸의 내경 계산 (안전선반이 있는 경우)
-                // 단, 듀얼 가구는 안전선반 위 칸을 별도 표시하지 않음
                 let topCompartmentHeight = null;
                 let topCompartmentBottomY = null;
                 let topCompartmentTopY = null;
 
                 const isDualFurniture = furnitureId?.includes('dual');
-                if (hasSafetyShelf && index === allSections.length - 1 && !isDualFurniture) {
+                if (hasSafetyShelf && index === allSections.length - 1) {
                   const safetyShelfPositionMm = section.shelfPositions.find(pos => pos > 0);
                   if (safetyShelfPositionMm !== undefined) {
                     const sectionBottomY = sectionCenterY - sectionHeight/2;
