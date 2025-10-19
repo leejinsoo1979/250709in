@@ -127,8 +127,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   if (currentViewDirection === 'left') {
     return (
       <group>
-        {/* ===== 왼쪽: 전체 높이 치수 ===== */}
-        <group>
+        {/* ===== 왼쪽: 전체 높이 치수 - 비활성화 (호버 반응 없는 치수) ===== */}
+        {false && <group>
           {/* 보조 가이드 연장선 - 하단 */}
           <NativeLine
             points={[
@@ -214,7 +214,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           >
             {spaceInfo.height}
           </Text>
-        </group>
+        </group>}
 
         {/* ===== 오른쪽: 상부프레임/가구높이/받침대 ===== */}
 
@@ -966,8 +966,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   if (currentViewDirection === 'right') {
     return (
       <group>
-        {/* ===== 왼쪽: 전체 높이 치수 ===== */}
-        <group>
+        {/* ===== 왼쪽: 전체 높이 치수 - 비활성화 (호버 반응 없는 치수) ===== */}
+        {false && <group>
           {/* 보조 가이드 연장선 - 하단 */}
           <NativeLine
             points={[
