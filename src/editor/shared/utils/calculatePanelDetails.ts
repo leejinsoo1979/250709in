@@ -141,24 +141,46 @@ export const calculatePanelDetails = (
       // === 섹션별 측판 추가 (좌우 2개) ===
       // 측판은 섹션 높이만큼 만들어짐
       const sectionPrefix = sectionName === '상부장' ? '(상)' : sectionName === '하부장' ? '(하)' : '';
-      targetPanel.push({
-        name: `${sectionPrefix}좌측`,
-        width: customDepth,
-        height: sectionHeightMm,
-        thickness: basicThickness,
-        material: 'PB'
-      });
-      targetPanel.push({
-        name: `${sectionPrefix}우측`,
-        width: customDepth,
-        height: sectionHeightMm,
-        thickness: basicThickness,
-        material: 'PB'
-      });
 
-      // === 좌우측판 (첫 번째 섹션만, 전체 가구 높이) ===
-      if (sectionIndex === 0) {
-        // 좌측판
+      // 상하 분리 측판 가구 여부 확인
+      const isSplitSidePanelFurniture =
+        moduleData.id.includes('4drawer-hanging') ||
+        moduleData.id.includes('2drawer-hanging') ||
+        moduleData.id.includes('2hanging');
+
+      // BaseFurnitureShell의 측판 높이 조정 로직 적용
+      let adjustedSectionHeight = sectionHeightMm;
+      if (isSplitSidePanelFurniture && sections.length === 2) {
+        const is4Drawer = moduleData.id.includes('4drawer-hanging');
+        if (sectionIndex === 0) {
+          // 하부 측판: 4drawer는 조정 없음, 2drawer/2hanging은 +18mm
+          adjustedSectionHeight = is4Drawer ? sectionHeightMm : sectionHeightMm + basicThickness;
+        } else {
+          // 상부 측판: 4drawer는 조정 없음, 2drawer/2hanging은 -18mm
+          adjustedSectionHeight = is4Drawer ? sectionHeightMm : sectionHeightMm - basicThickness;
+        }
+      }
+
+      // 다중 섹션이고 상하 분리 측판 가구인 경우만 섹션별로 추가
+      // 그 외는 통짜로 첫 번째 섹션에만 추가
+      if (sections.length >= 2 && isSplitSidePanelFurniture) {
+        // 상하 분리: 각 섹션마다 측판 추가
+        targetPanel.push({
+          name: `${sectionPrefix}좌측`,
+          width: customDepth,
+          height: adjustedSectionHeight,
+          thickness: basicThickness,
+          material: 'PB'
+        });
+        targetPanel.push({
+          name: `${sectionPrefix}우측`,
+          width: customDepth,
+          height: adjustedSectionHeight,
+          thickness: basicThickness,
+          material: 'PB'
+        });
+      } else if (sectionIndex === 0) {
+        // 통짜 측판: 첫 번째 섹션에 전체 높이로 추가
         targetPanel.push({
           name: '좌측판',
           width: customDepth,
@@ -166,8 +188,6 @@ export const calculatePanelDetails = (
           thickness: basicThickness,
           material: 'PB'
         });
-
-        // 우측판
         targetPanel.push({
           name: '우측판',
           width: customDepth,
