@@ -1275,9 +1275,16 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   {panelDetails.map((panel, index) => {
                   // 섹션 구분자인 경우
                   if (panel.name && panel.name.startsWith('===')) {
+                    // 현재 섹션부터 다음 섹션 구분자 전까지의 실제 패널 개수 계산
+                    let sectionPanelCount = 0;
+                    for (let i = index + 1; i < panelDetails.length; i++) {
+                      if (panelDetails[i].name?.startsWith('===')) break;
+                      if (!panelDetails[i].isInfo) sectionPanelCount++;
+                    }
+
                     return (
                       <div key={index} className={styles.panelSectionHeader}>
-                        <strong>{panel.name.replace(/=/g, '').trim()}</strong>
+                        <strong>{panel.name.replace(/=/g, '').trim()} (총 {sectionPanelCount}장)</strong>
                       </div>
                     );
                   }
