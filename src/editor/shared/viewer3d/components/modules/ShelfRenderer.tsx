@@ -215,7 +215,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               lineWidth={1}
             />
             {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
-            {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+            {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
               <>
                 <mesh position={[getDimensionXPosition(false), topPosition - basicThickness/2, getDimensionZPosition()]}>
                   <sphereGeometry args={[0.05, 8, 8]} />
@@ -525,7 +525,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     dashed={false}
                   />
                   {/* 상단 프레임 두께 수직선 양끝 점 - 측면뷰에서 숨김 */}
-                  {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                  {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
                     <>
                       <mesh position={[getDimensionXPosition(false), topFrameTopY, getDimensionZPosition()]}>
                         <sphereGeometry args={[0.05, 8, 8]} />
@@ -661,7 +661,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       dashed={false}
                     />
                     {/* 수직 연결선 양끝 점 - 측면뷰에서 숨김 */}
-                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
                       <>
                         <mesh position={[getDimensionXPosition(false), compartmentTop, getDimensionZPosition()]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
