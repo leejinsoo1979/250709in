@@ -526,16 +526,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   {Math.round(sectionHeightMm)}
                 </Text>
 
-                {/* 선반 섹션인 경우 각 칸의 내경 높이 표시 */}
+                {/* 선반 섹션 내경 높이 표시 제거 - 호버 반응 없는 중복 치수 */}
                 {(() => {
-                  // 디버깅: 섹션 정보 출력
-                  console.log('🔍 CADDimensions2D 섹션 체크:', {
-                    sectionIndex,
-                    type: section.type,
-                    hasShelfPositions: !!section.shelfPositions,
-                    shelfPositions: section.shelfPositions,
-                    isLastSection
-                  });
+                  return null; // 완전히 비활성화
 
                   // shelf 또는 hanging 타입이면서 shelfPositions가 있는 경우만 처리
                   if ((section.type !== 'shelf' && section.type !== 'hanging') || !section.shelfPositions || section.shelfPositions.length === 0) {
