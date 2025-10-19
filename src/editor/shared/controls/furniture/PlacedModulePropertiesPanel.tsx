@@ -1269,7 +1269,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             return (
               <div className={styles.detailsSection}>
                 <h5 className={styles.sectionTitle}>
-                  {t('furniture.panelDetails')} ({actualPanelCount})
+                  {t('furniture.panelDetails')} (총 {actualPanelCount}장)
                 </h5>
                 <div className={styles.panelList}>
                   {panelDetails.map((panel, index) => {
