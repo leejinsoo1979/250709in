@@ -598,8 +598,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     
                     return (
                       <group key={`dimension-${i}`}>
-                    {/* 치수 텍스트 - 수직 가이드선 좌측에 표시 */}
-                    {viewMode === '3D' && (
+                    {/* 치수 텍스트 - 비활성화 (SectionsRenderer의 EditableDimensionText와 중복) */}
+                    {false && viewMode === '3D' && (
                       <Text
                         renderOrder={1000}
                         depthTest={false}
@@ -618,7 +618,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         {Math.round(compartment.height * 100)}
                       </Text>
                     )}
-                    <Text
+                    {false && <Text
                         renderOrder={1000}
                         depthTest={false}
                       position={[
@@ -648,8 +648,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       }}
                     >
                       {Math.round(compartment.height * 100)}
-                    </Text>
-                    
+                    </Text>}
+
                     {/* 수직 연결선 (치수선) */}
                     <NativeLine
                       points={[
@@ -771,14 +771,14 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             
             return (
               <group key={`dimension-${i}`}>
-                {/* 치수 텍스트 - CleanCAD2D 스타일로 칸 중앙에 표시 */}
-                {viewMode === '3D' && (
+                {/* 치수 텍스트 - 비활성화 (SectionsRenderer의 EditableDimensionText와 중복) */}
+                {false && viewMode === '3D' && (
                   <Text
                         renderOrder={1000}
                         depthTest={false}
                     position={[
-                      -innerWidth/2 * 0.3 - 0.8 + 0.01, 
-                      compartmentCenterY - 0.01, 
+                      -innerWidth/2 * 0.3 - 0.8 + 0.01,
+                      compartmentCenterY - 0.01,
                       depth/2 + 0.1 - 0.01
                     ]}
                     fontSize={baseFontSize}
@@ -791,7 +791,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     {compartmentHeightMm}
                   </Text>
                 )}
-                <Text
+                {false && <Text
                         renderOrder={1000}
                         depthTest={false}
                   position={[
@@ -820,8 +820,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   }}
                 >
                   {compartmentHeightMm}
-                </Text>
-                
+                </Text>}
+
                 {/* 위쪽 가이드 보조선 */}
                 <NativeLine
                   points={[
