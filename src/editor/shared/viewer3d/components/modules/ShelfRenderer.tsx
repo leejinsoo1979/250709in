@@ -598,8 +598,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     
                     return (
                       <group key={`dimension-${i}`}>
-                    {/* 치수 텍스트 - 비활성화 (SectionsRenderer의 EditableDimensionText와 중복) */}
-                    {false && viewMode === '3D' && (
+                    {/* 치수 텍스트 - 듀얼 가구는 비활성화 (SectionsRenderer의 EditableDimensionText와 중복) */}
+                    {!furnitureId?.includes('dual') && viewMode === '3D' && (
                       <Text
                         renderOrder={1000}
                         depthTest={false}
@@ -618,7 +618,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         {Math.round(compartment.height * 100)}
                       </Text>
                     )}
-                    {false && <Text
+                    {!furnitureId?.includes('dual') && <Text
                         renderOrder={1000}
                         depthTest={false}
                       position={[
@@ -791,7 +791,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     {compartmentHeightMm}
                   </Text>
                 )}
-                {false && <Text
+                {!furnitureId?.includes('dual') && <Text
                         renderOrder={1000}
                         depthTest={false}
                   position={[
