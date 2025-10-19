@@ -32,6 +32,7 @@ interface ShelfRendererProps {
   textureUrl?: string; // 텍스처 URL
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
   sectionName?: string; // 섹션 이름 (예: "(상)", "(하)")
+  sectionIndex?: number; // 섹션 인덱스 (상부 섹션 바닥판 위치 조정용)
 }
 
 /**
@@ -62,6 +63,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   textureUrl,
   panelGrainDirections,
   sectionName = '',
+  sectionIndex,
 }) => {
   const showDimensions = useUIStore(state => state.showDimensions);
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
@@ -164,8 +166,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       return null;
     }
 
-    // 최상단 마감 패널 모드 (기존 18mm에서 추가로 18mm 위로, 총 0mm)
-    const topPosition = innerHeight / 2 - basicThickness / 2;
+    // 최상단 마감 패널 모드
+    // 상부 섹션(sectionIndex > 0)인 경우 바닥판이 섹션 하단에 위치
+    // 하부 섹션이거나 단일 섹션인 경우 기존대로 상단에 위치
+    const topPosition = sectionIndex && sectionIndex > 0
+      ? -innerHeight / 2 + basicThickness / 2  // 상부 섹션: 섹션 하단에 바닥판
+      : innerHeight / 2 - basicThickness / 2;  // 하부/단일 섹션: 섹션 상단에 상판
 
     const panelName = sectionName ? `${sectionName}선반 1` : `선반 1`;
     const topFinishMat = getPanelMaterial(panelName);

@@ -279,6 +279,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 textureUrl={textureUrl}
                 panelGrainDirections={panelGrainDirections}
                 sectionName={sectionName}
+                sectionIndex={index}
               />
             );
           }
@@ -302,6 +303,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               shelfPositions={section.shelfPositions}
               isTopFinishPanel={section.isTopFinishPanel}
               showTopFrameDimension={index === 0}
+              sectionIndex={index}
               renderMode={renderMode}
               furnitureId={placedFurnitureId || furnitureId}
               sectionType={section.type}
