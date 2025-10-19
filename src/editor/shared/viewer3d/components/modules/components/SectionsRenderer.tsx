@@ -383,12 +383,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             // 2단 옷장(2hanging) 특별 처리: 하부만 표시, 상부는 안전선반 있을 때만
             const shouldHide2HangingUpper = is2HangingFurniture && hasTwoSections && index === 1 && !hasSafetyShelf;
 
-            // 듀얼 가구: 중복 치수 방지를 위해 섹션 내경 치수 숨김
+            // 섹션 내경 치수 표시 조건
             const shouldShow = !hideSectionDimensions && showDimensions && showDimensionsText &&
                               !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) &&
                               (section.type === 'hanging' || section.type === 'drawer') &&
-                              !shouldHide2HangingUpper &&
-                              !isDualFurniture;
+                              !shouldHide2HangingUpper;
 
             // 2hanging만 로그
             if (furnitureId?.includes('2hanging')) {
