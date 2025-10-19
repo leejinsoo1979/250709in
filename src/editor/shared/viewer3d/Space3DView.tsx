@@ -1239,8 +1239,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               />
             )}
 
-            {/* 측면뷰 전용 치수 표시 - 2D 측면뷰에서만 */}
-            {viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (
+            {/* 측면뷰 전용 치수 표시 - 2D 측면뷰에서만 (Configurator 전용) */}
+            {!isStep2 && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (
               <CADDimensions2D
                 viewDirection={view2DDirection}
                 showDimensions={showDimensions}
@@ -1515,8 +1515,8 @@ const QuadrantContent: React.FC<{
         />
       )}
 
-      {/* 측면뷰 전용 치수 표시 */}
-      {(viewDirection === 'left' || viewDirection === 'right') && (
+      {/* 측면뷰 전용 치수 표시 (CNCOptimizer/Step2 전용) */}
+      {isStep2 && (viewDirection === 'left' || viewDirection === 'right') && (
         <CADDimensions2D
           viewDirection={viewDirection}
           showDimensions={showDimensions}
