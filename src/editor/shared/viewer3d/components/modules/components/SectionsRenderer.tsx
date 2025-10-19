@@ -366,6 +366,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           
           {/* 섹션 내경 치수 표시 - 2단 옷장은 하부 섹션만 표시 (상부는 안전선반 있을 때만), 듀얼 타입 중복 방지 */}
           {(() => {
+            // 모든 가구에서 furnitureId 확인
+            console.log('🔵 SectionsRenderer furnitureId 체크:', { furnitureId, index });
+
             const is2HangingFurniture = furnitureId?.includes('2hanging');
             const isDualFurniture = furnitureId?.includes('dual');
 
