@@ -1670,8 +1670,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })}
       
-      {/* 좌측 전체 높이 치수선 - 비활성화 (호버 반응 없는 치수) */}
-      {false && <group>
+      {/* 좌측 전체 높이 치수선 */}
+      {<group>
         {/* 단내림이 있는 경우 높이 치수선 표시 */}
         {spaceInfo.droppedCeiling?.enabled ? (
           <>
@@ -3263,8 +3263,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           />
         </group> */}
         
-        {/* 우측 전체 높이 치수선 - 비활성화 (호버 반응 없는 치수) */}
-        {false && <group>
+        {/* 우측 전체 높이 치수선 */}
+        {<group>
           {/* 단내림이 있는 경우 높이 치수선 표시 */}
           {spaceInfo.droppedCeiling?.enabled ? (
             <>
