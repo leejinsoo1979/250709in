@@ -47,19 +47,27 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
 
       // 현재 줌값
       const currentZoom = camera.zoom;
-      
+
       // 휠 방향에 따른 줌 계산
       const delta = event.deltaY;
+
+      // 트랙패드 감지: deltaY가 작고 정밀한 값이면 트랙패드
+      const isTrackpad = Math.abs(delta) < 50;
+
+      // 트랙패드는 훨씬 느린 배율 사용 (맥북 트랙패드 최적화)
+      const zoomInFactor = isTrackpad ? 1.005 : 1.02;   // 트랙패드: 0.5% / 마우스: 2%
+      const zoomOutFactor = isTrackpad ? 0.995 : 0.98;  // 트랙패드: 0.5% / 마우스: 2%
+
       let newZoom;
-      
+
       if (delta < 0) {
-        // 휠 위: 줌인(확대) - zoom 값 증가 (더 부드럽게 조정)
-        newZoom = currentZoom * 1.1;
+        // 휠 위: 줌인(확대)
+        newZoom = currentZoom * zoomInFactor;
       } else {
-        // 휠 아래: 줌아웃(축소) - zoom 값 감소 (더 부드럽게 조정)
-        newZoom = currentZoom * 0.9;
+        // 휠 아래: 줌아웃(축소)
+        newZoom = currentZoom * zoomOutFactor;
       }
-      
+
       // 줌 범위 제한: 축소는 0.95에서 멈춤, 확대는 무제한
       newZoom = Math.max(0.95, newZoom);
       
@@ -103,8 +111,9 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
       
       if (import.meta.env.DEV) {
         console.log('🔍 2D 마우스 포인터 줌:', {
+          device: isTrackpad ? 'Trackpad' : 'Mouse',
           mouseX: mouseX.toFixed(0),
-          mouseY: mouseY.toFixed(0), 
+          mouseY: mouseY.toFixed(0),
           oldZoom: currentZoom.toFixed(2),
           newZoom: newZoom.toFixed(2),
           deltaY: delta,
