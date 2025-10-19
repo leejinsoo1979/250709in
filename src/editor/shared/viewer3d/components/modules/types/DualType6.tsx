@@ -38,7 +38,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
   showFurniture = true, // 가구 본체 표시 여부
   visibleSectionIndex = null,
   textureUrl,
-  panelGrainDirections // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
+  panelGrainDirections, // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
+  placedFurnitureId // 배치된 가구 ID
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
