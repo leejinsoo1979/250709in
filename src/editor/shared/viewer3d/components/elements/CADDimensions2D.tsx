@@ -1053,7 +1053,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           >
             {spaceInfo.height}
           </Text>
-        </group>
+        </group>}
 
         {/* ===== 오른쪽: 상부프레임/가구높이/받침대 (좌측뷰 line 172-857과 동일, rotation만 대칭) ===== */}
 
