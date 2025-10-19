@@ -598,8 +598,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         </mesh>
                       </group>
 
-                      {/* 수직선 양끝 엔드포인트 (hover 시 테마 색상) - 측면뷰에서 숨김 */}
-                      {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                      {/* 수직선 양끝 엔드포인트 (hover 시 테마 색상) - 측면뷰/탑뷰에서 숨김 */}
+                      {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
                         <>
                           <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                             <sphereGeometry args={[0.05, 8, 8]} />
@@ -672,8 +672,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                                 </mesh>
                               </group>
 
-                              {/* 수직선 양끝 엔드포인트 - 측면뷰에서 숨김 */}
-                              {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                              {/* 수직선 양끝 엔드포인트 - 측면뷰/탑뷰에서 숨김 */}
+                              {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
                                 <>
                                   <mesh position={[-innerWidth/2 * 0.3, topCompartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                                     <sphereGeometry args={[0.05, 8, 8]} />
@@ -746,15 +746,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 dashed={false}
               />
               
-              {/* 하단 프레임 두께 수직선 양끝 점 */}
-              <mesh position={[-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={dimensionColor} />
-              </mesh>
-              <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={dimensionColor} />
-              </mesh>
+              {/* 하단 프레임 두께 수직선 양끝 점 - 측면뷰/탑뷰에서 숨김 */}
+              {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
+                <>
+                  <mesh position={[-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                    <sphereGeometry args={[0.05, 8, 8]} />
+                    <meshBasicMaterial color={dimensionColor} />
+                  </mesh>
+                  <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                    <sphereGeometry args={[0.05, 8, 8]} />
+                    <meshBasicMaterial color={dimensionColor} />
+                  </mesh>
+                </>
+              )}
             </group>
           )}
           
@@ -812,15 +816,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 dashed={false}
               />
               
-              {/* 상단 프레임 두께 수직선 양끝 점 */}
-              <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={dimensionColor} />
-              </mesh>
-              <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={dimensionColor} />
-              </mesh>
+              {/* 상단 프레임 두께 수직선 양끝 점 - 측면뷰/탑뷰에서 숨김 */}
+              {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
+                <>
+                  <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                    <sphereGeometry args={[0.05, 8, 8]} />
+                    <meshBasicMaterial color={dimensionColor} />
+                  </mesh>
+                  <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                    <sphereGeometry args={[0.05, 8, 8]} />
+                    <meshBasicMaterial color={dimensionColor} />
+                  </mesh>
+                </>
+              )}
             </group>
           )}
         </group>
