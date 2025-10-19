@@ -360,12 +360,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const is2Hanging = moduleData.id?.includes('2hanging');
 
             if (isLastSection) {
-              // 상부섹션: 하부섹션 끝점과 같은 위치에서 시작
-              // 2단서랍장: sectionStartY (하부 끝점 sectionEndY와 만남)
-              // 2단옷장, 4단: sectionStartY - basicThickness (하부 끝점 sectionEndY - basicThickness와 만남)
-              const lineStart = is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness);
-              const lineEnd = floatHeight + baseFrameHeight + internalHeight;
-              sectionHeightMm = (lineEnd - lineStart) / 0.01;
+              // 상부섹션: 실제 섹션 높이만 표시 (sectionHeight)
+              sectionHeightMm = sectionHeight / 0.01;
             } else if (sectionIndex === 0) {
               // 하부섹션: 받침대 위부터 하부섹션 상판 윗면까지
               // 2단서랍장: 하부 측판이 18mm 늘어나서 sectionEndY (상부 시작점과 만남)
@@ -1206,12 +1202,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const is2Hanging = moduleData.id?.includes('2hanging');
 
             if (isLastSection) {
-              // 상부섹션: 하부섹션 끝점과 같은 위치에서 시작
-              // 2단서랍장: sectionStartY (하부 끝점 sectionEndY와 만남)
-              // 2단옷장, 4단: sectionStartY - basicThickness (하부 끝점 sectionEndY - basicThickness와 만남)
-              const lineStart = is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness);
-              const lineEnd = floatHeight + baseFrameHeight + internalHeight;
-              sectionHeightMm = (lineEnd - lineStart) / 0.01;
+              // 상부섹션: 실제 섹션 높이만 표시 (sectionHeight)
+              sectionHeightMm = sectionHeight / 0.01;
             } else if (sectionIndex === 0) {
               // 하부섹션: 받침대 위부터 하부섹션 상판 윗면까지
               // 2단서랍장: 하부 측판이 18mm 늘어나서 sectionEndY (상부 시작점과 만남)
