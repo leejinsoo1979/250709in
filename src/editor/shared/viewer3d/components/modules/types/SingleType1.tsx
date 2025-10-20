@@ -39,7 +39,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   // 간접조명 관련 상태
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
 
-  // 공통 로직 사용
+  // 공통 로직 사용 - SingleType2 패턴과 동일하게 섹션 깊이를 전달하지 않음
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
     internalHeight,
@@ -67,20 +67,19 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     getSectionHeights,
     actualDepthMm,
     textureUrl,
-    panelGrainDirections,
-    lowerSectionDepthMm,
-    upperSectionDepthMm
+    panelGrainDirections
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
 
-  // 섹션별 깊이 계산 (기본값: 표준 깊이)
+  // 섹션별 깊이 계산 (기본값: 표준 깊이) - props에서 직접 사용
   const sectionDepths = React.useMemo(() => {
+    const defaultDepth = depth;
     return [
-      lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth, // 하부 섹션 (서랍)
-      upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth  // 상부 섹션 (옷장)
+      lowerSectionDepth ? mmToThreeUnits(lowerSectionDepth) : defaultDepth, // 하부 섹션 (서랍)
+      upperSectionDepth ? mmToThreeUnits(upperSectionDepth) : defaultDepth  // 상부 섹션 (옷장)
     ];
-  }, [lowerSectionDepthMm, upperSectionDepthMm, depth, mmToThreeUnits]);
+  }, [lowerSectionDepth, upperSectionDepth, depth, mmToThreeUnits]);
 
   // 디버깅: SingleType1이 받은 textureUrl과 panelGrainDirections 확인
   React.useEffect(() => {
@@ -139,6 +138,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           moduleData={moduleData}
           placedFurnitureId={placedFurnitureId}
           spaceInfo={spaceInfo}
+          lowerSectionDepthMm={lowerSectionDepth}
+          upperSectionDepthMm={upperSectionDepth}
           textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
         >

@@ -341,6 +341,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {/* 모든 타입에서 간접조명 렌더링 */}
         {/* IndirectLight는 마지막에 한 번만 렌더링 */}
         <SingleType1
+        key={`${placedFurnitureId}-${lowerSectionDepth}-${upperSectionDepth}`}
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
@@ -357,10 +358,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotCenterX={slotCenterX}
         adjustedWidth={adjustedWidth} // 조정된 폭 전달
         slotIndex={slotIndex} // 슬롯 인덱스 전달
+        slotInfo={slotInfo} // 슬롯 정보 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
         isHighlighted={isHighlighted} // 강조 상태 전달
         furnitureId={furnitureId} // 가구 ID 전달
         placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
+        lowerSectionDepth={lowerSectionDepth}
+        upperSectionDepth={upperSectionDepth}
+        panelGrainDirections={panelGrainDirections}
       />
       </>
     );
