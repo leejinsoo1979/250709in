@@ -67,19 +67,20 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     getSectionHeights,
     actualDepthMm,
     textureUrl,
-    panelGrainDirections
+    panelGrainDirections,
+    lowerSectionDepthMm,
+    upperSectionDepthMm
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
 
   // 섹션별 깊이 계산 (기본값: 표준 깊이)
   const sectionDepths = React.useMemo(() => {
-    const defaultDepth = depth;
     return [
-      lowerSectionDepth ? mmToThreeUnits(lowerSectionDepth) : defaultDepth, // 하부 섹션 (서랍)
-      upperSectionDepth ? mmToThreeUnits(upperSectionDepth) : defaultDepth  // 상부 섹션 (옷장)
+      lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth, // 하부 섹션 (서랍)
+      upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth  // 상부 섹션 (옷장)
     ];
-  }, [lowerSectionDepth, upperSectionDepth, depth, mmToThreeUnits]);
+  }, [lowerSectionDepthMm, upperSectionDepthMm, depth, mmToThreeUnits]);
 
   // 디버깅: SingleType1이 받은 textureUrl과 panelGrainDirections 확인
   React.useEffect(() => {
