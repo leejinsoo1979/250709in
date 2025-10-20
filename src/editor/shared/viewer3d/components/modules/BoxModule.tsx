@@ -144,6 +144,16 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   useEffect(() => {
     console.log('📦 BoxModule - showFurniture:', showFurniture, 'moduleId:', moduleData.id, 'placedFurnitureId:', placedFurnitureId);
   }, [showFurniture, moduleData.id, placedFurnitureId]);
+
+  // 섹션 깊이 props 추적
+  useEffect(() => {
+    console.log('📦 BoxModule - 섹션 깊이 props 수신:', {
+      moduleId: moduleData.id,
+      placedFurnitureId,
+      lowerSectionDepth,
+      upperSectionDepth
+    });
+  }, [lowerSectionDepth, upperSectionDepth, moduleData.id, placedFurnitureId]);
   
   // 모든 간접조명은 UpperCabinetIndirectLight에서 통합 처리하므로 BoxModule에서는 렌더링하지 않음
   const showIndirectLight = false;
