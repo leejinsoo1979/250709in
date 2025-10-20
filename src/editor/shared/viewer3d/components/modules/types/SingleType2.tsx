@@ -445,14 +445,16 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
                 rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
               } else if (sectionIndex === 0) {
-                // 하부 섹션: 브라켓 윗면이 하부 섹션 상판(lowerTopPanelY) 하단에 붙음
+                // 하부 섹션: 브라켓 상단이 하부 섹션 상판 밑면에 닿음
                 const lowerTopPanelY = sectionBottomY + actualSectionHeight + basicThickness / 2;
-                rodYPosition = lowerTopPanelY - basicThickness / 2 - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
+                const lowerTopPanelBottom = lowerTopPanelY - basicThickness / 2;
+                rodYPosition = lowerTopPanelBottom - mmToThreeUnits(75 / 2);
 
                 console.log('🔵 SingleType2 하부섹션 옷봉 위치 계산');
                 console.log('  sectionBottomY:', sectionBottomY * 100);
                 console.log('  actualSectionHeight:', actualSectionHeight * 100);
                 console.log('  lowerTopPanelY:', lowerTopPanelY * 100);
+                console.log('  lowerTopPanelBottom:', lowerTopPanelBottom * 100);
                 console.log('  rodYPosition:', rodYPosition * 100);
               } else {
                 // 상부 섹션: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
