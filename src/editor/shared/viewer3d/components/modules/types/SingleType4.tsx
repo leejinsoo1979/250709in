@@ -51,9 +51,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
     customDepth,
     isDragging,
     isEditMode,
-    adjustedWidth,
-    lowerSectionDepth,
-    upperSectionDepth
+    adjustedWidth
   });
 
   const {
@@ -88,20 +86,20 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
     ? sectionHeightsUnits.map(sectionHeight => Math.round(sectionHeight * unitsToMmFactor))
     : undefined;
 
-  // 섹션별 깊이 배열 생성 (Three.js 단위)
-  const sectionDepths = (() => {
-    const { lowerSectionDepthMm, upperSectionDepthMm } = baseFurniture;
+  // 섹션별 깊이 배열 생성 (Three.js 단위) - SingleType2와 동일한 방식
+  const sectionDepths = React.useMemo(() => {
+    const defaultDepth = depth;
 
-    // 2섹션 가구가 아니면 null 반환
+    // 2섹션 가구가 아니면 undefined 반환
     if (!baseFurniture.modelConfig.sections || baseFurniture.modelConfig.sections.length !== 2) {
       return undefined;
     }
 
     return [
-      lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth,
-      upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth
+      lowerSectionDepth ? mmToThreeUnits(lowerSectionDepth) : defaultDepth, // 하부 섹션
+      upperSectionDepth ? mmToThreeUnits(upperSectionDepth) : defaultDepth  // 상부 섹션
     ];
-  })();
+  }, [lowerSectionDepth, upperSectionDepth, depth, mmToThreeUnits, baseFurniture.modelConfig.sections]);
 
   return (
     <>
@@ -109,7 +107,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
-        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} lowerSectionDepthMm={baseFurniture.lowerSectionDepthMm} upperSectionDepthMm={baseFurniture.upperSectionDepthMm} textureUrl={spaceInfo.materialConfig?.doorTexture} panelGrainDirections={panelGrainDirections}>
+        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} lowerSectionDepthMm={lowerSectionDepth} upperSectionDepthMm={upperSectionDepth} textureUrl={spaceInfo.materialConfig?.doorTexture} panelGrainDirections={panelGrainDirections}>
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
             <>
