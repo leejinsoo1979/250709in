@@ -2369,14 +2369,13 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 {(() => {
                   const isFrontView = view2DDirection === 'front';
 
-                  // 첫 번째 대각선 (위에서 아래로)
-                  // 좌측뷰/우측뷰 동일: 음수X → 양수X
+                  // 첫 번째 대각선
                   const start1 = isFrontView
                     ? [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, -doorHeight / 2, 0]
-                    : [-doorWidthUnits / 2, -doorHeight / 2, 0];  // 측면뷰: 음수X에서 시작
+                    : [-doorWidthUnits / 2, doorHeight / 2, 0];  // 측면뷰: 왼쪽 상단에서 시작
                   const end1 = isFrontView
                     ? [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0]
-                    : [doorWidthUnits / 2, 0, 0];  // 측면뷰: 양수X로 끝
+                    : [doorWidthUnits / 2, -doorHeight / 2, 0];  // 측면뷰: 오른쪽 하단으로 끝
                   const segments1 = [];
 
                   // 선분의 총 길이 계산
