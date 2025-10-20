@@ -495,8 +495,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
         </group>
       )}
 
-      {/* 조절발 - 하부 섹션 깊이 적용 */}
-      {(() => {
+      {/* 조절발 - 하부 섹션 깊이 적용 (탑뷰에서는 숨김) */}
+      {(viewMode !== '2D' || view2DDirection !== 'top') && (() => {
         // 하부 섹션 깊이 사용 (조절발은 하부 섹션에 붙음)
         const lowerDepth = sectionDepths[0] || depth;
         const depthDiff = depth - lowerDepth;
