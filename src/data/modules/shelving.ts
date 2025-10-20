@@ -426,17 +426,16 @@ const createDualType2 = (dualColumnWidth: number, maxHeight: number, slotWidths?
   
   // 기본 섹션 구성
   const baseSections: SectionConfig[] = [
-    { 
+    {
       type: 'hanging', // 하부장도 옷걸이 구역
-      heightType: 'absolute', 
+      heightType: 'absolute',
       height: bottomHeight,
-      count: 1, // 상판 1개
-      isTopFinishPanel: true // 최상단 마감 패널 추가 (상부 섹션 하부판과 맞닿음)
+      shelfPositions: [0] // 치수 표시용 (실제 상판은 DualType1.tsx에서 렌더링)
     },
-    { 
-      type: 'hanging', 
-      heightType: 'absolute', 
-      height: topHeight 
+    {
+      type: 'hanging',
+      heightType: 'absolute',
+      height: topHeight
     }
   ];
   
