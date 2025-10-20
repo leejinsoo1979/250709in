@@ -557,7 +557,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
 
                 const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
                 const sectionBottomY = accumulatedY;
-                const sectionTopY = accumulatedY + sectionHeight - basicThickness;
+                const sectionCenterY = accumulatedY + sectionHeight / 2 - basicThickness;
 
                 // 누적 Y 위치 업데이트
                 accumulatedY += sectionHeight;
@@ -574,8 +574,10 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
                 } else if (sectionIndex === 0) {
                   // 하부 섹션: 브라켓 상단이 하부 섹션 상판 밑면에 닿음
-                  const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
-                  rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+                  // 측면판 렌더링과 동일한 계산 사용
+                  const lowerTopPanelY = sectionCenterY + sectionHeight/2 - basicThickness/2;
+                  const lowerTopPanelBottom = lowerTopPanelY - basicThickness / 2;
+                  rodYPosition = lowerTopPanelBottom - mmToThreeUnits(75 / 2);
                 } else if (hasFinishPanel) {
                   // 마감 패널이 있는 경우: 브라켓 윗면이 마감 패널 하단에서 27mm 아래
                   const finishPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
