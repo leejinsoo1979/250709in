@@ -4,6 +4,7 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import DoorModule from '../DoorModule';
 import { ClothingRod } from '../components/ClothingRod';
+import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 
 /**
  * SingleType1 컴포넌트
@@ -70,7 +71,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
     panelGrainDirections
   } = baseFurniture;
 
-  const { renderMode } = useSpace3DView();
+  const { renderMode, viewMode, view2DDirection } = useSpace3DView();
   const { showDimensions, highlightedSection, isIndividualDoorOpen, toggleIndividualDoor } = useUIStore();
 
   // 가구 본체 클릭 시 열린 도어 닫기 핸들러
@@ -493,7 +494,32 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           )}
         </group>
       )}
-      
+
+      {/* 조절발 - 하부 섹션 깊이 적용 */}
+      {(() => {
+        // 하부 섹션 깊이 사용 (조절발은 하부 섹션에 붙음)
+        const lowerDepth = sectionDepths[0] || depth;
+        const depthDiff = depth - lowerDepth;
+        const zOffset = depthDiff / 2; // 앞면 고정, 뒤쪽만 이동
+
+        return (
+          <group position={[0, 0, zOffset]}>
+            <AdjustableFootsRenderer
+              width={width}
+              depth={lowerDepth}
+              yOffset={-height / 2}
+              renderMode={renderMode}
+              isHighlighted={false}
+              isFloating={false}
+              baseHeight={spaceInfo?.baseConfig?.height || 65}
+              baseDepth={spaceInfo?.baseConfig?.depth || 0}
+              viewMode={viewMode}
+              view2DDirection={view2DDirection}
+            />
+          </group>
+        );
+      })()}
+
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) - 단, 기둥 A(deep) 침범 시에는 FurnitureItem에서 별도 렌더링 */}
       {hasDoor && spaceInfo && 
        !(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || adjustedWidth !== undefined)) && (
