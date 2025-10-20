@@ -53,7 +53,9 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
     textureUrl,
     panelGrainDirections,
     depth,
-    mmToThreeUnits
+    mmToThreeUnits,
+    lowerSectionDepthMm,
+    upperSectionDepthMm
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
@@ -61,11 +63,25 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   // 섹션별 깊이 계산 (하부 섹션 0, 상부 섹션 1)
   const defaultDepth = depth;
   const sectionDepths = React.useMemo(() => {
-    return [
-      lowerSectionDepth ? mmToThreeUnits(lowerSectionDepth) : defaultDepth, // 하부 섹션 (서랍)
-      upperSectionDepth ? mmToThreeUnits(upperSectionDepth) : defaultDepth  // 상부 섹션 (옷장)
+    console.log('🔍 [DualType1 섹션 깊이 디버깅]', {
+      moduleId: moduleData.id,
+      lowerSectionDepth,
+      upperSectionDepth,
+      lowerSectionDepthMm,
+      upperSectionDepthMm,
+      depth,
+      sections: baseFurniture.modelConfig?.sections
+    });
+
+    const result = [
+      lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : defaultDepth, // 하부 섹션 (서랍)
+      upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : defaultDepth  // 상부 섹션 (옷장)
     ];
-  }, [lowerSectionDepth, upperSectionDepth, depth, mmToThreeUnits]);
+
+    console.log('✅ [DualType1 섹션 깊이 결과]', result);
+
+    return result;
+  }, [lowerSectionDepthMm, upperSectionDepthMm, depth, mmToThreeUnits, moduleData.id, baseFurniture.modelConfig?.sections]);
 
   console.log('🔵 DualType1에서 추출한 값:', {
     moduleId: moduleData.id,
