@@ -446,16 +446,31 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
               } else if (sectionIndex === 0) {
                 // 하부 섹션: 브라켓 상단이 하부 섹션 상판 밑면에 닿음
-                const lowerTopPanelY = sectionBottomY + actualSectionHeight + basicThickness / 2;
+                // 측면판 렌더링과 동일한 계산 사용
+                // sectionCenterY = accumulatedY + sectionHeight / 2 - basicThickness
+                // middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2
+                // lowerTopPanelY = middlePanelY - basicThickness
+
+                // 여기서 sectionBottomY는 옷봉용 계산값이므로 측면판과 다름
+                // 측면판 계산: accumulatedY = -height/2 + basicThickness
+                const accumulatedY = -height/2 + basicThickness;
+                const sectionCenterY_panel = accumulatedY + actualSectionHeight / 2 - basicThickness;
+                const middlePanelY = sectionCenterY_panel + actualSectionHeight/2 + basicThickness/2;
+                const lowerTopPanelY = middlePanelY - basicThickness;
                 const lowerTopPanelBottom = lowerTopPanelY - basicThickness / 2;
+
+                // 브라켓 상단이 하부섹션 상판 밑면에 닿으므로
                 rodYPosition = lowerTopPanelBottom - mmToThreeUnits(75 / 2);
 
                 console.log('🔵 SingleType2 하부섹션 옷봉 위치 계산');
-                console.log('  sectionBottomY:', sectionBottomY * 100);
+                console.log('  accumulatedY:', accumulatedY * 100);
                 console.log('  actualSectionHeight:', actualSectionHeight * 100);
-                console.log('  lowerTopPanelY:', lowerTopPanelY * 100);
-                console.log('  lowerTopPanelBottom:', lowerTopPanelBottom * 100);
-                console.log('  rodYPosition:', rodYPosition * 100);
+                console.log('  sectionCenterY_panel:', sectionCenterY_panel * 100);
+                console.log('  middlePanelY (상부바닥중심):', middlePanelY * 100);
+                console.log('  lowerTopPanelY (하부상판중심):', lowerTopPanelY * 100);
+                console.log('  lowerTopPanelBottom (하부상판밑면):', lowerTopPanelBottom * 100);
+                console.log('  bracketHeight:', 75);
+                console.log('  rodYPosition (옷봉중심):', rodYPosition * 100);
               } else {
                 // 상부 섹션: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
                 const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
