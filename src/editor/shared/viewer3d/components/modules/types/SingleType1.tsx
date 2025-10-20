@@ -1,5 +1,5 @@
 import React from 'react';
-import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps } from '../shared';
+import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypeProps, BoxWithEdges } from '../shared';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useUIStore } from '@/store/uiStore';
 import DoorModule from '../DoorModule';
@@ -71,6 +71,20 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
+  const { showDimensions, highlightedSection, isIndividualDoorOpen, toggleIndividualDoor } = useUIStore();
+
+  // 가구 본체 클릭 시 열린 도어 닫기 핸들러
+  const handleCabinetBodyClick = (e: any) => {
+    if (!placedFurnitureId) return;
+    e.stopPropagation();
+
+    // 도어가 열려있으면 닫기
+    const isDoorOpen = isIndividualDoorOpen(placedFurnitureId, 0);
+    if (isDoorOpen) {
+      toggleIndividualDoor(placedFurnitureId, 0);
+      console.log('🚪 가구 본체 클릭 → 도어 닫기');
+    }
+  };
 
   // 섹션별 깊이 계산 (기본값: 표준 깊이) - props에서 직접 사용
   const sectionDepths = React.useMemo(() => {
@@ -130,19 +144,156 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
-        <BaseFurnitureShell
-          {...baseFurniture}
-          isDragging={isDragging}
-          isEditMode={isEditMode}
-          isHighlighted={isHighlighted}
-          moduleData={moduleData}
-          placedFurnitureId={placedFurnitureId}
-          spaceInfo={spaceInfo}
-          lowerSectionDepthMm={lowerSectionDepth}
-          upperSectionDepthMm={upperSectionDepth}
-          textureUrl={spaceInfo.materialConfig?.doorTexture}
-          panelGrainDirections={panelGrainDirections}
-        >
+        <group>
+          {/* 좌우 측면 판재 - 섹션별 분할 */}
+          {(() => {
+            let accumulatedY = -height/2 + basicThickness;
+
+            return getSectionHeights().map((sectionHeight: number, index: number) => {
+              // 현재 섹션의 깊이
+              const currentDepth = sectionDepths[index] || depth;
+
+              // Z축 위치 조정: 깊이가 줄어들면 뒤쪽에서 줄어들도록
+              const depthDiff = depth - currentDepth;
+              const zOffset = depthDiff / 2;
+
+              // 현재 섹션의 중심 Y 위치
+              const sectionCenterY = accumulatedY + sectionHeight / 2 - basicThickness;
+
+              // 다음 섹션을 위해 누적
+              accumulatedY += sectionHeight;
+
+              // 섹션별 강조 확인
+              const isSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
+
+              return (
+                <React.Fragment key={`side-panels-${index}`}>
+                  {/* 왼쪽 측면 판재 */}
+                  <BoxWithEdges
+                    args={[basicThickness, sectionHeight, currentDepth]}
+                    position={[-width/2 + basicThickness/2, sectionCenterY, zOffset]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    isHighlighted={isSectionHighlighted}
+                    onClick={handleCabinetBodyClick}
+                    panelName="좌측판"
+                    panelGrainDirections={panelGrainDirections}
+                    textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  />
+
+                  {/* 오른쪽 측면 판재 */}
+                  <BoxWithEdges
+                    args={[basicThickness, sectionHeight, currentDepth]}
+                    position={[width/2 - basicThickness/2, sectionCenterY, zOffset]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    isHighlighted={isSectionHighlighted}
+                    onClick={handleCabinetBodyClick}
+                    panelName="우측판"
+                    panelGrainDirections={panelGrainDirections}
+                    textureUrl={spaceInfo.materialConfig?.doorTexture}
+                  />
+
+                  {/* 하부 섹션 상판 + 상부 섹션 바닥판 - index=0일때만 */}
+                  {index === 0 && (() => {
+                    const middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2;
+
+                    // 하부 섹션 깊이 (index=0)
+                    const lowerDepth = sectionDepths[0] || depth;
+                    const lowerDepthDiff = depth - lowerDepth;
+                    const lowerZOffset = lowerDepthDiff / 2;
+
+                    // 상부 섹션 깊이 (index=1)
+                    const upperDepth = sectionDepths[1] || depth;
+                    const upperDepthDiff = depth - upperDepth;
+                    const upperZOffset = upperDepthDiff / 2;
+
+                    const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
+                    const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-${index + 1}`;
+
+                    return (
+                      <>
+                        {/* 하부 섹션 상판 (서랍 상단) */}
+                        <BoxWithEdges
+                          args={[innerWidth, basicThickness, lowerDepth]}
+                          position={[0, middlePanelY - basicThickness, lowerZOffset]}
+                          material={material}
+                          renderMode={renderMode}
+                          isDragging={isDragging}
+                          isEditMode={isEditMode}
+                          isHighlighted={isLowerHighlighted}
+                          onClick={handleCabinetBodyClick}
+                          panelName="하부상판"
+                          panelGrainDirections={panelGrainDirections}
+                          textureUrl={spaceInfo.materialConfig?.doorTexture}
+                        />
+
+                        {/* 상부 섹션 바닥판 (옷장 하단) */}
+                        <BoxWithEdges
+                          args={[innerWidth, basicThickness, upperDepth]}
+                          position={[0, middlePanelY, upperZOffset]}
+                          material={material}
+                          renderMode={renderMode}
+                          isDragging={isDragging}
+                          isEditMode={isEditMode}
+                          isHighlighted={isUpperHighlighted}
+                          onClick={handleCabinetBodyClick}
+                          panelName="상부바닥판"
+                          panelGrainDirections={panelGrainDirections}
+                          textureUrl={spaceInfo.materialConfig?.doorTexture}
+                        />
+                      </>
+                    );
+                  })()}
+                </React.Fragment>
+              );
+            });
+          })()}
+
+          {/* 상하판 */}
+          <BoxWithEdges
+            args={[innerWidth, basicThickness, depth]}
+            position={[0, -height/2 + basicThickness/2, 0]}
+            material={material}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            onClick={handleCabinetBodyClick}
+            panelName="하판"
+            panelGrainDirections={panelGrainDirections}
+            textureUrl={spaceInfo.materialConfig?.doorTexture}
+          />
+          <BoxWithEdges
+            args={[innerWidth, basicThickness, depth]}
+            position={[0, height/2 - basicThickness/2, 0]}
+            material={material}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            onClick={handleCabinetBodyClick}
+            panelName="상판"
+            panelGrainDirections={panelGrainDirections}
+            textureUrl={spaceInfo.materialConfig?.doorTexture}
+          />
+
+          {/* 백패널 */}
+          <BoxWithEdges
+            args={[width - basicThickness * 2, height - basicThickness * 2, backPanelThickness]}
+            position={[0, 0, -depth/2 + backPanelThickness/2]}
+            material={material}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isEditMode={isEditMode}
+            onClick={handleCabinetBodyClick}
+            panelName="백패널"
+            panelGrainDirections={panelGrainDirections}
+            textureUrl={spaceInfo.materialConfig?.doorTexture}
+          />
+
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
             <>
@@ -246,12 +397,21 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                     console.log('  basicThickness:', basicThickness * 100);
                   }
 
+                  // 옷봉 Z 위치 계산 (섹션 깊이에 따라 조정)
+                  let rodZPosition = 0;
+                  if (sectionDepths && sectionDepths[sectionIndex]) {
+                    // 현재 섹션의 깊이 사용
+                    const sectionDepth = sectionDepths[sectionIndex];
+                    const depthDiff = depth - sectionDepth;
+                    rodZPosition = depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+                  }
+
                   return (
                     <ClothingRod
                       key={`clothing-rod-${sectionIndex}`}
                       innerWidth={innerWidth}
                       yPosition={rodYPosition}
-                      zPosition={0}
+                      zPosition={rodZPosition}
                       renderMode={renderMode}
                       isDragging={false}
                       isEditMode={isEditMode}
@@ -263,7 +423,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
               })()}
             </>
           )}
-        </BaseFurnitureShell>
+        </group>
       )}
       
       {/* 도어는 showFurniture와 관계없이 hasDoor가 true이면 항상 렌더링 (도어만 보기 위해) - 단, 기둥 A(deep) 침범 시에는 FurnitureItem에서 별도 렌더링 */}
