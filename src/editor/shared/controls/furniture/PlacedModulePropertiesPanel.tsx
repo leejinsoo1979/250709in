@@ -1099,28 +1099,34 @@ const PlacedModulePropertiesPanel: React.FC = () => {
 
   // 섹션 깊이 입력 핸들러
   const handleLowerDepthChange = (value: string) => {
-    console.log('⬇️ [하부 섹션 깊이 변경] value=', value);
+    console.log('⬇️⬇️⬇️ [하부 섹션 깊이 변경 시작] value=', value, 'currentPlacedModule.id=', currentPlacedModule?.id);
     setLowerDepthInput(value);
 
     // 유효한 숫자면 즉시 반영
     const numValue = parseInt(value);
+    console.log('🔢 [숫자 파싱] numValue=', numValue, 'isValid=', !isNaN(numValue) && numValue > 0);
+
     if (!isNaN(numValue) && numValue > 0 && currentPlacedModule) {
-      console.log('✅ [하부 섹션 깊이 적용] numValue=', numValue);
+      console.log('✅✅✅ [하부 섹션 깊이 적용 시작] numValue=', numValue, 'moduleId=', currentPlacedModule.id);
       setLowerSectionDepth(numValue);
       updatePlacedModule(currentPlacedModule.id, { lowerSectionDepth: numValue });
+      console.log('💾 [updatePlacedModule 호출 완료]');
     }
   };
 
   const handleUpperDepthChange = (value: string) => {
-    console.log('⬆️ [상부 섹션 깊이 변경] value=', value);
+    console.log('⬆️⬆️⬆️ [상부 섹션 깊이 변경 시작] value=', value, 'currentPlacedModule.id=', currentPlacedModule?.id);
     setUpperDepthInput(value);
 
     // 유효한 숫자면 즉시 반영
     const numValue = parseInt(value);
+    console.log('🔢 [숫자 파싱] numValue=', numValue, 'isValid=', !isNaN(numValue) && numValue > 0);
+
     if (!isNaN(numValue) && numValue > 0 && currentPlacedModule) {
-      console.log('✅ [상부 섹션 깊이 적용] numValue=', numValue);
+      console.log('✅✅✅ [상부 섹션 깊이 적용 시작] numValue=', numValue, 'moduleId=', currentPlacedModule.id);
       setUpperSectionDepth(numValue);
       updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: numValue });
+      console.log('💾 [updatePlacedModule 호출 완료]');
     }
   };
 
