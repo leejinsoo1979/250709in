@@ -32,7 +32,9 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   isHighlighted = false,
   furnitureId,
   placedFurnitureId,
-  panelGrainDirections: propsPanelGrainDirections
+  panelGrainDirections: propsPanelGrainDirections,
+  lowerSectionDepth,
+  upperSectionDepth
 }) => {
   // 간접조명 관련 상태
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -69,6 +71,15 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
+
+  // 섹션별 깊이 계산 (기본값: 표준 깊이)
+  const sectionDepths = React.useMemo(() => {
+    const defaultDepth = depth;
+    return [
+      lowerSectionDepth ? mmToThreeUnits(lowerSectionDepth) : defaultDepth, // 하부 섹션 (서랍)
+      upperSectionDepth ? mmToThreeUnits(upperSectionDepth) : defaultDepth  // 상부 섹션 (옷장)
+    ];
+  }, [lowerSectionDepth, upperSectionDepth, depth, mmToThreeUnits]);
 
   // 디버깅: SingleType1이 받은 textureUrl과 panelGrainDirections 확인
   React.useEffect(() => {
@@ -150,6 +161,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 placedFurnitureId={placedFurnitureId}
                 textureUrl={spaceInfo.materialConfig?.doorTexture}
                 panelGrainDirections={panelGrainDirections}
+                sectionDepths={sectionDepths}
               />
 
               {/* 옷걸이 봉 렌더링 - 상부 옷장 섹션에만 */}
