@@ -156,6 +156,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   const { gl } = useThree(); // Three.js renderer 가져오기
   const { dimensionColor } = useDimensionColor(); // 치수 색상
 
+  const isSide2DView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+
   // furnitureId가 있으면 개별 도어 상태 사용 (분할 여부와 무관), 아니면 전역 상태 사용
   const useIndividualState = furnitureId !== undefined;
   const effectiveSectionIndex = sectionIndex !== undefined ? sectionIndex : 0; // 병합 모드는 섹션 0
@@ -1489,124 +1491,133 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
               {/* Door opening direction for left door - 정면뷰는 항상, 측면뷰는 열렸을 때만 */}
-              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (
-                <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
-                  {/* 대각선 - 도어 열림 방향 표시 */}
-                  {(() => {
-                    const isFrontView = view2DDirection === 'front';
-                    const segments = [];
+              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (() => {
+                const segments = (() => {
+                  const isFrontView = view2DDirection === 'front';
+                  const segmentList: React.ReactNode[] = [];
+                  const longDash = 2.4;
+                  const shortDash = 0.9;
+                  const gap = 0.9;
 
-                    // 패턴 정의: [긴 대시, 공백, 짧은 대시, 공백]의 반복
-                    const longDash = 2.4;   // 긴 대시
-                    const shortDash = 0.9;  // 짧은 대시
-                    const gap = 0.9;        // 공백
+                  if (isFrontView) {
+                    const start1 = [leftDoorWidthUnits / 2, -doorHeight / 2, 0] as const;
+                    const end1 = [-leftDoorWidthUnits / 2, 0, 0] as const;
+                    const dx1 = end1[0] - start1[0];
+                    const dy1 = end1[1] - start1[1];
+                    const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
 
-                    if (isFrontView) {
-                      // 정면뷰: X 패턴 (두 개의 대각선)
-                      // 첫 번째 대각선 (위에서 아래로)
-                      const start1 = [leftDoorWidthUnits / 2, -doorHeight / 2, 0];
-                      const end1 = [-leftDoorWidthUnits / 2, 0, 0];
-                      const dx1 = end1[0] - start1[0];
-                      const dy1 = end1[1] - start1[1];
-                      const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+                    let currentPos = 0;
+                    let isLongDash = true;
 
-                      let currentPos = 0;
-                      let isLongDash = true;
-
-                      while (currentPos < totalLength1) {
-                        const dashLength = isLongDash ? longDash : shortDash;
-                        const actualLength = Math.min(dashLength, totalLength1 - currentPos);
-                        const t1 = currentPos / totalLength1;
-                        const t2 = (currentPos + actualLength) / totalLength1;
-                        segments.push(
-                          <Line
-                            key={`seg1-${isLongDash ? 'long' : 'short'}-${currentPos}`}
-                            points={[
-                              [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
-                              [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
-                            ]}
-                            color="#FF8800"
-                            lineWidth={1}
-                            transparent={true}
-                            opacity={1.0}
-                          />
-                        );
-                        if (currentPos + actualLength >= totalLength1) break;
-                        currentPos += actualLength + gap;
-                        isLongDash = !isLongDash;
-                      }
-
-                      // 두 번째 대각선 (아래에서 위로)
-                      const start2 = [-leftDoorWidthUnits / 2, 0, 0];
-                      const end2 = [leftDoorWidthUnits / 2, doorHeight / 2, 0];
-                      const dx2 = end2[0] - start2[0];
-                      const dy2 = end2[1] - start2[1];
-                      const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-
-                      currentPos = 0;
-                      isLongDash = true;
-
-                      while (currentPos < totalLength2) {
-                        const dashLength = isLongDash ? longDash : shortDash;
-                        const actualLength = Math.min(dashLength, totalLength2 - currentPos);
-                        const t1 = currentPos / totalLength2;
-                        const t2 = (currentPos + actualLength) / totalLength2;
-                        segments.push(
-                          <Line
-                            key={`seg2-${isLongDash ? 'long' : 'short'}-${currentPos}`}
-                            points={[
-                              [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
-                              [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
-                            ]}
-                            color="#FF8800"
-                            lineWidth={1}
-                            transparent={true}
-                            opacity={1.0}
-                          />
-                        );
-                        if (currentPos + actualLength >= totalLength2) break;
-                        currentPos += actualLength + gap;
-                        isLongDash = !isLongDash;
-                      }
-                    } else {
-                      // 측면뷰: 왼쪽 힌지 도어 - 하나의 대각선만
-                      const start1 = [-leftDoorWidthUnits / 2, doorHeight / 2, 0];
-                      const end1 = [leftDoorWidthUnits / 2, 0, 0];
-                      const dx1 = end1[0] - start1[0];
-                      const dy1 = end1[1] - start1[1];
-                      const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-
-                      let currentPos = 0;
-                      let isLongDash = true;
-
-                      while (currentPos < totalLength1) {
-                        const dashLength = isLongDash ? longDash : shortDash;
-                        const actualLength = Math.min(dashLength, totalLength1 - currentPos);
-                        const t1 = currentPos / totalLength1;
-                        const t2 = (currentPos + actualLength) / totalLength1;
-                        segments.push(
-                          <Line
-                            key={`seg1-${isLongDash ? 'long' : 'short'}-${currentPos}`}
-                            points={[
-                              [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
-                              [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
-                            ]}
-                            color="#FF8800"
-                            lineWidth={1}
-                            transparent={true}
-                            opacity={1.0}
-                          />
-                        );
-                        if (currentPos + actualLength >= totalLength1) break;
-                        currentPos += actualLength + gap;
-                        isLongDash = !isLongDash;
-                      }
+                    while (currentPos < totalLength1) {
+                      const dashLength = isLongDash ? longDash : shortDash;
+                      const actualLength = Math.min(dashLength, totalLength1 - currentPos);
+                      const t1 = currentPos / totalLength1;
+                      const t2 = (currentPos + actualLength) / totalLength1;
+                      segmentList.push(
+                        <Line
+                          key={`left-door-front-1-${currentPos}`}
+                          points={[
+                            [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
+                            [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
+                          ]}
+                          color="#FF8800"
+                          lineWidth={1}
+                          transparent
+                          opacity={1.0}
+                        />
+                      );
+                      if (currentPos + actualLength >= totalLength1) break;
+                      currentPos += actualLength + gap;
+                      isLongDash = !isLongDash;
                     }
 
-                    return segments;
-                  })()}
-                </group>
-              )}
+                    const start2 = [-leftDoorWidthUnits / 2, 0, 0] as const;
+                    const end2 = [leftDoorWidthUnits / 2, doorHeight / 2, 0] as const;
+                    const dx2 = end2[0] - start2[0];
+                    const dy2 = end2[1] - start2[1];
+                    const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+
+                    currentPos = 0;
+                    isLongDash = true;
+
+                    while (currentPos < totalLength2) {
+                      const dashLength = isLongDash ? longDash : shortDash;
+                      const actualLength = Math.min(dashLength, totalLength2 - currentPos);
+                      const t1 = currentPos / totalLength2;
+                      const t2 = (currentPos + actualLength) / totalLength2;
+                      segmentList.push(
+                        <Line
+                          key={`left-door-front-2-${currentPos}`}
+                          points={[
+                            [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
+                            [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
+                          ]}
+                          color="#FF8800"
+                          lineWidth={1}
+                          transparent
+                          opacity={1.0}
+                        />
+                      );
+                      if (currentPos + actualLength >= totalLength2) break;
+                      currentPos += actualLength + gap;
+                      isLongDash = !isLongDash;
+                    }
+                  } else {
+                    const start1 = [-leftDoorWidthUnits / 2, doorHeight / 2, 0] as const;
+                    const end1 = [leftDoorWidthUnits / 2, 0, 0] as const;
+                    const dx1 = end1[0] - start1[0];
+                    const dy1 = end1[1] - start1[1];
+                    const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+
+                    let currentPos = 0;
+                    let isLongDash = true;
+
+                    while (currentPos < totalLength1) {
+                      const dashLength = isLongDash ? longDash : shortDash;
+                      const actualLength = Math.min(dashLength, totalLength1 - currentPos);
+                      const t1 = currentPos / totalLength1;
+                      const t2 = (currentPos + actualLength) / totalLength1;
+                      segmentList.push(
+                        <Line
+                          key={`left-door-side-1-${currentPos}`}
+                          points={[
+                            [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
+                            [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
+                          ]}
+                          color="#FF8800"
+                          lineWidth={1}
+                          transparent
+                          opacity={1.0}
+                        />
+                      );
+                      if (currentPos + actualLength >= totalLength1) break;
+                      currentPos += actualLength + gap;
+                      isLongDash = !isLongDash;
+                    }
+                  }
+
+                  return segmentList;
+                })();
+
+                const indicatorRotation = dualLeftDoorSpring.rotation.to(value => {
+                  if (!isSide2DView) {
+                    return 0;
+                  }
+                  const orientationSign = 1; // 측면뷰에서는 항상 동일한 방향 유지
+                  const targetWorldRotation = orientationSign * Math.abs(value);
+                  return targetWorldRotation - value;
+                });
+
+                return (
+                  <animated.group
+                    position={[0, 0, doorThicknessUnits / 2 + 0.001]}
+                    rotation-y={indicatorRotation}
+                  >
+                    {segments}
+                  </animated.group>
+                );
+              })()}
 
               {/* 왼쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외) */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && (() => {
@@ -1880,124 +1891,133 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
               {/* Door opening direction for right door - 정면뷰는 항상, 측면뷰는 열렸을 때만 */}
-              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (
-                <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
-                  {/* 대각선 - 도어 열림 방향 표시 */}
-                  {(() => {
-                    const isFrontView = view2DDirection === 'front';
-                    const segments = [];
+              {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (() => {
+                const segments = (() => {
+                  const isFrontView = view2DDirection === 'front';
+                  const segmentList: React.ReactNode[] = [];
+                  const longDash = 2.4;
+                  const shortDash = 0.9;
+                  const gap = 0.9;
 
-                    // 패턴 정의: [긴 대시, 공백, 짧은 대시, 공백]의 반복
-                    const longDash = 2.4;   // 긴 대시
-                    const shortDash = 0.9;  // 짧은 대시
-                    const gap = 0.9;        // 공백
+                  if (isFrontView) {
+                    const start1 = [-rightDoorWidthUnits / 2, -doorHeight / 2, 0] as const;
+                    const end1 = [rightDoorWidthUnits / 2, 0, 0] as const;
+                    const dx1 = end1[0] - start1[0];
+                    const dy1 = end1[1] - start1[1];
+                    const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
 
-                    if (isFrontView) {
-                      // 정면뷰: X 패턴 (두 개의 대각선)
-                      // 첫 번째 대각선 (위에서 아래로)
-                      const start1 = [-rightDoorWidthUnits / 2, -doorHeight / 2, 0];
-                      const end1 = [rightDoorWidthUnits / 2, 0, 0];
-                      const dx1 = end1[0] - start1[0];
-                      const dy1 = end1[1] - start1[1];
-                      const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+                    let currentPos = 0;
+                    let isLongDash = true;
 
-                      let currentPos = 0;
-                      let isLongDash = true;
-
-                      while (currentPos < totalLength1) {
-                        const dashLength = isLongDash ? longDash : shortDash;
-                        const actualLength = Math.min(dashLength, totalLength1 - currentPos);
-                        const t1 = currentPos / totalLength1;
-                        const t2 = (currentPos + actualLength) / totalLength1;
-                        segments.push(
-                          <Line
-                            key={`seg1-${isLongDash ? 'long' : 'short'}-${currentPos}`}
-                            points={[
-                              [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
-                              [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
-                            ]}
-                            color="#FF8800"
-                            lineWidth={1}
-                            transparent={true}
-                            opacity={1.0}
-                          />
-                        );
-                        if (currentPos + actualLength >= totalLength1) break;
-                        currentPos += actualLength + gap;
-                        isLongDash = !isLongDash;
-                      }
-
-                      // 두 번째 대각선 (아래에서 위로)
-                      const start2 = [rightDoorWidthUnits / 2, 0, 0];
-                      const end2 = [-rightDoorWidthUnits / 2, doorHeight / 2, 0];
-                      const dx2 = end2[0] - start2[0];
-                      const dy2 = end2[1] - start2[1];
-                      const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-
-                      currentPos = 0;
-                      isLongDash = true;
-
-                      while (currentPos < totalLength2) {
-                        const dashLength = isLongDash ? longDash : shortDash;
-                        const actualLength = Math.min(dashLength, totalLength2 - currentPos);
-                        const t1 = currentPos / totalLength2;
-                        const t2 = (currentPos + actualLength) / totalLength2;
-                        segments.push(
-                          <Line
-                            key={`seg2-${isLongDash ? 'long' : 'short'}-${currentPos}`}
-                            points={[
-                              [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
-                              [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
-                            ]}
-                            color="#FF8800"
-                            lineWidth={1}
-                            transparent={true}
-                            opacity={1.0}
-                          />
-                        );
-                        if (currentPos + actualLength >= totalLength2) break;
-                        currentPos += actualLength + gap;
-                        isLongDash = !isLongDash;
-                      }
-                    } else {
-                      // 측면뷰: 오른쪽 힌지 도어 - 하나의 대각선만
-                      const start1 = [-rightDoorWidthUnits / 2, doorHeight / 2, 0];
-                      const end1 = [rightDoorWidthUnits / 2, 0, 0];
-                      const dx1 = end1[0] - start1[0];
-                      const dy1 = end1[1] - start1[1];
-                      const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
-
-                      let currentPos = 0;
-                      let isLongDash = true;
-
-                      while (currentPos < totalLength1) {
-                        const dashLength = isLongDash ? longDash : shortDash;
-                        const actualLength = Math.min(dashLength, totalLength1 - currentPos);
-                        const t1 = currentPos / totalLength1;
-                        const t2 = (currentPos + actualLength) / totalLength1;
-                        segments.push(
-                          <Line
-                            key={`seg1-${isLongDash ? 'long' : 'short'}-${currentPos}`}
-                            points={[
-                              [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
-                              [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
-                            ]}
-                            color="#FF8800"
-                            lineWidth={1}
-                            transparent={true}
-                            opacity={1.0}
-                          />
-                        );
-                        if (currentPos + actualLength >= totalLength1) break;
-                        currentPos += actualLength + gap;
-                        isLongDash = !isLongDash;
-                      }
+                    while (currentPos < totalLength1) {
+                      const dashLength = isLongDash ? longDash : shortDash;
+                      const actualLength = Math.min(dashLength, totalLength1 - currentPos);
+                      const t1 = currentPos / totalLength1;
+                      const t2 = (currentPos + actualLength) / totalLength1;
+                      segmentList.push(
+                        <Line
+                          key={`right-door-front-1-${currentPos}`}
+                          points={[
+                            [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
+                            [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
+                          ]}
+                          color="#FF8800"
+                          lineWidth={1}
+                          transparent
+                          opacity={1.0}
+                        />
+                      );
+                      if (currentPos + actualLength >= totalLength1) break;
+                      currentPos += actualLength + gap;
+                      isLongDash = !isLongDash;
                     }
 
-                    return segments;
-                  })()}
-                </group>
-              )}
+                    const start2 = [rightDoorWidthUnits / 2, 0, 0] as const;
+                    const end2 = [-rightDoorWidthUnits / 2, doorHeight / 2, 0] as const;
+                    const dx2 = end2[0] - start2[0];
+                    const dy2 = end2[1] - start2[1];
+                    const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+
+                    currentPos = 0;
+                    isLongDash = true;
+
+                    while (currentPos < totalLength2) {
+                      const dashLength = isLongDash ? longDash : shortDash;
+                      const actualLength = Math.min(dashLength, totalLength2 - currentPos);
+                      const t1 = currentPos / totalLength2;
+                      const t2 = (currentPos + actualLength) / totalLength2;
+                      segmentList.push(
+                        <Line
+                          key={`right-door-front-2-${currentPos}`}
+                          points={[
+                            [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
+                            [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
+                          ]}
+                          color="#FF8800"
+                          lineWidth={1}
+                          transparent
+                          opacity={1.0}
+                        />
+                      );
+                      if (currentPos + actualLength >= totalLength2) break;
+                      currentPos += actualLength + gap;
+                      isLongDash = !isLongDash;
+                    }
+                  } else {
+                    const start1 = [-rightDoorWidthUnits / 2, doorHeight / 2, 0] as const;
+                    const end1 = [rightDoorWidthUnits / 2, 0, 0] as const;
+                    const dx1 = end1[0] - start1[0];
+                    const dy1 = end1[1] - start1[1];
+                    const totalLength1 = Math.sqrt(dx1 * dx1 + dy1 * dy1);
+
+                    let currentPos = 0;
+                    let isLongDash = true;
+
+                    while (currentPos < totalLength1) {
+                      const dashLength = isLongDash ? longDash : shortDash;
+                      const actualLength = Math.min(dashLength, totalLength1 - currentPos);
+                      const t1 = currentPos / totalLength1;
+                      const t2 = (currentPos + actualLength) / totalLength1;
+                      segmentList.push(
+                        <Line
+                          key={`right-door-side-1-${currentPos}`}
+                          points={[
+                            [start1[0] + dx1 * t1, start1[1] + dy1 * t1, 0],
+                            [start1[0] + dx1 * t2, start1[1] + dy1 * t2, 0]
+                          ]}
+                          color="#FF8800"
+                          lineWidth={1}
+                          transparent
+                          opacity={1.0}
+                        />
+                      );
+                      if (currentPos + actualLength >= totalLength1) break;
+                      currentPos += actualLength + gap;
+                      isLongDash = !isLongDash;
+                    }
+                  }
+
+                  return segmentList;
+                })();
+
+                const indicatorRotation = dualRightDoorSpring.rotation.to(value => {
+                  if (!isSide2DView) {
+                    return 0;
+                  }
+                  const orientationSign = 1; // 측면뷰에서는 항상 동일한 방향 유지
+                  const targetWorldRotation = orientationSign * Math.abs(value);
+                  return targetWorldRotation - value;
+                });
+
+                return (
+                  <animated.group
+                    position={[0, 0, doorThicknessUnits / 2 + 0.001]}
+                    rotation-y={indicatorRotation}
+                  >
+                    {segments}
+                  </animated.group>
+                );
+              })()}
 
               {/* 오른쪽 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외, 분할 모드 상부 섹션 제외) */}
               {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && !(totalSections > 1 && sectionIndex === 1) && (() => {
@@ -2363,8 +2383,23 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
 
             {/* 도어 열리는 방향 표시 (2D 정면뷰/측면뷰) - 정면은 항상, 측면은 열렸을 때만 */}
-            {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (
-              <group position={[0, 0, doorThicknessUnits / 2 + 0.001]}>
+            {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right') && (view2DDirection === 'front' || isDoorOpen) && (() => {
+              const indicatorRotation = (adjustedHingePosition === 'left'
+                ? leftHingeDoorSpring.rotation
+                : rightHingeDoorSpring.rotation).to(value => {
+                  if (!isSide2DView) {
+                    return 0;
+                  }
+                  const orientationSign = 1; // 측면뷰에서는 항상 동일한 방향 유지
+                  const targetWorldRotation = orientationSign * Math.abs(value);
+                  return targetWorldRotation - value;
+                });
+
+              return (
+                <animated.group
+                  position={[0, 0, doorThicknessUnits / 2 + 0.001]}
+                  rotation-y={indicatorRotation}
+                >
                 {/* 대각선 - 도어 열림 방향 표시 (긴선-짧은선 교차 패턴) */}
                 {(() => {
                   const isFrontView = view2DDirection === 'front';
@@ -2376,7 +2411,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   const segments1 = [];
 
                   if (!isFrontView) {
-                    // 측면뷰: 꺾인선 (< 모양)
+                    // 측면뷰: 항상 동일한 기준으로 표시 (좌/우측 뷰 모두 동일)
                     // 첫 번째 선: 왼쪽 상단 → 오른쪽 중간
                     const line1Start = [-doorWidthUnits / 2, doorHeight / 2, 0];
                     const line1End = [doorWidthUnits / 2, 0, 0];
@@ -2574,8 +2609,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                   return segments1;
                 })()}
-              </group>
-            )}
+                </animated.group>
+              );
+            })()}
 
             {/* 도어 가로 폭 치수 (2D 정면뷰/탑뷰, 상부장 제외) */}
             {viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'top') && !isUpperCabinet && (() => {

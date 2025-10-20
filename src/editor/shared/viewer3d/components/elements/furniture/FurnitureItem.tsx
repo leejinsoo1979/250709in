@@ -1391,26 +1391,29 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 듀얼캐비닛인지 확인
       // isDualFurniture는 이미 위에서 계산됨
       
-      if (isDualFurniture && remainingDepth <= 300) {
+     if (isDualFurniture && remainingDepth <= 300) {
         // 듀얼캐비닛이고 남은 깊이가 300mm 이하면 배치 불가
         // 배치 불가 처리 (원래 깊이 유지하거나 다른 처리)
         adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
       } else {
         // 배치 가능 - 깊이만 조정, 폭과 위치는 그대로
         adjustedDepthMm = remainingDepth;
-        
-        }
+      }
     }
-  } else if (slotInfo && !slotInfo.hasColumn && placedModule.customDepth) {
+  }
+
+  const shouldResetCustomDepth = !isFurnitureDragging && slotInfo && !slotInfo.hasColumn && !!placedModule.customDepth;
+
+  if (slotInfo && !slotInfo.hasColumn && placedModule.customDepth) {
     // 기둥이 슬롯을 벗어났을 때 customDepth 제거
     // 깊이를 원래대로 복구
     adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
-    
-    // customDepth 제거를 위해 updatePlacedModule 호출
-    if (!isFurnitureDragging) {
-      updatePlacedModule(placedModule.id, { customDepth: undefined });
-    }
-  } else if (slotInfo && !slotInfo.hasColumn && (placedModule.adjustedWidth || placedModule.columnSlotInfo)) {
+  }
+
+  const shouldResetWidth = !isFurnitureDragging && slotInfo && !slotInfo.hasColumn &&
+    (placedModule.adjustedWidth !== undefined || placedModule.columnSlotInfo !== undefined);
+
+  if (slotInfo && !slotInfo.hasColumn && (placedModule.adjustedWidth || placedModule.columnSlotInfo)) {
     // 기둥이 슬롯을 벗어났을 때 폭도 원상복구
     // 폭을 원래대로 복구
     furnitureWidthMm = actualModuleData?.dimensions.width || 0;
@@ -1421,15 +1424,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       ...adjustedPosition, // adjustedPosition 사용하여 상부장 Y 위치 보존
       x: slotCenterX + (needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0)
     };
-    
-    // adjustedWidth와 columnSlotInfo 제거를 위해 updatePlacedModule 호출
-    if (!isFurnitureDragging) {
-      updatePlacedModule(placedModule.id, {
-        adjustedWidth: undefined,
-        columnSlotInfo: undefined,
-        position: adjustedPosition
-      });
-    }
   }
   
   // 가구 치수를 Three.js 단위로 변환
@@ -1519,6 +1513,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     y: adjustedPosition.y,
     z: adjustedPosition.z
   }), [adjustedPosition.x, adjustedPosition.y, adjustedPosition.z]);
+
+  React.useEffect(() => {
+    if (!shouldResetCustomDepth) return;
+    updatePlacedModule(placedModule.id, { customDepth: undefined });
+  }, [shouldResetCustomDepth, placedModule.id, updatePlacedModule]);
+
+  const widthResetPayload = React.useMemo(() => {
+    if (!shouldResetWidth) return null;
+    return {
+      adjustedWidth: undefined,
+      columnSlotInfo: undefined,
+      position: memoizedAdjustedPosition
+    };
+  }, [shouldResetWidth, memoizedAdjustedPosition]);
+
+  React.useEffect(() => {
+    if (!widthResetPayload) return;
+    updatePlacedModule(placedModule.id, widthResetPayload);
+  }, [widthResetPayload, placedModule.id, updatePlacedModule]);
   
   // 계산된 값들을 상태로 업데이트 - 값이 실제로 변경될 때만 업데이트
   React.useEffect(() => {

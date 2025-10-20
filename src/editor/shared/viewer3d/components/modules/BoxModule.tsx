@@ -209,6 +209,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {/* 모든 타입에서 간접조명 렌더링 */}
         {/* IndirectLight는 마지막에 한 번만 렌더링 */}
         <DualType1
+        key={`${placedFurnitureId}-${lowerSectionDepth}-${upperSectionDepth}`}
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
@@ -231,6 +232,13 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
         grainDirection={grainDirection} // 텍스처 결 방향 (하위 호환성)
         panelGrainDirections={panelGrainDirections} // 패널별 개별 결 방향
+        lowerSectionDepth={lowerSectionDepth} // 하부 섹션 깊이 (mm)
+        upperSectionDepth={upperSectionDepth} // 상부 섹션 깊이 (mm)
+        doorSplit={doorSplit} // 도어 분할 여부
+        upperDoorTopGap={upperDoorTopGap} // 상부 도어 상단 갭
+        upperDoorBottomGap={upperDoorBottomGap} // 상부 도어 하단 갭
+        lowerDoorTopGap={lowerDoorTopGap} // 하부 도어 상단 갭
+        lowerDoorBottomGap={lowerDoorBottomGap} // 하부 도어 하단 갭
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -366,6 +374,13 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerSectionDepth={lowerSectionDepth}
         upperSectionDepth={upperSectionDepth}
         panelGrainDirections={panelGrainDirections}
+        doorSplit={doorSplit}
+        doorTopGap={doorTopGap}
+        doorBottomGap={doorBottomGap}
+        upperDoorTopGap={upperDoorTopGap}
+        upperDoorBottomGap={upperDoorBottomGap}
+        lowerDoorTopGap={lowerDoorTopGap}
+        lowerDoorBottomGap={lowerDoorBottomGap}
       />
       </>
     );

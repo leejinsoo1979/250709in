@@ -214,8 +214,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 
                 {/* 하부 섹션 상판 + 상부 섹션 바닥판 (2단 옷장 구조) - index=0일때만 */}
                 {index === 0 && (() => {
-                  const middlePanelY = sectionCenterY + sectionHeight/2 + basicThickness/2;
-                  const lowerTopPanelY = middlePanelY - basicThickness; // 하부 섹션 상판 위치
+                  const middlePanelY = sectionCenterY + sectionHeight/2 - basicThickness/2;
+                  const lowerTopPanelY = middlePanelY; // 하부 섹션 상판 위치
 
                   // 중간판 강조: 하부 섹션 상판은 index 섹션에 속함
                   const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
@@ -266,7 +266,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                       {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 */}
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, upperDepth]}
-                        position={[0, middlePanelY, upperZOffset]}
+                        position={[0, middlePanelY + basicThickness, upperZOffset]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}

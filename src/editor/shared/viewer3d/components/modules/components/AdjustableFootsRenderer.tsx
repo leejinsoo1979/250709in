@@ -1,6 +1,7 @@
 import React from 'react';
 import * as THREE from 'three';
 import { AdjustableFoot } from './AdjustableFoot';
+import { useUIStore } from '@/store/uiStore';
 
 interface AdjustableFootsRendererProps {
   width: number; // 가구 폭 (Three.js units)
@@ -14,7 +15,7 @@ interface AdjustableFootsRendererProps {
   baseHeight?: number; // 받침대 높이 (mm)
   baseDepth?: number; // 받침대 깊이 (mm, 0~300)
   viewMode?: '2D' | '3D';
-  view2DDirection?: 'front' | 'left' | 'right' | 'top';
+  view2DDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
 }
 
 /**
@@ -35,15 +36,33 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   baseHeight = 65, // 기본값 65mm
   baseDepth = 0, // 기본값 0mm
   viewMode = '3D',
-  view2DDirection = 'front',
+  view2DDirection,
 }) => {
+  const storeViewMode = useUIStore(state => state.viewMode);
+  const storeView2DDirection = useUIStore(state => state.view2DDirection);
+
+  const effectiveViewMode = viewMode ?? storeViewMode ?? '3D';
+  const effectiveView2DDirection =
+    view2DDirection ?? (effectiveViewMode === '2D' ? storeView2DDirection : undefined);
+
   // 띄움배치일 때는 발통 렌더링 안 함
   if (isFloating) {
     return null;
   }
-  
+
+  console.log('🦶🦶 AdjustableFootsRenderer 렌더링 체크:', {
+    viewMode: effectiveViewMode,
+    view2DDirection: effectiveView2DDirection,
+    isTopView: effectiveViewMode === '2D' && (effectiveView2DDirection === 'top' || effectiveView2DDirection === 'all'),
+    willRender: !(effectiveViewMode === '2D' && (effectiveView2DDirection === 'top' || effectiveView2DDirection === 'all'))
+  });
+
   // 2D 탑뷰일 때만 발통 렌더링 안 함
-  if (viewMode === '2D' && view2DDirection === 'top') {
+  if (effectiveViewMode === '2D' && (effectiveView2DDirection === 'top' || effectiveView2DDirection === 'all')) {
+    console.log('🦶🦶 탑뷰이므로 조절발 렌더링 안함 (effective view)', {
+      effectiveViewMode,
+      effectiveView2DDirection,
+    });
     return null;
   }
   const mmToThreeUnits = (mm: number) => mm * 0.01;
