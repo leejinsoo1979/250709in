@@ -58,8 +58,6 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
     isEditMode,
     slotWidths, // 듀얼 가구의 개별 슬롯 너비 전달
     adjustedWidth, // adjustedWidth 전달
-    lowerSectionDepth,
-    upperSectionDepth,
     panelGrainDirections: propsPanelGrainDirections
   });
 
