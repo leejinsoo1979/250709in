@@ -84,15 +84,39 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       // ID 중복 체크
       const existing = state.placedModules.find(m => m.id === module.id);
       if (existing) {
-        
+
         return state; // 변경 없음
       }
-      
+
       // 새 가구의 카테고리 확인
       const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
       const internalSpace = calculateInternalSpace(spaceInfo);
       const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const newCategory = newModuleData?.category;
+
+      // 2단 가구인 경우 섹션 깊이 초기화
+      const sections = newModuleData?.modelConfig?.sections;
+      if (sections && sections.length === 2) {
+        const defaultDepth = newModuleData.dimensions.depth;
+        console.log('🔧 [addModule] 2단 가구 섹션 깊이 초기화:', {
+          moduleId: module.moduleId,
+          defaultDepth,
+          sectionsCount: sections.length
+        });
+
+        // 섹션 깊이가 설정되지 않은 경우 기본값으로 초기화
+        if (module.lowerSectionDepth === undefined) {
+          module.lowerSectionDepth = defaultDepth;
+        }
+        if (module.upperSectionDepth === undefined) {
+          module.upperSectionDepth = defaultDepth;
+        }
+
+        console.log('✅ [addModule] 초기화된 섹션 깊이:', {
+          lowerSectionDepth: module.lowerSectionDepth,
+          upperSectionDepth: module.upperSectionDepth
+        });
+      }
       
       // 듀얼 가구인지 확인
       const isDual = module.moduleId.includes('dual-');
@@ -300,15 +324,28 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const newModules = state.placedModules.map(module => {
         if (module.id === id) {
           const updated = { ...module, ...updates };
+          console.log('✅ [updatePlacedModule] 모듈 업데이트 완료:', {
+            id,
+            before: module,
+            updates,
+            after: updated
+          });
           return updated;
         }
         return module;
       });
 
+      const afterUpdate = newModules.find(m => m.id === id);
+      console.log('📊 [updatePlacedModule] 최종 결과:', afterUpdate);
+
       return {
         placedModules: newModules
       };
     });
+
+    // 업데이트 후 실제 store 상태 확인
+    const updatedModule = get().placedModules.find(m => m.id === id);
+    console.log('🔍 [updatePlacedModule] store에서 재확인:', updatedModule);
   },
 
   // 모든 가구 초기화 함수 (기존 Context 로직과 동일)
