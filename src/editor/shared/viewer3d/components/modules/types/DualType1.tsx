@@ -32,6 +32,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   placedFurnitureId,
   showFurniture = true, // 가구 본체 표시 여부
   visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
+  lowerSectionDepth,
+  upperSectionDepth,
   panelGrainDirections: propsPanelGrainDirections
 }) => {
   // 공통 로직 사용
@@ -49,10 +51,21 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
 
   const {
     textureUrl,
-    panelGrainDirections
+    panelGrainDirections,
+    depth,
+    mmToThreeUnits
   } = baseFurniture;
 
   const { renderMode } = useSpace3DView();
+
+  // 섹션별 깊이 계산 (하부 섹션 0, 상부 섹션 1)
+  const defaultDepth = depth;
+  const sectionDepths = React.useMemo(() => {
+    return [
+      lowerSectionDepth ? mmToThreeUnits(lowerSectionDepth) : defaultDepth, // 하부 섹션 (서랍)
+      upperSectionDepth ? mmToThreeUnits(upperSectionDepth) : defaultDepth  // 상부 섹션 (옷장)
+    ];
+  }, [lowerSectionDepth, upperSectionDepth, depth, mmToThreeUnits]);
 
   console.log('🔵 DualType1에서 추출한 값:', {
     moduleId: moduleData.id,
@@ -93,6 +106,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               placedFurnitureId={placedFurnitureId}
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
+              sectionDepths={sectionDepths}
             />
 
             {/* 옷걸이 봉 렌더링 - hanging 섹션에만 */}
@@ -139,6 +153,11 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                 console.log('  heightType:', section.heightType);
                 console.log('  heightValue:', section.height);
 
+                // 현재 섹션의 깊이 및 Z 오프셋 계산
+                const currentSectionDepth = sectionDepths[sectionIndex] || depth;
+                const depthDiff = depth - currentSectionDepth;
+                const zOffset = depthDiff / 2; // 앞면 고정, 뒤쪽만 이동
+
                 // 안전선반 또는 마감 패널 위치 찾기
                 const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
                 const hasFinishPanel = section.isTopFinishPanel && section.count === 1;
@@ -169,19 +188,23 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                   console.log('  basicThickness:', basicThickness * 100);
                 }
 
+                // 섹션별 깊이에 맞는 adjustedDepth 계산
+                const sectionAdjustedDepth = currentSectionDepth - basicThickness * 2;
+
                 return (
-                  <ClothingRod
-                    key={`clothing-rod-${sectionIndex}`}
-                    innerWidth={innerWidth}
-                    yPosition={rodYPosition}
-                    zPosition={0}
-                    renderMode={renderMode}
-                    isDragging={false}
-                    isEditMode={isEditMode}
-                    adjustedDepthForShelves={adjustedDepthForShelves}
-                    depth={depth}
-                    furnitureId={placedFurnitureId}
-                  />
+                  <group key={`clothing-rod-${sectionIndex}`} position={[0, 0, zOffset]}>
+                    <ClothingRod
+                      innerWidth={innerWidth}
+                      yPosition={rodYPosition}
+                      zPosition={0}
+                      renderMode={renderMode}
+                      isDragging={false}
+                      isEditMode={isEditMode}
+                      adjustedDepthForShelves={sectionAdjustedDepth}
+                      depth={currentSectionDepth}
+                      furnitureId={placedFurnitureId}
+                    />
+                  </group>
                 );
               });
             })()}
