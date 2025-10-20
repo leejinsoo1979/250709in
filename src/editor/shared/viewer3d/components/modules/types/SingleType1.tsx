@@ -280,19 +280,66 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
             textureUrl={spaceInfo.materialConfig?.doorTexture}
           />
 
-          {/* 백패널 */}
-          <BoxWithEdges
-            args={[width - basicThickness * 2, height - basicThickness * 2, backPanelThickness]}
-            position={[0, 0, -depth/2 + backPanelThickness/2]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            onClick={handleCabinetBodyClick}
-            panelName="백패널"
-            panelGrainDirections={panelGrainDirections}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
-          />
+          {/* 백패널 - 섹션별로 분리 */}
+          {(() => {
+            const sectionHeights = getSectionHeights();
+            const lowerSectionHeight = sectionHeights[0];
+            const upperSectionHeight = sectionHeights[1];
+
+            // 백패널 높이 = 섹션 내경높이 + 10mm
+            const lowerInnerHeight = lowerSectionHeight - basicThickness * 2;
+            const upperInnerHeight = upperSectionHeight - basicThickness * 2;
+            const lowerBackPanelHeight = lowerInnerHeight + mmToThreeUnits(10);
+            const upperBackPanelHeight = upperInnerHeight + mmToThreeUnits(10);
+
+            // 백패널 Y 위치
+            const lowerBackPanelY = -height/2 + basicThickness + lowerInnerHeight/2;
+            const upperBackPanelY = -height/2 + lowerSectionHeight + basicThickness + upperInnerHeight/2;
+
+            // 하부 섹션 깊이 및 Z 오프셋
+            const lowerSectionDepth = sectionDepths[0] || depth;
+            const lowerDepthDiff = depth - lowerSectionDepth;
+            const lowerZOffset = lowerDepthDiff / 2;
+
+            // 상부 섹션 깊이 및 Z 오프셋
+            const upperSectionDepth = sectionDepths[1] || depth;
+            const upperDepthDiff = depth - upperSectionDepth;
+            const upperZOffset = upperDepthDiff / 2;
+
+            return (
+              <>
+                {/* 하부 섹션 백패널 */}
+                <BoxWithEdges
+                  args={[innerWidth + mmToThreeUnits(10), lowerBackPanelHeight, backPanelThickness]}
+                  position={[0, lowerBackPanelY, -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + lowerZOffset]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  onClick={handleCabinetBodyClick}
+                  isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                  panelName="하부섹션 백패널"
+                  panelGrainDirections={panelGrainDirections}
+                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                />
+
+                {/* 상부 섹션 백패널 */}
+                <BoxWithEdges
+                  args={[innerWidth + mmToThreeUnits(10), upperBackPanelHeight, backPanelThickness]}
+                  position={[0, upperBackPanelY, -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + upperZOffset]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  onClick={handleCabinetBodyClick}
+                  isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                  panelName="상부섹션 백패널"
+                  panelGrainDirections={panelGrainDirections}
+                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                />
+              </>
+            );
+          })()}
 
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
