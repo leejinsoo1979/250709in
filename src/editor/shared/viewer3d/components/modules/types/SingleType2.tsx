@@ -746,20 +746,29 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       )}
 
       {/* 조절발통 (네 모서리) - showFurniture가 true일 때만 렌더링 */}
-      {showFurniture && (
-        <AdjustableFootsRenderer
-          width={width}
-          depth={depth}
-          yOffset={-height / 2}
-          renderMode={renderMode}
-          isHighlighted={false}
-          isFloating={false}
-          baseHeight={spaceInfo?.baseConfig?.height || 65}
-          baseDepth={spaceInfo?.baseConfig?.depth || 0}
-          viewMode={viewMode}
-          view2DDirection={view2DDirection}
-        />
-      )}
+      {showFurniture && (() => {
+        // 하부 섹션 깊이 사용 (조절발은 하부 섹션에 붙음)
+        const lowerDepth = sectionDepths[0] || depth;
+        const depthDiff = depth - lowerDepth;
+        const zOffset = depthDiff / 2; // 앞면 고정, 뒤쪽만 이동
+
+        return (
+          <group position={[0, 0, zOffset]}>
+            <AdjustableFootsRenderer
+              width={width}
+              depth={lowerDepth}
+              yOffset={-height / 2}
+              renderMode={renderMode}
+              isHighlighted={false}
+              isFloating={false}
+              baseHeight={spaceInfo?.baseConfig?.height || 65}
+              baseDepth={spaceInfo?.baseConfig?.depth || 0}
+              viewMode={viewMode}
+              view2DDirection={view2DDirection}
+            />
+          </group>
+        );
+      })()}
     </>
   );
 };
