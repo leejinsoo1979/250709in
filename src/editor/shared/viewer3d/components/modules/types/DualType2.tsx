@@ -547,6 +547,14 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               const availableHeight = height - basicThickness * 2;
 
               return sections.map((section: any, sectionIndex: number) => {
+                // hanging 타입이 아니면 렌더링 안함
+                if (section.type !== 'hanging') {
+                  // accumulatedY는 업데이트해야 다음 섹션 위치가 맞음
+                  const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
+                  accumulatedY += sectionHeight;
+                  return null;
+                }
+
                 const sectionHeight = baseFurniture.calculateSectionHeight(section, availableHeight);
                 const sectionBottomY = accumulatedY;
                 const sectionTopY = accumulatedY + sectionHeight - basicThickness;
@@ -564,25 +572,28 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
                   const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
                   rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
+                } else if (sectionIndex === 0) {
+                  // 하부 섹션: 브라켓 상단이 하부 섹션 상판 밑면에 닿음
+                  const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
+                  rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
                 } else if (hasFinishPanel) {
-                  // 마감 패널이 있는 경우 (하부섹션): 브라켓 윗면이 마감 패널 하단에서 27mm 아래
-                  // 마감 패널은 섹션 최상단에 위치: sectionBottomY + sectionHeight - basicThickness/2
+                  // 마감 패널이 있는 경우: 브라켓 윗면이 마감 패널 하단에서 27mm 아래
                   const finishPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
                   rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
                 } else {
                   // 안전선반도 마감 패널도 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
                   const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
-                  // 브라켓 중심 = 상판 하단 - (브라켓 높이 / 2)
-                  rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+                  rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
                 }
 
                 // 옷봉 Z 위치 계산 (섹션 깊이에 따라 조정)
                 let rodZPosition = 0;
-                if (sectionDepths && sectionDepths[sectionIndex]) {
-                  const sectionDepth = sectionDepths[sectionIndex];
-                  const depthDiff = depth - sectionDepth;
-                  rodZPosition = depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
-                }
+                const currentSectionDepth = sectionDepths && sectionDepths[sectionIndex] ? sectionDepths[sectionIndex] : depth;
+                const depthDiff = depth - currentSectionDepth;
+                rodZPosition = depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+
+                // 섹션별 깊이에 맞는 adjustedDepth 계산
+                const sectionAdjustedDepth = currentSectionDepth - basicThickness * 2;
 
                 return (
                   <ClothingRod
@@ -593,8 +604,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                     renderMode={renderMode}
                     isDragging={false}
                     isEditMode={isEditMode}
-                    adjustedDepthForShelves={adjustedDepthForShelves}
-                    depth={depth}
+                    adjustedDepthForShelves={sectionAdjustedDepth}
+                    depth={currentSectionDepth}
                   />
                 );
               });
