@@ -469,6 +469,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         {/* 모든 타입에서 간접조명 렌더링 */}
         {/* IndirectLight는 마지막에 한 번만 렌더링 */}
         <DualType6
+        key={`${placedFurnitureId}-${lowerSectionDepth}-${upperSectionDepth}-${doorSplit}-${upperDoorTopGap}-${upperDoorBottomGap}-${lowerDoorTopGap}-${lowerDoorBottomGap}`}
         moduleData={moduleData}
         color={color}
         isDragging={isDragging}
@@ -487,6 +488,13 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
         visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
+        lowerSectionDepth={lowerSectionDepth}
+        upperSectionDepth={upperSectionDepth}
+        doorSplit={doorSplit}
+        upperDoorTopGap={upperDoorTopGap}
+        upperDoorBottomGap={upperDoorBottomGap}
+        lowerDoorTopGap={lowerDoorTopGap}
+        lowerDoorBottomGap={lowerDoorBottomGap}
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
