@@ -86,6 +86,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
         showFurniture={showFurniture}
         textureUrl={spaceInfo.materialConfig?.doorTexture}
         panelGrainDirections={panelGrainDirections}
+        lowerSectionDepthMm={lowerSectionDepth}
+        upperSectionDepthMm={upperSectionDepth}
       >
         {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
         {!isDragging && (
