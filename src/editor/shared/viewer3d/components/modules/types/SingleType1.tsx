@@ -497,6 +497,13 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
 
       {/* 조절발 - 하부 섹션 깊이 적용 */}
       {showFurniture && (() => {
+        console.log('🦶 SingleType1 조절발 렌더링 조건:', {
+          showFurniture,
+          viewMode,
+          view2DDirection,
+          shouldRender: !(viewMode === '2D' && view2DDirection === 'top')
+        });
+
         // 하부 섹션 깊이 사용 (조절발은 하부 섹션에 붙음)
         const lowerDepth = sectionDepths[0] || depth;
         const depthDiff = depth - lowerDepth;
