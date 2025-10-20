@@ -28,6 +28,19 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
   const { activePopup, view2DDirection: contextView2DDirection, selectedSlotIndex } = useUIStore();
 
+  // 섹션 깊이 변경 감지용 로그
+  React.useEffect(() => {
+    console.log('🔄 PlacedFurnitureContainer - storePlacedModules 변경 감지:', {
+      count: storePlacedModules.length,
+      modules: storePlacedModules.map(m => ({
+        id: m.id,
+        moduleId: m.moduleId,
+        lowerSectionDepth: m.lowerSectionDepth,
+        upperSectionDepth: m.upperSectionDepth
+      }))
+    });
+  }, [storePlacedModules]);
+
   // 슬롯 필터링 적용
   let basePlacedModules = propPlacedModules || storePlacedModules;
 

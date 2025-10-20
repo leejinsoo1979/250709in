@@ -251,6 +251,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       child.raycast = () => null;
     });
   }, [isSelected]);
+
+  // 섹션 깊이 변경 추적
+  React.useEffect(() => {
+    console.log('🔍 FurnitureItem - placedModule 섹션 깊이 변경:', {
+      id: placedModule.id,
+      moduleId: placedModule.moduleId,
+      lowerSectionDepth: placedModule.lowerSectionDepth,
+      upperSectionDepth: placedModule.upperSectionDepth
+    });
+  }, [placedModule.lowerSectionDepth, placedModule.upperSectionDepth, placedModule.id, placedModule.moduleId]);
   
   // 테마 색상 가져오기
   const getThemeColor = () => {
