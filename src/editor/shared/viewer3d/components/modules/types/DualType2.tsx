@@ -222,18 +222,18 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   const lowerSectionCenterY = lowerAccumulatedY + lowerSectionHeight / 2 - basicThickness;
                   const lowerTopPanelY = lowerSectionCenterY + lowerSectionHeight/2 - basicThickness/2;
 
-                  // 하부 섹션 깊이 사용
-                  const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
-                  const lowerDepthDiff = depth - lowerSectionDepth;
+                  // 상부 섹션 깊이 사용 (index=1)
+                  const upperSectionDepth = (sectionDepths && sectionDepths[1]) ? sectionDepths[1] : depth;
+                  const upperDepthDiff = depth - upperSectionDepth;
 
-                  // 백패널 방향으로 26mm 확장 (하부 섹션 깊이 기준)
+                  // 백패널 방향으로 26mm 확장 (상부 섹션 깊이 기준)
                   const backPanelThickness = depth - adjustedDepthForShelves;
-                  const lowerAdjustedDepth = lowerSectionDepth - backPanelThickness;
-                  const originalDepth = lowerAdjustedDepth - basicThickness;
+                  const upperAdjustedDepth = upperSectionDepth - backPanelThickness;
+                  const originalDepth = upperAdjustedDepth - basicThickness;
                   const extendedDepth = originalDepth + mmToThreeUnits(26);
 
                   // Z 위치: 뒤쪽으로만 줄어들도록 + 26mm 확장 고려 (양수: 앞쪽 고정, 뒤쪽 줄어듦)
-                  const zOffset = lowerDepthDiff / 2;
+                  const zOffset = upperDepthDiff / 2;
                   const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13) + zOffset;
 
                   return (
