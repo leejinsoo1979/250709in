@@ -2443,74 +2443,73 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                     isLongDash = !isLongDash;
                   }
                   
-                  // 두 번째 대각선 (아래에서 위로) - 첫 번째와 반대 방향
-                  // 좌측뷰/우측뷰 동일: 양수X → 음수X
-                  const start2 = isFrontView
-                    ? [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0]
-                    : [doorWidthUnits / 2, 0, 0];  // 측면뷰: 양수X에서 시작
-                  const end2 = isFrontView
-                    ? [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, doorHeight / 2, 0]
-                    : [-doorWidthUnits / 2, doorHeight / 2, 0];  // 측면뷰: 음수X로 끝
-                  const segments2 = [];
+                  // 두 번째 대각선: 정면뷰에만 렌더링
+                  if (isFrontView) {
+                    const start2 = [adjustedHingePosition === 'left' ? -doorWidthUnits / 2 : doorWidthUnits / 2, 0, 0];
+                    const end2 = [adjustedHingePosition === 'left' ? doorWidthUnits / 2 : -doorWidthUnits / 2, doorHeight / 2, 0];
+                    const segments2 = [];
 
-                  const dx2 = end2[0] - start2[0];
-                  const dy2 = end2[1] - start2[1];
-                  const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                    const dx2 = end2[0] - start2[0];
+                    const dy2 = end2[1] - start2[1];
+                    const totalLength2 = Math.sqrt(dx2 * dx2 + dy2 * dy2);
 
-                  currentPos = 0;
-                  isLongDash = true;
+                    currentPos = 0;
+                    isLongDash = true;
 
-                  // 두 번째 대각선 렌더링
-                  while (currentPos < totalLength2) {
-                    if (isLongDash) {
-                      let dashLength = longDash;
-                      if (currentPos + longDash + gap >= totalLength2) {
-                        dashLength = totalLength2 - currentPos;
+                    // 두 번째 대각선 렌더링
+                    while (currentPos < totalLength2) {
+                      if (isLongDash) {
+                        let dashLength = longDash;
+                        if (currentPos + longDash + gap >= totalLength2) {
+                          dashLength = totalLength2 - currentPos;
+                        }
+                        const t1 = currentPos / totalLength2;
+                        const t2 = (currentPos + dashLength) / totalLength2;
+                        segments2.push(
+                          <Line
+                            key={`seg2-long-${currentPos}`}
+                            points={[
+                              [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
+                              [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
+                            ]}
+                            color="#FF8800"
+                            lineWidth={1}
+                            transparent={true}
+                            opacity={1.0}
+                          />
+                        );
+                        if (currentPos + dashLength >= totalLength2) break;
+                        currentPos += dashLength + gap;
+                      } else {
+                        let dashLength = shortDash;
+                        if (currentPos + shortDash + gap >= totalLength2) {
+                          dashLength = totalLength2 - currentPos;
+                        }
+                        const t1 = currentPos / totalLength2;
+                        const t2 = (currentPos + dashLength) / totalLength2;
+                        segments2.push(
+                          <Line
+                            key={`seg2-short-${currentPos}`}
+                            points={[
+                              [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
+                              [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
+                            ]}
+                            color="#FF8800"
+                            lineWidth={1}
+                            transparent={true}
+                            opacity={1.0}
+                          />
+                        );
+                        if (currentPos + dashLength >= totalLength2) break;
+                        currentPos += dashLength + gap;
                       }
-                      const t1 = currentPos / totalLength2;
-                      const t2 = (currentPos + dashLength) / totalLength2;
-                      segments2.push(
-                        <Line
-                          key={`seg2-long-${currentPos}`}
-                          points={[
-                            [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
-                            [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
-                          ]}
-                          color="#FF8800"
-                          lineWidth={1}
-                          transparent={true}
-                          opacity={1.0}
-                        />
-                      );
-                      if (currentPos + dashLength >= totalLength2) break;
-                      currentPos += dashLength + gap;
-                    } else {
-                      let dashLength = shortDash;
-                      if (currentPos + shortDash + gap >= totalLength2) {
-                        dashLength = totalLength2 - currentPos;
-                      }
-                      const t1 = currentPos / totalLength2;
-                      const t2 = (currentPos + dashLength) / totalLength2;
-                      segments2.push(
-                        <Line
-                          key={`seg2-short-${currentPos}`}
-                          points={[
-                            [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
-                            [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
-                          ]}
-                          color="#FF8800"
-                          lineWidth={1}
-                          transparent={true}
-                          opacity={1.0}
-                        />
-                      );
-                      if (currentPos + dashLength >= totalLength2) break;
-                      currentPos += dashLength + gap;
+                      isLongDash = !isLongDash;
                     }
-                    isLongDash = !isLongDash;
+
+                    return [...segments1, ...segments2];
                   }
-                  
-                  return [...segments1, ...segments2];
+
+                  return segments1;
                 })()}
               </group>
             )}
