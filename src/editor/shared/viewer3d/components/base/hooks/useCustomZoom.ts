@@ -56,7 +56,7 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
 
       // 트랙패드는 적절한 배율 사용 (맥북 트랙패드 최적화)
       const zoomInFactor = isTrackpad ? 1.015 : 1.02;   // 트랙패드: 1.5% / 마우스: 2%
-      const zoomOutFactor = isTrackpad ? 0.975 : 0.96;  // 트랙패드: 2.5% / 마우스: 4% (줌아웃 속도 증가)
+      const zoomOutFactor = isTrackpad ? 0.90 : 0.90;   // 줌아웃: 10% (트랙패드/마우스 동일)
 
       let newZoom;
 
