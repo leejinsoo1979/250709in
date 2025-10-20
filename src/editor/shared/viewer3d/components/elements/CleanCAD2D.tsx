@@ -2914,7 +2914,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (!moduleData) return null;
           
           // 실제 가구 깊이와 위치 계산 (FurnitureItem.tsx와 동일)
-          const actualDepth = module.customDepth || moduleData.dimensions.depth;
+          // 상부섹션 깊이가 있으면 상부섹션 깊이 사용, 없으면 전체 깊이 사용
+          const actualDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
           const moduleDepth = mmToThreeUnits(actualDepth);
           
           // 실제 가구 Z 위치 계산 (FurnitureItem.tsx와 동일)
@@ -3642,8 +3643,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           );
           
           if (!moduleData) return null;
-          
-          const actualDepth = module.customDepth || moduleData.dimensions.depth;
+
+          // 상부섹션 깊이가 있으면 상부섹션 깊이 사용, 없으면 전체 깊이 사용
+          const actualDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
           const moduleDepth = mmToThreeUnits(actualDepth);
           const dimY = topDimensionY - mmToThreeUnits(120);
           
