@@ -54,9 +54,9 @@ export const CustomZoomController: React.FC<CustomZoomControllerProps> = ({
       // 트랙패드 감지: deltaY가 작고 정밀한 값이면 트랙패드
       const isTrackpad = Math.abs(delta) < 50;
 
-      // 트랙패드는 적절한 배율 사용 (맥북 트랙패드 최적화)
-      const zoomInFactor = isTrackpad ? 1.015 : 1.02;   // 트랙패드: 1.5% / 마우스: 2%
-      const zoomOutFactor = isTrackpad ? 0.90 : 0.90;   // 줌아웃: 10% (트랙패드/마우스 동일)
+      // 줌 속도 설정 (트랙패드/마우스 동일)
+      const zoomInFactor = 1.10;   // 줌인: 10%
+      const zoomOutFactor = 0.90;  // 줌아웃: 10%
 
       let newZoom;
 
