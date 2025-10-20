@@ -254,31 +254,52 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
             });
           })()}
 
-          {/* 상하판 */}
-          <BoxWithEdges
-            args={[innerWidth, basicThickness, depth]}
-            position={[0, -height/2 + basicThickness/2, 0]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            onClick={handleCabinetBodyClick}
-            panelName="하판"
-            panelGrainDirections={panelGrainDirections}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
-          />
-          <BoxWithEdges
-            args={[innerWidth, basicThickness, depth]}
-            position={[0, height/2 - basicThickness/2, 0]}
-            material={material}
-            renderMode={renderMode}
-            isDragging={isDragging}
-            isEditMode={isEditMode}
-            onClick={handleCabinetBodyClick}
-            panelName="상판"
-            panelGrainDirections={panelGrainDirections}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
-          />
+          {/* 상하판 - 각 섹션 깊이 적용 */}
+          {(() => {
+            // 하부 섹션(index=0) 깊이
+            const lowerDepth = sectionDepths[0] || depth;
+            const lowerDepthDiff = depth - lowerDepth;
+            const lowerZOffset = lowerDepthDiff / 2;
+
+            // 상부 섹션(index=1) 깊이
+            const upperDepth = sectionDepths[1] || depth;
+            const upperDepthDiff = depth - upperDepth;
+            const upperZOffset = upperDepthDiff / 2;
+
+            return (
+              <>
+                {/* 하판 - 하부 섹션 깊이 적용 */}
+                <BoxWithEdges
+                  args={[innerWidth, basicThickness, lowerDepth]}
+                  position={[0, -height/2 + basicThickness/2, lowerZOffset]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  onClick={handleCabinetBodyClick}
+                  isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                  panelName="하판"
+                  panelGrainDirections={panelGrainDirections}
+                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                />
+
+                {/* 상판 - 상부 섹션 깊이 적용 */}
+                <BoxWithEdges
+                  args={[innerWidth, basicThickness, upperDepth]}
+                  position={[0, height/2 - basicThickness/2, upperZOffset]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  onClick={handleCabinetBodyClick}
+                  isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                  panelName="상판"
+                  panelGrainDirections={panelGrainDirections}
+                  textureUrl={spaceInfo.materialConfig?.doorTexture}
+                />
+              </>
+            );
+          })()}
 
           {/* 백패널 - 섹션별로 분리 */}
           {(() => {
