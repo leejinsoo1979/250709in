@@ -98,43 +98,23 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
     ? sectionHeights.map(sectionHeight => Math.round(sectionHeight * unitsToMmFactor))
     : undefined;
 
-  // 섹션별 깊이 배열 생성 (Three.js 단위)
-  const sectionDepths = (() => {
-    const { lowerSectionDepthMm, upperSectionDepthMm } = baseFurniture;
+  // 섹션별 깊이 배열 생성 (Three.js 단위) - SingleType2와 동일한 방식
+  const sectionDepths = React.useMemo(() => {
+    const defaultDepth = depth;
 
-    console.log('🔍 [DualType2 섹션 깊이 디버깅]', {
+    console.log('🔍 [DualType2 섹션 깊이 계산]', {
       moduleId: moduleData.id,
-      lowerSectionDepth,
-      upperSectionDepth,
-      lowerSectionDepthMm,
-      upperSectionDepthMm,
-      sections: baseFurniture.modelConfig.sections,
-      sectionsLength: baseFurniture.modelConfig.sections?.length
+      lowerSectionDepth_prop: lowerSectionDepth,
+      upperSectionDepth_prop: upperSectionDepth,
+      defaultDepth_three: defaultDepth,
+      defaultDepth_mm: defaultDepth / 0.01
     });
 
-    console.log('🚪 [DualType2 도어 체크]', {
-      hasDoor,
-      spaceInfo: !!spaceInfo,
-      doorSplit,
-      doorSplitProp: doorSplit,
-      willRenderDoor: hasDoor && !!spaceInfo
-    });
-
-    // 2섹션 가구가 아니면 null 반환
-    if (!baseFurniture.modelConfig.sections || baseFurniture.modelConfig.sections.length !== 2) {
-      console.warn('⚠️ [DualType2] 2섹션 가구가 아님');
-      return undefined;
-    }
-
-    const result = [
-      lowerSectionDepthMm !== undefined ? mmToThreeUnits(lowerSectionDepthMm) : depth,
-      upperSectionDepthMm !== undefined ? mmToThreeUnits(upperSectionDepthMm) : depth
+    return [
+      lowerSectionDepth ? mmToThreeUnits(lowerSectionDepth) : defaultDepth, // 하부 섹션
+      upperSectionDepth ? mmToThreeUnits(upperSectionDepth) : defaultDepth  // 상부 섹션
     ];
-
-    console.log('✅ [DualType2 섹션 깊이 결과]', result);
-
-    return result;
-  })();
+  }, [lowerSectionDepth, upperSectionDepth, depth, mmToThreeUnits]);
 
   // 디버그: showFurniture 값 확인
   useEffect(() => {
