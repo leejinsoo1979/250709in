@@ -248,7 +248,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
                   return (
                     <>
-                      {/* 하부 섹션 상판 - 하부 섹션 깊이 적용 */}
+                      {/* 중간판 - 하부 섹션 상판 = 상부 섹션 바닥판 (하나의 패널) */}
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, lowerDepth]}
                         position={[0, lowerTopPanelY, lowerZOffset]}
@@ -256,22 +256,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
-                        isHighlighted={isLowerHighlighted}
-                        onClick={handleCabinetBodyClick}
-                        panelName="중간판"
-                        panelGrainDirections={hookPanelGrainDirections}
-                        textureUrl={spaceInfo.materialConfig?.doorTexture}
-                      />
-
-                      {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 */}
-                      <BoxWithEdges
-                        args={[innerWidth, basicThickness, upperDepth]}
-                        position={[0, middlePanelY, upperZOffset]}
-                        material={material}
-                        renderMode={renderMode}
-                        isDragging={isDragging}
-                        isEditMode={isEditMode}
-                        isHighlighted={isUpperHighlighted}
+                        isHighlighted={isLowerHighlighted || isUpperHighlighted}
                         onClick={handleCabinetBodyClick}
                         panelName="중간판"
                         panelGrainDirections={hookPanelGrainDirections}
