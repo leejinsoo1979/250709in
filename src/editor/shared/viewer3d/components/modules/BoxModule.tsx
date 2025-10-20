@@ -262,6 +262,14 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         isHighlighted={isHighlighted} // 강조 상태 전달
         placedFurnitureId={placedFurnitureId} // 배치된 가구 ID 전달
         visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
+        lowerSectionDepth={lowerSectionDepth} // 하부 섹션 깊이
+        upperSectionDepth={upperSectionDepth} // 상부 섹션 깊이
+        doorSplit={doorSplit}
+        upperDoorTopGap={upperDoorTopGap}
+        upperDoorBottomGap={upperDoorBottomGap}
+        lowerDoorTopGap={lowerDoorTopGap}
+        lowerDoorBottomGap={lowerDoorBottomGap}
+        panelGrainDirections={panelGrainDirections}
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
