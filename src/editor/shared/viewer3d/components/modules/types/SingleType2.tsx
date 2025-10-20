@@ -435,9 +435,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 return null;
               }
 
-              // 안전선반 또는 마감 패널 위치 찾기
+              // 안전선반 위치 찾기
               const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
-              const hasFinishPanel = section.isTopFinishPanel && section.count === 1;
 
               // 옷걸이 봉 Y 위치 계산
               let rodYPosition: number;
@@ -445,24 +444,26 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
                 const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
                 rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
-              } else if (hasFinishPanel) {
-                // 마감 패널이 있는 경우 (하부섹션): 브라켓 윗면이 마감 패널 하단에서 27mm 아래
-                const finishPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
-                rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
+              } else if (sectionIndex === 0) {
+                // 하부 섹션: 브라켓 윗면이 하부 섹션 상판(lowerTopPanelY) 하단에 붙음
+                const lowerTopPanelY = sectionBottomY + actualSectionHeight + basicThickness / 2;
+                rodYPosition = lowerTopPanelY - basicThickness / 2 - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
+
+                console.log('🔵 SingleType2 하부섹션 옷봉 위치 계산');
+                console.log('  sectionBottomY:', sectionBottomY * 100);
+                console.log('  actualSectionHeight:', actualSectionHeight * 100);
+                console.log('  lowerTopPanelY:', lowerTopPanelY * 100);
+                console.log('  rodYPosition:', rodYPosition * 100);
               } else {
-                // 안전선반도 마감 패널도 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
+                // 상부 섹션: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
                 const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                 rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
 
-                console.log('🔵 SingleType2 옷봉 위치 계산');
-                console.log('  moduleId:', moduleData.id);
-                console.log('  internalHeight:', internalHeight);
-                console.log('  height(Three→mm):', height * 100);
-                console.log('  actualSectionHeight:', actualSectionHeight * 100);
+                console.log('🔵 SingleType2 상부섹션 옷봉 위치 계산');
                 console.log('  sectionBottomY:', sectionBottomY * 100);
+                console.log('  actualSectionHeight:', actualSectionHeight * 100);
                 console.log('  sectionTopPanelBottom:', sectionTopPanelBottom * 100);
                 console.log('  rodYPosition:', rodYPosition * 100);
-                console.log('  basicThickness:', basicThickness * 100);
               }
 
               // 해당 섹션의 깊이 사용
