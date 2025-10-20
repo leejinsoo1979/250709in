@@ -795,9 +795,18 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       if (sections.length === 2) {
         const defaultDepth = moduleData.dimensions.depth;
 
-        // 저장된 섹션별 깊이가 있으면 사용
+        // 저장된 섹션별 깊이가 있으면 사용, 없으면 defaultDepth 사용하고 저장
         const lowerDepth = currentPlacedModule.lowerSectionDepth ?? defaultDepth;
         const upperDepth = currentPlacedModule.upperSectionDepth ?? defaultDepth;
+
+        // placedModule에 값이 없었다면 기본값을 실제로 저장
+        if (currentPlacedModule.lowerSectionDepth === undefined || currentPlacedModule.upperSectionDepth === undefined) {
+          console.log('🔧 [섹션 깊이 초기화] 기본값을 placedModule에 저장:', { lowerDepth, upperDepth });
+          updatePlacedModule(currentPlacedModule.id, {
+            lowerSectionDepth: lowerDepth,
+            upperSectionDepth: upperDepth
+          });
+        }
 
         setLowerSectionDepth(lowerDepth);
         setUpperSectionDepth(upperDepth);
