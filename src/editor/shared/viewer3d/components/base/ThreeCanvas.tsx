@@ -140,27 +140,17 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     const prevPos = prevDroppedPositionRef.current;
     const enabled = !!spaceInfo?.droppedCeiling?.enabled;
     
-    console.log('🔍 단내림 위치 변경 체크:', { 
-      enabled, 
-      prevPos, 
-      currentPos, 
-      changed: prevPos && currentPos && prevPos !== currentPos,
-      placedModulesCount: placedModules.length 
-    });
-    
     if (enabled && prevPos && currentPos && prevPos !== currentPos) {
-      console.log('🧹 단내림 좌/우 위치 변경 감지 → 배치된 가구 초기화', { prevPos, currentPos });
+      console.log('🧹 단내림 위치 변경 → 가구 초기화', { prevPos, currentPos });
       try {
         useFurnitureStore.getState().setPlacedModules([]);
-        // 선택 상태도 초기화
         useFurnitureStore.getState().clearAllSelections();
-        console.log('✅ 가구 초기화 완료');
       } catch (e) {
-        console.warn('가구 초기화 중 오류:', e);
+        console.warn('가구 초기화 오류:', e);
       }
     }
     prevDroppedPositionRef.current = currentPos;
-  }, [spaceInfo?.droppedCeiling?.position, spaceInfo?.droppedCeiling?.enabled, placedModules.length]);
+  }, [spaceInfo?.droppedCeiling?.position, spaceInfo?.droppedCeiling?.enabled]);
   
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView);

@@ -295,26 +295,9 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       spaceInfo: correctedSpaceInfo
     };
 
-    console.log('🚨🚨🚨 [ModuleGallery] 드래그 시작 - 최종 ID:', {
-      originalModuleId: module.id,
-      dragModuleId: dragModuleId,
-      adjustedWidth: adjustedDimensions.width,
-      isDynamic: module.isDynamic,
-      targetZone: targetZone
-    });
-    
     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
-    e.dataTransfer.setData('text/plain', module.id); // 호환성을 위해 추가
+    e.dataTransfer.setData('text/plain', module.id);
     e.dataTransfer.effectAllowed = 'copy';
-    
-    console.log('🎯 [ModuleGallery] Drag started:', {
-      originalModuleId: module.id,
-      dragModuleId: dragModuleId,
-      dragData,
-      zone: targetZone,
-      adjustedWidth: adjustedDimensions.width,
-      isDynamic: module.isDynamic
-    });
 
     // 전역 드래그 상태 설정
     setCurrentDragData(dragData);
@@ -322,7 +305,6 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
 
   // 드래그 종료 핸들러
   const handleDragEnd = () => {
-    console.log('🎯 [ModuleGallery] Drag ended');
     // 가구 배치 모드 비활성화
     setFurniturePlacementMode(false);
     setIsSlotDragging(false); // 슬롯 드래그 종료

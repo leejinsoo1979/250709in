@@ -141,12 +141,6 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // 드롭 처리 함수
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
-    console.log('🎯 handleSlotDrop called:', {
-      hasCurrentDragData: !!currentDragData,
-      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-      droppedCeilingWidth: spaceInfo.droppedCeiling?.width
-    });
-    
     // 드롭 위치에서 마우스 좌표 계산
     const rect = canvasElement.getBoundingClientRect();
     const mouseX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
@@ -191,7 +185,6 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const activeModuleData = currentDragData;
     
     if (!activeModuleData) {
-      console.log('❌ No currentDragData available');
       return false;
     }
     
@@ -199,17 +192,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     let dragData;
     try {
       const dragDataString = dragEvent.dataTransfer?.getData('application/json');
-      console.log('📋 Drag data string:', dragDataString);
       
       if (!dragDataString) {
-        console.log('❌ No drag data string from dataTransfer');
         // Fallback to activeModuleData (currentDragData)
         dragData = activeModuleData;
       } else {
         dragData = JSON.parse(dragDataString);
       }
-      
-      console.log('📦 Parsed drag data:', dragData);
     } catch (error) {
       console.error('Error parsing drag data:', error);
       // Fallback to activeModuleData
@@ -2123,15 +2112,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // window 객체에 함수 노출
   useEffect(() => {
-    console.log('🎯 SlotDropZonesSimple - registering window.handleSlotDrop');
     window.handleSlotDrop = (dragEvent: DragEvent, canvasElement: HTMLCanvasElement) => {
-      console.log('🎯 window.handleSlotDrop called');
-      // handleSlotDrop 내부에서 마우스 위치를 기반으로 영역을 자동 판단함
       return handleSlotDrop(dragEvent, canvasElement);
     };
     
     return () => {
-      console.log('🎯 SlotDropZonesSimple - unregistering window.handleSlotDrop');
       delete window.handleSlotDrop;
     };
   }, [handleSlotDrop]);
