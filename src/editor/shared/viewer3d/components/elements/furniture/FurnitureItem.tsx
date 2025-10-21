@@ -2278,7 +2278,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 첫 슬롯이면 왼쪽 엔드패널 (가구는 오른쪽으로 9mm 이동했으므로 엔드패널도 같이 이동)
         if (isNoSurroundFirstSlot || isNoSurroundDualLastSlot) {
           // 가구가 이미 오른쪽으로 9mm 이동했으므로, 원래 슬롯 왼쪽 경계에서 엔드패널 배치
-          const slotLeftBoundary = adjustedPosition.x - mmToThreeUnits(slotWidthMm) / 2;
+          const slotLeftBoundary = adjustedPosition.x - mmToThreeUnits(originalSlotWidthMm) / 2;
           const leftPanelX = slotLeftBoundary + endPanelWidth / 2;
           endPanels.push({
             x: leftPanelX,
@@ -2287,6 +2287,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           console.log('🔍 노서라운드 왼쪽 엔드패널:', {
             leftPanelX,
             slotLeftBoundary,
+            originalSlotWidthMm,
             furnitureLeftEdge: furnitureCenterX - adjustedHalfWidth,
             endPanelRightEdge: leftPanelX + endPanelWidth / 2,
             gap: (furnitureCenterX - adjustedHalfWidth) - (leftPanelX + endPanelWidth / 2)
@@ -2296,7 +2297,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 마지막 슬롯이면 오른쪽 엔드패널 (가구는 왼쪽으로 9mm 이동했으므로 엔드패널도 같이 이동)
         if (isNoSurroundLastSlot || isNoSurroundDualLastSlot) {
           // 가구가 이미 왼쪽으로 9mm 이동했으므로, 원래 슬롯 오른쪽 경계에서 엔드패널 배치
-          const slotRightBoundary = adjustedPosition.x + mmToThreeUnits(slotWidthMm) / 2;
+          const slotRightBoundary = adjustedPosition.x + mmToThreeUnits(originalSlotWidthMm) / 2;
           const rightPanelX = slotRightBoundary - endPanelWidth / 2;
           endPanels.push({
             x: rightPanelX,
@@ -2305,6 +2306,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           console.log('🔍 노서라운드 오른쪽 엔드패널:', {
             rightPanelX,
             slotRightBoundary,
+            originalSlotWidthMm,
             furnitureRightEdge: furnitureCenterX + adjustedHalfWidth,
             endPanelLeftEdge: rightPanelX - endPanelWidth / 2,
             gap: (rightPanelX - endPanelWidth / 2) - (furnitureCenterX + adjustedHalfWidth)
