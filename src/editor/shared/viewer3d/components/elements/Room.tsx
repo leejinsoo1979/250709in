@@ -1981,10 +1981,15 @@ const Room: React.FC<RoomProps> = ({
                     : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
             ]}
             position={[
-              // 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
-              hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0
-                ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left/2
-                : xOffset + frameThickness.left/2,
+              // 노서라운드 모드: 첫 슬롯 경계에서 엔드패널 반만큼 안쪽
+              // 일반 모드: 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
+              spaceInfo.surroundType === 'no-surround'
+                ? (indexingForCheck.threeUnitBoundaries.length > 0
+                    ? indexingForCheck.threeUnitBoundaries[0] + frameThickness.left/2
+                    : xOffset + frameThickness.left/2)
+                : (hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0
+                    ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left/2
+                    : xOffset + frameThickness.left/2),
               sideFrameCenterY,
               // 노서라운드 모드에서 엔드패널/프레임 위치 결정
               spaceInfo.surroundType === 'no-surround'
@@ -2194,10 +2199,15 @@ const Room: React.FC<RoomProps> = ({
                     : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
             ]}
             position={[
-              // 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
-              hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right/2
-                : xOffset + width - frameThickness.right/2,
+              // 노서라운드 모드: 마지막 슬롯 경계에서 엔드패널 반만큼 안쪽
+              // 일반 모드: 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
+              spaceInfo.surroundType === 'no-surround'
+                ? (indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
+                    ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] - frameThickness.right/2
+                    : xOffset + width - frameThickness.right/2)
+                : (hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
+                    ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right/2
+                    : xOffset + width - frameThickness.right/2),
               sideFrameCenterY,
               // 노서라운드 모드에서 엔드패널/프레임 위치 결정
               spaceInfo.surroundType === 'no-surround'
