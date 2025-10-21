@@ -2164,14 +2164,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {/* 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 */}
       {/* 단, 다음의 경우는 제외:
           1. 벽 없는 구간에 있는 경우 (기존 로직)
-          2. 노서라운드 벽없음 첫/마지막 슬롯 (엔드패널 생성 안함) */}
+          2. 노서라운드 벽없음 첫/마지막 슬롯 (노서라운드용 엔드패널이 별도로 렌더링됨) */}
       {(() => {
         // 엔드패널 렌더링 여부 디버깅
         if (actualModuleData?.category === 'full' && !needsEndPanelAdjustment) {
           }
         return null;
       })()}
-      {needsEndPanelAdjustment && endPanelSide && (() => {
+      {needsEndPanelAdjustment && endPanelSide && !isNoSurroundFirstSlot && !isNoSurroundLastSlot && !isNoSurroundDualLastSlot && (() => {
         // 엔드패널 위치 계산
         const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
         const endPanelHeight = height; // 가구와 동일한 높이
