@@ -1617,7 +1617,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       console.log('❌ No slot index found (non-dropped)');
       return false;
     }
-    
+
+    const zoneSlotIndex = slotIndex;
+
     // 듀얼/싱글 가구 판별 - 원본 모듈 ID로 판단
     const isDual = dragData.moduleData.id.startsWith('dual-');
     
@@ -1647,6 +1649,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       console.log('❌ 메인 구간 슬롯 충돌로 배치 불가');
       return false;
     }
+
+    const globalSlotIndex = globalSlotIndexForCheck;
     
     // 분할창인 경우 spaceInfo 조정 - mainDoorCount 정보도 포함
     let adjustedSpaceInfo = spaceInfo;
@@ -1808,8 +1812,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     
     // 듀얼 가구의 경우 두 슬롯 모두 확인
     if (isDual) {
-      const slot1Info = columnSlots[slotIndex];
-      const slot2Info = columnSlots[slotIndex + 1];
+      const slot1Info = columnSlots[globalSlotIndex];
+      const slot2Info = columnSlots[globalSlotIndex + 1];
       
       console.log('🏛️ 듀얼 가구 기둥 침범 확인:', {
         slot1: {
@@ -1856,7 +1860,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
     } else {
       // 싱글 가구의 경우 기존 로직 유지
-      slotInfo = columnSlots[slotIndex];
+      slotInfo = columnSlots[globalSlotIndex];
       
       if (slotInfo && slotInfo.hasColumn) {
         console.log('🏛️ 싱글 가구 - 기둥 침범 슬롯 감지:', {

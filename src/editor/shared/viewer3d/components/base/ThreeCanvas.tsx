@@ -21,6 +21,7 @@ import SceneCleanup from './components/SceneCleanup'; // 하위 레벨
 import SceneBackground from './components/SceneBackground'; // 하위 레벨
 import { TouchOrbitControlsSetup } from './components/TouchOrbitControlsSetup'; // 터치 컨트롤
 import { CAMERA_SETTINGS, CANVAS_SETTINGS, LIGHTING_SETTINGS } from './utils/constants'; // 하위 레벨
+import SlotDropZonesSimple from '../elements/SlotDropZonesSimple'; // 드롭존 컴포넌트
 
 
 
@@ -1047,6 +1048,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         
         {/* 축 표시 - 기즈모 제거 */}
         {/* <axesHelper args={[5]} /> */}
+        
+        {/* 드롭존 컴포넌트 - 드래그앤드롭 배치를 위해 필요 */}
+        <SlotDropZonesSimple 
+          spaceInfo={spaceInfo} 
+          showAll={true} 
+          showDimensions={true} 
+          viewMode={viewMode}
+        />
         
         {children}
       </Canvas>
