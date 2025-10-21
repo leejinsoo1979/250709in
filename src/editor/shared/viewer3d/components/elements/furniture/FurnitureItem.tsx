@@ -2183,39 +2183,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
         const furnitureCenterX = adjustedPosition.x + positionAdjustmentForEndPanel;
 
-        // 🔍 디버그: 가구와 엔드패널 위치 추적
-        console.log('🔍 엔드패널 위치 계산:', {
-          placedFurnitureId,
-          adjustedPosition_x: adjustedPosition.x,
-          positionAdjustmentForEndPanel,
-          furnitureCenterX,
-          width_original: originalWidth,
-          width_adjusted: width,
-          adjustedHalfWidth,
-          endPanelWidth,
-          isNoSurroundFirstSlot,
-          isNoSurroundLastSlot,
-          isNoSurroundDualLastSlot,
-          slotBoundaries,
-          furnitureLeftEdge: furnitureCenterX - adjustedHalfWidth,
-          furnitureRightEdge: furnitureCenterX + adjustedHalfWidth
-        });
-
         if (endPanelSide === 'left' || endPanelSide === 'both') {
-          // 노서라운드 첫/마지막 슬롯이면 가구 왼쪽 가장자리에 딱 붙임
           const leftPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
             ? furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2
             : (slotBoundaries
                 ? slotBoundaries.left + endPanelWidth / 2
                 : furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2);
-
-          console.log('🔍 왼쪽 엔드패널:', {
-            leftPanelX,
-            calculatedBy: (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) ? 'furniture left edge' : 'slot boundaries',
-            furnitureLeftEdge: furnitureCenterX - adjustedHalfWidth,
-            endPanelRightEdge: leftPanelX + endPanelWidth / 2,
-            gap: (furnitureCenterX - adjustedHalfWidth) - (leftPanelX + endPanelWidth / 2)
-          });
 
           endPanelXPositions.push({
             x: leftPanelX,
@@ -2223,20 +2196,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           });
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
-          // 노서라운드 첫/마지막 슬롯이면 가구 오른쪽 가장자리에 딱 붙임
           const rightPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
             ? furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2
             : (slotBoundaries
                 ? slotBoundaries.right - endPanelWidth / 2
                 : furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2);
-
-          console.log('🔍 오른쪽 엔드패널:', {
-            rightPanelX,
-            calculatedBy: (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) ? 'furniture right edge' : 'slot boundaries',
-            furnitureRightEdge: furnitureCenterX + adjustedHalfWidth,
-            endPanelLeftEdge: rightPanelX - endPanelWidth / 2,
-            gap: (rightPanelX - endPanelWidth / 2) - (furnitureCenterX + adjustedHalfWidth)
-          });
 
           endPanelXPositions.push({
             x: rightPanelX,
