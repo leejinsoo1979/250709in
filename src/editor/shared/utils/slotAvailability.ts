@@ -1,6 +1,6 @@
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { getModuleById } from '@/data/modules';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { ColumnIndexer, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { analyzeColumnSlots, canPlaceFurnitureInColumnSlot, ColumnSlotInfo } from './columnSlotProcessor';
@@ -25,14 +25,70 @@ export const isSlotAvailable = (
 ): boolean => {
   const indexing = calculateSpaceIndexing(spaceInfo);
   const internalSpace = calculateInternalSpace(spaceInfo);
+  const zoneInfo = spaceInfo.droppedCeiling?.enabled
+    ? ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount)
+    : undefined;
+
+  const resolveGlobalSlotIndex = (
+    slot: number,
+    zone?: 'normal' | 'dropped'
+  ): number => {
+    if (!spaceInfo.droppedCeiling?.enabled || !zoneInfo || slot < 0) {
+      return slot;
+    }
+
+    const normalCount = zoneInfo.normal?.columnCount ?? 0;
+    const droppedCount = zoneInfo.dropped?.columnCount ?? 0;
+    const position = spaceInfo.droppedCeiling?.position;
+
+    if (zone === 'normal') {
+      if (position === 'left') {
+        return slot >= droppedCount ? slot : slot + droppedCount;
+      }
+      return slot;
+    }
+
+    if (zone === 'dropped') {
+      if (position === 'right') {
+        return slot >= normalCount ? slot : slot + normalCount;
+      }
+      return slot;
+    }
+
+    return slot;
+  };
+
+  const totalZoneColumnCount = zoneInfo
+    ? (zoneInfo.normal?.columnCount ?? 0) + (zoneInfo.dropped?.columnCount ?? 0)
+    : indexing.columnCount;
+
+  const effectiveColumnCount = Math.max(indexing.columnCount, totalZoneColumnCount);
+  
+  console.log('[SlotDebug] isSlotAvailable:start', {
+    slotIndex,
+    isDualFurniture,
+    placedCount: placedModules.length,
+    effectiveColumnCount,
+    moduleId,
+    excludeModuleId
+  });
   
   // 범위 검사
-  if (slotIndex < 0) return false;
-  if (isDualFurniture && slotIndex >= indexing.columnCount - 1) return false;
-  if (!isDualFurniture && slotIndex >= indexing.columnCount) return false;
+  if (slotIndex < 0) {
+    console.log('[SlotDebug] isSlotAvailable:range-fail', { reason: 'negative', slotIndex });
+    return false;
+  }
+  if (isDualFurniture && slotIndex >= effectiveColumnCount - 1) {
+    console.log('[SlotDebug] isSlotAvailable:range-fail', { reason: 'dual-out-of-range', slotIndex, effectiveColumnCount });
+    return false;
+  }
+  if (!isDualFurniture && slotIndex >= effectiveColumnCount) {
+    console.log('[SlotDebug] isSlotAvailable:range-fail', { reason: 'single-out-of-range', slotIndex, effectiveColumnCount });
+    return false;
+  }
   
   // 기둥 포함 슬롯 분석
-  const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+  const columnSlots = analyzeColumnSlots(spaceInfo);
   
   // 목표 슬롯들 계산
   const targetSlots = isDualFurniture 
@@ -58,32 +114,46 @@ export const isSlotAvailable = (
         // Column C는 듀얼 가구를 2개의 싱글로 분할하여 배치 가능
         if (isDualFurniture) {
           // Column C 슬롯에 이미 2개의 가구가 있는지 확인
-          const furnitureInSlot = placedModules.filter(m => 
-            m.slotIndex === targetSlot && m.id !== excludeModuleId
-          );
+          const furnitureInSlot = placedModules.filter(m => {
+            if (typeof m.slotIndex !== 'number') {
+              return false;
+            }
+            const moduleZone = m.zone as 'normal' | 'dropped' | undefined;
+            const globalSlot = resolveGlobalSlotIndex(m.slotIndex, moduleZone);
+            return globalSlot === targetSlot && m.id !== excludeModuleId;
+          });
           
           if (furnitureInSlot.length >= 2) {
             return false; // 이미 2개의 가구가 있음
           }
           
           // 듀얼 가구는 배치 가능 (2개의 싱글로 분할됨)
+          console.log('[SlotDebug] isSlotAvailable:columnC-dual-allowed', { slotIndex: targetSlot, furnitureInSlot: furnitureInSlot.length });
           return true;
         } else {
           // 싱글 가구는 빈 서브슬롯이 있으면 배치 가능
-          const furnitureInSlot = placedModules.filter(m => 
-            m.slotIndex === targetSlot && m.id !== excludeModuleId
-          );
+          const furnitureInSlot = placedModules.filter(m => {
+            if (typeof m.slotIndex !== 'number') {
+              return false;
+            }
+            const moduleZone = m.zone as 'normal' | 'dropped' | undefined;
+            const globalSlot = resolveGlobalSlotIndex(m.slotIndex, moduleZone);
+            return globalSlot === targetSlot && m.id !== excludeModuleId;
+          });
           
           if (furnitureInSlot.length >= 2) {
+            console.log('[SlotDebug] isSlotAvailable:columnC-single-full', { slotIndex: targetSlot, furnitureInSlot: furnitureInSlot.length });
             return false; // 이미 2개의 가구가 있음
           }
           
+          console.log('[SlotDebug] isSlotAvailable:columnC-single-allowed', { slotIndex: targetSlot, furnitureInSlot: furnitureInSlot.length });
           return true; // 빈 서브슬롯이 있음
         }
       } else {
         // 일반 기둥 처리 (기존 로직)
         // 듀얼 가구는 기둥 슬롯에 배치 불가
         if (isDualFurniture) {
+          console.log('[SlotDebug] isSlotAvailable:column-blocked', { slotIndex: targetSlot, reason: 'dual-hit-column' });
           return false;
         }
         
@@ -103,9 +173,14 @@ export const isSlotAvailable = (
   if (hasColumnC) {
     // Column C 슬롯 - 3개까지 가구 배치 가능 (첫 번째 1개 + 기둥 앞 2개)
     const targetSlot = targetSlots[0]; // 단일 슬롯만 확인
-    const furnitureInSlot = placedModules.filter(m => 
-      m.slotIndex === targetSlot && m.id !== excludeModuleId
-    );
+    const furnitureInSlot = placedModules.filter(m => {
+      if (typeof m.slotIndex !== 'number') {
+        return false;
+      }
+      const moduleZone = m.zone as 'normal' | 'dropped' | undefined;
+      const globalSlot = resolveGlobalSlotIndex(m.slotIndex, moduleZone);
+      return globalSlot === targetSlot && m.id !== excludeModuleId;
+    });
     
     console.log('🔵 Column C 슬롯 가용성 확인:', {
       slotIndex: targetSlot,
@@ -114,7 +189,9 @@ export const isSlotAvailable = (
       배치가능: furnitureInSlot.length < 3
     });
     
-    return furnitureInSlot.length < 3; // 3개 미만이면 배치 가능
+    const columnCResult = furnitureInSlot.length < 3;
+    console.log('[SlotDebug] isSlotAvailable:columnC-result', { slotIndex: targetSlot, columnCResult });
+    return columnCResult; // 3개 미만이면 배치 가능
   } else if (targetSlots.some(slot => columnSlots[slot]?.hasColumn)) {
     // 일반 기둥이 있는 슬롯 - 기존 로직
     return true;
@@ -165,8 +242,12 @@ export const isSlotAvailable = (
                           Math.abs(moduleData.dimensions.width - (indexing.columnWidth * 2)) < 50;
       
       // 기존 모듈의 슬롯 위치 찾기 - slotIndex 속성을 우선 사용
-      let moduleSlot = placedModule.slotIndex !== undefined ? placedModule.slotIndex : -1;
-      
+      const storedSlot = placedModule.slotIndex;
+      const moduleZone = placedModule.zone as 'normal' | 'dropped' | undefined;
+      let moduleSlot = typeof storedSlot === 'number'
+        ? resolveGlobalSlotIndex(storedSlot, moduleZone)
+        : -1;
+
       // slotIndex가 없는 경우에만 위치로부터 계산
       if (moduleSlot === -1) {
         if (isModuleDual && indexing.threeUnitDualPositions) {
@@ -178,12 +259,25 @@ export const isSlotAvailable = (
             Math.abs(pos - placedModule.position.x) < 0.1
           );
         }
+        moduleSlot = resolveGlobalSlotIndex(moduleSlot, moduleZone);
       }
       
       if (moduleSlot >= 0) {
-        const moduleSlots = isModuleDual ? [moduleSlot, moduleSlot + 1] : [moduleSlot];
+        const moduleSlots = (() => {
+          if (!isModuleDual) {
+            return [moduleSlot];
+          }
+
+          if (typeof storedSlot === 'number') {
+            const second = resolveGlobalSlotIndex(storedSlot + 1, moduleZone);
+            return [moduleSlot, second];
+          }
+
+          return [moduleSlot, moduleSlot + 1];
+        })();
+
         const hasOverlap = targetSlots.some(slot => moduleSlots.includes(slot));
-        
+
         if (hasOverlap) {
           // 상부장과 하부장 공존은 허용되므로 이미 위에서 체크함
           console.log('🚫 슬롯 충돌 감지 (isSlotAvailable):', {
@@ -192,6 +286,7 @@ export const isSlotAvailable = (
               id: placedModule.id,
               moduleId: placedModule.moduleId,
               slotIndex: moduleSlot,
+              slotIndexGlobal: moduleSlots[0],
               isDual: isModuleDual,
               occupiedSlots: moduleSlots,
               category: existingCategory
@@ -203,12 +298,19 @@ export const isSlotAvailable = (
             isDualFurniture,
             conflict: true
           });
+          console.log('[SlotDebug] isSlotAvailable:conflict', {
+            conflictWith: placedModule.id,
+            conflictModuleSlot: moduleSlot,
+            targetSlots,
+            isDualFurniture
+          });
           return false; // 충돌 발견
         }
       }
     }
   }
   
+  console.log('[SlotDebug] isSlotAvailable:success', { slotIndex, isDualFurniture });
   return true; // 사용 가능
 };
 
@@ -259,41 +361,103 @@ export const findNextAvailableSlot = (
 export const debugSlotOccupancy = (placedModules: PlacedModule[], spaceInfo: SpaceInfo): void => {
   const indexing = calculateSpaceIndexing(spaceInfo);
   const internalSpace = calculateInternalSpace(spaceInfo);
+  const zoneInfo = spaceInfo.droppedCeiling?.enabled
+    ? ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount)
+    : undefined;
+
+  const resolveGlobalSlotIndex = (
+    slot: number,
+    zone?: 'normal' | 'dropped'
+  ): number => {
+    if (!spaceInfo.droppedCeiling?.enabled || !zoneInfo || slot < 0) {
+      return slot;
+    }
+
+    const normalCount = zoneInfo.normal?.columnCount ?? 0;
+    const droppedCount = zoneInfo.dropped?.columnCount ?? 0;
+    const position = spaceInfo.droppedCeiling?.position;
+
+    if (zone === 'normal') {
+      if (position === 'left') {
+        return slot >= droppedCount ? slot : slot + droppedCount;
+      }
+      return slot;
+    }
+
+    if (zone === 'dropped') {
+      if (position === 'right') {
+        return slot >= normalCount ? slot : slot + normalCount;
+      }
+      return slot;
+    }
+
+    return slot;
+  };
+
+  const totalZoneColumnCount = zoneInfo
+    ? (zoneInfo.normal?.columnCount ?? 0) + (zoneInfo.dropped?.columnCount ?? 0)
+    : indexing.columnCount;
+
+  const effectiveColumnCount = Math.max(indexing.columnCount, totalZoneColumnCount);
   
   // 전체 슬롯 점유 상태 맵
-  const occupancyMap = new Array(indexing.columnCount).fill('[ ]');
+  const occupancyMap = new Array(effectiveColumnCount).fill('[ ]');
   const slotDetails: Record<number, { modules: string[], isDual: boolean[] }> = {};
   
   // 각 슬롯 초기화
-  for (let i = 0; i < indexing.columnCount; i++) {
+  for (let i = 0; i < effectiveColumnCount; i++) {
     slotDetails[i] = { modules: [], isDual: [] };
   }
   
   placedModules.forEach((module, index) => {
     // isDualSlot 속성을 우선 사용
     const isModuleDual = module.isDualSlot !== undefined ? module.isDualSlot : false;
-    const moduleSlot = module.slotIndex !== undefined ? module.slotIndex : -1;
-    
+    const storedSlot = module.slotIndex;
+    const moduleZone = module.zone as 'normal' | 'dropped' | undefined;
+    let moduleSlot = typeof storedSlot === 'number'
+      ? resolveGlobalSlotIndex(storedSlot, moduleZone)
+      : -1;
+
+    if (moduleSlot === -1) {
+      if (isModuleDual && indexing.threeUnitDualPositions) {
+        moduleSlot = indexing.threeUnitDualPositions.findIndex((pos: number) => 
+          Math.abs(pos - module.position.x) < 0.1
+        );
+      } else {
+        moduleSlot = indexing.threeUnitPositions.findIndex((pos: number) => 
+          Math.abs(pos - module.position.x) < 0.1
+        );
+      }
+      moduleSlot = resolveGlobalSlotIndex(moduleSlot, moduleZone);
+    }
+
     if (moduleSlot >= 0) {
       const moduleLabel = String.fromCharCode(65 + index);
+      const secondarySlot = isModuleDual && typeof storedSlot === 'number'
+        ? resolveGlobalSlotIndex((storedSlot as number) + 1, moduleZone)
+        : moduleSlot + 1;
       
       if (isModuleDual) {
         // 듀얼 가구는 2개 슬롯 차지
-        slotDetails[moduleSlot].modules.push(moduleLabel);
-        slotDetails[moduleSlot].isDual.push(true);
-        if (moduleSlot + 1 < indexing.columnCount) {
-          slotDetails[moduleSlot + 1].modules.push(moduleLabel);
-          slotDetails[moduleSlot + 1].isDual.push(true);
+        if (slotDetails[moduleSlot]) {
+          slotDetails[moduleSlot].modules.push(moduleLabel);
+          slotDetails[moduleSlot].isDual.push(true);
+        }
+        if (secondarySlot < effectiveColumnCount && slotDetails[secondarySlot]) {
+          slotDetails[secondarySlot].modules.push(moduleLabel);
+          slotDetails[secondarySlot].isDual.push(true);
         }
         
         occupancyMap[moduleSlot] = `[${moduleLabel}`;
-        if (moduleSlot + 1 < indexing.columnCount) {
-          occupancyMap[moduleSlot + 1] = `${moduleLabel}]`;
+        if (secondarySlot < effectiveColumnCount) {
+          occupancyMap[secondarySlot] = `${moduleLabel}]`;
         }
       } else {
         // 싱글 가구는 1개 슬롯 차지
-        slotDetails[moduleSlot].modules.push(moduleLabel);
-        slotDetails[moduleSlot].isDual.push(false);
+        if (slotDetails[moduleSlot]) {
+          slotDetails[moduleSlot].modules.push(moduleLabel);
+          slotDetails[moduleSlot].isDual.push(false);
+        }
         occupancyMap[moduleSlot] = `[${moduleLabel}]`;
       }
     }
@@ -308,7 +472,7 @@ export const debugSlotOccupancy = (placedModules: PlacedModule[], spaceInfo: Spa
   });
   
   console.log('📊 전체 슬롯 점유 상태:', {
-    총슬롯수: indexing.columnCount,
+    총슬롯수: effectiveColumnCount,
     배치된가구수: placedModules.length,
     듀얼가구수: placedModules.filter(m => m.isDualSlot).length,
     싱글가구수: placedModules.filter(m => !m.isDualSlot).length,

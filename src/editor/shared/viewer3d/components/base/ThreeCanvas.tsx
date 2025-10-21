@@ -67,6 +67,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 단내림 설정 변경 감지
   const { spaceInfo } = useSpaceConfigStore();
   const { placedModules } = useFurnitureStore();
+  // 단내림 좌/우 위치 변경 이전 상태 추적
+  const prevDroppedPositionRef = useRef<'left' | 'right' | undefined>(spaceInfo?.droppedCeiling?.position);
   
   // 반응형 감지
   const { isTouchDevice, isMobile, isTablet } = useResponsive();
@@ -131,6 +133,24 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
     }
   }, [spaceInfo?.droppedCeiling?.enabled, spaceInfo?.droppedCeiling?.position, spaceInfo?.droppedCeiling?.width, spaceInfo?.droppedCeiling?.dropHeight]);
+
+  // 단내림 좌/우 위치가 바뀌면 배치된 가구 초기화
+  useEffect(() => {
+    const currentPos = spaceInfo?.droppedCeiling?.position;
+    const prevPos = prevDroppedPositionRef.current;
+    const enabled = !!spaceInfo?.droppedCeiling?.enabled;
+    if (enabled && prevPos && currentPos && prevPos !== currentPos) {
+      console.log('🧹 단내림 좌/우 위치 변경 감지 → 배치된 가구 초기화', { prevPos, currentPos });
+      try {
+        useFurnitureStore.getState().setPlacedModules([]);
+        // 선택 상태도 초기화
+        useFurnitureStore.getState().clearAllSelections();
+      } catch (e) {
+        console.warn('가구 초기화 중 오류:', e);
+      }
+    }
+    prevDroppedPositionRef.current = currentPos;
+  }, [spaceInfo?.droppedCeiling?.position, spaceInfo?.droppedCeiling?.enabled]);
   
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView);

@@ -1270,6 +1270,15 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 도어는 항상 3mm 갭 적용 (가구보다 3mm 작게)
     const doorGap = 3;
     
+    console.log('[DoorDebug] dual-door slot widths', {
+      slotWidths,
+      moduleWidth,
+      effectiveColumnWidth,
+      originalSlotWidth,
+      zone: (spaceInfo as any).zone,
+      slotIndex
+    });
+
     if (slotWidths && slotWidths.length >= 2) {
       // 개별 슬롯 너비가 제공된 경우
       totalWidth = slotWidths[0] + slotWidths[1];
