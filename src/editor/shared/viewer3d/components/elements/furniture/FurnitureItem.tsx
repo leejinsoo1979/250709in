@@ -2264,7 +2264,68 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           </>
         );
       })()}
-      
+
+      {/* 노서라운드 첫/마지막 슬롯 엔드패널 렌더링 (벽없음/한쪽벽 모드) */}
+      {(isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) && (() => {
+        const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
+        const endPanelHeight = height;
+        const endPanelDepth = depth;
+        const adjustedHalfWidth = width / 2;
+        const furnitureCenterX = adjustedPosition.x + positionAdjustmentForEndPanel;
+
+        const endPanels = [];
+
+        // 첫 슬롯이면 왼쪽 엔드패널
+        if (isNoSurroundFirstSlot || isNoSurroundDualLastSlot) {
+          const leftPanelX = furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2;
+          endPanels.push({
+            x: leftPanelX,
+            side: 'left'
+          });
+          console.log('🔍 노서라운드 왼쪽 엔드패널:', {
+            leftPanelX,
+            furnitureLeftEdge: furnitureCenterX - adjustedHalfWidth,
+            endPanelRightEdge: leftPanelX + endPanelWidth / 2,
+            gap: (furnitureCenterX - adjustedHalfWidth) - (leftPanelX + endPanelWidth / 2)
+          });
+        }
+
+        // 마지막 슬롯이면 오른쪽 엔드패널
+        if (isNoSurroundLastSlot || isNoSurroundDualLastSlot) {
+          const rightPanelX = furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2;
+          endPanels.push({
+            x: rightPanelX,
+            side: 'right'
+          });
+          console.log('🔍 노서라운드 오른쪽 엔드패널:', {
+            rightPanelX,
+            furnitureRightEdge: furnitureCenterX + adjustedHalfWidth,
+            endPanelLeftEdge: rightPanelX - endPanelWidth / 2,
+            gap: (rightPanelX - endPanelWidth / 2) - (furnitureCenterX + adjustedHalfWidth)
+          });
+        }
+
+        return (
+          <>
+            {endPanels.map((panel, index) => (
+              <group
+                key={`no-surround-endpanel-${placedModule.id}-${panel.side}-${index}`}
+                position={[panel.x, finalYPosition, furnitureZ]}
+              >
+                <EndPanelWithTexture
+                  width={endPanelWidth}
+                  height={endPanelHeight}
+                  depth={endPanelDepth}
+                  position={[0, 0, 0]}
+                  spaceInfo={zoneSpaceInfo}
+                  renderMode={renderMode}
+                />
+              </group>
+            ))}
+          </>
+        );
+      })()}
+
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
       
       {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true이고 3D 모드일 때만 표시 */}
