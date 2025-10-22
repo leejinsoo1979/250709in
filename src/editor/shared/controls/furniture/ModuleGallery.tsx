@@ -4,10 +4,8 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { calculateSpaceIndexing, ColumnIndexer, SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { isSlotAvailable, findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
-import { getModuleById } from '@/data/modules';
+import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import styles from './ModuleGallery.module.css';
-import Button from '@/components/common/Button';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -994,8 +992,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           zone: 'normal' as const
         };
       }
-      
-      const zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
+
       const furnitureHeightMm = module.dimensions.height || 600;
       const furnitureHeight = furnitureHeightMm * 0.01; // Three.js 단위로 변환
       
@@ -1310,9 +1307,6 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   const adjustedSpaceInfo = zoneSpaceInfo;
   const adjustedInternalSpace = calculateInternalSpace(adjustedSpaceInfo);
   
-  // 단일 컬럼의 너비 계산 (indexing의 슬롯 너비 사용)
-  const columnWidth = indexing.columnWidth;
-  
   // 조정된 spaceInfo에 슬롯 너비 정보 추가
   const spaceInfoWithSlotWidths = {
     ...adjustedSpaceInfo,
@@ -1362,7 +1356,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
     zoneSpaceInfo: {
       width: zoneSpaceInfo.width,
       customColumnCount: zoneSpaceInfo.customColumnCount,
-      zone: (zoneSpaceInfo as any).zone
+      zone: (zoneSpaceInfo as { zone?: string }).zone
     },
     internalSpace: zoneInternalSpace,
     indexing: {
@@ -1426,7 +1420,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
     });
     
     return modules;
-  }, [selectedType, singleModules, dualModules, moduleCategory, zoneInternalSpace, zoneSpaceInfo]);
+  }, [selectedType, singleModules, dualModules]);
 
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
