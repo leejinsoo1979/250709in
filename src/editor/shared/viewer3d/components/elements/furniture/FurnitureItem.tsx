@@ -182,12 +182,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onPointerUp,
   onDoubleClick
 }) => {
+  const FURNITURE_DEBUG = false;
+  const debugLog = (...args: any[]) => {
+    if (FURNITURE_DEBUG) {
+      console.log(...args);
+    }
+  };
+  const debugWarn = (...args: any[]) => {
+    if (FURNITURE_DEBUG) {
+      console.warn(...args);
+    }
+  };
   // Three.js 컨텍스트 접근
   const { gl, invalidate, scene, camera } = useThree();
 
   // 디버그: showFurniture 값 확인
   useEffect(() => {
-    console.log('🎯 FurnitureItem - showFurniture:', showFurniture, 'placedModuleId:', placedModule.id, 'moduleId:', placedModule.moduleId);
+    debugLog('🎯 FurnitureItem - showFurniture:', showFurniture, 'placedModuleId:', placedModule.id, 'moduleId:', placedModule.moduleId);
   }, [showFurniture, placedModule.id, placedModule.moduleId]);
   const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex } = useUIStore();
   const { updatePlacedModule } = useFurnitureStore();
@@ -254,7 +265,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 섹션 깊이 변경 추적
   React.useEffect(() => {
-    console.log('🔍 FurnitureItem - placedModule 섹션 깊이 변경:', {
+    debugLog('🔍 FurnitureItem - placedModule 섹션 깊이 변경:', {
       id: placedModule.id,
       moduleId: placedModule.moduleId,
       lowerSectionDepth: placedModule.lowerSectionDepth,
@@ -447,7 +458,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isDualCabinet = placedModule.moduleId.includes('dual-');
   
   if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
-    console.log('🔍 싱글 상하부장 처리 시작:', {
+    debugLog('🔍 싱글 상하부장 처리 시작:', {
       original: placedModule.moduleId,
       customWidth: placedModule.customWidth,
       adjustedWidth: placedModule.adjustedWidth,
@@ -473,7 +484,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       targetModuleId = `${baseId}-${placedModule.customWidth}`;
       
       if (!isDualCabinet) {
-        console.log('🎯 싱글 상하부장 ID 강제 변경:', {
+        debugLog('🎯 싱글 상하부장 ID 강제 변경:', {
           original: placedModule.moduleId,
           baseId,
           customWidth: placedModule.customWidth,
@@ -493,7 +504,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
   
   if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
-    console.log('📌 싱글 상하부장 getModuleById 결과:', {
+    debugLog('📌 싱글 상하부장 getModuleById 결과:', {
       targetModuleId,
       moduleDataFound: !!moduleData,
       moduleData: moduleData ? { id: moduleData.id, dimensions: moduleData.dimensions } : null
@@ -503,13 +514,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // moduleData가 없으면 기본 모듈 ID로 재시도
   if (!moduleData && targetModuleId !== placedModule.moduleId) {
     if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
-      console.log('⚠️ 싱글 상하부장 첫 시도 실패, 원본 ID로 재시도:', placedModule.moduleId);
+      debugLog('⚠️ 싱글 상하부장 첫 시도 실패, 원본 ID로 재시도:', placedModule.moduleId);
     }
     // targetModuleId로 모듈을 찾을 수 없음, 원본 ID로 재시도
     moduleData = getModuleById(placedModule.moduleId, internalSpace, zoneSpaceInfo);
     
     if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
-      console.log('📌 싱글 상하부장 원본 ID 재시도 결과:', {
+      debugLog('📌 싱글 상하부장 원본 ID 재시도 결과:', {
         moduleDataFound: !!moduleData
       });
     }
@@ -525,7 +536,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     
     if (isUpperCabinetFallback || isLowerCabinetFallback) {
       if (!isDualCabinet) {
-        console.log('🚨 싱글 상하부장 모든 시도 실패, 패턴 재시도 시작');
+        debugLog('🚨 싱글 상하부장 모든 시도 실패, 패턴 재시도 시작');
       }
       
       // 상하부장의 경우 너비를 변경해서 재시도
@@ -540,7 +551,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         if (placedModule.slotIndex !== undefined && indexing && indexing.columnWidth) {
           tryWidth = indexing.columnWidth;
           if (!isDualCabinet) {
-            console.log('🔧 싱글 상하부장 슬롯 너비로 시도:', {
+            debugLog('🔧 싱글 상하부장 슬롯 너비로 시도:', {
               slotIndex: placedModule.slotIndex,
               columnWidth: indexing.columnWidth,
               tryWidth
@@ -551,7 +562,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const newId = `${baseId}-${tryWidth}`;
         
         if (!isDualCabinet) {
-          console.log('🔧 싱글 상하부장 시도 ID:', newId);
+          debugLog('🔧 싱글 상하부장 시도 ID:', newId);
         }
         
         moduleData = getModuleById(newId, internalSpace, zoneSpaceInfo);
@@ -572,12 +583,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           for (const width of uniqueWidths) {
             const testId = `${baseId}-${width}`;
             if (!isDualCabinet) {
-              console.log('🔧 싱글 상하부장 너비로 시도:', testId);
+              debugLog('🔧 싱글 상하부장 너비로 시도:', testId);
             }
             moduleData = getModuleById(testId, internalSpace, zoneSpaceInfo);
             if (moduleData) {
               if (!isDualCabinet) {
-                console.log('✅ 싱글 상하부장 찾음!:', testId);
+                debugLog('✅ 싱글 상하부장 찾음!:', testId);
               }
               break;
             }
@@ -1168,14 +1179,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 단내림 구간 높이 디버깅
   if (placedModule.zone === 'dropped') {
-    console.log('🟢 FurnitureItem 단내림 구간 가구 높이');
-    console.log('  zone:', placedModule.zone);
-    console.log('  moduleId:', placedModule.moduleId);
-    console.log('  furnitureHeightMm:', furnitureHeightMm);
-    console.log('  actualModuleDataHeight:', actualModuleData?.dimensions.height);
-    console.log('  internalSpaceHeight:', internalSpace.height);
-    console.log('  droppedCeilingEnabled:', spaceInfo.droppedCeiling?.enabled);
-    console.log('  dropHeight:', spaceInfo.droppedCeiling?.dropHeight);
+    debugLog('🟢 FurnitureItem 단내림 구간 가구 높이');
+    debugLog('  zone:', placedModule.zone);
+    debugLog('  moduleId:', placedModule.moduleId);
+    debugLog('  furnitureHeightMm:', furnitureHeightMm);
+    debugLog('  actualModuleDataHeight:', actualModuleData?.dimensions.height);
+    debugLog('  internalSpaceHeight:', internalSpace.height);
+    debugLog('  droppedCeilingEnabled:', spaceInfo.droppedCeiling?.enabled);
+    debugLog('  dropHeight:', spaceInfo.droppedCeiling?.dropHeight);
   }
   
   // Column C 가구 너비 디버깅
@@ -1904,7 +1915,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 }
               }
 
-              console.log('🔍 FurnitureItem - visibleSectionIndex 계산:', {
+              debugLog('🔍 FurnitureItem - visibleSectionIndex 계산:', {
                 isDualSlot: placedModule.isDualSlot,
                 view2DDirection,
                 selectedSlotIndex,
@@ -1950,7 +1961,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   lowerDoorBottomGap={placedModule.lowerDoorBottomGap}
                   grainDirection={placedModule.grainDirection} // 텍스처 결 방향 (하위 호환성)
                   panelGrainDirections={(() => {
-                    console.log('🚨 FurnitureItem - placedModule 체크:', {
+                    debugLog('🚨 FurnitureItem - placedModule 체크:', {
                       id: placedModule.id,
                       hasPanelGrainDirections: !!placedModule.panelGrainDirections,
                       panelGrainDirections: placedModule.panelGrainDirections,

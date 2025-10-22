@@ -53,6 +53,18 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   style,
   isSplitView = false
 }) => {
+  const CANVAS_DEBUG = false;
+  const canvasLog = (...args: any[]) => {
+    if (CANVAS_DEBUG) {
+      console.log(...args);
+    }
+  };
+  const canvasWarn = (...args: any[]) => {
+    if (CANVAS_DEBUG) {
+      console.warn(...args);
+    }
+  };
+
   // 테마 컨텍스트
   const { theme } = useViewerTheme();
   
@@ -129,7 +141,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 단내림 설정 변경 시 캔버스 강제 업데이트
   useEffect(() => {
     if (spaceInfo?.droppedCeiling) {
-      console.log('🔄 ThreeCanvas - 단내림 설정 변경 감지, 캔버스 강제 업데이트');
+      canvasLog('🔄 ThreeCanvas - 단내림 설정 변경 감지, 캔버스 강제 업데이트');
       // 캔버스 키를 변경하여 강제로 재생성
       setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
     }
@@ -142,12 +154,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     const enabled = !!spaceInfo?.droppedCeiling?.enabled;
     
     if (enabled && prevPos && currentPos && prevPos !== currentPos) {
-      console.log('🧹 단내림 위치 변경 → 가구 초기화', { prevPos, currentPos });
+      canvasLog('🧹 단내림 위치 변경 → 가구 초기화', { prevPos, currentPos });
       try {
         useFurnitureStore.getState().setPlacedModules([]);
         useFurnitureStore.getState().clearAllSelections();
       } catch (e) {
-        console.warn('가구 초기화 오류:', e);
+        canvasWarn('가구 초기화 오류:', e);
       }
     }
     prevDroppedPositionRef.current = currentPos;
@@ -206,7 +218,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   useEffect(() => {
     if (rendererRef.current && viewMode === '3D') {
       if (import.meta.env.DEV) {
-        console.log('🔄 3D 모드 전환 - 그림자 설정 업데이트, shadowEnabled:', shadowEnabled);
+        canvasLog('🔄 3D 모드 전환 - 그림자 설정 업데이트, shadowEnabled:', shadowEnabled);
       }
       // 3D 모드에서는 shadowEnabled 상태에 따라 그림자 활성화
       rendererRef.current.shadowMap.enabled = shadowEnabled;
@@ -272,7 +284,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   
   // WebGL 컨텍스트 정리 함수 (더 부드러운 접근)
   const cleanupWebGL = useCallback(() => {
-    console.log('Cleaning up WebGL resources...');
+    canvasLog('Cleaning up WebGL resources...');
     
     // 기존 renderer 정리 (forceContextLoss 제거)
     if (rendererRef.current) {
@@ -280,7 +292,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         rendererRef.current.dispose();
         // forceContextLoss를 제거하여 불필요한 context lost 에러 방지
       } catch (error) {
-        console.warn('Error disposing renderer:', error);
+        canvasWarn('Error disposing renderer:', error);
       }
       rendererRef.current = null;
     }
@@ -302,7 +314,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       if ((window as any).__canvasDragHandlers) {
         const { canvas, dragOver, drop } = (window as any).__canvasDragHandlers;
         if (canvas && dragOver && drop) {
-          console.log('🧹 Removing canvas drag event handlers');
+          canvasLog('🧹 Removing canvas drag event handlers');
           canvas.removeEventListener('dragover', dragOver);
           canvas.removeEventListener('drop', drop);
           delete (window as any).__canvasDragHandlers;
@@ -314,7 +326,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 가구 드래그 이벤트 리스너
   useEffect(() => {
     const handleFurnitureDragStart = () => {
-      console.log('🎯 가구/기둥 드래그 시작 - 카메라 회전 비활성화');
+      canvasLog('🎯 가구/기둥 드래그 시작 - 카메라 회전 비활성화');
       
       // 카메라 컨트롤 비활성화
       if (controlsRef.current) {
@@ -324,12 +336,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         controls.enableZoom = false;
         controls.enableRotate = false;
         controls.update();
-        console.log('🎯 카메라 컨트롤 비활성화 완료');
+        canvasLog('🎯 카메라 컨트롤 비활성화 완료');
       }
     };
 
     const handleFurnitureDragEnd = () => {
-      console.log('🎯 가구/기둥 드래그 종료 - OrbitControls 회전 활성화');
+      canvasLog('🎯 가구/기둥 드래그 종료 - OrbitControls 회전 활성화');
       
       // 카메라 컨트롤 재활성화
       if (controlsRef.current) {
@@ -339,12 +351,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         controls.enableZoom = true;
         controls.enableRotate = viewMode === '3D';
         controls.update();
-        console.log('🎯 카메라 컨트롤 재활성화 완료');
+        canvasLog('🎯 카메라 컨트롤 재활성화 완료');
       }
     };
 
     const handleFurniturePlacementComplete = () => {
-      console.log('🎯 가구 배치 완료');
+      canvasLog('🎯 가구 배치 완료');
       // 카메라 리셋 기능 제거 - 사용자가 원하는 각도 유지
       
       // 카메라 컨트롤 재활성화
@@ -355,7 +367,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         controls.enableZoom = true;
         controls.enableRotate = viewMode === '3D';
         controls.update();
-        console.log('🎯 카메라 컨트롤 재활성화 완료');
+        canvasLog('🎯 카메라 컨트롤 재활성화 완료');
       }
     };
 
@@ -381,7 +393,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       const controls = controlsRef.current;
       
       // 3D orthographic 모드와 perspective 모드 모두 리셋 처리
-      console.log('🎯 카메라 리셋 시작:', {
+      canvasLog('🎯 카메라 리셋 시작:', {
         type: controls.object.type,
         cameraMode,
         currentPosition: controls.object.position.toArray(),
@@ -401,7 +413,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // 타겟 위치 계산
       const target = calculateCameraTargetUtil(spaceHeight);
       
-      console.log('🎯 3D 카메라 리셋 계산:', {
+      canvasLog('🎯 3D 카메라 리셋 계산:', {
         target,
         initialDistance,
         initialZoom,
@@ -432,7 +444,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // OrbitControls 업데이트
       controls.update();
       
-      console.log('🎯 3D 카메라 리셋 완료:', {
+      canvasLog('🎯 3D 카메라 리셋 완료:', {
         newPosition: controls.object.position.toArray(),
         newTarget: controls.target.toArray(),
         zoom: controls.object.zoom
@@ -442,16 +454,16 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 스페이스바로 카메라 리셋
   useEffect(() => {
-    console.log('🎮 스페이스 키 리스너 등록됨 - viewMode:', viewMode, 'cameraMode:', cameraMode);
+    canvasLog('🎮 스페이스 키 리스너 등록됨 - viewMode:', viewMode, 'cameraMode:', cameraMode);
     
     const handleKeyDown = (e: KeyboardEvent) => {
-      console.log('⌨️ 키 눌림:', e.code, e.keyCode);
+      canvasLog('⌨️ 키 눌림:', e.code, e.keyCode);
       
       // 스페이스바 (32) 또는 Space 키
       if (e.code === 'Space' || e.keyCode === 32) {
         e.preventDefault(); // 페이지 스크롤 방지
         e.stopPropagation(); // 이벤트 전파 방지
-        console.log('🚀 스페이스 키 눌림 - viewMode:', viewMode, 'cameraMode:', cameraMode);
+        canvasLog('🚀 스페이스 키 눌림 - viewMode:', viewMode, 'cameraMode:', cameraMode);
         resetCamera();
       }
     };
@@ -468,18 +480,18 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   useEffect(() => {
     // 3D 모드에서 기둥 드래그 시작 시 카메라 리셋
     const handleResetCameraForColumn = () => {
-      console.log('🎯 3D 모드에서 기둥 드래그 시작 - 카메라 리셋');
+      canvasLog('🎯 3D 모드에서 기둥 드래그 시작 - 카메라 리셋');
       resetCamera();
     };
     
     const handleColumnDragEnd = () => {
-      console.log('🎯 기둥 드래그 종료');
+      canvasLog('🎯 기둥 드래그 종료');
       // 드래그 종료 시에는 특별한 처리 없음
     };
     
     // 공간 설정 변경 시 카메라 리셋
     const handleResetCameraForSettings = () => {
-      console.log('🎯 공간 설정 변경 - 카메라 리셋');
+      canvasLog('🎯 공간 설정 변경 - 카메라 리셋');
       resetCamera();
     };
 
@@ -500,7 +512,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   //   if (mounted) {
   //     // 초기 마운트 직후에는 실행하지 않음
   //     const timer = setTimeout(() => {
-  //       console.log('ViewMode changed, regenerating canvas...');
+  //       canvasLog('ViewMode changed, regenerating canvas...');
   //       regenerateCanvas();
   //     }, 100);
   //     return () => clearTimeout(timer);
@@ -522,7 +534,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         const canvas = container.querySelector('canvas');
         if (canvas) {
           canvas.style.cursor = 'grab';
-          console.log('🖱️ 2D 모드: 휠 버튼 누름 - grab 커서');
+          canvasLog('🖱️ 2D 모드: 휠 버튼 누름 - grab 커서');
         }
       }
     };
@@ -543,7 +555,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         const canvas = container.querySelector('canvas');
         if (canvas) {
           canvas.style.cursor = 'auto';
-          console.log('🖱️ 2D 모드: 휠 버튼 해제 - 기본 커서');
+          canvasLog('🖱️ 2D 모드: 휠 버튼 해제 - 기본 커서');
         }
       }
     };
@@ -617,7 +629,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     // 2D 모드로 전환 시 카메라 각도만 리셋 (줌/팬 상태는 유지)
     if (viewMode === '2D' && controls.object) {
-      console.log('🔄 2D 모드 전환 - 카메라 각도만 리셋 (줌/팬 유지)');
+      canvasLog('🔄 2D 모드 전환 - 카메라 각도만 리셋 (줌/팬 유지)');
 
       // controls.reset() 제거 - 줌/팬 상태 초기화 방지
       // 대신 카메라 위치와 타겟만 업데이트
@@ -640,7 +652,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       // OrbitControls 업데이트
       controls.update();
 
-      console.log('✅ 2D 카메라 각도 리셋 완료 (줌/팬 유지):', {
+      canvasLog('✅ 2D 카메라 각도 리셋 완료 (줌/팬 유지):', {
         position: controls.object.position.toArray(),
         target: controls.target.toArray(),
         up: controls.object.up.toArray(),
@@ -774,11 +786,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         }}
         onCreated={({ gl, scene }) => {
           try {
-            console.log('🎨 Canvas 생성 시작:', { canvasKey, viewMode });
+            canvasLog('🎨 Canvas 생성 시작:', { canvasKey, viewMode });
             
             // 기존 renderer가 있으면 정리
             if (rendererRef.current && rendererRef.current !== gl) {
-              console.log('🧹 기존 renderer 정리');
+              canvasLog('🧹 기존 renderer 정리');
               rendererRef.current.dispose();
             }
             
@@ -793,7 +805,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             const handleCanvasDragOver = (e: DragEvent) => {
               e.preventDefault(); // 드롭을 허용
               // stopPropagation 제거 - 이벤트가 자연스럽게 버블링되도록 허용
-              console.log('🎨 Canvas dragOver 이벤트 감지:', {
+              canvasLog('🎨 Canvas dragOver 이벤트 감지:', {
                 clientX: e.clientX,
                 clientY: e.clientY,
                 dataTransfer: e.dataTransfer?.types
@@ -810,7 +822,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             const handleCanvasDrop = (e: DragEvent) => {
               e.preventDefault();
               // stopPropagation 제거 - 이벤트가 자연스럽게 버블링되도록 허용
-              console.log('🎨 Canvas drop 이벤트 감지:', {
+              canvasLog('🎨 Canvas drop 이벤트 감지:', {
                 clientX: e.clientX,
                 clientY: e.clientY,
                 dataTransfer: e.dataTransfer?.types,
@@ -842,7 +854,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                   activeZone = worldX > totalWidth/2 - droppedWidth ? 'dropped' : 'normal';
                 }
                 
-                console.log('🎯 ActiveZone 결정:', {
+                canvasLog('🎯 ActiveZone 결정:', {
                   droppedPosition,
                   worldX,
                   totalWidth,
@@ -853,13 +865,13 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
               
               // window.handleSlotDrop이 있으면 직접 호출
               if (typeof (window as any).handleSlotDrop === 'function') {
-                console.log('🎯 Canvas에서 직접 handleSlotDrop 호출 with activeZone:', activeZone);
+                canvasLog('🎯 Canvas에서 직접 handleSlotDrop 호출 with activeZone:', activeZone);
                 const result = (window as any).handleSlotDrop(e, canvas, activeZone);
-                console.log('🎯 handleSlotDrop 결과:', result);
+                canvasLog('🎯 handleSlotDrop 결과:', result);
                 
                 // 결과가 false면 부모 컨테이너로 이벤트 전파
                 if (!result) {
-                  console.log('📤 handleSlotDrop이 false 반환, 부모로 이벤트 전파 시도');
+                  canvasLog('📤 handleSlotDrop이 false 반환, 부모로 이벤트 전파 시도');
                   const parentContainer = canvas.closest('[data-viewer-container="true"]');
                   if (parentContainer) {
                     const syntheticEvent = new DragEvent('drop', {
@@ -913,7 +925,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             }
             
             setCanvasReady(true);
-            console.log('✅ Canvas 생성 완료:', { canvasKey, viewMode });
+            canvasLog('✅ Canvas 생성 완료:', { canvasKey, viewMode });
           } catch (error) {
             console.error('❌ Canvas 생성 중 오류:', error);
             setCanvasReady(false);
@@ -976,7 +988,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
               if (viewMode === '2D' && !initialCameraSetup.current.position2D) {
                 setTimeout(() => {
                   if (ref && ref.object) {
-                    console.log('📸 2D 모드 초기 상태 저장', {
+                    canvasLog('📸 2D 모드 초기 상태 저장', {
                       position: ref.object.position.toArray(),
                       target: ref.target.toArray(),
                       up: ref.object.up.toArray(),
@@ -993,7 +1005,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
               else if (viewMode === '3D' && !initialCameraSetup.current.position0) {
                 setTimeout(() => {
                   if (ref && ref.object) {
-                    console.log('📸 3D 모드 초기 상태 저장', {
+                    canvasLog('📸 3D 모드 초기 상태 저장', {
                       position: ref.object.position.toArray(),
                       target: ref.target.toArray(),
                       zoom: ref.object.zoom
