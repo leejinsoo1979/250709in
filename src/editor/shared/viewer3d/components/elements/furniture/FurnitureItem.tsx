@@ -1820,7 +1820,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 투명한 붉은색 발광 효과 */}
+            {/* 투명한 붉은색 효과 (발광 없음) */}
             <mesh
               ref={highlightMeshRef}
               position={[0, 0, 0]}
@@ -1829,11 +1829,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             >
               <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
               <meshBasicMaterial
-                color={new THREE.Color("#ff3333").multiplyScalar(1.5)}
+                color="#ff3333"
                 transparent
                 opacity={0.2}
                 depthWrite={false}
-                blending={THREE.AdditiveBlending}
               />
             </mesh>
           </>
