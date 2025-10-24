@@ -378,10 +378,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 if (sectionType === 'drawer') {
                   return;
                 }
-                
-                // Type4 hanging 섹션의 바닥판(shelfPos === 0) 두께는 표시하지 않음
-                const isType4HangingFloor = furnitureId?.includes('4drawer-hanging') && sectionType === 'hanging' && shelfPos === 0;
-                if (isType4HangingFloor) {
+
+                // 모든 섹션의 바닥판(shelfPos === 0) 두께는 표시하지 않음
+                if (shelfPos === 0) {
                   return;
                 }
                 
