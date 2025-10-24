@@ -50,19 +50,19 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
     return null;
   }
 
-  console.log('🦶🦶 AdjustableFootsRenderer 렌더링 체크:', {
-    viewMode: effectiveViewMode,
-    view2DDirection: effectiveView2DDirection,
-    isTopView: effectiveViewMode === '2D' && (effectiveView2DDirection === 'top' || effectiveView2DDirection === 'all'),
-    willRender: !(effectiveViewMode === '2D' && (effectiveView2DDirection === 'top' || effectiveView2DDirection === 'all'))
-  });
+  // console.log('🦶🦶 AdjustableFootsRenderer 렌더링 체크:', {
+  //   viewMode: effectiveViewMode,
+  //   view2DDirection: effectiveView2DDirection,
+  //   isTopView: effectiveViewMode === '2D' && (effectiveView2DDirection === 'top' || effectiveView2DDirection === 'all'),
+  //   willRender: !(effectiveViewMode === '2D' && (effectiveView2DDirection === 'top' || effectiveView2DDirection === 'all'))
+  // });
 
   // 2D 탑뷰일 때만 발통 렌더링 안 함
   if (effectiveViewMode === '2D' && (effectiveView2DDirection === 'top' || effectiveView2DDirection === 'all')) {
-    console.log('🦶🦶 탑뷰이므로 조절발 렌더링 안함 (effective view)', {
-      effectiveViewMode,
-      effectiveView2DDirection,
-    });
+    // console.log('🦶🦶 탑뷰이므로 조절발 렌더링 안함 (effective view)', {
+    //   effectiveViewMode,
+    //   effectiveView2DDirection,
+    // });
     return null;
   }
   const mmToThreeUnits = (mm: number) => mm * 0.01;
@@ -86,18 +86,18 @@ export const AdjustableFootsRenderer: React.FC<AdjustableFootsRendererProps> = (
   const frontZ = furnitureDepth / 2 - plateHalf - mmToThreeUnits(20) - baseDepthOffset;
   const backZ = -furnitureDepth / 2 + plateHalf;
 
-  console.log('🦶 조절발통 위치 계산:', {
-    'width(units)': width.toFixed(2),
-    'depth(units)': depth.toFixed(2),
-    'width(mm)': (width * 100).toFixed(0) + 'mm',
-    'depth(mm)': (depth * 100).toFixed(0) + 'mm',
-    'baseDepth(mm)': baseDepth + 'mm',
-    'plateHalf': plateHalf.toFixed(2) + ' units (32mm)',
-    leftX: leftX.toFixed(2) + ' units',
-    rightX: rightX.toFixed(2) + ' units',
-    frontZ: frontZ.toFixed(2) + ' units (받침대 깊이 적용)',
-    backZ: backZ.toFixed(2) + ' units (받침대 깊이 미적용)',
-  });
+  // console.log('🦶 조절발통 위치 계산:', {
+  //   'width(units)': width.toFixed(2),
+  //   'depth(units)': depth.toFixed(2),
+  //   'width(mm)': (width * 100).toFixed(0) + 'mm',
+  //   'depth(mm)': (depth * 100).toFixed(0) + 'mm',
+  //   'baseDepth(mm)': baseDepth + 'mm',
+  //   'plateHalf': plateHalf.toFixed(2) + ' units (32mm)',
+  //   leftX: leftX.toFixed(2) + ' units',
+  //   rightX: rightX.toFixed(2) + ' units',
+  //   frontZ: frontZ.toFixed(2) + ' units (받침대 깊이 적용)',
+  //   backZ: backZ.toFixed(2) + ' units (받침대 깊이 미적용)',
+  // });
 
   // 발통 위치 배열 (네 모서리, 회전 없음)
   const footPositions: Array<{pos: [number, number, number], rot: number}> = [
