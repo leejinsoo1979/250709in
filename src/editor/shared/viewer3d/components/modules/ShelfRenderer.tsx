@@ -332,6 +332,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               
               // 중간 칸들 - 현재 선반 상단부터 다음 선반 하단까지
               for (let i = 0; i < shelfPositions.length - 1; i++) {
+                // shelfPositions[i] === 0인 경우(바닥판) 다음 칸은 표시하지 않음
+                if (shelfPositions[i] === 0) {
+                  continue;
+                }
                 const currentShelfTopMm = shelfPositions[i] + basicThickness / 0.01 / 2; // 현재 선반의 상단
                 const nextShelfBottomMm = shelfPositions[i + 1] - basicThickness / 0.01 / 2; // 다음 선반의 하단
                 const heightMm = nextShelfBottomMm - currentShelfTopMm;
@@ -575,12 +579,20 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     if (isType2Hanging && i !== compartmentHeights.length - 1) {
                       return null;
                     }
+                    // shelfPos === 0인 바닥판이 있을 때는 compartmentHeights 배열에 포함되지 않으므로
+                    // i === 0이더라도 실제로는 바닥판 다음 칸을 의미함
+                    // 하지만 배열이 비어있지 않다면 첫 번째 요소는 바닥~첫선반 또는 첫선반~두번째선반
+
                     // 각 칸의 상단과 하단 Y 좌표 계산
                     let compartmentTop, compartmentBottom;
-                    
+
+                    // shelfPositions[0] === 0인 경우 (바닥판), compartmentHeights에는 포함되지 않음
+                    // 따라서 i === 0일 때도 바닥판이 아닌 다음 칸을 의미
+
                     // 각 칸의 정확한 위치 계산
                     if (i === 0) {
-                      // 첫 번째 칸: 바닥부터 첫 선반 하단까지
+                      // 첫 번째 칸: 바닥판이 있으면(shelfPositions[0] === 0) 이 칸은 추가되지 않음
+                      // 바닥판이 없으면 바닥부터 첫 선반 하단까지
                       compartmentBottom = -innerHeight / 2; // 바닥
                       compartmentTop = (-innerHeight / 2) + mmToThreeUnits(shelfPositions[0]) - basicThickness / 2; // 첫 선반 하단
                     } else if (i === compartmentHeights.length - 1 && shelfPositions.length > 0) {
