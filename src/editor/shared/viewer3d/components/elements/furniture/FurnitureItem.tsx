@@ -1820,41 +1820,37 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 네온사인 효과 - 붉은색 발광 (여러 겹) */}
-            <mesh
-              ref={highlightMeshRef}
-              position={[0, 0, 0]}
-              renderOrder={999}
-              userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
-            >
-              <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
-              <meshBasicMaterial
-                transparent
-                opacity={0}
-                depthWrite={false}
-              />
-              {/* 1층: 넓은 글로우 (어두운 빨강) */}
-              <Edges
-                color="#ff0000"
-                scale={1.0}
-                threshold={15}
-                linewidth={10}
-              />
-              {/* 2층: 중간 글로우 (밝은 빨강) */}
-              <Edges
-                color="#ff4444"
-                scale={1.0}
-                threshold={15}
-                linewidth={6}
-              />
-              {/* 3층: 밝은 코어 (거의 흰색에 가까운 빨강) */}
-              <Edges
-                color="#ffaaaa"
-                scale={1.0}
-                threshold={15}
-                linewidth={3}
-              />
-            </mesh>
+            {/* 네온사인 효과 - 실제 발광 */}
+            <group position={[0, 0, 0]}>
+              {/* 발광 조명 추가 - 8개 코너에 포인트 라이트 */}
+              <pointLight position={[width/2, height/2, depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
+              <pointLight position={[-width/2, height/2, depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
+              <pointLight position={[width/2, -height/2, depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
+              <pointLight position={[-width/2, -height/2, depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
+              <pointLight position={[width/2, height/2, -depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
+              <pointLight position={[-width/2, height/2, -depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
+              <pointLight position={[width/2, -height/2, -depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
+              <pointLight position={[-width/2, -height/2, -depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
+
+              <mesh
+                ref={highlightMeshRef}
+                userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
+              >
+                <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
+                <meshBasicMaterial
+                  transparent
+                  opacity={0}
+                  depthWrite={false}
+                />
+                {/* 단일 밝은 빨간 선 */}
+                <Edges
+                  color="#ff0000"
+                  scale={1.0}
+                  threshold={15}
+                  linewidth={3}
+                />
+              </mesh>
+            </group>
           </>
         )}
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
