@@ -75,7 +75,7 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
               disabled={!hasLeftWall}
             />
           </div>
-          
+
           <div className={styles.inputWrapper}>
             <label className={styles.inputLabel}>우측 (40~100)</label>
             <input
@@ -90,7 +90,7 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
               disabled={!hasRightWall}
             />
           </div>
-          
+
           <div className={styles.inputWrapper}>
             <label className={styles.inputLabel}>상단 (10~200)</label>
             <input
@@ -104,6 +104,9 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
               placeholder="10"
             />
           </div>
+        </div>
+        <div className={styles.hint} style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+          (키보드 상,하 커서키로 숫자를 변경하세요)
         </div>
       </div>
     );
@@ -127,6 +130,9 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
             placeholder="50"
           />
         </div>
+      </div>
+      <div className={styles.hint} style={{ fontSize: '11px', color: '#666', marginTop: '4px' }}>
+        (키보드 상,하 커서키로 숫자를 변경하세요)
       </div>
     </div>
   );
