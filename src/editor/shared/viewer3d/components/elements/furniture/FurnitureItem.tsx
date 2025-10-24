@@ -1846,7 +1846,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               renderOrder={999}
               userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
             >
-              <boxGeometry args={[width, height, depth]} />
+              <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
               <meshStandardMaterial
                 color={selectionHighlightColor}
                 emissive={selectionHighlightColor}
