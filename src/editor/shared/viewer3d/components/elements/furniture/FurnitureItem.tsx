@@ -1820,23 +1820,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 발광 효과를 위한 외부 메쉬 */}
-            <mesh
-              position={[0, 0, 0]}
-              renderOrder={998}
-            >
-              <boxGeometry args={[width + highlightPadding * 3, height + highlightPadding * 3, depth + highlightPadding * 3]} />
-              <meshBasicMaterial
-                color={new THREE.Color(selectionHighlightColor).multiplyScalar(3)}
-                transparent
-                opacity={0.5}
-                depthWrite={false}
-                side={THREE.BackSide}
-                blending={THREE.AdditiveBlending}
-              />
-            </mesh>
-
-            {/* 메인 하이라이트 박스와 엣지 */}
+            {/* 윤곽선만 표시 (가구 면은 투명) */}
             <mesh
               ref={highlightMeshRef}
               position={[0, 0, 0]}
@@ -1845,12 +1829,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             >
               <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
               <meshBasicMaterial
-                color={new THREE.Color(selectionHighlightColor).multiplyScalar(2.5)}
                 transparent
-                opacity={0.6}
+                opacity={0}
                 depthWrite={false}
-                depthTest={true}
-                blending={THREE.AdditiveBlending}
               />
               {/* 발광 효과를 위한 다중 엣지 라인 */}
               {/* 1층: 가장 밝고 넓은 외곽 */}
