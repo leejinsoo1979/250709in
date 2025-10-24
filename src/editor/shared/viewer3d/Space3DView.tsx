@@ -144,7 +144,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         };
 
         addModuleFn(newFurniture);
-        selectFurniture(newId);
+        // 원본 가구 선택 해제 후 복제된 가구 선택
+        selectFurniture(null);
+        setTimeout(() => selectFurniture(newId), 0);
         console.log('✅ [복제] 듀얼 가구 복제 완료:', newId, '슬롯:', targetSlot);
       } else {
         // 싱글 가구
@@ -171,7 +173,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         };
 
         addModuleFn(newFurniture);
-        selectFurniture(newId);
+        // 원본 가구 선택 해제 후 복제된 가구 선택
+        selectFurniture(null);
+        setTimeout(() => selectFurniture(newId), 0);
         console.log('✅ [복제] 싱글 가구 복제 완료:', newId, '슬롯:', targetSlot);
       }
     };
