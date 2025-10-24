@@ -1829,9 +1829,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             >
               <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
               <meshBasicMaterial
-                color={new THREE.Color("#ff0000").multiplyScalar(3)}
+                color="#ff0000"
                 transparent
-                opacity={0.4}
+                opacity={0.15}
                 depthWrite={false}
                 blending={THREE.AdditiveBlending}
               />
