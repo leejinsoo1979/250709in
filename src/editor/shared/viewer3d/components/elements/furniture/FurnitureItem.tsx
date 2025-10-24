@@ -1820,7 +1820,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 선에만 발광 효과 - 면은 완전 투명 */}
+            {/* 고스트 형광 발광 효과 */}
             <mesh
               ref={highlightMeshRef}
               position={[0, 0, 0]}
@@ -1829,9 +1829,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             >
               <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
               <meshBasicMaterial
+                color="#00ff00"
                 transparent
-                opacity={0}
+                opacity={0.3}
                 depthWrite={false}
+                blending={THREE.AdditiveBlending}
               />
               {/* 형광색 발광 엣지 */}
               <Edges
