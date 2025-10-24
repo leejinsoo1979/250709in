@@ -1833,27 +1833,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 opacity={0}
                 depthWrite={false}
               />
-              {/* 발광 효과를 위한 다중 엣지 라인 */}
-              {/* 1층: 가장 밝고 넓은 외곽 */}
+              {/* 네온 효과를 위한 다중 엣지 라인 */}
+              {/* 1층: 가장 넓은 외곽 글로우 (테마 색상) */}
               <Edges
-                color={new THREE.Color(selectionHighlightColor).multiplyScalar(4)}
+                color={selectionHighlightColor}
                 scale={1.0}
                 threshold={15}
                 linewidth={8}
               />
-              {/* 2층: 중간 밝기 */}
+              {/* 2층: 중간 글로우 (밝은 테마 색상) */}
               <Edges
-                color={new THREE.Color(selectionHighlightColor).multiplyScalar(3)}
+                color={new THREE.Color(selectionHighlightColor).multiplyScalar(1.5)}
                 scale={1.0}
                 threshold={15}
                 linewidth={5}
               />
-              {/* 3층: 코어 라인 */}
+              {/* 3층: 코어 라인 (거의 흰색) */}
               <Edges
-                color={new THREE.Color(selectionHighlightColor).multiplyScalar(2)}
+                color={new THREE.Color(1, 1, 1)}
                 scale={1.0}
                 threshold={15}
-                linewidth={3}
+                linewidth={2}
               />
             </mesh>
 
@@ -1865,7 +1865,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 depthWrite={false}
               />
               <Edges
-                color={new THREE.Color(selectionHighlightColor).multiplyScalar(3)}
+                color={new THREE.Color(selectionHighlightColor).multiplyScalar(0.8)}
                 scale={1.0}
                 threshold={15}
                 linewidth={6}
