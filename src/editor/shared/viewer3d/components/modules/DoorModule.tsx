@@ -115,8 +115,8 @@ interface DoorModuleProps {
   slotWidths?: number[]; // 듀얼 가구의 경우 개별 슬롯 너비 배열 [left, right]
   slotIndex?: number; // 슬롯 인덱스 (노서라운드 모드에서 엔드패널 확장 판단용)
   floatHeight?: number; // 플로팅 높이 (mm) - 띄워서 배치 시 도어 높이 조정용
-  doorTopGap?: number; // 가구 상단에서 위로의 갭 (mm, 기본값: 5)
-  doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 45)
+  doorTopGap?: number; // 천장에서 아래로의 갭 (mm, 기본값: 10)
+  doorBottomGap?: number; // 바닥에서 위로의 갭 (mm, 기본값: 바닥재 + 받침대 높이)
   sectionHeightsMm?: number[]; // 섹션별 실제 측판 높이 (mm)
   sectionIndex?: number; // 섹션 인덱스 (분할 모드용, 0: 하부, 1: 상부)
   totalSections?: number; // 전체 섹션 수 (분할 모드용, 기본값: 1)
@@ -140,8 +140,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   slotWidths,
   slotIndex,
   floatHeight = 0, // 플로팅 높이 기본값 0
-  doorTopGap = 5, // 가구 상단에서 위로 갭 기본값 5mm
-  doorBottomGap = 45, // 가구 하단에서 아래로 갭 기본값 45mm
+  doorTopGap = 10, // 천장에서 아래로 갭 기본값 10mm
+  doorBottomGap = 65, // 바닥에서 위로 갭 기본값 65mm (바닥재 + 받침대)
   sectionHeightsMm,
   sectionIndex, // 섹션 인덱스 (분할 모드용)
   totalSections = 1, // 전체 섹션 수 (분할 모드용)
@@ -729,37 +729,46 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         resolvedSectionHeightsMm = [fallbackLower, fallbackUpper];
       }
 
-      const targetSectionHeightMm = resolvedSectionHeightsMm[sectionIndex] ?? 0;
-
       // 도어 분할 시 섹션 사이 3mm 갭: 각 도어 높이를 1.5mm씩 줄임
       const SECTION_GAP_HALF = 1.5; // mm
-      actualDoorHeight = targetSectionHeightMm + doorTopGap + doorBottomGap - SECTION_GAP_HALF;
 
-      console.log('🚪📏 분할 모드 도어 높이:', {
+      // 천장/바닥 기준으로 각 섹션 도어 높이 계산
+      // 전체 도어 높이 = fullSpaceHeight - doorTopGap - doorBottomGap
+      // 각 섹션 도어 높이는 비율에 따라 분할
+      const totalDoorHeight = fullSpaceHeight - doorTopGap - doorBottomGap;
+      const totalSectionHeight = resolvedSectionHeightsMm.reduce((sum, h) => sum + h, 0);
+      const sectionRatio = resolvedSectionHeightsMm[sectionIndex] / totalSectionHeight;
+
+      actualDoorHeight = totalDoorHeight * sectionRatio - SECTION_GAP_HALF;
+
+      console.log('🚪📏 분할 모드 도어 높이 (천장/바닥 기준):', {
         sectionIndex,
         totalSections,
+        fullSpaceHeight,
         tallCabinetFurnitureHeight,
         sectionHeightsMm: resolvedSectionHeightsMm,
-        targetSectionHeightMm,
+        totalSectionHeight,
+        sectionRatio,
         doorTopGap,
         doorBottomGap,
+        totalDoorHeight,
         sectionGapReduction: SECTION_GAP_HALF,
         actualDoorHeight,
-        설명: `섹션 높이(${targetSectionHeightMm}) + 상단갭(${doorTopGap}) + 하단갭(${doorBottomGap}) - 갭감소(${SECTION_GAP_HALF}) = ${actualDoorHeight}mm`
+        설명: `전체 도어 높이(${totalDoorHeight}) × 섹션 비율(${sectionRatio.toFixed(2)}) - 갭 감소(${SECTION_GAP_HALF}) = ${actualDoorHeight}mm`
       });
     } else {
-      // 병합 모드: 전체 가구 높이
-      // doorTopGap: 가구 상단에서 위로 확장 (mm)
-      // doorBottomGap: 가구 하단에서 아래로 확장 (mm)
-      // 도어 높이 = 가구 높이 + 상단 확장 + 하단 확장
-      actualDoorHeight = tallCabinetFurnitureHeight + doorTopGap + doorBottomGap;
+      // 병합 모드: 천장/바닥 기준
+      // doorTopGap: 천장에서 아래로 갭 (mm)
+      // doorBottomGap: 바닥에서 위로 갭 (mm, 바닥재 + 받침대 포함)
+      // 도어 높이 = 전체 공간 높이 - 천장 갭 - 바닥 갭
+      actualDoorHeight = fullSpaceHeight - doorTopGap - doorBottomGap;
 
       // 플로팅 배치 시 키큰장 도어 높이 조정
       if (floatHeight > 0) {
         actualDoorHeight = actualDoorHeight - floatHeight;
       }
 
-      console.log('🚪📏 병합 모드 도어 높이:', {
+      console.log('🚪📏 병합 모드 도어 높이 (천장/바닥 기준):', {
         fullSpaceHeight,
         topFrameHeight: topFrameHeightValue,
         floorHeight: floorHeightValue,
@@ -767,7 +776,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         furnitureHeight: tallCabinetFurnitureHeight,
         doorTopGap,
         doorBottomGap,
-        actualDoorHeight
+        actualDoorHeight,
+        계산: `${fullSpaceHeight} - ${doorTopGap} - ${doorBottomGap} = ${actualDoorHeight}mm`
       });
     }
   }
@@ -875,96 +885,97 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         resolvedSectionHeightsMm = [fallbackLower, fallbackUpper];
       }
 
-      const lowerSectionHeightMm = resolvedSectionHeightsMm[0] ?? 0;
-      const upperSectionHeightMm = resolvedSectionHeightsMm[1] ?? Math.max(tallCabinetFurnitureHeight - lowerSectionHeightMm, 0);
-
       // 도어 분할 시 섹션 사이 3mm 갭: 각 도어 높이를 1.5mm씩 줄임
       const SECTION_GAP_HALF = 1.5; // mm
 
+      // 천장/바닥 기준으로 섹션 도어 Y 위치 계산
+      const totalDoorHeight = fullSpaceHeight - doorTopGap - doorBottomGap;
+      const totalSectionHeight = resolvedSectionHeightsMm.reduce((sum, h) => sum + h, 0);
+
       if (sectionIndex === 0) {
-        // 하부 섹션 도어: 가구 하단에서부터 계산
-        // 도어 높이가 1.5mm 줄어들었으므로 상단을 위로 1.5mm 이동
-        const furnitureBottom = -tallCabinetFurnitureHeight / 2;
+        // 하부 섹션 도어: 바닥에서부터 계산
+        const sectionRatio = resolvedSectionHeightsMm[0] / totalSectionHeight;
+        const sectionDoorHeight = totalDoorHeight * sectionRatio - SECTION_GAP_HALF;
 
-        // 원래 도어 높이로 중심 계산 후 상단을 위로 이동
-        const originalDoorHeight = lowerSectionHeightMm + doorTopGap + doorBottomGap;
-        const reducedDoorHeight = originalDoorHeight - SECTION_GAP_HALF;
-
-        // 도어 하단 위치 (변경 없음)
-        const doorBottom = furnitureBottom - doorBottomGap;
-        // 도어 상단 위치 (1.5mm 아래로 = 도어가 짧아짐)
-        const doorTop = doorBottom + reducedDoorHeight;
+        // 도어 하단 = 바닥에서 doorBottomGap
+        const doorBottom = doorBottomGap;
+        // 도어 상단 = 도어 하단 + 섹션 도어 높이
+        const doorTop = doorBottom + sectionDoorHeight;
         // 도어 중심
         const doorCenter = (doorBottom + doorTop) / 2;
 
         doorYPosition = mmToThreeUnits(doorCenter);
 
-        console.log('🚪📍 하부 섹션 도어 Y 위치 (상단 1.5mm 줄임):', {
-          tallCabinetFurnitureHeight,
-          lowerSectionHeightMm,
-          furnitureBottom,
+        console.log('🚪📍 하부 섹션 도어 Y 위치 (천장/바닥 기준):', {
+          fullSpaceHeight,
+          totalDoorHeight,
+          totalSectionHeight,
+          sectionRatio,
+          sectionDoorHeight,
           doorBottom,
           doorTop,
           doorCenter,
-          originalDoorHeight,
-          reducedDoorHeight,
           doorTopGap,
           doorBottomGap,
           doorYPosition,
           doorYPosition_mm: doorYPosition / 0.01,
-          설명: `하단 고정(${doorBottom}mm), 상단을 ${SECTION_GAP_HALF}mm 아래로 이동하여 도어 높이 감소`
+          설명: `바닥에서 ${doorBottom}mm ~ ${doorTop}mm, 중심 = ${doorCenter}mm`
         });
       } else {
-        // 상부 섹션 도어: 가구 상단에서부터 계산
-        // 도어 높이가 1.5mm 줄어들었으므로 하단을 아래로 1.5mm 이동
-        const furnitureTop = tallCabinetFurnitureHeight / 2;
+        // 상부 섹션 도어: 천장에서부터 계산
+        const sectionRatio = resolvedSectionHeightsMm[1] / totalSectionHeight;
+        const sectionDoorHeight = totalDoorHeight * sectionRatio - SECTION_GAP_HALF;
 
-        // 원래 도어 높이로 중심 계산 후 하단을 아래로 이동
-        const originalDoorHeight = upperSectionHeightMm + doorTopGap + doorBottomGap;
-        const reducedDoorHeight = originalDoorHeight - SECTION_GAP_HALF;
-
-        // 도어 상단 위치 (변경 없음)
-        const doorTop = furnitureTop + doorTopGap;
-        // 도어 하단 위치 (1.5mm 위로 = 도어가 짧아짐)
-        const doorBottom = doorTop - reducedDoorHeight;
+        // 도어 상단 = 천장에서 doorTopGap
+        const doorTop = fullSpaceHeight - doorTopGap;
+        // 도어 하단 = 도어 상단 - 섹션 도어 높이
+        const doorBottom = doorTop - sectionDoorHeight;
         // 도어 중심
         const doorCenter = (doorBottom + doorTop) / 2;
 
         doorYPosition = mmToThreeUnits(doorCenter);
 
-        console.log('🚪📍 상부 섹션 도어 Y 위치 (하단 1.5mm 줄임):', {
-          tallCabinetFurnitureHeight,
-          upperSectionHeightMm,
-          furnitureTop,
+        console.log('🚪📍 상부 섹션 도어 Y 위치 (천장/바닥 기준):', {
+          fullSpaceHeight,
+          totalDoorHeight,
+          totalSectionHeight,
+          sectionRatio,
+          sectionDoorHeight,
           doorTop,
           doorBottom,
           doorCenter,
-          originalDoorHeight,
-          reducedDoorHeight,
           doorTopGap,
           doorBottomGap,
           doorYPosition,
           doorYPosition_mm: doorYPosition / 0.01,
-          설명: `상단 고정(${doorTop}mm), 하단을 ${SECTION_GAP_HALF}mm 위로 이동하여 도어 높이 감소`
+          설명: `천장에서 ${doorTop}mm ~ ${doorBottom}mm, 중심 = ${doorCenter}mm`
         });
       }
     } else {
-      // 병합 모드: 기존 로직
-      // 도어 중심 오프셋 계산:
-      // - 도어가 위로 doorTopGap, 아래로 doorBottomGap 확장
-      // - 상단 확장 < 하단 확장이면 도어 중심이 가구 중심보다 아래로 이동
-      // - 오프셋 = (doorTopGap - doorBottomGap)/2 (음수면 아래로)
-      const centerOffset = (doorTopGap - doorBottomGap) / 2;
-      doorYPosition = mmToThreeUnits(centerOffset);
+      // 병합 모드: 천장/바닥 기준
+      // Y=0은 Three.js 바닥 기준
+      // 도어 하단 = 바닥에서 doorBottomGap (바닥재 + 받침대 포함)
+      // 도어 상단 = 천장에서 doorTopGap
+      // 도어 중심 = (도어 하단 + 도어 상단) / 2
 
-      console.log('🚪📍 도어 Y 위치 (가구 중심 기준 상대 좌표):', {
+      const doorBottom = doorBottomGap;
+      const doorTop = fullSpaceHeight - doorTopGap;
+      const doorCenter = (doorBottom + doorTop) / 2;
+
+      doorYPosition = mmToThreeUnits(doorCenter);
+
+      console.log('🚪📍 도어 Y 위치 (천장/바닥 기준):', {
+        fullSpaceHeight,
         tallCabinetFurnitureHeight,
         doorTopGap,
         doorBottomGap,
-        centerOffset,
+        doorBottom,
+        doorTop,
+        doorCenter,
         doorHeight: actualDoorHeight,
         doorYPosition,
-        설명: `가구 중심(Y=0) 기준, 도어 중심 오프셋 = (${doorTopGap} - ${doorBottomGap})/2 = ${centerOffset}mm, 도어 상단은 가구보다 ${doorTopGap}mm 위, 하단은 ${doorBottomGap}mm 아래`
+        doorYPosition_mm: doorYPosition / 0.01,
+        설명: `바닥에서 ${doorBottomGap}mm ~ 천장에서 ${doorTopGap}mm, 도어 중심 = (${doorBottom} + ${doorTop})/2 = ${doorCenter}mm`
       });
 
       // 플로팅 배치 시 Y 위치 조정 - 상단 고정, 하단만 올라가도록
