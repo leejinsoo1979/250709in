@@ -1831,7 +1831,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               <meshBasicMaterial
                 color={new THREE.Color("#ff3333").multiplyScalar(1.5)}
                 transparent
-                opacity={0.08}
+                opacity={0.2}
                 depthWrite={false}
                 blending={THREE.AdditiveBlending}
               />
