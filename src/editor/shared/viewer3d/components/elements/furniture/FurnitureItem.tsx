@@ -1852,27 +1852,42 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 depthTest={true}
                 blending={THREE.AdditiveBlending}
               />
-              {/* 모든 엣지 라인 강조 */}
+              {/* 발광 효과를 위한 다중 엣지 라인 */}
+              {/* 1층: 가장 밝고 넓은 외곽 */}
               <Edges
-                color={selectionHighlightColor}
+                color={new THREE.Color(selectionHighlightColor).multiplyScalar(4)}
+                scale={1.0}
+                threshold={15}
+                linewidth={8}
+              />
+              {/* 2층: 중간 밝기 */}
+              <Edges
+                color={new THREE.Color(selectionHighlightColor).multiplyScalar(3)}
+                scale={1.0}
+                threshold={15}
+                linewidth={5}
+              />
+              {/* 3층: 코어 라인 */}
+              <Edges
+                color={new THREE.Color(selectionHighlightColor).multiplyScalar(2)}
                 scale={1.0}
                 threshold={15}
                 linewidth={3}
               />
             </mesh>
-            
-            {/* 외곽 엣지 라인 (더 크게) */}
-            <Box args={[width + 0.005, height + 0.005, depth + 0.005]}>
+
+            {/* 외곽 발광 엣지 라인 (더 크게) */}
+            <Box args={[width + 0.01, height + 0.01, depth + 0.01]}>
               <meshBasicMaterial
                 transparent
                 opacity={0}
                 depthWrite={false}
               />
               <Edges
-                color={selectionHighlightColor}
+                color={new THREE.Color(selectionHighlightColor).multiplyScalar(3)}
                 scale={1.0}
                 threshold={15}
-                linewidth={2}
+                linewidth={6}
               />
             </Box>
           </>
