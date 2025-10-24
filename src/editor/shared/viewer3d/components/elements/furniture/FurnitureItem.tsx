@@ -1840,6 +1840,108 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 depthWrite={false}
               />
             </mesh>
+
+            {/* 가구 상단 아이콘 툴바 */}
+            <Html
+              position={[0, height / 2 + mmToThreeUnits(50), 0]}
+              center
+              style={{
+                pointerEvents: 'auto',
+                userSelect: 'none'
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '4px',
+                  background: '#4a4a4a',
+                  borderRadius: '6px',
+                  padding: '6px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                }}
+              >
+                {/* 잠금 버튼 */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('🔒 가구 잠금:', placedModule.id);
+                    // TODO: 잠금 기능 구현
+                  }}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    background: '#5a5a5a',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#6a6a6a'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#5a5a5a'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                  </svg>
+                </button>
+
+                {/* 복제 버튼 */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.dispatchEvent(new CustomEvent('duplicate-furniture', {
+                      detail: { furnitureId: placedModule.id }
+                    }));
+                  }}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    background: '#5a5a5a',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#6a6a6a'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#5a5a5a'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                  </svg>
+                </button>
+
+                {/* 삭제 버튼 */}
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDelete(placedModule.id);
+                  }}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    background: '#5a5a5a',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#d32f2f'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#5a5a5a'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+                  </svg>
+                </button>
+              </div>
+            </Html>
           </>
         )}
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
