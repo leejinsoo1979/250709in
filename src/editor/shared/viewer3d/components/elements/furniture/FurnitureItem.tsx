@@ -1722,6 +1722,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // Column C 전용 이벤트 핸들러 래핑
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    // 잠긴 가구는 드래그 불가
+    if (placedModule.isLocked) {
+      return;
+    }
+
     // 선택되지 않은 가구는 드래그 불가
     if (!isSelected) {
       return;
@@ -1804,7 +1809,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           furnitureZ // 공간 앞면에서 뒤쪽으로 배치
         ]}
         rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
-        onDoubleClick={(e) => onDoubleClick(e, placedModule.id)}
+        onDoubleClick={(e) => {
+          // 잠긴 가구는 더블클릭으로 잠금 해제
+          if (placedModule.isLocked) {
+            e.stopPropagation();
+            const updateModule = useFurnitureStore.getState().updateModule;
+            updateModule(placedModule.id, { isLocked: false });
+            console.log('🔓 가구 잠금 해제:', placedModule.id);
+          } else {
+            onDoubleClick(e, placedModule.id);
+          }
+        }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
@@ -1864,13 +1879,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    console.log('🔒 가구 잠금:', placedModule.id);
-                    // TODO: 잠금 기능 구현
+                    const updateModule = useFurnitureStore.getState().updateModule;
+                    updateModule(placedModule.id, { isLocked: !placedModule.isLocked });
+                    console.log('🔒 가구 잠금 토글:', placedModule.id, '→', !placedModule.isLocked);
                   }}
                   style={{
                     width: '32px',
                     height: '32px',
-                    background: '#5a5a5a',
+                    background: placedModule.isLocked ? '#f57c00' : '#5a5a5a',
                     border: 'none',
                     borderRadius: '4px',
                     cursor: 'pointer',
@@ -1879,11 +1895,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     justifyContent: 'center',
                     transition: 'background 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#6a6a6a'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#5a5a5a'}
+                  onMouseEnter={(e) => e.currentTarget.style.background = placedModule.isLocked ? '#ff9800' : '#6a6a6a'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = placedModule.isLocked ? '#f57c00' : '#5a5a5a'}
                 >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
-                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                    {placedModule.isLocked ? (
+                      <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                    ) : (
+                      <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6h2c0-1.66 1.34-3 3-3s3 1.34 3 3v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm0 12H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                    )}
                   </svg>
                 </button>
 
@@ -1943,6 +1963,36 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 </button>
               </div>
             </Html>
+
+            {/* 잠긴 가구 중앙에 자물쇠 아이콘 표시 */}
+            {placedModule.isLocked && (
+              <Html
+                position={[0, 0, 0]}
+                center
+                style={{
+                  pointerEvents: 'none',
+                  userSelect: 'none'
+                }}
+              >
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    background: 'rgba(245, 124, 0, 0.85)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.4)',
+                    border: '2px solid rgba(255, 255, 255, 0.3)'
+                  }}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                  </svg>
+                </div>
+              </Html>
+            )}
           </>
         )}
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
