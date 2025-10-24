@@ -1829,9 +1829,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               <meshStandardMaterial
                 color={selectionHighlightColor}
                 emissive={selectionHighlightColor}
-                emissiveIntensity={0.5}
+                emissiveIntensity={2.5}
                 transparent
-                opacity={0.15}
+                opacity={0.3}
                 depthWrite={false}
                 side={THREE.BackSide}
                 blending={THREE.AdditiveBlending}
@@ -1850,9 +1850,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               <meshStandardMaterial
                 color={selectionHighlightColor}
                 emissive={selectionHighlightColor}
-                emissiveIntensity={0.8}
+                emissiveIntensity={4.0}
                 transparent
-                opacity={0.1}
+                opacity={0.25}
                 depthWrite={false}
                 depthTest={true}
                 toneMapped={false}
