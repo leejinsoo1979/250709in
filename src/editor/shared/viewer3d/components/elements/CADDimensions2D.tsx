@@ -813,7 +813,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <meshBasicMaterial color={dimensionColor} depthTest={false} />
             </mesh>
 
-            {/* 엔드포인트 - 받침대 상단 모서리 */}
+            {/* 엔드포인트 - 받침대 상단 모서리 (가구가 없을 때만 표시) */}
+            {visibleFurniture.length === 0 && (
             <mesh
               position={[0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]}
               renderOrder={100001}
@@ -822,6 +823,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <circleGeometry args={[0.06, 16]} />
               <meshBasicMaterial color={dimensionColor} depthTest={false} />
             </mesh>
+            )}
 
             {/* 치수 텍스트 */}
             <Text
@@ -1445,6 +1447,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               renderOrder={100000}
               depthTest={false}
             />
+            {/* 엔드포인트 - 바닥 모서리 */}
             <mesh
               position={[0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]}
               renderOrder={100001}
@@ -1454,6 +1457,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <meshBasicMaterial color={dimensionColor} depthTest={false} />
             </mesh>
 
+            {/* 엔드포인트 - 받침대 상단 모서리 (가구가 없을 때만 표시) */}
+            {visibleFurniture.length === 0 && (
             <mesh
               position={[0, floatHeight + baseFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]}
               renderOrder={100001}
@@ -1462,6 +1467,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <circleGeometry args={[0.06, 16]} />
               <meshBasicMaterial color={dimensionColor} depthTest={false} />
             </mesh>
+            )}
 
             <Text
               position={[0, (floatHeight + baseFrameHeight) / 2, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)]}
