@@ -622,7 +622,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorHeight: number;
   let tallCabinetFurnitureHeight = 0; // 키큰장 가구 높이 (Y 위치 계산에서 사용)
   let resolvedSectionHeightsMm: number[] | undefined;
-  
+  let fullSpaceHeight = spaceInfo.height; // 전체 공간 높이 (단내림 고려)
+
   if (isUpperCabinet) {
     // 상부장 도어는 캐비넷보다 아래로 확장, 위쪽 간격
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
@@ -657,9 +658,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: '하부장 상단과 일치, 아래로 60mm 확장'
     });
   } else {
-    // 키큰장의 경우: 가구 높이 기준으로 상단에서 위로, 하단에서 아래로 갭 적용
-    let fullSpaceHeight = spaceInfo.height;
-
+    // 키큰장의 경우: 천장/바닥 기준으로 갭 적용
     // 단내림 구간인 경우 높이 조정
     if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
       const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
