@@ -698,13 +698,9 @@ const Room: React.FC<RoomProps> = ({
       olive: '#4C462C'
     };
 
-    // 현재 테마 색상 가져오기
-    const currentThemeColor = themeColorMap[appTheme.color] || '#3b82f6'; // 기본값 blue
-    
-    // 테마 색상으로 강조 효과 설정
-    const highlightColor = currentThemeColor;
-    const themeColorHex = parseInt(currentThemeColor.replace('#', ''), 16);
-    const highlightEmissive = themeColorHex >> 1; // 테마 색상의 절반 밝기로 자체발광
+    // 프레임 강조 색상은 붉은색으로 고정
+    const highlightColor = '#ff3333';
+    const highlightEmissive = 0xff3333 >> 1; // 붉은색의 절반 밝기로 자체발광
     const highlightOpacity = renderMode === 'wireframe' ? 0.6 : 0.6;
     
     const material = new THREE.MeshStandardMaterial({
