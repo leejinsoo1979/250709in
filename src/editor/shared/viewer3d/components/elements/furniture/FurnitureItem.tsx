@@ -1829,18 +1829,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             >
               <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
               <meshBasicMaterial
-                color="#ff0000"
+                color={new THREE.Color("#ff0000").multiplyScalar(3)}
                 transparent
-                opacity={0.3}
+                opacity={0.4}
                 depthWrite={false}
                 blending={THREE.AdditiveBlending}
               />
               {/* 붉은색 발광 엣지 */}
               <Edges
-                color={new THREE.Color("#ff0000").multiplyScalar(2)}
+                color={new THREE.Color("#ff0000").multiplyScalar(5)}
                 scale={1.0}
                 threshold={15}
-                linewidth={4}
+                linewidth={2}
               />
             </mesh>
           </>
