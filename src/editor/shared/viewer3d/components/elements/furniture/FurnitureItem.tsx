@@ -1833,24 +1833,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 opacity={0}
                 depthWrite={false}
               />
-              {/* 발광 엣지 - 테마 색상으로 글로우 효과 */}
+              {/* 형광색 발광 엣지 */}
               <Edges
-                color={new THREE.Color(selectionHighlightColor).multiplyScalar(5)}
+                color="#00ff00"
                 scale={1.0}
                 threshold={15}
-                linewidth={6}
-              />
-              <Edges
-                color={new THREE.Color(selectionHighlightColor).multiplyScalar(3)}
-                scale={1.0}
-                threshold={15}
-                linewidth={4}
-              />
-              <Edges
-                color={new THREE.Color(selectionHighlightColor).multiplyScalar(1.5)}
-                scale={1.0}
-                threshold={15}
-                linewidth={2}
+                linewidth={3}
               />
             </mesh>
           </>
