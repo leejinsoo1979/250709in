@@ -1833,21 +1833,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 opacity={0}
                 depthWrite={false}
               />
-              {/* 발광 엣지 - 여러 겹으로 글로우 효과 */}
+              {/* 발광 엣지 - 테마 색상으로 글로우 효과 */}
               <Edges
-                color={new THREE.Color(10, 0, 0)}
+                color={new THREE.Color(selectionHighlightColor).multiplyScalar(5)}
                 scale={1.0}
                 threshold={15}
                 linewidth={6}
               />
               <Edges
-                color={new THREE.Color(5, 0, 0)}
+                color={new THREE.Color(selectionHighlightColor).multiplyScalar(3)}
                 scale={1.0}
                 threshold={15}
                 linewidth={4}
               />
               <Edges
-                color={new THREE.Color(2, 0, 0)}
+                color={new THREE.Color(selectionHighlightColor).multiplyScalar(1.5)}
                 scale={1.0}
                 threshold={15}
                 linewidth={2}
