@@ -754,9 +754,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setOriginalDoorSplit(doorSplitVal); // 원래 값 저장
       setOriginalHasGapBackPanel(hasGapVal); // 원래 값 저장
 
-      // 도어 상하 갭 초기값 설정 (입력 중 방해 방지)
-      const initialTopGap = currentPlacedModule.doorTopGap ?? 5;
-      const initialBottomGap = currentPlacedModule.doorBottomGap ?? 45;
+      // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
+      const initialTopGap = currentPlacedModule.doorTopGap ?? 0;
+      const initialBottomGap = currentPlacedModule.doorBottomGap ?? 0;
       if (doorTopGap !== initialTopGap) {
         setDoorTopGap(initialTopGap);
         setDoorTopGapInput(initialTopGap.toString());
@@ -769,10 +769,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       }
 
       // 분할 모드용 섹션별 이격거리 초기화
-      const upperTopGap = currentPlacedModule.upperDoorTopGap ?? 5;
+      const upperTopGap = currentPlacedModule.upperDoorTopGap ?? 0;
       const upperBottomGap = currentPlacedModule.upperDoorBottomGap ?? 0;
       const lowerTopGap = currentPlacedModule.lowerDoorTopGap ?? 0;
-      const lowerBottomGap = currentPlacedModule.lowerDoorBottomGap ?? 45;
+      const lowerBottomGap = currentPlacedModule.lowerDoorBottomGap ?? 0;
 
       setUpperDoorTopGap(upperTopGap);
       setUpperDoorTopGapInput(upperTopGap.toString());
