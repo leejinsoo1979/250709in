@@ -903,7 +903,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             
             // 기본 렌더링 설정
             gl.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            
+
+            // ToneMapping 설정 - emissive 효과가 보이도록
+            gl.toneMapping = THREE.ACESFilmicToneMapping;
+            gl.toneMappingExposure = 1.0;
+            gl.outputColorSpace = THREE.SRGBColorSpace;
+
             // 그림자 설정 - 3D 모드이면서 shadowEnabled가 true일 때만
             const enableShadows = viewMode === '3D' && shadowEnabled;
             gl.shadowMap.enabled = enableShadows;
