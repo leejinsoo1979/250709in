@@ -1919,7 +1919,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    onDelete(placedModule.id);
+                    const removeModule = useFurnitureStore.getState().removeModule;
+                    removeModule(placedModule.id);
                   }}
                   style={{
                     width: '32px',
