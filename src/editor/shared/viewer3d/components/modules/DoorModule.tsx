@@ -140,8 +140,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   slotWidths,
   slotIndex,
   floatHeight = 0, // 플로팅 높이 기본값 0
-  doorTopGap = 10, // 천장에서 아래로 갭 기본값 10mm
-  doorBottomGap = 65, // 바닥에서 위로 갭 기본값 65mm (바닥재 + 받침대)
+  doorTopGap = 0, // 천장에서 아래로 갭 (임시로 0mm - 가구와 높이 동일하게)
+  doorBottomGap = 0, // 바닥에서 위로 갭 (임시로 0mm - 가구와 높이 동일하게)
   sectionHeightsMm,
   sectionIndex, // 섹션 인덱스 (분할 모드용)
   totalSections = 1, // 전체 섹션 수 (분할 모드용)
