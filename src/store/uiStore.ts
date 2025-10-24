@@ -565,13 +565,13 @@ export const useUIStore = create<UIState>()(
         })),
 
       setEraserMode: (enabled) =>
-        set({
+        set((state) => ({
           isEraserMode: enabled,
-          // 지우개 모드 활성화 시 측정 모드 비활성화
-          isMeasureMode: enabled ? false : false,
-          // 지우개 모드 비활성화 시 호버 초기화
-          hoveredMeasureLineId: enabled ? null : null
-        }),
+          // 지우개 모드 활성화 시에만 측정 모드를 강제로 비활성화
+          isMeasureMode: enabled ? false : state.isMeasureMode,
+          // 지우개 모드 전환 시 호버는 항상 초기화
+          hoveredMeasureLineId: null
+        })),
 
       setHoveredMeasureLineId: (id) =>
         set({ hoveredMeasureLineId: id }),
