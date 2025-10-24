@@ -1820,7 +1820,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 윤곽선만 표시 (가구 면은 투명) */}
+            {/* 네온사인 효과 - 발광 박스 */}
             <mesh
               ref={highlightMeshRef}
               position={[0, 0, 0]}
@@ -1828,49 +1828,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
             >
               <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
-              <meshBasicMaterial
+              <meshStandardMaterial
+                color="#ffffff"
+                emissive={selectionHighlightColor}
+                emissiveIntensity={5.0}
                 transparent
-                opacity={0}
+                opacity={0.2}
                 depthWrite={false}
+                toneMapped={false}
               />
-              {/* 네온 효과를 위한 다중 엣지 라인 */}
-              {/* 1층: 가장 넓은 외곽 글로우 (테마 색상) */}
+              {/* 단일 엣지 라인 */}
               <Edges
                 color={selectionHighlightColor}
                 scale={1.0}
                 threshold={15}
-                linewidth={8}
-              />
-              {/* 2층: 중간 글로우 (밝은 테마 색상) */}
-              <Edges
-                color={new THREE.Color(selectionHighlightColor).multiplyScalar(1.5)}
-                scale={1.0}
-                threshold={15}
-                linewidth={5}
-              />
-              {/* 3층: 코어 라인 (거의 흰색) */}
-              <Edges
-                color={new THREE.Color(1, 1, 1)}
-                scale={1.0}
-                threshold={15}
-                linewidth={2}
+                linewidth={4}
               />
             </mesh>
-
-            {/* 외곽 발광 엣지 라인 (더 크게) */}
-            <Box args={[width + 0.01, height + 0.01, depth + 0.01]}>
-              <meshBasicMaterial
-                transparent
-                opacity={0}
-                depthWrite={false}
-              />
-              <Edges
-                color={new THREE.Color(selectionHighlightColor).multiplyScalar(0.8)}
-                scale={1.0}
-                threshold={15}
-                linewidth={6}
-              />
-            </Box>
           </>
         )}
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
