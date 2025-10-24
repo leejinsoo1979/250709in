@@ -454,10 +454,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 스페이스바로 카메라 리셋
   useEffect(() => {
     canvasLog('🎮 스페이스 키 리스너 등록됨 - viewMode:', viewMode, 'cameraMode:', cameraMode);
-    
+
     const handleKeyDown = (e: KeyboardEvent) => {
       canvasLog('⌨️ 키 눌림:', e.code, e.keyCode);
-      
+
       // 스페이스바 (32) 또는 Space 키
       if (e.code === 'Space' || e.keyCode === 32) {
         e.preventDefault(); // 페이지 스크롤 방지
@@ -465,11 +465,25 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         canvasLog('🚀 스페이스 키 눌림 - viewMode:', viewMode, 'cameraMode:', cameraMode);
         resetCamera();
       }
+
+      // Ctrl+C: 선택된 가구 복제
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyC') {
+        const selectedFurnitureId = useFurnitureStore.getState().selectedFurnitureId;
+        if (selectedFurnitureId) {
+          e.preventDefault();
+          e.stopPropagation();
+
+          // 커스텀 이벤트 발생
+          window.dispatchEvent(new CustomEvent('duplicate-furniture', {
+            detail: { furnitureId: selectedFurnitureId }
+          }));
+        }
+      }
     };
 
     // capture: true로 이벤트를 먼저 캡처
     window.addEventListener('keydown', handleKeyDown, { capture: true });
-    
+
     return () => {
       window.removeEventListener('keydown', handleKeyDown, { capture: true });
     };
