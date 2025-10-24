@@ -531,22 +531,22 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hasDoor, setHasDoor] = useState<boolean>(false);
   const [doorSplit, setDoorSplit] = useState<boolean>(false);
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
-  const [doorTopGap, setDoorTopGap] = useState<number>(5); // 병합 모드 또는 상부 섹션 상단 갭
-  const [doorBottomGap, setDoorBottomGap] = useState<number>(45); // 병합 모드 또는 하부 섹션 하단 갭
-  const [doorTopGapInput, setDoorTopGapInput] = useState<string>('5');
+  const [doorTopGap, setDoorTopGap] = useState<number>(0); // 병합 모드: 천장에서 아래로
+  const [doorBottomGap, setDoorBottomGap] = useState<number>(0); // 병합 모드: 바닥에서 위로
+  const [doorTopGapInput, setDoorTopGapInput] = useState<string>('0');
 
   // 분할 모드용 섹션별 이격거리
-  const [upperDoorTopGap, setUpperDoorTopGap] = useState<number>(5);
-  const [upperDoorBottomGap, setUpperDoorBottomGap] = useState<number>(0);
-  const [lowerDoorTopGap, setLowerDoorTopGap] = useState<number>(0);
-  const [lowerDoorBottomGap, setLowerDoorBottomGap] = useState<number>(45);
-  const [upperDoorTopGapInput, setUpperDoorTopGapInput] = useState<string>('5');
+  const [upperDoorTopGap, setUpperDoorTopGap] = useState<number>(0); // 상부: 천장에서 아래로
+  const [upperDoorBottomGap, setUpperDoorBottomGap] = useState<number>(0); // 상부: 중간판에서 위로
+  const [lowerDoorTopGap, setLowerDoorTopGap] = useState<number>(0); // 하부: 중간판에서 아래로
+  const [lowerDoorBottomGap, setLowerDoorBottomGap] = useState<number>(0); // 하부: 바닥에서 위로
+  const [upperDoorTopGapInput, setUpperDoorTopGapInput] = useState<string>('0');
   const [upperDoorBottomGapInput, setUpperDoorBottomGapInput] = useState<string>('0');
   const [lowerDoorTopGapInput, setLowerDoorTopGapInput] = useState<string>('0');
-  const [lowerDoorBottomGapInput, setLowerDoorBottomGapInput] = useState<string>('45');
-  const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>('45');
-  const [originalDoorTopGap, setOriginalDoorTopGap] = useState<number>(5); // 원래 값 저장
-  const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(45); // 원래 값 저장
+  const [lowerDoorBottomGapInput, setLowerDoorBottomGapInput] = useState<string>('0');
+  const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>('0');
+  const [originalDoorTopGap, setOriginalDoorTopGap] = useState<number>(0);
+  const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(0);
 
   // 취소 시 복원을 위한 모든 초기값 저장
   const [originalCustomDepth, setOriginalCustomDepth] = useState<number>(580);
