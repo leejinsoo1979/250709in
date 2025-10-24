@@ -2576,10 +2576,9 @@ const Room: React.FC<RoomProps> = ({
       )}
       
       {/* 상단 서브프레임 - 상단 프레임에서 앞쪽으로 내려오는 판 (ㄱ자의 세로 부분, X축 기준 90도 회전) */}
-      {/* 상단 프레임 높이가 18mm보다 클 때만 렌더링 (서브프레임 높이 18mm와 비교) */}
       {/* 노서라운드 모드에서는 상부 서브프레임도 숨김 */}
       {/* 상부 서브프레임 - 측면 뷰에서도 표시 */}
-      {showFrame && topBottomFrameHeightMm > 18 && (
+      {showFrame && false && topBottomFrameHeightMm > 18 && (
         <>
           {/* 기둥이 있는 경우 상단 서브프레임을 분절하여 렌더링 */}
           {(() => {
