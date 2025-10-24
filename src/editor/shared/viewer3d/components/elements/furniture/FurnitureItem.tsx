@@ -1826,16 +1826,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               renderOrder={998}
             >
               <boxGeometry args={[width + highlightPadding * 3, height + highlightPadding * 3, depth + highlightPadding * 3]} />
-              <meshBasicMaterial
+              <meshStandardMaterial
                 color={selectionHighlightColor}
+                emissive={selectionHighlightColor}
+                emissiveIntensity={0.5}
                 transparent
-                opacity={0.1}
+                opacity={0.15}
                 depthWrite={false}
                 side={THREE.BackSide}
                 blending={THREE.AdditiveBlending}
+                toneMapped={false}
               />
             </mesh>
-            
+
             {/* 메인 하이라이트 박스와 엣지 */}
             <mesh
               ref={highlightMeshRef}
@@ -1844,10 +1847,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
             >
               <boxGeometry args={[width, height, depth]} />
-              <meshBasicMaterial
+              <meshStandardMaterial
                 color={selectionHighlightColor}
+                emissive={selectionHighlightColor}
+                emissiveIntensity={0.8}
                 transparent
-                opacity={0.05}
+                opacity={0.1}
                 depthWrite={false}
                 depthTest={true}
                 toneMapped={false}
