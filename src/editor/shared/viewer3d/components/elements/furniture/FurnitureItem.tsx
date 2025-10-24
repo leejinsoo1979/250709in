@@ -1862,32 +1862,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               center
               style={{
                 pointerEvents: 'auto',
-                userSelect: 'none'
+                userSelect: 'none',
+                background: 'transparent'
               }}
             >
-              <style>{`
-                .furniture-toolbar-container > div {
-                  background: transparent !important;
-                  padding: 0 !important;
-                }
-              `}</style>
               <div
-                className="furniture-toolbar-container"
                 style={{
-                  background: 'transparent'
+                  display: 'flex',
+                  gap: '16px',
+                  background: 'rgba(90, 90, 90, 0.85)',
+                  borderRadius: '30px',
+                  padding: '14px 24px',
+                  boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+                  backdropFilter: 'blur(10px)'
                 }}
               >
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '16px',
-                    background: 'rgba(90, 90, 90, 0.85)',
-                    borderRadius: '30px',
-                    padding: '14px 24px',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
-                    backdropFilter: 'blur(10px)'
-                  }}
-                >
                 {/* 잠금 버튼 */}
                 <button
                   onClick={(e) => {
@@ -1984,7 +1973,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
                   </svg>
                 </button>
-                </div>
               </div>
             </Html>
 
