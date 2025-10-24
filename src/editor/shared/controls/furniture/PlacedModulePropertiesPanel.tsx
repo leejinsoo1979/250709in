@@ -755,8 +755,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setOriginalHasGapBackPanel(hasGapVal); // 원래 값 저장
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
-      const initialTopGap = currentPlacedModule.doorTopGap ?? 0;
-      const initialBottomGap = currentPlacedModule.doorBottomGap ?? 0;
+      const initialTopGap = currentPlacedModule.doorTopGap ?? 10;
+      const initialBottomGap = currentPlacedModule.doorBottomGap ?? 65;
       if (doorTopGap !== initialTopGap) {
         setDoorTopGap(initialTopGap);
         setDoorTopGapInput(initialTopGap.toString());

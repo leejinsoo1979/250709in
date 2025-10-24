@@ -38,8 +38,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   showFurniture = true,
   furnitureId,
   placedFurnitureId,
-  doorTopGap = 5,
-  doorBottomGap = 45,
+  doorTopGap = 10,
+  doorBottomGap = 65,
   lowerSectionDepth,
   upperSectionDepth,
   doorSplit,
@@ -709,7 +709,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
                 sectionHeightsMm={sectionHeightsMm}
-                doorTopGap={upperDoorTopGap ?? 5}
+                doorTopGap={upperDoorTopGap ?? doorTopGap}
                 doorBottomGap={upperDoorBottomGap ?? 0}
                 sectionIndex={1}
                 totalSections={2}
@@ -734,7 +734,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           furnitureId={placedFurnitureId}
                 sectionHeightsMm={sectionHeightsMm}
                 doorTopGap={lowerDoorTopGap ?? 0}
-                doorBottomGap={lowerDoorBottomGap ?? 45}
+                doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
                 sectionIndex={0}
                 totalSections={2}
                 furnitureId={placedFurnitureId}

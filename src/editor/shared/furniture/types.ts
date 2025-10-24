@@ -32,8 +32,8 @@ export interface PlacedModule {
   hasBackPanel?: boolean; // 가구 내부 백패널 유무 (기본값: true)
   hasGapBackPanel?: boolean; // 상하부장 사이 갭 백패널 유무 (기본값: false)
   doorSplit?: boolean; // 도어 분할 여부 (기본값: false - 병합, true - 분할)
-  doorTopGap?: number; // 가구 상단에서 위로의 갭 (mm, 기본값: 5) - 병합 모드 또는 상부 섹션
-  doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 45) - 병합 모드 또는 하부 섹션
+  doorTopGap?: number; // 가구 상단에서 위로의 갭 (mm, 기본값: 10) - 병합 모드 또는 상부 섹션
+  doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 65) - 병합 모드 또는 하부 섹션
   upperDoorTopGap?: number; // 상부 섹션 도어 상단 갭 (분할 모드용, 기본값: 5)
   upperDoorBottomGap?: number; // 상부 섹션 도어 하단 갭 (분할 모드용, 기본값: 0)
   lowerDoorTopGap?: number; // 하부 섹션 도어 상단 갭 (분할 모드용, 기본값: 0)
