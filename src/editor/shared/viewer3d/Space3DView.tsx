@@ -135,13 +135,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           return;
         }
 
-        // 복제 실행 - position 제거하여 새 슬롯에 맞게 자동 계산되도록
+        // 복제 실행 - 기본 position 설정 (FurnitureItem에서 슬롯에 맞게 재계산됨)
         const newId = `${furniture.baseModuleType}-${Date.now()}`;
-        const { position, adjustedPosition, ...furnitureData } = furniture;
+        const { adjustedPosition, ...furnitureData } = furniture;
         const newFurniture = {
           ...furnitureData,
           id: newId,
-          slotIndex: targetSlot
+          slotIndex: targetSlot,
+          position: { x: 0, y: 0, z: 0 } // 기본값, FurnitureItem에서 재계산됨
         };
 
         addModuleFn(newFurniture);
@@ -167,11 +168,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         }
 
         const newId = `${furniture.baseModuleType}-${Date.now()}`;
-        const { position, adjustedPosition, ...furnitureData } = furniture;
+        const { adjustedPosition, ...furnitureData } = furniture;
         const newFurniture = {
           ...furnitureData,
           id: newId,
-          slotIndex: targetSlot
+          slotIndex: targetSlot,
+          position: { x: 0, y: 0, z: 0 } // 기본값, FurnitureItem에서 재계산됨
         };
 
         addModuleFn(newFurniture);
