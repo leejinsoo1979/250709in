@@ -1820,7 +1820,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 네온사인 효과 - 붉은색 발광 */}
+            {/* 네온사인 효과 - 붉은색 발광 (여러 겹) */}
             <mesh
               ref={highlightMeshRef}
               position={[0, 0, 0]}
@@ -1828,21 +1828,31 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
             >
               <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
-              <meshStandardMaterial
-                color="#ff0000"
-                emissive="#ff0000"
-                emissiveIntensity={8.0}
+              <meshBasicMaterial
                 transparent
-                opacity={0.3}
+                opacity={0}
                 depthWrite={false}
-                toneMapped={false}
               />
-              {/* 단일 엣지 라인 */}
+              {/* 1층: 넓은 글로우 (어두운 빨강) */}
               <Edges
-                color="#ff3333"
+                color="#ff0000"
                 scale={1.0}
                 threshold={15}
-                linewidth={4}
+                linewidth={10}
+              />
+              {/* 2층: 중간 글로우 (밝은 빨강) */}
+              <Edges
+                color="#ff4444"
+                scale={1.0}
+                threshold={15}
+                linewidth={6}
+              />
+              {/* 3층: 밝은 코어 (거의 흰색에 가까운 빨강) */}
+              <Edges
+                color="#ffaaaa"
+                scale={1.0}
+                threshold={15}
+                linewidth={3}
               />
             </mesh>
           </>
