@@ -1820,63 +1820,39 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 네온사인 발광 효과 - AdditiveBlending */}
-            <group position={[0, 0, 0]}>
-              {/* 발광 레이어 1 - 가장 넓은 글로우 */}
-              <mesh renderOrder={997}>
-                <boxGeometry args={[width + 0.06, height + 0.06, depth + 0.06]} />
-                <meshBasicMaterial
-                  color="#ff0000"
-                  transparent
-                  opacity={0.4}
-                  depthWrite={false}
-                  blending={THREE.AdditiveBlending}
-                />
-              </mesh>
-
-              {/* 발광 레이어 2 - 중간 글로우 */}
-              <mesh renderOrder={998}>
-                <boxGeometry args={[width + 0.04, height + 0.04, depth + 0.04]} />
-                <meshBasicMaterial
-                  color="#ff3333"
-                  transparent
-                  opacity={0.6}
-                  depthWrite={false}
-                  blending={THREE.AdditiveBlending}
-                />
-              </mesh>
-
-              {/* 발광 레이어 3 - 밝은 코어 */}
-              <mesh renderOrder={999}>
-                <boxGeometry args={[width + 0.02, height + 0.02, depth + 0.02]} />
-                <meshBasicMaterial
-                  color="#ff8888"
-                  transparent
-                  opacity={0.8}
-                  depthWrite={false}
-                  blending={THREE.AdditiveBlending}
-                />
-              </mesh>
-
-              <mesh
-                ref={highlightMeshRef}
-                userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
-              >
-                <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
-                <meshBasicMaterial
-                  transparent
-                  opacity={0}
-                  depthWrite={false}
-                />
-                {/* 빨간 엣지 선 */}
-                <Edges
-                  color="#ff0000"
-                  scale={1.0}
-                  threshold={15}
-                  linewidth={3}
-                />
-              </mesh>
-            </group>
+            {/* 선에만 발광 효과 - 면은 완전 투명 */}
+            <mesh
+              ref={highlightMeshRef}
+              position={[0, 0, 0]}
+              renderOrder={999}
+              userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
+            >
+              <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
+              <meshBasicMaterial
+                transparent
+                opacity={0}
+                depthWrite={false}
+              />
+              {/* 발광 엣지 - 여러 겹으로 글로우 효과 */}
+              <Edges
+                color={new THREE.Color(10, 0, 0)}
+                scale={1.0}
+                threshold={15}
+                linewidth={6}
+              />
+              <Edges
+                color={new THREE.Color(5, 0, 0)}
+                scale={1.0}
+                threshold={15}
+                linewidth={4}
+              />
+              <Edges
+                color={new THREE.Color(2, 0, 0)}
+                scale={1.0}
+                threshold={15}
+                linewidth={2}
+              />
+            </mesh>
           </>
         )}
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
