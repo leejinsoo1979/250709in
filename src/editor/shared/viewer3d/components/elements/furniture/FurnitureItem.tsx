@@ -1820,17 +1820,43 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 네온사인 효과 - 실제 발광 */}
+            {/* 네온사인 발광 효과 - AdditiveBlending */}
             <group position={[0, 0, 0]}>
-              {/* 발광 조명 추가 - 8개 코너에 포인트 라이트 */}
-              <pointLight position={[width/2, height/2, depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
-              <pointLight position={[-width/2, height/2, depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
-              <pointLight position={[width/2, -height/2, depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
-              <pointLight position={[-width/2, -height/2, depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
-              <pointLight position={[width/2, height/2, -depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
-              <pointLight position={[-width/2, height/2, -depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
-              <pointLight position={[width/2, -height/2, -depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
-              <pointLight position={[-width/2, -height/2, -depth/2]} color="#ff0000" intensity={2} distance={1} decay={2} />
+              {/* 발광 레이어 1 - 가장 넓은 글로우 */}
+              <mesh renderOrder={997}>
+                <boxGeometry args={[width + 0.06, height + 0.06, depth + 0.06]} />
+                <meshBasicMaterial
+                  color="#ff0000"
+                  transparent
+                  opacity={0.4}
+                  depthWrite={false}
+                  blending={THREE.AdditiveBlending}
+                />
+              </mesh>
+
+              {/* 발광 레이어 2 - 중간 글로우 */}
+              <mesh renderOrder={998}>
+                <boxGeometry args={[width + 0.04, height + 0.04, depth + 0.04]} />
+                <meshBasicMaterial
+                  color="#ff3333"
+                  transparent
+                  opacity={0.6}
+                  depthWrite={false}
+                  blending={THREE.AdditiveBlending}
+                />
+              </mesh>
+
+              {/* 발광 레이어 3 - 밝은 코어 */}
+              <mesh renderOrder={999}>
+                <boxGeometry args={[width + 0.02, height + 0.02, depth + 0.02]} />
+                <meshBasicMaterial
+                  color="#ff8888"
+                  transparent
+                  opacity={0.8}
+                  depthWrite={false}
+                  blending={THREE.AdditiveBlending}
+                />
+              </mesh>
 
               <mesh
                 ref={highlightMeshRef}
@@ -1842,7 +1868,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   opacity={0}
                   depthWrite={false}
                 />
-                {/* 단일 밝은 빨간 선 */}
+                {/* 빨간 엣지 선 */}
                 <Edges
                   color="#ff0000"
                   scale={1.0}
