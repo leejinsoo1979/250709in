@@ -99,6 +99,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
       console.log('🎯 [복제] 사용 가능한 슬롯:', availableSlots, '필요한 슬롯:', requiredSlots);
 
+      // addModule 함수 가져오기
+      const addModuleFn = useFurnitureStore.getState().addModule;
+
       // 듀얼 가구의 경우 연속된 빈 슬롯 2개 필요
       if (isDual) {
         const consecutivePair = availableSlots.find((slot, idx) =>
@@ -118,7 +121,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           slotIndex: consecutivePair
         };
 
-        addModule(newFurniture);
+        addModuleFn(newFurniture);
         console.log('✅ [복제] 듀얼 가구 복제 완료:', newId, '슬롯:', consecutivePair);
       } else {
         // 싱글 가구
@@ -135,7 +138,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           slotIndex: targetSlot
         };
 
-        addModule(newFurniture);
+        addModuleFn(newFurniture);
         console.log('✅ [복제] 싱글 가구 복제 완료:', newId, '슬롯:', targetSlot);
       }
     };
@@ -144,7 +147,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     return () => {
       window.removeEventListener('duplicate-furniture', handleDuplicateFurniture);
     };
-  }, [placedModules, spaceInfo, addModule]);
+  }, [placedModules, spaceInfo]);
 
   // 기둥 변경 감지하여 즉시 리렌더링 및 가구 업데이트
   useEffect(() => {
