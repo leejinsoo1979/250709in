@@ -1722,6 +1722,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // Column C 전용 이벤트 핸들러 래핑
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    // 선택되지 않은 가구는 드래그 불가
+    if (!isSelected) {
+      return;
+    }
+
     if (isColumnCFront && !isDragMode) {
       // Column C 기둥 앞 가구는 리사이즈 모드
       columnCResize.handlePointerDown(e);
