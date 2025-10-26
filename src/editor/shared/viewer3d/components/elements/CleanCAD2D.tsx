@@ -2919,6 +2919,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const upperDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
           const lowerDepth = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
 
+          console.log('📏📏📏 [좌측뷰 깊이 치수] module.id=', module.id, 'upperSectionDepth=', module.upperSectionDepth, 'lowerSectionDepth=', module.lowerSectionDepth, 'upperDepth=', upperDepth, 'lowerDepth=', lowerDepth);
+
           // 상부 치수용 (기본값: 상부섹션 깊이)
           const actualDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(actualDepth);
