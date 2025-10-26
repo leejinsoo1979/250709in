@@ -312,7 +312,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               const upperPanelY = -height/2 + lowerSectionHeight + upperOffset + adjustedUpperHeight/2;
 
               // 섹션 강조 확인 (placedFurnitureId 사용)
-              const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
+              const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0` || highlightedPanel === `${placedFurnitureId}-(하)상판`;
               const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
 
               // 섹션별 깊이 가져오기
@@ -455,7 +455,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const lowerTopPanelY = currentYPosition - basicThickness - basicThickness/2;
 
                   // 섹션 강조 확인 (placedFurnitureId 사용)
-                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
+                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0` || highlightedPanel === `${placedFurnitureId}-(하)상판`;
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
 
                   // 섹션별 깊이 가져오기
@@ -537,7 +537,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const upperFloorY = sectionBoundaryY + basicThickness/2 + mmToThreeUnits(0.05);
 
                   // 섹션 강조 확인 (placedFurnitureId 사용)
-                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
+                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0` || highlightedPanel === `${placedFurnitureId}-(하)상판`;
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
 
                   // 섹션별 깊이 가져오기
@@ -631,7 +631,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   const upperFloorY = sectionBoundaryY + basicThickness/2 + mmToThreeUnits(0.05);
 
                   // 섹션 강조 확인 (placedFurnitureId 사용)
-                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
+                  const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0` || highlightedPanel === `${placedFurnitureId}-(하)상판`;
                   const isUpperHighlighted = highlightedSection === `${placedFurnitureId}-1`;
 
                   // 섹션별 깊이 가져오기
@@ -707,7 +707,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const dividerY = currentYPosition - basicThickness/2;
 
                 // 섹션 강조 확인 - 중간판은 하부 섹션에 속함
-                const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0`;
+                const isLowerHighlighted = highlightedSection === `${placedFurnitureId}-0` || highlightedPanel === `${placedFurnitureId}-(하)상판`;
 
                 const panelName = index === 0 ? '(하)상판' : '(상)바닥';
                 const panelMat = getPanelMaterial(panelName);
