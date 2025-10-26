@@ -470,6 +470,13 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       if ((e.ctrlKey || e.metaKey) && e.code === 'KeyC') {
         const selectedFurnitureId = useFurnitureStore.getState().selectedFurnitureId;
         if (selectedFurnitureId) {
+          // 잠금된 가구는 복제 불가
+          const selectedFurniture = useFurnitureStore.getState().placedModules.find(m => m.id === selectedFurnitureId);
+          if (selectedFurniture?.isLocked) {
+            console.log('🔒 잠긴 가구는 복제할 수 없습니다');
+            return;
+          }
+
           e.preventDefault();
           e.stopPropagation();
 

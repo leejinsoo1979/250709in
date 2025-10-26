@@ -1924,6 +1924,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (placedModule.isLocked) {
+                      console.log('🔒 잠긴 가구는 삭제할 수 없습니다');
+                      return;
+                    }
                     const removeModule = useFurnitureStore.getState().removeModule;
                     removeModule(placedModule.id);
                   }}
@@ -1956,6 +1960,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    if (placedModule.isLocked) {
+                      console.log('🔒 잠긴 가구는 복제할 수 없습니다');
+                      return;
+                    }
                     window.dispatchEvent(new CustomEvent('duplicate-furniture', {
                       detail: { furnitureId: placedModule.id }
                     }));
