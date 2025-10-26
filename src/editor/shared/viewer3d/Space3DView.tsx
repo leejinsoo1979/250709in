@@ -120,6 +120,15 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       // 현재 가구의 슬롯 인덱스
       const currentSlotIndex = furniture.slotIndex ?? 0;
 
+      console.log('복제 시도:', {
+        furnitureId: furniture.id,
+        isDual,
+        currentSlotIndex,
+        totalSlots,
+        occupiedSlots: Array.from(occupiedSlots),
+        availableSlots
+      });
+
       // 듀얼 가구의 경우 연속된 빈 슬롯 2개 필요
       if (isDual) {
         // 현재 슬롯 옆 슬롯 우선 확인 (우측 → 좌측 순서)
