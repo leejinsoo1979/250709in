@@ -1991,7 +1991,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 center
                 style={{
                   pointerEvents: 'none',
-                  userSelect: 'none'
+                  userSelect: 'none',
+                  background: 'transparent'
                 }}
               >
                 <div
