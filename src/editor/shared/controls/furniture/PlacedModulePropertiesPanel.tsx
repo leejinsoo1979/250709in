@@ -444,6 +444,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [selectedPanelIndex, setSelectedPanelIndex] = useState<number | null>(null);
   const setHighlightedPanel = useUIStore(state => state.setHighlightedPanel);
   const setSelectedFurnitureId = useUIStore(state => state.setSelectedFurnitureId);
+  const setPanelListTabActive = useUIStore(state => state.setPanelListTabActive);
   const activePopup = useUIStore(state => state.activePopup);
   const closeAllPopups = useUIStore(state => state.closeAllPopups);
 
@@ -453,6 +454,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setHighlightedPanel(null);
     };
   }, [setHighlightedPanel]);
+
+  // 패널 목록 탭 활성 상태를 전역으로 공유하여 3D 툴바 표시를 제어
+  useEffect(() => {
+    setPanelListTabActive(showDetails);
+    return () => {
+      setPanelListTabActive(false);
+    };
+  }, [showDetails, setPanelListTabActive]);
 
   // 팝업이 열려 있는 동안 선택 상태 유지 (패널 목록 탭 전환 시 강조 유지)
   useEffect(() => {

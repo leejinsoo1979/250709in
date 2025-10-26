@@ -114,6 +114,9 @@ interface UIState {
   // 클릭 배치 상태 (Click & Place)
   selectedModuleForPlacement: string | null;
   hoveredSlotForPlacement: number | null;
+
+  // 패널 목록 탭 활성 상태 (가구 팝업의 패널 목록이 열려 있는지 여부)
+  isPanelListTabActive: boolean;
   
   // 간접조명 설정
   indirectLightEnabled: boolean;
@@ -188,6 +191,8 @@ interface UIState {
   setHighlightedPanel: (panelId: string | null) => void;
   setSelectedModuleForPlacement: (moduleId: string | null) => void;
   setHoveredSlotForPlacement: (slotIndex: number | null) => void;
+
+  setPanelListTabActive: (active: boolean) => void;
   setIndirectLightEnabled: (enabled: boolean) => void;
   setIndirectLightIntensity: (intensity: number) => void;
   setIndirectLightColor: (color: string) => void;
@@ -250,6 +255,7 @@ const initialUIState = {
   highlightedPanel: null,  // 기본값: 강조된 패널 없음
   selectedModuleForPlacement: null,  // 기본값: 선택된 모듈 없음
   hoveredSlotForPlacement: null,  // 기본값: 호버된 슬롯 없음
+  isPanelListTabActive: false, // 기본값: 패널 목록 탭 비활성화
   indirectLightEnabled: false,  // 기본값: 간접조명 비활성화 (띄워서 배치 포함)
   indirectLightIntensity: 0.8,  // 기본값: 강도 0.8
   indirectLightColor: '#ffffff',  // 기본값: 흰색
@@ -484,6 +490,9 @@ export const useUIStore = create<UIState>()(
       
       setHoveredSlotForPlacement: (slotIndex) =>
         set({ hoveredSlotForPlacement: slotIndex }),
+
+      setPanelListTabActive: (active) =>
+        set({ isPanelListTabActive: active }),
       
       setIndirectLightEnabled: (enabled) =>
         set({ indirectLightEnabled: enabled }),

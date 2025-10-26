@@ -201,6 +201,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     debugLog('🎯 FurnitureItem - showFurniture:', showFurniture, 'placedModuleId:', placedModule.id, 'moduleId:', placedModule.moduleId);
   }, [showFurniture, placedModule.id, placedModule.moduleId]);
   const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex } = useUIStore();
+  const isPanelListTabActive = useUIStore(state => state.isPanelListTabActive);
   const { updatePlacedModule } = useFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
   const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id;
@@ -1860,26 +1861,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             </mesh>
 
             {/* 가구 상단 아이콘 툴바 */}
-            <Html
-              position={[0, height / 2 + mmToThreeUnits(50), 0]}
-              center
-              style={{
-                pointerEvents: 'auto',
-                userSelect: 'none',
-                background: 'transparent'
-              }}
-            >
-              <div
+            {!isPanelListTabActive && (
+              <Html
+                position={[0, height / 2 + mmToThreeUnits(50), 0]}
+                center
                 style={{
-                  display: 'flex',
-                  gap: '12px',
-                  background: 'rgba(70, 70, 70, 0.7)',
-                  borderRadius: '24px',
-                  padding: '10px 18px',
-                  boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
-                  backdropFilter: 'blur(8px)'
+                  pointerEvents: 'auto',
+                  userSelect: 'none',
+                  background: 'transparent'
                 }}
               >
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: '12px',
+                    background: 'rgba(70, 70, 70, 0.7)',
+                    borderRadius: '24px',
+                    padding: '10px 18px',
+                    boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
+                    backdropFilter: 'blur(8px)'
+                  }}
+                >
                 {/* 잠금 버튼 */}
                 <button
                   onClick={(e) => {
@@ -1995,7 +1997,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   </svg>
                 </button>
               </div>
-            </Html>
+              </Html>
+            )}
 
           </>
         )}
