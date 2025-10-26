@@ -141,7 +141,21 @@ const Configurator: React.FC = () => {
         toggleDoors();
         return;
       }
-      
+
+      // Backspace 또는 Delete 키로 선택된 가구 삭제
+      if (event.key === 'Backspace' || event.key === 'Delete') {
+        const { selectedFurnitureId } = useUIStore.getState();
+        if (selectedFurnitureId) {
+          event.preventDefault();
+          console.log('🗑️ 키보드로 가구 삭제:', selectedFurnitureId);
+          const { removeModule } = useFurnitureStore.getState();
+          const { setSelectedFurnitureId } = useUIStore.getState();
+          removeModule(selectedFurnitureId);
+          setSelectedFurnitureId(null);
+          return;
+        }
+      }
+
       // Ctrl+E 또는 Cmd+E로 선택된 기둥 편집 모달 열기
       if ((event.ctrlKey || event.metaKey) && event.key === 'e') {
         event.preventDefault();
