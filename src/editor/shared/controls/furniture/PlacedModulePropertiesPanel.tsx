@@ -1637,6 +1637,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   inputMode="numeric"
                   value={lowerTopOffsetInput}
                   onChange={(e) => handleLowerTopOffsetChange(e.target.value)}
+                  onFocus={() => {
+                    if (currentPlacedModule) {
+                      const panelId = `${currentPlacedModule.id}-(하)상판`;
+                      console.log('🎯 하부장 상부패널 강조:', panelId);
+                      setHighlightedPanel(panelId);
+                    }
+                  }}
+                  onBlur={() => {
+                    console.log('🎯 패널 강조 해제');
+                    setHighlightedPanel(null);
+                  }}
                   className={styles.depthInput}
                   placeholder="0"
                   style={{
