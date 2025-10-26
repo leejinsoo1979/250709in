@@ -26,14 +26,6 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   const needsWarning = validation.needsWarning || false;
   const isDynamic = module.isDynamic;
 
-  console.log(`🎨 [ModuleItem] ${module.id} 렌더링:`, {
-    isValid,
-    needsWarning,
-    isDynamic,
-    draggable: isValid || needsWarning,
-    internalSpace
-  });
-
   // 도어 버튼 클릭 핸들러
   const handleDoorToggle = (e: React.MouseEvent) => {
     e.stopPropagation(); // 이벤트 버블링 방지
@@ -60,22 +52,10 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
   // 네이티브 HTML5 드래그 시작 핸들러
   const handleDragStart = (e: React.DragEvent) => {
-    console.log('🚀 [ModuleItem] handleDragStart 호출:', {
-      moduleId: module.id,
-      moduleName: module.name,
-      isValid,
-      needsWarning,
-      validation,
-      internalSpace
-    });
-
     if (!isValid && !needsWarning) {
-      console.log('❌ [ModuleItem] 드래그 차단됨 (유효하지 않음)');
       e.preventDefault();
       return;
     }
-
-    console.log('✅ [ModuleItem] 드래그 시작 허용');
 
     // 가구 배치 모드 활성화
     setFurniturePlacementMode(true);
@@ -96,8 +76,6 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
       }
     };
 
-    console.log('📦 [ModuleItem] 드래그 데이터 설정:', dragData);
-
     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
     e.dataTransfer.setData('text/plain', module.id); // 호환성을 위해 추가
 
@@ -110,8 +88,6 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
     // 전역 드래그 상태 설정
     setCurrentDragData(dragData);
-
-    console.log('✅ [ModuleItem] 드래그 초기화 완료');
   };
 
   const handleDragEnd = () => {

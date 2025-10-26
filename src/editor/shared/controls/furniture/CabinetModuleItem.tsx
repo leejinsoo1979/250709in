@@ -24,20 +24,6 @@ const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalS
   const isValid = validation.isValid;
   const needsWarning = validation.needsWarning || false;
   const isDynamic = module.isDynamic;
-  
-  // 디버깅: 상부장 유효성 검사 결과
-  if (module.category === 'upper') {
-    console.log('🔍 상부장 유효성 검사:', {
-      moduleId: module.id,
-      moduleName: module.name,
-      moduleHeight: module.dimensions.height,
-      internalSpaceHeight: internalSpace.height,
-      fitsHeight: validation.fitsHeight,
-      isValid,
-      needsWarning,
-      validation
-    });
-  }
 
   // 도어 버튼 클릭 핸들러
   const handleDoorToggle = (e: React.MouseEvent) => {
@@ -63,16 +49,7 @@ const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalS
 
   // 네이티브 HTML5 드래그 시작 핸들러
   const handleDragStart = (e: React.DragEvent) => {
-    console.log('🎯 드래그 시작 시도:', {
-      moduleId: module.id,
-      category: module.category,
-      isValid,
-      needsWarning,
-      canDrag: isValid || needsWarning
-    });
-    
     if (!isValid && !needsWarning) {
-      console.log('❌ 드래그 차단됨:', { moduleId: module.id, isValid, needsWarning });
       e.preventDefault();
       return;
     }
