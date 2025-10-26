@@ -349,7 +349,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             // Y 오프셋 없음 - 실제 섹션 위치 그대로 사용
             const sectionStartY = currentY;
-            const sectionEndY = currentY + sectionHeight;
+            let sectionEndY = currentY + sectionHeight;
 
             // 치수 표시값 계산 (sectionStartY 계산 후에)
             let sectionHeightMm: number;
@@ -361,6 +361,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             if (isLastSection) {
               // 상부섹션: 실제 섹션 높이만 표시 (sectionHeight)
+              const topInteriorY = floatHeight + baseFrameHeight + internalHeight;
+              sectionHeight = Math.max(topInteriorY - sectionStartY, 0);
+              sectionEndY = sectionStartY + sectionHeight;
               sectionHeightMm = sectionHeight / 0.01;
             } else if (sectionIndex === 0) {
               // 하부섹션: 받침대 위부터 하부섹션 상판 윗면까지
@@ -852,7 +855,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           if (!moduleData) return null;
 
-          const customDepth = module.customDepth || moduleData.dimensions.depth;
+          // 상부섹션 깊이 우선 사용
+          const upperDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+          const customDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(customDepth);
 
           // 가구 위치 계산 (FurnitureItem.tsx와 동일)
@@ -1186,7 +1191,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const isLastSection = sectionIndex === sections.length - 1;
             const sectionStartY = currentY;
-            const sectionEndY = currentY + sectionHeight;
+            let sectionEndY = currentY + sectionHeight;
 
             // 치수 표시값 계산 (sectionStartY 계산 후에)
             let sectionHeightMm: number;
@@ -1198,6 +1203,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             if (isLastSection) {
               // 상부섹션: 실제 섹션 높이만 표시 (sectionHeight)
+              const topInteriorY = floatHeight + baseFrameHeight + internalHeight;
+              sectionHeight = Math.max(topInteriorY - sectionStartY, 0);
+              sectionEndY = sectionStartY + sectionHeight;
               sectionHeightMm = sectionHeight / 0.01;
             } else if (sectionIndex === 0) {
               // 하부섹션: 받침대 위부터 하부섹션 상판 윗면까지
@@ -1494,7 +1502,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           if (!moduleData) return null;
 
-          const customDepth = module.customDepth || moduleData.dimensions.depth;
+          // 상부섹션 깊이 우선 사용
+          const upperDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+          const customDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(customDepth);
 
           const indexing = calculateSpaceIndexing(spaceInfo);
