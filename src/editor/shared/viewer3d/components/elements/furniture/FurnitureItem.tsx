@@ -1840,7 +1840,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       >
         {isSelected && width > 0 && height > 0 && depth > 0 && (
           <>
-            {/* 투명한 붉은색 효과 (발광 없음) */}
+            {/* 선택 하이라이트: 잠긴 가구는 빨간색, 일반 가구는 테마색 */}
             <mesh
               ref={highlightMeshRef}
               position={[0, 0, 0]}
@@ -1849,7 +1849,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             >
               <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
               <meshBasicMaterial
-                color="#ff3333"
+                color={placedModule.isLocked ? "#ff3333" : "#10b981"}
                 transparent
                 opacity={0.2}
                 depthWrite={false}
