@@ -178,7 +178,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         console.log('복제 성공: 듀얼 가구', newId, '슬롯:', targetSlot);
         addModuleFn(newFurniture);
         selectFurniture(null);
-        setTimeout(() => selectFurniture(newId), 50);
+        setTimeout(() => {
+          selectFurniture(newId);
+          console.log('복제된 가구 선택:', newId);
+        }, 100);
       } else {
         // 싱글 가구
         if (availableSlots.length === 0) {
@@ -216,7 +219,10 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         console.log('복제 성공: 싱글 가구', newId, '슬롯:', targetSlot);
         addModuleFn(newFurniture);
         selectFurniture(null);
-        setTimeout(() => selectFurniture(newId), 50);
+        setTimeout(() => {
+          selectFurniture(newId);
+          console.log('복제된 가구 선택:', newId);
+        }, 100);
       }
     };
 
