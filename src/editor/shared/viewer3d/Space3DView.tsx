@@ -80,8 +80,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       const { furnitureId } = customEvent.detail;
 
       const furniture = placedModules.find(m => m.id === furnitureId);
-      if (!furniture || !spaceInfo) {
-        console.log('복제 실패: 가구를 찾을 수 없거나 공간 정보가 없습니다');
+      if (!furniture) {
+        console.log('복제 실패: 가구를 찾을 수 없습니다', furnitureId);
+        console.log('현재 배치된 가구들:', placedModules.map(m => m.id));
+        return;
+      }
+
+      if (!spaceInfo) {
+        console.log('복제 실패: 공간 정보가 없습니다');
         return;
       }
 
