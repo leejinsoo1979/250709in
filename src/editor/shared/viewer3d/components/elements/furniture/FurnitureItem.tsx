@@ -1999,7 +1999,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   style={{
                     width: '48px',
                     height: '48px',
-                    background: 'rgba(255, 51, 51, 0.75)',
+                    background: 'rgba(255, 51, 51, 0.5)',
                     borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
