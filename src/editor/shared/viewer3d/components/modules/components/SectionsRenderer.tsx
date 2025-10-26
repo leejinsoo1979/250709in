@@ -47,6 +47,9 @@ interface SectionsRendererProps {
   // 강조 상태
   isHighlighted?: boolean;
 
+  // 드래그 상태
+  isDragging?: boolean;
+
   // 섹션 내경 치수 숨김 (듀얼 타입 중복 방지용)
   hideSectionDimensions?: boolean;
 
@@ -80,6 +83,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   mmToThreeUnits,
   furnitureId,
   isHighlighted = false,
+  isDragging = false,
   hideSectionDimensions = false,
   placedFurnitureId,
   sectionDepths,
@@ -600,8 +604,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         </mesh>
                       </group>
 
-                      {/* 섹션 내경 가이드선 양끝 엔드포인트 - 측면뷰/탑뷰에서 숨김 */}
-                      {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
+                      {/* 섹션 내경 가이드선 양끝 엔드포인트 - 측면뷰/탑뷰와 드래그 중에는 숨김 */}
+                      {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
                         <>
                           <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                             <sphereGeometry args={[0.05, 8, 8]} />
@@ -674,8 +678,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                                 </mesh>
                               </group>
 
-                              {/* 안전선반 위 칸 수직선 양끝 엔드포인트 - 측면뷰/탑뷰에서 숨김 */}
-                              {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
+                              {/* 안전선반 위 칸 수직선 양끝 엔드포인트 - 측면뷰/탑뷰와 드래그 중에는 숨김 */}
+                              {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
                                 <>
                                   <mesh position={[-innerWidth/2 * 0.3, topCompartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                                     <sphereGeometry args={[0.05, 8, 8]} />
@@ -748,8 +752,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 dashed={false}
               />
               
-              {/* 하단 프레임 두께 수직선 양끝 점 - 측면뷰/탑뷰에서 숨김 */}
-              {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
+              {/* 하단 프레임 두께 수직선 양끝 점 - 측면뷰/탑뷰와 드래그 중에는 숨김 */}
+              {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
                 <>
                   <mesh position={[-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                     <sphereGeometry args={[0.05, 8, 8]} />
