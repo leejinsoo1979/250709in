@@ -137,20 +137,27 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           return;
         }
 
-        // 복제 실행 - 기본 position 설정 (FurnitureItem에서 슬롯에 맞게 재계산됨)
+        // 복제 실행 - 슬롯에 맞는 정확한 위치 계산
+        const indexing = calculateSpaceIndexing(spaceInfo, []);
+        const slotCenterX = indexing.threeUnitPositions[targetSlot] || 0;
+
         const newId = `${furniture.baseModuleType}-${Date.now()}`;
-        const { adjustedPosition, ...furnitureData } = furniture;
+        const { adjustedPosition, adjustedWidth, columnSlotInfo, ...furnitureData } = furniture;
         const newFurniture = {
           ...furnitureData,
           id: newId,
           slotIndex: targetSlot,
-          position: { x: 0, y: 0, z: 0 } // 기본값, FurnitureItem에서 재계산됨
+          position: {
+            x: slotCenterX,
+            y: furniture.position.y,
+            z: furniture.position.z
+          }
         };
 
         addModuleFn(newFurniture);
         // 복제된 가구 즉시 선택
         selectFurniture(newId);
-        console.log('✅ [복제] 듀얼 가구 복제 완료:', newId, '슬롯:', targetSlot);
+        console.log('✅ [복제] 듀얼 가구 복제 완료:', newId, '슬롯:', targetSlot, '위치 X:', slotCenterX);
       } else {
         // 싱글 가구
         if (availableSlots.length === 0) {
@@ -168,19 +175,27 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           targetSlot = availableSlots[0];
         }
 
+        // 슬롯에 맞는 정확한 위치 계산
+        const indexing = calculateSpaceIndexing(spaceInfo, []);
+        const slotCenterX = indexing.threeUnitPositions[targetSlot] || 0;
+
         const newId = `${furniture.baseModuleType}-${Date.now()}`;
-        const { adjustedPosition, ...furnitureData } = furniture;
+        const { adjustedPosition, adjustedWidth, columnSlotInfo, ...furnitureData } = furniture;
         const newFurniture = {
           ...furnitureData,
           id: newId,
           slotIndex: targetSlot,
-          position: { x: 0, y: 0, z: 0 } // 기본값, FurnitureItem에서 재계산됨
+          position: {
+            x: slotCenterX,
+            y: furniture.position.y,
+            z: furniture.position.z
+          }
         };
 
         addModuleFn(newFurniture);
         // 복제된 가구 즉시 선택
         selectFurniture(newId);
-        console.log('✅ [복제] 싱글 가구 복제 완료:', newId, '슬롯:', targetSlot);
+        console.log('✅ [복제] 싱글 가구 복제 완료:', newId, '슬롯:', targetSlot, '위치 X:', slotCenterX);
       }
     };
 
