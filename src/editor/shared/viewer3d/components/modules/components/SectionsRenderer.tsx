@@ -607,10 +607,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                             <sphereGeometry args={[0.05, 8, 8]} />
                             <meshBasicMaterial color={currentColor} />
                           </mesh>
-                          <mesh position={[-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                            <sphereGeometry args={[0.05, 8, 8]} />
-                            <meshBasicMaterial color={currentColor} />
-                          </mesh>
+                          {/* 하부 섹션(index === 0)의 하단 엔드포인트는 바닥판 상단이므로 제거 */}
+                          {index !== 0 && (
+                            <mesh position={[-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                              <sphereGeometry args={[0.05, 8, 8]} />
+                              <meshBasicMaterial color={currentColor} />
+                            </mesh>
+                          )}
                         </>
                       )}
                     </>
