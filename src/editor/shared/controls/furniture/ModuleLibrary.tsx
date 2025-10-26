@@ -15,8 +15,6 @@ type ModuleType = 'single' | 'dual';
 type CategoryType = 'full' | 'upper' | 'lower';
 
 const ModuleLibrary: React.FC = () => {
-  console.log('🎨🎨🎨 [ModuleLibrary] 컴포넌트 렌더링 시작');
-
   const { t } = useTranslation();
   // 선택된 탭 상태 (싱글/듀얼)
   const [selectedType, setSelectedType] = useState<ModuleType>('single');
@@ -25,12 +23,6 @@ const ModuleLibrary: React.FC = () => {
 
   // 에디터 스토어에서 공간 정보 가져오기
   const { spaceInfo } = useSpaceConfigStore();
-
-  console.log('🔍🔍🔍 [ModuleLibrary] spaceInfo:', {
-    surroundType: spaceInfo.surroundType,
-    droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
-    installType: spaceInfo.installType
-  });
 
   // 내경 공간 계산
   // 단내림 활성화 시 normal zone의 높이를 사용 (더 높은 쪽 기준으로 가구 표시)
@@ -47,50 +39,16 @@ const ModuleLibrary: React.FC = () => {
 
   const internalSpace = calculateInternalSpace(normalZoneSpaceInfo);
 
-  // 디버깅: 내경 공간 확인
-  console.log('🏠 내경 공간 계산 결과:', {
-    internalSpace,
-    spaceInfoHeight: spaceInfo?.height,
-    hasFloorFinish: spaceInfo?.hasFloorFinish,
-    floorFinishHeight: spaceInfo?.floorFinish?.height,
-    baseConfigHeight: spaceInfo?.baseConfig?.height,
-    topFrameHeight: spaceInfo?.topFrame?.height,
-    droppedCeiling: spaceInfo?.droppedCeiling,
-    usingNormalZone: !!spaceInfo.droppedCeiling?.enabled,
-    설명: '단내림 활성화 시 normal zone 기준으로 가구 유효성 검사'
-  });
-  
   // 인덱싱 정보 계산 (컬럼 정보)
   const indexing = calculateSpaceIndexing(spaceInfo);
-  
+
   // 단일 컬럼의 너비 계산
   const columnWidth = indexing.columnWidth;
-  
+
   // 선택된 카테고리에 따라 모듈 가져오기
-  console.log('🔥 ModuleLibrary - 모듈 가져오기 시작:', {
-    internalSpace,
-    spaceInfo: {
-      width: spaceInfo?.width,
-      customColumnCount: spaceInfo?.customColumnCount,
-      columnMode: spaceInfo?.columnMode
-    }
-  });
-  
   const fullModules = getModulesByCategory('full', internalSpace, spaceInfo);
   const upperModules = getModulesByCategory('upper', internalSpace, spaceInfo);
   const lowerModules = getModulesByCategory('lower', internalSpace, spaceInfo);
-  
-  // 카테고리별 모듈 제거 (이제 따로 관리)
-  
-  // 디버깅용 로그 - 항상 출력
-  console.log('🎯 ModuleLibrary - 모듈 카테고리별 개수:', {
-    fullModulesCount: fullModules.length,
-    upperModulesCount: upperModules.length,
-    lowerModulesCount: lowerModules.length,
-    selectedCategory,
-    upperModules: upperModules.map(m => ({ id: m.id, name: m.name, category: m.category, width: m.dimensions.width })),
-    lowerModules: lowerModules.map(m => ({ id: m.id, name: m.name, category: m.category, width: m.dimensions.width }))
-  });
   
   // 현재 카테고리에 따라 모듈 선택
   const categoryModules = selectedCategory === 'full' ? fullModules : 
@@ -100,19 +58,6 @@ const ModuleLibrary: React.FC = () => {
   // 싱글(1컬럼)과 듀얼(2컬럼) 모듈로 분류
   // 상하부장의 경우 상부장과 하부장으로 분류
   const { singleModules, dualModules, upperCabinetModules, lowerCabinetModules } = useMemo(() => {
-    console.log('🎯 모듈 분류 시작:', {
-      categoryModulesCount: categoryModules.length,
-      selectedCategory,
-      columnWidth,
-      columnCount: indexing.columnCount,
-      categoryModules: categoryModules.map(m => ({ 
-        id: m.id, 
-        name: m.name, 
-        category: m.category,
-        width: m.dimensions.width,
-        isDual: Math.abs(m.dimensions.width - (columnWidth * 2)) <= 30
-      }))
-    });
     
     // 여백 허용치 축소 (기존 50mm에서 30mm로 감소)
     const MARGIN_TOLERANCE = 30;
@@ -128,17 +73,7 @@ const ModuleLibrary: React.FC = () => {
         const isDualByID = module.id.includes('dual-');
         const isDualByWidth = Math.abs(module.dimensions.width - (columnWidth * 2)) <= MARGIN_TOLERANCE;
         const isDualCabinet = isDualByID || isDualByWidth;
-        
-        console.log('🔍 상하부장 분류:', {
-          id: module.id,
-          width: module.dimensions.width,
-          isDualByID,
-          isDualByWidth,
-          isDualCabinet,
-          columnWidth,
-          dualWidth: columnWidth * 2
-        });
-        
+
         if (isDualCabinet) {
           dualCabinets.push(module);
         } else {
@@ -217,38 +152,15 @@ const ModuleLibrary: React.FC = () => {
       return acc;
     }, { singleModules: [] as ModuleData[], dualModules: [] as ModuleData[] });
     
-    const finalResult = {
+    return {
       ...result,
       upperCabinetModules: [],
       lowerCabinetModules: []
     };
-    
-    console.log('📊 모듈 분류 결과:', {
-      selectedCategory,
-      singleCount: finalResult.singleModules.length,
-      dualCount: finalResult.dualModules.length,
-      singleIds: finalResult.singleModules.map(m => m.id),
-      dualIds: finalResult.dualModules.map(m => m.id)
-    });
-    
-    return finalResult;
   }, [categoryModules, columnWidth, indexing.columnCount, selectedCategory]);
 
   // 현재 선택된 탭에 따른 모듈 목록
   const currentModules = selectedType === 'single' ? singleModules : dualModules;
-
-  // 디버깅: 최종 모듈 확인
-  console.log('🎯🎯🎯 [ModuleLibrary] 최종 모듈 표시:', {
-    selectedCategory,
-    selectedType,
-    singleModulesCount: singleModules.length,
-    dualModulesCount: dualModules.length,
-    currentModulesCount: currentModules.length,
-    currentModules: currentModules.map(m => ({ id: m.id, name: m.name, category: m.category })),
-    internalSpace
-  });
-
-  console.log('🎨🎨🎨 [ModuleLibrary] 렌더링 반환 - currentModules.length:', currentModules.length);
 
   return (
     <div className={styles.container}>
