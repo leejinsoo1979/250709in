@@ -118,6 +118,15 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     return mat;
   }, []); // 한 번만 생성
 
+  // 패널 강조용 material (형광색)
+  const highlightMaterial = React.useMemo(() =>
+    new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#FF4500'), // 붉은 주황색
+      transparent: true,
+      opacity: 0.8
+    }),
+  []);
+
   // 패널용 material 결정 - useCallback로 최적화
   const getPanelMaterial = React.useCallback((panelName: string) => {
     // 패널 ID 생성
@@ -129,16 +138,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     // 패널이 비활성화되어야 하는지 확인
     const isDimmed = highlightedPanel && highlightedPanel !== panelId && highlightedPanel.startsWith(`${placedFurnitureId}-`);
 
-    // 선택된 패널은 원래 material 유지
+    // 선택된 패널은 형광색으로 강조, 나머지는 원래대로
     if (isHighlighted) {
-      return material;
-    }
-    // 선택되지 않은 패널만 투명하게
-    if (isDimmed) {
-      return panelDimmedMaterial;
+      return highlightMaterial;
     }
     return material;
-  }, [highlightedPanel, placedFurnitureId, material, panelDimmedMaterial]);
+  }, [highlightedPanel, placedFurnitureId, material, highlightMaterial]);
 
   // 치수 변경 핸들러
   const handleDimensionChange = useCallback((sectionIndex: number, newInternalHeight: number) => {

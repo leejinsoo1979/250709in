@@ -266,13 +266,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
       });
     }
 
-    // 선택된 패널은 형광색으로 강조
+    // 선택된 패널은 형광색으로 강조, 나머지는 원래대로
     if (isHighlighted) {
       return highlightMaterial;
-    }
-    // 선택되지 않은 패널만 투명하게
-    if (isDimmed) {
-      return panelDimmedMaterial;
     }
     return material;
   }, [highlightedPanel, placedFurnitureId, material, panelDimmedMaterial, highlightMaterial]);
