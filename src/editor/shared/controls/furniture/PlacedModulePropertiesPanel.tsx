@@ -524,6 +524,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [upperSectionDepth, setUpperSectionDepth] = useState<number | undefined>(undefined); // 상부 섹션 깊이
   const [lowerDepthInput, setLowerDepthInput] = useState<string>(''); // 하부 섹션 깊이 입력 필드
   const [upperDepthInput, setUpperDepthInput] = useState<string>(''); // 상부 섹션 깊이 입력 필드
+  const [lowerTopOffset, setLowerTopOffset] = useState<number>(0); // 하부 섹션 상판 옵셋 (mm)
+  const [lowerTopOffsetInput, setLowerTopOffsetInput] = useState<string>('0'); // 하부 섹션 상판 옵셋 입력
   const [customWidth, setCustomWidth] = useState<number>(600); // 기본 컬럼 너비로 변경
   const [widthInputValue, setWidthInputValue] = useState<string>('600');
   const [widthError, setWidthError] = useState<string>('');
@@ -553,6 +555,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [originalCustomWidth, setOriginalCustomWidth] = useState<number>(600);
   const [originalLowerSectionDepth, setOriginalLowerSectionDepth] = useState<number | undefined>(undefined);
   const [originalUpperSectionDepth, setOriginalUpperSectionDepth] = useState<number | undefined>(undefined);
+  const [originalLowerTopOffset, setOriginalLowerTopOffset] = useState<number>(0);
   const [originalHingePosition, setOriginalHingePosition] = useState<'left' | 'right'>('right');
   const [originalHasDoor, setOriginalHasDoor] = useState<boolean>(false);
   const [originalDoorSplit, setOriginalDoorSplit] = useState<boolean>(false);
@@ -735,6 +738,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       // 섹션별 깊이 입력 필드 초기화
       setLowerDepthInput(lowerDepth?.toString() ?? '');
       setUpperDepthInput(upperDepth?.toString() ?? '');
+
+      const lowerOffset = currentPlacedModule.lowerSectionTopOffset ?? 0;
+      setLowerTopOffset(lowerOffset);
+      setLowerTopOffsetInput(lowerOffset.toString());
+      setOriginalLowerTopOffset(lowerOffset);
       // customWidth도 동일하게 처리
       if (customWidth !== initialWidth) {
         setCustomWidth(initialWidth);
@@ -804,7 +812,8 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           console.log('🔧 [섹션 깊이 초기화] 기본값을 placedModule에 저장:', { lowerDepth, upperDepth });
           updatePlacedModule(currentPlacedModule.id, {
             lowerSectionDepth: lowerDepth,
-            upperSectionDepth: upperDepth
+            upperSectionDepth: upperDepth,
+            lowerSectionTopOffset: currentPlacedModule.lowerSectionTopOffset ?? 0
           });
         }
 
@@ -812,6 +821,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setUpperSectionDepth(upperDepth);
         setLowerDepthInput(lowerDepth.toString());
         setUpperDepthInput(upperDepth.toString());
+
+        if (currentPlacedModule.lowerSectionTopOffset === undefined) {
+          updatePlacedModule(currentPlacedModule.id, { lowerSectionTopOffset: 0 });
+        }
       }
       
       console.log('🔧 팝업 초기값 설정:', {
@@ -1136,6 +1149,48 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setUpperSectionDepth(numValue);
       updatePlacedModule(currentPlacedModule.id, { upperSectionDepth: numValue });
       console.log('💾 [updatePlacedModule 호출 완료]');
+    }
+  };
+
+  const handleLowerTopOffsetChange = (value: string) => {
+    if (value === '' || /^-?\d+$/.test(value)) {
+      setLowerTopOffsetInput(value);
+
+      const numValue = parseInt(value, 10);
+      if (!isNaN(numValue) && currentPlacedModule) {
+        setLowerTopOffset(numValue);
+        updatePlacedModule(currentPlacedModule.id, { lowerSectionTopOffset: numValue });
+      }
+    }
+  };
+
+  const handleLowerTopOffsetBlur = () => {
+    if (lowerTopOffsetInput === '') {
+      setLowerTopOffsetInput(lowerTopOffset.toString());
+      return;
+    }
+
+    const numValue = parseInt(lowerTopOffsetInput, 10);
+    if (isNaN(numValue)) {
+      setLowerTopOffsetInput(lowerTopOffset.toString());
+    } else if (currentPlacedModule) {
+      setLowerTopOffset(numValue);
+      updatePlacedModule(currentPlacedModule.id, { lowerSectionTopOffset: numValue });
+    }
+  };
+
+  const handleLowerTopOffsetKeyDown = (e: React.KeyboardEvent) => {
+    if (!currentPlacedModule) return;
+
+    if (e.key === 'Enter') {
+      handleLowerTopOffsetBlur();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const currentValue = parseInt(lowerTopOffsetInput, 10) || 0;
+      const nextValue = currentValue + (e.key === 'ArrowUp' ? 1 : -1);
+      setLowerTopOffsetInput(nextValue.toString());
+      setLowerTopOffset(nextValue);
+      updatePlacedModule(currentPlacedModule.id, { lowerSectionTopOffset: nextValue });
     }
   };
 
@@ -1571,6 +1626,33 @@ const PlacedModulePropertiesPanel: React.FC = () => {
             </div>
             );
           })()}
+
+          {/* 하부장 상부패널 옵셋 (2섹션 가구만, 상세보기 아닐 때만) */}
+          {!showDetails && isTwoSectionFurniture && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>하부장 상부패널 옵셋</h5>
+              <div className={styles.inputWithUnit}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={lowerTopOffsetInput}
+                  onChange={(e) => handleLowerTopOffsetChange(e.target.value)}
+                  className={styles.depthInput}
+                  placeholder="0"
+                  style={{
+                    color: '#000000',
+                    backgroundColor: '#ffffff',
+                    WebkitTextFillColor: '#000000',
+                    opacity: 1
+                  }}
+                />
+                <span className={styles.unit}>mm</span>
+              </div>
+              <div className={styles.depthRange}>
+                범위: -50mm ~ 50mm
+              </div>
+            </div>
+          )}
 
           {/* 깊이 설정 (상세보기 아닐 때만) */}
           {!showDetails && (
