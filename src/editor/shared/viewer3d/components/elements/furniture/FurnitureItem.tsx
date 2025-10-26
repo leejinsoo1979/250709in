@@ -1984,38 +1984,40 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               </div>
             </Html>
 
-            {/* 잠긴 가구 중앙에 자물쇠 아이콘 표시 */}
-            {placedModule.isLocked && (
-              <Html
-                position={[0, 0, 0]}
-                center
-                style={{
-                  pointerEvents: 'none',
-                  userSelect: 'none',
-                  background: 'transparent'
-                }}
-              >
-                <div
-                  style={{
-                    width: '48px',
-                    height: '48px',
-                    background: 'rgba(255, 51, 51, 0.5)',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 12px rgba(0,0,0,0.4)',
-                    border: '2px solid rgba(255, 255, 255, 0.3)'
-                  }}
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
-                  </svg>
-                </div>
-              </Html>
-            )}
           </>
         )}
+
+        {/* 잠긴 가구 중앙에 자물쇠 아이콘 표시 (선택 여부와 무관) */}
+        {placedModule.isLocked && (
+          <Html
+            position={[0, 0, 0]}
+            center
+            style={{
+              pointerEvents: 'none',
+              userSelect: 'none',
+              background: 'transparent'
+            }}
+          >
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                background: 'rgba(255, 51, 51, 0.5)',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.4)',
+                border: '2px solid rgba(255, 255, 255, 0.3)'
+              }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+              </svg>
+            </div>
+          </Html>
+        )}
+
         {/* 노서라운드 모드에서 가구 위치 디버깅 */}
         {spaceInfo.surroundType === 'no-surround' && spaceInfo.gapConfig && (() => {
           return null;
