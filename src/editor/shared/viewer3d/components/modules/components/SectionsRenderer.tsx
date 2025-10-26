@@ -662,16 +662,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                                 </mesh>
                               </group>
 
-                              {/* 수직선 양끝 엔드포인트 - 측면뷰/탑뷰에서 숨김 */}
-                              {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
-                                <>
-                                  <mesh position={[-innerWidth/2 * 0.3, topCompartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                                    <sphereGeometry args={[0.05, 8, 8]} />
-                                    <meshBasicMaterial color={topCurrentColor} />
-                                  </mesh>
-                                  {/* 안전선반 위 칸의 하단 엔드포인트는 섹션 가이드선 상단과 중복되므로 제거 */}
-                                </>
-                              )}
+                              {/* 안전선반 위 칸 엔드포인트는 칸 높이 치수선과 중복되므로 모두 제거 */}
                             </>
                           );
                         })()}
