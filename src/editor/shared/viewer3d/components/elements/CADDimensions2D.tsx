@@ -6,6 +6,87 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSpaceIndexing, calculateInternalSpace } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
+import type { PlacedModule } from '@/editor/shared/furniture/types';
+import type { SectionConfig } from '@/data/modules/shelving';
+
+const DEFAULT_BASIC_THICKNESS_MM = 18;
+
+const mmToThreeUnits = (mm: number) => mm * 0.01;
+
+type SectionWithCalc = SectionConfig & { calculatedHeight?: number };
+
+interface SectionHeightsInfo {
+  sections: SectionWithCalc[];
+  heightsMm: number[];
+  basicThicknessMm: number;
+}
+
+const computeSectionHeightsInfo = (
+  module: PlacedModule,
+  moduleData: ReturnType<typeof getModuleById> | null,
+  internalHeightMm: number
+): SectionHeightsInfo => {
+  const rawSections = ((module.customSections && module.customSections.length > 0)
+    ? module.customSections
+    : moduleData?.modelConfig?.sections) as SectionWithCalc[] | undefined;
+
+  const basicThicknessMm = moduleData?.modelConfig?.basicThickness ?? DEFAULT_BASIC_THICKNESS_MM;
+
+  if (!rawSections || rawSections.length === 0) {
+    return {
+      sections: [],
+      heightsMm: [],
+      basicThicknessMm
+    };
+  }
+
+  const availableHeightMm = Math.max(internalHeightMm - basicThicknessMm * 2, 0);
+  const hasCalculatedHeights = rawSections.every(section => typeof (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight === 'number');
+
+  let heightsMm: number[];
+
+  if (hasCalculatedHeights) {
+    heightsMm = rawSections.map(section => {
+      const calc = (section as SectionWithCalc & { calculatedHeight?: number }).calculatedHeight;
+      return Math.max(calc ?? 0, 0);
+    });
+  } else {
+    const absoluteSections = rawSections.filter(section => section.heightType === 'absolute');
+    const totalFixedMm = absoluteSections.reduce((sum, section) => {
+      const value = typeof section.height === 'number' ? section.height : 0;
+      return sum + Math.min(value, availableHeightMm);
+    }, 0);
+
+    const remainingMm = Math.max(availableHeightMm - totalFixedMm, 0);
+    const percentageSections = rawSections.filter(section => section.heightType !== 'absolute');
+    const totalPercentage = percentageSections.reduce((sum, section) => sum + (section.height ?? 0), 0);
+    const percentageCount = percentageSections.length;
+
+    heightsMm = rawSections.map(section => {
+      if (section.heightType === 'absolute') {
+        return Math.min(section.height ?? 0, availableHeightMm);
+      }
+
+      if (totalPercentage > 0) {
+        return remainingMm * ((section.height ?? 0) / totalPercentage);
+      }
+
+      return percentageCount > 0 ? remainingMm / percentageCount : remainingMm;
+    });
+
+    const assignedMm = heightsMm.reduce((sum, value) => sum + value, 0);
+    const diffMm = availableHeightMm - assignedMm;
+    if (Math.abs(diffMm) > 0.01 && heightsMm.length > 0) {
+      heightsMm[heightsMm.length - 1] = Math.max(heightsMm[heightsMm.length - 1] + diffMm, 0);
+    }
+  }
+
+  return {
+    sections: rawSections,
+    heightsMm,
+    basicThicknessMm
+  };
+};
 
 interface CADDimensions2DProps {
   viewDirection?: '3D' | 'front' | 'left' | 'right' | 'top';
@@ -30,9 +111,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
   // 실제 뷰 방향 결정
   const currentViewDirection = viewDirection || view2DDirection;
-
-  // mm를 Three.js 단위로 변환
-  const mmToThreeUnits = (mm: number) => mm * 0.01;
 
   // showDimensions가 false이면 치수 표시하지 않음
   if (!showDimensions) {
@@ -299,9 +377,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             spaceInfo
           );
 
-          if (!moduleData || !moduleData.modelConfig?.sections) return null;
+          if (!moduleData) return null;
 
-          const sections = moduleData.modelConfig.sections;
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
 
@@ -320,67 +397,38 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 서랍 실제 깊이 (전체 깊이 - 뒤판 및 여유)
           const drawerDepthMm = 517;
 
-          // 실제 렌더링 높이 계산
-          const basicThickness = mmToThreeUnits(18); // 18mm 패널 두께
-          const availableHeight = internalHeight; // internalHeight가 이미 내경임
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm, basicThicknessMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, internalSpace.height);
+          if (sectionConfigs.length === 0) {
+            return null;
+          }
 
-          // 고정 높이 섹션들의 총 높이
-          const fixedSections = sections.filter((s: any) => s.heightType === 'absolute');
-          const totalFixedHeight = fixedSections.reduce((sum: number, section: any) => {
-            return sum + Math.min(mmToThreeUnits(section.height), availableHeight);
-          }, 0);
-
-          // 퍼센트 섹션들에게 남은 높이
-          const remainingHeight = availableHeight - totalFixedHeight;
+          const basicThickness = mmToThreeUnits(basicThicknessMm);
+          const sectionHeights = sectionHeightsMm.map(mmToThreeUnits);
+          const totalSections = sectionConfigs.length;
+          const sectionStartMm: number[] = [];
+          let accumMm = 0;
+          sectionHeightsMm.forEach(heightMm => {
+            sectionStartMm.push(accumMm);
+            accumMm += heightMm;
+          });
 
           // 각 섹션의 실제 높이 계산 (받침대 + 하판(basicThickness) 위부터 시작)
-          let currentY = floatHeight + baseFrameHeight + basicThickness;
+          const cabinetBottomY = floatHeight + baseFrameHeight;
+          const cabinetTopY = cabinetBottomY + internalHeight;
 
-          return sections.map((section, sectionIndex) => {
-            let sectionHeight: number;
-            if (section.heightType === 'absolute') {
-              sectionHeight = Math.min(mmToThreeUnits(section.height), availableHeight);
-            } else {
-              sectionHeight = remainingHeight * (section.height / 100);
-            }
+          return sectionConfigs.map((section, sectionIndex) => {
+            const interiorStartMm = sectionStartMm[sectionIndex] ?? 0;
+            const computedHeightMm = sectionHeightsMm[sectionIndex] ?? Math.max(sectionHeights[sectionIndex] / 0.01, 0);
+            const interiorStartY = cabinetBottomY + mmToThreeUnits(interiorStartMm);
+            const interiorEndY = interiorStartY + mmToThreeUnits(computedHeightMm);
 
-            // 상부섹션(마지막)은 가이드선을 짧게 해서 상단 끝에 맞춤
-            const isLastSection = sectionIndex === sections.length - 1;
+            const isLastSection = sectionIndex === totalSections - 1;
 
-            // Y 오프셋 없음 - 실제 섹션 위치 그대로 사용
-            const sectionStartY = currentY;
-            let sectionEndY = currentY + sectionHeight;
+            let sectionStartY = sectionIndex === 0 ? cabinetBottomY : interiorStartY;
+            let sectionEndY = isLastSection ? cabinetTopY : interiorEndY;
 
-            // 치수 표시값 계산 (sectionStartY 계산 후에)
-            let sectionHeightMm: number;
-
-            // 가구 타입 확인
-            const is4Drawer = moduleData.id?.includes('4drawer-hanging');
-            const is2DrawerHanging = moduleData.id?.includes('2drawer-hanging');
-            const is2Hanging = moduleData.id?.includes('2hanging');
-
-            if (isLastSection) {
-              // 상부섹션: 실제 섹션 높이만 표시
-              // 4단, 2단옷장: 하부 상판 두께(18mm) 제외하고 시작
-              // 2단서랍장: 하부 측판이 18mm 늘어나서 조정 없음
-              const topInteriorY = floatHeight + baseFrameHeight + internalHeight;
-              const actualStartY = is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness);
-              sectionHeight = Math.max(topInteriorY - actualStartY, 0);
-              sectionEndY = actualStartY + sectionHeight;
-              sectionHeightMm = sectionHeight / 0.01;
-            } else if (sectionIndex === 0) {
-              // 하부섹션: 받침대 위부터 하부섹션 상판 윗면까지
-              // 2단서랍장: 하부 측판이 18mm 늘어나서 sectionEndY (상부 시작점과 만남)
-              // 2단옷장, 4단: 하부 측판 조정 없어서 sectionEndY - basicThickness (하부 상판 윗면)
-              const lineStart = floatHeight + baseFrameHeight;
-              const lineEnd = is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness);
-              sectionHeightMm = (lineEnd - lineStart) / 0.01;
-            } else {
-              // 중간 섹션: 섹션 자체 높이
-              sectionHeightMm = sectionHeight / 0.01;
-            }
-
-            currentY = sectionEndY; // 다음 섹션 위치
+            const sectionHeight = sectionEndY - sectionStartY;
+            const sectionHeightMm = Math.max(sectionHeight / 0.01, 0);
 
             // 첫 번째 섹션은 하단 가이드선 표시 안 함 (받침대와 겹침)
             const shouldRenderStartGuide = sectionIndex !== 0;
@@ -392,10 +440,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0,
-                      is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                     [0,
-                      is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
                   color={dimensionColor}
@@ -408,12 +456,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                     [0,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
                   color={dimensionColor}
@@ -425,12 +471,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0,
-                      sectionIndex === 0 ? (floatHeight + baseFrameHeight) :
-                      (is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness)),
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                     [0,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
                   color={dimensionColor}
@@ -443,10 +487,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0 - 0.03,
-                      is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                     [0 + 0.03,
-                      is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
                   color={dimensionColor}
@@ -458,12 +502,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0 - 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                     [0 + 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
                   color={dimensionColor}
@@ -476,7 +518,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     0,
-                    is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
+                    sectionStartY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
                   ]}
                   renderOrder={100001}
@@ -491,8 +533,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     0,
-                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                    (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                    sectionEndY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
                   ]}
                   renderOrder={100001}
@@ -506,19 +547,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <Text
                   position={[
                     0,
-                    (() => {
-                      if (sectionIndex === 0) {
-                        // 하부섹션: 받침대 위부터 sectionEndY까지
-                        return (floatHeight + baseFrameHeight + sectionEndY) / 2;
-                      } else if (isLastSection) {
-                        // 상부섹션: 가구 최상단부터 하부섹션 끝까지
-                        const lineStart = floatHeight + baseFrameHeight + internalHeight;
-                        return (lineStart + sectionStartY) / 2;
-                      } else {
-                        // 중간 섹션
-                        return (sectionStartY + sectionEndY) / 2;
-                      }
-                    })(),
+                    (sectionStartY + sectionEndY) / 2,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)
                   ]}
                   fontSize={largeFontSize}
@@ -1246,9 +1275,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             spaceInfo
           );
 
-          if (!moduleData || !moduleData.modelConfig?.sections) return null;
-
-          const sections = moduleData.modelConfig.sections;
+          if (!moduleData) return null;
           const indexing = calculateSpaceIndexing(spaceInfo);
           const slotX = -spaceWidth / 2 + indexing.columnWidth * module.slotIndex + indexing.columnWidth / 2;
 
@@ -1266,64 +1293,47 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const actualDepthMm = moduleData.dimensions.depth;
           const drawerDepthMm = 517;
 
-          // 실제 렌더링 높이 계산
-          const basicThickness = mmToThreeUnits(18);
-          const availableHeight = internalHeight;
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm, basicThicknessMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, internalSpace.height);
+          if (sectionConfigs.length === 0) {
+            return null;
+          }
 
-          // 고정 높이 섹션들의 총 높이
-          const fixedSections = sections.filter((s: any) => s.heightType === 'absolute');
-          const totalFixedHeight = fixedSections.reduce((sum: number, section: any) => {
-            return sum + Math.min(mmToThreeUnits(section.height), availableHeight);
-          }, 0);
+          const basicThickness = mmToThreeUnits(basicThicknessMm);
+          const sectionHeights = sectionHeightsMm.map(mmToThreeUnits);
+          const totalSections = sectionConfigs.length;
+          const sectionStartMm: number[] = [];
+          let accumMm = 0;
+          sectionHeightsMm.forEach(heightMm => {
+            sectionStartMm.push(accumMm);
+            accumMm += heightMm;
+          });
 
-          // 퍼센트 섹션들에게 남은 높이
-          const remainingHeight = availableHeight - totalFixedHeight;
+          const cabinetBottomY = floatHeight + baseFrameHeight;
+          const cabinetTopY = cabinetBottomY + internalHeight;
 
-          // 각 섹션의 실제 높이 계산
-          let currentY = floatHeight + baseFrameHeight + basicThickness;
+          return sectionConfigs.map((section, sectionIndex) => {
+            const interiorStartMm = sectionStartMm[sectionIndex] ?? 0;
+            const computedHeightMm = sectionHeightsMm[sectionIndex] ?? Math.max(sectionHeights[sectionIndex] / 0.01, 0);
+            const interiorStartY = cabinetBottomY + mmToThreeUnits(interiorStartMm);
+            const interiorHeightUnits = mmToThreeUnits(computedHeightMm);
 
-          return sections.map((section, sectionIndex) => {
-            let sectionHeight: number;
-            if (section.heightType === 'absolute') {
-              sectionHeight = Math.min(mmToThreeUnits(section.height), availableHeight);
+            const isLastSection = sectionIndex === totalSections - 1;
+
+            let sectionStartY: number;
+            let sectionEndY: number;
+
+            if (sectionIndex === 0) {
+              sectionStartY = cabinetBottomY;
+              sectionEndY = sectionStartY + interiorHeightUnits;
+            } else if (isLastSection) {
+              sectionEndY = cabinetTopY;
+              sectionStartY = sectionEndY - interiorHeightUnits;
             } else {
-              sectionHeight = remainingHeight * (section.height / 100);
+              sectionStartY = interiorStartY - basicThickness;
+              sectionEndY = sectionStartY + interiorHeightUnits;
             }
 
-            const isLastSection = sectionIndex === sections.length - 1;
-            const sectionStartY = currentY;
-            let sectionEndY = currentY + sectionHeight;
-
-            // 치수 표시값 계산 (sectionStartY 계산 후에)
-            let sectionHeightMm: number;
-
-            // 가구 타입 확인
-            const is4Drawer = moduleData.id?.includes('4drawer-hanging');
-            const is2DrawerHanging = moduleData.id?.includes('2drawer-hanging');
-            const is2Hanging = moduleData.id?.includes('2hanging');
-
-            if (isLastSection) {
-              // 상부섹션: 실제 섹션 높이만 표시
-              // 4단, 2단옷장: 하부 상판 두께(18mm) 제외하고 시작
-              // 2단서랍장: 하부 측판이 18mm 늘어나서 조정 없음
-              const topInteriorY = floatHeight + baseFrameHeight + internalHeight;
-              const actualStartY = is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness);
-              sectionHeight = Math.max(topInteriorY - actualStartY, 0);
-              sectionEndY = actualStartY + sectionHeight;
-              sectionHeightMm = sectionHeight / 0.01;
-            } else if (sectionIndex === 0) {
-              // 하부섹션: 받침대 위부터 하부섹션 상판 윗면까지
-              // 2단서랍장: 하부 측판이 18mm 늘어나서 sectionEndY (상부 시작점과 만남)
-              // 2단옷장, 4단: 하부 측판 조정 없어서 sectionEndY - basicThickness (하부 상판 윗면)
-              const lineStart = floatHeight + baseFrameHeight;
-              const lineEnd = is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness);
-              sectionHeightMm = (lineEnd - lineStart) / 0.01;
-            } else {
-              // 중간 섹션: 섹션 자체 높이
-              sectionHeightMm = sectionHeight / 0.01;
-            }
-
-            currentY = sectionEndY; // 다음 섹션 위치
+            const sectionHeightMm = Math.max((sectionEndY - sectionStartY) / 0.01, 0);
 
             // 첫 번째 섹션은 하단 가이드선 표시 안 함 (받침대와 겹침)
             const shouldRenderStartGuide = sectionIndex !== 0;
@@ -1335,10 +1345,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0,
-                      is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                     [0,
-                      is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
                   color={dimensionColor}
@@ -1351,12 +1361,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                     [0,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
                   color={dimensionColor}
@@ -1368,12 +1376,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0,
-                      sectionIndex === 0 ? (floatHeight + baseFrameHeight) :
-                      (is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness)),
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                     [0,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
                   color={dimensionColor}
@@ -1386,10 +1392,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0 - 0.03,
-                      is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                     [0 + 0.03,
-                      is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
+                      sectionStartY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
                   color={dimensionColor}
@@ -1401,12 +1407,10 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <NativeLine
                   points={[
                     [0 - 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                     [0 + 0.03,
-                      isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                      (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                      sectionEndY,
                       spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
                   ]}
                   color={dimensionColor}
@@ -1419,7 +1423,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     0,
-                    is2DrawerHanging ? sectionStartY : (sectionStartY - basicThickness),
+                    sectionStartY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
                   ]}
                   renderOrder={100001}
@@ -1434,8 +1438,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <mesh
                   position={[
                     0,
-                    isLastSection ? (floatHeight + baseFrameHeight + internalHeight) :
-                    (is2DrawerHanging ? sectionEndY : (sectionEndY - basicThickness)),
+                    sectionEndY,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)
                   ]}
                   renderOrder={100001}
@@ -1449,16 +1452,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 <Text
                   position={[
                     0,
-                    (() => {
-                      if (sectionIndex === 0) {
-                        return (floatHeight + baseFrameHeight + sectionEndY) / 2;
-                      } else if (isLastSection) {
-                        const lineStart = floatHeight + baseFrameHeight + internalHeight;
-                        return (lineStart + sectionStartY) / 2;
-                      } else {
-                        return (sectionStartY + sectionEndY) / 2;
-                      }
-                    })(),
+                    (sectionStartY + sectionEndY) / 2,
                     spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) + mmToThreeUnits(60)
                   ]}
                   fontSize={largeFontSize}

@@ -528,7 +528,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   }
 
                   // 섹션 경계 지점 계산
-                  const sectionBoundaryY = currentYPosition - basicThickness/2;
+                  const sectionBoundaryY = currentYPosition - basicThickness;
 
                   // 하부 섹션 상판: 경계 바로 아래에 위치 (경계와 0.05mm 이격)
                   const lowerTopPanelY = sectionBoundaryY - basicThickness/2 - mmToThreeUnits(0.05);
@@ -622,7 +622,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   }
 
                   // 섹션 경계 지점 계산
-                  const sectionBoundaryY = currentYPosition - basicThickness/2;
+                  const sectionBoundaryY = currentYPosition - basicThickness;
 
                   // 하부 섹션 상판: 경계 바로 아래에 위치 (경계와 0.05mm 이격)
                   const lowerTopPanelY = sectionBoundaryY - basicThickness/2 - mmToThreeUnits(0.05);

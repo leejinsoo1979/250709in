@@ -442,7 +442,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const { t } = useTranslation();
   const [showDetails, setShowDetails] = useState(false);
   const [selectedPanelIndex, setSelectedPanelIndex] = useState<number | null>(null);
-  const { setHighlightedPanel } = useUIStore();
+  const setHighlightedPanel = useUIStore(state => state.setHighlightedPanel);
+  const setSelectedFurnitureId = useUIStore(state => state.setSelectedFurnitureId);
+  const activePopup = useUIStore(state => state.activePopup);
+  const closeAllPopups = useUIStore(state => state.closeAllPopups);
 
   // 컴포넌트 언마운트 시 패널 강조 해제
   useEffect(() => {
@@ -450,6 +453,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setHighlightedPanel(null);
     };
   }, [setHighlightedPanel]);
+
+  // 팝업이 열려 있는 동안 선택 상태 유지 (패널 목록 탭 전환 시 강조 유지)
+  useEffect(() => {
+    if (activePopup?.type === 'furnitureEdit' && activePopup.id) {
+      setSelectedFurnitureId(activePopup.id);
+    }
+  }, [activePopup?.type, activePopup?.id, setSelectedFurnitureId]);
 
   // 컴포넌트 마운트 시 스타일 강제 적용 (다크모드 대응)
   useEffect(() => {
@@ -514,7 +524,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const placedModules = useFurnitureStore(state => state.placedModules);
   const updatePlacedModule = useFurnitureStore(state => state.updatePlacedModule);
   const removeModule = useFurnitureStore(state => state.removeModule);
-  const { activePopup, closeAllPopups } = useUIStore();
 
   // 훅 선언부를 조건문 위로 이동
   const [customDepth, setCustomDepth] = useState<number>(580); // 임시 기본값
@@ -708,6 +717,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     return { slotInfo, isCoverDoor, isColumnC };
   }, [currentPlacedModule, moduleData, spaceInfo]);
 
+  const moduleDefaultLowerTopOffset = React.useMemo(() => {
+    if (!moduleData?.id) return 0;
+    return moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0;
+  }, [moduleData?.id]);
+
   // 초기값 설정 - 의존성에서 getDefaultDepth 제거하여 불필요한 재실행 방지
   useEffect(() => {
     if (currentPlacedModule && moduleData) {
@@ -739,7 +753,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setLowerDepthInput(lowerDepth?.toString() ?? '');
       setUpperDepthInput(upperDepth?.toString() ?? '');
 
-      const lowerOffset = currentPlacedModule.lowerSectionTopOffset ?? 0;
+      const lowerOffset = currentPlacedModule.lowerSectionTopOffset ?? moduleDefaultLowerTopOffset;
       setLowerTopOffset(lowerOffset);
       setLowerTopOffsetInput(lowerOffset.toString());
       setOriginalLowerTopOffset(lowerOffset);
@@ -813,7 +827,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           updatePlacedModule(currentPlacedModule.id, {
             lowerSectionDepth: lowerDepth,
             upperSectionDepth: upperDepth,
-            lowerSectionTopOffset: currentPlacedModule.lowerSectionTopOffset ?? 0
+            lowerSectionTopOffset: currentPlacedModule.lowerSectionTopOffset ?? moduleDefaultLowerTopOffset
           });
         }
 
@@ -823,7 +837,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setUpperDepthInput(upperDepth.toString());
 
         if (currentPlacedModule.lowerSectionTopOffset === undefined) {
-          updatePlacedModule(currentPlacedModule.id, { lowerSectionTopOffset: 0 });
+          updatePlacedModule(currentPlacedModule.id, { lowerSectionTopOffset: moduleDefaultLowerTopOffset });
         }
       }
       
@@ -839,7 +853,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         finalWidth: initialWidth
       });
     }
-  }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor]); // 실제 값이 바뀔 때만 실행
+  }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, moduleDefaultLowerTopOffset]); // 실제 값이 바뀔 때만 실행
 
   // ⚠️ CRITICAL: 모든 hooks는 조건부 return 전에 호출되어야 함 (React hooks 규칙)
   // 듀얼 가구 여부 확인 (moduleId 기반)
@@ -1275,13 +1289,23 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           <div className={styles.headerTabs}>
             <button
               className={`${styles.tabButton} ${!showDetails ? styles.activeTab : ''}`}
-              onClick={() => setShowDetails(false)}
+              onClick={() => {
+                setShowDetails(false);
+                if (activePopup?.type === 'furnitureEdit' && activePopup.id) {
+                  setSelectedFurnitureId(activePopup.id);
+                }
+              }}
             >
               {t('furniture.editFurniture')}
             </button>
             <button
               className={`${styles.tabButton} ${showDetails ? styles.activeTab : ''}`}
-              onClick={() => setShowDetails(true)}
+              onClick={() => {
+                setShowDetails(true);
+                if (activePopup?.type === 'furnitureEdit' && activePopup.id) {
+                  setSelectedFurnitureId(activePopup.id);
+                }
+              }}
             >
               {t('furniture.viewDetails')}
             </button>
