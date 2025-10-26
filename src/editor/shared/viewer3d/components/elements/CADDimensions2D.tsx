@@ -968,7 +968,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const lowerDepth = module.lowerSectionDepth;
                 const lowerModuleDepth = mmToThreeUnits(lowerDepth);
                 const lowerFurnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerModuleDepth/2;
-                const lowerDimY = floatHeight + mmToThreeUnits(100); // 하단 치수선 위치
+                const lowerDimY = floatHeight - mmToThreeUnits(200); // 하단 치수선 위치 (가구 바닥 아래)
 
                 return (
                   <group>
@@ -1703,7 +1703,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 const lowerDepth = module.lowerSectionDepth;
                 const lowerModuleDepth = mmToThreeUnits(lowerDepth);
                 const lowerFurnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerModuleDepth/2;
-                const lowerDimY = floatHeight + mmToThreeUnits(100);
+                const lowerDimY = floatHeight - mmToThreeUnits(200); // 하단 치수선 위치 (가구 바닥 아래)
 
                 return (
                   <group>
