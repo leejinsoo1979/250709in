@@ -43,12 +43,17 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
   // 간단한 드래그 아이콘 생성
   const createDragIcon = (): HTMLElement => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = `position:absolute;top:-1000px;width:48px;height:48px;background:transparent;`;
+
     const icon = document.createElement('div');
     const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary').trim() || '#10b981';
-    icon.style.cssText = `position:absolute;top:-1000px;width:48px;height:48px;background:${hasDoor ? primaryColor : primaryColor};border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;font-weight:bold;border:none;box-shadow:none;`;
+    icon.style.cssText = `width:48px;height:48px;background:${hasDoor ? primaryColor : primaryColor};border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;font-weight:bold;`;
     icon.textContent = hasDoor ? '🚪' : '📦'; // 도어 없음: 박스 아이콘으로 변경
-    document.body.appendChild(icon);
-    return icon;
+
+    wrapper.appendChild(icon);
+    document.body.appendChild(wrapper);
+    return wrapper;
   };
 
 
