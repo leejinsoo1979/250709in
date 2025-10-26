@@ -2914,8 +2914,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           if (!moduleData) return null;
           
           // 실제 가구 깊이와 위치 계산 (FurnitureItem.tsx와 동일)
-          // 상부섹션 깊이가 있으면 상부섹션 깊이 사용, 없으면 전체 깊이 사용
-          const actualDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+          // 2섹션 가구인 경우 상부/하부 섹션 깊이 각각 사용
+          const hasMultiSection = module.upperSectionDepth !== undefined || module.lowerSectionDepth !== undefined;
+          const upperDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+          const lowerDepth = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
+
+          // 상부 치수용 (기본값: 상부섹션 깊이)
+          const actualDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(actualDepth);
           
           // 실제 가구 Z 위치 계산 (FurnitureItem.tsx와 동일)
@@ -2977,6 +2982,66 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 lineWidth={1}
                 dashed={false}
               />
+
+              {/* 하부섹션 깊이 치수 (2섹션 가구인 경우) */}
+              {hasMultiSection && (() => {
+                const lowerModuleDepth = mmToThreeUnits(lowerDepth);
+                const lowerFurnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerModuleDepth/2;
+                const lowerBackZ = lowerFurnitureZ - lowerModuleDepth/2;
+                const lowerFrontZ = lowerFurnitureZ + lowerModuleDepth/2;
+                const lowerDimY = mmToThreeUnits(-50); // 하단 치수선 위치
+                const furnitureBottomY = module.position.y - furnitureHeight / 2;
+
+                return (
+                  <group>
+                    {/* 하부 깊이 치수선 */}
+                    <Line
+                      points={[[furnitureX, lowerDimY, lowerBackZ], [furnitureX, lowerDimY, lowerFrontZ]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+
+                    {/* 화살표들 */}
+                    <Line
+                      points={createArrowHead([furnitureX, lowerDimY, lowerBackZ], [furnitureX, lowerDimY, lowerBackZ + 0.02], 0.01)}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    <Line
+                      points={createArrowHead([furnitureX, lowerDimY, lowerFrontZ], [furnitureX, lowerDimY, lowerFrontZ - 0.02], 0.01)}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+
+                    {/* 치수 텍스트 */}
+                    <Text
+                      renderOrder={1000}
+                      depthTest={false}
+                      position={[furnitureX, lowerDimY - mmToThreeUnits(50), (lowerBackZ + lowerFrontZ) / 2]}
+                      fontSize={largeFontSize}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                    >
+                      {lowerDepth}
+                    </Text>
+
+                    {/* 연장선 (가구 하단에서 치수선까지) */}
+                    <Line
+                      points={[[furnitureX, furnitureBottomY, lowerBackZ], [furnitureX, lowerDimY - mmToThreeUnits(10), lowerBackZ]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      dashed={false}
+                    />
+                    <Line
+                      points={[[furnitureX, furnitureBottomY, lowerFrontZ], [furnitureX, lowerDimY - mmToThreeUnits(10), lowerFrontZ]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      dashed={false}
+                    />
+                  </group>
+                );
+              })()}
             </group>
           );
         })}
@@ -3644,8 +3709,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           
           if (!moduleData) return null;
 
-          // 상부섹션 깊이가 있으면 상부섹션 깊이 사용, 없으면 전체 깊이 사용
-          const actualDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+          // 2섹션 가구인 경우 상부/하부 섹션 깊이 각각 사용
+          const hasMultiSection = module.upperSectionDepth !== undefined || module.lowerSectionDepth !== undefined;
+          const upperDepth = module.upperSectionDepth || module.customDepth || moduleData.dimensions.depth;
+          const lowerDepth = module.lowerSectionDepth || module.customDepth || moduleData.dimensions.depth;
+
+          // 상부 치수용
+          const actualDepth = upperDepth;
           const moduleDepth = mmToThreeUnits(actualDepth);
           const dimY = topDimensionY - mmToThreeUnits(120);
           
@@ -3694,6 +3764,60 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 color={dimensionColor}
                 lineWidth={0.5}
               />
+
+              {/* 하부섹션 깊이 치수 (2섹션 가구인 경우) */}
+              {hasMultiSection && (() => {
+                const lowerModuleDepth = mmToThreeUnits(lowerDepth);
+                const lowerDimY = mmToThreeUnits(200); // 하단 치수선 위치 (바닥에서 위로)
+
+                return (
+                  <group>
+                    {/* 하부 깊이 치수선 */}
+                    <Line
+                      points={[[spaceWidth, lowerDimY, spaceZOffset], [spaceWidth, lowerDimY, spaceZOffset + lowerModuleDepth]]}
+                      color={dimensionColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 화살표들 */}
+                    <Line
+                      points={createArrowHead([spaceWidth, lowerDimY, spaceZOffset], [spaceWidth, lowerDimY, spaceZOffset + 0.02], 0.01)}
+                      color={dimensionColor}
+                      lineWidth={0.5}
+                    />
+                    <Line
+                      points={createArrowHead([spaceWidth, lowerDimY, spaceZOffset + lowerModuleDepth], [spaceWidth, lowerDimY, spaceZOffset + lowerModuleDepth - 0.02], 0.01)}
+                      color={dimensionColor}
+                      lineWidth={0.5}
+                    />
+
+                    {/* 치수 텍스트 */}
+                    <Text
+                      renderOrder={1000}
+                      depthTest={false}
+                      position={[spaceWidth, lowerDimY + mmToThreeUnits(30), spaceZOffset + lowerModuleDepth / 2]}
+                      fontSize={baseFontSize}
+                      color={dimensionColor}
+                      anchorX="center"
+                      anchorY="middle"
+                    >
+                      {lowerDepth}
+                    </Text>
+
+                    {/* 연장선 (가구에서 치수선까지) */}
+                    <Line
+                      points={[[spaceWidth, 0, spaceZOffset], [spaceWidth, lowerDimY - mmToThreeUnits(30), spaceZOffset]]}
+                      color={dimensionColor}
+                      lineWidth={0.5}
+                    />
+                    <Line
+                      points={[[spaceWidth, 0, spaceZOffset + lowerModuleDepth], [spaceWidth, lowerDimY - mmToThreeUnits(30), spaceZOffset + lowerModuleDepth]]}
+                      color={dimensionColor}
+                      lineWidth={0.5}
+                    />
+                  </group>
+                );
+              })()}
             </group>
           );
         })}
