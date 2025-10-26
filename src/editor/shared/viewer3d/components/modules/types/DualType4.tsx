@@ -84,7 +84,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   } = baseFurniture;
 
   const { renderMode, viewMode } = useSpace3DView();
-  const { view2DDirection, showDimensions, showDimensionsText, highlightedSection } = useUIStore();
+  const { view2DDirection, showDimensions, showDimensionsText, highlightedSection, highlightedPanel } = useUIStore();
   const { theme } = useTheme();
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
@@ -135,6 +135,38 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
     return result;
   })();
+
+  // 패널 강조용 형광색 material
+  const highlightMaterial = React.useMemo(() =>
+    new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#FF4500'), // 붉은 주황색
+      transparent: true,
+      opacity: 0.8
+    }),
+  []);
+
+  // 패널별 material 결정 함수
+  const getPanelMaterial = React.useCallback((panelName: string) => {
+    const panelId = `${placedFurnitureId}-${panelName}`;
+    const isHighlighted = highlightedPanel === panelId;
+
+    if (highlightedPanel) {
+      console.log('🔍 DualType4 패널 material 체크:', {
+        panelName,
+        placedFurnitureId,
+        highlightedPanel,
+        panelId,
+        isHighlighted,
+        returningMaterial: isHighlighted ? 'highlight' : 'normal'
+      });
+    }
+
+    // ONLY highlighted panel gets highlightMaterial, others stay normal
+    if (isHighlighted) {
+      return highlightMaterial;
+    }
+    return material;
+  }, [highlightedPanel, placedFurnitureId, material, highlightMaterial]);
 
   return (
     <>
@@ -236,15 +268,26 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26) - mmToThreeUnits(85) - userOffset;
                     const panelZOffset = lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 - userOffset/2;
 
+                    console.log('🔵 DualType4 하부 섹션 상판 렌더링:', {
+                      lowerSectionTopOffset,
+                      userOffset: userOffset / 0.01,
+                      panelDepth: panelDepth / 0.01,
+                      panelZOffset: panelZOffset / 0.01
+                    });
+
                     return (
                       <BoxWithEdges
                         args={[innerWidth, basicThickness, panelDepth]}
                         position={[0, lowerTopPanelY, panelZOffset]}
-                        material={material}
+                        material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
-                        isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                        isHighlighted={highlightedPanel === `${placedFurnitureId}-(하)상판`}
+                        panelName="(하)상판"
+                        furnitureId={placedFurnitureId}
+                        textureUrl={textureUrl}
+                        panelGrainDirections={panelGrainDirections}
                       />
                     );
                   })()}
