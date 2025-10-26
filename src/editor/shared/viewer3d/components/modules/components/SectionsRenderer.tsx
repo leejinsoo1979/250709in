@@ -600,22 +600,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         </mesh>
                       </group>
 
-                      {/* 수직선 양끝 엔드포인트 (hover 시 테마 색상) - 측면뷰/탑뷰에서 숨김 */}
-                      {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
-                        <>
-                          <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                            <sphereGeometry args={[0.05, 8, 8]} />
-                            <meshBasicMaterial color={currentColor} />
-                          </mesh>
-                          {/* 하부 섹션(index === 0)의 하단 엔드포인트는 바닥판 상단이므로 제거 */}
-                          {index !== 0 && (
-                            <mesh position={[-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                              <sphereGeometry args={[0.05, 8, 8]} />
-                              <meshBasicMaterial color={currentColor} />
-                            </mesh>
-                          )}
-                        </>
-                      )}
+                      {/* 섹션 내경 가이드선 엔드포인트는 칸 높이 치수선과 중복되므로 모두 제거 */}
                     </>
 
                     {/* 안전선반 위 칸의 내경 치수 (안전선반이 있는 경우 추가 표시) */}
