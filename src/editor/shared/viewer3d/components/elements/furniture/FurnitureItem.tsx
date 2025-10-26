@@ -1851,7 +1851,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               <meshBasicMaterial
                 color={placedModule.isLocked ? "#ff3333" : selectionHighlightColor}
                 transparent
-                opacity={0.2}
+                opacity={0.35}
                 depthWrite={false}
               />
             </mesh>
