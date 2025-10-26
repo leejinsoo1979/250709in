@@ -1882,9 +1882,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   onClick={(e) => {
                     e.stopPropagation();
                     console.log('🔒 [잠금 버튼 클릭] 현재 상태:', placedModule.isLocked);
-                    const updateModule = useFurnitureStore.getState().updateModule;
+                    const updatePlacedModule = useFurnitureStore.getState().updatePlacedModule;
                     const newLockedState = !placedModule.isLocked;
-                    updateModule(placedModule.id, { isLocked: newLockedState });
+                    updatePlacedModule(placedModule.id, { isLocked: newLockedState });
                     console.log('🔒 [잠금 상태 변경] ID:', placedModule.id, '새 상태:', newLockedState);
 
                     // 상태 확인
