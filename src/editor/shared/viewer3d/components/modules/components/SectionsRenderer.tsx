@@ -684,10 +684,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                                     <sphereGeometry args={[0.05, 8, 8]} />
                                     <meshBasicMaterial color={topCurrentColor} />
                                   </mesh>
-                                  <mesh position={[-innerWidth/2 * 0.3, topCompartmentBottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                                    <sphereGeometry args={[0.05, 8, 8]} />
-                                    <meshBasicMaterial color={topCurrentColor} />
-                                  </mesh>
+                                  {/* 안전선반 위 칸의 하단 엔드포인트는 섹션 가이드선 상단과 중복되므로 제거 */}
                                 </>
                               )}
                             </>
