@@ -110,13 +110,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 드래그 중일 때만 고스트 효과 적용 (편집 모드는 제외)
   const processedMaterial = React.useMemo(() => {
     // MeshBasicMaterial인 경우
-    // - 패널 하이라이팅용 dimmed material (opacity 0.5)은 그대로 사용
+    // - 패널 하이라이팅용 highlightMaterial은 그대로 사용 (투명 처리 안 함)
     // - 프레임 형광색 등도 그대로 사용
     if (baseMaterial instanceof THREE.MeshBasicMaterial) {
       return baseMaterial;
     }
 
-    // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (옷봉 제외)
+    // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (옷봉 제외, highlightMaterial 제외)
     if (viewMode === '2D' && renderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial && !isClothingRod) {
       // baseMaterial을 직접 수정하지 않고 clone
       const transparentMaterial = baseMaterial.clone();
