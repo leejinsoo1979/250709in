@@ -1881,9 +1881,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    console.log('🔒 [잠금 버튼 클릭] 현재 상태:', placedModule.isLocked);
                     const updateModule = useFurnitureStore.getState().updateModule;
-                    updateModule(placedModule.id, { isLocked: !placedModule.isLocked });
-                    console.log('🔒 가구 잠금 토글:', placedModule.id, '→', !placedModule.isLocked);
+                    const newLockedState = !placedModule.isLocked;
+                    updateModule(placedModule.id, { isLocked: newLockedState });
+                    console.log('🔒 [잠금 상태 변경] ID:', placedModule.id, '새 상태:', newLockedState);
+
+                    // 상태 확인
+                    setTimeout(() => {
+                      const currentState = useFurnitureStore.getState().placedModules.find(m => m.id === placedModule.id);
+                      console.log('🔒 [업데이트 후 확인]:', currentState?.isLocked);
+                    }, 100);
                   }}
                   style={{
                     width: '32px',
