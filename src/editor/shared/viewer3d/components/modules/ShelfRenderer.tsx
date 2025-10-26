@@ -685,10 +685,13 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
                         </mesh>
-                        <mesh position={[getDimensionXPosition(false), compartmentBottom, getDimensionZPosition()]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
-                        </mesh>
+                        {/* 첫 번째 칸(i === 0)의 하단 엔드포인트는 바닥판 위치이므로 제거 */}
+                        {i !== 0 && (
+                          <mesh position={[getDimensionXPosition(false), compartmentBottom, getDimensionZPosition()]}>
+                            <sphereGeometry args={[0.05, 8, 8]} />
+                            <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
+                          </mesh>
+                        )}
                       </>
                     )}
                   </group>
