@@ -38,8 +38,8 @@ export interface FurnitureTypeProps {
   placedFurnitureId?: string; // 배치된 가구의 고유 ID (치수 편집용)
   customSections?: SectionConfig[]; // 사용자 정의 섹션 설정
   visibleSectionIndex?: number | null; // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
-  doorTopGap?: number; // 가구 상단에서 위로의 갭 (mm, 기본값: 10)
-  doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 65)
+  doorTopGap?: number; // 가구 상단에서 위로의 갭 (mm, 기본값: 5)
+  doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 25)
   lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
   doorSplit?: boolean; // 도어 분할 여부 (기본값: false - 병합)

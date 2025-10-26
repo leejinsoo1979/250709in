@@ -1848,11 +1848,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               userData={{ decoration: 'selection-highlight', furnitureId: placedModule.id }}
             >
               <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
-              <meshBasicMaterial
+              <meshStandardMaterial
                 color={placedModule.isLocked ? "#ff3333" : selectionHighlightColor}
                 transparent
-                opacity={placedModule.isLocked ? 0.2 : 0.5}
+                opacity={placedModule.isLocked ? 0.2 : 0.45}
                 depthWrite={false}
+                emissive={new THREE.Color(placedModule.isLocked ? '#ff6666' : selectionHighlightColor)}
+                emissiveIntensity={placedModule.isLocked ? 0.4 : 0.75}
+                toneMapped={false}
               />
             </mesh>
 

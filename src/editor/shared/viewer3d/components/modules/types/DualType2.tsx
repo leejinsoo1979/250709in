@@ -38,8 +38,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   placedFurnitureId,
   showFurniture = true, // 가구 본체 표시 여부
   visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (이 타입은 대칭이므로 사용하지 않음)
-  doorTopGap = 10,
-  doorBottomGap = 65,
+  doorTopGap = 5,
+  doorBottomGap = 25,
   doorSplit,
   upperDoorTopGap,
   upperDoorBottomGap,

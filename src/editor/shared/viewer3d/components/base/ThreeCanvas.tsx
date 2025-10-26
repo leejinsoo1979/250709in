@@ -22,6 +22,9 @@ import SceneBackground from './components/SceneBackground'; // 하위 레벨
 import { TouchOrbitControlsSetup } from './components/TouchOrbitControlsSetup'; // 터치 컨트롤
 import { CAMERA_SETTINGS, CANVAS_SETTINGS, LIGHTING_SETTINGS } from './utils/constants'; // 하위 레벨
 
+// 최근 복사한 가구 ID를 전역 수준에서 유지해 Ctrl+V 붙여넣기 시 활용
+let lastCopiedFurnitureId: string | null = null;
+
 
 
 // ThreeCanvas 컴포넌트 props 정의
@@ -464,14 +467,43 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         e.stopPropagation(); // 이벤트 전파 방지
         canvasLog('🚀 스페이스 키 눌림 - viewMode:', viewMode, 'cameraMode:', cameraMode);
         resetCamera();
+        return;
       }
 
-      // Ctrl+C: 선택된 가구 복제
+      const uiStateSnapshot = useUIStore.getState();
+
+      // Ctrl+Z / Cmd+Z : Undo (측정 모드가 아니고 편집 입력 포커스가 없을 때)
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.code === 'KeyZ') {
+        if (!uiStateSnapshot.isMeasureMode) {
+          e.preventDefault();
+          e.stopPropagation();
+          const undoButton = document.querySelector('[title="실행 취소 (Ctrl+Z)"]') as HTMLButtonElement | null;
+          undoButton?.click();
+        }
+        return;
+      }
+
+      // Ctrl+Shift+Z / Cmd+Shift+Z or Ctrl+Y : Redo
+      if (((e.ctrlKey || e.metaKey) && e.shiftKey && e.code === 'KeyZ') ||
+          ((e.ctrlKey || e.metaKey) && e.code === 'KeyY')) {
+        if (!uiStateSnapshot.isMeasureMode) {
+          e.preventDefault();
+          e.stopPropagation();
+          const redoButton = document.querySelector('[title="다시 실행 (Ctrl+Y)"]') as HTMLButtonElement | null;
+          redoButton?.click();
+        }
+        return;
+      }
+
+      // Ctrl+C: 선택된 가구를 클립보드에 저장 (즉시 배치 없이 복사만 수행)
       if ((e.ctrlKey || e.metaKey) && e.code === 'KeyC') {
-        const selectedFurnitureId = useFurnitureStore.getState().selectedFurnitureId;
+        const furnitureState = useFurnitureStore.getState();
+        const selectedFurnitureId = uiStateSnapshot.selectedFurnitureId
+          || furnitureState.selectedFurnitureId
+          || furnitureState.selectedPlacedModuleId;
+
         if (selectedFurnitureId) {
-          // 잠금된 가구는 복제 불가
-          const selectedFurniture = useFurnitureStore.getState().placedModules.find(m => m.id === selectedFurnitureId);
+          const selectedFurniture = furnitureState.placedModules.find(m => m.id === selectedFurnitureId);
           if (selectedFurniture?.isLocked) {
             console.log('🔒 잠긴 가구는 복제할 수 없습니다');
             return;
@@ -480,11 +512,50 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           e.preventDefault();
           e.stopPropagation();
 
-          // 커스텀 이벤트 발생
-          window.dispatchEvent(new CustomEvent('duplicate-furniture', {
-            detail: { furnitureId: selectedFurnitureId }
-          }));
+          lastCopiedFurnitureId = selectedFurnitureId;
+          console.log('📋 가구 복사됨 (키보드):', lastCopiedFurnitureId);
         }
+      }
+
+      // Ctrl+V: 마지막으로 복사한 가구 붙여넣기 (없으면 현재 선택 가구 사용)
+      if ((e.ctrlKey || e.metaKey) && e.code === 'KeyV') {
+        const furnitureState = useFurnitureStore.getState();
+        const uiState = useUIStore.getState();
+        const preferredIds = [
+          uiState.selectedFurnitureId,
+          furnitureState.selectedFurnitureId,
+          furnitureState.selectedPlacedModuleId,
+          lastCopiedFurnitureId
+        ].filter((id): id is string => !!id);
+
+        if (preferredIds.length === 0) {
+          console.log('📋 붙여넣기 실패: 복사된 가구가 없습니다');
+          return;
+        }
+
+        const targetFurniture = preferredIds
+          .map(id => furnitureState.placedModules.find(m => m.id === id))
+          .find((module): module is typeof furnitureState.placedModules[number] => !!module);
+
+        if (!targetFurniture) {
+          console.log('📋 붙여넣기 실패: 대상 가구를 찾을 수 없습니다');
+          return;
+        }
+
+        if (targetFurniture.isLocked) {
+          console.log('🔒 잠긴 가구는 복제할 수 없습니다');
+          return;
+        }
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        lastCopiedFurnitureId = targetFurniture.id;
+        console.log('📋 가구 붙여넣기:', targetFurniture.id);
+
+        window.dispatchEvent(new CustomEvent('duplicate-furniture', {
+          detail: { furnitureId: targetFurniture.id }
+        }));
       }
     };
 

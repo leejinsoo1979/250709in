@@ -115,8 +115,8 @@ interface DoorModuleProps {
   slotWidths?: number[]; // 듀얼 가구의 경우 개별 슬롯 너비 배열 [left, right]
   slotIndex?: number; // 슬롯 인덱스 (노서라운드 모드에서 엔드패널 확장 판단용)
   floatHeight?: number; // 플로팅 높이 (mm) - 띄워서 배치 시 도어 높이 조정용
-  doorTopGap?: number; // 천장에서 아래로의 갭 (mm, 기본값: 10)
-  doorBottomGap?: number; // 바닥에서 위로의 갭 (mm, 기본값: 바닥재 + 받침대 높이)
+  doorTopGap?: number; // 천장에서 아래로의 갭 (mm, 기본값: 5)
+  doorBottomGap?: number; // 바닥에서 위로의 갭 (mm, 기본값: 25)
   sectionHeightsMm?: number[]; // 섹션별 실제 측판 높이 (mm)
   sectionIndex?: number; // 섹션 인덱스 (분할 모드용, 0: 하부, 1: 상부)
   totalSections?: number; // 전체 섹션 수 (분할 모드용, 기본값: 1)
@@ -140,8 +140,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   slotWidths,
   slotIndex,
   floatHeight = 0, // 플로팅 높이 기본값 0
-  doorTopGap = 0, // 천장에서 아래로 갭 (임시로 0mm - 가구와 높이 동일하게)
-  doorBottomGap = 0, // 바닥에서 위로 갭 (임시로 0mm - 가구와 높이 동일하게)
+  doorTopGap = 5, // 천장에서 아래로 갭 (기본값 5mm)
+  doorBottomGap = 25, // 바닥에서 위로 갭 (기본값 25mm)
   sectionHeightsMm,
   sectionIndex, // 섹션 인덱스 (분할 모드용)
   totalSections = 1, // 전체 섹션 수 (분할 모드용)

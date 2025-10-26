@@ -48,7 +48,7 @@ interface BoxModuleProps {
   customSections?: SectionConfig[]; // 사용자 정의 섹션 설정
   visibleSectionIndex?: number | null; // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
   doorTopGap?: number; // 가구 상단에서 위로의 갭 (mm, 기본값: 5)
-  doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 45)
+  doorBottomGap?: number; // 가구 하단에서 아래로의 갭 (mm, 기본값: 25)
   lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
   doorSplit?: boolean; // 도어 분할 여부
@@ -102,8 +102,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   placedFurnitureId, // 배치된 가구 ID
   customSections, // 사용자 정의 섹션 설정
   visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
-  doorTopGap = 10, // 가구 상단에서 위로의 갭 (mm)
-  doorBottomGap = 65, // 가구 하단에서 아래로의 갭 (mm)
+  doorTopGap = 5, // 가구 상단에서 위로의 갭 (mm)
+  doorBottomGap = 25, // 가구 하단에서 아래로의 갭 (mm)
   lowerSectionDepth, // 하부 섹션 깊이 (mm)
   upperSectionDepth, // 상부 섹션 깊이 (mm)
   doorSplit,

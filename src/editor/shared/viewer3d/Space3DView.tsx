@@ -79,14 +79,20 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       const customEvent = e as CustomEvent<{ furnitureId: string }>;
       const { furnitureId } = customEvent.detail;
 
-      const furniture = placedModules.find(m => m.id === furnitureId);
+      const { placedModules: latestPlacedModules, addModule: addModuleFn, setSelectedPlacedModuleId } = useFurnitureStore.getState();
+      const { spaceInfo: latestSpaceInfo } = useSpaceConfigStore.getState();
+      const setSelectedFurnitureId = useUIStore.getState().setSelectedFurnitureId;
+
+      const activeSpaceInfo = latestSpaceInfo || spaceInfo;
+
+      const furniture = latestPlacedModules.find(m => m.id === furnitureId);
       if (!furniture) {
         console.log('복제 실패: 가구를 찾을 수 없습니다', furnitureId);
-        console.log('현재 배치된 가구들:', placedModules.map(m => m.id));
+        console.log('현재 배치된 가구들:', latestPlacedModules.map(m => m.id));
         return;
       }
 
-      if (!spaceInfo) {
+      if (!activeSpaceInfo) {
         console.log('복제 실패: 공간 정보가 없습니다');
         return;
       }
@@ -101,18 +107,67 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       const isDual = furniture.baseModuleType?.includes('dual-');
 
       // 빈 슬롯 찾기 (듀얼 가구는 2개 슬롯 차지)
-      const occupiedSlots = new Set<number>();
-      placedModules.forEach(m => {
-        if (m.slotIndex !== undefined) {
-          occupiedSlots.add(m.slotIndex);
-          // 듀얼 가구는 다음 슬롯도 차지
-          if (m.baseModuleType?.includes('dual-') || m.isDualSlot) {
-            occupiedSlots.add(m.slotIndex + 1);
+      const indexing = calculateSpaceIndexing(activeSpaceInfo, []);
+      const totalSlotsRaw = indexing.columnCount
+        || activeSpaceInfo?.mainDoorCount
+        || activeSpaceInfo?.customColumnCount
+        || indexing.threeUnitPositions.length
+        || 2;
+      const totalSlots = Math.max(1, Math.floor(totalSlotsRaw));
+
+      const getSlotCenterPosition = (slotIndex: number, dual: boolean) => {
+        const zoneType = furniture.zone ?? 'normal';
+
+        if (dual) {
+          const zoneDualPositions = zoneType === 'dropped'
+            ? indexing.zones?.dropped?.threeUnitDualPositions
+            : indexing.zones?.normal?.threeUnitDualPositions;
+
+          if (zoneDualPositions && zoneDualPositions[slotIndex] !== undefined) {
+            return zoneDualPositions[slotIndex];
+          }
+
+          if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[slotIndex] !== undefined) {
+            return indexing.threeUnitDualPositions[slotIndex];
+          }
+        } else {
+          const zonePositions = zoneType === 'dropped'
+            ? indexing.zones?.dropped?.threeUnitPositions
+            : indexing.zones?.normal?.threeUnitPositions;
+
+          if (zonePositions && zonePositions[slotIndex] !== undefined) {
+            return zonePositions[slotIndex];
+          }
+
+          if (indexing.threeUnitPositions && indexing.threeUnitPositions[slotIndex] !== undefined) {
+            return indexing.threeUnitPositions[slotIndex];
           }
         }
-      });
 
-      const totalSlots = spaceInfo.customColumnCount || 2;
+        // fall back to 기본 threeUnitPositions (듀얼/싱글 공용) 또는 0
+        if (indexing.threeUnitPositions && indexing.threeUnitPositions[slotIndex] !== undefined) {
+          return indexing.threeUnitPositions[slotIndex];
+        }
+
+        return 0;
+      };
+
+      const occupiedSlots = new Set<number>();
+      const targetZone = furniture.zone ?? 'normal';
+      latestPlacedModules.forEach(m => {
+        if (m.slotIndex === undefined) return;
+
+        const moduleZone = m.zone ?? 'normal';
+        if (moduleZone !== targetZone) {
+          return;
+        }
+
+        occupiedSlots.add(m.slotIndex);
+        // 듀얼 가구는 다음 슬롯도 차지
+        if (m.baseModuleType?.includes('dual-') || m.isDualSlot) {
+          occupiedSlots.add(m.slotIndex + 1);
+        }
+      });
 
       const availableSlots: number[] = [];
       for (let i = 0; i < totalSlots; i++) {
@@ -120,10 +175,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           availableSlots.push(i);
         }
       }
-
-      // addModule 함수 및 selectFurniture 가져오기
-      const addModuleFn = useFurnitureStore.getState().addModule;
-      const selectFurniture = useFurnitureStore.getState().selectFurniture;
 
       // 현재 가구의 슬롯 인덱스
       const currentSlotIndex = furniture.slotIndex ?? 0;
@@ -142,23 +193,32 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         // 현재 슬롯 옆 슬롯 우선 확인 (우측 → 좌측 순서)
         let targetSlot: number | undefined;
 
-        // 우측 확인 (현재 슬롯 + 1, +2)
-        if (currentSlotIndex + 2 < totalSlots &&
-            !occupiedSlots.has(currentSlotIndex + 1) &&
-            !occupiedSlots.has(currentSlotIndex + 2)) {
-          targetSlot = currentSlotIndex + 1;
+        // 사용 가능한 연속 슬롯(2칸) 목록 계산
+        const consecutivePairs: number[] = [];
+        for (let i = 0; i < availableSlots.length - 1; i++) {
+          const slot = availableSlots[i];
+          if (availableSlots[i + 1] === slot + 1) {
+            consecutivePairs.push(slot);
+          }
         }
-        // 좌측 확인 (현재 슬롯 - 2, -1)
-        else if (currentSlotIndex >= 2 &&
-                 !occupiedSlots.has(currentSlotIndex - 2) &&
-                 !occupiedSlots.has(currentSlotIndex - 1)) {
-          targetSlot = currentSlotIndex - 2;
-        }
-        // 그 외 빈 연속 슬롯 찾기
-        else {
-          targetSlot = availableSlots.find((slot, idx) =>
-            idx < availableSlots.length - 1 && availableSlots[idx + 1] === slot + 1
-          );
+
+        // 우측으로 배치 가능한 연속 슬롯 중 가장 가까운 슬롯을 우선 사용
+        const rightCandidate = consecutivePairs.find(slot => slot >= currentSlotIndex + 2);
+
+        if (rightCandidate !== undefined) {
+          targetSlot = rightCandidate;
+        } else {
+          // 좌측으로 배치 가능한 연속 슬롯을 탐색 (가장 가까운 슬롯 우선)
+          const leftCandidate = [...consecutivePairs]
+            .reverse()
+            .find(slot => slot <= currentSlotIndex - 2);
+
+          if (leftCandidate !== undefined) {
+            targetSlot = leftCandidate;
+          } else {
+            // 어느 방향도 없으면 첫 번째 연속 슬롯 사용
+            targetSlot = consecutivePairs[0];
+          }
         }
 
         if (targetSlot === undefined) {
@@ -167,8 +227,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         }
 
         // 복제 실행 - 슬롯에 맞는 정확한 위치 계산
-        const indexing = calculateSpaceIndexing(spaceInfo, []);
-        const slotCenterX = indexing.threeUnitPositions[targetSlot] || 0;
+        const slotCenterX = getSlotCenterPosition(targetSlot, true);
 
         const newId = `${furniture.baseModuleType}-${Date.now()}`;
         const { adjustedPosition, adjustedWidth, columnSlotInfo, ...furnitureData } = furniture;
@@ -185,34 +244,54 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
         console.log('복제 성공: 듀얼 가구', newId, '슬롯:', targetSlot);
         // 먼저 기존 선택 해제
-        selectFurniture(null);
+        setSelectedPlacedModuleId(null);
+        setSelectedFurnitureId(null);
         // 가구 추가
         addModuleFn(newFurniture);
         // 복제된 가구 선택
         setTimeout(() => {
-          selectFurniture(newId);
+          setSelectedPlacedModuleId(newId);
+          setSelectedFurnitureId(newId);
           console.log('복제된 가구 선택:', newId);
         }, 100);
       } else {
-        // 싱글 가구
-        if (availableSlots.length === 0) {
-          console.log('복제 실패: 빈 슬롯이 없습니다');
+      // 싱글 가구
+      if (availableSlots.length === 0) {
+        console.log('복제 실패: 빈 슬롯이 없습니다');
+        return;
+      }
+
+      const leftSlot = currentSlotIndex - 1;
+      const rightSlot = currentSlotIndex + 1;
+      const leftAvailable = leftSlot >= 0 && availableSlots.includes(leftSlot);
+      const rightAvailable = rightSlot < totalSlots && availableSlots.includes(rightSlot);
+
+      console.log('[Single Duplicate] 슬롯 확인', {
+        currentSlotIndex,
+        leftSlot,
+        rightSlot,
+        leftAvailable,
+        rightAvailable,
+        availableSlots,
+        totalSlots
+      });
+
+      let targetSlot: number | undefined;
+      if (leftAvailable && !rightAvailable) {
+        targetSlot = leftSlot;
+      } else if (!leftAvailable && rightAvailable) {
+        targetSlot = rightSlot;
+      } else if (leftAvailable && rightAvailable) {
+        targetSlot = leftSlot; // 양쪽 모두 가능하면 좌측을 우선 사용
+      }
+
+      if (targetSlot === undefined) {
+        console.log('복제 실패: 인접한 빈 슬롯이 없습니다 (싱글 가구)');
           return;
         }
 
-        // 현재 슬롯 옆 슬롯 우선 (우측 → 좌측 순서)
-        let targetSlot: number;
-        if (availableSlots.includes(currentSlotIndex + 1)) {
-          targetSlot = currentSlotIndex + 1;
-        } else if (availableSlots.includes(currentSlotIndex - 1)) {
-          targetSlot = currentSlotIndex - 1;
-        } else {
-          targetSlot = availableSlots[0];
-        }
-
         // 슬롯에 맞는 정확한 위치 계산
-        const indexing = calculateSpaceIndexing(spaceInfo, []);
-        const slotCenterX = indexing.threeUnitPositions[targetSlot] || 0;
+        const slotCenterX = getSlotCenterPosition(targetSlot, false);
 
         const newId = `${furniture.baseModuleType}-${Date.now()}`;
         const { adjustedPosition, adjustedWidth, columnSlotInfo, ...furnitureData } = furniture;
@@ -229,12 +308,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
         console.log('복제 성공: 싱글 가구', newId, '슬롯:', targetSlot);
         // 먼저 기존 선택 해제
-        selectFurniture(null);
+        setSelectedPlacedModuleId(null);
+        setSelectedFurnitureId(null);
         // 가구 추가
         addModuleFn(newFurniture);
         // 복제된 가구 선택
         setTimeout(() => {
-          selectFurniture(newId);
+          setSelectedPlacedModuleId(newId);
+          setSelectedFurnitureId(newId);
           console.log('복제된 가구 선택:', newId);
         }, 100);
       }
@@ -244,7 +325,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     return () => {
       window.removeEventListener('duplicate-furniture', handleDuplicateFurniture);
     };
-  }, [placedModules, spaceInfo]);
+  }, [spaceInfo]);
 
   // 기둥 변경 감지하여 즉시 리렌더링 및 가구 업데이트
   useEffect(() => {
