@@ -277,6 +277,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
                     return (
                       <BoxWithEdges
+                        key={`lower-top-panel-${getPanelMaterial('(하)상판').uuid}`}
                         args={[innerWidth, basicThickness, panelDepth]}
                         position={[0, lowerTopPanelY, panelZOffset]}
                         material={getPanelMaterial('(하)상판')}
