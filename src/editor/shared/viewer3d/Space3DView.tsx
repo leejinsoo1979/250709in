@@ -107,6 +107,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       const currentSlotIndex = furniture.slotIndex ?? 0;
 
       console.log('🎯 [복제] 현재 슬롯:', currentSlotIndex, '빈 슬롯:', availableSlots);
+      console.log('🎯 [복제] 점유된 슬롯:', Array.from(occupiedSlots));
+      console.log('🎯 [복제] 우측(+1) 슬롯:', currentSlotIndex + 1, '사용 가능?', availableSlots.includes(currentSlotIndex + 1));
+      console.log('🎯 [복제] 좌측(-1) 슬롯:', currentSlotIndex - 1, '사용 가능?', availableSlots.includes(currentSlotIndex - 1));
 
       // 듀얼 가구의 경우 연속된 빈 슬롯 2개 필요
       if (isDual) {
@@ -155,7 +158,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         };
 
         addModuleFn(newFurniture);
-        // 복제된 가구 즉시 선택 (약간의 딜레이로 렌더링 후 선택)
+        // 기존 가구 선택 해제 후 복제된 가구 선택
+        selectFurniture(null); // 먼저 선택 해제
         setTimeout(() => {
           selectFurniture(newId);
           console.log('✅ [복제] 듀얼 가구 선택 완료:', newId);
@@ -196,7 +200,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         };
 
         addModuleFn(newFurniture);
-        // 복제된 가구 즉시 선택 (약간의 딜레이로 렌더링 후 선택)
+        // 기존 가구 선택 해제 후 복제된 가구 선택
+        selectFurniture(null); // 먼저 선택 해제
         setTimeout(() => {
           selectFurniture(newId);
           console.log('✅ [복제] 싱글 가구 선택 완료:', newId);
