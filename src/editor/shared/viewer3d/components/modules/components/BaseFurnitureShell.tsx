@@ -144,6 +144,9 @@ interface BaseFurnitureShellProps {
   lowerSectionDepthMm?: number;
   upperSectionDepthMm?: number;
 
+  // 하부장 상부패널 오프셋 (mm)
+  lowerSectionTopOffsetMm?: number;
+
   // 텍스처 URL과 패널별 결 방향
   textureUrl?: string;
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
@@ -192,6 +195,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   },
   lowerSectionDepthMm,
   upperSectionDepthMm,
+  lowerSectionTopOffsetMm,
   textureUrl,
   panelGrainDirections,
   children
@@ -496,11 +500,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                         textureUrl={textureUrl}
                       />
 
-                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
+                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 + 사용자 오프셋 적용 */}
                       <BoxWithEdges
                         key={`lower-top-${getPanelMaterial('(하)상판').uuid}`}
-                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
-                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 + lowerZOffset]}
+                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
+                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2 + lowerZOffset]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -575,11 +579,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                   return (
                     <React.Fragment key={`divider-${index}`}>
-                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
+                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 + 사용자 오프셋 적용 */}
                       <BoxWithEdges
                         key={`lower-top-dual-2drawer-${getPanelMaterial('(하)상판').uuid}`}
-                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
-                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 + lowerZOffset]}
+                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
+                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2 + lowerZOffset]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -655,11 +659,11 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
                   return (
                     <React.Fragment key={`divider-${index}`}>
-                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
+                      {/* 하부 섹션 상판 - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 + 사용자 오프셋 적용 */}
                       <BoxWithEdges
                         key={`lower-top-2drawer-${getPanelMaterial('(하)상판').uuid}`}
-                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85)]}
-                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 + lowerZOffset]}
+                        args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(85) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
+                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2 + lowerZOffset]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}

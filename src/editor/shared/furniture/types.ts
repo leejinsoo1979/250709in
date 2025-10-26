@@ -62,12 +62,15 @@ export interface PlacedModule {
 
   // 섹션별 깊이 설정 (2섹션 가구용)
   lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
+  upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
+
+  // 하부장 상부패널 오프셋 (2섹션 가구용)
+  lowerSectionTopOffset?: number; // 하부 섹션 상판 Z축 오프셋 (mm) - 0: 상부섹션 바닥판과 같은 위치, 양수: 앞쪽으로 줄어듦
 
   // 텍스처 결 방향 설정 (패널별 개별 제어)
   panelGrainDirections?: {
     [panelName: string]: 'horizontal' | 'vertical'; // 패널 이름별 결 방향
   };
-  upperSectionDepth?: number; // 상부 섹션 깊이 (mm)
 }
 
 // 네이티브 드래그앤드롭용 현재 드래그 데이터 타입

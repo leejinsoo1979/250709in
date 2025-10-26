@@ -50,7 +50,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   lowerDoorTopGap,
   lowerDoorBottomGap,
   lowerSectionDepth,
-  upperSectionDepth
+  upperSectionDepth,
+  lowerSectionTopOffset
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -227,12 +228,13 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     </>
                   )}
                   
-                  {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
+                  {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 + 사용자 오프셋 적용 */}
                   {index === 0 && (() => {
                     const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
                     const lowerDepthDiff = depth - lowerSectionDepth;
-                    const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26) - mmToThreeUnits(85);
-                    const panelZOffset = lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2;
+                    const userOffset = mmToThreeUnits(lowerSectionTopOffset || 0);
+                    const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26) - mmToThreeUnits(85) - userOffset;
+                    const panelZOffset = lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 - userOffset/2;
 
                     return (
                       <BoxWithEdges
