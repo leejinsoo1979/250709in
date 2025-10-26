@@ -92,8 +92,18 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       // 듀얼 가구인지 확인
       const isDual = furniture.baseModuleType?.includes('dual-');
 
-      // 빈 슬롯 찾기
-      const occupiedSlots = new Set(placedModules.map(m => m.slotIndex));
+      // 빈 슬롯 찾기 (듀얼 가구는 2개 슬롯 차지)
+      const occupiedSlots = new Set<number>();
+      placedModules.forEach(m => {
+        if (m.slotIndex !== undefined) {
+          occupiedSlots.add(m.slotIndex);
+          // 듀얼 가구는 다음 슬롯도 차지
+          if (m.baseModuleType?.includes('dual-') || m.isDualSlot) {
+            occupiedSlots.add(m.slotIndex + 1);
+          }
+        }
+      });
+
       const totalSlots = spaceInfo.customColumnCount || 2;
 
       const availableSlots: number[] = [];
