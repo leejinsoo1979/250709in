@@ -78,7 +78,16 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       const { furnitureId } = customEvent.detail;
 
       const furniture = placedModules.find(m => m.id === furnitureId);
-      if (!furniture || !spaceInfo) return;
+      if (!furniture || !spaceInfo) {
+        console.log('복제 실패: 가구를 찾을 수 없거나 공간 정보가 없습니다');
+        return;
+      }
+
+      // 잠긴 가구는 복제 불가
+      if (furniture.isLocked) {
+        console.log('복제 실패: 잠긴 가구는 복제할 수 없습니다');
+        return;
+      }
 
       // 듀얼 가구인지 확인
       const isDual = furniture.baseModuleType?.includes('dual-');
@@ -126,6 +135,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         }
 
         if (targetSlot === undefined) {
+          console.log('복제 실패: 듀얼 가구를 위한 연속된 빈 슬롯이 없습니다');
           return;
         }
 
@@ -146,12 +156,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           }
         };
 
+        console.log('복제 성공: 듀얼 가구', newId, '슬롯:', targetSlot);
         addModuleFn(newFurniture);
         selectFurniture(null);
         setTimeout(() => selectFurniture(newId), 50);
       } else {
         // 싱글 가구
         if (availableSlots.length === 0) {
+          console.log('복제 실패: 빈 슬롯이 없습니다');
           return;
         }
 
@@ -182,6 +194,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           }
         };
 
+        console.log('복제 성공: 싱글 가구', newId, '슬롯:', targetSlot);
         addModuleFn(newFurniture);
         selectFurniture(null);
         setTimeout(() => selectFurniture(newId), 50);
