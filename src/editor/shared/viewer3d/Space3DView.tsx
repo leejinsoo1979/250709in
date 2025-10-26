@@ -73,7 +73,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   
   // 가구 복제 이벤트 리스너
   useEffect(() => {
+    console.log('복제 이벤트 리스너 등록됨');
     const handleDuplicateFurniture = (e: Event) => {
+      console.log('복제 이벤트 수신됨');
       const customEvent = e as CustomEvent<{ furnitureId: string }>;
       const { furnitureId } = customEvent.detail;
 

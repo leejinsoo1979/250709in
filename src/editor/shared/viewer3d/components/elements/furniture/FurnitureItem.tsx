@@ -1960,10 +1960,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    console.log('복제 버튼 클릭:', placedModule.id);
                     if (placedModule.isLocked) {
                       console.log('🔒 잠긴 가구는 복제할 수 없습니다');
                       return;
                     }
+                    console.log('복제 이벤트 발생:', placedModule.id);
                     window.dispatchEvent(new CustomEvent('duplicate-furniture', {
                       detail: { furnitureId: placedModule.id }
                     }));
