@@ -962,6 +962,104 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               >
                 {customDepth}
               </Text>
+
+              {/* 하부섹션 깊이 치수 (2섹션 가구인 경우) */}
+              {(module.lowerSectionDepth !== undefined) && (() => {
+                const lowerDepth = module.lowerSectionDepth;
+                const lowerModuleDepth = mmToThreeUnits(lowerDepth);
+                const lowerFurnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerModuleDepth/2;
+                const lowerDimY = floatHeight + mmToThreeUnits(100); // 하단 치수선 위치
+
+                return (
+                  <group>
+                    {/* 보조 가이드 연장선 - 앞쪽 */}
+                    <NativeLine
+                      points={[
+                        [0, floatHeight, lowerFurnitureZ + lowerModuleDepth/2],
+                        [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    {/* 보조 가이드 연장선 - 뒤쪽 */}
+                    <NativeLine
+                      points={[
+                        [0, floatHeight, lowerFurnitureZ - lowerModuleDepth/2],
+                        [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    {/* 하부 깊이 치수선 */}
+                    <NativeLine
+                      points={[
+                        [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2],
+                        [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    {/* 앞쪽 티크 */}
+                    <NativeLine
+                      points={[
+                        [0 - 0.02, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2],
+                        [0 + 0.02, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    {/* 뒤쪽 티크 */}
+                    <NativeLine
+                      points={[
+                        [0 - 0.02, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2],
+                        [0 + 0.02, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    {/* 엔드포인트 - 앞쪽 */}
+                    <mesh position={[0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
+                      <circleGeometry args={[0.06, 16]} />
+                      <meshBasicMaterial color={dimensionColor} depthTest={false} />
+                    </mesh>
+
+                    {/* 엔드포인트 - 뒤쪽 */}
+                    <mesh position={[0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]} renderOrder={100001} rotation={[0, -Math.PI / 2, 0]}>
+                      <circleGeometry args={[0.06, 16]} />
+                      <meshBasicMaterial color={dimensionColor} depthTest={false} />
+                    </mesh>
+
+                    {/* 하부 깊이 텍스트 */}
+                    <Text
+                      position={[0, lowerDimY - mmToThreeUnits(80), lowerFurnitureZ]}
+                      fontSize={largeFontSize}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      renderOrder={1000}
+                      depthTest={false}
+                      rotation={[0, -Math.PI / 2, 0]}
+                    >
+                      {lowerDepth}
+                    </Text>
+                  </group>
+                );
+              })()}
             </group>
           );
         })}
@@ -1599,6 +1697,96 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               >
                 {customDepth}
               </Text>
+
+              {/* 하부섹션 깊이 치수 (2섹션 가구인 경우) */}
+              {(module.lowerSectionDepth !== undefined) && (() => {
+                const lowerDepth = module.lowerSectionDepth;
+                const lowerModuleDepth = mmToThreeUnits(lowerDepth);
+                const lowerFurnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - lowerModuleDepth/2;
+                const lowerDimY = floatHeight + mmToThreeUnits(100);
+
+                return (
+                  <group>
+                    <NativeLine
+                      points={[
+                        [0, floatHeight, lowerFurnitureZ + lowerModuleDepth/2],
+                        [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    <NativeLine
+                      points={[
+                        [0, floatHeight, lowerFurnitureZ - lowerModuleDepth/2],
+                        [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    <NativeLine
+                      points={[
+                        [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2],
+                        [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    <NativeLine
+                      points={[
+                        [0 - 0.02, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2],
+                        [0 + 0.02, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    <NativeLine
+                      points={[
+                        [0 - 0.02, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2],
+                        [0 + 0.02, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1.5}
+                      renderOrder={100000}
+                      depthTest={false}
+                    />
+
+                    <mesh position={[0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
+                      <circleGeometry args={[0.06, 16]} />
+                      <meshBasicMaterial color={dimensionColor} depthTest={false} />
+                    </mesh>
+
+                    <mesh position={[0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]} renderOrder={100001} rotation={[0, Math.PI / 2, 0]}>
+                      <circleGeometry args={[0.06, 16]} />
+                      <meshBasicMaterial color={dimensionColor} depthTest={false} />
+                    </mesh>
+
+                    <Text
+                      position={[0, lowerDimY - mmToThreeUnits(80), lowerFurnitureZ]}
+                      fontSize={largeFontSize}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      renderOrder={1000}
+                      depthTest={false}
+                      rotation={[0, Math.PI / 2, 0]}
+                    >
+                      {lowerDepth}
+                    </Text>
+                  </group>
+                );
+              })()}
             </group>
           );
         })}
