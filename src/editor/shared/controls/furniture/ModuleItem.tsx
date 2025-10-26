@@ -45,7 +45,7 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   const createDragIcon = (): HTMLElement => {
     const icon = document.createElement('div');
     const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--theme-primary').trim() || '#10b981';
-    icon.style.cssText = `position:absolute;top:-1000px;width:48px;height:48px;background:${hasDoor ? primaryColor : primaryColor};border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;font-weight:bold;`;
+    icon.style.cssText = `position:absolute;top:-1000px;width:48px;height:48px;background:${hasDoor ? primaryColor : primaryColor};border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:28px;font-weight:bold;border:none;box-shadow:none;`;
     icon.textContent = hasDoor ? '🚪' : '📦'; // 도어 없음: 박스 아이콘으로 변경
     document.body.appendChild(icon);
     return icon;
