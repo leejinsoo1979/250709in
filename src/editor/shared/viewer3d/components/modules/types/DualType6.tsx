@@ -413,19 +413,15 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
 
     return (
       <>
-        {/* 좌측 섹션 그룹 - visibleSectionIndex가 null이거나 0일 때만 표시 */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 0) && (
-          <group position={[leftXOffset, 0, 0]}>
-            {renderLeftSections()}
-          </group>
-        )}
+        {/* 좌측 섹션 그룹 */}
+        <group position={[leftXOffset, 0, 0]}>
+          {renderLeftSections()}
+        </group>
 
-        {/* 우측 섹션 그룹 - visibleSectionIndex가 null이거나 1일 때만 표시 */}
-        {(visibleSectionIndex === null || visibleSectionIndex === 1) && (
-          <group position={[rightXOffset, 0, 0]}>
-            {renderRightSections()}
-          </group>
-        )}
+        {/* 우측 섹션 그룹 */}
+        <group position={[rightXOffset, 0, 0]}>
+          {renderRightSections()}
+        </group>
 
         {/* 옷걸이 봉 렌더링 - 상부 옷장 섹션 (전체 너비) */}
         {(() => {
