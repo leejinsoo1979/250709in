@@ -678,25 +678,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       lineWidth={isHighlighted ? 2 : 1}
                       dashed={false}
                     />
-                    {/* 칸 높이 치수선 엔드포인트 - 측면뷰에서 숨김 */}
-                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
-                      <>
-                        {/* 첫 번째 칸(i === 0)의 상단 엔드포인트만 표시, 하단은 바닥판이므로 제거 */}
-                        {/* 두 번째 칸 이상(i > 0)은 상하단 모두 표시 */}
-                        {i === compartmentHeights.length - 1 && (
-                          <mesh position={[getDimensionXPosition(false), compartmentTop, getDimensionZPosition()]}>
-                            <sphereGeometry args={[0.05, 8, 8]} />
-                            <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
-                          </mesh>
-                        )}
-                        {i !== 0 && (
-                          <mesh position={[getDimensionXPosition(false), compartmentBottom, getDimensionZPosition()]}>
-                            <sphereGeometry args={[0.05, 8, 8]} />
-                            <meshBasicMaterial color={isHighlighted ? "#FFD700" : dimensionColor} />
-                          </mesh>
-                        )}
-                      </>
-                    )}
+                    {/* 칸 높이 치수선 엔드포인트는 모두 제거 (중복) */}
                   </group>
                     );
                   })}
