@@ -59,14 +59,6 @@ const PlacedModulesList: React.FC = () => {
       
       <div className={styles.listContainer}>
         {placedModules.map((placedModule) => {
-          // 모듈 데이터 가져오기
-          console.log('📋 [PlacedModulesList] 배치된 가구:', {
-            id: placedModule.id,
-            moduleId: placedModule.moduleId,
-            customWidth: placedModule.customWidth,
-            slotIndex: placedModule.slotIndex
-          });
-          
           // customWidth가 있으면 해당 너비로 모듈 ID 생성
           let targetModuleId = placedModule.moduleId;
           if (placedModule.customWidth) {

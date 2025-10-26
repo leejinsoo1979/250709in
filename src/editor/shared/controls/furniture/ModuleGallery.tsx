@@ -443,22 +443,11 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       // 전체 공간 사용 (통합된 공간)
       const fullSpaceInfo = correctedSpaceInfo;
       const fullInternalSpace = calculateInternalSpace(correctedSpaceInfo);
-      
+
       // 전체 공간에 대한 인덱싱 계산
       const indexing = calculateSpaceIndexing(fullSpaceInfo);
       const internalSpace = fullInternalSpace;
-      
-      console.log('🚨 [ModuleGallery] Using full space:', {
-        fullSpaceInfo: {
-          width: fullSpaceInfo.width,
-          customColumnCount: fullSpaceInfo.customColumnCount
-        },
-        indexing: {
-          columnWidth: indexing.columnWidth,
-          columnCount: indexing.columnCount
-        }
-      });
-      
+
       // 특수 듀얼 가구 체크 (바지걸이장, 스타일러장)
       const isSpecialDualFurniture = module.id.includes('dual-2drawer-styler') || 
                                    module.id.includes('dual-4drawer-pantshanger');
