@@ -1849,7 +1849,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             >
               <boxGeometry args={[width + highlightPadding, height + highlightPadding, depth + highlightPadding]} />
               <meshBasicMaterial
-                color={placedModule.isLocked ? "#ff3333" : "#10b981"}
+                color={placedModule.isLocked ? "#ff3333" : selectionHighlightColor}
                 transparent
                 opacity={0.2}
                 depthWrite={false}
