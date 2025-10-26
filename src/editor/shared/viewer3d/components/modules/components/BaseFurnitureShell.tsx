@@ -262,20 +262,20 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         panelId,
         isHighlighted,
         isDimmed,
-        returningMaterial: isHighlighted ? 'normal' : isDimmed ? 'dimmed' : 'normal'
+        returningMaterial: isHighlighted ? 'highlight' : isDimmed ? 'dimmed' : 'normal'
       });
     }
 
-    // 선택된 패널은 원래 material 유지
+    // 선택된 패널은 형광색으로 강조
     if (isHighlighted) {
-      return material;
+      return highlightMaterial;
     }
     // 선택되지 않은 패널만 투명하게
     if (isDimmed) {
       return panelDimmedMaterial;
     }
     return material;
-  }, [highlightedPanel, placedFurnitureId, material, panelDimmedMaterial]);
+  }, [highlightedPanel, placedFurnitureId, material, panelDimmedMaterial, highlightMaterial]);
 
   // 좌우 프레임에 사용할 material 결정 함수
   const getSidePanelMaterial = (panelName: string) => {
