@@ -2672,6 +2672,10 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
 
       // 텍스트 아이템을 html2canvas로 캡처하여 이미지로 추가
       console.log('📝 텍스트 아이템 렌더링 시작, 전체 뷰:', viewPositions.length);
+
+      // DOM이 완전히 렌더링될 때까지 잠시 대기
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       for (const view of viewPositions) {
         const viewType = view.id.split('_')[0];
         const isTextItem = AVAILABLE_TEXT_ITEMS.some(item => item.id === viewType);
@@ -2679,6 +2683,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         console.log(`뷰 확인: ${view.id}, 타입: ${viewType}, isTextItem: ${isTextItem}`);
 
         if (isTextItem) {
+          console.log(`✅ 텍스트 아이템 감지됨: ${viewType}`);
+
           const textXMm = (view.x * paperDimensions.width) / paperDimensions.displayWidth;
           const textYMm = (view.y * paperDimensions.height) / paperDimensions.displayHeight;
           const textWidthMm = (view.width * view.scale * paperDimensions.width) / paperDimensions.displayWidth;
