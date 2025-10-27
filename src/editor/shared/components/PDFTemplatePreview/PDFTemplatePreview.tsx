@@ -2625,10 +2625,14 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
 
         // 뷰카드 내부의 실제 이미지만 캡처
         try {
+          console.log(`🔍 뷰카드 캡처 시작: viewType=${viewType}, view.id=${view.id}`);
+
           // 먼저 data-capture-image 속성을 가진 img 요소를 찾음
           const imageElement = document.querySelector(`[data-capture-image="${view.id}"]`) as HTMLImageElement;
+          console.log(`🖼️ 이미지 요소 검색 결과:`, imageElement ? '찾음' : '못 찾음', imageElement);
 
           if (imageElement) {
+            console.log(`📸 html2canvas 캡처 시작...`);
             // html2canvas로 이미지 요소만 캡처 (투명 배경)
             const canvas = await html2canvas(imageElement, {
               backgroundColor: null, // 투명 배경
@@ -2639,14 +2643,17 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
               imageTimeout: 0,
               removeContainer: true
             });
+            console.log(`✅ 캡처 완료, canvas 크기: ${canvas.width}x${canvas.height}`);
             const imgData = canvas.toDataURL('image/png');
+            console.log(`📄 PDF 추가: position=(${viewXMm}, ${viewYMm}), size=(${viewWidthMm}, ${viewHeightMm})`);
             pdf.addImage(imgData, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
             console.log(`✅ ${viewType} 뷰카드 이미지가 PDF에 추가되었습니다.`);
           } else {
-            console.warn(`뷰카드 이미지를 찾을 수 없음: ${view.id}`);
+            console.warn(`❌ 뷰카드 이미지를 찾을 수 없음: ${view.id}`);
+            console.log(`모든 data-capture-image 요소:`, document.querySelectorAll('[data-capture-image]'));
           }
         } catch (err) {
-          console.error('뷰카드 이미지 추가 실패:', err);
+          console.error('❌ 뷰카드 이미지 추가 실패:', err);
 
           // 폴백: 기존 래스터 이미지 사용
           let imageData = null;
@@ -4570,9 +4577,10 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                           backgroundColor: '#f9f9f9'
                         }}>
                           {view.imageUrl ? (
-                            <img 
-                              src={view.imageUrl} 
-                              alt={view.fileName || 'Image'} 
+                            <img
+                              src={view.imageUrl}
+                              alt={view.fileName || 'Image'}
+                              data-capture-image={view.id}
                               style={{
                                 maxWidth: '100%',
                                 maxHeight: '100%',
@@ -4610,6 +4618,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                             <img
                               src={view.imageUrl}
                               alt={view.fileName || 'Vector View'}
+                              data-capture-image={view.id}
                               style={{
                                 width: '100%',
                                 height: '100%',
