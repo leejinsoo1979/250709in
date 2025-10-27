@@ -139,29 +139,30 @@
 .centerActions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   position: absolute;
   left: 50%;
-  transform: translateX(-60%);
+  transform: translateX(-55%);
   flex: 0 0 auto;
 }
 
 .actionButton {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   background: none;
   border: none;
-  padding: 10px 14px;
+  padding: 8px 10px;
   border-radius: 6px;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--theme-text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
   line-height: 20px;
   min-height: 36px;
+  white-space: nowrap;
 }
 
 .actionButton:hover {
@@ -540,9 +541,28 @@
 }
 
 /* 반응형 디자인 */
+@media (max-width: 1440px) {
+  .centerActions {
+    gap: 6px;
+    transform: translateX(-52%);
+  }
+
+  .actionButton {
+    padding: 8px 8px;
+    font-size: 12px;
+    gap: 3px;
+  }
+}
+
 @media (max-width: 1200px) {
   .centerActions {
-    gap: 16px;
+    gap: 4px;
+    transform: translateX(-50%);
+  }
+
+  .actionButton {
+    padding: 6px 6px;
+    font-size: 11px;
   }
 }
 
