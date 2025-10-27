@@ -184,29 +184,16 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             </label>
           )}
 
-          <div className={styles.checkboxWithIcon}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={showAll}
-                onChange={onShowAllToggle}
-                className={styles.checkbox}
-              />
-              <span className={styles.checkmark}></span>
-              {t('viewer.column')}
-            </label>
-            {viewMode === '3D' && (
-              <button
-                type="button"
-                className={`${styles.iconToggleButton} ${showFurnitureEditHandles ? styles.iconToggleButtonActive : ''}`}
-                onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}
-                aria-pressed={showFurnitureEditHandles}
-                title={showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}
-              >
-                <Edit3 size={14} />
-              </button>
-            )}
-          </div>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={showAll}
+              onChange={onShowAllToggle}
+              className={styles.checkbox}
+            />
+            <span className={styles.checkmark}></span>
+            {t('viewer.column')}
+          </label>
 
           <label className={styles.checkboxLabel}>
             <input
@@ -218,6 +205,19 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             <span className={styles.checkmark}></span>
             {t('viewer.dimensions')}
           </label>
+
+          {viewMode === '3D' && (
+            <label className={`${styles.checkboxLabel} ${styles.iconCheckboxLabel}`} title={showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시`}>
+              <input
+                type="checkbox"
+                checked={showFurnitureEditHandles}
+                onChange={(e) => setShowFurnitureEditHandles(e.target.checked)}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkmark}></span>
+              <Edit3 size={14} />
+            </label>
+          )}
 
           {/* 그리드와 축 - 2D 모드에서만 표시 */}
           {viewMode === '2D' && (
