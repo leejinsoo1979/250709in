@@ -439,7 +439,7 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* 그림자 토글 스위치 */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '13px', color: 'var(--text-primary)' }}>그림자</span>
+            <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--theme-text-secondary)' }}>그림자</span>
             <div
               onClick={() => setShadowEnabled(!shadowEnabled)}
               style={{
