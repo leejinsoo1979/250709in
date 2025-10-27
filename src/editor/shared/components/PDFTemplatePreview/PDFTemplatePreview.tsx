@@ -4940,70 +4940,53 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                 </button>
               </div>
               
-              {/* 서브헤더 - 가구 에디터의 모든 컨트롤 */}
+              {/* 서브헤더 - ViewerControls와 동일 */}
               <div className={styles.viewerSubHeader}>
                 <div className={styles.leftControls}>
                   {/* 치수 표시 토글 */}
                   <div className={styles.toggleGroup}>
-                    <span 
+                    <span
                       className={`${styles.toggleLabel} ${styles.clickable}`}
                       onClick={() => {
-                        // 토글이 꺼져있으면 켜고 모든 항목 체크
-                        if (!uiStore.showDimensions) {
-                          uiStore.setShowDimensions(true);
-                          // 모든 항목이 체크되어 있지 않으면 체크
-                          if (!uiStore.showAll) uiStore.setShowAll(true);
-                          if (!uiStore.showDimensionsText) uiStore.setShowDimensionsText(true);
-                          if (!uiStore.showGuides) uiStore.setShowGuides(true);
-                          if (!uiStore.showAxis) uiStore.setShowAxis(true);
-                          return;
-                        }
-                        
-                        // 토글이 켜져있을 때: 토글을 끄지 않고 모든 체크박스 해제
-                        const anyChecked = uiStore.showAll || uiStore.showDimensionsText || uiStore.showGuides || uiStore.showAxis;
-                        
-                        if (anyChecked) {
-                          // 하나라도 체크되어 있으면 모두 체크 해제
-                          if (uiStore.showAll) uiStore.setShowAll(false);
-                          if (uiStore.showDimensionsText) uiStore.setShowDimensionsText(false);
-                          if (uiStore.showGuides) uiStore.setShowGuides(false);
-                          if (uiStore.showAxis) uiStore.setShowAxis(false);
-                        } else {
-                          // 모두 체크 해제되어 있으면 토글 OFF
-                          uiStore.setShowDimensions(false);
-                        }
+                        // 단순히 치수 표시만 토글
+                        uiStore.setShowDimensions(!uiStore.showDimensions);
                       }}
                       style={{ cursor: 'pointer' }}
                     >
-                      {uiStore.showDimensions ? 'ON' : 'OFF'}
+                      {uiStore.showDimensions ? t('viewer.on').toUpperCase() : t('viewer.off').toUpperCase()}
                     </span>
-                    <button 
+                    <button
                       className={`${styles.switch} ${uiStore.showDimensions ? styles.on : styles.off}`}
                       onClick={() => {
-                        // 치수 토글이 켜져있으면 끄고, 모든 관련 옵션들도 함께 끄기
-                        if (uiStore.showDimensions) {
-                          uiStore.setShowDimensions(false);
-                          // 모든 하위 옵션들 OFF
-                          if (uiStore.showAll) uiStore.setShowAll(false);
-                          if (uiStore.showDimensionsText) uiStore.setShowDimensionsText(false);
-                          if (uiStore.showGuides) uiStore.setShowGuides(false);
-                          if (uiStore.showAxis) uiStore.setShowAxis(false);
-                        } else {
-                          // 치수 토글이 꺼져있으면 켜기
-                          uiStore.setShowDimensions(true);
-                        }
+                        // 단순히 치수 표시만 토글
+                        uiStore.setShowDimensions(!uiStore.showDimensions);
                       }}
                     >
                       <div className={styles.switchHandle}></div>
                     </button>
                   </div>
 
-                  {/* 체크박스 옵션들 - 항상 표시 */}
+                  {/* 체크박스 옵션들 - showDimensions가 true일 때만 표시 */}
+                  {uiStore.showDimensions && (
                   <div className={styles.checkboxGroup}>
+                    {/* 2D 모드에서만 가구 체크박스 표시 */}
+                    {viewMode === '2D' && (
+                      <label className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={uiStore.showFurniture}
+                          onChange={(e) => uiStore.setShowFurniture(e.target.checked)}
+                          className={styles.checkbox}
+                        />
+                        <span className={styles.checkmark}></span>
+                        {t('furniture.title')}
+                      </label>
+                    )}
+
                     <label className={styles.checkboxLabel}>
                       <input
                         type="checkbox"
-                        checked={uiStore.showDimensions && uiStore.showAll}
+                        checked={uiStore.showAll}
                         onChange={(e) => uiStore.setShowAll(e.target.checked)}
                         className={styles.checkbox}
                       />
@@ -5014,7 +4997,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                     <label className={styles.checkboxLabel}>
                       <input
                         type="checkbox"
-                        checked={uiStore.showDimensions && uiStore.showDimensionsText}
+                        checked={uiStore.showDimensionsText}
                         onChange={(e) => uiStore.setShowDimensionsText(e.target.checked)}
                         className={styles.checkbox}
                       />
@@ -5035,28 +5018,34 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                       </label>
                     )}
 
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={uiStore.showDimensions && uiStore.showGuides}
-                        onChange={(e) => uiStore.setShowGuides(e.target.checked)}
-                        className={styles.checkbox}
-                      />
-                      <span className={styles.checkmark}></span>
-                      {t('viewer.grid')}
-                    </label>
+                    {/* 그리드와 축 - 2D 모드에서만 표시 */}
+                    {viewMode === '2D' && (
+                      <>
+                        <label className={styles.checkboxLabel}>
+                          <input
+                            type="checkbox"
+                            checked={uiStore.showGuides}
+                            onChange={(e) => uiStore.setShowGuides(e.target.checked)}
+                            className={styles.checkbox}
+                          />
+                          <span className={styles.checkmark}></span>
+                          {t('viewer.grid')}
+                        </label>
 
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={uiStore.showDimensions && uiStore.showAxis}
-                        onChange={(e) => uiStore.setShowAxis(e.target.checked)}
-                        className={styles.checkbox}
-                      />
-                      <span className={styles.checkmark}></span>
-                      {t('viewer.axis')}
-                    </label>
+                        <label className={styles.checkboxLabel}>
+                          <input
+                            type="checkbox"
+                            checked={uiStore.showAxis}
+                            onChange={(e) => uiStore.setShowAxis(e.target.checked)}
+                            className={styles.checkbox}
+                          />
+                          <span className={styles.checkmark}></span>
+                          {t('viewer.axis')}
+                        </label>
+                      </>
+                    )}
                   </div>
+                  )}
                 </div>
 
                 <div className={styles.centerControls}>
@@ -5066,13 +5055,13 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                       className={`${styles.renderModeButton} ${renderMode === 'solid' ? styles.active : ''}`}
                       onClick={() => setRenderMode('solid')}
                     >
-                      Solid
+                      {t('viewer.solid')}
                     </button>
                     <button
                       className={`${styles.renderModeButton} ${renderMode === 'wireframe' ? styles.active : ''}`}
                       onClick={() => setRenderMode('wireframe')}
                     >
-                      Wireframe
+                      {t('viewer.wireframe')}
                     </button>
                   </div>
 
@@ -5091,6 +5080,27 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                       2D
                     </button>
                   </div>
+
+                  {/* 도어 설치 버튼 */}
+                  <div className={styles.doorButtonGroup}>
+                    <button
+                      className={`${styles.doorButton} ${spaceInfo.hasDoors ? styles.active : ''}`}
+                      onClick={() => {
+                        const newHasDoors = !spaceInfo.hasDoors;
+                        useSpaceConfigStore.getState().setSpaceInfo({
+                          ...spaceInfo,
+                          hasDoors: newHasDoors
+                        });
+                      }}
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <path d="M9 3v18" />
+                        <circle cx="15" cy="12" r="1" fill="currentColor" />
+                      </svg>
+                      {t('viewer.doorInstallation')}
+                    </button>
+                  </div>
                 </div>
 
                 <div className={styles.rightControls}>
@@ -5098,25 +5108,34 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   {viewMode === '2D' && (
                     <>
                       <div className={styles.viewDirectionGroup}>
-                        {['front', 'top', 'left', 'right'].map((direction) => (
+                        {['all', 'front', 'top', 'left', 'right'].map((direction) => (
                           <button
                             key={direction}
                             className={`${styles.viewDirectionButton} ${view2DDirection === direction ? styles.active : ''}`}
                             onClick={() => setView2DDirection(direction as any)}
                           >
-                            {direction}
+                            {direction === 'all' ? t('viewer.all') :
+                             direction === 'front' ? t('viewer.front') :
+                             direction === 'top' ? t('viewer.top') :
+                             direction === 'left' ? t('viewer.left') :
+                             t('viewer.right')}
                           </button>
                         ))}
                       </div>
-                      
+
                       {/* 다크모드/라이트모드 토글 - 2D 모드에서만 표시 */}
                       <button
                         className={styles.themeToggle}
                         onClick={() => uiStore.toggleView2DTheme()}
-                        title={uiStore.view2DTheme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
+                        title={uiStore.view2DTheme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')}
                       >
                         {uiStore.view2DTheme === 'dark' ? (
-                          // 해 아이콘 (라이트 모드)
+                          // 달 아이콘 (다크 모드 상태)
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                          </svg>
+                        ) : (
+                          // 해 아이콘 (라이트 모드 상태)
                           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                             <circle cx="12" cy="12" r="5" />
                             <line x1="12" y1="1" x2="12" y2="3" />
@@ -5127,11 +5146,6 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                             <line x1="21" y1="12" x2="23" y2="12" />
                             <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
                             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                          </svg>
-                        ) : (
-                          // 달 아이콘 (다크 모드)
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
                           </svg>
                         )}
                       </button>

@@ -2492,6 +2492,50 @@
   color: white;
 }
 
+/* 도어 설치 버튼 그룹 */
+.viewerSubHeader .doorButtonGroup {
+  display: flex;
+  border: 1px solid var(--accent-primary);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.viewerSubHeader .doorButton {
+  background: var(--theme-surface);
+  border: none;
+  padding: 5px 0;
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  line-height: 18px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  width: 75px;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.viewerSubHeader .doorButton svg {
+  color: currentColor;
+  width: 12px;
+  height: 12px;
+}
+
+.viewerSubHeader .doorButton.active {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.viewerSubHeader .doorButton:hover:not(.active) {
+  background: var(--theme-primary-light);
+}
+
 /* 테마 토글 버튼 */
 .viewerSubHeader .themeToggle {
   padding: 6px;
@@ -2552,6 +2596,121 @@
   position: relative;
   overflow: hidden;
   background-color: var(--theme-background);
+}
+
+.captureShade {
+  position: absolute;
+  background-color: rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.captureRegion {
+  position: absolute;
+  border: 2px solid var(--theme-primary);
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.6);
+  cursor: grab;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 8px;
+  box-sizing: border-box;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.captureRegion:active {
+  cursor: grabbing;
+}
+
+.captureRegionLabel {
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.captureHandle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  border: 2px solid #fff;
+  cursor: pointer;
+  pointer-events: auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.captureHandle:hover {
+  transform: scale(1.08);
+}
+
+.handleNw {
+  top: -7px;
+  left: -7px;
+  cursor: nwse-resize;
+}
+
+.handleN {
+  top: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.handleNe {
+  top: -7px;
+  right: -7px;
+  cursor: nesw-resize;
+}
+
+.handleE {
+  top: 50%;
+  right: -7px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.handleSe {
+  bottom: -7px;
+  right: -7px;
+  cursor: nwse-resize;
+}
+
+.handleS {
+  bottom: -7px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: ns-resize;
+}
+
+.handleSw {
+  bottom: -7px;
+  left: -7px;
+  cursor: nesw-resize;
+}
+
+.handleW {
+  top: 50%;
+  left: -7px;
+  transform: translateY(-50%);
+  cursor: ew-resize;
+}
+
+.captureRegionHint {
+  position: absolute;
+  left: 20px;
+  bottom: 20px;
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 12px;
+  border-radius: 6px;
+  pointer-events: none;
+  backdrop-filter: blur(2px);
 }
 
 .viewerFooter {
