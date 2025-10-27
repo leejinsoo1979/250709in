@@ -145,6 +145,53 @@ type CaptureRegion = {
 
 type CaptureHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
 
+interface TemplateSlot {
+  id: string;
+  type: 'view' | 'text';
+  target: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  maintainScale?: boolean;
+}
+
+interface LayoutTemplate {
+  id: string;
+  name: string;
+  description: string;
+  preview: string;
+  paperSize: PaperSize;
+  orientation: Orientation;
+  backgroundColor?: string;
+  backgroundImage?: string;
+  backgroundSize?: 'cover' | 'contain' | string;
+  slots: TemplateSlot[];
+}
+
+const LAYOUT_TEMPLATES: LayoutTemplate[] = [
+  {
+    id: 'a3-portrait-standard',
+    name: 'A3 표준 템플릿',
+    description: '정보 카드 + 상부/정면/측면/도어 뷰 배치',
+    preview: '/templates/a3-template.png',
+    paperSize: 'A3',
+    orientation: 'portrait',
+    backgroundColor: '#2d3035',
+    backgroundImage: '/templates/a3-template.png',
+    backgroundSize: 'cover',
+    slots: [
+      { id: 'info', type: 'text', target: 'info', x: 28, y: 28, width: 240, height: 140 },
+      { id: 'detail1', type: 'view', target: 'detail1', x: 28, y: 188, width: 120, height: 120 },
+      { id: 'top', type: 'view', target: 'top', x: 280, y: 28, width: 300, height: 140, maintainScale: true },
+      { id: 'front', type: 'view', target: 'front', x: 212, y: 188, width: 360, height: 360, maintainScale: true },
+      { id: 'side', type: 'view', target: 'side', x: 28, y: 328, width: 180, height: 320, maintainScale: true },
+      { id: 'right', type: 'view', target: 'right', x: 28, y: 520, width: 180, height: 240, maintainScale: true },
+      { id: 'door', type: 'view', target: 'door', x: 212, y: 560, width: 360, height: 240, maintainScale: true }
+    ]
+  }
+];
+
 const DEFAULT_CAPTURE_REGION: CaptureRegion = {
   x: 0,
   y: 0,
@@ -191,7 +238,10 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   const [selectedPaperSize, setSelectedPaperSize] = useState<PaperSize>('A3');
   const [orientation, setOrientation] = useState<Orientation>('landscape');
   const [isGenerating, setIsGenerating] = useState(false);
-  const paperColor = '#ffffff'; // 용지 색상은 항상 흰색
+  const [paperColor, setPaperColor] = useState('#ffffff');
+  const [paperBackgroundImage, setPaperBackgroundImage] = useState<string | null>(null);
+  const [paperBackgroundSize, setPaperBackgroundSize] = useState<'cover' | 'contain' | string>('cover');
+  const [paperBackgroundDataUrl, setPaperBackgroundDataUrl] = useState<string | null>(null);
   const [draggingView, setDraggingView] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [viewPositions, setViewPositions] = useState<ViewPosition[]>([]);
@@ -254,6 +304,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   const [showZoomDropdown, setShowZoomDropdown] = useState(false); // 줌 드롭다운 표시 상태
   const [isZoomDropdownOpen, setIsZoomDropdownOpen] = useState(false); // 줌 드롭다운 상태
   const [showExportPopup, setShowExportPopup] = useState(false); // 내보내기 팝업 표시 상태
+  const [activeTemplateId, setActiveTemplateId] = useState<string | null>(null);
   const [selectedExportFormat, setSelectedExportFormat] = useState<'pdf' | 'png' | 'jpg' | 'dxf'>('pdf'); // 선택된 내보내기 형식
   const [isPaperSizeDropdownOpen, setIsPaperSizeDropdownOpen] = useState(false); // 용지 사이즈 드롭다운 상태
   const [designSubTab, setDesignSubTab] = useState<'template' | '2d' | '3d'>('template'); // 레이아웃 탭의 서브 탭 상태
@@ -514,6 +565,176 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       viewType: viewType
     });
   };
+
+  const fetchImageAsDataUrl = useCallback(async (url: string) => {
+    try {
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`템플릿 이미지를 불러오지 못했습니다: ${response.status}`);
+      }
+      const blob = await response.blob();
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (typeof reader.result === 'string') {
+            resolve(reader.result);
+          } else {
+            reject(new Error('템플릿 이미지 변환 실패'));
+          }
+        };
+        reader.onerror = () => reject(reader.error ?? new Error('템플릿 이미지 로딩 실패'));
+        reader.readAsDataURL(blob);
+      });
+    } catch (error) {
+      console.error('템플릿 배경 이미지를 불러오지 못했습니다:', error);
+      return null;
+    }
+  }, []);
+
+  const getViewDimensionsMm = useCallback((viewType: string) => {
+    const fallbackWidth = spaceInfo?.width ?? 3000;
+    const fallbackDepth = spaceInfo?.depth ?? 600;
+    const fallbackHeight = spaceInfo?.height ?? 2400;
+
+    switch (viewType) {
+      case 'top':
+        return { width: fallbackWidth, height: fallbackDepth };
+      case 'front':
+        return { width: fallbackWidth, height: fallbackHeight };
+      case 'side':
+      case 'right':
+        return { width: fallbackDepth, height: fallbackHeight };
+      case 'door':
+        return { width: fallbackWidth, height: fallbackHeight };
+      default:
+        return { width: fallbackWidth, height: fallbackHeight };
+    }
+  }, [spaceInfo?.width, spaceInfo?.depth, spaceInfo?.height]);
+
+  const applyLayoutTemplate = useCallback(async (template: LayoutTemplate) => {
+    setActiveTemplateId(template.id);
+    setSelectedPaperSize(template.paperSize);
+    setOrientation(template.orientation);
+    setPreviewScale(0.9);
+
+    if (template.backgroundColor) {
+      setPaperColor(template.backgroundColor);
+    } else {
+      setPaperColor('#ffffff');
+    }
+
+    if (template.backgroundImage) {
+      setPaperBackgroundImage(template.backgroundImage);
+      setPaperBackgroundSize(template.backgroundSize ?? 'cover');
+      const dataUrl = await fetchImageAsDataUrl(template.backgroundImage);
+      setPaperBackgroundDataUrl(dataUrl);
+    } else {
+      setPaperBackgroundImage(null);
+      setPaperBackgroundDataUrl(null);
+    }
+
+    const templateDimensions = getPaperDimensions(template.paperSize, template.orientation);
+    const templateWidth = templateDimensions.displayWidth;
+    const templateHeight = templateDimensions.displayHeight;
+    const baseViews = viewPositions.map(view => ({ ...view }));
+    const updatedViews = [...baseViews];
+    const usedViewIds = new Set<string>();
+
+    const mmToPxCandidates: number[] = [];
+    template.slots.forEach(slot => {
+      if (slot.type === 'view' && slot.maintainScale) {
+        const dimsMm = getViewDimensionsMm(slot.target);
+        if (dimsMm.width > 0 && dimsMm.height > 0) {
+          mmToPxCandidates.push(slot.width / dimsMm.width);
+          mmToPxCandidates.push(slot.height / dimsMm.height);
+        }
+      }
+    });
+
+    const mmToPx = mmToPxCandidates.length > 0 ? Math.min(...mmToPxCandidates) : 1;
+    const timestampBase = Date.now();
+
+    const ensureViewForSlot = (slot: TemplateSlot, index: number) => {
+      let viewIndex = updatedViews.findIndex(view => {
+        const prefix = view.id.split('_')[0];
+        return !usedViewIds.has(view.id) && prefix === slot.target;
+      });
+
+      if (viewIndex === -1) {
+        const newView: ViewPosition = {
+          id: `${slot.target}_${timestampBase}_${index}`,
+          x: slot.x,
+          y: slot.y,
+          width: slot.width,
+          height: slot.height,
+          scale: 1,
+          rotation: 0,
+          cropRegion: { ...DEFAULT_CAPTURE_REGION },
+          imageAspectRatio: slot.width / Math.max(slot.height, 1)
+        };
+        updatedViews.push(newView);
+        viewIndex = updatedViews.length - 1;
+      }
+
+      usedViewIds.add(updatedViews[viewIndex].id);
+      return viewIndex;
+    };
+
+    template.slots.forEach((slot, slotIndex) => {
+      const viewIndex = ensureViewForSlot(slot, slotIndex);
+      const originalView = updatedViews[viewIndex];
+      const view = { ...originalView };
+
+      let targetWidthPx = slot.width;
+      let targetHeightPx = slot.height;
+      let targetAspect = view.imageAspectRatio ?? (slot.width / Math.max(slot.height, 1));
+
+      if (slot.type === 'view' && slot.maintainScale) {
+        const dimsMm = getViewDimensionsMm(slot.target);
+        if (dimsMm.width > 0 && dimsMm.height > 0) {
+          const scaledWidth = dimsMm.width * mmToPx;
+          const scaledHeight = dimsMm.height * mmToPx;
+          targetWidthPx = Math.min(slot.width, scaledWidth);
+          targetHeightPx = Math.min(slot.height, scaledHeight);
+          targetAspect = dimsMm.width / Math.max(dimsMm.height, 1);
+        }
+      }
+
+      const baseX = slot.x + (slot.width - targetWidthPx) / 2;
+      const baseY = slot.y + (slot.height - targetHeightPx) / 2;
+
+      view.x = clamp(baseX, 0, Math.max(0, templateWidth - targetWidthPx));
+      view.y = clamp(baseY, 0, Math.max(0, templateHeight - targetHeightPx));
+      view.width = targetWidthPx;
+      view.height = targetHeightPx;
+      view.scale = 1;
+      view.rotation = 0;
+      view.cropRegion = view.cropRegion ?? { ...DEFAULT_CAPTURE_REGION };
+
+      if (slot.type === 'view') {
+        view.imageAspectRatio = targetAspect;
+      }
+
+      updatedViews[viewIndex] = view;
+    });
+
+    setViewPositions(updatedViews);
+    setPages([updatedViews.map(view => ({ ...view }))]);
+    setCurrentPage(0);
+  }, [
+    fetchImageAsDataUrl,
+    getViewDimensionsMm,
+    viewPositions,
+    setViewPositions,
+    setPages,
+    setCurrentPage,
+    setPreviewScale,
+    setPaperColor,
+    setPaperBackgroundImage,
+    setPaperBackgroundSize,
+    setPaperBackgroundDataUrl,
+    setActiveTemplateId
+  ]);
 
   const handleRegionPointerMove = useCallback((event: PointerEvent) => {
     const dragState = captureDragStateRef.current;
@@ -1481,7 +1702,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         const canvas = new fabric.Canvas(uniqueId, {
             width: paperDimensions.displayWidth,
             height: paperDimensions.displayHeight,
-            backgroundColor: paperColor,
+            backgroundColor: paperBackgroundImage ? 'rgba(0,0,0,0)' : paperColor,
             selection: true,
             preserveObjectStacking: true,
             renderOnAddRemove: true
@@ -1693,7 +1914,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           isInitializingRef.current = false;
           console.log('🔓 Canvas initialization flag reset');
         }
-    }, [isOpen, orientation, paperDimensions, paperColor]);
+    }, [isOpen, orientation, paperDimensions, paperColor, paperBackgroundImage]);
 
   // Fabric.js 캔버스 초기화
   useEffect(() => {
@@ -2616,6 +2837,14 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       pdf.setFillColor(255, 255, 255);
       pdf.rect(0, 0, paperDimensions.width, paperDimensions.height, 'F');
 
+      if (paperBackgroundDataUrl) {
+        try {
+          pdf.addImage(paperBackgroundDataUrl, 'PNG', 0, 0, paperDimensions.width, paperDimensions.height, undefined, 'FAST');
+        } catch (error) {
+          console.error('PDF 배경 이미지 추가 실패:', error);
+        }
+      }
+
       // 각 뷰 위치에 대해 이미지 렌더링
       for (const view of viewPositions) {
         // 뷰 ID에서 원본 타입 추출 (timestamp 제거)
@@ -3142,8 +3371,25 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   </button>
                 </div>
                 {designSubTab === 'template' && (
-                  <div className={styles.templateContent}>
-                    <p className={styles.placeholderText}>템플릿 옵션이 여기에 표시됩니다.</p>
+                  <div className={styles.templateGrid}>
+                    {LAYOUT_TEMPLATES.map(template => (
+                      <button
+                        key={template.id}
+                        className={`${styles.templateCard} ${activeTemplateId === template.id ? styles.templateCardActive : ''}`}
+                        onClick={() => void applyLayoutTemplate(template)}
+                      >
+                        <div className={styles.templateThumbnail}>
+                          <img src={template.preview} alt={template.name} draggable={false} />
+                          <span className={styles.templateTag}>
+                            {template.paperSize} · {template.orientation === 'portrait' ? '세로' : '가로'}
+                          </span>
+                        </div>
+                        <div className={styles.templateMeta}>
+                          <span className={styles.templateMetaTitle}>{template.name}</span>
+                          <span className={styles.templateMetaDesc}>{template.description}</span>
+                        </div>
+                      </button>
+                    ))}
                   </div>
                 )}
                 {designSubTab === '2d' && (
@@ -4227,7 +4473,11 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                 style={{
                   width: `${paperDimensions.displayWidth}px`,
                   height: `${paperDimensions.displayHeight}px`,
-                  backgroundColor: paperColor
+                  backgroundColor: paperBackgroundImage ? 'transparent' : paperColor,
+                  backgroundImage: paperBackgroundImage ? `url(${paperBackgroundImage})` : 'none',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundSize: paperBackgroundSize,
+                  backgroundPosition: 'center'
                 }}
               >
                 {/* 메인 도면 영역 - 드래그 가능한 뷰들 */}
@@ -4253,7 +4503,11 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                       position: 'relative',
                       width: paperDimensions.displayWidth,
                       height: paperDimensions.displayHeight,
-                      backgroundColor: paperColor,
+                      backgroundColor: paperBackgroundImage ? 'transparent' : paperColor,
+                      backgroundImage: paperBackgroundImage ? `url(${paperBackgroundImage})` : 'none',
+                      backgroundSize: paperBackgroundSize,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'center',
                       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
                       overflow: 'visible',
                       // transform 제거 - 캔버스 중복 문제의 원인
@@ -4808,7 +5062,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              backgroundColor: paperColor || '#ffffff'
+                              backgroundColor: paperBackgroundImage ? 'transparent' : (paperColor || '#ffffff')
                             }}
                           >
                             <canvas 
@@ -4836,31 +5090,47 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                                       canvasHeight = cardHeight;
                                       canvasWidth = cardHeight * pageRatio;
                                     }
-                                    
                                     el.width = canvasWidth;
                                     el.height = canvasHeight;
-                                    
-                                    // 배경색 설정
-                                    ctx.fillStyle = paperColor || '#ffffff';
-                                    ctx.fillRect(0, 0, el.width, el.height);
-                                    
+
+                                    const drawBackground = (next: () => void) => {
+                                      if (paperBackgroundDataUrl) {
+                                        const bgImg = new Image();
+                                        bgImg.onload = () => {
+                                          ctx.drawImage(bgImg, 0, 0, el.width, el.height);
+                                          next();
+                                        };
+                                        bgImg.onerror = () => {
+                                          ctx.fillStyle = paperColor || '#ffffff';
+                                          ctx.fillRect(0, 0, el.width, el.height);
+                                          next();
+                                        };
+                                        bgImg.src = paperBackgroundDataUrl;
+                                      } else {
+                                        ctx.fillStyle = paperColor || '#ffffff';
+                                        ctx.fillRect(0, 0, el.width, el.height);
+                                        next();
+                                      }
+                                    };
+
                                     // Fabric 캔버스 내용을 그리기
                                     setTimeout(() => {
                                       if (fabricCanvasRef.current) {
-                                        // 캔버스 크기에 맞는 스케일 계산
                                         const scale = canvasWidth / paperDimensions.displayWidth;
-                                        
                                         const dataUrl = fabricCanvasRef.current.toDataURL({
                                           format: 'png',
                                           multiplier: scale
                                         });
-                                        
+
                                         const img = new Image();
                                         img.onload = () => {
                                           ctx.clearRect(0, 0, el.width, el.height);
-                                          ctx.fillStyle = paperColor || '#ffffff';
-                                          ctx.fillRect(0, 0, el.width, el.height);
-                                          ctx.drawImage(img, 0, 0, el.width, el.height);
+                                          drawBackground(() => {
+                                            ctx.drawImage(img, 0, 0, el.width, el.height);
+                                          });
+                                        };
+                                        img.onerror = () => {
+                                          drawBackground(() => void 0);
                                         };
                                         img.src = dataUrl;
                                       }
