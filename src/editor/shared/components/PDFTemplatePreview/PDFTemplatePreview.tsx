@@ -2671,9 +2671,12 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       }
 
       // 텍스트 아이템을 html2canvas로 캡처하여 이미지로 추가
+      console.log('📝 텍스트 아이템 렌더링 시작, 전체 뷰:', viewPositions.length);
       for (const view of viewPositions) {
         const viewType = view.id.split('_')[0];
         const isTextItem = AVAILABLE_TEXT_ITEMS.some(item => item.id === viewType);
+
+        console.log(`뷰 확인: ${view.id}, 타입: ${viewType}, isTextItem: ${isTextItem}`);
 
         if (isTextItem) {
           const textXMm = (view.x * paperDimensions.width) / paperDimensions.displayWidth;
@@ -2681,25 +2684,32 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           const textWidthMm = (view.width * view.scale * paperDimensions.width) / paperDimensions.displayWidth;
           const textHeightMm = (view.height * view.scale * paperDimensions.height) / paperDimensions.displayHeight;
 
+          console.log(`📍 텍스트 아이템 위치: x=${textXMm}mm, y=${textYMm}mm, w=${textWidthMm}mm, h=${textHeightMm}mm`);
+
           try {
             // DOM에서 해당 텍스트 아이템 요소 찾기
             const textElement = document.querySelector(`[data-text-id="${view.id}"]`);
+            console.log(`🔍 텍스트 요소 검색: [data-text-id="${view.id}"]`, textElement ? '찾음' : '못 찾음');
 
             if (textElement) {
+              console.log('📸 html2canvas 캡처 시작...');
               const canvas = await html2canvas(textElement as HTMLElement, {
                 backgroundColor: '#ffffff',
                 scale: 2,
-                logging: false,
+                logging: true,
                 useCORS: true
               });
+              console.log('✅ 캡처 완료, canvas 크기:', canvas.width, 'x', canvas.height);
               const imgData = canvas.toDataURL('image/png');
+              console.log('🖼️ 이미지 데이터 길이:', imgData.length);
               pdf.addImage(imgData, 'PNG', textXMm, textYMm, textWidthMm, textHeightMm);
-              console.log(`✅ 텍스트 아이템 ${viewType}이(가) 이미지로 렌더링되었습니다.`);
+              console.log(`✅ 텍스트 아이템 ${viewType}이(가) PDF에 추가되었습니다.`);
             } else {
-              console.warn(`텍스트 아이템 요소를 찾을 수 없음: ${view.id}`);
+              console.warn(`❌ 텍스트 아이템 요소를 찾을 수 없음: ${view.id}`);
+              console.log('모든 data-text-id 요소:', document.querySelectorAll('[data-text-id]'));
             }
           } catch (err) {
-            console.error('텍스트 아이템 캡처 실패:', err);
+            console.error('❌ 텍스트 아이템 캡처 실패:', err);
           }
         }
       }
