@@ -446,7 +446,7 @@ const Header: React.FC<HeaderProps> = ({
                 position: 'relative',
                 width: '36px',
                 height: '20px',
-                backgroundColor: shadowEnabled ? colors.primary : 'rgba(128,128,128,0.3)',
+                backgroundColor: shadowEnabled ? colors.primary : (theme.mode === 'dark' ? 'rgba(128,128,128,0.3)' : 'rgba(200,200,200,0.5)'),
                 borderRadius: '10px',
                 cursor: 'pointer',
                 transition: 'background-color 0.3s ease',
@@ -460,11 +460,11 @@ const Header: React.FC<HeaderProps> = ({
                 style={{
                   width: '16px',
                   height: '16px',
-                  backgroundColor: theme.mode === 'dark' ? '#1a1a1a' : '#ffffff',
+                  backgroundColor: theme.mode === 'dark' ? '#2a2a2a' : '#ffffff',
                   borderRadius: '50%',
-                  transition: 'transform 0.3s ease',
+                  transition: 'transform 0.3s ease, background-color 0.3s ease',
                   transform: shadowEnabled ? 'translateX(16px)' : 'translateX(0)',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  boxShadow: theme.mode === 'dark' ? '0 2px 4px rgba(0,0,0,0.5)' : '0 2px 4px rgba(0,0,0,0.2)'
                 }}
               />
             </div>
