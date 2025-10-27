@@ -1526,8 +1526,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           const gridSize = 20; // 그리드 간격 증가
           const majorGridSize = gridSize * 5; // 주 그리드 간격
           
-          // 캔버스 배경을 약간 어둡게 설정 (그리드가 보이도록)
-          canvas.setBackgroundColor('#fafafa', () => {
+          // 캔버스 배경을 흰색으로 설정
+          canvas.setBackgroundColor('#ffffff', () => {
             canvas.renderAll();
           });
           
@@ -2603,8 +2603,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         format: [paperDimensions.width, paperDimensions.height]
       });
 
-      // 배경색 설정
-      pdf.setFillColor(paperColor);
+      // 배경색 설정 (흰색)
+      pdf.setFillColor(255, 255, 255);
       pdf.rect(0, 0, paperDimensions.width, paperDimensions.height, 'F');
 
       // 각 뷰 위치에 대해 이미지 렌더링
@@ -2715,41 +2715,62 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           const textWidthMm = (view.width * view.scale * paperDimensions.width) / paperDimensions.displayWidth;
           const textHeightMm = (view.height * view.scale * paperDimensions.height) / paperDimensions.displayHeight;
           
-          // 배경 박스
-          pdf.setFillColor('#2a2a2a');
+          // 배경 박스 (흰색)
+          pdf.setFillColor(255, 255, 255);
           pdf.rect(textXMm, textYMm, textWidthMm, textHeightMm, 'F');
-          
+
+          // 테두리 추가
+          pdf.setDrawColor(200, 200, 200);
+          pdf.rect(textXMm, textYMm, textWidthMm, textHeightMm, 'S');
+
           if (viewType === 'info') {
             const themeColor = getThemeHex();
             pdf.setTextColor(themeColor);
-            pdf.setFontSize(18);
-            pdf.text('INSHOW', textXMm + 5, textYMm + 10);
-            
-            pdf.setTextColor('#ffffff');
-            pdf.setFontSize(14);
-            pdf.text(infoTexts.title, textXMm + 5, textYMm + 20);
-            
-            pdf.setFontSize(10);
-            pdf.setTextColor('#888888');
-            pdf.text('Size:', textXMm + 5, textYMm + 30);
-            pdf.setTextColor(themeColor);
-            pdf.text(infoTexts.size, textXMm + 20, textYMm + 30);
-            
-            pdf.setTextColor('#888888');
-            pdf.text('Door:', textXMm + 5, textYMm + 37);
-            pdf.setTextColor(themeColor);
-            pdf.text(infoTexts.door, textXMm + 20, textYMm + 37);
-            
-            pdf.setTextColor('#888888');
-            pdf.text('Body:', textXMm + 5, textYMm + 44);
-            pdf.setTextColor(themeColor);
-            pdf.text(infoTexts.body, textXMm + 20, textYMm + 44);
+            pdf.setFontSize(12);
+            pdf.text('INSHOW', textXMm + 2, textYMm + 6);
+
+            pdf.setTextColor(0, 0, 0);
+            pdf.setFontSize(9);
+            pdf.text(infoTexts.title, textXMm + 2, textYMm + 12);
+
+            // 실측 (녹색)
+            pdf.setFontSize(8);
+            pdf.setTextColor(34, 197, 94); // #22c55e
+            pdf.text('실측:', textXMm + 2, textYMm + 20);
+            pdf.text(infoTexts.size, textXMm + 15, textYMm + 20);
+
+            // 라인
+            pdf.setDrawColor(204, 204, 204);
+            pdf.line(textXMm + 2, textYMm + 22, textXMm + textWidthMm - 2, textYMm + 22);
+
+            // 속장 (주황색)
+            pdf.setTextColor(249, 115, 22); // #f97316
+            pdf.text('속장:', textXMm + 2, textYMm + 28);
+            pdf.text(infoTexts.body, textXMm + 15, textYMm + 28);
+
+            // 라인
+            pdf.setDrawColor(204, 204, 204);
+            pdf.line(textXMm + 2, textYMm + 30, textXMm + textWidthMm - 2, textYMm + 30);
+
+            // 도어 (검정)
+            pdf.setTextColor(0, 0, 0);
+            pdf.text('도어:', textXMm + 2, textYMm + 36);
+            pdf.text(infoTexts.door, textXMm + 15, textYMm + 36);
+
+            // 라인
+            pdf.setDrawColor(204, 204, 204);
+            pdf.line(textXMm + 2, textYMm + 38, textXMm + textWidthMm - 2, textYMm + 38);
+
+            // 속장 (검정)
+            pdf.setTextColor(0, 0, 0);
+            pdf.text('속장:', textXMm + 2, textYMm + 44);
+            pdf.text(infoTexts.body, textXMm + 15, textYMm + 44);
           } else if (viewType === 'title') {
-            pdf.setTextColor('#ffffff');
+            pdf.setTextColor(0, 0, 0);
             pdf.setFontSize(16);
             pdf.text(infoTexts.title, textXMm + 5, textYMm + textHeightMm / 2);
           } else if (viewType === 'notes' && infoTexts.notes) {
-            pdf.setTextColor('#cccccc');
+            pdf.setTextColor(0, 0, 0);
             pdf.setFontSize(10);
             const lines = pdf.splitTextToSize(infoTexts.notes, textWidthMm - 10);
             pdf.text(lines, textXMm + 5, textYMm + 10);
