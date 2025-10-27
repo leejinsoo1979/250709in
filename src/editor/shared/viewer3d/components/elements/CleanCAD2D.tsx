@@ -1906,20 +1906,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {/* 0. 띄움 높이 - 띄워서 배치인 경우에만 표시 (우측) */}
               {isFloating && floatHeight > 0 && (
                 <group>
-                  <Line
+                  <NativeLine
                     points={[[rightDimensionX + mmToThreeUnits(100), 0, 0.002], [rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight), 0.002]]}
                     color={textColor}
                     lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
-                  <Line
+                  <NativeLine
                     points={createArrowHead([rightDimensionX + mmToThreeUnits(100), 0, 0.002], [rightDimensionX + mmToThreeUnits(100), -0.03, 0.002])}
                     color={textColor}
                     lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
-                  <Line
+                  <NativeLine
                     points={createArrowHead([rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight), 0.002], [rightDimensionX + mmToThreeUnits(100), mmToThreeUnits(floatHeight) + 0.03, 0.002])}
                     color={textColor}
                     lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
                   <Text
                   renderOrder={1000}
@@ -1956,20 +1962,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {/* 1. 하부 프레임 높이 - 받침대가 있는 경우에만 표시 */}
               {bottomFrameHeight > 0 && (
               <group>
-                <Line
+                <NativeLine
                   points={[[rightDimensionX, bottomY, 0.002], [rightDimensionX, bottomFrameTopY, 0.002]]}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                <Line
+                <NativeLine
                   points={createArrowHead([rightDimensionX, bottomY, 0.002], [rightDimensionX, 0.03, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                <Line
+                <NativeLine
                   points={createArrowHead([rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, bottomFrameTopY - 0.03, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
                 <Text
                   renderOrder={1000}
@@ -2006,20 +2018,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               
               {/* 2. 캐비넷/가구 높이 */}
               <group>
-                <Line
+                <NativeLine
                   points={[[rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, furnitureTopY, 0.002]]}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                <Line
+                <NativeLine
                   points={createArrowHead([rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, bottomFrameTopY + 0.03, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                <Line
+                <NativeLine
                   points={createArrowHead([rightDimensionX, furnitureTopY, 0.002], [rightDimensionX, furnitureTopY - 0.03, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
                 <Text
                   renderOrder={1000}
@@ -2037,20 +2055,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               
               {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
               <group>
-                <Line
+                <NativeLine
                   points={[[rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, topFrameLineTopY, 0.002]]}
                   color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                <Line
+                <NativeLine
                   points={createArrowHead([rightDimensionX, cabinetAreaTopY, 0.002], [rightDimensionX, cabinetAreaTopY + 0.03, 0.002])}
                   color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                <Line
+                <NativeLine
                   points={createArrowHead([rightDimensionX, topFrameLineTopY, 0.002], [rightDimensionX, topFrameLineTopY - 0.03, 0.002])}
                   color={spaceInfo.surroundType === 'no-surround' ? textColor : frameDimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
                 <Text
                   renderOrder={1000}
@@ -2069,20 +2093,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {/* 4. 상부 프레임 이상으로 올라온 가구 높이 */}
               {hasExtraFurnitureHeight && (
               <group>
-                <Line
+                <NativeLine
                   points={[[extraFurnitureX, topFrameLineTopY, 0.002], [extraFurnitureX, maxFurnitureTop, 0.002]]}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                <Line
+                <NativeLine
                   points={createArrowHead([extraFurnitureX, topFrameLineTopY, 0.002], [extraFurnitureX, topFrameLineTopY + 0.03, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
-                <Line
+                <NativeLine
                   points={createArrowHead([extraFurnitureX, maxFurnitureTop, 0.002], [extraFurnitureX, maxFurnitureTop - 0.03, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
                 <Text
                   renderOrder={1000}
