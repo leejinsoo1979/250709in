@@ -4463,9 +4463,10 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                                       onKeyDown={(e) => e.key === 'Enter' && setEditingInfo(null)}
                                       className={styles.textInput}
                                       autoFocus
+                                      style={{ color: '#22c55e' }}
                                     />
                                   ) : (
-                                    <span onClick={() => setEditingInfo(`${view.id}_size`)}>{infoTexts.size}</span>
+                                    <span onClick={() => setEditingInfo(`${view.id}_size`)} style={{ color: '#22c55e' }}>{infoTexts.size}</span>
                                   )}
                                 </div>
                                 <div className={styles.infoSpecItem}>
@@ -4542,7 +4543,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                           {viewType === 'specs' && (
                             <div className={styles.specsContent}>
                               <h3>Specifications</h3>
-                              <p><span style={{ color: '#22c55e' }}>실측:</span> {infoTexts.size}</p>
+                              <p><span style={{ color: '#22c55e' }}>실측:</span> <span style={{ color: '#22c55e' }}>{infoTexts.size}</span></p>
                               <p><span style={{ color: '#f97316' }}>속장:</span> <span style={{ color: '#f97316' }}>{infoTexts.body}</span></p>
                               <p><span style={{ color: '#000000' }}>도어:</span> <span style={{ color: '#000000' }}>{infoTexts.door}</span></p>
                               <p><span style={{ color: '#000000' }}>속장:</span> <span style={{ color: '#000000' }}>{infoTexts.body}</span></p>
