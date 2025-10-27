@@ -2628,9 +2628,19 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           // 먼저 data-capture-image 속성을 가진 img 요소를 찾음
           const imageElement = document.querySelector(`[data-capture-image="${view.id}"]`) as HTMLImageElement;
 
-          if (imageElement && imageElement.src) {
-            // 이미지가 있으면 직접 PDF에 추가 (html2canvas 불필요)
-            pdf.addImage(imageElement.src, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
+          if (imageElement) {
+            // html2canvas로 이미지 요소만 캡처 (투명 배경)
+            const canvas = await html2canvas(imageElement, {
+              backgroundColor: null, // 투명 배경
+              scale: 4, // 고품질
+              logging: false,
+              useCORS: true,
+              allowTaint: true,
+              imageTimeout: 0,
+              removeContainer: true
+            });
+            const imgData = canvas.toDataURL('image/png');
+            pdf.addImage(imgData, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
             console.log(`✅ ${viewType} 뷰카드 이미지가 PDF에 추가되었습니다.`);
           } else {
             console.warn(`뷰카드 이미지를 찾을 수 없음: ${view.id}`);
