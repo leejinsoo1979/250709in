@@ -139,10 +139,10 @@
 .centerActions {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 12px;
   position: absolute;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-60%);
   flex: 0 0 auto;
 }
 
