@@ -2683,12 +2683,14 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
 
           try {
             // DOM에서 해당 텍스트 아이템 요소 찾기
-            const textElement = document.querySelector(`[data-view-id="${view.id}"]`);
+            const textElement = document.querySelector(`[data-text-id="${view.id}"]`);
+
             if (textElement) {
               const canvas = await html2canvas(textElement as HTMLElement, {
                 backgroundColor: '#ffffff',
                 scale: 2,
-                logging: false
+                logging: false,
+                useCORS: true
               });
               const imgData = canvas.toDataURL('image/png');
               pdf.addImage(imgData, 'PNG', textXMm, textYMm, textWidthMm, textHeightMm);
@@ -4380,7 +4382,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                       )}
                       
                       {isTextItem ? (
-                        <div className={styles.textItemContent} data-view-id={view.id}>
+                        <div className={styles.textItemContent} data-text-id={view.id}>
                           {viewType === 'info' && (
                             <div className={styles.infoContent}>
                               <h3 className={styles.infoTitle}>INSHOW</h3>
