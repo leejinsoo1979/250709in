@@ -184,37 +184,25 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             </label>
           )}
 
-          <div className={styles.columnOptionRow}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={showAll}
-                onChange={onShowAllToggle}
-                className={styles.checkbox}
-              />
-              <span className={styles.checkmark}></span>
+          <div className={styles.columnToggleGroup}>
+            <button
+              type="button"
+              className={`${styles.columnToggleButton} ${showAll ? styles.columnToggleButtonActive : ''}`}
+              onClick={onShowAllToggle}
+              aria-pressed={showAll}
+            >
               {t('viewer.column')}
-            </label>
+            </button>
             {viewMode === '3D' && (
-              <div className={styles.columnToggleGroup}>
-                <button
-                  type="button"
-                  className={`${styles.columnToggleButton} ${showFurnitureEditHandles ? styles.columnToggleButtonActive : ''}`}
-                  onClick={() => setShowFurnitureEditHandles(true)}
-                  aria-pressed={showFurnitureEditHandles}
-                >
-                  <Edit3 size={14} />
-                  <span>ON</span>
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.columnToggleButton} ${!showFurnitureEditHandles ? styles.columnToggleButtonActive : ''}`}
-                  onClick={() => setShowFurnitureEditHandles(false)}
-                  aria-pressed={!showFurnitureEditHandles}
-                >
-                  <span>OFF</span>
-                </button>
-              </div>
+              <button
+                type="button"
+                className={`${styles.columnToggleButton} ${showFurnitureEditHandles ? styles.columnToggleButtonActive : ''}`}
+                onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}
+                aria-pressed={showFurnitureEditHandles}
+                title={showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}
+              >
+                <Edit3 size={14} />
+              </button>
             )}
           </div>
 
