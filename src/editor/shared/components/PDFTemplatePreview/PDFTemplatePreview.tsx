@@ -2628,7 +2628,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           const viewElement = document.querySelector(`[data-view-id="${view.id}"]`);
           if (viewElement) {
             const canvas = await html2canvas(viewElement as HTMLElement, {
-              backgroundColor: null,
+              backgroundColor: null, // 투명 배경
               scale: 4, // 품질 향상 (2 → 4)
               logging: false,
               useCORS: true,
@@ -2636,17 +2636,19 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
               imageTimeout: 0,
               removeContainer: true,
               onclone: (clonedDoc) => {
-                // 캡처되는 복사본에서 border 제거
+                // 캡처되는 복사본에서 border, boxShadow, backgroundColor 제거
                 const clonedElement = clonedDoc.querySelector(`[data-view-id="${view.id}"]`) as HTMLElement;
                 if (clonedElement) {
                   clonedElement.style.border = 'none';
                   clonedElement.style.boxShadow = 'none';
+                  clonedElement.style.backgroundColor = 'transparent';
+                  clonedElement.style.borderRadius = '0';
                 }
               }
             });
-            // 고품질 JPEG 사용 (PNG보다 파일 크기 작음)
-            const imgData = canvas.toDataURL('image/jpeg', 0.95);
-            pdf.addImage(imgData, 'JPEG', viewXMm, viewYMm, viewWidthMm, viewHeightMm, undefined, 'FAST');
+            // PNG 형식 사용 (투명도 지원)
+            const imgData = canvas.toDataURL('image/png');
+            pdf.addImage(imgData, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
             console.log(`✅ ${viewType} 뷰카드가 고품질로 캡처되어 PDF에 추가되었습니다.`);
           } else {
             console.warn(`뷰카드 요소를 찾을 수 없음: ${view.id}`);
@@ -2722,19 +2724,20 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                 imageTimeout: 0,
                 removeContainer: true,
                 onclone: (clonedDoc) => {
-                  // 캡처되는 복사본에서 border 제거
+                  // 캡처되는 복사본에서 border, boxShadow 제거
                   const clonedElement = clonedDoc.querySelector(`[data-text-id="${view.id}"]`) as HTMLElement;
                   if (clonedElement) {
                     clonedElement.style.border = 'none';
                     clonedElement.style.boxShadow = 'none';
+                    clonedElement.style.borderRadius = '0';
                   }
                 }
               });
               console.log('✅ 캡처 완료, canvas 크기:', canvas.width, 'x', canvas.height);
-              // 고품질 JPEG 사용 (PNG보다 파일 크기 작음)
-              const imgData = canvas.toDataURL('image/jpeg', 0.95);
+              // PNG 형식 사용 (고품질)
+              const imgData = canvas.toDataURL('image/png');
               console.log('🖼️ 이미지 데이터 길이:', imgData.length);
-              pdf.addImage(imgData, 'JPEG', textXMm, textYMm, textWidthMm, textHeightMm, undefined, 'FAST');
+              pdf.addImage(imgData, 'PNG', textXMm, textYMm, textWidthMm, textHeightMm);
               console.log(`✅ 텍스트 아이템 ${viewType}이(가) 고품질로 PDF에 추가되었습니다.`);
             } else {
               console.warn(`❌ 텍스트 아이템 요소를 찾을 수 없음: ${view.id}`);
