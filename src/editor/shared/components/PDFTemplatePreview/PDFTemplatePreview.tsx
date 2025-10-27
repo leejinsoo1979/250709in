@@ -2622,40 +2622,19 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         const viewXMm = (view.x * paperDimensions.width) / paperDimensions.displayWidth;
         const viewYMm = (view.y * paperDimensions.height) / paperDimensions.displayHeight;
 
-        // 뷰카드 내부의 실제 이미지만 캡처
+        // 뷰카드의 원본 이미지를 직접 PDF에 추가 (고품질 유지)
         try {
-          console.log(`🔍 뷰카드 캡처 시작: viewType=${viewType}, view.id=${view.id}`);
+          console.log(`🔍 뷰카드 추가 시작: viewType=${viewType}, view.id=${view.id}`);
 
-          // 먼저 data-capture-image 속성을 가진 img 요소를 찾음
+          // data-capture-image 속성을 가진 img 요소를 찾음
           const imageElement = document.querySelector(`[data-capture-image="${view.id}"]`) as HTMLImageElement;
-          console.log(`🖼️ 이미지 요소 검색 결과:`, imageElement ? '찾음' : '못 찾음', imageElement);
+          console.log(`🖼️ 이미지 요소 검색 결과:`, imageElement ? '찾음' : '못 찾음');
 
-          if (imageElement) {
-            console.log(`📸 html2canvas 캡처 시작...`);
-            // html2canvas로 이미지 요소만 캡처 (투명 배경)
-            const canvas = await html2canvas(imageElement, {
-              backgroundColor: null, // 투명 배경
-              scale: 4, // 고품질
-              logging: false,
-              useCORS: true,
-              allowTaint: true,
-              imageTimeout: 0,
-              removeContainer: true,
-              onclone: (clonedDoc) => {
-                // 캡처되는 이미지 요소의 모든 외곽선 제거
-                const clonedImg = clonedDoc.querySelector(`[data-capture-image="${view.id}"]`) as HTMLElement;
-                if (clonedImg) {
-                  clonedImg.style.border = 'none';
-                  clonedImg.style.outline = 'none';
-                  clonedImg.style.boxShadow = 'none';
-                }
-              }
-            });
-            console.log(`✅ 캡처 완료, canvas 크기: ${canvas.width}x${canvas.height}`);
-            const imgData = canvas.toDataURL('image/png');
-            console.log(`📄 PDF 추가: position=(${viewXMm}, ${viewYMm}), size=(${viewWidthMm}, ${viewHeightMm})`);
-            pdf.addImage(imgData, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
-            console.log(`✅ ${viewType} 뷰카드 이미지가 PDF에 추가되었습니다.`);
+          if (imageElement && imageElement.src) {
+            // 원본 이미지 src를 직접 PDF에 추가 (화질 손실 없음)
+            console.log(`📄 원본 이미지를 PDF에 직접 추가: ${imageElement.src.substring(0, 100)}...`);
+            pdf.addImage(imageElement.src, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
+            console.log(`✅ ${viewType} 뷰카드가 고품질로 PDF에 추가되었습니다.`);
           } else {
             console.warn(`❌ 뷰카드 이미지를 찾을 수 없음: ${view.id}`);
             console.log(`모든 data-capture-image 요소:`, document.querySelectorAll('[data-capture-image]'));
