@@ -4863,15 +4863,23 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         {t('viewer.column')}
                       </label>
                       {viewMode === '3D' && (
-                        <div className={styles.inlineToggleGroup}>
+                        <div className={styles.columnToggleGroup}>
                           <button
                             type="button"
-                            className={`${styles.inlineToggleButton} ${uiStore.showFurnitureEditHandles ? styles.inlineToggleButtonActive : ''}`}
-                            onClick={() => uiStore.toggleFurnitureEditHandles()}
-                            title={uiStore.showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}
+                            className={`${styles.columnToggleButton} ${uiStore.showFurnitureEditHandles ? styles.columnToggleButtonActive : ''}`}
+                            onClick={() => uiStore.setShowFurnitureEditHandles(true)}
                             aria-pressed={uiStore.showFurnitureEditHandles}
                           >
                             <Edit3 size={14} />
+                            <span>ON</span>
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.columnToggleButton} ${!uiStore.showFurnitureEditHandles ? styles.columnToggleButtonActive : ''}`}
+                            onClick={() => uiStore.setShowFurnitureEditHandles(false)}
+                            aria-pressed={!uiStore.showFurnitureEditHandles}
+                          >
+                            <span>OFF</span>
                           </button>
                         </div>
                       )}

@@ -2439,7 +2439,7 @@
   transform: rotate(45deg);
 }
 
-.viewerSubHeader .inlineToggleGroup {
+.viewerSubHeader .columnToggleGroup {
   display: flex;
   border: 1px solid var(--theme-border);
   border-radius: 6px;
@@ -2447,8 +2447,8 @@
   background: var(--theme-surface);
 }
 
-.viewerSubHeader .inlineToggleButton {
-  width: 34px;
+.viewerSubHeader .columnToggleButton {
+  min-width: 44px;
   height: 28px;
   border: none;
   background: transparent;
@@ -2456,17 +2456,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  padding: 0;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
-.viewerSubHeader .inlineToggleButton:hover {
+.viewerSubHeader .columnToggleButton + .columnToggleButton {
+  border-left: 1px solid var(--theme-border);
+}
+
+.viewerSubHeader .columnToggleButton:hover {
   color: var(--theme-text);
   background: var(--theme-background-secondary);
 }
 
-.viewerSubHeader .inlineToggleButtonActive {
+.viewerSubHeader .columnToggleButtonActive {
   background: var(--theme-primary-light);
   color: var(--theme-primary);
 }

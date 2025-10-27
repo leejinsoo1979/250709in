@@ -76,7 +76,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onDoorInstallationToggle
 }) => {
   // UIStore에서 2D 뷰 방향 상태 및 측정 모드 상태 가져오기
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, toggleFurnitureEditHandles } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, setShowFurnitureEditHandles } = useUIStore();
   
   // 테마 컨텍스트
   const { theme } = useTheme();
@@ -196,15 +196,23 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               {t('viewer.column')}
             </label>
             {viewMode === '3D' && (
-              <div className={styles.inlineToggleGroup}>
+              <div className={styles.columnToggleGroup}>
                 <button
                   type="button"
-                  className={`${styles.inlineToggleButton} ${showFurnitureEditHandles ? styles.inlineToggleButtonActive : ''}`}
-                  onClick={toggleFurnitureEditHandles}
-                  title={showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}
+                  className={`${styles.columnToggleButton} ${showFurnitureEditHandles ? styles.columnToggleButtonActive : ''}`}
+                  onClick={() => setShowFurnitureEditHandles(true)}
                   aria-pressed={showFurnitureEditHandles}
                 >
                   <Edit3 size={14} />
+                  <span>ON</span>
+                </button>
+                <button
+                  type="button"
+                  className={`${styles.columnToggleButton} ${!showFurnitureEditHandles ? styles.columnToggleButtonActive : ''}`}
+                  onClick={() => setShowFurnitureEditHandles(false)}
+                  aria-pressed={!showFurnitureEditHandles}
+                >
+                  <span>OFF</span>
                 </button>
               </div>
             )}
