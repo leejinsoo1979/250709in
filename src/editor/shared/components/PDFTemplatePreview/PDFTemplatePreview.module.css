@@ -1153,46 +1153,52 @@
   height: 45mm;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
+  padding: 4px;
+  box-sizing: border-box;
 }
 
 .infoTitle {
-  font-size: 18px;
+  font-size: 12px;
   font-weight: bold;
   color: var(--accent-primary);
   margin: 0;
-  letter-spacing: 1px;
-  text-shadow: 0 0 10px var(--accent-light);
+  letter-spacing: 0.5px;
+  text-shadow: 0 0 5px var(--accent-light);
 }
 
 .infoContent p {
-  font-size: 14px;
+  font-size: 9px;
   color: var(--text-primary);
   margin: 0;
   cursor: pointer;
-  padding: 2px;
+  padding: 1px;
+  line-height: 1.2;
 }
 
 .infoContent p:hover {
   background-color: var(--accent-lighter);
-  border-radius: 3px;
+  border-radius: 2px;
 }
 
 .infoSpecs {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
+  gap: 2px;
+  font-size: 8px;
 }
 
 .infoSpecItem {
   display: flex;
-  gap: 10px;
+  gap: 6px;
+  align-items: center;
+  line-height: 1.2;
 }
 
 .infoSpecItem > span:first-child {
   color: var(--text-tertiary);
-  min-width: 40px;
+  min-width: 28px;
+  font-size: 8px;
 }
 
 .infoSpecItem > span:last-child {
