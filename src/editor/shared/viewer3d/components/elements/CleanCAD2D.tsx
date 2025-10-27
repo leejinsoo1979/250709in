@@ -978,7 +978,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           <group>
             {/* 치수선 */}
             <NativeLine
-              points={[[rightEdge - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(120), 0.002], [rightEdge, topDimensionY - mmToThreeUnits(120), 0.002]}}
+              points={[[rightEdge - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(120), 0.002], [rightEdge, topDimensionY - mmToThreeUnits(120), 0.002]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={100000}
