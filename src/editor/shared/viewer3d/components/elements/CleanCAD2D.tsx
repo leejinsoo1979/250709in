@@ -819,25 +819,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               <NativeLine
                 points={[[actualLeftEdge, topDimensionY, 0.002], [actualRightEdge, topDimensionY, 0.002]]}
                 color={dimensionColor}
-                lineWidth={2}
+                lineWidth={1}
                 renderOrder={100000}
                 depthTest={false}
               />
-              
+
               {/* 좌측 화살표 */}
               <NativeLine
                 points={createArrowHead([actualLeftEdge, topDimensionY, 0.002], [actualLeftEdge + 0.05, topDimensionY, 0.002])}
                 color={dimensionColor}
-                lineWidth={2}
+                lineWidth={1}
                 renderOrder={100000}
                 depthTest={false}
               />
-              
+
               {/* 우측 화살표 */}
               <NativeLine
                 points={createArrowHead([actualRightEdge, topDimensionY, 0.002], [actualRightEdge - 0.05, topDimensionY, 0.002])}
                 color={dimensionColor}
-                lineWidth={2}
+                lineWidth={1}
                 renderOrder={100000}
                 depthTest={false}
               />
@@ -1327,21 +1327,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Line
                   points={[[leftOffset, topDimensionY - mmToThreeUnits(120), 0.002], [leftOffset + mmToThreeUnits(leftValue), topDimensionY - mmToThreeUnits(120), 0.002]]}
                   color={dimensionColor}
-                  lineWidth={2}
+                  lineWidth={1}
                 />
-                
+
                 {/* 좌측 화살표 */}
                 <Line
                   points={createArrowHead([leftOffset, topDimensionY - mmToThreeUnits(120), 0.002], [leftOffset + 0.02, topDimensionY - mmToThreeUnits(120), 0.002])}
                   color={dimensionColor}
-                  lineWidth={2}
+                  lineWidth={1}
                 />
-                
+
                 {/* 우측 화살표 */}
                 <Line
                   points={createArrowHead([leftOffset + mmToThreeUnits(leftValue), topDimensionY - mmToThreeUnits(120), 0.002], [leftOffset + mmToThreeUnits(leftValue) - 0.02, topDimensionY - mmToThreeUnits(120), 0.002])}
                   color={dimensionColor}
-                  lineWidth={2}
+                  lineWidth={1}
                 />
                 
                 {/* 좌측 치수 텍스트 */}
@@ -1487,21 +1487,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <Line
                   points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(120), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(120), 0.002]]}
                   color={textColor}
-                  lineWidth={2}
+                  lineWidth={1}
                 />
-                
+
                 {/* 좌측 화살표 */}
                 <Line
                   points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue), topDimensionY - mmToThreeUnits(120), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(rightValue) + 0.02, topDimensionY - mmToThreeUnits(120), 0.002])}
                   color={textColor}
-                  lineWidth={2}
+                  lineWidth={1}
                 />
-                
+
                 {/* 우측 화살표 */}
                 <Line
                   points={createArrowHead([mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY - mmToThreeUnits(120), 0.002], [mmToThreeUnits(spaceInfo.width) + leftOffset - 0.02, topDimensionY - mmToThreeUnits(120), 0.002])}
                   color={textColor}
-                  lineWidth={2}
+                  lineWidth={1}
                 />
                 
                 {/* 우측 치수 텍스트 */}
@@ -1684,14 +1684,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor}
                   lineWidth={1}
                 />
-                
+
                 {/* 하단 화살표 */}
                 <Line
                   points={createArrowHead([leftDimensionX + leftOffset, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), 0.002], [leftDimensionX + leftOffset, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight) + 0.05, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
                 />
-                
+
                 {/* 상단 화살표 */}
                 <Line
                   points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
@@ -1721,14 +1721,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   color={dimensionColor}
                   lineWidth={1}
                 />
-                
+
                 {/* 하단 화살표 */}
                 <Line
                   points={createArrowHead([leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, 0.05, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
                 />
-                
+
                 {/* 상단 화살표 */}
                 <Line
                   points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
@@ -1761,14 +1761,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               color={dimensionColor}
               lineWidth={1}
             />
-            
+
             {/* 하단 화살표 */}
             <Line
               points={createArrowHead([leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, 0.05, 0.002])}
               color={dimensionColor}
               lineWidth={1}
             />
-            
+
             {/* 상단 화살표 */}
             <Line
               points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
@@ -2184,34 +2184,34 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         
         return (
           <group key={`module-guide-${index}`} renderOrder={1000000}>
-            
+
             {/* 가구 치수선 */}
             <NativeLine
               points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
               color={dimensionColor}
-              lineWidth={2}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
               transparent={true}
             />
-            
+
             {/* 좌측 화살표 */}
             <NativeLine
               points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
               color={dimensionColor}
-              lineWidth={2}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
               transparent={true}
             />
-            
+
             {/* 우측 화살표 */}
             <NativeLine
               points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
               color={dimensionColor}
-              lineWidth={2}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
@@ -5607,7 +5607,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               ]
             ]}
             color={primaryColor}
-            lineWidth={2}
+            lineWidth={1}
             dashed
             dashSize={0.03}
             gapSize={0.02}
