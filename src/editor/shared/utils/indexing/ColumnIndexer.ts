@@ -687,23 +687,27 @@ export class ColumnIndexer {
             rightGap = 2;
           }
           
+        } else if (spaceInfo.installType === 'freestanding') {
+          // 프리스탠딩: 엔드패널 포함, 전체 너비를 슬롯에 분할
+          leftGap = 0;
+          rightGap = 0;
         } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
           const baseWidth = spaceInfo.width;
-          
+
           // 벽이 있는 쪽 확인하고 2-5mm 범위에서 조정
           if (spaceInfo.wallConfig?.left && !spaceInfo.wallConfig?.right) {
-            // 좌측 벽: 좌측 이격거리만 조정 (2-5mm), 우측은 기존 gap 유지
+            // 좌측 벽: 좌측 이격거리만 조정 (2-5mm), 우측은 엔드패널이므로 0
             let adjusted = false;
             for (let gap = 2; gap <= 5; gap++) {
               const availableWidth = baseWidth - gap;  // 좌측 이격거리만 뺌
               const slotWidth = availableWidth / columnCount;
-              
+
               if (Number.isInteger(slotWidth)) {
                 leftGap = gap;
-                rightGap = spaceInfo.gapConfig?.right || 0;
+                rightGap = 0;  // 우측은 엔드패널
                 console.log('✅ 좌측벽 정수 슬롯 너비 조정:', {
-                  조정된이격거리: gap,
-                  유지된우측이격거리: rightGap,
+                  조정된좌측이격거리: gap,
+                  우측엔드패널: '포함됨 (gap=0)',
                   슬롯너비: slotWidth,
                   사용가능너비: availableWidth
                 });
@@ -711,25 +715,25 @@ export class ColumnIndexer {
                 break;
               }
             }
-            
+
             if (!adjusted) {
               leftGap = spaceInfo.gapConfig?.left || 2;
-              rightGap = spaceInfo.gapConfig?.right || 0;
+              rightGap = 0;  // 우측은 엔드패널
             }
-            
+
           } else if (!spaceInfo.wallConfig?.left && spaceInfo.wallConfig?.right) {
-            // 우측 벽: 우측 이격거리만 조정 (2-5mm), 좌측은 기존 gap 유지
+            // 우측 벽: 우측 이격거리만 조정 (2-5mm), 좌측은 엔드패널이므로 0
             let adjusted = false;
             for (let gap = 2; gap <= 5; gap++) {
               const availableWidth = baseWidth - gap;  // 우측 이격거리만 뺌
               const slotWidth = availableWidth / columnCount;
-              
+
               if (Number.isInteger(slotWidth)) {
-                leftGap = spaceInfo.gapConfig?.left || 0;
+                leftGap = 0;  // 좌측은 엔드패널
                 rightGap = gap;
                 console.log('✅ 우측벽 정수 슬롯 너비 조정:', {
-                  유지된좌측이격거리: leftGap,
-                  조정된이격거리: gap,
+                  좌측엔드패널: '포함됨 (gap=0)',
+                  조정된우측이격거리: gap,
                   슬롯너비: slotWidth,
                   사용가능너비: availableWidth
                 });
@@ -737,20 +741,12 @@ export class ColumnIndexer {
                 break;
               }
             }
-            
+
             if (!adjusted) {
-              leftGap = spaceInfo.gapConfig?.left || 0;
+              leftGap = 0;  // 좌측은 엔드패널
               rightGap = spaceInfo.gapConfig?.right || 2;
             }
-          } else if (spaceInfo.installType === 'freestanding') {
-            // 프리스탠딩: 양쪽 모두 엔드패널 포함이므로 gap 0
-            leftGap = 0;
-            rightGap = 0;
           }
-        } else if (spaceInfo.installType === 'freestanding') {
-          // 프리스탠딩: 엔드패널 포함
-          leftGap = 0;
-          rightGap = 0;
         }
         
         adjustedLeftGap = leftGap;
