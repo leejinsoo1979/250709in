@@ -1149,12 +1149,12 @@
 }
 
 .infoContent {
-  width: 80mm;
-  height: 45mm;
+  width: 200px;
+  height: 120px;
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 4px;
+  padding: 6px;
   box-sizing: border-box;
 }
 

@@ -4469,7 +4469,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                                     <span onClick={() => setEditingInfo(`${view.id}_size`)} style={{ color: '#22c55e' }}>{infoTexts.size}</span>
                                   )}
                                 </div>
-                                <hr style={{ width: '80mm', border: 'none', borderTop: '1px solid #ccc', margin: '2px 0' }} />
+                                <hr style={{ width: '100%', border: 'none', borderTop: '1px solid #ccc', margin: '2px 0' }} />
                                 <div className={styles.infoSpecItem}>
                                   <span style={{ color: '#f97316' }}>속장:</span>
                                   {editingInfo === `${view.id}_body` ? (
@@ -4487,7 +4487,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                                     <span onClick={() => setEditingInfo(`${view.id}_body`)} style={{ color: '#f97316' }}>{infoTexts.body}</span>
                                   )}
                                 </div>
-                                <hr style={{ width: '80mm', border: 'none', borderTop: '1px solid #ccc', margin: '2px 0' }} />
+                                <hr style={{ width: '100%', border: 'none', borderTop: '1px solid #ccc', margin: '2px 0' }} />
                                 <div className={styles.infoSpecItem}>
                                   <span style={{ color: '#000000' }}>도어:</span>
                                   {editingInfo === `${view.id}_door` ? (
@@ -4505,7 +4505,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                                     <span onClick={() => setEditingInfo(`${view.id}_door`)} style={{ color: '#000000' }}>{infoTexts.door}</span>
                                   )}
                                 </div>
-                                <hr style={{ width: '80mm', border: 'none', borderTop: '1px solid #ccc', margin: '2px 0' }} />
+                                <hr style={{ width: '100%', border: 'none', borderTop: '1px solid #ccc', margin: '2px 0' }} />
                                 <div className={styles.infoSpecItem}>
                                   <span style={{ color: '#000000' }}>속장:</span>
                                   {editingInfo === `${view.id}_body2` ? (
@@ -4547,11 +4547,11 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                             <div className={styles.specsContent}>
                               <h3>Specifications</h3>
                               <p><span style={{ color: '#22c55e' }}>실측:</span> <span style={{ color: '#22c55e' }}>{infoTexts.size}</span></p>
-                              <hr style={{ width: '80mm', border: 'none', borderTop: '1px solid #ccc', margin: '8px 0' }} />
+                              <hr style={{ width: '100%', border: 'none', borderTop: '1px solid #ccc', margin: '8px 0' }} />
                               <p><span style={{ color: '#f97316' }}>속장:</span> <span style={{ color: '#f97316' }}>{infoTexts.body}</span></p>
-                              <hr style={{ width: '80mm', border: 'none', borderTop: '1px solid #ccc', margin: '8px 0' }} />
+                              <hr style={{ width: '100%', border: 'none', borderTop: '1px solid #ccc', margin: '8px 0' }} />
                               <p><span style={{ color: '#000000' }}>도어:</span> <span style={{ color: '#000000' }}>{infoTexts.door}</span></p>
-                              <hr style={{ width: '80mm', border: 'none', borderTop: '1px solid #ccc', margin: '8px 0' }} />
+                              <hr style={{ width: '100%', border: 'none', borderTop: '1px solid #ccc', margin: '8px 0' }} />
                               <p><span style={{ color: '#000000' }}>속장:</span> <span style={{ color: '#000000' }}>{infoTexts.body}</span></p>
                             </div>
                           )}
