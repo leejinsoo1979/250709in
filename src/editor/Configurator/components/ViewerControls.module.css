@@ -100,10 +100,10 @@
   gap: 12px;
 }
 
-.checkboxWithIcon {
+.columnOptionRow {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .checkboxLabel {
@@ -150,12 +150,19 @@
   transform: translate(-50%, -50%);
 }
 
-.iconToggleButton {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+.inlineToggleGroup {
+  display: flex;
   border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  overflow: hidden;
   background: var(--theme-surface);
+}
+
+.inlineToggleButton {
+  width: 34px;
+  height: 28px;
+  border: none;
+  background: transparent;
   color: var(--theme-text-secondary);
   display: flex;
   align-items: center;
@@ -165,15 +172,14 @@
   padding: 0;
 }
 
-.iconToggleButton:hover {
+.inlineToggleButton:hover {
   color: var(--theme-text);
-  border-color: var(--theme-border-hover);
+  background: var(--theme-background);
 }
 
-.iconToggleButtonActive {
+.inlineToggleButtonActive {
   background: var(--theme-primary-light);
   color: var(--theme-primary);
-  border-color: var(--theme-primary);
 }
 
 /* 우측 컨트롤 */

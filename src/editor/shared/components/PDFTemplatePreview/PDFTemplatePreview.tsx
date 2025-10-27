@@ -4851,7 +4851,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   {/* 체크박스 옵션들 - 서브헤더가 ON일 때만 표시 */}
                   {uiStore.showDimensions ? (
                   <div className={styles.checkboxGroup}>
-                    <div className={styles.checkboxWithIcon}>
+                    <div className={styles.columnOptionRow}>
                       <label className={styles.checkboxLabel}>
                         <input
                           type="checkbox"
@@ -4863,15 +4863,17 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         {t('viewer.column')}
                       </label>
                       {viewMode === '3D' && (
-                        <button
-                          type="button"
-                          className={`${styles.iconToggleButton} ${uiStore.showFurnitureEditHandles ? styles.iconToggleButtonActive : ''}`}
-                          onClick={() => uiStore.toggleFurnitureEditHandles()}
-                          title={uiStore.showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}
-                          aria-pressed={uiStore.showFurnitureEditHandles}
-                        >
-                          <Edit3 size={14} />
-                        </button>
+                        <div className={styles.inlineToggleGroup}>
+                          <button
+                            type="button"
+                            className={`${styles.inlineToggleButton} ${uiStore.showFurnitureEditHandles ? styles.inlineToggleButtonActive : ''}`}
+                            onClick={() => uiStore.toggleFurnitureEditHandles()}
+                            title={uiStore.showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}
+                            aria-pressed={uiStore.showFurnitureEditHandles}
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                        </div>
                       )}
                     </div>
 

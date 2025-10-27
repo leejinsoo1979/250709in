@@ -184,7 +184,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             </label>
           )}
 
-          <div className={styles.checkboxWithIcon}>
+          <div className={styles.columnOptionRow}>
             <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
@@ -196,15 +196,17 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
               {t('viewer.column')}
             </label>
             {viewMode === '3D' && (
-              <button
-                type="button"
-                className={`${styles.iconToggleButton} ${showFurnitureEditHandles ? styles.iconToggleButtonActive : ''}`}
-                onClick={toggleFurnitureEditHandles}
-                title={showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}
-                aria-pressed={showFurnitureEditHandles}
-              >
-                <Edit3 size={14} />
-              </button>
+              <div className={styles.inlineToggleGroup}>
+                <button
+                  type="button"
+                  className={`${styles.inlineToggleButton} ${showFurnitureEditHandles ? styles.inlineToggleButtonActive : ''}`}
+                  onClick={toggleFurnitureEditHandles}
+                  title={showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}
+                  aria-pressed={showFurnitureEditHandles}
+                >
+                  <Edit3 size={14} />
+                </button>
+              </div>
             )}
           </div>
 

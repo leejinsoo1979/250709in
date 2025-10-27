@@ -2385,10 +2385,10 @@
   gap: 12px;
 }
 
-.viewerSubHeader .checkboxWithIcon {
+.viewerSubHeader .columnOptionRow {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .viewerSubHeader .checkboxLabel {
@@ -2439,12 +2439,19 @@
   transform: rotate(45deg);
 }
 
-.viewerSubHeader .iconToggleButton {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+.viewerSubHeader .inlineToggleGroup {
+  display: flex;
   border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  overflow: hidden;
   background: var(--theme-surface);
+}
+
+.viewerSubHeader .inlineToggleButton {
+  width: 34px;
+  height: 28px;
+  border: none;
+  background: transparent;
   color: var(--theme-text-secondary);
   display: flex;
   align-items: center;
@@ -2454,15 +2461,14 @@
   padding: 0;
 }
 
-.viewerSubHeader .iconToggleButton:hover {
+.viewerSubHeader .inlineToggleButton:hover {
   color: var(--theme-text);
-  border-color: var(--theme-border-hover);
+  background: var(--theme-background-secondary);
 }
 
-.viewerSubHeader .iconToggleButtonActive {
+.viewerSubHeader .inlineToggleButtonActive {
   background: var(--theme-primary-light);
   color: var(--theme-primary);
-  border-color: var(--theme-primary);
 }
 
 .viewerControls {
