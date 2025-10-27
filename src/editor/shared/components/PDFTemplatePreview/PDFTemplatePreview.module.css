@@ -2439,44 +2439,36 @@
   transform: rotate(45deg);
 }
 
-.viewerSubHeader .columnToggleGroup {
+.viewerSubHeader .checkboxWithIcon {
   display: flex;
-  border: 1px solid var(--theme-border);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--theme-surface);
+  align-items: center;
+  gap: 6px;
 }
 
-.viewerSubHeader .columnToggleButton {
-  min-width: 44px;
+.viewerSubHeader .iconToggleButton {
+  width: 28px;
   height: 28px;
-  border: none;
-  background: transparent;
+  border-radius: 6px;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
   color: var(--theme-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  padding: 0 10px;
-  font-size: 13px;
-  font-weight: 600;
-  text-transform: uppercase;
+  padding: 0;
 }
 
-.viewerSubHeader .columnToggleButton + .columnToggleButton {
-  border-left: 1px solid var(--theme-border);
-}
-
-.viewerSubHeader .columnToggleButton:hover {
+.viewerSubHeader .iconToggleButton:hover {
   color: var(--theme-text);
-  background: var(--theme-background-secondary);
+  border-color: var(--theme-border-hover);
 }
 
-.viewerSubHeader .columnToggleButtonActive {
+.viewerSubHeader .iconToggleButtonActive {
   background: var(--theme-primary-light);
   color: var(--theme-primary);
+  border-color: var(--theme-primary);
 }
 
 .viewerControls {

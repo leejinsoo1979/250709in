@@ -184,19 +184,21 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             </label>
           )}
 
-          <div className={styles.columnToggleGroup}>
-            <button
-              type="button"
-              className={`${styles.columnToggleButton} ${showAll ? styles.columnToggleButtonActive : ''}`}
-              onClick={onShowAllToggle}
-              aria-pressed={showAll}
-            >
+          <div className={styles.checkboxWithIcon}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={showAll}
+                onChange={onShowAllToggle}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkmark}></span>
               {t('viewer.column')}
-            </button>
+            </label>
             {viewMode === '3D' && (
               <button
                 type="button"
-                className={`${styles.columnToggleButton} ${showFurnitureEditHandles ? styles.columnToggleButtonActive : ''}`}
+                className={`${styles.iconToggleButton} ${showFurnitureEditHandles ? styles.iconToggleButtonActive : ''}`}
                 onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}
                 aria-pressed={showFurnitureEditHandles}
                 title={showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}

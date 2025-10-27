@@ -4851,19 +4851,21 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   {/* 체크박스 옵션들 - 서브헤더가 ON일 때만 표시 */}
                   {uiStore.showDimensions ? (
                   <div className={styles.checkboxGroup}>
-                    <div className={styles.columnToggleGroup}>
-                      <button
-                        type="button"
-                        className={`${styles.columnToggleButton} ${uiStore.showAll ? styles.columnToggleButtonActive : ''}`}
-                        onClick={() => uiStore.setShowAll(!uiStore.showAll)}
-                        aria-pressed={uiStore.showAll}
-                      >
+                    <div className={styles.checkboxWithIcon}>
+                      <label className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={uiStore.showDimensions && uiStore.showAll}
+                          onChange={(e) => uiStore.setShowAll(e.target.checked)}
+                          className={styles.checkbox}
+                        />
+                        <span className={styles.checkmark}></span>
                         {t('viewer.column')}
-                      </button>
+                      </label>
                       {viewMode === '3D' && (
                         <button
                           type="button"
-                          className={`${styles.columnToggleButton} ${uiStore.showFurnitureEditHandles ? styles.columnToggleButtonActive : ''}`}
+                          className={`${styles.iconToggleButton} ${uiStore.showFurnitureEditHandles ? styles.iconToggleButtonActive : ''}`}
                           onClick={() => uiStore.setShowFurnitureEditHandles(!uiStore.showFurnitureEditHandles)}
                           aria-pressed={uiStore.showFurnitureEditHandles}
                           title={uiStore.showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}

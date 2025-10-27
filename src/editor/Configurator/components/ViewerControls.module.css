@@ -144,44 +144,36 @@
   transform: translate(-50%, -50%);
 }
 
-.columnToggleGroup {
+.checkboxWithIcon {
   display: flex;
-  border: 1px solid var(--theme-border);
-  border-radius: 6px;
-  overflow: hidden;
-  background: var(--theme-surface);
+  align-items: center;
+  gap: 6px;
 }
 
-.columnToggleButton {
-  min-width: 40px;
+.iconToggleButton {
+  width: 28px;
   height: 28px;
-  border: none;
-  background: transparent;
+  border-radius: 6px;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
   color: var(--theme-text-secondary);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
   cursor: pointer;
   transition: all 0.2s ease;
-  padding: 0 12px;
-  font-size: 11px;
-  font-weight: 500;
-  text-transform: uppercase;
+  padding: 0;
 }
 
-.columnToggleButton + .columnToggleButton {
-  border-left: 1px solid var(--theme-border);
-}
-
-.columnToggleButton:hover {
+.iconToggleButton:hover {
   color: var(--theme-text);
-  background: var(--theme-background);
+  border-color: var(--theme-border-hover);
 }
 
-.columnToggleButtonActive {
+.iconToggleButtonActive {
   background: var(--theme-primary-light);
   color: var(--theme-primary);
+  border-color: var(--theme-primary);
 }
 
 /* 우측 컨트롤 */
