@@ -996,7 +996,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         )}
 
         {/* 내부 구조 (타입별로 다른 내용) */}
-        {children}
+        {showFurniture ? children : null}
 
         {/* 조절발통 (네 모서리) - 띄움배치가 아닐 때만 */}
         {(() => {

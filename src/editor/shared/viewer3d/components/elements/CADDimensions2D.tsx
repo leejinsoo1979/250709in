@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Text } from '@react-three/drei';
 import NativeLine from './NativeLine';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -99,8 +99,12 @@ interface CADDimensions2DProps {
  */
 const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDimensions: showDimensionsProp }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { placedModules } = useFurnitureStore();
-  const { view2DDirection, showDimensions: showDimensionsFromStore, view2DTheme, selectedSlotIndex } = useUIStore();
+  const placedModulesStore = useFurnitureStore(state => state.placedModules);
+  const { view2DDirection, showDimensions: showDimensionsFromStore, view2DTheme, selectedSlotIndex, showFurniture } = useUIStore();
+  const placedModules = useMemo(
+    () => (showFurniture ? placedModulesStore : []),
+    [placedModulesStore, showFurniture]
+  );
 
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;

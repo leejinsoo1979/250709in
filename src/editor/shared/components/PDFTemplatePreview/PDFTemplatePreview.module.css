@@ -2358,6 +2358,7 @@
   transition: background-color 0.3s;
   border: none;
   padding: 0;
+  margin-left: -4px;
 }
 
 .viewerSubHeader .switch.on {

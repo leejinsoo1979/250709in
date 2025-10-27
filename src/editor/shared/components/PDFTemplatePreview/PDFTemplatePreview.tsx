@@ -1284,16 +1284,13 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           fabricCanvasRef.current = null;
         }
         
-        // 2. DOM에서 모든 캔버스 관련 요소 강제 제거
-        const allCanvasContainers = document.querySelectorAll('.canvas-container');
-        allCanvasContainers.forEach(container => {
-          container.remove();
-        });
-        const allCanvases = document.querySelectorAll('canvas');
-        allCanvases.forEach(canvas => {
-          canvas.remove();
-        });
-        
+        // 2. 현재 컨테이너 범위에서만 기존 캔버스 정리
+        const scopedContainers = canvasContainerRef.current.querySelectorAll('.canvas-container');
+        scopedContainers.forEach(container => container.remove());
+
+        const scopedCanvases = canvasContainerRef.current.querySelectorAll('canvas');
+        scopedCanvases.forEach(canvas => canvas.remove());
+
         // 3. 컨테이너 내부 완전히 비우기
         canvasContainerRef.current.innerHTML = '';
         console.log('✅ Canvas container completely cleared');
@@ -1337,7 +1334,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           
           // 캔버스 생성 직후 즉시 중복 체크
           requestAnimationFrame(() => {
-            const containers = document.querySelectorAll('.canvas-container');
+            if (!canvasContainerRef.current) return;
+            const containers = canvasContainerRef.current.querySelectorAll('.canvas-container');
             console.log(`🔍 Canvas created, found ${containers.length} containers`);
             
             if (containers.length > 1) {
@@ -1362,8 +1360,9 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           
           // 추가 검증: 100ms 후 다시 한번 체크
           setTimeout(() => {
-            const finalContainers = document.querySelectorAll('.canvas-container');
-            const finalCanvases = document.querySelectorAll('canvas');
+            if (!canvasContainerRef.current) return;
+            const finalContainers = canvasContainerRef.current.querySelectorAll('.canvas-container');
+            const finalCanvases = canvasContainerRef.current.querySelectorAll('canvas');
             console.log(`🎯 Final check - containers: ${finalContainers.length}, canvases: ${finalCanvases.length}`);
             
             if (finalContainers.length > 1) {

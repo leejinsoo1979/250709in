@@ -198,7 +198,12 @@ const EditableLabel: React.FC<{
  */
 const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: showDimensionsProp, isStep2 }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { placedModules } = useFurnitureStore();
+  const placedModulesStore = useFurnitureStore(state => state.placedModules);
+  const showFurniture = useUIStore(state => state.showFurniture);
+  const placedModules = useMemo(
+    () => (showFurniture ? placedModulesStore : []),
+    [placedModulesStore, showFurniture]
+  );
   const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme } = useUIStore();
 
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
