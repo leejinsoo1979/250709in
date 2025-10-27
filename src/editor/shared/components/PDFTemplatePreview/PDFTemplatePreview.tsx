@@ -2623,38 +2623,20 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         const viewXMm = (view.x * paperDimensions.width) / paperDimensions.displayWidth;
         const viewYMm = (view.y * paperDimensions.height) / paperDimensions.displayHeight;
 
-        // 뷰카드를 html2canvas로 캡처 (고품질)
+        // 뷰카드 내부의 실제 이미지만 캡처
         try {
-          const viewElement = document.querySelector(`[data-view-id="${view.id}"]`);
-          if (viewElement) {
-            const canvas = await html2canvas(viewElement as HTMLElement, {
-              backgroundColor: null, // 투명 배경
-              scale: 4, // 품질 향상 (2 → 4)
-              logging: false,
-              useCORS: true,
-              allowTaint: true,
-              imageTimeout: 0,
-              removeContainer: true,
-              onclone: (clonedDoc) => {
-                // 캡처되는 복사본에서 border, boxShadow, backgroundColor 제거
-                const clonedElement = clonedDoc.querySelector(`[data-view-id="${view.id}"]`) as HTMLElement;
-                if (clonedElement) {
-                  clonedElement.style.border = 'none';
-                  clonedElement.style.boxShadow = 'none';
-                  clonedElement.style.backgroundColor = 'transparent';
-                  clonedElement.style.borderRadius = '0';
-                }
-              }
-            });
-            // PNG 형식 사용 (투명도 지원)
-            const imgData = canvas.toDataURL('image/png');
-            pdf.addImage(imgData, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
-            console.log(`✅ ${viewType} 뷰카드가 고품질로 캡처되어 PDF에 추가되었습니다.`);
+          // 먼저 data-capture-image 속성을 가진 img 요소를 찾음
+          const imageElement = document.querySelector(`[data-capture-image="${view.id}"]`) as HTMLImageElement;
+
+          if (imageElement && imageElement.src) {
+            // 이미지가 있으면 직접 PDF에 추가 (html2canvas 불필요)
+            pdf.addImage(imageElement.src, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
+            console.log(`✅ ${viewType} 뷰카드 이미지가 PDF에 추가되었습니다.`);
           } else {
-            console.warn(`뷰카드 요소를 찾을 수 없음: ${view.id}`);
+            console.warn(`뷰카드 이미지를 찾을 수 없음: ${view.id}`);
           }
         } catch (err) {
-          console.error('뷰카드 캡처 실패, 기존 이미지 사용:', err);
+          console.error('뷰카드 이미지 추가 실패:', err);
 
           // 폴백: 기존 래스터 이미지 사용
           let imageData = null;
@@ -4672,9 +4654,10 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                         }}>
                           {/* 캡처된 이미지 또는 플레이스홀더 */}
                           {capturedImage ? (
-                            <img 
-                              src={capturedImage} 
-                              alt={viewInfo?.label} 
+                            <img
+                              src={capturedImage}
+                              alt={viewInfo?.label}
+                              data-capture-image={view.id}
                               style={{
                                 width: '100%',
                                 height: '100%',
