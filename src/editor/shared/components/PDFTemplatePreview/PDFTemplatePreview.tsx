@@ -96,6 +96,7 @@ interface ViewPosition {
     width: number;
     height: number;
   };
+  imageAspectRatio?: number;
 }
 
 interface ViewMenuItem {
@@ -294,7 +295,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           width: 150,
           height: 150,
           scale: 1,
-          cropRegion: { ...DEFAULT_CAPTURE_REGION }
+          cropRegion: { ...DEFAULT_CAPTURE_REGION },
+          imageAspectRatio: 1
         });
         xOffset += 200;
       }
@@ -307,7 +309,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           width: 150,
           height: 150,
           scale: 1,
-          cropRegion: { ...DEFAULT_CAPTURE_REGION }
+          cropRegion: { ...DEFAULT_CAPTURE_REGION },
+          imageAspectRatio: 1
         });
         xOffset += 200;
       }
@@ -320,7 +323,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           width: 150,
           height: 150,
           scale: 1,
-          cropRegion: { ...DEFAULT_CAPTURE_REGION }
+          cropRegion: { ...DEFAULT_CAPTURE_REGION },
+          imageAspectRatio: 1
         });
         yOffset += 200;
         xOffset = 50;
@@ -334,7 +338,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           width: 150,
           height: 150,
           scale: 1,
-          cropRegion: { ...DEFAULT_CAPTURE_REGION }
+          cropRegion: { ...DEFAULT_CAPTURE_REGION },
+          imageAspectRatio: 1
         });
       }
       
@@ -670,6 +675,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       const maxY = sourceHeight - regionHeightPx;
       const regionX = clamp(Math.round(activeRegion.x * sourceWidth), 0, maxX);
       const regionY = clamp(Math.round(activeRegion.y * sourceHeight), 0, maxY);
+      const imageAspectRatio = regionWidthPx / Math.max(regionHeightPx, 1);
 
       // 캔버스 이미지를 고해상도로 리샘플링 (PDF 출력용 8192px)
       const maxDimension = 8192; // 4096 → 8192로 증가
@@ -716,7 +722,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
               type: 'image',
               hasDrawingData: false,
               visible: true,
-              cropRegion: activeRegion
+              cropRegion: activeRegion,
+              imageAspectRatio
             }
           : view
       ));
@@ -1322,7 +1329,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
               type: 'image',
               imageUrl: file.url,
               fileName: file.name,
-              cropRegion: { ...DEFAULT_CAPTURE_REGION }
+              cropRegion: { ...DEFAULT_CAPTURE_REGION },
+              imageAspectRatio: 4 / 3
             };
             
             console.log('✅ 이미지 뷰카드 추가:', newImageView);
@@ -1369,7 +1377,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
             width: 200,
             height: 150,
             scale: 1,
-            cropRegion: { ...DEFAULT_CAPTURE_REGION }
+            cropRegion: { ...DEFAULT_CAPTURE_REGION },
+            imageAspectRatio: 4 / 3
           };
           console.log('✅ 뷰카드 추가:', newView);
           setViewPositions(prev => {
@@ -2633,7 +2642,22 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           if (imageElement && imageElement.src) {
             // 원본 이미지 src를 직접 PDF에 추가 (화질 손실 없음)
             console.log(`📄 원본 이미지를 PDF에 직접 추가: ${imageElement.src.substring(0, 100)}...`);
-            pdf.addImage(imageElement.src, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
+            const naturalWidth = imageElement.naturalWidth || view.width || 1;
+            const naturalHeight = imageElement.naturalHeight || view.height || 1;
+            const imageAspect = view.imageAspectRatio ?? naturalWidth / Math.max(naturalHeight, 1);
+
+            let drawWidthMm = viewWidthMm;
+            let drawHeightMm = drawWidthMm / imageAspect;
+
+            if (drawHeightMm > viewHeightMm) {
+              drawHeightMm = viewHeightMm;
+              drawWidthMm = drawHeightMm * imageAspect;
+            }
+
+            const offsetXMm = viewXMm + (viewWidthMm - drawWidthMm) / 2;
+            const offsetYMm = viewYMm + (viewHeightMm - drawHeightMm) / 2;
+
+            pdf.addImage(imageElement.src, 'PNG', offsetXMm, offsetYMm, drawWidthMm, drawHeightMm);
             console.log(`✅ ${viewType} 뷰카드가 고품질로 PDF에 추가되었습니다.`);
           } else {
             console.warn(`❌ 뷰카드 이미지를 찾을 수 없음: ${view.id}`);
@@ -2661,7 +2685,21 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
 
           if (imageData) {
             try {
-              pdf.addImage(imageData, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
+              const imageAspect = view.imageAspectRatio
+                ?? (view.width > 0 && view.height > 0 ? view.width / view.height : 1);
+
+              let drawWidthMm = viewWidthMm;
+              let drawHeightMm = drawWidthMm / imageAspect;
+
+              if (drawHeightMm > viewHeightMm) {
+                drawHeightMm = viewHeightMm;
+                drawWidthMm = drawHeightMm * imageAspect;
+              }
+
+              const offsetXMm = viewXMm + (viewWidthMm - drawWidthMm) / 2;
+              const offsetYMm = viewYMm + (viewHeightMm - drawHeightMm) / 2;
+
+              pdf.addImage(imageData, 'PNG', offsetXMm, offsetYMm, drawWidthMm, drawHeightMm);
               console.log(`⚠️ ${viewType} 뷰는 래스터 이미지로 렌더링되었습니다.`);
             } catch (imgErr) {
               console.error('이미지 추가 실패:', imgErr);

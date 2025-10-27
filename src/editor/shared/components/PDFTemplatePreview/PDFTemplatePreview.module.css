@@ -2323,6 +2323,8 @@
   justify-content: space-between;
   align-items: center;
   gap: 20px;
+  flex-wrap: wrap;
+  row-gap: 12px;
 }
 
 .viewerSubHeader .leftControls,
