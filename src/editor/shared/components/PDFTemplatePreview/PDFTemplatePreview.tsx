@@ -7,6 +7,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import styles from './PDFTemplatePreview.module.css';
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import { renderViewToSVG, svgToCanvas } from '@/editor/shared/utils/svgRenderer';
 import { generateVectorDataFromConfig, convertToSVG } from '@/editor/shared/utils/vectorExtractor';
