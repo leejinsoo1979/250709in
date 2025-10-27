@@ -7,7 +7,6 @@ import { useUIStore } from '@/store/uiStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import styles from './PDFTemplatePreview.module.css';
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import { renderViewToSVG, svgToCanvas } from '@/editor/shared/utils/svgRenderer';
 import { generateVectorDataFromConfig, convertToSVG } from '@/editor/shared/utils/vectorExtractor';
@@ -90,6 +89,12 @@ interface ViewPosition {
   type?: 'view' | 'image' | 'pdf' | 'dxf'; // 뷰 타입
   imageUrl?: string; // 이미지 URL
   fileName?: string; // 파일 이름
+  cropRegion?: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
 }
 
 interface ViewMenuItem {
@@ -128,6 +133,53 @@ const AVAILABLE_TEXT_ITEMS: ViewMenuItem[] = [
   { id: 'specs', label: '사양' },
   { id: 'notes', label: '메모' }
 ];
+
+type CaptureRegion = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+type CaptureHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w';
+
+const DEFAULT_CAPTURE_REGION: CaptureRegion = {
+  x: 0,
+  y: 0,
+  width: 1,
+  height: 1
+};
+
+const MIN_CAPTURE_REGION_SIZE = 0.05;
+
+const clamp = (value: number, min: number, max: number) => Math.min(Math.max(value, min), max);
+
+const sanitizeRegion = (region: CaptureRegion): CaptureRegion => {
+  const width = clamp(region.width, MIN_CAPTURE_REGION_SIZE, 1);
+  const height = clamp(region.height, MIN_CAPTURE_REGION_SIZE, 1);
+  const maxX = Math.max(0, 1 - width);
+  const maxY = Math.max(0, 1 - height);
+
+  return {
+    x: clamp(region.x, 0, maxX),
+    y: clamp(region.y, 0, maxY),
+    width,
+    height
+  };
+};
+
+type CaptureDragState =
+  | {
+      mode: 'move';
+      offsetX: number;
+      offsetY: number;
+      startRegion: CaptureRegion;
+    }
+  | {
+      mode: 'resize';
+      handle: CaptureHandle;
+      startRegion: CaptureRegion;
+    };
 
 // const SNAP_THRESHOLD = 10; // 스냅이 작동하는 거리 (픽셀) - 비활성화
 // const GRID_SIZE = 20; // 그리드 크기 - 비활성화
@@ -184,6 +236,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   const [localCapturedViews, setLocalCapturedViews] = useState<{
     [key: string]: string;
   }>({});
+  const [captureRegion, setCaptureRegion] = useState<CaptureRegion | null>(null);
   const [editingInfo, setEditingInfo] = useState<string | null>(null); // 편집 중인 정보 카드 ID
   const [activeTab, setActiveTab] = useState<'views' | 'elements' | 'text' | 'upload'>('views'); // 좌측 탭 상태
   const [uploadedFiles, setUploadedFiles] = useState<{
@@ -236,11 +289,12 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           y: yOffset,
           width: 150,
           height: 150,
-          scale: 1
+          scale: 1,
+          cropRegion: { ...DEFAULT_CAPTURE_REGION }
         });
         xOffset += 200;
       }
-      
+
       if (capturedViews.front) {
         initialPositions.push({
           id: `front_${Date.now()+1}`,
@@ -248,11 +302,12 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           y: yOffset,
           width: 150,
           height: 150,
-          scale: 1
+          scale: 1,
+          cropRegion: { ...DEFAULT_CAPTURE_REGION }
         });
         xOffset += 200;
       }
-      
+
       if (capturedViews.side) {
         initialPositions.push({
           id: `side_${Date.now()+2}`,
@@ -260,12 +315,13 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           y: yOffset,
           width: 150,
           height: 150,
-          scale: 1
+          scale: 1,
+          cropRegion: { ...DEFAULT_CAPTURE_REGION }
         });
         yOffset += 200;
         xOffset = 50;
       }
-      
+
       if (capturedViews.door) {
         initialPositions.push({
           id: `door_${Date.now()+3}`,
@@ -273,7 +329,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           y: yOffset,
           width: 150,
           height: 150,
-          scale: 1
+          scale: 1,
+          cropRegion: { ...DEFAULT_CAPTURE_REGION }
         });
       }
       
@@ -282,6 +339,10 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   }, [capturedViews]);
   const { viewMode, view2DDirection, setViewMode, setView2DDirection, renderMode, setRenderMode, view2DTheme } = uiStore;
   const { theme } = useTheme();
+  const overlayTargetView = useMemo(() => {
+    if (!viewerOverlay.viewId) return null;
+    return viewPositions.find(view => view.id === viewerOverlay.viewId) ?? null;
+  }, [viewerOverlay.viewId, viewPositions]);
   
   // 스토어 값을 사용하는 상태 선언
   const [infoTexts, setInfoTexts] = useState<{ [key: string]: string }>({
@@ -294,6 +355,84 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   const previewRef = useRef<HTMLDivElement>(null);
   const drawingAreaRef = useRef<HTMLDivElement>(null);
   const viewerContainerRef = useRef<HTMLDivElement>(null);
+  const captureRegionRef = useRef<CaptureRegion | null>(null);
+  const captureDragStateRef = useRef<CaptureDragState | null>(null);
+
+  useEffect(() => {
+    captureRegionRef.current = captureRegion;
+  }, [captureRegion]);
+
+  useEffect(() => {
+    if (!viewerOverlay.isOpen || !viewerOverlay.viewId) {
+      setCaptureRegion(null);
+      captureDragStateRef.current = null;
+      return;
+    }
+
+    let frameId: number | null = null;
+    let attempts = 0;
+
+    const initializeRegion = () => {
+      const targetView = overlayTargetView;
+      const canvas = viewerContainerRef.current?.querySelector('canvas') as HTMLCanvasElement | null;
+
+      if (!targetView) {
+        setCaptureRegion(sanitizeRegion({ ...DEFAULT_CAPTURE_REGION }));
+        return;
+      }
+
+      if (!canvas) {
+        if (attempts < 30) {
+          attempts += 1;
+          frameId = requestAnimationFrame(initializeRegion);
+        }
+        return;
+      }
+
+      const canvasWidth = canvas.width || canvas.clientWidth;
+      const canvasHeight = canvas.height || canvas.clientHeight;
+
+      if (!canvasWidth || !canvasHeight) {
+        if (attempts < 30) {
+          attempts += 1;
+          frameId = requestAnimationFrame(initializeRegion);
+        }
+        return;
+      }
+
+      if (targetView.cropRegion) {
+        setCaptureRegion(sanitizeRegion(targetView.cropRegion));
+        return;
+      }
+
+      const aspectRatio = targetView.width && targetView.height
+        ? targetView.width / targetView.height
+        : canvasWidth / canvasHeight;
+
+      let regionWidthPx = canvasWidth;
+      let regionHeightPx = regionWidthPx / aspectRatio;
+
+      if (regionHeightPx > canvasHeight) {
+        regionHeightPx = canvasHeight;
+        regionWidthPx = regionHeightPx * aspectRatio;
+      }
+
+      const normalizedRegion: CaptureRegion = {
+        x: (canvasWidth - regionWidthPx) / 2 / canvasWidth,
+        y: (canvasHeight - regionHeightPx) / 2 / canvasHeight,
+        width: regionWidthPx / canvasWidth,
+        height: regionHeightPx / canvasHeight
+      };
+
+      setCaptureRegion(sanitizeRegion(normalizedRegion));
+    };
+
+    initializeRegion();
+
+    return () => {
+      if (frameId) cancelAnimationFrame(frameId);
+    };
+  }, [overlayTargetView, viewerOverlay.isOpen, viewerOverlay.viewId]);
 
   const paperDimensions = useMemo(() => {
     const dims = getPaperDimensions(selectedPaperSize, orientation);
@@ -367,223 +506,227 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
     });
   };
 
+  const handleRegionPointerMove = useCallback((event: PointerEvent) => {
+    const dragState = captureDragStateRef.current;
+    if (!dragState || !viewerContainerRef.current) {
+      return;
+    }
+
+    const rect = viewerContainerRef.current.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    const pointerX = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+    const pointerY = clamp((event.clientY - rect.top) / rect.height, 0, 1);
+
+    if (dragState.mode === 'move') {
+      const proposedRegion: CaptureRegion = {
+        x: pointerX - dragState.offsetX,
+        y: pointerY - dragState.offsetY,
+        width: dragState.startRegion.width,
+        height: dragState.startRegion.height
+      };
+
+      setCaptureRegion(sanitizeRegion(proposedRegion));
+    } else if (dragState.mode === 'resize') {
+      let { x, y, width, height } = dragState.startRegion;
+      const right = x + width;
+      const bottom = y + height;
+
+      const handle = dragState.handle;
+
+      if (handle.includes('w')) {
+        const newX = clamp(pointerX, 0, right - MIN_CAPTURE_REGION_SIZE);
+        x = newX;
+        width = right - newX;
+      }
+
+      if (handle.includes('e')) {
+        const newRight = clamp(pointerX, x + MIN_CAPTURE_REGION_SIZE, 1);
+        width = newRight - x;
+      }
+
+      if (handle.includes('n')) {
+        const newY = clamp(pointerY, 0, bottom - MIN_CAPTURE_REGION_SIZE);
+        y = newY;
+        height = bottom - newY;
+      }
+
+      if (handle.includes('s')) {
+        const newBottom = clamp(pointerY, y + MIN_CAPTURE_REGION_SIZE, 1);
+        height = newBottom - y;
+      }
+
+      setCaptureRegion(sanitizeRegion({ x, y, width, height }));
+    }
+
+    event.preventDefault();
+  }, []);
+
+  const handleRegionPointerUp = useCallback(() => {
+    captureDragStateRef.current = null;
+    window.removeEventListener('pointermove', handleRegionPointerMove);
+    window.removeEventListener('pointerup', handleRegionPointerUp);
+  }, [handleRegionPointerMove]);
+
+  const handleCaptureRegionPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!captureRegion || !viewerContainerRef.current) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const rect = viewerContainerRef.current.getBoundingClientRect();
+    if (!rect.width || !rect.height) return;
+
+    const pointerX = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+    const pointerY = clamp((event.clientY - rect.top) / rect.height, 0, 1);
+
+    const startRegion = sanitizeRegion(captureRegion);
+    captureDragStateRef.current = {
+      mode: 'move',
+      offsetX: pointerX - startRegion.x,
+      offsetY: pointerY - startRegion.y,
+      startRegion
+    };
+
+    window.addEventListener('pointermove', handleRegionPointerMove, { passive: false });
+    window.addEventListener('pointerup', handleRegionPointerUp);
+  };
+
+  const handleCaptureHandlePointerDown = (event: React.PointerEvent<HTMLDivElement>, handle: CaptureHandle) => {
+    if (!captureRegion || !viewerContainerRef.current) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const startRegion = sanitizeRegion(captureRegion);
+    captureDragStateRef.current = {
+      mode: 'resize',
+      handle,
+      startRegion
+    };
+
+    window.addEventListener('pointermove', handleRegionPointerMove, { passive: false });
+    window.addEventListener('pointerup', handleRegionPointerUp);
+  };
+
+  useEffect(() => {
+    return () => {
+      window.removeEventListener('pointermove', handleRegionPointerMove);
+      window.removeEventListener('pointerup', handleRegionPointerUp);
+    };
+  }, [handleRegionPointerMove, handleRegionPointerUp]);
+
+  useEffect(() => {
+    if (!viewerOverlay.isOpen) {
+      window.removeEventListener('pointermove', handleRegionPointerMove);
+      window.removeEventListener('pointerup', handleRegionPointerUp);
+      captureDragStateRef.current = null;
+    }
+  }, [handleRegionPointerMove, handleRegionPointerUp, viewerOverlay.isOpen]);
+
   // 뷰어에서 캡처 버튼 핸들러
   const handleCaptureFromViewer = async () => {
     if (!viewerContainerRef.current || !viewerOverlay.viewId) return;
-
     console.log('🎯 handleCaptureFromViewer 호출', {
       viewType: viewerOverlay.viewType,
       viewId: viewerOverlay.viewId
     });
 
     try {
-      // 모든 뷰에 대해 SVG 벡터 형식으로 변환 (2D 캐드처럼 처리)
-      // viewerOverlay.viewType이 있으면 벡터로 변환
-      if (viewerOverlay.viewType) {
-        console.log('🎨 뷰를 SVG 벡터로 변환 시작:', viewerOverlay.viewType);
-        
-        // 현재 뷰의 설정 가져오기
-        const currentView = viewPositions.find(v => v.id === viewerOverlay.viewId);
-        if (!currentView) {
-          console.error('뷰를 찾을 수 없습니다');
-          return;
-        }
-
-        // SVG 크기 설정
-        const svgWidth = 400;
-        const svgHeight = 300;
-
-        // SVG 생성
-        const svgElement = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svgElement.setAttribute('width', String(svgWidth));
-        svgElement.setAttribute('height', String(svgHeight));
-        svgElement.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
-        svgElement.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-        svgElement.setAttribute('preserveAspectRatio', 'xMidYMid meet');
-        
-        // 흰색 배경
-        const bgRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        bgRect.setAttribute('width', '100%');
-        bgRect.setAttribute('height', '100%');
-        bgRect.setAttribute('fill', '#ffffff');
-        svgElement.appendChild(bgRect);
-
-        // 그리드 패턴 정의
-        const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-        const pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
-        pattern.setAttribute('id', 'grid');
-        pattern.setAttribute('width', '10');
-        pattern.setAttribute('height', '10');
-        pattern.setAttribute('patternUnits', 'userSpaceOnUse');
-        
-        const smallGrid = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        smallGrid.setAttribute('d', 'M 10 0 L 0 0 0 10');
-        smallGrid.setAttribute('fill', 'none');
-        smallGrid.setAttribute('stroke', '#e0e0e0');
-        smallGrid.setAttribute('stroke-width', '0.5');
-        pattern.appendChild(smallGrid);
-        defs.appendChild(pattern);
-        svgElement.appendChild(defs);
-        
-        // 그리드 배경
-        const gridRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        gridRect.setAttribute('width', '100%');
-        gridRect.setAttribute('height', '100%');
-        gridRect.setAttribute('fill', 'url(#grid)');
-        svgElement.appendChild(gridRect);
-
-        // 2D 뷰 샘플 벡터 요소들 추가
-        const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-        g.setAttribute('transform', 'translate(50, 50)');
-        
-        // 샘플 직사각형 (방 구조)
-        const roomRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-        roomRect.setAttribute('x', '0');
-        roomRect.setAttribute('y', '0');
-        roomRect.setAttribute('width', '300');
-        roomRect.setAttribute('height', '200');
-        roomRect.setAttribute('fill', 'none');
-        roomRect.setAttribute('stroke', '#000000');
-        roomRect.setAttribute('stroke-width', '2');
-        g.appendChild(roomRect);
-        
-        // 샘플 선들 (벽)
-        const wall1 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        wall1.setAttribute('x1', '100');
-        wall1.setAttribute('y1', '0');
-        wall1.setAttribute('x2', '100');
-        wall1.setAttribute('y2', '200');
-        wall1.setAttribute('stroke', '#000000');
-        wall1.setAttribute('stroke-width', '1.5');
-        g.appendChild(wall1);
-        
-        const wall2 = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-        wall2.setAttribute('x1', '200');
-        wall2.setAttribute('y1', '0');
-        wall2.setAttribute('x2', '200');
-        wall2.setAttribute('y2', '200');
-        wall2.setAttribute('stroke', '#000000');
-        wall2.setAttribute('stroke-width', '1.5');
-        g.appendChild(wall2);
-        
-        // 텍스트 (치수)
-        const text1 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text1.setAttribute('x', '150');
-        text1.setAttribute('y', '-10');
-        text1.setAttribute('font-size', '12');
-        text1.setAttribute('font-family', 'Arial');
-        text1.setAttribute('text-anchor', 'middle');
-        text1.setAttribute('fill', '#000000');
-        text1.textContent = '3000mm';
-        g.appendChild(text1);
-        
-        const text2 = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text2.setAttribute('x', '-20');
-        text2.setAttribute('y', '100');
-        text2.setAttribute('font-size', '12');
-        text2.setAttribute('font-family', 'Arial');
-        text2.setAttribute('text-anchor', 'middle');
-        text2.setAttribute('transform', 'rotate(-90 -20 100)');
-        text2.setAttribute('fill', '#000000');
-        text2.textContent = '2000mm';
-        g.appendChild(text2);
-        
-        svgElement.appendChild(g);
-
-        // SVG를 문자열로 변환
-        const svgString = new XMLSerializer().serializeToString(svgElement);
-        const svgDataUrl = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgString)));
-
-        console.log('📊 SVG 데이터 생성 완료', {
-          svgDataUrl: svgDataUrl.substring(0, 100) + '...',
-          viewId: viewerOverlay.viewId
-        });
-
-        // 뷰 업데이트 - 이미지 타입으로 설정하여 제대로 렌더링되도록
-        setViewPositions(prev => {
-          const updatedViews = prev.map(view => {
-            if (view.id === viewerOverlay.viewId) {
-              console.log('✅ 뷰 업데이트 중:', view.id);
-              return {
-                ...view,
-                imageUrl: svgDataUrl,
-                type: 'image',  // 'image' 타입으로 설정
-                hasDrawingData: false,
-                visible: true,
-                fileName: '2D Vector View',
-                width: svgWidth,
-                height: svgHeight,
-                scale: 1
-              };
-            }
-            return view;
-          });
-          console.log('📝 업데이트된 뷰 목록:', updatedViews);
-          return updatedViews;
-        });
-
-        // 캔버스 강제 리렌더링을 위해 짧은 지연 후 썸네일 업데이트
-        setTimeout(() => {
-          setThumbnailRefresh(prev => prev + 1);
-          if (fabricCanvasRef.current) {
-            fabricCanvasRef.current.renderAll();
-          }
-        }, 100);
-
-        // 오버레이 닫기
-        setViewerOverlay({ isOpen: false, viewId: null, viewType: null });
-        console.log('✅ 2D 뷰가 SVG 벡터로 성공적으로 변환되었습니다');
-        
-        // 성공 알림 (디버깅용)
-        alert(`${viewerOverlay.viewType?.toUpperCase()} 뷰가 벡터로 변환되었습니다. 뷰카드를 확인하세요.`);
+      const targetView = viewPositions.find(v => v.id === viewerOverlay.viewId);
+      if (!targetView) {
+        console.error('뷰를 찾을 수 없습니다');
         return;
       }
 
-      // 기존 캡처 로직 (다른 뷰 타입의 경우)
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
       const canvas = viewerContainerRef.current.querySelector('canvas');
       if (!canvas) {
         console.error('Canvas not found in viewer container');
         return;
       }
 
-      const options = {
-        scale: 3,
-        backgroundColor: '#ffffff',
-        logging: false,
-        useCORS: true,
-        allowTaint: false,
-        onclone: (clonedDoc: Document) => {
-          const clonedCanvas = clonedDoc.querySelector('canvas');
-          if (clonedCanvas && canvas instanceof HTMLCanvasElement) {
-            const ctx = clonedCanvas.getContext('2d');
-            if (ctx) {
-              ctx.drawImage(canvas, 0, 0);
-            }
-          }
-        }
-      };
+      // 렌더 프레임이 완료된 뒤 데이터를 읽도록 한 틱 대기
+      await new Promise(resolve => requestAnimationFrame(() => resolve(null)));
 
-      // html2canvas로 캡처
-      const capturedCanvas = await html2canvas(viewerContainerRef.current, options);
-      const imgData = capturedCanvas.toDataURL('image/png');
-      
-      const viewType = viewerOverlay.viewType;
-      const viewId = viewerOverlay.viewId;
-      
-      if (viewType && viewId) {
-        // 캡처된 이미지를 로컬 상태에 저장
-        setLocalCapturedViews(prev => ({
-          ...prev,
-          [`${viewId}_${viewType}`]: imgData
-        }));
-        
-        console.log('View captured successfully:', viewType);
+      const sourceCanvas = canvas as HTMLCanvasElement;
+      const sourceWidth = sourceCanvas.width || sourceCanvas.clientWidth;
+      const sourceHeight = sourceCanvas.height || sourceCanvas.clientHeight;
+
+      if (!sourceWidth || !sourceHeight) {
+        console.error('소스 캔버스 크기를 확인할 수 없습니다');
+        return;
       }
 
-      // 오버레이 닫기
+      const activeRegion = sanitizeRegion(captureRegionRef.current ?? { ...DEFAULT_CAPTURE_REGION });
+      const regionWidthPxRaw = Math.round(activeRegion.width * sourceWidth);
+      const regionHeightPxRaw = Math.round(activeRegion.height * sourceHeight);
+      const regionWidthPx = clamp(regionWidthPxRaw, 1, sourceWidth);
+      const regionHeightPx = clamp(regionHeightPxRaw, 1, sourceHeight);
+      const maxX = sourceWidth - regionWidthPx;
+      const maxY = sourceHeight - regionHeightPx;
+      const regionX = clamp(Math.round(activeRegion.x * sourceWidth), 0, maxX);
+      const regionY = clamp(Math.round(activeRegion.y * sourceHeight), 0, maxY);
+
+      // 캔버스 이미지를 필요한 크기로 리샘플링 (최대 4096px 유지)
+      const maxDimension = 4096;
+      const scaleFactor = Math.min(1, maxDimension / Math.max(regionWidthPx, regionHeightPx));
+      const targetWidth = Math.max(1, Math.round(regionWidthPx * scaleFactor));
+      const targetHeight = Math.max(1, Math.round(regionHeightPx * scaleFactor));
+
+      const offscreen = document.createElement('canvas');
+      offscreen.width = targetWidth;
+      offscreen.height = targetHeight;
+      const ctx = offscreen.getContext('2d');
+
+      if (!ctx) {
+        console.error('오프스크린 캔버스 컨텍스트를 생성할 수 없습니다');
+        return;
+      }
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, targetWidth, targetHeight);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(sourceCanvas, regionX, regionY, regionWidthPx, regionHeightPx, 0, 0, targetWidth, targetHeight);
+
+      const imgData = offscreen.toDataURL('image/png');
+
+      if (!imgData) {
+        console.error('이미지 데이터를 생성하지 못했습니다');
+        return;
+      }
+
+      const viewId = viewerOverlay.viewId;
+      const viewType = viewerOverlay.viewType;
+
+      setLocalCapturedViews(prev => ({
+        ...prev,
+        [viewId]: imgData,
+        ...(viewType ? { [viewType]: imgData } : {})
+      }));
+
+      setViewPositions(prev => prev.map(view => 
+        view.id === viewId
+          ? {
+              ...view,
+              imageUrl: imgData,
+              type: 'image',
+              hasDrawingData: false,
+              visible: true,
+              cropRegion: activeRegion
+            }
+          : view
+      ));
+
+      setTimeout(() => {
+        setThumbnailRefresh(prev => prev + 1);
+        if (fabricCanvasRef.current) {
+          fabricCanvasRef.current.renderAll();
+        }
+      }, 0);
+
       setViewerOverlay({ isOpen: false, viewId: null, viewType: null });
+      console.log('✅ 캔버스 캡처 완료:', { viewId, viewType });
     } catch (error) {
       console.error('Error capturing view:', error);
     }
@@ -1175,7 +1318,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
               rotation: 0, // 회전 초기값
               type: 'image',
               imageUrl: file.url,
-              fileName: file.name
+              fileName: file.name,
+              cropRegion: { ...DEFAULT_CAPTURE_REGION }
             };
             
             console.log('✅ 이미지 뷰카드 추가:', newImageView);
@@ -1221,7 +1365,8 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
             y: y - 75,
             width: 200,
             height: 150,
-            scale: 1
+            scale: 1,
+            cropRegion: { ...DEFAULT_CAPTURE_REGION }
           };
           console.log('✅ 뷰카드 추가:', newView);
           setViewPositions(prev => {
@@ -2540,7 +2685,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           
           // localCapturedViews에서도 확인
           if (!imageData) {
-            imageData = localCapturedViews[view.id];
+            imageData = localCapturedViews[view.id] ?? (viewType ? localCapturedViews[viewType] : undefined);
           }
           
           if (imageData) {
@@ -2984,26 +3129,29 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                 )}
                 {designSubTab === '2d' && (
                   <div className={styles.viewGrid}>
-                    {AVAILABLE_VIEWS.map(view => (
-                      <div
-                        key={view.id}
-                        className={styles.viewMenuItem}
-                        onMouseDown={(e) => handleMenuItemDragStart(view, e)}
-                      >
-                        <div className={styles.viewItemContent}>
-                          {capturedViews[view.id as keyof typeof capturedViews] ? (
-                            <img 
-                              src={capturedViews[view.id as keyof typeof capturedViews]} 
-                              alt={view.label} 
-                              draggable={false}
-                            />
-                          ) : (
-                            <div className={styles.viewItemPlaceholder}>{view.label}</div>
-                          )}
+                    {AVAILABLE_VIEWS.map(view => {
+                      const menuImage = localCapturedViews[view.id] ?? capturedViews[view.id as keyof typeof capturedViews];
+                      return (
+                        <div
+                          key={view.id}
+                          className={styles.viewMenuItem}
+                          onMouseDown={(e) => handleMenuItemDragStart(view, e)}
+                        >
+                          <div className={styles.viewItemContent}>
+                            {menuImage ? (
+                              <img 
+                                src={menuImage} 
+                                alt={view.label} 
+                                draggable={false}
+                              />
+                            ) : (
+                              <div className={styles.viewItemPlaceholder}>{view.label}</div>
+                            )}
+                          </div>
+                          <span className={styles.viewItemLabel}>{view.label}</span>
                         </div>
-                        <span className={styles.viewItemLabel}>{view.label}</span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
                 {designSubTab === '3d' && (
@@ -4187,7 +4335,9 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   {viewPositions.length > 0 && viewPositions.map(view => {
                     const viewType = view.id.split('_')[0];
                     const viewInfo = AVAILABLE_VIEWS.find(v => v.id === viewType);
-                    const capturedImage = capturedViews[viewType as keyof typeof capturedViews];
+                    const capturedImage = localCapturedViews[view.id] 
+                      ?? (viewType ? localCapturedViews[viewType] : undefined)
+                      ?? capturedViews[viewType as keyof typeof capturedViews];
                     const isTextItem = AVAILABLE_TEXT_ITEMS.some(item => item.id === viewType);
                     
                     console.log('🎨 뷰카드 렌더링:', { 
@@ -4848,8 +4998,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                     </button>
                   </div>
 
-                  {/* 체크박스 옵션들 - 서브헤더가 ON일 때만 표시 */}
-                  {uiStore.showDimensions ? (
+                  {/* 체크박스 옵션들 - 항상 표시 */}
                   <div className={styles.checkboxGroup}>
                     <label className={styles.checkboxLabel}>
                       <input
@@ -4908,7 +5057,6 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                       {t('viewer.axis')}
                     </label>
                   </div>
-                  ) : null}
                 </div>
 
                 <div className={styles.centerControls}>
@@ -5005,6 +5153,91 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   showGuides={uiStore.showGuides}
                   showAxis={uiStore.showAxis}
                 />
+                {captureRegion && (
+                  <>
+                    <div
+                      className={styles.captureShade}
+                      style={{
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: `${captureRegion.y * 100}%`
+                      }}
+                    />
+                    <div
+                      className={styles.captureShade}
+                      style={{
+                        top: `${(captureRegion.y + captureRegion.height) * 100}%`,
+                        left: 0,
+                        width: '100%',
+                        height: `${Math.max(0, 1 - captureRegion.y - captureRegion.height) * 100}%`
+                      }}
+                    />
+                    <div
+                      className={styles.captureShade}
+                      style={{
+                        top: `${captureRegion.y * 100}%`,
+                        left: 0,
+                        width: `${captureRegion.x * 100}%`,
+                        height: `${captureRegion.height * 100}%`
+                      }}
+                    />
+                    <div
+                      className={styles.captureShade}
+                      style={{
+                        top: `${captureRegion.y * 100}%`,
+                        left: `${(captureRegion.x + captureRegion.width) * 100}%`,
+                        width: `${Math.max(0, 1 - captureRegion.x - captureRegion.width) * 100}%`,
+                        height: `${captureRegion.height * 100}%`
+                      }}
+                    />
+                    <div
+                      className={styles.captureRegion}
+                      style={{
+                        left: `${captureRegion.x * 100}%`,
+                        top: `${captureRegion.y * 100}%`,
+                        width: `${captureRegion.width * 100}%`,
+                        height: `${captureRegion.height * 100}%`
+                      }}
+                      onPointerDown={handleCaptureRegionPointerDown}
+                    >
+                      <span className={styles.captureRegionLabel}>캡처 영역</span>
+                      <div
+                        className={`${styles.captureHandle} ${styles.handleNw}`}
+                        onPointerDown={(e) => handleCaptureHandlePointerDown(e, 'nw')}
+                      />
+                      <div
+                        className={`${styles.captureHandle} ${styles.handleN}`}
+                        onPointerDown={(e) => handleCaptureHandlePointerDown(e, 'n')}
+                      />
+                      <div
+                        className={`${styles.captureHandle} ${styles.handleNe}`}
+                        onPointerDown={(e) => handleCaptureHandlePointerDown(e, 'ne')}
+                      />
+                      <div
+                        className={`${styles.captureHandle} ${styles.handleE}`}
+                        onPointerDown={(e) => handleCaptureHandlePointerDown(e, 'e')}
+                      />
+                      <div
+                        className={`${styles.captureHandle} ${styles.handleSe}`}
+                        onPointerDown={(e) => handleCaptureHandlePointerDown(e, 'se')}
+                      />
+                      <div
+                        className={`${styles.captureHandle} ${styles.handleS}`}
+                        onPointerDown={(e) => handleCaptureHandlePointerDown(e, 's')}
+                      />
+                      <div
+                        className={`${styles.captureHandle} ${styles.handleSw}`}
+                        onPointerDown={(e) => handleCaptureHandlePointerDown(e, 'sw')}
+                      />
+                      <div
+                        className={`${styles.captureHandle} ${styles.handleW}`}
+                        onPointerDown={(e) => handleCaptureHandlePointerDown(e, 'w')}
+                      />
+                    </div>
+                    <div className={styles.captureRegionHint}>드래그해서 영역을 이동하거나 모서리를 잡고 크기를 조절하세요</div>
+                  </>
+                )}
               </div>
 
               {/* 하단 버튼 */}
