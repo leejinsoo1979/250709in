@@ -1149,8 +1149,8 @@
 }
 
 .infoContent {
-  width: 100%;
-  height: 100%;
+  width: 80mm;
+  height: 45mm;
   display: flex;
   flex-direction: column;
   gap: 10px;
