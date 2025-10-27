@@ -2611,69 +2611,35 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       for (const view of viewPositions) {
         // 뷰 ID에서 원본 타입 추출 (timestamp 제거)
         const viewType = view.id.split('_')[0];
-        
+        const isTextItem = AVAILABLE_TEXT_ITEMS.some(item => item.id === viewType);
+
+        // 텍스트 아이템은 나중에 처리
+        if (isTextItem) continue;
+
         // 뷰 크기를 mm 단위로 변환
         const viewWidthMm = (view.width * view.scale * paperDimensions.width) / paperDimensions.displayWidth;
         const viewHeightMm = (view.height * view.scale * paperDimensions.height) / paperDimensions.displayHeight;
         const viewXMm = (view.x * paperDimensions.width) / paperDimensions.displayWidth;
         const viewYMm = (view.y * paperDimensions.height) / paperDimensions.displayHeight;
 
-        // 벡터 렌더링 시도
+        // 뷰카드를 html2canvas로 캡처
         try {
-          // 뷰 타입에 따른 방향 설정
-          let view2DDirection: 'front' | 'top' | 'left' | 'right' = 'front';
-          if (viewType === 'top') {
-            view2DDirection = 'top';
-          } else if (viewType === 'front') {
-            view2DDirection = 'front';
-          } else if (viewType === 'side') {
-            view2DDirection = 'left'; // side는 left view로 매핑
-          } else if (viewType === 'door') {
-            // door 타입은 벡터 렌더링 스킵하고 래스터 이미지 사용
-            throw new Error('Door view는 벡터 렌더링 미지원');
-          }
-
-          // ViewConfig 생성
-          const viewConfig = {
-            viewMode: '2D' as const,
-            view2DDirection,
-            renderMode: 'solid' as const,
-            showDimensions: true,
-            showGuides: false,
-            showAxis: false,
-            showAll: false,
-            spaceInfo: spaceInfo, // 컴포넌트 상단에서 가져온 spaceInfo 사용
-            placedModules: placedModules // 컴포넌트 상단에서 가져온 placedModules 사용
-          };
-
-          // 뷰포트 박스 설정 (PDF 내 위치와 크기를 픽셀로 변환)
-          const pixelsPerMm = 2.83465; // 72 DPI 기준
-          const viewportBox = {
-            x: 0,
-            y: 0,
-            width: viewWidthMm * pixelsPerMm,
-            height: viewHeightMm * pixelsPerMm
-          };
-
-          // SVG 생성
-          const svgContent = renderViewToSVG(viewConfig, viewportBox);
-          
-          // SVG를 PDF에 벡터로 추가
-          if (svgContent && (pdf as any).svg) {
-            const svgElement = new DOMParser().parseFromString(svgContent, 'image/svg+xml').documentElement;
-            (pdf as any).svg(svgElement, {
-              x: viewXMm,
-              y: viewYMm,
-              width: viewWidthMm,
-              height: viewHeightMm
+          const viewElement = document.querySelector(`[data-view-id="${view.id}"]`);
+          if (viewElement) {
+            const canvas = await html2canvas(viewElement as HTMLElement, {
+              backgroundColor: null,
+              scale: 2,
+              logging: false
             });
-            console.log(`✅ ${viewType} 뷰가 벡터로 렌더링되었습니다.`);
+            const imgData = canvas.toDataURL('image/png');
+            pdf.addImage(imgData, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
+            console.log(`✅ ${viewType} 뷰카드가 캡처되어 PDF에 추가되었습니다.`);
           } else {
-            throw new Error('SVG 렌더링 실패 또는 svg2pdf 미지원');
+            console.warn(`뷰카드 요소를 찾을 수 없음: ${view.id}`);
           }
-        } catch (vectorErr) {
-          console.warn('벡터 렌더링 실패, 래스터 이미지로 폴백:', vectorErr);
-          
+        } catch (err) {
+          console.error('뷰카드 캡처 실패, 기존 이미지 사용:', err);
+
           // 폴백: 기존 래스터 이미지 사용
           let imageData = null;
           if (viewType === 'top') {
@@ -2685,12 +2651,12 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
           } else if (viewType === 'door') {
             imageData = capturedViews?.door;
           }
-          
+
           // localCapturedViews에서도 확인
           if (!imageData) {
             imageData = localCapturedViews[view.id] ?? (viewType ? localCapturedViews[viewType] : undefined);
           }
-          
+
           if (imageData) {
             try {
               pdf.addImage(imageData, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
@@ -2704,76 +2670,34 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         }
       }
 
-      // 텍스트 아이템 렌더링
+      // 텍스트 아이템을 html2canvas로 캡처하여 이미지로 추가
       for (const view of viewPositions) {
         const viewType = view.id.split('_')[0];
         const isTextItem = AVAILABLE_TEXT_ITEMS.some(item => item.id === viewType);
-        
+
         if (isTextItem) {
           const textXMm = (view.x * paperDimensions.width) / paperDimensions.displayWidth;
           const textYMm = (view.y * paperDimensions.height) / paperDimensions.displayHeight;
           const textWidthMm = (view.width * view.scale * paperDimensions.width) / paperDimensions.displayWidth;
           const textHeightMm = (view.height * view.scale * paperDimensions.height) / paperDimensions.displayHeight;
-          
-          // 배경 박스 (흰색)
-          pdf.setFillColor(255, 255, 255);
-          pdf.rect(textXMm, textYMm, textWidthMm, textHeightMm, 'F');
 
-          // 테두리 추가
-          pdf.setDrawColor(200, 200, 200);
-          pdf.rect(textXMm, textYMm, textWidthMm, textHeightMm, 'S');
-
-          if (viewType === 'info') {
-            const themeColor = getThemeHex();
-            pdf.setTextColor(themeColor);
-            pdf.setFontSize(12);
-            pdf.text('INSHOW', textXMm + 2, textYMm + 6);
-
-            pdf.setTextColor(0, 0, 0);
-            pdf.setFontSize(9);
-            pdf.text(infoTexts.title, textXMm + 2, textYMm + 12);
-
-            // 실측 (녹색)
-            pdf.setFontSize(8);
-            pdf.setTextColor(34, 197, 94); // #22c55e
-            pdf.text('실측:', textXMm + 2, textYMm + 20);
-            pdf.text(infoTexts.size, textXMm + 15, textYMm + 20);
-
-            // 라인
-            pdf.setDrawColor(204, 204, 204);
-            pdf.line(textXMm + 2, textYMm + 22, textXMm + textWidthMm - 2, textYMm + 22);
-
-            // 속장 (주황색)
-            pdf.setTextColor(249, 115, 22); // #f97316
-            pdf.text('속장:', textXMm + 2, textYMm + 28);
-            pdf.text(infoTexts.body, textXMm + 15, textYMm + 28);
-
-            // 라인
-            pdf.setDrawColor(204, 204, 204);
-            pdf.line(textXMm + 2, textYMm + 30, textXMm + textWidthMm - 2, textYMm + 30);
-
-            // 도어 (검정)
-            pdf.setTextColor(0, 0, 0);
-            pdf.text('도어:', textXMm + 2, textYMm + 36);
-            pdf.text(infoTexts.door, textXMm + 15, textYMm + 36);
-
-            // 라인
-            pdf.setDrawColor(204, 204, 204);
-            pdf.line(textXMm + 2, textYMm + 38, textXMm + textWidthMm - 2, textYMm + 38);
-
-            // 속장 (검정)
-            pdf.setTextColor(0, 0, 0);
-            pdf.text('속장:', textXMm + 2, textYMm + 44);
-            pdf.text(infoTexts.body, textXMm + 15, textYMm + 44);
-          } else if (viewType === 'title') {
-            pdf.setTextColor(0, 0, 0);
-            pdf.setFontSize(16);
-            pdf.text(infoTexts.title, textXMm + 5, textYMm + textHeightMm / 2);
-          } else if (viewType === 'notes' && infoTexts.notes) {
-            pdf.setTextColor(0, 0, 0);
-            pdf.setFontSize(10);
-            const lines = pdf.splitTextToSize(infoTexts.notes, textWidthMm - 10);
-            pdf.text(lines, textXMm + 5, textYMm + 10);
+          try {
+            // DOM에서 해당 텍스트 아이템 요소 찾기
+            const textElement = document.querySelector(`[data-view-id="${view.id}"]`);
+            if (textElement) {
+              const canvas = await html2canvas(textElement as HTMLElement, {
+                backgroundColor: '#ffffff',
+                scale: 2,
+                logging: false
+              });
+              const imgData = canvas.toDataURL('image/png');
+              pdf.addImage(imgData, 'PNG', textXMm, textYMm, textWidthMm, textHeightMm);
+              console.log(`✅ 텍스트 아이템 ${viewType}이(가) 이미지로 렌더링되었습니다.`);
+            } else {
+              console.warn(`텍스트 아이템 요소를 찾을 수 없음: ${view.id}`);
+            }
+          } catch (err) {
+            console.error('텍스트 아이템 캡처 실패:', err);
           }
         }
       }
@@ -4376,6 +4300,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                     return (
                       <div
                         key={view.id}
+                        data-view-id={view.id}
                         style={{
                           position: 'absolute',
                           left: view.x,
@@ -4455,7 +4380,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                       )}
                       
                       {isTextItem ? (
-                        <div className={styles.textItemContent}>
+                        <div className={styles.textItemContent} data-view-id={view.id}>
                           {viewType === 'info' && (
                             <div className={styles.infoContent}>
                               <h3 className={styles.infoTitle}>INSHOW</h3>
