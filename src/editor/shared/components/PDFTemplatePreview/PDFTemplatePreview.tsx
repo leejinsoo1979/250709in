@@ -2641,7 +2641,16 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
               useCORS: true,
               allowTaint: true,
               imageTimeout: 0,
-              removeContainer: true
+              removeContainer: true,
+              onclone: (clonedDoc) => {
+                // 캡처되는 이미지 요소의 모든 외곽선 제거
+                const clonedImg = clonedDoc.querySelector(`[data-capture-image="${view.id}"]`) as HTMLElement;
+                if (clonedImg) {
+                  clonedImg.style.border = 'none';
+                  clonedImg.style.outline = 'none';
+                  clonedImg.style.boxShadow = 'none';
+                }
+              }
             });
             console.log(`✅ 캡처 완료, canvas 크기: ${canvas.width}x${canvas.height}`);
             const imgData = canvas.toDataURL('image/png');
