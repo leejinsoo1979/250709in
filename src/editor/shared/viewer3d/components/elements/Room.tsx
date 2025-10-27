@@ -1622,6 +1622,7 @@ const Room: React.FC<RoomProps> = ({
       {/* 바닥 마감재가 있는 경우 - 전체 가구 폭으로 설치 */}
       {spaceInfo.hasFloorFinish && floorFinishHeight > 0 && (
         <BoxWithEdges
+          hideEdges={hideEdges}
           args={[width, floorFinishHeight, extendedPanelDepth]}
           position={[xOffset + width/2, yOffset + floorFinishHeight/2, extendedZOffset + extendedPanelDepth/2]}
           material={new THREE.MeshLambertMaterial({ color: floorColor, transparent: true, opacity: 0.3 })}
@@ -1859,6 +1860,7 @@ const Room: React.FC<RoomProps> = ({
             <>
               {/* 단내림 영역 프레임/엔드패널 */}
               <BoxWithEdges
+          hideEdges={hideEdges}
                 key={`left-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                 args={[
@@ -1899,6 +1901,7 @@ const Room: React.FC<RoomProps> = ({
               {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
               <BoxWithEdges
+          hideEdges={hideEdges}
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.left,
@@ -1966,6 +1969,7 @@ const Room: React.FC<RoomProps> = ({
 
         return (!(hasDroppedCeiling && isLeftDropped) ? (
           <BoxWithEdges
+          hideEdges={hideEdges}
             key={`left-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
             args={[
@@ -2087,6 +2091,7 @@ const Room: React.FC<RoomProps> = ({
             <>
               {/* 단내림 영역 프레임/엔드패널 */}
               <BoxWithEdges
+          hideEdges={hideEdges}
                 key={`right-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
@@ -2127,6 +2132,7 @@ const Room: React.FC<RoomProps> = ({
               {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
               {spaceInfo.surroundType !== 'surround' && (
               <BoxWithEdges
+          hideEdges={hideEdges}
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.right,
@@ -2184,6 +2190,7 @@ const Room: React.FC<RoomProps> = ({
 
         return (!(hasDroppedCeiling && isRightDropped) ? (
           <BoxWithEdges
+          hideEdges={hideEdges}
             key={`right-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
             isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
             args={[
@@ -2294,6 +2301,7 @@ const Room: React.FC<RoomProps> = ({
               
               return (
                 <BoxWithEdges
+          hideEdges={hideEdges}
                   args={[
                     frameWidth, // 이미 엔드패널이 조정된 너비
                     topBottomFrameHeight, 
@@ -2425,6 +2433,7 @@ const Room: React.FC<RoomProps> = ({
                 <>
                   {/* 단내림 영역 상부 프레임 */}
                   <BoxWithEdges
+          hideEdges={hideEdges}
                     args={[
                       droppedFrameWidth,
                       topBottomFrameHeight,
@@ -2442,6 +2451,7 @@ const Room: React.FC<RoomProps> = ({
                   />
                   {/* 일반 영역 상부 프레임 */}
                   <BoxWithEdges
+          hideEdges={hideEdges}
                     args={[
                       normalFrameWidth,
                       topBottomFrameHeight,
@@ -2517,6 +2527,7 @@ const Room: React.FC<RoomProps> = ({
             if (frameSegments.length === 0) {
               return (
                 <BoxWithEdges
+          hideEdges={hideEdges}
                   args={[
                     frameWidth, // 노서라운드 모드에서는 전체 너비 사용
                     topBottomFrameHeight, 
@@ -2552,6 +2563,7 @@ const Room: React.FC<RoomProps> = ({
               
               return (
                 <BoxWithEdges
+          hideEdges={hideEdges}
                   key={`top-frame-segment-${index}`}
                   args={[
                     segment.width,
@@ -2613,6 +2625,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[Math.PI / 2, 0, 0]} // X축 기준 90도 회전
                 >
                   <BoxWithEdges
+          hideEdges={hideEdges}
                     args={[
                       adjustedSubFrameWidth, // 엔드패널이 있으면 조정된 너비 사용
                       mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
@@ -2686,6 +2699,7 @@ const Room: React.FC<RoomProps> = ({
                   rotation={[Math.PI / 2, 0, 0]} // X축 기준 90도 회전
                 >
                   <BoxWithEdges
+          hideEdges={hideEdges}
                     args={[
                       finalPanelWidth, 
                       mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
@@ -2712,6 +2726,7 @@ const Room: React.FC<RoomProps> = ({
                 rotation={[Math.PI / 2, 0, 0]} // X축 기준 90도 회전
               >
                 <BoxWithEdges
+          hideEdges={hideEdges}
                   args={[
                     segment.width,
                     mmToThreeUnits(40), // 앞쪽으로 40mm 나오는 깊이
@@ -2760,6 +2775,7 @@ const Room: React.FC<RoomProps> = ({
                 rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
+          hideEdges={hideEdges}
                   key={`left-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     mmToThreeUnits(44),
@@ -2781,6 +2797,7 @@ const Room: React.FC<RoomProps> = ({
                 ]}
               >
                 <BoxWithEdges
+          hideEdges={hideEdges}
                   key={`left-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     frameThickness.left,
@@ -2810,6 +2827,7 @@ const Room: React.FC<RoomProps> = ({
               rotation={[0, Math.PI / 2, 0]}
             >
               <BoxWithEdges
+          hideEdges={hideEdges}
                 key={`left-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 args={[
                   mmToThreeUnits(44),
@@ -2856,6 +2874,7 @@ const Room: React.FC<RoomProps> = ({
                 ]}
               >
                 <BoxWithEdges
+          hideEdges={hideEdges}
                   key={`right-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     frameThickness.right,
@@ -2879,6 +2898,7 @@ const Room: React.FC<RoomProps> = ({
                 rotation={[0, Math.PI / 2, 0]}
               >
                 <BoxWithEdges
+          hideEdges={hideEdges}
                   key={`right-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     mmToThreeUnits(44),
@@ -2908,6 +2928,7 @@ const Room: React.FC<RoomProps> = ({
               rotation={[0, Math.PI / 2, 0]}
             >
               <BoxWithEdges
+          hideEdges={hideEdges}
                 key={`right-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                 args={[
                   mmToThreeUnits(44),
@@ -3019,6 +3040,7 @@ const Room: React.FC<RoomProps> = ({
                 
                 return (
                   <BoxWithEdges
+          hideEdges={hideEdges}
                     key={`base-frame-zone-${zoneIndex}`}
                     args={[
                       frameWidth, // 이미 엔드패널이 조정된 너비
@@ -3099,6 +3121,7 @@ const Room: React.FC<RoomProps> = ({
               if (frameSegments.length === 0) {
                 return (
                   <BoxWithEdges
+          hideEdges={hideEdges}
                     key={`base-frame-zone-${zoneIndex}`}
                     args={[
                       frameWidth, 
@@ -3139,6 +3162,7 @@ const Room: React.FC<RoomProps> = ({
                 
                 return (
                   <BoxWithEdges
+          hideEdges={hideEdges}
                     key={`base-frame-zone-${zoneIndex}-segment-${segmentIndex}`}
                     args={[
                       segment.width,
