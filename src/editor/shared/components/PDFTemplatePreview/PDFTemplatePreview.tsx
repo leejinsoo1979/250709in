@@ -2634,7 +2634,15 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
               useCORS: true,
               allowTaint: true,
               imageTimeout: 0,
-              removeContainer: true
+              removeContainer: true,
+              onclone: (clonedDoc) => {
+                // 캡처되는 복사본에서 border 제거
+                const clonedElement = clonedDoc.querySelector(`[data-view-id="${view.id}"]`) as HTMLElement;
+                if (clonedElement) {
+                  clonedElement.style.border = 'none';
+                  clonedElement.style.boxShadow = 'none';
+                }
+              }
             });
             // 고품질 JPEG 사용 (PNG보다 파일 크기 작음)
             const imgData = canvas.toDataURL('image/jpeg', 0.95);
@@ -2712,7 +2720,15 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                 useCORS: true,
                 allowTaint: true,
                 imageTimeout: 0,
-                removeContainer: true
+                removeContainer: true,
+                onclone: (clonedDoc) => {
+                  // 캡처되는 복사본에서 border 제거
+                  const clonedElement = clonedDoc.querySelector(`[data-text-id="${view.id}"]`) as HTMLElement;
+                  if (clonedElement) {
+                    clonedElement.style.border = 'none';
+                    clonedElement.style.boxShadow = 'none';
+                  }
+                }
               });
               console.log('✅ 캡처 완료, canvas 크기:', canvas.width, 'x', canvas.height);
               // 고품질 JPEG 사용 (PNG보다 파일 크기 작음)
