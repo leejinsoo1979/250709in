@@ -271,8 +271,11 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
   // 스토어 훅을 먼저 선언
   const { title } = useProjectStore();
   const { spaceInfo, materialConfig } = useSpaceConfigStore();
-  const { placedModules } = useFurnitureStore();
+  const { placedModules, setAllDoors } = useFurnitureStore();
   const uiStore = useUIStore();
+
+  // 배치된 가구 중 도어가 있는 가구가 있는지 확인
+  const hasDoorsInstalled = placedModules.some(module => module.hasDoor);
   
   // capturedViews가 있을 때 자동으로 viewPositions 초기화
   useEffect(() => {
@@ -5084,13 +5087,22 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   {/* 도어 설치 버튼 */}
                   <div className={styles.doorButtonGroup}>
                     <button
-                      className={`${styles.doorButton} ${spaceInfo.hasDoors ? styles.active : ''}`}
+                      className={`${styles.doorButton} ${hasDoorsInstalled ? styles.active : ''}`}
                       onClick={() => {
-                        const newHasDoors = !spaceInfo.hasDoors;
-                        useSpaceConfigStore.getState().setSpaceInfo({
-                          ...spaceInfo,
-                          hasDoors: newHasDoors
+                        console.log('🚪 도어 설치/제거 핸들러 호출:', {
+                          hasDoorsInstalled,
+                          placedModulesCount: placedModules.length
                         });
+
+                        if (hasDoorsInstalled) {
+                          // 도어 제거: 모든 가구에서 도어 제거
+                          console.log('🚪 도어 제거 시도');
+                          setAllDoors(false);
+                        } else {
+                          // 도어 설치: 모든 가구에 도어 설치
+                          console.log('🚪 도어 설치 시도');
+                          setAllDoors(true);
+                        }
                       }}
                     >
                       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
