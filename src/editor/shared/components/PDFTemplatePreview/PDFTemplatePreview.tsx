@@ -671,9 +671,9 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
       const regionX = clamp(Math.round(activeRegion.x * sourceWidth), 0, maxX);
       const regionY = clamp(Math.round(activeRegion.y * sourceHeight), 0, maxY);
 
-      // 캔버스 이미지를 필요한 크기로 리샘플링 (최대 4096px 유지)
-      const maxDimension = 4096;
-      const scaleFactor = Math.min(1, maxDimension / Math.max(regionWidthPx, regionHeightPx));
+      // 캔버스 이미지를 고해상도로 리샘플링 (PDF 출력용 8192px)
+      const maxDimension = 8192; // 4096 → 8192로 증가
+      const scaleFactor = Math.min(2, maxDimension / Math.max(regionWidthPx, regionHeightPx)); // 최소 2배 확대
       const targetWidth = Math.max(1, Math.round(regionWidthPx * scaleFactor));
       const targetHeight = Math.max(1, Math.round(regionHeightPx * scaleFactor));
 
@@ -687,8 +687,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         return;
       }
 
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, targetWidth, targetHeight);
+      // 배경을 투명하게 유지 (fillRect 제거)
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(sourceCanvas, regionX, regionY, regionWidthPx, regionHeightPx, 0, 0, targetWidth, targetHeight);
