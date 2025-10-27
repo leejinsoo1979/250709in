@@ -460,7 +460,7 @@ const Header: React.FC<HeaderProps> = ({
                 style={{
                   width: '16px',
                   height: '16px',
-                  backgroundColor: 'var(--bg-primary)',
+                  backgroundColor: theme.mode === 'dark' ? '#1a1a1a' : '#ffffff',
                   borderRadius: '50%',
                   transition: 'transform 0.3s ease, background-color 0.3s ease',
                   transform: shadowEnabled ? 'translateX(16px)' : 'translateX(0)',
