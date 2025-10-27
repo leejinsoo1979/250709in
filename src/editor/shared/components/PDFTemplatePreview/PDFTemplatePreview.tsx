@@ -4851,16 +4851,29 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   {/* 체크박스 옵션들 - 서브헤더가 ON일 때만 표시 */}
                   {uiStore.showDimensions ? (
                   <div className={styles.checkboxGroup}>
-                    <label className={styles.checkboxLabel}>
-                      <input
-                        type="checkbox"
-                        checked={uiStore.showDimensions && uiStore.showAll}
-                        onChange={(e) => uiStore.setShowAll(e.target.checked)}
-                        className={styles.checkbox}
-                      />
-                      <span className={styles.checkmark}></span>
-                      {t('viewer.column')}
-                    </label>
+                    <div className={styles.checkboxWithIcon}>
+                      <label className={styles.checkboxLabel}>
+                        <input
+                          type="checkbox"
+                          checked={uiStore.showDimensions && uiStore.showAll}
+                          onChange={(e) => uiStore.setShowAll(e.target.checked)}
+                          className={styles.checkbox}
+                        />
+                        <span className={styles.checkmark}></span>
+                        {t('viewer.column')}
+                      </label>
+                      {viewMode === '3D' && (
+                        <button
+                          type="button"
+                          className={`${styles.iconToggleButton} ${uiStore.showFurnitureEditHandles ? styles.iconToggleButtonActive : ''}`}
+                          onClick={() => uiStore.toggleFurnitureEditHandles()}
+                          title={uiStore.showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}
+                          aria-pressed={uiStore.showFurnitureEditHandles}
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                      )}
+                    </div>
 
                     <label className={styles.checkboxLabel}>
                       <input

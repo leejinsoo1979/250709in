@@ -100,6 +100,12 @@
   gap: 12px;
 }
 
+.checkboxWithIcon {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .checkboxLabel {
   display: flex;
   align-items: center;
@@ -142,6 +148,32 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+}
+
+.iconToggleButton {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--theme-border);
+  background: var(--theme-surface);
+  color: var(--theme-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+}
+
+.iconToggleButton:hover {
+  color: var(--theme-text);
+  border-color: var(--theme-border-hover);
+}
+
+.iconToggleButtonActive {
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
+  border-color: var(--theme-primary);
 }
 
 /* 우측 컨트롤 */

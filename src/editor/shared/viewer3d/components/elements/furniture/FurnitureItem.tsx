@@ -200,7 +200,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   useEffect(() => {
     debugLog('🎯 FurnitureItem - showFurniture:', showFurniture, 'placedModuleId:', placedModule.id, 'moduleId:', placedModule.moduleId);
   }, [showFurniture, placedModule.id, placedModule.moduleId]);
-  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex } = useUIStore();
+  const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles } = useUIStore();
   const isPanelListTabActive = useUIStore(state => state.isPanelListTabActive);
   const { updatePlacedModule } = useFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
@@ -2401,7 +2401,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
       
       {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true이고 3D 모드일 때만 표시 */}
-      {showDimensions && viewMode === '3D' && (
+      {showFurnitureEditHandles && showDimensions && viewMode === '3D' && (
         <Html
           position={[
             adjustedPosition.x + positionAdjustmentForEndPanel,

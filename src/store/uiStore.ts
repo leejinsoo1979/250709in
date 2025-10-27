@@ -43,6 +43,9 @@ interface UIState {
   // 가구 표시 상태
   showFurniture: boolean;
 
+  // 가구 편집 아이콘 표시 상태
+  showFurnitureEditHandles: boolean;
+
   // 그리드(가이드) 표시 상태
   showGuides: boolean;
   
@@ -152,6 +155,10 @@ interface UIState {
   toggleGuides: () => void;
   toggleAxis: () => void;
   toggleIndirectLight: () => void;
+
+  // 가구 편집 아이콘 토글
+  toggleFurnitureEditHandles: () => void;
+  setShowFurnitureEditHandles: (show: boolean) => void;
   toggleView2DTheme: () => void;
   toggleAll: () => void;
   
@@ -232,6 +239,7 @@ const initialUIState = {
   showAxis: true, // 기본값: 축 표시
   showAll: true, // 기본값: 모든 가이드 표시
   showFurniture: true, // 기본값: 가구 표시
+  showFurnitureEditHandles: true, // 기본값: 가구 편집 아이콘 표시
   renderMode: 'solid' as const, // 기본값: 솔리드 렌더링
   activePopup: {
     type: null as 'furniture' | 'furnitureEdit' | 'column' | 'columnEdit' | 'wall' | 'wallEdit' | 'panelB' | 'panelBEdit' | null,
@@ -352,6 +360,9 @@ export const useUIStore = create<UIState>()(
       
       toggleAll: () =>
         set((state) => ({ showAll: !state.showAll })),
+
+      toggleFurnitureEditHandles: () =>
+        set((state) => ({ showFurnitureEditHandles: !state.showFurnitureEditHandles })),
       
       // setter 함수들 구현
       setShowDimensions: (show) =>
@@ -373,6 +384,9 @@ export const useUIStore = create<UIState>()(
         console.log('💾 UIStore.setShowFurniture called - new value:', show);
         set({ showFurniture: show });
       },
+
+      setShowFurnitureEditHandles: (show) =>
+        set({ showFurnitureEditHandles: show }),
       
       setRenderMode: (mode) =>
         set({ renderMode: mode }),

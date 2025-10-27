@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
+import { Edit3 } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
@@ -75,7 +76,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   onDoorInstallationToggle
 }) => {
   // UIStore에서 2D 뷰 방향 상태 및 측정 모드 상태 가져오기
-  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode } = useUIStore();
+  const { view2DDirection, setView2DDirection, view2DTheme, toggleView2DTheme, setView2DTheme, isMeasureMode, toggleMeasureMode, showFurnitureEditHandles, toggleFurnitureEditHandles } = useUIStore();
   
   // 테마 컨텍스트
   const { theme } = useTheme();
@@ -183,16 +184,29 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
             </label>
           )}
 
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={showAll}
-              onChange={onShowAllToggle}
-              className={styles.checkbox}
-            />
-            <span className={styles.checkmark}></span>
-            {t('viewer.column')}
-          </label>
+          <div className={styles.checkboxWithIcon}>
+            <label className={styles.checkboxLabel}>
+              <input
+                type="checkbox"
+                checked={showAll}
+                onChange={onShowAllToggle}
+                className={styles.checkbox}
+              />
+              <span className={styles.checkmark}></span>
+              {t('viewer.column')}
+            </label>
+            {viewMode === '3D' && (
+              <button
+                type="button"
+                className={`${styles.iconToggleButton} ${showFurnitureEditHandles ? styles.iconToggleButtonActive : ''}`}
+                onClick={toggleFurnitureEditHandles}
+                title={showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}
+                aria-pressed={showFurnitureEditHandles}
+              >
+                <Edit3 size={14} />
+              </button>
+            )}
+          </div>
 
           <label className={styles.checkboxLabel}>
             <input
