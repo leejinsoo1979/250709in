@@ -116,12 +116,30 @@ export class FurnitureSpaceAdapter {
         }
         
         // 위치 재계산
-        const newX = targetZone.startX + (slotIndex * targetZone.columnWidth) + 
+        const newX = targetZone.startX + (slotIndex * targetZone.columnWidth) +
                     (isDual ? targetZone.columnWidth : targetZone.columnWidth / 2);
-        
+
         // 영역에 맞는 새로운 moduleId 생성 - 이제 ID는 너비 정보를 포함하지 않음
         const newModuleId = module.moduleId;
-        
+
+        // 가구 너비 계산: 단내림 경계면 근처는 이격거리 3mm만 빼기
+        const BOUNDARY_GAP = 3;
+        let furnitureWidth = targetZone.columnWidth;
+
+        // 단내림 경계면 근처 슬롯인지 확인
+        const isAtBoundary = (module.zone === 'normal' && droppedPosition === 'left' && slotIndex === 0) ||
+                            (module.zone === 'normal' && droppedPosition === 'right' && slotIndex === targetZone.columnCount - 1) ||
+                            (module.zone === 'dropped' && droppedPosition === 'left' && slotIndex === targetZone.columnCount - 1) ||
+                            (module.zone === 'dropped' && droppedPosition === 'right' && slotIndex === 0);
+
+        if (isAtBoundary) {
+          // 단내림 경계면: 이격거리만 빼기
+          furnitureWidth = targetZone.columnWidth - BOUNDARY_GAP;
+        } else {
+          // 일반 슬롯: 전체 너비 사용 (엔드패널은 이미 슬롯 계산에 반영됨)
+          furnitureWidth = targetZone.columnWidth;
+        }
+
         validFurniture.push({
           ...module,
           moduleId: newModuleId,
@@ -134,8 +152,8 @@ export class FurnitureSpaceAdapter {
           isDualSlot: isDual,
           isValidInCurrentSpace: true,
           zone: module.zone,
-          adjustedWidth: parseFloat(targetZone.columnWidth.toFixed(2)),
-          customWidth: parseFloat(targetZone.columnWidth.toFixed(2))
+          adjustedWidth: parseFloat(furnitureWidth.toFixed(2)),
+          customWidth: parseFloat(furnitureWidth.toFixed(2))
         });
         
         return;
@@ -204,6 +222,20 @@ export class FurnitureSpaceAdapter {
               ? newIndexing.zones.normal.startX + slotIndex * zoneColumnWidth + zoneColumnWidth / 2
               : newIndexing.zones.dropped!.startX + slotIndex * zoneColumnWidth + zoneColumnWidth / 2;
             
+            // 가구 너비 계산: 단내림 경계면 근처는 이격거리 3mm만 빼기
+            const BOUNDARY_GAP_SINGLE = 3;
+            let furnitureWidthSingle = singleWidth;
+
+            // 단내림 경계면 근처 슬롯인지 확인
+            const isAtBoundarySingle = (zone === 'normal' && droppedPosition === 'left' && slotIndex === 0) ||
+                                      (zone === 'normal' && droppedPosition === 'right' && slotIndex === maxSlots - 1) ||
+                                      (zone === 'dropped' && droppedPosition === 'left' && slotIndex === maxSlots - 1) ||
+                                      (zone === 'dropped' && droppedPosition === 'right' && slotIndex === 0);
+
+            if (isAtBoundarySingle) {
+              furnitureWidthSingle = singleWidth - BOUNDARY_GAP_SINGLE;
+            }
+
             validFurniture.push({
               ...module,
               moduleId: singleModuleId,
@@ -216,7 +248,7 @@ export class FurnitureSpaceAdapter {
               isDualSlot: false,
               isValidInCurrentSpace: true,
               zone,
-              adjustedWidth: parseFloat(singleWidth.toFixed(2))
+              adjustedWidth: parseFloat(furnitureWidthSingle.toFixed(2))
             });
           } else {
             removedFurniture.push(module.id);
@@ -226,17 +258,32 @@ export class FurnitureSpaceAdapter {
         
         // 영역별 크기 조정된 moduleId 생성 - 이제 ID는 너비 정보를 포함하지 않음
         const adjustedModuleId = module.moduleId;
-        const adjustedWidth = isDualFurniture ? zoneColumnWidth * 2 : zoneColumnWidth;
-        
+        let adjustedWidth = isDualFurniture ? zoneColumnWidth * 2 : zoneColumnWidth;
+
+        // 가구 너비 계산: 단내림 경계면 근처는 이격거리 3mm만 빼기
+        const BOUNDARY_GAP_ADJ = 3;
+        const isAtBoundaryAdj = (zone === 'normal' && droppedPosition === 'left' && slotIndex === 0) ||
+                               (zone === 'normal' && droppedPosition === 'right' && slotIndex === maxSlots - 1) ||
+                               (zone === 'dropped' && droppedPosition === 'left' && slotIndex === maxSlots - 1) ||
+                               (zone === 'dropped' && droppedPosition === 'right' && slotIndex === 0);
+
+        if (isAtBoundaryAdj && !isDualFurniture) {
+          // 단내림 경계면의 싱글 가구: 이격거리만 빼기
+          adjustedWidth = zoneColumnWidth - BOUNDARY_GAP_ADJ;
+        } else if (isAtBoundaryAdj && isDualFurniture) {
+          // 단내림 경계면의 듀얼 가구: 한쪽만 이격거리 빼기
+          adjustedWidth = zoneColumnWidth * 2 - BOUNDARY_GAP_ADJ;
+        }
+
         // 새 위치 계산 (영역별)
-        const baseX = zone === 'normal' 
-          ? newIndexing.zones.normal.startX 
+        const baseX = zone === 'normal'
+          ? newIndexing.zones.normal.startX
           : newIndexing.zones.dropped!.startX;
-        
+
         const newX = isDualFurniture
           ? baseX + slotIndex * zoneColumnWidth + zoneColumnWidth // 듀얼은 두 슬롯의 중간
           : baseX + slotIndex * zoneColumnWidth + zoneColumnWidth / 2; // 싱글은 슬롯 중앙
-        
+
         validFurniture.push({
           ...module,
           moduleId: adjustedModuleId,
