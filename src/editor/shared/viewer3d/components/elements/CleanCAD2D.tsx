@@ -1697,24 +1697,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             {spaceInfo.droppedCeiling.position === 'left' ? (
               <>
                 {/* 좌측 단내림 - 좌측 외부 치수선에 단내림 구간 높이 표시 */}
-                <Line
+                <NativeLine
                   points={[[leftDimensionX + leftOffset, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), 0.002], [leftDimensionX + leftOffset, spaceHeight, 0.002]]}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
 
                 {/* 하단 화살표 */}
-                <Line
+                <NativeLine
                   points={createArrowHead([leftDimensionX + leftOffset, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight), 0.002], [leftDimensionX + leftOffset, mmToThreeUnits(spaceInfo.height - spaceInfo.droppedCeiling.dropHeight) + 0.05, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
 
                 {/* 상단 화살표 */}
-                <Line
+                <NativeLine
                   points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
                 
                 {/* 단내림 구간 높이 텍스트 */}
@@ -1734,24 +1740,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             ) : (
               <>
                 {/* 우측 단내림 - 좌측 외부 치수선에 전체 높이 표시 */}
-                <Line
+                <NativeLine
                   points={[[leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, spaceHeight, 0.002]]}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
 
                 {/* 하단 화살표 */}
-                <Line
+                <NativeLine
                   points={createArrowHead([leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, 0.05, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
 
                 {/* 상단 화살표 */}
-                <Line
+                <NativeLine
                   points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
                   color={dimensionColor}
                   lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
                 />
                 
                 {/* 전체 높이 텍스트 */}
@@ -1774,24 +1786,30 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           <>
             {/* 단내림이 없는 경우 기존 전체 높이 치수선 */}
             {/* 치수선 */}
-            <Line
+            <NativeLine
               points={[[leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, spaceHeight, 0.002]]}
               color={dimensionColor}
               lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
             />
 
             {/* 하단 화살표 */}
-            <Line
+            <NativeLine
               points={createArrowHead([leftDimensionX + leftOffset, 0, 0.002], [leftDimensionX + leftOffset, 0.05, 0.002])}
               color={dimensionColor}
               lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
             />
 
             {/* 상단 화살표 */}
-            <Line
+            <NativeLine
               points={createArrowHead([leftDimensionX + leftOffset, spaceHeight, 0.002], [leftDimensionX + leftOffset, spaceHeight - 0.05, 0.002])}
               color={dimensionColor}
               lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
             />
             
             {/* 전체 높이 치수 텍스트 - Text 3D 사용 */}
@@ -1811,17 +1829,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         )}
         
         {/* 연장선 (하단) */}
-        <Line
+        <NativeLine
           points={[[leftOffset, 0, 0.001], [leftDimensionX + leftOffset - mmToThreeUnits(20), 0, 0.001]]}
           color={dimensionColor}
           lineWidth={1}
+          renderOrder={100000}
+          depthTest={false}
         />
-        
+
         {/* 연장선 (상단) */}
-        <Line
+        <NativeLine
           points={[[leftOffset, spaceHeight, 0.001], [leftDimensionX + leftOffset - mmToThreeUnits(20), spaceHeight, 0.001]]}
           color={dimensionColor}
           lineWidth={1}
+          renderOrder={100000}
+          depthTest={false}
         />
       </group>}
 
