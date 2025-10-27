@@ -2623,18 +2623,23 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
         const viewXMm = (view.x * paperDimensions.width) / paperDimensions.displayWidth;
         const viewYMm = (view.y * paperDimensions.height) / paperDimensions.displayHeight;
 
-        // 뷰카드를 html2canvas로 캡처
+        // 뷰카드를 html2canvas로 캡처 (고품질)
         try {
           const viewElement = document.querySelector(`[data-view-id="${view.id}"]`);
           if (viewElement) {
             const canvas = await html2canvas(viewElement as HTMLElement, {
               backgroundColor: null,
-              scale: 2,
-              logging: false
+              scale: 4, // 품질 향상 (2 → 4)
+              logging: false,
+              useCORS: true,
+              allowTaint: true,
+              imageTimeout: 0,
+              removeContainer: true
             });
-            const imgData = canvas.toDataURL('image/png');
-            pdf.addImage(imgData, 'PNG', viewXMm, viewYMm, viewWidthMm, viewHeightMm);
-            console.log(`✅ ${viewType} 뷰카드가 캡처되어 PDF에 추가되었습니다.`);
+            // 고품질 JPEG 사용 (PNG보다 파일 크기 작음)
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            pdf.addImage(imgData, 'JPEG', viewXMm, viewYMm, viewWidthMm, viewHeightMm, undefined, 'FAST');
+            console.log(`✅ ${viewType} 뷰카드가 고품질로 캡처되어 PDF에 추가되었습니다.`);
           } else {
             console.warn(`뷰카드 요소를 찾을 수 없음: ${view.id}`);
           }
@@ -2702,15 +2707,19 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
               console.log('📸 html2canvas 캡처 시작...');
               const canvas = await html2canvas(textElement as HTMLElement, {
                 backgroundColor: '#ffffff',
-                scale: 2,
-                logging: true,
-                useCORS: true
+                scale: 4, // 품질 향상 (2 → 4)
+                logging: false,
+                useCORS: true,
+                allowTaint: true,
+                imageTimeout: 0,
+                removeContainer: true
               });
               console.log('✅ 캡처 완료, canvas 크기:', canvas.width, 'x', canvas.height);
-              const imgData = canvas.toDataURL('image/png');
+              // 고품질 JPEG 사용 (PNG보다 파일 크기 작음)
+              const imgData = canvas.toDataURL('image/jpeg', 0.95);
               console.log('🖼️ 이미지 데이터 길이:', imgData.length);
-              pdf.addImage(imgData, 'PNG', textXMm, textYMm, textWidthMm, textHeightMm);
-              console.log(`✅ 텍스트 아이템 ${viewType}이(가) PDF에 추가되었습니다.`);
+              pdf.addImage(imgData, 'JPEG', textXMm, textYMm, textWidthMm, textHeightMm, undefined, 'FAST');
+              console.log(`✅ 텍스트 아이템 ${viewType}이(가) 고품질로 PDF에 추가되었습니다.`);
             } else {
               console.warn(`❌ 텍스트 아이템 요소를 찾을 수 없음: ${view.id}`);
               console.log('모든 data-text-id 요소:', document.querySelectorAll('[data-text-id]'));
