@@ -340,7 +340,7 @@ export class MaterialFactory {
         fragmentShader,
         uniforms: {
           colorStart: { value: new THREE.Color('#ffffff') },
-          colorEnd: { value: new THREE.Color('#c0c0c0') },
+          colorEnd: { value: new THREE.Color('#e8e8e8') },  // 더 밝은 회색으로 변경
           direction: { value: directionValue },
           reverse: { value: isReverse ? 1.0 : 0.0 },
           opacity: { value: 1.0 }
@@ -435,7 +435,7 @@ export class MaterialFactory {
         fragmentShader,
         uniforms: {
           colorStart: { value: new THREE.Color('#ffffff') }, // 앞쪽: 흰색
-          colorEnd: { value: new THREE.Color('#c0c0c0') },   // 뒤쪽: 아주 살짝 더 진한 회색 (#c8c8c8 → #c0c0c0)
+          colorEnd: { value: new THREE.Color('#e8e8e8') },   // 뒤쪽: 더 밝은 회색으로 변경 (#c0c0c0 → #e8e8e8)
           direction: { value: directionValue },
           reverse: { value: isReverse ? 1.0 : 0.0 },
           isOrthographic: { value: is2DMode ? 1.0 : 0.0 }
