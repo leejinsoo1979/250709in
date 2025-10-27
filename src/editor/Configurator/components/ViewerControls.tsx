@@ -207,7 +207,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           </label>
 
           {viewMode === '3D' && (
-            <label className={`${styles.checkboxLabel} ${styles.iconCheckboxLabel}`} title={showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시`}>
+            <label className={styles.checkboxLabel}>
               <input
                 type="checkbox"
                 checked={showFurnitureEditHandles}
@@ -215,7 +215,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 className={styles.checkbox}
               />
               <span className={styles.checkmark}></span>
-              <Edit3 size={14} />
+              아이콘
             </label>
           )}
 

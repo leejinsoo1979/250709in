@@ -2439,15 +2439,6 @@
   transform: rotate(45deg);
 }
 
-.viewerSubHeader .iconCheckboxLabel {
-  gap: 4px;
-  padding-right: 4px;
-}
-
-.viewerSubHeader .iconCheckboxLabel svg {
-  width: 14px;
-  height: 14px;
-}
 
 .viewerControls {
   display: flex;

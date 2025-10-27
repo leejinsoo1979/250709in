@@ -144,15 +144,6 @@
   transform: translate(-50%, -50%);
 }
 
-.iconCheckboxLabel {
-  gap: 4px;
-  padding-right: 4px;
-}
-
-.iconCheckboxLabel svg {
-  width: 14px;
-  height: 14px;
-}
 
 /* 우측 컨트롤 */
 /* 중앙 뷰 컨트롤들 */

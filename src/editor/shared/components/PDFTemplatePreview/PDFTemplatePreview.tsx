@@ -4874,7 +4874,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                     </label>
 
                     {viewMode === '3D' && (
-                      <label className={`${styles.checkboxLabel} ${styles.iconCheckboxLabel}`} title={uiStore.showFurnitureEditHandles ? '편집 아이콘 숨기기' : '편집 아이콘 표시'}>
+                      <label className={styles.checkboxLabel}>
                         <input
                           type="checkbox"
                           checked={uiStore.showFurnitureEditHandles}
@@ -4882,7 +4882,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                           className={styles.checkbox}
                         />
                         <span className={styles.checkmark}></span>
-                        <Edit3 size={14} />
+                        아이콘
                       </label>
                     )}
 
