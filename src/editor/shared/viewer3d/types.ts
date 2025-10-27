@@ -39,6 +39,8 @@ export interface Space3DViewProps extends ViewerBaseProps {
   isStep2?: boolean;
   /** 현재 활성 영역 (단내림 사용 시) */
   activeZone?: 'normal' | 'dropped';
+  /** 외곽선 숨김 (PDF 캡처 시 사용) */
+  hideEdges?: boolean;
 }
 
 /**

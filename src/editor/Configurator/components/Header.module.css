@@ -139,7 +139,7 @@
 .centerActions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   position: absolute;
   left: 50%;
   transform: translateX(-55%);
@@ -149,20 +149,23 @@
 .actionButton {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
   background: none;
   border: none;
-  padding: 8px 10px;
+  padding: 6px 8px;
   border-radius: 6px;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--theme-text-secondary);
   cursor: pointer;
   transition: all 0.2s ease;
-  line-height: 20px;
-  min-height: 36px;
+  line-height: 18px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .actionButton:hover {
@@ -177,8 +180,9 @@
 
 .actionButton svg {
   color: currentColor;
-  width: 18px;
-  height: 18px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 /* 도어 설치 버튼 상태별 스타일 */
@@ -216,18 +220,22 @@
   background: var(--theme-primary);
   border: none;
   border-radius: 6px;
-  padding: 8px 20px;
+  padding: 6px 12px;
   color: white;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
-  line-height: 20px;
-  height: 36px;
+  gap: 4px;
+  line-height: 18px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .convertButton:hover {
@@ -238,18 +246,22 @@
   background: none;
   border: 1px solid var(--theme-primary);
   border-radius: 6px;
-  padding: 8px 20px;
+  padding: 6px 12px;
   color: var(--theme-primary);
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
-  line-height: 20px;
-  height: 36px;
+  gap: 4px;
+  line-height: 18px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .logoutButton:hover {
@@ -261,18 +273,22 @@
   background: var(--theme-primary);
   border: none;
   border-radius: 6px;
-  padding: 8px 20px;
+  padding: 6px 12px;
   color: white;
   font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   display: flex;
   align-items: center;
-  gap: 6px;
-  line-height: 20px;
-  height: 36px;
+  gap: 4px;
+  line-height: 18px;
+  height: 32px;
+  min-height: 32px;
+  max-height: 32px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .loginButton:hover {
@@ -543,14 +559,8 @@
 /* 반응형 디자인 */
 @media (max-width: 1440px) {
   .centerActions {
-    gap: 6px;
+    gap: 5px;
     transform: translateX(-52%);
-  }
-
-  .actionButton {
-    padding: 8px 8px;
-    font-size: 12px;
-    gap: 3px;
   }
 }
 
@@ -558,11 +568,6 @@
   .centerActions {
     gap: 4px;
     transform: translateX(-50%);
-  }
-
-  .actionButton {
-    padding: 6px 6px;
-    font-size: 11px;
   }
 }
 

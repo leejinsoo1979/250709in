@@ -5195,6 +5195,7 @@ const PDFTemplatePreview: React.FC<PDFTemplatePreviewProps> = ({ isOpen, onClose
                   showDimensionsText={uiStore.showDimensionsText}
                   showGuides={uiStore.showGuides}
                   showAxis={uiStore.showAxis}
+                  hideEdges={true}
                 />
                 {captureRegion && (
                   <>

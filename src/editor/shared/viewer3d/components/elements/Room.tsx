@@ -43,6 +43,7 @@ interface RoomProps {
   isStep2?: boolean; // Step2 여부
   activeZone?: 'normal' | 'dropped'; // 활성 영역
   showFurniture?: boolean; // 가구 본체 표시 여부
+  hideEdges?: boolean; // 외곽선 숨김 (PDF 캡처용)
 }
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
@@ -137,7 +138,8 @@ const BoxWithEdges: React.FC<{
   view2DTheme?: 'dark' | 'light';
   isEndPanel?: boolean; // 엔드패널 여부
   shadowEnabled?: boolean; // 그림자 활성화 여부
-}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true }) => {
+  hideEdges?: boolean; // 외곽선 숨김
+}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false }) => {
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   const { viewMode: contextViewMode } = useSpace3DView();
@@ -160,25 +162,27 @@ const BoxWithEdges: React.FC<{
           <primitive object={material} />
         </mesh>
       )}
-      {/* 모서리 라인 렌더링 - 항상 표시 */}
-      <lineSegments geometry={edgesGeometry}>
-        <lineBasicMaterial
-          color={
-            // MeshBasicMaterial인 경우 (프레임 형광색) material의 색상 사용
-            material instanceof THREE.MeshBasicMaterial
-              ? "#" + material.color.getHexString()
-              : // 2D 모드에서 엔드패널인 경우 도어와 같은 연두색 사용
-                viewMode === '2D' && isEndPanel
-                  ? "#00FF00" // 연두색 (도어 색상)
-                  : renderMode === 'wireframe'
-                    ? (theme?.mode === 'dark' ? "#ffffff" : "#333333")
-                    : (viewMode === '2D' && view2DTheme === 'dark' ? "#FFFFFF" : "#666666")
-          }
-          linewidth={viewMode === '2D' && view2DTheme === 'dark' ? 1.5 : 0.5}
-          opacity={1.0}
-          transparent={false}
-        />
-      </lineSegments>
+      {/* 모서리 라인 렌더링 - hideEdges가 false일 때만 표시 */}
+      {!hideEdges && (
+        <lineSegments geometry={edgesGeometry}>
+          <lineBasicMaterial
+            color={
+              // MeshBasicMaterial인 경우 (프레임 형광색) material의 색상 사용
+              material instanceof THREE.MeshBasicMaterial
+                ? "#" + material.color.getHexString()
+                : // 2D 모드에서 엔드패널인 경우 도어와 같은 연두색 사용
+                  viewMode === '2D' && isEndPanel
+                    ? "#00FF00" // 연두색 (도어 색상)
+                    : renderMode === 'wireframe'
+                      ? (theme?.mode === 'dark' ? "#ffffff" : "#333333")
+                      : (viewMode === '2D' && view2DTheme === 'dark' ? "#FFFFFF" : "#666666")
+            }
+            linewidth={viewMode === '2D' && view2DTheme === 'dark' ? 1.5 : 0.5}
+            opacity={1.0}
+            transparent={false}
+          />
+        </lineSegments>
+      )}
     </group>
   );
 };
@@ -196,7 +200,8 @@ const Room: React.FC<RoomProps> = ({
   isStep2,
   renderMode: renderModeProp,
   activeZone,
-  showFurniture
+  showFurniture,
+  hideEdges = false
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
