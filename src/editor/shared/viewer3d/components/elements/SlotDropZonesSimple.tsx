@@ -1222,16 +1222,35 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             // 단내림이 있는 경우 각 영역별로 처리
             if (spaceInfo.droppedCeiling?.enabled && zoneIndexing.zones) {
               const droppedPosition = spaceInfo.droppedCeiling.position;
+              const BOUNDARY_GAP = 3; // 단내림 경계면 이격거리
 
               if (zoneToUse === 'normal') {
-                // 일반구간: 단내림 반대쪽 끝만 체크
-                if (droppedPosition === 'left' && isLastSlot) {
-                  // 좌측 단내림 → 우측 끝 슬롯
-                  // 한쪽벽: 우측에 벽이 없을 때만
-                  // 벽없음: 항상
+                // 일반구간: 단내림 경계면 체크
+                if (droppedPosition === 'left' && isFirstSlot) {
+                  // 좌측 단내림 → 일반구간 첫 슬롯 (경계면)
+                  customWidth = customWidth - BOUNDARY_GAP;
+                  debugLog('🎯 일반구간 경계면 슬롯 가구 너비 조정 (이격거리):', {
+                    slotIndex: zoneSlotIndex,
+                    surroundType: spaceInfo.surroundType,
+                    originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
+                    adjustedWidth: customWidth,
+                    boundaryGap: BOUNDARY_GAP
+                  });
+                } else if (droppedPosition === 'right' && isLastSlot) {
+                  // 우측 단내림 → 일반구간 마지막 슬롯 (경계면)
+                  customWidth = customWidth - BOUNDARY_GAP;
+                  debugLog('🎯 일반구간 경계면 슬롯 가구 너비 조정 (이격거리):', {
+                    slotIndex: zoneSlotIndex,
+                    surroundType: spaceInfo.surroundType,
+                    originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
+                    adjustedWidth: customWidth,
+                    boundaryGap: BOUNDARY_GAP
+                  });
+                } else if (droppedPosition === 'left' && isLastSlot) {
+                  // 좌측 단내림 → 일반구간 우측 끝 슬롯 (엔드패널)
                   if (spaceInfo.installType === 'freestanding' || !spaceInfo.wallConfig?.right) {
                     customWidth = customWidth - END_PANEL_THICKNESS;
-                    debugLog('🎯 일반구간 우측 끝 슬롯 가구 너비 조정:', {
+                    debugLog('🎯 일반구간 우측 끝 슬롯 가구 너비 조정 (엔드패널):', {
                       slotIndex: zoneSlotIndex,
                       surroundType: spaceInfo.surroundType,
                       originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
@@ -1240,12 +1259,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                     });
                   }
                 } else if (droppedPosition === 'right' && isFirstSlot) {
-                  // 우측 단내림 → 좌측 끝 슬롯
-                  // 한쪽벽: 좌측에 벽이 없을 때만
-                  // 벽없음: 항상
+                  // 우측 단내림 → 일반구간 좌측 끝 슬롯 (엔드패널)
                   if (spaceInfo.installType === 'freestanding' || !spaceInfo.wallConfig?.left) {
                     customWidth = customWidth - END_PANEL_THICKNESS;
-                    debugLog('🎯 일반구간 좌측 끝 슬롯 가구 너비 조정:', {
+                    debugLog('🎯 일반구간 좌측 끝 슬롯 가구 너비 조정 (엔드패널):', {
                       slotIndex: zoneSlotIndex,
                       surroundType: spaceInfo.surroundType,
                       originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
@@ -1255,14 +1272,32 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                   }
                 }
               } else if (zoneToUse === 'dropped') {
-                // 단내림구간: 단내림 위치와 같은 쪽 끝만 체크
-                if (droppedPosition === 'left' && isFirstSlot) {
-                  // 좌측 단내림 → 좌측 끝 슬롯
-                  // 한쪽벽: 좌측에 벽이 없을 때만
-                  // 벽없음: 항상
+                // 단내림구간: 경계면 체크
+                if (droppedPosition === 'left' && isLastSlot) {
+                  // 좌측 단내림 → 단내림구간 마지막 슬롯 (경계면)
+                  customWidth = customWidth - BOUNDARY_GAP;
+                  debugLog('🎯 단내림구간 경계면 슬롯 가구 너비 조정 (이격거리):', {
+                    slotIndex: zoneSlotIndex,
+                    surroundType: spaceInfo.surroundType,
+                    originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
+                    adjustedWidth: customWidth,
+                    boundaryGap: BOUNDARY_GAP
+                  });
+                } else if (droppedPosition === 'right' && isFirstSlot) {
+                  // 우측 단내림 → 단내림구간 첫 슬롯 (경계면)
+                  customWidth = customWidth - BOUNDARY_GAP;
+                  debugLog('🎯 단내림구간 경계면 슬롯 가구 너비 조정 (이격거리):', {
+                    slotIndex: zoneSlotIndex,
+                    surroundType: spaceInfo.surroundType,
+                    originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
+                    adjustedWidth: customWidth,
+                    boundaryGap: BOUNDARY_GAP
+                  });
+                } else if (droppedPosition === 'left' && isFirstSlot) {
+                  // 좌측 단내림 → 단내림구간 좌측 끝 슬롯 (엔드패널)
                   if (spaceInfo.installType === 'freestanding' || !spaceInfo.wallConfig?.left) {
                     customWidth = customWidth - END_PANEL_THICKNESS;
-                    debugLog('🎯 단내림구간 좌측 끝 슬롯 가구 너비 조정:', {
+                    debugLog('🎯 단내림구간 좌측 끝 슬롯 가구 너비 조정 (엔드패널):', {
                       slotIndex: zoneSlotIndex,
                       surroundType: spaceInfo.surroundType,
                       originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
@@ -1271,12 +1306,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                     });
                   }
                 } else if (droppedPosition === 'right' && isLastSlot) {
-                  // 우측 단내림 → 우측 끝 슬롯
-                  // 한쪽벽: 우측에 벽이 없을 때만
-                  // 벽없음: 항상
+                  // 우측 단내림 → 단내림구간 우측 끝 슬롯 (엔드패널)
                   if (spaceInfo.installType === 'freestanding' || !spaceInfo.wallConfig?.right) {
                     customWidth = customWidth - END_PANEL_THICKNESS;
-                    debugLog('🎯 단내림구간 우측 끝 슬롯 가구 너비 조정:', {
+                    debugLog('🎯 단내림구간 우측 끝 슬롯 가구 너비 조정 (엔드패널):', {
                       slotIndex: zoneSlotIndex,
                       surroundType: spaceInfo.surroundType,
                       originalWidth: zoneIndexing.slotWidths[zoneSlotIndex],
