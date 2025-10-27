@@ -617,7 +617,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       : (hasPlacedModules ? (is3DMode ? 350 : 280) : (is3DMode ? 270 : 200))
   ); // 상단 전체 치수선
   const columnDimensionY = spaceHeight + mmToThreeUnits(120); // 컬럼 치수선
-  const leftDimensionX = -mmToThreeUnits(is3DMode ? 250 : 200); // 좌측 치수선 (3D에서는 더 왼쪽)
+  const leftDimensionX = -mmToThreeUnits(200); // 좌측 치수선 (균형감을 위해 200으로 고정)
   
   // 좌측 오프셋 (가로 공간치수의 절반)
   const leftOffset = -mmToThreeUnits(spaceInfo.width / 2);
@@ -1811,7 +1811,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {!isStep2 && (
       <group>
         {(() => {
-          const rightDimensionX = mmToThreeUnits(spaceInfo.width) + leftOffset + mmToThreeUnits(is3DMode ? 120 : 200); // 우측 치수선 위치 (3D에서는 더 가까이)
+          const rightDimensionX = mmToThreeUnits(spaceInfo.width) + leftOffset + mmToThreeUnits(200); // 우측 치수선 위치 (균형감을 위해 200으로 고정)
           
           // 띄워서 배치인지 확인
           const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
@@ -1858,7 +1858,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
           const extraFurnitureHeightMm = extraFurnitureHeightUnits > 1e-6 ? Math.round(threeUnitsToMm(extraFurnitureHeightUnits)) : 0;
           const hasExtraFurnitureHeight = extraFurnitureHeightMm > 0;
-          const extraFurnitureX = rightDimensionX + mmToThreeUnits(is3DMode ? 40 : 70);
+          const extraFurnitureX = rightDimensionX + mmToThreeUnits(70); // 균형감을 위해 70으로 고정
           const extraFurnitureTextY = topFrameLineTopY + (maxFurnitureTop - topFrameLineTopY) / 2;
           
           return (
