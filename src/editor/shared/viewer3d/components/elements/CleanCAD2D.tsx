@@ -5334,20 +5334,26 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 <>
                   {/* 좌측 도어 치수 */}
                   <group>
-                    <Line
+                    <NativeLine
                       points={[[leftDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [leftDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)]]}
                       color={dimensionColor}
-                      lineWidth={0.5}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
                     />
-                    <Line
+                    <NativeLine
                       points={createArrowHead([leftDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [leftDoorLeftX + 0.015, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
                       color={dimensionColor}
-                      lineWidth={0.5}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
                     />
-                    <Line
+                    <NativeLine
                       points={createArrowHead([leftDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [leftDoorRightX - 0.015, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
                       color={dimensionColor}
-                      lineWidth={0.5}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
                     />
                     <Text
                   renderOrder={1000}
@@ -5361,34 +5367,44 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     >
                       {Math.round((actualWidthMm - 6) / 2)}
                     </Text>
-                    <Line
+                    <NativeLine
                       points={[[leftDoorLeftX, spaceHeight, leftDoorFrontZ], [leftDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
                       color={dimensionColor}
-                      lineWidth={0.5}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
                     />
-                    <Line
+                    <NativeLine
                       points={[[leftDoorRightX, spaceHeight, leftDoorFrontZ], [leftDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
                       color={dimensionColor}
-                      lineWidth={0.5}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
                     />
                   </group>
                   
                   {/* 우측 도어 치수 - 모든 도어와 동일한 Z 라인 사용 */}
                   <group>
-                    <Line
+                    <NativeLine
                       points={[[rightDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)]]}
                       color={dimensionColor}
-                      lineWidth={0.5}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
                     />
-                    <Line
+                    <NativeLine
                       points={createArrowHead([rightDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorLeftX + 0.015, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
                       color={dimensionColor}
-                      lineWidth={0.5}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
                     />
-                    <Line
+                    <NativeLine
                       points={createArrowHead([rightDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorRightX - 0.015, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
                       color={dimensionColor}
-                      lineWidth={0.5}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
                     />
                     <Text
                   renderOrder={1000}
@@ -5402,44 +5418,56 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     >
                       {Math.round((actualWidthMm - 6) / 2)}
                     </Text>
-                    <Line
+                    <NativeLine
                       points={[[rightDoorLeftX, spaceHeight, leftDoorFrontZ], [rightDoorLeftX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
                       color={dimensionColor}
-                      lineWidth={0.5}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
                     />
-                    <Line
+                    <NativeLine
                       points={[[rightDoorRightX, spaceHeight, leftDoorFrontZ], [rightDoorRightX, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
                       color={dimensionColor}
-                      lineWidth={0.5}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
                     />
                   </group>
                   
                   {/* 중간 세로 가이드선 - 듀얼 도어를 나누는 중간선이 가로 치수선까지 확장 */}
                   <group>
-                    <Line
+                    <NativeLine
                       points={[[module.position.x, spaceHeight, leftDoorFrontZ], [module.position.x, spaceHeight, leftDoorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)]]}
                       color={dimensionColor}
-                      lineWidth={0.5}
+                      lineWidth={1}
+                      renderOrder={100000}
+                      depthTest={false}
                     />
                   </group>
                 </>
               ) : (
                 // 싱글 도어: 전체 치수 표시
                 <group>
-                  <Line
+                  <NativeLine
                     points={[[leftDoorLeftX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorRightX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)]]}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
-                  <Line
+                  <NativeLine
                     points={createArrowHead([leftDoorLeftX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [leftDoorLeftX + 0.02, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
-                  <Line
+                  <NativeLine
                     points={createArrowHead([rightDoorRightX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], [rightDoorRightX - 0.02, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 80 : 60)], 0.01)}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
                   <Text
                   renderOrder={1000}
@@ -5453,15 +5481,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   >
                     {actualWidthMm - 3}
                   </Text>
-                  <Line
+                  <NativeLine
                     points={[[leftDoorLeftX, spaceHeight, doorFrontZ], [leftDoorLeftX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
-                  <Line
+                  <NativeLine
                     points={[[rightDoorRightX, spaceHeight, doorFrontZ], [rightDoorRightX, spaceHeight, doorFrontZ + mmToThreeUnits(hasPlacedModules ? 60 : 40)]]}
                     color={dimensionColor}
-                    lineWidth={0.5}
+                    lineWidth={1}
+                    renderOrder={100000}
+                    depthTest={false}
                   />
                 </group>
               )}
