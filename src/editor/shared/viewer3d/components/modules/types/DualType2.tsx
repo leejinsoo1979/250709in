@@ -567,7 +567,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                 } else {
                   // 띄움 배치 또는 안전선반/마감패널 없는 경우: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
                   const sectionTopPanelBottom = sectionBottomY + sectionHeight - basicThickness / 2;
-                  rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
+                  rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) - mmToThreeUnits(27);
                   console.log('🔵 DualType2 옷봉 위치 (띄움 또는 안전선반 없음)', { isFloating, lowerSectionTopOffset, sectionIndex, rodYPosition: rodYPosition / 0.01 });
                 }
 
