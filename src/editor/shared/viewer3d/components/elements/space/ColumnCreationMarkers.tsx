@@ -169,7 +169,13 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       {ghostPosition && isHoveringSpace && (
         <group position={ghostPosition}>
           {/* 고스트 기둥 본체 */}
-          <mesh position={[0, (spaceInfo?.height || 2400) * 0.01 / 2, 0]}>
+          <mesh
+            position={[0, (spaceInfo?.height || 2400) * 0.01 / 2, 0]}
+            onClick={(e) => {
+              e.stopPropagation();
+              (e.nativeEvent as any).columnMarkerHandled = true;
+            }}
+          >
             <boxGeometry args={[300 * 0.01, (spaceInfo?.height || 2400) * 0.01, 730 * 0.01]} />
             <meshStandardMaterial
               color="#10b981"
