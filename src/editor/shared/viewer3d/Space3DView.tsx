@@ -1723,43 +1723,7 @@ const QuadrantContent: React.FC<{
         color="#ffffff"
       />
       <ambientLight intensity={0.8} color="#ffffff" />
-      
-      {/* 기둥 에셋 렌더링 */}
-      {(spaceInfo?.columns || []).map((column) => (
-        <React.Fragment key={column.id}>
-          <ColumnAsset
-            id={column.id}
-            position={column.position}
-            width={column.width}
-            height={column.height || spaceInfo.height || 2400}
-            depth={column.depth}
-            color={column.color}
-            hasBackPanelFinish={column.hasBackPanelFinish}
-            spaceInfo={spaceInfo}
-            renderMode="solid"
-            onPositionChange={(id, newPosition) => {
-              handleUpdateColumn(id, { position: newPosition });
-            }}
-            onRemove={(id) => {
-              removeColumn(id);
-            }}
-          />
-          {activePopup.type === 'columnEdit' && activePopup.id === column.id && (
-            <ColumnDistanceLabels
-              column={column}
-              spaceInfo={spaceInfo}
-              onPositionChange={(columnId, newPosition) => {
-                handleUpdateColumn(columnId, { position: newPosition });
-              }}
-              onColumnUpdate={(columnId, updates) => {
-                handleUpdateColumn(columnId, updates);
-              }}
-              showLabels={true}
-            />
-          )}
-        </React.Fragment>
-      ))}
-      
+
       {/* 컬럼 가이드 표시 */}
       {showDimensions && showAll && <ColumnGuides viewMode="2D" />}
       
