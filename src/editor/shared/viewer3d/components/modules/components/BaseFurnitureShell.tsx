@@ -1013,6 +1013,14 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             ? (depth - mmToThreeUnits(lowerSectionDepthMm))
             : 0;
 
+          // 띄움 배치 여부 확인 (lowerSectionTopOffsetMm이 0보다 크면 띄움 배치)
+          const isActuallyFloating = lowerSectionTopOffsetMm !== undefined && lowerSectionTopOffsetMm > 0;
+
+          // 띄움 배치가 아닐 때만 조절발 렌더링
+          if (isActuallyFloating) {
+            return null;
+          }
+
           return (
             <AdjustableFootsRenderer
               width={width}
