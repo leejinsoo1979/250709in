@@ -154,7 +154,11 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       <mesh
         position={[0, 0, 0]}
         onPointerMove={(e) => e.stopPropagation()}
-        onClick={handleClick}
+        onClick={(e) => {
+          // + 아이콘이 이미 클릭을 처리했으면 무시
+          if ((e.nativeEvent as any).columnMarkerHandled) return;
+          handleClick(e);
+        }}
       >
         <boxGeometry args={[(spaceInfo?.width || 3000) * 0.01, 0.01, (spaceInfo?.depth || 1500) * 0.01]} />
         <meshBasicMaterial transparent opacity={0} />
@@ -199,6 +203,8 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
             position={[0, 1.0, 0]}
             onClick={(e) => {
               e.stopPropagation();
+              // 이벤트에 플래그 설정하여 전체 공간 클릭 핸들러가 중복 실행되지 않도록
+              (e.nativeEvent as any).columnMarkerHandled = true;
               console.log('🎯 + 아이콘 클릭됨:', xPosition);
               const zPosition = -(spaceInfo?.depth || 1500) * 0.01 / 2 + (730 * 0.01) / 2;
               handleCreateColumn([xPosition, 0, zPosition]);
