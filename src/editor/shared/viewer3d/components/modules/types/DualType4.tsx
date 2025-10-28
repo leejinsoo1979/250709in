@@ -552,9 +552,16 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
               const hasFinishPanel = section.isTopFinishPanel && section.count === 1;
 
+              // 띄움 배치 여부 확인 (lowerSectionTopOffset > 0이면 띄움 배치)
+              const isFloating = lowerSectionTopOffset && lowerSectionTopOffset > 0;
+
               // 옷걸이 봉 Y 위치 계산
               let rodYPosition: number;
-              if (safetyShelfPositionMm !== undefined) {
+              if (isFloating) {
+                // 띄움 배치: 브라켓 윗면이 하부 섹션 상판 하단에 붙음
+                const lowerTopPanelY = -height/2 + mmToThreeUnits(1000) - basicThickness/2;
+                rodYPosition = lowerTopPanelY - mmToThreeUnits(75 / 2);
+              } else if (safetyShelfPositionMm !== undefined) {
                 // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
                 const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
                 rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
