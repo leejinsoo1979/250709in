@@ -557,12 +557,10 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
               // 옷걸이 봉 Y 위치 계산
               let rodYPosition: number;
-              if (isFloating) {
-                // 띄움 배치: 브라켓 윗면이 하부 섹션 상판 하단에 붙음
-                const drawerSectionHeight = mmToThreeUnits(1000);
-                const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2;
-                // 브라켓 윗면이 패널 하단에 붙도록: 패널 중심 - 패널 두께/2 - 브라켓 높이/2
-                rodYPosition = lowerTopPanelY - basicThickness/2 - mmToThreeUnits(75 / 2);
+              if (isFloating || !safetyShelfPositionMm) {
+                // 띄움 배치(안전선반 없음) 또는 안전선반이 없는 경우: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
+                const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
+                rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
               } else if (safetyShelfPositionMm !== undefined) {
                 // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
                 const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
@@ -571,10 +569,6 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                 // 마감 패널이 있는 경우: 브라켓 윗면이 마감 패널 하단에서 27mm 아래
                 const finishPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                 rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
-              } else {
-                // 안전선반도 마감 패널도 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
-                const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
-                rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
               }
 
               // 옷봉 Z 위치 계산 (섹션 깊이에 따라 조정)
