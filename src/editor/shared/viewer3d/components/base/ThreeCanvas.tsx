@@ -959,10 +959,14 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                 canvasLog('🎯 Canvas에서 직접 handleSlotDrop 호출 with activeZone:', activeZone);
                 const result = (window as any).handleSlotDrop(e, canvas, activeZone);
                 canvasLog('🎯 handleSlotDrop 결과:', result);
-                
+
                 // 결과가 false면 부모 컨테이너로 이벤트 전파
                 if (!result) {
                   canvasLog('📤 handleSlotDrop이 false 반환, 부모로 이벤트 전파 시도');
+                  // 원본 이벤트의 버블링을 중단하여 중복 호출 방지
+                  e.stopPropagation();
+                  e.preventDefault();
+
                   const parentContainer = canvas.closest('[data-viewer-container="true"]');
                   if (parentContainer) {
                     const syntheticEvent = new DragEvent('drop', {
