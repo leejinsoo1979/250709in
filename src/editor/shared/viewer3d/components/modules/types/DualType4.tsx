@@ -559,8 +559,10 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               let rodYPosition: number;
               if (isFloating) {
                 // 띄움 배치: 브라켓 윗면이 하부 섹션 상판 하단에 붙음
-                const lowerTopPanelY = -height/2 + mmToThreeUnits(1000) - basicThickness/2;
-                rodYPosition = lowerTopPanelY - mmToThreeUnits(75 / 2);
+                const drawerSectionHeight = mmToThreeUnits(1000);
+                const lowerTopPanelY = -height/2 + drawerSectionHeight - basicThickness/2;
+                // 브라켓 윗면이 패널 하단에 붙도록: 패널 중심 - 패널 두께/2 - 브라켓 높이/2
+                rodYPosition = lowerTopPanelY - basicThickness/2 - mmToThreeUnits(75 / 2);
               } else if (safetyShelfPositionMm !== undefined) {
                 // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
                 const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
