@@ -3164,23 +3164,35 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         } else if (isUpperCabinet) {
           // 상부장: 전체 공간 최상단에 배치 (실제 배치 로직과 동일)
           const furnitureHeightMm = adjustedFurnitureHeightMm;
-          
-          // 전체 높이에서 상단 프레임만 빼기
+
+          // 바닥 마감재 및 베이스 높이 계산
+          const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+          let baseHeightMm = floorFinishHeightMm;
+
+          if (spaceInfo.baseConfig?.type === 'floor') {
+            baseHeightMm += spaceInfo.baseConfig?.height || 65;
+          } else if (spaceInfo.baseConfig?.placementType === 'float') {
+            baseHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
+          }
+
+          // 전체 높이에서 상단 프레임과 하부 높이를 빼기
           let totalHeightMm = spaceInfo.height;
           const topFrameHeight = spaceInfo.topFrame?.height || 10;
-          totalHeightMm = totalHeightMm - topFrameHeight;
-          
+          totalHeightMm = totalHeightMm - topFrameHeight - baseHeightMm;
+
           // 상부장 Y 위치 계산 (mm 단위로 계산 후 Three.js 단위로 변환)
-          furnitureY = mmToThreeUnits(totalHeightMm - furnitureHeightMm / 2);
-          
+          furnitureY = mmToThreeUnits(baseHeightMm + totalHeightMm - furnitureHeightMm / 2);
+
           debugLog('👻 [Ghost Preview] 상부장 Y 위치:', {
             totalHeightMm,
             topFrameHeight,
+            baseHeightMm,
+            floorFinishHeightMm,
             furnitureHeightMm,
             furnitureY,
-            furnitureY_mm: totalHeightMm - furnitureHeightMm / 2,
+            furnitureY_mm: baseHeightMm + totalHeightMm - furnitureHeightMm / 2,
             category: moduleData.category,
-            설명: '상부장은 전체 공간 최상단에 배치'
+            설명: '상부장은 띄움 배치 고려하여 배치'
           });
         } else if (isLowerCabinet) {
           // 하부장: 바닥에서 시작 (실제 배치 로직과 동일)
