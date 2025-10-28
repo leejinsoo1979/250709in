@@ -50,8 +50,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   lowerDoorTopGap,
   lowerDoorBottomGap,
   lowerSectionDepth,
-  upperSectionDepth,
-  lowerSectionTopOffset
+  upperSectionDepth
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -260,20 +259,12 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     </>
                   )}
                   
-                  {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 + 사용자 오프셋 적용 */}
+                  {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 방향으로 26mm 늘림, 앞에서 85mm 줄임 */}
                   {index === 0 && (() => {
                     const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
                     const lowerDepthDiff = depth - lowerSectionDepth;
-                    const userOffset = mmToThreeUnits(lowerSectionTopOffset || 0);
-                    const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26) - mmToThreeUnits(85) - userOffset;
-                    const panelZOffset = lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2 - userOffset/2;
-
-                    console.log('🔵 DualType4 하부 섹션 상판 렌더링:', {
-                      lowerSectionTopOffset,
-                      userOffset: userOffset / 0.01,
-                      panelDepth: panelDepth / 0.01,
-                      panelZOffset: panelZOffset / 0.01
-                    });
+                    const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26) - mmToThreeUnits(85);
+                    const panelZOffset = lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 - mmToThreeUnits(85)/2;
 
                     return (
                       <BoxWithEdges
@@ -552,38 +543,20 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
               const hasFinishPanel = section.isTopFinishPanel && section.count === 1;
 
-              // 띄움 배치 여부 확인 (lowerSectionTopOffset > 0이면 띄움 배치)
-              const isFloating = lowerSectionTopOffset && lowerSectionTopOffset > 0;
-
-              console.log('🔴 [DualType4 옷봉 위치 디버깅]', {
-                sectionIndex,
-                isFloating,
-                lowerSectionTopOffset,
-                safetyShelfPositionMm,
-                hasFinishPanel,
-                sectionBottomY: sectionBottomY / 0.01,
-                actualSectionHeight: actualSectionHeight / 0.01,
-                height: height / 0.01,
-                basicThickness: basicThickness / 0.01
-              });
-
               // 옷걸이 봉 Y 위치 계산
               let rodYPosition: number;
-              if (safetyShelfPositionMm !== undefined && !isFloating) {
-                // 안전선반이 있고 띄움 배치가 아닌 경우: 브라켓 윗면이 안전선반 하단에 붙음
+              if (safetyShelfPositionMm !== undefined) {
+                // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
                 const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
                 rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
-                console.log('🟢 안전선반 모드:', { safetyShelfY: safetyShelfY / 0.01, rodYPosition: rodYPosition / 0.01 });
               } else if (hasFinishPanel) {
-                // 마감 패널이 있는 경우: 브라켓 윗면이 마감 패널 하단에서 27mm 아래
+                // 마감 패널이 있는 경우 (하부섹션): 브라켓 윗면이 마감 패널 하단에서 27mm 아래
                 const finishPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                 rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
-                console.log('🟡 마감패널 모드:', { finishPanelBottom: finishPanelBottom / 0.01, rodYPosition: rodYPosition / 0.01 });
               } else {
-                // 띄움 배치 또는 안전선반/마감패널 없는 경우: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
+                // 안전선반/마감패널 없는 경우: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
                 const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
-                rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
-                console.log('🔵 상부섹션상판 모드:', { sectionTopPanelBottom: sectionTopPanelBottom / 0.01, rodYPosition: rodYPosition / 0.01 });
+                rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2);
               }
 
               // 옷봉 Z 위치 계산 (섹션 깊이에 따라 조정)
