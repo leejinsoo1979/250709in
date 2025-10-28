@@ -167,15 +167,15 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
 
       {/* 고스트 기둥 */}
       {ghostPosition && isHoveringSpace && (
-        <group position={ghostPosition}>
+        <group
+          position={ghostPosition}
+          onClick={(e) => {
+            e.stopPropagation();
+            (e.nativeEvent as any).columnMarkerHandled = true;
+          }}
+        >
           {/* 고스트 기둥 본체 */}
-          <mesh
-            position={[0, (spaceInfo?.height || 2400) * 0.01 / 2, 0]}
-            onClick={(e) => {
-              e.stopPropagation();
-              (e.nativeEvent as any).columnMarkerHandled = true;
-            }}
-          >
+          <mesh position={[0, (spaceInfo?.height || 2400) * 0.01 / 2, 0]}>
             <boxGeometry args={[300 * 0.01, (spaceInfo?.height || 2400) * 0.01, 730 * 0.01]} />
             <meshStandardMaterial
               color="#10b981"
@@ -185,13 +185,13 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
               emissiveIntensity={0.2}
             />
           </mesh>
-          
+
           {/* 고스트 기둥 윤곽선 */}
           <lineSegments position={[0, (spaceInfo?.height || 2400) * 0.01 / 2, 0]}>
             <edgesGeometry args={[new THREE.BoxGeometry(300 * 0.01, (spaceInfo?.height || 2400) * 0.01, 730 * 0.01)]} />
             <lineBasicMaterial color="#10b981" linewidth={2} />
           </lineSegments>
-          
+
           {/* 바닥 표시 */}
           <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
             <circleGeometry args={[0.5, 32]} />
