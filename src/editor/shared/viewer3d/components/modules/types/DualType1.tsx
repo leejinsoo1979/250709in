@@ -283,10 +283,13 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                 const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
                 const hasFinishPanel = section.isTopFinishPanel && section.count === 1;
 
+                // 띄움 배치 여부 확인
+                const isFloating = lowerSectionTopOffset && lowerSectionTopOffset > 0;
+
                 // 옷걸이 봉 Y 위치 계산
                 let rodYPosition: number;
-                if (safetyShelfPositionMm !== undefined) {
-                  // 안전선반이 있는 경우: 브라켓 윗면이 안전선반 하단에 붙음
+                if (safetyShelfPositionMm !== undefined && !isFloating) {
+                  // 안전선반이 있고 띄움 배치가 아닌 경우: 브라켓 윗면이 안전선반 하단에 붙음
                   const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
                   rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
                 } else if (hasFinishPanel) {
@@ -294,11 +297,13 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                   const finishPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                   rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
                 } else {
-                  // 안전선반도 마감 패널도 없는 경우: 브라켓 윗면이 섹션 상판 하단에 붙음
+                  // 띄움 배치 또는 안전선반/마감패널 없는 경우: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
                   const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                   rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
 
-                  console.log('🔵 DualType1 옷봉 위치 계산');
+                  console.log('🔵 DualType1 옷봉 위치 계산 (띄움 또는 안전선반 없음)');
+                  console.log('  isFloating:', isFloating);
+                  console.log('  lowerSectionTopOffset:', lowerSectionTopOffset);
                   console.log('  moduleId:', moduleData.id);
                   console.log('  internalHeight:', internalHeight);
                   console.log('  height(Three→mm):', height * 100);
