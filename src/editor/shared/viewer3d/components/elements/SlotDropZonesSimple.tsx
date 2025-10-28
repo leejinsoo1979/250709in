@@ -3219,11 +3219,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           });
         } else {
           // 기본 가구: 바닥에서 시작
-          const floorY = mmToThreeUnits(zoneInternalSpace?.startY || internalSpace.startY);
-          const furnitureHeight = mmToThreeUnits(adjustedFurnitureHeightMm);
-          
-          // 기본 가구도 바닥에서 시작
-          furnitureY = floorY + furnitureHeight / 2;
+          const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+          let startHeightMm = floorFinishHeightMm;
+
+          if (spaceInfo.baseConfig?.type === 'floor') {
+            startHeightMm += spaceInfo.baseConfig?.height || 65;
+          } else if (spaceInfo.baseConfig?.placementType === 'float') {
+            startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
+          }
+
+          const furnitureHeightMm = adjustedFurnitureHeightMm;
+          furnitureY = mmToThreeUnits(startHeightMm + furnitureHeightMm / 2);
+
+          debugLog('👻 [Ghost Preview] 기본 가구 Y 위치:', {
+            floorFinishHeightMm,
+            startHeightMm,
+            furnitureHeightMm,
+            furnitureY,
+            furnitureY_mm: startHeightMm + furnitureHeightMm / 2,
+            category: moduleData.category,
+            설명: '기본 가구는 띄움 배치 고려'
+          });
         }
         
         debugLog('👻 [Ghost Preview] 가구 높이 계산:', {
