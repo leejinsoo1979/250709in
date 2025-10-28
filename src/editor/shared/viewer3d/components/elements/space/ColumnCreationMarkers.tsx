@@ -127,7 +127,8 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       material: 'concrete'
     };
 
-    console.log('🏗️ [ColumnCreationMarkers] handleCreateColumn 호출됨:', newColumn.id);
+    console.error('🚨🚨🚨 [ColumnCreationMarkers] handleCreateColumn 호출됨:', newColumn.id);
+    console.trace('호출 스택:');
     addColumn(newColumn);
   };
 

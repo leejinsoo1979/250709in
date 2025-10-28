@@ -392,11 +392,12 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
     })),
   
   addColumn: (column) => {
-    console.log('🏗️ [Store] addColumn 호출됨:', column.id);
+    console.error('🚨🚨🚨 [Store] addColumn 호출됨:', column.id);
+    console.trace('호출 스택:');
     set((state) => {
       const newColumns = [...(state.spaceInfo.columns || []), column];
-      console.log('🏗️ [Store] 기둥 추가 후 총 개수:', newColumns.length);
-      console.log('🏗️ [Store] 기둥 목록:', newColumns.map(c => c.id));
+      console.error('🚨🚨🚨 [Store] 기둥 추가 후 총 개수:', newColumns.length);
+      console.error('🚨🚨🚨 [Store] 기둥 목록:', newColumns.map(c => c.id));
       return {
         spaceInfo: {
           ...state.spaceInfo,
