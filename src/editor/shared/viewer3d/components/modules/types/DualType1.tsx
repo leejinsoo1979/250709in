@@ -41,6 +41,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   upperDoorBottomGap,
   lowerDoorTopGap,
   lowerDoorBottomGap,
+  lowerSectionTopOffset,
   panelGrainDirections: propsPanelGrainDirections
 }) => {
   // 공통 로직 사용
