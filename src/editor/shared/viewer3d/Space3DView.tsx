@@ -1320,9 +1320,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             />
             
             {/* 기둥 에셋 렌더링 */}
-            {(spaceInfo?.columns || []).map((column) => {
-              // 기둥이 단내림 영역에 있는지 확인
-              let columnHeight = column.height || spaceInfo.height || 2400; // 기본값은 공간 높이
+            {(() => {
+              console.log('🏗️ [Space3DView] 기둥 렌더링 - 총 개수:', (spaceInfo?.columns || []).length);
+              console.log('🏗️ [Space3DView] 기둥 목록:', (spaceInfo?.columns || []).map(c => c.id));
+              return (spaceInfo?.columns || []).map((column) => {
+                // 기둥이 단내림 영역에 있는지 확인
+                let columnHeight = column.height || spaceInfo.height || 2400; // 기본값은 공간 높이
               if (spaceInfo.droppedCeiling?.enabled) {
                 const totalWidth = spaceInfo.width;
                 const droppedWidth = spaceInfo.droppedCeiling.width || 900;
@@ -1386,7 +1389,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 )}
               </React.Fragment>
               );
-            })}
+              });
+            })()}
             
             {/* 가벽 에셋 렌더링 */}
             {(spaceInfo?.walls || []).map((wall) => {

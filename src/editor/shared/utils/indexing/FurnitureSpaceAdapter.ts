@@ -122,23 +122,8 @@ export class FurnitureSpaceAdapter {
         // 영역에 맞는 새로운 moduleId 생성 - 이제 ID는 너비 정보를 포함하지 않음
         const newModuleId = module.moduleId;
 
-        // 가구 너비 계산: 단내림 경계면 근처는 이격거리 3mm만 빼기
-        const BOUNDARY_GAP = 3;
+        // 가구 너비 계산: 슬롯 너비 그대로 사용 (이격거리는 이미 슬롯 계산에 반영됨)
         let furnitureWidth = targetZone.columnWidth;
-
-        // 단내림 경계면 근처 슬롯인지 확인
-        const isAtBoundary = (module.zone === 'normal' && droppedPosition === 'left' && slotIndex === 0) ||
-                            (module.zone === 'normal' && droppedPosition === 'right' && slotIndex === targetZone.columnCount - 1) ||
-                            (module.zone === 'dropped' && droppedPosition === 'left' && slotIndex === targetZone.columnCount - 1) ||
-                            (module.zone === 'dropped' && droppedPosition === 'right' && slotIndex === 0);
-
-        if (isAtBoundary) {
-          // 단내림 경계면: 이격거리만 빼기
-          furnitureWidth = targetZone.columnWidth - BOUNDARY_GAP;
-        } else {
-          // 일반 슬롯: 전체 너비 사용 (엔드패널은 이미 슬롯 계산에 반영됨)
-          furnitureWidth = targetZone.columnWidth;
-        }
 
         validFurniture.push({
           ...module,

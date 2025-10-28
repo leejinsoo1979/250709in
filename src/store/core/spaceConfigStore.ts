@@ -391,14 +391,21 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       isDirty: true,
     })),
   
-  addColumn: (column) =>
-    set((state) => ({
-      spaceInfo: {
-        ...state.spaceInfo,
-        columns: [...(state.spaceInfo.columns || []), column]
-      },
-      isDirty: true,
-    })),
+  addColumn: (column) => {
+    console.log('🏗️ [Store] addColumn 호출됨:', column.id);
+    set((state) => {
+      const newColumns = [...(state.spaceInfo.columns || []), column];
+      console.log('🏗️ [Store] 기둥 추가 후 총 개수:', newColumns.length);
+      console.log('🏗️ [Store] 기둥 목록:', newColumns.map(c => c.id));
+      return {
+        spaceInfo: {
+          ...state.spaceInfo,
+          columns: newColumns
+        },
+        isDirty: true,
+      };
+    });
+  },
   
   removeColumn: (id) =>
     set((state) => ({

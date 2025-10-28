@@ -113,10 +113,10 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
     // 위치가 제공되지 않으면 고스트 위치 사용
     const finalPosition = position || ghostPosition;
     if (!finalPosition) return;
-    
+
     // 공간 높이 가져오기
     const spaceHeightMm = spaceInfo?.height || 2400;
-    
+
     const newColumn: Column = {
       id: `column-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       position: finalPosition,
@@ -126,8 +126,8 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
       color: '#E0E0E0',
       material: 'concrete'
     };
-    
-    // console.log('🏗️ 새 기둥 생성:', newColumn);
+
+    console.log('🏗️ [ColumnCreationMarkers] handleCreateColumn 호출됨:', newColumn.id);
     addColumn(newColumn);
   };
 

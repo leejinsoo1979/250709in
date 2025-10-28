@@ -164,7 +164,6 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   const handlePointerDown = (event: ThreeEvent<PointerEvent>) => {
     event.stopPropagation();
     event.nativeEvent.stopPropagation();
-    event.nativeEvent.preventDefault();
     
     // console.log('🎯 기둥 포인터 다운:', id);
     
