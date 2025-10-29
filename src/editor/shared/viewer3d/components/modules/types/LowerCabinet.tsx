@@ -36,6 +36,12 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   showFurniture = true,
   lowerSectionTopOffset
 }) => {
+  console.log('🏠 [LowerCabinet] Props 확인:', {
+    moduleId: moduleData.id,
+    lowerSectionTopOffset,
+    placementType: spaceInfo?.baseConfig?.placementType,
+    floatHeight: spaceInfo?.baseConfig?.floatHeight
+  });
   const { renderMode, viewMode } = useSpace3DView();
   
   // 공통 가구 로직 사용
