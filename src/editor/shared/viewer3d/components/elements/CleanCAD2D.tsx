@@ -1877,6 +1877,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           let maxModuleHeightMm = 0;
           let tallestModuleTopY = cabinetAreaTopY;
 
+          // 상하부장 높이 계산 (띄움 배치 시 표시용)
+          let maxLowerCabinetHeightMm = 0;
+          let maxUpperCabinetHeightMm = 0;
+
           placedModules.forEach(module => {
             const moduleData = getModuleById(module.moduleId);
             if (!moduleData) return;
@@ -1891,6 +1895,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (moduleHeight > maxModuleHeightMm) {
               maxModuleHeightMm = moduleHeight;
               tallestModuleTopY = moduleTopY;
+            }
+
+            // 상하부장 분류
+            if (moduleData.category === 'lower' && moduleHeight > maxLowerCabinetHeightMm) {
+              maxLowerCabinetHeightMm = moduleHeight;
+            }
+            if (moduleData.category === 'upper' && moduleHeight > maxUpperCabinetHeightMm) {
+              maxUpperCabinetHeightMm = moduleHeight;
             }
           });
 
@@ -1964,8 +1976,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </group>
               )}
               
-              {/* 1. 하부 프레임 높이 - 받침대가 있는 경우에만 표시 */}
-              {bottomFrameHeight > 0 && (
+              {/* 1. 하부 프레임 높이 또는 하부섹션 높이 */}
+              {/* 띄움 배치가 아니고 받침대가 있는 경우: 하부 프레임 높이 표시 */}
+              {!isFloating && bottomFrameHeight > 0 && (
               <group>
                 <NativeLine
                   points={[[rightDimensionX, bottomY, 0.002], [rightDimensionX, bottomFrameTopY, 0.002]]}
@@ -1982,7 +1995,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   depthTest={false}
                 />
                 <NativeLine
-                  points={createArrowHead([rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, bottomFrameTopY - 0.03, 0.002])}
+                  points={createArrowHead([rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, bottomFrameTopY - 0.03, 0.002]]}
                   color={dimensionColor}
                   lineWidth={1}
                   renderOrder={100000}
@@ -1999,6 +2012,45 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   rotation={[0, 0, -Math.PI / 2]}
                 >
                   {bottomFrameHeight}
+                </Text>
+              </group>
+              )}
+
+              {/* 띄움 배치이고 하부장이 있는 경우: 하부섹션 높이 표시 */}
+              {isFloating && maxLowerCabinetHeightMm > 0 && (
+              <group>
+                <NativeLine
+                  points={[[rightDimensionX, mmToThreeUnits(floatHeight), 0.002], [rightDimensionX, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine
+                  points={createArrowHead([rightDimensionX, mmToThreeUnits(floatHeight), 0.002], [rightDimensionX, mmToThreeUnits(floatHeight) + 0.03, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine
+                  points={createArrowHead([rightDimensionX, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), 0.002], [rightDimensionX, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm) - 0.03, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm / 2), 0.01]}
+                  fontSize={baseFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                  rotation={[0, 0, -Math.PI / 2]}
+                >
+                  {maxLowerCabinetHeightMm}
                 </Text>
               </group>
               )}
@@ -2021,7 +2073,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </group>
               )}
               
-              {/* 2. 캐비넷/가구 높이 */}
+              {/* 2. 캐비넷/가구 높이 또는 상부섹션 높이 */}
+              {/* 띄움 배치가 아니거나 상하부장 분리되지 않은 경우: 통합 가구 높이 표시 */}
+              {(!isFloating || (maxLowerCabinetHeightMm === 0 && maxUpperCabinetHeightMm === 0)) && (
               <group>
                 <NativeLine
                   points={[[rightDimensionX, bottomFrameTopY, 0.002], [rightDimensionX, furnitureTopY, 0.002]]}
@@ -2057,6 +2111,46 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   {furnitureHeightValue}
                 </Text>
               </group>
+              )}
+
+              {/* 띄움 배치이고 상부장이 있는 경우: 상부섹션 높이 표시 */}
+              {isFloating && maxUpperCabinetHeightMm > 0 && (
+              <group>
+                <NativeLine
+                  points={[[rightDimensionX, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), 0.002], [rightDimensionX, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm), 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine
+                  points={createArrowHead([rightDimensionX, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), 0.002], [rightDimensionX, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm) + 0.03, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine
+                  points={createArrowHead([rightDimensionX, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm), 0.002], [rightDimensionX, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm) - 0.03, 0.002])}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                  position={[rightDimensionX + mmToThreeUnits(is3DMode ? 30 : 60), mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm / 2), 0.01]}
+                  fontSize={baseFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                  rotation={[0, 0, -Math.PI / 2]}
+                >
+                  {maxUpperCabinetHeightMm}
+                </Text>
+              </group>
+              )}
               
               {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
               <group>
