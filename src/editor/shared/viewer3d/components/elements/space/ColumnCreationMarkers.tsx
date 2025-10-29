@@ -135,8 +135,12 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
   // 클릭 핸들러
   const handleClick = (e: any) => {
     e.stopPropagation();
+    console.error('🚨🚨🚨 [ColumnCreationMarkers] handleClick 호출됨');
     if (ghostPosition) {
+      console.error('🚨🚨🚨 [ColumnCreationMarkers] ghostPosition 있음, handleCreateColumn 호출');
       handleCreateColumn();
+    } else {
+      console.error('🚨🚨🚨 [ColumnCreationMarkers] ghostPosition 없음');
     }
   };
 
@@ -156,8 +160,13 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         position={[0, 0, 0]}
         onPointerMove={(e) => e.stopPropagation()}
         onClick={(e) => {
+          console.error('🚨🚨🚨 [ColumnCreationMarkers] 전체 공간 mesh onClick 호출됨');
           // + 아이콘이 이미 클릭을 처리했으면 무시
-          if ((e.nativeEvent as any).columnMarkerHandled) return;
+          if ((e.nativeEvent as any).columnMarkerHandled) {
+            console.error('🚨🚨🚨 [ColumnCreationMarkers] columnMarkerHandled 플래그 있음, 무시');
+            return;
+          }
+          console.error('🚨🚨🚨 [ColumnCreationMarkers] handleClick 호출 예정');
           handleClick(e);
         }}
       >
@@ -170,8 +179,10 @@ const ColumnCreationMarkers: React.FC<ColumnCreationMarkersProps> = ({ spaceInfo
         <group
           position={ghostPosition}
           onClick={(e) => {
+            console.error('🚨🚨🚨 [ColumnCreationMarkers] 고스트 group onClick 호출됨');
             e.stopPropagation();
             (e.nativeEvent as any).columnMarkerHandled = true;
+            console.error('🚨🚨🚨 [ColumnCreationMarkers] columnMarkerHandled 플래그 설정 완료');
           }}
         >
           {/* 고스트 기둥 본체 */}
