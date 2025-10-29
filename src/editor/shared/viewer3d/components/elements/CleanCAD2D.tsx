@@ -2915,7 +2915,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY - 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, bottomFrameTopY, rightDimensionZ], [0, bottomFrameTopY + 0.03, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -3708,7 +3708,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, bottomFrameTopY - 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, bottomFrameTopY + 0.03, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
