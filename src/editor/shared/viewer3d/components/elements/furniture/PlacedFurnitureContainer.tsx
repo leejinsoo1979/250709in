@@ -182,24 +182,29 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     prevModuleIdsRef.current = currentIds;
   }, [placedModules]);
 
-  // 좌/우측 뷰에서는 해당 측면에 가장 가까운 가구만 필터링
+  // 좌/우측 뷰에서는 해당 측면에 가장 가까운 슬롯의 모든 가구 필터링
   const filteredModules = React.useMemo(() => {
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
       if (placedModules.length === 0) return [];
-      
-      // 가장 왼쪽/오른쪽 가구 찾기
+
       if (view2DDirection === 'left') {
-        // 가장 왼쪽 가구 (position.x가 가장 작은 가구)
-        const leftmost = placedModules.reduce((min, module) => 
-          module.position.x < min.position.x ? module : min
+        // 가장 왼쪽 X 좌표 찾기
+        const leftmostX = placedModules.reduce((min, module) =>
+          Math.min(min, module.position.x), Infinity
         );
-        return [leftmost];
+        // 같은 X 좌표의 모든 가구 반환 (상부장, 하부장 등)
+        return placedModules.filter(module =>
+          Math.abs(module.position.x - leftmostX) < 0.01 // 부동소수점 오차 허용
+        );
       } else {
-        // 가장 오른쪽 가구 (position.x가 가장 큰 가구)
-        const rightmost = placedModules.reduce((max, module) => 
-          module.position.x > max.position.x ? module : max
+        // 가장 오른쪽 X 좌표 찾기
+        const rightmostX = placedModules.reduce((max, module) =>
+          Math.max(max, module.position.x), -Infinity
         );
-        return [rightmost];
+        // 같은 X 좌표의 모든 가구 반환 (상부장, 하부장 등)
+        return placedModules.filter(module =>
+          Math.abs(module.position.x - rightmostX) < 0.01 // 부동소수점 오차 허용
+        );
       }
     }
     return placedModules;
