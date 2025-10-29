@@ -3782,22 +3782,33 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const topFrameHeight = frameSize.top ?? 0;
             const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
             const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0);
-            
+
+            // 띄움 배치 확인
+            const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+            const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+
             const bottomY = 0;
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight);
             const cabinetAreaTopY = mmToThreeUnits(bottomFrameHeight + cabinetPlacementHeight);
             const topFrameTopY = cabinetAreaTopY + mmToThreeUnits(topFrameHeight);
-            
+
             // 배치된 가구들의 최대 높이 계산 (우측뷰)
             let maxFurnitureTop = topFrameTopY;
             let maxModuleHeightMm = 0;
             let tallestModuleTopY = cabinetAreaTopY;
+
+            // 상하부장 높이 계산 (띄움 배치 시 표시용)
+            let maxLowerCabinetHeightMm = 0;
+            let maxUpperCabinetHeightMm = 0;
+
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
                 const moduleData = getModuleById(module.moduleId);
                 if (moduleData) {
                   const moduleHeight = module.customHeight ?? moduleData.dimensions.height;
-                  const moduleTopY = bottomFrameTopY + mmToThreeUnits(moduleHeight);
+                  // 띄움배치 시에는 floatHeight를 기준으로, 아니면 bottomFrameTopY를 기준으로
+                  const furnitureStartY = isFloating ? mmToThreeUnits(floatHeight) : bottomFrameTopY;
+                  const moduleTopY = furnitureStartY + mmToThreeUnits(moduleHeight);
                   if (moduleTopY > maxFurnitureTop) {
                     maxFurnitureTop = moduleTopY;
                   }
@@ -3805,14 +3816,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     maxModuleHeightMm = moduleHeight;
                     tallestModuleTopY = moduleTopY;
                   }
+
+                  // 상하부장 분류
+                  if (moduleData.category === 'lower' && moduleHeight > maxLowerCabinetHeightMm) {
+                    maxLowerCabinetHeightMm = moduleHeight;
+                  }
+                  if (moduleData.category === 'upper' && moduleHeight > maxUpperCabinetHeightMm) {
+                    maxUpperCabinetHeightMm = moduleHeight;
+                  }
                 }
               });
             }
-            
+
             const hasFurnitureHeight = maxModuleHeightMm > 0;
             const furnitureHeightValue = hasFurnitureHeight ? maxModuleHeightMm : cabinetPlacementHeight;
             const furnitureTopY = hasFurnitureHeight ? tallestModuleTopY : cabinetAreaTopY;
-            const furnitureTextY = bottomFrameTopY + (furnitureTopY - bottomFrameTopY) / 2;
+            // 띄움배치 시에는 floatHeight를 기준으로 텍스트 위치 계산
+            const furnitureStartY = isFloating ? mmToThreeUnits(floatHeight) : bottomFrameTopY;
+            const furnitureTextY = furnitureStartY + (furnitureTopY - furnitureStartY) / 2;
             const topFrameLineTopY = topFrameTopY;
             const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
             const extraFurnitureHeightMm = extraFurnitureHeightUnits > 1e-6 ? Math.round(threeUnitsToMm(extraFurnitureHeightUnits)) : 0;
@@ -3822,8 +3843,42 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             return (
               <>
-                {/* 1. 하부 프레임 높이 - 받침대가 있는 경우에만 표시 */}
-                {bottomFrameHeight > 0 && (
+                {/* 1. 띄움 높이 또는 하부 프레임 높이 */}
+                {/* 띄움 배치인 경우: 띄움 높이 표시 */}
+                {isFloating && floatHeight > 0 && (
+                <group>
+                  <Line
+                    points={[[spaceWidth, bottomY, leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight), leftDimensionZ]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, bottomY, leftDimensionZ], [spaceWidth, 0.03, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight) + 0.03, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[spaceWidth, mmToThreeUnits(floatHeight) / 2, leftDimensionZ + mmToThreeUnits(60)]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[0, 0, -Math.PI / 2]}
+                  >
+                    {floatHeight}
+                  </Text>
+                </group>
+                )}
+
+                {/* 띄움 배치가 아니고 받침대가 있는 경우: 하부 프레임 높이 표시 */}
+                {!isFloating && bottomFrameHeight > 0 && (
                 <group>
                   <Line
                     points={[[spaceWidth, bottomY, leftDimensionZ], [spaceWidth, bottomFrameTopY, leftDimensionZ]]}
@@ -3841,8 +3896,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Text
-                  renderOrder={1000}
-                  depthTest={false}
+                    renderOrder={1000}
+                    depthTest={false}
                     position={[spaceWidth, bottomFrameTopY / 2, leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
@@ -3854,8 +3909,43 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   </Text>
                 </group>
                 )}
-                
-                {/* 2. 캐비넷/가구 높이 */}
+
+                {/* 2. 하부섹션 높이 (띄움 배치 시) 또는 캐비넷/가구 높이 (일반 배치 시) */}
+                {/* 띄움 배치이고 하부장이 있는 경우: 하부섹션 높이 표시 */}
+                {isFloating && maxLowerCabinetHeightMm > 0 && (
+                <group>
+                  <Line
+                    points={[[spaceWidth, mmToThreeUnits(floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), leftDimensionZ]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight) + 0.03, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm) - 0.03, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[0, 0, -Math.PI / 2]}
+                  >
+                    {maxLowerCabinetHeightMm}
+                  </Text>
+                </group>
+                )}
+
+                {/* 띄움 배치가 아닌 경우: 일반 가구 높이 표시 */}
+                {!isFloating && (
                 <group>
                   <Line
                     points={[[spaceWidth, bottomFrameTopY, leftDimensionZ], [spaceWidth, furnitureTopY, leftDimensionZ]]}
@@ -3873,8 +3963,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Text
-                  renderOrder={1000}
-                  depthTest={false}
+                    renderOrder={1000}
+                    depthTest={false}
                     position={[spaceWidth, furnitureTextY, leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
@@ -3885,8 +3975,42 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     {furnitureHeightValue}
                   </Text>
                 </group>
-                
-                {/* 3. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
+                )}
+
+                {/* 3. 상부섹션 높이 (띄움 배치이고 상부장이 있는 경우) */}
+                {isFloating && maxUpperCabinetHeightMm > 0 && (
+                <group>
+                  <Line
+                    points={[[spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm), leftDimensionZ]]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm) + 0.03, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Line
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm) - 0.03, leftDimensionZ])}
+                    color={dimensionColor}
+                    lineWidth={1}
+                  />
+                  <Text
+                    renderOrder={1000}
+                    depthTest={false}
+                    position={[spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    fontSize={baseFontSize}
+                    color={textColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[0, 0, -Math.PI / 2]}
+                  >
+                    {maxUpperCabinetHeightMm}
+                  </Text>
+                </group>
+                )}
+
+                {/* 4. 상부 프레임 높이 / 노서라운드일 때는 상부 이격거리 */}
                 <group>
                   <Line
                     points={[[spaceWidth, cabinetAreaTopY, leftDimensionZ], [spaceWidth, topFrameLineTopY, leftDimensionZ]]}
@@ -3917,7 +4041,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </Text>
               </group>
 
-                {/* 4. 상부 프레임 이상 돌출 구간 */}
+                {/* 5. 상부 프레임 이상 돌출 구간 */}
                 {hasExtraFurnitureHeight && (
                 <group>
                   <Line
