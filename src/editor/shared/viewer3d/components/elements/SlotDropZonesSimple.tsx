@@ -1478,7 +1478,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         hingePosition: hingePosition, // 기둥 위치에 따른 최적 힌지 방향
         zone: zoneToUse, // 영역 정보 저장
         customWidth: customWidth, // 실제 슬롯 너비 사용 (소수점 2자리)
-        customHeight: zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace.height : undefined // 단내림 구간의 줄어든 높이 저장
+        customHeight: zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace.height : undefined, // 단내림 구간의 줄어든 높이 저장
+        lowerSectionTopOffset: spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : undefined // 띄움 배치 시 하부 섹션 상판 오프셋
       };
       
       // 기둥 정보가 있으면 추가
@@ -1595,7 +1596,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           adjustedWidth: moduleData.dimensions.width,
           hingePosition: 'right' as 'left' | 'right',
           customWidth: customWidth,
-          zone: targetZone // 클릭한 슬롯의 영역 사용
+          zone: targetZone, // 클릭한 슬롯의 영역 사용
+          lowerSectionTopOffset: spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : undefined // 띄움 배치 시 하부 섹션 상판 오프셋
         };
         
         addModule(newModule);
@@ -1991,7 +1993,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       hingePosition: 'right' as 'left' | 'right',
       // 노서라운드 모드에서는 customWidth를 설정하지 않음 - FurnitureItem이 직접 slotWidths 사용
       customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : adjustedCustomWidth,
-      zone: zoneToUse // 단내림 영역 정보 저장
+      zone: zoneToUse, // 단내림 영역 정보 저장
+      lowerSectionTopOffset: spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : undefined // 띄움 배치 시 하부 섹션 상판 오프셋
     };
     
     // 기둥 정보가 있으면 추가
