@@ -111,6 +111,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   // 테마 색상
   const themeColor = getThemeHex();
 
+  // 2D 측면뷰에서 치수 가이드 Y 오프셋 보정 (띄움 배치 시 바닥 기준 유지)
+  const dimensionYOffset = (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right'))
+    ? -mmToThreeUnits(lowerSectionTopOffsetMm)
+    : 0;
+
   // 패널 비활성화용 material - 한 번만 생성하고 재사용
   const panelDimmedMaterial = React.useMemo(() => {
     const mat = new THREE.MeshBasicMaterial({
@@ -571,7 +576,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       <EditableDimensionText
                         position={[
                           viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
-                          centerY,
+                          centerY + dimensionYOffset,
                           viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                         ]}
                         fontSize={baseFontSize}
@@ -590,8 +595,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       <group>
                         <NativeLine
                           points={[
-                            [-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                            [-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+                            [-innerWidth/2 * 0.3, topY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
+                            [-innerWidth/2 * 0.3, bottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
                           ]}
                           color={currentColor}
                           lineWidth={1}
@@ -600,7 +605,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                         {/* 가이드선 클릭/hover 영역 */}
                         <mesh
-                          position={[-innerWidth/2 * 0.3, (topY + bottomY) / 2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
+                          position={[-innerWidth/2 * 0.3, (topY + bottomY) / 2 + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
                           onPointerOver={(e) => {
                             e.stopPropagation();
                             setHoveredSectionIndex(index);
@@ -618,11 +623,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       {/* 섹션 내경 가이드선 양끝 엔드포인트 - 측면뷰/탑뷰와 드래그 중에는 숨김 */}
                       {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
                         <>
-                          <mesh position={[-innerWidth/2 * 0.3, topY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                          <mesh position={[-innerWidth/2 * 0.3, topY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                             <sphereGeometry args={[0.05, 8, 8]} />
                             <meshBasicMaterial color={currentColor} />
                           </mesh>
-                          <mesh position={[-innerWidth/2 * 0.3, bottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                          <mesh position={[-innerWidth/2 * 0.3, bottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                             <sphereGeometry args={[0.05, 8, 8]} />
                             <meshBasicMaterial color={currentColor} />
                           </mesh>
@@ -645,7 +650,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                               <EditableDimensionText
                                 position={[
                                   viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
-                                  topCenterY,
+                                  topCenterY + dimensionYOffset,
                                   viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                                 ]}
                                 fontSize={baseFontSize}
@@ -664,8 +669,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                               <group>
                                 <NativeLine
                                   points={[
-                                    [-innerWidth/2 * 0.3, topCompartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                                    [-innerWidth/2 * 0.3, topCompartmentBottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+                                    [-innerWidth/2 * 0.3, topCompartmentTopY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
+                                    [-innerWidth/2 * 0.3, topCompartmentBottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
                                   ]}
                                   color={topCurrentColor}
                                   lineWidth={1}
@@ -674,7 +679,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                                 {/* 가이드선 클릭/hover 영역 */}
                                 <mesh
-                                  position={[-innerWidth/2 * 0.3, topCenterY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
+                                  position={[-innerWidth/2 * 0.3, topCenterY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
                                   onPointerOver={(e) => {
                                     e.stopPropagation();
                                     setHoveredSectionIndex(topSectionIndex);
@@ -692,11 +697,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                               {/* 안전선반 위 칸 수직선 양끝 엔드포인트 - 측면뷰/탑뷰와 드래그 중에는 숨김 */}
                               {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
                                 <>
-                                  <mesh position={[-innerWidth/2 * 0.3, topCompartmentTopY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                                  <mesh position={[-innerWidth/2 * 0.3, topCompartmentTopY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                                     <sphereGeometry args={[0.05, 8, 8]} />
                                     <meshBasicMaterial color={topCurrentColor} />
                                   </mesh>
-                                  <mesh position={[-innerWidth/2 * 0.3, topCompartmentBottomY, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
+                                  <mesh position={[-innerWidth/2 * 0.3, topCompartmentBottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                                     <sphereGeometry args={[0.05, 8, 8]} />
                                     <meshBasicMaterial color={topCurrentColor} />
                                   </mesh>
