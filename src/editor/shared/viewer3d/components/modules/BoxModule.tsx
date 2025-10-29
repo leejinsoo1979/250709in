@@ -188,6 +188,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
           lowerSectionDepth={lowerSectionDepth} // 하부 섹션 깊이 (mm)
           upperSectionDepth={upperSectionDepth} // 상부 섹션 깊이 (mm)
           doorSplit={doorSplit} // 도어 분할 여부
+          lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
             // 이벤트 핸들러들 전달
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
@@ -239,6 +240,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         upperDoorBottomGap={upperDoorBottomGap} // 상부 도어 하단 갭
         lowerDoorTopGap={lowerDoorTopGap} // 하부 도어 상단 갭
         lowerDoorBottomGap={lowerDoorBottomGap} // 하부 도어 하단 갭
+        lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -288,6 +290,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         upperDoorBottomGap={upperDoorBottomGap}
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
+        lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         panelGrainDirections={panelGrainDirections}
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
@@ -338,11 +341,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         upperDoorBottomGap={upperDoorBottomGap}
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
+        lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
       />
       </>
     );
   }
-  
+
   if (moduleData.id.includes('single-2drawer-hanging')) {
     return (
       <>
@@ -381,11 +385,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         upperDoorBottomGap={upperDoorBottomGap}
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
+        lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
       />
       </>
     );
   }
-  
+
   if (moduleData.id.includes('single-2hanging')) {
     return (
       <>
@@ -419,6 +424,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         upperDoorBottomGap={upperDoorBottomGap}
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
+        lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
       />
       </>
     );
@@ -449,6 +455,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex} // 슬롯 인덱스 전달
         showFurniture={showFurniture} // 가구 본체 표시 여부
         visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
+        lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -495,6 +502,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         upperDoorBottomGap={upperDoorBottomGap}
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
+        lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         // 이벤트 핸들러들 전달
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
@@ -533,6 +541,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex}
         showFurniture={showFurniture} // 가구 본체 표시 여부
+        lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
       />
       </>
     );
@@ -563,6 +572,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotWidths={slotWidths} // 듀얼 가구의 개별 슬롯 너비들
         slotIndex={slotIndex}
         showFurniture={showFurniture} // 가구 본체 표시 여부
+        lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
       />
       </>
     );
