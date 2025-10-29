@@ -81,6 +81,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         furnitureId={moduleData.id}
                         hideSectionDimensions={false}
+                        lowerSectionTopOffsetMm={lowerSectionTopOffset}
                       />
                     </group>
                     
@@ -109,6 +110,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         furnitureId={moduleData.id}
                         hideSectionDimensions={true}
+                        lowerSectionTopOffsetMm={lowerSectionTopOffset}
                       />
                     </group>
                   </>
@@ -127,6 +129,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                     mmToThreeUnits={baseFurniture.mmToThreeUnits}
                     renderMode={renderMode}
                     furnitureId={moduleData.id}
+                    lowerSectionTopOffsetMm={lowerSectionTopOffset}
                   />
                 )}
               </>

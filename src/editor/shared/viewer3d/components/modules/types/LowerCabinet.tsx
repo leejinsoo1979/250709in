@@ -124,6 +124,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                         mmToThreeUnits={baseFurniture.mmToThreeUnits}
                         renderMode={renderMode}
                         furnitureId={moduleData.id}
+                        lowerSectionTopOffsetMm={lowerSectionTopOffset}
                       />
                     </group>
                     
@@ -150,6 +151,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                         mmToThreeUnits={baseFurniture.mmToThreeUnits}
                         renderMode={renderMode}
                         furnitureId={moduleData.id}
+                        lowerSectionTopOffsetMm={lowerSectionTopOffset}
                       />
                     </group>
                   </>
@@ -168,6 +170,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     calculateSectionHeight={baseFurniture.calculateSectionHeight}
                     mmToThreeUnits={baseFurniture.mmToThreeUnits}
                     renderMode={renderMode}
+                    lowerSectionTopOffsetMm={lowerSectionTopOffset}
                   />
                 )}
               </>

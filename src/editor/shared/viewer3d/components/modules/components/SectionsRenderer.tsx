@@ -62,6 +62,9 @@ interface SectionsRendererProps {
   // 텍스처 URL과 패널별 결 방향
   textureUrl?: string;
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' };
+
+  // 띄움 배치 시 치수 가이드 Y 오프셋 보정용 (mm)
+  lowerSectionTopOffsetMm?: number;
 }
 
 /**
@@ -88,7 +91,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   placedFurnitureId,
   sectionDepths,
   textureUrl,
-  panelGrainDirections
+  panelGrainDirections,
+  lowerSectionTopOffsetMm = 0
 }) => {
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);
@@ -289,6 +293,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 panelGrainDirections={panelGrainDirections}
                 sectionName={sectionName}
                 sectionIndex={index}
+                floatOffsetMm={lowerSectionTopOffsetMm}
               />
             );
           }
@@ -322,6 +327,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               textureUrl={textureUrl}
               panelGrainDirections={panelGrainDirections}
               sectionName={sectionName}
+              floatOffsetMm={lowerSectionTopOffsetMm}
             />
           );
           break;
