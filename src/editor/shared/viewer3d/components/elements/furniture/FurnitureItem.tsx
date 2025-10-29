@@ -2111,10 +2111,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   doorBottomGap={placedModule.doorBottomGap} // 바닥에서 도어 하단까지의 갭
                   lowerSectionDepth={placedModule.lowerSectionDepth} // 하부 섹션 깊이 (mm)
                   upperSectionDepth={placedModule.upperSectionDepth} // 상부 섹션 깊이 (mm)
-                  lowerSectionTopOffset={
-                    placedModule.lowerSectionTopOffset ??
-                    (spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : undefined)
-                  } // 하부 섹션 상판 오프셋 (mm) - placedModule에 없으면 현재 spaceInfo에서 계산
+                  lowerSectionTopOffset={(() => {
+                    // **중요**: 저장된 값 무시하고 항상 현재 spaceInfo의 placementType을 우선 사용
+                    // 이렇게 하면 배치 모드 변경 시 모든 가구가 자동으로 업데이트됨
+                    const calculated = spaceInfo.baseConfig?.placementType === 'float'
+                      ? (spaceInfo.baseConfig?.floatHeight || 0)
+                      : undefined;
+
+                    console.log('🔧 [FurnitureItem] lowerSectionTopOffset 계산 (동적):', {
+                      moduleId: placedModule.moduleId,
+                      placementType: spaceInfo.baseConfig?.placementType,
+                      floatHeight: spaceInfo.baseConfig?.floatHeight,
+                      calculated,
+                      stored: placedModule.lowerSectionTopOffset,
+                      usingStored: false // 항상 현재 spaceInfo 사용
+                    });
+                    return calculated;
+                  })()} // 하부 섹션 상판 오프셋 (mm) - 항상 현재 placementType에서 동적 계산
                   doorSplit={placedModule.doorSplit}
                   upperDoorTopGap={placedModule.upperDoorTopGap}
                   upperDoorBottomGap={placedModule.upperDoorBottomGap}
