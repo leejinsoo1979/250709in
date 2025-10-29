@@ -106,76 +106,76 @@ const OrthographicWalls: React.FC<OrthographicWallsProps> = ({ width, height, de
       {/* 왼쪽 벽 */}
       <mesh position={[-width/2, height/2, 0]}>
         <planeGeometry args={[depth, height]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           ref={leftWallRef}
-          map={createGradientTexture('#f0f0f0', '#ffffff00', 'vertical')}
+          map={createGradientTexture('#d8d8d8', '#ffffff00', 'vertical')}
           transparent
-          opacity={0.5}
+          opacity={0.7}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
       </mesh>
-      
+
       {/* 오른쪽 벽 */}
       <mesh position={[width/2, height/2, 0]} rotation={[0, Math.PI, 0]}>
         <planeGeometry args={[depth, height]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           ref={rightWallRef}
-          map={createGradientTexture('#f0f0f0', '#ffffff00', 'vertical')}
+          map={createGradientTexture('#d8d8d8', '#ffffff00', 'vertical')}
           transparent
-          opacity={0.5}
+          opacity={0.7}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
       </mesh>
-      
+
       {/* 앞 벽 */}
       <mesh position={[0, height/2, depth/2]} rotation={[0, Math.PI/2, 0]}>
         <planeGeometry args={[width, height]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           ref={frontWallRef}
-          map={createGradientTexture('#f0f0f0', '#ffffff00', 'vertical')}
+          map={createGradientTexture('#d8d8d8', '#ffffff00', 'vertical')}
           transparent
-          opacity={0.5}
+          opacity={0.7}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
       </mesh>
-      
+
       {/* 뒤 벽 */}
       <mesh position={[0, height/2, -depth/2]} rotation={[0, -Math.PI/2, 0]}>
         <planeGeometry args={[width, height]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           ref={backWallRef}
-          map={createGradientTexture('#f0f0f0', '#ffffff00', 'vertical')}
+          map={createGradientTexture('#d8d8d8', '#ffffff00', 'vertical')}
+          transparent
+          opacity={0.7}
+          side={THREE.DoubleSide}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* 천장 */}
+      <mesh position={[0, height, 0]} rotation={[-Math.PI/2, 0, 0]}>
+        <planeGeometry args={[width, depth]} />
+        <meshStandardMaterial
+          ref={ceilingRef}
+          map={createGradientTexture('#e0e0e0', '#ffffff00', 'horizontal')}
           transparent
           opacity={0.5}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
       </mesh>
-      
-      {/* 천장 */}
-      <mesh position={[0, height, 0]} rotation={[-Math.PI/2, 0, 0]}>
-        <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial 
-          ref={ceilingRef}
-          map={createGradientTexture('#fafafa', '#ffffff00', 'horizontal')}
-          transparent
-          opacity={0.3}
-          side={THREE.DoubleSide}
-          depthWrite={false}
-        />
-      </mesh>
-      
+
       {/* 바닥 */}
       <mesh position={[0, 0, 0]} rotation={[Math.PI/2, 0, 0]}>
         <planeGeometry args={[width, depth]} />
-        <meshStandardMaterial 
+        <meshStandardMaterial
           ref={floorRef}
-          map={createGradientTexture('#e8e8e8', '#ffffff00', 'horizontal')}
+          map={createGradientTexture('#d0d0d0', '#ffffff00', 'horizontal')}
           transparent
-          opacity={0.3}
+          opacity={0.5}
           side={THREE.DoubleSide}
           depthWrite={false}
         />
