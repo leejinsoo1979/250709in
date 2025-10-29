@@ -599,21 +599,37 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         )}
 
         {/* 조절발통 (네 모서리) - 띄움 배치 시에는 렌더링하지 않음 */}
-        {!(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
-          <AdjustableFootsRenderer
-            width={width}
-            depth={depth}
-            yOffset={-height / 2}
-            backZOffset={sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) : 0}
-            renderMode={renderMode}
-            isHighlighted={false}
-            isFloating={false}
-            baseHeight={spaceInfo?.baseConfig?.height || 65}
-            baseDepth={spaceInfo?.baseConfig?.depth || 0}
-            viewMode={viewMode}
-            view2DDirection={view2DDirection}
-          />
-        )}
+        {(() => {
+          const shouldHide = lowerSectionTopOffset && lowerSectionTopOffset > 0;
+          console.log('🦶 [DualType2] 조절발 렌더링 체크:', {
+            moduleId: moduleData.id,
+            lowerSectionTopOffset,
+            shouldHide,
+            shouldRender: !shouldHide,
+            spaceConfigPlacementType: spaceInfo?.baseConfig?.placementType,
+            spaceConfigFloatHeight: spaceInfo?.baseConfig?.floatHeight
+          });
+
+          if (shouldHide) {
+            return null;
+          }
+
+          return (
+            <AdjustableFootsRenderer
+              width={width}
+              depth={depth}
+              yOffset={-height / 2}
+              backZOffset={sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) : 0}
+              renderMode={renderMode}
+              isHighlighted={false}
+              isFloating={false}
+              baseHeight={spaceInfo?.baseConfig?.height || 65}
+              baseDepth={spaceInfo?.baseConfig?.depth || 0}
+              viewMode={viewMode}
+              view2DDirection={view2DDirection}
+            />
+          );
+        })()}
         </group>
       )}
 

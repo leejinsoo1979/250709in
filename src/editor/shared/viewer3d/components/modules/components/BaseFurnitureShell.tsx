@@ -1016,6 +1016,15 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           // 띄움 배치 여부 확인 (lowerSectionTopOffsetMm이 0보다 크면 띄움 배치)
           const isActuallyFloating = lowerSectionTopOffsetMm !== undefined && lowerSectionTopOffsetMm > 0;
 
+          console.log('🦶 [BaseFurnitureShell] 조절발 렌더링 체크:', {
+            moduleId: moduleData.id,
+            lowerSectionTopOffsetMm,
+            isActuallyFloating,
+            shouldRender: !isActuallyFloating,
+            spaceConfigPlacementType: spaceInfo?.baseConfig?.placementType,
+            spaceConfigFloatHeight: spaceInfo?.baseConfig?.floatHeight
+          });
+
           // 띄움 배치가 아닐 때만 조절발 렌더링
           if (isActuallyFloating) {
             return null;
