@@ -50,7 +50,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   lowerDoorTopGap,
   lowerDoorBottomGap,
   lowerSectionDepth,
-  upperSectionDepth
+  upperSectionDepth,
+  lowerSectionTopOffset
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -585,20 +586,22 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         </>
       )}
 
-        {/* 조절발통 (네 모서리) */}
-        <AdjustableFootsRenderer
-          width={width}
-          depth={depth}
-          yOffset={-height / 2}
-          backZOffset={sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) : 0}
-          renderMode={renderMode}
-          isHighlighted={false}
-          isFloating={false}
-          baseHeight={spaceInfo?.baseConfig?.height || 65}
-          baseDepth={spaceInfo?.baseConfig?.depth || 0}
-          viewMode={viewMode}
-          view2DDirection={view2DDirection}
-        />
+        {/* 조절발통 (네 모서리) - 띄움 배치 시에는 렌더링하지 않음 */}
+        {!(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
+          <AdjustableFootsRenderer
+            width={width}
+            depth={depth}
+            yOffset={-height / 2}
+            backZOffset={sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) : 0}
+            renderMode={renderMode}
+            isHighlighted={false}
+            isFloating={false}
+            baseHeight={spaceInfo?.baseConfig?.height || 65}
+            baseDepth={spaceInfo?.baseConfig?.depth || 0}
+            viewMode={viewMode}
+            view2DDirection={view2DDirection}
+          />
+        )}
         </group>
       )}
 

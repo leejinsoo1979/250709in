@@ -40,7 +40,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   placedFurnitureId,
   visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
   textureUrl,
-  panelGrainDirections
+  panelGrainDirections,
+  lowerSectionTopOffset
 }) => {
   // 공통 로직 사용 (좌측 깊이만 반영)
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -1350,19 +1351,21 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
           {!isDragging && renderAsymmetricSections()}
 
-          {/* 조절발통 (네 모서리) */}
-          <AdjustableFootsRenderer
-            width={width}
-            depth={depth}
-            yOffset={-height / 2}
-            renderMode={renderMode}
-            isHighlighted={false}
-            isFloating={false}
-            baseHeight={spaceInfo?.baseConfig?.height || 65}
-            baseDepth={spaceInfo?.baseConfig?.depth || 0}
-            viewMode={viewMode}
-            view2DDirection={view2DDirection}
-          />
+          {/* 조절발통 (네 모서리) - 띄움 배치 시에는 렌더링하지 않음 */}
+          {!(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
+            <AdjustableFootsRenderer
+              width={width}
+              depth={depth}
+              yOffset={-height / 2}
+              renderMode={renderMode}
+              isHighlighted={false}
+              isFloating={false}
+              baseHeight={spaceInfo?.baseConfig?.height || 65}
+              baseDepth={spaceInfo?.baseConfig?.depth || 0}
+              viewMode={viewMode}
+              view2DDirection={view2DDirection}
+            />
+          )}
         </>
       )}
 

@@ -48,7 +48,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   lowerDoorTopGap,
   lowerDoorBottomGap,
   grainDirection,
-  panelGrainDirections
+  panelGrainDirections,
+  lowerSectionTopOffset
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -746,7 +747,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       )}
 
       {/* 조절발통 (네 모서리) - showFurniture가 true일 때만 렌더링 */}
-      {showFurniture && (() => {
+      {showFurniture && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (() => {
         // 하부 섹션 깊이 사용 (조절발은 하부 섹션에 붙음)
         const lowerDepth = sectionDepths[0] || depth;
         const depthDiff = depth - lowerDepth;
