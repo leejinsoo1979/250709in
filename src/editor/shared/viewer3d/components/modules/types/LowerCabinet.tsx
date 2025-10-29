@@ -33,7 +33,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   slotCenterX,
   adjustedWidth,
   slotWidths, // 듀얼 가구의 개별 슬롯 너비들
-  showFurniture = true
+  showFurniture = true,
+  lowerSectionTopOffset
 }) => {
   const { renderMode, viewMode } = useSpace3DView();
   
@@ -85,13 +86,14 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
       {showFurniture && (
         <>
           <group position={[0, cabinetYPosition, 0]}>
-            <BaseFurnitureShell 
-              {...baseFurniture} 
+            <BaseFurnitureShell
+              {...baseFurniture}
               height={adjustedHeight}
-              isDragging={isDragging} 
-              isEditMode={isEditMode} 
+              isDragging={isDragging}
+              isEditMode={isEditMode}
               hasBackPanel={hasBackPanel}
-              spaceInfo={spaceInfo}>
+              spaceInfo={spaceInfo}
+              lowerSectionTopOffsetMm={lowerSectionTopOffset}>
             {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
             {!isDragging && (
               <>

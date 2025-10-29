@@ -36,7 +36,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   upperDoorTopGap,
   upperDoorBottomGap,
   lowerDoorTopGap,
-  lowerDoorBottomGap
+  lowerDoorBottomGap,
+  lowerSectionTopOffset
 }) => {
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -172,6 +173,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           placedFurnitureId={placedFurnitureId}
           lowerSectionDepthMm={lowerSectionDepth}
           upperSectionDepthMm={upperSectionDepth}
+          lowerSectionTopOffsetMm={lowerSectionTopOffset}
           textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
         >
