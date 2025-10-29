@@ -1886,7 +1886,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             if (!moduleData) return;
 
             const moduleHeight = module.customHeight ?? moduleData.dimensions.height;
-            const moduleTopY = bottomFrameTopY + mmToThreeUnits(moduleHeight);
+            // 띄움배치 시에는 floatHeight를 기준으로, 아니면 bottomFrameTopY를 기준으로
+            const furnitureStartY = isFloating ? mmToThreeUnits(floatHeight) : bottomFrameTopY;
+            const moduleTopY = furnitureStartY + mmToThreeUnits(moduleHeight);
 
             if (moduleTopY > maxFurnitureTop) {
               maxFurnitureTop = moduleTopY;
@@ -1909,7 +1911,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const hasFurnitureHeight = maxModuleHeightMm > 0;
           const furnitureHeightValue = hasFurnitureHeight ? maxModuleHeightMm : cabinetPlacementHeight;
           const furnitureTopY = hasFurnitureHeight ? tallestModuleTopY : cabinetAreaTopY;
-          const furnitureTextY = bottomFrameTopY + (furnitureTopY - bottomFrameTopY) / 2;
+          // 띄움배치 시에는 floatHeight를 기준으로 텍스트 위치 계산
+          const furnitureStartY = isFloating ? mmToThreeUnits(floatHeight) : bottomFrameTopY;
+          const furnitureTextY = furnitureStartY + (furnitureTopY - furnitureStartY) / 2;
 
           const topFrameLineTopY = topFrameTopY;
           const extraFurnitureHeightUnits = maxFurnitureTop - topFrameLineTopY;
