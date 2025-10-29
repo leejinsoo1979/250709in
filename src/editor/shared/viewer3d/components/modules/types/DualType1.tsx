@@ -44,6 +44,12 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   lowerSectionTopOffset,
   panelGrainDirections: propsPanelGrainDirections
 }) => {
+  console.log('🔍 [DualType1] Props 확인:', {
+    moduleId: moduleData.id,
+    lowerSectionTopOffset,
+    hasLowerSectionTopOffset: lowerSectionTopOffset !== undefined
+  });
+
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
     color,

@@ -2111,7 +2111,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   doorBottomGap={placedModule.doorBottomGap} // 바닥에서 도어 하단까지의 갭
                   lowerSectionDepth={placedModule.lowerSectionDepth} // 하부 섹션 깊이 (mm)
                   upperSectionDepth={placedModule.upperSectionDepth} // 상부 섹션 깊이 (mm)
-                  lowerSectionTopOffset={placedModule.lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm)
+                  lowerSectionTopOffset={
+                    placedModule.lowerSectionTopOffset ??
+                    (spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : undefined)
+                  } // 하부 섹션 상판 오프셋 (mm) - placedModule에 없으면 현재 spaceInfo에서 계산
                   doorSplit={placedModule.doorSplit}
                   upperDoorTopGap={placedModule.upperDoorTopGap}
                   upperDoorBottomGap={placedModule.upperDoorBottomGap}
