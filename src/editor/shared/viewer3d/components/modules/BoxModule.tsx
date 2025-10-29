@@ -56,6 +56,7 @@ interface BoxModuleProps {
   upperDoorBottomGap?: number; // 상부 섹션 도어 하단 갭
   lowerDoorTopGap?: number; // 하부 섹션 도어 상단 갭
   lowerDoorBottomGap?: number; // 하부 섹션 도어 하단 갭
+  lowerSectionTopOffset?: number; // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (하위 호환성)
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
   // 이벤트 핸들러 추가
@@ -111,6 +112,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   upperDoorBottomGap,
   lowerDoorTopGap,
   lowerDoorBottomGap,
+  lowerSectionTopOffset, // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
   grainDirection, // 텍스처 결 방향
   panelGrainDirections, // 패널별 개별 결 방향
   // 이벤트 핸들러들
