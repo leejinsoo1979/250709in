@@ -93,6 +93,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               isEditMode={isEditMode}
               hasBackPanel={hasBackPanel}
               spaceInfo={spaceInfo}
+              moduleData={moduleData}
               lowerSectionTopOffsetMm={lowerSectionTopOffset}>
             {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
             {!isDragging && (
