@@ -32,7 +32,9 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   adjustedWidth,
   slotWidths, // 듀얼 가구의 개별 슬롯 너비들
   showFurniture = true,
-  lowerSectionTopOffset
+  lowerSectionTopOffset,
+  placedFurnitureId,
+  panelGrainDirections
 }) => {
   const { renderMode, viewMode } = useSpace3DView();
   

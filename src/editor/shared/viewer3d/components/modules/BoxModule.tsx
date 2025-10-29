@@ -544,6 +544,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex}
         showFurniture={showFurniture} // 가구 본체 표시 여부
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        placedFurnitureId={placedFurnitureId}
+        panelGrainDirections={panelGrainDirections}
       />
       </>
     );
@@ -575,6 +577,8 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         slotIndex={slotIndex}
         showFurniture={showFurniture} // 가구 본체 표시 여부
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        placedFurnitureId={placedFurnitureId}
+        panelGrainDirections={panelGrainDirections}
       />
       </>
     );
