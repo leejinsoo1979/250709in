@@ -143,10 +143,8 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
       key={module.id}
       className={`${styles.moduleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''} ${isSelected ? styles.moduleItemSelected : ''}`}
       tabIndex={-1}
-      draggable={isValid || needsWarning}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      title={needsWarning ? '배치슬롯의 사이즈를 늘려주세요' : (!isValid ? '내경 공간에 맞지 않는 모듈입니다' : '클릭하여 선택하거나 드래그하여 배치하세요')}
+      draggable={false}
+      title={needsWarning ? '배치슬롯의 사이즈를 늘려주세요' : (!isValid ? '내경 공간에 맞지 않는 모듈입니다' : '클릭하여 선택하세요')}
       style={{
         cursor: (isValid || needsWarning) ? 'pointer' : 'not-allowed'
       }}
