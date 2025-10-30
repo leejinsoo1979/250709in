@@ -11,8 +11,11 @@ interface CabinetModuleItemProps {
 }
 
 const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalSpace }) => {
+  console.log('🏗️ CabinetModuleItem 렌더링:', module.id, module.name);
+
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
+  const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const { openFurniturePopup, setIsSlotDragging } = useUIStore();
   const itemRef = useRef<HTMLDivElement>(null);
   
@@ -47,17 +50,44 @@ const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalS
     return wrapper;
   };
 
+  // 클릭 핸들러
+  const handleClick = () => {
+    console.log('🔵 CabinetModuleItem 클릭:', module.id);
+    if (isValid || needsWarning) {
+      setSelectedFurnitureId(module.id);
+      console.log('🎯 가구 선택됨:', module.id);
+    }
+  };
+
+  // useEffect로 직접 DOM에 클릭 이벤트 추가
+  React.useEffect(() => {
+    const element = itemRef.current;
+    if (!element) return;
+
+    element.addEventListener('click', handleClick, true);
+    console.log('✅ 클릭 리스너 추가됨:', module.id);
+
+    return () => {
+      element.removeEventListener('click', handleClick, true);
+    };
+  }, [module.id, isValid, needsWarning]);
+
   // 네이티브 HTML5 드래그 시작 핸들러
   const handleDragStart = (e: React.DragEvent) => {
     if (!isValid && !needsWarning) {
       e.preventDefault();
       return;
     }
-    
+
+    console.log('🚀 드래그 시작:', module.id);
+
+    // 드래그 시작 시 가구 선택 (고스트 표시용)
+    setSelectedFurnitureId(module.id);
+
     // 가구 배치 모드 활성화
     setFurniturePlacementMode(true);
     setIsSlotDragging(true); // 슬롯 드래그 시작
-    
+
     // 드래그 데이터 설정 (도어 정보 포함)
     const dragData = {
       type: 'furniture',
@@ -72,10 +102,10 @@ const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalS
         needsWarning: needsWarning // 경고 필요 여부 추가
       }
     };
-    
+
     e.dataTransfer.setData('application/json', JSON.stringify(dragData));
     e.dataTransfer.setData('text/plain', module.id);
-    
+
     e.dataTransfer.effectAllowed = 'copy';
     
     // 간단한 드래그 아이콘 설정
@@ -88,6 +118,8 @@ const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalS
   };
 
   const handleDragEnd = () => {
+    console.log('🛑 드래그 종료:', module.id);
+
     // 가구 배치 모드 비활성화
     setFurniturePlacementMode(false);
     setIsSlotDragging(false); // 슬롯 드래그 종료
@@ -95,6 +127,8 @@ const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalS
     // 전역 드래그 상태 초기화를 지연시켜 drop 이벤트가 먼저 처리되도록 함
     setTimeout(() => {
       setCurrentDragData(null);
+      // 드래그 종료 후 선택 해제
+      setSelectedFurnitureId(null);
     }, 100);
   };
 
@@ -105,18 +139,20 @@ const CabinetModuleItem: React.FC<CabinetModuleItemProps> = ({ module, internalS
     return '';
   };
 
+  // 선택된 가구인지 확인
+  const selectedFurnitureId = useFurnitureStore(state => state.selectedFurnitureId);
+  const isSelected = selectedFurnitureId === module.id;
+
   return (
     <div
       ref={itemRef}
       key={module.id}
-      className={`${styles.moduleItem} ${styles.cabinetModuleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''}`}
+      className={`${styles.moduleItem} ${styles.cabinetModuleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''} ${isSelected ? styles.moduleItemSelected : ''}`}
       tabIndex={-1}
-      draggable={isValid || needsWarning}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      title={needsWarning ? '배치슬롯의 사이즈를 늘려주세요' : (!isValid ? '내경 공간에 맞지 않는 모듈입니다' : '드래그하여 배치하세요')}
-      style={{ 
-        cursor: (isValid || needsWarning) ? 'grab' : 'not-allowed'
+      draggable={false}
+      title={needsWarning ? '배치슬롯의 사이즈를 늘려주세요' : (!isValid ? '내경 공간에 맞지 않는 모듈입니다' : '클릭하여 선택하세요')}
+      style={{
+        cursor: (isValid || needsWarning) ? 'pointer' : 'not-allowed'
       }}
     >
       {/* 2D 썸네일 */}
