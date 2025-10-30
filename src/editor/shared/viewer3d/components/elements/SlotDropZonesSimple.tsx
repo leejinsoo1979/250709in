@@ -2866,8 +2866,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             const zoneMatches = hoveredZone ? (hoveredZone === slotZone) : true;
             shouldRenderGhost = compareIndex === hoveredSlotIndex && zoneMatches;
           }
-          // 클릭 모드: 모든 빈 슬롯에 고스트 표시
-          else if (selectedFurnitureId && !currentDragData) {
+          // 클릭 모드: 모든 빈 슬롯에 고스트 표시 (hoveredSlotIndex가 null이면 클릭 모드)
+          else if (selectedFurnitureId && hoveredSlotIndex === null) {
             // 슬롯이 비어있는지 확인
             const slotOccupied = placedModules.some(m => {
               if (isDual) {
