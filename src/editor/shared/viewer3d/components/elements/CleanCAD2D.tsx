@@ -258,6 +258,52 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   });
   const { updateColumn } = useSpaceConfigStore();
   const groupRef = useRef<THREE.Group>(null);
+
+  // 가구 높이 계산을 useMemo로 메모이제이션 - placedModules 변경 시 자동 업데이트
+  const furnitureHeights = useMemo(() => {
+    const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
+    const topFrameHeight = frameSize.top ?? 0;
+    const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+    const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+    const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+    const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+
+    let maxLowerCabinetHeightMm = 0;
+    let maxUpperCabinetHeightMm = 0;
+
+    if (placedModules.length > 0) {
+      placedModules.forEach(module => {
+        const moduleData = getModuleById(module.moduleId);
+        if (moduleData) {
+          const moduleHeight = module.customHeight ?? moduleData.dimensions.height;
+
+          // 상하부장 분류
+          if (moduleData.category === 'lower' && moduleHeight > maxLowerCabinetHeightMm) {
+            maxLowerCabinetHeightMm = moduleHeight;
+          }
+          if (moduleData.category === 'upper' && moduleHeight > maxUpperCabinetHeightMm) {
+            maxUpperCabinetHeightMm = moduleHeight;
+          }
+        }
+      });
+    }
+
+    // 띄움 배치 시 상부섹션 높이 조정
+    const adjustedUpperCabinetHeightMm = isFloating && maxUpperCabinetHeightMm > 0
+      ? maxUpperCabinetHeightMm - (floatHeight - bottomFrameHeight)
+      : 0;
+
+    return {
+      maxLowerCabinetHeightMm,
+      maxUpperCabinetHeightMm,
+      adjustedUpperCabinetHeightMm,
+      isFloating,
+      floatHeight,
+      floorFinishHeightMm,
+      bottomFrameHeight,
+      topFrameHeight
+    };
+  }, [placedModules, spaceInfo.baseConfig, spaceInfo.frameSize, spaceInfo.hasFloorFinish, spaceInfo.floorFinish]);
   
   // 그룹의 모든 자식 요소들에 renderOrder와 depthTest 설정
   useEffect(() => {
@@ -2862,16 +2908,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         <group>
           {(() => {
             const rightDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(120); // 우측 치수선 위치
-            const topFrameHeight = frameSize.top ?? 0; // 상부 프레임 높이
-            const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0; // 하부 프레임 높이 (받침대가 있는 경우만)
+
+            // useMemo로 메모이제이션된 값 사용
+            const {
+              maxLowerCabinetHeightMm,
+              adjustedUpperCabinetHeightMm,
+              isFloating,
+              floatHeight,
+              floorFinishHeightMm,
+              bottomFrameHeight,
+              topFrameHeight
+            } = furnitureHeights;
+
             const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역
-
-            // 띄움 배치 확인
-            const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-            const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-
-            // 바닥재 높이 계산
-            const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
 
             const bottomY = 0; // 바닥
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 하부 프레임 상단
@@ -2882,11 +2931,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             let maxFurnitureTop = topFrameTopY;
             let maxModuleHeightMm = 0;
             let tallestModuleTopY = cabinetAreaTopY;
-
-            // 상하부장 높이 계산 (띄움 배치 시 표시용)
-            let maxLowerCabinetHeightMm = 0;
-            let maxUpperCabinetHeightMm = 0;
-            let adjustedUpperCabinetHeightMm = 0; // 띄움 배치 시 조정된 상부섹션 높이
 
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
@@ -2903,23 +2947,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     maxModuleHeightMm = moduleHeight;
                     tallestModuleTopY = moduleTopY;
                   }
-
-                  // 상하부장 분류
-                  if (moduleData.category === 'lower' && moduleHeight > maxLowerCabinetHeightMm) {
-                    maxLowerCabinetHeightMm = moduleHeight;
-                  }
-                  if (moduleData.category === 'upper' && moduleHeight > maxUpperCabinetHeightMm) {
-                    maxUpperCabinetHeightMm = moduleHeight;
-                  }
                 }
               });
-
-              // 띄움 배치 시 상부섹션 높이 조정
-              // 상부섹션(조정) = 상부섹션(원본) - (띄움높이 - 하부프레임)
-              if (isFloating && maxUpperCabinetHeightMm > 0) {
-                const heightReduction = floatHeight - bottomFrameHeight;
-                adjustedUpperCabinetHeightMm = maxUpperCabinetHeightMm - heightReduction;
-              }
             }
 
             const hasFurnitureHeight = maxModuleHeightMm > 0;
@@ -3790,16 +3819,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         <group>
           {(() => {
             const leftDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(120);
-            const topFrameHeight = frameSize.top ?? 0;
-            const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+
+            // useMemo로 메모이제이션된 값 사용
+            const {
+              maxLowerCabinetHeightMm,
+              adjustedUpperCabinetHeightMm,
+              isFloating,
+              floatHeight,
+              floorFinishHeightMm,
+              bottomFrameHeight,
+              topFrameHeight
+            } = furnitureHeights;
+
             const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0);
-
-            // 띄움 배치 확인
-            const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-            const floatHeight = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
-
-            // 바닥재 높이 계산
-            const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
 
             const bottomY = 0;
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight);
@@ -3810,11 +3842,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             let maxFurnitureTop = topFrameTopY;
             let maxModuleHeightMm = 0;
             let tallestModuleTopY = cabinetAreaTopY;
-
-            // 상하부장 높이 계산 (띄움 배치 시 표시용)
-            let maxLowerCabinetHeightMm = 0;
-            let maxUpperCabinetHeightMm = 0;
-            let adjustedUpperCabinetHeightMm = 0; // 띄움 배치 시 조정된 상부섹션 높이
 
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
@@ -3831,23 +3858,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     maxModuleHeightMm = moduleHeight;
                     tallestModuleTopY = moduleTopY;
                   }
-
-                  // 상하부장 분류
-                  if (moduleData.category === 'lower' && moduleHeight > maxLowerCabinetHeightMm) {
-                    maxLowerCabinetHeightMm = moduleHeight;
-                  }
-                  if (moduleData.category === 'upper' && moduleHeight > maxUpperCabinetHeightMm) {
-                    maxUpperCabinetHeightMm = moduleHeight;
-                  }
                 }
               });
-
-              // 띄움 배치 시 상부섹션 높이 조정
-              // 상부섹션(조정) = 상부섹션(원본) - (띄움높이 - 하부프레임)
-              if (isFloating && maxUpperCabinetHeightMm > 0) {
-                const heightReduction = floatHeight - bottomFrameHeight;
-                adjustedUpperCabinetHeightMm = maxUpperCabinetHeightMm - heightReduction;
-              }
             }
 
             const hasFurnitureHeight = maxModuleHeightMm > 0;
