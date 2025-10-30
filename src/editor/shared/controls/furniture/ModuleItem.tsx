@@ -14,6 +14,7 @@ interface ModuleItemProps {
 const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
+  const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const { openFurniturePopup, setIsSlotDragging } = useUIStore();
   const itemRef = useRef<HTMLDivElement>(null);
 
@@ -101,6 +102,13 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     }, 100);
   };
 
+  // 섬네일 클릭 핸들러 - 가구 선택 시 슬롯에 + 아이콘 표시
+  const handleClick = () => {
+    if (isValid || needsWarning) {
+      setSelectedFurnitureId(module.id);
+      console.log('🎯 가구 선택됨:', module.id, module.name);
+    }
+  };
 
   return (
     <div
@@ -109,11 +117,12 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
       className={`${styles.moduleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''}`}
       tabIndex={-1}
       draggable={isValid || needsWarning}
+      onClick={handleClick}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
-      title={needsWarning ? '배치슬롯의 사이즈를 늘려주세요' : (!isValid ? '내경 공간에 맞지 않는 모듈입니다' : '드래그하여 배치하세요')}
-      style={{ 
-        cursor: (isValid || needsWarning) ? 'grab' : 'not-allowed'
+      title={needsWarning ? '배치슬롯의 사이즈를 늘려주세요' : (!isValid ? '내경 공간에 맞지 않는 모듈입니다' : '클릭하여 선택하거나 드래그하여 배치하세요')}
+      style={{
+        cursor: (isValid || needsWarning) ? 'pointer' : 'not-allowed'
       }}
     >
       <div className={styles.modulePreview}>

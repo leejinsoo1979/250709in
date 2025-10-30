@@ -22,12 +22,14 @@ import DroppedCeilingSpace from './components/elements/DroppedCeilingSpace';
 import { MeasurementTool } from './components/elements/MeasurementTool';
 
 import SlotDropZonesSimple from './components/elements/SlotDropZonesSimple';
+import SlotPlacementIndicators from './components/elements/SlotPlacementIndicators';
 import FurniturePlacementPlane from './components/elements/FurniturePlacementPlane';
 import FurnitureItem from './components/elements/furniture/FurnitureItem';
 import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelBetweenCabinets';
 import UpperCabinetIndirectLight from './components/elements/furniture/UpperCabinetIndirectLight';
 import InternalDimensionDisplay from './components/elements/InternalDimensionDisplay';
 import ViewerToolbar from './components/ViewerToolbar';
+import { useFurniturePlacement } from './components/elements/furniture/hooks/useFurniturePlacement';
 
 
 import { useLocation } from 'react-router-dom';
@@ -57,6 +59,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const { view2DDirection, showDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture, isMeasureMode, toggleMeasureMode, isEraserMode } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
+  const { placeFurniture } = useFurniturePlacement();
   
   // 기둥 위치 업데이트를 8ms(120fps)로 제한하여 부드러운 움직임
   const throttledUpdateColumn = useThrottle((id: string, updates: any) => {
@@ -1508,6 +1511,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
             <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} />
+
+            {/* 슬롯 배치 인디케이터 - 가구 선택 시 + 아이콘 표시 */}
+            <SlotPlacementIndicators onSlotClick={placeFurniture} />
 
             {/* 내경 치수 표시 - showDimensions 상태에 따라 표시/숨김 */}
             <InternalDimensionDisplay />
