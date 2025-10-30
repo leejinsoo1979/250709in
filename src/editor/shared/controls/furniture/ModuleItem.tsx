@@ -51,12 +51,39 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
 
 
 
+  // 클릭 핸들러
+  const handleClick = () => {
+    console.log('🔵 ModuleItem 클릭:', module.id);
+    if (isValid || needsWarning) {
+      setSelectedFurnitureId(module.id);
+      console.log('🎯 가구 선택됨:', module.id);
+    }
+  };
+
+  // useEffect로 직접 DOM에 클릭 이벤트 추가
+  React.useEffect(() => {
+    const element = itemRef.current;
+    if (!element) return;
+
+    element.addEventListener('click', handleClick, true);
+    console.log('✅ 클릭 리스너 추가됨:', module.id);
+
+    return () => {
+      element.removeEventListener('click', handleClick, true);
+    };
+  }, [module.id, isValid, needsWarning]);
+
   // 네이티브 HTML5 드래그 시작 핸들러
   const handleDragStart = (e: React.DragEvent) => {
     if (!isValid && !needsWarning) {
       e.preventDefault();
       return;
     }
+
+    console.log('🚀 드래그 시작:', module.id);
+
+    // 드래그 시작 시 가구 선택 (고스트 표시용)
+    setSelectedFurnitureId(module.id);
 
     // 가구 배치 모드 활성화
     setFurniturePlacementMode(true);
@@ -92,6 +119,8 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
   };
 
   const handleDragEnd = () => {
+    console.log('🛑 드래그 종료:', module.id);
+
     // 가구 배치 모드 비활성화
     setFurniturePlacementMode(false);
     setIsSlotDragging(false); // 슬롯 드래그 종료
@@ -99,25 +128,22 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     // 전역 드래그 상태 초기화를 지연시켜 drop 이벤트가 먼저 처리되도록 함
     setTimeout(() => {
       setCurrentDragData(null);
+      // 드래그 종료 후 선택 해제
+      setSelectedFurnitureId(null);
     }, 100);
   };
 
-  // 섬네일 클릭 핸들러 - 가구 선택 시 슬롯에 + 아이콘 표시
-  const handleClick = () => {
-    if (isValid || needsWarning) {
-      setSelectedFurnitureId(module.id);
-      console.log('🎯 가구 선택됨:', module.id, module.name);
-    }
-  };
+  // 선택된 가구인지 확인
+  const selectedFurnitureId = useFurnitureStore(state => state.selectedFurnitureId);
+  const isSelected = selectedFurnitureId === module.id;
 
   return (
     <div
       ref={itemRef}
       key={module.id}
-      className={`${styles.moduleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''}`}
+      className={`${styles.moduleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''} ${isSelected ? styles.moduleItemSelected : ''}`}
       tabIndex={-1}
       draggable={isValid || needsWarning}
-      onClick={handleClick}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       title={needsWarning ? '배치슬롯의 사이즈를 늘려주세요' : (!isValid ? '내경 공간에 맞지 않는 모듈입니다' : '클릭하여 선택하거나 드래그하여 배치하세요')}
