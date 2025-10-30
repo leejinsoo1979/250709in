@@ -2938,28 +2938,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             return (
               <>
                 {/* 1. 띄움 높이 또는 하부 프레임 높이 */}
-                {/* 띄움 배치인 경우: 띄움 높이 표시 (바닥 0부터 시작) */}
+                {/* 띄움 배치인 경우: 띄움 높이 표시 (실제 가구 위치에 맞춤) */}
                 {isFloating && floatHeight > 0 && (
                 <group>
                   <Line
-                    points={[[0, bottomY, rightDimensionZ], [0, mmToThreeUnits(floatHeight), rightDimensionZ]]}
+                    points={[[0, mmToThreeUnits(floorFinishHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, bottomY, rightDimensionZ], [0, bottomY + 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm) + 0.03, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floatHeight), rightDimensionZ], [0, mmToThreeUnits(floatHeight) + 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.03, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[0, mmToThreeUnits(floatHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, mmToThreeUnits(floorFinishHeightMm) + mmToThreeUnits(floatHeight / 2), rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -3009,24 +3009,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {isFloating && maxLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[0, mmToThreeUnits(floatHeight), rightDimensionZ], [0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), rightDimensionZ]]}
+                    points={[[0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floatHeight), rightDimensionZ], [0, mmToThreeUnits(floatHeight) + 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.03, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm) - 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) - 0.03, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, mmToThreeUnits(floorFinishHeightMm + floatHeight) + mmToThreeUnits(maxLowerCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -3075,24 +3075,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {isFloating && adjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ]]}
+                    points={[[0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm) + 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + 0.03, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.03, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + mmToThreeUnits(adjustedUpperCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -3866,28 +3866,28 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             return (
               <>
                 {/* 1. 띄움 높이 또는 하부 프레임 높이 */}
-                {/* 띄움 배치인 경우: 띄움 높이 표시 (바닥 0부터 시작) */}
+                {/* 띄움 배치인 경우: 띄움 높이 표시 (실제 가구 위치에 맞춤) */}
                 {isFloating && floatHeight > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, bottomY, leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight), leftDimensionZ]]}
+                    points={[[spaceWidth, mmToThreeUnits(floorFinishHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, bottomY, leftDimensionZ], [spaceWidth, bottomY + 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm) + 0.03, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight) + 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.03, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[spaceWidth, mmToThreeUnits(floatHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, mmToThreeUnits(floorFinishHeightMm) + mmToThreeUnits(floatHeight / 2), leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -3937,24 +3937,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {isFloating && maxLowerCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, mmToThreeUnits(floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), leftDimensionZ]]}
+                    points={[[spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight) + 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight) + 0.03, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm) - 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) - 0.03, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight) + mmToThreeUnits(maxLowerCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
@@ -4003,24 +4003,24 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {isFloating && adjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ]]}
+                    points={[[spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm) + 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + 0.03, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.03, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, mmToThreeUnits(floorFinishHeightMm + floatHeight + maxLowerCabinetHeightMm) + mmToThreeUnits(adjustedUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
