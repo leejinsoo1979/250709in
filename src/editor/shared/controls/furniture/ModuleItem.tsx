@@ -56,7 +56,8 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
     console.log('🔵 ModuleItem 클릭:', module.id);
     if (isValid || needsWarning) {
       setSelectedFurnitureId(module.id);
-      console.log('🎯 가구 선택됨:', module.id);
+      setFurniturePlacementMode(true); // 클릭 시 배치 모드 활성화 (고스트 프리뷰용)
+      console.log('🎯 가구 선택됨:', module.id, '- 배치 모드 활성화');
     }
   };
 
@@ -143,7 +144,9 @@ const ModuleItem: React.FC<ModuleItemProps> = ({ module, internalSpace }) => {
       key={module.id}
       className={`${styles.moduleItem} ${!isValid && !needsWarning ? styles.moduleItemDisabled : ''} ${needsWarning ? styles.moduleItemWarning : ''} ${isDynamic ? styles.moduleItemDynamic : ''} ${isSelected ? styles.moduleItemSelected : ''}`}
       tabIndex={-1}
-      draggable={false}
+      draggable={isValid || needsWarning}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
       title={needsWarning ? '배치슬롯의 사이즈를 늘려주세요' : (!isValid ? '내경 공간에 맞지 않는 모듈입니다' : '클릭하여 선택하세요')}
       style={{
         cursor: (isValid || needsWarning) ? 'pointer' : 'not-allowed'
