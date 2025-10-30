@@ -969,6 +969,12 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   }
 
   const fullModules = categoryModules;
+  console.log('🏗️ ModuleGallery 렌더링:', {
+    moduleCategory,
+    fullModulesCount: fullModules.length,
+    selectedType,
+    adjustedInternalSpace
+  });
   
   // 싱글(1컬럼)과 듀얼(2컬럼) 모듈로 분류 (동적 크기 조정을 위해 ID 기반 분류)
   const { singleModules, dualModules } = useMemo(() => {
