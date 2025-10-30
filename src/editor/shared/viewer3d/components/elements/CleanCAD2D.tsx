@@ -2883,6 +2883,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 상하부장 높이 계산 (띄움 배치 시 표시용)
             let maxLowerCabinetHeightMm = 0;
             let maxUpperCabinetHeightMm = 0;
+            let adjustedUpperCabinetHeightMm = 0; // 띄움 배치 시 조정된 상부섹션 높이
 
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
@@ -2909,6 +2910,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   }
                 }
               });
+
+              // 띄움 배치 시 상부섹션 높이 조정
+              // 상부섹션(조정) = 상부섹션(원본) - (띄움높이 - 하부프레임)
+              if (isFloating && maxUpperCabinetHeightMm > 0) {
+                const heightReduction = floatHeight - bottomFrameHeight;
+                adjustedUpperCabinetHeightMm = maxUpperCabinetHeightMm - heightReduction;
+              }
             }
 
             const hasFurnitureHeight = maxModuleHeightMm > 0;
@@ -3061,10 +3069,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3. 상부섹션 높이 (띄움 배치이고 상부장이 있는 경우) */}
-                {isFloating && maxUpperCabinetHeightMm > 0 && (
+                {isFloating && adjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm), rightDimensionZ]]}
+                    points={[[0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -3074,21 +3082,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm) - 0.03, rightDimensionZ])}
+                    points={createArrowHead([0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), rightDimensionZ], [0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.03, rightDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
+                    position={[0, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm / 2), rightDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, -Math.PI / 2, -Math.PI / 2]}
                   >
-                    {maxUpperCabinetHeightMm}
+                    {adjustedUpperCabinetHeightMm}
                   </Text>
                 </group>
                 )}
@@ -3800,6 +3808,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             // 상하부장 높이 계산 (띄움 배치 시 표시용)
             let maxLowerCabinetHeightMm = 0;
             let maxUpperCabinetHeightMm = 0;
+            let adjustedUpperCabinetHeightMm = 0; // 띄움 배치 시 조정된 상부섹션 높이
 
             if (placedModules.length > 0) {
               placedModules.forEach(module => {
@@ -3826,6 +3835,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   }
                 }
               });
+
+              // 띄움 배치 시 상부섹션 높이 조정
+              // 상부섹션(조정) = 상부섹션(원본) - (띄움높이 - 하부프레임)
+              if (isFloating && maxUpperCabinetHeightMm > 0) {
+                const heightReduction = floatHeight - bottomFrameHeight;
+                adjustedUpperCabinetHeightMm = maxUpperCabinetHeightMm - heightReduction;
+              }
             }
 
             const hasFurnitureHeight = maxModuleHeightMm > 0;
@@ -3978,10 +3994,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 )}
 
                 {/* 3. 상부섹션 높이 (띄움 배치이고 상부장이 있는 경우) */}
-                {isFloating && maxUpperCabinetHeightMm > 0 && (
+                {isFloating && adjustedUpperCabinetHeightMm > 0 && (
                 <group>
                   <Line
-                    points={[[spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm), leftDimensionZ]]}
+                    points={[[spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ]]}
                     color={dimensionColor}
                     lineWidth={1}
                   />
@@ -3991,21 +4007,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                     lineWidth={1}
                   />
                   <Line
-                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm) - 0.03, leftDimensionZ])}
+                    points={createArrowHead([spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm), leftDimensionZ], [spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm) - 0.03, leftDimensionZ])}
                     color={dimensionColor}
                     lineWidth={1}
                   />
                   <Text
                     renderOrder={1000}
                     depthTest={false}
-                    position={[spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + maxUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
+                    position={[spaceWidth, mmToThreeUnits(floatHeight + maxLowerCabinetHeightMm + adjustedUpperCabinetHeightMm / 2), leftDimensionZ + mmToThreeUnits(60)]}
                     fontSize={baseFontSize}
                     color={textColor}
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, 0, -Math.PI / 2]}
                   >
-                    {maxUpperCabinetHeightMm}
+                    {adjustedUpperCabinetHeightMm}
                   </Text>
                 </group>
                 )}
