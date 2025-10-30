@@ -2979,7 +2979,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const hasExtraFurnitureHeight = extraFurnitureHeightMm > 0;
             const extraFurnitureZ = rightDimensionZ + mmToThreeUnits(40);
             const extraFurnitureTextY = topFrameLineTopY + (maxFurnitureTop - topFrameLineTopY) / 2;
-            
+
+            console.log('📐 [좌측뷰] 치수 렌더링:', {
+              isFloating,
+              floatHeight,
+              maxLowerCabinetHeightMm,
+              adjustedUpperCabinetHeightMm,
+              floorFinishHeightMm,
+              bottomFrameHeight
+            });
+
             return (
               <>
                 {/* 1. 띄움 높이 또는 하부 프레임 높이 */}
@@ -3890,7 +3899,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const hasExtraFurnitureHeight = extraFurnitureHeightMm > 0;
             const extraFurnitureZ = leftDimensionZ + mmToThreeUnits(40);
             const extraFurnitureTextY = topFrameLineTopY + (maxFurnitureTop - topFrameLineTopY) / 2;
-            
+
+            console.log('📐 [우측뷰] 치수 렌더링:', {
+              isFloating,
+              floatHeight,
+              maxLowerCabinetHeightMm,
+              adjustedUpperCabinetHeightMm,
+              floorFinishHeightMm,
+              bottomFrameHeight
+            });
+
             return (
               <>
                 {/* 1. 띄움 높이 또는 하부 프레임 높이 */}
