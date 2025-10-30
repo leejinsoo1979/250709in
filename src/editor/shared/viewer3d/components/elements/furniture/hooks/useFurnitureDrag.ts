@@ -463,6 +463,14 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       let newCustomDepth: number | undefined = undefined;
       let newAdjustedWidth: number | undefined = undefined;
       let adjustedPosition = { x: finalX, y: currentModule.position.y, z: currentModule.position.z };
+
+      console.log('🎯 드래그 중 위치 계산:', {
+        moduleId: currentModule.id,
+        currentPositionY: currentModule.position.y,
+        adjustedPositionY: adjustedPosition.y,
+        floatMode: spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float',
+        floatHeight: spaceInfo.baseConfig?.floatHeight
+      });
       
       if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
         const columnDepth = targetSlotInfo.column.depth;
