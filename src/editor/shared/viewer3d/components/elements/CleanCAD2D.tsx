@@ -259,8 +259,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const { updateColumn } = useSpaceConfigStore();
   const groupRef = useRef<THREE.Group>(null);
 
+  // 가구 높이 배열을 추출하여 깊은 비교를 위한 의존성으로 사용
+  const furnitureHeightKeys = useMemo(
+    () => placedModules.map(m => `${m.id}-${m.moduleId}-${m.customHeight || 0}`).join(','),
+    [placedModules]
+  );
+
   // 가구 높이 계산을 useMemo로 메모이제이션 - placedModules 변경 시 자동 업데이트
   const furnitureHeights = useMemo(() => {
+    console.log('🔄 furnitureHeights 재계산 중...', { furnitureHeightKeys });
+
     const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
     const topFrameHeight = frameSize.top ?? 0;
     const bottomFrameHeight = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
@@ -293,6 +301,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       ? maxUpperCabinetHeightMm - (floatHeight - bottomFrameHeight)
       : 0;
 
+    console.log('✅ furnitureHeights 계산 완료:', {
+      maxLowerCabinetHeightMm,
+      maxUpperCabinetHeightMm,
+      adjustedUpperCabinetHeightMm,
+      isFloating,
+      floatHeight
+    });
+
     return {
       maxLowerCabinetHeightMm,
       maxUpperCabinetHeightMm,
@@ -303,7 +319,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       bottomFrameHeight,
       topFrameHeight
     };
-  }, [placedModules, spaceInfo.baseConfig, spaceInfo.frameSize, spaceInfo.hasFloorFinish, spaceInfo.floorFinish]);
+  }, [furnitureHeightKeys, spaceInfo.baseConfig, spaceInfo.frameSize, spaceInfo.hasFloorFinish, spaceInfo.floorFinish, placedModules]);
   
   // 그룹의 모든 자식 요소들에 renderOrder와 depthTest 설정
   useEffect(() => {
