@@ -877,81 +877,96 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let adjustedPosition = initialAdjustedPosition;
   
   if (isUpperCabinetForY && actualModuleData) {
-    // 상부장은 상부프레임 하단에 붙어야 함
-    const upperCabinetHeight = actualModuleData?.dimensions.height || 0; // 상부장 높이
-    
-    // 띄워서 배치 모드와 관계없이 상부장은 항상 상부프레임 하단에 붙어야 함
-    // 바닥 마감재 높이
-    const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-    
-    // 상부프레임 높이 - frameSize.top 사용
-    const topFrameHeightMm = spaceInfo.frameSize?.top || 10; // 기본값 10mm
-    
-    // 하부프레임 높이 - frameSize.bottom 사용  
-    const bottomFrameHeightMm = spaceInfo.frameSize?.bottom || 0;
-    
-    // 내경 높이 = 전체 높이 - 상부프레임 - 하부프레임 - 바닥마감재
-    const internalHeight = spaceInfo.height - topFrameHeightMm - bottomFrameHeightMm - floorFinishHeightMm;
-    
-    // 상부장 중심 Y = 바닥마감재 + 하부프레임 + 내경높이 - 상부장 높이/2
-    // 이렇게 하면 상부장 상단이 상부프레임 하단에 딱 붙음
-    const upperCabinetCenterY = (floorFinishHeightMm + bottomFrameHeightMm + internalHeight - upperCabinetHeight/2) * 0.01;
-    
-    adjustedPosition = {
-      ...adjustedPosition,
-      y: upperCabinetCenterY
-    };
-    
+    // 드래그 중일 때는 position.y 그대로 사용
+    if (isDraggingThis) {
+      adjustedPosition = {
+        ...adjustedPosition,
+        y: placedModule.position.y
+      };
+    } else {
+      // 상부장은 상부프레임 하단에 붙어야 함
+      const upperCabinetHeight = actualModuleData?.dimensions.height || 0; // 상부장 높이
+
+      // 띄워서 배치 모드와 관계없이 상부장은 항상 상부프레임 하단에 붙어야 함
+      // 바닥 마감재 높이
+      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+
+      // 상부프레임 높이 - frameSize.top 사용
+      const topFrameHeightMm = spaceInfo.frameSize?.top || 10; // 기본값 10mm
+
+      // 하부프레임 높이 - frameSize.bottom 사용
+      const bottomFrameHeightMm = spaceInfo.frameSize?.bottom || 0;
+
+      // 내경 높이 = 전체 높이 - 상부프레임 - 하부프레임 - 바닥마감재
+      const internalHeight = spaceInfo.height - topFrameHeightMm - bottomFrameHeightMm - floorFinishHeightMm;
+
+      // 상부장 중심 Y = 바닥마감재 + 하부프레임 + 내경높이 - 상부장 높이/2
+      // 이렇게 하면 상부장 상단이 상부프레임 하단에 딱 붙음
+      const upperCabinetCenterY = (floorFinishHeightMm + bottomFrameHeightMm + internalHeight - upperCabinetHeight/2) * 0.01;
+
+      adjustedPosition = {
+        ...adjustedPosition,
+        y: upperCabinetCenterY
+      };
+    }
     } 
   // 하부장과 키큰장의 띄워서 배치 처리
   else if ((isLowerCabinetForY || isTallCabinetForY) && actualModuleData) {
-    // 띄워서 배치 확인 - placementType이 명시적으로 'float'이고 type이 'stand'일 때만
-    const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-    
-    if (isFloatPlacement) {
-      // 바닥 마감재 높이
-      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? 
-                                  spaceInfo.floorFinish.height : 0;
-      const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
-      
-      // 띄움 높이 - baseConfig가 있을 때만 floatHeight 가져오기
-      const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
-      const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
-      
-      // 가구 높이
-      const furnitureHeight = (actualModuleData?.dimensions.height || 0) * 0.01; // mm to Three.js units
-      
-      // Y 위치 계산: 바닥마감재 + 띄움높이 + 가구높이/2
-      const yPos = floorFinishHeight + floatHeight + (furnitureHeight / 2);
-      
+    // 드래그 중일 때는 position.y 그대로 사용
+    if (isDraggingThis) {
       adjustedPosition = {
         ...adjustedPosition,
-        y: yPos
+        y: placedModule.position.y
       };
-      
-      } else {
-      // 일반 배치 (받침대 있거나 바닥 배치)
-      // 기본적으로 받침대 높이 65mm 적용, stand 타입일 때만 0
-      const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
-      const baseHeight = baseHeightMm * 0.01; // mm to Three.js units
-      
-      // 바닥 마감재 높이
-      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? 
-                                  spaceInfo.floorFinish.height : 0;
-      const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
-      
-      // 가구 높이
-      const furnitureHeight = (actualModuleData?.dimensions.height || 0) * 0.01; // mm to Three.js units
-      
-      // Y 위치 계산: 바닥마감재 + 받침대높이 + 가구높이/2
-      const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
-      
-      adjustedPosition = {
-        ...adjustedPosition,
-        y: yPos
-      };
-      
-      }
+    } else {
+      // 띄워서 배치 확인 - placementType이 명시적으로 'float'이고 type이 'stand'일 때만
+      const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+
+      if (isFloatPlacement) {
+        // 바닥 마감재 높이
+        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
+                                    spaceInfo.floorFinish.height : 0;
+        const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
+
+        // 띄움 높이 - baseConfig가 있을 때만 floatHeight 가져오기
+        const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+        const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
+
+        // 가구 높이
+        const furnitureHeight = (actualModuleData?.dimensions.height || 0) * 0.01; // mm to Three.js units
+
+        // Y 위치 계산: 바닥마감재 + 띄움높이 + 가구높이/2
+        const yPos = floorFinishHeight + floatHeight + (furnitureHeight / 2);
+
+        adjustedPosition = {
+          ...adjustedPosition,
+          y: yPos
+        };
+
+        } else {
+        // 일반 배치 (받침대 있거나 바닥 배치)
+        // 기본적으로 받침대 높이 65mm 적용, stand 타입일 때만 0
+        const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
+        const baseHeight = baseHeightMm * 0.01; // mm to Three.js units
+
+        // 바닥 마감재 높이
+        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
+                                    spaceInfo.floorFinish.height : 0;
+        const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
+
+        // 가구 높이
+        const furnitureHeight = (actualModuleData?.dimensions.height || 0) * 0.01; // mm to Three.js units
+
+        // Y 위치 계산: 바닥마감재 + 받침대높이 + 가구높이/2
+        const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
+
+        adjustedPosition = {
+          ...adjustedPosition,
+          y: yPos
+        };
+
+        }
+    }
   }
   
   // 기둥 침범 상황 확인 및 가구/도어 크기 조정
