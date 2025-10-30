@@ -36,7 +36,7 @@ declare global {
 }
 
 const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, showAll = true, showDimensions = true, viewMode: viewModeProp }) => {
-  const SLOT_DEBUG = false;
+  const SLOT_DEBUG = true; // 디버깅 활성화
   const debugLog = (...args: any[]) => {
     if (SLOT_DEBUG) {
       console.log(...args);
@@ -68,6 +68,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     viewModeProp,
     contextViewMode,
     finalViewMode: viewMode
+  });
+
+  // 고스트 프리뷰 상태 로깅
+  debugLog('👻 Ghost Preview State:', {
+    selectedFurnitureId,
+    currentDragData: !!currentDragData,
+    placedModulesCount: placedModules.length
   });
   
   // 테마 컨텍스트에서 색상 가져오기
