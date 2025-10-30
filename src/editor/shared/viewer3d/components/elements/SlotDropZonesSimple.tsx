@@ -51,6 +51,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const placedModules = useFurnitureStore(state => state.placedModules);
   const addModule = useFurnitureStore(state => state.addModule);
   const currentDragData = useFurnitureStore(state => state.currentDragData);
+  const selectedFurnitureId = useFurnitureStore(state => state.selectedFurnitureId);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { showAlert } = useAlert();
@@ -2810,19 +2811,37 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       {debugLog('👻 [Ghost] Rendering conditions:', {
         hoveredSlotIndex,
         hasCurrentDragData: !!currentDragData,
-        hasSelectedModule: false,
+        hasSelectedFurnitureId: !!selectedFurnitureId,
         zoneSlotPositionsLength: zoneSlotPositions.length
       })}
-      {hoveredSlotIndex !== null && currentDragData && zoneSlotPositions.map((slotData, slotIndex) => {
+      {(currentDragData || selectedFurnitureId) && zoneSlotPositions.map((slotData, slotIndex) => {
         // slotData가 객체인지 숫자인지 확인하여 위치 추출
         const isZoneData = typeof slotData === 'object' && slotData !== null;
         const slotX = isZoneData ? slotData.position : slotData;
         // 단내림이 없는 경우 slotZone을 'normal'로 설정
         const slotZone = isZoneData ? slotData.zone : 'normal';
         const slotLocalIndex = isZoneData ? slotData.index : slotIndex;
-        
+
         // 현재 활성 모듈 가져오기 (드래그 중이거나 선택된 모듈)
-        const activeModuleData = currentDragData;
+        let activeModuleData = currentDragData;
+
+        // selectedFurnitureId가 있고 currentDragData가 없으면 selectedFurnitureId로부터 데이터 생성
+        if (!activeModuleData && selectedFurnitureId) {
+          const moduleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+          if (moduleData) {
+            activeModuleData = {
+              type: 'furniture',
+              moduleData: {
+                id: moduleData.id,
+                name: moduleData.name,
+                dimensions: moduleData.dimensions,
+                type: moduleData.type || 'default',
+                category: moduleData.category,
+                color: moduleData.color
+              }
+            };
+          }
+        }
         
         // 현재 드래그 중인 가구가 듀얼인지 확인
         let isDual = false;
@@ -2832,49 +2851,50 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         // 고스트 렌더링 여부 결정
         let shouldRenderGhost = false;
-        if (hoveredSlotIndex !== null && activeModuleData) {
-          // zone 정보가 있는 경우 로컬 인덱스로 비교
+        if (activeModuleData) {
           const compareIndex = isZoneData ? slotLocalIndex : slotIndex;
-          
-          // zone이 일치하는지 체크
-          // hoveredZone이 설정되어 있으면 zone이 일치해야 함
-          // hoveredZone이 null이면 zone 체크 하지 않음
-          const zoneMatches = hoveredZone ? (hoveredZone === slotZone) : true;
-          
-          if (isDual) {
-            // 듀얼 가구: 첫 번째 슬롯에서만 고스트 렌더링
-            shouldRenderGhost = compareIndex === hoveredSlotIndex && zoneMatches;
-          } else {
-            // 싱글 가구: 현재 슬롯에서만 고스트 렌더링
+
+          // 드래그 모드: hoveredSlotIndex 사용
+          if (currentDragData && hoveredSlotIndex !== null) {
+            const zoneMatches = hoveredZone ? (hoveredZone === slotZone) : true;
             shouldRenderGhost = compareIndex === hoveredSlotIndex && zoneMatches;
           }
-          
-          // 항상 디버깅 로그 출력 (모든 zone에서)
+          // 클릭 모드: 모든 빈 슬롯에 고스트 표시
+          else if (selectedFurnitureId && !currentDragData) {
+            // 슬롯이 비어있는지 확인
+            const slotOccupied = placedModules.some(m => {
+              if (isDual) {
+                // 듀얼 가구: 현재 슬롯과 다음 슬롯 체크
+                return m.slotIndex === compareIndex || m.slotIndex === compareIndex + 1;
+              } else {
+                // 싱글 가구: 같은 슬롯에 같은 카테고리가 있는지 체크
+                if (m.slotIndex !== compareIndex) return false;
+                const placedModuleData = getModuleById(m.moduleId, internalSpace, spaceInfo);
+                return placedModuleData?.category === activeModuleData.moduleData.category;
+              }
+            });
+
+            // 듀얼 가구는 마지막 슬롯에 배치 불가
+            if (isDual && compareIndex >= indexing.columnCount - 1) {
+              shouldRenderGhost = false;
+            } else {
+              shouldRenderGhost = !slotOccupied;
+            }
+          }
+
           debugLog('🔥 고스트 렌더링 체크:', {
+            mode: currentDragData ? 'drag' : selectedFurnitureId ? 'click' : 'none',
             hoveredSlotIndex,
             hoveredZone,
             slotIndex,
             slotLocalIndex,
             slotZone,
             compareIndex,
-            isZoneData,
-            zoneMatches,
             shouldRenderGhost,
-            hasDroppedCeiling,
-            activeModuleData: {
-              id: activeModuleData.moduleData.id,
-              isDual
-            },
-            조건분석: {
-              'hoveredSlotIndex !== null': hoveredSlotIndex !== null,
-              'activeModuleData있음': !!activeModuleData,
-              '인덱스일치': compareIndex === hoveredSlotIndex,
-              'zone일치': zoneMatches,
-              '최종결과': shouldRenderGhost
-            }
+            isDual
           });
         }
-        
+
         if (!shouldRenderGhost || !activeModuleData) return null;
         
         // 활성 가구의 모듈 데이터 가져오기
