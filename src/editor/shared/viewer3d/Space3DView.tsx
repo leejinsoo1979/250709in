@@ -74,6 +74,24 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     doorColor: '#FFFFFF'  // 기본값도 흰색으로 변경 (테스트용)
   };
   
+  // ESC 키 이벤트 리스너 - selectedFurnitureId 해제
+  useEffect(() => {
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        const { selectedFurnitureId, setSelectedFurnitureId } = useUIStore.getState();
+        if (selectedFurnitureId) {
+          console.log('🔵 [Space3DView] ESC 키 - selectedFurnitureId 해제:', selectedFurnitureId);
+          setSelectedFurnitureId(null);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleEscKey);
+    return () => {
+      window.removeEventListener('keydown', handleEscKey);
+    };
+  }, []);
+
   // 가구 복제 이벤트 리스너
   useEffect(() => {
     console.log('복제 이벤트 리스너 등록됨');
