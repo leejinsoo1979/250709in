@@ -193,7 +193,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           position={[slot.position.x, slot.position.y, slot.position.z]}
           center
           style={{
-            pointerEvents: 'auto',
+            pointerEvents: 'none',
             userSelect: 'none',
             background: 'transparent'
           }}
@@ -223,7 +223,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               color: 'white',
               fontWeight: 'bold',
               lineHeight: '1',
-              animation: 'pulse 0.8s ease-in-out infinite'
+              animation: 'pulse 0.8s ease-in-out infinite',
+              pointerEvents: 'auto'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.15)';
