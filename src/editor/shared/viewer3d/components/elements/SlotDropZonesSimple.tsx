@@ -2878,8 +2878,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }
           // 클릭 모드: 모든 빈 슬롯에 고스트 표시 (hoveredSlotIndex가 null이면 클릭 모드)
           else if (selectedFurnitureId && hoveredSlotIndex === null) {
-            // 슬롯이 비어있는지 확인
+            // 슬롯이 비어있는지 확인 (zone 고려)
             const slotOccupied = placedModules.some(m => {
+              // zone이 다르면 점유되지 않음
+              if (m.zone !== slotZone) {
+                return false;
+              }
+
               // 배치된 가구가 듀얼인지 확인
               const placedModuleData = getModuleById(m.moduleId, internalSpace, spaceInfo);
               const placedModuleWidth = placedModuleData?.dimensions.width || 0;
