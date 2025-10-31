@@ -31,35 +31,38 @@ export const useFurniturePlacement = () => {
       threeUnitPositions: indexing.threeUnitPositions
     });
 
-    // zone에 맞는 internal space를 객체로 생성
-    const baseInternalSpace = calculateInternalSpace(spaceInfo);
-    let targetInternalSpace = baseInternalSpace;
+    // zone별 spaceInfo 생성 (고스트 프리뷰와 동일)
+    let zoneSpaceInfo = spaceInfo;
+    let zoneInternalSpace = calculateInternalSpace(spaceInfo);
 
-    if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
-      // 단내림 영역: 단내림 영역의 폭 사용
-      targetInternalSpace = {
-        width: indexing.zones.dropped.internalWidth,
-        height: baseInternalSpace.height,
-        depth: baseInternalSpace.depth
-      };
-    } else if (hasDroppedCeiling && indexing.zones?.normal) {
-      // 단내림이 있지만 일반 영역: 일반 영역의 폭 사용
-      targetInternalSpace = {
-        width: indexing.zones.normal.internalWidth,
-        height: baseInternalSpace.height,
-        depth: baseInternalSpace.depth
-      };
+    if (hasDroppedCeiling && zone && indexing.zones) {
+      const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
+
+      if (zone === 'dropped') {
+        zoneSpaceInfo = {
+          ...spaceInfo,
+          width: droppedCeilingWidth,
+          height: spaceInfo.height,
+          zone: 'dropped' as const
+        };
+      } else {
+        zoneSpaceInfo = {
+          ...spaceInfo,
+          width: spaceInfo.width - droppedCeilingWidth,
+          zone: 'normal' as const
+        };
+      }
+
+      zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
+
+      console.log('🟢 [useFurniturePlacement] zone별 spaceInfo:', {
+        zone,
+        outerWidth: zoneSpaceInfo.width,
+        internalWidth: zoneInternalSpace.width
+      });
     }
 
-    console.log('🟢 [useFurniturePlacement] targetInternalSpace:', {
-      zone,
-      hasDroppedCeiling,
-      targetInternalSpace,
-      'zones.normal': indexing.zones?.normal?.internalWidth,
-      'zones.dropped': indexing.zones?.dropped?.internalWidth
-    });
-
-    const moduleData = getModuleById(selectedFurnitureId, targetInternalSpace, spaceInfo);
+    const moduleData = getModuleById(selectedFurnitureId, zoneInternalSpace, zoneSpaceInfo);
 
     if (!moduleData) {
       console.error('❌ 가구 데이터를 찾을 수 없습니다:', selectedFurnitureId);
@@ -72,18 +75,18 @@ export const useFurniturePlacement = () => {
       category: moduleData.category
     });
 
-    // 듀얼 가구 여부 확인 - zone에 맞는 columnWidth 사용
+    // 듀얼 가구 여부 확인 - zone별 모듈이므로 해당 zone의 columnWidth 사용
     let columnWidth;
-    if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
-      columnWidth = indexing.zones.dropped.columnWidth;
-    } else if (hasDroppedCeiling && indexing.zones?.normal) {
-      columnWidth = indexing.zones.normal.columnWidth;
+    if (hasDroppedCeiling && zone && indexing.zones) {
+      columnWidth = zone === 'dropped' && indexing.zones.dropped
+        ? indexing.zones.dropped.columnWidth
+        : indexing.zones.normal.columnWidth;
     } else {
       columnWidth = indexing.columnWidth;
     }
 
     const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
-    console.log('🟢 [useFurniturePlacement] 듀얼 가구 판단:', { columnWidth, furnitureWidth: moduleData.dimensions.width, isDualFurniture });
+    console.log('🟢 [useFurniturePlacement] 듀얼 가구 판단:', { zone, columnWidth, furnitureWidth: moduleData.dimensions.width, isDualFurniture });
 
     // 단내림이 있는 경우 영역별 슬롯 위치 계산
     let allSlotPositions: Array<{ position: number; zone: 'normal' | 'dropped'; index: number }> = [];
