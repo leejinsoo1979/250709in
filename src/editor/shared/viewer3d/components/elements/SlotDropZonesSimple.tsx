@@ -2880,8 +2880,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           else if (selectedFurnitureId && hoveredSlotIndex === null) {
             // 슬롯이 비어있는지 확인 (zone 고려)
             const slotOccupied = placedModules.some(m => {
-              // zone이 다르면 점유되지 않음
-              if (m.zone !== slotZone) {
+              // zone이 없으면 normal로 간주
+              const moduleZone = m.zone || 'normal';
+
+              // zone이 다르면 이 가구는 체크 안함 (다음 가구로)
+              if (moduleZone !== slotZone) {
                 return false;
               }
 
