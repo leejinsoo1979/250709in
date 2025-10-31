@@ -183,6 +183,54 @@ export const useFurniturePlacement = () => {
       yPosition = 5;
     }
 
+    // customWidth 계산 - 단내림이 있는 경우 슬롯별 실제 너비 사용
+    let customWidth: number | undefined;
+    let targetIndexing;
+
+    if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
+      targetIndexing = indexing.zones.dropped;
+    } else if (hasDroppedCeiling && zone === 'normal' && indexing.zones?.normal) {
+      targetIndexing = indexing.zones.normal;
+    } else {
+      targetIndexing = indexing;
+    }
+
+    if (targetIndexing.slotWidths && targetIndexing.slotWidths[slotIndex] !== undefined) {
+      if (isDualFurniture && slotIndex < targetIndexing.slotWidths.length - 1) {
+        // 듀얼 가구: 두 슬롯의 너비 합
+        const slot1Width = targetIndexing.slotWidths[slotIndex];
+        const slot2Width = targetIndexing.slotWidths[slotIndex + 1];
+        customWidth = slot1Width + slot2Width;
+
+        console.log('🟢 [useFurniturePlacement] 듀얼 가구 customWidth 계산:', {
+          slotIndex,
+          slot1Width,
+          slot2Width,
+          customWidth,
+          columnWidth
+        });
+      } else {
+        // 싱글 가구: 해당 슬롯의 실제 너비
+        customWidth = targetIndexing.slotWidths[slotIndex];
+
+        console.log('🟢 [useFurniturePlacement] 싱글 가구 customWidth 계산:', {
+          slotIndex,
+          customWidth,
+          columnWidth,
+          slotWidths: targetIndexing.slotWidths
+        });
+      }
+    } else {
+      // slotWidths가 없으면 기본 columnWidth 사용 (균등 분할)
+      customWidth = undefined;
+
+      console.log('🟢 [useFurniturePlacement] slotWidths 없음 - customWidth undefined (columnWidth 사용):', {
+        slotIndex,
+        columnWidth,
+        isDualFurniture
+      });
+    }
+
     // 새 가구 모듈 생성
     const newModule = {
       id: uuidv4(),
@@ -197,7 +245,7 @@ export const useFurniturePlacement = () => {
       isDualSlot: isDualFurniture,
       customHeight: undefined,
       customDepth: undefined,
-      customWidth: undefined,
+      customWidth: customWidth,
       adjustedWidth: undefined,
       lowerSectionDepth: undefined,
       upperSectionDepth: undefined,
@@ -214,7 +262,9 @@ export const useFurniturePlacement = () => {
       category: moduleData.category,
       furnitureWidth: moduleData.dimensions.width,
       columnWidth,
-      targetSlot
+      customWidth: newModule.customWidth,
+      targetSlot,
+      slotWidths: targetIndexing.slotWidths
     });
 
     // 가구 추가
