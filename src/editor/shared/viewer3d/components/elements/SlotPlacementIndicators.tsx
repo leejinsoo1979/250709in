@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import { Html } from '@react-three/drei';
-import { AiOutlinePlusCircle } from 'react-icons/ai';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
@@ -210,13 +209,20 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               onSlotClick(slot.slotIndex, slot.zone);
             }}
             style={{
+              width: '40px',
+              height: '40px',
+              borderRadius: '50%',
+              backgroundColor: view2DTheme.primary,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
               transition: 'all 0.2s ease',
-              fontSize: '36px',
-              color: view2DTheme.primary
+              fontSize: '28px',
+              color: 'white',
+              fontWeight: 'bold',
+              lineHeight: '1'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.15)';
@@ -227,7 +233,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               e.currentTarget.style.opacity = '1';
             }}
           >
-            <AiOutlinePlusCircle />
+            +
           </div>
         </Html>
       ))}
