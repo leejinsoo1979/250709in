@@ -152,22 +152,23 @@
 .input {
   width: 100%;
   padding: 16px 20px;
-  border: 1px solid #E5E7EB;
+  border: 1px solid #E5E7EB !important;
   border-radius: 12px;
   font-size: 16px;
   transition: all 0.2s ease;
-  background: #F9FAFB;
+  background: #F9FAFB !important;
+  color: #1A1A1A !important;
 }
 
 .input:focus {
   outline: none;
-  border-color: #6B5EFF;
-  background: white;
+  border-color: #6B5EFF !important;
+  background: white !important;
   box-shadow: 0 0 0 3px rgba(107, 94, 255, 0.1);
 }
 
 .input::placeholder {
-  color: #9CA3AF;
+  color: #9CA3AF !important;
 }
 
 /* Forgot Password */
