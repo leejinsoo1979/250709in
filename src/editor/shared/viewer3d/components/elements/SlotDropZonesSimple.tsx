@@ -2890,8 +2890,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           });
           const compareIndex = isZoneData ? slotLocalIndex : slotIndex;
 
-          // 클릭 모드: hoveredSlotIndex가 null이면 무조건 클릭 모드
-          if (hoveredSlotIndex === null && (selectedFurnitureId || currentDragData)) {
+          // 클릭 모드: selectedFurnitureId가 있으면 클릭 모드 (섬네일 클릭)
+          if (selectedFurnitureId) {
             const moduleIdForCheck = selectedFurnitureId || currentDragData?.moduleData?.id || activeModuleData?.moduleData?.id || '';
 
             console.log('🟢🟢🟢 [Click Mode] 클릭 모드 진입:', {
@@ -2930,8 +2930,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               shouldRenderGhost = available;
             }
           }
-          // 드래그 모드: hoveredSlotIndex가 있으면 드래그 중
-          else if (hoveredSlotIndex !== null && (currentDragData || selectedFurnitureId)) {
+          // 드래그 모드: currentDragData만 있고 selectedFurnitureId가 없으면 드래그 중
+          else if (currentDragData && !selectedFurnitureId) {
             const zoneMatches = hoveredZone ? (hoveredZone === slotZone) : true;
             const isHoveredSlot = compareIndex === hoveredSlotIndex && zoneMatches;
 
