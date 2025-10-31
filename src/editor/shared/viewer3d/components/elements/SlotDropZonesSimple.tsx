@@ -3528,6 +3528,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               customWidth={customWidth}
               customHeight={customHeight}
               spaceInfo={spaceInfo}
+              renderMode="wireframe"
             />
           </group>
         );
