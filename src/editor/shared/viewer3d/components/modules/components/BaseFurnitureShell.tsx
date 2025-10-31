@@ -213,18 +213,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
-  // renderMode에 따라 재질 투명도 조정
-  const adjustedMaterial = useMemo(() => {
-    if (renderMode === 'wireframe') {
-      const clonedMaterial = material.clone() as THREE.MeshStandardMaterial;
-      clonedMaterial.transparent = true;
-      clonedMaterial.opacity = 0.4;
-      clonedMaterial.wireframe = false; // wireframe은 BoxWithEdges에서 처리
-      return clonedMaterial;
-    }
-    return material;
-  }, [material, renderMode]);
-
   // 디버깅: BaseFurnitureShell이 받은 props 확인
   React.useEffect(() => {
     if (panelGrainDirections && Object.keys(panelGrainDirections).length > 0) {
@@ -287,8 +275,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     if (isHighlighted) {
       return highlightMaterial;
     }
-    return adjustedMaterial;
-  }, [highlightedPanel, placedFurnitureId, adjustedMaterial, panelDimmedMaterial, highlightMaterial]);
+    return material;
+  }, [highlightedPanel, placedFurnitureId, material, panelDimmedMaterial, highlightMaterial]);
 
   // 좌우 프레임에 사용할 material 결정 함수
   const getSidePanelMaterial = (panelName: string) => {
