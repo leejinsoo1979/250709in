@@ -1248,6 +1248,21 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           renderMode={renderMode}
         >
           <React.Suspense fallback={null}>
+            {/* 배경 클릭 감지용 평면 - selectedFurnitureId 해제 */}
+            <mesh
+              position={[0, 0, -100]}
+              onClick={(e) => {
+                e.stopPropagation();
+                const { selectedFurnitureId, setSelectedFurnitureId } = useUIStore.getState();
+                if (selectedFurnitureId) {
+                  console.log('🔵 [Space3DView] 배경 클릭 - selectedFurnitureId 해제:', selectedFurnitureId);
+                  setSelectedFurnitureId(null);
+                }
+              }}
+            >
+              <planeGeometry args={[1000, 1000]} />
+              <meshBasicMaterial transparent opacity={0} />
+            </mesh>
             {/* 확실히 작동하는 CAD 그리드 - 2D와 3D 모두에서 작동 */}
             <CADGrid viewMode={viewMode} view2DDirection={view2DDirection} enabled={showDimensions && showGuides} showAxis={showDimensions && showAxis} />
             
