@@ -131,13 +131,25 @@ export const useFurniturePlacement = () => {
     let xPosition: number;
     if (isDualFurniture) {
       // 듀얼 가구: 현재 슬롯과 다음 슬롯의 중심
-      const currentSlotIdx = allSlotPositions.findIndex(slot => slot.index === slotIndex);
-      const nextSlot = allSlotPositions[currentSlotIdx + 1];
-      if (!nextSlot || nextSlot.zone !== targetSlot.zone) {
-        console.error('듀얼 가구 배치를 위한 다음 슬롯을 찾을 수 없습니다');
+      // 같은 zone의 다음 인덱스 슬롯 찾기
+      const nextSlot = allSlotPositions.find(slot =>
+        slot.index === slotIndex + 1 && slot.zone === targetSlot.zone
+      );
+      if (!nextSlot) {
+        console.error('듀얼 가구 배치를 위한 다음 슬롯을 찾을 수 없습니다:', {
+          targetSlotIndex: slotIndex,
+          targetSlotZone: targetSlot.zone,
+          lookingForIndex: slotIndex + 1,
+          allSlotPositions
+        });
         return;
       }
       xPosition = (targetSlot.position + nextSlot.position) / 2;
+      console.log('🟢 [useFurniturePlacement] 듀얼 가구 위치 계산:', {
+        targetSlot,
+        nextSlot,
+        xPosition
+      });
     } else {
       xPosition = targetSlot.position;
     }
