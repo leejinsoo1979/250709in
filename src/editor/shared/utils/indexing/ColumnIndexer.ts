@@ -74,6 +74,10 @@ export class ColumnIndexer {
     
     // 단내림이 활성화된 경우에도 전체 영역 정보는 유지하되, zones에 영역별 정보 추가
     if (spaceInfo.droppedCeiling?.enabled) {
+      console.log('🟣🟣🟣 [ColumnIndexer] 단내림 블록 진입:', {
+        enabled: spaceInfo.droppedCeiling?.enabled,
+        droppedCeiling: spaceInfo.droppedCeiling
+      });
       // 전체 영역에 대한 기본 계산 수행
       const totalWidth = spaceInfo.width;
       const internalWidth = SpaceCalculator.calculateInternalWidth(spaceInfo, hasLeftFurniture, hasRightFurniture);
@@ -225,7 +229,14 @@ export class ColumnIndexer {
       for (let i = 0; i < columnCount; i++) {
         slotWidths.push(exactSlotWidth);
       }
-      
+
+      console.log('🟣🟣🟣 [ColumnIndexer] 단내림 있음 - zones 포함 반환:', {
+        hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
+        zonesIncluded: !!zones,
+        normalZone: zones.normal,
+        droppedZone: zones.dropped
+      });
+
       return {
         columnCount,
         columnPositions,
@@ -502,8 +513,14 @@ export class ColumnIndexer {
       dualColumnPositions.push(dualCenterPosition);
       threeUnitDualPositions.push(SpaceCalculator.mmToThreeUnits(dualCenterPosition));
     }
-    
-    
+
+    console.log('🟡🟡🟡 [ColumnIndexer] 단내림 없음 - zones 없이 반환:', {
+      hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
+      columnCount,
+      columnWidth,
+      internalWidth
+    });
+
     return {
       columnCount,            // 슬롯(컬럼) 개수
       columnPositions,        // 각 슬롯 중심의 mm 단위 X좌표 배열
