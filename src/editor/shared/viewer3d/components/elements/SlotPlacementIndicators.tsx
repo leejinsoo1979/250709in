@@ -125,6 +125,14 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
         // 두 슬롯이 모두 비어있는지 확인 (배치된 듀얼 가구도 고려)
         const slotsOccupied = placedModules.some(m => {
+          // zone이 없으면 normal로 간주
+          const moduleZone = m.zone || 'normal';
+
+          // zone이 다르면 이 가구는 체크 안함
+          if (moduleZone !== slotData.zone) {
+            return false;
+          }
+
           const moduleData = getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
           const moduleWidth = moduleData?.dimensions.width || 0;
           const isPlacedDual = Math.abs(moduleWidth - (indexing.columnWidth * 2)) < 50;
@@ -157,6 +165,14 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         // 싱글 가구인 경우
         // 같은 슬롯에 어떤 가구든 있으면 점유됨 (배치된 듀얼 가구의 두 번째 슬롯도 고려)
         const slotOccupied = placedModules.some(m => {
+          // zone이 없으면 normal로 간주
+          const moduleZone = m.zone || 'normal';
+
+          // zone이 다르면 이 가구는 체크 안함
+          if (moduleZone !== slotData.zone) {
+            return false;
+          }
+
           const moduleData = getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
           const moduleWidth = moduleData?.dimensions.width || 0;
           const isPlacedDual = Math.abs(moduleWidth - (indexing.columnWidth * 2)) < 50;
