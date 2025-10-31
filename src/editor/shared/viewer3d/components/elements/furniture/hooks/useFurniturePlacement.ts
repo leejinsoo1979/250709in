@@ -13,28 +13,49 @@ export const useFurniturePlacement = () => {
   const { spaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, addModule, setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
 
-  const placeFurniture = useCallback((slotIndex: number) => {
+  const placeFurniture = useCallback((slotIndex: number, zone?: 'normal' | 'dropped') => {
     if (!selectedFurnitureId) {
       console.warn('선택된 가구가 없습니다');
       return;
     }
 
-    const internalSpace = calculateInternalSpace(spaceInfo);
-    const moduleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+    const indexing = calculateSpaceIndexing(spaceInfo);
+
+    // zone에 맞는 internal space 계산
+    const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
+    let targetInternalSpace;
+
+    if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
+      // 단내림 영역: 단내림 영역의 폭 사용
+      targetInternalSpace = indexing.zones.dropped.internalWidth;
+    } else if (hasDroppedCeiling && indexing.zones?.normal) {
+      // 단내림이 있지만 일반 영역: 일반 영역의 폭 사용
+      targetInternalSpace = indexing.zones.normal.internalWidth;
+    } else {
+      // 단내림이 없음: 전체 폭 사용
+      targetInternalSpace = calculateInternalSpace(spaceInfo);
+    }
+
+    const moduleData = getModuleById(selectedFurnitureId, targetInternalSpace, spaceInfo);
 
     if (!moduleData) {
       console.error('가구 데이터를 찾을 수 없습니다:', selectedFurnitureId);
       return;
     }
 
-    const indexing = calculateSpaceIndexing(spaceInfo);
+    // 듀얼 가구 여부 확인 - zone에 맞는 columnWidth 사용
+    let columnWidth;
+    if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
+      columnWidth = indexing.zones.dropped.columnWidth;
+    } else if (hasDroppedCeiling && indexing.zones?.normal) {
+      columnWidth = indexing.zones.normal.columnWidth;
+    } else {
+      columnWidth = indexing.columnWidth;
+    }
 
-    // 듀얼 가구 여부 확인
-    const columnWidth = indexing.columnWidth;
     const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
 
     // 단내림이 있는 경우 영역별 슬롯 위치 계산
-    const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
     let allSlotPositions: Array<{ position: number; zone: 'normal' | 'dropped'; index: number }> = [];
 
     if (!hasDroppedCeiling || !indexing.zones) {
@@ -66,10 +87,12 @@ export const useFurniturePlacement = () => {
       allSlotPositions.sort((a, b) => a.position - b.position);
     }
 
-    // 위치 계산 - slotIndex에 해당하는 슬롯 찾기
-    const targetSlot = allSlotPositions.find(slot => slot.index === slotIndex);
+    // 위치 계산 - slotIndex와 zone에 해당하는 슬롯 찾기
+    const targetSlot = allSlotPositions.find(slot =>
+      slot.index === slotIndex && (!zone || slot.zone === zone)
+    );
     if (!targetSlot) {
-      console.error('슬롯을 찾을 수 없습니다:', slotIndex);
+      console.error('슬롯을 찾을 수 없습니다:', { slotIndex, zone });
       return;
     }
 

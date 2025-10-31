@@ -7,7 +7,7 @@ import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../../utils/geometry';
 
 interface SlotPlacementIndicatorsProps {
-  onSlotClick: (slotIndex: number) => void;
+  onSlotClick: (slotIndex: number, zone?: 'normal' | 'dropped') => void;
 }
 
 /**
@@ -37,12 +37,49 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   // 슬롯 인덱싱 정보
   const indexing = useMemo(() => calculateSpaceIndexing(spaceInfo), [spaceInfo]);
 
+  // 단내림이 있는 경우 영역별 슬롯 위치 계산
+  const getAllSlotPositions = useMemo(() => {
+    const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
+
+    if (!hasDroppedCeiling || !indexing.zones) {
+      // 단내림이 없으면 기본 위치 사용
+      return indexing.threeUnitPositions.map((pos, idx) => ({
+        position: pos,
+        zone: 'normal' as const,
+        index: idx
+      }));
+    }
+
+    const allPositions = [];
+
+    // normal 영역
+    if (indexing.zones.normal?.threeUnitPositions) {
+      allPositions.push(...indexing.zones.normal.threeUnitPositions.map((pos, idx) => ({
+        position: pos,
+        zone: 'normal' as const,
+        index: idx
+      })));
+    }
+
+    // dropped 영역
+    if (indexing.zones.dropped?.threeUnitPositions) {
+      allPositions.push(...indexing.zones.dropped.threeUnitPositions.map((pos, idx) => ({
+        position: pos,
+        zone: 'dropped' as const,
+        index: idx
+      })));
+    }
+
+    return allPositions.sort((a, b) => a.position - b.position);
+  }, [indexing, spaceInfo.droppedCeiling?.enabled]);
+
   // 사용 가능한 슬롯 계산
   const availableSlots = useMemo(() => {
     if (!selectedModuleData) return [];
 
-    const slots: Array<{ slotIndex: number; position: { x: number; y: number; z: number } }> = [];
+    const slots: Array<{ slotIndex: number; zone: 'normal' | 'dropped'; position: { x: number; y: number; z: number } }> = [];
     const selectedCategory = selectedModuleData.category;
+    const allSlotPositions = getAllSlotPositions;
 
     // 가구 높이의 중심 계산
     const furnitureHeightMm = selectedModuleData.dimensions.height;
@@ -62,10 +99,17 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       yPosition = (floorFinishHeightMm + baseHeightMm + floatHeightMm + furnitureHeightMm / 2) * 0.01;
     }
 
-    for (let i = 0; i < indexing.columnCount; i++) {
+    for (let i = 0; i < allSlotPositions.length; i++) {
+      const slotData = allSlotPositions[i];
+      const slotIndex = slotData.index;
+
       // 듀얼 가구인 경우 연속된 두 슬롯 체크
       if (isDualFurniture) {
-        if (i >= indexing.columnCount - 1) continue; // 마지막 슬롯은 듀얼 배치 불가
+        if (i >= allSlotPositions.length - 1) continue; // 마지막 슬롯은 듀얼 배치 불가
+
+        const nextSlotData = allSlotPositions[i + 1];
+        // 같은 영역의 연속된 슬롯인지 확인
+        if (slotData.zone !== nextSlotData.zone) continue;
 
         // 두 슬롯이 모두 비어있는지 확인 (배치된 듀얼 가구도 고려)
         const slotsOccupied = placedModules.some(m => {
@@ -75,21 +119,21 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
           if (isPlacedDual) {
             // 배치된 가구가 듀얼: 슬롯 범위 겹침 체크
-            return (m.slotIndex === i || m.slotIndex === i + 1) ||
-                   (m.slotIndex + 1 === i || m.slotIndex + 1 === i + 1);
+            return (m.slotIndex === slotIndex || m.slotIndex === nextSlotData.index) ||
+                   (m.slotIndex + 1 === slotIndex || m.slotIndex + 1 === nextSlotData.index);
           } else {
             // 배치된 가구가 싱글
-            return m.slotIndex === i || m.slotIndex === i + 1;
+            return m.slotIndex === slotIndex || m.slotIndex === nextSlotData.index;
           }
         });
 
         if (!slotsOccupied) {
           // 두 슬롯의 중심 위치 계산
-          const centerX = indexing.threeUnitDualPositions?.[i] ||
-                         (indexing.threeUnitPositions[i] + indexing.threeUnitPositions[i + 1]) / 2;
+          const centerX = (slotData.position + nextSlotData.position) / 2;
 
           slots.push({
-            slotIndex: i,
+            slotIndex: slotIndex,
+            zone: slotData.zone,
             position: {
               x: centerX,
               y: yPosition,
@@ -107,18 +151,19 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
           if (isPlacedDual) {
             // 배치된 가구가 듀얼: 듀얼 가구의 두 슬롯 중 하나라도 현재 슬롯이면 점유됨
-            return m.slotIndex === i || m.slotIndex + 1 === i;
+            return m.slotIndex === slotIndex || m.slotIndex + 1 === slotIndex;
           } else {
             // 배치된 가구가 싱글
-            return m.slotIndex === i;
+            return m.slotIndex === slotIndex;
           }
         });
 
         if (!slotOccupied) {
           slots.push({
-            slotIndex: i,
+            slotIndex: slotIndex,
+            zone: slotData.zone,
             position: {
-              x: indexing.threeUnitPositions[i],
+              x: slotData.position,
               y: yPosition,
               z: 0
             }
@@ -150,7 +195,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           <div
             onClick={(e) => {
               e.stopPropagation();
-              onSlotClick(slot.slotIndex);
+              onSlotClick(slot.slotIndex, slot.zone);
             }}
             style={{
               width: '32px',
