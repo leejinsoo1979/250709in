@@ -132,10 +132,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return baseMaterial;
     }
 
-    if (isDragging && baseMaterial instanceof THREE.MeshStandardMaterial) {
+    // wireframe 모드이거나 드래그 중일 때 투명 처리
+    if ((renderMode === 'wireframe' || isDragging) && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = baseMaterial.clone();
       ghostMaterial.transparent = true;
-      ghostMaterial.opacity = 0.6;
+      ghostMaterial.opacity = renderMode === 'wireframe' ? 0.4 : 0.6;
 
       // 테마 색상 가져오기
       const getThemeColor = () => {
