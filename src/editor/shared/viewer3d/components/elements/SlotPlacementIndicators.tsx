@@ -128,6 +128,14 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           // zone이 없으면 normal로 간주
           const moduleZone = m.zone || 'normal';
 
+          console.log('🔍 [SlotIndicators] 듀얼 슬롯 점유 체크:', {
+            checkingSlot: slotIndex,
+            checkingZone: slotData.zone,
+            moduleSlot: m.slotIndex,
+            moduleZone: moduleZone,
+            zoneMatch: moduleZone === slotData.zone
+          });
+
           // zone이 다르면 이 가구는 체크 안함
           if (moduleZone !== slotData.zone) {
             return false;
@@ -168,6 +176,16 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           // zone이 없으면 normal로 간주
           const moduleZone = m.zone || 'normal';
 
+          console.log('🔍 [SlotIndicators] 싱글 슬롯 점유 체크:', {
+            checkingSlot: slotIndex,
+            checkingZone: slotData.zone,
+            moduleSlot: m.slotIndex,
+            moduleZone: moduleZone,
+            moduleId: m.moduleId,
+            zoneMatch: moduleZone === slotData.zone,
+            slotMatch: m.slotIndex === slotIndex
+          });
+
           // zone이 다르면 이 가구는 체크 안함
           if (moduleZone !== slotData.zone) {
             return false;
@@ -185,6 +203,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             return m.slotIndex === slotIndex;
           }
         });
+
+        console.log('🔍 [SlotIndicators] 최종 점유 결과:', { slotIndex, slotOccupied });
 
         if (!slotOccupied) {
           slots.push({
