@@ -262,26 +262,45 @@ export const isSlotAvailable = (
       // 기존 모듈의 슬롯 위치 찾기 - slotIndex 속성을 우선 사용
       const storedSlot = placedModule.slotIndex;
       const moduleZone = placedModule.zone as 'normal' | 'dropped' | undefined;
-      let moduleSlot = typeof storedSlot === 'number'
-        ? resolveGlobalSlotIndex(storedSlot, moduleZone)
-        : -1;
 
-      // slotIndex가 없는 경우에만 위치로부터 계산
-      if (moduleSlot === -1) {
-        if (isModuleDual && indexing.threeUnitDualPositions) {
-          moduleSlot = indexing.threeUnitDualPositions.findIndex((pos: number) => 
-            Math.abs(pos - placedModule.position.x) < 0.1
-          );
+      // targetZone이 지정된 경우, 로컬 인덱스로 직접 비교
+      let moduleSlot: number;
+      let moduleSlots: number[];
+
+      if (targetZone && typeof storedSlot === 'number') {
+        // 로컬 인덱스로 직접 비교 (zone이 같은 경우만 여기까지 옴)
+        moduleSlot = storedSlot;
+        if (isModuleDual) {
+          moduleSlots = [moduleSlot, moduleSlot + 1];
         } else {
-          moduleSlot = indexing.threeUnitPositions.findIndex((pos: number) => 
-            Math.abs(pos - placedModule.position.x) < 0.1
-          );
+          moduleSlots = [moduleSlot];
         }
-        moduleSlot = resolveGlobalSlotIndex(moduleSlot, moduleZone);
-      }
-      
-      if (moduleSlot >= 0) {
-        const moduleSlots = (() => {
+        console.log('🔍 [isSlotAvailable] 로컬 인덱스 비교:', {
+          targetSlots,
+          moduleSlots,
+          placedModuleId: placedModule.id
+        });
+      } else {
+        // 글로벌 인덱스로 변환하여 비교 (기존 로직)
+        moduleSlot = typeof storedSlot === 'number'
+          ? resolveGlobalSlotIndex(storedSlot, moduleZone)
+          : -1;
+
+        // slotIndex가 없는 경우에만 위치로부터 계산
+        if (moduleSlot === -1) {
+          if (isModuleDual && indexing.threeUnitDualPositions) {
+            moduleSlot = indexing.threeUnitDualPositions.findIndex((pos: number) =>
+              Math.abs(pos - placedModule.position.x) < 0.1
+            );
+          } else {
+            moduleSlot = indexing.threeUnitPositions.findIndex((pos: number) =>
+              Math.abs(pos - placedModule.position.x) < 0.1
+            );
+          }
+          moduleSlot = resolveGlobalSlotIndex(moduleSlot, moduleZone);
+        }
+
+        moduleSlots = (() => {
           if (!isModuleDual) {
             return [moduleSlot];
           }
@@ -293,7 +312,9 @@ export const isSlotAvailable = (
 
           return [moduleSlot, moduleSlot + 1];
         })();
+      }
 
+      if (moduleSlot >= 0) {
         const hasOverlap = targetSlots.some(slot => moduleSlots.includes(slot));
 
         if (hasOverlap) {
