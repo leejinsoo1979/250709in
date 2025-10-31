@@ -65,13 +65,23 @@ export const useFurniturePlacement = () => {
     // 듀얼 가구 여부를 먼저 확인 - ID 기반 판단 (dual- prefix)
     const isDualFurnitureId = selectedFurnitureId.startsWith('dual-');
 
-    // zone이 있고 듀얼 가구일 때만 ID에서 너비 제거 - getModuleById가 zone별 너비로 새로 생성
+    // zone이 있고 듀얼 가구일 때는 zone별 columnWidth로 정확한 너비 계산
     let furnitureId = selectedFurnitureId;
     if (hasDroppedCeiling && zone && indexing.zones && isDualFurnitureId) {
-      furnitureId = selectedFurnitureId.replace(/-[\d.]+$/, '');
-      console.log('🟢 [useFurniturePlacement] 듀얼 가구 base ID 사용:', {
+      const zoneColumnWidth = zone === 'dropped' && indexing.zones.dropped
+        ? indexing.zones.dropped.columnWidth
+        : indexing.zones.normal.columnWidth;
+
+      const dualWidth = zoneColumnWidth * 2;
+      const baseId = selectedFurnitureId.replace(/-[\d.]+$/, '');
+      furnitureId = `${baseId}-${dualWidth}`;
+
+      console.log('🟢 [useFurniturePlacement] 듀얼 가구 zone별 ID 생성:', {
         originalId: selectedFurnitureId,
-        baseId: furnitureId
+        zone,
+        zoneColumnWidth,
+        dualWidth,
+        newId: furnitureId
       });
     }
 
