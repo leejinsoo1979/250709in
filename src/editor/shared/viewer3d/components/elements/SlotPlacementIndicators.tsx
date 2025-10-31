@@ -44,6 +44,24 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const slots: Array<{ slotIndex: number; position: { x: number; y: number; z: number } }> = [];
     const selectedCategory = selectedModuleData.category;
 
+    // 가구 높이의 중심 계산
+    const furnitureHeightMm = selectedModuleData.dimensions.height;
+    const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+    const baseHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
+    const floatHeightMm = spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+
+    let yPosition: number;
+    if (selectedCategory === 'upper') {
+      // 상부장: 천장 근처
+      const topFrameHeightMm = spaceInfo.frameSize?.top || 10;
+      const bottomFrameHeightMm = spaceInfo.frameSize?.bottom || 0;
+      const internalHeight = spaceInfo.height - topFrameHeightMm - bottomFrameHeightMm - floorFinishHeightMm;
+      yPosition = (floorFinishHeightMm + bottomFrameHeightMm + internalHeight - furnitureHeightMm / 2) * 0.01;
+    } else {
+      // 하부장/키큰장: 바닥 기준
+      yPosition = (floorFinishHeightMm + baseHeightMm + floatHeightMm + furnitureHeightMm / 2) * 0.01;
+    }
+
     for (let i = 0; i < indexing.columnCount; i++) {
       // 듀얼 가구인 경우 연속된 두 슬롯 체크
       if (isDualFurniture) {
@@ -62,26 +80,22 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             slotIndex: i,
             position: {
               x: centerX,
-              y: 5, // 적절한 높이 (나중에 조정 가능)
+              y: yPosition,
               z: 0
             }
           });
         }
       } else {
         // 싱글 가구인 경우
-        // 같은 슬롯에 동일 카테고리 가구가 있는지 확인
-        const occupiedBySameCategory = placedModules.some(m => {
-          if (m.slotIndex !== i) return false;
-          const moduleData = getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
-          return moduleData?.category === selectedCategory;
-        });
+        // 같은 슬롯에 어떤 가구든 있으면 점유됨
+        const slotOccupied = placedModules.some(m => m.slotIndex === i);
 
-        if (!occupiedBySameCategory) {
+        if (!slotOccupied) {
           slots.push({
             slotIndex: i,
             position: {
               x: indexing.threeUnitPositions[i],
-              y: 5,
+              y: yPosition,
               z: 0
             }
           });
@@ -114,18 +128,17 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               onSlotClick(slot.slotIndex);
             }}
             style={{
-              width: '48px',
-              height: '48px',
+              width: '32px',
+              height: '32px',
               borderRadius: '50%',
               backgroundColor: 'rgba(59, 130, 246, 0.9)',
-              border: '3px solid white',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
               transition: 'all 0.2s ease',
-              fontSize: '32px',
+              fontSize: '24px',
               color: 'white',
               fontWeight: 'bold',
               lineHeight: '1'
