@@ -268,6 +268,9 @@ export const useFurnitureKeyboard = ({
           case 'Escape':
             setEditMode(false);
             setEditingModuleId(null);
+            // selectedFurnitureId도 함께 해제 (섬네일 체크 해제)
+            const { setSelectedFurnitureId } = useUIStore.getState();
+            setSelectedFurnitureId(null);
             e.preventDefault();
             break;
             
@@ -493,6 +496,16 @@ export const useFurnitureKeyboard = ({
               e.preventDefault();
               break;
             }
+          }
+        }
+
+        // selectedFurnitureId가 설정된 경우 (섬네일 클릭 모드) ESC 처리
+        if (e.key === 'Escape') {
+          const { selectedFurnitureId, setSelectedFurnitureId } = useUIStore.getState();
+          if (selectedFurnitureId) {
+            console.log('🔵 [useFurnitureKeyboard] ESC 키로 selectedFurnitureId 해제:', selectedFurnitureId);
+            setSelectedFurnitureId(null);
+            e.preventDefault();
           }
         }
       }
