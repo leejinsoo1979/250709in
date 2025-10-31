@@ -22,28 +22,38 @@ export const useFurniturePlacement = () => {
     }
 
     const indexing = calculateSpaceIndexing(spaceInfo);
-
-    // zone에 맞는 internal space 계산
     const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
-    let targetInternalSpace;
+
+    // zone에 맞는 internal space를 객체로 생성
+    const baseInternalSpace = calculateInternalSpace(spaceInfo);
+    let targetInternalSpace = baseInternalSpace;
 
     if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
       // 단내림 영역: 단내림 영역의 폭 사용
-      targetInternalSpace = indexing.zones.dropped.internalWidth;
+      targetInternalSpace = {
+        width: indexing.zones.dropped.internalWidth,
+        height: baseInternalSpace.height,
+        depth: baseInternalSpace.depth
+      };
     } else if (hasDroppedCeiling && indexing.zones?.normal) {
       // 단내림이 있지만 일반 영역: 일반 영역의 폭 사용
-      targetInternalSpace = indexing.zones.normal.internalWidth;
-    } else {
-      // 단내림이 없음: 전체 폭 사용
-      targetInternalSpace = calculateInternalSpace(spaceInfo);
+      targetInternalSpace = {
+        width: indexing.zones.normal.internalWidth,
+        height: baseInternalSpace.height,
+        depth: baseInternalSpace.depth
+      };
     }
+
+    console.log('🟢 [useFurniturePlacement] targetInternalSpace:', targetInternalSpace);
 
     const moduleData = getModuleById(selectedFurnitureId, targetInternalSpace, spaceInfo);
 
     if (!moduleData) {
-      console.error('가구 데이터를 찾을 수 없습니다:', selectedFurnitureId);
+      console.error('❌ 가구 데이터를 찾을 수 없습니다:', selectedFurnitureId);
       return;
     }
+
+    console.log('🟢 [useFurniturePlacement] moduleData:', moduleData);
 
     // 듀얼 가구 여부 확인 - zone에 맞는 columnWidth 사용
     let columnWidth;
@@ -56,6 +66,7 @@ export const useFurniturePlacement = () => {
     }
 
     const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+    console.log('🟢 [useFurniturePlacement] 듀얼 가구 판단:', { columnWidth, furnitureWidth: moduleData.dimensions.width, isDualFurniture });
 
     // 단내림이 있는 경우 영역별 슬롯 위치 계산
     let allSlotPositions: Array<{ position: number; zone: 'normal' | 'dropped'; index: number }> = [];
