@@ -21,6 +21,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   const { selectedFurnitureId, placedModules } = useFurnitureStore();
   const { view2DTheme } = useUIStore();
 
+  console.log('🔵🔵🔵 SlotPlacementIndicators 렌더링:', { selectedFurnitureId, placedModulesCount: placedModules.length });
+
   // 선택된 가구 정보 가져오기
   const selectedModuleData = useMemo(() => {
     if (!selectedFurnitureId) return null;
@@ -186,8 +188,11 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
   }, [selectedModuleData, isDualFurniture, indexing, placedModules, spaceInfo]);
 
   if (!selectedFurnitureId || !selectedModuleData) {
+    console.log('🔵 SlotPlacementIndicators - 렌더링 안함:', { selectedFurnitureId, selectedModuleData: !!selectedModuleData });
     return null;
   }
+
+  console.log('🔵🔵🔵 SlotPlacementIndicators - 아이콘 렌더링:', { availableSlotsCount: availableSlots.length, availableSlots });
 
   return (
     <>
@@ -206,7 +211,10 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             onClick={(e) => {
               e.stopPropagation();
               console.log('🔵 [SlotIndicators] + 아이콘 클릭:', { slotIndex: slot.slotIndex, zone: slot.zone });
+              console.log('🔵 [SlotIndicators] onSlotClick 함수:', onSlotClick);
+              console.log('🔵 [SlotIndicators] onSlotClick 호출 시작');
               onSlotClick(slot.slotIndex, slot.zone);
+              console.log('🔵 [SlotIndicators] onSlotClick 호출 완료');
             }}
             style={{
               width: '32px',
@@ -223,19 +231,34 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               fontSize: '22px',
               color: 'white',
               fontWeight: 'bold',
-              lineHeight: '1'
+              lineHeight: '1',
+              animation: 'pulse 2s ease-in-out infinite'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.15)';
               e.currentTarget.style.opacity = '0.8';
+              e.currentTarget.style.animation = 'none';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
               e.currentTarget.style.opacity = '1';
+              e.currentTarget.style.animation = 'pulse 2s ease-in-out infinite';
             }}
           >
             +
           </div>
+          <style>{`
+            @keyframes pulse {
+              0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+              }
+              50% {
+                transform: scale(1.1);
+                opacity: 0.8;
+              }
+            }
+          `}</style>
         </Html>
       ))}
     </>
