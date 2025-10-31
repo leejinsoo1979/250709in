@@ -2871,10 +2871,26 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         if (activeModuleData) {
           const compareIndex = isZoneData ? slotLocalIndex : slotIndex;
 
-          // 드래그 모드: hoveredSlotIndex 사용
+          // 드래그 모드: hoveredSlotIndex 사용 + 슬롯 사용 가능 여부 확인
           if (currentDragData && hoveredSlotIndex !== null) {
             const zoneMatches = hoveredZone ? (hoveredZone === slotZone) : true;
-            shouldRenderGhost = compareIndex === hoveredSlotIndex && zoneMatches;
+            const isHoveredSlot = compareIndex === hoveredSlotIndex && zoneMatches;
+
+            if (isHoveredSlot) {
+              // hover 중인 슬롯이면 사용 가능 여부 확인
+              const available = isSlotAvailable(
+                compareIndex,
+                isDual,
+                placedModules,
+                spaceInfo,
+                selectedFurnitureId || currentDragData.moduleData.id,
+                undefined, // excludeModuleId
+                slotZone // targetZone
+              );
+              shouldRenderGhost = available;
+            } else {
+              shouldRenderGhost = false;
+            }
           }
           // 클릭 모드: 모든 빈 슬롯에 고스트 표시 (hoveredSlotIndex가 null이면 클릭 모드)
           else if (selectedFurnitureId && hoveredSlotIndex === null) {
