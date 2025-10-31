@@ -2850,10 +2850,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }
         }
         
-        // 현재 드래그 중인 가구가 듀얼인지 확인
+        // 현재 드래그 중인 가구가 듀얼인지 확인 (너비 기반)
         let isDual = false;
         if (activeModuleData) {
-          isDual = activeModuleData.moduleData.id.startsWith('dual-');
+          const moduleWidth = activeModuleData.moduleData.dimensions.width;
+          const columnWidth = indexing.columnWidth;
+          isDual = Math.abs(moduleWidth - (columnWidth * 2)) < 50;
+
+          debugLog('👻 [Ghost] 듀얼 가구 체크:', {
+            moduleId: activeModuleData.moduleData.id,
+            moduleWidth,
+            columnWidth,
+            columnWidth2x: columnWidth * 2,
+            isDual
+          });
         }
         
         // 고스트 렌더링 여부 결정
@@ -3137,16 +3147,24 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }
         } else {
           // 단내림이 없는 일반 구간
-          if (isDual && slotIndex === hoveredSlotIndex) {
+          if (isDual) {
             // 듀얼 가구 - indexing의 threeUnitDualPositions 사용
+            // 드래그 모드와 클릭 모드 모두 지원
             if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[slotIndex] !== undefined) {
               previewX = indexing.threeUnitDualPositions[slotIndex];
+            } else {
+              // threeUnitDualPositions가 없으면 두 슬롯의 중심 계산
+              const slot1X = indexing.threeUnitPositions[slotIndex];
+              const slot2X = indexing.threeUnitPositions[slotIndex + 1];
+              if (slot1X !== undefined && slot2X !== undefined) {
+                previewX = (slot1X + slot2X) / 2;
+              }
             }
           } else {
             // 싱글 가구는 이미 slotX에 올바른 위치가 설정되어 있음
             previewX = slotX;
           }
-          
+
           debugLog('🎯 [Normal Ghost] 일반 구간 고스트 위치:', {
             isDual,
             slotIndex,
@@ -3387,10 +3405,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const targetZone = effectiveZone === 'dropped' && zoneSlotInfo.dropped
             ? zoneSlotInfo.dropped
             : zoneSlotInfo.normal;
-          
+
           // 로컬 인덱스 사용
           const localIdx = slotLocalIndex;
-          
+
           if (isDual && localIdx < targetZone.columnCount - 1) {
             // 듀얼 가구: 두 슬롯의 너비 합
             const slot1Width = targetZone.slotWidths?.[localIdx] || targetZone.columnWidth;
@@ -3400,7 +3418,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             // 싱글 가구: 해당 슬롯의 너비
             customWidth = targetZone.slotWidths?.[localIdx] || targetZone.columnWidth;
           }
-          
+
           debugLog('👻 [Ghost Preview] 단내림 커스텀 너비:', {
             effectiveZone,
             localIdx,
@@ -3412,6 +3430,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               columnWidth: targetZone.columnWidth,
               slotWidths: targetZone.slotWidths
             }
+          });
+        } else if (isDual) {
+          // 일반 구간에서 듀얼 가구 커스텀 너비 계산
+          customWidth = indexing.columnWidth * 2;
+
+          debugLog('👻 [Ghost Preview] 일반 구간 듀얼 가구:', {
+            columnWidth: indexing.columnWidth,
+            customWidth,
+            moduleWidth: moduleData.dimensions.width
           });
         }
         
