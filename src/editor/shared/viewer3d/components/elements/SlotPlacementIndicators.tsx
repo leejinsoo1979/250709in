@@ -43,34 +43,42 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
     if (!hasDroppedCeiling || !indexing.zones) {
       // 단내림이 없으면 기본 위치 사용
-      return indexing.threeUnitPositions.map((pos, idx) => ({
+      const positions = indexing.threeUnitPositions.map((pos, idx) => ({
         position: pos,
         zone: 'normal' as const,
         index: idx
       }));
+      console.log('🔵 [SlotIndicators] 단내림 없음 - 슬롯 위치:', positions);
+      return positions;
     }
 
     const allPositions = [];
 
     // normal 영역
     if (indexing.zones.normal?.threeUnitPositions) {
-      allPositions.push(...indexing.zones.normal.threeUnitPositions.map((pos, idx) => ({
+      const normalPositions = indexing.zones.normal.threeUnitPositions.map((pos, idx) => ({
         position: pos,
         zone: 'normal' as const,
         index: idx
-      })));
+      }));
+      allPositions.push(...normalPositions);
+      console.log('🔵 [SlotIndicators] Normal 영역 슬롯:', normalPositions);
     }
 
     // dropped 영역
     if (indexing.zones.dropped?.threeUnitPositions) {
-      allPositions.push(...indexing.zones.dropped.threeUnitPositions.map((pos, idx) => ({
+      const droppedPositions = indexing.zones.dropped.threeUnitPositions.map((pos, idx) => ({
         position: pos,
         zone: 'dropped' as const,
         index: idx
-      })));
+      }));
+      allPositions.push(...droppedPositions);
+      console.log('🔵 [SlotIndicators] Dropped 영역 슬롯:', droppedPositions);
     }
 
-    return allPositions.sort((a, b) => a.position - b.position);
+    const sorted = allPositions.sort((a, b) => a.position - b.position);
+    console.log('🔵 [SlotIndicators] 전체 슬롯 위치 (정렬됨):', sorted);
+    return sorted;
   }, [indexing, spaceInfo.droppedCeiling?.enabled]);
 
   // 사용 가능한 슬롯 계산
@@ -195,6 +203,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           <div
             onClick={(e) => {
               e.stopPropagation();
+              console.log('🔵 [SlotIndicators] + 아이콘 클릭:', { slotIndex: slot.slotIndex, zone: slot.zone });
               onSlotClick(slot.slotIndex, slot.zone);
             }}
             style={{

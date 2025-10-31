@@ -14,6 +14,8 @@ export const useFurniturePlacement = () => {
   const { selectedFurnitureId, addModule, setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
 
   const placeFurniture = useCallback((slotIndex: number, zone?: 'normal' | 'dropped') => {
+    console.log('🟢 [useFurniturePlacement] placeFurniture 호출:', { slotIndex, zone });
+
     if (!selectedFurnitureId) {
       console.warn('선택된 가구가 없습니다');
       return;
@@ -88,11 +90,13 @@ export const useFurniturePlacement = () => {
     }
 
     // 위치 계산 - slotIndex와 zone에 해당하는 슬롯 찾기
+    console.log('🟢 [useFurniturePlacement] 슬롯 찾기:', { allSlotPositions, slotIndex, zone });
     const targetSlot = allSlotPositions.find(slot =>
       slot.index === slotIndex && (!zone || slot.zone === zone)
     );
+    console.log('🟢 [useFurniturePlacement] 찾은 슬롯:', targetSlot);
     if (!targetSlot) {
-      console.error('슬롯을 찾을 수 없습니다:', { slotIndex, zone });
+      console.error('❌ 슬롯을 찾을 수 없습니다:', { slotIndex, zone, allSlotPositions });
       return;
     }
 
