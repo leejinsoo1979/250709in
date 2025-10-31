@@ -232,7 +232,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               color: 'white',
               fontWeight: 'bold',
               lineHeight: '1',
-              animation: 'pulse 2s ease-in-out infinite'
+              animation: 'pulse 0.8s ease-in-out infinite'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.15)';
@@ -242,7 +242,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
               e.currentTarget.style.opacity = '1';
-              e.currentTarget.style.animation = 'pulse 2s ease-in-out infinite';
+              e.currentTarget.style.animation = 'pulse 0.8s ease-in-out infinite';
             }}
           >
             +
