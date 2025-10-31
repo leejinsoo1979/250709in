@@ -2881,13 +2881,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             // 슬롯이 비어있는지 확인
             const slotOccupied = placedModules.some(m => {
               if (isDual) {
-                // 듀얼 가구: 현재 슬롯과 다음 슬롯 체크
+                // 듀얼 가구: 현재 슬롯과 다음 슬롯에 어떤 가구든 있으면 점유됨
                 return m.slotIndex === compareIndex || m.slotIndex === compareIndex + 1;
               } else {
-                // 싱글 가구: 같은 슬롯에 같은 카테고리가 있는지 체크
-                if (m.slotIndex !== compareIndex) return false;
-                const placedModuleData = getModuleById(m.moduleId, internalSpace, spaceInfo);
-                return placedModuleData?.category === activeModuleData.moduleData.category;
+                // 싱글 가구: 같은 슬롯에 어떤 가구든 있으면 점유됨
+                return m.slotIndex === compareIndex;
               }
             });
 
