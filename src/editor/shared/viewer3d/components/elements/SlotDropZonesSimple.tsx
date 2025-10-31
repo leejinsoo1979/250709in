@@ -2832,9 +2832,21 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 현재 활성 모듈 가져오기 (드래그 중이거나 선택된 모듈)
         let activeModuleData = currentDragData;
 
+        console.log('🔍 [Ghost] activeModuleData 생성 전:', {
+          hasCurrentDragData: !!currentDragData,
+          selectedFurnitureId,
+          hoveredSlotIndex,
+          slotIndex
+        });
+
         // selectedFurnitureId가 있고 currentDragData가 없으면 selectedFurnitureId로부터 데이터 생성
         if (!activeModuleData && selectedFurnitureId) {
           const moduleData = getModuleById(selectedFurnitureId, internalSpace, spaceInfo);
+          console.log('🔍 [Ghost] moduleData 조회 결과:', {
+            selectedFurnitureId,
+            foundModuleData: !!moduleData,
+            moduleDataId: moduleData?.id
+          });
           if (moduleData) {
             activeModuleData = {
               type: 'furniture',
@@ -2857,43 +2869,37 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const columnWidth = indexing.columnWidth;
           isDual = Math.abs(moduleWidth - (columnWidth * 2)) < 50;
 
-          debugLog('👻 [Ghost] 듀얼 가구 체크:', {
+          console.log('🔍 [Ghost] activeModuleData 있음, 듀얼 체크:', {
             moduleId: activeModuleData.moduleData.id,
             moduleWidth,
             columnWidth,
-            columnWidth2x: columnWidth * 2,
-            isDual
+            isDual,
+            selectedFurnitureId,
+            hoveredSlotIndex
           });
         }
-        
+
         // 고스트 렌더링 여부 결정
         let shouldRenderGhost = false;
         if (activeModuleData) {
+          console.log('🔍 [Ghost] shouldRenderGhost 결정 시작:', {
+            hasCurrentDragData: !!currentDragData,
+            selectedFurnitureId,
+            hoveredSlotIndex,
+            slotIndex
+          });
           const compareIndex = isZoneData ? slotLocalIndex : slotIndex;
 
-          // 드래그 모드: hoveredSlotIndex 사용 + 슬롯 사용 가능 여부 확인
-          if (currentDragData && hoveredSlotIndex !== null) {
-            const zoneMatches = hoveredZone ? (hoveredZone === slotZone) : true;
-            const isHoveredSlot = compareIndex === hoveredSlotIndex && zoneMatches;
+          // 클릭 모드: hoveredSlotIndex가 null이면 무조건 클릭 모드
+          if (hoveredSlotIndex === null && (selectedFurnitureId || currentDragData)) {
+            console.log('🟢🟢🟢 [Click Mode] 클릭 모드 진입:', {
+              selectedFurnitureId,
+              hoveredSlotIndex,
+              slotIndex: compareIndex,
+              slotZone,
+              currentDragData: !!currentDragData
+            });
 
-            if (isHoveredSlot) {
-              // hover 중인 슬롯이면 사용 가능 여부 확인
-              const available = isSlotAvailable(
-                compareIndex,
-                isDual,
-                placedModules,
-                spaceInfo,
-                selectedFurnitureId || currentDragData.moduleData.id,
-                undefined, // excludeModuleId
-                slotZone // targetZone
-              );
-              shouldRenderGhost = available;
-            } else {
-              shouldRenderGhost = false;
-            }
-          }
-          // 클릭 모드: 모든 빈 슬롯에 고스트 표시 (hoveredSlotIndex가 null이면 클릭 모드)
-          else if (selectedFurnitureId && hoveredSlotIndex === null) {
             // isSlotAvailable 함수로 슬롯 사용 가능 여부 확인
             const available = isSlotAvailable(
               compareIndex,
@@ -2905,7 +2911,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               slotZone // targetZone
             );
 
-            debugLog('👻 [Click Mode] 슬롯 점유 체크:', {
+            console.log('👻 [Click Mode] 슬롯 점유 체크:', {
               slotIndex: compareIndex,
               slotZone,
               isDual,
@@ -2916,6 +2922,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             });
 
             shouldRenderGhost = available;
+          }
+          // 드래그 모드: hoveredSlotIndex가 있으면 드래그 중
+          else if (hoveredSlotIndex !== null && (currentDragData || selectedFurnitureId)) {
+            const zoneMatches = hoveredZone ? (hoveredZone === slotZone) : true;
+            const isHoveredSlot = compareIndex === hoveredSlotIndex && zoneMatches;
+
+            if (isHoveredSlot) {
+              // hover 중인 슬롯이면 사용 가능 여부 확인
+              const available = isSlotAvailable(
+                compareIndex,
+                isDual,
+                placedModules,
+                spaceInfo,
+                selectedFurnitureId || (currentDragData?.moduleData.id || ''),
+                undefined, // excludeModuleId
+                slotZone // targetZone
+              );
+              shouldRenderGhost = available;
+            } else {
+              shouldRenderGhost = false;
+            }
           }
 
           debugLog('🔥 고스트 렌더링 체크:', {
