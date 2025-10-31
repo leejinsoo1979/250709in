@@ -546,6 +546,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         placedFurnitureId={placedFurnitureId}
         panelGrainDirections={panelGrainDirections}
+        renderMode={renderMode} // 렌더 모드 전달
       />
       </>
     );
@@ -579,6 +580,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
         placedFurnitureId={placedFurnitureId}
         panelGrainDirections={panelGrainDirections}
+        renderMode={renderMode} // 렌더 모드 전달
       />
       </>
     );

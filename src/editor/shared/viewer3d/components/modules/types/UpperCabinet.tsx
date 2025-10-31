@@ -34,9 +34,11 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
   showFurniture = true,
   lowerSectionTopOffset,
   placedFurnitureId,
-  panelGrainDirections
+  panelGrainDirections,
+  renderMode: renderModeProp
 }) => {
-  const { renderMode, viewMode } = useSpace3DView();
+  const { renderMode: contextRenderMode, viewMode } = useSpace3DView();
+  const renderMode = renderModeProp || contextRenderMode;
   
   // 공통 가구 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -58,8 +60,9 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
         <>
-          <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} hasBackPanel={hasBackPanel} isFloating={true} spaceInfo={spaceInfo} moduleData={moduleData} lowerSectionTopOffsetMm={lowerSectionTopOffset}>
+          <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} hasBackPanel={hasBackPanel} isFloating={true} spaceInfo={spaceInfo} moduleData={moduleData} lowerSectionTopOffsetMm={lowerSectionTopOffset} renderMode={renderMode}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
+            {console.log('🟣 [UpperCabinet] 내부 구조 렌더링:', { isDragging, renderMode, hasLeftRight: !!(baseFurniture.modelConfig.leftSections && baseFurniture.modelConfig.rightSections) })}
             <>
                 {/* 듀얼 가구인 경우 좌우 섹션 별도 렌더링 */}
                 {baseFurniture.modelConfig.leftSections && baseFurniture.modelConfig.rightSections ? (
@@ -147,7 +150,8 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
               spaceInfo={spaceInfo}
               doorColor={baseFurniture.doorColor}
               renderMode={renderMode}
-                        furnitureId={moduleData.id}
+              furnitureId={moduleData.id}
+              isDragging={isDragging}
             />
         </>
       )}

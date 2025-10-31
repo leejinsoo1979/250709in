@@ -36,7 +36,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   showFurniture = true,
   lowerSectionTopOffset,
   placedFurnitureId,
-  panelGrainDirections
+  panelGrainDirections,
+  renderMode: renderModeProp
 }) => {
   console.log('🏠 [LowerCabinet] Props 확인:', {
     moduleId: moduleData.id,
@@ -44,7 +45,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
     placementType: spaceInfo?.baseConfig?.placementType,
     floatHeight: spaceInfo?.baseConfig?.floatHeight
   });
-  const { renderMode, viewMode } = useSpace3DView();
+  const { renderMode: contextRenderMode, viewMode } = useSpace3DView();
+  const renderMode = renderModeProp || contextRenderMode;
   
   // 공통 가구 로직 사용
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -102,7 +104,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               hasBackPanel={hasBackPanel}
               spaceInfo={spaceInfo}
               moduleData={moduleData}
-              lowerSectionTopOffsetMm={lowerSectionTopOffset}>
+              lowerSectionTopOffsetMm={lowerSectionTopOffset}
+              renderMode={renderMode}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
                 {/* 듀얼 가구인 경우 좌우 섹션 별도 렌더링 */}
@@ -188,6 +191,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               spaceInfo={spaceInfo}
               doorColor={baseFurniture.doorColor}
               renderMode={renderMode}
+              isDragging={isDragging}
             />
           </group>
         </>

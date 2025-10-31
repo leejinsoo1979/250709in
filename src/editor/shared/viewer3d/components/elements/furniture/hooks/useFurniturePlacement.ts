@@ -24,6 +24,13 @@ export const useFurniturePlacement = () => {
     const indexing = calculateSpaceIndexing(spaceInfo);
     const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
 
+    console.log('🟢 [useFurniturePlacement] indexing:', {
+      hasDroppedCeiling,
+      zones: indexing.zones,
+      columnWidth: indexing.columnWidth,
+      threeUnitPositions: indexing.threeUnitPositions
+    });
+
     // zone에 맞는 internal space를 객체로 생성
     const baseInternalSpace = calculateInternalSpace(spaceInfo);
     let targetInternalSpace = baseInternalSpace;
