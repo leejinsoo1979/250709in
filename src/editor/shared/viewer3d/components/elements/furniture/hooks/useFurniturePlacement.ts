@@ -44,7 +44,13 @@ export const useFurniturePlacement = () => {
       };
     }
 
-    console.log('🟢 [useFurniturePlacement] targetInternalSpace:', targetInternalSpace);
+    console.log('🟢 [useFurniturePlacement] targetInternalSpace:', {
+      zone,
+      hasDroppedCeiling,
+      targetInternalSpace,
+      'zones.normal': indexing.zones?.normal?.internalWidth,
+      'zones.dropped': indexing.zones?.dropped?.internalWidth
+    });
 
     const moduleData = getModuleById(selectedFurnitureId, targetInternalSpace, spaceInfo);
 
@@ -53,7 +59,11 @@ export const useFurniturePlacement = () => {
       return;
     }
 
-    console.log('🟢 [useFurniturePlacement] moduleData:', moduleData);
+    console.log('🟢 [useFurniturePlacement] moduleData:', {
+      id: moduleData.id,
+      dimensions: moduleData.dimensions,
+      category: moduleData.category
+    });
 
     // 듀얼 가구 여부 확인 - zone에 맞는 columnWidth 사용
     let columnWidth;
@@ -191,10 +201,13 @@ export const useFurniturePlacement = () => {
 
     console.log('🎯 가구 배치:', {
       slotIndex,
+      zone: targetSlot.zone,
       position: newModule.position,
       isDual: isDualFurniture,
       category: moduleData.category,
-      zone: targetSlot.zone
+      furnitureWidth: moduleData.dimensions.width,
+      columnWidth,
+      targetSlot
     });
 
     // 가구 추가

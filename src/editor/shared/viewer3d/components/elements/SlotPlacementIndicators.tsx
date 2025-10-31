@@ -191,7 +191,7 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     <>
       {availableSlots.map((slot) => (
         <Html
-          key={`slot-indicator-${slot.slotIndex}`}
+          key={`slot-indicator-${slot.zone}-${slot.slotIndex}`}
           position={[slot.position.x, slot.position.y, slot.position.z]}
           center
           style={{
