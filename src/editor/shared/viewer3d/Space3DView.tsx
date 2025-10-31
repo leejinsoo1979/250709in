@@ -77,18 +77,22 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   // ESC 키 이벤트 리스너 - selectedFurnitureId 해제
   useEffect(() => {
     const handleEscKey = (e: KeyboardEvent) => {
+      console.log('🔵 [Space3DView] 키 눌림:', e.key);
       if (e.key === 'Escape') {
         const { selectedFurnitureId, setSelectedFurnitureId } = useUIStore.getState();
+        console.log('🔵 [Space3DView] ESC 키 감지 - selectedFurnitureId:', selectedFurnitureId);
         if (selectedFurnitureId) {
-          console.log('🔵 [Space3DView] ESC 키 - selectedFurnitureId 해제:', selectedFurnitureId);
+          console.log('🔵 [Space3DView] selectedFurnitureId 해제 실행');
           setSelectedFurnitureId(null);
         }
       }
     };
 
-    window.addEventListener('keydown', handleEscKey);
+    console.log('🔵 [Space3DView] ESC 키 이벤트 리스너 등록');
+    document.addEventListener('keydown', handleEscKey);
     return () => {
-      window.removeEventListener('keydown', handleEscKey);
+      console.log('🔵 [Space3DView] ESC 키 이벤트 리스너 해제');
+      document.removeEventListener('keydown', handleEscKey);
     };
   }, []);
 
