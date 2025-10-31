@@ -3522,7 +3522,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             <BoxModule
               moduleData={moduleData}
               color={theme.color}
-              isDragging={true}
+              isDragging={false}
               hasDoor={moduleData.hasDoor}
               customDepth={customDepth}
               customWidth={customWidth}
