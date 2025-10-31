@@ -2880,12 +2880,30 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           else if (selectedFurnitureId && hoveredSlotIndex === null) {
             // 슬롯이 비어있는지 확인
             const slotOccupied = placedModules.some(m => {
+              // 배치된 가구가 듀얼인지 확인
+              const placedModuleData = getModuleById(m.moduleId, internalSpace, spaceInfo);
+              const placedModuleWidth = placedModuleData?.dimensions.width || 0;
+              const isPlacedDual = Math.abs(placedModuleWidth - (indexing.columnWidth * 2)) < 50;
+
               if (isDual) {
-                // 듀얼 가구: 현재 슬롯과 다음 슬롯에 어떤 가구든 있으면 점유됨
-                return m.slotIndex === compareIndex || m.slotIndex === compareIndex + 1;
+                // 선택한 가구가 듀얼: 현재 슬롯과 다음 슬롯에 어떤 가구든 있으면 점유됨
+                if (isPlacedDual) {
+                  // 배치된 가구도 듀얼: 슬롯 범위 겹침 체크
+                  return (m.slotIndex === compareIndex || m.slotIndex === compareIndex + 1) ||
+                         (m.slotIndex + 1 === compareIndex || m.slotIndex + 1 === compareIndex + 1);
+                } else {
+                  // 배치된 가구는 싱글
+                  return m.slotIndex === compareIndex || m.slotIndex === compareIndex + 1;
+                }
               } else {
-                // 싱글 가구: 같은 슬롯에 어떤 가구든 있으면 점유됨
-                return m.slotIndex === compareIndex;
+                // 선택한 가구가 싱글: 현재 슬롯에 어떤 가구든 있으면 점유됨
+                if (isPlacedDual) {
+                  // 배치된 가구가 듀얼: 듀얼 가구의 두 슬롯 중 하나라도 현재 슬롯이면 점유됨
+                  return m.slotIndex === compareIndex || m.slotIndex + 1 === compareIndex;
+                } else {
+                  // 배치된 가구도 싱글
+                  return m.slotIndex === compareIndex;
+                }
               }
             });
 

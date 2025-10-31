@@ -67,11 +67,23 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       if (isDualFurniture) {
         if (i >= indexing.columnCount - 1) continue; // 마지막 슬롯은 듀얼 배치 불가
 
-        // 두 슬롯이 모두 비어있는지 확인
-        const slot1Occupied = placedModules.some(m => m.slotIndex === i);
-        const slot2Occupied = placedModules.some(m => m.slotIndex === i + 1);
+        // 두 슬롯이 모두 비어있는지 확인 (배치된 듀얼 가구도 고려)
+        const slotsOccupied = placedModules.some(m => {
+          const moduleData = getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+          const moduleWidth = moduleData?.dimensions.width || 0;
+          const isPlacedDual = Math.abs(moduleWidth - (indexing.columnWidth * 2)) < 50;
 
-        if (!slot1Occupied && !slot2Occupied) {
+          if (isPlacedDual) {
+            // 배치된 가구가 듀얼: 슬롯 범위 겹침 체크
+            return (m.slotIndex === i || m.slotIndex === i + 1) ||
+                   (m.slotIndex + 1 === i || m.slotIndex + 1 === i + 1);
+          } else {
+            // 배치된 가구가 싱글
+            return m.slotIndex === i || m.slotIndex === i + 1;
+          }
+        });
+
+        if (!slotsOccupied) {
           // 두 슬롯의 중심 위치 계산
           const centerX = indexing.threeUnitDualPositions?.[i] ||
                          (indexing.threeUnitPositions[i] + indexing.threeUnitPositions[i + 1]) / 2;
@@ -87,8 +99,20 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         }
       } else {
         // 싱글 가구인 경우
-        // 같은 슬롯에 어떤 가구든 있으면 점유됨
-        const slotOccupied = placedModules.some(m => m.slotIndex === i);
+        // 같은 슬롯에 어떤 가구든 있으면 점유됨 (배치된 듀얼 가구의 두 번째 슬롯도 고려)
+        const slotOccupied = placedModules.some(m => {
+          const moduleData = getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+          const moduleWidth = moduleData?.dimensions.width || 0;
+          const isPlacedDual = Math.abs(moduleWidth - (indexing.columnWidth * 2)) < 50;
+
+          if (isPlacedDual) {
+            // 배치된 가구가 듀얼: 듀얼 가구의 두 슬롯 중 하나라도 현재 슬롯이면 점유됨
+            return m.slotIndex === i || m.slotIndex + 1 === i;
+          } else {
+            // 배치된 가구가 싱글
+            return m.slotIndex === i;
+          }
+        });
 
         if (!slotOccupied) {
           slots.push({
