@@ -2908,26 +2908,32 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               console.error('❌ [Click Mode] moduleId가 없습니다!');
               shouldRenderGhost = false;
             } else {
-              // isSlotAvailable 함수로 슬롯 사용 가능 여부 확인
-              const available = isSlotAvailable(
-                compareIndex,
-                isDual,
-                placedModules,
-                spaceInfo,
-                moduleIdForCheck,
-                undefined, // excludeModuleId
-                slotZone // targetZone
-              );
+              // 듀얼 가구일 때 겹치지 않도록 짝수 슬롯(0,2,4,...)에만 고스트 표시
+              if (isDual && compareIndex % 2 !== 0) {
+                console.log('🚫 [Click Mode] 듀얼 가구 홀수 슬롯 제외:', { slotIndex: compareIndex });
+                shouldRenderGhost = false;
+              } else {
+                // isSlotAvailable 함수로 슬롯 사용 가능 여부 확인
+                const available = isSlotAvailable(
+                  compareIndex,
+                  isDual,
+                  placedModules,
+                  spaceInfo,
+                  moduleIdForCheck,
+                  undefined, // excludeModuleId
+                  slotZone // targetZone
+                );
 
-              console.log('👻 [Click Mode] 슬롯 점유 체크:', {
-                slotIndex: compareIndex,
-                slotZone,
-                isDual,
-                available,
-                moduleIdForCheck
-              });
+                console.log('👻 [Click Mode] 슬롯 점유 체크:', {
+                  slotIndex: compareIndex,
+                  slotZone,
+                  isDual,
+                  available,
+                  moduleIdForCheck
+                });
 
-              shouldRenderGhost = available;
+                shouldRenderGhost = available;
+              }
             }
           }
           // 드래그 모드: currentDragData만 있고 selectedFurnitureId가 없으면 드래그 중
