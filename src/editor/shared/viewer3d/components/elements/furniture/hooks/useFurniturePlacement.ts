@@ -72,10 +72,7 @@ export const useFurniturePlacement = () => {
       category: moduleData.category
     });
 
-    // 듀얼 가구 여부 확인 - ID 기반 판단
-    const isDualFurniture = selectedFurnitureId.includes('dual-');
-
-    // zone에 맞는 columnWidth 계산
+    // 듀얼 가구 여부 확인 - zone에 맞는 columnWidth 사용
     let columnWidth;
     if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
       columnWidth = indexing.zones.dropped.columnWidth;
@@ -85,12 +82,8 @@ export const useFurniturePlacement = () => {
       columnWidth = indexing.columnWidth;
     }
 
-    console.log('🟢 [useFurniturePlacement] 듀얼 가구 판단 (ID 기반):', {
-      selectedFurnitureId,
-      isDualFurniture,
-      columnWidth,
-      furnitureWidth: moduleData.dimensions.width
-    });
+    const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+    console.log('🟢 [useFurniturePlacement] 듀얼 가구 판단:', { columnWidth, furnitureWidth: moduleData.dimensions.width, isDualFurniture });
 
     // 단내림이 있는 경우 영역별 슬롯 위치 계산
     let allSlotPositions: Array<{ position: number; zone: 'normal' | 'dropped'; index: number }> = [];
