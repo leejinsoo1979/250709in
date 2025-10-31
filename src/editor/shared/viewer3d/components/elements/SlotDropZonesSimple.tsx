@@ -2892,36 +2892,43 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
           // 클릭 모드: hoveredSlotIndex가 null이면 무조건 클릭 모드
           if (hoveredSlotIndex === null && (selectedFurnitureId || currentDragData)) {
+            const moduleIdForCheck = selectedFurnitureId || currentDragData?.moduleData?.id || activeModuleData?.moduleData?.id || '';
+
             console.log('🟢🟢🟢 [Click Mode] 클릭 모드 진입:', {
               selectedFurnitureId,
+              currentDragDataId: currentDragData?.moduleData?.id,
+              activeModuleDataId: activeModuleData?.moduleData?.id,
+              moduleIdForCheck,
               hoveredSlotIndex,
               slotIndex: compareIndex,
-              slotZone,
-              currentDragData: !!currentDragData
+              slotZone
             });
 
-            // isSlotAvailable 함수로 슬롯 사용 가능 여부 확인
-            const available = isSlotAvailable(
-              compareIndex,
-              isDual,
-              placedModules,
-              spaceInfo,
-              selectedFurnitureId,
-              undefined, // excludeModuleId
-              slotZone // targetZone
-            );
+            if (!moduleIdForCheck) {
+              console.error('❌ [Click Mode] moduleId가 없습니다!');
+              shouldRenderGhost = false;
+            } else {
+              // isSlotAvailable 함수로 슬롯 사용 가능 여부 확인
+              const available = isSlotAvailable(
+                compareIndex,
+                isDual,
+                placedModules,
+                spaceInfo,
+                moduleIdForCheck,
+                undefined, // excludeModuleId
+                slotZone // targetZone
+              );
 
-            console.log('👻 [Click Mode] 슬롯 점유 체크:', {
-              slotIndex: compareIndex,
-              slotZone,
-              isDual,
-              available,
-              placedModulesInSlot: placedModules.filter(m => m.slotIndex === compareIndex),
-              placedModulesWithZone: placedModules.map(m => ({ slotIndex: m.slotIndex, zone: m.zone })),
-              selectedCategory: activeModuleData.moduleData.category
-            });
+              console.log('👻 [Click Mode] 슬롯 점유 체크:', {
+                slotIndex: compareIndex,
+                slotZone,
+                isDual,
+                available,
+                moduleIdForCheck
+              });
 
-            shouldRenderGhost = available;
+              shouldRenderGhost = available;
+            }
           }
           // 드래그 모드: hoveredSlotIndex가 있으면 드래그 중
           else if (hoveredSlotIndex !== null && (currentDragData || selectedFurnitureId)) {
