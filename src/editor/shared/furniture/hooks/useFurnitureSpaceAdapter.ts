@@ -206,9 +206,18 @@ export const useFurnitureSpaceAdapter = ({ setPlacedModules }: UseFurnitureSpace
             maxColumnCount = zoneInfo.normal.columnCount;
           }
         }
-        
-        if (isDualModule && (slotIndex + 1) >= maxColumnCount) {
+
+        // 듀얼 가구가 범위를 벗어나는지 체크 (slotIndex + 1이 maxColumnCount보다 크거나 같으면 변환)
+        // 예: maxColumnCount=2 (슬롯 0,1), 듀얼 가구 slotIndex=1이면 1+1=2 >= 2이므로 변환
+        // 하지만 slotIndex=0이면 0+1=1 < 2이므로 유지
+        if (isDualModule && (slotIndex + 1) > maxColumnCount - 1) {
           // 듀얼 가구를 싱글로 변환 시도
+          console.log('⚠️ [SpaceAdapter] 듀얼 가구 범위 초과, 싱글로 변환:', {
+            slotIndex,
+            maxColumnCount,
+            moduleId: module.moduleId,
+            zone: module.zone
+          });
           // 소수점 1자리까지 정확히 처리
           const normalizedWidth = Math.round(newIndexing.columnWidth * 10) / 10;
           newModuleId = newModuleId.replace(/^dual-/, 'single-').replace(/-[\d.]+$/, `-${normalizedWidth}`);
