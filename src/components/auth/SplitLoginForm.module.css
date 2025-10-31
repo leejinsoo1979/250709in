@@ -202,7 +202,7 @@
 /* Login Button */
 .loginButton {
   width: 100%;
-  background: var(--theme-primary, #6B5EFF) !important;
+  background: #6B5EFF !important;
   color: white !important;
   border: none;
   padding: 16px;
@@ -215,7 +215,7 @@
 }
 
 .loginButton:hover:not(:disabled) {
-  background: var(--theme-primary-hover, #5A4FE6) !important;
+  background: #5A4FE6 !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(107, 94, 255, 0.3);
 }
@@ -330,7 +330,7 @@
 .demoButton {
   width: 100%;
   padding: 16px;
-  background: var(--theme-primary, #6B5EFF) !important;
+  background: #6B5EFF !important;
   color: white !important;
   border: none;
   border-radius: 12px;
@@ -343,7 +343,7 @@
 }
 
 .demoButton:hover {
-  background: var(--theme-primary-hover, #5A4FE6) !important;
+  background: #5A4FE6 !important;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(107, 94, 255, 0.3);
 }
