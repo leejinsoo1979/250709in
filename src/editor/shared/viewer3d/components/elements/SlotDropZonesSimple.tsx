@@ -2878,59 +2878,28 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }
           // 클릭 모드: 모든 빈 슬롯에 고스트 표시 (hoveredSlotIndex가 null이면 클릭 모드)
           else if (selectedFurnitureId && hoveredSlotIndex === null) {
-            // 슬롯이 비어있는지 확인 (zone 고려)
-            const slotOccupied = placedModules.some(m => {
-              // zone이 없으면 normal로 간주
-              const moduleZone = m.zone || 'normal';
-
-              // zone이 다르면 이 가구는 체크 안함 (다음 가구로)
-              if (moduleZone !== slotZone) {
-                return false;
-              }
-
-              // 배치된 가구가 듀얼인지 확인
-              const placedModuleData = getModuleById(m.moduleId, internalSpace, spaceInfo);
-              const placedModuleWidth = placedModuleData?.dimensions.width || 0;
-              const isPlacedDual = Math.abs(placedModuleWidth - (indexing.columnWidth * 2)) < 50;
-
-              if (isDual) {
-                // 선택한 가구가 듀얼: 현재 슬롯과 다음 슬롯에 어떤 가구든 있으면 점유됨
-                if (isPlacedDual) {
-                  // 배치된 가구도 듀얼: 슬롯 범위 겹침 체크
-                  return (m.slotIndex === compareIndex || m.slotIndex === compareIndex + 1) ||
-                         (m.slotIndex + 1 === compareIndex || m.slotIndex + 1 === compareIndex + 1);
-                } else {
-                  // 배치된 가구는 싱글
-                  return m.slotIndex === compareIndex || m.slotIndex === compareIndex + 1;
-                }
-              } else {
-                // 선택한 가구가 싱글: 현재 슬롯에 어떤 가구든 있으면 점유됨
-                if (isPlacedDual) {
-                  // 배치된 가구가 듀얼: 듀얼 가구의 두 슬롯 중 하나라도 현재 슬롯이면 점유됨
-                  return m.slotIndex === compareIndex || m.slotIndex + 1 === compareIndex;
-                } else {
-                  // 배치된 가구도 싱글
-                  return m.slotIndex === compareIndex;
-                }
-              }
-            });
+            // isSlotAvailable 함수로 슬롯 사용 가능 여부 확인
+            const available = isSlotAvailable(
+              compareIndex,
+              isDual,
+              placedModules,
+              spaceInfo,
+              selectedFurnitureId,
+              undefined, // excludeModuleId
+              slotZone // targetZone
+            );
 
             debugLog('👻 [Click Mode] 슬롯 점유 체크:', {
               slotIndex: compareIndex,
               slotZone,
               isDual,
-              slotOccupied,
+              available,
               placedModulesInSlot: placedModules.filter(m => m.slotIndex === compareIndex),
               placedModulesWithZone: placedModules.map(m => ({ slotIndex: m.slotIndex, zone: m.zone })),
               selectedCategory: activeModuleData.moduleData.category
             });
 
-            // 듀얼 가구는 마지막 슬롯에 배치 불가
-            if (isDual && compareIndex >= indexing.columnCount - 1) {
-              shouldRenderGhost = false;
-            } else {
-              shouldRenderGhost = !slotOccupied;
-            }
+            shouldRenderGhost = available;
           }
 
           debugLog('🔥 고스트 렌더링 체크:', {
