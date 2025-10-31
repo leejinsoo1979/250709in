@@ -2914,9 +2914,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
             debugLog('👻 [Click Mode] 슬롯 점유 체크:', {
               slotIndex: compareIndex,
+              slotZone,
               isDual,
               slotOccupied,
               placedModulesInSlot: placedModules.filter(m => m.slotIndex === compareIndex),
+              placedModulesWithZone: placedModules.map(m => ({ slotIndex: m.slotIndex, zone: m.zone })),
               selectedCategory: activeModuleData.moduleData.category
             });
 
