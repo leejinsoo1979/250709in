@@ -2881,6 +2881,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               }
             });
 
+            debugLog('👻 [Click Mode] 슬롯 점유 체크:', {
+              slotIndex: compareIndex,
+              isDual,
+              slotOccupied,
+              placedModulesInSlot: placedModules.filter(m => m.slotIndex === compareIndex),
+              selectedCategory: activeModuleData.moduleData.category
+            });
+
             // 듀얼 가구는 마지막 슬롯에 배치 불가
             if (isDual && compareIndex >= indexing.columnCount - 1) {
               shouldRenderGhost = false;
