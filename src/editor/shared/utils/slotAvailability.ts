@@ -214,9 +214,18 @@ export const isSlotAvailable = (
       // zone이 지정된 경우, 다른 zone의 가구는 무시
       if (targetZone) {
         const moduleZone = placedModule.zone || 'normal';
+        console.log('🔍 [isSlotAvailable] Zone 체크:', {
+          targetZone,
+          moduleZone,
+          placedModuleId: placedModule.id,
+          placedModuleSlotIndex: placedModule.slotIndex,
+          match: moduleZone === targetZone
+        });
         if (moduleZone !== targetZone) {
+          console.log('  → 다른 zone이므로 무시');
           continue; // 다른 zone의 가구는 체크 안함
         }
+        console.log('  → 같은 zone, 충돌 체크 계속');
       }
 
       const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
