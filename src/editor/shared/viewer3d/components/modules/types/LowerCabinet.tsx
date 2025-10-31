@@ -104,8 +104,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               moduleData={moduleData}
               lowerSectionTopOffsetMm={lowerSectionTopOffset}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
-            {(
-              <>
+            <>
                 {/* 듀얼 가구인 경우 좌우 섹션 별도 렌더링 */}
                 {baseFurniture.modelConfig.leftSections && baseFurniture.modelConfig.rightSections ? (
                   <>
@@ -174,11 +173,9 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                   />
                 )}
               </>
-            )}
           </BaseFurnitureShell>
 
           {/* 하부장 상단 마감재 (18mm) - 도어 색상과 동일 */}
-          {(
             <FinishingPanelWithTexture
               width={baseFurniture.width}
               height={0.18}
@@ -192,7 +189,6 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               doorColor={baseFurniture.doorColor}
               renderMode={renderMode}
             />
-          )}
           </group>
         </>
       )}

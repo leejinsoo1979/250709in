@@ -60,8 +60,7 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
         <>
           <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} hasBackPanel={hasBackPanel} isFloating={true} spaceInfo={spaceInfo} moduleData={moduleData} lowerSectionTopOffsetMm={lowerSectionTopOffset}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
-            {(
-              <>
+            <>
                 {/* 듀얼 가구인 경우 좌우 섹션 별도 렌더링 */}
                 {baseFurniture.modelConfig.leftSections && baseFurniture.modelConfig.rightSections ? (
                   <>
@@ -133,11 +132,9 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
                   />
                 )}
               </>
-            )}
           </BaseFurnitureShell>
 
           {/* 상부장 하단 마감재 (18mm) - 도어 색상과 동일 */}
-          {(
             <FinishingPanelWithTexture
               width={baseFurniture.width}
               height={0.18}
@@ -152,7 +149,6 @@ const UpperCabinet: React.FC<FurnitureTypeProps> = ({
               renderMode={renderMode}
                         furnitureId={moduleData.id}
             />
-          )}
         </>
       )}
       
