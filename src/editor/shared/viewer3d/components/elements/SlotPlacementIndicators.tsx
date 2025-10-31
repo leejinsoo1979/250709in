@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
 import { Html } from '@react-three/drei';
+import { AiOutlinePlusCircle } from 'react-icons/ai';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../../utils/geometry';
+import { useUIStore } from '@/store/uiStore';
 
 interface SlotPlacementIndicatorsProps {
   onSlotClick: (slotIndex: number, zone?: 'normal' | 'dropped') => void;
@@ -18,6 +20,7 @@ interface SlotPlacementIndicatorsProps {
 const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlotClick }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, placedModules } = useFurnitureStore();
+  const { view2DTheme } = useUIStore();
 
   // 선택된 가구 정보 가져오기
   const selectedModuleData = useMemo(() => {
@@ -207,31 +210,24 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               onSlotClick(slot.slotIndex, slot.zone);
             }}
             style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(59, 130, 246, 0.9)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
               transition: 'all 0.2s ease',
-              fontSize: '24px',
-              color: 'white',
-              fontWeight: 'bold',
-              lineHeight: '1'
+              fontSize: '36px',
+              color: view2DTheme.primary
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.15)';
-              e.currentTarget.style.backgroundColor = 'rgba(37, 99, 235, 1)';
+              e.currentTarget.style.opacity = '0.8';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style.backgroundColor = 'rgba(59, 130, 246, 0.9)';
+              e.currentTarget.style.opacity = '1';
             }}
           >
-            +
+            <AiOutlinePlusCircle />
           </div>
         </Html>
       ))}
