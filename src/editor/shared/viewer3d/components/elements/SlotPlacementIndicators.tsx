@@ -111,9 +111,18 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       yPosition = (floorFinishHeightMm + baseHeightMm + floatHeightMm + furnitureHeightMm / 2) * 0.01;
     }
 
+    console.log('🟠 [SlotIndicators] availableSlots 계산 시작:', {
+      isDualFurniture,
+      allSlotPositions,
+      placedModulesCount: placedModules.length,
+      placedModules: placedModules.map(m => ({ slotIndex: m.slotIndex, zone: m.zone, id: m.moduleId }))
+    });
+
     for (let i = 0; i < allSlotPositions.length; i++) {
       const slotData = allSlotPositions[i];
       const slotIndex = slotData.index;
+
+      console.log('🟠 [SlotIndicators] 슬롯 체크 시작:', { i, slotIndex, zone: slotData.zone });
 
       // 듀얼 가구인 경우 연속된 두 슬롯 체크
       if (isDualFurniture) {
