@@ -100,24 +100,41 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
     const baseHeightMm = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig?.height || 65) : 0;
     const floatHeightMm = spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
 
-    let yPosition: number;
-    if (selectedCategory === 'upper') {
-      // 상부장: 천장 근처
-      const topFrameHeightMm = spaceInfo.frameSize?.top || 10;
-      const bottomFrameHeightMm = spaceInfo.frameSize?.bottom || 0;
-      const internalHeight = spaceInfo.height - topFrameHeightMm - bottomFrameHeightMm - floorFinishHeightMm;
-      yPosition = (floorFinishHeightMm + bottomFrameHeightMm + internalHeight - furnitureHeightMm / 2) * 0.01;
-    } else {
-      // 하부장/키큰장: 바닥 기준
-      yPosition = (floorFinishHeightMm + baseHeightMm + floatHeightMm + furnitureHeightMm / 2) * 0.01;
-    }
-
     console.log('🟠 [SlotIndicators] availableSlots 계산 시작:', {
       isDualFurniture,
       allSlotPositions,
       placedModulesCount: placedModules.length,
       placedModules: placedModules.map(m => ({ slotIndex: m.slotIndex, zone: m.zone, id: m.moduleId }))
     });
+
+    // Y 위치 계산 함수 - zone에 따라 다른 높이 적용
+    const calculateYPosition = (zone: 'normal' | 'dropped'): number => {
+      if (selectedCategory === 'upper') {
+        // 상부장: 천장 근처
+        const topFrameHeightMm = spaceInfo.frameSize?.top || 10;
+        const bottomFrameHeightMm = spaceInfo.frameSize?.bottom || 0;
+
+        // 기본 내부 높이
+        let internalHeight = spaceInfo.height - topFrameHeightMm - bottomFrameHeightMm - floorFinishHeightMm;
+
+        // 단내림이 있는 경우, dropped 영역은 단내림 높이만큼 낮아짐
+        if (spaceInfo.droppedCeiling?.enabled && zone === 'dropped') {
+          const droppedCeilingHeight = spaceInfo.droppedCeiling.height || 0;
+          internalHeight = internalHeight - droppedCeilingHeight;
+          console.log('🔴 [SlotIndicators] Dropped 영역 상부장 Y 위치 계산:', {
+            zone,
+            droppedCeilingHeight,
+            internalHeight,
+            furnitureHeightMm
+          });
+        }
+
+        return (floorFinishHeightMm + bottomFrameHeightMm + internalHeight - furnitureHeightMm / 2) * 0.01;
+      } else {
+        // 하부장/키큰장: 바닥 기준
+        return (floorFinishHeightMm + baseHeightMm + floatHeightMm + furnitureHeightMm / 2) * 0.01;
+      }
+    };
 
     for (let i = 0; i < allSlotPositions.length; i++) {
       const slotData = allSlotPositions[i];
@@ -140,6 +157,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         console.log('🔍 [SlotIndicators] 슬롯 사용 불가:', { slotIndex, zone: slotData.zone });
         continue; // 슬롯 사용 불가
       }
+
+      // zone에 따른 Y 위치 계산
+      const yPosition = calculateYPosition(slotData.zone);
 
       // 듀얼 가구인 경우 연속된 두 슬롯 체크
       if (isDualFurniture) {
