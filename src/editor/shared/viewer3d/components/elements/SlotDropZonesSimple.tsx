@@ -3474,7 +3474,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         
         return (
           <group key={`furniture-preview-${slotIndex}`} position={[previewX, furnitureY, furnitureZ]}>
-            <BoxModule 
+            <BoxModule
               moduleData={moduleData}
               color={theme.color}
               isDragging={true}

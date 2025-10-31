@@ -12,6 +12,7 @@ interface FinishingPanelWithTextureProps {
   spaceInfo?: SpaceInfo;
   doorColor: string;
   renderMode?: 'solid' | 'wireframe';
+  isDragging?: boolean;
 }
 
 /**
@@ -25,18 +26,19 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
   position,
   spaceInfo,
   doorColor,
-  renderMode = 'solid'
+  renderMode = 'solid',
+  isDragging = false
 }) => {
   const [textureLoaded, setTextureLoaded] = useState(false);
-  
+
   // 재질을 useMemo로 캐싱
   const panelMaterial = useMemo(() => {
     const material = new THREE.MeshStandardMaterial({
       color: doorColor,
       metalness: 0.0,
       roughness: 0.6,
-      transparent: renderMode === 'wireframe',
-      opacity: renderMode === 'wireframe' ? 0.3 : 1.0,
+      transparent: renderMode === 'wireframe' || isDragging,
+      opacity: renderMode === 'wireframe' ? 0.3 : isDragging ? 0.15 : 1.0,
       wireframe: renderMode === 'wireframe'
     });
     
@@ -76,7 +78,7 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
     }
     
     return material;
-  }, [doorColor, renderMode, spaceInfo?.materialConfig?.interiorTexture, spaceInfo?.materialConfig?.doorTexture]);
+  }, [doorColor, renderMode, isDragging, spaceInfo?.materialConfig?.interiorTexture, spaceInfo?.materialConfig?.doorTexture]);
   
   // 컴포넌트 언마운트 시 재질 정리
   useEffect(() => {
