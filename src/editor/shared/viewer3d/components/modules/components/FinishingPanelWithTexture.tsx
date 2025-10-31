@@ -38,7 +38,7 @@ const FinishingPanelWithTexture: React.FC<FinishingPanelWithTextureProps> = ({
       metalness: 0.0,
       roughness: 0.6,
       transparent: renderMode === 'wireframe' || isDragging,
-      opacity: renderMode === 'wireframe' ? 0.3 : isDragging ? 0.15 : 1.0,
+      opacity: renderMode === 'wireframe' ? 0.3 : isDragging ? 0.35 : 1.0,
       wireframe: renderMode === 'wireframe'
     });
     
