@@ -21,7 +21,8 @@ export const isSlotAvailable = (
   placedModules: PlacedModule[],
   spaceInfo: SpaceInfo,
   moduleId: string,
-  excludeModuleId?: string
+  excludeModuleId?: string,
+  targetZone?: 'normal' | 'dropped'
 ): boolean => {
   const indexing = calculateSpaceIndexing(spaceInfo);
   const internalSpace = calculateInternalSpace(spaceInfo);
@@ -209,15 +210,23 @@ export const isSlotAvailable = (
       if (excludeModuleId && placedModule.id === excludeModuleId) {
         continue;
       }
-      
+
+      // zone이 지정된 경우, 다른 zone의 가구는 무시
+      if (targetZone) {
+        const moduleZone = placedModule.zone || 'normal';
+        if (moduleZone !== targetZone) {
+          continue; // 다른 zone의 가구는 체크 안함
+        }
+      }
+
       const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
       if (!moduleData) continue;
-      
+
       // 기존 가구의 카테고리 확인
       const existingCategory = moduleData.category;
       const isExistingUpper = existingCategory === 'upper';
       const isExistingLower = existingCategory === 'lower';
-      
+
       // 상부장과 하부장은 같은 슬롯에 공존 가능
       if ((isNewUpper && isExistingLower) || (isNewLower && isExistingUpper)) {
         // 공존 가능한 경우, 이 모듈은 충돌로 간주하지 않음
