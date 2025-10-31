@@ -109,8 +109,6 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 드래그 중일 때만 고스트 효과 적용 (편집 모드는 제외)
   const processedMaterial = React.useMemo(() => {
-    console.log('🎨 [BoxWithEdges] processedMaterial 재계산:', { renderMode, isDragging, panelName });
-
     // MeshBasicMaterial인 경우
     // - 패널 하이라이팅용 highlightMaterial은 그대로 사용 (투명 처리 안 함)
     // - 프레임 형광색 등도 그대로 사용
@@ -134,13 +132,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return baseMaterial;
     }
 
-    // wireframe 모드이거나 드래그 중일 때 투명 처리
-    if ((renderMode === 'wireframe' || isDragging) && baseMaterial instanceof THREE.MeshStandardMaterial) {
-      console.log('🎨 [BoxWithEdges] wireframe/dragging 투명 처리:', { renderMode, isDragging, panelName });
+    // 드래그 중일 때 투명 처리
+    if (isDragging && baseMaterial instanceof THREE.MeshStandardMaterial) {
       const ghostMaterial = baseMaterial.clone();
       ghostMaterial.transparent = true;
-      ghostMaterial.opacity = renderMode === 'wireframe' ? 0.4 : 0.6;
-      console.log('🎨 [BoxWithEdges] ghostMaterial.opacity:', ghostMaterial.opacity);
+      ghostMaterial.opacity = 0.6;
 
       // 테마 색상 가져오기
       const getThemeColor = () => {
