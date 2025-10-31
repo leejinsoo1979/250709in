@@ -2994,18 +2994,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           let zoneSpaceInfo;
           
           if (effectiveZone === 'dropped') {
-            // 단내림 영역용 spaceInfo - 높이도 조정
-            const droppedHeight = spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0);
+            // 단내림 영역용 spaceInfo - 높이는 동일 (천장만 낮아짐)
             zoneSpaceInfo = {
               ...spaceInfo,
               width: droppedCeilingWidth,  // 단내림 영역의 외경 너비
-              height: droppedHeight,  // 단내림 영역의 높이
+              height: spaceInfo.height,  // 단내림 영역의 높이는 전체 높이와 동일
               zone: 'dropped' as const
             };
             debugLog('🔧 [Ghost Preview] 단내림 영역 zoneSpaceInfo 생성:', {
               zone: 'dropped',
               width: droppedCeilingWidth,
-              height: droppedHeight,
+              height: spaceInfo.height,
               droppedCeilingEnabled: zoneSpaceInfo.droppedCeiling?.enabled
             });
           } else {

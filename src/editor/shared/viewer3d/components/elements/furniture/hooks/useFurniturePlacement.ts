@@ -36,18 +36,12 @@ export const useFurniturePlacement = () => {
     let targetInternalSpace = baseInternalSpace;
 
     if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
-      // 단내림 영역: 단내림 영역의 폭 사용, 높이는 단내림 천장 높이만큼 감소
-      const droppedCeilingHeight = spaceInfo.droppedCeiling?.height || 0;
+      // 단내림 영역: 단내림 영역의 폭 사용
       targetInternalSpace = {
         width: indexing.zones.dropped.internalWidth,
-        height: baseInternalSpace.height - droppedCeilingHeight,
+        height: baseInternalSpace.height,
         depth: baseInternalSpace.depth
       };
-      console.log('🔴 [useFurniturePlacement] 단내림 영역 internal space 조정:', {
-        baseHeight: baseInternalSpace.height,
-        droppedCeilingHeight,
-        adjustedHeight: targetInternalSpace.height
-      });
     } else if (hasDroppedCeiling && indexing.zones?.normal) {
       // 단내림이 있지만 일반 영역: 일반 영역의 폭 사용
       targetInternalSpace = {

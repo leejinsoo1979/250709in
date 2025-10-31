@@ -658,14 +658,16 @@ const createDualType6 = (dualColumnWidth: number, maxHeight: number, slotWidths?
 /**
  * 상부장 기본형 - 선반 2단
  */
-const createUpperCabinet1 = (columnWidth: number): ModuleData => {
+const createUpperCabinet1 = (columnWidth: number, maxHeight?: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  
+  // maxHeight가 제공되면 사용, 아니면 기본값 600mm
+  const upperHeight = maxHeight ? maxHeight - 200 : 600; // 천장과 200mm 갭
+
   const base = createFurnitureBase(
     `upper-cabinet-shelf-${widthForId}`,
     `상부장 선반형 ${widthForId}mm`,
     columnWidth,
-    600, // 상부장 기본 높이 600mm
+    upperHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     '#e8f5e9', // 연한 초록색
     `상부장 선반 2단형`,
@@ -693,14 +695,15 @@ const createUpperCabinet1 = (columnWidth: number): ModuleData => {
 /**
  * 상부장 2단형 - 중간 선반 1개
  */
-const createUpperCabinet4 = (columnWidth: number): ModuleData => {
+const createUpperCabinet4 = (columnWidth: number, maxHeight?: number): ModuleData => {
   const widthForId = Math.round(columnWidth * 100) / 100;
-  
+  const upperHeight = maxHeight ? maxHeight - 200 : 600; // 천장과 200mm 갭
+
   const base = createFurnitureBase(
     `upper-cabinet-2tier-${widthForId}`,
     `상부장 2단형 ${widthForId}mm`,
     columnWidth,
-    600, // 상부장 기본 높이 600mm
+    upperHeight,
     FURNITURE_SPECS.DEFAULT_DEPTH,
     '#e3f2fd', // 연한 파란색
     `상부장 2단형 (중간 선반 1개)`,
