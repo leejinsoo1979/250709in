@@ -6,6 +6,7 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../../utils/geometry';
 import { useUIStore } from '@/store/uiStore';
+import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 
 interface SlotPlacementIndicatorsProps {
   onSlotClick: (slotIndex: number, zone?: 'normal' | 'dropped') => void;
@@ -124,6 +125,22 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
 
       console.log('🟠 [SlotIndicators] 슬롯 체크 시작:', { i, slotIndex, zone: slotData.zone });
 
+      // isDualFurniture와 slotIndex로 슬롯 사용 가능 여부 확인
+      const available = isSlotAvailable(
+        slotIndex,
+        isDualFurniture,
+        placedModules,
+        spaceInfo,
+        selectedFurnitureId,
+        undefined, // excludeModuleId
+        slotData.zone // targetZone
+      );
+
+      if (!available) {
+        console.log('🔍 [SlotIndicators] 슬롯 사용 불가:', { slotIndex, zone: slotData.zone });
+        continue; // 슬롯 사용 불가
+      }
+
       // 듀얼 가구인 경우 연속된 두 슬롯 체크
       if (isDualFurniture) {
         if (i >= allSlotPositions.length - 1) continue; // 마지막 슬롯은 듀얼 배치 불가
@@ -132,100 +149,29 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
         // 같은 영역의 연속된 슬롯인지 확인
         if (slotData.zone !== nextSlotData.zone) continue;
 
-        // 두 슬롯이 모두 비어있는지 확인 (배치된 듀얼 가구도 고려)
-        const slotsOccupied = placedModules.some(m => {
-          // zone이 없으면 normal로 간주
-          const moduleZone = m.zone || 'normal';
+        // 두 슬롯의 중심 위치 계산
+        const centerX = (slotData.position + nextSlotData.position) / 2;
 
-          console.log('🔍 [SlotIndicators] 듀얼 슬롯 점유 체크:', {
-            checkingSlot: slotIndex,
-            checkingZone: slotData.zone,
-            moduleSlot: m.slotIndex,
-            moduleZone: moduleZone,
-            zoneMatch: moduleZone === slotData.zone
-          });
-
-          // zone이 다르면 이 가구는 체크 안함
-          if (moduleZone !== slotData.zone) {
-            return false;
-          }
-
-          const moduleData = getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
-          const moduleWidth = moduleData?.dimensions.width || 0;
-          const isPlacedDual = Math.abs(moduleWidth - (indexing.columnWidth * 2)) < 50;
-
-          if (isPlacedDual) {
-            // 배치된 가구가 듀얼: 슬롯 범위 겹침 체크
-            return (m.slotIndex === slotIndex || m.slotIndex === nextSlotData.index) ||
-                   (m.slotIndex + 1 === slotIndex || m.slotIndex + 1 === nextSlotData.index);
-          } else {
-            // 배치된 가구가 싱글
-            return m.slotIndex === slotIndex || m.slotIndex === nextSlotData.index;
+        slots.push({
+          slotIndex: slotIndex,
+          zone: slotData.zone,
+          position: {
+            x: centerX,
+            y: yPosition,
+            z: 0
           }
         });
-
-        if (!slotsOccupied) {
-          // 두 슬롯의 중심 위치 계산
-          const centerX = (slotData.position + nextSlotData.position) / 2;
-
-          slots.push({
-            slotIndex: slotIndex,
-            zone: slotData.zone,
-            position: {
-              x: centerX,
-              y: yPosition,
-              z: 0
-            }
-          });
-        }
       } else {
         // 싱글 가구인 경우
-        // 같은 슬롯에 어떤 가구든 있으면 점유됨 (배치된 듀얼 가구의 두 번째 슬롯도 고려)
-        const slotOccupied = placedModules.some(m => {
-          // zone이 없으면 normal로 간주
-          const moduleZone = m.zone || 'normal';
-
-          console.log('🔍 [SlotIndicators] 싱글 슬롯 점유 체크:', {
-            checkingSlot: slotIndex,
-            checkingZone: slotData.zone,
-            moduleSlot: m.slotIndex,
-            moduleZone: moduleZone,
-            moduleId: m.moduleId,
-            zoneMatch: moduleZone === slotData.zone,
-            slotMatch: m.slotIndex === slotIndex
-          });
-
-          // zone이 다르면 이 가구는 체크 안함
-          if (moduleZone !== slotData.zone) {
-            return false;
-          }
-
-          const moduleData = getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
-          const moduleWidth = moduleData?.dimensions.width || 0;
-          const isPlacedDual = Math.abs(moduleWidth - (indexing.columnWidth * 2)) < 50;
-
-          if (isPlacedDual) {
-            // 배치된 가구가 듀얼: 듀얼 가구의 두 슬롯 중 하나라도 현재 슬롯이면 점유됨
-            return m.slotIndex === slotIndex || m.slotIndex + 1 === slotIndex;
-          } else {
-            // 배치된 가구가 싱글
-            return m.slotIndex === slotIndex;
+        slots.push({
+          slotIndex: slotIndex,
+          zone: slotData.zone,
+          position: {
+            x: slotData.position,
+            y: yPosition,
+            z: 0
           }
         });
-
-        console.log('🔍 [SlotIndicators] 최종 점유 결과:', { slotIndex, slotOccupied });
-
-        if (!slotOccupied) {
-          slots.push({
-            slotIndex: slotIndex,
-            zone: slotData.zone,
-            position: {
-              x: slotData.position,
-              y: yPosition,
-              z: 0
-            }
-          });
-        }
       }
     }
 
