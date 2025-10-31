@@ -11,7 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export const useFurniturePlacement = () => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { selectedFurnitureId, addModule, setSelectedFurnitureId } = useFurnitureStore();
+  const { selectedFurnitureId, addModule, setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
 
   const placeFurniture = useCallback((slotIndex: number) => {
     if (!selectedFurnitureId) {
@@ -115,9 +115,12 @@ export const useFurniturePlacement = () => {
     // 가구 추가
     addModule(newModule);
 
-    // 선택 해제 (다음 배치를 위해 유지하거나, 원한다면 주석 해제)
-    // setSelectedFurnitureId(null);
-  }, [selectedFurnitureId, spaceInfo, addModule, setSelectedFurnitureId]);
+    // 배치 완료 후 선택 해제 및 placement mode 종료
+    setSelectedFurnitureId(null);
+    setFurniturePlacementMode(false);
+
+    console.log('✅ 가구 배치 완료 - placement mode 종료');
+  }, [selectedFurnitureId, spaceInfo, addModule, setSelectedFurnitureId, setFurniturePlacementMode]);
 
   return {
     placeFurniture,
