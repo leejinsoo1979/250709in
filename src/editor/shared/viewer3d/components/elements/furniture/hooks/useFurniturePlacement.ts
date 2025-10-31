@@ -62,7 +62,17 @@ export const useFurniturePlacement = () => {
       });
     }
 
-    const moduleData = getModuleById(selectedFurnitureId, zoneInternalSpace, zoneSpaceInfo);
+    // zone이 있을 때는 ID에서 너비 제거 - getModuleById가 zone별 너비로 새로 생성
+    let furnitureId = selectedFurnitureId;
+    if (hasDroppedCeiling && zone && indexing.zones) {
+      furnitureId = selectedFurnitureId.replace(/-[\d.]+$/, '');
+      console.log('🟢 [useFurniturePlacement] base ID 사용:', {
+        originalId: selectedFurnitureId,
+        baseId: furnitureId
+      });
+    }
+
+    const moduleData = getModuleById(furnitureId, zoneInternalSpace, zoneSpaceInfo);
 
     if (!moduleData) {
       console.error('❌ 가구 데이터를 찾을 수 없습니다:', selectedFurnitureId);
