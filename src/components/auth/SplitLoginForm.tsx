@@ -177,9 +177,14 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
                 onChange={(e) => setDisplayName(e.target.value)}
                 required
                 className={styles.input}
+                style={{
+                  backgroundColor: '#F9FAFB',
+                  color: '#1A1A1A',
+                  borderColor: '#E5E7EB'
+                } as React.CSSProperties}
               />
             )}
-            
+
             <Input
               type="email"
               placeholder="Username"
@@ -187,8 +192,13 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
               onChange={(e) => setEmail(e.target.value)}
               required
               className={styles.input}
+              style={{
+                backgroundColor: '#F9FAFB',
+                color: '#1A1A1A',
+                borderColor: '#E5E7EB'
+              } as React.CSSProperties}
             />
-            
+
             <Input
               type="password"
               placeholder="Password"
@@ -196,6 +206,11 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
               onChange={(e) => setPassword(e.target.value)}
               required
               className={styles.input}
+              style={{
+                backgroundColor: '#F9FAFB',
+                color: '#1A1A1A',
+                borderColor: '#E5E7EB'
+              } as React.CSSProperties}
             />
             
             {!isSignUp && (
