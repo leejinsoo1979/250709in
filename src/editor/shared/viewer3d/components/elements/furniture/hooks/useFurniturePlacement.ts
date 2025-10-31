@@ -33,12 +33,58 @@ export const useFurniturePlacement = () => {
     const columnWidth = indexing.columnWidth;
     const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
 
-    // 위치 계산
-    let xPosition: number;
-    if (isDualFurniture && indexing.threeUnitDualPositions) {
-      xPosition = indexing.threeUnitDualPositions[slotIndex];
+    // 단내림이 있는 경우 영역별 슬롯 위치 계산
+    const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
+    let allSlotPositions: Array<{ position: number; zone: 'normal' | 'dropped'; index: number }> = [];
+
+    if (!hasDroppedCeiling || !indexing.zones) {
+      // 단내림이 없으면 기본 위치 사용
+      allSlotPositions = indexing.threeUnitPositions.map((pos, idx) => ({
+        position: pos,
+        zone: 'normal' as const,
+        index: idx
+      }));
     } else {
-      xPosition = indexing.threeUnitPositions[slotIndex];
+      // normal 영역
+      if (indexing.zones.normal?.threeUnitPositions) {
+        allSlotPositions.push(...indexing.zones.normal.threeUnitPositions.map((pos, idx) => ({
+          position: pos,
+          zone: 'normal' as const,
+          index: idx
+        })));
+      }
+
+      // dropped 영역
+      if (indexing.zones.dropped?.threeUnitPositions) {
+        allSlotPositions.push(...indexing.zones.dropped.threeUnitPositions.map((pos, idx) => ({
+          position: pos,
+          zone: 'dropped' as const,
+          index: idx
+        })));
+      }
+
+      allSlotPositions.sort((a, b) => a.position - b.position);
+    }
+
+    // 위치 계산 - slotIndex에 해당하는 슬롯 찾기
+    const targetSlot = allSlotPositions.find(slot => slot.index === slotIndex);
+    if (!targetSlot) {
+      console.error('슬롯을 찾을 수 없습니다:', slotIndex);
+      return;
+    }
+
+    let xPosition: number;
+    if (isDualFurniture) {
+      // 듀얼 가구: 현재 슬롯과 다음 슬롯의 중심
+      const currentSlotIdx = allSlotPositions.findIndex(slot => slot.index === slotIndex);
+      const nextSlot = allSlotPositions[currentSlotIdx + 1];
+      if (!nextSlot || nextSlot.zone !== targetSlot.zone) {
+        console.error('듀얼 가구 배치를 위한 다음 슬롯을 찾을 수 없습니다');
+        return;
+      }
+      xPosition = (targetSlot.position + nextSlot.position) / 2;
+    } else {
+      xPosition = targetSlot.position;
     }
 
     // Y 위치 계산 (가구 타입에 따라)
@@ -102,14 +148,15 @@ export const useFurniturePlacement = () => {
       upperSectionDepth: undefined,
       customSections: undefined,
       isLocked: false,
-      zone: undefined
+      zone: targetSlot.zone
     };
 
     console.log('🎯 가구 배치:', {
       slotIndex,
       position: newModule.position,
       isDual: isDualFurniture,
-      category: moduleData.category
+      category: moduleData.category,
+      zone: targetSlot.zone
     });
 
     // 가구 추가
