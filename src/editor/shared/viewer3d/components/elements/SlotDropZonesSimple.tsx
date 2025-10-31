@@ -3236,14 +3236,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         let adjustedFurnitureHeightMm = moduleData.dimensions.height;
         if (effectiveZone === 'dropped' && isFullCabinet && spaceInfo.droppedCeiling?.enabled) {
           // 키큰장인 경우 단내림 구간에서 높이 조정
-          const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
-          const maxHeight = spaceInfo.height - dropHeight;
-          adjustedFurnitureHeightMm = Math.min(adjustedFurnitureHeightMm, maxHeight - 100); // 여유 공간 100mm
+          // zoneInternalSpace.height는 이미 calculateInternalSpace에서 dropHeight를 뺀 값
+          const maxAvailableHeight = zoneInternalSpace?.height || (spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 200));
+          adjustedFurnitureHeightMm = Math.min(adjustedFurnitureHeightMm, maxAvailableHeight - 100); // 여유 공간 100mm
           debugLog('👻 [Ghost Preview] 단내림 구간 키큰장 높이 조정:', {
             원래높이: moduleData.dimensions.height,
             조정된높이: adjustedFurnitureHeightMm,
-            dropHeight,
-            maxHeight
+            maxAvailableHeight,
+            zoneInternalSpaceHeight: zoneInternalSpace?.height,
+            dropHeight: spaceInfo.droppedCeiling?.dropHeight
           });
         }
         
@@ -3497,27 +3498,28 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 고스트 높이 조정 (키큰장이 아닌 경우에도 단내림 구간에서 높이 조정)
         let customHeight = undefined;
         if (effectiveZone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-          const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
-          const maxHeight = spaceInfo.height - dropHeight;
-          
+          // zoneInternalSpace.height는 이미 calculateInternalSpace에서 dropHeight를 뺀 값
+          const maxAvailableHeight = zoneInternalSpace?.height || (spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 200));
+
           if (moduleData?.category === 'upper') {
             // 상부장은 높이 조정 불필요 (천장 기준)
             customHeight = undefined;
           } else if (moduleData?.category === 'full') {
             // 키큰장: 단내림 구간 높이에 맞춤
-            customHeight = maxHeight - 100; // 여유 공간 100mm
+            customHeight = maxAvailableHeight - 100; // 여유 공간 100mm
           } else {
             // 하부장 및 일반 가구: 높이 유지
             customHeight = moduleData.dimensions.height;
           }
-          
+
           debugLog('👻 [Ghost Preview] 커스텀 높이:', {
             effectiveZone,
             category: moduleData?.category,
             originalHeight: moduleData.dimensions.height,
             customHeight,
-            dropHeight,
-            maxHeight
+            maxAvailableHeight,
+            zoneInternalSpaceHeight: zoneInternalSpace?.height,
+            dropHeight: spaceInfo.droppedCeiling?.dropHeight
           });
         }
         
