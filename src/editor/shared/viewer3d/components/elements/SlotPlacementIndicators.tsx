@@ -119,7 +119,8 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
           center
           style={{
             pointerEvents: 'auto',
-            userSelect: 'none'
+            userSelect: 'none',
+            background: 'transparent'
           }}
         >
           <div
