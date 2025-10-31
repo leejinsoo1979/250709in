@@ -80,9 +80,9 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       console.log('🔵 [SlotIndicators] Dropped 영역 슬롯:', droppedPositions);
     }
 
-    const sorted = allPositions.sort((a, b) => a.position - b.position);
-    console.log('🔵 [SlotIndicators] 전체 슬롯 위치 (정렬됨):', sorted);
-    return sorted;
+    // position 정렬하지 않음 - zone별로 slotIndex 순서대로 유지
+    console.log('🔵 [SlotIndicators] 전체 슬롯 위치:', allPositions);
+    return allPositions;
   }, [indexing, spaceInfo.droppedCeiling?.enabled]);
 
   // 사용 가능한 슬롯 계산
