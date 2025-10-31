@@ -209,17 +209,18 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
               onSlotClick(slot.slotIndex, slot.zone);
             }}
             style={{
-              width: '40px',
-              height: '40px',
+              width: '32px',
+              height: '32px',
               borderRadius: '50%',
               backgroundColor: view2DTheme.primary,
+              border: '2px solid white',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
               boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
               transition: 'all 0.2s ease',
-              fontSize: '28px',
+              fontSize: '22px',
               color: 'white',
               fontWeight: 'bold',
               lineHeight: '1'
