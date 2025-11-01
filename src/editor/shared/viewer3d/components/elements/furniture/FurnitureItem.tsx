@@ -997,11 +997,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 엔드패널 조정 전 원래 너비 저장 (엔드패널 조정 시 사용)
   let originalFurnitureWidthMm = furnitureWidthMm;
 
-  // 단내림 구간 듀얼 가구: 엔드패널만큼 줄임
-  if (isDualFurniture && spaceInfo.installType === 'freestanding' &&
-      spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
+  // 듀얼 가구: 엔드패널만큼 줄임 (벽없음 모드)
+  if (isDualFurniture && spaceInfo.installType === 'freestanding') {
     furnitureWidthMm = furnitureWidthMm - END_PANEL_THICKNESS;
-    console.log('🔴 [단내림 듀얼장] 가구 너비 조정:', {
+    console.log('🔴 [듀얼장] 가구 너비 조정:', {
       원래너비: originalFurnitureWidthMm,
       조정후: furnitureWidthMm,
       zone: placedModule.zone
@@ -1904,20 +1903,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     };
   }
 
-  // 단내림 구간 듀얼 가구: 9mm 왼쪽 이동
-  if (isDualFurniture && spaceInfo.installType === 'freestanding' &&
-      spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
+  // 듀얼 가구: 9mm 왼쪽 이동 (벽없음 모드)
+  if (isDualFurniture && spaceInfo.installType === 'freestanding') {
     const currentX = adjustedPosition.x;
     const offset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm
     adjustedPosition = {
       ...adjustedPosition,
       x: currentX - offset  // 왼쪽으로 이동
     };
-    console.log('🔴 [단내림 듀얼장] 위치 이동:', {
+    console.log('🔴 [듀얼장] 위치 이동:', {
       원래위치: currentX,
       이동량: -offset,
       조정후: adjustedPosition.x,
-      서라운드타입: spaceInfo.surroundType
+      zone: placedModule.zone
     });
   }
 
