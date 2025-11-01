@@ -1011,9 +1011,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 키큰장 엔드패널 처리
   let adjustedWidthForEndPanel = furnitureWidthMm;
   let positionAdjustmentForEndPanel = 0; // 위치 조정값
-  
+
   // 키큰장이 상하부장과 인접한 경우 확인
-  const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
+  // 단, 서라운드 모드일 때는 이미 벽에 엔드패널이 있으므로 추가 렌더링 불필요
+  const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower && spaceInfo.surroundType === 'no-surround';
   const endPanelSide = adjacentCheck.adjacentSide;
   
   // 🔴🔴🔴 엔드패널 디버깅 - 키큰장일 때만
