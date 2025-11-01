@@ -2697,24 +2697,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const adjustedHalfWidth = width / 2; // 이미 줄어든 너비의 절반
         const endPanelXPositions = [];
 
-        // 가구 몸통의 실제 중심 위치 사용 (adjustedPosition은 도어 오프셋이 포함되어 있을 수 있음)
-        const furnitureCenterX = adjustedPosition.x - (needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0);
-
-        // 노서라운드 모드에서는 엔드패널을 18mm 바깥쪽으로 이동
-        const isNoSurround = spaceInfo.surroundType === 'no-surround';
-        const endPanelExtraOffset = isNoSurround ? endPanelWidth / 2 : 0; // 9mm 추가 오프셋
+        const furnitureCenterX = adjustedPosition.x;
 
         if (endPanelSide === 'left' || endPanelSide === 'both') {
-          let leftPanelX;
-          if (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) {
-            // 노서라운드 첫/마지막 슬롯: 가구 측판 바깥쪽에 엔드패널 배치
-            leftPanelX = furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2 - endPanelExtraOffset;
-          } else {
-            // 서라운드 모드 또는 중간 슬롯: 슬롯 경계 또는 기본 위치
-            leftPanelX = slotBoundaries
-              ? slotBoundaries.left + endPanelWidth / 2
-              : furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2 - endPanelExtraOffset;
-          }
+          const leftPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
+            ? furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2
+            : (slotBoundaries
+                ? slotBoundaries.left + endPanelWidth / 2
+                : furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2);
 
           endPanelXPositions.push({
             x: leftPanelX,
@@ -2723,16 +2713,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           });
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
-          let rightPanelX;
-          if (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) {
-            // 노서라운드 첫/마지막 슬롯: 가구 측판 바깥쪽에 엔드패널 배치
-            rightPanelX = furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2 + endPanelExtraOffset;
-          } else {
-            // 서라운드 모드 또는 중간 슬롯: 슬롯 경계 또는 기본 위치
-            rightPanelX = slotBoundaries
-              ? slotBoundaries.right - endPanelWidth / 2
-              : furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2 + endPanelExtraOffset;
-          }
+          const rightPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
+            ? furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2
+            : (slotBoundaries
+                ? slotBoundaries.right - endPanelWidth / 2
+                : furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2);
 
           endPanelXPositions.push({
             x: rightPanelX,
