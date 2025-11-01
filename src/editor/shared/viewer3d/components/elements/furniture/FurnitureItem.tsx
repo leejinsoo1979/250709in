@@ -1026,21 +1026,54 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
   const hasLeftWall = spaceInfo.wallConfig?.left;
   const hasRightWall = spaceInfo.wallConfig?.right;
-  
-  const isNoSurroundFirstSlot = spaceInfo.surroundType === 'no-surround' && 
-                                  ((spaceInfo.installType === 'freestanding') || 
+
+  // 노서라운드 첫 슬롯: zone별 첫 슬롯 (zone 내 인덱스 0)
+  const isNoSurroundFirstSlot = spaceInfo.surroundType === 'no-surround' &&
+                                  ((spaceInfo.installType === 'freestanding') ||
                                    (isSemiStanding && !hasLeftWall)) && // 세미스탠딩에서 왼쪽 벽이 없는 경우
-                                  normalizedSlotIndex === 0;
-  const isNoSurroundLastSlot = spaceInfo.surroundType === 'no-surround' && 
+                                  (() => {
+                                    // 단내림이 있으면 zone별 첫 슬롯 확인
+                                    if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
+                                      const targetZone = placedModule.zone === 'dropped' ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
+                                      const localIndex = localSlotIndex ?? placedModule.slotIndex;
+                                      return localIndex === 0;
+                                    }
+                                    // 단내림이 없으면 전체 첫 슬롯
+                                    return normalizedSlotIndex === 0;
+                                  })();
+
+  // 노서라운드 마지막 슬롯: zone별 마지막 슬롯
+  const isNoSurroundLastSlot = spaceInfo.surroundType === 'no-surround' &&
                                  ((spaceInfo.installType === 'freestanding') ||
                                   (isSemiStanding && !hasRightWall)) && // 세미스탠딩에서 오른쪽 벽이 없는 경우
-                                 isLastSlot;
+                                 (() => {
+                                   // 단내림이 있으면 zone별 마지막 슬롯 확인
+                                   if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
+                                     const targetZone = placedModule.zone === 'dropped' ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
+                                     const localIndex = localSlotIndex ?? placedModule.slotIndex;
+                                     const zoneColumnCount = targetZone?.columnCount ?? indexing.columnCount;
+                                     return localIndex === zoneColumnCount - 1;
+                                   }
+                                   // 단내림이 없으면 isLastSlot 사용
+                                   return isLastSlot;
+                                 })();
+
   // 듀얼 가구가 마지막 슬롯에 있는 경우
-  const isNoSurroundDualLastSlot = spaceInfo.surroundType === 'no-surround' && 
+  const isNoSurroundDualLastSlot = spaceInfo.surroundType === 'no-surround' &&
                                     ((spaceInfo.installType === 'freestanding') ||
                                      (isSemiStanding && !hasRightWall)) && // 세미스탠딩에서 오른쪽 벽이 없는 경우
-                                    isDualFurniture && 
-                                    normalizedSlotIndex === indexing.columnCount - 2;
+                                    isDualFurniture &&
+                                    (() => {
+                                      // 단내림이 있으면 zone별 마지막에서 두번째 슬롯 확인
+                                      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
+                                        const targetZone = placedModule.zone === 'dropped' ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
+                                        const localIndex = localSlotIndex ?? placedModule.slotIndex;
+                                        const zoneColumnCount = targetZone?.columnCount ?? indexing.columnCount;
+                                        return localIndex === zoneColumnCount - 2;
+                                      }
+                                      // 단내림이 없으면 전체 마지막에서 두번째 슬롯
+                                      return normalizedSlotIndex === indexing.columnCount - 2;
+                                    })();
   
   // 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동
   if (needsEndPanelAdjustment && endPanelSide) {
@@ -2484,7 +2517,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
           endPanelXPositions.push({
             x: leftPanelX,
-            side: 'left'
+            side: 'left',
+            zone: placedModule.zone
           });
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
@@ -2496,7 +2530,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
           endPanelXPositions.push({
             x: rightPanelX,
-            side: 'right'
+            side: 'right',
+            zone: placedModule.zone
           });
         }
         
