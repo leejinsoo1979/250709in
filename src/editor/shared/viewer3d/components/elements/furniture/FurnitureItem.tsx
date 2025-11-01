@@ -1066,28 +1066,45 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                                    (isSemiStanding && !hasLeftWall)) && // 세미스탠딩에서 왼쪽 벽이 없는 경우
                                   !isAtDroppedBoundary && // 경계 슬롯 제외
                                   (() => {
-                                    // 단내림이 있으면 zone별 첫 슬롯 확인
+                                    // 단내림이 있으면 zone별 바깥쪽 끝 첫 슬롯 확인
                                     if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
-                                      const targetZone = placedModule.zone === 'dropped' ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
+                                      const droppedPosition = spaceInfo.droppedCeiling.position;
                                       const localIndex = localSlotIndex ?? placedModule.slotIndex;
-                                      return localIndex === 0;
+
+                                      if (placedModule.zone === 'dropped') {
+                                        // 단내림 왼쪽: 단내림구간 첫 슬롯(0)이 바깥쪽 끝
+                                        // 단내림 오른쪽: 단내림구간 첫 슬롯(0)은 안쪽 경계
+                                        return droppedPosition === 'left' && localIndex === 0;
+                                      } else {
+                                        // 메인구간: zone 첫 슬롯
+                                        return localIndex === 0;
+                                      }
                                     }
                                     // 단내림이 없으면 전체 첫 슬롯
                                     return normalizedSlotIndex === 0;
                                   })();
 
-  // 노서라운드 마지막 슬롯: zone별 마지막 슬롯
+  // 노서라운드 마지막 슬롯: zone별 바깥쪽 끝 마지막 슬롯
   const isNoSurroundLastSlot = spaceInfo.surroundType === 'no-surround' &&
                                  ((spaceInfo.installType === 'freestanding') ||
                                   (isSemiStanding && !hasRightWall)) && // 세미스탠딩에서 오른쪽 벽이 없는 경우
                                  !isAtDroppedBoundary && // 경계 슬롯 제외
                                  (() => {
-                                   // 단내림이 있으면 zone별 마지막 슬롯 확인
+                                   // 단내림이 있으면 zone별 바깥쪽 끝 마지막 슬롯 확인
                                    if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
+                                     const droppedPosition = spaceInfo.droppedCeiling.position;
                                      const targetZone = placedModule.zone === 'dropped' ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
                                      const localIndex = localSlotIndex ?? placedModule.slotIndex;
                                      const zoneColumnCount = targetZone?.columnCount ?? indexing.columnCount;
-                                     return localIndex === zoneColumnCount - 1;
+
+                                     if (placedModule.zone === 'dropped') {
+                                       // 단내림 왼쪽: 단내림구간 마지막 슬롯은 안쪽 경계
+                                       // 단내림 오른쪽: 단내림구간 마지막 슬롯이 바깥쪽 끝
+                                       return droppedPosition === 'right' && localIndex === zoneColumnCount - 1;
+                                     } else {
+                                       // 메인구간: zone 마지막 슬롯
+                                       return localIndex === zoneColumnCount - 1;
+                                     }
                                    }
                                    // 단내림이 없으면 isLastSlot 사용
                                    return isLastSlot;
