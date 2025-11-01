@@ -1911,18 +1911,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     };
   }
 
-  // 듀얼 가구: 위치 이동 (벽없음 모드)
-  if (isDualFurniture && spaceInfo.installType === 'freestanding') {
+  // 가구 위치 이동 (벽없음 모드)
+  if (spaceInfo.installType === 'freestanding') {
     const currentX = adjustedPosition.x;
     const offset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm
     const isDroppedZone = spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
 
-    // 노서라운드: 단내림=왼쪽, 메인=오른쪽
-    // 서라운드: 단내림=왼쪽만
+    // 노서라운드: 모든 가구 오른쪽 이동 (단내림은 왼쪽)
+    // 서라운드: 듀얼 단내림만 왼쪽 이동
     let finalOffset = 0;
     if (spaceInfo.surroundType === 'no-surround') {
       finalOffset = isDroppedZone ? -offset : offset;
-    } else if (isDroppedZone) {
+    } else if (isDualFurniture && isDroppedZone) {
       finalOffset = -offset;
     }
 
@@ -1931,10 +1931,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         ...adjustedPosition,
         x: currentX + finalOffset
       };
-      console.log('🔴 [듀얼장] 위치 이동:', {
+      console.log('🔴 [가구] 위치 이동:', {
         원래위치: currentX,
         zone: placedModule.zone,
         서라운드: spaceInfo.surroundType,
+        듀얼여부: isDualFurniture,
         이동량: finalOffset,
         조정후: adjustedPosition.x
       });
