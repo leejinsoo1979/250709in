@@ -1114,7 +1114,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       let result = false;
 
       if (droppedPosition === 'right') {
-        // 단내림이 오른쪽: 메인구간 마지막 슬롯(zone별) & 단내림구간 첫 슬롯이 경계면
+        // 단내림이 오른쪽: 메인구간 마지막 슬롯만 경계 (안쪽)
+        // 단내림구간 첫 슬롯은 경계 (안쪽), 마지막 슬롯은 바깥쪽이므로 경계 아님
         if (placedModule.zone === 'normal') {
           if (isDual && normalizedSlotIndex !== undefined) {
             // 듀얼 가구: 끝 슬롯(slotIndex+1)이 zone 마지막인지 체크
@@ -1126,10 +1127,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             result = isLastSlot;
           }
         } else if (placedModule.zone === 'dropped') {
+          // 단내림구간: 첫 슬롯(index 0)만 경계 (안쪽)
+          // 마지막 슬롯은 바깥쪽이므로 엔드패널 필요
           result = normalizedSlotIndex === 0;
         }
       } else {
-        // 단내림이 왼쪽: 단내림구간 마지막 슬롯(zone별) & 메인구간 첫 슬롯이 경계면
+        // 단내림이 왼쪽: 메인구간 첫 슬롯만 경계 (안쪽)
+        // 단내림구간 마지막 슬롯은 경계 (안쪽), 첫 슬롯은 바깥쪽이므로 경계 아님
         if (placedModule.zone === 'normal') {
           if (isDual && normalizedSlotIndex !== undefined) {
             // 듀얼 가구: 시작 슬롯이 0 또는 1이면 경계
@@ -1139,6 +1143,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             result = normalizedSlotIndex === 0;
           }
         } else if (placedModule.zone === 'dropped') {
+          // 단내림구간: 마지막 슬롯만 경계 (안쪽)
+          // 첫 슬롯은 바깥쪽이므로 엔드패널 필요
           result = isLastSlot;
         }
       }
