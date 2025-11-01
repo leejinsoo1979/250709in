@@ -996,15 +996,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 엔드패널 조정 전 원래 너비 저장 (엔드패널 조정 시 사용)
   let originalFurnitureWidthMm = furnitureWidthMm;
-  
+
+  // 단내림 구간 듀얼 가구: 엔드패널만큼 줄임
+  if (isDualFurniture && spaceInfo.installType === 'freestanding' &&
+      spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
+    furnitureWidthMm = furnitureWidthMm - END_PANEL_THICKNESS;
+    console.log('🔴 [단내림 듀얼장] 가구 너비 조정:', {
+      원래너비: originalFurnitureWidthMm,
+      조정후: furnitureWidthMm,
+      zone: placedModule.zone
+    });
+  }
+
   // 슬롯 가이드와의 크기 비교 로그
   if (indexing.slotWidths && normalizedSlotIndex !== undefined) {
     const slotGuideWidth = isDualFurniture && normalizedSlotIndex < indexing.slotWidths.length - 1
       ? indexing.slotWidths[normalizedSlotIndex] + indexing.slotWidths[normalizedSlotIndex + 1]
       : indexing.slotWidths[normalizedSlotIndex];
-    
+
     }
-  
+
   // 키큰장인지 확인 (2hanging이 포함된 모듈 ID)
   const isTallCabinet = actualModuleData?.id?.includes('2hanging') || false;
 
@@ -1892,7 +1903,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       x: slotCenterX + (needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0)
     };
   }
-  
+
+  // 단내림 구간 듀얼 가구: 노서라운드면 9mm 이동
+  if (isDualFurniture && spaceInfo.installType === 'freestanding' &&
+      spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped' &&
+      spaceInfo.surroundType === 'no-surround') {
+    const currentX = adjustedPosition.x;
+    const offset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm
+    adjustedPosition = {
+      ...adjustedPosition,
+      x: currentX + offset
+    };
+    console.log('🔴 [단내림 듀얼장] 위치 이동:', {
+      원래위치: currentX,
+      이동량: offset,
+      조정후: adjustedPosition.x
+    });
+  }
+
   // 가구 치수를 Three.js 단위로 변환
   const width = mmToThreeUnits(furnitureWidthMm);
   
