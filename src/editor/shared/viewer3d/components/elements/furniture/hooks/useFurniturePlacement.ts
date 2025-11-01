@@ -270,9 +270,11 @@ export const useFurniturePlacement = () => {
     }
 
     // 새 가구 모듈 생성
+    const baseType = selectedFurnitureId.replace(/-[\d.]+$/, '');
     const newModule = {
       id: uuidv4(),
       moduleId: selectedFurnitureId,
+      baseModuleType: baseType,
       position: {
         x: xPosition,
         y: yPosition,
