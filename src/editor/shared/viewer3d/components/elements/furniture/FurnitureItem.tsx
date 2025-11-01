@@ -1074,7 +1074,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                                       // 단내림이 없으면 전체 마지막에서 두번째 슬롯
                                       return normalizedSlotIndex === indexing.columnCount - 2;
                                     })();
-  
+
+  console.log('🔍🔍🔍 [노서라운드 슬롯 체크]', {
+    moduleId: placedModule.id,
+    zone: placedModule.zone,
+    localSlotIndex: localSlotIndex ?? placedModule.slotIndex,
+    normalizedSlotIndex,
+    isNoSurroundFirstSlot,
+    isNoSurroundLastSlot,
+    isNoSurroundDualLastSlot,
+    surroundType: spaceInfo.surroundType,
+    installType: spaceInfo.installType,
+    hasLeftWall,
+    hasRightWall
+  });
+
   // 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동
   if (needsEndPanelAdjustment && endPanelSide) {
     // 노서라운드 첫/마지막 슬롯에서는 특별 처리
