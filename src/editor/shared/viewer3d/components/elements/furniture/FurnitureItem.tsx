@@ -997,13 +997,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 엔드패널 조정 전 원래 너비 저장 (엔드패널 조정 시 사용)
   let originalFurnitureWidthMm = furnitureWidthMm;
 
-  // 듀얼 가구: 엔드패널만큼 줄임 (벽없음 + 노서라운드 모드만)
-  if (isDualFurniture && spaceInfo.installType === 'freestanding' && spaceInfo.surroundType === 'no-surround') {
+  // 듀얼 가구: 엔드패널만큼 줄임
+  // - 노서라운드: 모든 구간
+  // - 서라운드: 단내림 구간만
+  const shouldReduceWidth = isDualFurniture && spaceInfo.installType === 'freestanding' && (
+    spaceInfo.surroundType === 'no-surround' ||
+    (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped')
+  );
+
+  if (shouldReduceWidth) {
     furnitureWidthMm = furnitureWidthMm - END_PANEL_THICKNESS;
     console.log('🔴 [듀얼장] 가구 너비 조정:', {
       원래너비: originalFurnitureWidthMm,
       조정후: furnitureWidthMm,
-      zone: placedModule.zone
+      zone: placedModule.zone,
+      서라운드타입: spaceInfo.surroundType
     });
   }
 
