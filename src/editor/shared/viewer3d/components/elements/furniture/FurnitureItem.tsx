@@ -1904,10 +1904,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     };
   }
 
-  // 단내림 구간 듀얼 가구: 노서라운드면 9mm 왼쪽 이동
+  // 단내림 구간 듀얼 가구: 9mm 왼쪽 이동
   if (isDualFurniture && spaceInfo.installType === 'freestanding' &&
-      spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped' &&
-      spaceInfo.surroundType === 'no-surround') {
+      spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
     const currentX = adjustedPosition.x;
     const offset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm
     adjustedPosition = {
@@ -1917,7 +1916,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     console.log('🔴 [단내림 듀얼장] 위치 이동:', {
       원래위치: currentX,
       이동량: -offset,
-      조정후: adjustedPosition.x
+      조정후: adjustedPosition.x,
+      서라운드타입: spaceInfo.surroundType
     });
   }
 
