@@ -1911,24 +1911,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     };
   }
 
-  // 듀얼 가구: zone별 이동 (벽없음 모드)
-  if (isDualFurniture && spaceInfo.installType === 'freestanding') {
+  // 듀얼 가구: 단내림 구간만 왼쪽 이동 (벽없음 모드)
+  if (isDualFurniture && spaceInfo.installType === 'freestanding' &&
+      spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
     const currentX = adjustedPosition.x;
     const offset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm
 
-    // 단내림 구간: 왼쪽 이동, 메인 구간: 오른쪽 이동
-    const isDroppedZone = spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
-    const finalOffset = isDroppedZone ? -offset : offset;
-
     adjustedPosition = {
       ...adjustedPosition,
-      x: currentX + finalOffset
+      x: currentX - offset  // 왼쪽으로 이동
     };
-    console.log('🔴 [듀얼장] 위치 이동:', {
+    console.log('🔴 [단내림 듀얼장] 위치 이동:', {
       원래위치: currentX,
-      zone: placedModule.zone,
-      이동방향: isDroppedZone ? '왼쪽' : '오른쪽',
-      이동량: finalOffset,
+      이동량: -offset,
       조정후: adjustedPosition.x
     });
   }
