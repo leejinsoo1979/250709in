@@ -1189,7 +1189,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       return indexing.columnCount;
     })();
 
-    const isDualLastSlot = isDualFurniture && normalizedSlotIndex === zoneColumnCount - 2 && !isAtBoundary &&
+    // 듀얼 가구의 끝 슬롯이 바깥쪽(경계 바깥)인지 체크
+    const isDualEndSlotAtOuter = isDualFurniture && normalizedSlotIndex !== undefined &&
+      normalizedSlotIndex + 1 === zoneColumnCount - 1 &&
+      spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
+
+    const isDualLastSlot = isDualFurniture && normalizedSlotIndex === zoneColumnCount - 2 && (!isAtBoundary || isDualEndSlotAtOuter) &&
                             (spaceInfo.installType === 'freestanding' ||
                              ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
     // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
