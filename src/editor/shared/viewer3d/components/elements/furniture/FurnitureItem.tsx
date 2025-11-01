@@ -1117,16 +1117,37 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
     const isAtBoundary = spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone && (() => {
       const droppedPosition = spaceInfo.droppedCeiling.position;
+      const isDual = placedModule.isDualSlot || false;
       let result = false;
 
       if (droppedPosition === 'right') {
         // 단내림이 오른쪽: 메인구간 마지막 슬롯(zone별) & 단내림구간 첫 슬롯이 경계면
-        result = (placedModule.zone === 'normal' && isLastSlot) ||
-                 (placedModule.zone === 'dropped' && normalizedSlotIndex === 0);
+        if (placedModule.zone === 'normal') {
+          if (isDual && normalizedSlotIndex !== undefined) {
+            // 듀얼 가구: 끝 슬롯(slotIndex+1)이 zone 마지막인지 체크
+            const endSlotIndex = normalizedSlotIndex + 1;
+            const zoneLastIndex = (zoneData?.columnCount ?? indexing.columnCount) - 1;
+            result = isLastSlot || (endSlotIndex === zoneLastIndex);
+          } else {
+            // 싱글 가구: 시작 슬롯이 마지막인지만 체크
+            result = isLastSlot;
+          }
+        } else if (placedModule.zone === 'dropped') {
+          result = normalizedSlotIndex === 0;
+        }
       } else {
         // 단내림이 왼쪽: 단내림구간 마지막 슬롯(zone별) & 메인구간 첫 슬롯이 경계면
-        result = (placedModule.zone === 'dropped' && isLastSlot) ||
-                 (placedModule.zone === 'normal' && normalizedSlotIndex === 0);
+        if (placedModule.zone === 'normal') {
+          if (isDual && normalizedSlotIndex !== undefined) {
+            // 듀얼 가구: 시작 슬롯이 0 또는 1이면 경계
+            result = normalizedSlotIndex === 0 || normalizedSlotIndex === 1;
+          } else {
+            // 싱글 가구
+            result = normalizedSlotIndex === 0;
+          }
+        } else if (placedModule.zone === 'dropped') {
+          result = isLastSlot;
+        }
       }
 
       console.log('🔍 경계면 체크:', {
@@ -1134,6 +1155,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         zone: placedModule.zone,
         slotIndex: normalizedSlotIndex,
         isLastSlot,
+        isDual,
         droppedPosition,
         isBoundary: result
       });
