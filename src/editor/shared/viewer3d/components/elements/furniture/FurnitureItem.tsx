@@ -843,7 +843,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? (() => {
         if (spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone) {
           const zoneData = placedModule.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
-          return normalizedSlotIndex === (zoneData?.columnCount ?? indexing.columnCount) - 1;
+          const result = normalizedSlotIndex === (zoneData?.columnCount ?? indexing.columnCount) - 1;
+
+          console.log('🔍 isLastSlot 계산:', {
+            moduleId: placedModule.id,
+            zone: placedModule.zone,
+            normalizedSlotIndex,
+            zoneColumnCount: zoneData?.columnCount,
+            계산식: `${normalizedSlotIndex} === ${(zoneData?.columnCount ?? indexing.columnCount) - 1}`,
+            isLastSlot: result
+          });
+
+          return result;
         }
         return normalizedSlotIndex === indexing.columnCount - 1;
       })()
