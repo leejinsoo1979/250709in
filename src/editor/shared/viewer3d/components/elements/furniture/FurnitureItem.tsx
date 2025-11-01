@@ -1094,15 +1094,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 단내림이 있을 때 경계면 슬롯인지 확인
     const isBoundarySlot = spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone && (() => {
       const droppedPosition = spaceInfo.droppedCeiling.position;
+      let result = false;
       if (placedModule.zone === 'normal') {
         // 메인구간: 단내림이 왼쪽이면 첫 슬롯이 경계, 오른쪽이면 마지막 슬롯이 경계
-        return (droppedPosition === 'left' && normalizedSlotIndex === 0) ||
-               (droppedPosition === 'right' && isLastSlot);
+        result = (droppedPosition === 'left' && normalizedSlotIndex === 0) ||
+                 (droppedPosition === 'right' && isLastSlot);
       } else {
         // 단내림구간: 단내림이 왼쪽이면 마지막 슬롯이 경계, 오른쪽이면 첫 슬롯이 경계
-        return (droppedPosition === 'left' && isLastSlot) ||
-               (droppedPosition === 'right' && normalizedSlotIndex === 0);
+        result = (droppedPosition === 'left' && isLastSlot) ||
+                 (droppedPosition === 'right' && normalizedSlotIndex === 0);
       }
+
+      console.log('🔍 경계면 슬롯 체크:', {
+        moduleId: placedModule.id,
+        zone: placedModule.zone,
+        slotIndex: normalizedSlotIndex,
+        isLastSlot,
+        droppedPosition,
+        isBoundarySlot: result
+      });
+
+      return result;
     })();
 
     if (spaceInfo.installType === 'freestanding') {
