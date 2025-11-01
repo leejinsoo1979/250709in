@@ -997,8 +997,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 엔드패널 조정 전 원래 너비 저장 (엔드패널 조정 시 사용)
   let originalFurnitureWidthMm = furnitureWidthMm;
 
-  // 듀얼 가구: 엔드패널만큼 줄임 (벽없음 모드)
-  if (isDualFurniture && spaceInfo.installType === 'freestanding') {
+  // 듀얼 가구: 엔드패널만큼 줄임 (벽없음 + 노서라운드 모드만)
+  if (isDualFurniture && spaceInfo.installType === 'freestanding' && spaceInfo.surroundType === 'no-surround') {
     furnitureWidthMm = furnitureWidthMm - END_PANEL_THICKNESS;
     console.log('🔴 [듀얼장] 가구 너비 조정:', {
       원래너비: originalFurnitureWidthMm,
