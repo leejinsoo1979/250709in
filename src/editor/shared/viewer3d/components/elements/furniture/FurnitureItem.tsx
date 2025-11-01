@@ -1016,6 +1016,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 단, 서라운드 모드일 때는 이미 벽에 엔드패널이 있으므로 추가 렌더링 불필요
   const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower && spaceInfo.surroundType === 'no-surround';
   const endPanelSide = adjacentCheck.adjacentSide;
+
+  console.log('🔴🔴🔴 [엔드패널 조건 체크]', {
+    moduleId: placedModule.id,
+    surroundType: spaceInfo.surroundType,
+    hasAdjacentUpperLower: adjacentCheck.hasAdjacentUpperLower,
+    needsEndPanelAdjustment,
+    endPanelSide
+  });
   
   // 🔴🔴🔴 엔드패널 디버깅 - 키큰장일 때만
   if (actualModuleData?.category === 'full') {
@@ -2673,7 +2681,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           }
         return null;
       })()}
-      {needsEndPanelAdjustment && endPanelSide && !isNoSurroundFirstSlot && !isNoSurroundLastSlot && !isNoSurroundDualLastSlot && (() => {
+      {needsEndPanelAdjustment && endPanelSide && !isNoSurroundFirstSlot && !isNoSurroundLastSlot && !isNoSurroundDualLastSlot && spaceInfo.surroundType === 'no-surround' && (() => {
         console.log('🟢🟢🟢 [엔드패널 렌더링 시작]', {
           moduleId: placedModule.id,
           zone: placedModule.zone,
