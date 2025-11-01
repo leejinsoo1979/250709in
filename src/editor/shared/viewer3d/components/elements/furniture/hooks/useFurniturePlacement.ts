@@ -162,7 +162,8 @@ export const useFurniturePlacement = () => {
         slot.index === slotIndex + 1 && slot.zone === targetSlot.zone
       );
       if (!nextSlot) {
-        console.error('듀얼 가구 배치를 위한 다음 슬롯을 찾을 수 없습니다:', {
+        console.error('❌ 듀얼 가구 배치 불가: 다음 슬롯을 찾을 수 없습니다');
+        console.error('듀얼 가구는 같은 zone 내에서 연속된 두 슬롯이 필요합니다:', {
           targetSlotIndex: slotIndex,
           targetSlotZone: targetSlot.zone,
           lookingForIndex: slotIndex + 1,
@@ -170,6 +171,17 @@ export const useFurniturePlacement = () => {
         });
         return;
       }
+
+      // 단내림 경계 체크: 다음 슬롯이 다른 zone이면 배치 불가
+      if (hasDroppedCeiling && nextSlot.zone !== targetSlot.zone) {
+        console.error('❌ 듀얼 가구 배치 불가: 단내림 경계를 침범합니다');
+        console.error('듀얼 가구는 zone 경계를 넘을 수 없습니다:', {
+          targetSlot: { index: targetSlot.index, zone: targetSlot.zone },
+          nextSlot: { index: nextSlot.index, zone: nextSlot.zone }
+        });
+        return;
+      }
+
       xPosition = (targetSlot.position + nextSlot.position) / 2;
       console.log('🟢 [useFurniturePlacement] 듀얼 가구 위치 계산:', {
         targetSlot,
