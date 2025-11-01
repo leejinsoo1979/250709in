@@ -2697,18 +2697,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const adjustedHalfWidth = width / 2; // 이미 줄어든 너비의 절반
         const endPanelXPositions = [];
 
-        const furnitureCenterX = adjustedPosition.x;
-
-        // 단내림 구간에서 노서라운드일 때 엔드패널이 안쪽으로 들어오는 문제 보정
-        // 서라운드 -> 노서라운드 변경 시 엔드패널이 안쪽으로 18mm 들어오므로 바깥쪽으로 18mm 보정
-        const isDroppedZoneNoSurround = spaceInfo.droppedCeiling?.enabled &&
-                                        placedModule.zone === 'dropped' &&
-                                        spaceInfo.surroundType === 'no-surround';
-        const droppedEndPanelOffset = isDroppedZoneNoSurround ? endPanelWidth : 0; // 18mm 보정
+        // 엔드패널은 가구 몸통 기준이므로 도어 오프셋(positionAdjustmentForEndPanel) 제거
+        // adjustedPosition.x는 needsEndPanelAdjustment일 때 positionAdjustmentForEndPanel을 포함하므로 빼야 함
+        const furnitureCenterX = adjustedPosition.x - (needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0);
 
         if (endPanelSide === 'left' || endPanelSide === 'both') {
           const leftPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
-            ? furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2 - droppedEndPanelOffset
+            ? furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2
             : (slotBoundaries
                 ? slotBoundaries.left + endPanelWidth / 2
                 : furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2);
@@ -2721,7 +2716,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
           const rightPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
-            ? furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2 + droppedEndPanelOffset
+            ? furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2
             : (slotBoundaries
                 ? slotBoundaries.right - endPanelWidth / 2
                 : furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2);
