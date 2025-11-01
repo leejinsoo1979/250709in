@@ -1911,21 +1911,34 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     };
   }
 
-  // 듀얼 가구: 단내림 구간만 왼쪽 이동 (벽없음 모드)
-  if (isDualFurniture && spaceInfo.installType === 'freestanding' &&
-      spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
+  // 듀얼 가구: 위치 이동 (벽없음 모드)
+  if (isDualFurniture && spaceInfo.installType === 'freestanding') {
     const currentX = adjustedPosition.x;
     const offset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm
+    const isDroppedZone = spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
 
-    adjustedPosition = {
-      ...adjustedPosition,
-      x: currentX - offset  // 왼쪽으로 이동
-    };
-    console.log('🔴 [단내림 듀얼장] 위치 이동:', {
-      원래위치: currentX,
-      이동량: -offset,
-      조정후: adjustedPosition.x
-    });
+    // 노서라운드: 단내림=왼쪽, 메인=오른쪽
+    // 서라운드: 단내림=왼쪽만
+    let finalOffset = 0;
+    if (spaceInfo.surroundType === 'no-surround') {
+      finalOffset = isDroppedZone ? -offset : offset;
+    } else if (isDroppedZone) {
+      finalOffset = -offset;
+    }
+
+    if (finalOffset !== 0) {
+      adjustedPosition = {
+        ...adjustedPosition,
+        x: currentX + finalOffset
+      };
+      console.log('🔴 [듀얼장] 위치 이동:', {
+        원래위치: currentX,
+        zone: placedModule.zone,
+        서라운드: spaceInfo.surroundType,
+        이동량: finalOffset,
+        조정후: adjustedPosition.x
+      });
+    }
   }
 
   // 가구 치수를 Three.js 단위로 변환
