@@ -1874,9 +1874,11 @@ const Room: React.FC<RoomProps> = ({
               return null;
             }
 
-            // 우측(일반구간)에 가구가 있으면 좌측(단내림구간) 엔드패널 렌더링 생략
-            if (hasRightFurniture) {
-              console.log('🚫 [노서라운드] 왼쪽 단내림 엔드패널 렌더링 생략 (우측 일반구간에 가구 있음)');
+            // 프리스탠딩: 우측(일반구간)에 가구가 있으면 좌측(단내림구간) 엔드패널 렌더링 생략
+            // 한쪽벽: 벽이 없는 쪽은 엔드패널 필요 (우측 가구 여부와 무관)
+            const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
+            if (!isSemiStanding && hasRightFurniture) {
+              console.log('🚫 [노서라운드] 왼쪽 단내림 엔드패널 렌더링 생략 (프리스탠딩 + 우측 일반구간에 가구 있음)');
               return null;
             }
           }
@@ -2105,9 +2107,11 @@ const Room: React.FC<RoomProps> = ({
               return null;
             }
 
-            // 좌측(일반구간)에 가구가 있으면 우측(단내림구간) 엔드패널 렌더링 생략
-            if (hasLeftFurniture) {
-              console.log('🚫 [노서라운드] 오른쪽 단내림 엔드패널 렌더링 생략 (좌측 일반구간에 가구 있음)');
+            // 프리스탠딩: 좌측(일반구간)에 가구가 있으면 우측(단내림구간) 엔드패널 렌더링 생략
+            // 한쪽벽: 벽이 없는 쪽은 엔드패널 필요 (좌측 가구 여부와 무관)
+            const isSemiStanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
+            if (!isSemiStanding && hasLeftFurniture) {
+              console.log('🚫 [노서라운드] 오른쪽 단내림 엔드패널 렌더링 생략 (프리스탠딩 + 좌측 일반구간에 가구 있음)');
               return null;
             }
           }
