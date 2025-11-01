@@ -1279,10 +1279,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const originalWidth = furnitureWidthMm;
       furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 18mm 줄임
 
-      // 단내림구간인 경우: 가구와 도어를 슬롯 중심에 고정 (이동하지 않음)
+      // 단내림구간인 경우: 단내림 위치에 따라 바깥쪽 방향 결정
       if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
-        // 단내림 구간: 가구를 슬롯 중심에 고정 (이동 없음)
-        positionAdjustmentForEndPanel = 0;
+        const droppedPosition = spaceInfo.droppedCeiling.position;
+        // 단내림 왼쪽: 첫 슬롯의 바깥쪽 = 왼쪽, 가구는 오른쪽으로 이동
+        // 단내림 오른쪽: 첫 슬롯의 바깥쪽 = 오른쪽, 가구는 왼쪽으로 이동
+        positionAdjustmentForEndPanel = droppedPosition === 'left'
+          ? (END_PANEL_THICKNESS / 2) * 0.01  // 왼쪽 단내림: 오른쪽으로 9mm
+          : -(END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽 단내림: 왼쪽으로 9mm
       } else {
         // 메인구간 또는 단내림 없음: 첫 슬롯 = 왼쪽 끝, 오른쪽으로 이동
         positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
@@ -1293,17 +1297,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const originalWidth = furnitureWidthMm;
       furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 18mm 줄임
 
-      // 단내림구간인 경우: 가구와 도어를 슬롯 중심에 고정 (이동하지 않음)
+      // 단내림구간인 경우: 단내림 위치에 따라 바깥쪽 방향 결정
       if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
-        // 단내림 구간: 가구를 슬롯 중심에 고정 (이동 없음)
-        positionAdjustmentForEndPanel = 0;
+        const droppedPosition = spaceInfo.droppedCeiling.position;
+        // 단내림 왼쪽: 마지막 슬롯의 바깥쪽 = 왼쪽, 가구는 오른쪽으로 이동
+        // 단내림 오른쪽: 마지막 슬롯의 바깥쪽 = 오른쪽, 가구는 왼쪽으로 이동
+        positionAdjustmentForEndPanel = droppedPosition === 'left'
+          ? (END_PANEL_THICKNESS / 2) * 0.01  // 왼쪽 단내림: 오른쪽으로 9mm
+          : -(END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽 단내림: 왼쪽으로 9mm
 
         console.log('🟢🟢🟢 [단내림구간 듀얼 마지막 슬롯]', {
           moduleId: placedModule.id,
           zone: placedModule.zone,
+          droppedPosition,
           조정된너비: furnitureWidthMm,
-          위치조정m: positionAdjustmentForEndPanel,
-          위치: '슬롯 중심 고정'
+          위치조정m: positionAdjustmentForEndPanel
         });
       } else {
         // 메인구간 또는 단내림 없음: 마지막 슬롯 = 오른쪽 끝, 왼쪽으로 이동
@@ -1581,11 +1589,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       if (isDualFurniture && isDualFirstSlotDoor) {
         // 듀얼 가구가 첫번째 슬롯에 있는 경우: 왼쪽 도어만 18mm 확장
         doorWidthExpansion = END_PANEL_THICKNESS; // 18mm 확장
-        // 단내림 구간 듀얼장: doorXOffset = 0 (슬롯 중심 고정)
+        // 단내림 구간 듀얼장: 가구 이동을 상쇄해서 도어를 슬롯 중심에 고정
         // 일반 구간 듀얼장: 상하부장 인접 시 위치 조정, 아니면 기본 9mm 좌측 이동
         if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-          doorXOffset = 0; // 슬롯 중심 고정
-          console.log('✅✅✅ 단내림 구간 듀얼장(첫번째) → doorXOffset = 0 (중심 고정) 설정됨');
+          // 가구가 positionAdjustmentForEndPanel만큼 이동했으므로, 도어는 반대로 이동
+          doorXOffset = -positionAdjustmentForEndPanel;
+          console.log('✅✅✅ 단내림 구간 듀얼장(첫번째) → doorXOffset =', doorXOffset, '(가구 이동 상쇄)');
         } else {
           doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
         }
@@ -1593,12 +1602,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         } else if (isDualFurniture && isDualLastSlot) {
         // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽 도어만 18mm 확장
         doorWidthExpansion = END_PANEL_THICKNESS; // 18mm 확장
-        // 단내림 구간 듀얼장: doorXOffset = 0 (슬롯 중심 고정)
+        // 단내림 구간 듀얼장: 가구 이동을 상쇄해서 도어를 슬롯 중심에 고정
         // 일반 구간 듀얼장(단내림 경계): doorXOffset = 0 (슬롯 중심 고정)
         // 단내림 없을 때: 기본 9mm 우측 이동
         if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-          doorXOffset = 0; // 슬롯 중심 고정
-          console.log('✅✅✅ 단내림 구간 듀얼장(마지막) → doorXOffset = 0 (중심 고정) 설정됨');
+          // 가구가 positionAdjustmentForEndPanel만큼 이동했으므로, 도어는 반대로 이동
+          doorXOffset = -positionAdjustmentForEndPanel;
+          console.log('✅✅✅ 단내림 구간 듀얼장(마지막) → doorXOffset =', doorXOffset, '(가구 이동 상쇄)');
         } else if (spaceInfo.droppedCeiling?.enabled) {
           // 단내림이 있고, 일반 구간 마지막 슬롯 → 도어 중심 고정 (단내림 경계)
           doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0;
