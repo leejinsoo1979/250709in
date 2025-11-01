@@ -2857,69 +2857,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         );
       })()}
 
-      {/* 노서라운드 첫/마지막 슬롯 엔드패널 렌더링 (싱글 가구 포함) */}
-      {spaceInfo.surroundType === 'no-surround' &&
-       spaceInfo.installType === 'freestanding' &&
-       (isNoSurroundFirstSlot || isNoSurroundLastSlot) &&
-       actualModuleData?.category === 'full' && (() => {
-        console.log('🟡🟡🟡 [노서라운드 싱글 엔드패널 렌더링]', {
-          moduleId: placedModule.id,
-          zone: placedModule.zone,
-          isNoSurroundFirstSlot,
-          isNoSurroundLastSlot
-        });
-
-        const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
-        const endPanelHeight = height;
-        const endPanelDepth = depth;
-        const adjustedHalfWidth = width / 2;
-
-        const endPanelXPositions = [];
-
-        if (isNoSurroundFirstSlot) {
-          // 첫 슬롯: 왼쪽 엔드패널
-          endPanelXPositions.push({
-            x: adjustedPosition.x - adjustedHalfWidth - endPanelWidth / 2,
-            side: 'left'
-          });
-        }
-
-        if (isNoSurroundLastSlot) {
-          // 마지막 슬롯: 오른쪽 엔드패널
-          endPanelXPositions.push({
-            x: adjustedPosition.x + adjustedHalfWidth + endPanelWidth / 2,
-            side: 'right'
-          });
-        }
-
-        console.log('🟡🟡🟡 [노서라운드 싱글 엔드패널 위치]', {
-          moduleId: placedModule.id,
-          zone: placedModule.zone,
-          endPanelXPositions,
-          furnitureCenter: adjustedPosition.x,
-          adjustedHalfWidth
-        });
-
-        return (
-          <>
-            {endPanelXPositions.map((panel, index) => (
-              <group
-                key={`no-surround-endpanel-${placedModule.id}-${panel.side}-${index}`}
-                position={[panel.x, finalYPosition, furnitureZ]}
-              >
-                <EndPanelWithTexture
-                  width={endPanelWidth}
-                  height={endPanelHeight}
-                  depth={endPanelDepth}
-                  position={[0, 0, 0]}
-                  spaceInfo={zoneSpaceInfo}
-                  renderMode={renderMode}
-                />
-              </group>
-            ))}
-          </>
-        );
-      })()}
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
       
