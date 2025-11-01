@@ -1078,6 +1078,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   console.log('🔍🔍🔍 [노서라운드 슬롯 체크]', {
     moduleId: placedModule.id,
     zone: placedModule.zone,
+    category: actualModuleData?.category,
     localSlotIndex: localSlotIndex ?? placedModule.slotIndex,
     normalizedSlotIndex,
     isNoSurroundFirstSlot,
@@ -1086,7 +1087,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     surroundType: spaceInfo.surroundType,
     installType: spaceInfo.installType,
     hasLeftWall,
-    hasRightWall
+    hasRightWall,
+    needsEndPanelAdjustment,
+    endPanelSide
   });
 
   // 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동
@@ -2511,6 +2514,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         return null;
       })()}
       {needsEndPanelAdjustment && endPanelSide && !isNoSurroundFirstSlot && !isNoSurroundLastSlot && !isNoSurroundDualLastSlot && (() => {
+        console.log('🟢🟢🟢 [엔드패널 렌더링 시작]', {
+          moduleId: placedModule.id,
+          zone: placedModule.zone,
+          category: actualModuleData?.category,
+          localSlotIndex: localSlotIndex ?? placedModule.slotIndex,
+          isNoSurroundFirstSlot,
+          isNoSurroundLastSlot,
+          isNoSurroundDualLastSlot,
+          needsEndPanelAdjustment,
+          endPanelSide
+        });
+
         // 엔드패널 위치 계산
         const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
         const endPanelHeight = height; // 가구와 동일한 높이
@@ -2548,7 +2563,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             zone: placedModule.zone
           });
         }
-        
+
+        console.log('🟢🟢🟢 [엔드패널 X 위치]', {
+          moduleId: placedModule.id,
+          zone: placedModule.zone,
+          endPanelXPositions,
+          furnitureCenterX,
+          adjustedPosition: adjustedPosition.x,
+          slotBoundaries,
+          finalYPosition,
+          furnitureZ
+        });
+
         return (
           <>
             {endPanelXPositions.map((panel, index) => (
