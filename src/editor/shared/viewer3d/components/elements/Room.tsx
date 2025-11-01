@@ -2117,6 +2117,44 @@ const Room: React.FC<RoomProps> = ({
           const upperPartHeight = droppedCeilingHeight;
           const upperPartCenterY = panelStartY + height - upperPartHeight/2;
 
+          // 단내림 구간의 경계 위치 계산
+          const droppedZone = indexingForCheck.zones?.dropped;
+          const droppedBoundaries = droppedZone?.threeUnitPositions || [];
+          const droppedStartSlot = droppedZone?.startSlotIndex ?? 0;
+          const droppedLastSlot = droppedStartSlot + (droppedZone?.columnCount ?? 1) - 1;
+
+          // 단내림 구간 오른쪽 끝 가구 위치 찾기
+          const droppedRightFurniture = placedModulesFromStore.find(m => {
+            const isDual = m.isDualSlot || m.moduleId?.includes('dual-');
+            if (m.zone !== 'dropped') return false;
+            // 오른쪽 끝 = dropped zone의 마지막 슬롯 또는 마지막-1 슬롯(듀얼)
+            return m.slotIndex === droppedLastSlot || (isDual && m.slotIndex === droppedLastSlot - 1);
+          });
+
+          // 엔드패널 X 위치: 가구가 있으면 가구 오른쪽 끝 + 9mm(가구가 18mm 줄어든 것의 절반)
+          let endPanelX = xOffset + width - frameThickness.right/2; // 기본값: 공간 끝
+
+          if (droppedRightFurniture) {
+            const furnitureX = droppedRightFurniture.position.x;
+            const furnitureWidth = (droppedRightFurniture.customWidth ?? (droppedZone?.columnWidth ?? 0)) * 0.01;
+            // 가구 중심 + 가구 너비/2 = 가구 오른쪽 끝
+            endPanelX = furnitureX + furnitureWidth / 2 + frameThickness.right / 2;
+          }
+
+          console.log('🔍 단내림 오른쪽 엔드패널 위치 계산:', {
+            droppedZone,
+            droppedBoundaries,
+            droppedStartSlot,
+            droppedLastSlot,
+            droppedRightFurniture: droppedRightFurniture ? {
+              slotIndex: droppedRightFurniture.slotIndex,
+              positionX: droppedRightFurniture.position.x,
+              customWidth: droppedRightFurniture.customWidth
+            } : null,
+            endPanelX,
+            hasRightFurniture
+          });
+
           // 단내림 영역 렌더링 카운터
           if (typeof window !== 'undefined' && window.renderCounter) {
             if (!wallConfig?.right) {
@@ -2137,8 +2175,8 @@ const Room: React.FC<RoomProps> = ({
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.right,
-                  // 서라운드: 단내림 천장까지의 높이, 노서라운드: 단내림되지 않은 높이
-                  spaceInfo.surroundType === 'surround' ? (height - droppedCeilingHeight) : droppedHeight,
+                  // 단내림 구간 높이 = 바닥부터 단내림 천장까지
+                  droppedHeight,
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
@@ -2150,12 +2188,10 @@ const Room: React.FC<RoomProps> = ({
                         : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
                 ]}
                 position={[
-                  // 끝 슬롯에 가구가 있을 때는 가구 옆에 붙여서 렌더링
-                  hasRightFurniture && indexingForCheck.threeUnitBoundaries.length > lastSlotIndex + 1
-                    ? indexingForCheck.threeUnitBoundaries[lastSlotIndex + 1] + frameThickness.right/2
-                    : xOffset + width - frameThickness.right/2,
-                  // 서라운드: 단내림 천장까지의 중심, 노서라운드: 단내림 구간 중심
-                  spaceInfo.surroundType === 'surround' ? (panelStartY + (height - droppedCeilingHeight)/2) : droppedCenterY,
+                  // 가구 오른쪽 끝에 붙임
+                  endPanelX,
+                  // 단내림 구간 중심 Y
+                  droppedCenterY,
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
