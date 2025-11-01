@@ -2697,7 +2697,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const adjustedHalfWidth = width / 2; // 이미 줄어든 너비의 절반
         const endPanelXPositions = [];
 
-        const furnitureCenterX = adjustedPosition.x + positionAdjustmentForEndPanel;
+        const furnitureCenterX = adjustedPosition.x;
 
         if (endPanelSide === 'left' || endPanelSide === 'both') {
           const leftPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
