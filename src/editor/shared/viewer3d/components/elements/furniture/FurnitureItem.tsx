@@ -1104,6 +1104,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     let shouldProcessLastSlot = false;
 
     // 단내림이 있을 때, 경계면 슬롯인지 확인 (공간 전체의 끝이 아닌 경계면)
+    console.log('🔍 isAtBoundary 조건 체크:', {
+      moduleId: placedModule.id,
+      'droppedCeiling?.enabled': spaceInfo.droppedCeiling?.enabled,
+      'indexing.zones': !!indexing.zones,
+      'placedModule.zone': placedModule.zone,
+      '모든조건': spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone
+    });
+
     const isAtBoundary = spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone && (() => {
       const droppedPosition = spaceInfo.droppedCeiling.position;
       let result = false;
@@ -1124,7 +1132,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         slotIndex: normalizedSlotIndex,
         isLastSlot,
         droppedPosition,
-        isAtBoundary: result
+        isBoundary: result
       });
 
       return result;
