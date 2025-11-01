@@ -997,27 +997,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 엔드패널 조정 전 원래 너비 저장 (엔드패널 조정 시 사용)
   let originalFurnitureWidthMm = furnitureWidthMm;
 
-  // 듀얼 가구: 엔드패널만큼 줄임
-  // - 노서라운드: 모든 구간
-  // - 서라운드: 단내림 구간만
-  const shouldReduceWidth = isDualFurniture && spaceInfo.installType === 'freestanding' && (
-    spaceInfo.surroundType === 'no-surround' ||
-    (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped')
-  );
-
   // 너비 줄임 여부 저장 (위치 조정에서 사용)
   let widthReduced = false;
-
-  if (shouldReduceWidth) {
-    furnitureWidthMm = furnitureWidthMm - END_PANEL_THICKNESS;
-    widthReduced = true;
-    console.log('🔴 [듀얼장] 가구 너비 조정:', {
-      원래너비: originalFurnitureWidthMm,
-      조정후: furnitureWidthMm,
-      zone: placedModule.zone,
-      서라운드타입: spaceInfo.surroundType
-    });
-  }
 
   // 슬롯 가이드와의 크기 비교 로그
   if (indexing.slotWidths && normalizedSlotIndex !== undefined) {
@@ -1128,6 +1109,41 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                                       // 단내림이 없으면 전체 마지막에서 두번째 슬롯
                                       return normalizedSlotIndex === indexing.columnCount - 2;
                                     })();
+
+  // 서라운드 모드: 단내림구간 바깥쪽 끝 슬롯 확인
+  const isSurroundDroppedEdgeSlot = spaceInfo.surroundType === 'surround' &&
+                                     spaceInfo.installType === 'freestanding' &&
+                                     spaceInfo.droppedCeiling?.enabled &&
+                                     placedModule.zone === 'dropped' &&
+                                     !isAtDroppedBoundary &&
+                                     (() => {
+                                       if (zoneSlotInfo?.dropped) {
+                                         const localIndex = localSlotIndex ?? placedModule.slotIndex;
+                                         const zoneColumnCount = zoneSlotInfo.dropped.columnCount ?? indexing.columnCount;
+                                         return localIndex === 0 || localIndex === zoneColumnCount - 1;
+                                       }
+                                       return false;
+                                     })();
+
+  // 듀얼 가구: 바깥쪽 끝 슬롯만 엔드패널만큼 줄임
+  // - 노서라운드: 바깥쪽 끝 슬롯(첫/마지막)만
+  // - 서라운드: 단내림 구간 바깥쪽 끝 슬롯만
+  const shouldReduceWidth = isDualFurniture && spaceInfo.installType === 'freestanding' && (
+    (spaceInfo.surroundType === 'no-surround' && (isNoSurroundFirstSlot || isNoSurroundLastSlot)) ||
+    isSurroundDroppedEdgeSlot
+  );
+
+  if (shouldReduceWidth) {
+    furnitureWidthMm = furnitureWidthMm - END_PANEL_THICKNESS;
+    widthReduced = true;
+    console.log('🔴 [듀얼장] 가구 너비 조정:', {
+      원래너비: originalFurnitureWidthMm,
+      조정후: furnitureWidthMm,
+      zone: placedModule.zone,
+      서라운드타입: spaceInfo.surroundType,
+      바깥쪽끝: isNoSurroundFirstSlot || isNoSurroundLastSlot || isSurroundDroppedEdgeSlot
+    });
+  }
 
   console.log('🔍🔍🔍 [노서라운드 슬롯 체크]', {
     moduleId: placedModule.id,
