@@ -1609,11 +1609,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (isFirstSlot && !hasLeftWall) {
       // 왼쪽 벽이 없는 첫번째 슬롯
       if (isDualFurniture) {
-        // 듀얼장: 두 슬롯 모두의 도어를 확장
+        // 듀얼장: 가구가 이미 18mm 줄어들었으므로 도어도 같은 너비로
         const firstSlotReduction = indexing.slotWidths?.[0] ? indexing.columnWidth - indexing.slotWidths[0] : 0;
         const secondSlotReduction = indexing.slotWidths?.[1] ? indexing.columnWidth - indexing.slotWidths[1] : 0;
-        // 두 슬롯의 총 너비에 18mm 추가
-        doorWidthExpansion = END_PANEL_THICKNESS + firstSlotReduction + secondSlotReduction;
+        // 가구가 18mm 줄어들었으므로 도어도 18mm 축소
+        doorWidthExpansion = -END_PANEL_THICKNESS + firstSlotReduction + secondSlotReduction;
         // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
         doorXOffset = needsEndPanelAdjustment && isNoSurroundFirstSlot ? 
           positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
@@ -1630,26 +1630,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     } else if ((isLastSlotForDual || isLastSlotForSingle) && !hasRightWall) {
       // 오른쪽 벽이 없는 마지막 슬롯
       if (isDualFurniture && isLastSlotForDual) {
-        // 듀얼장: 두 슬롯 모두의 도어를 확장
+        // 듀얼장: 가구가 이미 18mm 줄어들었으므로 도어도 같은 너비로
         const lastSlotIndex = indexing.columnCount - 1;
         const beforeLastSlotIndex = indexing.columnCount - 2;
-        const lastSlotReduction = indexing.slotWidths?.[lastSlotIndex] ? 
+        const lastSlotReduction = indexing.slotWidths?.[lastSlotIndex] ?
           indexing.columnWidth - indexing.slotWidths[lastSlotIndex] : 0;
-        const beforeLastSlotReduction = indexing.slotWidths?.[beforeLastSlotIndex] ? 
+        const beforeLastSlotReduction = indexing.slotWidths?.[beforeLastSlotIndex] ?
           indexing.columnWidth - indexing.slotWidths[beforeLastSlotIndex] : 0;
-        // 두 슬롯의 총 너비에 18mm 추가
-        doorWidthExpansion = END_PANEL_THICKNESS + lastSlotReduction + beforeLastSlotReduction;
+        // 가구가 18mm 줄어들었으므로 도어도 18mm 축소 (expansion = -18 + slotReductions)
+        doorWidthExpansion = -END_PANEL_THICKNESS + lastSlotReduction + beforeLastSlotReduction;
         // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
-        doorXOffset = needsEndPanelAdjustment && isNoSurroundLastSlot ? 
+        doorXOffset = needsEndPanelAdjustment && isNoSurroundLastSlot ?
           positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
-        
+
         } else {
         // 싱글장: 18mm 확장, 상하부장 인접 시 위치 조정
         doorWidthExpansion = END_PANEL_THICKNESS;
         // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
-        doorXOffset = needsEndPanelAdjustment && isNoSurroundLastSlot ? 
+        doorXOffset = needsEndPanelAdjustment && isNoSurroundLastSlot ?
           positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
-        
+
         }
     }
   }
