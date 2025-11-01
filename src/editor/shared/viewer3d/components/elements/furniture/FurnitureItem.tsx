@@ -2703,7 +2703,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
         if (endPanelSide === 'left' || endPanelSide === 'both') {
           const leftPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
-            ? furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2
+            ? furnitureCenterX - adjustedHalfWidth - endPanelWidth
             : (slotBoundaries
                 ? slotBoundaries.left + endPanelWidth / 2
                 : furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2);
@@ -2716,7 +2716,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
           const rightPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
-            ? furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2
+            ? furnitureCenterX + adjustedHalfWidth + endPanelWidth
             : (slotBoundaries
                 ? slotBoundaries.right - endPanelWidth / 2
                 : furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2);
