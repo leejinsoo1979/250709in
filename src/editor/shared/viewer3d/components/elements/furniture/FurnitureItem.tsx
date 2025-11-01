@@ -1162,15 +1162,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       shouldProcessLastSlot = isLastSlot && !spaceInfo.wallConfig?.right && !isAtBoundary;
     }
 
-    if (isAtBoundary && placedModule.isDualSlot) {
-      console.log('🚨🚨🚨 [경계 듀얼가구]', {
-        moduleId: placedModule.id,
-        zone: placedModule.zone,
-        slotIndex: normalizedSlotIndex,
-        positionX: placedModule.position.x,
-        customWidth: placedModule.customWidth
-      });
-    }
+    console.log('🔍🔍🔍 [엔드패널 처리 상태]', {
+      moduleId: placedModule.id,
+      zone: placedModule.zone,
+      slotIndex: normalizedSlotIndex,
+      isLastSlot,
+      isAtBoundary,
+      shouldProcessFirstSlot,
+      shouldProcessLastSlot
+    });
 
     // 듀얼 가구의 경우: 첫번째 슬롯에 있고, 왼쪽에 벽이 없으면 처리 (경계면 제외)
     const isDualFirstSlot = isDualFurniture && normalizedSlotIndex === 0 && !isAtBoundary &&
