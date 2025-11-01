@@ -1059,24 +1059,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const hasRightWall = spaceInfo.wallConfig?.right;
 
   // 노서라운드 첫 슬롯: zone별 첫 슬롯 (zone 내 인덱스 0)
-  // 단내림 경계 슬롯 체크 (안쪽)
+  // 단내림 경계 슬롯 체크 (메인구간과 단내림구간 사이의 안쪽 슬롯만 경계)
   const isAtDroppedBoundary = spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone && (() => {
     const droppedPosition = spaceInfo.droppedCeiling.position;
-    const localIndex = localSlotIndex ?? placedModule.slotIndex;
 
     if (droppedPosition === 'right') {
-      // 단내림 오른쪽: 메인구간 마지막, 단내림구간 첫 슬롯이 경계
+      // 단내림 오른쪽: 메인구간 마지막 슬롯만 경계 (단내림 첫 슬롯은 경계 아님)
       if (placedModule.zone === 'normal') {
         return isLastSlot;
       } else {
-        return localIndex === 0;
+        return false; // 단내림구간은 경계 없음
       }
     } else {
-      // 단내림 왼쪽: 메인구간 첫, 단내림구간 마지막 슬롯이 경계
+      // 단내림 왼쪽: 메인구간 첫 슬롯만 경계 (단내림 마지막 슬롯은 경계 아님)
       if (placedModule.zone === 'normal') {
         return normalizedSlotIndex === 0;
       } else {
-        return isLastSlot;
+        return false; // 단내림구간은 경계 없음
       }
     }
   })();
