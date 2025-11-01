@@ -775,7 +775,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 듀얼 가구 여부는 이미 위에서 판단했으므로 재사용
       
       // 듀얼 가구가 영역 경계를 넘어가는지 체크
+      console.log('🔍🔍🔍 [경계 체크]', {
+        isDual,
+        zoneSlotIndex,
+        targetZoneColumnCount: targetZone.columnCount,
+        '다음슬롯인덱스': zoneSlotIndex + 1,
+        '경계넘음': zoneSlotIndex + 1 >= targetZone.columnCount,
+        zone: zoneToUse
+      });
+
       if (isDual && zoneSlotIndex + 1 >= targetZone.columnCount) {
+        console.error('❌❌❌ 듀얼 가구 배치 불가: zone 경계를 침범합니다');
         debugLog('🚫 듀얼 가구가 영역 경계를 넘어감:', {
           zone: zoneToUse,
           zoneSlotIndex,
@@ -783,6 +793,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           필요한슬롯: [zoneSlotIndex, zoneSlotIndex + 1],
           영역범위: `0 ~ ${targetZone.columnCount - 1}`
         });
+        showAlert?.('듀얼 가구는 구역 경계를 넘을 수 없습니다', 'error');
         return false;
       }
       
