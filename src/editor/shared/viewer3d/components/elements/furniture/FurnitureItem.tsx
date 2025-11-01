@@ -1254,9 +1254,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isDualLastSlot = isDualFurniture && zoneLocalIndex === zoneColumnCount - 2 && (!isAtBoundary || isDualEndSlotAtOuter) &&
                             (spaceInfo.installType === 'freestanding' ||
                              ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
+
+    console.log('🔍🔍🔍 [듀얼 가구 슬롯 체크]', {
+      moduleId: placedModule.id,
+      zone: placedModule.zone,
+      isDualFurniture,
+      zoneLocalIndex,
+      zoneColumnCount,
+      isAtBoundary,
+      isDualEndSlotAtOuter,
+      isDualFirstSlot,
+      isDualLastSlot,
+      조건1_듀얼: isDualFurniture,
+      조건2_마지막에서두번째: zoneLocalIndex === zoneColumnCount - 2,
+      조건3_경계아니거나바깥: !isAtBoundary || isDualEndSlotAtOuter,
+      조건4_프리스탠딩: spaceInfo.installType === 'freestanding'
+    });
+
     // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
     const isLastSlotNoSurround = shouldProcessLastSlot && !isDualLastSlot;
-    
+
     // 듀얼 가구 첫번째 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
     if (isDualFirstSlot && !needsEndPanelAdjustment) {
       // 듀얼 가구가 첫번째 슬롯에 있는 경우: 왼쪽만 18mm 줄임
