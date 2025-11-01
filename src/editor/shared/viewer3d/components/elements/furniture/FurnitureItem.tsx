@@ -1284,11 +1284,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
     // 듀얼 가구 마지막 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
     else if (isDualLastSlot && !needsEndPanelAdjustment) {
+      console.log('🟢🟢🟢 [듀얼 마지막 슬롯 처리]', {
+        moduleId: placedModule.id,
+        zone: placedModule.zone,
+        원래너비: furnitureWidthMm,
+        줄일너비: END_PANEL_THICKNESS,
+        이동거리mm: -(END_PANEL_THICKNESS / 2),
+        이동거리m: -(END_PANEL_THICKNESS / 2) * 0.01
+      });
+
       // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽만 18mm 줄임
       const originalWidth = furnitureWidthMm;
       furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 오른쪽만 18mm 줄임
       positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
-      
+
+      console.log('🟢🟢🟢 [듀얼 마지막 슬롯 처리 완료]', {
+        moduleId: placedModule.id,
+        조정된너비: furnitureWidthMm,
+        위치조정m: positionAdjustmentForEndPanel
+      });
       }
     // 싱글 가구 첫/마지막 슬롯 처리 (상하부장도 포함)
     else if ((isFirstSlotNoSurround || isLastSlotNoSurround)) {
@@ -1978,6 +1992,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // moduleData가 없으면 빈 그룹 반환 (모든 Hook 호출 이후)
   if (moduleNotFound || !moduleData) {
     return <group />;
+  }
+
+  // 최종 렌더링 위치 로그
+  if (placedModule.zone === 'dropped') {
+    console.log('🔵🔵🔵 [단내림구간 가구 렌더링]', {
+      moduleId: placedModule.id,
+      zone: placedModule.zone,
+      adjustedPositionX: adjustedPosition.x,
+      positionAdjustmentForEndPanel,
+      최종X위치: adjustedPosition.x + positionAdjustmentForEndPanel,
+      가구너비mm: furnitureWidthMm,
+      가구너비m: mmToThreeUnits(furnitureWidthMm)
+    });
   }
 
   return (
