@@ -1603,13 +1603,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         } else if (isDualFurniture && isDualLastSlot) {
         // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽 도어만 18mm 확장
         doorWidthExpansion = END_PANEL_THICKNESS; // 18mm 확장
-        // 단내림 구간 듀얼장: doorXOffset = 9mm 우측 이동 (일반 구간과 동일)
-        // 일반 구간 듀얼장: 상하부장 인접 시 위치 조정, 아니면 기본 9mm 우측 이동
+        // 단내림 구간 듀얼장: doorXOffset = 9mm 우측 이동
+        // 일반 구간 듀얼장(단내림 경계): doorXOffset = 0 (슬롯 중심 고정)
         if (placedModule.zone === 'dropped') {
           doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm 우측 이동
           console.log('✅✅✅ 단내림 구간 듀얼장(마지막) → doorXOffset = +9mm (우측 이동) 설정됨');
         } else {
-          doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
+          // 일반 구간 마지막 슬롯은 단내림 경계와 인접 → 도어 중심 고정
+          doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0;
+          console.log('✅✅✅ 일반 구간 듀얼장(마지막, 단내림 경계) → doorXOffset = 0 (중심 고정) 설정됨');
         }
         
         } else {
