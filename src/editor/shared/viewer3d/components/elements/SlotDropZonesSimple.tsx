@@ -725,8 +725,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       });
       
       // 드래그하는 모듈과 동일한 타입의 모듈 찾기
-      // 원본 ID에서 타입 부분만 추출 (너비 정보 제거)
-      const moduleBaseType = dragData.moduleData.id.replace(/-\d+$/, '');
+      // 원본 ID에서 타입 부분만 추출 (소수점 포함한 너비 정보 제거)
+      const moduleBaseType = dragData.moduleData.id.replace(/-[\d.]+$/, '');
       
       // 듀얼 가구 여부 판단 - 원본 모듈 ID로 판단
       const isDual = dragData.moduleData.id.startsWith('dual-');
@@ -1696,11 +1696,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         ? targetIndexing.slotWidths[slotIndex]
         : targetIndexing.columnWidth);
     
-    // 베이스 타입 추출 (숫자 제거)
-    const moduleBaseType = dragData.moduleData.id.replace(/-\d+$/, '');
-    
+    // 베이스 타입 추출 (소수점 포함한 숫자 제거)
+    const moduleBaseType = dragData.moduleData.id.replace(/-[\d.]+$/, '');
+
+    // 듀얼 가구인 경우 너비를 2배로 계산
+    const finalWidth = isDual ? targetWidth * 2 : targetWidth;
+
     // 정확한 너비를 포함한 ID 생성
-    const targetModuleId = `${moduleBaseType}-${targetWidth}`;
+    const targetModuleId = `${moduleBaseType}-${finalWidth}`;
     
     debugLog('🎯 [SlotDropZones] Non-dropped module lookup:', {
       originalId: dragData.moduleData.id,
