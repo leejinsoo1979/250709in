@@ -1055,9 +1055,32 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const hasRightWall = spaceInfo.wallConfig?.right;
 
   // 노서라운드 첫 슬롯: zone별 첫 슬롯 (zone 내 인덱스 0)
+  // 단내림 경계 슬롯 체크 (안쪽)
+  const isAtDroppedBoundary = spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone && (() => {
+    const droppedPosition = spaceInfo.droppedCeiling.position;
+    const localIndex = localSlotIndex ?? placedModule.slotIndex;
+
+    if (droppedPosition === 'right') {
+      // 단내림 오른쪽: 메인구간 마지막, 단내림구간 첫 슬롯이 경계
+      if (placedModule.zone === 'normal') {
+        return isLastSlot;
+      } else {
+        return localIndex === 0;
+      }
+    } else {
+      // 단내림 왼쪽: 메인구간 첫, 단내림구간 마지막 슬롯이 경계
+      if (placedModule.zone === 'normal') {
+        return normalizedSlotIndex === 0;
+      } else {
+        return isLastSlot;
+      }
+    }
+  })();
+
   const isNoSurroundFirstSlot = spaceInfo.surroundType === 'no-surround' &&
                                   ((spaceInfo.installType === 'freestanding') ||
                                    (isSemiStanding && !hasLeftWall)) && // 세미스탠딩에서 왼쪽 벽이 없는 경우
+                                  !isAtDroppedBoundary && // 경계 슬롯 제외
                                   (() => {
                                     // 단내림이 있으면 zone별 첫 슬롯 확인
                                     if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
@@ -1073,6 +1096,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isNoSurroundLastSlot = spaceInfo.surroundType === 'no-surround' &&
                                  ((spaceInfo.installType === 'freestanding') ||
                                   (isSemiStanding && !hasRightWall)) && // 세미스탠딩에서 오른쪽 벽이 없는 경우
+                                 !isAtDroppedBoundary && // 경계 슬롯 제외
                                  (() => {
                                    // 단내림이 있으면 zone별 마지막 슬롯 확인
                                    if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
