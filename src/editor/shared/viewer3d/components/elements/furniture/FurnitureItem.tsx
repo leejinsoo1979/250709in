@@ -1222,15 +1222,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       shouldProcessLastSlot
     });
 
-    // 듀얼 가구의 경우: 첫번째 슬롯에 있고, 왼쪽에 벽이 없으면 처리 (경계면 제외)
-    const isDualFirstSlot = isDualFurniture && normalizedSlotIndex === 0 && !isAtBoundary &&
-                            (spaceInfo.installType === 'freestanding' ||
-                             ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.left));
-
-    const isFirstSlotNoSurround = shouldProcessFirstSlot && !isDualFirstSlot;
-
-    // 듀얼 가구의 경우: 마지막에서 두번째 슬롯에 있고, 오른쪽에 벽이 없으면 처리
-    // 단내림이 있으면 zone별 columnCount 사용
+    // zone별 columnCount와 zone 내 로컬 인덱스 계산 (듀얼 가구 체크에 필요)
     const zoneColumnCount = (() => {
       if (spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone) {
         const zoneData = placedModule.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
@@ -1239,12 +1231,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       return indexing.columnCount;
     })();
 
+    // zone 내 로컬 인덱스 계산 (단내림이 있을 때)
+    const zoneLocalIndex = (() => {
+      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
+        return localSlotIndex ?? placedModule.slotIndex;
+      }
+      return normalizedSlotIndex;
+    })();
+
+    // 듀얼 가구의 경우: 첫번째 슬롯에 있고, 왼쪽에 벽이 없으면 처리 (경계면 제외)
+    const isDualFirstSlot = isDualFurniture && zoneLocalIndex === 0 && !isAtBoundary &&
+                            (spaceInfo.installType === 'freestanding' ||
+                             ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.left));
+
+    const isFirstSlotNoSurround = shouldProcessFirstSlot && !isDualFirstSlot;
+
     // 듀얼 가구의 끝 슬롯이 바깥쪽(경계 바깥)인지 체크
-    const isDualEndSlotAtOuter = isDualFurniture && normalizedSlotIndex !== undefined &&
-      normalizedSlotIndex + 1 === zoneColumnCount - 1 &&
+    const isDualEndSlotAtOuter = isDualFurniture && zoneLocalIndex !== undefined &&
+      zoneLocalIndex + 1 === zoneColumnCount - 1 &&
       spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
 
-    const isDualLastSlot = isDualFurniture && normalizedSlotIndex === zoneColumnCount - 2 && (!isAtBoundary || isDualEndSlotAtOuter) &&
+    const isDualLastSlot = isDualFurniture && zoneLocalIndex === zoneColumnCount - 2 && (!isAtBoundary || isDualEndSlotAtOuter) &&
                             (spaceInfo.installType === 'freestanding' ||
                              ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
     // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
