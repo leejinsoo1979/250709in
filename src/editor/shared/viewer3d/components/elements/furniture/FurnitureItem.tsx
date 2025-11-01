@@ -1553,15 +1553,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       shouldExpandLastSlot = isLastSlot && !spaceInfo.wallConfig?.right;
     }
 
-    // 듀얼 가구의 경우: 첫번째 슬롯에 있고, 왼쪽에 벽이 없으면 처리
-    const isDualFirstSlotDoor = isDualFurniture && normalizedSlotIndex === 0 && 
-                            (spaceInfo.installType === 'freestanding' || 
+    // zone별 로컬 인덱스 사용
+    const currentLocalSlotIndex = localSlotIndex ?? normalizedSlotIndex;
+
+    // 듀얼 가구의 경우: 각 zone의 첫번째 슬롯에 있고, 벽이 없으면 처리
+    const isDualFirstSlotDoor = isDualFurniture && currentLocalSlotIndex === 0 &&
+                            (spaceInfo.installType === 'freestanding' ||
                              ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.left));
 
     const isFirstSlotFreestanding = shouldExpandFirstSlot && !isDualFirstSlotDoor;
     const isLastSlotFreestanding = shouldExpandLastSlot;
-    const isDualLastSlot = isDualFurniture && normalizedSlotIndex === indexing.columnCount - 2 && 
-                            (spaceInfo.installType === 'freestanding' || 
+
+    // 각 zone의 마지막 듀얼 슬롯 체크
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    const zoneColumnCount = placedModule.zone === 'dropped' && zoneInfo.dropped
+      ? zoneInfo.dropped.columnCount
+      : (zoneInfo.normal?.columnCount ?? indexing.columnCount);
+
+    const isDualLastSlot = isDualFurniture && currentLocalSlotIndex === zoneColumnCount - 2 &&
+                            (spaceInfo.installType === 'freestanding' ||
                              ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
     
     // 첫번째 또는 마지막 슬롯: 도어 확장
