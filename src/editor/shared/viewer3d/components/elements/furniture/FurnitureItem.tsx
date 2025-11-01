@@ -1106,16 +1106,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 단내림이 있을 때, 경계면 슬롯인지 확인 (공간 전체의 끝이 아닌 경계면)
     const isAtBoundary = spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone && (() => {
       const droppedPosition = spaceInfo.droppedCeiling.position;
+      let result = false;
 
       if (droppedPosition === 'right') {
         // 단내림이 오른쪽: 메인구간 마지막 슬롯(zone별) & 단내림구간 첫 슬롯이 경계면
-        return (placedModule.zone === 'normal' && isLastSlot) ||
-               (placedModule.zone === 'dropped' && normalizedSlotIndex === 0);
+        result = (placedModule.zone === 'normal' && isLastSlot) ||
+                 (placedModule.zone === 'dropped' && normalizedSlotIndex === 0);
       } else {
         // 단내림이 왼쪽: 단내림구간 마지막 슬롯(zone별) & 메인구간 첫 슬롯이 경계면
-        return (placedModule.zone === 'dropped' && isLastSlot) ||
-               (placedModule.zone === 'normal' && normalizedSlotIndex === 0);
+        result = (placedModule.zone === 'dropped' && isLastSlot) ||
+                 (placedModule.zone === 'normal' && normalizedSlotIndex === 0);
       }
+
+      console.log('🔍 경계면 체크:', {
+        moduleId: placedModule.id,
+        zone: placedModule.zone,
+        slotIndex: normalizedSlotIndex,
+        isLastSlot,
+        droppedPosition,
+        isAtBoundary: result
+      });
+
+      return result;
     })();
 
     if (spaceInfo.installType === 'freestanding') {
@@ -1127,6 +1139,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       shouldProcessFirstSlot = normalizedSlotIndex === 0 && !spaceInfo.wallConfig?.left && !isAtBoundary;
       shouldProcessLastSlot = isLastSlot && !spaceInfo.wallConfig?.right && !isAtBoundary;
     }
+
+    console.log('🔍 엔드패널 처리 플래그:', {
+      moduleId: placedModule.id,
+      zone: placedModule.zone,
+      slotIndex: normalizedSlotIndex,
+      isAtBoundary,
+      shouldProcessFirstSlot,
+      shouldProcessLastSlot
+    });
 
     // 듀얼 가구의 경우: 첫번째 슬롯에 있고, 왼쪽에 벽이 없으면 처리 (경계면 제외)
     const isDualFirstSlot = isDualFurniture && normalizedSlotIndex === 0 && !isAtBoundary &&
