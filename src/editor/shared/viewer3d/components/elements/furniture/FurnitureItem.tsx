@@ -1605,13 +1605,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         doorWidthExpansion = END_PANEL_THICKNESS; // 18mm 확장
         // 단내림 구간 듀얼장: doorXOffset = 9mm 우측 이동
         // 일반 구간 듀얼장(단내림 경계): doorXOffset = 0 (슬롯 중심 고정)
+        // 단내림 없을 때: 기본 9mm 우측 이동
         if (placedModule.zone === 'dropped') {
           doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm 우측 이동
           console.log('✅✅✅ 단내림 구간 듀얼장(마지막) → doorXOffset = +9mm (우측 이동) 설정됨');
-        } else {
-          // 일반 구간 마지막 슬롯은 단내림 경계와 인접 → 도어 중심 고정
+        } else if (spaceInfo.droppedCeiling?.enabled) {
+          // 단내림이 있고, 일반 구간 마지막 슬롯 → 도어 중심 고정 (단내림 경계)
           doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0;
           console.log('✅✅✅ 일반 구간 듀얼장(마지막, 단내림 경계) → doorXOffset = 0 (중심 고정) 설정됨');
+        } else {
+          // 단내림이 없을 때 → 기본 9mm 우측 이동
+          doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
+          console.log('✅✅✅ 듀얼장(마지막, 단내림 없음) → doorXOffset = +9mm (우측 이동) 설정됨');
         }
         
         } else {
@@ -1628,14 +1633,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         });
 
         // 도어 위치는 확장된 방향과 반대로 이동 (가구 위치에 맞춤)
-        // 단내림 경계와 인접한 슬롯: 도어 중심 고정 (최우선)
+        // 단내림 경계와 인접한 슬롯: 도어 중심 고정 (최우선, 단내림이 있을 때만)
         // 상하부장이 인접한 경우 위치 조정 사용, 아니면 기본 9mm 이동
-        if (placedModule.zone === 'dropped' && currentLocalSlotIndex === 0) {
+        if (placedModule.zone === 'dropped' && currentLocalSlotIndex === 0 && spaceInfo.droppedCeiling?.enabled) {
           // 단내림 구간 첫번째 슬롯 싱글장: 도어 중심 고정
           doorXOffset = 0;
           console.log('✅✅✅ 단내림 구간 싱글장(첫번째, 메인 경계) → doorXOffset = 0 (중심 고정) 설정됨');
-        } else if (placedModule.zone === 'normal' && currentLocalSlotIndex === zoneColumnCount - 1) {
-          // 일반 구간 마지막 슬롯 싱글장: 도어 중심 고정 (단내림 경계)
+        } else if (placedModule.zone === 'normal' && currentLocalSlotIndex === zoneColumnCount - 1 && spaceInfo.droppedCeiling?.enabled) {
+          // 일반 구간 마지막 슬롯 싱글장: 도어 중심 고정 (단내림 경계, 단내림이 있을 때만)
           doorXOffset = 0;
           console.log('✅✅✅ 일반 구간 싱글장(마지막, 단내림 경계) → doorXOffset = 0 (중심 고정) 설정됨');
         } else if (isFirstSlotFreestanding) {
