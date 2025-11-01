@@ -1279,14 +1279,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const originalWidth = furnitureWidthMm;
       furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 18mm 줄임
 
-      // 단내림구간인 경우: 단내림 위치에 따라 바깥쪽 방향 결정
+      // 단내림구간인 경우: 가구와 도어를 슬롯 중심에 고정 (이동하지 않음)
       if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
-        const droppedPosition = spaceInfo.droppedCeiling.position;
-        // 단내림 왼쪽: 첫 슬롯의 바깥쪽 = 왼쪽, 가구는 오른쪽으로 이동
-        // 단내림 오른쪽: 첫 슬롯의 바깥쪽 = 오른쪽, 가구는 왼쪽으로 이동
-        positionAdjustmentForEndPanel = droppedPosition === 'left'
-          ? (END_PANEL_THICKNESS / 2) * 0.01  // 왼쪽 단내림: 오른쪽으로 9mm
-          : -(END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽 단내림: 왼쪽으로 9mm
+        // 단내림 구간: 가구를 슬롯 중심에 고정 (이동 없음)
+        positionAdjustmentForEndPanel = 0;
       } else {
         // 메인구간 또는 단내림 없음: 첫 슬롯 = 왼쪽 끝, 오른쪽으로 이동
         positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
@@ -1297,23 +1293,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const originalWidth = furnitureWidthMm;
       furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 18mm 줄임
 
-      // 단내림구간인 경우: 단내림 위치에 따라 바깥쪽 방향 결정
+      // 단내림구간인 경우: 가구와 도어를 슬롯 중심에 고정 (이동하지 않음)
       if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
-        const droppedPosition = spaceInfo.droppedCeiling.position;
-        // 단내림 왼쪽: 마지막 슬롯의 바깥쪽 = 왼쪽, 가구는 오른쪽으로 이동
-        // 단내림 오른쪽: 마지막 슬롯의 바깥쪽 = 오른쪽, 가구는 왼쪽으로 이동
-        positionAdjustmentForEndPanel = droppedPosition === 'left'
-          ? (END_PANEL_THICKNESS / 2) * 0.01  // 왼쪽 단내림: 오른쪽으로 9mm
-          : -(END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽 단내림: 왼쪽으로 9mm
+        // 단내림 구간: 가구를 슬롯 중심에 고정 (이동 없음)
+        positionAdjustmentForEndPanel = 0;
 
         console.log('🟢🟢🟢 [단내림구간 듀얼 마지막 슬롯]', {
           moduleId: placedModule.id,
           zone: placedModule.zone,
-          droppedPosition,
-          바깥쪽방향: droppedPosition === 'left' ? '왼쪽' : '오른쪽',
-          가구이동방향: droppedPosition === 'left' ? '오른쪽' : '왼쪽',
           조정된너비: furnitureWidthMm,
-          위치조정m: positionAdjustmentForEndPanel
+          위치조정m: positionAdjustmentForEndPanel,
+          위치: '슬롯 중심 고정'
         });
       } else {
         // 메인구간 또는 단내림 없음: 마지막 슬롯 = 오른쪽 끝, 왼쪽으로 이동
