@@ -1948,6 +1948,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 경계 슬롯은 이동하지 않음
     let finalOffset = 0;
 
+    console.log('🟠 [위치 이동 조건 체크]', {
+      서라운드타입: spaceInfo.surroundType,
+      너비줄임: widthReduced,
+      단내림존: isDroppedZone,
+      경계슬롯: isAtDroppedBoundary
+    });
+
     if (spaceInfo.surroundType === 'no-surround') {
       // 노서라운드: 바깥쪽 끝 슬롯만 이동 (첫/마지막 슬롯)
       if (isNoSurroundFirstSlot || isNoSurroundLastSlot) {
@@ -1956,6 +1963,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     } else if (spaceInfo.surroundType === 'surround' && widthReduced) {
       // 서라운드: 너비가 줄어든 듀얼 가구만 안쪽(왼쪽)으로 9mm 이동
       finalOffset = -offset;
+      console.log('🟠 [서라운드 위치 이동]', { finalOffset });
     }
 
     if (finalOffset !== 0) {
