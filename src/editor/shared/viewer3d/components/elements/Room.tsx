@@ -2131,14 +2131,24 @@ const Room: React.FC<RoomProps> = ({
             return m.slotIndex === droppedLastSlot || (isDual && m.slotIndex === droppedLastSlot - 1);
           });
 
-          // 엔드패널 X 위치: 가구가 있으면 가구 오른쪽 끝 + 9mm(가구가 18mm 줄어든 것의 절반)
+          // 엔드패널 X 위치: 가구가 있으면 가구 오른쪽 끝에 붙임
           let endPanelX = xOffset + width - frameThickness.right/2; // 기본값: 공간 끝
 
           if (droppedRightFurniture) {
             const furnitureX = droppedRightFurniture.position.x;
-            const furnitureWidth = (droppedRightFurniture.customWidth ?? (droppedZone?.columnWidth ?? 0)) * 0.01;
-            // 가구 중심 + 가구 너비/2 = 가구 오른쪽 끝
-            endPanelX = furnitureX + furnitureWidth / 2 + frameThickness.right / 2;
+            // customWidth는 이미 18mm 줄어든 값
+            const furnitureWidthReduced = (droppedRightFurniture.customWidth ?? (droppedZone?.columnWidth ?? 0)) * 0.01;
+
+            // FurnitureItem.tsx에서 가구가 왼쪽으로 9mm 이동했으므로, 원래 위치로 되돌림
+            // 단내림 오른쪽: positionAdjustment = -9mm = -0.09
+            const positionAdjustment = -0.09;
+            const originalFurnitureX = furnitureX - positionAdjustment;
+
+            // 원래 가구 너비 = 줄어든 너비 + 18mm
+            const originalFurnitureWidth = furnitureWidthReduced + 0.18;
+
+            // 엔드패널 X = 원래 가구 중심 + 원래 가구 너비/2 + 엔드패널 두께/2
+            endPanelX = originalFurnitureX + originalFurnitureWidth / 2 + frameThickness.right / 2;
           }
 
           console.log('🔍 단내림 오른쪽 엔드패널 위치 계산:', {
