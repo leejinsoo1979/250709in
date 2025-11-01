@@ -1104,17 +1104,29 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     let shouldProcessLastSlot = false;
 
     // 단내림이 있을 때 경계면 슬롯인지 확인
+    // 경계면 = 메인구간과 단내림구간이 맞닿은 슬롯 (공간 전체의 끝이 아님!)
     const isBoundarySlot = spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone && (() => {
       const droppedPosition = spaceInfo.droppedCeiling.position;
       let result = false;
-      if (placedModule.zone === 'normal') {
-        // 메인구간: 단내림이 왼쪽이면 첫 슬롯이 경계, 오른쪽이면 마지막 슬롯이 경계
-        result = (droppedPosition === 'left' && normalizedSlotIndex === 0) ||
-                 (droppedPosition === 'right' && isLastSlot);
+
+      if (droppedPosition === 'right') {
+        // 단내림이 오른쪽에 있을 때:
+        // - 메인구간 마지막 슬롯 = 경계면 (엔드패널 없음)
+        // - 단내림구간 첫번째 슬롯 = 경계면 (엔드패널 없음)
+        if (placedModule.zone === 'normal') {
+          result = isLastSlot; // 메인구간 마지막 슬롯이 경계면
+        } else {
+          result = normalizedSlotIndex === 0; // 단내림구간 첫 슬롯이 경계면
+        }
       } else {
-        // 단내림구간: 단내림이 왼쪽이면 마지막 슬롯이 경계, 오른쪽이면 첫 슬롯이 경계
-        result = (droppedPosition === 'left' && isLastSlot) ||
-                 (droppedPosition === 'right' && normalizedSlotIndex === 0);
+        // 단내림이 왼쪽에 있을 때:
+        // - 단내림구간 마지막 슬롯 = 경계면 (엔드패널 없음)
+        // - 메인구간 첫번째 슬롯 = 경계면 (엔드패널 없음)
+        if (placedModule.zone === 'dropped') {
+          result = isLastSlot; // 단내림구간 마지막 슬롯이 경계면
+        } else {
+          result = normalizedSlotIndex === 0; // 메인구간 첫 슬롯이 경계면
+        }
       }
 
       console.log('🔍 경계면 슬롯 체크:', {
