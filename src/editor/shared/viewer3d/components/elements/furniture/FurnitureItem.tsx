@@ -2124,7 +2124,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       <group
         userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
         position={[
-          adjustedPosition.x + positionAdjustmentForEndPanel,
+          adjustedPosition.x,
           finalYPosition, // 상부장은 강제로 14, 나머지는 adjustedPosition.y
           furnitureZ // 공간 앞면에서 뒤쪽으로 배치
         ]}
@@ -2764,7 +2764,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {showFurnitureEditHandles && showDimensions && viewMode === '3D' && (
         <Html
           position={[
-            adjustedPosition.x + positionAdjustmentForEndPanel,
+            adjustedPosition.x,
             finalYPosition - height / 2 - 2.0, // 하부 프레임보다 더 아래로 (1.0 -> 2.0)
             furnitureZ + depth / 2 + 0.5 // 가구 앞쪽
           ]}
