@@ -1556,10 +1556,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // zone별 로컬 인덱스 사용
     const currentLocalSlotIndex = localSlotIndex ?? normalizedSlotIndex;
 
+    console.log('🔥🔥🔥 [듀얼장 감지 체크]', {
+      moduleId: placedModule.id,
+      zone: placedModule.zone,
+      isDualFurniture,
+      normalizedSlotIndex,
+      localSlotIndex,
+      currentLocalSlotIndex,
+      installType: spaceInfo.installType
+    });
+
     // 듀얼 가구의 경우: 각 zone의 첫번째 슬롯에 있고, 벽이 없으면 처리
     const isDualFirstSlotDoor = isDualFurniture && currentLocalSlotIndex === 0 &&
                             (spaceInfo.installType === 'freestanding' ||
                              ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.left));
+
+    console.log('🔥 isDualFirstSlotDoor:', isDualFirstSlotDoor);
 
     const isFirstSlotFreestanding = shouldExpandFirstSlot && !isDualFirstSlotDoor;
     const isLastSlotFreestanding = shouldExpandLastSlot;
@@ -1579,10 +1591,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       if (isDualFurniture && isDualFirstSlotDoor) {
         // 듀얼 가구가 첫번째 슬롯에 있는 경우: 왼쪽 도어만 18mm 확장
         doorWidthExpansion = END_PANEL_THICKNESS; // 18mm 확장
-        // 단내림 구간 듀얼장: doorXOffset = 0 (슬롯 중심 고정)
-        // 일반 구간 듀얼장: 상하부장 인접 시 위치 조정, 아니면 기본 9mm 이동
+        // 단내림 구간 듀얼장: doorXOffset = 9mm 우측 이동 (슬롯 중심에서 우측으로)
+        // 일반 구간 듀얼장: 상하부장 인접 시 위치 조정, 아니면 기본 9mm 좌측 이동
         if (placedModule.zone === 'dropped') {
-          doorXOffset = 0;
+          doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm 우측 이동
+          console.log('✅✅✅ 단내림 구간 듀얼장 → doorXOffset = +9mm (우측 이동) 설정됨');
         } else {
           doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
         }
@@ -1590,10 +1603,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         } else if (isDualFurniture && isDualLastSlot) {
         // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽 도어만 18mm 확장
         doorWidthExpansion = END_PANEL_THICKNESS; // 18mm 확장
-        // 단내림 구간 듀얼장: doorXOffset = 0 (슬롯 중심 고정)
-        // 일반 구간 듀얼장: 상하부장 인접 시 위치 조정, 아니면 기본 9mm 이동
+        // 단내림 구간 듀얼장: doorXOffset = 9mm 우측 이동 (일반 구간과 동일)
+        // 일반 구간 듀얼장: 상하부장 인접 시 위치 조정, 아니면 기본 9mm 우측 이동
         if (placedModule.zone === 'dropped') {
-          doorXOffset = 0;
+          doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm 우측 이동
+          console.log('✅✅✅ 단내림 구간 듀얼장(마지막) → doorXOffset = +9mm (우측 이동) 설정됨');
         } else {
           doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
         }
