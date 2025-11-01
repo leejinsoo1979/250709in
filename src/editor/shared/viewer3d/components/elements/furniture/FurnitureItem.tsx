@@ -1276,33 +1276,49 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
     // 듀얼 가구 첫번째 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
     if (isDualFirstSlot && !needsEndPanelAdjustment) {
-      // 듀얼 가구가 첫번째 슬롯에 있는 경우: 왼쪽만 18mm 줄임
       const originalWidth = furnitureWidthMm;
-      furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 왼쪽만 18mm 줄임
-      positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
-      
+      furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 18mm 줄임
+
+      // 단내림구간인 경우: 단내림 위치에 따라 바깥쪽 방향 결정
+      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
+        const droppedPosition = spaceInfo.droppedCeiling.position;
+        // 단내림 왼쪽: 첫 슬롯의 바깥쪽 = 왼쪽, 가구는 오른쪽으로 이동
+        // 단내림 오른쪽: 첫 슬롯의 바깥쪽 = 오른쪽, 가구는 왼쪽으로 이동
+        positionAdjustmentForEndPanel = droppedPosition === 'left'
+          ? (END_PANEL_THICKNESS / 2) * 0.01  // 왼쪽 단내림: 오른쪽으로 9mm
+          : -(END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽 단내림: 왼쪽으로 9mm
+      } else {
+        // 메인구간 또는 단내림 없음: 첫 슬롯 = 왼쪽 끝, 오른쪽으로 이동
+        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+      }
       }
     // 듀얼 가구 마지막 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
     else if (isDualLastSlot && !needsEndPanelAdjustment) {
-      console.log('🟢🟢🟢 [듀얼 마지막 슬롯 처리]', {
-        moduleId: placedModule.id,
-        zone: placedModule.zone,
-        원래너비: furnitureWidthMm,
-        줄일너비: END_PANEL_THICKNESS,
-        이동거리mm: -(END_PANEL_THICKNESS / 2),
-        이동거리m: -(END_PANEL_THICKNESS / 2) * 0.01
-      });
-
-      // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽만 18mm 줄임
       const originalWidth = furnitureWidthMm;
-      furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 오른쪽만 18mm 줄임
-      positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
+      furnitureWidthMm = originalWidth - END_PANEL_THICKNESS; // 18mm 줄임
 
-      console.log('🟢🟢🟢 [듀얼 마지막 슬롯 처리 완료]', {
-        moduleId: placedModule.id,
-        조정된너비: furnitureWidthMm,
-        위치조정m: positionAdjustmentForEndPanel
-      });
+      // 단내림구간인 경우: 단내림 위치에 따라 바깥쪽 방향 결정
+      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
+        const droppedPosition = spaceInfo.droppedCeiling.position;
+        // 단내림 왼쪽: 마지막 슬롯의 바깥쪽 = 왼쪽, 가구는 오른쪽으로 이동
+        // 단내림 오른쪽: 마지막 슬롯의 바깥쪽 = 오른쪽, 가구는 왼쪽으로 이동
+        positionAdjustmentForEndPanel = droppedPosition === 'left'
+          ? (END_PANEL_THICKNESS / 2) * 0.01  // 왼쪽 단내림: 오른쪽으로 9mm
+          : -(END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽 단내림: 왼쪽으로 9mm
+
+        console.log('🟢🟢🟢 [단내림구간 듀얼 마지막 슬롯]', {
+          moduleId: placedModule.id,
+          zone: placedModule.zone,
+          droppedPosition,
+          바깥쪽방향: droppedPosition === 'left' ? '왼쪽' : '오른쪽',
+          가구이동방향: droppedPosition === 'left' ? '오른쪽' : '왼쪽',
+          조정된너비: furnitureWidthMm,
+          위치조정m: positionAdjustmentForEndPanel
+        });
+      } else {
+        // 메인구간 또는 단내림 없음: 마지막 슬롯 = 오른쪽 끝, 왼쪽으로 이동
+        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+      }
       }
     // 싱글 가구 첫/마지막 슬롯 처리 (상하부장도 포함)
     else if ((isFirstSlotNoSurround || isLastSlotNoSurround)) {
@@ -1315,23 +1331,54 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 노서라운드 모드에서 위치 조정
         // 키큰장: 엔드패널에서 멀어지는 방향으로 9mm 이동 (침범 방지)
         // 상하부장: 엔드패널 쪽으로 9mm 이동 (엔드패널과 함께 이동)
+
+        // 단내림구간인 경우: 단내림 위치에 따라 바깥쪽 방향 결정
+        const isDroppedZone = spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
+        const droppedPosition = spaceInfo.droppedCeiling?.position;
+
         if (isTallCabinet) {
           // 키큰장은 엔드패널 반대쪽으로 이동 (침범 방지)
           if (isFirstSlotNoSurround) {
-            // 첫번째 슬롯: 왼쪽에 엔드패널이 있으므로 오른쪽으로 9mm 이동
-            positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm
+            if (isDroppedZone && droppedPosition === 'left') {
+              // 단내림 왼쪽 + 첫 슬롯: 바깥쪽=왼쪽, 엔드패널 반대=오른쪽
+              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+            } else if (isDroppedZone && droppedPosition === 'right') {
+              // 단내림 오른쪽 + 첫 슬롯: 바깥쪽=오른쪽, 엔드패널 반대=왼쪽
+              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+            } else {
+              // 메인구간: 첫 슬롯=왼쪽 끝, 엔드패널 반대=오른쪽
+              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+            }
           } else if (isLastSlotNoSurround) {
-            // 마지막 슬롯: 오른쪽에 엔드패널이 있으므로 왼쪽으로 9mm 이동
-            positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm
+            if (isDroppedZone && droppedPosition === 'left') {
+              // 단내림 왼쪽 + 마지막 슬롯: 바깥쪽=왼쪽, 엔드패널 반대=오른쪽
+              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+            } else if (isDroppedZone && droppedPosition === 'right') {
+              // 단내림 오른쪽 + 마지막 슬롯: 바깥쪽=오른쪽, 엔드패널 반대=왼쪽
+              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+            } else {
+              // 메인구간: 마지막 슬롯=오른쪽 끝, 엔드패널 반대=왼쪽
+              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+            }
           }
         } else {
-          // 상하부장도 엔드패널 반대쪽으로 이동 (가구+엔드패널이 슬롯에 딱 맞도록)
+          // 상하부장도 엔드패널 반대쪽으로 이동
           if (isFirstSlotNoSurround) {
-            // 첫번째 슬롯: 왼쪽에 엔드패널이 있으므로 오른쪽으로 9mm 이동
-            positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm
+            if (isDroppedZone && droppedPosition === 'left') {
+              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+            } else if (isDroppedZone && droppedPosition === 'right') {
+              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+            } else {
+              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+            }
           } else if (isLastSlotNoSurround) {
-            // 마지막 슬롯: 오른쪽에 엔드패널이 있으므로 왼쪽으로 9mm 이동
-            positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm
+            if (isDroppedZone && droppedPosition === 'left') {
+              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+            } else if (isDroppedZone && droppedPosition === 'right') {
+              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+            } else {
+              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+            }
           }
         }
         
