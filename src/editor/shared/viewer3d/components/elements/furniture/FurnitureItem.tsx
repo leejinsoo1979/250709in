@@ -1103,56 +1103,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     let shouldProcessFirstSlot = false;
     let shouldProcessLastSlot = false;
 
-    // 단내림이 있을 때 경계면 슬롯인지 확인
-    // 경계면 = 메인구간과 단내림구간이 맞닿은 슬롯 (공간 전체의 끝이 아님!)
-    const isBoundarySlot = spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone && (() => {
-      const droppedPosition = spaceInfo.droppedCeiling.position;
-      let result = false;
-
-      if (droppedPosition === 'right') {
-        // 단내림이 오른쪽에 있을 때:
-        // - 메인구간 마지막 슬롯 = 경계면 (엔드패널 없음)
-        // - 단내림구간 첫번째 슬롯 = 경계면 (엔드패널 없음)
-        if (placedModule.zone === 'normal') {
-          result = isLastSlot; // 메인구간 마지막 슬롯이 경계면
-        } else {
-          result = normalizedSlotIndex === 0; // 단내림구간 첫 슬롯이 경계면
-        }
-      } else {
-        // 단내림이 왼쪽에 있을 때:
-        // - 단내림구간 마지막 슬롯 = 경계면 (엔드패널 없음)
-        // - 메인구간 첫번째 슬롯 = 경계면 (엔드패널 없음)
-        if (placedModule.zone === 'dropped') {
-          result = isLastSlot; // 단내림구간 마지막 슬롯이 경계면
-        } else {
-          result = normalizedSlotIndex === 0; // 메인구간 첫 슬롯이 경계면
-        }
-      }
-
-      console.log('🔍 경계면 슬롯 체크:', {
-        moduleId: placedModule.id,
-        zone: placedModule.zone,
-        slotIndex: normalizedSlotIndex,
-        isLastSlot,
-        droppedPosition,
-        isBoundarySlot: result
-      });
-
-      return result;
-    })();
-
     if (spaceInfo.installType === 'freestanding') {
-      // 프리스탠딩: 양쪽 모두 처리 (단, 경계면 슬롯은 제외)
-      shouldProcessFirstSlot = normalizedSlotIndex === 0 && !isBoundarySlot;
-      shouldProcessLastSlot = isLastSlot && !isBoundarySlot;
+      // 프리스탠딩: 양쪽 모두 처리
+      shouldProcessFirstSlot = normalizedSlotIndex === 0;
+      shouldProcessLastSlot = isLastSlot;
     } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
-      // 세미스탠딩: 벽이 없는 쪽만 처리 (단, 경계면 슬롯은 제외)
-      shouldProcessFirstSlot = normalizedSlotIndex === 0 && !spaceInfo.wallConfig?.left && !isBoundarySlot;
-      shouldProcessLastSlot = isLastSlot && !spaceInfo.wallConfig?.right && !isBoundarySlot;
+      // 세미스탠딩: 벽이 없는 쪽만 처리
+      shouldProcessFirstSlot = normalizedSlotIndex === 0 && !spaceInfo.wallConfig?.left;
+      shouldProcessLastSlot = isLastSlot && !spaceInfo.wallConfig?.right;
     }
 
-    // 듀얼 가구의 경우: 첫번째 슬롯에 있고, 왼쪽에 벽이 없으면 처리 (경계면 제외)
-    const isDualFirstSlot = isDualFurniture && normalizedSlotIndex === 0 && !isBoundarySlot &&
+    // 듀얼 가구의 경우: 첫번째 슬롯에 있고, 왼쪽에 벽이 없으면 처리
+    const isDualFirstSlot = isDualFurniture && normalizedSlotIndex === 0 &&
                             (spaceInfo.installType === 'freestanding' ||
                              ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.left));
 
@@ -1168,7 +1130,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       return indexing.columnCount;
     })();
 
-    const isDualLastSlot = isDualFurniture && normalizedSlotIndex === zoneColumnCount - 2 && !isBoundarySlot &&
+    const isDualLastSlot = isDualFurniture && normalizedSlotIndex === zoneColumnCount - 2 &&
                             (spaceInfo.installType === 'freestanding' ||
                              ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
     // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
