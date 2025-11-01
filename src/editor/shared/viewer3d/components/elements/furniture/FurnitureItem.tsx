@@ -1936,13 +1936,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 가구 위치 이동 (벽없음 모드)
-  if (spaceInfo.installType === 'freestanding') {
+  if (spaceInfo.installType === 'freestanding' && !isAtDroppedBoundary) {
     const currentX = adjustedPosition.x;
     const offset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm
     const isDroppedZone = spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
 
     // 노서라운드: 모든 가구 오른쪽 이동 (단내림은 왼쪽)
     // 서라운드: 듀얼 단내림만 왼쪽 이동
+    // 경계 슬롯은 이동하지 않음
     let finalOffset = 0;
     if (spaceInfo.surroundType === 'no-surround') {
       finalOffset = isDroppedZone ? -offset : offset;
@@ -1960,6 +1961,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         zone: placedModule.zone,
         서라운드: spaceInfo.surroundType,
         듀얼여부: isDualFurniture,
+        경계슬롯: isAtDroppedBoundary,
         이동량: finalOffset,
         조정후: adjustedPosition.x
       });
