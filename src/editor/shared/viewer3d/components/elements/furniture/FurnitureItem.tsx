@@ -1940,6 +1940,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 가구 위치 이동 (벽없음 모드)
+  console.log('🔵 [가구 위치 이동 진입 체크]', {
+    설치타입: spaceInfo.installType,
+    경계슬롯: isAtDroppedBoundary,
+    진입가능: spaceInfo.installType === 'freestanding' && !isAtDroppedBoundary
+  });
+
   if (spaceInfo.installType === 'freestanding' && !isAtDroppedBoundary) {
     const currentX = adjustedPosition.x;
     const offset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm
