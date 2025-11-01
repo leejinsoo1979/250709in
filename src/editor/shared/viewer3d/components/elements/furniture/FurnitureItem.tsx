@@ -1081,10 +1081,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 노서라운드 모드에서 엔드패널 처리
   // 벽없음(freestanding) 또는 한쪽벽(semistanding) 모드에서 엔드패널이 있는 슬롯 처리
-  if (spaceInfo.surroundType === 'no-surround' && 
-      (spaceInfo.installType === 'freestanding' || 
-       spaceInfo.installType === 'semistanding' || 
-       spaceInfo.installType === 'semi-standing') && 
+  console.log('🔍 엔드패널 처리 조건 체크:', {
+    moduleId: placedModule.id,
+    surroundType: spaceInfo.surroundType,
+    installType: spaceInfo.installType,
+    normalizedSlotIndex,
+    조건통과: spaceInfo.surroundType === 'no-surround' &&
+      (spaceInfo.installType === 'freestanding' ||
+       spaceInfo.installType === 'semistanding' ||
+       spaceInfo.installType === 'semi-standing') &&
+      normalizedSlotIndex !== undefined
+  });
+
+  if (spaceInfo.surroundType === 'no-surround' &&
+      (spaceInfo.installType === 'freestanding' ||
+       spaceInfo.installType === 'semistanding' ||
+       spaceInfo.installType === 'semi-standing') &&
       normalizedSlotIndex !== undefined) {
 
     // 프리스탠딩에서는 양쪽 모두, 세미스탠딩에서는 벽이 없는 쪽만 처리
