@@ -1157,7 +1157,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 듀얼 가구: 바깥쪽 끝 슬롯만 엔드패널만큼 줄임
   // - 노서라운드: 바깥쪽 끝 슬롯(첫/마지막)만
   // - 서라운드: 단내림 구간 바깥쪽 끝 슬롯만
-  const shouldReduceWidth = isDualFurniture && spaceInfo.installType === 'freestanding' && (
+  // - 한쪽벽(semistanding)도 프리스탠딩과 동일하게 처리
+  const shouldReduceWidth = isDualFurniture && (spaceInfo.installType === 'freestanding' || isSemiStanding) && (
     (spaceInfo.surroundType === 'no-surround' && (isNoSurroundFirstSlot || isNoSurroundLastSlot)) ||
     isSurroundDroppedEdgeSlot
   );
@@ -1990,7 +1991,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     진입가능: spaceInfo.installType === 'freestanding' && !isAtDroppedBoundary
   });
 
-  if (spaceInfo.installType === 'freestanding' && !isAtDroppedBoundary) {
+  if ((spaceInfo.installType === 'freestanding' || isSemiStanding) && !isAtDroppedBoundary) {
     const currentX = adjustedPosition.x;
     const offset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm
     const isDroppedZone = spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
