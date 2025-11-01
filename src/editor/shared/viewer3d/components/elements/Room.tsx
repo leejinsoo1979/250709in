@@ -2140,13 +2140,17 @@ const Room: React.FC<RoomProps> = ({
             const customWidthMm = droppedRightFurniture.customWidth ?? (droppedZone?.columnWidth ?? 0);
             const actualFurnitureWidth = (customWidthMm - END_PANEL_THICKNESS) * 0.01; // 실제 렌더링 너비
 
-            // 엔드패널 X = 현재 가구 중심 + 실제 가구 너비/2 + 엔드패널 두께/2
-            endPanelX = furnitureX + actualFurnitureWidth / 2 + frameThickness.right / 2;
+            // 엔드패널 왼쪽 끝 = 가구 오른쪽 끝
+            const furnitureRightEdge = furnitureX + actualFurnitureWidth / 2;
+
+            // 엔드패널 중심 = 가구 오른쪽 끝 (엔드패널은 가구 바로 옆에 붙음, 두께/2 더하지 않음)
+            endPanelX = furnitureRightEdge;
 
             console.log('🔍 엔드패널 X 계산:', {
               customWidthMm,
               actualFurnitureWidth,
               furnitureX,
+              furnitureRightEdge,
               endPanelX
             });
           }
