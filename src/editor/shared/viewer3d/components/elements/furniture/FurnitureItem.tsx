@@ -1945,18 +1945,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const offset = (END_PANEL_THICKNESS / 2) * 0.01; // 9mm
     const isDroppedZone = spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
 
-    // 노서라운드: 바깥쪽 끝 슬롯만 이동 (첫/마지막 슬롯)
-    // 서라운드: 너비가 실제로 줄어든 듀얼 가구만 안쪽으로 9mm 이동
+    // 너비가 줄어든 가구는 안쪽으로 9mm 이동
     // 경계 슬롯은 이동하지 않음
     let finalOffset = 0;
-    if (spaceInfo.surroundType === 'no-surround') {
-      // 바깥쪽 끝 슬롯(첫/마지막)만 이동
+
+    if (widthReduced) {
+      // 너비가 줄어들면 안쪽(왼쪽)으로 9mm 이동
+      finalOffset = -offset;
+    } else if (spaceInfo.surroundType === 'no-surround') {
+      // 노서라운드: 바깥쪽 끝 슬롯만 이동 (첫/마지막 슬롯)
       if (isNoSurroundFirstSlot || isNoSurroundLastSlot) {
         finalOffset = isDroppedZone ? -offset : offset;
       }
-    } else if (widthReduced && isDroppedZone) {
-      // 서라운드: 너비가 실제로 줄어든 단내림 듀얼 가구만 안쪽(왼쪽)으로 9mm 이동
-      finalOffset = -offset;
     }
 
     if (finalOffset !== 0) {
