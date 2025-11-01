@@ -2699,9 +2699,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
         const furnitureCenterX = adjustedPosition.x;
 
+        // 단내림 구간에서 노서라운드일 때 엔드패널 추가 오프셋
+        const isDroppedZoneNoSurround = spaceInfo.droppedCeiling?.enabled &&
+                                        placedModule.zone === 'dropped' &&
+                                        spaceInfo.surroundType === 'no-surround';
+        const droppedEndPanelOffset = isDroppedZoneNoSurround ? endPanelWidth / 2 : 0;
+
         if (endPanelSide === 'left' || endPanelSide === 'both') {
           const leftPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
-            ? furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2
+            ? furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2 - droppedEndPanelOffset
             : (slotBoundaries
                 ? slotBoundaries.left + endPanelWidth / 2
                 : furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2);
@@ -2714,7 +2720,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
           const rightPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
-            ? furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2
+            ? furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2 + droppedEndPanelOffset
             : (slotBoundaries
                 ? slotBoundaries.right - endPanelWidth / 2
                 : furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2);
