@@ -2699,11 +2699,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
         const furnitureCenterX = adjustedPosition.x;
 
-        // 단내림 구간에서 노서라운드일 때 엔드패널 추가 오프셋
+        // 단내림 구간에서 노서라운드일 때 엔드패널이 안쪽으로 들어오는 문제 보정
+        // 서라운드 -> 노서라운드 변경 시 엔드패널이 안쪽으로 18mm 들어오므로 바깥쪽으로 18mm 보정
         const isDroppedZoneNoSurround = spaceInfo.droppedCeiling?.enabled &&
                                         placedModule.zone === 'dropped' &&
                                         spaceInfo.surroundType === 'no-surround';
-        const droppedEndPanelOffset = isDroppedZoneNoSurround ? endPanelWidth / 2 : 0;
+        const droppedEndPanelOffset = isDroppedZoneNoSurround ? endPanelWidth : 0; // 18mm 보정
 
         if (endPanelSide === 'left' || endPanelSide === 'both') {
           const leftPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
