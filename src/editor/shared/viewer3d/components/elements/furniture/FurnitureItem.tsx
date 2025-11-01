@@ -2007,8 +2007,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
 
     if (spaceInfo.surroundType === 'no-surround') {
-      // 노서라운드: 바깥쪽 끝 슬롯의 듀얼가구만 이동 (너비가 줄어든 경우만)
-      if ((isNoSurroundFirstSlot || isNoSurroundLastSlot) && isDualFurniture && widthReduced) {
+      // 노서라운드: 바깥쪽 끝 슬롯만 이동 (첫/마지막 슬롯)
+      if (isNoSurroundFirstSlot || isNoSurroundLastSlot) {
         finalOffset = isDroppedZone ? -offset : offset;
       }
     } else if (spaceInfo.surroundType === 'surround' && widthReduced) {
