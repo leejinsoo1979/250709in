@@ -847,8 +847,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   
   // 마지막 슬롯인지 확인 (adjustedPosition 초기화 전에 필요)
+  // 단내림이 있으면 zone별 columnCount 사용
   const isLastSlot = normalizedSlotIndex !== undefined
-    ? normalizedSlotIndex === indexing.columnCount - 1
+    ? (() => {
+        if (spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone) {
+          const zoneData = placedModule.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+          return normalizedSlotIndex === (zoneData?.columnCount ?? indexing.columnCount) - 1;
+        }
+        return normalizedSlotIndex === indexing.columnCount - 1;
+      })()
     : false;
   
   // adjustedPosition 계산을 useMemo로 최적화 (초기값만 설정)
@@ -1102,8 +1109,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isFirstSlotNoSurround = shouldProcessFirstSlot && !isDualFirstSlot;
 
     // 듀얼 가구의 경우: 마지막에서 두번째 슬롯에 있고, 오른쪽에 벽이 없으면 처리
-    const isDualLastSlot = isDualFurniture && normalizedSlotIndex === indexing.columnCount - 2 && 
-                            (spaceInfo.installType === 'freestanding' || 
+    // 단내림이 있으면 zone별 columnCount 사용
+    const zoneColumnCount = (() => {
+      if (spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone) {
+        const zoneData = placedModule.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+        return zoneData?.columnCount ?? indexing.columnCount;
+      }
+      return indexing.columnCount;
+    })();
+
+    const isDualLastSlot = isDualFurniture && normalizedSlotIndex === zoneColumnCount - 2 &&
+                            (spaceInfo.installType === 'freestanding' ||
                              ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
     // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
     const isLastSlotNoSurround = shouldProcessLastSlot && !isDualLastSlot;
