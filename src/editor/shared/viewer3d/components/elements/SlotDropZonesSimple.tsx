@@ -1225,7 +1225,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           if (hasEndPanel) {
             const END_PANEL_THICKNESS = 18;
             const isFirstSlot = zoneSlotIndex === 0;
-            const isLastSlot = zoneSlotIndex === zoneIndexing.columnCount - 1;
+
+            // zone별 마지막 슬롯 판단 - zone이 있으면 해당 zone의 columnCount 사용
+            let isLastSlot: boolean;
+            if (spaceInfo.droppedCeiling?.enabled && zoneIndexing.zones && zoneToUse) {
+              const targetZone = zoneToUse === 'dropped' ? zoneIndexing.zones.dropped : zoneIndexing.zones.normal;
+              isLastSlot = zoneSlotIndex === (targetZone?.columnCount ?? zoneIndexing.columnCount) - 1;
+            } else {
+              isLastSlot = zoneSlotIndex === zoneIndexing.columnCount - 1;
+            }
 
             // 단내림이 있는 경우 각 영역별로 처리
             if (spaceInfo.droppedCeiling?.enabled && zoneIndexing.zones) {
