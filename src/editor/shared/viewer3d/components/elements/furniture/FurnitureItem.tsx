@@ -1107,14 +1107,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     let shouldProcessLastSlot = false;
 
     // 단내림이 있을 때, 경계면 슬롯인지 확인 (공간 전체의 끝이 아닌 경계면)
-    console.log('🔍 isAtBoundary 조건 체크:', {
-      moduleId: placedModule.id,
-      'droppedCeiling?.enabled': spaceInfo.droppedCeiling?.enabled,
-      'indexing.zones': !!indexing.zones,
-      'placedModule.zone': placedModule.zone,
-      '모든조건': spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone
-    });
-
     const isAtBoundary = spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone && (() => {
       const droppedPosition = spaceInfo.droppedCeiling.position;
       const isDual = placedModule.isDualSlot || false;
@@ -1151,16 +1143,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
       }
 
-      console.log('🔍 경계면 체크:', {
-        moduleId: placedModule.id,
-        zone: placedModule.zone,
-        slotIndex: normalizedSlotIndex,
-        isLastSlot,
-        isDual,
-        droppedPosition,
-        isBoundary: result
-      });
-
       return result;
     })();
 
@@ -1174,25 +1156,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       shouldProcessLastSlot = isLastSlot && !spaceInfo.wallConfig?.right && !isAtBoundary;
     }
 
-    console.log('🔍 엔드패널 처리 플래그:', {
-      moduleId: placedModule.id,
-      zone: placedModule.zone,
-      slotIndex: normalizedSlotIndex,
-      isAtBoundary,
-      shouldProcessFirstSlot,
-      shouldProcessLastSlot
-    });
-
-    console.log('🚨🚨🚨 [경계 가구] 배치 정보:', {
-      moduleId: placedModule.id,
-      zone: placedModule.zone,
-      slotIndex: normalizedSlotIndex,
-      isDual: placedModule.isDualSlot,
-      isBoundary: isAtBoundary,
-      '현재위치X': placedModule.position.x,
-      'customWidth': placedModule.customWidth,
-      'adjustedWidth': placedModule.adjustedWidth
-    });
+    if (isAtBoundary && placedModule.isDualSlot) {
+      console.log('🚨🚨🚨 [경계 듀얼가구]', {
+        moduleId: placedModule.id,
+        zone: placedModule.zone,
+        slotIndex: normalizedSlotIndex,
+        positionX: placedModule.position.x,
+        customWidth: placedModule.customWidth
+      });
+    }
 
     // 듀얼 가구의 경우: 첫번째 슬롯에 있고, 왼쪽에 벽이 없으면 처리 (경계면 제외)
     const isDualFirstSlot = isDualFurniture && normalizedSlotIndex === 0 && !isAtBoundary &&
