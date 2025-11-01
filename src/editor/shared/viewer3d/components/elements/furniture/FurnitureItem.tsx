@@ -639,17 +639,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
   let indexing;
   if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
-    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-    const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-    
-    // zone별 indexing은 targetZone 정보를 직접 사용
-    indexing = {
-      columnCount: targetZone.columnCount,
-      columnWidth: targetZone.columnWidth,
-      threeUnitPositions: [],
-      threeUnitDualPositions: {},
-      threeUnitBoundaries: []
-    };
+    // 단내림이 있을 때는 전체 indexing 정보를 가져와서 zones 포함
+    indexing = calculateSpaceIndexing(spaceInfo);
   } else {
     indexing = calculateSpaceIndexing(zoneSpaceInfo);
   }
