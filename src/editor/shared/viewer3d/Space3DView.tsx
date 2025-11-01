@@ -129,7 +129,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       }
 
       // 듀얼 가구인지 확인
-      const isDual = furniture.baseModuleType?.includes('dual-');
+      console.log('🔍 복제 - 가구 정보:', {
+        id: furniture.id,
+        moduleId: furniture.moduleId,
+        baseModuleType: furniture.baseModuleType,
+        isDualSlot: furniture.isDualSlot
+      });
+
+      const isDual = furniture.baseModuleType?.includes('dual-') || furniture.isDualSlot;
 
       // 빈 슬롯 찾기 (듀얼 가구는 2개 슬롯 차지)
       const indexing = calculateSpaceIndexing(activeSpaceInfo, []);
