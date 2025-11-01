@@ -2136,19 +2136,12 @@ const Room: React.FC<RoomProps> = ({
 
           if (droppedRightFurniture) {
             const furnitureX = droppedRightFurniture.position.x;
-            // customWidth는 이미 18mm 줄어든 값
+            // customWidth는 이미 18mm 줄어든 값 (903mm)
             const furnitureWidthReduced = (droppedRightFurniture.customWidth ?? (droppedZone?.columnWidth ?? 0)) * 0.01;
 
-            // FurnitureItem.tsx에서 가구가 왼쪽으로 9mm 이동했으므로, 원래 위치로 되돌림
-            // 단내림 오른쪽: positionAdjustment = -9mm = -0.09
-            const positionAdjustment = -0.09;
-            const originalFurnitureX = furnitureX - positionAdjustment;
-
-            // 원래 가구 너비 = 줄어든 너비 + 18mm
-            const originalFurnitureWidth = furnitureWidthReduced + 0.18;
-
-            // 엔드패널 X = 원래 가구 중심 + 원래 가구 너비/2 + 엔드패널 두께/2
-            endPanelX = originalFurnitureX + originalFurnitureWidth / 2 + frameThickness.right / 2;
+            // 엔드패널 X = 현재 가구 중심 + 줄어든 가구 너비/2 + 엔드패널 두께/2
+            // 가구가 이미 -9mm 이동했고 903mm 너비이므로, 그 오른쪽 끝에 바로 붙임
+            endPanelX = furnitureX + furnitureWidthReduced / 2 + frameThickness.right / 2;
           }
 
           console.log('🔍 단내림 오른쪽 엔드패널 위치 계산:', {
@@ -2185,8 +2178,8 @@ const Room: React.FC<RoomProps> = ({
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.right,
-                  // 단내림 구간 전체 높이 (바닥부터 일반 천장까지)
-                  height,
+                  // 단내림 구간 높이 (바닥부터 단내림 천장까지)
+                  droppedHeight,
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
@@ -2200,8 +2193,8 @@ const Room: React.FC<RoomProps> = ({
                 position={[
                   // 가구 오른쪽 끝에 붙임
                   endPanelX,
-                  // 전체 공간 중심 Y
-                  panelStartY + height/2,
+                  // 단내림 구간 중심 Y
+                  droppedCenterY,
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
