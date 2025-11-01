@@ -1118,6 +1118,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isAtBoundary = spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone && (() => {
       const droppedPosition = spaceInfo.droppedCeiling.position;
       const isDual = placedModule.isDualSlot || false;
+      const currentZoneData = placedModule.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
       let result = false;
 
       if (droppedPosition === 'right') {
@@ -1126,7 +1127,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           if (isDual && normalizedSlotIndex !== undefined) {
             // 듀얼 가구: 끝 슬롯(slotIndex+1)이 zone 마지막인지 체크
             const endSlotIndex = normalizedSlotIndex + 1;
-            const zoneLastIndex = (zoneData?.columnCount ?? indexing.columnCount) - 1;
+            const zoneLastIndex = (currentZoneData?.columnCount ?? indexing.columnCount) - 1;
             result = isLastSlot || (endSlotIndex === zoneLastIndex);
           } else {
             // 싱글 가구: 시작 슬롯이 마지막인지만 체크
