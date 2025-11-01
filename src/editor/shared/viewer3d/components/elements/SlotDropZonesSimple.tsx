@@ -2868,14 +2868,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 현재 드래그 중인 가구가 듀얼인지 확인 (너비 기반)
         let isDual = false;
         if (activeModuleData) {
-          const moduleWidth = activeModuleData.moduleData.dimensions.width;
-          const columnWidth = indexing.columnWidth;
-          isDual = Math.abs(moduleWidth - (columnWidth * 2)) < 50;
+          // 듀얼 여부는 ID로 판단 (dual- prefix)
+          isDual = activeModuleData.moduleData.id.startsWith('dual-');
 
           console.log('🔍 [Ghost] activeModuleData 있음, 듀얼 체크:', {
             moduleId: activeModuleData.moduleData.id,
-            moduleWidth,
-            columnWidth,
             isDual,
             selectedFurnitureId,
             hoveredSlotIndex
