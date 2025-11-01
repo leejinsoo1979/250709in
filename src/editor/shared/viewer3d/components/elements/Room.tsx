@@ -496,23 +496,15 @@ const Room: React.FC<RoomProps> = ({
     const floorFinishHeightMm = calculateFloorFinishHeight(spaceInfo);
     const panelDepthMm = calculatePanelDepth(spaceInfo); // 사용자 설정 깊이 사용
     const furnitureDepthMm = calculateFurnitureDepth(placedModules, spaceInfo); // 가구/프레임용 (동적 계산, 노서라운드 고려)
-    const hasLeftForFrame = placedModulesFromStore.some(m => {
-      const isDual = m.isDualSlot || m.moduleId?.includes('dual-');
-      return m.slotIndex === 0 || (isDual && m.slotIndex === 0);
-    });
-    const hasRightForFrame = placedModulesFromStore.some(m => {
-      const indexing = calculateSpaceIndexing(spaceInfo);
-      const isDual = m.isDualSlot || m.moduleId?.includes('dual-');
-      return m.slotIndex === indexing.columnCount - 1 || (isDual && m.slotIndex === indexing.columnCount - 2);
-    });
-    
+
     console.log('🎯 frameThickness 계산 전 체크:', {
-      hasLeftForFrame,
-      hasRightForFrame,
+      hasLeftFurniture,
+      hasRightFurniture,
       surroundType: spaceInfo.surroundType
     });
-    
-    const frameThicknessMm = calculateFrameThickness(spaceInfo, hasLeftForFrame, hasRightForFrame);
+
+    // hasLeftFurniture와 hasRightFurniture는 이미 단내림을 고려하여 계산됨 (line 360, 400)
+    const frameThicknessMm = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
     console.log('🔥 calculateDimensionsAndFrames 내부 - frameThicknessMm 계산 직후:', {
       frameThicknessMm,
       wallConfig: spaceInfo.wallConfig,
