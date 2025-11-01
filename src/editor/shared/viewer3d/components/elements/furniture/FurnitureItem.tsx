@@ -1072,11 +1072,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                                       const localIndex = localSlotIndex ?? placedModule.slotIndex;
 
                                       if (placedModule.zone === 'dropped') {
-                                        // 단내림 왼쪽: 단내림구간 첫 슬롯(0)이 바깥쪽 끝
+                                        // 단내림 왼쪽: 단내림구간 첫 슬롯(0)이 바깥쪽 끝 (단, 한쪽벽에서 왼쪽벽이 있으면 제외)
                                         // 단내림 오른쪽: 단내림구간 첫 슬롯(0)은 안쪽 경계
-                                        return droppedPosition === 'left' && localIndex === 0;
+                                        if (droppedPosition === 'left') {
+                                          // 한쪽벽에서 왼쪽벽이 있으면 바깥쪽 끝이 아님
+                                          if (isSemiStanding && hasLeftWall) return false;
+                                          return localIndex === 0;
+                                        }
+                                        return false;
                                       } else {
-                                        // 메인구간: zone 첫 슬롯
+                                        // 메인구간: zone 첫 슬롯 (단, 한쪽벽에서 왼쪽벽이 있으면 제외)
+                                        if (isSemiStanding && hasLeftWall) return false;
                                         return localIndex === 0;
                                       }
                                     }
@@ -1099,10 +1105,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
                                      if (placedModule.zone === 'dropped') {
                                        // 단내림 왼쪽: 단내림구간 마지막 슬롯은 안쪽 경계
-                                       // 단내림 오른쪽: 단내림구간 마지막 슬롯이 바깥쪽 끝
-                                       return droppedPosition === 'right' && localIndex === zoneColumnCount - 1;
+                                       // 단내림 오른쪽: 단내림구간 마지막 슬롯이 바깥쪽 끝 (단, 한쪽벽에서 오른쪽벽이 있으면 제외)
+                                       if (droppedPosition === 'right') {
+                                         // 한쪽벽에서 오른쪽벽이 있으면 바깥쪽 끝이 아님
+                                         if (isSemiStanding && hasRightWall) return false;
+                                         return localIndex === zoneColumnCount - 1;
+                                       }
+                                       return false;
                                      } else {
-                                       // 메인구간: zone 마지막 슬롯
+                                       // 메인구간: zone 마지막 슬롯 (단, 한쪽벽에서 오른쪽벽이 있으면 제외)
+                                       if (isSemiStanding && hasRightWall) return false;
                                        return localIndex === zoneColumnCount - 1;
                                      }
                                    }
