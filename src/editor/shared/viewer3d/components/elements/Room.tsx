@@ -352,43 +352,164 @@ const Room: React.FC<RoomProps> = ({
   const indexingForCheck = calculateSpaceIndexing(spaceInfo);
   const lastSlotIndex = indexingForCheck.columnCount - 1;
   
-  const hasLeftFurniture = spaceInfo.surroundType === 'no-surround' && 
+  // Zone별 왼쪽/오른쪽 가구 감지 (단내림 대응)
+  const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
+  const droppedPosition = spaceInfo.droppedCeiling?.position;
+
+  // 일반 구간 (메인) 왼쪽 가구 감지
+  const hasLeftFurnitureNormal = spaceInfo.surroundType === 'no-surround' &&
     placedModulesFromStore.some(module => {
-      // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
+      // 단내림이 있으면 normal zone만 체크
+      if (hasDroppedCeiling && module.zone !== 'normal') return false;
+
       const isDual = module.isDualSlot || module.moduleId.includes('dual-');
-      // 싱글 모듈이 0번 슬롯에 있거나, 듀얼 모듈이 0번 슬롯을 포함하는 경우
-      const isLeft = module.slotIndex === 0 || (isDual && module.slotIndex === 1);
+      // 단내림 왼쪽: normal zone의 오른쪽 끝 (zone boundary)
+      // 단내림 오른쪽 또는 없음: normal zone의 왼쪽 끝 (space 왼쪽 끝)
+      let isLeft = false;
+
+      if (hasDroppedCeiling && droppedPosition === 'left') {
+        // 단내림이 왼쪽: normal zone은 오른쪽, 오른쪽 끝이 outer edge
+        const normalZone = indexingForCheck.zones?.normal;
+        if (normalZone) {
+          const normalLastSlot = normalZone.columnCount - 1;
+          isLeft = module.slotIndex === normalLastSlot || (isDual && module.slotIndex === normalLastSlot - 1);
+        }
+      } else {
+        // 단내림 오른쪽 또는 없음: normal zone의 왼쪽 끝
+        isLeft = module.slotIndex === 0 || (isDual && module.slotIndex === 1);
+      }
+
       if (isLeft) {
-        console.log('🟢 왼쪽 가구 감지:', { 
-          slotIndex: module.slotIndex, 
+        console.log('🟢 [NORMAL] 왼쪽 가구 감지:', {
+          slotIndex: module.slotIndex,
+          zone: module.zone,
           isDualSlot: module.isDualSlot,
           isDual,
-          moduleId: module.moduleId 
+          moduleId: module.moduleId,
+          droppedPosition
         });
       }
       return isLeft;
     });
-    
-  const hasRightFurniture = spaceInfo.surroundType === 'no-surround' &&
+
+  // 단내림 구간 왼쪽 가구 감지
+  const hasLeftFurnitureDropped = hasDroppedCeiling && spaceInfo.surroundType === 'no-surround' &&
     placedModulesFromStore.some(module => {
-      // 듀얼 가구 판단: isDualSlot 속성 또는 moduleId에 'dual-' 포함
+      if (module.zone !== 'dropped') return false;
+
       const isDual = module.isDualSlot || module.moduleId.includes('dual-');
-      // 싱글 모듈이 마지막 슬롯에 있거나, 듀얼 모듈이 columnCount - 2 위치에 있는 경우
-      const isRight = module.slotIndex === lastSlotIndex ||
-        (isDual && module.slotIndex === indexingForCheck.columnCount - 2);
-      if (isRight) {
-        console.log('🔴 오른쪽 가구 감지:', {
+      // 단내림 왼쪽: dropped zone의 왼쪽 끝 (space 왼쪽 끝)
+      // 단내림 오른쪽: dropped zone의 오른쪽 끝 (space 오른쪽 끝)
+      let isLeft = false;
+
+      if (droppedPosition === 'left') {
+        // 단내림이 왼쪽: dropped zone의 왼쪽 끝이 outer edge
+        const droppedZone = indexingForCheck.zones?.dropped;
+        if (droppedZone) {
+          const droppedFirstSlot = droppedZone.startSlotIndex ?? 0;
+          isLeft = module.slotIndex === droppedFirstSlot || (isDual && module.slotIndex === droppedFirstSlot + 1);
+        }
+      } else {
+        // 단내림 오른쪽: dropped zone의 오른쪽 끝이 outer edge
+        const droppedZone = indexingForCheck.zones?.dropped;
+        if (droppedZone) {
+          const droppedLastSlot = (droppedZone.startSlotIndex ?? 0) + droppedZone.columnCount - 1;
+          isLeft = module.slotIndex === droppedLastSlot || (isDual && module.slotIndex === droppedLastSlot - 1);
+        }
+      }
+
+      if (isLeft) {
+        console.log('🟢 [DROPPED] 왼쪽 가구 감지:', {
           slotIndex: module.slotIndex,
+          zone: module.zone,
+          isDualSlot: module.isDualSlot,
+          isDual,
+          moduleId: module.moduleId,
+          droppedPosition
+        });
+      }
+      return isLeft;
+    });
+
+  const hasLeftFurniture = hasLeftFurnitureNormal || hasLeftFurnitureDropped;
+
+  // 일반 구간 (메인) 오른쪽 가구 감지
+  const hasRightFurnitureNormal = spaceInfo.surroundType === 'no-surround' &&
+    placedModulesFromStore.some(module => {
+      if (hasDroppedCeiling && module.zone !== 'normal') return false;
+
+      const isDual = module.isDualSlot || module.moduleId.includes('dual-');
+      let isRight = false;
+
+      if (hasDroppedCeiling && droppedPosition === 'right') {
+        // 단내림이 오른쪽: normal zone의 왼쪽 끝이 outer edge
+        isRight = module.slotIndex === 0 || (isDual && module.slotIndex === 1);
+      } else {
+        // 단내림 왼쪽 또는 없음: normal zone의 오른쪽 끝
+        const normalZone = indexingForCheck.zones?.normal;
+        if (normalZone) {
+          const normalLastSlot = hasDroppedCeiling
+            ? normalZone.columnCount - 1
+            : lastSlotIndex;
+          isRight = module.slotIndex === normalLastSlot || (isDual && module.slotIndex === normalLastSlot - 1);
+        } else {
+          isRight = module.slotIndex === lastSlotIndex || (isDual && module.slotIndex === indexingForCheck.columnCount - 2);
+        }
+      }
+
+      if (isRight) {
+        console.log('🔴 [NORMAL] 오른쪽 가구 감지:', {
+          slotIndex: module.slotIndex,
+          zone: module.zone,
           isDualSlot: module.isDualSlot,
           isDual,
           moduleId: module.moduleId,
           lastSlotIndex,
           columnCount: indexingForCheck.columnCount,
-          체크조건: `slotIndex === ${lastSlotIndex} 또는 (듀얼 && slotIndex === ${indexingForCheck.columnCount - 2})`
+          droppedPosition
         });
       }
       return isRight;
     });
+
+  // 단내림 구간 오른쪽 가구 감지
+  const hasRightFurnitureDropped = hasDroppedCeiling && spaceInfo.surroundType === 'no-surround' &&
+    placedModulesFromStore.some(module => {
+      if (module.zone !== 'dropped') return false;
+
+      const isDual = module.isDualSlot || module.moduleId.includes('dual-');
+      let isRight = false;
+
+      if (droppedPosition === 'right') {
+        // 단내림 오른쪽: dropped zone의 오른쪽 끝이 outer edge
+        const droppedZone = indexingForCheck.zones?.dropped;
+        if (droppedZone) {
+          const droppedLastSlot = (droppedZone.startSlotIndex ?? 0) + droppedZone.columnCount - 1;
+          isRight = module.slotIndex === droppedLastSlot || (isDual && module.slotIndex === droppedLastSlot - 1);
+        }
+      } else {
+        // 단내림 왼쪽: dropped zone의 왼쪽 끝이 outer edge
+        const droppedZone = indexingForCheck.zones?.dropped;
+        if (droppedZone) {
+          const droppedFirstSlot = droppedZone.startSlotIndex ?? 0;
+          isRight = module.slotIndex === droppedFirstSlot || (isDual && module.slotIndex === droppedFirstSlot + 1);
+        }
+      }
+
+      if (isRight) {
+        console.log('🔴 [DROPPED] 오른쪽 가구 감지:', {
+          slotIndex: module.slotIndex,
+          zone: module.zone,
+          isDualSlot: module.isDualSlot,
+          isDual,
+          moduleId: module.moduleId,
+          droppedPosition
+        });
+      }
+      return isRight;
+    });
+
+  const hasRightFurniture = hasRightFurnitureNormal || hasRightFurnitureDropped;
 
   // 단내림 구간의 가구 배치 여부 체크
   const hasDroppedZoneFurniture = spaceInfo.droppedCeiling?.enabled && spaceInfo.surroundType === 'no-surround' &&
