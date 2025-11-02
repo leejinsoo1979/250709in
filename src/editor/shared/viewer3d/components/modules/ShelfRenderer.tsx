@@ -646,8 +646,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       {Math.round(compartment.height * 100)}
                     </Text>}
 
-                    {/* 수직 연결선 (치수선) */}
-                    <NativeLine
+                    {/* 수직 연결선 (치수선) - SectionsRenderer의 EditableDimensionText와 중복으로 비활성화 */}
+                    {false && <NativeLine
                       points={[
                         [getDimensionXPosition(false), compartmentTop + dimensionYOffset, getDimensionZPosition()],
                         [getDimensionXPosition(false), compartmentBottom + dimensionYOffset, getDimensionZPosition()]
@@ -655,7 +655,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       color={isHighlighted ? "#FFD700" : dimensionColor}
                       lineWidth={isHighlighted ? 2 : 1}
                       dashed={false}
-                    />
+                    />}
                     {/* 칸 높이 치수선 엔드포인트는 모두 제거 (중복) */}
                   </group>
                     );
