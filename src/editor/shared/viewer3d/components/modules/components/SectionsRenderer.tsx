@@ -518,10 +518,26 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
                   const sectionTopY = sectionCenterY + sectionHeight/2;
 
-                  // 첫 번째 섹션(하부)은 하부 프레임 윗면부터, 상단은 상판 아랫면까지
-                  bottomY = index === 0 ? (-height/2 + basicThickness * 2) : (sectionBottomY + basicThickness);
+                  // 첫 번째 섹션(하부)은 가구 바닥판 윗면부터, 상단은 상판 아랫면까지
+                  bottomY = index === 0 ? (-height/2 + basicThickness) : (sectionBottomY + basicThickness);
                   topY = sectionTopY - basicThickness;
-                  actualInternalHeight = (topY - bottomY) / 0.01;
+                  // 내경은 564mm로 표시하기 위해 하부 프레임 두께를 빼줌
+                  actualInternalHeight = index === 0 ? ((topY - bottomY) / 0.01 - 18) : ((topY - bottomY) / 0.01);
+
+                  console.log('📏 DRAWER 섹션 치수:', {
+                    index,
+                    height,
+                    basicThickness,
+                    sectionHeight,
+                    sectionCenterY,
+                    sectionBottomY,
+                    sectionTopY,
+                    bottomY,
+                    topY,
+                    'bottomY_mm': bottomY * 100,
+                    'topY_mm': topY * 100,
+                    'internal_mm': actualInternalHeight
+                  });
                 } else {
                   // 다른 타입은 기본값 사용
                   bottomY = sectionCenterY - sectionHeight/2;
