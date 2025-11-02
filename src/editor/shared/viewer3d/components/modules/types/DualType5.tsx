@@ -293,6 +293,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   allowSideViewDimensions={true}
                   sideViewTextX={getDimensionXPosition(leftWidth, true, leftXOffset)}
                   sideViewLineX={getDimensionXPosition(leftWidth, false, leftXOffset)}
+                  sectionIndex={index}
                 />
               );
             } else {
@@ -455,13 +456,14 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 )}
                 
                 {/* 섹션 높이 표시 (drawer 섹션만 - hanging은 ShelfRenderer에서 칸별로 표시) */}
-                {(section.type === 'drawer') && (() => {
-                  // 좌측 하부섹션(drawer)은 바닥판이 있으므로 내경 높이 계산 시 상하판 두께 모두 제외
-                  const drawerInternalHeight = sectionHeight - basicThickness * 2;
-                  // 치수선 하단: 바닥판 윗면
-                  const lineBottomY = sectionCenterY - sectionHeight/2 + basicThickness;
-                  // 치수선 상단: 상판 하단
-                  const lineTopY = sectionCenterY + sectionHeight/2 - basicThickness;
+                {(section.type === 'drawer' && index === 0) && (() => {
+                  // 하부섹션(drawer, index=0): 가구 바닥판 윗면부터 중간 분리판 아랫면까지
+                  // 치수선 하단: 가구 바닥판 윗면
+                  const lineBottomY = -height/2 + basicThickness;
+                  // 치수선 상단: 중간 분리판 아랫면
+                  const lineTopY = currentYPosition + sectionHeight - basicThickness;
+                  // 내경 높이 계산
+                  const drawerInternalHeight = lineTopY - lineBottomY;
                   // 텍스트 중심 위치
                   const textCenterY = (lineBottomY + lineTopY) / 2;
 

@@ -571,7 +571,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     if (i === 0) {
                       // 첫 번째 칸: 바닥판이 있으면(shelfPositions[0] === 0) 이 칸은 추가되지 않음
                       // 바닥판이 없으면 바닥부터 첫 선반 하단까지
-                      compartmentBottom = -innerHeight / 2; // 바닥
+                      // 상부섹션 (sectionIndex > 0)인 경우 바닥판(중간 분리판) 두께만큼 올려서 시작
+                      const bottomOffset = (sectionIndex && sectionIndex > 0) ? basicThickness : 0;
+                      compartmentBottom = -innerHeight / 2 + bottomOffset; // 바닥 (상부섹션은 바닥판 윗면)
                       compartmentTop = (-innerHeight / 2) + mmToThreeUnits(shelfPositions[0]) - basicThickness / 2; // 첫 선반 하단
                     } else if (i === compartmentHeights.length - 1 && shelfPositions.length > 0) {
                       // 마지막 칸: 마지막 선반 상단부터 상단 프레임 하단까지
