@@ -454,6 +454,55 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   </group>
                 )}
                 
+                {/* 섹션 높이 표시 (drawer 섹션만 - hanging은 ShelfRenderer에서 칸별로 표시) */}
+                {(section.type === 'drawer') && (() => {
+                  // 좌측 하부섹션(drawer)은 바닥판이 있으므로 내경 높이 계산 시 바닥판 두께 제외
+                  const drawerInternalHeight = sectionHeight - basicThickness;
+                  return (
+                    <group>
+                      {/* 서랍 섹션 내경 높이 텍스트 */}
+                      
+                      <Text
+                        position={[
+                          getDimensionXPosition(leftWidth, true, leftXOffset),
+                          sectionCenterY,
+                          getDimensionZPosition(leftDepth)
+                        ]}
+                        fontSize={viewMode === '3D' ? 0.45 : 0.32}
+                        color={dimensionColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        rotation={[0, 0, Math.PI / 2]}
+                        renderOrder={999}
+                      >
+                        {Math.round(drawerInternalHeight * 100)}
+                      </Text>
+                    
+                    {/* 서랍 섹션 높이 수직선 */}
+                    <Line
+                      points={[
+                        [getDimensionXPosition(leftWidth, false, leftXOffset), sectionCenterY - sectionHeight/2, getDimensionZPosition(leftDepth)],
+                        [getDimensionXPosition(leftWidth, false, leftXOffset), sectionCenterY + sectionHeight/2 - basicThickness, getDimensionZPosition(leftDepth)]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                    />
+                    {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                      <>
+                        <mesh position={[-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, getDimensionZPosition(leftDepth)]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                        <mesh position={[-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2 - basicThickness, getDimensionZPosition(leftDepth)]}>
+                          <sphereGeometry args={[0.05, 8, 8]} />
+                          <meshBasicMaterial color={dimensionColor} />
+                        </mesh>
+                      </>
+                    )}
+                    </group>
+                  );
+                })()}
 
                 {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 (측면뷰 제외) */}
                 {index === 0 && section.type === 'drawer' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
