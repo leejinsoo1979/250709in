@@ -514,13 +514,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   // 실제 내경 계산 (가이드선 사이의 거리)
                   actualInternalHeight = (topY - bottomY) / 0.01;
                 } else if (section.type === 'drawer') {
-                  // drawer 섹션: 바닥판 상단부터 상판 하단까지
+                  // drawer 섹션: 바닥판 상단부터 섹션 상단까지
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
                   const sectionTopY = sectionCenterY + sectionHeight/2;
 
-                  // 첫 번째 섹션(하부)은 가구 바닥판 윗면부터
+                  // 첫 번째 섹션(하부)은 가구 바닥판 윗면부터, 상단은 섹션 상단까지
                   bottomY = index === 0 ? (-height/2 + basicThickness) : (sectionBottomY + basicThickness);
-                  topY = sectionTopY - basicThickness;
+                  topY = sectionTopY;
                   actualInternalHeight = (topY - bottomY) / 0.01;
                 } else {
                   // 다른 타입은 기본값 사용
