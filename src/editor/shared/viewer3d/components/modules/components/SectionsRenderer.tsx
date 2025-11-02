@@ -449,11 +449,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // Type4 상부 섹션: 상부섹션 바닥판 상단부터 (하부 1000mm + 바닥판 18mm)
                     bottomY = -height/2 + mmToThreeUnits(1000) + basicThickness;
                   } else {
-                    // 2hanging 상부 섹션: 바닥판 윗면까지 (sectionBottomY는 이미 바닥판 중간이므로 그대로 사용)
-                    const is2HangingUpperSection = furnitureId?.includes('2hanging') && index === 1;
+                    // 2hanging, 2drawer-hanging 상부 섹션: 바닥판 윗면까지
+                    const is2HangingUpperSection = (furnitureId?.includes('2hanging') || furnitureId?.includes('2drawer-hanging')) && index === 1;
                     if (is2HangingUpperSection) {
-                      // 상부섹션 바닥판 윗면 = 섹션 하단 (바닥판 아래쪽)
-                      bottomY = sectionBottomY;
+                      // 상부섹션 바닥판 윗면 = 섹션 하단 + 바닥판 두께
+                      bottomY = sectionBottomY + basicThickness;
                     } else {
                       // 일반 hanging 섹션: 바닥판 상단부터
                       bottomY = sectionBottomY + basicThickness;
@@ -493,12 +493,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       }
                     } else {
                       // 안전선반 없는 경우
-                      // 2hanging 상부 섹션: 측판 높이에서 최상단 칸과 선반들을 뺀 내경
-                      // topY = bottomY + (sectionHeight - basicThickness * 2) = 바닥판 상단 + 내경
-                      const is2HangingUpperSection = furnitureId?.includes('2hanging') && index === 1;
+                      // 2hanging, 2drawer-hanging 상부 섹션: 측판 높이에서 최상단 칸과 선반들을 뺀 내경
+                      // topY = bottomY + (sectionHeight - basicThickness) = 바닥판 상단 + 내경 (상판만 빼기)
+                      const is2HangingUpperSection = (furnitureId?.includes('2hanging') || furnitureId?.includes('2drawer-hanging')) && index === 1;
                       if (is2HangingUpperSection) {
-                        // 상부 섹션의 경우 섹션 높이에서 상하판만 빼면 내경
-                        topY = bottomY + (sectionHeight - basicThickness * 2);
+                        // 상부 섹션의 경우 섹션 높이에서 상판만 빼면 내경 (바닥판은 이미 bottomY에 반영됨)
+                        topY = bottomY + (sectionHeight - basicThickness);
                       } else {
                         // 일반 케이스: 상부 프레임 하단까지
                         topY = height/2 - basicThickness;
