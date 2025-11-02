@@ -1908,6 +1908,18 @@ const Configurator: React.FC = () => {
               </div>
             </div>
 
+            {/* 공간 유형 - 공간 설정과 단내림 사이 */}
+            <div className={styles.configSection}>
+              <div className={styles.sectionHeader}>
+                <span className={styles.sectionDot}></span>
+                <h3 className={styles.sectionTitle}>공간 유형</h3>
+              </div>
+              <InstallTypeControls
+                spaceInfo={spaceInfo}
+                onUpdate={handleSpaceInfoUpdate}
+              />
+            </div>
+
             {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 */}
             <div className={styles.configSection}>
               <div className={styles.sectionHeader}>
@@ -2359,18 +2371,6 @@ const Configurator: React.FC = () => {
               )}
 
               </div>
-
-            {/* 공간 유형 - 양쪽 탭에서 모두 표시 */}
-            <div className={styles.configSection}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>공간 유형</h3>
-              </div>
-              <InstallTypeControls 
-                spaceInfo={spaceInfo}
-                onUpdate={handleSpaceInfoUpdate}
-              />
-            </div>
 
             {/* 프레임 설정 - 양쪽 탭에서 모두 표시 */}
             <div className={styles.configSection}>
