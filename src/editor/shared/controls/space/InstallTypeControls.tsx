@@ -1,5 +1,6 @@
 import React from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { INSTALL_TYPES, InstallType } from '../types';
 import styles from '../styles/common.module.css';
 
@@ -9,6 +10,8 @@ interface InstallTypeControlsProps {
 }
 
 const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, onUpdate }) => {
+  const { resetFurnitureWidths } = useFurnitureStore();
+
   console.log('🏢 InstallTypeControls - 현재 installType:', spaceInfo.installType);
   console.log('🏢 InstallTypeControls - 현재 wallConfig:', spaceInfo.wallConfig);
   const handleInstallTypeChange = (type: InstallType) => {
@@ -99,20 +102,19 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
       left: side === 'left',
       right: side === 'right',
     };
-    
-    // 노서라운드 모드일 때 gapConfig도 함께 업데이트
+
     const updates: Partial<SpaceInfo> = {
       wallConfig: newWallConfig
     };
-    
+
     if (spaceInfo.surroundType === 'no-surround') {
-      // 벽 유무에 따라 이격거리 설정
+      // 노서라운드 모드: 벽 유무에 따라 이격거리 설정
       // 벽이 있으면 2mm, 벽이 없으면 18mm (엔드패널)
       updates.gapConfig = {
         left: newWallConfig.left ? 2 : 18,
         right: newWallConfig.right ? 2 : 18
       };
-      
+
       console.log('🚨🚨 벽 위치 변경 시 gapConfig:', {
         newWallConfig,
         gapConfig: updates.gapConfig,
@@ -121,14 +123,36 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
       });
       // frameSize도 업데이트하여 자동 계산이 작동하도록 함
       updates.frameSize = { left: 0, right: 0, top: 0 };
+    } else if (spaceInfo.surroundType === 'surround') {
+      // 서라운드 모드: 벽 유무에 따라 frameSize 설정
+      // 벽이 있으면 50mm, 벽이 없으면 20mm
+      updates.frameSize = {
+        left: newWallConfig.left ? 50 : 20,
+        right: newWallConfig.right ? 50 : 20,
+        top: spaceInfo.frameSize?.top || 10,
+      };
+
+      console.log('🚨🚨 서라운드 모드 벽 위치 변경 시 frameSize:', {
+        newWallConfig,
+        frameSize: updates.frameSize,
+        '좌측': newWallConfig.left ? '벽있음(50mm)' : '벽없음(20mm)',
+        '우측': newWallConfig.right ? '벽있음(50mm)' : '벽없음(20mm)'
+      });
     }
-    
-    console.log('🏢 InstallTypeControls - wallConfig 변경:', { 
-      newWallConfig, 
+
+    console.log('🏢 InstallTypeControls - wallConfig 변경:', {
+      newWallConfig,
       gapConfig: updates.gapConfig,
-      surroundType: spaceInfo.surroundType 
+      frameSize: updates.frameSize,
+      surroundType: spaceInfo.surroundType
     });
-    
+
+    // frameSize 변경 시 가구 너비 초기화
+    if (updates.frameSize) {
+      console.log('🔄 wallConfig 변경으로 frameSize 변경됨 - 가구 너비 초기화');
+      resetFurnitureWidths();
+    }
+
     onUpdate(updates);
   };
 

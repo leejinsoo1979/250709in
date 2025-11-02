@@ -38,7 +38,10 @@ interface FurnitureDataState {
   
   // 기둥 변경 시 가구 업데이트
   updateFurnitureForColumns: (spaceInfo: any) => void;
-  
+
+  // wallConfig/frameSize 변경 시 가구 너비 재계산
+  resetFurnitureWidths: () => void;
+
   // 선택 상태 액션들 (FurnitureSelectionProvider와 동일한 인터페이스)
   setSelectedLibraryModuleId: (id: string | null) => void;
   setSelectedPlacedModuleId: (id: string | null) => void;
@@ -507,6 +510,34 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   // Mark as saved
   markAsSaved: () => {
     set({ hasUnsavedChanges: false });
+  },
+
+  // wallConfig/frameSize 변경 시 가구 너비 재계산
+  resetFurnitureWidths: () => {
+    set((state) => {
+      console.log('🔄 [furnitureStore] resetFurnitureWidths - customWidth/adjustedWidth 초기화');
+
+      const updatedModules = state.placedModules.map(module => {
+        // customWidth와 adjustedWidth 초기화
+        const updated = { ...module };
+
+        if (module.customWidth !== undefined) {
+          console.log(`  - ${module.id}: customWidth ${module.customWidth} → undefined`);
+          delete updated.customWidth;
+        }
+
+        if (module.adjustedWidth !== undefined) {
+          console.log(`  - ${module.id}: adjustedWidth ${module.adjustedWidth} → undefined`);
+          delete updated.adjustedWidth;
+        }
+
+        return updated;
+      });
+
+      return {
+        placedModules: updatedModules
+      };
+    });
   },
 
   // 패널 결 방향 초기화 (측판/백패널/도어를 기본값으로 리셋)
