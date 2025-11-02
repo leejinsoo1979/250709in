@@ -3259,8 +3259,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             module.position.x < min.position.x ? module : min
           );
           return [leftmost];
-        })()
-          .map((module, index) => {
+        })().map((module, index) => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
