@@ -840,7 +840,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       })()}
 
       {/* 정면도 치수선들 */}
-      {(
+      {showDimensions && (
         <>
           {/* 상단 전체 프레임 포함 폭 치수선 */}
           <group>
