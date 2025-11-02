@@ -931,6 +931,17 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset) + lowerZOffset;
                 const upperBackPanelZ = -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset) + upperZOffset;
 
+                console.log('🔧 백패널 Z 위치 계산:', {
+                  depthMm: depth / 0.01,
+                  upperSectionDepthMm: upperSectionDepth / 0.01,
+                  upperDepthDiffMm: upperDepthDiff / 0.01,
+                  upperZOffsetMm: upperZOffset / 0.01,
+                  backPanelThicknessMm: backPanelThickness / 0.01,
+                  depthOffsetMm: backPanelConfig.depthOffset,
+                  계산식: '-upperSectionDepth/2 + backPanelThickness/2 + depthOffset + upperZOffset',
+                  upperBackPanelZMm: upperBackPanelZ / 0.01
+                });
+
                 return (
                   <>
                     {/* 하부 섹션 백패널 */}
