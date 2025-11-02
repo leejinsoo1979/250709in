@@ -80,8 +80,8 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   if (is3DMode) {
     return (
       <group position={position}>
-        {/* 메인 원형 커버 */}
-        <mesh rotation={[0, 0, 0]}>
+        {/* 메인 원형 커버 - 백패널에 수직으로 붙도록 X축으로 90도 회전 */}
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[outerRadius, outerRadius, mmToThreeUnits(thickness), 32]} />
           <meshStandardMaterial
             color="#e0e0e0"
@@ -90,20 +90,20 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
           />
         </mesh>
 
-        {/* 통풍구 슬릿 (8개) */}
+        {/* 통풍구 슬릿 (8개) - 백패널에 수직 */}
         {Array.from({ length: 8 }).map((_, i) => {
           const angle = (i / 8) * Math.PI * 2;
           const slitRadius = outerRadius * 0.6;
           const slitX = Math.cos(angle) * slitRadius;
-          const slitY = Math.sin(angle) * slitRadius;
+          const slitZ = Math.sin(angle) * slitRadius;
           const slitWidth = mmToThreeUnits(3);
           const slitLength = outerRadius * 0.4;
 
           return (
             <mesh
               key={i}
-              position={[slitX, slitY, mmToThreeUnits(thickness) / 2 + 0.001]}
-              rotation={[0, 0, angle]}
+              position={[slitX, mmToThreeUnits(thickness) / 2 + 0.001, slitZ]}
+              rotation={[Math.PI / 2, 0, angle]}
             >
               <boxGeometry args={[slitLength, slitWidth, mmToThreeUnits(1)]} />
               <meshStandardMaterial
@@ -115,8 +115,8 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
           );
         })}
 
-        {/* 중앙 허브 */}
-        <mesh position={[0, 0, 0]}>
+        {/* 중앙 허브 - 백패널에 수직 */}
+        <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[outerRadius * 0.15, outerRadius * 0.15, mmToThreeUnits(thickness + 2), 16]} />
           <meshStandardMaterial
             color="#d0d0d0"
