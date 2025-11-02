@@ -76,62 +76,17 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
     return null;
   }
 
-  // 육각형 벌집 패턴 생성 함수
-  const generateHoneycombPattern = () => {
-    const hexSize = mmToThreeUnits(8); // 육각형 한 변 크기
-    const holes: JSX.Element[] = [];
-
-    // 육각형 간격 계산
-    const hexWidth = hexSize * Math.sqrt(3);
-    const hexHeight = hexSize * 1.5;
-
-    let holeIndex = 0;
-
-    // 행/열로 배치
-    for (let row = -3; row <= 3; row++) {
-      for (let col = -3; col <= 3; col++) {
-        // 육각형 그리드 오프셋 계산
-        const xOffset = col * hexWidth + (row % 2) * (hexWidth / 2);
-        const zOffset = row * hexHeight;
-
-        // 원형 범위 내에만 구멍 배치
-        const distance = Math.sqrt(xOffset * xOffset + zOffset * zOffset);
-        if (distance < outerRadius * 0.7) {
-          holes.push(
-            <mesh
-              key={holeIndex++}
-              position={[xOffset, mmToThreeUnits(thickness) / 2 + 0.001, zOffset]}
-              rotation={[Math.PI / 2, 0, 0]}
-            >
-              <cylinderGeometry args={[hexSize * 0.4, hexSize * 0.4, mmToThreeUnits(2), 6]} />
-              <meshStandardMaterial
-                color="#333333"
-                metalness={0.2}
-                roughness={0.8}
-              />
-            </mesh>
-          );
-        }
-      }
-    }
-
-    return holes;
-  };
-
   // 3D 모드: 실제 환기캡 모델
   if (is3DMode) {
     return (
       <group position={position}>
-        {/* 흰색 원형 베이스 */}
+        {/* 단순한 흰색 원형 환기캡 */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
           <cylinderGeometry args={[outerRadius, outerRadius, mmToThreeUnits(thickness), 32]} />
           <meshStandardMaterial
             color="#ffffff"
           />
         </mesh>
-
-        {/* 벌집 패턴 구멍들 */}
-        {generateHoneycombPattern()}
       </group>
     );
   }
