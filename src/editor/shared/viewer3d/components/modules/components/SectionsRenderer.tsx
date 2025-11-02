@@ -519,8 +519,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   const sectionTopY = sectionCenterY + sectionHeight/2;
 
                   // 첫 번째 섹션(하부)은 하부 프레임 윗면부터, 상단은 상판 아랫면까지
-                  bottomY = index === 0 ? (-height/2 + basicThickness * 2) : (sectionBottomY + basicThickness);
-                  topY = sectionTopY - basicThickness;
+                  bottomY = index === 0 ? (-height/2 + basicThickness) : (sectionBottomY + basicThickness);
+                  topY = sectionTopY - basicThickness * 2;
                   // 실제 거리로 내경 계산 (하드코딩 없음)
                   actualInternalHeight = (topY - bottomY) / 0.01;
 
