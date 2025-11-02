@@ -362,51 +362,6 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
              !(viewMode === '2D' && view2DDirection === 'top') &&
              !(viewMode === '2D' && view2DDirection === 'right') && (
               <>
-                {/* 섹션 구분 패널 두께 표시 (마지막 섹션 제외, 측면뷰 제외) */}
-                {index < allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                  <group>
-                    {/* 구분 패널 두께 텍스트 */}
-                    
-                    <Text
-                      position={[
-                        getDimensionXPosition(leftWidth, true, leftXOffset),
-                        sectionCenterY + sectionHeight/2 - basicThickness/2,
-                        getDimensionZPosition(leftDepth)
-                      ]}
-                      fontSize={baseFontSize}
-                      color={dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      rotation={[0, 0, Math.PI / 2]}
-                      renderOrder={999}
-                    >
-                      {Math.round(basicThickness * 100)}
-                    </Text>
-
-                    {/* 구분 패널 두께 수직선 */}
-                    <Line
-                      points={[
-                        [getDimensionXPosition(leftWidth, false, leftXOffset), sectionCenterY + sectionHeight/2 - basicThickness, getDimensionZPosition(leftDepth)],
-                        [getDimensionXPosition(leftWidth, false, leftXOffset), sectionCenterY + sectionHeight/2, getDimensionZPosition(leftDepth)]
-                      ]}
-                      color={dimensionColor}
-                      lineWidth={1}
-                    />
-                    {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
-                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                      <>
-                        <mesh position={[-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2 - basicThickness, getDimensionZPosition(leftDepth)]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                        <mesh position={[-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2, getDimensionZPosition(leftDepth)]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                      </>
-                    )}
-                  </group>
-                )}
                 
                 {/* 상판 두께 표시 (마지막 섹션일 때만, 측면뷰 제외) */}
                 {index === allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
