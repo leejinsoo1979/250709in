@@ -2333,7 +2333,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       
 
       {/* 가구별 실시간 치수선 및 가이드 (가구가 배치된 경우에만 표시, 탑뷰가 아닐 때만) */}
-      {furnitureDimensions && furnitureDimensions.map((item, index) => {
+      {showDimensions && furnitureDimensions && furnitureDimensions.map((item, index) => {
         if (!item) return null;
         
         const {
@@ -2488,7 +2488,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       })}
       
       {/* 기둥별 치수선 (가구와 동일한 스타일, 탑뷰가 아닐 때만) */}
-      {spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {
+      {showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {
         const columnWidthM = column.width * 0.01;
         const leftX = column.position[0] - columnWidthM / 2;
         const rightX = column.position[0] + columnWidthM / 2;
@@ -2562,7 +2562,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       })}
       
       {/* 단내림 구간 치수선 - 탑뷰 */}
-      {spaceInfo.droppedCeiling?.enabled && currentViewDirection === 'top' && (
+      {showDimensions && spaceInfo.droppedCeiling?.enabled && currentViewDirection === 'top' && (
         <group>
           {(() => {
             // 탑뷰에서 필요한 변수들 재정의
@@ -3253,7 +3253,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
 
 
         {/* 가구별 치수선 (좌측뷰에서는 깊이 치수) - 좌측뷰에서는 가장 왼쪽 가구만 표시 */}
-        {placedModules.length > 0 && (() => {
+        {showDimensions && placedModules.length > 0 && (() => {
           // 가장 왼쪽 가구 찾기 (position.x가 가장 작은 가구)
           const leftmost = placedModules.reduce((min, module) =>
             module.position.x < min.position.x ? module : min
@@ -3405,7 +3405,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         })}
 
         {/* 단내림 구간 치수선 - 좌측뷰 */}
-        {spaceInfo.droppedCeiling?.enabled && (
+        {showDimensions && spaceInfo.droppedCeiling?.enabled && (
           <group>
             {(() => {
               const normalBounds = getNormalZoneBounds(spaceInfo);
@@ -4179,7 +4179,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>
         
         {/* 가구별 치수선 (우측뷰에서는 깊이 치수) - 우측뷰에서는 가장 오른쪽 가구만 표시 */}
-        {placedModules.length > 0 && (() => {
+        {showDimensions && placedModules.length > 0 && (() => {
           // 가장 오른쪽 가구 찾기 (position.x가 가장 큰 가구)
           const rightmost = placedModules.reduce((max, module) =>
             module.position.x > max.position.x ? module : max
@@ -4656,7 +4656,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>
         
         {/* 단내림 구간 치수선 - 탑뷰 */}
-        {spaceInfo.droppedCeiling?.enabled && (
+        {showDimensions && spaceInfo.droppedCeiling?.enabled && (
           <group>
             {(() => {
               const normalBounds = getNormalZoneBounds(spaceInfo);
@@ -5495,7 +5495,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         })}
 
         {/* 기둥별 치수선 - 상부뷰 (가구와 동일한 스타일) */}
-        {spaceInfo.columns && spaceInfo.columns.length > 0 && spaceInfo.columns.map((column, index) => {
+        {showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && spaceInfo.columns.map((column, index) => {
           const columnWidthM = column.width * 0.01;
           const leftX = column.position[0] - columnWidthM / 2;
           const rightX = column.position[0] + columnWidthM / 2;
