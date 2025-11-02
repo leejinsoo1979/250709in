@@ -947,7 +947,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
 
       {/* 노서라운드 모드 좌측 엔드패널 치수선 */}
-      {spaceInfo.surroundType === 'no-surround' && hasLeftFurniture && (() => {
+      {showDimensions && spaceInfo.surroundType === 'no-surround' && hasLeftFurniture && (() => {
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
         
         // 왼쪽 벽이 있는지 확인
@@ -1019,7 +1019,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       })()}
       
       {/* 노서라운드 모드 우측 엔드패널 치수선 */}
-      {spaceInfo.surroundType === 'no-surround' && hasRightFurniture && (() => {
+      {showDimensions && spaceInfo.surroundType === 'no-surround' && hasRightFurniture && (() => {
         const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
         
         // 오른쪽 벽이 있는지 확인
@@ -1099,7 +1099,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       })()}
 
       {/* 단내림 구간 치수선 - 전체 폭 치수선 아래에 표시 (탑뷰가 아닐 때만) */}
-      {spaceInfo.droppedCeiling?.enabled && currentViewDirection !== 'top' && (
+      {showDimensions && spaceInfo.droppedCeiling?.enabled && currentViewDirection !== 'top' && (
         <group>
           {(() => {
             const normalBounds = getNormalZoneBounds(spaceInfo);
@@ -1355,7 +1355,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       )}
       
       {/* 좌측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
-      {!isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
             // 왼쪽 벽이 있는지 확인
             const hasLeftWall = spaceInfo.wallConfig?.left;
             
@@ -1461,7 +1461,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })()}
       
       {/* 서라운드 모드 좌측 프레임 치수선 */}
-      {!isStep2 && spaceInfo.surroundType === 'surround' && (
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'surround' && (
       <group>
             {/* 치수선 */}
             <Line
@@ -1520,7 +1520,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       )}
       
       {/* 우측 프레임 치수선 / 노서라운드일 때는 이격거리/엔드패널 치수선 */}
-      {!isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'no-surround' && (() => {
             // 오른쪽 벽이 있는지 확인
             const hasRightWall = spaceInfo.wallConfig?.right;
             
@@ -1626,7 +1626,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           })()}
       
       {/* 서라운드 모드 우측 프레임 치수선 */}
-      {!isStep2 && spaceInfo.surroundType === 'surround' && (
+      {showDimensions && !isStep2 && spaceInfo.surroundType === 'surround' && (
       <group>
             {/* 치수선 */}
             <Line
