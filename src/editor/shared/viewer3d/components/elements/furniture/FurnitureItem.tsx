@@ -1375,7 +1375,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     const isLastSlotNoSurround = shouldProcessLastSlot && !isDualLastSlot;
 
     // 듀얼 가구 첫번째 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
-    if (isDualFirstSlot && !needsEndPanelAdjustment) {
+    if ((isDualFirstSlot || (widthReduced && isNoSurroundFirstSlot)) && !needsEndPanelAdjustment) {
       // 노서라운드 모드에서만 위치 조정
       if (spaceInfo.surroundType === 'no-surround') {
         // 단내림구간인 경우: 단내림 위치에 따라 바깥쪽 방향 결정
@@ -1394,7 +1394,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
       }
     // 듀얼 가구 마지막 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
-    else if (isDualLastSlot && !needsEndPanelAdjustment) {
+    else if ((isDualLastSlot || (widthReduced && (isNoSurroundLastSlot || isNoSurroundDualLastSlot))) && !needsEndPanelAdjustment) {
       // 노서라운드 모드에서만 위치 조정
       if (spaceInfo.surroundType === 'no-surround') {
         // 단내림구간인 경우: 단내림 위치에 따라 바깥쪽 방향 결정
