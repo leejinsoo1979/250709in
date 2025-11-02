@@ -643,12 +643,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         {(() => {
                           const topCenterY = (topCompartmentTopY + topCompartmentBottomY) / 2;
                           const topSectionIndex = `${index}-top`;
-                          const isTopHovered = hoveredSectionIndex === topSectionIndex;
-                          const topCurrentColor = isTopHovered ? themeColor : dimensionColor;
 
                           return (
                             <>
-                              {/* 안전선반 위 칸 치수 텍스트 */}
+                              {/* 안전선반 위 칸 치수 텍스트만 표시 (가이드라인 제거) */}
                               <EditableDimensionText
                                 position={[
                                   viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
@@ -666,49 +664,6 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                                 depthTest={false}
                                 onHoverChange={(hovered) => setHoveredSectionIndex(hovered ? topSectionIndex : null)}
                               />
-
-                              {/* 안전선반 위 칸 수직 연결선 (점선) */}
-                              <group>
-                                <NativeLine
-                                  points={[
-                                    [-innerWidth/2 * 0.3, topCompartmentTopY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                                    [-innerWidth/2 * 0.3, topCompartmentBottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
-                                  ]}
-                                  color={topCurrentColor}
-                                  lineWidth={1}
-                                  dashed={true}
-                                />
-
-                                {/* 가이드선 클릭/hover 영역 */}
-                                <mesh
-                                  position={[-innerWidth/2 * 0.3, topCenterY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}
-                                  onPointerOver={(e) => {
-                                    e.stopPropagation();
-                                    setHoveredSectionIndex(topSectionIndex);
-                                  }}
-                                  onPointerOut={(e) => {
-                                    e.stopPropagation();
-                                    setHoveredSectionIndex(null);
-                                  }}
-                                >
-                                  <planeGeometry args={[0.3, Math.abs(topCompartmentTopY - topCompartmentBottomY)]} />
-                                  <meshBasicMaterial transparent opacity={0} depthTest={false} side={2} />
-                                </mesh>
-                              </group>
-
-                              {/* 안전선반 위 칸 수직선 양끝 엔드포인트 - 측면뷰/탑뷰와 드래그 중에는 숨김 */}
-                              {!isDragging && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
-                                <>
-                                  <mesh position={[-innerWidth/2 * 0.3, topCompartmentTopY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                                    <sphereGeometry args={[0.05, 8, 8]} />
-                                    <meshBasicMaterial color={topCurrentColor} />
-                                  </mesh>
-                                  <mesh position={[-innerWidth/2 * 0.3, topCompartmentBottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
-                                    <sphereGeometry args={[0.05, 8, 8]} />
-                                    <meshBasicMaterial color={topCurrentColor} />
-                                  </mesh>
-                                </>
-                              )}
                             </>
                           );
                         })()}
