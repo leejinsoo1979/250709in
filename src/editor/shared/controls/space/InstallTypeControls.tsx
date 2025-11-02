@@ -147,13 +147,16 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
       surroundType: spaceInfo.surroundType
     });
 
-    // frameSize 변경 시 가구 너비 초기화
+    // frameSize 변경 시: 먼저 spaceInfo 업데이트 후 가구 너비 초기화
+    onUpdate(updates);
+
     if (updates.frameSize) {
       console.log('🔄 wallConfig 변경으로 frameSize 변경됨 - 가구 너비 초기화');
-      resetFurnitureWidths();
+      // onUpdate가 완료된 후 가구 너비 초기화 (다음 프레임에서 실행)
+      setTimeout(() => {
+        resetFurnitureWidths();
+      }, 0);
     }
-
-    onUpdate(updates);
   };
 
   return (
