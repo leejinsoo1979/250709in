@@ -14,6 +14,7 @@ interface ShelfRendererProps {
   innerWidth: number;
   innerHeight: number;
   depth: number;
+  originalDepth?: number; // 치수 표시용 원래 가구 깊이 (섹션별 깊이가 다를 때 사용)
   basicThickness: number;
   material: THREE.Material;
   yOffset?: number; // 전체 선반 그룹의 Y축 오프셋
@@ -47,6 +48,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
   innerWidth,
   innerHeight,
   depth,
+  originalDepth,
   basicThickness,
   material,
   yOffset = 0,
@@ -149,16 +151,19 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
 
   // 측면뷰에서 치수 Z 위치 계산 함수 (통일된 Z 위치)
   const getDimensionZPosition = () => {
+    // 치수 표시용 깊이: originalDepth가 있으면 사용, 없으면 depth 사용
+    const depthForDimension = originalDepth !== undefined ? originalDepth : depth;
+
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
       // 측면뷰: Z축 오른쪽으로 324mm (3.24) 이동
-      return depth/2 + 1.0 + 3.24;
+      return depthForDimension/2 + 1.0 + 3.24;
     }
     // 3D 모드: 스타일러장 우측 섹션은 zOffset + depth/2 (다른 모듈과 동일)
     if (viewMode === '3D' && furnitureId && furnitureId.includes('-right-section')) {
-      return zOffset + depth/2;
+      return zOffset + depthForDimension/2;
     }
-    // 3D 또는 정면뷰: depth에 따라 다른 Z 위치
-    return depth/2 + 0.1;
+    // 3D 또는 정면뷰: 원래 가구 깊이 기준으로 고정
+    return depthForDimension/2 + 0.1;
   };
   
   if (shelfCount <= 0) {
