@@ -2038,7 +2038,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
     if (spaceInfo.surroundType === 'no-surround') {
       // 노서라운드: 바깥쪽 끝 슬롯만 이동 (첫/마지막 슬롯)
-      if (isNoSurroundFirstSlot || isNoSurroundLastSlot) {
+      if (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) {
         finalOffset = isDroppedZone ? -offset : offset;
       }
     } else if (spaceInfo.surroundType === 'surround' && widthReduced) {
