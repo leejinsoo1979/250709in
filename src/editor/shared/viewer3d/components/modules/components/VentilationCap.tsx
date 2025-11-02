@@ -54,9 +54,9 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   const outerCirclePoints = generateCirclePoints(outerRadius);
   const innerCirclePoints = generateCirclePoints(innerRadius);
 
-  // 정면뷰에서만 표시
+  // 2D 정면뷰에서만 표시
   const isFrontView = viewMode === '2D' && view2DDirection === 'front';
-  const shouldRender = viewMode === '3D' || isFrontView;
+  const shouldRender = isFrontView;
 
   console.log('🌀 VentilationCap 렌더링:', {
     position,
