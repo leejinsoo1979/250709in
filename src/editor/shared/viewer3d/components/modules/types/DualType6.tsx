@@ -198,51 +198,6 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             {/* 좌측 섹션 치수 표시 */}
             {showDimensions && showDimensionsText && (section.type === 'drawer' || section.type === 'hanging') && (
               <group>
-                {section.type === 'drawer' ? (
-                  <>
-                    {/* 서랍 섹션 전체 높이 텍스트 - 중간 가로선반 하단까지 */}
-                    
-                    <Text
-                      position={[
-                        viewMode === '3D' ? -leftWidth/2 * 0.3 - 0.8 : -leftWidth/2 * 0.3 - 0.5, 
-                        (sectionCenterY - sectionHeight/2 + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2)) / 2,
-                        viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
-                      ]}
-                      fontSize={baseFontSize}
-                      color={dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      rotation={[0, 0, Math.PI / 2]}
-                      renderOrder={999}
-                      depthTest={false}
-                    >
-                      {Math.round(threeUnitsToMm(((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2) - (sectionCenterY - sectionHeight/2))))}
-                    </Text>
-                    
-                    {/* 서랍 섹션 높이 수직선 - 중간 가로선반 하단까지 */}
-                    <Line
-                      points={[
-                        [-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                        [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
-                      ]}
-                      color={dimensionColor}
-                      lineWidth={1}
-                    />
-                    {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
-                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                      <>
-                        <mesh position={[-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                      </>
-                    )}
-                  </>
-                ) : null}
                 
                 {/* 첫 번째 섹션(서랍)의 하부 프레임 두께 표시 */}
                 {index === 0 && (
