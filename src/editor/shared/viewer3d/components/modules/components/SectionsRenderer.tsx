@@ -600,7 +600,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                           viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                         ]}
                         fontSize={baseFontSize}
-                        color={dimensionColor}
+                        color={viewMode === '3D' ? '#000000' : dimensionColor}
                         rotation={[0, 0, Math.PI / 2]}
                         value={actualInternalHeight}
                         onValueChange={(newValue) => handleDimensionChange(index, newValue)}
@@ -674,7 +674,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                                   viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                                 ]}
                                 fontSize={baseFontSize}
-                                color={dimensionColor}
+                                color={viewMode === '3D' ? '#000000' : dimensionColor}
                                 rotation={[0, 0, Math.PI / 2]}
                                 value={topCompartmentHeight}
                                 onValueChange={(newValue) => handleDimensionChange(index, newValue)}
