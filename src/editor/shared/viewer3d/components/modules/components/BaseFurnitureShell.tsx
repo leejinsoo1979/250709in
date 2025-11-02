@@ -966,17 +966,30 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     />
 
                     {/* 환기캡 - 상부 백패널과 함께 이동 */}
-                    {!isDragging && (
-                      <VentilationCap
-                        position={[
-                          innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
-                          upperBackPanelY,  // 상부 백패널 Y 위치와 동일
-                          upperBackPanelZ + backPanelThickness/2 + 0.01  // 백패널 앞쪽 표면에 붙음
-                        ]}
-                        diameter={98}
-                        renderMode={renderMode}
-                      />
-                    )}
+                    {!isDragging && (() => {
+                      const ventCapZ = upperBackPanelZ + backPanelThickness/2 + 0.01;
+                      console.log('🌀 환기캡 위치 (상부 섹션):', {
+                        upperSectionDepthMm: upperSectionDepth / 0.01,
+                        upperDepthDiffMm: upperDepthDiff / 0.01,
+                        upperZOffsetMm: upperZOffset / 0.01,
+                        upperBackPanelZMm: upperBackPanelZ / 0.01,
+                        backPanelThicknessMm: backPanelThickness / 0.01,
+                        ventCapZMm: ventCapZ / 0.01,
+                        upperBackPanelY: upperBackPanelY / 0.01
+                      });
+
+                      return (
+                        <VentilationCap
+                          position={[
+                            innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
+                            upperBackPanelY,  // 상부 백패널 Y 위치와 동일
+                            ventCapZ  // 백패널 앞쪽 표면에 붙음
+                          ]}
+                          diameter={98}
+                          renderMode={renderMode}
+                        />
+                      );
+                    })()}
                   </>
                 );
               })()}
