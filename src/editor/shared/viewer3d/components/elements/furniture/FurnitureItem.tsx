@@ -1144,7 +1144,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 서라운드 모드: 단내림구간 바깥쪽 끝 슬롯 확인
   const isSurroundDroppedEdgeSlot = spaceInfo.surroundType === 'surround' &&
-                                     spaceInfo.installType === 'freestanding' &&
+                                     (spaceInfo.installType === 'freestanding' || isSemiStanding) &&
                                      spaceInfo.droppedCeiling?.enabled &&
                                      placedModule.zone === 'dropped' &&
                                      !isAtDroppedBoundary &&
@@ -1152,6 +1152,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                                        if (zoneSlotInfo?.dropped) {
                                          const localIndex = localSlotIndex ?? placedModule.slotIndex;
                                          const zoneColumnCount = zoneSlotInfo.dropped.columnCount ?? indexing.columnCount;
+                                         // 한쪽벽일 때: 오른쪽 벽이 없으면 오른쪽 끝만, 왼쪽 벽이 없으면 왼쪽 끝만
+                                         if (isSemiStanding) {
+                                           if (!hasRightWall) {
+                                             return localIndex === zoneColumnCount - 1;
+                                           } else if (!hasLeftWall) {
+                                             return localIndex === 0;
+                                           }
+                                           return false;
+                                         }
+                                         // 프리스탠딩: 양쪽 끝 모두
                                          return localIndex === 0 || localIndex === zoneColumnCount - 1;
                                        }
                                        return false;
