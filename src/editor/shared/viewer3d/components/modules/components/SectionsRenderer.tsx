@@ -558,7 +558,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                 // 현재 섹션의 hover 상태에 따른 색상
                 const isHovered = hoveredSectionIndex === index;
-                const currentColor = isHovered ? themeColor : dimensionColor;
+                const currentColor = isHovered ? themeColor : (viewMode === '3D' ? '#000000' : dimensionColor);
 
                 // 안전선반 위 칸의 내경 계산 (안전선반이 있는 경우)
                 let topCompartmentHeight = null;
@@ -662,7 +662,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                           const topCenterY = (topCompartmentTopY + topCompartmentBottomY) / 2;
                           const topSectionIndex = `${index}-top`;
                           const isTopHovered = hoveredSectionIndex === topSectionIndex;
-                          const topCurrentColor = isTopHovered ? themeColor : dimensionColor;
+                          const topCurrentColor = isTopHovered ? themeColor : (viewMode === '3D' ? '#000000' : dimensionColor);
 
                           return (
                             <>
