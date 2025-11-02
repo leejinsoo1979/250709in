@@ -1731,6 +1731,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
 
           {/* 도어 병합/분할 (2섹션 가구만, 도어가 있을 때만, 상세보기 아닐 때만) */}
+          {/* 주석 처리: 도어 병합/분할 기능 숨김
           {!showDetails && moduleData.hasDoor && hasDoor && isTwoSectionFurniture && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>도어 병합/분할</h5>
@@ -1760,6 +1761,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
             </div>
           )}
+          */}
 
           {/* 경첩 방향 선택 (도어가 있고 싱글 가구인 경우만, 상세보기 아닐 때만) */}
           {!showDetails && moduleData.hasDoor && hasDoor && (
@@ -1795,11 +1797,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
 
           {/* 도어 상하 이격거리 설정 (도어가 있는 경우만) */}
+          {/* 주석 처리: 도어 병합 모드 이격거리 설정 숨김
           {!showDetails && moduleData.hasDoor && hasDoor && !doorSplit && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>도어 상하 이격거리 (병합)</h5>
               <div className={styles.doorGapContainer}>
-                {/* 좌측: 천장에서 아래로 갭 */}
                 <div className={styles.doorGapField}>
                   <label className={styles.doorGapLabel}>천장에서 ↓</label>
                   <div className={styles.inputWithUnit}>
@@ -1823,7 +1825,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   </div>
                 </div>
 
-                {/* 우측: 바닥에서 위로 갭 */}
                 <div className={styles.doorGapField}>
                   <label className={styles.doorGapLabel}>바닥에서 ↑</label>
                   <div className={styles.inputWithUnit}>
@@ -1849,13 +1850,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
             </div>
           )}
+          */}
 
           {/* 분할 모드: 섹션별 도어 이격거리 */}
+          {/* 주석 처리: 도어 분할 모드 이격거리 설정 숨김
           {!showDetails && moduleData.hasDoor && hasDoor && doorSplit && isTwoSectionFurniture && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>도어 상하 이격거리 (분할)</h5>
 
-              {/* 상부 도어 이격거리 */}
               <h6 className={styles.subSectionTitle}>상부 도어</h6>
               <div className={styles.doorGapContainer}>
                 <div className={styles.doorGapField}>
@@ -1904,7 +1906,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 </div>
               </div>
 
-              {/* 하부 도어 이격거리 */}
               <h6 className={styles.subSectionTitle} style={{marginTop: '12px'}}>하부 도어</h6>
               <div className={styles.doorGapContainer}>
                 <div className={styles.doorGapField}>
@@ -1954,6 +1955,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
             </div>
           )}
+          */}
 
           {/* 상하부장 사이 갭 백패널 설정 (상부장/하부장만) */}
           {(moduleData.category === 'upper' || moduleData.category === 'lower') && (
