@@ -456,16 +456,23 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 
                 {/* 섹션 높이 표시 (drawer 섹션만 - hanging은 ShelfRenderer에서 칸별로 표시) */}
                 {(section.type === 'drawer') && (() => {
-                  // 좌측 하부섹션(drawer)은 바닥판이 있으므로 내경 높이 계산 시 바닥판 두께 제외
-                  const drawerInternalHeight = sectionHeight - basicThickness;
+                  // 좌측 하부섹션(drawer)은 바닥판이 있으므로 내경 높이 계산 시 상하판 두께 모두 제외
+                  const drawerInternalHeight = sectionHeight - basicThickness * 2;
+                  // 치수선 하단: 바닥판 윗면
+                  const lineBottomY = sectionCenterY - sectionHeight/2 + basicThickness;
+                  // 치수선 상단: 상판 하단
+                  const lineTopY = sectionCenterY + sectionHeight/2 - basicThickness;
+                  // 텍스트 중심 위치
+                  const textCenterY = (lineBottomY + lineTopY) / 2;
+
                   return (
                     <group>
                       {/* 서랍 섹션 내경 높이 텍스트 */}
-                      
+
                       <Text
                         position={[
                           getDimensionXPosition(leftWidth, true, leftXOffset),
-                          sectionCenterY,
+                          textCenterY,
                           getDimensionZPosition(leftDepth)
                         ]}
                         fontSize={viewMode === '3D' ? 0.45 : 0.32}
@@ -477,12 +484,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       >
                         {Math.round(drawerInternalHeight * 100)}
                       </Text>
-                    
+
                     {/* 서랍 섹션 높이 수직선 */}
                     <Line
                       points={[
-                        [getDimensionXPosition(leftWidth, false, leftXOffset), sectionCenterY - sectionHeight/2, getDimensionZPosition(leftDepth)],
-                        [getDimensionXPosition(leftWidth, false, leftXOffset), sectionCenterY + sectionHeight/2 - basicThickness, getDimensionZPosition(leftDepth)]
+                        [getDimensionXPosition(leftWidth, false, leftXOffset), lineBottomY, getDimensionZPosition(leftDepth)],
+                        [getDimensionXPosition(leftWidth, false, leftXOffset), lineTopY, getDimensionZPosition(leftDepth)]
                       ]}
                       color={dimensionColor}
                       lineWidth={1}
@@ -490,11 +497,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
                     {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                       <>
-                        <mesh position={[-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, getDimensionZPosition(leftDepth)]}>
+                        <mesh position={[-leftWidth/2 * 0.3, lineBottomY, getDimensionZPosition(leftDepth)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={dimensionColor} />
                         </mesh>
-                        <mesh position={[-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2 - basicThickness, getDimensionZPosition(leftDepth)]}>
+                        <mesh position={[-leftWidth/2 * 0.3, lineTopY, getDimensionZPosition(leftDepth)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
                           <meshBasicMaterial color={dimensionColor} />
                         </mesh>

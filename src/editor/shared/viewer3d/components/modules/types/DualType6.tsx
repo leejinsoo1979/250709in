@@ -200,47 +200,61 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               <group>
                 {section.type === 'drawer' ? (
                   <>
-                    {/* 서랍 섹션 전체 높이 텍스트 - 중간 가로선반 하단까지 */}
-                    
-                    <Text
-                      position={[
-                        viewMode === '3D' ? -leftWidth/2 * 0.3 - 0.8 : -leftWidth/2 * 0.3 - 0.5, 
-                        (sectionCenterY - sectionHeight/2 + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2)) / 2,
-                        viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
-                      ]}
-                      fontSize={baseFontSize}
-                      color={dimensionColor}
-                      anchorX="center"
-                      anchorY="middle"
-                      rotation={[0, 0, Math.PI / 2]}
-                      renderOrder={999}
-                      depthTest={false}
-                    >
-                      {Math.round(threeUnitsToMm(((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2) - (sectionCenterY - sectionHeight/2))))}
-                    </Text>
-                    
-                    {/* 서랍 섹션 높이 수직선 - 중간 가로선반 하단까지 */}
-                    <Line
-                      points={[
-                        [-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                        [-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
-                      ]}
-                      color={dimensionColor}
-                      lineWidth={1}
-                    />
-                    {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
-                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                      <>
-                        <mesh position={[-leftWidth/2 * 0.3, sectionCenterY - sectionHeight/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                        <mesh position={[-leftWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
-                        </mesh>
-                      </>
-                    )}
+                    {/* 서랍 섹션 전체 높이 텍스트 - 바닥판 윗면부터 중간 가로선반 하단까지 */}
+                    {(() => {
+                      // 치수선 하단: 바닥판 윗면
+                      const lineBottomY = sectionCenterY - sectionHeight/2 + basicThickness;
+                      // 치수선 상단: 중간 가로선반 하단
+                      const lineTopY = -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2;
+                      // 텍스트 중심 위치
+                      const textCenterY = (lineBottomY + lineTopY) / 2;
+                      // 내경 높이
+                      const internalHeightMm = threeUnitsToMm(lineTopY - lineBottomY);
+
+                      return (
+                        <>
+                          <Text
+                            position={[
+                              viewMode === '3D' ? -leftWidth/2 * 0.3 - 0.8 : -leftWidth/2 * 0.3 - 0.5,
+                              textCenterY,
+                              viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+                            ]}
+                            fontSize={baseFontSize}
+                            color={dimensionColor}
+                            anchorX="center"
+                            anchorY="middle"
+                            rotation={[0, 0, Math.PI / 2]}
+                            renderOrder={999}
+                            depthTest={false}
+                          >
+                            {Math.round(internalHeightMm)}
+                          </Text>
+
+                          {/* 서랍 섹션 높이 수직선 - 바닥판 윗면부터 중간 가로선반 하단까지 */}
+                          <Line
+                            points={[
+                              [-leftWidth/2 * 0.3, lineBottomY, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
+                              [-leftWidth/2 * 0.3, lineTopY, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                            ]}
+                            color={dimensionColor}
+                            lineWidth={1}
+                          />
+                          {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                          {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                            <>
+                              <mesh position={[-leftWidth/2 * 0.3, lineBottomY, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                                <sphereGeometry args={[0.05, 8, 8]} />
+                                <meshBasicMaterial color={dimensionColor} />
+                              </mesh>
+                              <mesh position={[-leftWidth/2 * 0.3, lineTopY, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
+                                <sphereGeometry args={[0.05, 8, 8]} />
+                                <meshBasicMaterial color={dimensionColor} />
+                              </mesh>
+                            </>
+                          )}
+                        </>
+                      );
+                    })()}
                   </>
                 ) : null}
                 
