@@ -1155,13 +1155,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                                          // 한쪽벽일 때: 오른쪽 벽이 없으면 오른쪽 끝만, 왼쪽 벽이 없으면 왼쪽 끝만
                                          if (isSemiStanding) {
                                            if (!hasRightWall) {
-                                             return localIndex === zoneColumnCount - 1;
+                                             // 듀얼: 마지막에서 두번째, 싱글: 마지막
+                                             return isDualFurniture
+                                               ? localIndex === zoneColumnCount - 2
+                                               : localIndex === zoneColumnCount - 1;
                                            } else if (!hasLeftWall) {
                                              return localIndex === 0;
                                            }
                                            return false;
                                          }
                                          // 프리스탠딩: 양쪽 끝 모두
+                                         if (isDualFurniture) {
+                                           // 듀얼: 첫슬롯 또는 마지막에서 두번째 슬롯
+                                           return localIndex === 0 || localIndex === zoneColumnCount - 2;
+                                         }
                                          return localIndex === 0 || localIndex === zoneColumnCount - 1;
                                        }
                                        return false;
