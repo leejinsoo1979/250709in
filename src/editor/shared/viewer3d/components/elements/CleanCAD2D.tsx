@@ -719,7 +719,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 뷰 방향별 치수선 렌더링
   const renderDimensions = () => {
     // showDimensions가 false이면 렌더링 안 함
+    console.log('🔵 renderDimensions called:', { showDimensions, currentViewDirection });
     if (!showDimensions) {
+      console.log('❌ showDimensions is false, returning null');
       return null;
     }
 
