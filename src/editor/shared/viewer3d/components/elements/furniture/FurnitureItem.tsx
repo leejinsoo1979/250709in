@@ -1159,7 +1159,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // - 서라운드: 단내림 구간 바깥쪽 끝 슬롯만
   // - 한쪽벽(semistanding)도 프리스탠딩과 동일하게 처리
   const shouldReduceWidth = isDualFurniture && (spaceInfo.installType === 'freestanding' || isSemiStanding) && (
-    (spaceInfo.surroundType === 'no-surround' && (isNoSurroundFirstSlot || isNoSurroundLastSlot)) ||
+    (spaceInfo.surroundType === 'no-surround' && (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)) ||
     isSurroundDroppedEdgeSlot
   );
 
