@@ -10,11 +10,15 @@ interface InstallTypeControlsProps {
 }
 
 const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, onUpdate }) => {
-  const { resetFurnitureWidths } = useFurnitureStore();
+  const { clearAllModules } = useFurnitureStore();
 
   console.log('🏢 InstallTypeControls - 현재 installType:', spaceInfo.installType);
   console.log('🏢 InstallTypeControls - 현재 wallConfig:', spaceInfo.wallConfig);
   const handleInstallTypeChange = (type: InstallType) => {
+    // 공간 유형 변경 시 모든 가구 제거
+    clearAllModules();
+    console.log('🗑️ InstallTypeControls - 공간 유형 변경으로 모든 가구 제거');
+
     // 설치 유형에 따른 벽 구성 설정
     let wallConfig = { ...spaceInfo.wallConfig };
     
@@ -98,6 +102,10 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
   };
 
   const handleWallConfigChange = (side: 'left' | 'right') => {
+    // 벽 위치 변경 시 모든 가구 제거
+    clearAllModules();
+    console.log('🗑️ InstallTypeControls - 벽 위치 변경으로 모든 가구 제거');
+
     const newWallConfig = {
       left: side === 'left',
       right: side === 'right',
@@ -147,16 +155,8 @@ const InstallTypeControls: React.FC<InstallTypeControlsProps> = ({ spaceInfo, on
       surroundType: spaceInfo.surroundType
     });
 
-    // frameSize 변경 시: 먼저 spaceInfo 업데이트 후 가구 너비 초기화
+    // spaceInfo 업데이트 (가구는 이미 제거됨)
     onUpdate(updates);
-
-    if (updates.frameSize) {
-      console.log('🔄 wallConfig 변경으로 frameSize 변경됨 - 가구 너비 초기화');
-      // onUpdate가 완료된 후 가구 너비 초기화 (다음 프레임에서 실행)
-      setTimeout(() => {
-        resetFurnitureWidths();
-      }, 0);
-    }
   };
 
   return (
