@@ -497,8 +497,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       // topY = bottomY + (sectionHeight - basicThickness) = 바닥판 상단 + 내경 (상판만 빼기)
                       const is2HangingUpperSection = (furnitureId?.includes('2hanging') || furnitureId?.includes('2drawer-hanging')) && index === 1;
                       if (is2HangingUpperSection) {
-                        // 상부 섹션의 경우 섹션 높이에서 상판만 빼면 내경 (바닥판은 이미 bottomY에 반영됨)
-                        topY = bottomY + (sectionHeight - basicThickness);
+                        // 상부 섹션의 경우 섹션 높이만큼 올림 (바닥판, 상판 모두 제외하지 않음)
+                        topY = bottomY + sectionHeight;
                       } else {
                         // 일반 케이스: 상부 프레임 하단까지
                         topY = height/2 - basicThickness;
