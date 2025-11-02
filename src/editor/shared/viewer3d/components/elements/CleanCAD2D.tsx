@@ -222,6 +222,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     return [leftmostModule];
   }, [showDimensions, placedModules]);
 
+  const rightmostModules = useMemo(() => {
+    if (!showDimensions || placedModules.length === 0) return [];
+    const [firstModule] = placedModules;
+    if (!firstModule) return [];
+
+    const rightmostModule = placedModules.reduce((max, module) =>
+      module.position.x > max.position.x ? module : max,
+      firstModule
+    );
+
+    return [rightmostModule];
+  }, [showDimensions, placedModules]);
+
   // 실제 뷰 방향 결정
   const currentViewDirection = viewDirection || view2DDirection;
 
@@ -4188,13 +4201,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>}
 
         {/* 가구별 치수선 (우측뷰에서는 깊이 치수) - 우측뷰에서는 가장 오른쪽 가구만 표시 */}
-        {showDimensions && placedModules.length > 0 && (() => {
-          // 가장 오른쪽 가구 찾기 (position.x가 가장 큰 가구)
-          const rightmost = placedModules.reduce((max, module) =>
-            module.position.x > max.position.x ? module : max
-          );
-          return [rightmost];
-        })().map((module, index) => {
+        {rightmostModules.map((module, index) => {
+          // 우측뷰에서는 가장 오른쪽 가구만 대상으로 깊이 치수 표시
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
