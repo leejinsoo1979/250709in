@@ -980,9 +980,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     {!isDragging && (
                       <VentilationCap
                         position={[
-                          innerWidth/2 - mmToThreeUnits(132),
-                          upperBackPanelY,
-                          upperBackPanelZ + backPanelThickness/2 + 0.01
+                          innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
+                          height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
+                          upperBackPanelZ + backPanelThickness/2 + 0.01  // 백패널 앞쪽 표면에 붙음
                         ]}
                         diameter={98}
                         renderMode={renderMode}
@@ -1013,9 +1013,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               {!isDragging && (
                 <VentilationCap
                   position={[
-                    innerWidth/2 - mmToThreeUnits(132),
-                    0,
-                    -depth/2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset) + 0.01
+                    innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
+                    height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
+                    -depth/2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset) + 0.01  // 백패널 앞쪽 표면에 붙음
                   ]}
                   diameter={98}
                   renderMode={renderMode}
