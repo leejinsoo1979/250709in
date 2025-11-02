@@ -419,7 +419,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         getDimensionZPosition()
                       ]}
                       fontSize={baseFontSize}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
@@ -492,7 +492,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       getDimensionZPosition()
                     ]}
                     fontSize={baseFontSize}
-                    color={dimensionColor}
+                    color={viewMode === '3D' ? '#000000' : dimensionColor}
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, 0, Math.PI / 2]}
