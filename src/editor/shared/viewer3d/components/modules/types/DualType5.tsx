@@ -457,11 +457,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 
                 {/* 섹션 높이 표시 (drawer 섹션만 - hanging은 ShelfRenderer에서 칸별로 표시) */}
                 {(section.type === 'drawer' && index === 0) && (() => {
-                  // 하부섹션(drawer, index=0): 가구 바닥판 윗면부터 중간 분리판 아랫면까지
-                  // 치수선 하단: 가구 바닥판 윗면
-                  const lineBottomY = -height/2 + basicThickness;
-                  // 치수선 상단: 중간 분리판 아랫면
-                  const lineTopY = currentYPosition + sectionHeight - basicThickness;
+                  // 하부섹션(drawer, index=0): 하부 프레임 윗면부터 중간 분리판 아랫면까지
+                  // 치수선 하단: 하부 프레임 윗면 (가구 바닥판 위 + 하부 프레임 두께)
+                  const lineBottomY = -height/2 + basicThickness * 2;
+                  // 치수선 상단: 중간 분리판 아랫면 = 섹션 상단 - 패널 두께
+                  const lineTopY = sectionCenterY + sectionHeight/2 - basicThickness;
                   // 내경 높이 계산
                   const drawerInternalHeight = lineTopY - lineBottomY;
                   // 텍스트 중심 위치
