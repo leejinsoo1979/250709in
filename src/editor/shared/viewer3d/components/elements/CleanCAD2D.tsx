@@ -1915,7 +1915,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>}
 
       {/* 우측 3구간 높이 치수선 (상부프레임 + 캐비넷배치영역 + 하부프레임) */}
-      {!isStep2 && (
+      {showDimensions && !isStep2 && (
       <group>
         {(() => {
           const rightDimensionX = mmToThreeUnits(spaceInfo.width) + leftOffset + mmToThreeUnits(200); // 우측 치수선 위치 (균형감을 위해 200으로 고정)
@@ -2921,7 +2921,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group> */}
 
         {/* 우측 3구간 높이 치수선 표시 */}
-        <group>
+        {showDimensions && <group>
           {(() => {
             const rightDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(120); // 우측 치수선 위치
 
@@ -3841,7 +3841,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>}
 
         {/* 좌측 3구간 높이 치수선 */}
-        <group>
+        {showDimensions && <group>
           {(() => {
             const leftDimensionZ = spaceZOffset + panelDepth + mmToThreeUnits(120);
 
@@ -4432,7 +4432,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>
         
         {/* 좌측 프레임 폭 치수선 - 외부로 이동 */}
-        <group>
+        {showDimensions && <group>
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 50 : 40);
             
@@ -4544,7 +4544,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         </group>
         
         {/* 우측 프레임 폭 치수선 - 외부로 이동 */}
-        <group>
+        {showDimensions && <group>
           {(() => {
             const frameDimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 50 : 40);
             
@@ -5367,7 +5367,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         )}
 
         {/* 캐비넷별 폭 치수선 - 외부로 이동하고 정면처럼 표시 */}
-        {placedModules.length > 0 && placedModules.map((module, index) => {
+        {showDimensions && placedModules.length > 0 && placedModules.map((module, index) => {
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
