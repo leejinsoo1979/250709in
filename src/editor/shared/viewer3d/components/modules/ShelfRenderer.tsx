@@ -215,7 +215,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 getDimensionZPosition()
               ]}
               fontSize={baseFontSize}
-              color={dimensionColor}
+              color={viewMode === '3D' ? '#000000' : dimensionColor}
               anchorX="center"
               anchorY="middle"
               rotation={[0, 0, Math.PI / 2]}
@@ -231,7 +231,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 [getDimensionXPosition(false), topPosition - basicThickness/2 + dimensionYOffset, getDimensionZPosition()],
                 [getDimensionXPosition(false), topPosition + basicThickness/2 + dimensionYOffset, getDimensionZPosition()]
               ]}
-              color={dimensionColor}
+              color={viewMode === '3D' ? '#000000' : dimensionColor}
               lineWidth={1}
             />
             {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
@@ -239,11 +239,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               <>
                 <mesh position={[getDimensionXPosition(false), topPosition - basicThickness/2 + dimensionYOffset, getDimensionZPosition()]}>
                   <sphereGeometry args={[0.05, 8, 8]} />
-                  <meshBasicMaterial color={dimensionColor} />
+                  <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                 </mesh>
                 <mesh position={[getDimensionXPosition(false), topPosition + basicThickness/2 + dimensionYOffset, getDimensionZPosition()]}>
                   <sphereGeometry args={[0.05, 8, 8]} />
-                  <meshBasicMaterial color={dimensionColor} />
+                  <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                 </mesh>
               </>
             )}
@@ -435,7 +435,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         [getDimensionXPosition(false), shelfTopY + dimensionYOffset, getDimensionZPosition()],
                         [getDimensionXPosition(false), shelfBottomY + dimensionYOffset, getDimensionZPosition()]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                       dashed={false}
                     />
@@ -508,7 +508,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       [getDimensionXPosition(false), topFrameTopY + dimensionYOffset, getDimensionZPosition()],
                       [getDimensionXPosition(false), topFrameBottomY + dimensionYOffset, getDimensionZPosition()]
                     ]}
-                    color={dimensionColor}
+                    color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={1}
                     dashed={false}
                   />
@@ -517,11 +517,11 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     <>
                       <mesh position={[getDimensionXPosition(false), topFrameTopY + dimensionYOffset, getDimensionZPosition()]}>
                         <sphereGeometry args={[0.05, 8, 8]} />
-                        <meshBasicMaterial color={dimensionColor} />
+                        <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                       </mesh>
                       <mesh position={[getDimensionXPosition(false), topFrameBottomY + dimensionYOffset, getDimensionZPosition()]}>
                         <sphereGeometry args={[0.05, 8, 8]} />
-                        <meshBasicMaterial color={dimensionColor} />
+                        <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                       </mesh>
                     </>
                   )}
