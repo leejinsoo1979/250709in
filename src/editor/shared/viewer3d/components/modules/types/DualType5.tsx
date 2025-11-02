@@ -375,7 +375,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         getDimensionZPosition(leftDepth)
                       ]}
                       fontSize={baseFontSize}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
@@ -390,7 +390,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         [getDimensionXPosition(leftWidth, false, leftXOffset), sectionCenterY + sectionHeight/2 - basicThickness, getDimensionZPosition(leftDepth)],
                         [getDimensionXPosition(leftWidth, false, leftXOffset), sectionCenterY + sectionHeight/2, getDimensionZPosition(leftDepth)]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                     />
                     {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
@@ -398,11 +398,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       <>
                         <mesh position={[-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2 - basicThickness, getDimensionZPosition(leftDepth)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                         <mesh position={[-leftWidth/2 * 0.3, sectionCenterY + sectionHeight/2, getDimensionZPosition(leftDepth)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                       </>
                     )}
@@ -421,7 +421,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         getDimensionZPosition(leftDepth)
                       ]}
                       fontSize={baseFontSize}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
@@ -436,7 +436,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         [getDimensionXPosition(leftWidth, false, leftXOffset), height/2 - basicThickness, getDimensionZPosition(leftDepth)],
                         [getDimensionXPosition(leftWidth, false, leftXOffset), height/2, getDimensionZPosition(leftDepth)]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                     />
                     {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
@@ -444,11 +444,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       <>
                         <mesh position={[getDimensionXPosition(leftWidth, false, leftXOffset), height/2 - basicThickness, getDimensionZPosition(leftDepth)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                         <mesh position={[getDimensionXPosition(leftWidth, false, leftXOffset), height/2, getDimensionZPosition(leftDepth)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                       </>
                     )}
@@ -478,7 +478,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                           getDimensionZPosition(leftDepth)
                         ]}
                         fontSize={viewMode === '3D' ? 0.45 : 0.32}
-                        color={dimensionColor}
+                        color={viewMode === '3D' ? '#000000' : dimensionColor}
                         anchorX="center"
                         anchorY="middle"
                         rotation={[0, 0, Math.PI / 2]}
@@ -493,7 +493,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         [getDimensionXPosition(leftWidth, false, leftXOffset), lineBottomY, getDimensionZPosition(leftDepth)],
                         [getDimensionXPosition(leftWidth, false, leftXOffset), lineTopY, getDimensionZPosition(leftDepth)]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                     />
                     {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
@@ -501,11 +501,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       <>
                         <mesh position={[-leftWidth/2 * 0.3, lineBottomY, getDimensionZPosition(leftDepth)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                         <mesh position={[-leftWidth/2 * 0.3, lineTopY, getDimensionZPosition(leftDepth)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                       </>
                     )}
@@ -525,7 +525,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         getDimensionZPosition(leftDepth, true)
                       ]}
                       fontSize={baseFontSize}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
@@ -544,7 +544,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                          viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') ? -height/2 + basicThickness + 0.18 : -height/2 + basicThickness,
                          getDimensionZPosition(leftDepth, true)]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                     />
                     {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
@@ -552,11 +552,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       <>
                         <mesh position={[getDimensionXPosition(leftWidth, false, leftXOffset), -height/2, getDimensionZPosition(leftDepth, true)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                         <mesh position={[getDimensionXPosition(leftWidth, false, leftXOffset), -height/2 + basicThickness, getDimensionZPosition(leftDepth, true)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                       </>
                     )}
@@ -683,7 +683,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         getDimensionZPosition(rightDepth, true)
                       ]}
                       fontSize={baseFontSize}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
@@ -702,7 +702,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                          viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') ? -height/2 + basicThickness + 0.18 : -height/2 + basicThickness,
                          getDimensionZPosition(rightDepth, true)]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                     />
                     {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
@@ -710,11 +710,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       <>
                         <mesh position={[-rightWidth/2 * 0.3, -height/2, getDimensionZPosition(rightDepth, true)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                         <mesh position={[-rightWidth/2 * 0.3, -height/2 + basicThickness, getDimensionZPosition(rightDepth, true)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                       </>
                     )}
@@ -733,7 +733,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         getDimensionZPosition(rightDepth)
                       ]}
                       fontSize={baseFontSize}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]}
@@ -748,7 +748,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         [getDimensionXPosition(rightWidth, false, rightXOffset), height/2 - basicThickness, getDimensionZPosition(rightDepth)],
                         [getDimensionXPosition(rightWidth, false, rightXOffset), height/2, getDimensionZPosition(rightDepth)]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                     />
                     {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
@@ -756,11 +756,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       <>
                         <mesh position={[-rightWidth/2 * 0.3, height/2 - basicThickness, getDimensionZPosition(rightDepth)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                         <mesh position={[-rightWidth/2 * 0.3, height/2, getDimensionZPosition(rightDepth)]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                       </>
                     )}
@@ -776,7 +776,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         [-rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightShelfZOffset + rightAdjustedDepthForShelves/2 : rightDepth/2 + 1.0],
                         [rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightShelfZOffset + rightAdjustedDepthForShelves/2 : rightDepth/2 + 1.0]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                     />
 
@@ -789,7 +789,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         viewMode === '3D' ? rightShelfZOffset + rightAdjustedDepthForShelves/2 : rightDepth/2 + 1.0
                       ]}
                       fontSize={baseFontSize}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       anchorX="center"
                       anchorY="top"
                       renderOrder={999}
@@ -802,11 +802,11 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       <>
                         <mesh position={[-rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightShelfZOffset + rightAdjustedDepthForShelves/2 : rightDepth/2 + 1.0]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                         <mesh position={[rightWidth/2, sectionCenterY + sectionHeight/2 - basicThickness - 1.0, viewMode === '3D' ? rightShelfZOffset + rightAdjustedDepthForShelves/2 : rightDepth/2 + 1.0]}>
                           <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={dimensionColor} />
+                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                         </mesh>
                       </>
                     )}

@@ -750,7 +750,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                 ]}
                 fontSize={baseFontSize}
-                color={dimensionColor}
+                color={viewMode === '3D' ? '#000000' : dimensionColor}
                 anchorX="center"
                 anchorY="middle"
                 rotation={[0, 0, Math.PI / 2]}
@@ -766,7 +766,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   [-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
                   [-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
                 ]}
-                color={dimensionColor}
+                color={viewMode === '3D' ? '#000000' : dimensionColor}
                 lineWidth={1}
                 dashed={false}
               />
@@ -776,11 +776,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 <>
                   <mesh position={[-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                     <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={dimensionColor} />
+                    <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                   </mesh>
                   <mesh position={[-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                     <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={dimensionColor} />
+                    <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                   </mesh>
                 </>
               )}
@@ -803,7 +803,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     : depth/2 + 1.0
                 ]}
                 fontSize={baseFontSize}
-                color={dimensionColor}
+                color={viewMode === '3D' ? '#000000' : dimensionColor}
                 anchorX="center"
                 anchorY="middle"
                 rotation={[0, 0, Math.PI / 2]}
@@ -819,7 +819,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
                   [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
                 ]}
-                color={dimensionColor}
+                color={viewMode === '3D' ? '#000000' : dimensionColor}
                 lineWidth={1}
                 dashed={false}
               />
@@ -829,11 +829,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 <>
                   <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                     <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={dimensionColor} />
+                    <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                   </mesh>
                   <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                     <sphereGeometry args={[0.05, 8, 8]} />
-                    <meshBasicMaterial color={dimensionColor} />
+                    <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                   </mesh>
                 </>
               )}

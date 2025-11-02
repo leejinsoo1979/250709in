@@ -1667,7 +1667,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [-leftDoorWidthUnits / 2, extensionStart, doorThicknessUnits / 2 + 0.001],
                         [-leftDoorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                     />
 
@@ -1680,7 +1680,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [leftDoorWidthUnits / 2, extensionStart, doorThicknessUnits / 2 + 0.001],
                         [leftDoorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                     />
 
@@ -1693,7 +1693,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [-leftDoorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001],
                         [leftDoorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={2}
                     />
 
@@ -1706,7 +1706,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [-leftDoorWidthUnits / 2 - tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001],
                         [-leftDoorWidthUnits / 2 + tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={2}
                     />
 
@@ -1719,7 +1719,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [leftDoorWidthUnits / 2 - tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001],
                         [leftDoorWidthUnits / 2 + tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={2}
                     />
 
@@ -2067,7 +2067,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [-rightDoorWidthUnits / 2, extensionStart, doorThicknessUnits / 2 + 0.001],
                         [-rightDoorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                     />
 
@@ -2080,7 +2080,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [rightDoorWidthUnits / 2, extensionStart, doorThicknessUnits / 2 + 0.001],
                         [rightDoorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={1}
                     />
 
@@ -2093,7 +2093,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [-rightDoorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001],
                         [rightDoorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={2}
                     />
 
@@ -2106,7 +2106,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [-rightDoorWidthUnits / 2 - tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001],
                         [-rightDoorWidthUnits / 2 + tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={2}
                     />
 
@@ -2119,7 +2119,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                         [rightDoorWidthUnits / 2 - tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001],
                         [rightDoorWidthUnits / 2 + tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                       ]}
-                      color={dimensionColor}
+                      color={viewMode === '3D' ? '#000000' : dimensionColor}
                       lineWidth={2}
                     />
 
@@ -2661,7 +2661,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       [-doorWidthUnits / 2, extensionStart, doorThicknessUnits / 2 + 0.001],
                       [-doorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                     ]}
-                    color={dimensionColor}
+                    color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={1}
                   />
 
@@ -2674,7 +2674,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       [doorWidthUnits / 2, extensionStart, doorThicknessUnits / 2 + 0.001],
                       [doorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                     ]}
-                    color={dimensionColor}
+                    color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={1}
                   />
 
@@ -2687,7 +2687,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       [-doorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001],
                       [doorWidthUnits / 2, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                     ]}
-                    color={dimensionColor}
+                    color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={2}
                   />
 
@@ -2700,7 +2700,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       [-doorWidthUnits / 2 - tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001],
                       [-doorWidthUnits / 2 + tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                     ]}
-                    color={dimensionColor}
+                    color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={2}
                   />
 
@@ -2713,7 +2713,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                       [doorWidthUnits / 2 - tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001],
                       [doorWidthUnits / 2 + tickSize, dimensionLinePos, doorThicknessUnits / 2 + 0.001]
                     ]}
-                    color={dimensionColor}
+                    color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={2}
                   />
 
