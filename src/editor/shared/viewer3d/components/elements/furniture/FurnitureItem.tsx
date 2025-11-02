@@ -1171,7 +1171,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       조정후: furnitureWidthMm,
       zone: placedModule.zone,
       서라운드타입: spaceInfo.surroundType,
-      바깥쪽끝: isNoSurroundFirstSlot || isNoSurroundLastSlot || isSurroundDroppedEdgeSlot
+      바깥쪽끝: isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot || isSurroundDroppedEdgeSlot,
+      isNoSurroundFirstSlot,
+      isNoSurroundLastSlot,
+      isNoSurroundDualLastSlot,
+      widthReduced: true
     });
   }
 
@@ -1384,9 +1388,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           positionAdjustmentForEndPanel = droppedPosition === 'left'
             ? (END_PANEL_THICKNESS / 2) * 0.01  // 왼쪽 단내림: 오른쪽으로 9mm
             : -(END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽 단내림: 왼쪽으로 9mm
+          console.log('🟢 [듀얼장 첫슬롯] 위치 조정:', {
+            zone: placedModule.zone,
+            droppedPosition,
+            positionAdjustmentForEndPanel,
+            widthReduced,
+            isNoSurroundFirstSlot
+          });
         } else {
           // 메인구간 또는 단내림 없음: 첫 슬롯 = 왼쪽 끝, 오른쪽으로 이동
           positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+          console.log('🟢 [듀얼장 첫슬롯 메인] 위치 조정:', {
+            positionAdjustmentForEndPanel,
+            widthReduced,
+            isNoSurroundFirstSlot
+          });
         }
       } else {
         // 서라운드 모드: 위치 조정 없음
@@ -1403,9 +1419,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           positionAdjustmentForEndPanel = droppedPosition === 'left'
             ? (END_PANEL_THICKNESS / 2) * 0.01  // 왼쪽 단내림: 오른쪽으로 9mm
             : -(END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽 단내림: 왼쪽으로 9mm
+          console.log('🟢 [듀얼장 마지막슬롯] 위치 조정:', {
+            zone: placedModule.zone,
+            droppedPosition,
+            positionAdjustmentForEndPanel,
+            widthReduced,
+            isNoSurroundLastSlot,
+            isNoSurroundDualLastSlot
+          });
         } else {
           // 메인구간 또는 단내림 없음: 마지막 슬롯 = 오른쪽 끝, 왼쪽으로 이동
           positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+          console.log('🟢 [듀얼장 마지막슬롯 메인] 위치 조정:', {
+            positionAdjustmentForEndPanel,
+            widthReduced,
+            isNoSurroundLastSlot,
+            isNoSurroundDualLastSlot
+          });
         }
       } else {
         // 서라운드 모드: 위치 조정 없음
