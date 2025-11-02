@@ -1122,18 +1122,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                                    return isLastSlot;
                                  })();
 
-  // 듀얼 가구가 마지막 슬롯에 있는 경우
+  // 듀얼 가구가 전체 공간의 맨 마지막 슬롯에 있는 경우 (바깥쪽 끝)
   const isNoSurroundDualLastSlot = spaceInfo.surroundType === 'no-surround' &&
                                     ((spaceInfo.installType === 'freestanding') ||
                                      (isSemiStanding && !hasRightWall)) && // 세미스탠딩에서 오른쪽 벽이 없는 경우
                                     isDualFurniture &&
                                     (() => {
-                                      // 단내림이 있으면 zone별 마지막에서 두번째 슬롯 확인
+                                      // 단내림이 있으면 dropped zone의 마지막에서 두번째 슬롯만 체크 (전체 공간의 바깥쪽 끝)
                                       if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
-                                        const targetZone = placedModule.zone === 'dropped' ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
-                                        const localIndex = localSlotIndex ?? placedModule.slotIndex;
-                                        const zoneColumnCount = targetZone?.columnCount ?? indexing.columnCount;
-                                        return localIndex === zoneColumnCount - 2;
+                                        if (placedModule.zone === 'dropped' && zoneSlotInfo.dropped) {
+                                          const localIndex = localSlotIndex ?? placedModule.slotIndex;
+                                          const zoneColumnCount = zoneSlotInfo.dropped.columnCount ?? indexing.columnCount;
+                                          return localIndex === zoneColumnCount - 2;
+                                        }
+                                        // normal zone은 전체 공간의 바깥쪽 끝이 아니므로 false
+                                        return false;
                                       }
                                       // 단내림이 없으면 전체 마지막에서 두번째 슬롯
                                       return normalizedSlotIndex === indexing.columnCount - 2;
