@@ -78,52 +78,77 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
 
   // 3D 모드: 실제 환기캡 모델
   if (is3DMode) {
+    const capDepth = mmToThreeUnits(thickness);
+    const rimThickness = mmToThreeUnits(2);
+
     return (
       <group position={position}>
-        {/* 메인 원형 커버 - 백패널에 수직으로 붙도록 X축으로 90도 회전 */}
+        {/* 외부 테두리 링 */}
         <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[outerRadius, outerRadius, mmToThreeUnits(thickness), 32]} />
+          <ringGeometry args={[outerRadius - rimThickness, outerRadius, 32]} />
           <meshStandardMaterial
-            color="#e0e0e0"
-            metalness={0.3}
+            color="#ffffff"
+            metalness={0.6}
+            roughness={0.3}
+          />
+        </mesh>
+
+        {/* 메인 베이스 (얇은 원형 플레이트) */}
+        <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, -capDepth / 2, 0]}>
+          <cylinderGeometry args={[outerRadius - rimThickness, outerRadius - rimThickness, rimThickness, 32]} />
+          <meshStandardMaterial
+            color="#f5f5f5"
+            metalness={0.5}
             roughness={0.4}
           />
         </mesh>
 
-        {/* 통풍구 슬릿 (8개) - 백패널에 수직 */}
-        {Array.from({ length: 8 }).map((_, i) => {
-          const angle = (i / 8) * Math.PI * 2;
-          const slitRadius = outerRadius * 0.6;
-          const slitX = Math.cos(angle) * slitRadius;
-          const slitZ = Math.sin(angle) * slitRadius;
-          const slitWidth = mmToThreeUnits(3);
-          const slitLength = outerRadius * 0.4;
+        {/* 루버 (가로 통풍구) - 여러 줄 */}
+        {Array.from({ length: 6 }).map((_, i) => {
+          const louverHeight = (i - 2.5) * mmToThreeUnits(12);
+          const louverWidth = outerRadius * 1.6;
+          const louverDepth = mmToThreeUnits(2);
+          const louverThickness = mmToThreeUnits(1);
 
           return (
             <mesh
               key={i}
-              position={[slitX, mmToThreeUnits(thickness) / 2 + 0.001, slitZ]}
-              rotation={[Math.PI / 2, 0, angle]}
+              position={[0, louverDepth / 2, louverHeight]}
+              rotation={[Math.PI / 6, 0, 0]}
             >
-              <boxGeometry args={[slitLength, slitWidth, mmToThreeUnits(1)]} />
+              <boxGeometry args={[louverWidth, louverDepth, louverThickness]} />
               <meshStandardMaterial
-                color="#333333"
-                metalness={0.1}
-                roughness={0.8}
+                color="#e8e8e8"
+                metalness={0.5}
+                roughness={0.4}
               />
             </mesh>
           );
         })}
 
-        {/* 중앙 허브 - 백패널에 수직 */}
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[outerRadius * 0.15, outerRadius * 0.15, mmToThreeUnits(thickness + 2), 16]} />
-          <meshStandardMaterial
-            color="#d0d0d0"
-            metalness={0.4}
-            roughness={0.3}
-          />
-        </mesh>
+        {/* 고정 나사 구멍 (4개) */}
+        {Array.from({ length: 4 }).map((_, i) => {
+          const angle = (i / 4) * Math.PI * 2 + Math.PI / 4;
+          const screwRadius = outerRadius * 0.85;
+          const screwX = Math.cos(angle) * screwRadius;
+          const screwZ = Math.sin(angle) * screwRadius;
+          const screwHoleRadius = mmToThreeUnits(3);
+
+          return (
+            <mesh
+              key={`screw-${i}`}
+              position={[screwX, 0, screwZ]}
+              rotation={[Math.PI / 2, 0, 0]}
+            >
+              <cylinderGeometry args={[screwHoleRadius, screwHoleRadius, rimThickness * 2, 8]} />
+              <meshStandardMaterial
+                color="#999999"
+                metalness={0.7}
+                roughness={0.2}
+              />
+            </mesh>
+          );
+        })}
       </group>
     );
   }
