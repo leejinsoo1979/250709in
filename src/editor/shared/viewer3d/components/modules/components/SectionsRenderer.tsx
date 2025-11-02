@@ -725,27 +725,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           {showDimensions && showDimensionsText && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && index === 0 && (
             <group>
               {/* 하단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
-              {viewMode === '3D' && (
-                <Text
-                  position={[
-                    -innerWidth/2 * 0.3 - 0.8 + 0.01, 
-                    -height/2 + basicThickness/2 - 0.01, 
-                    depth/2 + 0.1 - 0.01
-                  ]}
-                  fontSize={baseFontSize}
-                  color="rgba(0, 0, 0, 0.3)"
-                  anchorX="center"
-                  anchorY="middle"
-                  rotation={[0, 0, Math.PI / 2]}
-                  renderOrder={998}
-                >
-                  {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
-                </Text>
-              )}
               <Text
                 position={[
-                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
-                  -height/2 + basicThickness/2, 
+                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
+                  -height/2 + basicThickness/2,
                   viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0
                 ]}
                 fontSize={baseFontSize}
@@ -793,29 +776,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           ) && (
             <group>
               {/* 상단 프레임 두께 텍스트 - 수직선 좌측에 표시 */}
-              {viewMode === '3D' && (
-                <Text
-                  position={[
-                    -innerWidth/2 * 0.3 - 0.8 + 0.01, 
-                    height/2 - basicThickness/2 - 0.01, 
-                    depth/2 + 0.1 - 0.01
-                  ]}
-                  fontSize={baseFontSize}
-                  color="rgba(0, 0, 0, 0.3)"
-                  anchorX="center"
-                  anchorY="middle"
-                  rotation={[0, 0, Math.PI / 2]}
-                  renderOrder={998}
-                >
-                  {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
-                </Text>
-              )}
               <Text
                 position={[
-                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5, 
-                  height/2 - basicThickness/2, 
-                  viewMode === '3D' 
-                    ? depth/2 + 0.1 
+                  viewMode === '3D' ? -innerWidth/2 * 0.3 - 0.8 : -innerWidth/2 * 0.3 - 0.5,
+                  height/2 - basicThickness/2,
+                  viewMode === '3D'
+                    ? depth/2 + 0.1
                     : depth/2 + 1.0
                 ]}
                 fontSize={baseFontSize}

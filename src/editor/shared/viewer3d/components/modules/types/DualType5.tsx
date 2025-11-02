@@ -366,23 +366,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 {index < allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                   <group>
                     {/* 구분 패널 두께 텍스트 */}
-                    {viewMode === '3D' && (
-                      <Text
-                        position={[
-                          -leftWidth/2 * 0.3 - 0.8 + 0.01,
-                          sectionCenterY + sectionHeight/2 - basicThickness/2 - 0.01,
-                          leftDepth/2 + 0.1 - 0.002
-                        ]}
-                        fontSize={baseFontSize}
-                        color="rgba(0, 0, 0, 0.3)"
-                        anchorX="center"
-                        anchorY="middle"
-                        rotation={[0, 0, Math.PI / 2]}
-                        renderOrder={998}
-                      >
-                        {Math.round(basicThickness * 100)}
-                      </Text>
-                    )}
+                    
                     <Text
                       position={[
                         getDimensionXPosition(leftWidth, true, leftXOffset),
@@ -428,23 +412,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 {index === allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                   <group>
                     {/* 상판 두께 텍스트 */}
-                    {viewMode === '3D' && (
-                      <Text
-                        position={[
-                          -leftWidth/2 * 0.3 - 0.8 + 0.01,
-                          height/2 - basicThickness/2 - 0.01,
-                          leftDepth/2 + 0.1 - 0.01
-                        ]}
-                        fontSize={baseFontSize}
-                        color="rgba(0, 0, 0, 0.3)"
-                        anchorX="center"
-                        anchorY="middle"
-                        rotation={[0, 0, Math.PI / 2]}
-                        renderOrder={998}
-                      >
-                        {Math.round(basicThickness * 100)}
-                      </Text>
-                    )}
+                    
                     <Text
                       position={[
                         getDimensionXPosition(leftWidth, true, leftXOffset),
@@ -493,23 +461,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   return (
                     <group>
                       {/* 서랍 섹션 내경 높이 텍스트 */}
-                      {viewMode === '3D' && (
-                        <Text
-                          position={[
-                            -leftWidth/2 * 0.3 - 0.8 + 0.01,
-                            sectionCenterY - 0.01,
-                            leftDepth/2 + 0.1 - 0.01
-                          ]}
-                          fontSize={0.45}
-                          color="rgba(0, 0, 0, 0.3)"
-                          anchorX="center"
-                          anchorY="middle"
-                          rotation={[0, 0, Math.PI / 2]}
-                          renderOrder={998}
-                        >
-                          {Math.round(drawerInternalHeight * 100)}
-                        </Text>
-                      )}
+                      
                       <Text
                         position={[
                           getDimensionXPosition(leftWidth, true, leftXOffset),
@@ -556,23 +508,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 {index === 0 && section.type === 'drawer' && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                   <group>
                     {/* 하부 프레임 두께 텍스트 */}
-                    {viewMode === '3D' && (
-                      <Text
-                        position={[
-                          -leftWidth/2 * 0.3 - 0.8 + 0.01,
-                          -height/2 + basicThickness/2 - 0.01,
-                          leftDepth/2 + 0.1 - 0.01
-                        ]}
-                        fontSize={baseFontSize}
-                        color="rgba(0, 0, 0, 0.3)"
-                        anchorX="center"
-                        anchorY="middle"
-                        rotation={[0, 0, Math.PI / 2]}
-                        renderOrder={998}
-                      >
-                        {Math.round(basicThickness * 100)}
-                      </Text>
-                    )}
+                    
                     <Text
                       position={[
                         getDimensionXPosition(leftWidth, true, leftXOffset),
@@ -730,23 +666,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 {index === 0 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                   <>
                     {/* 하부 프레임 두께 텍스트 */}
-                    {viewMode === '3D' && (
-                      <Text
-                        position={[
-                          -rightWidth/2 * 0.3 - 0.8 + 0.01,
-                          -height/2 + basicThickness/2 - 0.01,
-                          rightShelfZOffset + rightAdjustedDepthForShelves/2 - 0.01
-                        ]}
-                        fontSize={baseFontSize}
-                        color="rgba(0, 0, 0, 0.3)"
-                        anchorX="center"
-                        anchorY="middle"
-                        rotation={[0, 0, Math.PI / 2]}
-                        renderOrder={998}
-                      >
-                        {Math.round(basicThickness * 100)}
-                      </Text>
-                    )}
+                    
                     <Text
                       position={[
                         getDimensionXPosition(rightWidth, true, rightXOffset),
@@ -796,23 +716,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 {index === allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
                   <>
                     {/* 상판 두께 텍스트 */}
-                    {viewMode === '3D' && (
-                      <Text
-                        position={[
-                          -rightWidth/2 * 0.3 - 0.8 + 0.01,
-                          height/2 - basicThickness/2 - 0.01,
-                          rightShelfZOffset + rightAdjustedDepthForShelves/2 - 0.01
-                        ]}
-                        fontSize={baseFontSize}
-                        color="rgba(0, 0, 0, 0.3)"
-                        anchorX="center"
-                        anchorY="middle"
-                        rotation={[0, 0, Math.PI / 2]}
-                        renderOrder={998}
-                      >
-                        {Math.round(basicThickness * 100)}
-                      </Text>
-                    )}
+                    
                     <Text
                       position={[
                         getDimensionXPosition(rightWidth, true, rightXOffset), 
@@ -868,22 +772,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                     />
 
                     {/* 가로 내경 텍스트 - 가이드선 아래 */}
-                    {viewMode === '3D' && (
-                      <Text
-                        position={[
-                          0 + 0.01,
-                          sectionCenterY + sectionHeight/2 - basicThickness - 1.2 - 0.01,
-                          rightShelfZOffset + rightAdjustedDepthForShelves/2 - 0.01
-                        ]}
-                        fontSize={baseFontSize}
-                        color="rgba(0, 0, 0, 0.3)"
-                        anchorX="center"
-                        anchorY="top"
-                        renderOrder={998}
-                      >
-                        {Math.round(rightWidth * 100)}
-                      </Text>
-                    )}
+                    
                     <Text
                       position={[
                         0,

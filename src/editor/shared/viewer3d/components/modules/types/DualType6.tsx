@@ -201,23 +201,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 {section.type === 'drawer' ? (
                   <>
                     {/* 서랍 섹션 전체 높이 텍스트 - 중간 가로선반 하단까지 */}
-                    {viewMode === '3D' && (
-                      <Text
-                        position={[
-                          -leftWidth/2 * 0.3 - 0.8 + 0.01, 
-                          (sectionCenterY - sectionHeight/2 + (-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2)) / 2 - 0.01,
-                          adjustedDepthForShelves/2 + 0.1 - 0.01
-                        ]}
-                        fontSize={baseFontSize}
-                        color="rgba(0, 0, 0, 0.3)"
-                        anchorX="center"
-                        anchorY="middle"
-                        rotation={[0, 0, Math.PI / 2]}
-                        renderOrder={998}
-                      >
-                        {Math.round(threeUnitsToMm(((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2) - (sectionCenterY - sectionHeight/2))))}
-                      </Text>
-                    )}
+                    
                     <Text
                       position={[
                         viewMode === '3D' ? -leftWidth/2 * 0.3 - 0.8 : -leftWidth/2 * 0.3 - 0.5, 

@@ -411,25 +411,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 
                 shelfThicknessElements.push(
                   <group key={`shelf-thickness-${i}`}>
-                    {/* 선반 두께 치수 텍스트 - 수직선 좌측에 표시 (3D 그림자) */}
-                    {viewMode === '3D' && (
-                      <Text
-                        position={[
-                          -innerWidth/2 * 0.3 - 0.8 + 0.01,
-                          shelfY - 0.01 + dimensionYOffset,
-                          (furnitureId && furnitureId.includes('-right-section') ? zOffset + depth/2 : depth/2 + 0.1) - 0.01
-                        ]}
-                        fontSize={baseFontSize}
-                        color="rgba(0, 0, 0, 0.3)"
-                        anchorX="center"
-                        anchorY="middle"
-                        rotation={[0, 0, Math.PI / 2]}
-                        renderOrder={998}
-                        depthTest={false}
-                      >
-                        {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
-                      </Text>
-                    )}
+                    {/* 선반 두께 치수 텍스트 - 수직선 좌측에 표시 */}
                     <Text
                       position={[
                         getDimensionXPosition(true),
@@ -502,25 +484,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 });
                 shelfThicknessElements.push(
                 <group key="top-frame-thickness">
-                  {/* 상단 프레임 두께 치수 텍스트 - 수직선 좌측에 표시 (3D 그림자) */}
-                  {viewMode === '3D' && (
-                    <Text
-                      position={[
-                        -innerWidth/2 * 0.3 - 0.8 + 0.01,
-                        topFrameY - 0.01 + dimensionYOffset,
-                        depth/2 + 0.1 - 0.01
-                      ]}
-                      fontSize={baseFontSize}
-                      color="rgba(0, 0, 0, 0.3)"
-                      anchorX="center"
-                      anchorY="middle"
-                      rotation={[0, 0, Math.PI / 2]}
-                      renderOrder={998}
-                      depthTest={false}
-                    >
-                      {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
-                    </Text>
-                  )}
+                  {/* 상단 프레임 두께 치수 텍스트 - 수직선 좌측에 표시 */}
                   <Text
                     position={[
                       getDimensionXPosition(true),

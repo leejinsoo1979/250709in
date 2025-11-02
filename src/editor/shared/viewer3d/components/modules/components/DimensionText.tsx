@@ -107,51 +107,28 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   const displayText = `${prefix}${formattedValue}`;
   
   return (
-    <group>
-      {/* 3D 모드에서 그림자 효과 */}
-      {showShadow && viewMode === '3D' && (
-        <Text
-          renderOrder={998}
-          depthTest={false}
-          position={[
-            position[0] + shadowOffset[0],
-            position[1] + shadowOffset[1],
-            position[2] + shadowOffset[2]
-          ]}
-          fontSize={fontSize}
-          color="rgba(0, 0, 0, 0.3)"
-          anchorX={anchorX}
-          anchorY={anchorY}
-          rotation={rotation}
-        >
-          {displayText}
-        </Text>
-      )}
-      
-      {/* 메인 텍스트 */}
-      <Text
-        renderOrder={999}
-        depthTest={false}
-        position={position}
-        fontSize={fontSize}
-        color={textColor}
-        anchorX={anchorX}
-        anchorY={anchorY}
-        rotation={rotation}
-        onPointerOver={(e) => {
-          e.stopPropagation();
-          setIsHovered(true);
-          document.body.style.cursor = 'pointer';
-        }}
-        onPointerOut={(e) => {
-          e.stopPropagation();
-          setIsHovered(false);
-          document.body.style.cursor = 'default';
-        }}
-      >
-        {displayText}
-      </Text>
-    </group>
+    <Text
+      renderOrder={999}
+      depthTest={false}
+      position={position}
+      fontSize={fontSize}
+      color={textColor}
+      anchorX={anchorX}
+      anchorY={anchorY}
+      rotation={rotation}
+      onPointerOver={(e) => {
+        e.stopPropagation();
+        setIsHovered(true);
+        document.body.style.cursor = 'pointer';
+      }}
+      onPointerOut={(e) => {
+        e.stopPropagation();
+        setIsHovered(false);
+        document.body.style.cursor = 'default';
+      }}
+    >
+      {displayText}
+    </Text>
   );
 };
 
