@@ -949,58 +949,49 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       textureUrl={textureUrl}
                     />
 
-                    {/* 상부 섹션 백패널 */}
-                    <BoxWithEdges
-                      key={`upper-back-${getPanelMaterial('(상)백패널').uuid}`}
-                      args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), upperBackPanelHeight, backPanelThickness]}
-                      position={[0, upperBackPanelY, upperBackPanelZ]}
-                      material={getPanelMaterial('(상)백패널')}
-                      renderMode={renderMode}
-                      isDragging={isDragging}
-                      isBackPanel={true}
-                      isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
-                      panelName="(상)백패널"
-                      panelGrainDirections={panelGrainDirections}
-                      furnitureId={placedFurnitureId}
-                      textureUrl={textureUrl}
-                    />
+                    {/* 상부 섹션 백패널과 환기캡을 하나의 그룹으로 */}
+                    <group position={[0, upperBackPanelY, upperBackPanelZ]}>
+                      {/* 상부 섹션 백패널 - 그룹 중심 기준 상대 위치 */}
+                      <BoxWithEdges
+                        key={`upper-back-${getPanelMaterial('(상)백패널').uuid}`}
+                        args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), upperBackPanelHeight, backPanelThickness]}
+                        position={[0, 0, 0]}
+                        material={getPanelMaterial('(상)백패널')}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        isBackPanel={true}
+                        isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                        panelName="(상)백패널"
+                        panelGrainDirections={panelGrainDirections}
+                        furnitureId={placedFurnitureId}
+                        textureUrl={textureUrl}
+                      />
 
-                    {/* 환기캡 - 상부 백패널과 함께 이동 */}
-                    {!isDragging && (() => {
-                      const ventCapZ = upperBackPanelZ + backPanelThickness/2 + 0.01;
-                      console.log('🌀 환기캡 위치 (상부 섹션):', {
-                        upperSectionDepthMm: upperSectionDepth / 0.01,
-                        upperDepthDiffMm: upperDepthDiff / 0.01,
-                        upperZOffsetMm: upperZOffset / 0.01,
-                        upperBackPanelZMm: upperBackPanelZ / 0.01,
-                        backPanelThicknessMm: backPanelThickness / 0.01,
-                        ventCapZMm: ventCapZ / 0.01,
-                        upperBackPanelY: upperBackPanelY / 0.01
-                      });
-
-                      return (
+                      {/* 환기캡 - 상부 백패널 그룹 내 상대 위치 */}
+                      {!isDragging && (
                         <VentilationCap
                           position={[
                             innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
-                            upperBackPanelY,  // 상부 백패널 Y 위치와 동일
-                            ventCapZ  // 백패널 앞쪽 표면에 붙음
+                            0,  // 백패널 Y 중심 기준
+                            backPanelThickness/2 + 0.01  // 백패널 앞쪽 표면에 붙음
                           ]}
                           diameter={98}
                           renderMode={renderMode}
                         />
-                      );
-                    })()}
+                      )}
+                    </group>
                   </>
                 );
               })()}
             </>
           ) : (
-            <>
-              {/* 단일 섹션: 기존 통짜 백패널 */}
+            // 단일 섹션: 백패널과 환기캡을 하나의 그룹으로
+            <group position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}>
+              {/* 단일 섹션 백패널 - 그룹 중심 기준 상대 위치 */}
               <BoxWithEdges
                 key={`back-panel-${getPanelMaterial('백패널').uuid}`}
                 args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), innerHeight + mmToThreeUnits(backPanelConfig.heightExtension), backPanelThickness]}
-                position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
+                position={[0, 0, 0]}
                 material={getPanelMaterial('백패널')}
                 renderMode={renderMode}
                 isDragging={isDragging}
@@ -1011,19 +1002,19 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 textureUrl={textureUrl}
               />
 
-              {/* 환기캡 - 백패널과 함께 이동 */}
+              {/* 환기캡 - 백패널 그룹 내 상대 위치 */}
               {!isDragging && (
                 <VentilationCap
                   position={[
                     innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
-                    0,  // 백패널 Y 위치와 동일
-                    -depth/2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset) + 0.01  // 백패널 앞쪽 표면에 붙음
+                    0,  // 백패널 Y 중심 기준
+                    backPanelThickness/2 + 0.01  // 백패널 앞쪽 표면에 붙음
                   ]}
                   diameter={98}
                   renderMode={renderMode}
                 />
               )}
-            </>
+            </group>
           )}
         </>
         )}
