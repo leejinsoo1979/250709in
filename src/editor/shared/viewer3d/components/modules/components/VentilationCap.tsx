@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import * as THREE from 'three';
 import { Line } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
@@ -54,9 +54,9 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   const outerCirclePoints = generateCirclePoints(outerRadius);
   const innerCirclePoints = generateCirclePoints(innerRadius);
 
-  // 2D 정면뷰에서만 표시
+  // 2D 정면뷰 체크
   const isFrontView = viewMode === '2D' && view2DDirection === 'front';
-  const shouldRender = isFrontView;
+  const is3DMode = viewMode === '3D';
 
   console.log('🌀 VentilationCap 렌더링:', {
     position,
@@ -66,15 +66,69 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
     crossLineLength,
     viewMode,
     view2DDirection,
-    shouldRender,
+    is3DMode,
+    isFrontView,
     renderMode
   });
 
   // 탑뷰, 측면뷰에서는 렌더링하지 않음
-  if (!shouldRender) {
+  if (!is3DMode && !isFrontView) {
     return null;
   }
 
+  // 3D 모드: 실제 환기캡 모델
+  if (is3DMode) {
+    return (
+      <group position={position}>
+        {/* 메인 원형 커버 */}
+        <mesh rotation={[0, 0, 0]}>
+          <cylinderGeometry args={[outerRadius, outerRadius, mmToThreeUnits(thickness), 32]} />
+          <meshStandardMaterial
+            color="#e0e0e0"
+            metalness={0.3}
+            roughness={0.4}
+          />
+        </mesh>
+
+        {/* 통풍구 슬릿 (8개) */}
+        {Array.from({ length: 8 }).map((_, i) => {
+          const angle = (i / 8) * Math.PI * 2;
+          const slitRadius = outerRadius * 0.6;
+          const slitX = Math.cos(angle) * slitRadius;
+          const slitY = Math.sin(angle) * slitRadius;
+          const slitWidth = mmToThreeUnits(3);
+          const slitLength = outerRadius * 0.4;
+
+          return (
+            <mesh
+              key={i}
+              position={[slitX, slitY, mmToThreeUnits(thickness) / 2 + 0.001]}
+              rotation={[0, 0, angle]}
+            >
+              <boxGeometry args={[slitLength, slitWidth, mmToThreeUnits(1)]} />
+              <meshStandardMaterial
+                color="#333333"
+                metalness={0.1}
+                roughness={0.8}
+              />
+            </mesh>
+          );
+        })}
+
+        {/* 중앙 허브 */}
+        <mesh position={[0, 0, 0]}>
+          <cylinderGeometry args={[outerRadius * 0.15, outerRadius * 0.15, mmToThreeUnits(thickness + 2), 16]} />
+          <meshStandardMaterial
+            color="#d0d0d0"
+            metalness={0.4}
+            roughness={0.3}
+          />
+        </mesh>
+      </group>
+    );
+  }
+
+  // 2D 모드: 도면 표시
   return (
     <group position={position}>
       {/* 외부 원 */}
