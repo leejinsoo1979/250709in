@@ -1671,7 +1671,6 @@ const Room: React.FC<RoomProps> = ({
           viewMode={viewMode}
           shadowEnabled={shadowEnabled}
           view2DTheme={view2DTheme}
-          shadowEnabled={shadowEnabled}
         />
       )}
       

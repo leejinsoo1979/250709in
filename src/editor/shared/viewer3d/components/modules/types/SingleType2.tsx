@@ -686,9 +686,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
-              doorTopGap={doorTopGap}
-              doorBottomGap={doorBottomGap}
-              furnitureId={placedFurnitureId}
+          doorTopGap={doorTopGap}
+          doorBottomGap={doorBottomGap}
             />
           ) : (
             // 분할 모드: 상부/하부 섹션별 도어
@@ -714,7 +713,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 doorBottomGap={upperDoorBottomGap ?? 0}
                 sectionIndex={1}
                 totalSections={2}
-                furnitureId={placedFurnitureId}
               />
 
               {/* 하부 섹션 도어 */}
@@ -738,7 +736,6 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
                 sectionIndex={0}
                 totalSections={2}
-                furnitureId={placedFurnitureId}
               />
 
             </>
