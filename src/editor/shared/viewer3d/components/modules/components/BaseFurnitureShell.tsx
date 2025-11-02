@@ -796,7 +796,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
             ]}
             fontSize={baseFontSize}
-            color={dimensionColor}
+            color={viewMode === '3D' ? '#000000' : dimensionColor}
             anchorX="center"
             anchorY="middle"
             rotation={[0, 0, Math.PI / 2]}
