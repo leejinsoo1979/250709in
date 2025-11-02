@@ -4351,7 +4351,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     return (
       <group>
         {/* 탑뷰 치수선들 - 좌측면도가 아닐 때만 표시 */}
-        {viewDirection !== 'left' && (
+        {showDimensions && viewDirection !== 'left' && (
           <>
         {/* 상단 전체 폭 치수선 (상부 프레임의 가로 길이) - 외부로 이동 */}
         <group>
