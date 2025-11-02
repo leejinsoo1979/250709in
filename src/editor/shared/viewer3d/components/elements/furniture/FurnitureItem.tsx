@@ -1946,7 +1946,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       furnitureWidthMm = furnitureBounds.renderWidth;
       adjustedPosition = {
         ...adjustedPosition, // adjustedPosition 사용하여 상부장 Y 위치 보존
-        x: furnitureBounds.center + (needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0)
+        x: furnitureBounds.center + ((needsEndPanelAdjustment || widthReduced) ? positionAdjustmentForEndPanel : 0)
       };
       
       // 기둥 변경으로 인한 폭 조정이 필요한 경우 실시간 업데이트
@@ -2010,7 +2010,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       : placedModule.position.x;
     adjustedPosition = {
       ...adjustedPosition, // adjustedPosition 사용하여 상부장 Y 위치 보존
-      x: slotCenterX + (needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0)
+      x: slotCenterX + ((needsEndPanelAdjustment || widthReduced) ? positionAdjustmentForEndPanel : 0)
     };
   }
 
