@@ -11,141 +11,145 @@ interface VentilationCapProps {
   renderMode: '2d' | '3d';
 }
 
+const createCirclePoints = (radius: number, segments: number = 48): [number, number, number][] => {
+  const points: [number, number, number][] = [];
+  for (let i = 0; i <= segments; i++) {
+    const angle = (i / segments) * Math.PI * 2;
+    points.push([Math.cos(angle) * radius, Math.sin(angle) * radius, 0]);
+  }
+  return points;
+};
+
 /**
  * VentilationCap 컴포넌트
- * 환기캡 표시: 동심원 2개로 표현
- *
+ * 3D에서는 백패널과 맞닿는 흰색 타공 환기캡 모델을, 2D에서는 동일 위치에 도면용 심볼을 렌더링한다.
  * 기본 크기: 직경 98mm, 두께 9mm
  */
 export const VentilationCap: React.FC<VentilationCapProps> = ({
   position,
   diameter = 98,
   thickness = 9,
-  renderMode
+  renderMode: _renderMode
 }) => {
-  const { view2DTheme, view2DDirection } = useUIStore();
+  const { view2DDirection } = useUIStore();
   const { viewMode } = useSpace3DView();
 
   // 단위 변환 함수
   const mmToThreeUnits = (mm: number): number => mm * 0.01;
 
-  // 원 직경 (Three.js 단위)
-  const outerRadius = mmToThreeUnits(diameter) / 2;
-  const innerRadius = outerRadius * 0.95; // 내부 원은 외부 원의 95% 크기
+  const {
+    innerCirclePoints,
+    outerCirclePoints,
+    rimGeometry,
+    perforatedGeometry,
+    rimDepth,
+    faceDepth
+  } = useMemo(() => {
+    const outerRadius = mmToThreeUnits(diameter) / 2;
+    const rimDepth = mmToThreeUnits(thickness * 0.5);
+    const faceDepth = mmToThreeUnits(thickness * 0.3);
+    const recessRadius = outerRadius * 0.74;
 
-  // 십자선 길이 (150mm)
-  const crossLineLength = mmToThreeUnits(150) / 2;
+    const holeDiameterMm = 7;
+    const holeSpacingMm = 11;
+    const holeRadius = mmToThreeUnits(holeDiameterMm / 2);
+    const spacing = mmToThreeUnits(holeSpacingMm);
+    const maxSteps = Math.floor((recessRadius - holeRadius * 1.2) / spacing);
 
-  // 2D 도면용 선 색상
-  const lineColor = view2DTheme === 'light' ? '#FF00FF' : '#FF00FF'; // 마젠타(보라) 색상
+    const perforatedShape = new THREE.Shape();
+    perforatedShape.absarc(0, 0, recessRadius, 0, Math.PI * 2, false);
 
-  // 원을 그리기 위한 점 생성
-  const generateCirclePoints = (radius: number, segments: number = 64): [number, number, number][] => {
-    const points: [number, number, number][] = [];
-    for (let i = 0; i <= segments; i++) {
-      const angle = (i / segments) * Math.PI * 2;
-      const x = Math.cos(angle) * radius;
-      const y = Math.sin(angle) * radius;
-      points.push([x, y, 0]);
+    for (let ix = -maxSteps; ix <= maxSteps; ix++) {
+      for (let iy = -maxSteps; iy <= maxSteps; iy++) {
+        const offset = ix % 2 !== 0 ? spacing / 2 : 0; // 살짝 어긋난 배열로 밀집 타공 연출
+        const hx = ix * spacing;
+        const hy = iy * spacing + offset;
+        const distance = Math.sqrt(hx * hx + hy * hy);
+        if (distance + holeRadius <= recessRadius - spacing * 0.2) {
+          const holePath = new THREE.Path();
+          holePath.absarc(hx, hy, holeRadius, 0, Math.PI * 2, true);
+          perforatedShape.holes.push(holePath);
+        }
+      }
     }
-    return points;
-  };
 
-  const outerCirclePoints = generateCirclePoints(outerRadius);
-  const innerCirclePoints = generateCirclePoints(innerRadius);
+    const perforatedGeometry = new THREE.ExtrudeGeometry(perforatedShape, {
+      depth: faceDepth,
+      bevelEnabled: false
+    });
 
-  // 2D 정면뷰 체크
+    const rimShape = new THREE.Shape();
+    rimShape.absarc(0, 0, outerRadius, 0, Math.PI * 2, false);
+    const rimInnerPath = new THREE.Path();
+    rimInnerPath.absarc(0, 0, recessRadius * 0.98, 0, Math.PI * 2, true);
+    rimShape.holes.push(rimInnerPath);
+
+    const rimGeometry = new THREE.ExtrudeGeometry(rimShape, {
+      depth: rimDepth,
+      bevelEnabled: true,
+      bevelSegments: 2,
+      bevelThickness: mmToThreeUnits(0.8),
+      bevelSize: mmToThreeUnits(0.9)
+    });
+
+    const outerCirclePoints = createCirclePoints(outerRadius, 64);
+    const innerCirclePoints = createCirclePoints(recessRadius, 48);
+
+    return {
+      innerCirclePoints,
+      outerCirclePoints,
+      rimGeometry,
+      perforatedGeometry,
+      rimDepth,
+      faceDepth
+    };
+  }, [diameter, thickness]);
+
   const isFrontView = viewMode === '2D' && view2DDirection === 'front';
   const is3DMode = viewMode === '3D';
+  const requestedRenderMode = _renderMode === '2d' || _renderMode === '3d' ? _renderMode : null;
+  const renderAs3D = requestedRenderMode ? requestedRenderMode === '3d' : is3DMode;
+  const renderAs2D = requestedRenderMode ? requestedRenderMode === '2d' : (!is3DMode && isFrontView);
 
-  console.log('🌀 VentilationCap 렌더링:', {
-    position,
-    diameter,
-    thickness,
-    outerRadius,
-    crossLineLength,
-    viewMode,
-    view2DDirection,
-    is3DMode,
-    isFrontView,
-    renderMode
-  });
-
-  // 탑뷰, 측면뷰에서는 렌더링하지 않음
-  if (!is3DMode && !isFrontView) {
+  if (!renderAs3D && !renderAs2D) {
     return null;
   }
 
-  // 3D 모드: 실제 환기캡 모델
-  if (is3DMode) {
+  const faceColor = '#ffffff';
+  const rimColor = '#ffffff';
+  const lineColor = '#FF00FF';
+  const crossLineLength = mmToThreeUnits(150) / 2;
+  const liftOffset = mmToThreeUnits(0.05); // 백패널 접촉을 유지하면서 미세한 z-fighting 방지
+
+  if (renderAs3D) {
     return (
       <group position={position}>
-        {/* 메인 원형 커버 - 백패널에 수직으로 붙도록 X축으로 90도 회전 */}
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[outerRadius, outerRadius, mmToThreeUnits(thickness), 32]} />
-          <meshStandardMaterial
-            color="#e0e0e0"
-            metalness={0.3}
-            roughness={0.4}
-          />
-        </mesh>
-
-        {/* 통풍구 슬릿 (8개) - 백패널에 수직 */}
-        {Array.from({ length: 8 }).map((_, i) => {
-          const angle = (i / 8) * Math.PI * 2;
-          const slitRadius = outerRadius * 0.6;
-          const slitX = Math.cos(angle) * slitRadius;
-          const slitZ = Math.sin(angle) * slitRadius;
-          const slitWidth = mmToThreeUnits(3);
-          const slitLength = outerRadius * 0.4;
-
-          return (
-            <mesh
-              key={i}
-              position={[slitX, mmToThreeUnits(thickness) / 2 + 0.001, slitZ]}
-              rotation={[Math.PI / 2, 0, angle]}
-            >
-              <boxGeometry args={[slitLength, slitWidth, mmToThreeUnits(1)]} />
-              <meshStandardMaterial
-                color="#333333"
-                metalness={0.1}
-                roughness={0.8}
-              />
-            </mesh>
-          );
-        })}
-
-        {/* 중앙 허브 - 백패널에 수직 */}
-        <mesh rotation={[Math.PI / 2, 0, 0]}>
-          <cylinderGeometry args={[outerRadius * 0.15, outerRadius * 0.15, mmToThreeUnits(thickness + 2), 16]} />
-          <meshStandardMaterial
-            color="#d0d0d0"
-            metalness={0.4}
-            roughness={0.3}
-          />
-        </mesh>
+        <group position={[0, 0, liftOffset]}>
+          <mesh
+            geometry={rimGeometry}
+            castShadow
+            receiveShadow
+          >
+            <meshStandardMaterial color={rimColor} metalness={0.05} roughness={0.2} />
+          </mesh>
+          <mesh
+            geometry={perforatedGeometry}
+            position={[0, 0, rimDepth - faceDepth]}
+            castShadow
+            receiveShadow
+          >
+            <meshStandardMaterial color={faceColor} metalness={0.05} roughness={0.35} />
+          </mesh>
+        </group>
       </group>
     );
   }
 
-  // 2D 모드: 도면 표시
+  // 2D 정면 도면 표현: 기존 도면 심볼 (동심원 + 십자선)
   return (
     <group position={position}>
-      {/* 외부 원 */}
-      <Line
-        points={outerCirclePoints}
-        color={lineColor}
-        lineWidth={1}
-      />
-
-      {/* 내부 원 */}
-      <Line
-        points={innerCirclePoints}
-        color={lineColor}
-        lineWidth={1}
-      />
-
-      {/* 중심선 - 가로 (150mm) */}
+      <Line points={outerCirclePoints} color={lineColor} lineWidth={1} />
+      <Line points={innerCirclePoints} color={lineColor} lineWidth={1} />
       <Line
         points={[
           [-crossLineLength, 0, 0],
@@ -154,8 +158,6 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
         color={lineColor}
         lineWidth={0.5}
       />
-
-      {/* 중심선 - 세로 (150mm) */}
       <Line
         points={[
           [0, -crossLineLength, 0],
