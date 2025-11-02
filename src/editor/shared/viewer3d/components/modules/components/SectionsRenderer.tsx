@@ -556,9 +556,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   actualInternalHeight: Math.round(actualInternalHeight)
                 });
 
-                // 현재 섹션의 hover 상태에 따른 색상
+                // 현재 섹션의 hover 상태에 따른 색상 (3D에서는 검정색, 호버 시 테마색 발광)
                 const isHovered = hoveredSectionIndex === index;
-                const currentColor = isHovered ? themeColor : dimensionColor;
+                const baseColor = viewMode === '3D' ? '#000000' : dimensionColor;
+                const currentColor = isHovered ? themeColor : baseColor;
 
                 // 안전선반 위 칸의 내경 계산 (안전선반이 있는 경우)
                 let topCompartmentHeight = null;
@@ -645,11 +646,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         <>
                           <mesh position={[-innerWidth/2 * 0.3, topY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                             <sphereGeometry args={[0.05, 8, 8]} />
-                            <meshBasicMaterial color={currentColor} />
+                            <meshBasicMaterial
+                              color={currentColor}
+                              emissive={isHovered && viewMode === '3D' ? themeColor : '#000000'}
+                              emissiveIntensity={isHovered && viewMode === '3D' ? 0.8 : 0}
+                            />
                           </mesh>
                           <mesh position={[-innerWidth/2 * 0.3, bottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                             <sphereGeometry args={[0.05, 8, 8]} />
-                            <meshBasicMaterial color={currentColor} />
+                            <meshBasicMaterial
+                              color={currentColor}
+                              emissive={isHovered && viewMode === '3D' ? themeColor : '#000000'}
+                              emissiveIntensity={isHovered && viewMode === '3D' ? 0.8 : 0}
+                            />
                           </mesh>
                         </>
                       )}
@@ -662,7 +671,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                           const topCenterY = (topCompartmentTopY + topCompartmentBottomY) / 2;
                           const topSectionIndex = `${index}-top`;
                           const isTopHovered = hoveredSectionIndex === topSectionIndex;
-                          const topCurrentColor = isTopHovered ? themeColor : dimensionColor;
+                          const topBaseColor = viewMode === '3D' ? '#000000' : dimensionColor;
+                          const topCurrentColor = isTopHovered ? themeColor : topBaseColor;
 
                           return (
                             <>
@@ -719,11 +729,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                                 <>
                                   <mesh position={[-innerWidth/2 * 0.3, topCompartmentTopY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                                     <sphereGeometry args={[0.05, 8, 8]} />
-                                    <meshBasicMaterial color={topCurrentColor} />
+                                    <meshBasicMaterial
+                                      color={topCurrentColor}
+                                      emissive={isTopHovered && viewMode === '3D' ? themeColor : '#000000'}
+                                      emissiveIntensity={isTopHovered && viewMode === '3D' ? 0.8 : 0}
+                                    />
                                   </mesh>
                                   <mesh position={[-innerWidth/2 * 0.3, topCompartmentBottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]}>
                                     <sphereGeometry args={[0.05, 8, 8]} />
-                                    <meshBasicMaterial color={topCurrentColor} />
+                                    <meshBasicMaterial
+                                      color={topCurrentColor}
+                                      emissive={isTopHovered && viewMode === '3D' ? themeColor : '#000000'}
+                                      emissiveIntensity={isTopHovered && viewMode === '3D' ? 0.8 : 0}
+                                    />
                                   </mesh>
                                 </>
                               )}
