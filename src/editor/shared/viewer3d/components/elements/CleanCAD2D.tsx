@@ -209,6 +209,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
 
+  const leftmostModules = useMemo(() => {
+    if (!showDimensions || placedModules.length === 0) return [];
+    const [firstModule] = placedModules;
+    if (!firstModule) return [];
+
+    const leftmostModule = placedModules.reduce((min, module) =>
+      module.position.x < min.position.x ? module : min,
+      firstModule
+    );
+
+    return [leftmostModule];
+  }, [showDimensions, placedModules]);
+
   // 실제 뷰 방향 결정
   const currentViewDirection = viewDirection || view2DDirection;
 
@@ -3251,17 +3264,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </>
             );
           })()}
-        </group>
+        </group>}
 
 
         {/* 가구별 치수선 (좌측뷰에서는 깊이 치수) - 좌측뷰에서는 가장 왼쪽 가구만 표시 */}
-        {showDimensions && placedModules.length > 0 && (() => {
-          // 가장 왼쪽 가구 찾기 (position.x가 가장 작은 가구)
-          const leftmost = placedModules.reduce((min, module) =>
-            module.position.x < min.position.x ? module : min
-          );
-          return [leftmost];
-        })().map((module, index) => {
+        {showDimensions && leftmostModules.map((module, index) => {
+          // 좌측뷰에서는 가장 왼쪽 가구만 대상으로 깊이 치수 표시
           const moduleData = getModuleById(
             module.moduleId,
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
@@ -4177,8 +4185,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               </>
             );
           })()}
-        </group>
-        
+        </group>}
+
         {/* 가구별 치수선 (우측뷰에서는 깊이 치수) - 우측뷰에서는 가장 오른쪽 가구만 표시 */}
         {showDimensions && placedModules.length > 0 && (() => {
           // 가장 오른쪽 가구 찾기 (position.x가 가장 큰 가구)
@@ -4542,8 +4550,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               );
             }
           })()}
-        </group>
-        
+        </group>}
+
         {/* 우측 프레임 폭 치수선 - 외부로 이동 */}
         {showDimensions && <group>
           {(() => {
@@ -4654,8 +4662,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               );
             }
           })()}
-        </group>
-        
+        </group>}
+
         {/* 단내림 구간 치수선 - 탑뷰 */}
         {showDimensions && spaceInfo.droppedCeiling?.enabled && (
           <group>
