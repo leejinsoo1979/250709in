@@ -264,7 +264,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                             viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
                           ]}
                           fontSize={baseFontSize}
-                          color={dimensionColor}
+                          color={viewMode === '3D' ? '#000000' : dimensionColor}
                           anchorX="center"
                           anchorY="middle"
                           rotation={[0, 0, Math.PI / 2]}
@@ -280,7 +280,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                             [-innerWidth/2 * 0.3, lowerTopPanelY - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
                             [-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
                           ]}
-                          color={dimensionColor}
+                          color={viewMode === '3D' ? '#000000' : dimensionColor}
                           lineWidth={1}
                         />
                         {/* 하부 섹션 상판 수직선 양끝 점 - 측면뷰에서 숨김 */}
@@ -288,11 +288,11 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                           <>
                             <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
                               <sphereGeometry args={[0.05, 8, 8]} />
-                              <meshBasicMaterial color={dimensionColor} />
+                              <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                             </mesh>
                             <mesh position={[-innerWidth/2 * 0.3, lowerTopPanelY + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
                               <sphereGeometry args={[0.05, 8, 8]} />
-                              <meshBasicMaterial color={dimensionColor} />
+                              <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
                             </mesh>
                           </>
                         )}
@@ -359,7 +359,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
             ]}
             fontSize={baseFontSize}
-            color={dimensionColor}
+            color={viewMode === '3D' ? '#000000' : dimensionColor}
             anchorX="center"
             anchorY="middle"
             rotation={[0, 0, Math.PI / 2]}
@@ -368,14 +368,14 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
           >
             {Math.round(basicThickness * 100)}
           </Text>
-          
+
           {/* 상판 두께 수직선 */}
           <Line
             points={[
               [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
               [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
             ]}
-            color={dimensionColor}
+            color={viewMode === '3D' ? '#000000' : dimensionColor}
             lineWidth={1}
           />
           {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
@@ -383,11 +383,11 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             <>
               <mesh position={[-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
                 <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={dimensionColor} />
+                <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
               </mesh>
               <mesh position={[-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]}>
                 <sphereGeometry args={[0.05, 8, 8]} />
-                <meshBasicMaterial color={dimensionColor} />
+                <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
               </mesh>
             </>
           )}
