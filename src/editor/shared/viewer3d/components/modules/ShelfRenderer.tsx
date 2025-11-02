@@ -409,6 +409,38 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 const shelfTopY = shelfY + basicThickness / 2;
                 const shelfBottomY = shelfY - basicThickness / 2;
                 
+                shelfThicknessElements.push(
+                  <group key={`shelf-thickness-${i}`}>
+                    {/* 선반 두께 치수 텍스트 - 수직선 좌측에 표시 */}
+                    <Text
+                      position={[
+                        getDimensionXPosition(true),
+                        shelfY + dimensionYOffset,
+                        getDimensionZPosition()
+                      ]}
+                      fontSize={baseFontSize}
+                      color={dimensionColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      rotation={[0, 0, Math.PI / 2]}
+                      renderOrder={1000}
+                      depthTest={false}
+                    >
+                      {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+                    </Text>
+
+                    {/* 선반 두께 수직선 */}
+                    <NativeLine
+                      points={[
+                        [getDimensionXPosition(false), shelfTopY + dimensionYOffset, getDimensionZPosition()],
+                        [getDimensionXPosition(false), shelfBottomY + dimensionYOffset, getDimensionZPosition()]
+                      ]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      dashed={false}
+                    />
+                  </group>
+                );
               });
               
               // 상단 프레임 두께 표시 추가
@@ -442,6 +474,60 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
               const topFrameTopY = topFrameY + basicThickness / 2; // 상단 프레임의 상단
               const topFrameBottomY = topFrameY - basicThickness / 2; // 상단 프레임의 하단
 
+              // 상단 프레임 치수는 showTopFrameDimension이 true이고 측면뷰/탑뷰가 아닐 때만 표시
+              if (showTopFrameDimension && !isSideView && !isTopView) {
+                console.log('🟣 상단 프레임 엔드포인트:', {
+                  'topFrameTopY_mm': topFrameTopY * 100,
+                  'topFrameBottomY_mm': topFrameBottomY * 100,
+                  '위점렌더링': 'O',
+                  '아래점렌더링': 'O'
+                });
+                shelfThicknessElements.push(
+                <group key="top-frame-thickness">
+                  {/* 상단 프레임 두께 치수 텍스트 - 수직선 좌측에 표시 */}
+                  <Text
+                    position={[
+                      getDimensionXPosition(true),
+                      topFrameY + dimensionYOffset,
+                      getDimensionZPosition()
+                    ]}
+                    fontSize={baseFontSize}
+                    color={dimensionColor}
+                    anchorX="center"
+                    anchorY="middle"
+                    rotation={[0, 0, Math.PI / 2]}
+                    renderOrder={1000}
+                    depthTest={false}
+                  >
+                    {Math.round((basicThickness > 0 ? basicThickness : 0.18) * 100)}
+                  </Text>
+
+                  {/* 상단 프레임 두께 수직선 */}
+                  <NativeLine
+                    points={[
+                      [getDimensionXPosition(false), topFrameTopY + dimensionYOffset, getDimensionZPosition()],
+                      [getDimensionXPosition(false), topFrameBottomY + dimensionYOffset, getDimensionZPosition()]
+                    ]}
+                    color={dimensionColor}
+                    lineWidth={1}
+                    dashed={false}
+                  />
+                  {/* 상단 프레임 두께 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                  {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) && (
+                    <>
+                      <mesh position={[getDimensionXPosition(false), topFrameTopY + dimensionYOffset, getDimensionZPosition()]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={dimensionColor} />
+                      </mesh>
+                      <mesh position={[getDimensionXPosition(false), topFrameBottomY + dimensionYOffset, getDimensionZPosition()]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={dimensionColor} />
+                      </mesh>
+                    </>
+                  )}
+                </group>
+                );
+              }
               
               // shouldShowDimensions가 false면 빈 요소 반환
               if (!shouldShowDimensions) {
