@@ -187,67 +187,41 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     const currentModule = placedModules.find(m => m.id === draggingModuleId);
     if (!currentModule) return;
 
-    // 가구의 원래 zone을 유지 (단내림용 가구는 단내림 구간에만, 메인용은 메인 구간에만)
-    const furnitureZone = currentModule.zone;
-
-    // 마우스 위치에서 슬롯 인덱스 감지 (해당 zone 내에서만)
+    // 마우스 위치에서 슬롯 인덱스와 zone을 감지 (모든 zone에서)
     const raycastResult = getSlotIndexAndZoneFromMousePosition(
       event.nativeEvent.clientX,
       event.nativeEvent.clientY,
       canvas,
       camera,
       scene,
-      spaceInfo,
-      furnitureZone // 가구의 zone만 감지
+      spaceInfo
+      // activeZone 없이 호출 - zone 변경 허용
     );
 
-    const slotIndex = raycastResult.slotIndex;
-    const detectedZone = raycastResult.zone;
-
-    console.log('🎯 Raycast result:', { slotIndex, detectedZone, furnitureZone });
+    let slotIndex = raycastResult.slotIndex;
+    let detectedZone = raycastResult.zone;
 
     if (slotIndex !== null && detectedZone !== null) {
+      // 감지된 zone으로 변경
+      currentModule.zone = detectedZone;
       // currentModule은 이미 위에서 정의됨
       
       // 단내림이 활성화된 경우 영역 체크
       if (spaceInfo.droppedCeiling?.enabled && currentModule.zone) {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-        
-        // 레이캐스트로 받은 slotIndex는 이미 영역별 로컬 인덱스
-        // targetZone에 맞는 영역인지만 확인
-        
-        // 듀얼 가구인지 먼저 확인
         const checkIsDual = currentModule.isDualSlot !== undefined ? currentModule.isDualSlot : false;
-        
+
         if (currentModule.zone === 'normal') {
           const maxSlotForDual = checkIsDual ? zoneInfo.normal.columnCount - 1 : zoneInfo.normal.columnCount;
           if (slotIndex >= maxSlotForDual) {
-            console.log('❌ 메인구간 가구: 유효하지 않은 슬롯 인덱스', {
-              isDual: checkIsDual,
-              slotIndex,
-              maxSlotForDual,
-              columnCount: zoneInfo.normal.columnCount
-            });
             return;
           }
         } else if (currentModule.zone === 'dropped' && zoneInfo.dropped) {
           const maxSlotForDual = checkIsDual ? zoneInfo.dropped.columnCount - 1 : zoneInfo.dropped.columnCount;
           if (slotIndex >= maxSlotForDual) {
-            console.log('❌ 단내림구간 가구: 유효하지 않은 슬롯 인덱스', {
-              isDual: checkIsDual,
-              slotIndex,
-              maxSlotForDual,
-              columnCount: zoneInfo.dropped.columnCount
-            });
             return;
           }
         }
-        
-        console.log('✅ 영역별 가구 이동 검증 통과:', {
-          zone: currentModule.zone,
-          slotIndex,
-          maxSlots: currentModule.zone === 'dropped' ? zoneInfo.dropped?.columnCount : zoneInfo.normal.columnCount
-        });
       }
 
       // 단내림이 활성화되고 zone 정보가 있는 경우 영역별 처리
