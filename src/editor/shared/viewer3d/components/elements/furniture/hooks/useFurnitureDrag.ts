@@ -339,35 +339,40 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
       // 슬롯 가용성 검사 (자기 자신 제외)
 
-      // FurniturePositioner를 사용하여 정확한 위치 계산 (더블클릭/+아이콘과 동일한 로직)
-      console.log('🎯 [드래그] adjustFurniturePosition 호출 전:', {
+      // 더블클릭/+아이콘과 동일한 방식으로 위치 계산
+      // indexing에서 직접 threeUnitPositions 사용
+      let finalX: number;
+
+      if (isDualFurniture) {
+        // 듀얼 가구: threeUnitDualPositions 또는 두 슬롯의 중간
+        if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[slotIndex] !== undefined) {
+          finalX = indexing.threeUnitDualPositions[slotIndex];
+        } else if (indexing.threeUnitPositions &&
+                   indexing.threeUnitPositions[slotIndex] !== undefined &&
+                   indexing.threeUnitPositions[slotIndex + 1] !== undefined) {
+          // 두 슬롯의 중간 위치
+          finalX = (indexing.threeUnitPositions[slotIndex] + indexing.threeUnitPositions[slotIndex + 1]) / 2;
+        } else {
+          console.log('❌ 듀얼 가구 위치 계산 실패');
+          return;
+        }
+      } else {
+        // 싱글 가구: threeUnitPositions에서 직접 가져오기
+        if (indexing.threeUnitPositions && indexing.threeUnitPositions[slotIndex] !== undefined) {
+          finalX = indexing.threeUnitPositions[slotIndex];
+        } else {
+          console.log('❌ 싱글 가구 위치 계산 실패');
+          return;
+        }
+      }
+
+      console.log('🎯 [드래그] 위치 계산 완료:', {
         slotIndex,
         isDualFurniture,
         zone: currentModule.zone,
-        indexing: {
-          columnCount: indexing.columnCount,
-          columnWidth: indexing.columnWidth,
-          hasThreeUnitPositions: indexing.threeUnitPositions?.length > 0,
-          threeUnitPositionsLength: indexing.threeUnitPositions?.length
-        }
+        finalX,
+        threeUnitPositionsLength: indexing.threeUnitPositions?.length
       });
-
-      const positionResult = FurniturePositioner.adjustFurniturePosition(
-        slotIndex,
-        isDualFurniture,
-        indexing,
-        currentModule.zone
-      );
-
-      console.log('🎯 [드래그] adjustFurniturePosition 반환값:', positionResult);
-
-      if (!positionResult) {
-        console.log('❌ 위치 계산 실패 - adjustFurniturePosition returned null');
-        return;
-      }
-
-      const finalX = positionResult.x;
-      console.log('🎯 [드래그] finalX 설정됨:', finalX);
       
       // 기둥 슬롯으로 이동 시 자동 크기 조정
       // 단내림 구간에서는 글로벌 슬롯 인덱스로 변환 필요
