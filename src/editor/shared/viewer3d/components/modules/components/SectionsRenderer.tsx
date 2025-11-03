@@ -557,9 +557,18 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   });
                 } else {
                   // 다른 타입은 기본값 사용
-                  bottomY = sectionCenterY - sectionHeight/2;
-                  topY = sectionCenterY + sectionHeight/2;
-                  actualInternalHeight = sectionHeight / 0.01;
+                  const sectionBottomY = sectionCenterY - sectionHeight/2;
+                  const sectionTopY = sectionCenterY + sectionHeight/2;
+
+                  // 측면뷰에서 상부 섹션(index > 0)인 경우: 중간 분리판(basicThickness) 위에서 시작
+                  if (isSideView && index > 0) {
+                    bottomY = sectionBottomY + basicThickness;
+                    topY = sectionTopY;
+                  } else {
+                    bottomY = sectionBottomY;
+                    topY = sectionTopY;
+                  }
+                  actualInternalHeight = (topY - bottomY) / 0.01;
                 }
                 
                 const centerY = (topY + bottomY) / 2;
