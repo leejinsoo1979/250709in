@@ -842,13 +842,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? checkAdjacentUpperLowerToFull(placedModule, placedModules, spaceInfo)
     : { hasAdjacentUpperLower: false, adjacentSide: null };
 
-  console.log('🟡 [adjacentCheck 호출 결과]', {
-    moduleId: placedModule.id,
-    zone: placedModule.zone,
-    slotIndex: placedModule.slotIndex,
-    actualModuleDataExists: !!actualModuleData,
-    adjacentCheck
-  });
+  // 키큰장에서 인접 체크 결과가 변경되는 경우만 로그
+  if (actualModuleData?.category === 'full') {
+    console.log('🔴🔴🔴 [키큰장 인접 체크]', {
+      moduleId: placedModule.id,
+      zone: placedModule.zone,
+      slotIndex: placedModule.slotIndex,
+      hasAdjacentUpperLower: adjacentCheck.hasAdjacentUpperLower,
+      adjacentSide: adjacentCheck.adjacentSide,
+      전체가구: placedModules.map(m => `${m.moduleId}(zone:${m.zone},slot:${m.slotIndex})`).join(' | ')
+    });
+  }
   
   // 마지막 슬롯인지 확인 (adjustedPosition 초기화 전에 필요)
   // 단내림이 있으면 zone별 columnCount 사용
