@@ -268,12 +268,12 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       if (spaceInfo.droppedCeiling?.enabled && currentModule.zone) {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
         const targetZone = currentModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-        
+
         // 영역별 spaceInfo와 internalSpace 생성
         // 단내림 영역별 외경 너비 계산 (프레임 포함)
         const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
         let zoneOuterWidth: number;
-        
+
         if (currentModule.zone === 'dropped') {
           // 단내림 영역의 외경 너비
           zoneOuterWidth = droppedCeilingWidth;
@@ -281,25 +281,47 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           // 메인 영역의 외경 너비
           zoneOuterWidth = spaceInfo.width - droppedCeilingWidth;
         }
-        
+
         const zoneSpaceInfo = {
           ...spaceInfo,
           width: zoneOuterWidth,  // 영역별 외경 너비 설정
           zone: currentModule.zone  // zone 정보 추가
         };
         const zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
-        
+
         moduleData = getModuleById(currentModule.moduleId, zoneInternalSpace, zoneSpaceInfo);
         if (!moduleData) return;
-        
-        // zone별 indexing은 targetZone 정보를 직접 사용
+
+        // 전체 indexing에서 zone별 정보 가져오기 (threeUnitPositions 포함)
+        const fullIndexing = calculateSpaceIndexing(spaceInfo);
+        const zoneData = currentModule.zone === 'dropped'
+          ? fullIndexing.zones?.dropped
+          : fullIndexing.zones?.normal;
+
+        if (!zoneData) {
+          console.log('❌ Zone 데이터를 찾을 수 없음:', currentModule.zone);
+          return;
+        }
+
+        // zone별 indexing은 전체 indexing의 zone 정보를 사용
         indexing = {
-          columnCount: targetZone.columnCount,
-          columnWidth: targetZone.columnWidth,
-          threeUnitPositions: [],
-          threeUnitDualPositions: {},
-          threeUnitBoundaries: []
+          columnCount: zoneData.columnCount,
+          columnWidth: zoneData.columnWidth,
+          threeUnitPositions: zoneData.threeUnitPositions || [],
+          threeUnitDualPositions: zoneData.threeUnitDualPositions || [],
+          threeUnitBoundaries: [],
+          slotWidths: zoneData.slotWidths,
+          zones: fullIndexing.zones  // zone 정보도 포함
         };
+
+        console.log('🔍 [드래그] Zone indexing 생성됨:', {
+          zone: currentModule.zone,
+          columnCount: indexing.columnCount,
+          columnWidth: indexing.columnWidth,
+          threeUnitPositionsLength: indexing.threeUnitPositions?.length,
+          threeUnitDualPositionsLength: indexing.threeUnitDualPositions?.length
+        });
+
         // isDualSlot 속성을 우선 사용
         isDualFurniture = currentModule.isDualSlot !== undefined ? currentModule.isDualSlot :
                          Math.abs(moduleData.dimensions.width - (targetZone.columnWidth * 2)) < 50;
@@ -318,6 +340,18 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 슬롯 가용성 검사 (자기 자신 제외)
 
       // FurniturePositioner를 사용하여 정확한 위치 계산 (더블클릭/+아이콘과 동일한 로직)
+      console.log('🎯 [드래그] adjustFurniturePosition 호출 전:', {
+        slotIndex,
+        isDualFurniture,
+        zone: currentModule.zone,
+        indexing: {
+          columnCount: indexing.columnCount,
+          columnWidth: indexing.columnWidth,
+          hasThreeUnitPositions: indexing.threeUnitPositions?.length > 0,
+          threeUnitPositionsLength: indexing.threeUnitPositions?.length
+        }
+      });
+
       const positionResult = FurniturePositioner.adjustFurniturePosition(
         slotIndex,
         isDualFurniture,
@@ -325,12 +359,15 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         currentModule.zone
       );
 
+      console.log('🎯 [드래그] adjustFurniturePosition 반환값:', positionResult);
+
       if (!positionResult) {
         console.log('❌ 위치 계산 실패 - adjustFurniturePosition returned null');
         return;
       }
 
       const finalX = positionResult.x;
+      console.log('🎯 [드래그] finalX 설정됨:', finalX);
       
       // 기둥 슬롯으로 이동 시 자동 크기 조정
       // 단내림 구간에서는 글로벌 슬롯 인덱스로 변환 필요
