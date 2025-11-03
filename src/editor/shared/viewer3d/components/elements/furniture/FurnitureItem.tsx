@@ -2232,9 +2232,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       return;
     }
 
-    // 선택되지 않은 가구는 드래그 불가
+    // 드래그 시작 시 자동으로 선택
     if (!isSelected) {
-      return;
+      handleSelect();
     }
 
     if (isColumnCFront && !isDragMode) {
