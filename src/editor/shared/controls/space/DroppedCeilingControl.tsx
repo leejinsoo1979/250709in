@@ -108,9 +108,8 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
         modules: placedModules.map(m => ({ id: m.id, slotIndex: m.slotIndex }))
       });
 
-      // 모든 가구 삭제
-      const modulesToRemove = [...placedModules];
-      modulesToRemove.forEach(module => {
+      // 모든 가구들 제거 (handleEnabledToggle과 동일한 방식)
+      placedModules.forEach(module => {
         console.log('🗑️ 가구 삭제:', module.id);
         removeModule(module.id);
       });
