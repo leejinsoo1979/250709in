@@ -968,7 +968,7 @@ export class ColumnIndexer {
           'spaceInfo.installType': spaceInfo.installType
         });
       } else {
-        // 노서라운드: 엔드패널 고려
+        // 노서라운드: 엔드패널 고려하여 계산 (단내림 우측과 동일한 로직)
         let leftReduction = 0;
         let rightReduction = 0;
         const BOUNDARY_GAP = 3; // 중간 경계면 이격거리
@@ -1011,21 +1011,23 @@ export class ColumnIndexer {
           }
         }
 
-        // 단내림구간(좌): 좌측 이격거리 빼고, 중간 경계 이격거리는 더하기
+        // 단내림구간(좌): 좌측 이격거리 빼고, 중간 경계 이격거리는 더하기 (단내림 우측과 대칭)
         droppedAreaInternalWidth = droppedAreaOuterWidth - leftReduction + BOUNDARY_GAP;
         droppedStartX = internalStartX; // 수정된 internalStartX 사용
 
-        console.log('🔴🔴🔴 [단내림 startX 계산]', {
-          'internalStartX': internalStartX,
-          'totalWidth': totalWidth,
-          'leftReduction': leftReduction,
-          'installType': spaceInfo.installType,
-          'droppedStartX (최종)': droppedStartX,
-          '엔드패널두께(18mm)': 18,
-          'droppedStartX가 엔드패널 안쪽인가?': droppedStartX > -(totalWidth/2) + 18
+        console.log('🔴🔴 단내림 좌측 + 노서라운드 단내림구간 계산:', {
+          droppedAreaOuterWidth,
+          leftReduction,
+          BOUNDARY_GAP,
+          droppedAreaInternalWidth,
+          internalStartX,
+          droppedStartX,
+          '좌측벽유무': spaceInfo.wallConfig?.left,
+          '엔드패널있음': !spaceInfo.wallConfig?.left,
+          totalWidth: spaceInfo.width
         });
 
-        // 일반구간(우): 우측 이격거리 + 중간 경계 이격거리 빼기
+        // 일반구간(우): 우측 이격거리 + 중간 경계 이격거리 빼기 (단내림 우측과 대칭)
         normalAreaInternalWidth = normalAreaOuterWidth - rightReduction - BOUNDARY_GAP;
         normalStartX = droppedStartX + droppedAreaInternalWidth; // 갭 없이 바로 연결 (단내림 내경에 이미 +3mm 포함)
 
