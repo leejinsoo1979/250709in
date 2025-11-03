@@ -1331,6 +1331,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const computedHeightMm = sectionHeightsMm[sectionIndex] ?? Math.max(sectionHeights[sectionIndex] / 0.01, 0);
             const interiorStartY = cabinetBottomY + mmToThreeUnits(interiorStartMm);
             const interiorHeightUnits = mmToThreeUnits(computedHeightMm);
+            const interiorEndY = interiorStartY + mmToThreeUnits(computedHeightMm);
 
             const isLastSection = sectionIndex === totalSections - 1;
 
