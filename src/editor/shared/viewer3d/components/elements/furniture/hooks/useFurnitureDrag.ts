@@ -638,9 +638,16 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
   // 드래그 종료
   const handlePointerUp = () => {
+    console.log('🏁 handlePointerUp 호출됨:', {
+      isDragging: isDragging.current,
+      draggingModuleId,
+      hasDragEndData: !!dragEndData,
+      hasTempPosition: !!tempPosition
+    });
+
     if (isDragging.current && draggingModuleId) {
       if (import.meta.env.DEV) {
-        console.log('🏁 드래그 종료');
+        console.log('🏁 드래그 종료 - 업데이트 시작');
       }
       
       // 드래그가 끝날 때 전체 속성 업데이트
