@@ -63,6 +63,18 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
 
   const { renderMode, viewMode, view2DDirection } = useSpace3DView();
 
+  // 플로팅 높이 디버그
+  React.useEffect(() => {
+    if (spaceInfo?.baseConfig) {
+      console.log('🔍 SingleType1 spaceInfo.baseConfig:', {
+        floatHeight: spaceInfo.baseConfig.floatHeight,
+        placementType: spaceInfo.baseConfig.placementType,
+        height: spaceInfo.baseConfig.height,
+        전체baseConfig: spaceInfo.baseConfig
+      });
+    }
+  }, [spaceInfo?.baseConfig]);
+
   const sectionDepths = React.useMemo(() => {
     const defaultDepth = depth;
     if (!modelConfig.sections || modelConfig.sections.length !== 2) {
