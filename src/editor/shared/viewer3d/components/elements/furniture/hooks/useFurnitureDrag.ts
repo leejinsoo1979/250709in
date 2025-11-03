@@ -295,67 +295,55 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
       // 슬롯 가용성 검사 (자기 자신 제외)
 
-      // 더블클릭/+아이콘과 완전히 동일한 방식으로 위치 계산
+      // 위치 계산 - zone별 배열 직접 접근
       const fullIndexing = calculateSpaceIndexing(spaceInfo);
-      const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
-
-      // allSlotPositions 구성 (useFurniturePlacement와 동일)
-      let allSlotPositions: Array<{ position: number; zone: 'normal' | 'dropped'; index: number }> = [];
-
-      if (!hasDroppedCeiling || !fullIndexing.zones) {
-        allSlotPositions = fullIndexing.threeUnitPositions.map((pos, idx) => ({
-          position: pos,
-          zone: 'normal' as const,
-          index: idx
-        }));
-      } else {
-        if (fullIndexing.zones.normal?.threeUnitPositions) {
-          allSlotPositions.push(...fullIndexing.zones.normal.threeUnitPositions.map((pos, idx) => ({
-            position: pos,
-            zone: 'normal' as const,
-            index: idx
-          })));
-        }
-        if (fullIndexing.zones.dropped?.threeUnitPositions) {
-          allSlotPositions.push(...fullIndexing.zones.dropped.threeUnitPositions.map((pos, idx) => ({
-            position: pos,
-            zone: 'dropped' as const,
-            index: idx
-          })));
-        }
-        allSlotPositions.sort((a, b) => a.position - b.position);
-      }
-
-      // 위치 계산 - detectedZone 사용
-      const targetSlot = allSlotPositions.find(slot =>
-        slot.index === slotIndex && slot.zone === detectedZone
-      );
-
-      if (!targetSlot) {
-        return;
-      }
-
       let finalX: number;
-      if (isDualFurniture) {
-        const nextSlot = allSlotPositions.find(slot =>
-          slot.index === slotIndex + 1 && slot.zone === targetSlot.zone
-        );
-        if (!nextSlot) {
+
+      if (spaceInfo.droppedCeiling?.enabled && currentModule.zone) {
+        if (currentModule.zone === 'dropped' && fullIndexing.zones?.dropped) {
+          const droppedPositions = fullIndexing.zones.dropped.threeUnitPositions;
+
+          if (isDualFurniture && slotIndex < droppedPositions.length - 1) {
+            if (fullIndexing.zones.dropped.threeUnitDualPositions &&
+                fullIndexing.zones.dropped.threeUnitDualPositions[slotIndex] !== undefined) {
+              finalX = fullIndexing.zones.dropped.threeUnitDualPositions[slotIndex];
+            } else {
+              const leftSlotX = droppedPositions[slotIndex];
+              const rightSlotX = droppedPositions[slotIndex + 1];
+              finalX = (leftSlotX + rightSlotX) / 2;
+            }
+          } else {
+            finalX = droppedPositions[slotIndex];
+          }
+        } else if (currentModule.zone === 'normal' && fullIndexing.zones?.normal) {
+          const normalPositions = fullIndexing.zones.normal.threeUnitPositions;
+
+          if (isDualFurniture && slotIndex < normalPositions.length - 1) {
+            if (fullIndexing.zones.normal.threeUnitDualPositions &&
+                fullIndexing.zones.normal.threeUnitDualPositions[slotIndex] !== undefined) {
+              finalX = fullIndexing.zones.normal.threeUnitDualPositions[slotIndex];
+            } else {
+              const leftSlotX = normalPositions[slotIndex];
+              const rightSlotX = normalPositions[slotIndex + 1];
+              finalX = (leftSlotX + rightSlotX) / 2;
+            }
+          } else {
+            finalX = normalPositions[slotIndex];
+          }
+        } else {
           return;
         }
-        finalX = (targetSlot.position + nextSlot.position) / 2;
       } else {
-        finalX = targetSlot.position;
+        if (isDualFurniture) {
+          if (fullIndexing.threeUnitDualPositions && fullIndexing.threeUnitDualPositions[slotIndex] !== undefined) {
+            finalX = fullIndexing.threeUnitDualPositions[slotIndex];
+          } else {
+            return;
+          }
+        } else {
+          finalX = fullIndexing.threeUnitPositions[slotIndex];
+        }
       }
-
-      console.log('📍 최종 위치:', {
-        slotIndex,
-        zone: detectedZone,
-        isDual: isDualFurniture,
-        targetSlotPosition: targetSlot.position,
-        finalX,
-        allSlotPositionsCount: allSlotPositions.length
-      });
       
       // 기둥 슬롯으로 이동 시 자동 크기 조정
       // 단내림 구간에서는 글로벌 슬롯 인덱스로 변환 필요
