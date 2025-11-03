@@ -371,26 +371,27 @@ export const findNextAvailableSlot = (
   placedModules: PlacedModule[],
   spaceInfo: SpaceInfo,
   moduleId: string,
-  excludeModuleId?: string
+  excludeModuleId?: string,
+  targetZone?: 'normal' | 'dropped'
 ): number | null => {
   const indexing = calculateSpaceIndexing(spaceInfo);
   const step = direction === 'left' ? -1 : 1;
   const maxSlot = indexing.columnCount - (isDualFurniture ? 1 : 0);
-  
+
   // 듀얼장의 경우 한 칸씩만 이동하도록 수정
   // 싱글장은 기존대로 동작
   const moveStep = step;
-  
+
   // 방향에 따라 끝까지 검색
-  for (let slot = currentSlot + moveStep; 
-       direction === 'right' ? slot <= maxSlot : slot >= 0; 
+  for (let slot = currentSlot + moveStep;
+       direction === 'right' ? slot <= maxSlot : slot >= 0;
        slot += moveStep) {
-    
-    if (isSlotAvailable(slot, isDualFurniture, placedModules, spaceInfo, moduleId, excludeModuleId)) {
+
+    if (isSlotAvailable(slot, isDualFurniture, placedModules, spaceInfo, moduleId, excludeModuleId, targetZone)) {
       return slot;
     }
   }
-  
+
   return null; // 해당 방향에 빈 슬롯 없음
 };
 

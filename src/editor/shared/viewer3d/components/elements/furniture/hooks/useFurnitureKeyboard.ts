@@ -92,13 +92,14 @@ export const useFurnitureKeyboard = ({
           case 'ArrowLeft': {
             // 스마트 건너뛰기: 왼쪽으로 다음 사용 가능한 슬롯 찾기
             const nextSlot = findNextAvailableSlot(
-              currentSlotIndex, 
-              'left', 
-              isDualFurniture, 
-              placedModules, 
-              spaceInfo, 
+              currentSlotIndex,
+              'left',
+              isDualFurniture,
+              placedModules,
+              spaceInfo,
               editingModule.moduleId,
-              targetModuleId // excludeModuleId로 전달
+              targetModuleId, // excludeModuleId로 전달
+              editingModule.zone // 현재 zone 유지
             );
             
             if (nextSlot !== null) {
@@ -180,13 +181,14 @@ export const useFurnitureKeyboard = ({
           case 'ArrowRight': {
             // 스마트 건너뛰기: 오른쪽으로 다음 사용 가능한 슬롯 찾기
             const nextSlot = findNextAvailableSlot(
-              currentSlotIndex, 
-              'right', 
-              isDualFurniture, 
-              placedModules, 
-              spaceInfo, 
+              currentSlotIndex,
+              'right',
+              isDualFurniture,
+              placedModules,
+              spaceInfo,
               editingModule.moduleId,
-              targetModuleId // excludeModuleId로 전달
+              targetModuleId, // excludeModuleId로 전달
+              editingModule.zone // 현재 zone 유지
             );
             
             if (nextSlot !== null) {
