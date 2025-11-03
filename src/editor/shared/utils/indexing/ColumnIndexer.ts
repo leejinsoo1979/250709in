@@ -1403,6 +1403,13 @@ export class ColumnIndexer {
         let closestIndex = 0;
         let minDistance = Infinity;
 
+        console.log('🎯 [calculateZoneAndSlot] 단내림 영역 슬롯 찾기:', {
+          positionMm: position.x,
+          positionThreeUnits,
+          droppedPositions,
+          droppedPositionsCount: droppedPositions.length
+        });
+
         for (let i = 0; i < droppedPositions.length; i++) {
           const distance = Math.abs(positionThreeUnits - droppedPositions[i]);
           if (distance < minDistance) {
@@ -1410,6 +1417,12 @@ export class ColumnIndexer {
             closestIndex = i;
           }
         }
+
+        console.log('🎯 [calculateZoneAndSlot] 단내림 결과:', {
+          closestIndex,
+          closestPosition: droppedPositions[closestIndex],
+          minDistance
+        });
 
         return {
           zone: 'dropped',
@@ -1438,6 +1451,13 @@ export class ColumnIndexer {
         let closestIndex = 0;
         let minDistance = Infinity;
 
+        console.log('🎯 [calculateZoneAndSlot] 일반 영역 슬롯 찾기:', {
+          positionMm: position.x,
+          positionThreeUnits,
+          normalPositions,
+          normalPositionsCount: normalPositions.length
+        });
+
         for (let i = 0; i < normalPositions.length; i++) {
           const distance = Math.abs(positionThreeUnits - normalPositions[i]);
           if (distance < minDistance) {
@@ -1445,6 +1465,12 @@ export class ColumnIndexer {
             closestIndex = i;
           }
         }
+
+        console.log('🎯 [calculateZoneAndSlot] 일반 결과:', {
+          closestIndex,
+          closestPosition: normalPositions[closestIndex],
+          minDistance
+        });
 
         return {
           zone: 'normal',
