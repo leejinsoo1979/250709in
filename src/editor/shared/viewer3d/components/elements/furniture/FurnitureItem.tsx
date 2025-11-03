@@ -130,9 +130,27 @@ const checkAdjacentUpperLowerToFull = (
     return { hasAdjacentUpperLower: false, adjacentSide: null };
   })();
 
-  // 듀얼 가구일 때만 디버그 로그
-  if (isCurrentDual) {
-    }
+  // 디버그 로그
+  console.log('🔵 [checkAdjacentUpperLowerToFull 결과]', {
+    currentId: currentModule.id,
+    currentZone: currentZone,
+    currentSlotIndex,
+    leftAdjacentModule: leftAdjacentModule ? {
+      id: leftAdjacentModule.id,
+      moduleId: leftAdjacentModule.moduleId,
+      zone: leftAdjacentModule.zone,
+      slotIndex: leftAdjacentModule.slotIndex
+    } : null,
+    rightAdjacentModule: rightAdjacentModule ? {
+      id: rightAdjacentModule.id,
+      moduleId: rightAdjacentModule.moduleId,
+      zone: rightAdjacentModule.zone,
+      slotIndex: rightAdjacentModule.slotIndex
+    } : null,
+    hasLeftAdjacent,
+    hasRightAdjacent,
+    result
+  });
 
   return result;
 };
