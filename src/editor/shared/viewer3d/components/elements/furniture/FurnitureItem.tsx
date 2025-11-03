@@ -891,20 +891,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const upperCabinetHeight = actualModuleData?.dimensions.height || 0; // 상부장 높이
 
       // 띄워서 배치 모드와 관계없이 상부장은 항상 상부프레임 하단에 붙어야 함
-      // 바닥 마감재 높이
-      const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
-
-      // 상부프레임 높이 - frameSize.top 사용
+      // 상부프레임 높이
       const topFrameHeightMm = spaceInfo.frameSize?.top || 10; // 기본값 10mm
 
-      // 하부프레임 높이 - frameSize.bottom 사용
-      const bottomFrameHeightMm = spaceInfo.frameSize?.bottom || 0;
-
-      // 내경 높이 = 전체 높이 - 상부프레임 - 하부프레임 - 바닥마감재
-      const internalHeight = spaceInfo.height - topFrameHeightMm - bottomFrameHeightMm - floorFinishHeightMm;
-
-      // 상부장 상단 Y = 바닥마감재 + 하부프레임 + 내경높이 (상부프레임 하단)
-      const upperCabinetTopY = floorFinishHeightMm + bottomFrameHeightMm + internalHeight;
+      // 상부장 상단 Y = 전체 높이 - 상부프레임 높이 (상부프레임 하단)
+      const upperCabinetTopY = spaceInfo.height - topFrameHeightMm;
       // 상부장 중심 Y = 상부장 상단 - 상부장 높이/2
       const upperCabinetCenterY = (upperCabinetTopY - upperCabinetHeight/2) * 0.01;
 
