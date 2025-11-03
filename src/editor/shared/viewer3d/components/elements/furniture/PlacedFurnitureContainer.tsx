@@ -2,6 +2,7 @@ import React from 'react';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
+import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useFurnitureDrag } from './hooks/useFurnitureDrag';
 import { useFurnitureSelection } from './hooks/useFurnitureSelection';
 import { useFurnitureKeyboard } from './hooks/useFurnitureKeyboard';
@@ -47,16 +48,37 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   // 측면뷰이고 selectedSlotIndex가 있는 경우 필터링
   const finalView2DDirection = view2DDirection || contextView2DDirection;
   if ((finalView2DDirection === 'left' || finalView2DDirection === 'right') && selectedSlotIndex !== null) {
+    // 단내림 영역 정보 가져오기
+    const { zones } = useDerivedSpaceStore.getState();
+    const normalSlotCount = zones?.normal?.columnCount || 0;
+
     basePlacedModules = basePlacedModules.filter(module => {
       if (module.slotIndex === undefined) return false;
 
+      // selectedSlotIndex가 일반 영역인지 단내림 영역인지 판단
+      const isSelectedInDropped = selectedSlotIndex >= normalSlotCount;
+      const moduleIsInDropped = module.zone === 'dropped';
+
+      // 영역이 다르면 필터링
+      if (isSelectedInDropped !== moduleIsInDropped) return false;
+
+      // 실제 슬롯 인덱스 계산
+      let actualSelectedSlot: number;
+      if (isSelectedInDropped) {
+        // 단내림 영역: normalSlotCount를 빼서 실제 슬롯 인덱스 계산
+        actualSelectedSlot = selectedSlotIndex - normalSlotCount;
+      } else {
+        // 일반 영역: 그대로 사용
+        actualSelectedSlot = selectedSlotIndex;
+      }
+
       // 듀얼 가구인 경우: 시작 슬롯 또는 다음 슬롯 확인
       if (module.isDualSlot) {
-        return module.slotIndex === selectedSlotIndex || module.slotIndex + 1 === selectedSlotIndex;
+        return module.slotIndex === actualSelectedSlot || module.slotIndex + 1 === actualSelectedSlot;
       }
 
       // 싱글 가구인 경우: 정확히 일치하는 슬롯만
-      return module.slotIndex === selectedSlotIndex;
+      return module.slotIndex === actualSelectedSlot;
     });
   }
 
