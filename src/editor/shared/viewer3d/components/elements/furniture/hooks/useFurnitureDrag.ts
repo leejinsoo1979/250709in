@@ -418,22 +418,18 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         yPosition = (upperCabinetTopY - upperCabinetHeight/2) * 0.01;
       } else if (isLowerCabinet || isTallCabinet) {
         // 하부장/키큰장: 띄워서 배치 적용
-        const isFloating = spaceInfo.baseConfig?.placementType === 'float';
+        const isFloating = spaceInfo.baseConfig?.placementType === 'float' && spaceInfo.baseConfig?.type === 'stand';
         const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
         const floorFinishHeight = floorFinishHeightMm * 0.01;
         const furnitureHeight = (moduleData.dimensions.height || 0) * 0.01;
 
         if (isFloating) {
+          // 띄워서 배치: 바닥마감재 + 띄움높이 + 가구높이/2
           const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
           const floatHeight = floatHeightMm * 0.01;
-          const baseHeight = ((spaceInfo.baseConfig?.height || 65) * 0.01);
-
-          if (spaceInfo.baseConfig?.type === 'stand') {
-            yPosition = floorFinishHeight + floatHeight + (furnitureHeight / 2);
-          } else {
-            yPosition = floorFinishHeight + baseHeight + (furnitureHeight / 2) + floatHeight / 2;
-          }
+          yPosition = floorFinishHeight + floatHeight + (furnitureHeight / 2);
         } else {
+          // 일반 배치: 바닥마감재 + 받침대높이 + 가구높이/2
           const baseHeight = ((spaceInfo.baseConfig?.height || 65) * 0.01);
           yPosition = floorFinishHeight + baseHeight + (furnitureHeight / 2);
         }

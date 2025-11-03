@@ -944,10 +944,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             y: yPos
           };
         } else {
-          // 키큰장은 천장 기준 정렬 유지 + 하단 띄움 반영
-          const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
-          const baseHeight = baseHeightMm * 0.01;
-          const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2) + floatHeight / 2;
+          // 키큰장: 하부장과 동일하게 띄움 높이만큼 전체가 떠야 함
+          const yPos = floorFinishHeight + floatHeight + (furnitureHeight / 2);
 
           adjustedPosition = {
             ...adjustedPosition,
