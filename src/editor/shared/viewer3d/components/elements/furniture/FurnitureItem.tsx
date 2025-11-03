@@ -1814,7 +1814,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         } else if (placedModule.zone === 'normal' && currentLocalSlotIndex === zoneColumnCount - 1 && spaceInfo.droppedCeiling?.enabled) {
           // 일반 구간 마지막 슬롯 싱글장: 단내림 우측은 경계라서 중심 고정, 단내림 좌측은 바깥쪽 끝이라서 중심 고정
           doorXOffset = 0;
-          console.log('✅✅✅ 일반 구간 싱글장(마지막) → doorXOffset = 0 (중심 고정) 설정됨');
+          console.log('✅✅✅ [노서라운드 메인 마지막 슬롯] 일반 구간 싱글장(마지막) → doorXOffset = 0 (슬롯 중심 고정)');
         } else if (isFirstSlotFreestanding) {
           doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
           console.log('🔵 isFirstSlotFreestanding → doorXOffset:', doorXOffset);
