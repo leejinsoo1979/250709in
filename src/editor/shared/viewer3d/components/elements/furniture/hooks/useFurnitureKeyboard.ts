@@ -91,6 +91,11 @@ export const useFurnitureKeyboard = ({
             
           case 'ArrowLeft': {
             // 스마트 건너뛰기: 왼쪽으로 다음 사용 가능한 슬롯 찾기
+            console.log('⌨️ ArrowLeft 키 입력:', {
+              currentSlot: currentSlotIndex,
+              editingModuleZone: editingModule.zone,
+              hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled
+            });
             const nextSlot = findNextAvailableSlot(
               currentSlotIndex,
               'left',
@@ -101,6 +106,7 @@ export const useFurnitureKeyboard = ({
               targetModuleId, // excludeModuleId로 전달
               editingModule.zone // 현재 zone 유지
             );
+            console.log('⌨️ ArrowLeft 결과:', { nextSlot });
             
             if (nextSlot !== null) {
               let newX: number;
@@ -180,6 +186,11 @@ export const useFurnitureKeyboard = ({
             
           case 'ArrowRight': {
             // 스마트 건너뛰기: 오른쪽으로 다음 사용 가능한 슬롯 찾기
+            console.log('⌨️ ArrowRight 키 입력:', {
+              currentSlot: currentSlotIndex,
+              editingModuleZone: editingModule.zone,
+              hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled
+            });
             const nextSlot = findNextAvailableSlot(
               currentSlotIndex,
               'right',
@@ -190,6 +201,7 @@ export const useFurnitureKeyboard = ({
               targetModuleId, // excludeModuleId로 전달
               editingModule.zone // 현재 zone 유지
             );
+            console.log('⌨️ ArrowRight 결과:', { nextSlot });
             
             if (nextSlot !== null) {
               let newX: number;
