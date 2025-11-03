@@ -310,6 +310,20 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
           // 섹션별 강조 확인
           const isHangingSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
 
+          // 디버깅: hanging 섹션 innerHeight 확인
+          console.log('🟢 SectionsRenderer hanging 섹션 높이:', {
+            furnitureId: placedFurnitureId || furnitureId,
+            sectionIndex: index,
+            sectionHeight,
+            sectionHeight_mm: sectionHeight * 100,
+            height,
+            height_mm: height * 100,
+            availableHeight,
+            availableHeight_mm: availableHeight * 100,
+            calculatedHeight: section.calculatedHeight,
+            calculatedHeight_mm: section.calculatedHeight * 100
+          });
+
           sectionContent = (
             <ShelfRenderer
               shelfCount={section.count || (section.shelfPositions ? section.shelfPositions.length : 0)}
