@@ -1520,7 +1520,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             }
           }
         } else {
-          // 상하부장도 엔드패널 반대쪽으로 이동
+          // 상하부장은 엔드패널 쪽으로 이동 (엔드패널에 붙게)
           if (isFirstSlotNoSurround) {
             console.log('🔴🔴🔴 isFirstSlotNoSurround 엔드패널 조정:', {
               isDroppedZone,
@@ -1531,21 +1531,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             });
 
             if (isDroppedZone && droppedPosition === 'left') {
-              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 (엔드패널 쪽으로)
             } else if (isDroppedZone && droppedPosition === 'right') {
-              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 (엔드패널 쪽으로)
             } else {
-              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 (엔드패널 쪽으로)
             }
 
             console.log('🔴🔴🔴 최종 positionAdjustmentForEndPanel:', positionAdjustmentForEndPanel);
           } else if (isLastSlotNoSurround) {
             if (isDroppedZone && droppedPosition === 'left') {
-              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
+              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 (엔드패널 쪽으로)
             } else if (isDroppedZone && droppedPosition === 'right') {
-              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 (엔드패널 쪽으로)
             } else {
-              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
+              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 (엔드패널 쪽으로)
             }
           }
         }
