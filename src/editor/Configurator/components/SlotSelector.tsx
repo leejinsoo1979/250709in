@@ -82,20 +82,20 @@ const SlotSelector: React.FC = () => {
   // 단내림 위치에 따른 슬롯 순서 결정
   const isDroppedOnLeft = spaceInfo?.droppedCeiling?.position === 'left';
 
-  // 슬롯 배열 생성 (단내림 위치에 따라 순서 변경)
+  // 슬롯 배열 생성 (단내림 위치에 따라 displayIndex만 변경, 버튼 배열 순서는 동일)
   const slotButtons = [];
 
   if (isDroppedOnLeft) {
-    // 단내림이 좌측: 8,7 / 6,5,4,3,2,1 (버튼 표시만 역순, actualIndex는 동일)
-    // 단내림 슬롯들
+    // 단내림이 좌측: 버튼은 좌→우 배열, 숫자만 8,7,6,5,4,3,2,1
+    // 단내림 슬롯들 (좌→우 버튼 배열)
     for (let i = 0; i < droppedSlotCount; i++) {
       slotButtons.push({
-        displayIndex: normalSlotCount + droppedSlotCount - i, // 8, 7
+        displayIndex: totalSlots - i, // 8, 7
         actualIndex: normalSlotCount + i, // 6, 7
         zone: 'dropped' as const
       });
     }
-    // 일반 슬롯들
+    // 일반 슬롯들 (좌→우 버튼 배열)
     for (let i = 0; i < normalSlotCount; i++) {
       slotButtons.push({
         displayIndex: normalSlotCount - i, // 6, 5, 4, 3, 2, 1
@@ -104,8 +104,8 @@ const SlotSelector: React.FC = () => {
       });
     }
   } else {
-    // 단내림이 우측: 1,2,3,4,5,6 / 7,8
-    // 일반 슬롯들
+    // 단내림이 우측: 버튼 좌→우 배열, 숫자도 1,2,3,4,5,6,7,8
+    // 일반 슬롯들 (좌→우 버튼 배열)
     for (let i = 0; i < normalSlotCount; i++) {
       slotButtons.push({
         displayIndex: i + 1, // 1, 2, 3, 4, 5, 6
@@ -113,7 +113,7 @@ const SlotSelector: React.FC = () => {
         zone: 'normal' as const
       });
     }
-    // 단내림 슬롯들
+    // 단내림 슬롯들 (좌→우 버튼 배열)
     for (let i = 0; i < droppedSlotCount; i++) {
       slotButtons.push({
         displayIndex: normalSlotCount + i + 1, // 7, 8
