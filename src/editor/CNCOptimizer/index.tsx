@@ -290,11 +290,15 @@ const CNCOptimizer: React.FC = () => {
       {/* 헤더 */}
       <header className={styles.header}>
         <div className={styles.headerLeft}>
-          <button 
+          <button
             className={styles.backButton}
             onClick={() => {
-              // 단순히 이전 페이지로 돌아가기
-              navigate(-1);
+              // 프로젝트 ID와 디자인 파일 ID를 유지하며 Configurator로 돌아가기
+              const params = new URLSearchParams();
+              if (projectId) params.set('projectId', projectId);
+              if (designFileId) params.set('designFileId', designFileId);
+              const queryString = params.toString();
+              navigate(`/configurator${queryString ? `?${queryString}` : ''}`);
             }}
           >
             <ArrowLeft size={18} />
