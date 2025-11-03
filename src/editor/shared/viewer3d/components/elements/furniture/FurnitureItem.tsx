@@ -2085,7 +2085,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
 
     if (spaceInfo.surroundType === 'no-surround') {
-      // 단내림 좌측 메인 구간: 가구 너비 18mm 줄어들어서 중심이 9mm 왼쪽으로 밀림 → 우측으로 9mm 보정
+      // 단내림 좌측 메인 구간: 엔드패널과 안 겹치도록 왼쪽으로 9mm 이동
       if (spaceInfo.droppedCeiling?.enabled &&
           spaceInfo.droppedCeiling.position === 'left' &&
           placedModule.zone === 'normal') {
@@ -2094,8 +2094,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           const localIndex = localSlotIndex ?? placedModule.slotIndex;
           const zoneColumnCount = zoneSlotInfo.normal.columnCount;
           if (localIndex === zoneColumnCount - 1) {
-            finalOffset = offset; // 우측으로 9mm (가구 중심 보정)
-            console.log('🟢 [단내림 좌측 메인 구간 마지막 슬롯] 우측으로 9mm 이동 (가구 중심 보정)');
+            finalOffset = -offset; // 왼쪽으로 9mm
+            console.log('🟢 [단내림 좌측 메인 구간 마지막 슬롯] 왼쪽으로 9mm 이동');
           }
         }
       }
