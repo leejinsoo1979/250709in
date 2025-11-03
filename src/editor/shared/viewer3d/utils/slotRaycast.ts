@@ -200,11 +200,11 @@ export const getSlotIndexAndZoneFromMousePosition = (
       }
     });
 
-    const intersects = raycaster.intersectObjects(slotColliders);
+    const intersects = raycaster.intersectObjects(slotColliders, true); // true = check children
     if (intersects.length > 0) {
       const intersectedObject: any = intersects[0].object;
       const slotIndex = intersectedObject.userData?.slotIndex;
-      const zone = (intersectedObject.userData?.zone as 'normal' | 'dropped' | undefined) || null;
+      const zone = (intersectedObject.userData?.zone as 'normal' | 'dropped' | undefined) || 'normal';
       if (typeof slotIndex === 'number' && slotIndex >= 0) {
         return { slotIndex, zone };
       }
