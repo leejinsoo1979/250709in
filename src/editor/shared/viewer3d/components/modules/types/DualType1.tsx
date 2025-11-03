@@ -249,7 +249,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
 
               // 단내림 높이 감소분 계산 (단내림 구간인 경우에만)
               let droppedHeightReduction = 0;
-              if (spaceInfo?.droppedCeiling?.enabled) {
+              if (spaceInfo?.droppedCeiling?.enabled && spaceInfo?.dimensions?.ceilingHeight) {
                 // 원래 천장 높이와 현재 천장 높이 비교
                 const originalCeilingHeight = spaceInfo.dimensions.ceilingHeight;
                 const currentCeilingHeight = internalHeight + (spaceInfo.baseConfig?.floatHeight || 0);
