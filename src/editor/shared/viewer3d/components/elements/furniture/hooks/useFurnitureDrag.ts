@@ -187,23 +187,26 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     const currentModule = placedModules.find(m => m.id === draggingModuleId);
     if (!currentModule) return;
 
-    // 마우스 위치에서 슬롯 인덱스와 zone을 함께 감지
+    // 가구의 원래 zone을 유지 (단내림용 가구는 단내림 구간에만, 메인용은 메인 구간에만)
+    const furnitureZone = currentModule.zone;
+
+    // 마우스 위치에서 슬롯 인덱스 감지 (해당 zone 내에서만)
     const raycastResult = getSlotIndexAndZoneFromMousePosition(
       event.nativeEvent.clientX,
       event.nativeEvent.clientY,
       canvas,
       camera,
       scene,
-      spaceInfo
-      // activeZone 파라미터 없이 호출 - 모든 zone에서 감지
+      spaceInfo,
+      furnitureZone // 가구의 zone만 감지
     );
 
     const slotIndex = raycastResult.slotIndex;
     const detectedZone = raycastResult.zone;
 
+    console.log('🎯 Raycast result:', { slotIndex, detectedZone, furnitureZone });
+
     if (slotIndex !== null && detectedZone !== null) {
-      // 감지된 zone으로 currentModule의 zone 업데이트
-      currentModule.zone = detectedZone;
       // currentModule은 이미 위에서 정의됨
       
       // 단내림이 활성화된 경우 영역 체크
