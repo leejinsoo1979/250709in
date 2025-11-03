@@ -589,11 +589,12 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     // 각 칸의 상단과 하단 Y 좌표 계산
                     let compartmentTop, compartmentBottom;
 
-                    // shelfPositions[0] === 0인 경우 (바닥판), compartmentHeights에는 포함되지 않음
-                    // 따라서 i === 0일 때도 바닥판이 아닌 다음 칸을 의미
-
-                    // 각 칸의 정확한 위치 계산
-                    if (i === 0) {
+                    // 듀얼 가구 측면뷰인 경우: compartmentHeights에 저장된 height 값을 그대로 사용
+                    if (isSideViewForDual) {
+                      const compartmentHeight = compartment.height;
+                      compartmentBottom = -compartmentHeight / 2;
+                      compartmentTop = compartmentHeight / 2;
+                    } else if (i === 0) {
                       // 첫 번째 칸: 바닥판이 있으면(shelfPositions[0] === 0) 이 칸은 추가되지 않음
                       // 바닥판이 없으면 바닥부터 첫 선반 하단까지
                       // 상부섹션 (sectionIndex > 0)인 경우 바닥판(중간 분리판) 두께만큼 올려서 시작
