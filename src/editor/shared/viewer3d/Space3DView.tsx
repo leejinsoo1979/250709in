@@ -1828,7 +1828,6 @@ const QuadrantContent: React.FC<{
         materialConfig={materialConfig}
         activeZone={activeZone}
         showFurniture={showFurniture}
-        hideEdges={hideEdges}
       />
     </React.Suspense>
   );
