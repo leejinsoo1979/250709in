@@ -123,10 +123,13 @@ const SlotSelector: React.FC = () => {
     }
   }
 
+  // 단내림 좌측일 때는 버튼 배열도 역순으로
+  const finalSlotButtons = isDroppedOnLeft ? [...slotButtons].reverse() : slotButtons;
+
   return (
     <div className={styles.slotSelector} style={containerStyle}>
       <div className={styles.slotButtons}>
-        {slotButtons.map((slot) => {
+        {finalSlotButtons.map((slot) => {
           const isActive = selectedSlotIndex === slot.actualIndex;
           const isDroppedZone = slot.zone === 'dropped';
 
