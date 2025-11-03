@@ -724,8 +724,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   </>
                 )}
                 
-                {/* 마지막 섹션일 때 상판 두께 표시 (측면뷰 제외) */}
-                {index === allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                {/* 마지막 섹션일 때 상판 두께 표시 (측면뷰 제외, 띄워서 배치가 아닐 때만) */}
+                {index === allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && !isFloating && (
                   <>
                     {/* 상판 두께 텍스트 */}
                     
