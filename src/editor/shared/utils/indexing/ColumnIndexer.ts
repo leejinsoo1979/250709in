@@ -170,21 +170,52 @@ export class ColumnIndexer {
         // 메인 영역 슬롯 위치 계산 - 실제 슬롯 너비 사용
         zones.normal.threeUnitPositions = [];
         zones.normal.threeUnitDualPositions = [];
-        
+
+        // 단내림 있고 노서라운드이고 세미스탠딩인 경우 엔드패널 체크
+        const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
+        const isNoSurround = spaceInfo.surroundType === 'no-surround';
+        const isSemistanding = spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing';
+        const droppedPosition = spaceInfo.droppedCeiling?.position;
+
+        // 메인 구간의 좌측에 엔드패널이 있는지 확인
+        const hasLeftEndPanel = hasDroppedCeiling && isNoSurround && isSemistanding &&
+                                 droppedPosition === 'right' && !spaceInfo.wallConfig?.left;
+
+        // 메인 구간의 우측에 엔드패널이 있는지 확인
+        const hasRightEndPanel = hasDroppedCeiling && isNoSurround && isSemistanding &&
+                                  droppedPosition === 'left' && !spaceInfo.wallConfig?.right;
+
         let currentX = zones.normal.startX;
         for (let i = 0; i < zones.normal.columnCount; i++) {
           const slotWidth = zones.normal.slotWidths?.[i] || zones.normal.columnWidth;
-          const slotCenterX = currentX + (slotWidth / 2);
+          let slotCenterX: number;
+
+          // 첫 슬롯이고 좌측에 엔드패널이 있는 경우
+          if (i === 0 && hasLeftEndPanel) {
+            // 엔드패널 18mm를 고려한 중심 계산
+            slotCenterX = currentX + END_PANEL_THICKNESS + (slotWidth - END_PANEL_THICKNESS) / 2;
+          }
+          // 마지막 슬롯이고 우측에 엔드패널이 있는 경우
+          else if (i === zones.normal.columnCount - 1 && hasRightEndPanel) {
+            // 엔드패널 18mm를 고려한 중심 계산
+            slotCenterX = currentX + (slotWidth - END_PANEL_THICKNESS) / 2;
+          }
+          else {
+            slotCenterX = currentX + (slotWidth / 2);
+          }
+
           // 이미 Room 좌표계이므로 그대로 변환
           zones.normal.threeUnitPositions.push(SpaceCalculator.mmToThreeUnits(slotCenterX));
-          
+
           console.log(`🎯 Normal Zone Slot ${i}:`, {
             startX: currentX,
             width: slotWidth,
             centerX: slotCenterX,
-            threeUnits: SpaceCalculator.mmToThreeUnits(slotCenterX)
+            threeUnits: SpaceCalculator.mmToThreeUnits(slotCenterX),
+            hasLeftEndPanel: i === 0 && hasLeftEndPanel,
+            hasRightEndPanel: i === zones.normal.columnCount - 1 && hasRightEndPanel
           });
-          
+
           currentX += slotWidth;
         }
         
