@@ -257,27 +257,26 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               console.log('  dropHeight:', spaceInfo?.droppedCeiling?.dropHeight);
               console.log('  originalCeilingHeight:', spaceInfo?.dimensions?.ceilingHeight);
 
-              let accumulatedY = -height / 2 + basicThickness;
-
               return sections.map((section: any, sectionIndex: number) => {
                 console.log(`🟡 DualType1 섹션[${sectionIndex}] (${section.type})`);
 
-                if (section.type !== 'hanging') {
-                  console.log('  ⏭️ hanging 섹션이 아니므로 옷봉 렌더링 생략');
+                // 현재 섹션의 시작 Y 위치 계산
+                let sectionBottomY = -height / 2 + basicThickness;
 
-                  // hanging이 아닌 섹션도 accumulatedY를 업데이트해야 함
-                  if (sectionIndex === 0) {
-                    accumulatedY += mmToThreeUnits(section.height);
+                // 이전 섹션들의 높이를 누적 (actualSectionHeight 사용)
+                for (let i = 0; i < sectionIndex; i++) {
+                  if (i === 0) {
+                    sectionBottomY += mmToThreeUnits(sections[i].height);
                   } else {
                     const bottomSectionHeight = mmToThreeUnits(sections[0].height);
-                    accumulatedY += availableHeight - bottomSectionHeight;
+                    sectionBottomY += availableHeight - bottomSectionHeight;
                   }
-
-                  return null;
                 }
 
-                // 현재 섹션의 시작 Y 위치
-                const sectionBottomY = accumulatedY;
+                if (section.type !== 'hanging') {
+                  console.log('  ⏭️ hanging 섹션이 아니므로 옷봉 렌더링 생략');
+                  return null;
+                }
 
                 // 실제 섹션 높이 계산 (현재 가구 높이 기반)
                 let actualSectionHeight: number;
@@ -292,9 +291,6 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                   const bottomSectionHeight = mmToThreeUnits(sections[0].height);
                   actualSectionHeight = availableHeight - bottomSectionHeight;
                 }
-
-                // 다음 섹션을 위해 accumulatedY 업데이트
-                accumulatedY += actualSectionHeight;
 
                 console.log('  actualSectionHeight:', actualSectionHeight * 100);
                 console.log('  sectionBottomY:', sectionBottomY * 100);
