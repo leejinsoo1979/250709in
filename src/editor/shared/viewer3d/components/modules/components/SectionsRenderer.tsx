@@ -444,7 +444,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
             // 섹션 내경 치수 표시 조건
             const shouldShow = !hideSectionDimensions && showDimensions && showDimensionsText &&
-                              !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'top')) &&
+                              !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) &&
                               (section.type === 'hanging' || section.type === 'drawer') &&
                               !shouldHide2HangingUpper;
 
