@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { InstallType, FloorFinishConfig } from '@/editor/shared/controls/types';
 import { Column, Wall, PanelB } from '@/types/space';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
+import { useFurnitureStore } from './furnitureStore';
 
 // Configurator 관련 추가 타입들
 export type SurroundType = 'surround' | 'no-surround';
@@ -336,6 +337,27 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         }
       }
       
+      const previousDropped = state.spaceInfo.droppedCeiling;
+      const nextDropped = tempSpaceInfo.droppedCeiling;
+
+      if (
+        previousDropped?.enabled &&
+        nextDropped?.enabled &&
+        previousDropped.position !== nextDropped.position
+      ) {
+        const furnitureState = useFurnitureStore.getState();
+        if (furnitureState.placedModules.length > 0) {
+          console.log('🧹 단내림 위치 변경 → 배치된 가구 초기화', {
+            이전위치: previousDropped.position,
+            새로운위치: nextDropped.position,
+            초기화가구수: furnitureState.placedModules.length
+          });
+
+          furnitureState.setPlacedModules([]);
+          furnitureState.clearAllSelections();
+        }
+      }
+
       const newState = {
         spaceInfo: tempSpaceInfo,
         isDirty: true,
