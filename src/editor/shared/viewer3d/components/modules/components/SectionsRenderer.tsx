@@ -469,8 +469,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   } else {
                     // 상부 섹션 (index > 0)
                     if (index > 0) {
-                      // 내경은 항상 바닥판 윗면부터 시작
-                      bottomY = sectionBottomY + basicThickness;
+                      // 듀얼 가구: 바닥판 윗면부터 시작
+                      // 싱글 가구: 중간 분리판 하단부터 시작 (분리판 두께 포함)
+                      const isDualFurniture = furnitureId?.includes('dual');
+                      if (isDualFurniture) {
+                        bottomY = sectionBottomY + basicThickness;
+                      } else {
+                        bottomY = sectionBottomY;
+                      }
                     } else {
                       // 하부 섹션: 바닥판 상단부터
                       bottomY = sectionBottomY + basicThickness;
