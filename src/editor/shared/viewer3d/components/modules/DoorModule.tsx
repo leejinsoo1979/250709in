@@ -844,7 +844,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   if (isUpperCabinet) {
     // 상부장 도어는 캐비넷보다 아래로 확장
     const upperCabinetHeight = moduleData?.dimensions?.height || 600;
-    
+
     // 캐비넷 하단 = -캐비넷높이/2
     // 도어 하단 = 캐비넷 하단 - 확장값 (더 아래로)
     // 도어 높이 = 캐비넷높이 - 위쪽 간격 + 아래 확장
@@ -852,8 +852,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorHeightMm = upperCabinetHeight - UPPER_CABINET_TOP_GAP + UPPER_CABINET_BOTTOM_EXTENSION;
     const cabinetBottom = -upperCabinetHeight / 2;
     const doorBottom = cabinetBottom - UPPER_CABINET_BOTTOM_EXTENSION;
-    const doorCenter = doorBottom + doorHeightMm / 2;
-    
+    const doorCenter = doorBottom + doorHeightMm / 2 + 10; // 10mm 위로 조정
+
     doorYPosition = mmToThreeUnits(doorCenter);
     
     console.log('🚪🔴 상부장 도어 Y 위치:', {
