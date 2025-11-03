@@ -53,27 +53,39 @@ export const useFurnitureKeyboard = ({
         const moduleData = getModuleById(editingModule.moduleId, internalSpace, spaceInfo);
         if (!moduleData) return;
         
-        // 듀얼/싱글 가구 판별
-        const columnWidth = indexing.columnWidth;
-        const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
-        
-        let currentSlotIndex = -1;
-
         // 단내림 모드일 때는 zone별 position 배열 사용
         const moduleZone = editingModule.zone || 'normal';
         let positionsToSearch: number[] | undefined;
         let dualPositionsToSearch: number[] | undefined;
+        let columnWidth: number;
 
         if (indexing.zones && spaceInfo.droppedCeiling?.enabled) {
           const zoneInfo = moduleZone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
           if (zoneInfo) {
             positionsToSearch = zoneInfo.threeUnitPositions;
             dualPositionsToSearch = zoneInfo.threeUnitDualPositions;
+            columnWidth = zoneInfo.columnWidth;
+          } else {
+            columnWidth = indexing.columnWidth;
           }
         } else {
           positionsToSearch = indexing.threeUnitPositions;
           dualPositionsToSearch = indexing.threeUnitDualPositions;
+          columnWidth = indexing.columnWidth;
         }
+
+        // 듀얼/싱글 가구 판별 - zone별 columnWidth 사용
+        const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+
+        console.log('🔍 [useFurnitureKeyboard] 가구 타입 판별:', {
+          moduleZone,
+          columnWidth,
+          furnitureWidth: moduleData.dimensions.width,
+          isDualFurniture,
+          hasZones: !!indexing.zones
+        });
+
+        let currentSlotIndex = -1;
 
         if (isDualFurniture) {
           // 듀얼 가구: threeUnitDualPositions에서 슬롯 찾기
