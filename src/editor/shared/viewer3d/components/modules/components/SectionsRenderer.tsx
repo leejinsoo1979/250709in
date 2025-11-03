@@ -543,8 +543,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                       if (is2HangingUpperSection && isDualFurniture) {
                         // 듀얼 가구만: sectionTopY가 측판 상단 (전체 가구 상판 아래)
-                        // 내경은 sectionTopY까지 (상판 두께 빼지 않음)
-                        topY = sectionTopY;
+                        // 내경은 상판 하단까지 (상판 두께를 빼야 함)
+                        topY = sectionTopY - basicThickness;
                       } else if (is2HangingUpperSection) {
                         // 싱글 가구: bottomY + sectionHeight (원래 로직)
                         topY = bottomY + sectionHeight;
