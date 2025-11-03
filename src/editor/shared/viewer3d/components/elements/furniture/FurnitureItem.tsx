@@ -1971,9 +1971,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 마지막 슬롯도 일반 슬롯과 동일하게 처리 (특별 처리 제거)
   // threeUnitPositions가 이미 올바른 위치를 가지고 있음
-  
-  // 마지막 슬롯은 기둥 처리 제외
-  if (!isFurnitureDragging && !isLastSlot && slotInfo && slotInfo.hasColumn && slotInfo.column) {
+
+  // 기둥이 있는 모든 슬롯 처리 (단내림 구간 포함)
+  if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && slotInfo.column) {
     // 기둥 타입에 따른 처리 방식 확인
     const columnProcessingMethod = slotInfo.columnProcessingMethod || 'width-adjustment';
     
