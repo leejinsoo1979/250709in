@@ -2085,9 +2085,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
 
     if (spaceInfo.surroundType === 'no-surround') {
+      // 단내림 좌측 메인 구간: 가구 너비 18mm 줄어들어서 중심이 9mm 왼쪽으로 밀림 → 우측으로 9mm 보정
+      if (spaceInfo.droppedCeiling?.enabled &&
+          spaceInfo.droppedCeiling.position === 'left' &&
+          placedModule.zone === 'normal') {
+        // zone의 마지막 슬롯인지 확인
+        if (zoneSlotInfo && zoneSlotInfo.normal) {
+          const localIndex = localSlotIndex ?? placedModule.slotIndex;
+          const zoneColumnCount = zoneSlotInfo.normal.columnCount;
+          if (localIndex === zoneColumnCount - 1) {
+            finalOffset = offset; // 우측으로 9mm (가구 중심 보정)
+            console.log('🟢 [단내림 좌측 메인 구간 마지막 슬롯] 우측으로 9mm 이동 (가구 중심 보정)');
+          }
+        }
+      }
       // 노서라운드: 바깥쪽 끝 슬롯만 이동 (첫/마지막 슬롯)
       // 단내림 구간은 이동하지 않음 (엔드패널과 붙어야 함)
-      if ((isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) && !isDroppedZone) {
+      else if ((isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) && !isDroppedZone) {
         finalOffset = offset;
       }
     } else if (spaceInfo.surroundType === 'surround' && widthReduced) {
