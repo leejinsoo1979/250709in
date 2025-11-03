@@ -467,8 +467,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 2hanging, 2drawer-hanging 상부 섹션: 바닥판 아래부터
                     const is2HangingUpperSection = (furnitureId?.includes('2hanging') || furnitureId?.includes('2drawer-hanging')) && index === 1;
                     if (is2HangingUpperSection) {
-                      // 상부섹션 바닥판 아래 = 섹션 하단
-                      bottomY = sectionBottomY;
+                      // 측면뷰: 중간 분리판 윗면부터 (바닥판 상단)
+                      // 정면뷰: 바닥판 아래 = 섹션 하단
+                      bottomY = isSideView ? (sectionBottomY + basicThickness) : sectionBottomY;
                     } else {
                       // 일반 hanging 섹션: 바닥판 상단부터
                       bottomY = sectionBottomY + basicThickness;
