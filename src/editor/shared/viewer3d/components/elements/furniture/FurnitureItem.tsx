@@ -1522,6 +1522,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         } else {
           // 상하부장도 엔드패널 반대쪽으로 이동
           if (isFirstSlotNoSurround) {
+            console.log('🔴🔴🔴 isFirstSlotNoSurround 엔드패널 조정:', {
+              isDroppedZone,
+              droppedPosition,
+              zone: placedModule.zone,
+              slotIndex: placedModule.slotIndex,
+              '단내림활성화': spaceInfo.droppedCeiling?.enabled
+            });
+
             if (isDroppedZone && droppedPosition === 'left') {
               positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
             } else if (isDroppedZone && droppedPosition === 'right') {
@@ -1529,6 +1537,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             } else {
               positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
             }
+
+            console.log('🔴🔴🔴 최종 positionAdjustmentForEndPanel:', positionAdjustmentForEndPanel);
           } else if (isLastSlotNoSurround) {
             if (isDroppedZone && droppedPosition === 'left') {
               positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
