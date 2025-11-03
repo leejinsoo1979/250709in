@@ -248,13 +248,20 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               const availableHeight = height - basicThickness * 2;
 
               // 단내림 높이 감소분 계산 (단내림 구간인 경우에만)
+              // internalHeight가 원래 천장높이보다 낮으면 단내림 구간
               let droppedHeightReduction = 0;
               if (spaceInfo?.droppedCeiling?.enabled && spaceInfo?.dimensions?.ceilingHeight) {
-                // 원래 천장 높이와 현재 천장 높이 비교
                 const originalCeilingHeight = spaceInfo.dimensions.ceilingHeight;
-                const currentCeilingHeight = internalHeight + (spaceInfo.baseConfig?.floatHeight || 0);
-                if (currentCeilingHeight < originalCeilingHeight) {
-                  droppedHeightReduction = mmToThreeUnits(originalCeilingHeight - currentCeilingHeight);
+                const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
+                const dropHeight = spaceInfo.droppedCeiling.dropHeight || 0;
+
+                // 단내림 구간의 천장 높이 = 원래 천장 - 단내림 높이
+                const droppedCeilingHeight = originalCeilingHeight - dropHeight;
+
+                // 현재 가구의 internalHeight가 단내림 구간 높이와 일치하면 단내림 구간 가구
+                if (Math.abs(internalHeight - (droppedCeilingHeight - floatHeight)) < 10) {
+                  // 단내림으로 인한 높이 감소 = dropHeight
+                  droppedHeightReduction = mmToThreeUnits(dropHeight);
                 }
               }
 
