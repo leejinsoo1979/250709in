@@ -65,24 +65,31 @@ export class FurniturePositioner {
     
     // 단내림이 있는 경우 영역별 위치 계산
     if (zone && newIndexing.zones) {
-      const zoneData = zone === 'normal' 
-        ? newIndexing.zones.normal 
+      const zoneData = zone === 'normal'
+        ? newIndexing.zones.normal
         : newIndexing.zones.dropped!;
-      
-      const baseX = zoneData.startX;
-      const columnWidth = zoneData.columnWidth;
-      
-      if (isDualFurniture) {
-        // 듀얼 가구: 두 슬롯의 중간 위치
-        newX = baseX + slotIndex * columnWidth + columnWidth;
+
+      // zone별 threeUnitPositions 사용
+      if (isDualFurniture && zoneData.threeUnitDualPositions) {
+        // 듀얼 가구: zone의 threeUnitDualPositions에서 위치 가져오기
+        newX = zoneData.threeUnitDualPositions[slotIndex];
+      } else if (zoneData.threeUnitPositions) {
+        // 싱글 가구: zone의 threeUnitPositions에서 위치 가져오기
+        newX = zoneData.threeUnitPositions[slotIndex];
       } else {
-        // 싱글 가구: 슬롯 중앙 위치
-        newX = baseX + slotIndex * columnWidth + columnWidth / 2;
+        // fallback: 수동 계산
+        const baseX = zoneData.startX;
+        const columnWidth = zoneData.columnWidth;
+
+        if (isDualFurniture) {
+          newX = SpaceCalculator.mmToThreeUnits(baseX + slotIndex * columnWidth + columnWidth);
+        } else {
+          newX = SpaceCalculator.mmToThreeUnits(baseX + slotIndex * columnWidth + columnWidth / 2);
+        }
       }
-      
-      // mm를 Three.js 단위로 변환
+
       return {
-        x: SpaceCalculator.mmToThreeUnits(newX),
+        x: newX,
         y: 0, // Y 좌표는 변경하지 않음
         z: 0  // Z 좌표는 변경하지 않음
       };
