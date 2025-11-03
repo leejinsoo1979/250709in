@@ -1092,23 +1092,33 @@ const Configurator: React.FC = () => {
     const mode = searchParams.get('mode');
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
-    
+
+    // 프로젝트 ID가 변경된 경우에만 상태 업데이트
     if (projectId && projectId !== currentProjectId) {
       setCurrentProjectId(projectId);
-      
-      // designFileId가 있으면 저장
-      if (designFileId) {
-        setCurrentDesignFileId(designFileId);
-        console.log('📝 디자인파일 ID 설정:', designFileId);
-      }
-      
+    }
+
+    // designFileId가 변경된 경우에만 상태 업데이트
+    if (designFileId && designFileId !== currentDesignFileId) {
+      setCurrentDesignFileId(designFileId);
+      console.log('📝 디자인파일 ID 설정:', designFileId);
+    }
+
+    // CNC에서 돌아오는 경우 - 이미 데이터가 로드되어 있으면 재로드하지 않음
+    if (projectId === currentProjectId && designFileId === currentDesignFileId && placedModules.length > 0) {
+      console.log('✅ 이미 로드된 프로젝트 - 재로드하지 않음');
+      setLoading(false);
+      return;
+    }
+
+    if (projectId) {
       if (skipLoad || isNewDesign) {
         // Step 1-3에서 넘어온 경우 또는 새 디자인 생성 - 이미 스토어에 데이터가 설정되어 있음
         console.log('✅ skipLoad=true 또는 design=new - Step 1-3에서 설정한 데이터 유지');
         console.log('🔍 현재 spaceInfo:', spaceInfo);
         console.log('🔍 현재 basicInfo:', basicInfo);
         console.log('🔍 현재 designFileId:', designFileId);
-        
+
         // 로딩 완료 처리
         setTimeout(() => {
           setLoading(false);
@@ -1116,13 +1126,13 @@ const Configurator: React.FC = () => {
       } else if (mode === 'new-design') {
         // 기존 프로젝트에 새 디자인 생성하는 경우 - 프로젝트명만 가져오기
         console.log('🎨 기존 프로젝트에 새 디자인 생성:', projectId);
-        
+
         // 프로젝트명만 가져와서 헤더에 표시하기 위해
         getProject(projectId).then(({ project, error }) => {
           if (project && !error) {
             console.log('🔍 setBasicInfo 호출 전 basicInfo:', basicInfo);
             console.log('🔍 설정할 프로젝트명:', project.title);
-            
+
             setBasicInfo({ title: project.title });
             console.log('📝 프로젝트명 설정:', project.title);
           }
@@ -1131,18 +1141,18 @@ const Configurator: React.FC = () => {
       } else if (designFileId && !skipLoad) {
         // designFileId가 있는 경우 디자인 파일 데이터 로드
         console.log('📂 디자인파일 데이터 로드 시작:', designFileId);
-        
+
         import('@/firebase/projects').then(({ getDesignFileById }) => {
           getDesignFileById(designFileId).then(({ designFile, error }) => {
             if (designFile && !error) {
               console.log('✅ 디자인파일 로드 성공:', designFile);
-              
+
               // 프로젝트 기본 정보 설정
               if (designFile.projectData) {
                 setBasicInfo(designFile.projectData);
                 console.log('📝 프로젝트 데이터 설정:', designFile.projectData);
               }
-              
+
               // 공간 설정
               if (designFile.spaceConfig) {
                 // mainDoorCount와 customColumnCount를 undefined로 초기화하여 자동 계산 활성화
@@ -1155,17 +1165,17 @@ const Configurator: React.FC = () => {
                 setSpaceInfo(spaceConfig);
                 console.log('📐 공간 설정 데이터 설정 (컬럼 관련 값 초기화):', spaceConfig);
               }
-              
+
               // 가구 배치 데이터 설정
               if (designFile.furniture?.placedModules) {
                 // 상하부장 필터링 확인
-                const upperCabinets = designFile.furniture.placedModules.filter(m => 
+                const upperCabinets = designFile.furniture.placedModules.filter(m =>
                   m.moduleId?.includes('upper-cabinet')
                 );
-                const lowerCabinets = designFile.furniture.placedModules.filter(m => 
+                const lowerCabinets = designFile.furniture.placedModules.filter(m =>
                   m.moduleId?.includes('lower-cabinet')
                 );
-                
+
                 console.log('🗄️ [Configurator] 불러온 상하부장 데이터:', {
                   totalModules: designFile.furniture.placedModules.length,
                   upperCabinets: upperCabinets.length,
@@ -1181,13 +1191,13 @@ const Configurator: React.FC = () => {
                     slotIndex: m.slotIndex
                   }))
                 });
-                
+
                 // baseModuleType이 없는 경우 추가
                 const modulesWithBaseType = designFile.furniture.placedModules.map(m => ({
                   ...m,
                   baseModuleType: m.baseModuleType || m.moduleId.replace(/-[\d.]+$/, '')
                 }));
-                
+
                 setPlacedModules(modulesWithBaseType);
                 console.log('🪑 가구 배치 데이터 설정:', {
                   count: modulesWithBaseType.length,
@@ -1201,7 +1211,7 @@ const Configurator: React.FC = () => {
                   }))
                 });
               }
-              
+
               // 디자인파일 이름 설정
               if (designFile.fileName) {
                 setCurrentDesignFileName(designFile.fileName);
@@ -1223,7 +1233,7 @@ const Configurator: React.FC = () => {
         setLoading(false);
       }, 500);
     }
-  }, [searchParams, currentProjectId]);
+  }, [searchParams]);
 
   // 폴더에서 실제 디자인파일명 찾기
   useEffect(() => {
