@@ -870,7 +870,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 하부장 도어는 하부장 상단과 일치하고 아래로 확장
     const LOWER_CABINET_BOTTOM_EXTENSION = 40; // 아래쪽 확장
     const LOWER_CABINET_TOP_EXTENSION = 18; // 상부 마감재 두께 (도어 상단 = 하부장 상단)
-    const DOOR_POSITION_ADJUSTMENT = 10; // 위치 조정값 (10mm 더 아래로)
+    const DOOR_POSITION_ADJUSTMENT = 0; // 위치 조정값 (10mm 위로 올림)
     const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
 
     // 하부장 캐비넷은 Y=0에 위치 (cabinetYPosition = 0)
