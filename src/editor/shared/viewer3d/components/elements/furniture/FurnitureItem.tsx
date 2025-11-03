@@ -746,6 +746,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   const slotInfo = globalSlotIndex !== undefined ? columnSlots[globalSlotIndex] : undefined;
 
+  // 단내림 구간 기둥 디버깅
+  if (placedModule.zone === 'dropped' && slotInfo) {
+    console.log('🔴 [단내림 구간 가구] slotInfo:', {
+      moduleId: placedModule.id,
+      globalSlotIndex,
+      hasColumn: slotInfo.hasColumn,
+      column: slotInfo.column,
+      availableWidth: slotInfo.availableWidth
+    });
+  }
+
   const slotBoundaries = React.useMemo(() => {
     if (normalizedSlotIndex === undefined) {
       return null;
