@@ -304,6 +304,10 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
             {(() => {
               const compartmentHeights: Array<{ height: number; centerY: number }> = [];
 
+              // 첫 번째 칸의 높이를 미리 계산하여 표시 여부 결정
+              let shouldShowDimensions = true;
+              let firstCompartmentHeightMm = 0;
+
               // 측면뷰(allowSideViewDimensions=true)에서는 섹션 전체 높이만 표시
               const isSideViewForDual = allowSideViewDimensions && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
 
@@ -329,9 +333,6 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                 });
               } else {
                 // 기존 로직: 개별 칸 높이 계산
-                // 첫 번째 칸의 높이를 미리 계산하여 표시 여부 결정
-                let shouldShowDimensions = true;
-                let firstCompartmentHeightMm = 0;
 
                 // 첫 번째 칸 (맨 아래) - 바닥부터 첫 번째 선반 하단까지
                 if (shelfPositions.length > 0) {
