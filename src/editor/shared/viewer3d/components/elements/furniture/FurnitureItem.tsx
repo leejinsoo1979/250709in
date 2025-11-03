@@ -1244,18 +1244,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     } else {
       // 일반적인 경우: 엔드패널 두께만큼 키큰장 너비를 줄이고 위치 조정
       if (endPanelSide === 'left') {
-        // 왼쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동 (엔드패널 쪽으로)
+        // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동 (반대쪽으로)
         adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
-        console.log('🔶 왼쪽 상하부장 인접 - 왼쪽으로 9mm 이동:', {
+        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
+        console.log('🔶 왼쪽 상하부장 인접 - 오른쪽으로 9mm 이동:', {
           adjustedWidth: adjustedWidthForEndPanel,
           positionAdjustment: positionAdjustmentForEndPanel
         });
       } else if (endPanelSide === 'right') {
-        // 오른쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동 (엔드패널 쪽으로)
+        // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동 (반대쪽으로)
         adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
-        console.log('🔶 오른쪽 상하부장 인접 - 오른쪽으로 9mm 이동:', {
+        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
+        console.log('🔶 오른쪽 상하부장 인접 - 왼쪽으로 9mm 이동:', {
           adjustedWidth: adjustedWidthForEndPanel,
           positionAdjustment: positionAdjustmentForEndPanel
         });
