@@ -662,15 +662,26 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                       {/* 수직 연결선 - 왼쪽으로 이동 (hover 시 테마 색상) */}
                       <group>
-                        <NativeLine
-                          points={[
-                            [-innerWidth/2 * 0.3, topY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
-                            [-innerWidth/2 * 0.3, bottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
-                          ]}
-                          color={currentColor}
-                          lineWidth={1}
-                          dashed={false}
-                        />
+                        {(() => {
+                          // 2D 우측뷰에서 상부 섹션은 bottomY를 36mm 아래로 확장
+                          const isRightView = viewMode === '2D' && view2DDirection === 'right';
+                          const isUpperSection = index > 0;
+                          const extendedBottomY = (isRightView && isUpperSection)
+                            ? bottomY - mmToThreeUnits(36)
+                            : bottomY;
+
+                          return (
+                            <NativeLine
+                              points={[
+                                [-innerWidth/2 * 0.3, topY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
+                                [-innerWidth/2 * 0.3, extendedBottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
+                              ]}
+                              color={currentColor}
+                              lineWidth={1}
+                              dashed={false}
+                            />
+                          );
+                        })()}
 
                         {/* 가이드선 클릭/hover 영역 */}
                         <mesh
