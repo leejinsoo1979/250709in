@@ -313,9 +313,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
 
               if (isSideViewForDual) {
                 // 듀얼 가구 측면뷰: 섹션 전체 높이를 하나의 치수로 표시
-                const totalSectionHeight = innerHeight - basicThickness * 2; // 상하 프레임 두께 제외
+                // innerHeight는 이미 섹션 내부 높이이므로 그대로 사용
                 compartmentHeights.push({
-                  height: totalSectionHeight,
+                  height: innerHeight,
                   centerY: 0 // 섹션 중앙
                 });
 
@@ -327,9 +327,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                   innerHeight_mm: innerHeight * 100,
                   basicThickness,
                   basicThickness_mm: basicThickness * 100,
-                  totalSectionHeight,
-                  totalSectionHeight_mm: totalSectionHeight * 100,
-                  표시될값: Math.round(totalSectionHeight * 100)
+                  표시될값: Math.round(innerHeight * 100)
                 });
               } else {
                 // 기존 로직: 개별 칸 높이 계산
