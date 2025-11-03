@@ -132,6 +132,13 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
             lineWidth={0.5}
             position={[0, 0, rimDepth + 0.01]}
           />
+          {/* 타공 부분 윤곽선 */}
+          <Line
+            points={innerCirclePoints}
+            color="#666666"
+            lineWidth={0.5}
+            position={[0, 0, rimDepth + 0.01]}
+          />
           <mesh
             geometry={rimGeometry}
             castShadow
