@@ -90,7 +90,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
   // sectionHeightsMm 계산 (도어 분할용)
   const sectionHeights = getSectionHeights();
-  const isFloating = lowerSectionTopOffset !== undefined && lowerSectionTopOffset > 0;
+  const isFloating = spaceInfo?.baseConfig?.type === 'stand' && spaceInfo?.baseConfig?.placementType === 'float';
   const unitsToMmFactor = (() => {
     const unit = mmToThreeUnits(1);
     return unit === 0 ? 100 : 1 / unit;
