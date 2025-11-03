@@ -2870,7 +2870,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const shouldRender = needsEndPanelAdjustment && endPanelSide && !isNoSurroundFirstSlot && !isNoSurroundLastSlot && !isNoSurroundDualLastSlot && spaceInfo.surroundType === 'no-surround';
 
         console.log('🟢 키큰장+상하부장 엔드패널 렌더링 조건:', {
-          currentId: currentModule.id,
+          currentId: placedModule.id,
           needsEndPanelAdjustment,
           endPanelSide,
           isNoSurroundFirstSlot,

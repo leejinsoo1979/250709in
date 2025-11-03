@@ -2108,8 +2108,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         return;
       }
 
-      const moduleZone = (m.zone || 'normal') as 'normal' | 'dropped';
-      const localIndex = convertToZoneIndex(m.slotIndex, moduleZone);
+      // 단내림이 없으면 slotIndex를 그대로 사용
+      const localIndex = m.slotIndex;
 
       if (localIndex < 0 || localIndex >= slotOccupancy.length) {
         return;
