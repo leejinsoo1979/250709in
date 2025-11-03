@@ -122,6 +122,8 @@
 .userSection {
   padding: 16px;
   border-top: 1px solid var(--theme-border);
+  display: flex;
+  justify-content: center;
 }
 
 .userAvatar {

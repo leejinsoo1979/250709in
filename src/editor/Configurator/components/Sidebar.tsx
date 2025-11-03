@@ -207,7 +207,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* 설정 버튼 */}
-      <div style={{ padding: '16px', borderTop: '1px solid var(--theme-border)' }}>
+      <div style={{ padding: '16px', borderTop: '1px solid var(--theme-border)', display: 'flex', justifyContent: 'center' }}>
         <button
           className={styles.settingsButton}
           title="설정"
