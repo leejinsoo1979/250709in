@@ -486,8 +486,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   } else {
                     // 상부 섹션 (index > 0)
                     if (index > 0) {
-                      // 듀얼/싱글 모두 중간 분리판 하단부터 시작 (분리판 두께 포함)
-                      bottomY = sectionBottomY;
+                      // 듀얼/싱글 모두 중간 분리판 상단부터 시작 (내경)
+                      bottomY = sectionBottomY + basicThickness;
 
                       // 2D 우측뷰에서 상부섹션 치수가이드를 36mm 아래로 확장
                       if (view2DDirection === 'right') {
