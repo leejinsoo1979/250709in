@@ -1,6 +1,7 @@
 import React from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import styles from './SlotSelector.module.css';
 
@@ -13,6 +14,7 @@ const SlotSelector: React.FC = () => {
   const { viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex, view2DTheme } = useUIStore();
   const { columnCount, zones } = useDerivedSpaceStore();
   const { theme } = useTheme();
+  const { spaceInfo } = useSpaceConfigStore();
 
   // 측면뷰가 아닐 때 selectedSlotIndex를 null로 리셋
   React.useEffect(() => {
@@ -77,12 +79,56 @@ const SlotSelector: React.FC = () => {
   const droppedSlotCount = zones?.dropped?.columnCount || 0;
   const totalSlots = normalSlotCount + droppedSlotCount;
 
+  // 단내림 위치에 따른 슬롯 순서 결정
+  const isDroppedOnLeft = spaceInfo?.droppedCeiling?.position === 'left';
+
+  // 슬롯 배열 생성 (단내림 위치에 따라 순서 변경)
+  const slotButtons = [];
+
+  if (isDroppedOnLeft) {
+    // 단내림이 좌측: 단내림 슬롯(우→좌) + 일반 슬롯(좌→우)
+    // 단내림 슬롯들 (역순으로 표시)
+    for (let i = droppedSlotCount - 1; i >= 0; i--) {
+      slotButtons.push({
+        displayIndex: droppedSlotCount - i,
+        actualIndex: normalSlotCount + i,
+        zone: 'dropped' as const
+      });
+    }
+    // 일반 슬롯들
+    for (let i = 0; i < normalSlotCount; i++) {
+      slotButtons.push({
+        displayIndex: droppedSlotCount + i + 1,
+        actualIndex: i,
+        zone: 'normal' as const
+      });
+    }
+  } else {
+    // 단내림이 우측: 일반 슬롯(좌→우) + 단내림 슬롯(좌→우)
+    // 일반 슬롯들
+    for (let i = 0; i < normalSlotCount; i++) {
+      slotButtons.push({
+        displayIndex: i + 1,
+        actualIndex: i,
+        zone: 'normal' as const
+      });
+    }
+    // 단내림 슬롯들
+    for (let i = 0; i < droppedSlotCount; i++) {
+      slotButtons.push({
+        displayIndex: normalSlotCount + i + 1,
+        actualIndex: normalSlotCount + i,
+        zone: 'dropped' as const
+      });
+    }
+  }
+
   return (
     <div className={styles.slotSelector} style={containerStyle}>
       <div className={styles.slotButtons}>
-        {/* 일반 영역 슬롯 버튼들 */}
-        {Array.from({ length: normalSlotCount }, (_, index) => {
-          const isActive = selectedSlotIndex === index;
+        {slotButtons.map((slot) => {
+          const isActive = selectedSlotIndex === slot.actualIndex;
+          const isDroppedZone = slot.zone === 'dropped';
 
           // 버튼 스타일 (다크/라이트 테마에 따른 색상)
           const buttonStyle: React.CSSProperties = isActive
@@ -90,6 +136,12 @@ const SlotSelector: React.FC = () => {
                 backgroundColor: themeColor,
                 borderColor: themeColor,
                 color: 'white',
+              }
+            : isDroppedZone
+            ? {
+                backgroundColor: isDark ? '#1a1a1a' : '#f5f5f5',
+                borderColor: isDark ? '#303030' : '#c0c0c0',
+                color: isDark ? '#d0d0d0' : '#555',
               }
             : {
                 backgroundColor: isDark ? '#2a2a2a' : 'white',
@@ -99,43 +151,13 @@ const SlotSelector: React.FC = () => {
 
           return (
             <button
-              key={index}
+              key={slot.actualIndex}
               className={`${styles.slotButton} ${isActive ? styles.active : ''}`}
-              onClick={() => setSelectedSlotIndex(index)}
+              onClick={() => setSelectedSlotIndex(slot.actualIndex)}
               style={buttonStyle}
+              title={isDroppedZone ? '단내림 영역' : undefined}
             >
-              {index + 1}
-            </button>
-          );
-        })}
-
-        {/* 단내림 영역 슬롯 버튼들 (있는 경우) */}
-        {droppedSlotCount > 0 && Array.from({ length: droppedSlotCount }, (_, index) => {
-          const slotIndex = normalSlotCount + index;
-          const isActive = selectedSlotIndex === slotIndex;
-
-          // 버튼 스타일 (단내림 영역은 약간 다른 색상)
-          const buttonStyle: React.CSSProperties = isActive
-            ? {
-                backgroundColor: themeColor,
-                borderColor: themeColor,
-                color: 'white',
-              }
-            : {
-                backgroundColor: isDark ? '#1a1a1a' : '#f5f5f5',
-                borderColor: isDark ? '#303030' : '#c0c0c0',
-                color: isDark ? '#d0d0d0' : '#555',
-              };
-
-          return (
-            <button
-              key={slotIndex}
-              className={`${styles.slotButton} ${isActive ? styles.active : ''}`}
-              onClick={() => setSelectedSlotIndex(slotIndex)}
-              style={buttonStyle}
-              title="단내림 영역"
-            >
-              {slotIndex + 1}
+              {slot.displayIndex}
             </button>
           );
         })}
