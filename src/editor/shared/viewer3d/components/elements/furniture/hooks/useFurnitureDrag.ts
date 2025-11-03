@@ -150,6 +150,12 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       return;
     }
 
+    // 더블클릭으로 활성화된 가구만 드래그 가능
+    const selectedFurnitureId = useUIStore.getState().selectedFurnitureId;
+    if (selectedFurnitureId !== placedModuleId) {
+      return;
+    }
+
     e.stopPropagation();
 
     setDraggingModuleId(placedModuleId);
@@ -158,10 +164,10 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
     // 가구 드래그 시작 이벤트 발생
     window.dispatchEvent(new CustomEvent('furniture-drag-start'));
-    
+
     // 가구 배치 모드 활성화
     setFurniturePlacementMode(true);
-    
+
     // 드래그 시작 시 즉시 렌더링 업데이트
     triggerRender();
 
@@ -170,7 +176,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     if (target && target.setPointerCapture) {
       target.setPointerCapture(e.pointerId);
     }
-    
+
     document.body.style.cursor = 'grabbing';
   };
 
