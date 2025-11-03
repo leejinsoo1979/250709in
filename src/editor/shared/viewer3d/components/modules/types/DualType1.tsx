@@ -254,6 +254,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               console.log('  availableHeight:', availableHeight * 100);
               console.log('  basicThickness:', basicThickness * 100);
               console.log('  sectionsCount:', sections.length);
+              console.log('  dropHeight:', spaceInfo?.droppedCeiling?.dropHeight);
+              console.log('  originalCeilingHeight:', spaceInfo?.dimensions?.ceilingHeight);
 
               return sections.map((section: any, sectionIndex: number) => {
                 console.log(`🟡 DualType1 섹션[${sectionIndex}] (${section.type})`);
@@ -300,6 +302,11 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                 // 띄움 배치 여부 확인
                 const isFloating = lowerSectionTopOffset && lowerSectionTopOffset > 0;
 
+                // 단내림 구간 판단
+                const isInDroppedZone = spaceInfo?.droppedCeiling?.enabled &&
+                  spaceInfo?.dimensions?.ceilingHeight &&
+                  internalHeight < (spaceInfo.dimensions.ceilingHeight - (spaceInfo.baseConfig?.floatHeight || 0));
+
                 // 옷걸이 봉 Y 위치 계산
                 let rodYPosition: number;
                 if (safetyShelfPositionMm !== undefined && !isFloating) {
@@ -314,6 +321,11 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                   // 띄움 배치 또는 안전선반/마감패널 없는 경우: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
                   const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                   rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
+
+                  // 단내림 구간의 경우 36mm 내리기
+                  if (isInDroppedZone) {
+                    rodYPosition -= mmToThreeUnits(36);
+                  }
 
                   console.log('🔵 DualType1 옷봉 위치 계산 (띄움 또는 안전선반 없음)');
                   console.log('  isFloating:', isFloating);
