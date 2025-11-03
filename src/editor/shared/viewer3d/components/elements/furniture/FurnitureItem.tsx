@@ -2102,10 +2102,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 노서라운드: 바깥쪽 끝 슬롯만 이동 (첫/마지막 슬롯)
       // 단내림 구간은 이동하지 않음 (엔드패널과 붙어야 함)
       else if ((isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) && !isDroppedZone) {
-        // 단내림 없음: 마지막 슬롯 좌측으로 18mm 이동
+        // 단내림 없음: 마지막 슬롯 좌측으로 9mm 추가 이동 (widthReduced로 인한 9mm + 추가 9mm = 총 18mm)
         if (!spaceInfo.droppedCeiling?.enabled && (isNoSurroundLastSlot || isNoSurroundDualLastSlot)) {
-          finalOffset = -(END_PANEL_THICKNESS * 0.01); // 좌측으로 18mm
-          console.log('🟢 [단내림 없음 노서라운드 마지막 슬롯] 좌측으로 18mm 이동');
+          finalOffset = -offset; // 좌측으로 9mm 추가 (widthReduced로 이미 9mm 이동됨)
+          console.log('🟢 [단내림 없음 노서라운드 마지막 슬롯] 좌측으로 9mm 추가 이동 (총 18mm)');
         } else {
           finalOffset = offset; // 우측으로 9mm
         }
