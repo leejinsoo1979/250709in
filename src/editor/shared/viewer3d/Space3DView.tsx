@@ -56,7 +56,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture, isMeasureMode, toggleMeasureMode, isEraserMode } = useUIStore();
+  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture, isMeasureMode, toggleMeasureMode, isEraserMode } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
   const { placeFurniture } = useFurniturePlacement();
@@ -73,6 +73,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     interiorColor: '#FFFFFF', 
     doorColor: '#FFFFFF'  // 기본값도 흰색으로 변경 (테스트용)
   };
+  const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : storeShowDimensions;
+  const dimensionDisplayEnabled = showDimensions && showDimensionsText;
   
   // ESC 키 이벤트 리스너 - selectedFurnitureId 해제
   useEffect(() => {
@@ -951,6 +953,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showFrame={showFrame}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
+                showDimensionsText={showDimensionsText}
                 showGuides={showGuides}
                 showAxis={showAxis}
                 isStep2={isStep2}
@@ -1033,6 +1036,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showFrame={showFrame}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
+                showDimensionsText={showDimensionsText}
                 showGuides={showGuides}
                 showAxis={showAxis}
                 isStep2={isStep2}
@@ -1115,6 +1119,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showFrame={showFrame}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
+                showDimensionsText={showDimensionsText}
                 showGuides={showGuides}
                 showAxis={showAxis}
                 isStep2={isStep2}
@@ -1197,6 +1202,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showFrame={showFrame}
                 activeZone={activeZone}
                 showDimensions={showDimensions}
+                showDimensionsText={showDimensionsText}
                 showGuides={showGuides}
                 showAxis={showAxis}
                 isStep2={isStep2}
@@ -1535,23 +1541,23 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             {showDimensions && showAll && <ColumnGuides viewMode={viewMode} />}
             
             {/* CAD 스타일 치수/가이드 표시 - 3D 모드 또는 2D 정면/탑뷰에서 표시 */}
-            {(viewMode === '3D' || (viewMode === '2D' && view2DDirection !== 'left' && view2DDirection !== 'right')) && (
+            {showDimensions && showDimensionsText && (viewMode === '3D' || (viewMode === '2D' && view2DDirection !== 'left' && view2DDirection !== 'right')) && (
               <CleanCAD2D
                 viewDirection={viewMode === '3D' ? '3D' : view2DDirection}
-                showDimensions={showDimensions}
+                showDimensions={dimensionDisplayEnabled}
                 isStep2={isStep2}
               />
             )}
 
             {/* 측면뷰 전용 치수 표시 - 2D 측면뷰에서만 (Configurator 전용) */}
-            {!isStep2 && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (
+            {showDimensions && showDimensionsText && !isStep2 && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right') && (
               <CADDimensions2D
                 viewDirection={view2DDirection}
-                showDimensions={showDimensions}
+                showDimensions={dimensionDisplayEnabled}
                 isSplitView={true}
               />
             )}
-            
+
             {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
             <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} />
@@ -1738,15 +1744,17 @@ const QuadrantContent: React.FC<{
   showFrame: boolean;
   activeZone?: 'normal' | 'dropped';
   showDimensions: boolean;
+  showDimensionsText: boolean;
   showGuides: boolean;
   showAxis: boolean;
   isStep2?: boolean;
   throttledUpdateColumn?: (id: string, updates: any) => void;
   showFurniture?: boolean;
-}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone, showFurniture }) => {
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showDimensionsText, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone, showFurniture }) => {
   const { placedModules } = useFurnitureStore();
   const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
   const { activePopup } = useUIStore();
+  const dimensionDisplayEnabled = showDimensions && showDimensionsText;
   
   // throttledUpdateColumn이 전달되지 않으면 기본 updateColumn 사용
   const handleUpdateColumn = throttledUpdateColumn || updateColumn;
@@ -1778,19 +1786,19 @@ const QuadrantContent: React.FC<{
       {showDimensions && showAll && <ColumnGuides viewMode="2D" />}
       
       {/* CAD 스타일 치수/가이드 표시 (측면뷰 제외) */}
-      {viewDirection !== 'left' && viewDirection !== 'right' && (
+      {showDimensions && showDimensionsText && viewDirection !== 'left' && viewDirection !== 'right' && (
         <CleanCAD2D
           viewDirection={viewDirection}
-          showDimensions={showDimensions}
+          showDimensions={dimensionDisplayEnabled}
           isStep2={isStep2}
         />
       )}
 
       {/* 측면뷰 전용 치수 표시 (CNCOptimizer/Step2 전용) */}
-      {isStep2 && (viewDirection === 'left' || viewDirection === 'right') && (
+      {showDimensions && showDimensionsText && isStep2 && (viewDirection === 'left' || viewDirection === 'right') && (
         <CADDimensions2D
           viewDirection={viewDirection}
-          showDimensions={showDimensions}
+          showDimensions={dimensionDisplayEnabled}
           isSplitView={false}
         />
       )}

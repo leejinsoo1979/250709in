@@ -11,10 +11,6 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 // 클린 아키텍처: 의존성 방향 관리
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
 import { useOrbitControlsConfig } from './hooks/useOrbitControlsConfig'; // 하위 레벨
-import { 
-  calculateOptimalDistance as calculateOptimalDistanceUtil,
-  calculateCameraTarget as calculateCameraTargetUtil 
-} from './utils/threeUtils';
 import { CustomZoomController } from './hooks/useCustomZoom'; // 하위 레벨
 import { useResponsive } from '@/hooks/useResponsive'; // 반응형 감지
 import SceneCleanup from './components/SceneCleanup'; // 하위 레벨
@@ -117,6 +113,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     // 2D 모드 초기 상태 별도 저장
     position2D: THREE.Vector3 | null;
     target2D: THREE.Vector3 | null;
+    up2D: THREE.Vector3 | null;
     zoom2D: number | null;
   }>({
     position0: null,
@@ -124,6 +121,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     zoom0: null,
     position2D: null,
     target2D: null,
+    up2D: null,
     zoom2D: null
   });
   
@@ -386,73 +384,78 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 카메라 리셋 함수
   const resetCamera = useCallback(() => {
-    // 2D 모드에서는 리셋 비활성화
-    if (viewMode === '2D') {
+    const controls = controlsRef.current;
+    if (!controls) {
       return;
     }
-    
-    if (controlsRef.current && viewMode === '3D') {
-      const controls = controlsRef.current;
-      
-      // 3D orthographic 모드와 perspective 모드 모두 리셋 처리
-      canvasLog('🎯 카메라 리셋 시작:', {
-        type: controls.object.type,
-        cameraMode,
-        currentPosition: controls.object.position.toArray(),
-        currentTarget: controls.target.toArray()
+
+    const isOrthographicCamera = controls.object.type === 'OrthographicCamera';
+
+    // 2D 모드 또는 Orthographic 카메라 리셋
+    if (viewMode === '2D' || isOrthographicCamera) {
+      const initial = initialCameraSetup.current;
+      const targetVec = initial.target2D?.clone() ?? new THREE.Vector3(...camera.target);
+      const positionVec = initial.position2D?.clone() ?? new THREE.Vector3(...camera.position);
+      const upVec = initial.up2D?.clone() ?? new THREE.Vector3(0, 1, 0);
+      const zoomValue = initial.zoom2D ?? camera.zoom ?? 1;
+
+      canvasLog('🎯 2D 카메라 리셋 실행', {
+        storedPosition: initial.position2D?.toArray(),
+        fallbackPosition: positionVec.toArray(),
+        storedTarget: initial.target2D?.toArray(),
+        zoomValue
       });
-      
-      // Orthographic 카메라인 경우 zoom을 초기값(1.0)으로 리셋
-      const isOrthographic = controls.object.type === 'OrthographicCamera' || cameraMode === 'orthographic';
-      const initialZoom = 1.0; // 초기 줌 레벨
-      
-      // 공간 정보 계산
-      const spaceHeight = spaceInfo?.height || 2400;
-      const spaceWidth = spaceInfo?.width || 3000;
-      // 초기 거리: cameraPosition의 Z 값 사용 (기본값 10)
-      const initialDistance = cameraPosition?.[2] || 10;
-      
-      // 타겟 위치 계산
-      const target = calculateCameraTargetUtil(spaceHeight);
-      
-      canvasLog('🎯 3D 카메라 리셋 계산:', {
-        target,
-        initialDistance,
-        initialZoom,
-        spaceHeight,
-        spaceWidth,
-        isOrthographic
-      });
-      
-      // 타겟 설정
-      controls.target.set(...target);
-      
-      // Orthographic 모드에서는 줌과 거리 모두 초기값으로 리셋
-      if (isOrthographic) {
-        // 완전 정면에서 바라보도록 설정 (초기 거리 사용)
-        controls.object.position.set(0, target[1], initialDistance);
-        controls.object.zoom = initialZoom; // 줌을 초기값(1.0)으로 리셋
-        controls.object.updateProjectionMatrix();
-      } else {
-        // Perspective 모드에서도 초기 거리 사용
-        controls.object.position.set(0, target[1], initialDistance);
+
+      controls.target.copy(targetVec);
+      controls.object.position.copy(positionVec);
+      controls.object.up.copy(upVec);
+
+      if ('zoom' in controls.object) {
+        controls.object.zoom = zoomValue;
+        if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
+          (controls.object as THREE.OrthographicCamera).updateProjectionMatrix();
+        }
       }
-      
-      controls.object.up.set(0, 1, 0);
-      
-      // 카메라가 타겟을 바라보도록 설정
+
       controls.object.lookAt(controls.target);
-      
-      // OrbitControls 업데이트
       controls.update();
-      
-      canvasLog('🎯 3D 카메라 리셋 완료:', {
-        newPosition: controls.object.position.toArray(),
-        newTarget: controls.target.toArray(),
-        zoom: controls.object.zoom
-      });
+      return;
     }
-  }, [camera, cameraPosition, cameraTarget, cameraUp, viewMode, spaceInfo, cameraMode, view2DDirection]);
+
+    // 3D 퍼스펙티브/Orthographic (cameraMode=orthographic) 리셋
+    const isOrthographic = controls.object.type === 'OrthographicCamera' || cameraMode === 'orthographic';
+
+    canvasLog('🎯 3D 카메라 리셋 시작:', {
+      type: controls.object.type,
+      cameraMode,
+      currentPosition: controls.object.position.toArray(),
+      currentTarget: controls.target.toArray()
+    });
+
+    const initialPos = initialCameraSetup.current.position0?.clone() ?? new THREE.Vector3(...camera.position);
+    const initialTarget = initialCameraSetup.current.target0?.clone() ?? new THREE.Vector3(...camera.target);
+    const initialZoom = initialCameraSetup.current.zoom0 ?? (controls.object as any).zoom ?? 1;
+
+    controls.target.copy(initialTarget);
+    controls.object.position.copy(initialPos);
+
+    if (isOrthographic && 'zoom' in controls.object) {
+      controls.object.zoom = initialZoom;
+      if (typeof (controls.object as THREE.OrthographicCamera).updateProjectionMatrix === 'function') {
+        (controls.object as THREE.OrthographicCamera).updateProjectionMatrix();
+      }
+    }
+
+    controls.object.up.set(0, 1, 0);
+    controls.object.lookAt(controls.target);
+    controls.update();
+
+    canvasLog('🎯 3D 카메라 리셋 완료:', {
+      newPosition: controls.object.position.toArray(),
+      newTarget: controls.target.toArray(),
+      zoom: (controls.object as any).zoom
+    });
+  }, [camera, viewMode, cameraMode]);
 
   // 스페이스바로 카메라 리셋
   useEffect(() => {
