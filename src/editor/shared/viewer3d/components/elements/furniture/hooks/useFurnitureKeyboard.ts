@@ -187,19 +187,36 @@ export const useFurnitureKeyboard = ({
                   adjustedPosition
                 });
               }
-              
-              // customWidth 계산
+
+              // customWidth 계산 - zone별 slotWidths 사용
               const customWidth = (() => {
-                if (indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
-                  if (isDualFurniture && nextSlot < indexing.slotWidths.length - 1) {
-                    return indexing.slotWidths[nextSlot] + indexing.slotWidths[nextSlot + 1];
+                // zone별 slotWidths와 columnWidth 가져오기
+                let zoneSlotWidths: number[] | undefined;
+                let zoneColumnWidth: number;
+
+                if (indexing.zones && spaceInfo.droppedCeiling?.enabled) {
+                  const zoneInfo = moduleZone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+                  if (zoneInfo) {
+                    zoneSlotWidths = zoneInfo.slotWidths;
+                    zoneColumnWidth = zoneInfo.columnWidth;
                   } else {
-                    return indexing.slotWidths[nextSlot];
+                    zoneColumnWidth = indexing.columnWidth;
+                  }
+                } else {
+                  zoneSlotWidths = indexing.slotWidths;
+                  zoneColumnWidth = indexing.columnWidth;
+                }
+
+                if (zoneSlotWidths && zoneSlotWidths[nextSlot] !== undefined) {
+                  if (isDualFurniture && nextSlot < zoneSlotWidths.length - 1) {
+                    return zoneSlotWidths[nextSlot] + zoneSlotWidths[nextSlot + 1];
+                  } else {
+                    return zoneSlotWidths[nextSlot];
                   }
                 }
-                return indexing.columnWidth;
+                return zoneColumnWidth;
               })();
-              
+
               // 업데이트 (zone 정보 유지)
               updatePlacedModule(targetModuleId, {
                 position: adjustedPosition,
@@ -214,7 +231,7 @@ export const useFurnitureKeyboard = ({
             e.preventDefault();
             break;
           }
-            
+
           case 'ArrowRight': {
             // 스마트 건너뛰기: 오른쪽으로 다음 사용 가능한 슬롯 찾기
             console.log('⌨️ ArrowRight 키 입력:', {
@@ -285,19 +302,36 @@ export const useFurnitureKeyboard = ({
                   adjustedPosition
                 });
               }
-              
-              // customWidth 계산
+
+              // customWidth 계산 - zone별 slotWidths 사용
               const customWidth = (() => {
-                if (indexing.slotWidths && indexing.slotWidths[nextSlot] !== undefined) {
-                  if (isDualFurniture && nextSlot < indexing.slotWidths.length - 1) {
-                    return indexing.slotWidths[nextSlot] + indexing.slotWidths[nextSlot + 1];
+                // zone별 slotWidths와 columnWidth 가져오기
+                let zoneSlotWidths: number[] | undefined;
+                let zoneColumnWidth: number;
+
+                if (indexing.zones && spaceInfo.droppedCeiling?.enabled) {
+                  const zoneInfo = moduleZone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+                  if (zoneInfo) {
+                    zoneSlotWidths = zoneInfo.slotWidths;
+                    zoneColumnWidth = zoneInfo.columnWidth;
                   } else {
-                    return indexing.slotWidths[nextSlot];
+                    zoneColumnWidth = indexing.columnWidth;
+                  }
+                } else {
+                  zoneSlotWidths = indexing.slotWidths;
+                  zoneColumnWidth = indexing.columnWidth;
+                }
+
+                if (zoneSlotWidths && zoneSlotWidths[nextSlot] !== undefined) {
+                  if (isDualFurniture && nextSlot < zoneSlotWidths.length - 1) {
+                    return zoneSlotWidths[nextSlot] + zoneSlotWidths[nextSlot + 1];
+                  } else {
+                    return zoneSlotWidths[nextSlot];
                   }
                 }
-                return indexing.columnWidth;
+                return zoneColumnWidth;
               })();
-              
+
               // 업데이트 (zone 정보 유지)
               updatePlacedModule(targetModuleId, {
                 position: adjustedPosition,
