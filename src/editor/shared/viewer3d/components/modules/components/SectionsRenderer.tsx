@@ -670,18 +670,6 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                             ? bottomY - 0.36
                             : bottomY;
 
-                          console.log('🔵 치수 가이드 라인:', {
-                            furnitureId,
-                            index,
-                            viewMode,
-                            view2DDirection,
-                            isRightView,
-                            isUpperSection,
-                            bottomY,
-                            extendedBottomY,
-                            extension: bottomY - extendedBottomY
-                          });
-
                           return (
                             <NativeLine
                               points={[
