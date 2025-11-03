@@ -519,11 +519,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     } else {
                       // 안전선반 없는 경우
                       // 2hanging, 2drawer-hanging 상부 섹션: 측판 높이에서 최상단 칸과 선반들을 뺀 내경
-                      // topY = bottomY + (sectionHeight - basicThickness) = 바닥판 상단 + 내경 (상판만 빼기)
                       const is2HangingUpperSection = (furnitureId?.includes('2hanging') || furnitureId?.includes('2drawer-hanging')) && index === 1;
                       if (is2HangingUpperSection) {
-                        // 상부 섹션의 경우 섹션 높이만큼 올림 (바닥판, 상판 모두 제외하지 않음)
-                        topY = bottomY + sectionHeight;
+                        // 상부 섹션: 실제 섹션 상단에서 상판 두께를 뺀 위치
+                        // sectionTopY는 실제 섹션의 상단 위치이므로 단내림에서도 정확
+                        topY = sectionTopY - basicThickness;
                       } else {
                         // 일반 케이스: 상부 프레임 하단까지
                         topY = height/2 - basicThickness;
