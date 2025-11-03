@@ -72,6 +72,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   const { renderMode, viewMode } = useSpace3DView();
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
+  // 띄워서 배치 여부 확인
+  const isFloating = spaceInfo?.baseConfig?.type === 'stand' && spaceInfo?.baseConfig?.placementType === 'float';
+
   // 측면뷰에서 치수 X 위치 계산 함수 (섹션 너비 기준)
   const getDimensionXPosition = (sectionWidth: number, forText: boolean = false, sectionGroupOffset: number = 0) => {
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
@@ -409,8 +412,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   </group>
                 )}
                 
-                {/* 상판 두께 표시 (마지막 섹션일 때만, 측면뷰 제외) */}
-                {index === allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                {/* 상판 두께 표시 (마지막 섹션일 때만, 측면뷰 제외, 띄워서 배치가 아닐 때만) */}
+                {index === allSections.length - 1 && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && !isFloating && (
                   <group>
                     {/* 상판 두께 텍스트 */}
                     
