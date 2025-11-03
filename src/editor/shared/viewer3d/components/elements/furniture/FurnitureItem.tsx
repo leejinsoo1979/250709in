@@ -2941,8 +2941,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const adjustedHalfWidth = width / 2; // 이미 줄어든 너비의 절반
         const endPanelXPositions = [];
 
-        // 키큰장/듀얼장 중심 X 위치 (positionAdjustmentForEndPanel 이동 후 위치)
-        const furnitureCenterX = adjustedPosition.x + positionAdjustmentForEndPanel;
+        // 키큰장/듀얼장 중심 X 위치 (adjustedPosition.x에 이미 positionAdjustmentForEndPanel이 적용됨)
+        const furnitureCenterX = adjustedPosition.x;
 
         if (endPanelSide === 'left' || endPanelSide === 'both') {
           // 왼쪽 엔드패널: 슬롯 왼쪽 경계에 배치
