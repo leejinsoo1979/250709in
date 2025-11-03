@@ -303,78 +303,104 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           <group>
             {(() => {
               const compartmentHeights: Array<{ height: number; centerY: number }> = [];
-              
-              // 첫 번째 칸의 높이를 미리 계산하여 표시 여부 결정
-              let shouldShowDimensions = true;
-              let firstCompartmentHeightMm = 0;
-              
-              // 첫 번째 칸 (맨 아래) - 바닥부터 첫 번째 선반 하단까지
-              if (shelfPositions.length > 0) {
-                // positionMm === 0인 경우 (바닥판) - 칸 높이 치수는 표시하지 않음 (선반 두께만 표시)
-                if (shelfPositions[0] === 0) {
-                  // 바닥판은 shelfThicknessElements에서 처리
-                } else {
-                  const firstShelfBottomMm = shelfPositions[0] - basicThickness / 0.01 / 2; // 첫 번째 선반의 하단
-                  firstCompartmentHeightMm = firstShelfBottomMm;
-                  
-                  // 선반이 1개이고 상단 근처에 있으며, 첫 번째 칸이 100mm 미만인 경우만 제외
-                  if (shelfPositions.length === 1 && shelfPositions[0] > (innerHeight / 0.01) * 0.9 && firstCompartmentHeightMm < 100) {
-                    shouldShowDimensions = false;
-                  }
-                  
-                  if (shouldShowDimensions) {
-                    const height = mmToThreeUnits(firstShelfBottomMm); // 바닥(0)부터 선반 하단까지 (Three.js 단위로 변환)
-                    const centerY = (-innerHeight / 2) + height / 2;
-                  
-                  console.log('🔴 절대위치모드 - 첫 번째 칸:', {
-                    shelfPositions_0: shelfPositions[0],
-                    basicThickness,
-                    basicThickness_mm: basicThickness * 100,
-                    firstShelfBottomMm,
-                    height,
-                    height_mm: height * 100,
-                    표시될값: Math.round(height * 100)
-                  });
-                  
-                    compartmentHeights.push({
+
+              // 측면뷰(allowSideViewDimensions=true)에서는 섹션 전체 높이만 표시
+              const isSideViewForDual = allowSideViewDimensions && viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+
+              if (isSideViewForDual) {
+                // 듀얼 가구 측면뷰: 섹션 전체 높이를 하나의 치수로 표시
+                const totalSectionHeight = innerHeight - basicThickness * 2; // 상하 프레임 두께 제외
+                compartmentHeights.push({
+                  height: totalSectionHeight,
+                  centerY: 0 // 섹션 중앙
+                });
+
+                console.log('🔵 ShelfRenderer 듀얼 측면뷰 - 섹션 전체 높이:', {
+                  furnitureId,
+                  viewMode,
+                  view2DDirection,
+                  innerHeight,
+                  innerHeight_mm: innerHeight * 100,
+                  basicThickness,
+                  basicThickness_mm: basicThickness * 100,
+                  totalSectionHeight,
+                  totalSectionHeight_mm: totalSectionHeight * 100,
+                  표시될값: Math.round(totalSectionHeight * 100)
+                });
+              } else {
+                // 기존 로직: 개별 칸 높이 계산
+                // 첫 번째 칸의 높이를 미리 계산하여 표시 여부 결정
+                let shouldShowDimensions = true;
+                let firstCompartmentHeightMm = 0;
+
+                // 첫 번째 칸 (맨 아래) - 바닥부터 첫 번째 선반 하단까지
+                if (shelfPositions.length > 0) {
+                  // positionMm === 0인 경우 (바닥판) - 칸 높이 치수는 표시하지 않음 (선반 두께만 표시)
+                  if (shelfPositions[0] === 0) {
+                    // 바닥판은 shelfThicknessElements에서 처리
+                  } else {
+                    const firstShelfBottomMm = shelfPositions[0] - basicThickness / 0.01 / 2; // 첫 번째 선반의 하단
+                    firstCompartmentHeightMm = firstShelfBottomMm;
+
+                    // 선반이 1개이고 상단 근처에 있으며, 첫 번째 칸이 100mm 미만인 경우만 제외
+                    if (shelfPositions.length === 1 && shelfPositions[0] > (innerHeight / 0.01) * 0.9 && firstCompartmentHeightMm < 100) {
+                      shouldShowDimensions = false;
+                    }
+
+                    if (shouldShowDimensions) {
+                      const height = mmToThreeUnits(firstShelfBottomMm); // 바닥(0)부터 선반 하단까지 (Three.js 단위로 변환)
+                      const centerY = (-innerHeight / 2) + height / 2;
+
+                    console.log('🔴 절대위치모드 - 첫 번째 칸:', {
+                      shelfPositions_0: shelfPositions[0],
+                      basicThickness,
+                      basicThickness_mm: basicThickness * 100,
+                      firstShelfBottomMm,
                       height,
-                      centerY
+                      height_mm: height * 100,
+                      표시될값: Math.round(height * 100)
                     });
+
+                      compartmentHeights.push({
+                        height,
+                        centerY
+                      });
+                    }
                   }
                 }
-              }
-              
-              // 중간 칸들 - 현재 선반 상단부터 다음 선반 하단까지
-              for (let i = 0; i < shelfPositions.length - 1; i++) {
-                // shelfPositions[i] === 0인 경우(바닥판) 다음 칸은 표시하지 않음
-                if (shelfPositions[i] === 0) {
-                  continue;
-                }
-                const currentShelfTopMm = shelfPositions[i] + basicThickness / 0.01 / 2; // 현재 선반의 상단
-                const nextShelfBottomMm = shelfPositions[i + 1] - basicThickness / 0.01 / 2; // 다음 선반의 하단
-                const heightMm = nextShelfBottomMm - currentShelfTopMm;
-                const height = mmToThreeUnits(heightMm); // Three.js 단위로 변환
-                const centerY = (-innerHeight / 2) + mmToThreeUnits(currentShelfTopMm + heightMm / 2);
-                compartmentHeights.push({ height, centerY });
-              }
-              
-              // 마지막 칸은 일반적인 선반 구성에서만 계산
-              // Type2의 하단 섹션처럼 상단 마감 패널만 있는 경우는 제외
-              // DualType5 스타일러장 우측의 경우도 상단 칸 치수 제외
-              const isDualType5Right = furnitureId && furnitureId.includes('dual-2drawer-styler') && innerHeight > 2000;
-              if (shelfPositions.length > 0 && !(shelfPositions.length === 1 && shelfPositions[0] > (innerHeight / 0.01) * 0.9)) {
-                // 스타일러장 우측이 아닌 경우에만 마지막 칸 추가
-                if (!isDualType5Right) {
-                  const lastShelfPos = shelfPositions[shelfPositions.length - 1];
-                  const lastShelfTopMm = lastShelfPos + basicThickness / 0.01 / 2; // 선반 상단 위치
-                  // 섹션의 상단에서 프레임 두께의 2배만큼 아래가 정확한 위치
-                  // innerHeight는 섹션의 높이이고, 상단 프레임은 섹션 위에 있음
-                  // 프레임 두께를 2번 빼면 정확한 프레임 하단 위치
-                  const topFrameBottomMm = (innerHeight / 0.01) - (basicThickness / 0.01) * 2;
-                  const heightMm = topFrameBottomMm - lastShelfTopMm; // 선반 상단부터 상단 프레임 하단까지
+
+                // 중간 칸들 - 현재 선반 상단부터 다음 선반 하단까지
+                for (let i = 0; i < shelfPositions.length - 1; i++) {
+                  // shelfPositions[i] === 0인 경우(바닥판) 다음 칸은 표시하지 않음
+                  if (shelfPositions[i] === 0) {
+                    continue;
+                  }
+                  const currentShelfTopMm = shelfPositions[i] + basicThickness / 0.01 / 2; // 현재 선반의 상단
+                  const nextShelfBottomMm = shelfPositions[i + 1] - basicThickness / 0.01 / 2; // 다음 선반의 하단
+                  const heightMm = nextShelfBottomMm - currentShelfTopMm;
                   const height = mmToThreeUnits(heightMm); // Three.js 단위로 변환
-                  const centerY = (-innerHeight / 2) + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
+                  const centerY = (-innerHeight / 2) + mmToThreeUnits(currentShelfTopMm + heightMm / 2);
                   compartmentHeights.push({ height, centerY });
+                }
+
+                // 마지막 칸은 일반적인 선반 구성에서만 계산
+                // Type2의 하단 섹션처럼 상단 마감 패널만 있는 경우는 제외
+                // DualType5 스타일러장 우측의 경우도 상단 칸 치수 제외
+                const isDualType5Right = furnitureId && furnitureId.includes('dual-2drawer-styler') && innerHeight > 2000;
+                if (shelfPositions.length > 0 && !(shelfPositions.length === 1 && shelfPositions[0] > (innerHeight / 0.01) * 0.9)) {
+                  // 스타일러장 우측이 아닌 경우에만 마지막 칸 추가
+                  if (!isDualType5Right) {
+                    const lastShelfPos = shelfPositions[shelfPositions.length - 1];
+                    const lastShelfTopMm = lastShelfPos + basicThickness / 0.01 / 2; // 선반 상단 위치
+                    // 섹션의 상단에서 프레임 두께의 2배만큼 아래가 정확한 위치
+                    // innerHeight는 섹션의 높이이고, 상단 프레임은 섹션 위에 있음
+                    // 프레임 두께를 2번 빼면 정확한 프레임 하단 위치
+                    const topFrameBottomMm = (innerHeight / 0.01) - (basicThickness / 0.01) * 2;
+                    const heightMm = topFrameBottomMm - lastShelfTopMm; // 선반 상단부터 상단 프레임 하단까지
+                    const height = mmToThreeUnits(heightMm); // Three.js 단위로 변환
+                    const centerY = (-innerHeight / 2) + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
+                    compartmentHeights.push({ height, centerY });
+                  }
                 }
               }
               
