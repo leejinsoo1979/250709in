@@ -7,7 +7,7 @@ import { getModuleById } from '@/data/modules';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { getSlotIndexFromMousePosition as getSlotIndexFromRaycast } from '../../../../utils/slotRaycast';
+import { getSlotIndexAndZoneFromMousePosition } from '../../../../utils/slotRaycast';
 import { isSlotAvailable, findNextAvailableSlot } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { ColumnIndexer, FurniturePositioner } from '@/editor/shared/utils/indexing';
@@ -182,27 +182,28 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
     // 공통 레이캐스팅 유틸리티 사용
     const canvas = event.nativeEvent.target as HTMLCanvasElement;
-    
-    // 현재 드래그 중인 모듈의 zone 정보 확인
+
+    // 현재 드래그 중인 모듈 확인
     const currentModule = placedModules.find(m => m.id === draggingModuleId);
     if (!currentModule) return;
-    
-    // 단내림이 활성화되고 zone이 있는 경우에만 zone 전달
-    const targetZone = spaceInfo.droppedCeiling?.enabled && currentModule.zone 
-      ? currentModule.zone 
-      : undefined;
-    
-    let slotIndex = getSlotIndexFromRaycast(
+
+    // 마우스 위치에서 슬롯 인덱스와 zone을 함께 감지
+    const raycastResult = getSlotIndexAndZoneFromMousePosition(
       event.nativeEvent.clientX,
       event.nativeEvent.clientY,
       canvas,
       camera,
       scene,
-      spaceInfo,
-      targetZone  // activeDroppedCeilingTab 대신 가구의 zone 정보 사용
+      spaceInfo
+      // activeZone 파라미터 없이 호출 - 모든 zone에서 감지
     );
 
-    if (slotIndex !== null) {
+    const slotIndex = raycastResult.slotIndex;
+    const detectedZone = raycastResult.zone;
+
+    if (slotIndex !== null && detectedZone !== null) {
+      // 감지된 zone으로 currentModule의 zone 업데이트
+      currentModule.zone = detectedZone;
       // currentModule은 이미 위에서 정의됨
       
       // 단내림이 활성화된 경우 영역 체크
