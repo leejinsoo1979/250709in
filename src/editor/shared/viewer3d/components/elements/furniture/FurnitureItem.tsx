@@ -1812,31 +1812,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           doorXOffset = 0;
           console.log('✅✅✅ 단내림 구간 싱글장(첫번째, 메인 경계) → doorXOffset = 0 (중심 고정) 설정됨');
         } else if (placedModule.zone === 'normal' && currentLocalSlotIndex === zoneColumnCount - 1 && spaceInfo.droppedCeiling?.enabled) {
-          // 일반 구간 마지막 슬롯 싱글장: 도어 중심 고정 (단내림 경계, 단내림이 있을 때만)
+          // 일반 구간 마지막 슬롯 싱글장: 단내림 우측은 경계라서 중심 고정, 단내림 좌측은 바깥쪽 끝이라서 중심 고정
           doorXOffset = 0;
-          console.log('✅✅✅ 일반 구간 싱글장(마지막, 단내림 경계) → doorXOffset = 0 (중심 고정) 설정됨');
+          console.log('✅✅✅ 일반 구간 싱글장(마지막) → doorXOffset = 0 (중심 고정) 설정됨');
         } else if (isFirstSlotFreestanding) {
           doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
           console.log('🔵 isFirstSlotFreestanding → doorXOffset:', doorXOffset);
         } else {
-          // 단내림 좌측 메인 구간 마지막 슬롯: 가구는 -9mm 이동했지만 도어는 슬롯 중심 유지
-          if (spaceInfo.droppedCeiling?.enabled &&
-              spaceInfo.droppedCeiling.position === 'left' &&
-              placedModule.zone === 'normal' &&
-              zoneSlotInfo && zoneSlotInfo.normal) {
-            const localIndex = localSlotIndex ?? placedModule.slotIndex;
-            const zoneColumnCount = zoneSlotInfo.normal.columnCount;
-            if (localIndex === zoneColumnCount - 1) {
-              doorXOffset = 0; // 슬롯 중심 유지 (originalSlotCenterX 그대로)
-              console.log('🟢 [단내림 좌측 메인 구간 마지막 슬롯] doorXOffset = 0 (슬롯 중심 유지)');
-            } else {
-              doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
-              console.log('🔵 else → doorXOffset:', doorXOffset);
-            }
-          } else {
-            doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
-            console.log('🔵 else → doorXOffset:', doorXOffset);
-          }
+          doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
+          console.log('🔵 else → doorXOffset:', doorXOffset);
         }
 
         }
