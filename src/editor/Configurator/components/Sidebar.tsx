@@ -215,9 +215,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             // 설정 패널 열기 이벤트 발생
             window.dispatchEvent(new CustomEvent('openSettingsPanel'));
           }}
-          style={{ backgroundColor: themeColor }}
         >
-          <Settings size={24} color="#ffffff" />
+          <Settings size={24} />
         </button>
       </div>
 
@@ -227,9 +226,8 @@ const Sidebar: React.FC<SidebarProps> = ({
           className={styles.settingsButton}
           title={t('sidebar.exitToDashboard')}
           onClick={handleExitClick}
-          style={{ backgroundColor: themeColor }}
         >
-          <LogOut size={24} style={{ transform: 'scaleX(-1)' }} color="#ffffff" />
+          <LogOut size={24} style={{ transform: 'scaleX(-1)' }} />
         </button>
       </div>
       
