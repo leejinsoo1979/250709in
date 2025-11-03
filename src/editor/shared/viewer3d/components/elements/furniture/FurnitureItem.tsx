@@ -2922,8 +2922,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const furnitureCenterX = adjustedPosition.x + positionAdjustmentForEndPanel;
 
         if (endPanelSide === 'left' || endPanelSide === 'both') {
-          // 왼쪽 엔드패널: 키큰장 왼쪽 면에 붙음
-          const leftPanelX = furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2;
+          // 왼쪽 엔드패널: 슬롯 왼쪽 경계에 배치
+          // slotBoundaries가 있으면 슬롯 경계 사용, 없으면 가구 기준으로 계산
+          let leftPanelX: number;
+          if (slotBoundaries) {
+            // 슬롯 왼쪽 경계에서 엔드패널 절반만큼 안쪽
+            leftPanelX = slotBoundaries.left + endPanelWidth / 2;
+          } else {
+            // 가구 왼쪽 면에 붙음
+            leftPanelX = furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2;
+          }
 
           endPanelXPositions.push({
             x: leftPanelX,
@@ -2932,8 +2940,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           });
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
-          // 오른쪽 엔드패널: 키큰장 오른쪽 면에 붙음
-          const rightPanelX = furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2;
+          // 오른쪽 엔드패널: 슬롯 오른쪽 경계에 배치
+          // slotBoundaries가 있으면 슬롯 경계 사용, 없으면 가구 기준으로 계산
+          let rightPanelX: number;
+          if (slotBoundaries) {
+            // 슬롯 오른쪽 경계에서 엔드패널 절반만큼 안쪽
+            rightPanelX = slotBoundaries.right - endPanelWidth / 2;
+          } else {
+            // 가구 오른쪽 면에 붙음
+            rightPanelX = furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2;
+          }
 
           endPanelXPositions.push({
             x: rightPanelX,
