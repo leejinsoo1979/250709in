@@ -102,6 +102,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const { dimensionColor, baseFontSize, viewMode } = useDimensionColor();
 
+  // 측면뷰 여부 확인
+  const isSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+
   // 가구 스토어 메서드
   const { placedModules, updatePlacedModule } = useFurnitureStore();
 
@@ -591,7 +594,6 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 let topCompartmentTopY = null;
 
                 const isDualFurniture = furnitureId?.includes('dual');
-                const isSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
 
                 // 측면뷰가 아닌 경우에만 안전선반 위 칸을 별도로 렌더링
                 if (hasSafetyShelf && index === allSections.length - 1 && !isSideView) {
