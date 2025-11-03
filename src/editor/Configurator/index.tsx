@@ -1093,22 +1093,35 @@ const Configurator: React.FC = () => {
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
 
+    console.log('🔍 useEffect 실행:', {
+      urlProjectId: projectId,
+      urlDesignFileId: designFileId,
+      currentProjectId,
+      currentDesignFileId,
+      placedModulesCount: placedModules.length
+    });
+
+    // CNC에서 돌아오는 경우 - 이미 데이터가 로드되어 있으면 재로드하지 않음
+    // 상태 업데이트 전에 먼저 체크해야 함!
+    if (projectId && designFileId &&
+        projectId === currentProjectId &&
+        designFileId === currentDesignFileId &&
+        placedModules.length > 0) {
+      console.log('✅ 이미 로드된 프로젝트 - 재로드하지 않음');
+      setLoading(false);
+      return;
+    }
+
     // 프로젝트 ID가 변경된 경우에만 상태 업데이트
     if (projectId && projectId !== currentProjectId) {
       setCurrentProjectId(projectId);
+      console.log('📝 프로젝트 ID 업데이트:', projectId);
     }
 
     // designFileId가 변경된 경우에만 상태 업데이트
     if (designFileId && designFileId !== currentDesignFileId) {
       setCurrentDesignFileId(designFileId);
-      console.log('📝 디자인파일 ID 설정:', designFileId);
-    }
-
-    // CNC에서 돌아오는 경우 - 이미 데이터가 로드되어 있으면 재로드하지 않음
-    if (projectId === currentProjectId && designFileId === currentDesignFileId && placedModules.length > 0) {
-      console.log('✅ 이미 로드된 프로젝트 - 재로드하지 않음');
-      setLoading(false);
-      return;
+      console.log('📝 디자인파일 ID 업데이트:', designFileId);
     }
 
     if (projectId) {
