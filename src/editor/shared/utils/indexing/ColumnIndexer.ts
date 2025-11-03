@@ -1393,7 +1393,31 @@ export class ColumnIndexer {
     
     // 단내림 영역 확인
     if (position.x >= zoneInfo.dropped.startX && position.x <= droppedEndX) {
-      // 단내림 영역 내 슬롯 인덱스 계산
+      // 단내림 영역의 zone 정보 가져오기
+      if (indexing.zones?.dropped?.threeUnitPositions) {
+        const droppedPositions = indexing.zones.dropped.threeUnitPositions;
+        const droppedBoundaries = indexing.zones.dropped.threeUnitBoundaries;
+
+        // zone 내에서 가장 가까운 슬롯 찾기 (Three.js 좌표 사용)
+        const positionThreeUnits = SpaceCalculator.mmToThreeUnits(position.x);
+        let closestIndex = 0;
+        let minDistance = Infinity;
+
+        for (let i = 0; i < droppedPositions.length; i++) {
+          const distance = Math.abs(positionThreeUnits - droppedPositions[i]);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestIndex = i;
+          }
+        }
+
+        return {
+          zone: 'dropped',
+          slotIndex: closestIndex
+        };
+      }
+
+      // fallback: 기존 계산 방식
       const relativeX = position.x - zoneInfo.dropped.startX;
       const slotIndex = Math.floor(relativeX / zoneInfo.dropped.columnWidth);
       return {
@@ -1404,7 +1428,31 @@ export class ColumnIndexer {
     
     // 일반 영역 확인
     if (position.x >= zoneInfo.normal.startX && position.x <= normalEndX) {
-      // 일반 영역 내 슬롯 인덱스 계산
+      // 일반 영역의 zone 정보 가져오기
+      if (indexing.zones?.normal?.threeUnitPositions) {
+        const normalPositions = indexing.zones.normal.threeUnitPositions;
+        const normalBoundaries = indexing.zones.normal.threeUnitBoundaries;
+
+        // zone 내에서 가장 가까운 슬롯 찾기 (Three.js 좌표 사용)
+        const positionThreeUnits = SpaceCalculator.mmToThreeUnits(position.x);
+        let closestIndex = 0;
+        let minDistance = Infinity;
+
+        for (let i = 0; i < normalPositions.length; i++) {
+          const distance = Math.abs(positionThreeUnits - normalPositions[i]);
+          if (distance < minDistance) {
+            minDistance = distance;
+            closestIndex = i;
+          }
+        }
+
+        return {
+          zone: 'normal',
+          slotIndex: closestIndex
+        };
+      }
+
+      // fallback: 기존 계산 방식
       const relativeX = position.x - zoneInfo.normal.startX;
       const slotIndex = Math.floor(relativeX / zoneInfo.normal.columnWidth);
       return {
