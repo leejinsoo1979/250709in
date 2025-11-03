@@ -491,6 +491,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                       // 2D 우측뷰에서 상부섹션 치수가이드를 36mm 아래로 확장
                       if (view2DDirection === 'right') {
+                        console.log('🟢 SectionsRenderer: 우측뷰 상부섹션 36mm 확장', {
+                          view2DDirection,
+                          index,
+                          originalBottomY: bottomY,
+                          adjustedBottomY: bottomY - 0.36
+                        });
                         bottomY -= 0.36;
                       }
                     } else {
