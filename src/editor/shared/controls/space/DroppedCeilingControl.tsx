@@ -1,6 +1,7 @@
 import React from 'react';
 import { useSpaceConfigStore, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -17,7 +18,8 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
 }) => {
   const { t } = useTranslation();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const { placedModules, removeModule } = useFurnitureStore();
+  const { placedModules, removeModule, updatePlacedModule } = useFurnitureStore();
+  const { zones } = useDerivedSpaceStore();
   const droppedCeiling = spaceInfo.droppedCeiling;
 
   const handleEnabledToggle = () => {
@@ -101,6 +103,18 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
 
   const handlePositionChange = (position: 'left' | 'right') => {
     if (droppedCeiling) {
+      const normalSlotCount = zones?.normal?.columnCount || 0;
+      const droppedSlotCount = zones?.dropped?.columnCount || 0;
+      const totalSlots = normalSlotCount + droppedSlotCount;
+
+      // 모든 가구의 slotIndex를 역순으로 변환
+      placedModules.forEach(module => {
+        if (module.slotIndex !== undefined) {
+          const newSlotIndex = (totalSlots - 1) - module.slotIndex;
+          updatePlacedModule(module.id, { slotIndex: newSlotIndex });
+        }
+      });
+
       setSpaceInfo({
         droppedCeiling: {
           ...droppedCeiling,
