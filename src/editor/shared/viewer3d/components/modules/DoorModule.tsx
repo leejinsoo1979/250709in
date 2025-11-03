@@ -927,11 +927,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const sectionRatio = resolvedSectionHeightsMm[0] / totalSectionHeight;
         const sectionDoorHeight = Math.max(totalDoorHeight * sectionRatio - SECTION_GAP_HALF, 0);
 
+        // 하부 섹션: 하단 고정 (플로팅 시 상단이 내려감)
         const sectionDoorBottom = doorBottomLocal;
-        const sectionDoorTop = sectionDoorBottom + sectionDoorHeight;
-        const doorCenter = (sectionDoorBottom + sectionDoorTop) / 2;
 
-        doorYPosition = mmToThreeUnits(doorCenter);
+        // 도어 중심 = 하단에서 도어 높이의 절반만큼 위
+        doorYPosition = mmToThreeUnits(sectionDoorBottom + sectionDoorHeight / 2);
 
         console.log('🚪📍 하부 섹션 도어 Y 위치 (가구 기준):', {
           fullSpaceHeight,
@@ -978,29 +978,24 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     } else {
       // 병합 모드: 천장/바닥 기준
       // Three.js 좌표계: Y=0은 공간 중심, 바닥=-fullSpaceHeight/2, 천장=+fullSpaceHeight/2
-      // 도어 하단 = 바닥(-fullSpaceHeight/2)에서 doorBottomGap만큼 위
-      // 도어 상단 = 천장(+fullSpaceHeight/2)에서 doorTopGap만큼 아래
-      // 도어 중심 = (도어 하단 + 도어 상단) / 2
+      // 플로팅 시: 도어 상단 고정, 하단만 올라감 (actualDoorHeight가 이미 줄어듦)
+      // 도어 중심 = 도어 상단 - (도어 높이 / 2)
 
-      const doorBottom = doorBottomLocal;
       const doorTop = doorTopLocal;
-      const doorCenter = (doorBottom + doorTop) / 2;
 
-      doorYPosition = mmToThreeUnits(doorCenter);
+      // 도어 중심 = 상단에서 도어 높이의 절반만큼 아래
+      doorYPosition = mmToThreeUnits(doorTop - actualDoorHeight / 2);
 
-      console.log('🚪📍 도어 Y 위치 (가구 기준):', {
+      console.log('🚪📍 키큰장 도어 Y 위치 (상단 고정):', {
         fullSpaceHeight,
         cabinetHeight: tallCabinetFurnitureHeight,
-        tallCabinetFurnitureHeight,
         doorTopGap,
         doorBottomGap,
-        doorBottom,
-        doorTop,
-        doorCenter,
-        doorHeight: actualDoorHeight,
-        doorYPosition,
-        doorYPosition_mm: doorYPosition / 0.01,
-        설명: `가구 하단(${doorBottomLocal.toFixed(2)}mm) ~ 상단(${doorTopLocal.toFixed(2)}mm), 도어 중심 = ${doorCenter.toFixed(2)}mm`
+        floatHeight,
+        도어상단_mm: doorTop.toFixed(1),
+        도어높이_mm: actualDoorHeight.toFixed(1),
+        도어중심Y_mm: (doorYPosition / 0.01).toFixed(1),
+        설명: `도어 상단 ${doorTop.toFixed(1)}mm 고정, 플로팅 시 하단만 올라감`
       });
     }
   }
