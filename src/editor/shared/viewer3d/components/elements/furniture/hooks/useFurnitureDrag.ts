@@ -645,12 +645,23 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       
       // 드래그가 끝날 때 전체 속성 업데이트
       if (dragEndData && tempPosition) {
-        updatePlacedModule(draggingModuleId, {
-          ...dragEndData,
-          position: tempPosition
-        });
+        const fullIndexing = calculateSpaceIndexing(spaceInfo);
+        const placedModule = placedModules.find(m => m.id === draggingModuleId);
+
         console.log('✅ 드래그 종료 - 전체 속성 업데이트:', {
           moduleId: draggingModuleId,
+          zone: placedModule?.zone,
+          slotIndex: dragEndData.slotIndex,
+          position: tempPosition,
+          hasZones: !!fullIndexing.zones,
+          zonesInfo: fullIndexing.zones ? {
+            droppedPositions: fullIndexing.zones.dropped?.threeUnitPositions?.length,
+            normalPositions: fullIndexing.zones.normal?.threeUnitPositions?.length
+          } : null,
+          dragEndData
+        });
+
+        updatePlacedModule(draggingModuleId, {
           ...dragEndData,
           position: tempPosition
         });
