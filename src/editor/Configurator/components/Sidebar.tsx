@@ -206,8 +206,8 @@ const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </div>
 
-      {/* 하단 설정 및 나가기 버튼 */}
-      <div className={styles.userSection}>
+      {/* 설정 버튼 */}
+      <div style={{ padding: '16px', borderTop: '1px solid var(--theme-border)' }}>
         <button
           className={styles.settingsButton}
           title="설정"
@@ -218,6 +218,10 @@ const Sidebar: React.FC<SidebarProps> = ({
         >
           <Settings size={24} color={themeColor} />
         </button>
+      </div>
+
+      {/* 하단 나가기 버튼 */}
+      <div className={styles.userSection}>
         <button
           className={styles.settingsButton}
           title={t('sidebar.exitToDashboard')}
