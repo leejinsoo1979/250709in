@@ -1551,10 +1551,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           // 이미 키큰장 때문에 조정된 경우가 아니면 조정
           if (furnitureWidthMm === originalFurnitureWidthMm) {
             furnitureWidthMm = originalWidth - END_PANEL_THICKNESS;
-            
-          // 모든 구간에서 슬롯 위치가 이미 올바르므로 추가 조정 불필요
-          positionAdjustmentForEndPanel = 0;
-            
+
+            // 단내림구간인지 확인
+            const isDroppedZone = spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
+            const droppedPosition = spaceInfo.droppedCeiling?.position;
+
+            if (isDroppedZone) {
+              // 단내림구간: 엔드패널에서 멀어지는 방향으로 9mm 이동
+              positionAdjustmentForEndPanel = droppedPosition === 'right'
+                ? -(END_PANEL_THICKNESS / 2) * 0.01  // 우측 단내림: 왼쪽으로
+                : (END_PANEL_THICKNESS / 2) * 0.01;  // 좌측 단내림: 오른쪽으로
+            } else {
+              // 메인구간: 조정 불필요
+              positionAdjustmentForEndPanel = 0;
+            }
+
             }
         }
       }
