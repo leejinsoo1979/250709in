@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { LogOut } from 'lucide-react';
+import { LogOut, Settings } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { PaletteIcon, StructureIcon } from '@/components/common/Icons';
@@ -206,10 +206,20 @@ const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </div>
 
-      {/* 하단 나가기 버튼 */}
+      {/* 하단 설정 및 나가기 버튼 */}
       <div className={styles.userSection}>
-        <button 
-          className={styles.settingsButton} 
+        <button
+          className={styles.settingsButton}
+          title="설정"
+          onClick={() => {
+            // 설정 패널 열기 이벤트 발생
+            window.dispatchEvent(new CustomEvent('openSettingsPanel'));
+          }}
+        >
+          <Settings size={24} color={themeColor} />
+        </button>
+        <button
+          className={styles.settingsButton}
           title={t('sidebar.exitToDashboard')}
           onClick={handleExitClick}
         >

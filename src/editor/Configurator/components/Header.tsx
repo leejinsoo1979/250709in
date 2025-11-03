@@ -113,6 +113,19 @@ const Header: React.FC<HeaderProps> = ({
     };
   }, []);
 
+  // 설정 패널 열기 이벤트 리스너
+  useEffect(() => {
+    const handleOpenSettings = () => {
+      setIsSettingsPanelOpen(true);
+    };
+
+    window.addEventListener('openSettingsPanel', handleOpenSettings);
+
+    return () => {
+      window.removeEventListener('openSettingsPanel', handleOpenSettings);
+    };
+  }, []);
+
   const handleHelpClick = () => {
     setIsHelpModalOpen(true);
   };
@@ -473,15 +486,6 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* 우측 액션 버튼들 */}
         <div className={styles.rightActions}>
-          {/* 설정 버튼 */}
-          <button 
-            className={styles.actionButton}
-            onClick={() => setIsSettingsPanelOpen(true)}
-            title={t('settings.title')}
-          >
-            <Settings size={20} />
-          </button>
-
           {/* 내보내기 버튼 */}
           {onExportPDF && (
             <button 

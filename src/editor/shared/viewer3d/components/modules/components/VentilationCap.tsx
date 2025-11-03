@@ -130,7 +130,13 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
             castShadow
             receiveShadow
           >
-            <meshStandardMaterial color={rimColor} metalness={0.05} roughness={0.2} />
+            <meshStandardMaterial
+              color={rimColor}
+              metalness={0}
+              roughness={0.04}
+              emissive={rimColor}
+              emissiveIntensity={0.25}
+            />
           </mesh>
           <mesh
             geometry={perforatedGeometry}
@@ -138,7 +144,13 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
             castShadow
             receiveShadow
           >
-            <meshStandardMaterial color={faceColor} metalness={0.05} roughness={0.35} />
+            <meshStandardMaterial
+              color={faceColor}
+              metalness={0}
+              roughness={0.08}
+              emissive={faceColor}
+              emissiveIntensity={0.2}
+            />
           </mesh>
         </group>
       </group>
