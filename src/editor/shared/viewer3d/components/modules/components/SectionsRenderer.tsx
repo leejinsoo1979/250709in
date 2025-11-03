@@ -581,7 +581,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                 let topCompartmentTopY = null;
 
                 const isDualFurniture = furnitureId?.includes('dual');
-                if (hasSafetyShelf && index === allSections.length - 1) {
+                const isSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+
+                // 측면뷰가 아닌 경우에만 안전선반 위 칸을 별도로 렌더링
+                if (hasSafetyShelf && index === allSections.length - 1 && !isSideView) {
                   const safetyShelfPositionMm = section.shelfPositions.find(pos => pos > 0);
                   if (safetyShelfPositionMm !== undefined) {
                     const sectionBottomY = sectionCenterY - sectionHeight/2;
