@@ -86,21 +86,21 @@ const SlotSelector: React.FC = () => {
   const slotButtons = [];
 
   if (isDroppedOnLeft) {
-    // 단내림이 좌측: 전체가 우→좌 (맨 우측부터 1번)
-    // 일반 슬롯들 (역순)
-    for (let i = normalSlotCount - 1; i >= 0; i--) {
-      slotButtons.push({
-        displayIndex: normalSlotCount - i,
-        actualIndex: i,
-        zone: 'normal' as const
-      });
-    }
+    // 단내림이 좌측: 8,7 / 6,5,4,3,2,1 (단내림부터 역순)
     // 단내림 슬롯들 (역순)
     for (let i = droppedSlotCount - 1; i >= 0; i--) {
       slotButtons.push({
-        displayIndex: normalSlotCount + (droppedSlotCount - i),
+        displayIndex: droppedSlotCount - i,
         actualIndex: normalSlotCount + i,
         zone: 'dropped' as const
+      });
+    }
+    // 일반 슬롯들 (역순)
+    for (let i = normalSlotCount - 1; i >= 0; i--) {
+      slotButtons.push({
+        displayIndex: droppedSlotCount + (normalSlotCount - i),
+        actualIndex: i,
+        zone: 'normal' as const
       });
     }
   } else {
