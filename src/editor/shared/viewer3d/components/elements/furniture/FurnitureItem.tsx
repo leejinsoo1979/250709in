@@ -1216,6 +1216,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동
   if (needsEndPanelAdjustment && endPanelSide) {
+    console.log('🔶 키큰장 너비/위치 조정 시작:', {
+      currentId: placedModule.id,
+      endPanelSide,
+      originalWidth: originalFurnitureWidthMm,
+      isNoSurroundSlot: isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot
+    });
+
     // 노서라운드 첫/마지막 슬롯에서는 특별 처리
     if (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) {
       // 노서라운드에서는 바깥쪽 엔드패널 18mm + 안쪽 상하부장 엔드패널 18mm = 총 36mm 줄임
@@ -1240,13 +1247,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동
         adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
         positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
+        console.log('🔶 왼쪽 상하부장 인접 - 오른쪽 이동:', {
+          adjustedWidth: adjustedWidthForEndPanel,
+          positionAdjustment: positionAdjustmentForEndPanel
+        });
       } else if (endPanelSide === 'right') {
         // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동
         adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
         positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
+        console.log('🔶 오른쪽 상하부장 인접 - 왼쪽 이동:', {
+          adjustedWidth: adjustedWidthForEndPanel,
+          positionAdjustment: positionAdjustmentForEndPanel
+        });
       } else if (endPanelSide === 'both') {
         // 양쪽에 상하부장이 있으면 36mm 줄이고 중앙 유지
         adjustedWidthForEndPanel = originalFurnitureWidthMm - (END_PANEL_THICKNESS * 2);
+        console.log('🔶 양쪽 상하부장 인접 - 중앙 유지:', {
+          adjustedWidth: adjustedWidthForEndPanel
+        });
         positionAdjustmentForEndPanel = 0;
       }
     }
