@@ -90,6 +90,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
 
   // sectionHeightsMm 계산 (도어 분할용)
   const sectionHeights = getSectionHeights();
+  const isFloating = lowerSectionTopOffset !== undefined && lowerSectionTopOffset > 0;
   const unitsToMmFactor = (() => {
     const unit = mmToThreeUnits(1);
     return unit === 0 ? 100 : 1 / unit;
@@ -345,8 +346,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
         isHighlighted={isMultiSectionFurniture() ? highlightedSection === `${placedFurnitureId}-1` : false}
       />
       
-      {/* Type4 상단 상판 두께 치수 표시 - 정면도에서만 */}
-      {moduleData?.id?.includes('4drawer-hanging') && showFurniture && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && (
+      {/* Type4 상단 상판 두께 치수 표시 - 정면도에서만, 띄워서 배치가 아닐 때만 */}
+      {moduleData?.id?.includes('4drawer-hanging') && showFurniture && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && !isFloating && (
         <group>
           {/* 상판 두께 텍스트 */}
           <Text

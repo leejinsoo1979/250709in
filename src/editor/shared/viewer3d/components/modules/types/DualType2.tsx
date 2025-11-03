@@ -88,6 +88,9 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   const sectionHeights = getSectionHeights();
   const isMulti = sectionHeights.length >= 2;
 
+  // 띄워서 배치 여부 확인
+  const isFloating = lowerSectionTopOffset !== undefined && lowerSectionTopOffset > 0;
+
   // sectionHeightsMm 계산 (도어 분할용)
   const unitsToMmFactor = (() => {
     const unit = mmToThreeUnits(1);
@@ -302,8 +305,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         textureUrl={spaceInfo.materialConfig?.doorTexture}
       />
       
-      {/* 상단 상판 두께 치수 표시 - 정면도에서만 */}
-      {showFurniture && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && (
+      {/* 상단 상판 두께 치수 표시 - 정면도에서만, 띄워서 배치가 아닐 때만 */}
+      {showFurniture && showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && !isFloating && (
         <group>
           {/* 상판 두께 텍스트 */}
           <Text

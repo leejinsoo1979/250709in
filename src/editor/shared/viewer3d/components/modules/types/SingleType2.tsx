@@ -319,8 +319,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         </>
       )}
 
-      {/* 상단 상판 두께 치수 표시 - 정면도에서만 */}
-      {showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && (
+      {/* 상단 상판 두께 치수 표시 - 정면도에서만, 띄워서 배치가 아닐 때만 */}
+      {showDimensions && showDimensionsText && (viewMode === '3D' || view2DDirection === 'front') && !isFloating && (
         <group>
           {/* 상판 두께 텍스트 */}
           <Text
