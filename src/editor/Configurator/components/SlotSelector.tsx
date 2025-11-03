@@ -86,38 +86,38 @@ const SlotSelector: React.FC = () => {
   const slotButtons = [];
 
   if (isDroppedOnLeft) {
-    // 단내림이 좌측: 8,7 / 6,5,4,3,2,1 (단내림부터 역순)
-    // 단내림 슬롯들 (우→좌 배열)
+    // 단내림이 좌측: 8,7 / 6,5,4,3,2,1 (버튼 표시만 역순, actualIndex는 동일)
+    // 단내림 슬롯들
     for (let i = 0; i < droppedSlotCount; i++) {
       slotButtons.push({
-        displayIndex: totalSlots - i,
-        actualIndex: normalSlotCount + (droppedSlotCount - 1 - i),
+        displayIndex: normalSlotCount + droppedSlotCount - i, // 8, 7
+        actualIndex: normalSlotCount + i, // 6, 7
         zone: 'dropped' as const
       });
     }
-    // 일반 슬롯들 (우→좌 배열)
+    // 일반 슬롯들
     for (let i = 0; i < normalSlotCount; i++) {
       slotButtons.push({
-        displayIndex: normalSlotCount - i,
-        actualIndex: normalSlotCount - 1 - i,
+        displayIndex: normalSlotCount - i, // 6, 5, 4, 3, 2, 1
+        actualIndex: i, // 0, 1, 2, 3, 4, 5
         zone: 'normal' as const
       });
     }
   } else {
-    // 단내림이 우측: 1,2,3,4,5,6 / 7,8 (좌→우 배열)
-    // 일반 슬롯들 (좌→우 배열)
+    // 단내림이 우측: 1,2,3,4,5,6 / 7,8
+    // 일반 슬롯들
     for (let i = 0; i < normalSlotCount; i++) {
       slotButtons.push({
-        displayIndex: i + 1,
-        actualIndex: i,
+        displayIndex: i + 1, // 1, 2, 3, 4, 5, 6
+        actualIndex: i, // 0, 1, 2, 3, 4, 5
         zone: 'normal' as const
       });
     }
-    // 단내림 슬롯들 (좌→우 배열)
+    // 단내림 슬롯들
     for (let i = 0; i < droppedSlotCount; i++) {
       slotButtons.push({
-        displayIndex: normalSlotCount + i + 1,
-        actualIndex: normalSlotCount + i,
+        displayIndex: normalSlotCount + i + 1, // 7, 8
+        actualIndex: normalSlotCount + i, // 6, 7
         zone: 'dropped' as const
       });
     }
