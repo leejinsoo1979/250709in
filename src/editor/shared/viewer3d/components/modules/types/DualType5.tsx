@@ -777,7 +777,15 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   const lineTopY = index === allSections.length - 1
                     ? sectionCenterY + sectionHeight/2 - basicThickness  // 마지막 섹션: 상판 두께 제외
                     : sectionCenterY + sectionHeight/2;  // 중간 섹션: 분리판까지
-                  const internalHeight = lineTopY - lineBottomY;
+                  let internalHeight = lineTopY - lineBottomY;
+
+                  // 띄워서 배치 시 치수 가이드에서 띄움 높이 제외
+                  if (isFloating) {
+                    const floatHeightMm = spaceInfo?.baseConfig?.floatHeight || 0;
+                    const floatHeight = floatHeightMm * 0.01;
+                    internalHeight = internalHeight - floatHeight;
+                  }
+
                   const textCenterY = (lineBottomY + lineTopY) / 2;
 
                   return (
