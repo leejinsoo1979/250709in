@@ -139,7 +139,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   isEditMode = false,
   slotWidths,
   slotIndex,
-  floatHeight = 0, // 플로팅 높이 기본값 0
+  floatHeight: floatHeightProp,
   doorTopGap = 5, // 천장에서 아래로 갭 (기본값 5mm)
   doorBottomGap = 25, // 바닥에서 위로 갭 (기본값 25mm)
   sectionHeightsMm,
@@ -149,6 +149,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   textureUrl, // 텍스처 URL
   panelGrainDirections // 패널별 결 방향
 }) => {
+  const floatHeight = floatHeightProp ?? spaceInfo?.baseConfig?.floatHeight ?? 0;
+  const floatHeightUnits = mmToThreeUnits(floatHeight);
   // Store에서 재질 설정과 도어 상태 가져오기
   const { spaceInfo: storeSpaceInfo } = useSpaceConfigStore();
   const { doorsOpen, view2DDirection, isIndividualDoorOpen, toggleIndividualDoor, selectedSlotIndex } = useUIStore();
@@ -849,7 +851,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const doorBottom = cabinetBottom - UPPER_CABINET_BOTTOM_EXTENSION;
     const doorCenter = doorBottom + doorHeightMm / 2;
     
-    doorYPosition = mmToThreeUnits(doorCenter);
+    doorYPosition = mmToThreeUnits(doorCenter) - floatHeightUnits;
     
     console.log('🚪🔴 상부장 도어 Y 위치:', {
       moduleId: moduleData?.id,
@@ -885,7 +887,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     // 도어 중심 = 도어 상단 - (도어 높이 / 2)
     // 플로팅 시 actualDoorHeight가 이미 줄어들었으므로, 도어 상단에서 절반 내려온 위치
-    doorYPosition = doorTop - mmToThreeUnits(actualDoorHeight) / 2;
+    doorYPosition = doorTop - mmToThreeUnits(actualDoorHeight) / 2 - floatHeightUnits;
 
     console.log('🚪📍 하부장 도어 Y 위치 (상단 고정, 하단만 조정):', {
       moduleId: moduleData?.id,
@@ -939,7 +941,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const sectionDoorBottom = doorBottomLocal;
 
         // 도어 중심 = 하단에서 도어 높이의 절반만큼 위
-        doorYPosition = mmToThreeUnits(sectionDoorBottom + sectionDoorHeight / 2);
+        doorYPosition = mmToThreeUnits(sectionDoorBottom + sectionDoorHeight / 2) - floatHeightUnits;
 
         console.log('🚪📍 하부 섹션 도어 Y 위치 (가구 기준):', {
           fullSpaceHeight,
@@ -965,7 +967,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
         const sectionDoorBottom = sectionDoorTop - sectionDoorHeight;
         const doorCenter = (sectionDoorBottom + sectionDoorTop) / 2;
 
-        doorYPosition = mmToThreeUnits(doorCenter);
+        doorYPosition = mmToThreeUnits(doorCenter) - floatHeightUnits;
 
         console.log('🚪📍 상부 섹션 도어 Y 위치 (가구 기준):', {
           fullSpaceHeight,
@@ -992,7 +994,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       const doorTop = doorTopLocal;
 
       // 도어 중심 = 상단에서 도어 높이의 절반만큼 아래
-      doorYPosition = mmToThreeUnits(doorTop - actualDoorHeight / 2);
+      doorYPosition = mmToThreeUnits(doorTop - actualDoorHeight / 2) - floatHeightUnits;
 
       console.log('🚪📍 키큰장 도어 Y 위치 (상단 고정):', {
         fullSpaceHeight,
