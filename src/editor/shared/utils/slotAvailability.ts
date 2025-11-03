@@ -376,7 +376,24 @@ export const findNextAvailableSlot = (
 ): number | null => {
   const indexing = calculateSpaceIndexing(spaceInfo);
   const step = direction === 'left' ? -1 : 1;
-  const maxSlot = indexing.columnCount - (isDualFurniture ? 1 : 0);
+
+  // zone별 슬롯 범위 계산
+  let maxSlot: number;
+  if (targetZone && indexing.zones) {
+    const zoneInfo = targetZone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+    if (!zoneInfo) {
+      console.log('⚠️ [findNextAvailableSlot] Zone 정보 없음:', targetZone);
+      return null;
+    }
+    maxSlot = zoneInfo.columnCount - (isDualFurniture ? 1 : 0);
+    console.log('🔍 [findNextAvailableSlot] Zone 범위:', {
+      targetZone,
+      maxSlot,
+      zoneColumnCount: zoneInfo.columnCount
+    });
+  } else {
+    maxSlot = indexing.columnCount - (isDualFurniture ? 1 : 0);
+  }
 
   // 듀얼장의 경우 한 칸씩만 이동하도록 수정
   // 싱글장은 기존대로 동작
