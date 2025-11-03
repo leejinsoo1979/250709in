@@ -1112,6 +1112,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                                        return false;
                                      } else {
                                        // 메인구간: zone 마지막 슬롯 (단, 한쪽벽에서 오른쪽벽이 있으면 제외)
+                                       // 단내림 좌측: 메인구간은 바깥쪽 끝이 아님 (좌측에 있는 단내림 구간이 바깥쪽)
+                                       if (droppedPosition === 'left') return false;
                                        if (isSemiStanding && hasRightWall) return false;
                                        return localIndex === zoneColumnCount - 1;
                                      }
