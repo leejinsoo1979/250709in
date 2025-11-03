@@ -43,7 +43,8 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
     rimGeometry,
     perforatedGeometry,
     rimDepth,
-    faceDepth
+    faceDepth,
+    holePositions
   } = useMemo(() => {
     const outerRadius = mmToThreeUnits(diameter) / 2;
     const rimDepth = mmToThreeUnits(thickness * 0.5);
@@ -59,6 +60,8 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
     const perforatedShape = new THREE.Shape();
     perforatedShape.absarc(0, 0, recessRadius, 0, Math.PI * 2, false);
 
+    const holePositions: Array<{ x: number; y: number; radius: number }> = [];
+
     for (let ix = -maxSteps; ix <= maxSteps; ix++) {
       for (let iy = -maxSteps; iy <= maxSteps; iy++) {
         const offset = ix % 2 !== 0 ? spacing / 2 : 0; // 살짝 어긋난 배열로 밀집 타공 연출
@@ -69,6 +72,7 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
           const holePath = new THREE.Path();
           holePath.absarc(hx, hy, holeRadius, 0, Math.PI * 2, true);
           perforatedShape.holes.push(holePath);
+          holePositions.push({ x: hx, y: hy, radius: holeRadius });
         }
       }
     }
@@ -101,7 +105,8 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
       rimGeometry,
       perforatedGeometry,
       rimDepth,
-      faceDepth
+      faceDepth,
+      holePositions
     };
   }, [diameter, thickness]);
 
@@ -139,6 +144,24 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
             lineWidth={0.5}
             position={[0, 0, rimDepth + 0.01]}
           />
+          {/* 각 타공 구멍 윤곽선 */}
+          {holePositions.map((hole, index) => {
+            const holeCirclePoints = createCirclePoints(hole.radius, 16);
+            const translatedPoints = holeCirclePoints.map(([x, y, z]) => [
+              x + hole.x,
+              y + hole.y,
+              z
+            ] as [number, number, number]);
+            return (
+              <Line
+                key={index}
+                points={translatedPoints}
+                color="#999999"
+                lineWidth={0.3}
+                position={[0, 0, rimDepth + 0.01]}
+              />
+            );
+          })}
           <mesh
             geometry={rimGeometry}
             castShadow
