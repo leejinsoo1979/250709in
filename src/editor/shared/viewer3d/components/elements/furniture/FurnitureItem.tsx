@@ -61,9 +61,10 @@ const checkAdjacentUpperLowerToFull = (
   // 왼쪽: 싱글 가구는 -1, 듀얼 가구는 시작 슬롯이 -2 위치에 있어야 함
   // 단내림이 있으면 같은 zone에 있어야 함
   let leftAdjacentModule = allModules.find(m => {
-    // 단내림이 있으면 zone 체크 먼저
-    if (currentZone && spaceInfo.droppedCeiling?.enabled) {
-      if (m.zone !== currentZone) return false;
+    // 단내림이 있으면 무조건 zone 체크 (currentZone이 undefined여도)
+    if (spaceInfo.droppedCeiling?.enabled) {
+      // 양쪽 모두 zone이 있어야 하고, 같아야 함
+      if (!m.zone || !currentZone || m.zone !== currentZone) return false;
     }
 
     // 왼쪽에 있는 가구가 듀얼인 경우 처리
@@ -81,9 +82,10 @@ const checkAdjacentUpperLowerToFull = (
   // 오른쪽: 현재 가구가 듀얼이면 +2, 싱글이면 +1 위치 체크
   // 단내림이 있으면 같은 zone에 있어야 함
   let rightAdjacentModule = allModules.find(m => {
-    // 단내림이 있으면 zone 체크 먼저
-    if (currentZone && spaceInfo.droppedCeiling?.enabled) {
-      if (m.zone !== currentZone) return false;
+    // 단내림이 있으면 무조건 zone 체크 (currentZone이 undefined여도)
+    if (spaceInfo.droppedCeiling?.enabled) {
+      // 양쪽 모두 zone이 있어야 하고, 같아야 함
+      if (!m.zone || !currentZone || m.zone !== currentZone) return false;
     }
 
     const targetSlot = isCurrentDual ? currentSlotIndex + 2 : currentSlotIndex + 1;
