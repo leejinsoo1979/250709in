@@ -116,7 +116,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       }
     }
   };
-  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
+  const floatHeight = isFloating ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
   const showIndirectLight = false;
   const { view2DDirection, indirectLightEnabled, indirectLightIntensity, showDimensions, showDimensionsText, highlightedSection } = useUIStore();
   const { dimensionColor, baseFontSize } = useDimensionColor();
@@ -683,11 +683,12 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               originalSlotWidth={originalSlotWidth}
               slotCenterX={slotCenterX || 0}
               slotIndex={slotIndex}
-          textureUrl={spaceInfo.materialConfig?.doorTexture}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={placedFurnitureId}
-          doorTopGap={doorTopGap}
-          doorBottomGap={doorBottomGap}
+              textureUrl={spaceInfo.materialConfig?.doorTexture}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={placedFurnitureId}
+              floatHeight={floatHeight}
+              doorTopGap={doorTopGap}
+              doorBottomGap={doorBottomGap}
             />
           ) : (
             // 분할 모드: 상부/하부 섹션별 도어
@@ -705,9 +706,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 originalSlotWidth={originalSlotWidth}
                 slotCenterX={slotCenterX || 0}
                 slotIndex={slotIndex}
-          textureUrl={spaceInfo.materialConfig?.doorTexture}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={placedFurnitureId}
+                textureUrl={spaceInfo.materialConfig?.doorTexture}
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+                floatHeight={floatHeight}
                 sectionHeightsMm={sectionHeightsMm}
                 doorTopGap={upperDoorTopGap ?? doorTopGap}
                 doorBottomGap={upperDoorBottomGap ?? 0}
@@ -728,9 +730,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 originalSlotWidth={originalSlotWidth}
                 slotCenterX={slotCenterX || 0}
                 slotIndex={slotIndex}
-          textureUrl={spaceInfo.materialConfig?.doorTexture}
-          panelGrainDirections={panelGrainDirections}
-          furnitureId={placedFurnitureId}
+                textureUrl={spaceInfo.materialConfig?.doorTexture}
+                panelGrainDirections={panelGrainDirections}
+                furnitureId={placedFurnitureId}
+                floatHeight={floatHeight}
                 sectionHeightsMm={sectionHeightsMm}
                 doorTopGap={lowerDoorTopGap ?? 0}
                 doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}

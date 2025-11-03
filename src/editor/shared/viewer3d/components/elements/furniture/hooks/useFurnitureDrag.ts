@@ -145,42 +145,30 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
   // 드래그 시작
   const handlePointerDown = (e: ThreeEvent<PointerEvent>, placedModuleId: string) => {
-    console.log('🖱️ 드래그 시작:', placedModuleId, 'button:', e.button);
-    
     // 왼쪽 버튼이 아니면 드래그 시작하지 않음 (오른쪽 버튼은 OrbitControls 회전용)
     if (e.button !== 0) {
-      if (import.meta.env.DEV) {
-        console.log('❌ 왼쪽 버튼이 아님, 드래그 취소');
-      }
       return;
     }
-    
+
     e.stopPropagation();
-    
+
     setDraggingModuleId(placedModuleId);
     isDragging.current = true;
     setFurnitureDragging(true); // 드래그 상태 설정
-    
+
     // 가구 드래그 시작 이벤트 발생
     window.dispatchEvent(new CustomEvent('furniture-drag-start'));
-    
-    if (import.meta.env.DEV) {
-      console.log('✅ 드래그 상태 설정 완료:', { draggingModuleId: placedModuleId, isDragging: isDragging.current });
-    }
     
     // 가구 배치 모드 활성화
     setFurniturePlacementMode(true);
     
     // 드래그 시작 시 즉시 렌더링 업데이트
     triggerRender();
-    
+
     // 포인터 캡처
     const target = e.target as Element & { setPointerCapture?: (pointerId: number) => void };
     if (target && target.setPointerCapture) {
       target.setPointerCapture(e.pointerId);
-      if (import.meta.env.DEV) {
-        console.log('📌 포인터 캡처 설정');
-      }
     }
     
     document.body.style.cursor = 'grabbing';
@@ -191,8 +179,6 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
     if (!isDragging.current || !draggingModuleId) {
       return;
     }
-    
-    console.log('🖱️ 드래그 중:', draggingModuleId);
 
     // 공통 레이캐스팅 유틸리티 사용
     const canvas = event.nativeEvent.target as HTMLCanvasElement;
@@ -207,15 +193,15 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       : undefined;
     
     let slotIndex = getSlotIndexFromRaycast(
-      event.nativeEvent.clientX, 
-      event.nativeEvent.clientY, 
+      event.nativeEvent.clientX,
+      event.nativeEvent.clientY,
       canvas,
       camera,
       scene,
       spaceInfo,
       targetZone  // activeDroppedCeilingTab 대신 가구의 zone 정보 사용
     );
-    
+
     if (slotIndex !== null) {
       // currentModule은 이미 위에서 정의됨
       
@@ -314,14 +300,6 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           zones: fullIndexing.zones  // zone 정보도 포함
         };
 
-        console.log('🔍 [드래그] Zone indexing 생성됨:', {
-          zone: currentModule.zone,
-          columnCount: indexing.columnCount,
-          columnWidth: indexing.columnWidth,
-          threeUnitPositionsLength: indexing.threeUnitPositions?.length,
-          threeUnitDualPositionsLength: indexing.threeUnitDualPositions?.length
-        });
-
         // isDualSlot 속성을 우선 사용
         isDualFurniture = currentModule.isDualSlot !== undefined ? currentModule.isDualSlot :
                          Math.abs(moduleData.dimensions.width - (targetZone.columnWidth * 2)) < 50;
@@ -339,40 +317,58 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
       // 슬롯 가용성 검사 (자기 자신 제외)
 
-      // 더블클릭/+아이콘과 동일한 방식으로 위치 계산
-      // indexing에서 직접 threeUnitPositions 사용
-      let finalX: number;
+      // 더블클릭/+아이콘과 완전히 동일한 방식으로 위치 계산
+      const fullIndexing = calculateSpaceIndexing(spaceInfo);
+      const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
 
-      if (isDualFurniture) {
-        // 듀얼 가구: threeUnitDualPositions 또는 두 슬롯의 중간
-        if (indexing.threeUnitDualPositions && indexing.threeUnitDualPositions[slotIndex] !== undefined) {
-          finalX = indexing.threeUnitDualPositions[slotIndex];
-        } else if (indexing.threeUnitPositions &&
-                   indexing.threeUnitPositions[slotIndex] !== undefined &&
-                   indexing.threeUnitPositions[slotIndex + 1] !== undefined) {
-          // 두 슬롯의 중간 위치
-          finalX = (indexing.threeUnitPositions[slotIndex] + indexing.threeUnitPositions[slotIndex + 1]) / 2;
-        } else {
-          console.log('❌ 듀얼 가구 위치 계산 실패');
-          return;
-        }
+      // allSlotPositions 구성 (useFurniturePlacement와 동일)
+      let allSlotPositions: Array<{ position: number; zone: 'normal' | 'dropped'; index: number }> = [];
+
+      if (!hasDroppedCeiling || !fullIndexing.zones) {
+        allSlotPositions = fullIndexing.threeUnitPositions.map((pos, idx) => ({
+          position: pos,
+          zone: 'normal' as const,
+          index: idx
+        }));
       } else {
-        // 싱글 가구: threeUnitPositions에서 직접 가져오기
-        if (indexing.threeUnitPositions && indexing.threeUnitPositions[slotIndex] !== undefined) {
-          finalX = indexing.threeUnitPositions[slotIndex];
-        } else {
-          console.log('❌ 싱글 가구 위치 계산 실패');
-          return;
+        if (fullIndexing.zones.normal?.threeUnitPositions) {
+          allSlotPositions.push(...fullIndexing.zones.normal.threeUnitPositions.map((pos, idx) => ({
+            position: pos,
+            zone: 'normal' as const,
+            index: idx
+          })));
         }
+        if (fullIndexing.zones.dropped?.threeUnitPositions) {
+          allSlotPositions.push(...fullIndexing.zones.dropped.threeUnitPositions.map((pos, idx) => ({
+            position: pos,
+            zone: 'dropped' as const,
+            index: idx
+          })));
+        }
+        allSlotPositions.sort((a, b) => a.position - b.position);
       }
 
-      console.log('🎯 [드래그] 위치 계산 완료:', {
-        slotIndex,
-        isDualFurniture,
-        zone: currentModule.zone,
-        finalX,
-        threeUnitPositionsLength: indexing.threeUnitPositions?.length
-      });
+      // 위치 계산
+      const targetSlot = allSlotPositions.find(slot =>
+        slot.index === slotIndex && (!currentModule.zone || slot.zone === currentModule.zone)
+      );
+
+      if (!targetSlot) {
+        return;
+      }
+
+      let finalX: number;
+      if (isDualFurniture) {
+        const nextSlot = allSlotPositions.find(slot =>
+          slot.index === slotIndex + 1 && slot.zone === targetSlot.zone
+        );
+        if (!nextSlot) {
+          return;
+        }
+        finalX = (targetSlot.position + nextSlot.position) / 2;
+      } else {
+        finalX = targetSlot.position;
+      }
       
       // 기둥 슬롯으로 이동 시 자동 크기 조정
       // 단내림 구간에서는 글로벌 슬롯 인덱스로 변환 필요
@@ -607,53 +603,14 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
 
   // 드래그 종료
   const handlePointerUp = () => {
-    console.log('🏁 handlePointerUp 호출됨:', {
-      isDragging: isDragging.current,
-      draggingModuleId,
-      hasDragEndData: !!dragEndData,
-      hasTempPosition: !!tempPosition
-    });
-
     if (isDragging.current && draggingModuleId) {
-      if (import.meta.env.DEV) {
-        console.log('🏁 드래그 종료 - 업데이트 시작');
-      }
-      
       // 드래그가 끝날 때 전체 속성 업데이트
       if (dragEndData && tempPosition) {
-        const fullIndexing = calculateSpaceIndexing(spaceInfo);
-        const placedModule = placedModules.find(m => m.id === draggingModuleId);
-
-        console.log('✅ 드래그 종료 - 전체 속성 업데이트:', {
-          moduleId: draggingModuleId,
-          zone: placedModule?.zone,
-          slotIndex: dragEndData.slotIndex,
-          position: tempPosition,
-          hasZones: !!fullIndexing.zones,
-          zonesInfo: fullIndexing.zones ? {
-            droppedPositions: fullIndexing.zones.dropped?.threeUnitPositions?.length,
-            normalPositions: fullIndexing.zones.normal?.threeUnitPositions?.length
-          } : null,
-          dragEndData
-        });
-
         updatePlacedModule(draggingModuleId, {
           ...dragEndData,
           position: tempPosition
         });
       }
-      
-      // 드래그 종료 시 store 상태 확인
-      const currentModules = useFurnitureStore.getState().placedModules;
-      console.log('🔍 드래그 종료 시 Store 상태:', {
-        가구개수: currentModules.length,
-        가구IDs: currentModules.map(m => m.id),
-        가구상세: currentModules.map(m => ({
-          id: m.id,
-          slotIndex: m.slotIndex,
-          position: m.position.x.toFixed(3)
-        }))
-      });
       
       isDragging.current = false;
       setDraggingModuleId(null);

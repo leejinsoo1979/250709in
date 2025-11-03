@@ -933,27 +933,33 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
 
       if (isFloatPlacement) {
-        // 바닥 마감재 높이
         const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
                                     spaceInfo.floorFinish.height : 0;
         const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
-
-        // 띄움 높이 - baseConfig가 있을 때만 floatHeight 가져오기
         const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
         const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
-
-        // 가구 높이
         const furnitureHeight = (actualModuleData?.dimensions.height || 0) * 0.01; // mm to Three.js units
 
-        // Y 위치 계산: 바닥마감재 + 띄움높이 + 가구높이/2
-        const yPos = floorFinishHeight + floatHeight + (furnitureHeight / 2);
+        if (isLowerCabinetForY) {
+          // 하부장은 띄움 높이만큼 전체가 떠야 함
+          const yPos = floorFinishHeight + floatHeight + (furnitureHeight / 2);
 
-        adjustedPosition = {
-          ...adjustedPosition,
-          y: yPos
-        };
-
+          adjustedPosition = {
+            ...adjustedPosition,
+            y: yPos
+          };
         } else {
+          // 키큰장은 천장 기준 정렬 유지 + 하단 띄움 반영
+          const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
+          const baseHeight = baseHeightMm * 0.01;
+          const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2) + floatHeight / 2;
+
+          adjustedPosition = {
+            ...adjustedPosition,
+            y: yPos
+          };
+        }
+      } else {
         // 일반 배치 (받침대 있거나 바닥 배치)
         // 기본적으로 받침대 높이 65mm 적용, stand 타입일 때만 0
         const baseHeightMm = spaceInfo.baseConfig?.type === 'stand' ? 0 : (spaceInfo.baseConfig?.height || 65);
@@ -974,8 +980,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           ...adjustedPosition,
           y: yPos
         };
-
-        }
+      }
     }
   }
   

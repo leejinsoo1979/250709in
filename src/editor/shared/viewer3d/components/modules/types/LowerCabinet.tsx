@@ -62,7 +62,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   // 띄워서 배치 여부 확인 (간접조명용)
   const placementType = spaceInfo?.baseConfig?.placementType;
   const isFloating = placementType === 'float';
-  const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
+  const floatHeight = isFloating ? (spaceInfo?.baseConfig?.floatHeight || 0) : 0;
   
   // 2D 모드 체크 - 2D 모드면 간접조명 안 보이게
   const is2DMode = viewMode === '2D' || viewMode !== '3D';
@@ -212,6 +212,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           isEditMode={isEditMode}
           slotWidths={slotWidths}
           slotIndex={slotIndex}
+          floatHeight={floatHeight}
           textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
