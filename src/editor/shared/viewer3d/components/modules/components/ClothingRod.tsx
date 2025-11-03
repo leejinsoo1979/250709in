@@ -91,7 +91,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   // 브라켓 중심에서 옷봉이 안쪽으로 1mm 들어감
   const rodZOffset = -mmToThreeUnits(1);
 
-  // 옷봉 재질: 3D 모드에서는 밝은 은색 금속, 2D 모드에서는 회색
+  // 옷봉 재질: 3D 모드에서는 헤어라인 스테인리스 금속, 2D 모드에서는 회색
   // 패널 하이라이팅 시 투명하게 처리
   const rodMaterial = React.useMemo(() => {
     if (shouldDim) {
@@ -104,12 +104,12 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
 
     if (viewMode === '3D') {
       return new THREE.MeshStandardMaterial({
-        color: '#f5f5f5',
-        metalness: 1.0,
-        roughness: 0.15,
-        envMapIntensity: 1.5,
-        clearcoat: 0.3,
-        clearcoatRoughness: 0.1
+        color: '#e8e8e8',
+        metalness: 0.9,
+        roughness: 0.25,
+        envMapIntensity: 2.0,
+        emissive: new THREE.Color('#b8b8b8'),
+        emissiveIntensity: 0.15
       });
     } else {
       return new THREE.MeshStandardMaterial({
