@@ -903,9 +903,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 내경 높이 = 전체 높이 - 상부프레임 - 하부프레임 - 바닥마감재
       const internalHeight = spaceInfo.height - topFrameHeightMm - bottomFrameHeightMm - floorFinishHeightMm;
 
-      // 상부장 중심 Y = 바닥마감재 + 하부프레임 + 내경높이 - 상부장 높이/2
-      // 이렇게 하면 상부장 상단이 상부프레임 하단에 딱 붙음
-      const upperCabinetCenterY = (floorFinishHeightMm + bottomFrameHeightMm + internalHeight - upperCabinetHeight/2) * 0.01;
+      // 상부장 상단 Y = 바닥마감재 + 하부프레임 + 내경높이 (상부프레임 하단)
+      const upperCabinetTopY = floorFinishHeightMm + bottomFrameHeightMm + internalHeight;
+      // 상부장 중심 Y = 상부장 상단 - 상부장 높이/2
+      const upperCabinetCenterY = (upperCabinetTopY - upperCabinetHeight/2) * 0.01;
 
       adjustedPosition = {
         ...adjustedPosition,
