@@ -2894,18 +2894,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           }
         return null;
       })()}
-      {needsEndPanelAdjustment && endPanelSide && !isNoSurroundFirstSlot && !isNoSurroundLastSlot && !isNoSurroundDualLastSlot && spaceInfo.surroundType === 'no-surround' && (() => {
-        console.log('🟢🟢🟢 [엔드패널 렌더링 시작]', {
-          moduleId: placedModule.id,
-          zone: placedModule.zone,
-          category: actualModuleData?.category,
-          localSlotIndex: localSlotIndex ?? placedModule.slotIndex,
-          isNoSurroundFirstSlot,
-          isNoSurroundLastSlot,
-          isNoSurroundDualLastSlot,
-          needsEndPanelAdjustment,
-          endPanelSide
-        });
+      {(() => {
+        // 엔드패널 렌더링 조건 체크
+        const shouldRender = needsEndPanelAdjustment && endPanelSide && !isNoSurroundFirstSlot && !isNoSurroundLastSlot && !isNoSurroundDualLastSlot && spaceInfo.surroundType === 'no-surround';
+
+        if (needsEndPanelAdjustment) {
+          console.log('🟢🟢🟢 [엔드패널 렌더링 조건 체크]', {
+            moduleId: placedModule.id,
+            zone: placedModule.zone,
+            slotIndex: placedModule.slotIndex,
+            shouldRender,
+            조건들: {
+              needsEndPanelAdjustment,
+              endPanelSide,
+              isNoSurroundFirstSlot,
+              isNoSurroundLastSlot,
+              isNoSurroundDualLastSlot,
+              surroundType: spaceInfo.surroundType
+            }
+          });
+        }
+
+        if (!shouldRender) return null;
+
+        return (() => {
 
         // 엔드패널 위치 계산
         const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
