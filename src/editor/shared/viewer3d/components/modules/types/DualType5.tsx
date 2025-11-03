@@ -458,22 +458,37 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   </group>
                 )}
                 
-                {/* 섹션 높이 표시 (drawer 섹션만 - hanging은 ShelfRenderer에서 칸별로 표시) */}
-                {(section.type === 'drawer' && index === 0) && (() => {
-                  // 하부섹션(drawer, index=0): 하부 프레임 윗면부터 중간 분리판 아랫면까지
-                  // 치수선 하단: 하부 프레임 윗면 (가구 바닥판 위 + 하부 프레임 두께)
-                  const lineBottomY = -height/2 + basicThickness * 2;
-                  // 치수선 상단: 중간 분리판 아랫면 = 섹션 상단 - 패널 두께
-                  const lineTopY = sectionCenterY + sectionHeight/2 - basicThickness;
-                  // 내경 높이 계산
-                  const drawerInternalHeight = lineTopY - lineBottomY;
-                  // 텍스트 중심 위치
+                {/* 세로 내경 높이 표시 */}
+                {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
+                  let lineBottomY: number;
+                  let lineTopY: number;
+
+                  if (section.type === 'drawer' && index === 0) {
+                    // 하부섹션(drawer, index=0): 하부 프레임 윗면부터 중간 분리판 아랫면까지
+                    lineBottomY = -height/2 + basicThickness * 2;
+                    lineTopY = sectionCenterY + sectionHeight/2 - basicThickness;
+                  } else if (section.type === 'hanging' && index === allSections.length - 1) {
+                    // 상부섹션(hanging, 마지막): 중간 분리판 윗면부터 상판 아랫면까지
+                    lineBottomY = sectionCenterY - sectionHeight/2 + basicThickness;
+                    lineTopY = sectionCenterY + sectionHeight/2 - basicThickness;
+                  } else {
+                    return null;
+                  }
+
+                  let internalHeight = lineTopY - lineBottomY;
+
+                  // 띄워서 배치 시 치수 가이드에서 띄움 높이 제외
+                  if (isFloating && section.type === 'drawer') {
+                    const floatHeightMm = spaceInfo?.baseConfig?.floatHeight || 0;
+                    const floatHeight = floatHeightMm * 0.01;
+                    internalHeight = internalHeight - floatHeight;
+                  }
+
                   const textCenterY = (lineBottomY + lineTopY) / 2;
 
                   return (
                     <group>
-                      {/* 서랍 섹션 내경 높이 텍스트 */}
-
+                      {/* 내경 높이 텍스트 */}
                       <Text
                         position={[
                           getDimensionXPosition(leftWidth, true, leftXOffset),
@@ -487,31 +502,28 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         rotation={[0, 0, Math.PI / 2]}
                         renderOrder={999}
                       >
-                        {Math.round(drawerInternalHeight * 100)}
+                        {Math.round(internalHeight * 100)}
                       </Text>
 
-                    {/* 서랍 섹션 높이 수직선 */}
-                    <Line
-                      points={[
-                        [getDimensionXPosition(leftWidth, false, leftXOffset), lineBottomY, getDimensionZPosition(leftDepth)],
-                        [getDimensionXPosition(leftWidth, false, leftXOffset), lineTopY, getDimensionZPosition(leftDepth)]
-                      ]}
-                      color={viewMode === '3D' ? '#000000' : dimensionColor}
-                      lineWidth={1}
-                    />
-                    {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
-                    {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
-                      <>
-                        <mesh position={[-leftWidth/2 * 0.3, lineBottomY, getDimensionZPosition(leftDepth)]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                        </mesh>
-                        <mesh position={[-leftWidth/2 * 0.3, lineTopY, getDimensionZPosition(leftDepth)]}>
-                          <sphereGeometry args={[0.05, 8, 8]} />
-                          <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                        </mesh>
-                      </>
-                    )}
+                      {/* 내경 높이 수직선 */}
+                      <Line
+                        points={[
+                          [getDimensionXPosition(leftWidth, false, leftXOffset), lineBottomY, getDimensionZPosition(leftDepth)],
+                          [getDimensionXPosition(leftWidth, false, leftXOffset), lineTopY, getDimensionZPosition(leftDepth)]
+                        ]}
+                        color={viewMode === '3D' ? '#000000' : dimensionColor}
+                        lineWidth={1}
+                      />
+
+                      {/* 수직선 양끝 점 */}
+                      <mesh position={[-leftWidth/2 * 0.3, lineBottomY, getDimensionZPosition(leftDepth)]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
+                      </mesh>
+                      <mesh position={[-leftWidth/2 * 0.3, lineTopY, getDimensionZPosition(leftDepth)]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
+                      </mesh>
                     </group>
                   );
                 })()}
