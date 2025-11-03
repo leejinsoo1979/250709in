@@ -326,9 +326,9 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         allSlotPositions.sort((a, b) => a.position - b.position);
       }
 
-      // 위치 계산
+      // 위치 계산 - detectedZone 사용
       const targetSlot = allSlotPositions.find(slot =>
-        slot.index === slotIndex && (!currentModule.zone || slot.zone === currentModule.zone)
+        slot.index === slotIndex && slot.zone === detectedZone
       );
 
       if (!targetSlot) {
@@ -347,6 +347,15 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       } else {
         finalX = targetSlot.position;
       }
+
+      console.log('📍 최종 위치:', {
+        slotIndex,
+        zone: detectedZone,
+        isDual: isDualFurniture,
+        targetSlotPosition: targetSlot.position,
+        finalX,
+        allSlotPositionsCount: allSlotPositions.length
+      });
       
       // 기둥 슬롯으로 이동 시 자동 크기 조정
       // 단내림 구간에서는 글로벌 슬롯 인덱스로 변환 필요
