@@ -428,9 +428,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const isLastSection = sectionIndex === totalSections - 1;
 
-            // 내경 계산: 하판 상단부터 상판 하단까지
-            let sectionStartY = sectionIndex === 0 ? cabinetBottomY : (interiorStartY + basicThickness);
-            let sectionEndY = isLastSection ? (cabinetTopY - basicThickness) : (interiorEndY - basicThickness);
+            let sectionStartY = sectionIndex === 0 ? cabinetBottomY : interiorStartY;
+            let sectionEndY = isLastSection ? cabinetTopY : interiorEndY;
 
             // 우측뷰에서 상부섹션의 치수가이드를 36mm 아래로 확장
             if (currentViewDirection === 'right' && sectionIndex > 0) {
