@@ -103,34 +103,17 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
 
   const handlePositionChange = (position: 'left' | 'right') => {
     if (droppedCeiling) {
-      const normalSlotCount = zones?.normal?.columnCount || 0;
-      const droppedSlotCount = zones?.dropped?.columnCount || 0;
+      // 모든 가구 삭제
+      placedModules.forEach(module => {
+        removeModule(module.id);
+      });
 
-      // setSpaceInfo를 먼저 호출
       setSpaceInfo({
         droppedCeiling: {
           ...droppedCeiling,
           position
         }
       });
-
-      // 다음 프레임에서 가구 이동 (zones 업데이트 후)
-      setTimeout(() => {
-        placedModules.forEach(module => {
-          if (module.slotIndex !== undefined) {
-            const isInDropped = module.zone === 'dropped';
-
-            if (isInDropped) {
-              // 단내림 영역: slotIndex 그대로 유지 (끝은 끝으로)
-              // 아무것도 안 함
-            } else {
-              // 일반 영역: 영역 내 상대 위치 유지하며 역순
-              const newSlotIndex = (normalSlotCount - 1) - module.slotIndex;
-              updatePlacedModule(module.id, { slotIndex: newSlotIndex });
-            }
-          }
-        });
-      }, 0);
     }
   };
 
