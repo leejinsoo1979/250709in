@@ -716,20 +716,28 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       doorTopLocal
     });
 
-    // 플로팅 배치 시 하단을 띄움 높이만큼 올리고 높이를 재조정 (상단은 고정)
+    // 플로팅 배치 시: 도어 상단 고정, 하단만 플로팅 높이만큼 올라감
     if (floatHeight > 0) {
-      const adjustedBottom = doorBottomLocal + floatHeight;
-      doorBottomLocal = Math.min(doorTopLocal - 1, adjustedBottom);
+      doorBottomLocal = doorBottomLocal + floatHeight;
 
-      console.log('🚪📐 플로팅 도어 높이 조정:', {
-        originalHeight: cabinetTopLocal - cabinetBottomLocal,
+      console.log('🚪📐 키큰장 플로팅 도어 높이 조정:', {
+        doorTopLocal,
+        doorBottomLocal_원래: doorBottomLocal - floatHeight,
+        doorBottomLocal_조정후: doorBottomLocal,
         floatHeight,
-        adjustedBottom: doorBottomLocal,
-        설명: '도어 상단 고정, 하단만 띄움 높이만큼 상승'
+        설명: '도어 상단 고정, 하단만 플로팅 높이만큼 올라감'
       });
     }
 
     actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
+
+    console.log('🚪📏 키큰장 actualDoorHeight:', {
+      doorTopLocal,
+      doorBottomLocal,
+      actualDoorHeight,
+      floatHeight,
+      설명: '상단 - 하단 = 도어 높이'
+    });
 
     const resolveSectionHeightsForDoor = () => {
       if (sectionHeightsMm?.length === totalSections) {
