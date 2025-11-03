@@ -2949,12 +2949,34 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           furnitureZ
         });
 
+        // 엔드패널 Y 위치는 키큰장/듀얼장 기준 (바닥부터 시작)
+        // 상부장/하부장 Y 위치가 아님!
+        const endPanelYPosition = (() => {
+          // 키큰장/듀얼장은 바닥부터 시작
+          // 띄워서 배치일 때 고려
+          const isFloatPlacement = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+          if (isFloatPlacement) {
+            const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
+                                        spaceInfo.floorFinish.height : 0;
+            const floorFinishHeight = floorFinishHeightMm * 0.01;
+            const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+            const floatHeight = floatHeightMm * 0.01;
+            return floorFinishHeight + floatHeight + endPanelHeight / 2;
+          } else {
+            // 일반 배치: 바닥마감재 + 엔드패널 높이/2
+            const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
+                                        spaceInfo.floorFinish.height : 0;
+            const floorFinishHeight = floorFinishHeightMm * 0.01;
+            return floorFinishHeight + endPanelHeight / 2;
+          }
+        })();
+
         return (
           <>
             {endPanelXPositions.map((panel, index) => (
               <group
                 key={`endpanel-group-${placedModule.id}-${panel.side}-${index}`}
-                position={[panel.x, finalYPosition, furnitureZ]}
+                position={[panel.x, endPanelYPosition, furnitureZ]}
               >
                 <EndPanelWithTexture
                   width={endPanelWidth}
