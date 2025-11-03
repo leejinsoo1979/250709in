@@ -130,28 +130,6 @@ const checkAdjacentUpperLowerToFull = (
     return { hasAdjacentUpperLower: false, adjacentSide: null };
   })();
 
-  // 디버그 로그
-  console.log('🔵 [checkAdjacentUpperLowerToFull 결과]', {
-    currentId: currentModule.id,
-    currentZone: currentZone,
-    currentSlotIndex,
-    leftAdjacentModule: leftAdjacentModule ? {
-      id: leftAdjacentModule.id,
-      moduleId: leftAdjacentModule.moduleId,
-      zone: leftAdjacentModule.zone,
-      slotIndex: leftAdjacentModule.slotIndex
-    } : null,
-    rightAdjacentModule: rightAdjacentModule ? {
-      id: rightAdjacentModule.id,
-      moduleId: rightAdjacentModule.moduleId,
-      zone: rightAdjacentModule.zone,
-      slotIndex: rightAdjacentModule.slotIndex
-    } : null,
-    hasLeftAdjacent,
-    hasRightAdjacent,
-    result
-  });
-
   return result;
 };
 
@@ -842,17 +820,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? checkAdjacentUpperLowerToFull(placedModule, placedModules, spaceInfo)
     : { hasAdjacentUpperLower: false, adjacentSide: null };
 
-  // 키큰장에서 인접 체크 결과가 변경되는 경우만 로그
-  if (actualModuleData?.category === 'full') {
-    console.log('🔴🔴🔴 [키큰장 인접 체크]', {
-      moduleId: placedModule.id,
-      zone: placedModule.zone,
-      slotIndex: placedModule.slotIndex,
-      hasAdjacentUpperLower: adjacentCheck.hasAdjacentUpperLower,
-      adjacentSide: adjacentCheck.adjacentSide,
-      전체가구: placedModules.map(m => `${m.moduleId}(zone:${m.zone},slot:${m.slotIndex})`).join(' | ')
-    });
-  }
   
   // 마지막 슬롯인지 확인 (adjustedPosition 초기화 전에 필요)
   // 단내림이 있으면 zone별 columnCount 사용
@@ -2891,23 +2858,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       {(() => {
         // 엔드패널 렌더링 조건 체크
         const shouldRender = needsEndPanelAdjustment && endPanelSide && !isNoSurroundFirstSlot && !isNoSurroundLastSlot && !isNoSurroundDualLastSlot && spaceInfo.surroundType === 'no-surround';
-
-        if (needsEndPanelAdjustment) {
-          console.log('🟢🟢🟢 [엔드패널 렌더링 조건 체크]', {
-            moduleId: placedModule.id,
-            zone: placedModule.zone,
-            slotIndex: placedModule.slotIndex,
-            shouldRender,
-            조건들: {
-              needsEndPanelAdjustment,
-              endPanelSide,
-              isNoSurroundFirstSlot,
-              isNoSurroundLastSlot,
-              isNoSurroundDualLastSlot,
-              surroundType: spaceInfo.surroundType
-            }
-          });
-        }
 
         if (!shouldRender) return null;
 
