@@ -275,14 +275,11 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
 
                 // 실제 섹션 높이 계산 (현재 가구 높이 기반)
                 let actualSectionHeight: number;
-                if (section.heightType === 'absolute') {
-                  // absolute 타입: 지정된 높이 사용
-                  actualSectionHeight = mmToThreeUnits(section.height);
-                } else if (sectionIndex === 0) {
-                  // 하부 섹션 (서랍): 항상 고정 높이
-                  actualSectionHeight = mmToThreeUnits(section.height);
+                if (sectionIndex === 0) {
+                  // 하부 섹션: 항상 고정 높이
+                  actualSectionHeight = originalSectionHeight;
                 } else {
-                  // 상부 섹션 (옷장): 전체 높이에서 하부 섹션 높이를 뺀 나머지
+                  // 상부 섹션: 전체 높이에서 하부 섹션 높이를 뺀 나머지
                   const bottomSectionHeight = mmToThreeUnits(sections[0].height);
                   actualSectionHeight = availableHeight - bottomSectionHeight;
                 }
