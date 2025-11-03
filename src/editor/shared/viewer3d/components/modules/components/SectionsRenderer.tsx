@@ -239,12 +239,29 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     const remainingHeight = availableHeight - totalFixedHeight;
     
     // 모든 섹션의 높이 계산
-    const allSections = sections.map((section: SectionConfig) => ({
-      ...section,
-      calculatedHeight: (section.heightType === 'absolute') 
-        ? calculateSectionHeight(section, availableHeight)
-        : calculateSectionHeight(section, remainingHeight)
-    }));
+    const allSections = sections.map((section: SectionConfig, index: number) => {
+      let calcHeight: number;
+
+      if (section.heightType === 'absolute') {
+        if (index === 0) {
+          // 첫 번째 섹션: 지정된 높이 사용
+          calcHeight = calculateSectionHeight(section, availableHeight);
+        } else {
+          // 상부 섹션: 전체 높이에서 하부 섹션들을 뺀 나머지
+          const lowerSectionsHeight = sections
+            .slice(0, index)
+            .reduce((sum, s) => sum + calculateSectionHeight(s, availableHeight), 0);
+          calcHeight = availableHeight - lowerSectionsHeight;
+        }
+      } else {
+        calcHeight = calculateSectionHeight(section, remainingHeight);
+      }
+
+      return {
+        ...section,
+        calculatedHeight: calcHeight
+      };
+    });
 
     // 렌더링
     let currentYPosition = -height/2 + basicThickness;
