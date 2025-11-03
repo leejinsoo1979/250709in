@@ -104,12 +104,12 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
 
     if (viewMode === '3D') {
       return new THREE.MeshStandardMaterial({
-        color: '#f0f2f5',
-        metalness: 0.98,
-        roughness: 0.05,
-        envMapIntensity: 3.5,
-        emissive: new THREE.Color('#e5e8ec'),
-        emissiveIntensity: 0.3
+        color: '#c0c5cc',
+        metalness: 1.0,
+        roughness: 0.15,
+        envMapIntensity: 1.5,
+        clearcoat: 0.3,
+        clearcoatRoughness: 0.1
       });
     } else {
       return new THREE.MeshStandardMaterial({
