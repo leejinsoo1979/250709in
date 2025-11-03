@@ -95,24 +95,20 @@ const checkAdjacentUpperLowerToFull = (
   // 왼쪽 인접 모듈이 상부장/하부장인지 확인
   let hasLeftAdjacent = false;
   if (leftAdjacentModule) {
-    // 상하부장 판단을 모듈 ID로 직접 수행 (더 안정적)
-    const isLeftUpperCabinet = leftAdjacentModule.moduleId?.includes('upper-cabinet');
-    const isLeftLowerCabinet = leftAdjacentModule.moduleId?.includes('lower-cabinet');
-    const isLeftUpperLower = isLeftUpperCabinet || isLeftLowerCabinet;
-    
+    const leftModuleData = getModuleById(leftAdjacentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+    const isLeftUpperLower = leftModuleData?.category === 'upper' || leftModuleData?.category === 'lower';
+
     if (isLeftUpperLower) {
       hasLeftAdjacent = true;
     }
   }
-  
+
   // 오른쪽 인접 모듈이 상부장/하부장인지 확인
   let hasRightAdjacent = false;
   if (rightAdjacentModule) {
-    // 상하부장 판단을 모듈 ID로 직접 수행 (더 안정적)
-    const isRightUpperCabinet = rightAdjacentModule.moduleId?.includes('upper-cabinet');
-    const isRightLowerCabinet = rightAdjacentModule.moduleId?.includes('lower-cabinet');
-    const isRightUpperLower = isRightUpperCabinet || isRightLowerCabinet;
-    
+    const rightModuleData = getModuleById(rightAdjacentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
+    const isRightUpperLower = rightModuleData?.category === 'upper' || rightModuleData?.category === 'lower';
+
     if (isRightUpperLower) {
       hasRightAdjacent = true;
     }
