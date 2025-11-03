@@ -1166,19 +1166,17 @@ export const calculateFurnitureBounds = (
   slotInfo: ColumnSlotInfo,
   originalSlotBounds: { left: number; right: number; center: number },
   spaceInfo: SpaceInfo
-): { 
-  left: number; 
-  right: number; 
-  center: number; 
+): {
+  left: number;
+  right: number;
+  center: number;
   width: number;
   renderWidth: number; // 실제 렌더링될 가구 너비
   depthAdjustmentNeeded?: boolean; // Column C 150mm 이상 침범 시 깊이 조정 필요
 } => {
-  // 단내림 영역에서도 기둥 처리 로직 적용 (기둥 침범 시 가구 줄어들기)
-  if ((spaceInfo as any).zone === 'dropped') {
-    console.log('🔧 [calculateFurnitureBounds] 단내림 영역 - 기둥 처리 로직 적용');
-  }
-  
+  // 모든 영역(단내림 포함)에서 기둥 처리 로직 적용
+  console.log('🔧 [calculateFurnitureBounds] 기둥 처리 로직 적용 (모든 구간)');
+
   if (!slotInfo.hasColumn || !slotInfo.column) {
     // 기둥이 없으면 원래 슬롯 경계 그대로
     const width = originalSlotBounds.right - originalSlotBounds.left;
