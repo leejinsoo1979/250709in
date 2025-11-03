@@ -1827,8 +1827,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             const localIndex = localSlotIndex ?? placedModule.slotIndex;
             const zoneColumnCount = zoneSlotInfo.normal.columnCount;
             if (localIndex === zoneColumnCount - 1) {
-              doorXOffset = (END_PANEL_THICKNESS / 2) * 0.01; // +9mm (가구 -9mm 상쇄)
-              console.log('🟢 [단내림 좌측 메인 구간 마지막 슬롯] doorXOffset = +9mm (슬롯 중심 유지)');
+              doorXOffset = 0; // 슬롯 중심 유지 (originalSlotCenterX 그대로)
+              console.log('🟢 [단내림 좌측 메인 구간 마지막 슬롯] doorXOffset = 0 (슬롯 중심 유지)');
             } else {
               doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
               console.log('🔵 else → doorXOffset:', doorXOffset);
