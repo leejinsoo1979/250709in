@@ -1014,8 +1014,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let positionAdjustmentForEndPanel = 0; // 위치 조정값
 
   // 키큰장이 상하부장과 인접한 경우 확인
-  // 단, 서라운드 모드일 때는 이미 벽에 엔드패널이 있으므로 추가 렌더링 불필요
-  const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower && spaceInfo.surroundType === 'no-surround';
+  // 노서라운드/서라운드 무관하게 무조건 엔드패널 필요 (높이 차이를 메우기 위함)
+  const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
   const endPanelSide = adjacentCheck.adjacentSide;
 
   console.log('🔴🔴🔴 [엔드패널 조건 체크]', {
@@ -2862,12 +2862,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       )}
 
       {/* 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 */}
-      {/* 단, 다음의 경우는 제외:
-          1. 벽 없는 구간에 있는 경우 (기존 로직)
-          2. 노서라운드 벽없음 첫/마지막 슬롯 (노서라운드용 엔드패널이 별도로 렌더링됨) */}
+      {/* 노서라운드/서라운드 무관하게 무조건 렌더링 (높이 차이를 메우기 위함) */}
       {(() => {
         // 엔드패널 렌더링 조건 체크
-        const shouldRender = needsEndPanelAdjustment && endPanelSide && !isNoSurroundFirstSlot && !isNoSurroundLastSlot && !isNoSurroundDualLastSlot && spaceInfo.surroundType === 'no-surround';
+        const shouldRender = needsEndPanelAdjustment && endPanelSide;
 
         console.log('🟢 키큰장+상하부장 엔드패널 렌더링 조건:', {
           currentId: placedModule.id,
