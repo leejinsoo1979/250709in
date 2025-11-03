@@ -2232,11 +2232,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       return;
     }
 
-    // 드래그 시작 시 자동으로 선택
-    if (!isSelected) {
-      handleSelect();
-    }
-
     if (isColumnCFront && !isDragMode) {
       // Column C 기둥 앞 가구는 리사이즈 모드
       columnCResize.handlePointerDown(e);
