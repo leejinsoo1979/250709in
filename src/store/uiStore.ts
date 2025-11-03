@@ -54,6 +54,14 @@ interface UIState {
   
   // 가이드 표시 상태 (showAll 체크박스용)
   showAll: boolean;
+
+  // 치수 보기를 껐다가 다시 켤 때를 위한 옵션 백업
+  dimensionOptionsBackup: {
+    showAll: boolean;
+    showGuides: boolean;
+    showAxis: boolean;
+    showDimensionsText: boolean;
+  } | null;
   
   // 렌더링 모드 (solid 또는 wireframe)
   renderMode: 'solid' | 'wireframe';
@@ -238,6 +246,7 @@ const initialUIState = {
   showGuides: true, // 기본값: 그리드(가이드) 표시
   showAxis: true, // 기본값: 축 표시
   showAll: true, // 기본값: 모든 가이드 표시
+  dimensionOptionsBackup: null,
   showFurniture: true, // 기본값: 가구 표시
   showFurnitureEditHandles: true, // 기본값: 가구 편집 아이콘 표시
   renderMode: 'solid' as const, // 기본값: 솔리드 렌더링
@@ -341,8 +350,34 @@ export const useUIStore = create<UIState>()(
 
       toggleDimensions: () =>
         set((state) => {
-          console.log('🎯 toggleDimensions - 이전 상태:', state.showDimensions, '새 상태:', !state.showDimensions);
-          return { showDimensions: !state.showDimensions };
+          const nextValue = !state.showDimensions;
+          console.log('🎯 toggleDimensions - 이전 상태:', state.showDimensions, '새 상태:', nextValue);
+
+          if (!nextValue) {
+            return {
+              showDimensions: false,
+              dimensionOptionsBackup: {
+                showAll: state.showAll,
+                showGuides: state.showGuides,
+                showAxis: state.showAxis,
+                showDimensionsText: state.showDimensionsText
+              },
+              showAll: false,
+              showGuides: false,
+              showAxis: false,
+              showDimensionsText: false
+            };
+          }
+
+          const backup = state.dimensionOptionsBackup;
+          return {
+            showDimensions: true,
+            showAll: backup ? backup.showAll : true,
+            showGuides: backup ? backup.showGuides : true,
+            showAxis: backup ? backup.showAxis : true,
+            showDimensionsText: backup ? backup.showDimensionsText : true,
+            dimensionOptionsBackup: null
+          };
         }),
       toggleDimensionsText: () =>
         set((state) => ({ showDimensionsText: !state.showDimensionsText })),
@@ -366,7 +401,33 @@ export const useUIStore = create<UIState>()(
       
       // setter 함수들 구현
       setShowDimensions: (show) =>
-        set({ showDimensions: show }),
+        set((state) => {
+          if (!show) {
+            return {
+              showDimensions: false,
+              dimensionOptionsBackup: {
+                showAll: state.showAll,
+                showGuides: state.showGuides,
+                showAxis: state.showAxis,
+                showDimensionsText: state.showDimensionsText
+              },
+              showAll: false,
+              showGuides: false,
+              showAxis: false,
+              showDimensionsText: false
+            };
+          }
+
+          const backup = state.dimensionOptionsBackup;
+          return {
+            showDimensions: true,
+            showAll: backup ? backup.showAll : true,
+            showGuides: backup ? backup.showGuides : true,
+            showAxis: backup ? backup.showAxis : true,
+            showDimensionsText: backup ? backup.showDimensionsText : true,
+            dimensionOptionsBackup: null
+          };
+        }),
       
       setShowDimensionsText: (show) =>
         set({ showDimensionsText: show }),

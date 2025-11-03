@@ -646,10 +646,21 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
     const LOWER_CABINET_BOTTOM_EXTENSION = 40; // 하부장 도어 아래쪽 확장 (mm)
     const LOWER_CABINET_TOP_EXTENSION = 18; // 하부장 상부 마감재 두께 (도어 상단이 하부장 상단과 일치)
-    
+
     // 하부장 도어 높이 = 캐비넷 높이 + 아래 확장 + 위 확장(상부 마감재)
     actualDoorHeight = lowerCabinetHeight + LOWER_CABINET_BOTTOM_EXTENSION + LOWER_CABINET_TOP_EXTENSION;
-    
+
+    // 플로팅 배치 시 하단만 줄어들도록 조정 (상단은 고정)
+    if (floatHeight > 0) {
+      actualDoorHeight = actualDoorHeight - floatHeight;
+      console.log('🚪📐 하부장 플로팅 도어 높이 조정:', {
+        원래높이: lowerCabinetHeight + LOWER_CABINET_BOTTOM_EXTENSION + LOWER_CABINET_TOP_EXTENSION,
+        플로팅높이: floatHeight,
+        조정된높이: actualDoorHeight,
+        설명: '도어 상단 고정, 하단만 띄움 높이만큼 줄어듦'
+      });
+    }
+
     console.log('🚪📏 하부장 도어 높이:', {
       moduleId: moduleData?.id,
       캐비넷높이: lowerCabinetHeight,
