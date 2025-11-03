@@ -1245,20 +1245,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         positionAdjustmentForEndPanel = 0;
       }
     } else {
-      // 일반적인 경우: 엔드패널 두께만큼 키큰장 너비를 줄이고 위치 조정
+      // 일반적인 경우: 엔드패널 두께만큼 키큰장 너비를 줄이되 위치는 유지
+      // (너비가 줄어들면서 중앙 정렬로 자동 이동되므로 추가 조정 불필요)
       if (endPanelSide === 'left') {
-        // 왼쪽에 상하부장이 있으면 18mm 줄이고 오른쪽으로 9mm 이동 (반대쪽으로)
+        // 왼쪽에 상하부장이 있으면 18mm 줄임 (위치 조정 없음)
         adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-        positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽으로 9mm 이동
-        console.log('🔶 왼쪽 상하부장 인접 - 오른쪽으로 9mm 이동:', {
+        positionAdjustmentForEndPanel = 0;
+        console.log('🔶 왼쪽 상하부장 인접 - 너비만 조정:', {
           adjustedWidth: adjustedWidthForEndPanel,
           positionAdjustment: positionAdjustmentForEndPanel
         });
       } else if (endPanelSide === 'right') {
-        // 오른쪽에 상하부장이 있으면 18mm 줄이고 왼쪽으로 9mm 이동 (반대쪽으로)
+        // 오른쪽에 상하부장이 있으면 18mm 줄임 (위치 조정 없음)
         adjustedWidthForEndPanel = originalFurnitureWidthMm - END_PANEL_THICKNESS;
-        positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01; // 왼쪽으로 9mm 이동
-        console.log('🔶 오른쪽 상하부장 인접 - 왼쪽으로 9mm 이동:', {
+        positionAdjustmentForEndPanel = 0;
+        console.log('🔶 오른쪽 상하부장 인접 - 너비만 조정:', {
           adjustedWidth: adjustedWidthForEndPanel,
           positionAdjustment: positionAdjustmentForEndPanel
         });
@@ -2971,7 +2972,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             rightPanelX = slotBoundaries.right - endPanelWidth / 2;
           } else {
             // 가구 오른쪽 면에 붙음
-            rightPanelX = furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2;
+            // 듀얼장의 경우: 원래 가구 중심(조정 전)에서 원래 너비의 절반 사용
+            const originalHalfWidth = mmToThreeUnits(originalFurnitureWidthMm) / 2;
+            rightPanelX = adjustedPosition.x + originalHalfWidth + endPanelWidth / 2;
           }
 
           endPanelXPositions.push({
