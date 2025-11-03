@@ -402,7 +402,44 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       // 새로운 슬롯의 기둥 정보 확인하여 customDepth와 adjustedWidth 계산
       let newCustomDepth: number | undefined = undefined;
       let newAdjustedWidth: number | undefined = undefined;
-      let adjustedPosition = { x: finalX, y: currentModule.position.y, z: currentModule.position.z };
+
+      // Y 위치 계산 (FurnitureItem.tsx와 동일한 로직)
+      let yPosition = currentModule.position.y;
+
+      const isUpperCabinet = moduleData.category === 'upper';
+      const isLowerCabinet = moduleData.category === 'lower';
+      const isTallCabinet = moduleData.category === 'full';
+
+      if (isUpperCabinet) {
+        // 상부장: 항상 천장에 붙음
+        const topFrameHeightMm = spaceInfo.frameSize?.top || 10;
+        const upperCabinetHeight = moduleData.dimensions.height || 0;
+        const upperCabinetTopY = spaceInfo.height - topFrameHeightMm;
+        yPosition = (upperCabinetTopY - upperCabinetHeight/2) * 0.01;
+      } else if (isLowerCabinet || isTallCabinet) {
+        // 하부장/키큰장: 띄워서 배치 적용
+        const isFloating = spaceInfo.baseConfig?.placementType === 'float';
+        const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
+        const floorFinishHeight = floorFinishHeightMm * 0.01;
+        const furnitureHeight = (moduleData.dimensions.height || 0) * 0.01;
+
+        if (isFloating) {
+          const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+          const floatHeight = floatHeightMm * 0.01;
+          const baseHeight = ((spaceInfo.baseConfig?.height || 65) * 0.01);
+
+          if (spaceInfo.baseConfig?.type === 'stand') {
+            yPosition = floorFinishHeight + floatHeight + (furnitureHeight / 2);
+          } else {
+            yPosition = floorFinishHeight + baseHeight + (furnitureHeight / 2) + floatHeight / 2;
+          }
+        } else {
+          const baseHeight = ((spaceInfo.baseConfig?.height || 65) * 0.01);
+          yPosition = floorFinishHeight + baseHeight + (furnitureHeight / 2);
+        }
+      }
+
+      let adjustedPosition = { x: finalX, y: yPosition, z: currentModule.position.z };
 
       console.log('🎯 드래그 중 위치 계산:', {
         moduleId: currentModule.id,

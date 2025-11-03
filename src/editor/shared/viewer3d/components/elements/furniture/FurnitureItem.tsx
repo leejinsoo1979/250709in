@@ -899,6 +899,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 상부장 중심 Y = 상부장 상단 - 상부장 높이/2
       const upperCabinetCenterY = (upperCabinetTopY - upperCabinetHeight/2) * 0.01;
 
+      console.log('🔴🔴🔴 상부장 Y 위치 계산:', {
+        moduleId: placedModule.id,
+        전체높이: spaceInfo.height,
+        상부프레임: topFrameHeightMm,
+        상부장높이: upperCabinetHeight,
+        상부장상단Y: upperCabinetTopY,
+        상부장중심Y: upperCabinetCenterY,
+        띄움높이: spaceInfo.baseConfig?.floatHeight || 0
+      });
+
       adjustedPosition = {
         ...adjustedPosition,
         y: upperCabinetCenterY
