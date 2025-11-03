@@ -2227,16 +2227,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // Column C 전용 이벤트 핸들러 래핑
   const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
+    console.log('🖱️ PointerDown:', {
+      id: placedModule.id,
+      isLocked: placedModule.isLocked,
+      isColumnCFront,
+      isDragMode
+    });
+
     // 잠긴 가구는 드래그 불가
     if (placedModule.isLocked) {
+      console.log('❌ 잠긴 가구');
       return;
     }
 
     if (isColumnCFront && !isDragMode) {
       // Column C 기둥 앞 가구는 리사이즈 모드
+      console.log('📏 리사이즈 모드');
       columnCResize.handlePointerDown(e);
     } else {
       // 일반 가구는 드래그 모드
+      console.log('🎯 드래그 모드 시작');
       onPointerDown(e, placedModule.id);
     }
   };
