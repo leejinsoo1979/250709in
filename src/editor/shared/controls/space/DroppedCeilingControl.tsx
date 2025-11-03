@@ -103,8 +103,15 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
 
   const handlePositionChange = (position: 'left' | 'right') => {
     if (droppedCeiling) {
+      console.log('🔥 단내림 위치 변경 - 가구 삭제 시작', {
+        placedModulesCount: placedModules.length,
+        modules: placedModules.map(m => ({ id: m.id, slotIndex: m.slotIndex }))
+      });
+
       // 모든 가구 삭제
-      placedModules.forEach(module => {
+      const modulesToRemove = [...placedModules];
+      modulesToRemove.forEach(module => {
+        console.log('🗑️ 가구 삭제:', module.id);
         removeModule(module.id);
       });
 
@@ -114,6 +121,8 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
           position
         }
       });
+
+      console.log('✅ 단내림 위치 변경 완료');
     }
   };
 
