@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { Line } from '@react-three/drei';
 import { useUIStore } from '@/store/uiStore';
 import { useSpace3DView } from '../../../context/useSpace3DView';
+import { EdgesGeometry, LineBasicMaterial, LineSegments } from 'three';
 
 interface VentilationCapProps {
   position: [number, number, number];
@@ -130,38 +131,6 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
     return (
       <group position={position}>
         <group position={[0, 0, liftOffset]}>
-          {/* 외곽 윤곽선 */}
-          <Line
-            points={outerCirclePoints}
-            color="#666666"
-            lineWidth={0.5}
-            position={[0, 0, rimDepth + 0.01]}
-          />
-          {/* 타공 부분 윤곽선 */}
-          <Line
-            points={innerCirclePoints}
-            color="#666666"
-            lineWidth={0.5}
-            position={[0, 0, rimDepth + 0.01]}
-          />
-          {/* 각 타공 구멍 윤곽선 */}
-          {holePositions.map((hole, index) => {
-            const holeCirclePoints = createCirclePoints(hole.radius, 16);
-            const translatedPoints = holeCirclePoints.map(([x, y, z]) => [
-              x + hole.x,
-              y + hole.y,
-              z
-            ] as [number, number, number]);
-            return (
-              <Line
-                key={index}
-                points={translatedPoints}
-                color="#999999"
-                lineWidth={0.3}
-                position={[0, 0, rimDepth + 0.01]}
-              />
-            );
-          })}
           <mesh
             geometry={rimGeometry}
             castShadow
@@ -175,6 +144,11 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
               emissiveIntensity={0.25}
             />
           </mesh>
+          {/* Rim 윤곽선 */}
+          <lineSegments geometry={new EdgesGeometry(rimGeometry, 30)}>
+            <lineBasicMaterial color="#888888" opacity={0.6} transparent />
+          </lineSegments>
+
           <mesh
             geometry={perforatedGeometry}
             position={[0, 0, rimDepth - faceDepth]}
@@ -189,6 +163,13 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
               emissiveIntensity={0.2}
             />
           </mesh>
+          {/* Perforated 면 윤곽선 (타공 구멍 포함) */}
+          <lineSegments
+            geometry={new EdgesGeometry(perforatedGeometry, 15)}
+            position={[0, 0, rimDepth - faceDepth]}
+          >
+            <lineBasicMaterial color="#888888" opacity={0.5} transparent />
+          </lineSegments>
         </group>
       </group>
     );
