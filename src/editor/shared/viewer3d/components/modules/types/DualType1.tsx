@@ -247,24 +247,6 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               const { height, innerWidth, basicThickness, mmToThreeUnits, adjustedDepthForShelves, depth } = baseFurniture;
               const availableHeight = height - basicThickness * 2;
 
-              // 단내림 높이 감소분 계산 (단내림 구간인 경우에만)
-              // internalHeight가 원래 천장높이보다 낮으면 단내림 구간
-              let droppedHeightReduction = 0;
-              if (spaceInfo?.droppedCeiling?.enabled && spaceInfo?.dimensions?.ceilingHeight) {
-                const originalCeilingHeight = spaceInfo.dimensions.ceilingHeight;
-                const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
-                const dropHeight = spaceInfo.droppedCeiling.dropHeight || 0;
-
-                // 단내림 구간의 천장 높이 = 원래 천장 - 단내림 높이
-                const droppedCeilingHeight = originalCeilingHeight - dropHeight;
-
-                // 현재 가구의 internalHeight가 단내림 구간 높이와 일치하면 단내림 구간 가구
-                if (Math.abs(internalHeight - (droppedCeilingHeight - floatHeight)) < 10) {
-                  // 단내림으로 인한 높이 감소 = dropHeight
-                  droppedHeightReduction = mmToThreeUnits(dropHeight);
-                }
-              }
-
               console.log('🟢 DualType1 섹션 계산 시작');
               console.log('  moduleId:', moduleData.id);
               console.log('  internalHeight:', internalHeight);
@@ -272,7 +254,6 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               console.log('  availableHeight:', availableHeight * 100);
               console.log('  basicThickness:', basicThickness * 100);
               console.log('  sectionsCount:', sections.length);
-              console.log('  droppedHeightReduction:', droppedHeightReduction * 100);
 
               return sections.map((section: any, sectionIndex: number) => {
                 console.log(`🟡 DualType1 섹션[${sectionIndex}] (${section.type})`);
@@ -324,15 +305,15 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                 if (safetyShelfPositionMm !== undefined && !isFloating) {
                   // 안전선반이 있고 띄움 배치가 아닌 경우: 브라켓 윗면이 안전선반 하단에 붙음
                   const safetyShelfY = sectionBottomY + mmToThreeUnits(safetyShelfPositionMm);
-                  rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2) - droppedHeightReduction;
+                  rodYPosition = safetyShelfY - basicThickness / 2 - mmToThreeUnits(75 / 2);
                 } else if (hasFinishPanel) {
                   // 마감 패널이 있는 경우 (하부섹션): 브라켓 윗면이 마감 패널 하단에서 27mm 아래
                   const finishPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
-                  rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2) - droppedHeightReduction;
+                  rodYPosition = finishPanelBottom - mmToThreeUnits(27) - mmToThreeUnits(75 / 2);
                 } else {
                   // 띄움 배치 또는 안전선반/마감패널 없는 경우: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
                   const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
-                  rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9) - droppedHeightReduction;
+                  rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
 
                   console.log('🔵 DualType1 옷봉 위치 계산 (띄움 또는 안전선반 없음)');
                   console.log('  isFloating:', isFloating);
