@@ -962,6 +962,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             furnitureId={placedFurnitureId}
             doorTopGap={undefined}
             doorBottomGap={undefined}
+            floatHeight={spaceInfo.baseConfig?.floatHeight || 0}
           />
         ) : (
           // 분할 모드: 상/하부 도어 각각
@@ -985,6 +986,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               furnitureId={placedFurnitureId}
               doorTopGap={lowerDoorTopGap}
               doorBottomGap={lowerDoorBottomGap}
+              floatHeight={spaceInfo.baseConfig?.floatHeight || 0}
             />
             {/* 상부 도어 */}
             <DoorModule
@@ -1005,6 +1007,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               furnitureId={placedFurnitureId}
               doorTopGap={upperDoorTopGap}
               doorBottomGap={upperDoorBottomGap}
+              floatHeight={spaceInfo.baseConfig?.floatHeight || 0}
             />
           </>
         )
