@@ -2889,12 +2889,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           1. 벽 없는 구간에 있는 경우 (기존 로직)
           2. 노서라운드 벽없음 첫/마지막 슬롯 (노서라운드용 엔드패널이 별도로 렌더링됨) */}
       {(() => {
-        // 엔드패널 렌더링 여부 디버깅
-        if (actualModuleData?.category === 'full' && !needsEndPanelAdjustment) {
-          }
-        return null;
-      })()}
-      {(() => {
         // 엔드패널 렌더링 조건 체크
         const shouldRender = needsEndPanelAdjustment && endPanelSide && !isNoSurroundFirstSlot && !isNoSurroundLastSlot && !isNoSurroundDualLastSlot && spaceInfo.surroundType === 'no-surround';
 
@@ -2916,8 +2910,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
 
         if (!shouldRender) return null;
-
-        return (() => {
 
         // 엔드패널 위치 계산
         const endPanelWidth = mmToThreeUnits(END_PANEL_THICKNESS);
