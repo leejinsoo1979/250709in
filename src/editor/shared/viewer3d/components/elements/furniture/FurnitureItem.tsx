@@ -1578,13 +1578,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 가구 높이는 기본적으로 모듈 데이터의 높이 사용
   let furnitureHeightMm = actualModuleData?.dimensions.height || 0;
 
-  // 띄워서 배치 시 키큰장/듀얼장 높이 조정
-  const isFloatingMode = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-  if (isFloatingMode && (isTallCabinetForY || actualModuleData?.category === 'full')) {
-    const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
-    furnitureHeightMm = furnitureHeightMm - floatHeightMm;
-  }
-
   // 단내림 구간 높이 디버깅
   if (placedModule.zone === 'dropped') {
     debugLog('🟢 FurnitureItem 단내림 구간 가구 높이');
