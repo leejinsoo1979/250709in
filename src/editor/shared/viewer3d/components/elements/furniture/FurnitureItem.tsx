@@ -98,6 +98,13 @@ const checkAdjacentUpperLowerToFull = (
     const leftModuleData = getModuleById(leftAdjacentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
     const isLeftUpperLower = leftModuleData?.category === 'upper' || leftModuleData?.category === 'lower';
 
+    console.log('🟣 LEFT 인접 모듈:', {
+      currentId: currentModule.id,
+      leftModuleId: leftAdjacentModule.moduleId,
+      leftCategory: leftModuleData?.category,
+      isLeftUpperLower
+    });
+
     if (isLeftUpperLower) {
       hasLeftAdjacent = true;
     }
@@ -108,6 +115,13 @@ const checkAdjacentUpperLowerToFull = (
   if (rightAdjacentModule) {
     const rightModuleData = getModuleById(rightAdjacentModule.moduleId, calculateInternalSpace(spaceInfo), spaceInfo);
     const isRightUpperLower = rightModuleData?.category === 'upper' || rightModuleData?.category === 'lower';
+
+    console.log('🟣 RIGHT 인접 모듈:', {
+      currentId: currentModule.id,
+      rightModuleId: rightAdjacentModule.moduleId,
+      rightCategory: rightModuleData?.category,
+      isRightUpperLower
+    });
 
     if (isRightUpperLower) {
       hasRightAdjacent = true;
