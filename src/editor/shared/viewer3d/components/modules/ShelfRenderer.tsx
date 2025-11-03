@@ -579,9 +579,8 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       // 마지막 칸: 마지막 선반 상단부터 상단 프레임 하단까지
                       const lastShelfPos = shelfPositions[shelfPositions.length - 1];
                       compartmentBottom = (-innerHeight / 2) + mmToThreeUnits(lastShelfPos) + basicThickness / 2; // 마지막 선반 상단
-                      // 상단 프레임 하단까지만 (섹션 상단에서 프레임 두께의 2배만큼 아래)
-                      const topFrameBottomMm = (innerHeight / 0.01) - (basicThickness / 0.01) * 2;
-                      compartmentTop = (-innerHeight / 2) + mmToThreeUnits(topFrameBottomMm); // 상단 프레임 하단
+                      // 상단 프레임 하단까지만 (섹션 상단에서 프레임 두께 뺀 위치)
+                      compartmentTop = (innerHeight / 2) - basicThickness; // 상단 프레임 하단
 
                       // 디버깅: 상부섹션 높이 계산 로그
                       console.log('🔍 ShelfRenderer 상부섹션 높이 계산:', {
@@ -592,7 +591,9 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         innerHeight_mm: innerHeight * 100,
                         basicThickness,
                         basicThickness_mm: basicThickness * 100,
-                        topFrameBottomMm,
+                        lastShelfPos,
+                        compartmentBottom,
+                        compartmentTop,
                         compartmentHeight_mm: (compartmentTop - compartmentBottom) * 100,
                         표시될값: Math.round((compartmentTop - compartmentBottom) * 100)
                       });
