@@ -18,7 +18,7 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
 }) => {
   const { t } = useTranslation();
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
-  const { removeModule, updatePlacedModule } = useFurnitureStore();
+  const { removeModule, updatePlacedModule, clearAllModules } = useFurnitureStore();
   const { zones } = useDerivedSpaceStore();
   const droppedCeiling = spaceInfo.droppedCeiling;
 
@@ -102,19 +102,10 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
 
   const handlePositionChange = (position: 'left' | 'right') => {
     if (droppedCeiling) {
-      // 실시간으로 스토어에서 가구 목록 가져오기
-      const currentModules = useFurnitureStore.getState().placedModules;
+      console.log('🔥 단내림 위치 변경 - 모든 가구 삭제');
 
-      console.log('🔥 단내림 위치 변경 - 가구 삭제 시작', {
-        placedModulesCount: currentModules.length,
-        modules: currentModules.map(m => ({ id: m.id, slotIndex: m.slotIndex }))
-      });
-
-      // 모든 가구들 제거
-      currentModules.forEach(module => {
-        console.log('🗑️ 가구 삭제:', module.id);
-        removeModule(module.id);
-      });
+      // clearAllModules로 모든 가구 한번에 삭제
+      clearAllModules();
 
       setSpaceInfo({
         droppedCeiling: {
