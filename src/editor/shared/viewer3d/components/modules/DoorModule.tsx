@@ -859,37 +859,39 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const LOWER_CABINET_TOP_EXTENSION = 18; // 상부 마감재 두께 (도어 상단 = 하부장 상단)
     const DOOR_POSITION_ADJUSTMENT = 10; // 위치 조정값 (10mm 더 아래로)
     const lowerCabinetHeight = moduleData?.dimensions?.height || 1000;
-    
+
     // 하부장 캐비넷은 Y=0에 위치 (cabinetYPosition = 0)
     // 하부장 캐비넷 중심 Y = 0
     // 하부장 캐비넷 상단 = 캐비넷높이/2 + 상부 마감재(18mm)
     // 하부장 캐비넷 하단 = -캐비넷높이/2
-    
+
     // 도어는 캐비넷 상단(마감재 포함)에서 아래로 확장
-    // 도어 상단 = 캐비넷 상단 + 상부 마감재
-    // 도어 하단 = 캐비넷 하단 - 아래 확장값
-    // 도어 높이 = 캐비넷 높이 + 상부 마감재 + 아래 확장값
-    const doorHeight = lowerCabinetHeight + LOWER_CABINET_TOP_EXTENSION + LOWER_CABINET_BOTTOM_EXTENSION;
+    // 도어 상단 = 캐비넷 상단 + 상부 마감재 (고정)
+    // 도어 하단 = 캐비넷 하단 - 아래 확장값 (플로팅 시 올라감)
+    // 도어 높이 = actualDoorHeight (이미 플로팅 높이가 반영됨)
     const cabinetTop = mmToThreeUnits(lowerCabinetHeight) / 2 + mmToThreeUnits(LOWER_CABINET_TOP_EXTENSION);
     const cabinetBottom = -mmToThreeUnits(lowerCabinetHeight) / 2;
-    const doorBottom = cabinetBottom - mmToThreeUnits(LOWER_CABINET_BOTTOM_EXTENSION);
-    
-    // 도어 중심 = 도어 하단 + 도어 높이/2 - 추가 조정값
-    doorYPosition = doorBottom + mmToThreeUnits(doorHeight) / 2 - mmToThreeUnits(DOOR_POSITION_ADJUSTMENT);
-    
-    console.log('🚪📍 하부장 도어 Y 위치 (상단 일치, 아래 확장):', {
+
+    // 도어 상단은 고정 (cabinetTop에서 DOOR_POSITION_ADJUSTMENT만큼 아래)
+    const doorTop = cabinetTop - mmToThreeUnits(DOOR_POSITION_ADJUSTMENT);
+
+    // 도어 중심 = 도어 상단 - (도어 높이 / 2)
+    // 플로팅 시 actualDoorHeight가 이미 줄어들었으므로, 도어 상단에서 절반 내려온 위치
+    doorYPosition = doorTop - mmToThreeUnits(actualDoorHeight) / 2;
+
+    console.log('🚪📍 하부장 도어 Y 위치 (상단 고정, 하단만 조정):', {
       moduleId: moduleData?.id,
       캐비넷높이: lowerCabinetHeight,
-      캐비넷상단: cabinetTop,
-      캐비넷하단: cabinetBottom,
-      도어하단: doorBottom,
-      도어높이: doorHeight,
-      doorYPosition,
+      캐비넷상단_mm: (cabinetTop / 0.01).toFixed(1),
+      캐비넷하단_mm: (cabinetBottom / 0.01).toFixed(1),
+      도어상단_mm: (doorTop / 0.01).toFixed(1),
+      도어높이_mm: actualDoorHeight,
+      플로팅높이_mm: floatHeight,
+      도어중심Y_mm: (doorYPosition / 0.01).toFixed(1),
       위확장: LOWER_CABINET_TOP_EXTENSION,
-      아래확장: LOWER_CABINET_BOTTOM_EXTENSION,
       위치조정: DOOR_POSITION_ADJUSTMENT,
       type: '하부장',
-      설명: '하부장 상단과 일치, 아래로 40mm 확장, 10mm 아래로 조정'
+      설명: '도어 상단 고정(' + (doorTop / 0.01).toFixed(1) + 'mm), 하단은 플로팅만큼 올라감'
     });
   } else {
     // 키큰장 도어 Y 위치 계산
