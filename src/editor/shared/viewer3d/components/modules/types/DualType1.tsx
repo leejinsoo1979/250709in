@@ -257,21 +257,16 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               console.log('  dropHeight:', spaceInfo?.droppedCeiling?.dropHeight);
               console.log('  originalCeilingHeight:', spaceInfo?.dimensions?.ceilingHeight);
 
+              let accumulatedY = -height / 2 + basicThickness;
+
               return sections.map((section: any, sectionIndex: number) => {
                 console.log(`🟡 DualType1 섹션[${sectionIndex}] (${section.type})`);
 
-                // 현재 섹션의 시작 Y 위치 계산
-                let sectionBottomY = -height / 2 + basicThickness;
-
-                // 이전 섹션들의 높이를 누적 (actualSectionHeight 사용)
-                for (let i = 0; i < sectionIndex; i++) {
-                  if (i === 0) {
-                    sectionBottomY += mmToThreeUnits(sections[i].height);
-                  } else {
-                    const bottomSectionHeight = mmToThreeUnits(sections[0].height);
-                    sectionBottomY += availableHeight - bottomSectionHeight;
-                  }
-                }
+                // 현재 섹션의 시작 Y 위치 (측판 기준)
+                const sectionBottomY = accumulatedY;
+                // 원본 섹션 높이로 누적 (측판 위치 계산용)
+                const originalSectionHeight = mmToThreeUnits(section.height);
+                accumulatedY += originalSectionHeight;
 
                 if (section.type !== 'hanging') {
                   console.log('  ⏭️ hanging 섹션이 아니므로 옷봉 렌더링 생략');
