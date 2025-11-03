@@ -331,6 +331,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               sectionInternalHeight={section.internalHeight}
               isLastSection={index === allSections.length - 1}
               isHighlighted={isHangingSectionHighlighted}
+              allowSideViewDimensions={true}
               textureUrl={textureUrl}
               panelGrainDirections={panelGrainDirections}
               sectionName={sectionName}
