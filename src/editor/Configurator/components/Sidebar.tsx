@@ -216,7 +216,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             window.dispatchEvent(new CustomEvent('openSettingsPanel'));
           }}
         >
-          <Settings size={24} />
+          <Settings size={20} />
         </button>
       </div>
 
@@ -227,7 +227,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           title={t('sidebar.exitToDashboard')}
           onClick={handleExitClick}
         >
-          <LogOut size={24} style={{ transform: 'scaleX(-1)' }} />
+          <LogOut size={20} style={{ transform: 'scaleX(-1)' }} />
         </button>
       </div>
       
