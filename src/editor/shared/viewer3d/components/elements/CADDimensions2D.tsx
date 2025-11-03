@@ -432,7 +432,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             let sectionEndY = isLastSection ? cabinetTopY : interiorEndY;
 
             // 우측뷰에서 상부섹션의 치수가이드를 36mm 아래로 확장
-            if (viewDirection === 'right' && sectionIndex > 0) {
+            if (currentViewDirection === 'right' && sectionIndex > 0) {
               sectionStartY -= mmToThreeUnits(36);
             }
 
