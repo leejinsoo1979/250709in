@@ -1103,11 +1103,17 @@ const Configurator: React.FC = () => {
 
     // CNC에서 돌아오는 경우 - 이미 데이터가 로드되어 있으면 재로드하지 않음
     // 상태 업데이트 전에 먼저 체크해야 함!
-    if (projectId && designFileId &&
-        projectId === currentProjectId &&
-        designFileId === currentDesignFileId &&
-        placedModules.length > 0) {
-      console.log('✅ 이미 로드된 프로젝트 - 재로드하지 않음');
+    const isSameProject = projectId && projectId === currentProjectId;
+    const isSameDesignFile = designFileId && designFileId === currentDesignFileId;
+    const hasLoadedData = placedModules.length > 0 || spaceInfo.width > 0;
+
+    if (isSameProject && isSameDesignFile && hasLoadedData && !skipLoad && mode !== 'new-design') {
+      console.log('✅ 이미 로드된 프로젝트 - 재로드하지 않음 (CNC에서 복귀)');
+
+      // ID만 동기화
+      if (projectId !== currentProjectId) setCurrentProjectId(projectId);
+      if (designFileId !== currentDesignFileId) setCurrentDesignFileId(designFileId);
+
       setLoading(false);
       return;
     }
