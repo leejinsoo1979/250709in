@@ -533,12 +533,19 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       }
                     } else {
                       // 안전선반 없는 경우
-                      // 2hanging, 2drawer-hanging 상부 섹션: 측판 높이에서 최상단 칸과 선반들을 뺀 내경
                       const is2HangingUpperSection = (furnitureId?.includes('2hanging') || furnitureId?.includes('2drawer-hanging')) && index === 1;
+                      const isDualFurniture = furnitureId?.includes('dual');
+
                       if (is2HangingUpperSection) {
-                        // 상부 섹션: 실제 섹션 상단에서 상판 두께를 뺀 위치
-                        // sectionTopY는 실제 섹션의 상단 위치이므로 단내림에서도 정확
-                        topY = sectionTopY - basicThickness;
+                        if (isDualFurniture) {
+                          // 듀얼 가구: sectionTopY가 측판 상단 (전체 가구 상판 아래)
+                          // 내경은 sectionTopY까지 (상판 두께 빼지 않음)
+                          topY = sectionTopY;
+                        } else {
+                          // 싱글 가구: sectionTopY가 측판 상단 (상판 윗면)
+                          // 내경은 상판 아랫면까지 (상판 두께 빼기)
+                          topY = sectionTopY - basicThickness;
+                        }
                       } else {
                         // 일반 케이스: 상부 프레임 하단까지
                         topY = height/2 - basicThickness;
