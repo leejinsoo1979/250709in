@@ -838,13 +838,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     : actualModuleData?.id.includes('dual-') || false;
   
   // 상부장/하부장과 인접한 키큰장인지 확인 (actualModuleData가 있을 때만)
-  const adjacentCheck = actualModuleData 
+  const adjacentCheck = actualModuleData
     ? checkAdjacentUpperLowerToFull(placedModule, placedModules, spaceInfo)
     : { hasAdjacentUpperLower: false, adjacentSide: null };
-  
-  // 듀얼 가구 인접 체크 디버깅
-  if (isDualFurniture && actualModuleData) {
-    }
+
+  console.log('🟡 [adjacentCheck 호출 결과]', {
+    moduleId: placedModule.id,
+    zone: placedModule.zone,
+    slotIndex: placedModule.slotIndex,
+    actualModuleDataExists: !!actualModuleData,
+    adjacentCheck
+  });
   
   // 마지막 슬롯인지 확인 (adjustedPosition 초기화 전에 필요)
   // 단내림이 있으면 zone별 columnCount 사용
