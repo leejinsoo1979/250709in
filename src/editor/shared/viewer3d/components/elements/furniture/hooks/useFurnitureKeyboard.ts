@@ -58,22 +58,50 @@ export const useFurnitureKeyboard = ({
         const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
         
         let currentSlotIndex = -1;
-        
+
+        // 단내림 모드일 때는 zone별 position 배열 사용
+        const moduleZone = editingModule.zone || 'normal';
+        let positionsToSearch: number[] | undefined;
+        let dualPositionsToSearch: number[] | undefined;
+
+        if (indexing.zones && spaceInfo.droppedCeiling?.enabled) {
+          const zoneInfo = moduleZone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+          if (zoneInfo) {
+            positionsToSearch = zoneInfo.threeUnitPositions;
+            dualPositionsToSearch = zoneInfo.threeUnitDualPositions;
+          }
+        } else {
+          positionsToSearch = indexing.threeUnitPositions;
+          dualPositionsToSearch = indexing.threeUnitDualPositions;
+        }
+
         if (isDualFurniture) {
           // 듀얼 가구: threeUnitDualPositions에서 슬롯 찾기
-          if (indexing.threeUnitDualPositions) {
-            currentSlotIndex = indexing.threeUnitDualPositions.findIndex(pos => 
+          if (dualPositionsToSearch) {
+            currentSlotIndex = dualPositionsToSearch.findIndex(pos =>
               Math.abs(pos - editingModule.position.x) < 0.1
             );
           }
         } else {
           // 싱글 가구: threeUnitPositions에서 슬롯 찾기
-          currentSlotIndex = indexing.threeUnitPositions.findIndex(pos => 
-            Math.abs(pos - editingModule.position.x) < 0.1
-          );
+          if (positionsToSearch) {
+            currentSlotIndex = positionsToSearch.findIndex(pos =>
+              Math.abs(pos - editingModule.position.x) < 0.1
+            );
+          }
         }
-        
+
+        console.log('🔍 [useFurnitureKeyboard] 슬롯 인덱스 찾기:', {
+          moduleZone,
+          hasZones: !!indexing.zones,
+          currentSlotIndex,
+          positionX: editingModule.position.x,
+          positionsCount: positionsToSearch?.length,
+          dualPositionsCount: dualPositionsToSearch?.length
+        });
+
         if (currentSlotIndex === -1) {
+          console.log('⚠️ [useFurnitureKeyboard] 슬롯을 찾을 수 없어 키보드 이동 불가');
           return;
         }
         
@@ -107,13 +135,16 @@ export const useFurnitureKeyboard = ({
               editingModule.zone // 현재 zone 유지
             );
             console.log('⌨️ ArrowLeft 결과:', { nextSlot });
-            
+
             if (nextSlot !== null) {
               let newX: number;
-              if (isDualFurniture && indexing.threeUnitDualPositions) {
-                newX = indexing.threeUnitDualPositions[nextSlot];
+              if (isDualFurniture && dualPositionsToSearch) {
+                newX = dualPositionsToSearch[nextSlot];
+              } else if (positionsToSearch) {
+                newX = positionsToSearch[nextSlot];
               } else {
-                newX = indexing.threeUnitPositions[nextSlot];
+                console.error('⚠️ 위치 배열을 찾을 수 없음');
+                break;
               }
               
               // 기둥 슬롯 분석
@@ -202,13 +233,16 @@ export const useFurnitureKeyboard = ({
               editingModule.zone // 현재 zone 유지
             );
             console.log('⌨️ ArrowRight 결과:', { nextSlot });
-            
+
             if (nextSlot !== null) {
               let newX: number;
-              if (isDualFurniture && indexing.threeUnitDualPositions) {
-                newX = indexing.threeUnitDualPositions[nextSlot];
+              if (isDualFurniture && dualPositionsToSearch) {
+                newX = dualPositionsToSearch[nextSlot];
+              } else if (positionsToSearch) {
+                newX = positionsToSearch[nextSlot];
               } else {
-                newX = indexing.threeUnitPositions[nextSlot];
+                console.error('⚠️ 위치 배열을 찾을 수 없음');
+                break;
               }
               
               // 기둥 슬롯 분석
