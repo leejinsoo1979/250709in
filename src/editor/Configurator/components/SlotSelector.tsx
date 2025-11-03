@@ -82,30 +82,31 @@ const SlotSelector: React.FC = () => {
   // 단내림 위치에 따른 슬롯 순서 결정
   const isDroppedOnLeft = spaceInfo?.droppedCeiling?.position === 'left';
 
-  // 슬롯 배열 생성 (단내림 위치에 따라 displayIndex만 변경, 버튼 배열 순서는 동일)
+  // 슬롯 배열 생성
   const slotButtons = [];
 
   if (isDroppedOnLeft) {
-    // 단내림이 좌측: 버튼은 좌→우 배열, 숫자만 8,7,6,5,4,3,2,1
-    // 단내림 슬롯들 (좌→우 버튼 배열)
-    for (let i = 0; i < droppedSlotCount; i++) {
+    // 단내림이 좌측: 번호도 역순, actualIndex도 역순
+    // 8,7 / 6,5,4,3,2,1 → actualIndex: 7,6 / 5,4,3,2,1,0
+    // 단내림 슬롯들 (역순)
+    for (let i = droppedSlotCount - 1; i >= 0; i--) {
       slotButtons.push({
-        displayIndex: totalSlots - i, // 8, 7
-        actualIndex: normalSlotCount + i, // 6, 7
+        displayIndex: normalSlotCount + droppedSlotCount - i, // 8, 7
+        actualIndex: normalSlotCount + i, // 7, 6
         zone: 'dropped' as const
       });
     }
-    // 일반 슬롯들 (좌→우 버튼 배열)
-    for (let i = 0; i < normalSlotCount; i++) {
+    // 일반 슬롯들 (역순)
+    for (let i = normalSlotCount - 1; i >= 0; i--) {
       slotButtons.push({
-        displayIndex: normalSlotCount - i, // 6, 5, 4, 3, 2, 1
-        actualIndex: i, // 0, 1, 2, 3, 4, 5
+        displayIndex: i + 1, // 6, 5, 4, 3, 2, 1
+        actualIndex: i, // 5, 4, 3, 2, 1, 0
         zone: 'normal' as const
       });
     }
   } else {
-    // 단내림이 우측: 버튼 좌→우 배열, 숫자도 1,2,3,4,5,6,7,8
-    // 일반 슬롯들 (좌→우 버튼 배열)
+    // 단내림이 우측: 1,2,3,4,5,6 / 7,8 → actualIndex: 0,1,2,3,4,5 / 6,7
+    // 일반 슬롯들
     for (let i = 0; i < normalSlotCount; i++) {
       slotButtons.push({
         displayIndex: i + 1, // 1, 2, 3, 4, 5, 6
@@ -113,7 +114,7 @@ const SlotSelector: React.FC = () => {
         zone: 'normal' as const
       });
     }
-    // 단내림 슬롯들 (좌→우 버튼 배열)
+    // 단내림 슬롯들
     for (let i = 0; i < droppedSlotCount; i++) {
       slotButtons.push({
         displayIndex: normalSlotCount + i + 1, // 7, 8
@@ -123,8 +124,7 @@ const SlotSelector: React.FC = () => {
     }
   }
 
-  // 단내림 좌측일 때는 버튼 배열도 역순으로
-  const finalSlotButtons = isDroppedOnLeft ? [...slotButtons].reverse() : slotButtons;
+  const finalSlotButtons = slotButtons;
 
   return (
     <div className={styles.slotSelector} style={containerStyle}>
