@@ -121,11 +121,8 @@ const DroppedCeilingControl: React.FC<DroppedCeilingControlProps> = ({
             const isInDropped = module.zone === 'dropped';
 
             if (isInDropped) {
-              // 단내림 영역: 영역 내 상대 위치 유지하며 역순
-              const relativeIndex = module.slotIndex - normalSlotCount;
-              const newRelativeIndex = (droppedSlotCount - 1) - relativeIndex;
-              const newSlotIndex = normalSlotCount + newRelativeIndex;
-              updatePlacedModule(module.id, { slotIndex: newSlotIndex });
+              // 단내림 영역: slotIndex 그대로 유지 (끝은 끝으로)
+              // 아무것도 안 함
             } else {
               // 일반 영역: 영역 내 상대 위치 유지하며 역순
               const newSlotIndex = (normalSlotCount - 1) - module.slotIndex;
