@@ -257,19 +257,27 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               console.log('  dropHeight:', spaceInfo?.droppedCeiling?.dropHeight);
               console.log('  originalCeilingHeight:', spaceInfo?.dimensions?.ceilingHeight);
 
+              let accumulatedY = -height / 2 + basicThickness;
+
               return sections.map((section: any, sectionIndex: number) => {
                 console.log(`🟡 DualType1 섹션[${sectionIndex}] (${section.type})`);
 
                 if (section.type !== 'hanging') {
                   console.log('  ⏭️ hanging 섹션이 아니므로 옷봉 렌더링 생략');
+
+                  // hanging이 아닌 섹션도 accumulatedY를 업데이트해야 함
+                  if (sectionIndex === 0) {
+                    accumulatedY += mmToThreeUnits(section.height);
+                  } else {
+                    const bottomSectionHeight = mmToThreeUnits(sections[0].height);
+                    accumulatedY += availableHeight - bottomSectionHeight;
+                  }
+
                   return null;
                 }
 
-                // 측판용: 원본 섹션 높이 기반 계산
-                let sectionBottomY = -height / 2 + basicThickness;
-                for (let i = 0; i < sectionIndex; i++) {
-                  sectionBottomY += mmToThreeUnits(sections[i].height);
-                }
+                // 현재 섹션의 시작 Y 위치
+                const sectionBottomY = accumulatedY;
 
                 // 실제 섹션 높이 계산 (현재 가구 높이 기반)
                 let actualSectionHeight: number;
@@ -284,6 +292,9 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                   const bottomSectionHeight = mmToThreeUnits(sections[0].height);
                   actualSectionHeight = availableHeight - bottomSectionHeight;
                 }
+
+                // 다음 섹션을 위해 accumulatedY 업데이트
+                accumulatedY += actualSectionHeight;
 
                 console.log('  actualSectionHeight:', actualSectionHeight * 100);
                 console.log('  sectionBottomY:', sectionBottomY * 100);
@@ -302,11 +313,6 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                 // 띄움 배치 여부 확인
                 const isFloating = lowerSectionTopOffset && lowerSectionTopOffset > 0;
 
-                // 단내림 구간 판단
-                const isInDroppedZone = spaceInfo?.droppedCeiling?.enabled &&
-                  spaceInfo?.dimensions?.ceilingHeight &&
-                  internalHeight < (spaceInfo.dimensions.ceilingHeight - (spaceInfo.baseConfig?.floatHeight || 0));
-
                 // 옷걸이 봉 Y 위치 계산
                 let rodYPosition: number;
                 if (safetyShelfPositionMm !== undefined && !isFloating) {
@@ -321,11 +327,6 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                   // 띄움 배치 또는 안전선반/마감패널 없는 경우: 브라켓 윗면이 상부 섹션 상판 하단에 붙음
                   const sectionTopPanelBottom = sectionBottomY + actualSectionHeight - basicThickness / 2;
                   rodYPosition = sectionTopPanelBottom - mmToThreeUnits(75 / 2) + mmToThreeUnits(9);
-
-                  // 단내림 구간의 경우 36mm 내리기
-                  if (isInDroppedZone) {
-                    rodYPosition -= mmToThreeUnits(36);
-                  }
 
                   console.log('🔵 DualType1 옷봉 위치 계산 (띄움 또는 안전선반 없음)');
                   console.log('  isFloating:', isFloating);
