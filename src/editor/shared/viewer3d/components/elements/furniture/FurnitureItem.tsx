@@ -2907,16 +2907,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const adjustedHalfWidth = width / 2; // 이미 줄어든 너비의 절반
         const endPanelXPositions = [];
 
-        // 엔드패널은 가구 몸통 기준이므로 도어 오프셋(positionAdjustmentForEndPanel) 제거
-        // adjustedPosition.x는 needsEndPanelAdjustment일 때 positionAdjustmentForEndPanel을 포함하므로 빼야 함
-        const furnitureCenterX = adjustedPosition.x - (needsEndPanelAdjustment ? positionAdjustmentForEndPanel : 0);
+        // 키큰장/듀얼장 중심 X 위치 (positionAdjustmentForEndPanel 이동 후 위치)
+        const furnitureCenterX = adjustedPosition.x + positionAdjustmentForEndPanel;
 
         if (endPanelSide === 'left' || endPanelSide === 'both') {
-          const leftPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
-            ? furnitureCenterX - adjustedHalfWidth - endPanelWidth
-            : (slotBoundaries
-                ? slotBoundaries.left + endPanelWidth / 2
-                : furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2);
+          // 왼쪽 엔드패널: 키큰장 왼쪽 면에 붙음
+          const leftPanelX = furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2;
 
           endPanelXPositions.push({
             x: leftPanelX,
@@ -2925,11 +2921,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           });
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
-          const rightPanelX = (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot)
-            ? furnitureCenterX + adjustedHalfWidth + endPanelWidth
-            : (slotBoundaries
-                ? slotBoundaries.right - endPanelWidth / 2
-                : furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2);
+          // 오른쪽 엔드패널: 키큰장 오른쪽 면에 붙음
+          const rightPanelX = furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2;
 
           endPanelXPositions.push({
             x: rightPanelX,
