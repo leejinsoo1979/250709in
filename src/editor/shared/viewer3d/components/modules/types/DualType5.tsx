@@ -770,6 +770,58 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   </>
                 )}
                 
+                {/* 세로 내경 높이 표시 */}
+                {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
+                  // 내경 높이 계산: 섹션 높이 - 상하 기본두께
+                  const lineBottomY = sectionCenterY - sectionHeight/2 + basicThickness;
+                  const lineTopY = index === allSections.length - 1
+                    ? sectionCenterY + sectionHeight/2 - basicThickness  // 마지막 섹션: 상판 두께 제외
+                    : sectionCenterY + sectionHeight/2;  // 중간 섹션: 분리판까지
+                  const internalHeight = lineTopY - lineBottomY;
+                  const textCenterY = (lineBottomY + lineTopY) / 2;
+
+                  return (
+                    <group>
+                      {/* 내경 높이 텍스트 */}
+                      <Text
+                        position={[
+                          getDimensionXPosition(rightWidth, true, rightXOffset),
+                          textCenterY,
+                          getDimensionZPosition(rightDepth)
+                        ]}
+                        fontSize={viewMode === '3D' ? 0.45 : 0.32}
+                        color={viewMode === '3D' ? '#000000' : dimensionColor}
+                        anchorX="center"
+                        anchorY="middle"
+                        rotation={[0, 0, Math.PI / 2]}
+                        renderOrder={999}
+                      >
+                        {Math.round(internalHeight * 100)}
+                      </Text>
+
+                      {/* 내경 높이 수직선 */}
+                      <Line
+                        points={[
+                          [getDimensionXPosition(rightWidth, false, rightXOffset), lineBottomY, getDimensionZPosition(rightDepth)],
+                          [getDimensionXPosition(rightWidth, false, rightXOffset), lineTopY, getDimensionZPosition(rightDepth)]
+                        ]}
+                        color={viewMode === '3D' ? '#000000' : dimensionColor}
+                        lineWidth={1}
+                      />
+
+                      {/* 수직선 양끝 점 */}
+                      <mesh position={[-rightWidth/2 * 0.3, lineBottomY, getDimensionZPosition(rightDepth)]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
+                      </mesh>
+                      <mesh position={[-rightWidth/2 * 0.3, lineTopY, getDimensionZPosition(rightDepth)]}>
+                        <sphereGeometry args={[0.05, 8, 8]} />
+                        <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
+                      </mesh>
+                    </group>
+                  );
+                })()}
+
                 {/* 상단 가로 내경 치수 표시 (첫 번째 섹션일 때만) - 칸 내부에 표시 */}
                 {index === 0 && (
                   <>
