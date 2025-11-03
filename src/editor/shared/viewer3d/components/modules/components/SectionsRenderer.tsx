@@ -536,16 +536,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       const is2HangingUpperSection = (furnitureId?.includes('2hanging') || furnitureId?.includes('2drawer-hanging')) && index === 1;
                       const isDualFurniture = furnitureId?.includes('dual');
 
-                      if (is2HangingUpperSection) {
-                        if (isDualFurniture) {
-                          // 듀얼 가구: sectionTopY가 측판 상단 (전체 가구 상판 아래)
-                          // 내경은 sectionTopY까지 (상판 두께 빼지 않음)
-                          topY = sectionTopY;
-                        } else {
-                          // 싱글 가구: sectionTopY가 측판 상단 (상판 윗면)
-                          // 내경은 상판 아랫면까지 (상판 두께 빼기)
-                          topY = sectionTopY - basicThickness;
-                        }
+                      if (is2HangingUpperSection && isDualFurniture) {
+                        // 듀얼 가구만: sectionTopY가 측판 상단 (전체 가구 상판 아래)
+                        // 내경은 sectionTopY까지 (상판 두께 빼지 않음)
+                        topY = sectionTopY;
+                      } else if (is2HangingUpperSection) {
+                        // 싱글 가구: bottomY + sectionHeight (원래 로직)
+                        topY = bottomY + sectionHeight;
                       } else {
                         // 일반 케이스: 상부 프레임 하단까지
                         topY = height/2 - basicThickness;
