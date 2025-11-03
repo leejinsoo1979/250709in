@@ -1416,67 +1416,32 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
     // 듀얼 가구 첫번째 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
     if ((isDualFirstSlot || (widthReduced && isNoSurroundFirstSlot)) && !needsEndPanelAdjustment) {
-      // 노서라운드 모드에서만 위치 조정
-      if (spaceInfo.surroundType === 'no-surround') {
-        // 단내림구간인 경우: 단내림 위치에 따라 바깥쪽 방향 결정
-        if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
-          const droppedPosition = spaceInfo.droppedCeiling.position;
-          positionAdjustmentForEndPanel = droppedPosition === 'left'
-            ? -(END_PANEL_THICKNESS / 2) * 0.01  // 왼쪽 단내림: 엔드패널 쪽(왼쪽)으로 9mm 이동
-            : (END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽 단내림: 엔드패널 쪽(오른쪽)으로 9mm 이동
-          console.log('🟢 [듀얼장 첫슬롯] 위치 조정:', {
-            zone: placedModule.zone,
-            droppedPosition,
-            positionAdjustmentForEndPanel,
-            widthReduced,
-            isNoSurroundFirstSlot
-          });
-        } else {
-          // 메인구간 또는 단내림 없음: 첫 슬롯 = 왼쪽 끝, 엔드패널 쪽(왼쪽)으로 이동
-          positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
-          console.log('🟢 [듀얼장 첫슬롯 메인] 위치 조정:', {
-            positionAdjustmentForEndPanel,
-            widthReduced,
-            isNoSurroundFirstSlot
-          });
-        }
-      } else {
-        // 서라운드 모드: 위치 조정 없음
-        positionAdjustmentForEndPanel = 0;
-      }
+      // 듀얼 가구: 슬롯 위치가 이미 올바르므로 추가 조정 불필요
+      // (가구 너비만 줄어들고, 위치는 슬롯 중심 그대로)
+      positionAdjustmentForEndPanel = 0;
+
+      console.log('🟢 [듀얼장 첫슬롯] 위치 조정 (조정없음):', {
+        zone: placedModule.zone,
+        droppedPosition: spaceInfo.droppedCeiling?.position,
+        widthReduced,
+        isNoSurroundFirstSlot,
+        '최종조정값': positionAdjustmentForEndPanel
+      });
       }
     // 듀얼 가구 마지막 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
     else if ((isDualLastSlot || (widthReduced && (isNoSurroundLastSlot || isNoSurroundDualLastSlot))) && !needsEndPanelAdjustment) {
-      // 노서라운드 모드에서만 위치 조정
-      if (spaceInfo.surroundType === 'no-surround') {
-        // 단내림구간인 경우: 단내림 위치에 따라 바깥쪽 방향 결정
-        if (spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped') {
-          const droppedPosition = spaceInfo.droppedCeiling.position;
-          positionAdjustmentForEndPanel = droppedPosition === 'left'
-            ? (END_PANEL_THICKNESS / 2) * 0.01  // 왼쪽 단내림: 엔드패널 쪽(왼쪽)으로 9mm 이동
-            : -(END_PANEL_THICKNESS / 2) * 0.01; // 오른쪽 단내림: 엔드패널 쪽(오른쪽)으로 9mm 이동
-          console.log('🟢 [듀얼장 마지막슬롯] 위치 조정:', {
-            zone: placedModule.zone,
-            droppedPosition,
-            positionAdjustmentForEndPanel,
-            widthReduced,
-            isNoSurroundLastSlot,
-            isNoSurroundDualLastSlot
-          });
-        } else {
-          // 메인구간 또는 단내림 없음: 마지막 슬롯 = 오른쪽 끝, 엔드패널 쪽(오른쪽)으로 이동
-          positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
-          console.log('🟢 [듀얼장 마지막슬롯 메인] 위치 조정:', {
-            positionAdjustmentForEndPanel,
-            widthReduced,
-            isNoSurroundLastSlot,
-            isNoSurroundDualLastSlot
-          });
-        }
-      } else {
-        // 서라운드 모드: 위치 조정 없음
-        positionAdjustmentForEndPanel = 0;
-      }
+      // 듀얼 가구: 슬롯 위치가 이미 올바르므로 추가 조정 불필요
+      // (가구 너비만 줄어들고, 위치는 슬롯 중심 그대로)
+      positionAdjustmentForEndPanel = 0;
+
+      console.log('🟢 [듀얼장 마지막슬롯] 위치 조정 (조정없음):', {
+        zone: placedModule.zone,
+        droppedPosition: spaceInfo.droppedCeiling?.position,
+        widthReduced,
+        isNoSurroundLastSlot,
+        isNoSurroundDualLastSlot,
+        '최종조정값': positionAdjustmentForEndPanel
+      });
       }
     // 싱글 가구 첫/마지막 슬롯 처리 (상하부장도 포함)
     else if ((isFirstSlotNoSurround || isLastSlotNoSurround)) {
