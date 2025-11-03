@@ -1334,19 +1334,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
             const isLastSection = sectionIndex === totalSections - 1;
 
-            let sectionStartY: number;
-            let sectionEndY: number;
-
-            if (sectionIndex === 0) {
-              sectionStartY = cabinetBottomY;
-              sectionEndY = sectionStartY + interiorHeightUnits;
-            } else if (isLastSection) {
-              sectionEndY = cabinetTopY;
-              sectionStartY = sectionEndY - interiorHeightUnits;
-            } else {
-              sectionStartY = interiorStartY - basicThickness;
-              sectionEndY = sectionStartY + interiorHeightUnits;
-            }
+            // 좌측뷰와 동일한 계산 방식
+            let sectionStartY = sectionIndex === 0 ? cabinetBottomY : interiorStartY;
+            let sectionEndY = isLastSection ? cabinetTopY : interiorEndY;
 
             const sectionHeightMm = Math.max((sectionEndY - sectionStartY) / 0.01, 0);
 
