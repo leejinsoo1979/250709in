@@ -667,7 +667,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                           const isRightView = viewMode === '2D' && view2DDirection === 'right';
                           const isUpperSection = index > 0;
                           const extendedBottomY = (isRightView && isUpperSection)
-                            ? bottomY - mmToThreeUnits(36)
+                            ? bottomY - 0.36
                             : bottomY;
 
                           return (
