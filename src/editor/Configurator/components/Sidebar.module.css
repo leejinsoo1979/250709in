@@ -163,11 +163,11 @@
   height: 40px;
   border-radius: 50%;
   background: transparent;
-  border: 2px solid var(--theme-primary);
+  border: 2px solid #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--theme-primary);
+  color: #ffffff;
   cursor: pointer;
   transition: all 0.2s ease;
 }
