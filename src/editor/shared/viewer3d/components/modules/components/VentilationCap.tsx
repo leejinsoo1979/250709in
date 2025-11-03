@@ -128,6 +128,9 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   const liftOffset = mmToThreeUnits(0.05); // 백패널 접촉을 유지하면서 미세한 z-fighting 방지
 
   if (renderAs3D) {
+    const rimEdges = useMemo(() => new EdgesGeometry(rimGeometry, 30), [rimGeometry]);
+    const perforatedEdges = useMemo(() => new EdgesGeometry(perforatedGeometry, 15), [perforatedGeometry]);
+
     return (
       <group position={position}>
         <group position={[0, 0, liftOffset]}>
@@ -145,9 +148,14 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
             />
           </mesh>
           {/* Rim 윤곽선 */}
-          <lineSegments geometry={new EdgesGeometry(rimGeometry, 30)}>
-            <lineBasicMaterial color="#888888" opacity={0.6} transparent />
-          </lineSegments>
+          <primitive object={new LineSegments(rimEdges, new LineBasicMaterial({
+            color: '#333333',
+            linewidth: 2,
+            opacity: 0.8,
+            transparent: true,
+            depthTest: true,
+            depthWrite: false
+          }))} />
 
           <mesh
             geometry={perforatedGeometry}
@@ -164,12 +172,17 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
             />
           </mesh>
           {/* Perforated 면 윤곽선 (타공 구멍 포함) */}
-          <lineSegments
-            geometry={new EdgesGeometry(perforatedGeometry, 15)}
+          <primitive
+            object={new LineSegments(perforatedEdges, new LineBasicMaterial({
+              color: '#333333',
+              linewidth: 2,
+              opacity: 0.7,
+              transparent: true,
+              depthTest: true,
+              depthWrite: false
+            }))}
             position={[0, 0, rimDepth - faceDepth]}
-          >
-            <lineBasicMaterial color="#888888" opacity={0.5} transparent />
-          </lineSegments>
+          />
         </group>
       </group>
     );
