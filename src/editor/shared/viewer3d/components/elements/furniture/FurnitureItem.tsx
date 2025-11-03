@@ -1489,29 +1489,30 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         const droppedPosition = spaceInfo.droppedCeiling?.position;
 
         if (isTallCabinet) {
-          // 키큰장은 엔드패널 쪽으로 밀착되도록 이동
-          if (isFirstSlotNoSurround) {
-            if (isDroppedZone && droppedPosition === 'left') {
-              // 단내림 왼쪽 + 첫 슬롯: 엔드패널 쪽(왼쪽)으로 이동
-              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
-            } else if (isDroppedZone && droppedPosition === 'right') {
-              // 단내림 오른쪽 + 첫 슬롯: 엔드패널 쪽(오른쪽)으로 이동
-              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
-            } else {
-              // 메인구간: 첫 슬롯=왼쪽 끝, 엔드패널 쪽(왼쪽)으로 이동
-              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
-            }
-          } else if (isLastSlotNoSurround) {
-            if (isDroppedZone && droppedPosition === 'left') {
-              // 단내림 왼쪽 + 마지막 슬롯: 엔드패널 쪽(왼쪽)으로 이동
-              positionAdjustmentForEndPanel = -(END_PANEL_THICKNESS / 2) * 0.01;
-            } else if (isDroppedZone && droppedPosition === 'right') {
-              // 단내림 오른쪽 + 마지막 슬롯: 엔드패널 쪽(오른쪽)으로 이동
-              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
-            } else {
-              // 메인구간: 마지막 슬롯=오른쪽 끝, 엔드패널 쪽(오른쪽)으로 이동
-              positionAdjustmentForEndPanel = (END_PANEL_THICKNESS / 2) * 0.01;
-            }
+          // 키큰장: 단내림구간과 메인구간 구분
+          if (isDroppedZone) {
+            // 단내림구간: 엔드패널에서 멀어지는 방향으로 9mm 이동
+            // 단내림 우측: 왼쪽으로 9mm (오른쪽 엔드패널에서 멀어지게)
+            // 단내림 좌측: 오른쪽으로 9mm (왼쪽 엔드패널에서 멀어지게)
+            positionAdjustmentForEndPanel = droppedPosition === 'right'
+              ? -(END_PANEL_THICKNESS / 2) * 0.01  // 우측 단내림: 왼쪽으로
+              : (END_PANEL_THICKNESS / 2) * 0.01;  // 좌측 단내림: 오른쪽으로
+            console.log('🔵🔵🔵 키큰장 단내림 엔드패널 조정:', {
+              zone: placedModule.zone,
+              droppedPosition,
+              isFirstSlot: isFirstSlotNoSurround,
+              isLastSlot: isLastSlotNoSurround,
+              '최종조정값': positionAdjustmentForEndPanel
+            });
+          } else {
+            // 메인구간: 조정 불필요
+            positionAdjustmentForEndPanel = 0;
+            console.log('🔵🔵🔵 키큰장 메인 엔드패널 조정 (조정없음):', {
+              zone: placedModule.zone,
+              isFirstSlot: isFirstSlotNoSurround,
+              isLastSlot: isLastSlotNoSurround,
+              '최종조정값': positionAdjustmentForEndPanel
+            });
           }
         } else {
           // 상하부장: 단내림구간과 메인구간 구분
