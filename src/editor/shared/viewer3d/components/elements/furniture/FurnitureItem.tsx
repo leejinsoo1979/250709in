@@ -3014,8 +3014,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
         // 오른쪽 엔드패널 렌더링
         if ((endPanelSide === 'right' || endPanelSide === 'both' || ((isNoSurroundLastSlot || isNoSurroundDualLastSlot) && needsEndPanelAdjustment)) && slotBoundaries) {
-          // 엔드패널은 항상 슬롯 오른쪽 경계에 고정
-          const rightPanelX = slotBoundaries.right - endPanelWidth / 2;
+          // 듀얼장의 경우 두 번째 슬롯의 오른쪽 경계 사용
+          let rightPanelX: number;
+
+          if (isDualFurniture && normalizedSlotIndex !== undefined) {
+            // 듀얼장: 다음 슬롯(normalizedSlotIndex + 1)의 오른쪽 경계
+            if (indexing.threeUnitBoundaries && indexing.threeUnitBoundaries.length > normalizedSlotIndex + 2) {
+              rightPanelX = indexing.threeUnitBoundaries[normalizedSlotIndex + 2] - endPanelWidth / 2;
+            } else {
+              rightPanelX = slotBoundaries.right - endPanelWidth / 2;
+            }
+          } else {
+            // 싱글장: 현재 슬롯의 오른쪽 경계
+            rightPanelX = slotBoundaries.right - endPanelWidth / 2;
+          }
 
           endPanelXPositions.push({
             x: rightPanelX,
