@@ -705,9 +705,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const effectiveBottomGap = inputBottomGap;
     const extraBottomGap = effectiveBottomGap - baselineBottomGap;
 
-    // doorTopGap은 "천장에서 아래로" 거리이므로 그대로 빼야 함
-    const inputTopGap = doorTopGap ?? topFrameHeightValue;
-    const extraTopGap = inputTopGap;
+    // doorTopGap은 천장에서 도어 상단까지의 절대 거리
+    // 가구 상단은 천장에서 topFrameHeight만큼 아래에 있음
+    // 따라서 가구 상단에서 도어 상단까지의 거리는 (doorTopGap - topFrameHeight)
+    const absoluteTopGap = doorTopGap !== undefined ? doorTopGap : (topFrameHeightValue + 5);
+    const extraTopGap = absoluteTopGap - topFrameHeightValue;
 
     doorBottomLocal = cabinetBottomLocal + extraBottomGap;
     doorTopLocal = cabinetTopLocal - extraTopGap;
