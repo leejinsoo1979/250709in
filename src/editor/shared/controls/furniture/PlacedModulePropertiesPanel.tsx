@@ -1799,7 +1799,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {/* 도어 상하 이격거리 설정 (도어가 있는 경우만) */}
           {!showDetails && moduleData.hasDoor && hasDoor && !doorSplit && (
             <div className={styles.propertySection}>
-              <h5 className={styles.sectionTitle}>도어 상하 이격거리 (병합)</h5>
+              <h5 className={styles.sectionTitle}>
+                도어 상하 이격거리 ({spaceInfo.baseConfig?.placementType === 'float' ? '띄움배치' : '바닥배치'})
+              </h5>
               <div className={styles.doorGapContainer}>
                 <div className={styles.doorGapField}>
                   <label className={styles.doorGapLabel}>천장에서 ↓</label>
