@@ -1875,7 +1875,7 @@ const Room: React.FC<RoomProps> = ({
           }
 
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + (floatHeight + droppedHeight)/2;
+          const droppedCenterY = panelStartY + floatHeight + (droppedHeight - floatHeight)/2;
           const upperPartHeight = height - droppedHeight;
           const upperPartCenterY = panelStartY + droppedHeight + upperPartHeight/2;
 
@@ -2100,7 +2100,7 @@ const Room: React.FC<RoomProps> = ({
           }
 
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + (floatHeight + droppedHeight)/2;
+          const droppedCenterY = panelStartY + floatHeight + (droppedHeight - floatHeight)/2;
           const upperPartHeight = droppedCeilingHeight;
           const upperPartCenterY = panelStartY + height - upperPartHeight/2;
 
