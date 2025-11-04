@@ -872,15 +872,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, moduleDefaultLowerTopOffset]); // 실제 값이 바뀔 때만 실행
 
-  // 띄움 높이가 변경될 때 바닥 이격거리 자동 업데이트
+  // 띄움 높이 또는 배치 타입이 변경될 때 바닥 이격거리 자동 업데이트
   useEffect(() => {
-    if (spaceInfo.baseConfig?.placementType === 'float' && currentPlacedModule) {
+    if (currentPlacedModule) {
+      const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
       const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
-      // 현재 값이 이전 띄움 높이와 같으면 새 띄움 높이로 업데이트
-      if (doorBottomGap !== floatHeight) {
-        setDoorBottomGap(floatHeight);
-        setDoorBottomGapInput(floatHeight.toString());
-        updatePlacedModule(currentPlacedModule.id, { doorBottomGap: floatHeight });
+      const targetBottomGap = isFloatPlacement ? floatHeight : 25;
+
+      if (doorBottomGap !== targetBottomGap) {
+        setDoorBottomGap(targetBottomGap);
+        setDoorBottomGapInput(targetBottomGap.toString());
+        updatePlacedModule(currentPlacedModule.id, { doorBottomGap: targetBottomGap });
       }
     }
   }, [spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType]);
