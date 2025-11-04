@@ -1856,7 +1856,9 @@ const Room: React.FC<RoomProps> = ({
           ? spaceInfo.droppedCeiling.dropHeight || 200
           : 0;
         const droppedCeilingHeight = mmToThreeUnits(dropHeight);
-        
+
+        console.log('🔍 [좌측 프레임] 단내림 체크:', { hasDroppedCeiling, isLeftDropped, position: spaceInfo.droppedCeiling?.position, wallLeft: wallConfig?.left });
+
         // 왼쪽이 단내림 영역인 경우 두 부분으로 나누어 렌더링
         if (hasDroppedCeiling && isLeftDropped) {
           // 서라운드 모드에서도 단내림 프레임 렌더링 (띄움높이 반영)
@@ -1878,6 +1880,8 @@ const Room: React.FC<RoomProps> = ({
           const droppedCenterY = panelStartY + floatHeight + (droppedHeight - floatHeight)/2;
           const upperPartHeight = height - droppedHeight;
           const upperPartCenterY = panelStartY + droppedHeight + upperPartHeight/2;
+
+          console.log('🔥 [단내림 왼쪽 프레임] floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedCenterY:', droppedCenterY);
 
           // 단내림 영역 렌더링 카운터
           if (typeof window !== 'undefined' && window.renderCounter) {
@@ -2081,7 +2085,9 @@ const Room: React.FC<RoomProps> = ({
           ? spaceInfo.droppedCeiling.dropHeight || 200
           : 0;
         const droppedCeilingHeight = mmToThreeUnits(dropHeight);
-        
+
+        console.log('🔍 [우측 프레임] 단내림 체크:', { hasDroppedCeiling, isRightDropped, position: spaceInfo.droppedCeiling?.position, wallRight: wallConfig?.right });
+
         // 오른쪽이 단내림 영역인 경우
         if (hasDroppedCeiling && isRightDropped) {
           // 서라운드 모드에서도 단내림 프레임 렌더링 (띄움높이 반영)
@@ -2103,6 +2109,8 @@ const Room: React.FC<RoomProps> = ({
           const droppedCenterY = panelStartY + floatHeight + (droppedHeight - floatHeight)/2;
           const upperPartHeight = droppedCeilingHeight;
           const upperPartCenterY = panelStartY + height - upperPartHeight/2;
+
+          console.log('🔥 [단내림 오른쪽 프레임] floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedCenterY:', droppedCenterY);
 
           // 단내림 구간의 경계 위치 계산
           const droppedZone = indexingForCheck.zones?.dropped;
