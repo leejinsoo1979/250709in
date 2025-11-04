@@ -1918,7 +1918,7 @@ const Room: React.FC<RoomProps> = ({
                     ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left
                     : xOffset + frameThickness.left/2,
                   // 단내림 구간 중심 (띄움높이와 단내림높이 반영)
-                  panelStartY + (floatHeight + droppedHeight)/2,
+                  droppedCenterY,
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left
