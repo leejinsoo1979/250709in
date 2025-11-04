@@ -2894,12 +2894,12 @@ const Room: React.FC<RoomProps> = ({
                   shadowEnabled={shadowEnabled}
                 />
               </group>
-              {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) - 제거됨 */}
-              {/* <group
+              {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) - z축 -8mm 이동 */}
+              <group
                 position={[
                   xOffset + frameThickness.left / 2,
                   droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(8)
                 ]}
               >
                 <BoxWithEdges
@@ -2915,7 +2915,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
-              </group> */}
+              </group>
             </>
           );
         }
@@ -2978,12 +2978,12 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
-              {/* 우측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) - 제거됨 */}
-              {/* <group
+              {/* 우측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) - z축 -8mm 이동 */}
+              <group
                 position={[
                   xOffset + width - frameThickness.right / 2,
                   droppedCenterY,
-                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(8)
                 ]}
               >
                 <BoxWithEdges
@@ -2999,7 +2999,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
-              </group> */}
+              </group>
 
               {/* 우측 벽 안쪽 세로 서브프레임 (단내림 구간: 슬롯 가이드 정렬, 단내림 높이) */}
               <group
