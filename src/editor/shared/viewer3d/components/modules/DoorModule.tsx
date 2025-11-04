@@ -728,10 +728,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       설명: '띄움배치 시 baselineBottomGap에 이미 floatHeight 반영됨'
     });
 
-    // 띄움배치 시 floatHeight는 이미 baselineBottomGap에 반영되어 있음
-    // 별도의 doorBottomLocal 조정 불필요
-
     actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
+
+    // 띄움배치 시 도어 하단이 받침대 위로 올라가도록 높이 조정
+    if (floatHeight > 0) {
+      actualDoorHeight = Math.max(actualDoorHeight - floatHeight, 0);
+      console.log('🚪📐 키큰장 플로팅 도어 높이 조정:', {
+        원래높이: doorTopLocal - doorBottomLocal,
+        플로팅높이: floatHeight,
+        조정된높이: actualDoorHeight,
+        설명: '도어 상단 고정, 하단만 띄움 높이만큼 줄어듦'
+      });
+    }
 
     console.log('🚪📏 키큰장 actualDoorHeight:', {
       doorTopLocal,
