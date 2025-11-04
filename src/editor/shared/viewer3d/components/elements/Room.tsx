@@ -2871,8 +2871,8 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
-              {/* 좌측 벽 안쪽 세로 서브프레임 (단내림 구간: 슬롯 가이드 정렬, 단내림 높이) - 제거됨 */}
-              {/* <group
+              {/* 좌측 벽 안쪽 세로 서브프레임 (단내림 구간: 슬롯 가이드 정렬, 단내림 높이) */}
+              <group
                 position={[
                   xOffset + frameThickness.left - mmToThreeUnits(9),
                   droppedCenterY,
@@ -2893,9 +2893,9 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
-              </group> */}
-              {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
-              <group
+              </group>
+              {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) - 제거됨 */}
+              {/* <group
                 position={[
                   xOffset + frameThickness.left / 2,
                   droppedCenterY,
@@ -2915,7 +2915,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
-              </group>
+              </group> */}
             </>
           );
         }
@@ -2978,8 +2978,8 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
-              {/* 우측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
-              <group
+              {/* 우측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) - 제거됨 */}
+              {/* <group
                 position={[
                   xOffset + width - frameThickness.right / 2,
                   droppedCenterY,
@@ -2999,10 +2999,10 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
-              </group>
+              </group> */}
 
-              {/* 우측 벽 안쪽 세로 서브프레임 (단내림 구간: 슬롯 가이드 정렬, 단내림 높이) - 제거됨 */}
-              {/* <group
+              {/* 우측 벽 안쪽 세로 서브프레임 (단내림 구간: 슬롯 가이드 정렬, 단내림 높이) */}
+              <group
                 position={[
                   xOffset + width - frameThickness.right + mmToThreeUnits(9),
                   droppedCenterY,
@@ -3023,7 +3023,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
-              </group> */}
+              </group>
             </>
           );
         }
