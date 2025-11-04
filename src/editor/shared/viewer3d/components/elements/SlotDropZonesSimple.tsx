@@ -2898,6 +2898,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           });
         }
 
+        // 해당 슬롯에 이미 배치된 모듈 찾기 (띄움 높이를 재사용하기 위해)
+        const localSlotIndexForOccupancy = slotLocalIndex ?? slotIndex;
+        const occupantModule = placedModules.find(m =>
+          m.slotIndex === localSlotIndexForOccupancy &&
+          m.zone === slotZone
+        );
+
+        // 배치된 모듈의 띄움 높이 가져오기
+        const floatOffsetFromOccupant = occupantModule?.lowerSectionTopOffset;
+
         // 고스트 렌더링 여부 결정
         let shouldRenderGhost = false;
         if (activeModuleData) {
@@ -3266,7 +3276,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             maxHeight
           });
         }
-        
+
+        // 띄움 높이 계산 - 배치된 모듈에서 가져오거나 spaceInfo에서 가져옴
+        const baseFloatOffsetMm = spaceInfo.baseConfig?.placementType === 'float'
+          ? spaceInfo.baseConfig?.floatHeight || 0
+          : undefined;
+        const effectiveFloatOffsetMm = floatOffsetFromOccupant !== undefined
+          ? floatOffsetFromOccupant
+          : baseFloatOffsetMm;
+
         // 가구 Y 위치 계산 - 실제 배치 로직과 동일하게
         let furnitureY: number;
         
@@ -3274,9 +3292,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // 키큰장: 바닥부터 시작
           const floorY = mmToThreeUnits(zoneInternalSpace?.startY || internalSpace.startY);
           const furnitureHeight = mmToThreeUnits(adjustedFurnitureHeightMm);
-          
-          // 키큰장은 바닥에서 시작
-          furnitureY = floorY + furnitureHeight / 2;
+          const floatOffset = effectiveFloatOffsetMm !== undefined ? mmToThreeUnits(effectiveFloatOffsetMm) : 0;
+
+          // 키큰장은 바닥에서 시작 (띄움 높이 적용)
+          furnitureY = floorY + floatOffset + furnitureHeight / 2;
           
           debugLog('👻 [Ghost Preview] 키큰장 Y 위치:', {
             floorY,
@@ -3323,13 +3342,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // 하부장: 바닥에서 시작 (실제 배치 로직과 동일)
           const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
           let startHeightMm = floorFinishHeightMm;
-          
-          if (spaceInfo.baseConfig?.type === 'floor') {
+
+          if (effectiveFloatOffsetMm !== undefined) {
+            startHeightMm += effectiveFloatOffsetMm;
+          } else if (spaceInfo.baseConfig?.type === 'floor') {
             startHeightMm += spaceInfo.baseConfig?.height || 65;
-          } else if (spaceInfo.baseConfig?.placementType === 'float') {
-            startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
+          } else if (spaceInfo.baseConfig?.type !== 'stand') {
+            startHeightMm += spaceInfo.baseConfig?.height || 65;
           }
-          
+
           const furnitureHeightMm = adjustedFurnitureHeightMm;
           furnitureY = mmToThreeUnits(startHeightMm + furnitureHeightMm / 2);
           
@@ -3347,10 +3368,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
           let startHeightMm = floorFinishHeightMm;
 
-          if (spaceInfo.baseConfig?.type === 'floor') {
+          if (effectiveFloatOffsetMm !== undefined) {
+            startHeightMm += effectiveFloatOffsetMm;
+          } else if (spaceInfo.baseConfig?.type === 'floor') {
             startHeightMm += spaceInfo.baseConfig?.height || 65;
-          } else if (spaceInfo.baseConfig?.placementType === 'float') {
-            startHeightMm += spaceInfo.baseConfig?.floatHeight || 0;
           }
 
           const furnitureHeightMm = adjustedFurnitureHeightMm;
@@ -3366,7 +3387,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             설명: '기본 가구는 띄움 배치 고려'
           });
         }
-        
+
+        // 배치된 모듈이 있으면 그 모듈의 Y 위치를 직접 사용
+        if (occupantModule && occupantModule.position && typeof occupantModule.position.y === 'number') {
+          furnitureY = occupantModule.position.y;
+        }
+
         debugLog('👻 [Ghost Preview] 가구 높이 계산:', {
           effectiveZone,
           moduleDataHeight: moduleData.dimensions.height,
