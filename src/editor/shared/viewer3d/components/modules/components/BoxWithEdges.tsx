@@ -350,8 +350,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // Debug log for position
   React.useEffect(() => {
-    if (position[1] > 10) { // Y > 10이면 단내림 프레임일 가능성
-      console.log('📍 BoxWithEdges position:', position, 'args:', args);
+    if (args[1] === 20 || position[1] === 12) { // 단내림 프레임 조건
+      console.log('📍 BoxWithEdges 단내림 프레임 - position:', position, 'args:', args);
     }
   }, [position, args]);
 
