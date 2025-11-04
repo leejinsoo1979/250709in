@@ -872,19 +872,25 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, moduleDefaultLowerTopOffset]); // 실제 값이 바뀔 때만 실행
 
-  // 띄움 높이 또는 배치 타입이 변경될 때 바닥 이격거리 자동 업데이트
+  // 띄움 높이 또는 배치 타입이 변경될 때 모든 가구의 바닥 이격거리 자동 업데이트
   useEffect(() => {
-    if (currentPlacedModule) {
-      const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
-      const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
-      const targetBottomGap = isFloatPlacement ? floatHeight : 25;
+    const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
+    const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
+    const targetBottomGap = isFloatPlacement ? floatHeight : 25;
 
-      // 항상 업데이트 (배치 타입 변경 시 즉시 반영)
+    // 모든 배치된 가구에 일괄 적용
+    placedModules.forEach(module => {
+      if (module.doorBottomGap !== targetBottomGap) {
+        updatePlacedModule(module.id, { doorBottomGap: targetBottomGap });
+      }
+    });
+
+    // 현재 선택된 가구의 UI 상태도 업데이트
+    if (currentPlacedModule) {
       setDoorBottomGap(targetBottomGap);
       setDoorBottomGapInput(targetBottomGap.toString());
-      updatePlacedModule(currentPlacedModule.id, { doorBottomGap: targetBottomGap });
     }
-  }, [spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, currentPlacedModule?.id]);
+  }, [spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType]);
 
   // ⚠️ CRITICAL: 모든 hooks는 조건부 return 전에 호출되어야 함 (React hooks 규칙)
   // 듀얼 가구 여부 확인 (moduleId 기반)
