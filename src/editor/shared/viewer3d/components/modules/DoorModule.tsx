@@ -993,24 +993,26 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     } else {
       // 병합 모드: 천장/바닥 기준
       // Three.js 좌표계: Y=0은 공간 중심, 바닥=-fullSpaceHeight/2, 천장=+fullSpaceHeight/2
-      // 플로팅 시: 도어 상단 고정, 하단만 올라감 (actualDoorHeight가 이미 줄어듦)
-      // 도어 중심 = 도어 상단 - (도어 높이 / 2)
+      // 플로팅 시: 도어 상단 고정, 하단만 올라감 (doorBottomLocal이 이미 올라감)
+      // 도어 중심 = 도어 하단 + (도어 높이 / 2)
 
+      const doorBottom = doorBottomLocal;
       const doorTop = doorTopLocal;
 
-      // 도어 중심 = 상단에서 도어 높이의 절반만큼 아래
-      doorYPosition = mmToThreeUnits(doorTop - actualDoorHeight / 2);
+      // 도어 중심 = 하단에서 도어 높이의 절반만큼 위 (플로팅 시 하단이 올라가므로 중심도 올라감)
+      doorYPosition = mmToThreeUnits(doorBottom + actualDoorHeight / 2);
 
-      console.log('🚪📍 키큰장 도어 Y 위치 (상단 고정):', {
+      console.log('🚪📍 키큰장 도어 Y 위치 (하단 기준 계산):', {
         fullSpaceHeight,
         cabinetHeight: tallCabinetFurnitureHeight,
         doorTopGap,
         doorBottomGap,
         floatHeight,
+        도어하단_mm: doorBottom.toFixed(1),
         도어상단_mm: doorTop.toFixed(1),
         도어높이_mm: actualDoorHeight.toFixed(1),
         도어중심Y_mm: (doorYPosition / 0.01).toFixed(1),
-        설명: `도어 상단 ${doorTop.toFixed(1)}mm 고정, 플로팅 시 하단만 올라감`
+        설명: `도어 하단 ${doorBottom.toFixed(1)}mm에서 도어 높이 절반(${(actualDoorHeight / 2).toFixed(1)}mm) 만큼 위`
       });
     }
   }
