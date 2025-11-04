@@ -2808,7 +2808,8 @@ const Room: React.FC<RoomProps> = ({
         // 왼쫝이 단내림 영역인 경우
         if (droppedCeilingEnabled && droppedCeilingPosition === 'left') {
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + floatHeight + droppedHeight/2;
+          const actualDroppedHeight = droppedHeight - floatHeight;
+          const droppedCenterY = panelStartY + (floatHeight + droppedHeight)/2;
           const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900);
 
           return (
@@ -2827,7 +2828,7 @@ const Room: React.FC<RoomProps> = ({
                   key={`left-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     mmToThreeUnits(44),
-                    droppedHeight,
+                    actualDroppedHeight,
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
@@ -2849,7 +2850,7 @@ const Room: React.FC<RoomProps> = ({
                   key={`left-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     frameThickness.left,
-                    droppedHeight,
+                    actualDroppedHeight,
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
@@ -2908,7 +2909,8 @@ const Room: React.FC<RoomProps> = ({
         // 오른쪽이 단내림 영역인 경우
         if (droppedCeilingEnabled && droppedCeilingPosition === 'right') {
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + floatHeight + droppedHeight/2;
+          const actualDroppedHeight = droppedHeight - floatHeight;
+          const droppedCenterY = panelStartY + (floatHeight + droppedHeight)/2;
           const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900);
 
           return (
@@ -2926,7 +2928,7 @@ const Room: React.FC<RoomProps> = ({
                   key={`right-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     frameThickness.right,
-                    droppedHeight,
+                    actualDroppedHeight,
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
@@ -2950,7 +2952,7 @@ const Room: React.FC<RoomProps> = ({
                   key={`right-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     mmToThreeUnits(44),
-                    droppedHeight,
+                    actualDroppedHeight,
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
