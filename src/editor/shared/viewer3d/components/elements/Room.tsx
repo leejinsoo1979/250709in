@@ -142,7 +142,20 @@ const BoxWithEdges: React.FC<{
 }> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false }) => {
   // Debug: 측면 프레임 확인
   if (args[0] < 1 && args[1] > 15) {
-    console.log('📍 Room BoxWithEdges 측면 프레임 - Y:', position[1], 'H:', args[1], 'position:', position, 'args:', args);
+    const bottom = position[1] - args[1]/2;
+    const top = position[1] + args[1]/2;
+    console.log('📍 Room BoxWithEdges 측면 프레임 - Y:', position[1], 'H:', args[1], '하단:', bottom, '상단:', top, 'position:', position, 'args:', args);
+
+    // Y=0인 프레임 추적
+    if (position[1] === 0) {
+      console.error('🚨🚨🚨 [Y=0 프레임 발견!] 바닥에서 시작하는 프레임!', {
+        position,
+        args,
+        isEndPanel,
+        material,
+        stackTrace: new Error().stack
+      });
+    }
   }
 
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
@@ -213,12 +226,13 @@ const Room: React.FC<RoomProps> = ({
 
   // Room 컴포넌트 렌더링 추적
   React.useEffect(() => {
-    console.log('🏠 Room 컴포넌트 렌더링:', {
+    console.log('🏠🏠🏠 Room 컴포넌트 렌더링:', {
       roomId: roomId.substring(0, 20),
       viewMode,
       placedModulesProp: !!placedModules,
       placedModulesCount: placedModules?.length,
       activeZone,
+      droppedCeiling: spaceInfo.droppedCeiling,
       timestamp: Date.now()
     });
   });
@@ -959,6 +973,7 @@ const Room: React.FC<RoomProps> = ({
   
   // 좌우 프레임 높이 (띄워서 배치일 때 줄어듦)
   const adjustedPanelHeight = height - floatHeight;
+  console.log('🔍 adjustedPanelHeight 계산:', { height, floatHeight, adjustedPanelHeight, baseConfig: spaceInfo.baseConfig });
   
   // 상단 요소들의 Y 위치 (띄워서 배치일 때 위로 이동)
   const topElementsY = panelStartY + height - topBottomFrameHeight/2;
@@ -1888,6 +1903,7 @@ const Room: React.FC<RoomProps> = ({
           const upperPartCenterY = panelStartY + droppedHeight + upperPartHeight/2;
 
           console.log('🔥 [단내림 왼쪽 프레임] panelStartY:', panelStartY, 'floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedFrameHeight:', droppedFrameHeight, 'droppedCenterY:', droppedCenterY);
+          console.log('✅✅✅ [단내림 왼쪽] 프레임 렌더링 시작');
 
           // 단내림 영역 렌더링 카운터
           if (typeof window !== 'undefined' && window.renderCounter) {
@@ -2013,6 +2029,27 @@ const Room: React.FC<RoomProps> = ({
           }
         }
 
+        console.log('❓❓❓ [왼쪽 일반 구간] 렌더링 여부:', !(hasDroppedCeiling && isLeftDropped), 'hasDroppedCeiling:', hasDroppedCeiling, 'isLeftDropped:', isLeftDropped);
+        const leftPosition: [number, number, number] = [
+          // X 위치
+          spaceInfo.surroundType === 'no-surround'
+            ? (indexingForCheck.threeUnitBoundaries.length > 0
+                ? indexingForCheck.threeUnitBoundaries[0] + frameThickness.left/2
+                : xOffset + frameThickness.left/2)
+            : xOffset + frameThickness.left/2,
+          // Y 위치
+          sideFrameCenterY,
+          // Z 위치
+          spaceInfo.surroundType === 'no-surround'
+            ? (wallConfig?.left
+                ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(3)
+                : noSurroundEndPanelZ)
+            : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
+               (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+                ? surroundEndPanelZ
+                : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(3))
+        ];
+        console.log('🎯🎯🎯 [왼쪽 일반 구간 프레임 position]', leftPosition, 'sideFrameCenterY:', sideFrameCenterY, 'adjustedPanelHeight:', adjustedPanelHeight);
         return (!(hasDroppedCeiling && isLeftDropped) ? (
           <BoxWithEdges
           hideEdges={hideEdges}
@@ -2031,25 +2068,7 @@ const Room: React.FC<RoomProps> = ({
                     ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
                     : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
             ]}
-            position={[
-              // 노서라운드 모드: 첫 슬롯 경계에서 엔드패널 반만큼 안쪽
-              // 서라운드 모드: 가구 배치 여부와 관계없이 엔드패널 위치 고정
-              spaceInfo.surroundType === 'no-surround'
-                ? (indexingForCheck.threeUnitBoundaries.length > 0
-                    ? indexingForCheck.threeUnitBoundaries[0] + frameThickness.left/2
-                    : xOffset + frameThickness.left/2)
-                : xOffset + frameThickness.left/2,
-              sideFrameCenterY,
-              // 노서라운드 모드에서 엔드패널/프레임 위치 결정
-              spaceInfo.surroundType === 'no-surround'
-                ? (wallConfig?.left
-                    ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(3)  // 일반 구간: 가구 앞면에서 3mm 앞
-                    : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
-                : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
-                   (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                    ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                    : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(3))  // 일반 구간: 가구 앞면에서 3mm 앞
-            ]}
+            position={leftPosition}
             material={createFrameMaterial('left')}
             renderMode={renderMode}
             shadowEnabled={shadowEnabled}
@@ -2081,6 +2100,26 @@ const Room: React.FC<RoomProps> = ({
           hasRightFurniture
         });
         
+        return null;
+      })()}
+      {(() => {
+        const condition1 = showFrame && frameThickness.right > 0;
+        const condition2 = (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasRightFurniture);
+        const condition3 = !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right'));
+        const finalCondition = condition1 && condition2 && condition3;
+        console.log('🔵🔵🔵 [오른쪽 프레임 렌더링 조건 체크]', {
+          condition1_showFrame_thickness: condition1,
+          condition2_surroundOrFreestandingOrFurniture: condition2,
+          condition3_not2DSide: condition3,
+          finalCondition,
+          showFrame,
+          frameThicknessRight: frameThickness.right,
+          surroundType: spaceInfo.surroundType,
+          installType: spaceInfo.installType,
+          hasRightFurniture,
+          viewMode,
+          view2DDirection
+        });
         return null;
       })()}
       {showFrame && frameThickness.right > 0 && (spaceInfo.surroundType !== 'no-surround' || spaceInfo.installType === 'freestanding' || hasRightFurniture) && !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
@@ -2119,6 +2158,7 @@ const Room: React.FC<RoomProps> = ({
 
           console.log('🔥 [단내림 오른쪽 프레임] panelStartY:', panelStartY, 'floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedFrameHeight:', droppedFrameHeight, 'droppedCenterY:', droppedCenterY);
           console.log('🎯 [단내림 오른쪽 프레임 args] frameThickness.right:', frameThickness.right, 'droppedFrameHeight:', droppedFrameHeight);
+          console.log('✅✅✅ [단내림 오른쪽] 프레임 렌더링 시작 - 이 다음에는 일반 구간이 렌더링되면 안됨!');
 
           // 단내림 구간의 경계 위치 계산
           const droppedZone = indexingForCheck.zones?.dropped;
@@ -2235,6 +2275,7 @@ const Room: React.FC<RoomProps> = ({
         // 일반 구간 (단내림이 아닌 경우에만 렌더링)
         // 단내림 구간에서는 이미 위에서 return했으므로 여기 도달하지 않음
         // 하지만 명시적으로 체크하여 중복 방지
+        console.log('❓❓❓ [일반 구간 체크] hasDroppedCeiling:', hasDroppedCeiling, 'isRightDropped:', isRightDropped, '렌더링여부:', !(hasDroppedCeiling && isRightDropped));
         if (!(hasDroppedCeiling && isRightDropped)) {
           // 렌더링 카운터 증가
           if (typeof window !== 'undefined' && window.renderCounter) {
@@ -2246,6 +2287,8 @@ const Room: React.FC<RoomProps> = ({
               console.log('🚨🚨🚨 [일반] 오른쪽 프레임 렌더링!', window.renderCounter.rightFrame, '번째');
             }
           }
+        } else {
+          console.log('🛑🛑🛑 [일반 구간 스킵] 단내림이 오른쪽이므로 일반 구간 렌더링 건너뜀');
         }
 
         return (!(hasDroppedCeiling && isRightDropped) ? (
@@ -2920,8 +2963,11 @@ const Room: React.FC<RoomProps> = ({
         // 오른쪽이 단내림 영역인 경우
         if (droppedCeilingEnabled && droppedCeilingPosition === 'right') {
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + droppedHeight/2;
+          const droppedFrameHeight = droppedHeight - floatHeight;
+          const droppedCenterY = panelStartY + floatHeight + droppedFrameHeight/2;
           const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900);
+
+          console.log('🔥🔥🔥 [오른쪽 서브프레임 - 단내림] floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedFrameHeight:', droppedFrameHeight, 'droppedCenterY:', droppedCenterY);
 
           return (
             <>
@@ -2938,7 +2984,7 @@ const Room: React.FC<RoomProps> = ({
                   key={`right-dropped-front-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     frameThickness.right,
-                    droppedHeight,
+                    droppedFrameHeight,
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
@@ -2962,7 +3008,7 @@ const Room: React.FC<RoomProps> = ({
                   key={`right-dropped-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
                   args={[
                     mmToThreeUnits(44),
-                    droppedHeight,
+                    droppedFrameHeight,
                     mmToThreeUnits(END_PANEL_THICKNESS)
                   ]}
                   position={[0, 0, 0]}
