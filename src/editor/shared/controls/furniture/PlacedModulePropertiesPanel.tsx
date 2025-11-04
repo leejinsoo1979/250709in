@@ -552,8 +552,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [doorSplit, setDoorSplit] = useState<boolean>(false);
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
 
-  // 띄움배치일 때 바닥 이격거리 기본값 200mm
-  const defaultDoorBottomGap = spaceInfo.baseConfig?.placementType === 'float' ? 200 : 25;
+  // 띄움배치일 때 바닥 이격거리를 띄움 높이로 연동
+  const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
+  const defaultDoorBottomGap = spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 25;
   const [doorTopGap, setDoorTopGap] = useState<number>(5); // 병합 모드: 천장에서 아래로
   const [doorBottomGap, setDoorBottomGap] = useState<number>(defaultDoorBottomGap); // 병합 모드: 바닥에서 위로
   const [doorTopGapInput, setDoorTopGapInput] = useState<string>('5');
@@ -789,9 +790,10 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setOriginalHasGapBackPanel(hasGapVal); // 원래 값 저장
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
-      // 띄움배치일 때는 바닥에서 200mm 기본값
+      // 띄움배치일 때는 띄움 높이를 바닥 이격거리로 자동 설정
       const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
-      const defaultBottomGap = isFloatPlacement ? 200 : 25;
+      const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
+      const defaultBottomGap = isFloatPlacement ? floatHeight : 25;
       const initialTopGap = currentPlacedModule.doorTopGap ?? 5;
       const initialBottomGap = currentPlacedModule.doorBottomGap ?? defaultBottomGap;
       if (doorTopGap !== initialTopGap) {
@@ -869,6 +871,19 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       });
     }
   }, [currentPlacedModule?.id, moduleData?.id, currentPlacedModule?.customDepth, currentPlacedModule?.customWidth, currentPlacedModule?.adjustedWidth, currentPlacedModule?.hasDoor, moduleDefaultLowerTopOffset]); // 실제 값이 바뀔 때만 실행
+
+  // 띄움 높이가 변경될 때 바닥 이격거리 자동 업데이트
+  useEffect(() => {
+    if (spaceInfo.baseConfig?.placementType === 'float' && currentPlacedModule) {
+      const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
+      // 현재 값이 이전 띄움 높이와 같으면 새 띄움 높이로 업데이트
+      if (doorBottomGap !== floatHeight) {
+        setDoorBottomGap(floatHeight);
+        setDoorBottomGapInput(floatHeight.toString());
+        updatePlacedModule(currentPlacedModule.id, { doorBottomGap: floatHeight });
+      }
+    }
+  }, [spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType]);
 
   // ⚠️ CRITICAL: 모든 hooks는 조건부 return 전에 호출되어야 함 (React hooks 규칙)
   // 듀얼 가구 여부 확인 (moduleId 기반)
