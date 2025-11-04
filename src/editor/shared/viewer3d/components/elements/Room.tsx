@@ -2199,11 +2199,12 @@ const Room: React.FC<RoomProps> = ({
                         ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
                         : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
                 ]}
-                position={[
-                  // 가구 오른쪽 끝에 붙임
-                  endPanelX,
-                  // 단내림 구간 중심 Y
-                  droppedCenterY,
+                position={(() => {
+                  const pos: [number, number, number] = [
+                    // 가구 오른쪽 끝에 붙임
+                    endPanelX,
+                    // 단내림 구간 중심 Y
+                    droppedCenterY,
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
@@ -2213,7 +2214,10 @@ const Room: React.FC<RoomProps> = ({
                        (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
                         ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
                         : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(11))  // 단내림 구간: 메인프레임과 맞닿도록 11mm 앞 (추가 2mm)
-                ]}
+                  ];
+                  console.log('🎯 [단내림 오른쪽 프레임 position]', pos);
+                  return pos;
+                })()}
                 material={createFrameMaterial('right')}
                 renderMode={renderMode}
                 shadowEnabled={shadowEnabled}
