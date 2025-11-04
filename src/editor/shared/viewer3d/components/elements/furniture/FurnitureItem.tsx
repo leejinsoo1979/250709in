@@ -1988,7 +1988,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 기둥 타입에 따른 처리 방식 확인
     const columnProcessingMethod = slotInfo.columnProcessingMethod || 'width-adjustment';
     
-    const slotWidthM = indexing.columnWidth * 0.01; // mm to meters
+    const slotWidthMmForBounds = slotInfo.slotWidth ?? indexing.slotWidths?.[normalizedSlotIndex] ?? indexing.columnWidth;
+    const slotWidthM = slotWidthMmForBounds * 0.01; // mm to meters
     const originalSlotBounds = {
       left: originalSlotCenterX - slotWidthM / 2,
       right: originalSlotCenterX + slotWidthM / 2,
@@ -2003,10 +2004,31 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (columnProcessingMethod === 'width-adjustment') {
       // 일반 폭 조정 방식: 가구 크기와 위치 조정
       // 기둥 침범 시에는 항상 폭 조정
+      const slotHalfWidthM = (slotWidthMmForBounds * 0.01) / 2;
+      const furnitureHalfWidthM = (furnitureBounds.renderWidth * 0.01) / 2;
+      const slotLeft = originalSlotCenterX - slotHalfWidthM;
+      const slotRight = originalSlotCenterX + slotHalfWidthM;
+
+      const desiredOffset = (needsEndPanelAdjustment || widthReduced) ? positionAdjustmentForEndPanel : 0;
+      let targetCenter = furnitureBounds.center + desiredOffset;
+
+      if (targetCenter - furnitureHalfWidthM < slotLeft) {
+        targetCenter = slotLeft + furnitureHalfWidthM;
+      }
+      if (targetCenter + furnitureHalfWidthM > slotRight) {
+        targetCenter = slotRight - furnitureHalfWidthM;
+      }
+
+      const appliedOffset = targetCenter - furnitureBounds.center;
+
+      if (needsEndPanelAdjustment || widthReduced || appliedOffset !== desiredOffset) {
+        positionAdjustmentForEndPanel = appliedOffset;
+      }
+
       furnitureWidthMm = furnitureBounds.renderWidth;
       adjustedPosition = {
         ...adjustedPosition, // adjustedPosition 사용하여 상부장 Y 위치 보존
-        x: furnitureBounds.center + ((needsEndPanelAdjustment || widthReduced) ? positionAdjustmentForEndPanel : 0)
+        x: targetCenter
       };
       
       // 기둥 변경으로 인한 폭 조정이 필요한 경우 실시간 업데이트
@@ -2908,6 +2930,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             moduleData={actualModuleData}
             isDragging={isDraggingThis}
             isEditMode={isEditMode}
+            floatHeight={spaceInfo.baseConfig?.floatHeight}
             slotWidths={(() => {
               if (placedModule.zone === 'dropped' && zoneSlotInfo?.dropped) {
                 const targetZone = zoneSlotInfo.dropped;
