@@ -703,7 +703,10 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     const inputBottomGap = doorBottomGap ?? baselineBottomGap;
     const effectiveBottomGap = inputBottomGap;
     const extraBottomGap = effectiveBottomGap - baselineBottomGap;
-    const extraTopGap = (doorTopGap ?? topFrameHeightValue) - topFrameHeightValue;
+
+    // doorTopGap은 "천장에서 아래로" 거리이므로 그대로 빼야 함
+    const inputTopGap = doorTopGap ?? topFrameHeightValue;
+    const extraTopGap = inputTopGap;
 
     doorBottomLocal = cabinetBottomLocal + extraBottomGap;
     doorTopLocal = cabinetTopLocal - extraTopGap;
