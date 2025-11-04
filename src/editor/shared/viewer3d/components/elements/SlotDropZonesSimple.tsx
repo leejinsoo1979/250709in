@@ -3320,7 +3320,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }
 
           // 전체 높이에서 상단 프레임과 하부 높이를 빼기
+          // 단내림 구간이면 단내림 높이 사용
           let totalHeightMm = spaceInfo.height;
+          if (effectiveZone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
+            const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+            totalHeightMm = spaceInfo.height - dropHeight;
+          }
           const topFrameHeight = spaceInfo.topFrame?.height || 10;
           totalHeightMm = totalHeightMm - topFrameHeight - baseHeightMm;
 
@@ -3328,6 +3333,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           furnitureY = mmToThreeUnits(baseHeightMm + totalHeightMm - furnitureHeightMm / 2);
 
           debugLog('👻 [Ghost Preview] 상부장 Y 위치:', {
+            effectiveZone,
+            isDroppedZone: effectiveZone === 'dropped',
             totalHeightMm,
             topFrameHeight,
             baseHeightMm,
