@@ -1797,7 +1797,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           )}
 
           {/* 도어 상하 이격거리 설정 (도어가 있는 경우만) */}
-          {/* 주석 처리: 도어 병합 모드 이격거리 설정 숨김
           {!showDetails && moduleData.hasDoor && hasDoor && !doorSplit && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>도어 상하 이격거리 (병합)</h5>
@@ -1850,7 +1849,6 @@ const PlacedModulePropertiesPanel: React.FC = () => {
               </div>
             </div>
           )}
-          */}
 
           {/* 분할 모드: 섹션별 도어 이격거리 */}
           {/* 주석 처리: 도어 분할 모드 이격거리 설정 숨김
