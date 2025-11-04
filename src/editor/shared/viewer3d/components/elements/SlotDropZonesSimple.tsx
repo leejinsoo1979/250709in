@@ -3388,9 +3388,28 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           });
         }
 
-        // 배치된 모듈이 있으면 그 모듈의 Y 위치를 직접 사용
+        // 배치된 모듈이 있고 같은 category일 때만 Y 위치를 직접 사용
+        // (상부장 슬롯에 하부장 고스트가 상부장 위치로 가는 것을 방지)
         if (occupantModule && occupantModule.position && typeof occupantModule.position.y === 'number') {
-          furnitureY = occupantModule.position.y;
+          // occupant module의 category 확인 (moduleId 패턴으로 판단)
+          const occupantIsUpper = occupantModule.moduleId?.includes('upper-') || false;
+          const occupantIsLower = occupantModule.moduleId?.includes('lower-') || false;
+          const occupantIsFull = occupantModule.moduleId?.includes('2hanging') || false;
+
+          // 같은 category일 때만 position 재사용
+          const isSameCategory =
+            (isUpperCabinet && occupantIsUpper) ||
+            (isLowerCabinet && occupantIsLower) ||
+            (isFullCabinet && occupantIsFull);
+
+          if (isSameCategory) {
+            furnitureY = occupantModule.position.y;
+            debugLog('👻 [Ghost Preview] occupant position 재사용:', {
+              ghostCategory: moduleData.category,
+              occupantCategory: occupantIsUpper ? 'upper' : occupantIsLower ? 'lower' : 'full',
+              positionY: occupantModule.position.y
+            });
+          }
         }
 
         debugLog('👻 [Ghost Preview] 가구 높이 계산:', {
