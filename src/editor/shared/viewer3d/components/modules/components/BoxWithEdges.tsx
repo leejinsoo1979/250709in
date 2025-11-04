@@ -60,6 +60,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   panelGrainDirections,
   textureUrl
 }) => {
+  // Debug: 단내림 프레임 확인
+  if (args[1] > 19 && args[1] < 21) {
+    console.log('📍 BoxWithEdges 렌더 - position:', position, 'args:', args);
+  }
+
   const { viewMode } = useSpace3DView();
   const { view2DDirection, shadowEnabled } = useUIStore(); // view2DDirection, shadowEnabled 추가
   const { gl } = useThree();
@@ -350,8 +355,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // Debug log for position
   React.useEffect(() => {
-    if (args[1] === 20 || position[1] === 12) { // 단내림 프레임 조건
-      console.log('📍 BoxWithEdges 단내림 프레임 - position:', position, 'args:', args);
+    const height = args[1];
+    const yPos = position[1];
+    if (height > 19 && height < 21) { // 높이가 약 20 (19~21 범위)
+      console.log('📍 BoxWithEdges 단내림 프레임 - position:', position, 'args:', args, 'Y:', yPos, 'H:', height);
     }
   }, [position, args]);
 
