@@ -8,6 +8,7 @@ import { useUIStore } from '@/store/uiStore';
 import DoorModule from '../DoorModule';
 import FinishingPanelWithTexture from '../components/FinishingPanelWithTexture';
 import BoxWithEdges from '../components/BoxWithEdges';
+import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
 
 /**
  * 하부장 컴포넌트
@@ -217,6 +218,22 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
+        />
+      )}
+
+      {/* 조절발통 (네 모서리) - 키큰장과 동일하게 처리 */}
+      {showFurniture && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
+        <AdjustableFootsRenderer
+          width={adjustedWidth ? adjustedWidth * 0.01 : baseFurniture.width}
+          depth={baseFurniture.depth}
+          yOffset={-adjustedHeight / 2}
+          renderMode={renderMode}
+          isHighlighted={false}
+          isFloating={isFloating}
+          baseHeight={spaceInfo?.baseConfig?.height || 65}
+          baseDepth={spaceInfo?.baseConfig?.depth || 0}
+          viewMode={viewMode}
+          view2DDirection={useUIStore.getState().view2DDirection}
         />
       )}
     </>

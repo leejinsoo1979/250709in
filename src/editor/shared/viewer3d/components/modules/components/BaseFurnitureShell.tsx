@@ -6,7 +6,6 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useUIStore } from '@/store/uiStore';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import BoxWithEdges from './BoxWithEdges';
-import { AdjustableFootsRenderer } from './AdjustableFootsRenderer';
 import { Text, Line } from '@react-three/drei';
 import DimensionText from './DimensionText';
 import { useDimensionColor } from '../hooks/useDimensionColor';
@@ -1080,58 +1079,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         {showFurniture ? children : null}
       </>
       )}
-
-      {/* 조절발통 (네 모서리) - showFurniture와 무관하게 항상 렌더링, 띄움배치가 아닐 때만 */}
-      {(() => {
-        const baseDepthValue = spaceInfo?.baseConfig?.depth || 0;
-        console.log('🏠 BaseFurnitureShell - baseDepth 전달:', {
-          spaceInfoExists: !!spaceInfo,
-          baseConfigExists: !!spaceInfo?.baseConfig,
-          baseDepthValue,
-          fullBaseConfig: spaceInfo?.baseConfig
-        });
-        // 다중 섹션이면 뒤쪽 조절발 Z 오프셋 계산
-        // 앞면 고정, 뒷면만 이동하므로 전체 차이만큼 이동
-        const backZOffset = isMultiSectionFurniture() && lowerSectionDepthMm !== undefined
-          ? (depth - mmToThreeUnits(lowerSectionDepthMm))
-          : 0;
-
-        // 띄움 배치 여부 확인 (lowerSectionTopOffsetMm이 0보다 크면 띄움 배치)
-        const isActuallyFloating = lowerSectionTopOffsetMm !== undefined && lowerSectionTopOffsetMm > 0;
-
-        console.log('🦶 [BaseFurnitureShell] 조절발 렌더링 체크:');
-        console.log('  moduleId:', moduleData.id);
-        console.log('  lowerSectionTopOffsetMm:', lowerSectionTopOffsetMm);
-        console.log('  isActuallyFloating:', isActuallyFloating);
-        console.log('  shouldRender:', !isActuallyFloating);
-        console.log('  spaceConfigPlacementType:', spaceInfo?.baseConfig?.placementType);
-        console.log('  spaceConfigFloatHeight:', spaceInfo?.baseConfig?.floatHeight);
-
-        // 띄움 배치가 아닐 때만 조절발 렌더링
-        if (isActuallyFloating) {
-          console.log('  ✅ 조절발 숨김 (띄움 배치)');
-          return null;
-        }
-
-        console.log('  ❌ 조절발 렌더링 (바닥 배치)');
-
-        return (
-          <AdjustableFootsRenderer
-            width={width}
-            depth={depth}
-            yOffset={-height / 2}
-            backZOffset={backZOffset}
-            material={material}
-            renderMode={renderMode}
-            isHighlighted={isHighlighted}
-            isFloating={isFloating}
-            baseHeight={spaceInfo?.baseConfig?.height || 65}
-            baseDepth={baseDepthValue}
-            viewMode={viewMode}
-            view2DDirection={view2DDirection}
-          />
-        );
-      })()}
     </group>
   );
 };
@@ -1147,13 +1094,6 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     prevMaterialConfig?.interiorColor === nextMaterialConfig?.interiorColor &&
     prevMaterialConfig?.interiorTexture === nextMaterialConfig?.interiorTexture;
 
-  // spaceInfo.baseConfig 비교 (조절발 렌더링에 영향)
-  const baseConfigEqual =
-    prevProps.spaceInfo?.baseConfig?.placementType === nextProps.spaceInfo?.baseConfig?.placementType &&
-    prevProps.spaceInfo?.baseConfig?.floatHeight === nextProps.spaceInfo?.baseConfig?.floatHeight &&
-    prevProps.spaceInfo?.baseConfig?.height === nextProps.spaceInfo?.baseConfig?.height &&
-    prevProps.spaceInfo?.baseConfig?.depth === nextProps.spaceInfo?.baseConfig?.depth;
-
   // 기타 중요 props 비교 (textureUrl은 이미 interiorTexture로 비교했으므로 제외)
   const otherPropsEqual =
     prevProps.width === nextProps.width &&
@@ -1166,7 +1106,6 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     prevProps.isEditMode === nextProps.isEditMode &&
     prevProps.placedFurnitureId === nextProps.placedFurnitureId &&
     prevProps.lowerSectionTopOffsetMm === nextProps.lowerSectionTopOffsetMm &&
-    prevProps.isFloating === nextProps.isFloating &&
     prevProps.showFurniture === nextProps.showFurniture &&
     prevProps.lowerSectionDepthMm === nextProps.lowerSectionDepthMm &&
     prevProps.upperSectionDepthMm === nextProps.upperSectionDepthMm &&
@@ -1175,18 +1114,13 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
   console.log('🏠 BaseFurnitureShell React.memo 비교:', {
     materialPropsEqual,
     otherPropsEqual,
-    baseConfigEqual,
     prevInteriorTexture: prevMaterialConfig?.interiorTexture,
     nextInteriorTexture: nextMaterialConfig?.interiorTexture,
     prevDoorTexture: prevMaterialConfig?.doorTexture,
     nextDoorTexture: nextMaterialConfig?.doorTexture,
-    prevPlacementType: prevProps.spaceInfo?.baseConfig?.placementType,
-    nextPlacementType: nextProps.spaceInfo?.baseConfig?.placementType,
-    prevFloatHeight: prevProps.spaceInfo?.baseConfig?.floatHeight,
-    nextFloatHeight: nextProps.spaceInfo?.baseConfig?.floatHeight,
-    willRerender: !(materialPropsEqual && otherPropsEqual && baseConfigEqual)
+    willRerender: !(materialPropsEqual && otherPropsEqual)
   });
 
   // 모든 중요 props가 같으면 true 반환 (리렌더링 방지)
-  return materialPropsEqual && otherPropsEqual && baseConfigEqual;
+  return materialPropsEqual && otherPropsEqual;
 }); 
