@@ -3001,18 +3001,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 키큰장/듀얼장 중심 X 위치 (adjustedPosition.x에 이미 positionAdjustmentForEndPanel이 적용됨)
         const furnitureCenterX = adjustedPosition.x;
 
-        if (endPanelSide === 'left' || endPanelSide === 'both') {
-          // 왼쪽 엔드패널: 가구 왼쪽 면에 배치
+        // 왼쪽 엔드패널 렌더링: endPanelSide가 left/both이거나, 노서라운드 첫 슬롯 + 상하부장 인접
+        if (endPanelSide === 'left' || endPanelSide === 'both' || (isNoSurroundFirstSlot && needsEndPanelAdjustment)) {
           let leftPanelX: number;
 
-          // 노서라운드 첫 슬롯 + 양쪽 엔드패널인 경우, 왼쪽은 노서라운드 끝이므로 슬롯 경계 기준
-          const isLeftNoSurroundEdge = isNoSurroundFirstSlot && endPanelSide === 'both';
-
-          if (isLeftNoSurroundEdge && slotBoundaries) {
+          // 노서라운드 첫 슬롯이면 슬롯 경계 기준, 아니면 가구 면 기준
+          if (isNoSurroundFirstSlot && slotBoundaries) {
             // 노서라운드 끝 → 슬롯 경계 기준
             leftPanelX = slotBoundaries.left + endPanelWidth / 2;
           } else {
-            // 상하부장 인접 → 가구 면에 붙음 (키큰장이 줄어든 면에 엔드패널이 딱 붙음)
+            // 상하부장 인접 → 가구 면에 붙음
             leftPanelX = furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2;
           }
 
@@ -3022,18 +3020,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             zone: placedModule.zone
           });
         }
-        if (endPanelSide === 'right' || endPanelSide === 'both') {
-          // 오른쪽 엔드패널: 가구 오른쪽 면에 배치
+        // 오른쪽 엔드패널 렌더링: endPanelSide가 right/both이거나, 노서라운드 마지막 슬롯 + 상하부장 인접
+        if (endPanelSide === 'right' || endPanelSide === 'both' || ((isNoSurroundLastSlot || isNoSurroundDualLastSlot) && needsEndPanelAdjustment)) {
           let rightPanelX: number;
 
-          // 노서라운드 마지막 슬롯 + 양쪽 엔드패널인 경우, 오른쪽은 노서라운드 끝이므로 슬롯 경계 기준
-          const isRightNoSurroundEdge = (isNoSurroundLastSlot || isNoSurroundDualLastSlot) && endPanelSide === 'both';
-
-          if (isRightNoSurroundEdge && slotBoundaries) {
+          // 노서라운드 마지막 슬롯이면 슬롯 경계 기준, 아니면 가구 면 기준
+          if ((isNoSurroundLastSlot || isNoSurroundDualLastSlot) && slotBoundaries) {
             // 노서라운드 끝 → 슬롯 경계 기준
             rightPanelX = slotBoundaries.right - endPanelWidth / 2;
           } else {
-            // 상하부장 인접 → 가구 면에 붙음 (키큰장이 줄어든 면에 엔드패널이 딱 붙음)
+            // 상하부장 인접 → 가구 면에 붙음
             rightPanelX = furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2;
           }
 
