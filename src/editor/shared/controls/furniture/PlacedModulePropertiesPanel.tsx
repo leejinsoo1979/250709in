@@ -879,13 +879,12 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
       const targetBottomGap = isFloatPlacement ? floatHeight : 25;
 
-      if (doorBottomGap !== targetBottomGap) {
-        setDoorBottomGap(targetBottomGap);
-        setDoorBottomGapInput(targetBottomGap.toString());
-        updatePlacedModule(currentPlacedModule.id, { doorBottomGap: targetBottomGap });
-      }
+      // 항상 업데이트 (배치 타입 변경 시 즉시 반영)
+      setDoorBottomGap(targetBottomGap);
+      setDoorBottomGapInput(targetBottomGap.toString());
+      updatePlacedModule(currentPlacedModule.id, { doorBottomGap: targetBottomGap });
     }
-  }, [spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType]);
+  }, [spaceInfo.baseConfig?.floatHeight, spaceInfo.baseConfig?.placementType, currentPlacedModule?.id]);
 
   // ⚠️ CRITICAL: 모든 hooks는 조건부 return 전에 호출되어야 함 (React hooks 규칙)
   // 듀얼 가구 여부 확인 (moduleId 기반)
