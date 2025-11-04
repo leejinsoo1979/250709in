@@ -76,7 +76,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
     mmToThreeUnits,
     modelConfig
   } = baseFurniture;
-  
+
+  // 띄움 배치 여부 확인
+  const isFloating = spaceInfo?.baseConfig?.type === 'stand' && spaceInfo?.baseConfig?.placementType === 'float';
+
   // Three.js 단위를 mm로 변환하는 함수
   const threeUnitsToMm = (units: number) => units * 100;
 
@@ -930,7 +933,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               yOffset={-height / 2}
               renderMode={renderMode}
               isHighlighted={false}
-              isFloating={false}
+              isFloating={isFloating}
               baseHeight={spaceInfo?.baseConfig?.height || 65}
               baseDepth={spaceInfo?.baseConfig?.depth || 0}
               viewMode={viewMode}
