@@ -1877,11 +1877,12 @@ const Room: React.FC<RoomProps> = ({
           }
 
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + (floatHeight + droppedHeight)/2;
+          const droppedFrameHeight = droppedHeight - floatHeight;
+          const droppedCenterY = panelStartY + floatHeight + droppedFrameHeight/2;
           const upperPartHeight = height - droppedHeight;
           const upperPartCenterY = panelStartY + droppedHeight + upperPartHeight/2;
 
-          console.log('🔥 [단내림 왼쪽 프레임] floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedCenterY:', droppedCenterY);
+          console.log('🔥 [단내림 왼쪽 프레임] panelStartY:', panelStartY, 'floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedFrameHeight:', droppedFrameHeight, 'droppedCenterY:', droppedCenterY);
 
           // 단내림 영역 렌더링 카운터
           if (typeof window !== 'undefined' && window.renderCounter) {
@@ -1903,8 +1904,8 @@ const Room: React.FC<RoomProps> = ({
                 isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.left,
-                  // 단내림 구간 높이 (띄움배치 시 floatHeight 제외)
-                  droppedHeight - floatHeight,
+                  // 단내림 구간 프레임 높이 (띄움배치 시 floatHeight 제외)
+                  droppedFrameHeight,
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left
@@ -2106,11 +2107,12 @@ const Room: React.FC<RoomProps> = ({
           }
 
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + (floatHeight + droppedHeight)/2;
+          const droppedFrameHeight = droppedHeight - floatHeight;
+          const droppedCenterY = panelStartY + floatHeight + droppedFrameHeight/2;
           const upperPartHeight = droppedCeilingHeight;
           const upperPartCenterY = panelStartY + height - upperPartHeight/2;
 
-          console.log('🔥 [단내림 오른쪽 프레임] floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedCenterY:', droppedCenterY);
+          console.log('🔥 [단내림 오른쪽 프레임] panelStartY:', panelStartY, 'floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedFrameHeight:', droppedFrameHeight, 'droppedCenterY:', droppedCenterY);
 
           // 단내림 구간의 경계 위치 계산
           const droppedZone = indexingForCheck.zones?.dropped;
@@ -2185,8 +2187,8 @@ const Room: React.FC<RoomProps> = ({
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.right,
-                  // 단내림 구간 높이 (바닥부터 단내림 천장까지, 띄움배치 시 floatHeight 제외)
-                  droppedHeight - floatHeight,
+                  // 단내림 구간 프레임 높이 (띄움배치 시 floatHeight 제외)
+                  droppedFrameHeight,
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
