@@ -1147,6 +1147,13 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     prevMaterialConfig?.interiorColor === nextMaterialConfig?.interiorColor &&
     prevMaterialConfig?.interiorTexture === nextMaterialConfig?.interiorTexture;
 
+  // spaceInfo.baseConfig 비교 (조절발 렌더링에 영향)
+  const baseConfigEqual =
+    prevProps.spaceInfo?.baseConfig?.placementType === nextProps.spaceInfo?.baseConfig?.placementType &&
+    prevProps.spaceInfo?.baseConfig?.floatHeight === nextProps.spaceInfo?.baseConfig?.floatHeight &&
+    prevProps.spaceInfo?.baseConfig?.height === nextProps.spaceInfo?.baseConfig?.height &&
+    prevProps.spaceInfo?.baseConfig?.depth === nextProps.spaceInfo?.baseConfig?.depth;
+
   // 기타 중요 props 비교 (textureUrl은 이미 interiorTexture로 비교했으므로 제외)
   const otherPropsEqual =
     prevProps.width === nextProps.width &&
@@ -1158,18 +1165,28 @@ export default React.memo(BaseFurnitureShell, (prevProps, nextProps) => {
     prevProps.isDragging === nextProps.isDragging &&
     prevProps.isEditMode === nextProps.isEditMode &&
     prevProps.placedFurnitureId === nextProps.placedFurnitureId &&
+    prevProps.lowerSectionTopOffsetMm === nextProps.lowerSectionTopOffsetMm &&
+    prevProps.isFloating === nextProps.isFloating &&
+    prevProps.showFurniture === nextProps.showFurniture &&
+    prevProps.lowerSectionDepthMm === nextProps.lowerSectionDepthMm &&
+    prevProps.upperSectionDepthMm === nextProps.upperSectionDepthMm &&
     JSON.stringify(prevProps.panelGrainDirections) === JSON.stringify(nextProps.panelGrainDirections);
 
   console.log('🏠 BaseFurnitureShell React.memo 비교:', {
     materialPropsEqual,
     otherPropsEqual,
+    baseConfigEqual,
     prevInteriorTexture: prevMaterialConfig?.interiorTexture,
     nextInteriorTexture: nextMaterialConfig?.interiorTexture,
     prevDoorTexture: prevMaterialConfig?.doorTexture,
     nextDoorTexture: nextMaterialConfig?.doorTexture,
-    willRerender: !(materialPropsEqual && otherPropsEqual)
+    prevPlacementType: prevProps.spaceInfo?.baseConfig?.placementType,
+    nextPlacementType: nextProps.spaceInfo?.baseConfig?.placementType,
+    prevFloatHeight: prevProps.spaceInfo?.baseConfig?.floatHeight,
+    nextFloatHeight: nextProps.spaceInfo?.baseConfig?.floatHeight,
+    willRerender: !(materialPropsEqual && otherPropsEqual && baseConfigEqual)
   });
 
   // 모든 중요 props가 같으면 true 반환 (리렌더링 방지)
-  return materialPropsEqual && otherPropsEqual;
+  return materialPropsEqual && otherPropsEqual && baseConfigEqual;
 }); 
