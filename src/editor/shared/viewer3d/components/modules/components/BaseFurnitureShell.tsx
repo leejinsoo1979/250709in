@@ -1078,60 +1078,60 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
         {/* 내부 구조 (타입별로 다른 내용) */}
         {showFurniture ? children : null}
-
-        {/* 조절발통 (네 모서리) - 띄움배치가 아닐 때만 */}
-        {(() => {
-          const baseDepthValue = spaceInfo?.baseConfig?.depth || 0;
-          console.log('🏠 BaseFurnitureShell - baseDepth 전달:', {
-            spaceInfoExists: !!spaceInfo,
-            baseConfigExists: !!spaceInfo?.baseConfig,
-            baseDepthValue,
-            fullBaseConfig: spaceInfo?.baseConfig
-          });
-          // 다중 섹션이면 뒤쪽 조절발 Z 오프셋 계산
-          // 앞면 고정, 뒷면만 이동하므로 전체 차이만큼 이동
-          const backZOffset = isMultiSectionFurniture() && lowerSectionDepthMm !== undefined
-            ? (depth - mmToThreeUnits(lowerSectionDepthMm))
-            : 0;
-
-          // 띄움 배치 여부 확인 (lowerSectionTopOffsetMm이 0보다 크면 띄움 배치)
-          const isActuallyFloating = lowerSectionTopOffsetMm !== undefined && lowerSectionTopOffsetMm > 0;
-
-          console.log('🦶 [BaseFurnitureShell] 조절발 렌더링 체크:');
-          console.log('  moduleId:', moduleData.id);
-          console.log('  lowerSectionTopOffsetMm:', lowerSectionTopOffsetMm);
-          console.log('  isActuallyFloating:', isActuallyFloating);
-          console.log('  shouldRender:', !isActuallyFloating);
-          console.log('  spaceConfigPlacementType:', spaceInfo?.baseConfig?.placementType);
-          console.log('  spaceConfigFloatHeight:', spaceInfo?.baseConfig?.floatHeight);
-
-          // 띄움 배치가 아닐 때만 조절발 렌더링
-          if (isActuallyFloating) {
-            console.log('  ✅ 조절발 숨김 (띄움 배치)');
-            return null;
-          }
-
-          console.log('  ❌ 조절발 렌더링 (바닥 배치)');
-
-          return (
-            <AdjustableFootsRenderer
-              width={width}
-              depth={depth}
-              yOffset={-height / 2}
-              backZOffset={backZOffset}
-              material={material}
-              renderMode={renderMode}
-              isHighlighted={isHighlighted}
-              isFloating={isFloating}
-              baseHeight={spaceInfo?.baseConfig?.height || 65}
-              baseDepth={baseDepthValue}
-              viewMode={viewMode}
-              view2DDirection={view2DDirection}
-            />
-          );
-        })()}
       </>
       )}
+
+      {/* 조절발통 (네 모서리) - showFurniture와 무관하게 항상 렌더링, 띄움배치가 아닐 때만 */}
+      {(() => {
+        const baseDepthValue = spaceInfo?.baseConfig?.depth || 0;
+        console.log('🏠 BaseFurnitureShell - baseDepth 전달:', {
+          spaceInfoExists: !!spaceInfo,
+          baseConfigExists: !!spaceInfo?.baseConfig,
+          baseDepthValue,
+          fullBaseConfig: spaceInfo?.baseConfig
+        });
+        // 다중 섹션이면 뒤쪽 조절발 Z 오프셋 계산
+        // 앞면 고정, 뒷면만 이동하므로 전체 차이만큼 이동
+        const backZOffset = isMultiSectionFurniture() && lowerSectionDepthMm !== undefined
+          ? (depth - mmToThreeUnits(lowerSectionDepthMm))
+          : 0;
+
+        // 띄움 배치 여부 확인 (lowerSectionTopOffsetMm이 0보다 크면 띄움 배치)
+        const isActuallyFloating = lowerSectionTopOffsetMm !== undefined && lowerSectionTopOffsetMm > 0;
+
+        console.log('🦶 [BaseFurnitureShell] 조절발 렌더링 체크:');
+        console.log('  moduleId:', moduleData.id);
+        console.log('  lowerSectionTopOffsetMm:', lowerSectionTopOffsetMm);
+        console.log('  isActuallyFloating:', isActuallyFloating);
+        console.log('  shouldRender:', !isActuallyFloating);
+        console.log('  spaceConfigPlacementType:', spaceInfo?.baseConfig?.placementType);
+        console.log('  spaceConfigFloatHeight:', spaceInfo?.baseConfig?.floatHeight);
+
+        // 띄움 배치가 아닐 때만 조절발 렌더링
+        if (isActuallyFloating) {
+          console.log('  ✅ 조절발 숨김 (띄움 배치)');
+          return null;
+        }
+
+        console.log('  ❌ 조절발 렌더링 (바닥 배치)');
+
+        return (
+          <AdjustableFootsRenderer
+            width={width}
+            depth={depth}
+            yOffset={-height / 2}
+            backZOffset={backZOffset}
+            material={material}
+            renderMode={renderMode}
+            isHighlighted={isHighlighted}
+            isFloating={isFloating}
+            baseHeight={spaceInfo?.baseConfig?.height || 65}
+            baseDepth={baseDepthValue}
+            viewMode={viewMode}
+            view2DDirection={view2DDirection}
+          />
+        );
+      })()}
     </group>
   );
 };
