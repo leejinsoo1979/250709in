@@ -1879,7 +1879,7 @@ const Room: React.FC<RoomProps> = ({
           }
 
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + floatHeight + (droppedHeight - floatHeight)/2;
+          const droppedCenterY = panelStartY + (floatHeight + droppedHeight)/2;
           const upperPartHeight = height - droppedHeight;
           const upperPartCenterY = panelStartY + droppedHeight + upperPartHeight/2;
 
@@ -1921,8 +1921,8 @@ const Room: React.FC<RoomProps> = ({
                   (spaceInfo.surroundType !== 'surround' && hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0)
                     ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left
                     : xOffset + frameThickness.left/2,
-                  // 단내림 구간 중심 (띄움배치 시 floatHeight 추가)
-                  panelStartY + floatHeight + (droppedHeight - floatHeight)/2,
+                  // 단내림 구간 중심 (띄움높이와 단내림높이 반영)
+                  panelStartY + (floatHeight + droppedHeight)/2,
                   // 노서라운드 모드에서 엔드패널/프레임 위치 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left
@@ -2108,7 +2108,7 @@ const Room: React.FC<RoomProps> = ({
           }
 
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + floatHeight + (droppedHeight - floatHeight)/2;
+          const droppedCenterY = panelStartY + (floatHeight + droppedHeight)/2;
           const upperPartHeight = droppedCeilingHeight;
           const upperPartCenterY = panelStartY + height - upperPartHeight/2;
 
@@ -2808,7 +2808,7 @@ const Room: React.FC<RoomProps> = ({
         // 왼쫝이 단내림 영역인 경우
         if (droppedCeilingEnabled && droppedCeilingPosition === 'left') {
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + floatHeight + (droppedHeight - floatHeight)/2;
+          const droppedCenterY = panelStartY + (floatHeight + droppedHeight)/2;
           const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900);
 
           return (
@@ -2908,7 +2908,7 @@ const Room: React.FC<RoomProps> = ({
         // 오른쪽이 단내림 영역인 경우
         if (droppedCeilingEnabled && droppedCeilingPosition === 'right') {
           const droppedHeight = mmToThreeUnits(spaceInfo.height - dropHeight);
-          const droppedCenterY = panelStartY + floatHeight + (droppedHeight - floatHeight)/2;
+          const droppedCenterY = panelStartY + (floatHeight + droppedHeight)/2;
           const droppedCeilingWidth = mmToThreeUnits(spaceInfo.droppedCeiling?.width || 900);
 
           return (
