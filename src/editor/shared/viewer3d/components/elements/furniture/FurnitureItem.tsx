@@ -3011,8 +3011,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           } else {
             // 가구 왼쪽 면에 붙음
             // 서라운드 모드에서만: 왼쪽에 상하부장이 있으면 엔드패널을 오른쪽으로 9mm 추가 이동
-            // 노서라운드 모드 또는 상하부장이 인접한 경우에는 추가 오프셋 없이 가구 면에 붙음
-            const endPanelOffset = (spaceInfo.surroundType === 'surround' && endPanelSide === 'left' && !needsEndPanelAdjustment) ? (END_PANEL_THICKNESS / 2) * 0.01 : 0;
+            // 노서라운드 모드에서는 추가 오프셋 없이 가구 면에 붙음
+            const endPanelOffset = (spaceInfo.surroundType === 'surround' && endPanelSide === 'left') ? (END_PANEL_THICKNESS / 2) * 0.01 : 0;
             leftPanelX = furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2 + endPanelOffset;
           }
 
@@ -3032,8 +3032,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           } else {
             // 가구 오른쪽 면에 붙음
             // 서라운드 모드에서만: 오른쪽에 상하부장이 있으면 엔드패널을 왼쪽으로 9mm 추가 이동
-            // 노서라운드 모드 또는 상하부장이 인접한 경우에는 추가 오프셋 없이 가구 면에 붙음
-            const endPanelOffset = (spaceInfo.surroundType === 'surround' && endPanelSide === 'right' && !needsEndPanelAdjustment) ? -(END_PANEL_THICKNESS / 2) * 0.01 : 0;
+            // 노서라운드 모드에서는 추가 오프셋 없이 가구 면에 붙음
+            const endPanelOffset = (spaceInfo.surroundType === 'surround' && endPanelSide === 'right') ? -(END_PANEL_THICKNESS / 2) * 0.01 : 0;
             rightPanelX = furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2 + endPanelOffset;
           }
 
