@@ -3003,13 +3003,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
         if (endPanelSide === 'left' || endPanelSide === 'both') {
           // 왼쪽 엔드패널: 가구 왼쪽 면에 배치
-          // 상하부장이 인접한 경우 항상 가구 기준으로 계산
           let leftPanelX: number;
-          if (slotBoundaries && !needsEndPanelAdjustment) {
-            // 슬롯 왼쪽 경계에서 엔드패널 절반만큼 안쪽
+
+          // 노서라운드 첫 슬롯 + 양쪽 엔드패널인 경우, 왼쪽은 노서라운드 끝이므로 슬롯 경계 기준
+          const isLeftNoSurroundEdge = isNoSurroundFirstSlot && endPanelSide === 'both';
+
+          if (isLeftNoSurroundEdge && slotBoundaries) {
+            // 노서라운드 끝 → 슬롯 경계 기준
             leftPanelX = slotBoundaries.left + endPanelWidth / 2;
           } else {
-            // 가구 왼쪽 면에 붙음 (키큰장이 줄어든 면에 엔드패널이 딱 붙음)
+            // 상하부장 인접 → 가구 면에 붙음 (키큰장이 줄어든 면에 엔드패널이 딱 붙음)
             leftPanelX = furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2;
           }
 
@@ -3021,13 +3024,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
         if (endPanelSide === 'right' || endPanelSide === 'both') {
           // 오른쪽 엔드패널: 가구 오른쪽 면에 배치
-          // 상하부장이 인접한 경우 항상 가구 기준으로 계산
           let rightPanelX: number;
-          if (slotBoundaries && !needsEndPanelAdjustment) {
-            // 슬롯 오른쪽 경계에서 엔드패널 절반만큼 안쪽
+
+          // 노서라운드 마지막 슬롯 + 양쪽 엔드패널인 경우, 오른쪽은 노서라운드 끝이므로 슬롯 경계 기준
+          const isRightNoSurroundEdge = (isNoSurroundLastSlot || isNoSurroundDualLastSlot) && endPanelSide === 'both';
+
+          if (isRightNoSurroundEdge && slotBoundaries) {
+            // 노서라운드 끝 → 슬롯 경계 기준
             rightPanelX = slotBoundaries.right - endPanelWidth / 2;
           } else {
-            // 가구 오른쪽 면에 붙음 (키큰장이 줄어든 면에 엔드패널이 딱 붙음)
+            // 상하부장 인접 → 가구 면에 붙음 (키큰장이 줄어든 면에 엔드패널이 딱 붙음)
             rightPanelX = furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2;
           }
 
