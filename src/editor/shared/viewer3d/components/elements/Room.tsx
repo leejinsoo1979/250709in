@@ -2918,33 +2918,37 @@ const Room: React.FC<RoomProps> = ({
         }
 
         // 단내림이 없거나 오른쪽에 있는 경우 (일반구간)
-        return (
-          <>
-            {/* 세로 서브프레임 (슬롯 가이드 끝선에 맞춤: x축 +1mm 이동) */}
-            <group
-              position={[
-                xOffset + frameThickness.left - mmToThreeUnits(9),
-                sideFrameCenterY,
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(28)
-              ]}
-              rotation={[0, Math.PI / 2, 0]}
-            >
-              <BoxWithEdges
-          hideEdges={hideEdges}
-                key={`left-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
-                args={[
-                  mmToThreeUnits(44),
-                  adjustedPanelHeight,
-                  mmToThreeUnits(END_PANEL_THICKNESS)
+        // 왼쪽이 단내림이면 이미 위에서 렌더링했으므로 여기서는 스킵
+        if (!droppedCeilingEnabled || droppedCeilingPosition !== 'left') {
+          return (
+            <>
+              {/* 세로 서브프레임 (슬롯 가이드 끝선에 맞춤: x축 +1mm 이동) */}
+              <group
+                position={[
+                  xOffset + frameThickness.left - mmToThreeUnits(9),
+                  sideFrameCenterY,
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(28)
                 ]}
-                position={[0, 0, 0]}
-                material={createFrameMaterial('left')}
-                renderMode={renderMode}
-                shadowEnabled={shadowEnabled}
-              />
-            </group>
-          </>
-        );
+                rotation={[0, Math.PI / 2, 0]}
+              >
+                <BoxWithEdges
+            hideEdges={hideEdges}
+                  key={`left-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                  args={[
+                    mmToThreeUnits(44),
+                    adjustedPanelHeight,
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ]}
+                  position={[0, 0, 0]}
+                  material={createFrameMaterial('left')}
+                  renderMode={renderMode}
+                  shadowEnabled={shadowEnabled}
+                />
+              </group>
+            </>
+          );
+        }
+        return null;
       })()}
       
       {/* 오른쪽 서브프레임 - 오른쪽 프레임에서 왼쪽으로 들어오는 판 (ㄱ자의 가로 부분, Y축 기준 90도 회전) */}
@@ -3022,33 +3026,37 @@ const Room: React.FC<RoomProps> = ({
         }
 
         // 단내림이 없거나 왼쪽에 있는 경우 (일반구간)
-        return (
-          <>
-            {/* 세로 서브프레임 (슬롯 가이드 끝선에 맞춤: x축 -1mm 이동) */}
-            <group
-              position={[
-                xOffset + width - frameThickness.right + mmToThreeUnits(9),
-                sideFrameCenterY,
-                furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(28)
-              ]}
-              rotation={[0, Math.PI / 2, 0]}
-            >
-              <BoxWithEdges
-          hideEdges={hideEdges}
-                key={`right-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
-                args={[
-                  mmToThreeUnits(44),
-                  adjustedPanelHeight,
-                  mmToThreeUnits(END_PANEL_THICKNESS)
+        // 오른쪽이 단내림이면 이미 위에서 렌더링했으므로 여기서는 스킵
+        if (!droppedCeilingEnabled || droppedCeilingPosition !== 'right') {
+          return (
+            <>
+              {/* 세로 서브프레임 (슬롯 가이드 끝선에 맞춤: x축 -1mm 이동) */}
+              <group
+                position={[
+                  xOffset + width - frameThickness.right + mmToThreeUnits(9),
+                  sideFrameCenterY,
+                  furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 - mmToThreeUnits(28)
                 ]}
-                position={[0, 0, 0]}
-                material={createFrameMaterial('right')}
-                renderMode={renderMode}
-                shadowEnabled={shadowEnabled}
-              />
-            </group>
-          </>
-        );
+                rotation={[0, Math.PI / 2, 0]}
+              >
+                <BoxWithEdges
+            hideEdges={hideEdges}
+                  key={`right-normal-vertical-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+                  args={[
+                    mmToThreeUnits(44),
+                    adjustedPanelHeight,
+                    mmToThreeUnits(END_PANEL_THICKNESS)
+                  ]}
+                  position={[0, 0, 0]}
+                  material={createFrameMaterial('right')}
+                  renderMode={renderMode}
+                  shadowEnabled={shadowEnabled}
+                />
+              </group>
+            </>
+          );
+        }
+        return null;
       })()}
       
       {/* 하단 프레임 - 받침대 역할 (가구 앞면에 배치, 문 안쪽에 숨김) */}
