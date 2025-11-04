@@ -1118,9 +1118,9 @@ const Room: React.FC<RoomProps> = ({
             
             // 왼쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
             if (hasDroppedCeiling && isLeftDropped) {
-              // 단내림 벽 높이 = 전체 높이 - 단내림 높이차
-              const droppedWallHeight = height - droppedCeilingHeight;
-              const droppedCenterY = panelStartY + droppedWallHeight/2;
+              // 단내림 벽 높이 = 전체 높이 - 단내림 높이차 - 띄움높이
+              const droppedWallHeight = height - droppedCeilingHeight - floatHeight;
+              const droppedCenterY = panelStartY + floatHeight + droppedWallHeight/2;
               
               console.log('🔴 왼쪽 단내림 벽 렌더링:', {
                 '전체 높이': height / 0.01,
@@ -1187,9 +1187,9 @@ const Room: React.FC<RoomProps> = ({
             
             // 오른쪽이 단내림 영역인 경우 하나의 벽으로 렌더링
             if (hasDroppedCeiling && isRightDropped) {
-              // 단내림 벽 높이 = 전체 높이 - 단내림 높이차
-              const droppedWallHeight = height - droppedCeilingHeight;
-              const droppedCenterY = panelStartY + droppedWallHeight/2;
+              // 단내림 벽 높이 = 전체 높이 - 단내림 높이차 - 띄움높이
+              const droppedWallHeight = height - droppedCeilingHeight - floatHeight;
+              const droppedCenterY = panelStartY + floatHeight + droppedWallHeight/2;
               
               console.log('🔵 오른쪽 단내림 벽 렌더링:', {
                 '전체 높이': height / 0.01,
