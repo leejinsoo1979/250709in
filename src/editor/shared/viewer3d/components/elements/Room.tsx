@@ -1904,7 +1904,7 @@ const Room: React.FC<RoomProps> = ({
                 args={[
                   frameThickness.left,
                   // 서라운드: 단내림 천장까지의 높이, 노서라운드: 단내림되지 않은 높이 (띄움배치 시 floatHeight 제외)
-                  spaceInfo.surroundType === 'surround' ? (height - droppedCeilingHeight - floatHeight) : droppedHeight,
+                  spaceInfo.surroundType === 'surround' ? (height - droppedCeilingHeight - floatHeight) : (droppedHeight - floatHeight),
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.left
@@ -2185,8 +2185,8 @@ const Room: React.FC<RoomProps> = ({
                 isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
                 args={[
                   frameThickness.right,
-                  // 단내림 구간 높이 (바닥부터 단내림 천장까지)
-                  droppedHeight,
+                  // 단내림 구간 높이 (바닥부터 단내림 천장까지, 띄움배치 시 floatHeight 제외)
+                  droppedHeight - floatHeight,
                   // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
                   spaceInfo.surroundType === 'no-surround'
                     ? (wallConfig?.right
