@@ -97,6 +97,19 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
       const newModuleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
       const newCategory = newModuleData?.category;
 
+      // 도어 바닥 이격거리 초기화 (배치 타입에 따라)
+      if (module.doorBottomGap === undefined) {
+        const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
+        const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
+        module.doorBottomGap = isFloatPlacement ? floatHeight : 25;
+        console.log('🚪 [addModule] 도어 바닥 이격거리 초기화:', {
+          moduleId: module.moduleId,
+          placementType: spaceInfo.baseConfig?.placementType,
+          floatHeight,
+          doorBottomGap: module.doorBottomGap
+        });
+      }
+
       // 2단 가구인 경우 섹션 깊이 초기화
       const sections = newModuleData?.modelConfig?.sections;
       if (sections && sections.length === 2) {
