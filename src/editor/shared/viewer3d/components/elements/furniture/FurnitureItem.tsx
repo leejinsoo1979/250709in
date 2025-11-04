@@ -2224,9 +2224,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // Room.tsx와 동일한 계산: 뒷벽에서 600mm만 나오도록
   const zOffset = -panelDepth / 2; // 공간 메쉬용 깊이 중앙
   const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2; // 뒷벽에서 600mm
-  
+
   // Z축 위치 계산 - 기둥 C가 있어도 위치는 변경하지 않음
-  const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
+  // 띄움배치일 때는 받침대 깊이만큼 앞으로 당김 (조절발이 없으므로)
+  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+  const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+  const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset;
   
   // 기둥 C 디버깅 - 위치는 유지, 깊이만 조정
   if (adjustedDepthMm !== moduleDepth && slotInfo?.hasColumn) {
