@@ -647,6 +647,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               textureUrl={baseFurniture.textureUrl} // 텍스처 URL 전달
               panelGrainDirections={baseFurniture.panelGrainDirections} // 결방향 정보 전달
               furnitureId={placedFurnitureId} // 가구 ID 전달
+              floatHeight={spaceInfo?.baseConfig?.floatHeight} // 띄움 높이 전달
             />
           );
         }
