@@ -3001,18 +3001,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 키큰장/듀얼장 중심 X 위치 (adjustedPosition.x에 이미 positionAdjustmentForEndPanel이 적용됨)
         const furnitureCenterX = adjustedPosition.x;
 
-        // 왼쪽 엔드패널 렌더링: endPanelSide가 left/both이거나, 노서라운드 첫 슬롯 + 상하부장 인접
-        if (endPanelSide === 'left' || endPanelSide === 'both' || (isNoSurroundFirstSlot && needsEndPanelAdjustment)) {
-          let leftPanelX: number;
-
-          // 노서라운드 첫 슬롯이면 슬롯 경계 기준, 아니면 가구 면 기준
-          if (isNoSurroundFirstSlot && slotBoundaries) {
-            // 노서라운드 끝 → 슬롯 경계 기준
-            leftPanelX = slotBoundaries.left + endPanelWidth / 2;
-          } else {
-            // 상하부장 인접 → 가구 면에 붙음
-            leftPanelX = furnitureCenterX - adjustedHalfWidth - endPanelWidth / 2;
-          }
+        // 왼쪽 엔드패널 렌더링
+        if ((endPanelSide === 'left' || endPanelSide === 'both' || (isNoSurroundFirstSlot && needsEndPanelAdjustment)) && slotBoundaries) {
+          // 엔드패널은 항상 슬롯 왼쪽 경계에 고정
+          const leftPanelX = slotBoundaries.left + endPanelWidth / 2;
 
           endPanelXPositions.push({
             x: leftPanelX,
@@ -3020,18 +3012,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             zone: placedModule.zone
           });
         }
-        // 오른쪽 엔드패널 렌더링: endPanelSide가 right/both이거나, 노서라운드 마지막 슬롯 + 상하부장 인접
-        if (endPanelSide === 'right' || endPanelSide === 'both' || ((isNoSurroundLastSlot || isNoSurroundDualLastSlot) && needsEndPanelAdjustment)) {
-          let rightPanelX: number;
-
-          // 노서라운드 마지막 슬롯이면 슬롯 경계 기준, 아니면 가구 면 기준
-          if ((isNoSurroundLastSlot || isNoSurroundDualLastSlot) && slotBoundaries) {
-            // 노서라운드 끝 → 슬롯 경계 기준
-            rightPanelX = slotBoundaries.right - endPanelWidth / 2;
-          } else {
-            // 상하부장 인접 → 가구 면에 붙음
-            rightPanelX = furnitureCenterX + adjustedHalfWidth + endPanelWidth / 2;
-          }
+        // 오른쪽 엔드패널 렌더링
+        if ((endPanelSide === 'right' || endPanelSide === 'both' || ((isNoSurroundLastSlot || isNoSurroundDualLastSlot) && needsEndPanelAdjustment)) && slotBoundaries) {
+          // 엔드패널은 항상 슬롯 오른쪽 경계에 고정
+          const rightPanelX = slotBoundaries.right - endPanelWidth / 2;
 
           endPanelXPositions.push({
             x: rightPanelX,
