@@ -551,8 +551,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hasDoor, setHasDoor] = useState<boolean>(false);
   const [doorSplit, setDoorSplit] = useState<boolean>(false);
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
+
+  // 띄움배치일 때 바닥 이격거리 기본값 200mm
+  const defaultDoorBottomGap = spaceInfo.baseConfig?.placementType === 'float' ? 200 : 25;
   const [doorTopGap, setDoorTopGap] = useState<number>(5); // 병합 모드: 천장에서 아래로
-  const [doorBottomGap, setDoorBottomGap] = useState<number>(25); // 병합 모드: 바닥에서 위로
+  const [doorBottomGap, setDoorBottomGap] = useState<number>(defaultDoorBottomGap); // 병합 모드: 바닥에서 위로
   const [doorTopGapInput, setDoorTopGapInput] = useState<string>('5');
 
   // 분할 모드용 섹션별 이격거리
@@ -564,9 +567,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [upperDoorBottomGapInput, setUpperDoorBottomGapInput] = useState<string>('0');
   const [lowerDoorTopGapInput, setLowerDoorTopGapInput] = useState<string>('0');
   const [lowerDoorBottomGapInput, setLowerDoorBottomGapInput] = useState<string>('0');
-  const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>('25');
+  const [doorBottomGapInput, setDoorBottomGapInput] = useState<string>(defaultDoorBottomGap.toString());
   const [originalDoorTopGap, setOriginalDoorTopGap] = useState<number>(5);
-  const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(25);
+  const [originalDoorBottomGap, setOriginalDoorBottomGap] = useState<number>(defaultDoorBottomGap);
 
   // 취소 시 복원을 위한 모든 초기값 저장
   const [originalCustomDepth, setOriginalCustomDepth] = useState<number>(580);
@@ -786,8 +789,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setOriginalHasGapBackPanel(hasGapVal); // 원래 값 저장
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
+      // 띄움배치일 때는 바닥에서 200mm 기본값
+      const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
+      const defaultBottomGap = isFloatPlacement ? 200 : 25;
       const initialTopGap = currentPlacedModule.doorTopGap ?? 5;
-      const initialBottomGap = currentPlacedModule.doorBottomGap ?? 25;
+      const initialBottomGap = currentPlacedModule.doorBottomGap ?? defaultBottomGap;
       if (doorTopGap !== initialTopGap) {
         setDoorTopGap(initialTopGap);
         setDoorTopGapInput(initialTopGap.toString());
