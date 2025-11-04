@@ -105,7 +105,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
               spaceInfo={spaceInfo}
               moduleData={moduleData}
               lowerSectionTopOffsetMm={lowerSectionTopOffset}
-              renderMode={renderMode}>
+              renderMode={renderMode}
+              isFloating={isFloating}>
             {/* 내부 구조는 항상 렌더링 (서랍/선반) */}
             <>
                 {/* 듀얼 가구인 경우 좌우 섹션 별도 렌더링 */}
