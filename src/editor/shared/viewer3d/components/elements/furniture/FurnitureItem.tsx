@@ -1602,6 +1602,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 가구 높이는 기본적으로 모듈 데이터의 높이 사용
   let furnitureHeightMm = actualModuleData?.dimensions.height || 0;
 
+  // 단내림 구간에서 키큰장 높이 조정
+  if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && isTallCabinet) {
+    const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
+    const maxHeightInDroppedZone = spaceInfo.height - dropHeight;
+    const topFrameHeight = spaceInfo.frameSize?.top || 10;
+    const availableHeight = maxHeightInDroppedZone - topFrameHeight - 100; // 100mm 여유
+
+    // 키큰장이 단내림 구간 높이보다 크면 조정
+    if (furnitureHeightMm > availableHeight) {
+      furnitureHeightMm = availableHeight;
+      debugLog('🔧 [단내림 구간] 키큰장 높이 조정:', {
+        원래높이: actualModuleData?.dimensions.height,
+        조정후높이: furnitureHeightMm,
+        단내림높이: maxHeightInDroppedZone,
+        가용높이: availableHeight
+      });
+    }
+  }
+
   // 단내림 구간 높이 디버깅
   if (placedModule.zone === 'dropped') {
     debugLog('🟢 FurnitureItem 단내림 구간 가구 높이');
