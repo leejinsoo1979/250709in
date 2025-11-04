@@ -1916,91 +1916,94 @@ const Room: React.FC<RoomProps> = ({
             }
           }
 
-          return (
-            <>
-              {/* 단내림 영역 프레임/엔드패널 */}
-              <BoxWithEdges
-          hideEdges={hideEdges}
-                key={`left-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
-                isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
-                args={[
-                  frameThickness.left,
-                  // 단내림 구간 프레임 높이 (띄움배치 시 floatHeight 제외)
-                  droppedFrameHeight,
-                  // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (wallConfig?.left
-                        ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
-                        : noSurroundEndPanelDepth)  // 벽이 없는 경우: 공간 뒷벽부터 가구 앞면-20mm까지
-                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
-                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                        ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
-                        : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
-                ]}
-                position={[
-                  // 서라운드 모드에서는 가구 배치 여부와 관계없이 엔드패널 위치 고정
-                  // 노서라운드 모드에서만 가구가 있을 때 가구 옆에 붙여서 렌더링
-                  (spaceInfo.surroundType !== 'surround' && hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0)
-                    ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left
-                    : xOffset + frameThickness.left/2,
-                  // 단내림 구간 중심 (띄움높이와 단내림높이 반영)
-                  droppedCenterY,
-                  // 노서라운드 모드에서 엔드패널/프레임 위치 결정
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (wallConfig?.left
-                        ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(7)  // 단내림 구간: 가구 앞면에서 7mm 앞
-                        : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
-                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
-                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                        ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                        : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(7))  // 단내림 구간: 가구 앞면에서 7mm 앞
-                ]}
-                material={createFrameMaterial('left')}
-                renderMode={renderMode}
-                shadowEnabled={shadowEnabled}
-              />
-              {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
-              {spaceInfo.surroundType !== 'surround' && (
-              <BoxWithEdges
-          hideEdges={hideEdges}
-                isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
-                args={[
-                  frameThickness.left,
-                  upperPartHeight, // 상부 구간 높이
-                  // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (wallConfig?.left
-                        ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
-                        : noSurroundEndPanelDepth)  // 벽이 없는 경우: 공간 뒷벽부터 가구 앞면-20mm까지
-                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
-                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                        ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                        : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
-                ]}
-                position={[
-                  // 서라운드 모드에서는 가구 배치 여부와 관계없이 엔드패널 위치 고정
-                  // 노서라운드 모드에서만 가구가 있을 때 가구 옆에 붙여서 렌더링
-                  (spaceInfo.surroundType !== 'surround' && hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0)
-                    ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left
-                    : xOffset + frameThickness.left/2,
-                  upperPartCenterY, // 상부 구간 중심
-                  // 노서라운드 모드에서 엔드패널/프레임 위치 결정
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (wallConfig?.left
-                        ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(5)  // 단내림 상부: 가구 앞면에서 5mm 앞
-                        : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
-                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
-                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                        ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                        : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(5))  // 단내림 상부: 가구 앞면에서 5mm 앞
-                ]}
-                material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
-                renderMode={renderMode}
-                shadowEnabled={shadowEnabled}
-              />
-              )}
-            </>
-          );
+          return null; // 메인 프레임 제거 - 서브프레임만 사용
+          // {/*
+          // return (
+          //   <>
+          //     {/* 단내림 영역 프레임/엔드패널 */}
+          //     <BoxWithEdges
+          // hideEdges={hideEdges}
+          //       key={`left-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+          //       isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
+          //       args={[
+          //         frameThickness.left,
+          //         // 단내림 구간 프레임 높이 (띄움배치 시 floatHeight 제외)
+          //         droppedFrameHeight,
+          //         // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
+          //         spaceInfo.surroundType === 'no-surround'
+          //           ? (wallConfig?.left
+          //               ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
+          //               : noSurroundEndPanelDepth)  // 벽이 없는 경우: 공간 뒷벽부터 가구 앞면-20mm까지
+          //           : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
+          //              (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+          //               ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
+          //               : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
+          //       ]}
+          //       position={[
+          //         // 서라운드 모드에서는 가구 배치 여부와 관계없이 엔드패널 위치 고정
+          //         // 노서라운드 모드에서만 가구가 있을 때 가구 옆에 붙여서 렌더링
+          //         (spaceInfo.surroundType !== 'surround' && hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0)
+          //           ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left
+          //           : xOffset + frameThickness.left/2,
+          //         // 단내림 구간 중심 (띄움높이와 단내림높이 반영)
+          //         droppedCenterY,
+          //         // 노서라운드 모드에서 엔드패널/프레임 위치 결정
+          //         spaceInfo.surroundType === 'no-surround'
+          //           ? (wallConfig?.left
+          //               ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(7)  // 단내림 구간: 가구 앞면에서 7mm 앞
+          //               : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
+          //           : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
+          //              (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+          //               ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
+          //               : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(7))  // 단내림 구간: 가구 앞면에서 7mm 앞
+          //       ]}
+          //       material={createFrameMaterial('left')}
+          //       renderMode={renderMode}
+          //       shadowEnabled={shadowEnabled}
+          //     />
+          //     {/* 상부 영역 프레임 (천장까지) - 서라운드는 이미 전체 높이이므로 생략 */}
+          //     {spaceInfo.surroundType !== 'surround' && (
+          //     <BoxWithEdges
+          // hideEdges={hideEdges}
+          //       isEndPanel={!wallConfig?.left} // 왼쪽 벽이 없으면 엔드패널
+          //       args={[
+          //         frameThickness.left,
+          //         upperPartHeight, // 상부 구간 높이
+          //         // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
+          //         spaceInfo.surroundType === 'no-surround'
+          //           ? (wallConfig?.left
+          //               ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
+          //               : noSurroundEndPanelDepth)  // 벽이 없는 경우: 공간 뒷벽부터 가구 앞면-20mm까지
+          //           : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
+          //              (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+          //               ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
+          //               : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
+          //       ]}
+          //       position={[
+          //         // 서라운드 모드에서는 가구 배치 여부와 관계없이 엔드패널 위치 고정
+          //         // 노서라운드 모드에서만 가구가 있을 때 가구 옆에 붙여서 렌더링
+          //         (spaceInfo.surroundType !== 'surround' && hasLeftFurniture && indexingForCheck.threeUnitBoundaries.length > 0)
+          //           ? indexingForCheck.threeUnitBoundaries[0] - frameThickness.left
+          //           : xOffset + frameThickness.left/2,
+          //         upperPartCenterY, // 상부 구간 중심
+          //         // 노서라운드 모드에서 엔드패널/프레임 위치 결정
+          //         spaceInfo.surroundType === 'no-surround'
+          //           ? (wallConfig?.left
+          //               ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(5)  // 단내림 상부: 가구 앞면에서 5mm 앞
+          //               : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
+          //           : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.left) ||
+          //              (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+          //               ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
+          //               : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(5))  // 단내림 상부: 가구 앞면에서 5mm 앞
+          //       ]}
+          //       material={leftFrameMaterial ?? new THREE.MeshStandardMaterial({ color: '#cccccc' })}
+          //       renderMode={renderMode}
+          //       shadowEnabled={shadowEnabled}
+          //     />
+          //     )}
+          //   </>
+          // );
+          // */}
         }
 
         // 일반 구간 (단내림이 아닌 경우에만 렌더링)
@@ -2224,52 +2227,55 @@ const Room: React.FC<RoomProps> = ({
             }
           }
 
-          return (
-            <>
-              {/* 단내림 영역 프레임/엔드패널 */}
-              <BoxWithEdges
-          hideEdges={hideEdges}
-                key={`right-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
-                isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
-                args={[
-                  frameThickness.right,
-                  // 단내림 구간 프레임 높이 (띄움배치 시 floatHeight 제외)
-                  droppedFrameHeight,
-                  // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (wallConfig?.right
-                        ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
-                        : noSurroundEndPanelDepth)  // 벽이 없는 경우: 공간 뒷벽부터 가구 앞면-20mm까지
-                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
-                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                        ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
-                        : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
-                ]}
-                position={(() => {
-                  const pos: [number, number, number] = [
-                    // 가구 오른쪽 끝에 붙임
-                    endPanelX,
-                    // 단내림 구간 중심 Y
-                    droppedCenterY,
-                  // 노서라운드 모드에서 엔드패널/프레임 위치 결정
-                  spaceInfo.surroundType === 'no-surround'
-                    ? (wallConfig?.right
-                        ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(9)  // 단내림 구간: 메인프레임과 맞닿도록 9mm 앞
-                        : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
-                    : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
-                       (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
-                        ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
-                        : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(11))  // 단내림 구간: 메인프레임과 맞닿도록 11mm 앞 (추가 2mm)
-                  ];
-                  console.log('🎯 [단내림 오른쪽 프레임 position]', pos);
-                  return pos;
-                })()}
-                material={createFrameMaterial('right')}
-                renderMode={renderMode}
-                shadowEnabled={shadowEnabled}
-              />
-            </>
-          );
+          return null; // 메인 프레임 제거 - 서브프레임만 사용
+          // {/*
+          // return (
+          //   <>
+          //     {/* 단내림 영역 프레임/엔드패널 */}
+          //     <BoxWithEdges
+          // hideEdges={hideEdges}
+          //       key={`right-dropped-frame-${materialConfig?.doorColor}-${materialConfig?.doorTexture}`}
+          //       isEndPanel={!wallConfig?.right} // 오른쪽 벽이 없으면 엔드패널
+          //       args={[
+          //         frameThickness.right,
+          //         // 단내림 구간 프레임 높이 (띄움배치 시 floatHeight 제외)
+          //         droppedFrameHeight,
+          //         // 노서라운드 모드에서 엔드패널/프레임 깊이 결정
+          //         spaceInfo.surroundType === 'no-surround'
+          //           ? (wallConfig?.right
+          //               ? mmToThreeUnits(END_PANEL_THICKNESS)  // 벽이 있는 경우: 얇은 프레임 (18mm)
+          //               : noSurroundEndPanelDepth)  // 벽이 없는 경우: 공간 뒷벽부터 가구 앞면-20mm까지
+          //           : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
+          //              (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+          //               ? surroundEndPanelDepth  // 서라운드 엔드패널: 뒷벽까지 보정된 깊이
+          //               : mmToThreeUnits(END_PANEL_THICKNESS))  // 서라운드 프레임 (18mm)
+          //       ]}
+          //       position={(() => {
+          //         const pos: [number, number, number] = [
+          //           // 가구 오른쪽 끝에 붙임
+          //           endPanelX,
+          //           // 단내림 구간 중심 Y
+          //           droppedCenterY,
+          //         // 노서라운드 모드에서 엔드패널/프레임 위치 결정
+          //         spaceInfo.surroundType === 'no-surround'
+          //           ? (wallConfig?.right
+          //               ? furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(9)  // 단내림 구간: 메인프레임과 맞닿도록 9mm 앞
+          //               : noSurroundEndPanelZ)  // 벽이 없는 경우: 공간 뒷벽과 가구 앞면-20mm의 중심
+          //           : (((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !wallConfig?.right) ||
+          //              (spaceInfo.installType === 'freestanding' || spaceInfo.installType === 'free-standing')
+          //               ? surroundEndPanelZ  // 서라운드 엔드패널: 뒷벽까지 보정된 위치
+          //               : furnitureZOffset + furnitureDepth/2 - mmToThreeUnits(END_PANEL_THICKNESS)/2 + mmToThreeUnits(11))  // 단내림 구간: 메인프레임과 맞닿도록 11mm 앞 (추가 2mm)
+          //         ];
+          //         console.log('🎯 [단내림 오른쪽 프레임 position]', pos);
+          //         return pos;
+          //       })()}
+          //       material={createFrameMaterial('right')}
+          //       renderMode={renderMode}
+          //       shadowEnabled={shadowEnabled}
+          //     />
+          //   </>
+          // );
+          // */}
         }
 
         // 일반 구간 (단내림이 아닌 경우에만 렌더링)
@@ -2894,8 +2900,8 @@ const Room: React.FC<RoomProps> = ({
                   shadowEnabled={shadowEnabled}
                 />
               </group>
-              {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) - 제거 */}
-              {/* <group
+              {/* 좌측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
+              <group
                 position={[
                   xOffset + frameThickness.left / 2,
                   droppedCenterY,
@@ -2915,7 +2921,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
-              </group> */}
+              </group>
             </>
           );
         }
@@ -2978,8 +2984,8 @@ const Room: React.FC<RoomProps> = ({
 
           return (
             <>
-              {/* 우측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) - 제거 */}
-              {/* <group
+              {/* 우측 벽 안쪽 정면 프레임 (벽과 가구 사이 공간 메우기) */}
+              <group
                 position={[
                   xOffset + width - frameThickness.right / 2,
                   droppedCenterY,
@@ -2999,7 +3005,7 @@ const Room: React.FC<RoomProps> = ({
                   renderMode={renderMode}
                   shadowEnabled={shadowEnabled}
                 />
-              </group> */}
+              </group>
 
               {/* 우측 벽 안쪽 세로 서브프레임 (단내림 구간: 슬롯 가이드 정렬, 단내림 높이) */}
               <group
