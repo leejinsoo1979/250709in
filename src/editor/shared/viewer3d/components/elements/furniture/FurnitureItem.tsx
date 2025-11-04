@@ -2954,6 +2954,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             isDragging={isDraggingThis}
             isEditMode={isEditMode}
             floatHeight={placedModule.lowerSectionTopOffset !== undefined ? placedModule.lowerSectionTopOffset : spaceInfo.baseConfig?.floatHeight}
+            doorTopGap={placedModule.doorTopGap}
+            doorBottomGap={placedModule.doorBottomGap}
             slotWidths={(() => {
               if (placedModule.zone === 'dropped' && zoneSlotInfo?.dropped) {
                 const targetZone = zoneSlotInfo.dropped;
