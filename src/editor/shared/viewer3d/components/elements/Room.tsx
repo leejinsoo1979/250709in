@@ -2113,6 +2113,7 @@ const Room: React.FC<RoomProps> = ({
           const upperPartCenterY = panelStartY + height - upperPartHeight/2;
 
           console.log('🔥 [단내림 오른쪽 프레임] panelStartY:', panelStartY, 'floatHeight:', floatHeight, 'droppedHeight:', droppedHeight, 'droppedFrameHeight:', droppedFrameHeight, 'droppedCenterY:', droppedCenterY);
+          console.log('🎯 [단내림 오른쪽 프레임 args] frameThickness.right:', frameThickness.right, 'droppedFrameHeight:', droppedFrameHeight);
 
           // 단내림 구간의 경계 위치 계산
           const droppedZone = indexingForCheck.zones?.dropped;

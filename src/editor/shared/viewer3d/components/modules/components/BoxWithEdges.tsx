@@ -348,6 +348,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
   }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor]);
 
+  // Debug log for position
+  React.useEffect(() => {
+    if (position[1] > 10) { // Y > 10이면 단내림 프레임일 가능성
+      console.log('📍 BoxWithEdges position:', position, 'args:', args);
+    }
+  }, [position, args]);
+
   return (
     <group position={position}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
