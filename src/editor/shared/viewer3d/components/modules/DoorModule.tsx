@@ -691,15 +691,16 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
     const floorHeightValue = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
     const topFrameHeightValue = spaceInfo.frameSize?.top || 10;
-    const baseHeightValue = spaceInfo.baseConfig?.height || 65;
+    const baseHeightValue = placementType === 'float' ? floatHeight : (spaceInfo.baseConfig?.height || 65);
 
-    // 가구 높이 계산 (천장 높이 - 상부프레임 - 바닥재 - 받침대)
+    // 가구 높이 계산 (천장 높이 - 상부프레임 - 바닥재 - 받침대/띄움높이)
     tallCabinetFurnitureHeight = fullSpaceHeight - topFrameHeightValue - floorHeightValue - baseHeightValue;
 
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
     const cabinetTopLocal = tallCabinetFurnitureHeight / 2;
-    const baselineBottomGap = floorHeightValue + baseHeightValue;
+    const actualBaseHeight = placementType === 'float' ? floatHeight : (spaceInfo.baseConfig?.height || 65);
+    const baselineBottomGap = floorHeightValue + actualBaseHeight;
     const inputBottomGap = doorBottomGap ?? baselineBottomGap;
     const effectiveBottomGap = inputBottomGap;
     const extraBottomGap = effectiveBottomGap - baselineBottomGap;
@@ -721,21 +722,14 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       cabinetBottomLocal,
       cabinetTopLocal,
       doorBottomLocal,
-      doorTopLocal
+      doorTopLocal,
+      placementType,
+      floatHeight,
+      설명: '띄움배치 시 baselineBottomGap에 이미 floatHeight 반영됨'
     });
 
-    // 플로팅 배치 시: 도어 상단 고정, 하단만 플로팅 높이만큼 올라감
-    if (floatHeight > 0) {
-      doorBottomLocal = doorBottomLocal + floatHeight;
-
-      console.log('🚪📐 키큰장 플로팅 도어 높이 조정:', {
-        doorTopLocal,
-        doorBottomLocal_원래: doorBottomLocal - floatHeight,
-        doorBottomLocal_조정후: doorBottomLocal,
-        floatHeight,
-        설명: '도어 상단 고정, 하단만 플로팅 높이만큼 올라감'
-      });
-    }
+    // 띄움배치 시 floatHeight는 이미 baselineBottomGap에 반영되어 있음
+    // 별도의 doorBottomLocal 조정 불필요
 
     actualDoorHeight = Math.max(doorTopLocal - doorBottomLocal, 0);
 
