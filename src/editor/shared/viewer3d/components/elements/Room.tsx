@@ -140,6 +140,11 @@ const BoxWithEdges: React.FC<{
   shadowEnabled?: boolean; // 그림자 활성화 여부
   hideEdges?: boolean; // 외곽선 숨김
 }> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false }) => {
+  // Debug: 측면 프레임 확인
+  if (args[0] < 1 && args[1] > 15) {
+    console.log('📍 Room BoxWithEdges 측면 프레임 - Y:', position[1], 'H:', args[1], 'position:', position, 'args:', args);
+  }
+
   const geometry = useMemo(() => new THREE.BoxGeometry(...args), [args[0], args[1], args[2]]);
   const edgesGeometry = useMemo(() => new THREE.EdgesGeometry(geometry), [geometry]);
   const { viewMode: contextViewMode } = useSpace3DView();
