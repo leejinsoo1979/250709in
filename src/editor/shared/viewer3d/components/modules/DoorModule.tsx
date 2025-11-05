@@ -531,13 +531,17 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   
   // 투명도 설정: renderMode에 따라 조정 (2D solid 모드에서도 투명하게)
   const opacity = renderMode === 'wireframe' ? 0.3 : (viewMode === '2D' && renderMode === 'solid' ? 0.2 : 1.0);
-  // 인덱싱 정보 계산
-  const indexing = calculateSpaceIndexing(spaceInfo);
 
-  // 단내림 구간인 경우 영역별 슬롯 정보 계산
+  // 원본 spaceInfo 가져오기 (zone별로 분리되지 않은 전체 공간 정보)
+  const { spaceInfo: originalSpaceInfo } = useSpaceConfigStore();
+
+  // 인덱싱 정보 계산 - 원본 spaceInfo 사용
+  const indexing = calculateSpaceIndexing(originalSpaceInfo);
+
+  // 단내림 구간인 경우 영역별 슬롯 정보 계산 - 원본 spaceInfo로 계산
   let effectiveColumnWidth = indexing.columnWidth;
-  if (spaceInfo.droppedCeiling?.enabled && (spaceInfo as any).zone) {
-    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+  if (originalSpaceInfo.droppedCeiling?.enabled && (spaceInfo as any).zone) {
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(originalSpaceInfo, originalSpaceInfo.customColumnCount);
     const zone = (spaceInfo as any).zone;
 
     if (zone === 'dropped' && zoneInfo.dropped) {
