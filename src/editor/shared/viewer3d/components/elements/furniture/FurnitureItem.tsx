@@ -1001,7 +1001,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 하부장과 키큰장의 띄워서 배치 처리
-  else if ((isLowerCabinetForY || isTallCabinetForY) && actualModuleData) {
+  if ((isLowerCabinetForY || isTallCabinetForY) && actualModuleData) {
     // 드래그 중일 때는 position.y 그대로 사용
     if (isDraggingThis) {
       adjustedPosition = {
