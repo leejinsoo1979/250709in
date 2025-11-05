@@ -112,24 +112,28 @@ const SlotPlacementIndicators: React.FC<SlotPlacementIndicatorsProps> = ({ onSlo
       if (selectedCategory === 'upper') {
         // 상부장: 천장 근처
         const topFrameHeightMm = spaceInfo.frameSize?.top || 10;
-        const bottomFrameHeightMm = spaceInfo.frameSize?.bottom || 0;
 
-        // 기본 내부 높이
-        let internalHeight = spaceInfo.height - topFrameHeightMm - bottomFrameHeightMm - floorFinishHeightMm;
+        // 천장 높이 결정 (단내림 영역이면 단내림 천장 높이 사용)
+        const ceilingHeight = (spaceInfo.droppedCeiling?.enabled && zone === 'dropped' && spaceInfo.droppedCeiling?.dropHeight !== undefined)
+          ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight // 전체 높이 - 내려온 높이
+          : spaceInfo.height;
 
-        // 단내림이 있는 경우, dropped 영역은 단내림 높이만큼 낮아짐
-        if (spaceInfo.droppedCeiling?.enabled && zone === 'dropped') {
-          const droppedCeilingHeight = spaceInfo.droppedCeiling.height || 0;
-          internalHeight = internalHeight - droppedCeilingHeight;
-          console.log('🔴 [SlotIndicators] Dropped 영역 상부장 Y 위치 계산:', {
-            zone,
-            droppedCeilingHeight,
-            internalHeight,
-            furnitureHeightMm
-          });
-        }
+        console.log('🔴 [SlotIndicators] 상부장 Y 위치 계산:', {
+          zone,
+          전체높이: spaceInfo.height,
+          단내림내려온높이: spaceInfo.droppedCeiling?.dropHeight,
+          단내림천장높이: (spaceInfo.droppedCeiling?.enabled && zone === 'dropped' && spaceInfo.droppedCeiling?.dropHeight !== undefined)
+            ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight
+            : undefined,
+          사용된천장높이: ceilingHeight,
+          상부프레임: topFrameHeightMm,
+          상부장높이: furnitureHeightMm
+        });
 
-        return (floorFinishHeightMm + bottomFrameHeightMm + internalHeight - furnitureHeightMm / 2) * 0.01;
+        // 상부장 상단 Y = 천장 높이 - 상부프레임 높이
+        const upperCabinetTopY = ceilingHeight - topFrameHeightMm;
+        // 상부장 중심 Y = 상부장 상단 - 상부장 높이/2
+        return (upperCabinetTopY - furnitureHeightMm / 2) * 0.01;
       } else {
         // 하부장/키큰장: 바닥 기준
         return (floorFinishHeightMm + baseHeightMm + floatHeightMm + furnitureHeightMm / 2) * 0.01;
