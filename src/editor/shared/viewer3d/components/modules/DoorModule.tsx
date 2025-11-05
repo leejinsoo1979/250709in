@@ -635,12 +635,25 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 단내림 구간인 경우 해당 구간의 높이 사용
   let fullSpaceHeight = originalSpaceInfo.height;
+
+  console.log('🚪🔴 DoorModule zone 정보:', {
+    zone,
+    droppedCeilingEnabled: originalSpaceInfo.droppedCeiling?.enabled,
+    dropHeight: originalSpaceInfo.droppedCeiling?.dropHeight,
+    normalHeight: originalSpaceInfo.height,
+    willUseDroppedHeight: originalSpaceInfo.droppedCeiling?.enabled && zone === 'dropped'
+  });
+
   if (originalSpaceInfo.droppedCeiling?.enabled && zone === 'dropped') {
-    fullSpaceHeight = originalSpaceInfo.droppedCeiling.height;
+    // 단내림 구간 높이 = 전체 높이 - 내려온 높이
+    const dropHeight = originalSpaceInfo.droppedCeiling.dropHeight || 0;
+    fullSpaceHeight = originalSpaceInfo.height - dropHeight;
     console.log('🚪📏 단내림 구간 높이 사용:', {
       zone,
-      droppedHeight: originalSpaceInfo.droppedCeiling.height,
-      normalHeight: originalSpaceInfo.height
+      normalHeight: originalSpaceInfo.height,
+      dropHeight,
+      droppedHeight: fullSpaceHeight,
+      계산식: `${originalSpaceInfo.height} - ${dropHeight} = ${fullSpaceHeight}`
     });
   }
 

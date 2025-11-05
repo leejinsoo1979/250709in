@@ -2790,7 +2790,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     });
                     return placedModule.panelGrainDirections;
                   })()} // 패널별 개별 결 방향
-                  zone={placedModule.zone}
+                  zone={(() => {
+                    console.log('🚪🔴 FurnitureItem - zone 전달:', {
+                      furnitureId: placedModule.id,
+                      zone: placedModule.zone,
+                      droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled
+                    });
+                    return placedModule.zone;
+                  })()}
                 />
               );
             })()}

@@ -149,6 +149,15 @@ const BoxModule: React.FC<BoxModuleProps> = ({
     console.log('📦 BoxModule - showFurniture:', showFurniture, 'moduleId:', moduleData.id, 'placedFurnitureId:', placedFurnitureId);
   }, [showFurniture, moduleData.id, placedFurnitureId]);
 
+  // 디버그: zone 값 확인
+  useEffect(() => {
+    console.log('🚪🔴 BoxModule - zone prop:', {
+      zone,
+      moduleId: moduleData.id,
+      placedFurnitureId
+    });
+  }, [zone, moduleData.id, placedFurnitureId]);
+
   // 섹션 깊이 props 추적
   useEffect(() => {
     console.log('📦 BoxModule - 섹션 깊이 props 수신:', {

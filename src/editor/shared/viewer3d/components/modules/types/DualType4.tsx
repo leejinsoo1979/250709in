@@ -89,6 +89,15 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   const { theme } = useTheme();
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
+  // 디버그: zone 값 확인
+  React.useEffect(() => {
+    console.log('🚪🔴 DualType4 - zone prop:', {
+      zone,
+      moduleId: moduleData.id,
+      placedFurnitureId
+    });
+  }, [zone, moduleData.id, placedFurnitureId]);
+
   // sectionHeightsMm 계산 (도어 분할용)
   const sectionHeights = getSectionHeights();
   const isFloating = spaceInfo?.baseConfig?.type === 'stand' && spaceInfo?.baseConfig?.placementType === 'float';
