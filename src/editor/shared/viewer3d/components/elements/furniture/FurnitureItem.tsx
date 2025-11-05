@@ -839,7 +839,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const actualModuleData = React.useMemo(() => {
     let result = moduleData;
     if (moduleData) {
-      if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && !isColumnC) {
+      // isDualSlot이 true이면 듀얼 가구 유지 (키보드 이동 등으로 명시적으로 배치된 경우)
+      if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && !isColumnC && !placedModule.isDualSlot) {
         const conversionResult = convertDualToSingleIfNeeded(moduleData, slotInfo, spaceInfo);
         if (conversionResult.shouldConvert && conversionResult.convertedModuleData) {
           result = conversionResult.convertedModuleData;
@@ -847,7 +848,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
       
       // Column C에서 싱글 가구로 변환 (듀얼 가구가 Column C에 배치된 경우)
-      if (!isFurnitureDragging && isColumnC && moduleData.id.includes('dual-')) {
+      // isDualSlot이 true이면 듀얼 가구 유지
+      if (!isFurnitureDragging && isColumnC && moduleData.id.includes('dual-') && !placedModule.isDualSlot) {
         result = {
           ...moduleData,
           id: moduleData.id.replace('dual-', 'single-'),
