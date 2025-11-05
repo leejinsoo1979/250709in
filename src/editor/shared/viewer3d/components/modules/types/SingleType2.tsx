@@ -87,6 +87,19 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
 
+  // 디버깅: 조절발 렌더링 조건 확인
+  React.useEffect(() => {
+    console.log('🔍 SingleType2 조절발 조건 체크:', {
+      moduleId: moduleData.id,
+      placedFurnitureId,
+      showFurniture,
+      isFloating,
+      'spaceInfo.baseConfig.placementType': spaceInfo?.baseConfig?.placementType,
+      lowerSectionTopOffset,
+      '조절발렌더링': showFurniture && !isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0)
+    });
+  }, [showFurniture, isFloating, lowerSectionTopOffset, moduleData.id, placedFurnitureId, spaceInfo?.baseConfig?.placementType]);
+
   // 가구 본체 클릭 시 열린 도어 닫기 핸들러
   const handleCabinetBodyClick = (e: any) => {
     if (!placedFurnitureId) return;
