@@ -3002,18 +3002,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             }
             doorTopGap={placedModule.doorTopGap}
             doorBottomGap={placedModule.doorBottomGap}
-            slotWidths={(() => {
-              if (placedModule.zone === 'dropped' && zoneSlotInfo?.dropped) {
-                const targetZone = zoneSlotInfo.dropped;
-                const zoneIndex = localSlotIndex ?? placedModule.slotIndex;
-                if (zoneIndex !== undefined && targetZone.slotWidths && zoneIndex < targetZone.slotWidths.length - 1) {
-                  return [targetZone.slotWidths[zoneIndex], targetZone.slotWidths[zoneIndex + 1]];
-                }
-              } else if (indexing.slotWidths && normalizedSlotIndex !== undefined && normalizedSlotIndex < indexing.slotWidths.length - 1) {
-                return [indexing.slotWidths[normalizedSlotIndex], indexing.slotWidths[normalizedSlotIndex + 1]];
-              }
-              return undefined;
-            })()}
+            slotWidths={undefined}
           />
         </group>
       )}
