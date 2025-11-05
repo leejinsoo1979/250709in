@@ -4,6 +4,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { getModuleById } from '@/data/modules';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../../../utils/geometry';
+import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { v4 as uuidv4 } from 'uuid';
 
 /**
@@ -235,6 +236,8 @@ export const useFurniturePlacement = () => {
 
     // customWidth 계산 - 단내림이 있는 경우 슬롯별 실제 너비 사용
     let customWidth: number | undefined;
+    let adjustedWidth: number | undefined;
+    let customDepth: number | undefined;
     let targetIndexing;
 
     if (hasDroppedCeiling && zone === 'dropped' && indexing.zones?.dropped) {
@@ -281,6 +284,62 @@ export const useFurniturePlacement = () => {
       });
     }
 
+    // 기둥 체크 및 크기 조정 (전체 공간 기준 spaceInfo 사용)
+    const columnSlots = analyzeColumnSlots(spaceInfo);
+
+    // zone이 있는 경우 globalSlotIndex 계산
+    let globalSlotIndex = slotIndex;
+    if (hasDroppedCeiling && zone && indexing.zones) {
+      if (zone === 'dropped' && indexing.zones.normal) {
+        // dropped zone의 경우 normal zone 슬롯 개수를 더해야 함
+        globalSlotIndex = indexing.zones.normal.columnCount + slotIndex;
+      }
+      // normal zone은 이미 globalSlotIndex와 동일
+    }
+
+    const targetSlotInfo = columnSlots[globalSlotIndex];
+
+    console.log('🔍 [useFurniturePlacement] 기둥 체크:', {
+      slotIndex,
+      zone,
+      globalSlotIndex,
+      targetSlotInfo,
+      hasColumn: targetSlotInfo?.hasColumn,
+      columnSlotsLength: columnSlots.length
+    });
+
+    if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
+      // 기둥이 있는 슬롯 - calculateFurnitureBounds로 조정된 크기 계산
+      const slotWidthM = columnWidth * 0.01;
+      const originalSlotBounds = {
+        left: xPosition - slotWidthM / 2,
+        right: xPosition + slotWidthM / 2,
+        center: xPosition
+      };
+
+      const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
+      adjustedWidth = furnitureBounds.renderWidth;
+      customWidth = undefined; // 기둥 슬롯에서는 customWidth 사용 안 함
+      xPosition = furnitureBounds.center; // 위치도 조정
+
+      // Column C (300mm)의 경우 깊이 조정
+      const columnDepth = targetSlotInfo.column.depth;
+      if (columnDepth === 300 && furnitureBounds.renderWidth === columnWidth) {
+        customDepth = 730 - columnDepth; // 430mm
+      }
+
+      console.log('🔧 [useFurniturePlacement] 기둥 슬롯 배치 - 자동 조정:', {
+        zone,
+        slotIndex,
+        globalSlotIndex,
+        originalWidth: moduleData.dimensions.width,
+        adjustedWidth,
+        adjustedX: xPosition,
+        columnDepth,
+        customDepth
+      });
+    }
+
     // 새 가구 모듈 생성
     const baseType = selectedFurnitureId.replace(/-[\d.]+$/, '');
     const newModule = {
@@ -296,9 +355,9 @@ export const useFurniturePlacement = () => {
       slotIndex: slotIndex,
       isDualSlot: isDualFurniture,
       customHeight: undefined,
-      customDepth: undefined,
+      customDepth: customDepth,
       customWidth: customWidth,
-      adjustedWidth: undefined,
+      adjustedWidth: adjustedWidth,
       lowerSectionDepth: undefined,
       upperSectionDepth: undefined,
       customSections: undefined,
