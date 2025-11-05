@@ -365,7 +365,16 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
       
       const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
       const targetSlotInfo = columnSlots[globalSlotIndex];
-      
+
+      console.log('🔍 [useFurnitureDrag] targetSlotInfo 확인:', {
+        zone: currentModule.zone,
+        slotIndex,
+        globalSlotIndex,
+        targetSlotInfo,
+        hasColumn: targetSlotInfo?.hasColumn,
+        columnSlotsLength: columnSlots.length
+      });
+
       if (targetSlotInfo && targetSlotInfo.hasColumn) {
         // 기둥이 있는 슬롯으로 이동하는 경우
         if (isDualFurniture) {
@@ -554,6 +563,7 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         customWidth: (() => {
           // 기둥이 있는 슬롯인 경우 customWidth를 설정하지 않음 (adjustedWidth만 사용)
           if (targetSlotInfo && targetSlotInfo.hasColumn) {
+            console.log('✅ 기둥 슬롯 → customWidth = undefined, adjustedWidth =', newAdjustedWidth);
             return undefined; // 기둥 슬롯에서는 adjustedWidth만 사용
           }
           // zone별로 다른 슬롯 너비 사용
@@ -601,10 +611,20 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
           }
           
           // fallback: 평균 슬롯 너비
-          return globalIndexing.columnWidth;
+          const fallbackWidth = globalIndexing.columnWidth;
+          console.log('⚠️ customWidth fallback:', fallbackWidth);
+          return fallbackWidth;
         })()
       };
-      
+
+      console.log('📦 [useFurnitureDrag] endData 생성:', {
+        zone: currentModule.zone,
+        adjustedWidth: endData.adjustedWidth,
+        customWidth: endData.customWidth,
+        customDepth: endData.customDepth,
+        slotIndex: endData.slotIndex
+      });
+
       // 드래그 끝날 때 사용할 데이터 저장
       setDragEndData(endData);
       
