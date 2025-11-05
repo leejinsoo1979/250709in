@@ -886,20 +886,32 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? (() => {
         if (spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone) {
           const zoneData = placedModule.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
-          const result = normalizedSlotIndex === (zoneData?.columnCount ?? indexing.columnCount) - 1;
+          const totalColumnCount = zoneData?.columnCount ?? indexing.columnCount;
+
+          // 듀얼 가구: 마지막-1 슬롯에서 시작해도 마지막으로 간주 (두 슬롯 차지하므로)
+          const result = isDualFurniture
+            ? normalizedSlotIndex >= totalColumnCount - 2
+            : normalizedSlotIndex === totalColumnCount - 1;
 
           console.log('🔍 isLastSlot 계산:', {
             moduleId: placedModule.id,
             zone: placedModule.zone,
             normalizedSlotIndex,
-            zoneColumnCount: zoneData?.columnCount,
-            계산식: `${normalizedSlotIndex} === ${(zoneData?.columnCount ?? indexing.columnCount) - 1}`,
+            isDualFurniture,
+            zoneColumnCount: totalColumnCount,
+            계산식: isDualFurniture
+              ? `${normalizedSlotIndex} >= ${totalColumnCount - 2}`
+              : `${normalizedSlotIndex} === ${totalColumnCount - 1}`,
             isLastSlot: result
           });
 
           return result;
         }
-        return normalizedSlotIndex === indexing.columnCount - 1;
+        // 단내림 없을 때도 동일 로직 적용
+        const result = isDualFurniture
+          ? normalizedSlotIndex >= indexing.columnCount - 2
+          : normalizedSlotIndex === indexing.columnCount - 1;
+        return result;
       })()
     : false;
   
