@@ -5,6 +5,7 @@ import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry'
 import { calculateSpaceIndexing, ColumnIndexer, SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
+import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import styles from './ModuleGallery.module.css';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
@@ -775,6 +776,50 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         yPosition = floorY + furnitureHeight / 2;
       }
       
+      // 기둥 체크 및 크기 조정
+      const placedModules = useFurnitureStore.getState().placedModules;
+      const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+      const targetSlotInfo = columnSlots[availableSlotIndex];
+
+      let finalAdjustedWidth: number | undefined = undefined;
+      let finalCustomWidth: number | undefined;
+      let finalCustomDepth: number | undefined = getDefaultDepth(module);
+
+      if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
+        // 기둥이 있는 슬롯 - calculateFurnitureBounds로 조정된 크기 계산
+        const indexing = calculateSpaceIndexing(spaceInfo);
+        const slotWidthM = indexing.columnWidth * 0.01;
+        const originalSlotBounds = {
+          left: positionX - slotWidthM / 2,
+          right: positionX + slotWidthM / 2,
+          center: positionX
+        };
+
+        const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
+        finalAdjustedWidth = furnitureBounds.renderWidth;
+        finalCustomWidth = undefined; // 기둥 슬롯에서는 customWidth 사용 안 함
+        positionX = furnitureBounds.center; // 위치도 조정
+
+        // Column C (300mm)의 경우 깊이 조정
+        const columnDepth = targetSlotInfo.column.depth;
+        if (columnDepth === 300 && furnitureBounds.renderWidth === indexing.columnWidth) {
+          finalCustomDepth = 730 - columnDepth; // 430mm
+        }
+
+        console.log('🔧 [ModuleGallery] 기둥 슬롯 배치 - 자동 조정:', {
+          zone: targetZone,
+          slotIndex: availableSlotIndex,
+          originalWidth: module.dimensions.width,
+          adjustedWidth: finalAdjustedWidth,
+          adjustedX: positionX,
+          columnDepth,
+          customDepth: finalCustomDepth
+        });
+      } else {
+        // 기둥 없는 슬롯 - 기존 로직
+        finalCustomWidth = spaceInfo.surroundType === 'no-surround' ? undefined : customWidth;
+      }
+
       // 새 모듈 생성
       const newModule = {
         id: placedId,
@@ -788,16 +833,14 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         },
         rotation: 0,
         hasDoor: false,
-        customDepth: getDefaultDepth(module),
+        customDepth: finalCustomDepth,
+        adjustedWidth: finalAdjustedWidth,
         slotIndex: availableSlotIndex, // 글로벌 슬롯 인덱스 사용 (zone 정보는 별도로 저장)
         isDualSlot: isDualFurniture,
         isValidInCurrentSpace: true,
-        // 단내림이 있을 때는 customWidth를 사용하지 않고 adjustedWidth도 설정하지 않음
-        // 이렇게 하면 실제 슬롯 너비에 맞게 가구가 렌더링됨
         hingePosition: 'right' as 'left' | 'right',
         zone: targetZone || undefined, // 영역 정보 저장
-        // 노서라운드 모드에서는 customWidth를 설정하지 않음
-        customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : customWidth
+        customWidth: finalCustomWidth
       };
 
       // 가구 배치
