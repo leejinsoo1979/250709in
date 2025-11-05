@@ -1118,12 +1118,41 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 듀얼 가구는 customWidth가 올바른지 확인 필요
   let furnitureWidthMm = actualModuleData?.dimensions.width || 0; // 기본값
 
+  console.log('🔧 [FurnitureItem] 너비 결정 시작:', {
+    moduleId: placedModule.id,
+    zone: placedModule.zone,
+    adjustedWidth: placedModule.adjustedWidth,
+    customWidth: placedModule.customWidth,
+    originalWidth: actualModuleData?.dimensions.width
+  });
+
   // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
   if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
     furnitureWidthMm = placedModule.adjustedWidth;
+    console.log('  ✅ adjustedWidth 사용:', furnitureWidthMm);
   } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
-    // customWidth가 명시적으로 설정되어 있으면 사용 (배치/드래그/키보드 이동 시 설정된 슬롯 맞춤 너비)
-    furnitureWidthMm = placedModule.customWidth;
+    // customWidth가 있지만 기둥도 있으면 기둥 조정 우선
+    if (slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
+      console.log('  ⚠️ customWidth 있지만 기둥도 있음 - 기둥 조정 우선');
+      const originalSlotBounds = {
+        left: slotBoundaries.left,
+        right: slotBoundaries.right,
+        center: (slotBoundaries.left + slotBoundaries.right) / 2
+      };
+
+      const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
+      furnitureWidthMm = furnitureBounds.renderWidth;
+
+      console.log('  🔧 기둥 조정 적용:', {
+        originalCustomWidth: placedModule.customWidth,
+        adjustedWidth: furnitureWidthMm,
+        columnDepth: slotInfo.column.depth
+      });
+    } else {
+      // 기둥이 없으면 customWidth 사용
+      furnitureWidthMm = placedModule.customWidth;
+      console.log('  ✅ customWidth 사용:', furnitureWidthMm);
+    }
   } else {
     // 기본값 사용 전에 기둥이 있는지 확인
     console.log('🔍 [FurnitureItem] 기둥 체크 조건:', {
