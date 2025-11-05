@@ -870,9 +870,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // 듀얼 가구인지 확인 (가장 먼저 계산)
   // placedModule.isDualSlot이 있으면 그것을 사용, 없으면 모듈 ID로 판단
-  const isDualFurniture = placedModule.isDualSlot !== undefined 
-    ? placedModule.isDualSlot 
+  const isDualFurniture = placedModule.isDualSlot !== undefined
+    ? placedModule.isDualSlot
     : actualModuleData?.id.includes('dual-') || false;
+
+  console.log('🔍 isDualFurniture 계산:', {
+    placedModuleId: placedModule.id,
+    moduleId: placedModule.moduleId,
+    isDualSlot: placedModule.isDualSlot,
+    actualModuleId: actualModuleData?.id,
+    최종isDualFurniture: isDualFurniture
+  });
   
   // 상부장/하부장과 인접한 키큰장인지 확인 (actualModuleData가 있을 때만)
   const adjacentCheck = actualModuleData
@@ -895,13 +903,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
           console.log('🔍 isLastSlot 계산:', {
             moduleId: placedModule.id,
+            placedModuleModuleId: placedModule.moduleId,
+            isDualSlot: placedModule.isDualSlot,
             zone: placedModule.zone,
             normalizedSlotIndex,
             isDualFurniture,
             zoneColumnCount: totalColumnCount,
             계산식: isDualFurniture
-              ? `${normalizedSlotIndex} >= ${totalColumnCount - 2}`
-              : `${normalizedSlotIndex} === ${totalColumnCount - 1}`,
+              ? `${normalizedSlotIndex} === ${totalColumnCount - 2} (듀얼)`
+              : `${normalizedSlotIndex} === ${totalColumnCount - 1} (싱글)`,
             isLastSlot: result
           });
 

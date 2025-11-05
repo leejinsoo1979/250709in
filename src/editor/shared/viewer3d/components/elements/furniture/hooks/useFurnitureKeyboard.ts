@@ -74,8 +74,8 @@ export const useFurnitureKeyboard = ({
           columnWidth = indexing.columnWidth;
         }
 
-        // 듀얼/싱글 가구 판별 - zone별 columnWidth 사용
-        const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+        // 듀얼/싱글 가구 판별 - moduleId로 직접 확인 (width는 변경될 수 있음)
+        const isDualFurniture = editingModule.moduleId.includes('dual-');
 
         console.log('🔍 [useFurnitureKeyboard] 가구 타입 판별:', {
           moduleZone,
@@ -387,9 +387,8 @@ export const useFurnitureKeyboard = ({
           const moduleData = getModuleById(selectedModule.moduleId, internalSpace, spaceInfo);
           if (!moduleData) return;
           
-          // 듀얼/싱글 가구 판별
-          const columnWidth = indexing.columnWidth;
-          const isDualFurniture = Math.abs(moduleData.dimensions.width - (columnWidth * 2)) < 50;
+          // 듀얼/싱글 가구 판별 - moduleId로 직접 확인 (width는 변경될 수 있음)
+          const isDualFurniture = selectedModule.moduleId.includes('dual-');
           
           let currentSlotIndex = -1;
           
