@@ -448,13 +448,16 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
   
   // 기둥 변경 시 가구 adjustedWidth 업데이트
   updateFurnitureForColumns: (spaceInfo: any) => {
+    console.log('🔧 [updateFurnitureForColumns] 호출됨');
     set((state) => {
+      console.log('🔧 [updateFurnitureForColumns] placedModules 수:', state.placedModules.length);
 
       const columnSlots = analyzeColumnSlots(spaceInfo);
+      console.log('🔧 [updateFurnitureForColumns] columnSlots:', columnSlots);
 
       const updatedModules = state.placedModules.map(module => {
         if (module.slotIndex === undefined) return module;
-        
+
         // zone이 있는 경우 글로벌 슬롯 인덱스로 변환
         let globalSlotIndex = module.slotIndex;
         if (module.zone && spaceInfo.droppedCeiling?.enabled) {
@@ -463,14 +466,22 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
             globalSlotIndex = zoneInfo.normal.columnCount + module.slotIndex;
           }
         }
-        
+
         const slotInfo = columnSlots[globalSlotIndex];
+        console.log(`🔧 [updateFurnitureForColumns] ${module.id}:`, {
+          slotIndex: module.slotIndex,
+          globalSlotIndex,
+          hasColumn: slotInfo?.hasColumn,
+          adjustedWidth: slotInfo?.adjustedWidth,
+          availableWidth: slotInfo?.availableWidth
+        });
 
         // 기둥이 있는 슬롯인 경우 adjustedWidth 설정 (소수점 2자리로 반올림)
         if (slotInfo?.hasColumn) {
           const rawWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
           const newAdjustedWidth = Math.round(rawWidth * 100) / 100;
-          
+
+          console.log(`✅ [updateFurnitureForColumns] ${module.id} adjustedWidth 설정:`, newAdjustedWidth);
           return {
             ...module,
             adjustedWidth: newAdjustedWidth

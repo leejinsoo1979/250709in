@@ -377,10 +377,16 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
   // 가구 배치 시에도 adjustedWidth 업데이트
   useEffect(() => {
+    console.log('🔄 [Space3DView] placedModules 변경 감지:', {
+      count: placedModules.length,
+      spaceInfo: !!spaceInfo,
+      columns: spaceInfo?.columns?.length || 0
+    });
     if (spaceInfo) {
+      console.log('🔄 [Space3DView] updateFurnitureForColumns 호출');
       updateFurnitureForColumns(spaceInfo);
     }
-  }, [placedModules.length]); // 가구 개수 변경 시에만 호출 (무한 루프 방지)
+  }, [placedModules.length, spaceInfo, updateFurnitureForColumns]); // 가구 개수 변경 시에만 호출
 
 
   // 2D 뷰 방향별 카메라 위치 계산 - threeUtils의 최적화된 거리 사용
