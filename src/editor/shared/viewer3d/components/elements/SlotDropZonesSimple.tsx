@@ -160,8 +160,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   
   // 드롭 처리 함수
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
-    // 드래그 앤 드롭 배치 기능 비활성화
-    return false;
+    console.log('🎯🎯🎯 [handleSlotDrop] 호출됨!');
 
     // 드롭 위치에서 마우스 좌표 계산
     const rect = canvasElement.getBoundingClientRect();
