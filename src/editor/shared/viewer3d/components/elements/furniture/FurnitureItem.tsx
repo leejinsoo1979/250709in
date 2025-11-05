@@ -980,6 +980,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 가구 높이 계산 (Y 위치 계산 전에 필요)
   let furnitureHeightMm = actualModuleData?.dimensions.height || 0;
+  let adjustedCustomSections = placedModule.customSections;
 
   // 단내림 구간에서 키큰장 높이 조정
   if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && isTallCabinetForY) {
@@ -990,10 +991,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
     // 키큰장이 단내림 구간 높이보다 크면 조정
     if (furnitureHeightMm > availableHeight) {
+      const originalHeight = furnitureHeightMm;
       furnitureHeightMm = availableHeight;
+
+      // 섹션 높이도 비례해서 조정
+      if (actualModuleData?.modelConfig?.sections && actualModuleData.modelConfig.sections.length > 0) {
+        const heightRatio = furnitureHeightMm / originalHeight;
+        adjustedCustomSections = actualModuleData.modelConfig.sections.map(section => ({
+          ...section,
+          height: Math.round(section.height * heightRatio),
+          calculatedHeight: Math.round(section.height * heightRatio),
+          // 선반 위치도 비례해서 조정
+          shelfPositions: section.shelfPositions?.map(pos => Math.round(pos * heightRatio))
+        }));
+      }
+
       debugLog('🔧 [단내림 구간] 키큰장 높이 조정:', {
-        원래높이: actualModuleData?.dimensions.height,
+        원래높이: originalHeight,
         조정후높이: furnitureHeightMm,
+        heightRatio: furnitureHeightMm / originalHeight,
+        원래섹션: actualModuleData?.modelConfig?.sections?.map(s => s.height),
+        조정섹션: adjustedCustomSections?.map(s => s.height),
         단내림높이: maxHeightInDroppedZone,
         가용높이: availableHeight
       });
@@ -2801,7 +2819,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   slotWidths={calculatedSlotWidths}
                   isHighlighted={isSelected} // 선택 상태 전달
                   placedFurnitureId={placedModule.id} // 배치된 가구 ID 전달 (치수 편집용)
-                  customSections={placedModule.customSections} // 사용자 정의 섹션 설정
+                  customSections={adjustedCustomSections} // 사용자 정의 섹션 설정 (단내림 구간에서 조정됨)
                   showFurniture={showFurniture} // 가구 본체 표시 여부
                   visibleSectionIndex={visibleSectionIndex} // 듀얼 가구 섹션 필터링
                   doorTopGap={placedModule.doorTopGap} // 천장에서 도어 상단까지의 갭
