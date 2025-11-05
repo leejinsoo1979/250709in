@@ -133,9 +133,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   // 패널 강조용 material (형광색)
   const highlightMaterial = React.useMemo(() =>
     new THREE.MeshBasicMaterial({
-      color: new THREE.Color('#FF4500'), // 붉은 주황색
+      color: new THREE.Color('#00FF00'), // 형광 녹색
       transparent: true,
-      opacity: 0.8
+      opacity: 1.0
     }),
   []);
 
