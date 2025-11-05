@@ -312,12 +312,33 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       const slotEndX = slotCenterX + slotWidthM / 2;
     
     // 이 슬롯에 포함된 기둥 찾기
-    const columnInSlot = columns.find(column => {
+    console.log(`🔍🔍🔍 [analyzeColumnSlots] 슬롯 ${globalSlotIndex} (zone: ${zone}, local: ${localSlotIndex}) 기둥 검색 시작:`, {
+      slotCenterX: slotCenterX.toFixed(3),
+      slotStartX: slotStartX.toFixed(3),
+      slotEndX: slotEndX.toFixed(3),
+      slotWidthM: slotWidthM.toFixed(3),
+      columnsToCheck: columns.length
+    });
+
+    const columnInSlot = columns.find((column, colIdx) => {
       const columnLeftX = column.position[0] - (column.width * 0.01) / 2;
       const columnRightX = column.position[0] + (column.width * 0.01) / 2;
-      
+
+      const overlaps = (columnLeftX < slotEndX && columnRightX > slotStartX);
+
+      console.log(`  🔍 기둥 ${colIdx} 체크:`, {
+        columnPosition: column.position,
+        columnWidth: column.width,
+        columnDepth: column.depth,
+        columnLeftX: columnLeftX.toFixed(3),
+        columnRightX: columnRightX.toFixed(3),
+        overlaps,
+        condition1_leftLessThanSlotEnd: columnLeftX < slotEndX,
+        condition2_rightGreaterThanSlotStart: columnRightX > slotStartX
+      });
+
       // 기둥이 슬롯 영역과 겹치는지 확인
-      return (columnLeftX < slotEndX && columnRightX > slotStartX);
+      return overlaps;
     });
     
     if (!columnInSlot) {
