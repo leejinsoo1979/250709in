@@ -2438,10 +2438,28 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // moduleData가 없으면 빈 그룹 반환
   // 도어 크기는 상하부장 배치 여부와 무관하게 항상 동일하게 생성
-  // slotWidths를 전달하지 않으면 DoorModule이 zone별 effectiveColumnWidth를 사용
+  // 듀얼 가구인 경우 개별 슬롯 너비 배열 계산
   const calculatedSlotWidths = React.useMemo(() => {
+    if (!isDualFurniture) return undefined;
+
+    const localIndex = localSlotIndex ?? placedModule.slotIndex ?? 0;
+
+    // 단내림이 있고 zone 정보가 있는 경우
+    if (placedModule.zone && spaceInfo.droppedCeiling?.enabled && zoneSlotInfo) {
+      const targetZone = placedModule.zone === 'dropped' && zoneSlotInfo.dropped ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
+
+      if (targetZone.slotWidths && localIndex >= 0 && localIndex < targetZone.slotWidths.length - 1) {
+        return [targetZone.slotWidths[localIndex], targetZone.slotWidths[localIndex + 1]];
+      }
+    }
+
+    // 단내림이 없는 경우
+    if (indexing.slotWidths && normalizedSlotIndex !== undefined && normalizedSlotIndex < indexing.slotWidths.length - 1) {
+      return [indexing.slotWidths[normalizedSlotIndex], indexing.slotWidths[normalizedSlotIndex + 1]];
+    }
+
     return undefined;
-  }, []);
+  }, [isDualFurniture, localSlotIndex, placedModule.slotIndex, placedModule.zone, spaceInfo.droppedCeiling?.enabled, zoneSlotInfo, indexing.slotWidths, normalizedSlotIndex]);
 
   // moduleData가 없으면 빈 그룹 반환 (모든 Hook 호출 이후)
   if (moduleNotFound || !moduleData) {
