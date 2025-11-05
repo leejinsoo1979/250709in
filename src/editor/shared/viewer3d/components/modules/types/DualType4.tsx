@@ -266,7 +266,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
                     const lowerDepthDiff = depth - lowerSectionDepth;
                     const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0);
-                    const panelZOffset = lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 - mmToThreeUnits(lowerSectionTopOffset || 0)/2;
+                    const panelZOffset = lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 + mmToThreeUnits(lowerSectionTopOffset || 0)/2;
 
                     return (
                       <BoxWithEdges

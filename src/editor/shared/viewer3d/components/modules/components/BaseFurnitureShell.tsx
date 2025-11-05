@@ -504,7 +504,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         key={`lower-top-${getPanelMaterial('(하)상판').uuid}`}
                         args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
-                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2 + lowerZOffset]}
+                        position={[0, lowerTopPanelY - mmToThreeUnits(0.05), basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 + mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2 + lowerZOffset]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -585,7 +585,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         key={`lower-top-dual-2drawer-${getPanelMaterial('(하)상판').uuid}`}
                         args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
-                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2 + lowerZOffset]}
+                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 + mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2 + lowerZOffset]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -667,7 +667,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       <BoxWithEdges
                         key={`lower-top-2drawer-${getPanelMaterial('(하)상판').uuid}`}
                         args={[innerWidth, basicThickness - mmToThreeUnits(0.1), lowerAdjustedDepth - basicThickness + mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffsetMm || 0)]}
-                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 - mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2 + lowerZOffset]}
+                        position={[0, lowerTopPanelY, basicThickness/2 + shelfZOffset - mmToThreeUnits(26)/2 + mmToThreeUnits(lowerSectionTopOffsetMm || 0)/2 + lowerZOffset]}
                         material={getPanelMaterial('(하)상판')}
                         renderMode={renderMode}
                         isDragging={isDragging}
