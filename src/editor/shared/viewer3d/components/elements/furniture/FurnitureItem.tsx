@@ -3002,7 +3002,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             moduleData={actualModuleData}
             isDragging={isDraggingThis}
             isEditMode={isEditMode}
-            floatHeight={placedModule.lowerSectionTopOffset !== undefined ? placedModule.lowerSectionTopOffset : spaceInfo.baseConfig?.floatHeight}
+            floatHeight={
+              placedModule.lowerSectionTopOffset !== undefined
+                ? placedModule.lowerSectionTopOffset
+                : (spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0)
+            }
             doorTopGap={placedModule.doorTopGap}
             doorBottomGap={placedModule.doorBottomGap}
             slotWidths={(() => {

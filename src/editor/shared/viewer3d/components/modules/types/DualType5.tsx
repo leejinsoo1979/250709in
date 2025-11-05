@@ -1360,7 +1360,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
-          floatHeight={spaceInfo.baseConfig?.floatHeight || 0}
+          floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
         />
       )}
     </>
