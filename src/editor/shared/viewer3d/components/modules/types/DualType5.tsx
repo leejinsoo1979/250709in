@@ -73,7 +73,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
   // 띄워서 배치 여부 확인
-  const isFloating = spaceInfo?.baseConfig?.type === 'stand' && spaceInfo?.baseConfig?.placementType === 'float';
+  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
 
   // 측면뷰에서 치수 X 위치 계산 함수 (섹션 너비 기준)
   const getDimensionXPosition = (sectionWidth: number, forText: boolean = false, sectionGroupOffset: number = 0) => {

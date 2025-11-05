@@ -89,7 +89,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   const isMulti = sectionHeights.length >= 2;
 
   // 띄워서 배치 여부 확인
-  const isFloating = spaceInfo?.baseConfig?.type === 'stand' && spaceInfo?.baseConfig?.placementType === 'float';
+  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
 
   // sectionHeightsMm 계산 (도어 분할용)
   const unitsToMmFactor = (() => {

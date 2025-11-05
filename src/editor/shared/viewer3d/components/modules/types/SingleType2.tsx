@@ -85,7 +85,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   const { isIndividualDoorOpen, toggleIndividualDoor } = useUIStore();
 
   // 띄워서 배치 여부 확인
-  const isFloating = spaceInfo?.baseConfig?.type === 'stand' && spaceInfo?.baseConfig?.placementType === 'float';
+  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
 
   // 가구 본체 클릭 시 열린 도어 닫기 핸들러
   const handleCabinetBodyClick = (e: any) => {
