@@ -1190,9 +1190,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }
 
   // 기둥에 의한 자동 깊이 조정을 위한 플래그와 값 저장
+  // customWidth가 있어도 기둥이 있으면 깊이 조정 필요
   let autoAdjustedDepthMm: number | null = null;
-  if (!placedModule.adjustedWidth && !placedModule.customWidth &&
-      slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
+  if (slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
     const columnDepth = slotInfo.column.depth;
     // Column C (300mm)의 경우 깊이 조정 필요
     if (columnDepth === 300 && furnitureWidthMm === indexing.columnWidth) {
