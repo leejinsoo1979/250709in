@@ -203,6 +203,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         furnitureId={furnitureId}
         doorTopGap={doorTopGap} // 천장에서 도어 상단까지의 갭
         doorBottomGap={doorBottomGap} // 바닥에서 도어 하단까지의 갭
+        zone={zone}
         />
       </>
     );
