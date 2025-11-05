@@ -1117,17 +1117,55 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // customWidth는 슬롯 기반 너비 조정 시 사용, adjustedWidth는 기둥 침범 시 사용
   // 듀얼 가구는 customWidth가 올바른지 확인 필요
   let furnitureWidthMm = actualModuleData?.dimensions.width || 0; // 기본값
-  
+
   // adjustedWidth가 있으면 최우선 사용 (기둥 침범 케이스)
   if (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) {
     furnitureWidthMm = placedModule.adjustedWidth;
-    } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
+  } else if (placedModule.customWidth !== undefined && placedModule.customWidth !== null) {
     // customWidth가 명시적으로 설정되어 있으면 사용 (배치/드래그/키보드 이동 시 설정된 슬롯 맞춤 너비)
     furnitureWidthMm = placedModule.customWidth;
-    } else {
-    // 기본값은 모듈 원래 크기 (이미 위에서 설정됨)
+  } else {
+    // 기본값 사용 전에 기둥이 있는지 확인
+    // 기둥이 있으면 calculateFurnitureBounds로 조정된 너비 계산
+    if (slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
+      const slotWidthM = indexing.columnWidth * 0.01;
+      const originalSlotBounds = {
+        left: slotBoundaries.left,
+        right: slotBoundaries.right,
+        center: (slotBoundaries.left + slotBoundaries.right) / 2
+      };
+
+      const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
+      furnitureWidthMm = furnitureBounds.renderWidth;
+
+      console.log('🔧 [FurnitureItem] 기둥에 의한 가구 크기 자동 조정:', {
+        moduleId: placedModule.id,
+        zone: placedModule.zone,
+        originalWidth: actualModuleData?.dimensions.width,
+        adjustedWidth: furnitureWidthMm,
+        columnDepth: slotInfo.column.depth
+      });
     }
-  
+    // 기둥이 없으면 기본값 그대로 사용 (이미 위에서 설정됨)
+  }
+
+  // 기둥에 의한 자동 깊이 조정을 위한 플래그와 값 저장
+  let autoAdjustedDepthMm: number | null = null;
+  if (!placedModule.adjustedWidth && !placedModule.customWidth &&
+      slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
+    const columnDepth = slotInfo.column.depth;
+    // Column C (300mm)의 경우 깊이 조정 필요
+    if (columnDepth === 300 && furnitureWidthMm === indexing.columnWidth) {
+      autoAdjustedDepthMm = 730 - columnDepth; // 430mm
+      console.log('🔧 [FurnitureItem] 기둥에 의한 깊이 자동 조정:', {
+        moduleId: placedModule.id,
+        zone: placedModule.zone,
+        columnDepth,
+        adjustedDepth: autoAdjustedDepthMm
+      });
+    }
+  }
+
   // 엔드패널 조정 전 원래 너비 저장 (엔드패널 조정 시 사용)
   let originalFurnitureWidthMm = furnitureWidthMm;
 
@@ -2311,9 +2349,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (placedModule.zone === 'dropped') {
     }
   
-  // 깊이 계산: customDepth 우선, 기둥 충돌로 조정된 깊이, 기본 깊이 순
+  // 깊이 계산: customDepth 우선, 자동 조정 깊이, 기둥 충돌로 조정된 깊이, 기본 깊이 순
   const moduleDepth = actualModuleData?.dimensions?.depth || 0;
-  const actualDepthMm = placedModule.customDepth || (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth);
+  const actualDepthMm = placedModule.customDepth ||
+                        (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
+                         (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth));
   const depth = mmToThreeUnits(actualDepthMm);
   
   // Column C 깊이 디버깅
