@@ -230,9 +230,9 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   // 2D 정면뷰에서 좌우 프레임 형광색 material (BoxWithEdges 엣지 색상과 통일)
   const highlightMaterial = useMemo(() =>
     new THREE.MeshBasicMaterial({
-      color: new THREE.Color('#FF4500'), // 붉은 주황색 (reddish-orange)
+      color: new THREE.Color('#00FF00'), // 형광 녹색
       transparent: true,
-      opacity: 0.8
+      opacity: 1.0
     }),
   []);
 

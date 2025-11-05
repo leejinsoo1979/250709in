@@ -140,9 +140,9 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
   // 패널 강조용 형광색 material
   const highlightMaterial = React.useMemo(() =>
     new THREE.MeshBasicMaterial({
-      color: new THREE.Color('#FF4500'), // 붉은 주황색
+      color: new THREE.Color('#00FF00'), // 형광 녹색
       transparent: true,
-      opacity: 0.8
+      opacity: 1.0
     }),
   []);
 
