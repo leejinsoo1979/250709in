@@ -1509,7 +1509,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zone: zoneToUse, // 영역 정보 저장
         customWidth: customWidth, // 실제 슬롯 너비 사용 (소수점 2자리)
         customHeight: zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace.height : undefined, // 단내림 구간의 줄어든 높이 저장
-        lowerSectionTopOffset: spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : undefined // 띄움 배치 시 하부 섹션 상판 오프셋
+        lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
       };
       
       // 기둥 정보가 있으면 추가
@@ -1627,7 +1627,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           hingePosition: 'right' as 'left' | 'right',
           customWidth: customWidth,
           zone: targetZone, // 클릭한 슬롯의 영역 사용
-          lowerSectionTopOffset: spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : undefined // 띄움 배치 시 하부 섹션 상판 오프셋
+          lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
         };
         
         addModule(newModule);
@@ -2027,7 +2027,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // 노서라운드 모드에서는 customWidth를 설정하지 않음 - FurnitureItem이 직접 slotWidths 사용
       customWidth: spaceInfo.surroundType === 'no-surround' ? undefined : adjustedCustomWidth,
       zone: zoneToUse, // 단내림 영역 정보 저장
-      lowerSectionTopOffset: spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : undefined // 띄움 배치 시 하부 섹션 상판 오프셋
+      lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
     };
     
     // 기둥 정보가 있으면 추가
