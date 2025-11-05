@@ -678,17 +678,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     });
   } else {
     // 키큰장의 경우: 천장/바닥 기준으로 갭 적용
-    // 단내림 구간인 경우 높이 조정
-    if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-      const dropHeight = spaceInfo.droppedCeiling.dropHeight || 200;
-      fullSpaceHeight = spaceInfo.height - dropHeight;
-      console.log('🚪📏 단내림 도어 높이 조정:', {
-        originalHeight: spaceInfo.height,
-        dropHeight,
-        adjustedHeight: fullSpaceHeight,
-        zone: (spaceInfo as any).zone
-      });
-    }
+    // fullSpaceHeight는 FurnitureItem에서 zone별로 이미 조정된 height를 사용
+    // (zoneSpaceInfo에 zone별 height가 반영되어 전달됨)
 
     const floorHeightValue = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
     const topFrameHeightValue = spaceInfo.frameSize?.top || 10;
@@ -1016,18 +1007,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       });
     }
   }
-  
-  // 단내림 구간인 경우 Y 위치는 조정하지 않음 (하단이 메인구간과 맞아야 함)
-  // 단내림 구간에서는 높이만 줄어들고, 하단 위치는 메인 구간과 동일하게 유지
-  if ((spaceInfo as any).zone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-    console.log('🚪📍 단내림 도어 위치:', {
-      doorYPosition,
-      doorHeight: actualDoorHeight - 30,
-      zone: 'dropped',
-      note: '하단이 메인구간과 정렬됨'
-    });
-  }
-  
+
   // 노서라운드 + 벽없음 상태 체크
   const isNoSurroundNoWallLeft = spaceInfo.surroundType === 'no-surround' && !spaceInfo.wallConfig?.left;
   const isNoSurroundNoWallRight = spaceInfo.surroundType === 'no-surround' && !spaceInfo.wallConfig?.right;
