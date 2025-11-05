@@ -289,6 +289,22 @@ export const useFurniturePlacement = () => {
     // 기둥 체크 및 크기 조정 (전체 공간 기준 spaceInfo 사용)
     const columnSlots = analyzeColumnSlots(spaceInfo);
 
+    console.log('🏛️🏛️🏛️ [useFurniturePlacement] 전체 기둥 정보:', {
+      columns: spaceInfo.columns?.map(c => ({
+        position: c.position,
+        width: c.width,
+        depth: c.depth
+      })),
+      columnSlots: columnSlots.map((slot, idx) => ({
+        idx,
+        slotIndex: slot.slotIndex,
+        hasColumn: slot.hasColumn,
+        columnType: slot.columnType,
+        availableWidth: slot.availableWidth,
+        adjustedWidth: slot.adjustedWidth
+      }))
+    });
+
     // zone이 있는 경우 globalSlotIndex 계산
     let globalSlotIndex = slotIndex;
     if (hasDroppedCeiling && zone && indexing.zones) {
