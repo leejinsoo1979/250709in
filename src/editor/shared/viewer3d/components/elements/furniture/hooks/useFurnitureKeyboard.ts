@@ -159,7 +159,18 @@ export const useFurnitureKeyboard = ({
                 console.error('⚠️ 위치 배열을 찾을 수 없음');
                 break;
               }
-              
+
+              // newX가 undefined인 경우 (zone 경계를 넘어가는 경우)
+              if (newX === undefined) {
+                console.error('⚠️ 슬롯 위치를 찾을 수 없음 (zone 경계 초과):', {
+                  nextSlot,
+                  currentZone: editingModule.zone,
+                  positionsLength: positionsToSearch?.length,
+                  dualPositionsLength: dualPositionsToSearch?.length
+                });
+                break;
+              }
+
               // 기둥 슬롯 분석
               const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
               const targetSlotInfo = columnSlots[nextSlot];
@@ -275,7 +286,18 @@ export const useFurnitureKeyboard = ({
                 console.error('⚠️ 위치 배열을 찾을 수 없음');
                 break;
               }
-              
+
+              // newX가 undefined인 경우 (zone 경계를 넘어가는 경우)
+              if (newX === undefined) {
+                console.error('⚠️ 슬롯 위치를 찾을 수 없음 (zone 경계 초과):', {
+                  nextSlot,
+                  currentZone: editingModule.zone,
+                  positionsLength: positionsToSearch?.length,
+                  dualPositionsLength: dualPositionsToSearch?.length
+                });
+                break;
+              }
+
               // 기둥 슬롯 분석
               const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
               const targetSlotInfo = columnSlots[nextSlot];
@@ -422,15 +444,15 @@ export const useFurnitureKeyboard = ({
             case 'ArrowLeft': {
               // 스마트 건너뛰기: 왼쪽으로 다음 사용 가능한 슬롯 찾기
               const nextSlot = findNextAvailableSlot(
-                currentSlotIndex, 
-                'left', 
-                isDualFurniture, 
-                placedModules, 
-                spaceInfo, 
+                currentSlotIndex,
+                'left',
+                isDualFurniture,
+                placedModules,
+                spaceInfo,
                 selectedModule.moduleId,
                 selectedPlacedModuleId // excludeModuleId로 전달
               );
-              
+
               if (nextSlot !== null) {
                 let newX: number;
                 if (isDualFurniture && indexing.threeUnitDualPositions) {
@@ -438,7 +460,17 @@ export const useFurnitureKeyboard = ({
                 } else {
                   newX = indexing.threeUnitPositions[nextSlot];
                 }
-                
+
+                // newX가 undefined인 경우 (zone 경계를 넘어가는 경우)
+                if (newX === undefined) {
+                  console.error('⚠️ [선택모드] 슬롯 위치를 찾을 수 없음 (zone 경계 초과):', {
+                    nextSlot,
+                    positionsLength: indexing.threeUnitPositions?.length,
+                    dualPositionsLength: indexing.threeUnitDualPositions?.length
+                  });
+                  break;
+                }
+
                 // 기둥 슬롯 분석
                 const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
                 const targetSlotInfo = columnSlots[nextSlot];
@@ -510,15 +542,15 @@ export const useFurnitureKeyboard = ({
             case 'ArrowRight': {
               // 스마트 건너뛰기: 오른쪽으로 다음 사용 가능한 슬롯 찾기
               const nextSlot = findNextAvailableSlot(
-                currentSlotIndex, 
-                'right', 
-                isDualFurniture, 
-                placedModules, 
-                spaceInfo, 
+                currentSlotIndex,
+                'right',
+                isDualFurniture,
+                placedModules,
+                spaceInfo,
                 selectedModule.moduleId,
                 selectedPlacedModuleId // excludeModuleId로 전달
               );
-              
+
               if (nextSlot !== null) {
                 let newX: number;
                 if (isDualFurniture && indexing.threeUnitDualPositions) {
@@ -526,7 +558,17 @@ export const useFurnitureKeyboard = ({
                 } else {
                   newX = indexing.threeUnitPositions[nextSlot];
                 }
-                
+
+                // newX가 undefined인 경우 (zone 경계를 넘어가는 경우)
+                if (newX === undefined) {
+                  console.error('⚠️ [선택모드] 슬롯 위치를 찾을 수 없음 (zone 경계 초과):', {
+                    nextSlot,
+                    positionsLength: indexing.threeUnitPositions?.length,
+                    dualPositionsLength: indexing.threeUnitDualPositions?.length
+                  });
+                  break;
+                }
+
                 // 기둥 슬롯 분석
                 const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
                 const targetSlotInfo = columnSlots[nextSlot];

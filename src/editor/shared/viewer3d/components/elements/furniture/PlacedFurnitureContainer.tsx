@@ -220,7 +220,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     가구상세: filteredModules.map(m => ({
       id: m.id,
       slotIndex: m.slotIndex,
-      position: m.position.x.toFixed(3)
+      position: m.position?.x?.toFixed(3) ?? 'undefined'
     })),
     viewMode,
     view2DDirection,
