@@ -374,9 +374,15 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     }
     // Three.js 씬 강제 업데이트는 ThreeCanvas에서 자동으로 처리됨
   }, [spaceInfo?.columns]); // updateFurnitureForColumns는 dependency에서 제외 (무한 루프 방지)
-  
 
-  
+  // 가구 배치 시에도 adjustedWidth 업데이트
+  useEffect(() => {
+    if (spaceInfo) {
+      updateFurnitureForColumns(spaceInfo);
+    }
+  }, [placedModules.length]); // 가구 개수 변경 시에만 호출 (무한 루프 방지)
+
+
   // 2D 뷰 방향별 카메라 위치 계산 - threeUtils의 최적화된 거리 사용
   const cameraPosition = useMemo(() => {
     if (!spaceInfo) {
