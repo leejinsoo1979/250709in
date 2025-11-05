@@ -88,6 +88,21 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
   const sectionHeights = getSectionHeights();
   const isMulti = sectionHeights.length >= 2;
 
+  // 단내림 구간 디버깅
+  React.useEffect(() => {
+    if (spaceInfo?.droppedCeiling?.enabled) {
+      console.log('🟣🟣🟣 DualType2 - sectionHeights:', {
+        moduleId: moduleData.id,
+        height: height,
+        basicThickness: basicThickness,
+        sectionHeights: sectionHeights,
+        sectionHeightsMm: sectionHeights.map(h => Math.round(h * (1 / mmToThreeUnits(1)))),
+        internalHeight,
+        moduleDataHeight: moduleData.dimensions.height
+      });
+    }
+  }, [sectionHeights, height, basicThickness, spaceInfo?.droppedCeiling, moduleData.id, internalHeight, moduleData.dimensions.height, mmToThreeUnits]);
+
   // 띄워서 배치 여부 확인
   const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
 
