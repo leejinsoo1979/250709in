@@ -49,7 +49,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
   lowerDoorBottomGap,
   grainDirection,
   panelGrainDirections,
-  lowerSectionTopOffset
+  lowerSectionTopOffset,
+  zone
 }) => {
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -99,6 +100,17 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
       '조절발렌더링': showFurniture && !isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0)
     });
   }, [showFurniture, isFloating, lowerSectionTopOffset, moduleData.id, placedFurnitureId, spaceInfo?.baseConfig?.placementType]);
+
+  // 디버그: zone 값 확인
+  React.useEffect(() => {
+    console.log('🚪🔴 SingleType2 - zone prop:', {
+      zone,
+      moduleId: moduleData.id,
+      placedFurnitureId,
+      droppedCeilingEnabled: spaceInfo?.droppedCeiling?.enabled,
+      dropHeight: spaceInfo?.droppedCeiling?.dropHeight
+    });
+  }, [zone, moduleData.id, placedFurnitureId, spaceInfo?.droppedCeiling]);
 
   // 가구 본체 클릭 시 열린 도어 닫기 핸들러
   const handleCabinetBodyClick = (e: any) => {
@@ -702,6 +714,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
+              zone={zone}
             />
           ) : (
             // 분할 모드: 상부/하부 섹션별 도어
@@ -728,6 +741,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 doorBottomGap={upperDoorBottomGap ?? 0}
                 sectionIndex={1}
                 totalSections={2}
+                zone={zone}
               />
 
               {/* 하부 섹션 도어 */}
@@ -752,6 +766,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
                 sectionIndex={0}
                 totalSections={2}
+                zone={zone}
               />
 
             </>

@@ -37,7 +37,8 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   upperDoorBottomGap,
   lowerDoorTopGap,
   lowerDoorBottomGap,
-  lowerSectionTopOffset
+  lowerSectionTopOffset,
+  zone
 }) => {
   const baseFurniture = useBaseFurniture(moduleData, {
     color,
@@ -74,6 +75,17 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
       });
     }
   }, [spaceInfo?.baseConfig]);
+
+  // 디버그: zone 값 확인
+  React.useEffect(() => {
+    console.log('🚪🔴 SingleType1 - zone prop:', {
+      zone,
+      moduleId: moduleData.id,
+      placedFurnitureId,
+      droppedCeilingEnabled: spaceInfo?.droppedCeiling?.enabled,
+      dropHeight: spaceInfo?.droppedCeiling?.dropHeight
+    });
+  }, [zone, moduleData.id, placedFurnitureId, spaceInfo?.droppedCeiling]);
 
   const sectionDepths = React.useMemo(() => {
     const defaultDepth = depth;
@@ -257,6 +269,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
               floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
+              zone={zone}
             />
           ) : (
             <>
@@ -281,6 +294,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 sectionIndex={1}
                 totalSections={2}
                 floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
+                zone={zone}
               />
 
               <DoorModule
@@ -304,6 +318,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 sectionIndex={0}
                 totalSections={2}
                 floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
+                zone={zone}
               />
             </>
           )}

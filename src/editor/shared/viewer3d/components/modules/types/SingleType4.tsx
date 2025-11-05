@@ -42,7 +42,8 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   lowerDoorBottomGap,
   lowerSectionDepth,
   upperSectionDepth,
-  lowerSectionTopOffset
+  lowerSectionTopOffset,
+  zone
 }) => {
   // 공통 로직 사용
   const { indirectLightEnabled, indirectLightIntensity } = useUIStore();
@@ -78,6 +79,17 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   const isFloating = spaceInfo?.baseConfig?.placementType === "float";
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
   const showIndirectLight = false;
+
+  // 디버그: zone 값 확인
+  React.useEffect(() => {
+    console.log('🚪🔴 SingleType4 - zone prop:', {
+      zone,
+      moduleId: moduleData.id,
+      placedFurnitureId,
+      droppedCeilingEnabled: spaceInfo?.droppedCeiling?.enabled,
+      dropHeight: spaceInfo?.droppedCeiling?.dropHeight
+    });
+  }, [zone, moduleData.id, placedFurnitureId, spaceInfo?.droppedCeiling]);
 
   const sectionHeightsUnits = getSectionHeights();
   const unitsToMmFactor = (() => {
@@ -241,6 +253,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
           furnitureId={placedFurnitureId}
           doorTopGap={doorTopGap}
           doorBottomGap={doorBottomGap}
+              zone={zone}
             />
           ) : (
             // 분할 모드: 상하부 도어 각각
@@ -266,6 +279,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               totalSections={2}
               doorTopGap={upperDoorTopGap ?? doorTopGap}
               doorBottomGap={upperDoorBottomGap ?? 0}
+                zone={zone}
               />
 
               {/* 하부 섹션 도어 (4단 서랍) */}
@@ -289,6 +303,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
               totalSections={2}
               doorTopGap={lowerDoorTopGap ?? 0}
               doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
+                zone={zone}
               />
             </>
           )}

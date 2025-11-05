@@ -356,6 +356,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        zone={zone}
       />
       </>
     );
@@ -400,6 +401,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        zone={zone}
       />
       </>
     );
@@ -439,6 +441,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         lowerDoorTopGap={lowerDoorTopGap}
         lowerDoorBottomGap={lowerDoorBottomGap}
         lowerSectionTopOffset={lowerSectionTopOffset} // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
+        zone={zone}
       />
       </>
     );
