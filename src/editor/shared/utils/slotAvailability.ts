@@ -193,10 +193,10 @@ export const isSlotAvailable = (
     const columnCResult = furnitureInSlot.length < 3;
     console.log('[SlotDebug] isSlotAvailable:columnC-result', { slotIndex: targetSlot, columnCResult });
     return columnCResult; // 3개 미만이면 배치 가능
-  } else if (targetSlots.some(slot => columnSlots[slot]?.hasColumn)) {
-    // 일반 기둥이 있는 슬롯 - 기존 로직
-    return true;
-  } else {
+  }
+
+  // 기둥이 있는 슬롯이든 없는 슬롯이든, 이미 배치된 가구가 있는지 확인
+  {
     // 기둥이 없는 슬롯에서는 기존 로직 사용
     
     // 배치하려는 모듈의 카테고리 확인
