@@ -51,6 +51,7 @@ export interface FurnitureTypeProps {
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (기본값: horizontal) - 하위 호환성
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
   textureUrl?: string; // 텍스처 URL
+  zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
