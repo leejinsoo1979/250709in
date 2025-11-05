@@ -3078,19 +3078,52 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const targetZone = effectiveZone === 'dropped' && zoneSlotInfo.dropped
             ? zoneSlotInfo.dropped
             : zoneSlotInfo.normal;
-          
+
           let targetWidth;
           // 로컬 인덱스 사용 (hoveredSlotIndex는 이미 로컬 인덱스)
           const localIndex = slotLocalIndex;
-          
+
+          // 기둥 정보 확인 (단내림 구간에서도 기둥 조정 필요)
+          const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+
           if (isDual && localIndex < targetZone.columnCount - 1) {
             // 듀얼 가구: 두 슬롯의 너비 합
-            const slot1Width = targetZone.slotWidths?.[localIndex] || targetZone.columnWidth;
-            const slot2Width = targetZone.slotWidths?.[localIndex + 1] || targetZone.columnWidth;
+            const slot1Info = columnSlots[localIndex];
+            const slot2Info = columnSlots[localIndex + 1];
+
+            // 각 슬롯의 adjustedWidth 또는 기본 너비 사용
+            const slot1Width = (slot1Info?.hasColumn && slot1Info.adjustedWidth)
+              ? slot1Info.adjustedWidth
+              : (targetZone.slotWidths?.[localIndex] || targetZone.columnWidth);
+            const slot2Width = (slot2Info?.hasColumn && slot2Info.adjustedWidth)
+              ? slot2Info.adjustedWidth
+              : (targetZone.slotWidths?.[localIndex + 1] || targetZone.columnWidth);
+
             targetWidth = slot1Width + slot2Width;
+
+            if ((slot1Info?.hasColumn && slot1Info.adjustedWidth) || (slot2Info?.hasColumn && slot2Info.adjustedWidth)) {
+              console.log(`🏗️ [Ghost Preview 단내림] 듀얼 가구 기둥 조정:`, {
+                슬롯1: { 인덱스: localIndex, 원본: targetZone.slotWidths?.[localIndex], 조정: slot1Width, 기둥: slot1Info?.hasColumn },
+                슬롯2: { 인덱스: localIndex + 1, 원본: targetZone.slotWidths?.[localIndex + 1], 조정: slot2Width, 기둥: slot2Info?.hasColumn },
+                총너비: targetWidth
+              });
+            }
           } else {
             // 싱글 가구: 해당 슬롯의 너비
-            targetWidth = targetZone.slotWidths?.[localIndex] || targetZone.columnWidth;
+            const slotInfo = columnSlots[localIndex];
+
+            // adjustedWidth가 있으면 우선 사용
+            if (slotInfo?.hasColumn && slotInfo.adjustedWidth) {
+              targetWidth = slotInfo.adjustedWidth;
+              console.log(`🏗️ [Ghost Preview 단내림] 싱글 가구 기둥 조정:`, {
+                슬롯인덱스: localIndex,
+                원본: targetZone.slotWidths?.[localIndex] || targetZone.columnWidth,
+                조정: targetWidth,
+                기둥너비: slotInfo.column?.width
+              });
+            } else {
+              targetWidth = targetZone.slotWidths?.[localIndex] || targetZone.columnWidth;
+            }
           }
           
           targetModuleId = `${baseType}-${targetWidth}`;
@@ -3141,15 +3174,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // 기둥 정보 확인
           const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
           const targetSlotInfo = columnSlots[hoveredSlotIndex];
-          
-          if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
-            // 기둥이 있는 슬롯의 경우 실제 사용 가능한 너비 계산
-            if (targetSlotInfo.availableWidth) {
-              targetWidth = targetSlotInfo.availableWidth;
-            } else {
-              // 기본 슬롯 너비에서 기둥 너비를 뺀 값
-              targetWidth = indexing.columnWidth - (targetSlotInfo.column.width || 0);
-            }
+
+          if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.adjustedWidth) {
+            // 기둥이 있는 슬롯의 경우 adjustedWidth 사용
+            targetWidth = targetSlotInfo.adjustedWidth;
+            console.log(`🏗️ [Ghost Preview] 기둥 슬롯 ${hoveredSlotIndex} 고스트 너비 조정:`, {
+              원본슬롯너비: indexing.columnWidth,
+              기둥너비: targetSlotInfo.column?.width,
+              조정된너비: targetWidth
+            });
           } else if (isDual && hoveredSlotIndex < indexing.columnCount - 1) {
             // 듀얼 가구: 두 슬롯의 너비 합
             targetWidth = indexing.columnWidth * 2;
