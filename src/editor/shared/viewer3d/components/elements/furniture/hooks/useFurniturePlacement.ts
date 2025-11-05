@@ -15,12 +15,14 @@ export const useFurniturePlacement = () => {
   const { selectedFurnitureId, addModule, setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
 
   const placeFurniture = useCallback((slotIndex: number, zone?: 'normal' | 'dropped') => {
-    console.log('🟢 [useFurniturePlacement] placeFurniture 호출:', { slotIndex, zone });
+    console.log('🎯🎯🎯 [useFurniturePlacement] placeFurniture 호출됨!!!!', { slotIndex, zone, selectedFurnitureId });
 
     if (!selectedFurnitureId) {
-      console.warn('선택된 가구가 없습니다');
+      console.error('❌❌❌ 선택된 가구가 없습니다:', selectedFurnitureId);
       return;
     }
+
+    console.log('✅ selectedFurnitureId 체크 통과:', selectedFurnitureId);
 
     const indexing = calculateSpaceIndexing(spaceInfo);
     const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
