@@ -213,7 +213,7 @@ const createDefaultSpaceConfig = (): SpaceInfo => {
     baseConfig: {
       type: 'floor',
       height: DEFAULT_BASE_VALUES.HEIGHT,
-      placementType: 'float'  // 기본값을 띄워서 배치로 변경
+      placementType: 'ground'  // 기본값: 바닥에 배치
     },
     // 재질 설정 초기값
     materialConfig: {
