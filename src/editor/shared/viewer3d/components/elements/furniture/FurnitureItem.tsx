@@ -3003,9 +3003,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             isDragging={isDraggingThis}
             isEditMode={isEditMode}
             floatHeight={
-              placedModule.lowerSectionTopOffset !== undefined
-                ? placedModule.lowerSectionTopOffset
-                : (spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0)
+              // **중요**: 저장된 값 무시하고 항상 현재 spaceInfo의 placementType을 우선 사용
+              spaceInfo.baseConfig?.placementType === 'float'
+                ? (spaceInfo.baseConfig?.floatHeight || 0)
+                : 0
             }
             doorTopGap={placedModule.doorTopGap}
             doorBottomGap={placedModule.doorBottomGap}
