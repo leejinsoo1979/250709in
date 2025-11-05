@@ -3485,7 +3485,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
         const targetSlotInfo = columnSlots[hoveredSlotIndex];
 
-        // 기둥이 있는 슬롯인 경우 adjustedWidth 사용
+        // 기둥이 있는 슬롯인 경우 calculateFurnitureBounds 사용 (실제 배치와 동일)
         if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.adjustedWidth) {
           // 듀얼 가구는 기둥 슬롯에 배치 불가
           if (isDual) {
@@ -3493,34 +3493,34 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             return null;
           }
 
-          // adjustedWidth를 customWidth로 사용
-          customWidth = targetSlotInfo.adjustedWidth;
+          // 실제 배치와 동일한 방식으로 경계 계산
+          const slotWidthM = indexing.columnWidth * 0.01;
+          const originalSlotBounds = {
+            left: previewX - slotWidthM / 2,
+            right: previewX + slotWidthM / 2,
+            center: previewX
+          };
 
-          // 슬롯의 좌우 끝 위치 계산
-          const slotWidthThree = mmToThreeUnits(indexing.columnWidth);
-          const slotLeft = previewX - slotWidthThree / 2;
-          const slotRight = previewX + slotWidthThree / 2;
+          // calculateFurnitureBounds로 실제 가구 경계 계산 (실제 배치와 동일)
+          const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
 
-          // furniturePosition에 따라 가구 위치 조정
-          if (targetSlotInfo.furniturePosition === 'right-aligned') {
-            // 오른쪽 정렬: 슬롯 오른쪽 끝에서 가구 너비의 절반만큼 왼쪽
-            adjustedPreviewX = slotRight - mmToThreeUnits(customWidth) / 2;
-          } else if (targetSlotInfo.furniturePosition === 'left-aligned') {
-            // 왼쪽 정렬: 슬롯 왼쪽 끝에서 가구 너비의 절반만큼 오른쪽
-            adjustedPreviewX = slotLeft + mmToThreeUnits(customWidth) / 2;
-          } else {
-            // 중앙 정렬: 슬롯 중심 사용
-            adjustedPreviewX = previewX;
+          // 공간이 부족한 경우 미리보기 표시 안함
+          if (furnitureBounds.renderWidth < 150) {
+            console.log('👻 [Ghost Preview] 기둥 슬롯 공간 부족:', furnitureBounds.renderWidth, 'mm');
+            return null;
           }
 
-          console.log(`👻 [Ghost Preview] 기둥 슬롯 ${hoveredSlotIndex} 고스트 조정:`, {
+          // 실제 배치와 동일하게 크기와 위치 사용
+          customWidth = furnitureBounds.renderWidth;
+          adjustedPreviewX = furnitureBounds.center;
+
+          console.log(`👻 [Ghost Preview] 기둥 슬롯 ${hoveredSlotIndex} 고스트 조정 (calculateFurnitureBounds):`, {
             원본슬롯너비: indexing.columnWidth,
-            조정된너비: customWidth,
+            renderWidth: customWidth,
+            center: adjustedPreviewX,
             기둥너비: targetSlotInfo.column?.width,
             furniturePosition: targetSlotInfo.furniturePosition,
-            원본위치: previewX,
-            조정된위치: adjustedPreviewX,
-            슬롯범위: { left: slotLeft, right: slotRight }
+            furnitureBounds
           });
         } else if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
           // 단내림 구간에서 커스텀 너비 계산 (기둥 조정 포함)
