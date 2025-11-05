@@ -3058,39 +3058,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           let rightPanelX: number;
 
           if (isDualFurniture && normalizedSlotIndex !== undefined) {
-            // 듀얼장: 다음 슬롯(normalizedSlotIndex + 1)의 오른쪽 경계
-            if (indexing.threeUnitBoundaries && indexing.threeUnitBoundaries.length > normalizedSlotIndex + 2) {
-              rightPanelX = indexing.threeUnitBoundaries[normalizedSlotIndex + 2] - endPanelWidth / 2;
-            } else {
-              // fallback: slotBoundaries.right는 첫 번째 슬롯의 오른쪽 경계이므로
-              // 두 번째 슬롯의 너비를 더해서 두 번째 슬롯의 오른쪽 경계를 계산
-
-              // 단내림이 있을 때는 zone별 slotWidths 사용
-              let secondSlotWidth: number;
-              if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
-                const targetZone = placedModule.zone === 'dropped' ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
-                if (targetZone?.slotWidths && targetZone.slotWidths[normalizedSlotIndex + 1] !== undefined) {
-                  secondSlotWidth = targetZone.slotWidths[normalizedSlotIndex + 1] * 0.01;
-                } else {
-                  secondSlotWidth = (targetZone?.columnWidth ?? indexing.columnWidth) * 0.01;
-                }
+            // 듀얼장: slotBoundaries.right(첫 슬롯 우측) + 두 번째 슬롯 너비
+            // 단내림이 있을 때는 zone별 slotWidths 사용
+            let secondSlotWidth: number;
+            if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
+              const targetZone = placedModule.zone === 'dropped' ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
+              if (targetZone?.slotWidths && targetZone.slotWidths[normalizedSlotIndex + 1] !== undefined) {
+                secondSlotWidth = targetZone.slotWidths[normalizedSlotIndex + 1] * 0.01;
               } else {
-                // 단내림이 없을 때는 일반 indexing.slotWidths 사용
-                secondSlotWidth = indexing.slotWidths && indexing.slotWidths[normalizedSlotIndex + 1]
-                  ? indexing.slotWidths[normalizedSlotIndex + 1] * 0.01
-                  : indexing.columnWidth * 0.01;
+                secondSlotWidth = (targetZone?.columnWidth ?? indexing.columnWidth) * 0.01;
               }
-
-              rightPanelX = slotBoundaries.right + secondSlotWidth - endPanelWidth / 2;
-
-              console.log('🟠 듀얼장 오른쪽 엔드패널 fallback 계산:', {
-                hasDroppedCeiling: spaceInfo.droppedCeiling?.enabled,
-                zone: placedModule.zone,
-                slotBoundariesRight: slotBoundaries.right,
-                secondSlotWidth,
-                rightPanelX
-              });
+            } else {
+              // 단내림이 없을 때는 일반 indexing.slotWidths 사용
+              secondSlotWidth = indexing.slotWidths && indexing.slotWidths[normalizedSlotIndex + 1]
+                ? indexing.slotWidths[normalizedSlotIndex + 1] * 0.01
+                : indexing.columnWidth * 0.01;
             }
+
+            rightPanelX = slotBoundaries.right + secondSlotWidth - endPanelWidth / 2;
           } else {
             // 싱글장: 현재 슬롯의 오른쪽 경계
             rightPanelX = slotBoundaries.right - endPanelWidth / 2;
