@@ -582,7 +582,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   });
 
   // 노서라운드 모드에서 도어 크기 처리
-  if (spaceInfo.surroundType === 'no-surround') {
+  if (originalSpaceInfo.surroundType === 'no-surround') {
     // 노서라운드에서는 항상 원래 슬롯 크기를 사용해야 함
     // originalSlotWidth가 없으면 fallback으로 계산
     if (!originalSlotWidth) {
@@ -590,7 +590,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
       // 듀얼 가구면 슬롯 너비 * 2
       actualDoorWidth = isDualFurniture ? effectiveColumnWidth * 2 : effectiveColumnWidth;
       console.log(`🚪 노서라운드 도어 너비 계산:`, {
-        전체너비: spaceInfo.width,
+        전체너비: originalSpaceInfo.width,
         effectiveColumnWidth,
         isDualFurniture,
         actualDoorWidth,
@@ -632,7 +632,18 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   let actualDoorHeight: number;
   let tallCabinetFurnitureHeight = 0; // 키큰장 가구 높이 (Y 위치 계산에서 사용)
   let resolvedSectionHeightsMm: number[] | undefined;
-  let fullSpaceHeight = spaceInfo.height; // 전체 공간 높이 (단내림 고려)
+
+  // 단내림 구간인 경우 해당 구간의 높이 사용
+  let fullSpaceHeight = originalSpaceInfo.height;
+  if (originalSpaceInfo.droppedCeiling?.enabled && zone === 'dropped') {
+    fullSpaceHeight = originalSpaceInfo.droppedCeiling.height;
+    console.log('🚪📏 단내림 구간 높이 사용:', {
+      zone,
+      droppedHeight: originalSpaceInfo.droppedCeiling.height,
+      normalHeight: originalSpaceInfo.height
+    });
+  }
+
   let doorBottomLocal = 0; // 키큰장 기준 로컬 좌표에서의 도어 하단 (mm)
   let doorTopLocal = 0; // 키큰장 기준 로컬 좌표에서의 도어 상단 (mm)
 
@@ -683,12 +694,11 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     });
   } else {
     // 키큰장의 경우: 천장/바닥 기준으로 갭 적용
-    // fullSpaceHeight는 FurnitureItem에서 zone별로 이미 조정된 height를 사용
-    // (zoneSpaceInfo에 zone별 height가 반영되어 전달됨)
+    // fullSpaceHeight는 zone prop에 따라 단내림 구간 높이 또는 일반 구간 높이 사용
 
-    const floorHeightValue = spaceInfo.hasFloorFinish ? (spaceInfo.floorFinish?.height || 0) : 0;
-    const topFrameHeightValue = spaceInfo.frameSize?.top || 10;
-    const baseHeightValue = placementType === 'float' ? floatHeight : (spaceInfo.baseConfig?.height || 65);
+    const floorHeightValue = originalSpaceInfo.hasFloorFinish ? (originalSpaceInfo.floorFinish?.height || 0) : 0;
+    const topFrameHeightValue = originalSpaceInfo.frameSize?.top || 10;
+    const baseHeightValue = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
 
     // 가구 높이 계산 (천장 높이 - 상부프레임 - 바닥재 - 받침대/띄움높이)
     tallCabinetFurnitureHeight = fullSpaceHeight - topFrameHeightValue - floorHeightValue - baseHeightValue;
@@ -696,7 +706,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     // 로컬 좌표계에서 도어 기준 위치 계산
     const cabinetBottomLocal = -tallCabinetFurnitureHeight / 2;
     const cabinetTopLocal = tallCabinetFurnitureHeight / 2;
-    const actualBaseHeight = placementType === 'float' ? floatHeight : (spaceInfo.baseConfig?.height || 65);
+    const actualBaseHeight = placementType === 'float' ? floatHeight : (originalSpaceInfo.baseConfig?.height || 65);
     const baselineBottomGap = floorHeightValue + actualBaseHeight;
     const inputBottomGap = doorBottomGap ?? baselineBottomGap;
     const effectiveBottomGap = inputBottomGap;
@@ -1014,8 +1024,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   }
 
   // 노서라운드 + 벽없음 상태 체크
-  const isNoSurroundNoWallLeft = spaceInfo.surroundType === 'no-surround' && !spaceInfo.wallConfig?.left;
-  const isNoSurroundNoWallRight = spaceInfo.surroundType === 'no-surround' && !spaceInfo.wallConfig?.right;
+  const isNoSurroundNoWallLeft = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.left;
+  const isNoSurroundNoWallRight = originalSpaceInfo.surroundType === 'no-surround' && !originalSpaceInfo.wallConfig?.right;
   const endPanelThickness = 18; // 엔드패널 두께 18mm
 
   // 패널 두께 (18mm) - 먼저 선언
@@ -1190,7 +1200,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 기둥 옆에 있는지 확인하여 힌지 위치 자동 조정
   const checkColumnAdjacent = () => {
-    const columns = spaceInfo.columns || [];
+    const columns = originalSpaceInfo.columns || [];
     if (columns.length === 0) {
       console.log('🚪 기둥이 없음');
       return { isNearColumn: false, columnSide: null };
@@ -1211,7 +1221,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
     
     // 각 기둥과의 거리 체크
     for (const column of columns) {
-      const columnX = mmToThreeUnits(column.position[0] - spaceInfo.width / 2);
+      const columnX = mmToThreeUnits(column.position[0] - originalSpaceInfo.width / 2);
       const columnWidth = mmToThreeUnits(column.width);
       const columnLeftEdge = columnX - columnWidth / 2;
       const columnRightEdge = columnX + columnWidth / 2;
