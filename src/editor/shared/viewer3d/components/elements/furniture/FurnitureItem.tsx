@@ -905,14 +905,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 상부프레임 높이
       const topFrameHeightMm = spaceInfo.frameSize?.top || 10; // 기본값 10mm
 
-      // 상부장 상단 Y = 전체 높이 - 상부프레임 높이 (상부프레임 하단)
-      const upperCabinetTopY = spaceInfo.height - topFrameHeightMm;
+      // 단내림 구역에 배치된 경우 단내림 높이 사용, 아니면 전체 높이 사용
+      const isInDroppedZone = placedModule.zone === 'dropped';
+      const ceilingHeight = isInDroppedZone && spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.height
+        ? spaceInfo.droppedCeiling.height
+        : spaceInfo.height;
+
+      // 상부장 상단 Y = 천장 높이 - 상부프레임 높이 (상부프레임 하단)
+      const upperCabinetTopY = ceilingHeight - topFrameHeightMm;
       // 상부장 중심 Y = 상부장 상단 - 상부장 높이/2
       const upperCabinetCenterY = (upperCabinetTopY - upperCabinetHeight/2) * 0.01;
 
       console.log('🔴🔴🔴 상부장 Y 위치 계산:', {
         moduleId: placedModule.id,
+        zone: placedModule.zone,
+        isInDroppedZone,
         전체높이: spaceInfo.height,
+        단내림높이: spaceInfo.droppedCeiling?.height,
+        사용된높이: ceilingHeight,
         상부프레임: topFrameHeightMm,
         상부장높이: upperCabinetHeight,
         상부장상단Y: upperCabinetTopY,
