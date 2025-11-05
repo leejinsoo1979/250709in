@@ -214,7 +214,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           isEditMode={isEditMode}
           slotWidths={slotWidths}
           slotIndex={slotIndex}
-          floatHeight={floatHeight}
+          floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
           textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}

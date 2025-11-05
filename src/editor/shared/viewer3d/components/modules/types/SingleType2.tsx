@@ -686,7 +686,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
               furnitureId={placedFurnitureId}
-              floatHeight={floatHeight}
+              floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
               doorTopGap={doorTopGap}
               doorBottomGap={doorBottomGap}
             />
@@ -709,7 +709,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 textureUrl={spaceInfo.materialConfig?.doorTexture}
                 panelGrainDirections={panelGrainDirections}
                 furnitureId={placedFurnitureId}
-                floatHeight={floatHeight}
+                floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
                 sectionHeightsMm={sectionHeightsMm}
                 doorTopGap={upperDoorTopGap ?? doorTopGap}
                 doorBottomGap={upperDoorBottomGap ?? 0}
@@ -733,7 +733,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                 textureUrl={spaceInfo.materialConfig?.doorTexture}
                 panelGrainDirections={panelGrainDirections}
                 furnitureId={placedFurnitureId}
-                floatHeight={floatHeight}
+                floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 0}
                 sectionHeightsMm={sectionHeightsMm}
                 doorTopGap={lowerDoorTopGap ?? 0}
                 doorBottomGap={lowerDoorBottomGap ?? doorBottomGap}
