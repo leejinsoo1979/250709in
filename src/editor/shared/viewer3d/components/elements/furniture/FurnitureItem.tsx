@@ -982,39 +982,34 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let furnitureHeightMm = actualModuleData?.dimensions.height || 0;
   let adjustedCustomSections = placedModule.customSections;
 
-  // 단내림 구간에서 키큰장 높이 조정
-  if (placedModule.zone === 'dropped' && spaceInfo.droppedCeiling?.enabled && isTallCabinetForY) {
-    const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
-    const maxHeightInDroppedZone = spaceInfo.height - dropHeight;
-    const topFrameHeight = spaceInfo.frameSize?.top || 10;
-    const availableHeight = maxHeightInDroppedZone - topFrameHeight - 100; // 100mm 여유
+  // 섹션 높이 조정 (actualModuleData.dimensions.height가 이미 조정된 경우를 대비)
+  if (actualModuleData?.modelConfig?.sections && actualModuleData.modelConfig.sections.length > 0) {
+    // 섹션들의 원래 총 높이 계산
+    const originalSectionsTotal = actualModuleData.modelConfig.sections.reduce((sum, s) => sum + s.height, 0);
 
-    // 키큰장이 단내림 구간 높이보다 크면 조정
-    if (furnitureHeightMm > availableHeight) {
-      const originalHeight = furnitureHeightMm;
-      furnitureHeightMm = availableHeight;
+    // 현재 가구 높이와 섹션 총합이 다르면 조정 필요 (1mm 이상 차이)
+    if (Math.abs(furnitureHeightMm - originalSectionsTotal) > 1) {
+      const heightRatio = furnitureHeightMm / originalSectionsTotal;
 
-      // 섹션 높이도 비례해서 조정
-      if (actualModuleData?.modelConfig?.sections && actualModuleData.modelConfig.sections.length > 0) {
-        const heightRatio = furnitureHeightMm / originalHeight;
-        adjustedCustomSections = actualModuleData.modelConfig.sections.map(section => ({
-          ...section,
-          height: Math.round(section.height * heightRatio),
-          calculatedHeight: Math.round(section.height * heightRatio),
-          // 선반 위치도 비례해서 조정
-          shelfPositions: section.shelfPositions?.map(pos => Math.round(pos * heightRatio))
-        }));
-      }
-
-      debugLog('🔧 [단내림 구간] 키큰장 높이 조정:', {
-        원래높이: originalHeight,
-        조정후높이: furnitureHeightMm,
-        heightRatio: furnitureHeightMm / originalHeight,
-        원래섹션: actualModuleData?.modelConfig?.sections?.map(s => s.height),
-        조정섹션: adjustedCustomSections?.map(s => s.height),
-        단내림높이: maxHeightInDroppedZone,
-        가용높이: availableHeight
+      console.log('🔧🔧🔧 섹션 높이 비례 조정:', {
+        moduleId: actualModuleData.id,
+        furnitureHeightMm,
+        originalSectionsTotal,
+        차이: furnitureHeightMm - originalSectionsTotal,
+        heightRatio,
+        zone: placedModule.zone,
+        원래섹션: actualModuleData.modelConfig.sections.map(s => s.height),
       });
+
+      adjustedCustomSections = actualModuleData.modelConfig.sections.map(section => ({
+        ...section,
+        height: Math.round(section.height * heightRatio),
+        calculatedHeight: Math.round(section.height * heightRatio),
+        // 선반 위치도 비례해서 조정
+        shelfPositions: section.shelfPositions?.map(pos => Math.round(pos * heightRatio))
+      }));
+
+      console.log('🔧🔧🔧 조정된 섹션:', adjustedCustomSections.map(s => s.height), '총합:', adjustedCustomSections.reduce((sum, s) => sum + s.height, 0));
     }
   }
 
