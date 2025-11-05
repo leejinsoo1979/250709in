@@ -113,8 +113,9 @@ export const useFurnitureKeyboard = ({
         });
 
         if (currentSlotIndex === -1) {
-          console.log('⚠️ [useFurnitureKeyboard] 슬롯을 찾을 수 없어 키보드 이동 불가');
-          return;
+          // 슬롯 인덱스를 못 찾은 경우 placedModule의 slotIndex 사용 (fallback)
+          currentSlotIndex = editingModule.slotIndex || 0;
+          console.log('⚠️ [useFurnitureKeyboard] 슬롯 위치를 못 찾아 저장된 slotIndex 사용:', currentSlotIndex);
         }
         
         switch (e.key) {
