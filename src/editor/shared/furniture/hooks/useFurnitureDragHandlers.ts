@@ -68,6 +68,16 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         const dropPosition = calculateDropPosition(e, currentDragData);
         if (!dropPosition) return;
 
+        console.log('🟢🟢🟢 dropPosition 확인:', {
+          column: dropPosition.column,
+          zone: dropPosition.zone,
+          isDualFurniture: dropPosition.isDualFurniture,
+          x: dropPosition.x,
+          단내림활성화: spaceInfo.droppedCeiling?.enabled,
+          단내림높이: spaceInfo.droppedCeiling?.height,
+          전체높이: spaceInfo.height
+        });
+
         let finalX = dropPosition.x;
         
         // 슬롯 사용 가능 여부 확인 - 기둥이 있어도 150mm 이상 공간이 있으면 배치 가능
@@ -247,7 +257,14 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           adjustedWidth: adjustedWidth, // 기둥에 따른 폭 조정
           zone: dropPosition.zone || 'normal' // 단내림 구역 정보 저장 (기본값: normal)
         };
-        
+
+        console.log('🔵🔵🔵 newModuleData 저장:', {
+          moduleId: newModuleData.moduleId,
+          zone: newModuleData.zone,
+          dropPositionZone: dropPosition.zone,
+          position: newModuleData.position
+        });
+
         // Column C의 경우 서브슬롯 위치 추가
         if (targetSlotInfo && targetSlotInfo.columnType === 'medium' && targetSlotInfo.allowMultipleFurniture) {
           // 이미 Column C 처리 로직에서 서브슬롯이 설정된 경우
