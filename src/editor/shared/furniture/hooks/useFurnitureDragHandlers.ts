@@ -135,10 +135,10 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
               const leftModule = {
                 id: `placed-left-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 moduleId: currentDragData.moduleData.id.replace('dual-', 'single-'),
-                position: { 
-                  x: targetSlotInfo.subSlots.left.center, 
-                  y: 0, 
-                  z: 0 
+                position: {
+                  x: targetSlotInfo.subSlots.left.center,
+                  y: 0,
+                  z: 0
                 },
                 rotation: 0,
                 slotIndex: dropPosition.column,
@@ -146,17 +146,18 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
                 isDualSlot: false,
                 hasDoor: false,
                 customDepth: getDefaultDepth(moduleData),
-                adjustedWidth: targetSlotInfo.subSlots.left.availableWidth
+                adjustedWidth: targetSlotInfo.subSlots.left.availableWidth,
+                zone: dropPosition.zone || 'normal' // 단내림 구역 정보 저장 (기본값: normal)
               };
-              
+
               // 오른쪽 싱글 캐비넷
               const rightModule = {
                 id: `placed-right-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                 moduleId: currentDragData.moduleData.id.replace('dual-', 'single-'),
-                position: { 
-                  x: targetSlotInfo.subSlots.right.center, 
-                  y: 0, 
-                  z: 0 
+                position: {
+                  x: targetSlotInfo.subSlots.right.center,
+                  y: 0,
+                  z: 0
                 },
                 rotation: 0,
                 slotIndex: dropPosition.column,
@@ -164,7 +165,8 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
                 isDualSlot: false,
                 hasDoor: false,
                 customDepth: getDefaultDepth(moduleData),
-                adjustedWidth: targetSlotInfo.subSlots.right.availableWidth
+                adjustedWidth: targetSlotInfo.subSlots.right.availableWidth,
+                zone: dropPosition.zone || 'normal' // 단내림 구역 정보 저장 (기본값: normal)
               };
               
               // 두 개의 싱글 캐비넷 추가
@@ -242,7 +244,8 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           isDualSlot: dropPosition.isDualFurniture, // 듀얼 슬롯 여부 저장
           hasDoor: false, // 배치 시 항상 도어 없음 (오픈형)
           customDepth: adjustedDepth, // 기둥에 따른 깊이 조정
-          adjustedWidth: adjustedWidth // 기둥에 따른 폭 조정
+          adjustedWidth: adjustedWidth, // 기둥에 따른 폭 조정
+          zone: dropPosition.zone || 'normal' // 단내림 구역 정보 저장 (기본값: normal)
         };
         
         // Column C의 경우 서브슬롯 위치 추가

@@ -118,7 +118,8 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
       return {
         x: targetPositionX,
         column: targetColumn,
-        isDualFurniture
+        isDualFurniture,
+        zone
       };
     }
     
