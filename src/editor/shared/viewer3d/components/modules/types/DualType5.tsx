@@ -335,10 +335,10 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         // visibleSectionIndex가 1(스타일러장 선택)일 때는 좌측 구분 패널도 흐리게 표시
         let separatorPanel = null;
         if (index < allSections.length - 1) {
-          // 하부섹션 상판(drawer 섹션 위)은 앞에서 85mm 줄임
+          // 하부섹션 상판(drawer 섹션 위)은 앞에서 사용자 오프셋만큼 줄임 (앞에서 줄어듦)
           const isDrawerTopPanel = section.type === 'drawer';
-          const panelDepth = isDrawerTopPanel ? leftDepth - mmToThreeUnits(85) : leftDepth;
-          const panelZPosition = isDrawerTopPanel ? -mmToThreeUnits(42.5) : 0;
+          const panelDepth = isDrawerTopPanel ? leftDepth - mmToThreeUnits(lowerSectionTopOffset || 0) : leftDepth;
+          const panelZPosition = isDrawerTopPanel ? -mmToThreeUnits((lowerSectionTopOffset || 0) / 2) : 0;
 
           separatorPanel = (
             <BoxWithEdges
