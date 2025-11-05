@@ -362,8 +362,8 @@ export const useFurnitureDrag = ({ spaceInfo }: UseFurnitureDragProps) => {
         }
         // 메인 구간은 이미 글로벌 인덱스와 동일
       }
-      
-      const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+
+      const columnSlots = analyzeColumnSlots(spaceInfo);
       const targetSlotInfo = columnSlots[globalSlotIndex];
 
       console.log('🔍 [useFurnitureDrag] targetSlotInfo 확인:', {

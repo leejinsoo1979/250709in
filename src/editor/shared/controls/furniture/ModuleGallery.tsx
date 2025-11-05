@@ -777,8 +777,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       }
       
       // 기둥 체크 및 크기 조정
-      const placedModules = useFurnitureStore.getState().placedModules;
-      const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+      const columnSlots = analyzeColumnSlots(fullSpaceInfo);
       const targetSlotInfo = columnSlots[availableSlotIndex];
 
       console.log('🔍 [ModuleGallery] 가구 배치 시작:', {
