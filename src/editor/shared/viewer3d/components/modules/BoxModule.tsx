@@ -59,6 +59,7 @@ interface BoxModuleProps {
   lowerSectionTopOffset?: number; // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
   grainDirection?: 'horizontal' | 'vertical'; // 텍스처 결 방향 (하위 호환성)
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 개별 결 방향
+  zone?: 'normal' | 'dropped'; // 단내림 영역 정보
   // 이벤트 핸들러 추가
   onPointerDown?: (e: any) => void;
   onPointerMove?: (e: any) => void;
@@ -115,6 +116,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   lowerSectionTopOffset, // 하부 섹션 상판 오프셋 (mm) - 띄움 배치 시 사용
   grainDirection, // 텍스처 결 방향
   panelGrainDirections, // 패널별 개별 결 방향
+  zone, // 단내림 영역 정보
   // 이벤트 핸들러들
   onPointerDown,
   onPointerMove,

@@ -2790,6 +2790,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     });
                     return placedModule.panelGrainDirections;
                   })()} // 패널별 개별 결 방향
+                  zone={placedModule.zone}
                 />
               );
             })()}
@@ -2985,6 +2986,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             doorTopGap={placedModule.doorTopGap}
             doorBottomGap={placedModule.doorBottomGap}
             slotWidths={undefined}
+            zone={placedModule.zone}
           />
         </group>
       )}

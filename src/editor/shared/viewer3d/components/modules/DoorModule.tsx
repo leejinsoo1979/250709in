@@ -123,6 +123,7 @@ interface DoorModuleProps {
   furnitureId?: string; // 가구 ID (개별 도어 제어용)
   textureUrl?: string; // 텍스처 URL
   panelGrainDirections?: { [panelName: string]: 'horizontal' | 'vertical' }; // 패널별 결 방향
+  zone?: 'normal' | 'dropped'; // 단내림 영역 정보
 }
 
 const DoorModule: React.FC<DoorModuleProps> = ({
@@ -147,7 +148,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   totalSections = 1, // 전체 섹션 수 (분할 모드용)
   furnitureId, // 가구 ID
   textureUrl, // 텍스처 URL
-  panelGrainDirections // 패널별 결 방향
+  panelGrainDirections, // 패널별 결 방향
+  zone // 단내림 영역 정보
 }) => {
   const storeSpaceInfo = useSpaceConfigStore(state => state.spaceInfo);
   const placementType = (storeSpaceInfo?.baseConfig?.placementType) ?? (spaceInfo?.baseConfig?.placementType);
@@ -540,9 +542,8 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
   // 단내림 구간인 경우 영역별 슬롯 정보 계산 - 원본 spaceInfo로 계산
   let effectiveColumnWidth = indexing.columnWidth;
-  if (originalSpaceInfo.droppedCeiling?.enabled && (spaceInfo as any).zone) {
+  if (originalSpaceInfo.droppedCeiling?.enabled && zone) {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(originalSpaceInfo, originalSpaceInfo.customColumnCount);
-    const zone = (spaceInfo as any).zone;
 
     if (zone === 'dropped' && zoneInfo.dropped) {
       effectiveColumnWidth = zoneInfo.dropped.columnWidth;
