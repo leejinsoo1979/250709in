@@ -1782,10 +1782,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let doorWidth = actualModuleData?.dimensions.width || 0;
   let doorXOffset = 0;
   let originalSlotWidthForDoor = originalSlotWidthMm;
+
+  // 상하부장 인접 시 도어 확장 비활성화 (엔드패널이 공간을 채우므로)
+  if (needsEndPanelAdjustment) {
+    console.log('🚫 상하부장 인접으로 인해 도어 확장 비활성화');
+  }
   
   // 노서라운드 엔드패널이 있는 슬롯 도어 확장 처리
   // hasLeftWall과 hasRightWall은 이미 위에서 선언됨 (809-810줄)
-  if (spaceInfo.surroundType === 'no-surround' && 
+  // 단, 상하부장 인접 시에는 도어 확장하지 않음
+  if (!needsEndPanelAdjustment && spaceInfo.surroundType === 'no-surround' && 
       (spaceInfo.installType === 'freestanding' || 
        spaceInfo.installType === 'semistanding' || 
        spaceInfo.installType === 'semi-standing') && 
@@ -1909,7 +1915,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     
     // 벽 위치 설정 (freestanding은 양쪽 벽 없음) - hasLeftWall, hasRightWall은 이미 위에서 설정됨
-  } else if (spaceInfo.surroundType === 'no-surround' && normalizedSlotIndex !== undefined) {
+  } else if (!needsEndPanelAdjustment && spaceInfo.surroundType === 'no-surround' && normalizedSlotIndex !== undefined) {
     const isFirstSlot = normalizedSlotIndex === 0;
     const isLastSlotForDual = isDualFurniture && normalizedSlotIndex === indexing.columnCount - 2;
     const isLastSlotForSingle = !isDualFurniture && isLastSlot;
