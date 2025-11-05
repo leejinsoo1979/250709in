@@ -147,10 +147,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     // 패널이 강조되어야 하는지 확인
     const isHighlighted = highlightedPanel === panelId;
 
-    // 패널이 비활성화되어야 하는지 확인
-    const isDimmed = highlightedPanel && highlightedPanel !== panelId && highlightedPanel.startsWith(`${placedFurnitureId}-`);
-
-    // 선택된 패널은 형광색으로 강조, 나머지는 원래대로
+    // 선택된 패널만 형광색으로 강조, 나머지는 원래대로
     if (isHighlighted) {
       return highlightMaterial;
     }

@@ -83,9 +83,6 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     // 패널이 강조되어야 하는지 확인
     const isHighlighted = highlightedPanel === panelId;
 
-    // 패널이 비활성화되어야 하는지 확인
-    const isDimmed = highlightedPanel && highlightedPanel !== panelId && highlightedPanel.startsWith(`${furnitureId}-`);
-
     if (highlightedPanel) {
       console.log('🎨 DrawerRenderer getPanelMaterial:', {
         panelName,
@@ -93,21 +90,13 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         panelId,
         highlightedPanel,
         isHighlighted,
-        isDimmed,
-        result: isHighlighted ? 'ORIGINAL' : isDimmed ? 'DIMMED' : 'DEFAULT'
+        result: isHighlighted ? 'ORIGINAL' : 'DEFAULT'
       });
     }
 
-    // 선택된 패널은 원래 material 유지
-    if (isHighlighted) {
-      return material;
-    }
-    // 선택되지 않은 패널만 투명하게
-    if (isDimmed) {
-      return panelDimmedMaterial;
-    }
+    // 항상 원래 material 사용 (dimming 제거)
     return material;
-  }, [highlightedPanel, furnitureId, material, panelDimmedMaterial]);
+  }, [highlightedPanel, furnitureId, material]);
 
   // 디버그: 측면 뷰에서 렌더링 확인
   React.useEffect(() => {

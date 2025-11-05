@@ -255,9 +255,6 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
     // 패널이 강조되어야 하는지 확인
     const isHighlighted = highlightedPanel === panelId;
 
-    // 패널이 비활성화되어야 하는지 확인
-    const isDimmed = highlightedPanel && highlightedPanel !== panelId && highlightedPanel.startsWith(`${placedFurnitureId}-`);
-
     if (highlightedPanel) {
       console.log('🔍 패널 material 체크:', {
         panelName,
@@ -265,17 +262,16 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         highlightedPanel,
         panelId,
         isHighlighted,
-        isDimmed,
-        returningMaterial: isHighlighted ? 'highlight' : isDimmed ? 'dimmed' : 'normal'
+        returningMaterial: isHighlighted ? 'highlight' : 'normal'
       });
     }
 
-    // 선택된 패널은 형광색으로 강조, 나머지는 원래대로
+    // 선택된 패널만 형광색으로 강조, 나머지는 원래대로
     if (isHighlighted) {
       return highlightMaterial;
     }
     return material;
-  }, [highlightedPanel, placedFurnitureId, material, panelDimmedMaterial, highlightMaterial]);
+  }, [highlightedPanel, placedFurnitureId, material, highlightMaterial]);
 
   // 좌우 프레임에 사용할 material 결정 함수
   const getSidePanelMaterial = (panelName: string) => {
