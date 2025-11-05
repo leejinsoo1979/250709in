@@ -2438,7 +2438,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   
   // moduleData가 없으면 빈 그룹 반환
   // 도어 크기는 상하부장 배치 여부와 무관하게 항상 동일하게 생성
-  // slotWidths를 전달하지 않으면 DoorModule이 effectiveColumnWidth를 사용하여 균등하게 계산
+  // slotWidths를 전달하지 않으면 DoorModule이 zone별 effectiveColumnWidth를 사용
   const calculatedSlotWidths = React.useMemo(() => {
     return undefined;
   }, []);
