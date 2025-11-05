@@ -781,6 +781,15 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
       const targetSlotInfo = columnSlots[availableSlotIndex];
 
+      console.log('🔍 [ModuleGallery] 가구 배치 시작:', {
+        zone: targetZone,
+        slotIndex: availableSlotIndex,
+        moduleId: module.id,
+        targetSlotInfo,
+        hasColumn: targetSlotInfo?.hasColumn,
+        columnSlotsLength: columnSlots.length
+      });
+
       let finalAdjustedWidth: number | undefined = undefined;
       let finalCustomWidth: number | undefined;
       let finalCustomDepth: number | undefined = getDefaultDepth(module);
