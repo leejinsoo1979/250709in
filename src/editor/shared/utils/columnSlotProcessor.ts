@@ -163,23 +163,58 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
   const indexing = calculateSpaceIndexing(spaceInfo);
   const columns = spaceInfo.columns || [];
   const slotInfos: ColumnSlotInfo[] = [];
-  
+
+  console.log('🔍🔍🔍 [analyzeColumnSlots] 함수 시작:', {
+    surroundType: spaceInfo.surroundType,
+    hasDroppedCeiling: !!spaceInfo.droppedCeiling?.enabled,
+    totalColumns: columns.length,
+    columns: columns.map(c => ({
+      position: c.position,
+      width: c.width,
+      depth: c.depth
+    })),
+    columnCount: indexing.columnCount,
+    columnWidth: indexing.columnWidth
+  });
+
   // 노서라운드 모드에서도 기둥 처리 (기둥은 있을 수 있음)
   if (spaceInfo.surroundType === 'no-surround') {
+    console.log('🔍🔍🔍 [analyzeColumnSlots] NO-SURROUND 경로 진입');
     // 노서라운드에서도 기둥 확인 필요
     for (let i = 0; i < indexing.columnCount; i++) {
       const slotCenterX = indexing.threeUnitPositions[i];
       const slotWidthM = indexing.columnWidth * 0.01;
       const slotStartX = slotCenterX - slotWidthM / 2;
       const slotEndX = slotCenterX + slotWidthM / 2;
-      
+
+      console.log(`🔍🔍🔍 [analyzeColumnSlots] 슬롯 ${i} 기둥 검색 시작 (NO-SURROUND):`, {
+        slotCenterX: slotCenterX.toFixed(3),
+        slotStartX: slotStartX.toFixed(3),
+        slotEndX: slotEndX.toFixed(3),
+        slotWidthM: slotWidthM.toFixed(3),
+        columnsToCheck: columns.length
+      });
+
       // 이 슬롯에 포함된 기둥 찾기
-      const columnInSlot = columns.find(column => {
+      const columnInSlot = columns.find((column, colIdx) => {
         const columnLeftX = column.position[0] - (column.width * 0.01) / 2;
         const columnRightX = column.position[0] + (column.width * 0.01) / 2;
-        
+
+        const overlaps = (columnLeftX < slotEndX && columnRightX > slotStartX);
+
+        console.log(`  🔍 기둥 ${colIdx} 체크 (NO-SURROUND):`, {
+          columnPosition: column.position,
+          columnWidth: column.width,
+          columnDepth: column.depth,
+          columnLeftX: columnLeftX.toFixed(3),
+          columnRightX: columnRightX.toFixed(3),
+          overlaps,
+          condition1_leftLessThanSlotEnd: columnLeftX < slotEndX,
+          condition2_rightGreaterThanSlotStart: columnRightX > slotStartX
+        });
+
         // 기둥이 슬롯 영역과 겹치는지 확인
-        return (columnLeftX < slotEndX && columnRightX > slotStartX);
+        return overlaps;
       });
       
       if (!columnInSlot) {
