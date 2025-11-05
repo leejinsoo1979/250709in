@@ -170,7 +170,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
   ]);
 
   // 띄움 배치 여부 확인
-  const isFloating = lowerSectionTopOffset !== undefined && lowerSectionTopOffset > 0;
+  const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
   const shouldRenderFeet = showFurniture && !(viewMode === '2D' && view2DDirection === 'top') && !isFloating;
   const lowerSectionDepthUnits = sectionDepths?.[0] ?? depth;
   const footZOffset = (depth - lowerSectionDepthUnits) / 2;
