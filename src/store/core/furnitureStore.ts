@@ -204,6 +204,40 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
         placedModules: [...state.placedModules, module]
       };
     });
+
+    // 가구 추가 후 즉시 기둥에 의한 adjustedWidth 계산
+    const spaceInfo = useSpaceConfigStore.getState().spaceInfo;
+    const columnSlots = analyzeColumnSlots(spaceInfo);
+
+    const addedModule = get().placedModules.find(m => m.id === module.id);
+    if (addedModule) {
+      const globalSlotIndex = addedModule.zone === 'dropped'
+        ? (columnSlots.zones?.normal?.columnCount || 0) + addedModule.slotIndex
+        : addedModule.slotIndex;
+
+      const slotInfo = columnSlots.slots[globalSlotIndex];
+
+      if (slotInfo?.hasColumn) {
+        const rawWidth = slotInfo.adjustedWidth || slotInfo.availableWidth;
+        const newAdjustedWidth = Math.round(rawWidth * 100) / 100;
+
+        // adjustedWidth 즉시 적용
+        set((state) => ({
+          placedModules: state.placedModules.map(m =>
+            m.id === module.id
+              ? { ...m, adjustedWidth: newAdjustedWidth }
+              : m
+          )
+        }));
+
+        console.log('🏗️ [addModule] 기둥 슬롯에 가구 배치 - adjustedWidth 적용:', {
+          moduleId: module.id,
+          slotIndex: addedModule.slotIndex,
+          globalSlotIndex,
+          adjustedWidth: newAdjustedWidth
+        });
+      }
+    }
   },
 
   // 모듈 제거 함수 (기존 Context 로직과 동일)
