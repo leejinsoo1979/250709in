@@ -746,8 +746,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         </>
       )}
 
-      {/* 조절발통 (네 모서리) - showFurniture가 true일 때만 렌더링 */}
-      {showFurniture && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (() => {
+      {/* 조절발통 (네 모서리) - showFurniture가 true이고 띄움배치가 아닐 때만 렌더링 */}
+      {showFurniture && !isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (() => {
         // 하부 섹션 깊이 사용 (조절발은 하부 섹션에 붙음)
         const lowerDepth = sectionDepths[0] || depth;
         const depthDiff = depth - lowerDepth;
