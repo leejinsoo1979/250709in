@@ -553,8 +553,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
 
   // 띄움배치일 때 바닥 이격거리를 띄움 높이로 연동
+  const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
   const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
-  const defaultDoorBottomGap = spaceInfo.baseConfig?.placementType === 'float' ? floatHeight : 25;
+  const defaultDoorBottomGap = isFloatPlacement ? floatHeight : 25;
   const [doorTopGap, setDoorTopGap] = useState<number>(5); // 병합 모드: 천장에서 아래로
   const [doorBottomGap, setDoorBottomGap] = useState<number>(defaultDoorBottomGap); // 병합 모드: 바닥에서 위로
   const [doorTopGapInput, setDoorTopGapInput] = useState<string>('5');
@@ -795,16 +796,31 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       const floatHeight = spaceInfo.baseConfig?.floatHeight || 0;
       const defaultBottomGap = isFloatPlacement ? floatHeight : 25;
       const initialTopGap = currentPlacedModule.doorTopGap ?? 5;
-      const initialBottomGap = currentPlacedModule.doorBottomGap ?? defaultBottomGap;
+      // 바닥배치인데 doorBottomGap이 0이면 기본값 25 사용
+      const initialBottomGap = currentPlacedModule.doorBottomGap !== undefined &&
+                                (isFloatPlacement || currentPlacedModule.doorBottomGap > 0)
+        ? currentPlacedModule.doorBottomGap
+        : defaultBottomGap;
+      // State 업데이트
+      const needsUpdate = doorTopGap !== initialTopGap || doorBottomGap !== initialBottomGap;
+
       if (doorTopGap !== initialTopGap) {
         setDoorTopGap(initialTopGap);
         setDoorTopGapInput(initialTopGap.toString());
-        setOriginalDoorTopGap(initialTopGap); // 원래 값 저장
+        setOriginalDoorTopGap(initialTopGap);
       }
       if (doorBottomGap !== initialBottomGap) {
         setDoorBottomGap(initialBottomGap);
         setDoorBottomGapInput(initialBottomGap.toString());
-        setOriginalDoorBottomGap(initialBottomGap); // 원래 값 저장
+        setOriginalDoorBottomGap(initialBottomGap);
+      }
+
+      // 바닥배치인데 doorTopGap이나 doorBottomGap이 기본값이 아니면 업데이트
+      if (needsUpdate && (currentPlacedModule.doorTopGap !== initialTopGap || currentPlacedModule.doorBottomGap !== initialBottomGap)) {
+        updatePlacedModule(currentPlacedModule.id, {
+          doorTopGap: initialTopGap,
+          doorBottomGap: initialBottomGap
+        });
       }
 
       // 분할 모드용 섹션별 이격거리 초기화
@@ -1828,7 +1844,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           {!showDetails && moduleData.hasDoor && hasDoor && !doorSplit && (
             <div className={styles.propertySection}>
               <h5 className={styles.sectionTitle}>
-                도어 상하 이격거리 ({spaceInfo.baseConfig?.placementType === 'float' ? '띄움배치' : '바닥배치'})
+                도어 상하 이격거리 ({isFloatPlacement ? '띄움배치' : '바닥배치'})
               </h5>
               <div className={styles.doorGapContainer}>
                 <div className={styles.doorGapField}>
