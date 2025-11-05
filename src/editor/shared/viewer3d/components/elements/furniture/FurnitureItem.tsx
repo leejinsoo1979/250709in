@@ -1025,8 +1025,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                                     spaceInfo.floorFinish.height : 0;
         const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
 
-        // 가구 높이
-        const furnitureHeight = (actualModuleData?.dimensions.height || 0) * 0.01; // mm to Three.js units
+        // 가구 높이 (단내림 구간에서 조정된 높이 사용)
+        const furnitureHeight = furnitureHeightMm * 0.01; // mm to Three.js units
 
         // Y 위치 계산: 바닥마감재 + 받침대높이 + 가구높이/2
         const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
