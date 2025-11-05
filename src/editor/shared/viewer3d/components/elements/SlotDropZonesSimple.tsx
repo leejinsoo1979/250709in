@@ -3480,85 +3480,33 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 기둥 정보를 고려한 커스텀 너비와 위치 계산
         let customWidth = undefined;
         let adjustedPreviewX = previewX;
-        
+
         // 기둥 슬롯 정보 확인
         const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
         const targetSlotInfo = columnSlots[hoveredSlotIndex];
-        
-        // 기둥이 있는 슬롯인 경우 실제 배치와 동일한 로직 적용
-        if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
-          if (targetSlotInfo.columnType === 'medium' && targetSlotInfo.allowMultipleFurniture && targetSlotInfo.subSlots) {
-            // Column C (300mm) 특별 처리 - 듀얼 가구는 표시하지 않음
-            if (isDual) {
-              debugLog('👻 [Ghost Preview] Column C에 듀얼 가구는 미리보기 없음');
-              return null;
-            }
-            
-            // 싱글 가구를 Column C 슬롯에 표시하는 경우
-            // 기존 배치된 가구 확인
-            const existingModulesInSlot = placedModules.filter(m => 
-              m.slotIndex === hoveredSlotIndex
-            );
-            
-            let targetSubSlot: 'left' | 'right' = 'left';
-            if (existingModulesInSlot.some(m => m.subSlotPosition === 'left')) {
-              targetSubSlot = 'right';
-            }
-            
-            customWidth = targetSlotInfo.subSlots[targetSubSlot].availableWidth;
-            adjustedPreviewX = mmToThreeUnits(targetSlotInfo.subSlots[targetSubSlot].center);
-            
-            debugLog('👻 [Ghost Preview] Column C 싱글 가구 위치:', {
-              targetSubSlot,
-              customWidth,
-              adjustedPreviewX,
-              subSlots: targetSlotInfo.subSlots
-            });
-          } else {
-            // 일반 기둥이 있는 경우 (Column A, B 등)
-            // 듀얼 가구는 기둥 슬롯에 배치 불가
-            if (isDual) {
-              debugLog('👻 [Ghost Preview] 기둥 슬롯에 듀얼 가구는 미리보기 없음');
-              return null;
-            }
-            
-            const slotWidthM = indexing.columnWidth * 0.01;
-            const originalSlotBounds = {
-              left: previewX - mmToThreeUnits(indexing.columnWidth) / 2,
-              right: previewX + mmToThreeUnits(indexing.columnWidth) / 2,
-              center: previewX
-            };
-            
-            const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
-            
-            // 공간이 부족한 경우 미리보기 표시 안함
-            if (furnitureBounds.renderWidth < 150) {
-              debugLog('👻 [Ghost Preview] 기둥 슬롯 공간 부족:', furnitureBounds.renderWidth, 'mm');
-              return null;
-            }
-            
-            // 크기와 위치 조정
-            customWidth = furnitureBounds.renderWidth;
-            adjustedPreviewX = furnitureBounds.center;
-            
-            // Column C (300mm) 깊이 조정
-            if (furnitureBounds.depthAdjustmentNeeded && targetSlotInfo.column) {
-              customDepth = 730 - targetSlotInfo.column.depth; // 430mm
-              debugLog('👻 [Ghost Preview] Column C 깊이 조정:', customDepth, 'mm');
-            }
-            
-            debugLog('👻 [Ghost Preview] 기둥 슬롯 조정:', {
-              slotIndex: hoveredSlotIndex,
-              columnType: targetSlotInfo.columnType,
-              originalWidth: indexing.columnWidth,
-              adjustedWidth: customWidth,
-              originalX: previewX,
-              adjustedX: adjustedPreviewX,
-              furnitureBounds
-            });
+
+        // 기둥이 있는 슬롯인 경우 adjustedWidth 사용
+        if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.adjustedWidth) {
+          // 듀얼 가구는 기둥 슬롯에 배치 불가
+          if (isDual) {
+            console.log('👻 [Ghost Preview] 기둥 슬롯에 듀얼 가구는 미리보기 없음');
+            return null;
           }
+
+          // adjustedWidth를 customWidth로 사용
+          customWidth = targetSlotInfo.adjustedWidth;
+
+          // 위치는 기본 previewX 사용 (analyzeColumnSlots가 이미 올바른 center 계산)
+          adjustedPreviewX = previewX;
+
+          console.log(`👻 [Ghost Preview] 기둥 슬롯 ${hoveredSlotIndex} 고스트 너비 조정:`, {
+            원본슬롯너비: indexing.columnWidth,
+            조정된너비: customWidth,
+            기둥너비: targetSlotInfo.column?.width,
+            위치: adjustedPreviewX
+          });
         } else if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
-          // 단내림 구간에서 커스텀 너비 계산
+          // 단내림 구간에서 커스텀 너비 계산 (기둥 조정 포함)
           const targetZone = effectiveZone === 'dropped' && zoneSlotInfo.dropped
             ? zoneSlotInfo.dropped
             : zoneSlotInfo.normal;
@@ -3567,13 +3515,40 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const localIdx = slotLocalIndex;
 
           if (isDual && localIdx < targetZone.columnCount - 1) {
-            // 듀얼 가구: 두 슬롯의 너비 합
-            const slot1Width = targetZone.slotWidths?.[localIdx] || targetZone.columnWidth;
-            const slot2Width = targetZone.slotWidths?.[localIdx + 1] || targetZone.columnWidth;
+            // 듀얼 가구: 두 슬롯의 너비 합 (기둥 조정 포함)
+            const slot1Info = columnSlots[localIdx];
+            const slot2Info = columnSlots[localIdx + 1];
+
+            const slot1Width = (slot1Info?.hasColumn && slot1Info.adjustedWidth)
+              ? slot1Info.adjustedWidth
+              : (targetZone.slotWidths?.[localIdx] || targetZone.columnWidth);
+            const slot2Width = (slot2Info?.hasColumn && slot2Info.adjustedWidth)
+              ? slot2Info.adjustedWidth
+              : (targetZone.slotWidths?.[localIdx + 1] || targetZone.columnWidth);
+
             customWidth = slot1Width + slot2Width;
+
+            if ((slot1Info?.hasColumn && slot1Info.adjustedWidth) || (slot2Info?.hasColumn && slot2Info.adjustedWidth)) {
+              console.log(`👻 [Ghost Preview 단내림] 듀얼 가구 기둥 조정:`, {
+                슬롯1: { 인덱스: localIdx, 조정: slot1Width, 기둥: slot1Info?.hasColumn },
+                슬롯2: { 인덱스: localIdx + 1, 조정: slot2Width, 기둥: slot2Info?.hasColumn },
+                총너비: customWidth
+              });
+            }
           } else {
-            // 싱글 가구: 해당 슬롯의 너비
-            customWidth = targetZone.slotWidths?.[localIdx] || targetZone.columnWidth;
+            // 싱글 가구: 해당 슬롯의 너비 (기둥 조정 포함)
+            const slotInfo = columnSlots[localIdx];
+
+            if (slotInfo?.hasColumn && slotInfo.adjustedWidth) {
+              customWidth = slotInfo.adjustedWidth;
+              console.log(`👻 [Ghost Preview 단내림] 싱글 가구 기둥 조정:`, {
+                슬롯인덱스: localIdx,
+                조정된너비: customWidth,
+                기둥너비: slotInfo.column?.width
+              });
+            } else {
+              customWidth = targetZone.slotWidths?.[localIdx] || targetZone.columnWidth;
+            }
           }
 
           debugLog('👻 [Ghost Preview] 단내림 커스텀 너비:', {
