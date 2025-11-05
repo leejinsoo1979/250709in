@@ -432,7 +432,12 @@ export const useFurnitureStore = create<FurnitureDataState>((set, get) => ({
     set((state) => {
       const updatedModules = state.placedModules.map(module => ({
         ...module,
-        hasDoor
+        hasDoor,
+        // 도어 설치 시 기본 갭 설정 (천장에서 5mm, 바닥에서 25mm)
+        ...(hasDoor && {
+          doorTopGap: module.doorTopGap ?? 5,
+          doorBottomGap: module.doorBottomGap ?? 25
+        })
       }));
 
       return {

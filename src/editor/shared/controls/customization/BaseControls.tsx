@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import BaseTypeSelector from './components/BaseTypeSelector';
 import PlacementControls from './components/PlacementControls';
 import styles from '../styles/common.module.css';
@@ -11,7 +12,8 @@ interface BaseControlsProps {
 }
 
 const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabled = false }) => {
-  
+  const { placedModules, updateModule } = useFurnitureStore();
+
   console.log('🔧 BaseControls - disabled 상태:', disabled);
   
   // 바닥마감재가 있을 때 받침대 높이 조정해서 표시
@@ -79,7 +81,7 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
   const handlePlacementTypeChange = (placementType: 'ground' | 'float') => {
     // 기존 baseConfig가 없으면 기본값으로 초기화하여 생성
     const currentBaseConfig = spaceInfo.baseConfig || { type: 'stand', height: 65 };
-    
+
     // 띄워서 배치 선택 시 바닥 마감재도 자동으로 없음으로 설정
     if (placementType === 'float') {
       onUpdate({
@@ -97,6 +99,18 @@ const BaseControls: React.FC<BaseControlsProps> = ({ spaceInfo, onUpdate, disabl
           ...currentBaseConfig,
           placementType,
         },
+      });
+    }
+
+    // 바닥 배치로 변경 시 모든 가구에 도어 기본 갭 설정
+    if (placementType === 'ground') {
+      placedModules.forEach(module => {
+        if (module.hasDoor) {
+          updateModule(module.id, {
+            doorTopGap: module.doorTopGap ?? 5,
+            doorBottomGap: module.doorBottomGap ?? 25
+          });
+        }
       });
     }
   };
