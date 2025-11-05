@@ -2545,30 +2545,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const reducedDepth = slotDimensions.depth;
         const zOffset = furnitureZOffset; // 가구 배치 영역의 Z 중심
         
-        // 영역별 슬롯 너비 계산 - 기둥에 의한 adjustedWidth 우선 반영
+        // 영역별 슬롯 너비 계산 - slotWidths 배열 사용
         let slotWidth = slotDimensions.width;
-
-        // 기둥 슬롯 정보 가져오기
-        const columnSlots = analyzeColumnSlots(spaceInfo);
-        const slotInfo = columnSlots[slotGlobalIndex];
-
-        // 기둥이 있는 슬롯이면 adjustedWidth 사용
-        if (slotInfo?.hasColumn && slotInfo.adjustedWidth) {
-          slotWidth = mmToThreeUnits(slotInfo.adjustedWidth);
-          console.log(`🏗️ [SlotDropZonesSimple] 기둥 슬롯 너비 조정:`, {
-            globalIndex: slotGlobalIndex,
-            localIndex: slotLocalIndex,
-            zone: slotZone,
-            adjustedWidth: slotInfo.adjustedWidth,
-            slotWidth
-          });
-        } else if (hasDroppedCeiling && zoneSlotInfo) {
+        if (hasDroppedCeiling && zoneSlotInfo) {
           const currentZone = slotZone;
           // slotWidths 배열에서 실제 슬롯 너비 가져오기
           const zoneSlotWidths = currentZone === 'dropped' && zoneSlotInfo.dropped
             ? zoneSlotInfo.dropped.slotWidths
             : zoneSlotInfo.normal.slotWidths;
-
+          
           if (zoneSlotWidths && slotLocalIndex < zoneSlotWidths.length) {
             slotWidth = mmToThreeUnits(zoneSlotWidths[slotLocalIndex]);
           } else {
