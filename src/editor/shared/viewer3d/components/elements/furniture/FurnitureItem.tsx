@@ -1031,6 +1031,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // Y 위치 계산: 바닥마감재 + 받침대높이 + 가구높이/2
         const yPos = floorFinishHeight + baseHeight + (furnitureHeight / 2);
 
+        // 단내림 구간 Y 위치 디버깅
+        if (placedModule.zone === 'dropped') {
+          console.log('🟢🟢🟢 단내림 구간 Y 위치 계산:', {
+            moduleId: placedModule.moduleId,
+            zone: placedModule.zone,
+            가구높이mm: actualModuleData?.dimensions.height,
+            가구높이m: furnitureHeight,
+            받침대높이mm: baseHeightMm,
+            받침대높이m: baseHeight,
+            바닥마감재높이mm: floorFinishHeightMm,
+            바닥마감재높이m: floorFinishHeight,
+            계산된Y위치: yPos,
+            '계산식': `${floorFinishHeight} + ${baseHeight} + ${furnitureHeight}/2 = ${yPos}`
+          });
+        }
+
         adjustedPosition = {
           ...adjustedPosition,
           y: yPos
