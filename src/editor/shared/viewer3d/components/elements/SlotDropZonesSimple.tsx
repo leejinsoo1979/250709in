@@ -2665,188 +2665,119 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const primaryColor = getThemeColorFromCSS();
         
         if (hasDroppedCeiling && zoneSlotInfo.dropped) {
-          // 단내림 활성화된 경우 양쪽 영역 모두 표시
-          debugLog('🎯🎯🎯 SlotDropZonesSimple - 투명 슬롯 메쉬 경계:', {
-            메인영역: {
-              시작X_mm: zoneSlotInfo.normal.startX,
-              너비_mm: zoneSlotInfo.normal.width,
-              끝X_mm: zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width,
-              시작X_three: mmToThreeUnits(zoneSlotInfo.normal.startX),
-              끝X_three: mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width),
-              중심X_three: (mmToThreeUnits(zoneSlotInfo.normal.startX) + mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width)) / 2,
-              너비_three: mmToThreeUnits(zoneSlotInfo.normal.width)
-            }
+          // 단내림 활성화된 경우 개별 슬롯별로 표시 (기둥에 의한 너비 조정 반영)
+          const columnSlots = analyzeColumnSlots(spaceInfo);
+          const droppedCeilingHeight = mmToThreeUnits(spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0) - (spaceInfo.frameSize?.top || 0));
+
+          debugLog('🎯🎯🎯 SlotDropZonesSimple - 단내림 개별 슬롯 렌더링:', {
+            메인영역슬롯수: zoneSlotInfo.normal.slotCount,
+            단내림영역슬롯수: zoneSlotInfo.dropped.slotCount,
+            전체슬롯수: indexing.threeUnitPositions.length
           });
-          
+
           return (
             <>
-              {/* 메인 영역 표시 */}
-              <group key="main-zone-group">
-                {/* 바닥 슬롯 메쉬 */}
-                <mesh
-                    position={[
-                      mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
-                      floorY,
-                      slotFloorZ
-                    ]}
-                  >
-                    <boxGeometry args={[
-                      mmToThreeUnits(zoneSlotInfo.normal.width),
-                      viewMode === '2D' ? 0.1 : 0.001,
-                      slotFloorDepth
-                    ]} />
-                    <meshBasicMaterial 
-                      color={primaryColor} 
-                      transparent 
-                      opacity={0.35} 
-                    />
-                  </mesh>
-                  {/* 천장 슬롯 메쉬 - 바닥과 동일한 깊이, 2D 모드에서는 숨김 */}
-                  {viewMode !== '2D' && (
-                    <mesh
-                      position={[
-                        mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
-                        ceilingY,
-                        slotFloorZ
-                      ]}
-                    >
-                      <boxGeometry args={[
-                        mmToThreeUnits(zoneSlotInfo.normal.width),
-                        viewMode === '2D' ? 0.1 : 0.001,
-                        slotFloorDepth
-                      ]} />
-                      <meshBasicMaterial 
-                        color={primaryColor} 
-                        transparent 
-                        opacity={0.35} 
+              {/* 모든 슬롯을 개별적으로 렌더링 */}
+              {indexing.threeUnitPositions.map((slotX, slotIndex) => {
+                const slotInfo = columnSlots[slotIndex];
+
+                // 기둥이 있는 슬롯이면 adjustedWidth 사용, 없으면 slotWidths 사용
+                let slotWidthMm = indexing.slotWidths?.[slotIndex] || indexing.columnWidth;
+                if (slotInfo?.hasColumn && slotInfo.adjustedWidth) {
+                  slotWidthMm = slotInfo.adjustedWidth;
+                  console.log(`🏗️ [단내림 슬롯 시각화] 기둥 슬롯 ${slotIndex} 너비 조정:`, {
+                    원본: indexing.slotWidths?.[slotIndex],
+                    조정: slotWidthMm
+                  });
+                }
+
+                const slotWidth = mmToThreeUnits(slotWidthMm);
+
+                // 슬롯이 단내림 영역에 속하는지 확인
+                const isInDroppedZone = slotInfo?.zone === 'dropped';
+                const ceilingHeight = isInDroppedZone ? droppedCeilingHeight : ceilingY;
+
+                return (
+                  <group key={`slot-${slotIndex}`}>
+                    {/* 바닥 슬롯 메쉬 */}
+                    <mesh position={[slotX, floorY, slotFloorZ]}>
+                      <boxGeometry args={[slotWidth, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
+                      <meshBasicMaterial
+                        color={primaryColor}
+                        transparent
+                        opacity={0.35}
                       />
                     </mesh>
-                  )}
-                  {/* 메인 영역 외곽선 */}
-                  <lineSegments
-                    position={[
-                      mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
-                      floorY,
-                      slotFloorZ
-                    ]}
-                  >
-                    <edgesGeometry args={[new THREE.BoxGeometry(
-                      mmToThreeUnits(zoneSlotInfo.normal.width),
-                      viewMode === '2D' ? 0.1 : 0.001,
-                      slotFloorDepth
-                    )]} />
-                    <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
-                  </lineSegments>
-                </group>
-                {/* 단내림 영역 표시 */}
-                <group key="dropped-zone-group">
-                  {/* 바닥 슬롯 메쉬 */}
-                  <mesh
-                    position={[
-                      mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width / 2),
-                      floorY,
-                      slotFloorZ
-                    ]}
-                  >
-                    <boxGeometry args={[
-                      mmToThreeUnits(zoneSlotInfo.dropped.width),
-                      viewMode === '2D' ? 0.1 : 0.001,
-                      slotFloorDepth
-                    ]} />
-                    <meshBasicMaterial 
-                      color={primaryColor} 
-                      transparent 
-                      opacity={0.35} 
-                    />
-                  </mesh>
-                  {/* 천장 슬롯 메쉬 - 단내림 구간은 높이가 다름, 2D 모드에서는 숨김 */}
-                  {viewMode !== '2D' && (
-                    <mesh
-                      position={[
-                        mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width / 2),
-                        mmToThreeUnits(spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0) - (spaceInfo.frameSize?.top || 0)),
-                        slotFloorZ
-                      ]}
-                    >
-                      <boxGeometry args={[
-                        mmToThreeUnits(zoneSlotInfo.dropped.width),
-                        viewMode === '2D' ? 0.1 : 0.001,
-                        slotFloorDepth
-                      ]} />
-                      <meshBasicMaterial 
-                        color={primaryColor} 
-                        transparent 
-                        opacity={0.35} 
-                      />
-                    </mesh>
-                  )}
-                  {/* 단내림 영역 외곽선 */}
-                  <lineSegments
-                    position={[
-                      mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width / 2),
-                      floorY,
-                      slotFloorZ
-                    ]}
-                  >
-                    <edgesGeometry args={[new THREE.BoxGeometry(
-                      mmToThreeUnits(zoneSlotInfo.dropped.width),
-                      viewMode === '2D' ? 0.1 : 0.001,
-                      slotFloorDepth
-                    )]} />
-                    <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
-                  </lineSegments>
-                </group>
-              </>
-            );
+                    {/* 천장 슬롯 메쉬 - 단내림 구간은 높이가 다름, 2D 모드에서는 숨김 */}
+                    {viewMode !== '2D' && (
+                      <mesh position={[slotX, ceilingHeight, slotFloorZ]}>
+                        <boxGeometry args={[slotWidth, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
+                        <meshBasicMaterial
+                          color={primaryColor}
+                          transparent
+                          opacity={0.35}
+                        />
+                      </mesh>
+                    )}
+                    <lineSegments position={[slotX, floorY, slotFloorZ]}>
+                      <edgesGeometry args={[new THREE.BoxGeometry(slotWidth, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth)]} />
+                      <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
+                    </lineSegments>
+                  </group>
+                );
+              })}
+            </>
+          );
         } else {
-          // 단내림이 없는 경우 전체 영역 표시 - zoneSlotInfo 사용
-          const startX = mmToThreeUnits(zoneSlotInfo.normal.startX);
-          const endX = mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width);
-          const centerX = (startX + endX) / 2;
-          const width = endX - startX;
-          
-          debugLog('🎯🎯🎯 SlotDropZonesSimple - 단내림 없는 경우 투명 슬롯 메쉬 경계:', {
-            'zoneSlotInfo.normal.startX': zoneSlotInfo.normal.startX,
-            'zoneSlotInfo.normal.width': zoneSlotInfo.normal.width,
-            'startX_three': startX,
-            'endX_three': endX,
-            'centerX_three': centerX,
-            'width_three': width
-          });
-          
+          // 단내림이 없는 경우 개별 슬롯별로 표시 (기둥에 의한 너비 조정 반영)
+          const columnSlots = analyzeColumnSlots(spaceInfo);
+
           return (
-            <group key="full-zone-group">
-              {/* 바닥 슬롯 메쉬 */}
-              <mesh
-                position={[centerX, floorY, slotFloorZ]}
-              >
-                <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
-                <meshBasicMaterial 
-                  color={primaryColor} 
-                  transparent 
-                  opacity={0.35} 
-                />
-              </mesh>
-              {/* 천장 슬롯 메쉬 - 2D 모드에서는 숨김 */}
-              {debugLog('🎯 천장 메시 렌더링 조건:', { viewMode, shouldRender: viewMode !== '2D' })}
-              {viewMode !== '2D' && (
-                <mesh
-                  position={[centerX, ceilingY, slotFloorZ]}
-                >
-                  <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
-                  <meshBasicMaterial 
-                    color={primaryColor} 
-                    transparent 
-                    opacity={0.35} 
-                  />
-                </mesh>
-              )}
-              <lineSegments
-                position={[centerX, floorY, slotFloorZ]}
-              >
-                <edgesGeometry args={[new THREE.BoxGeometry(width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth)]} />
-                <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
-              </lineSegments>
+            <group key="individual-slots-group">
+              {indexing.threeUnitPositions.map((slotX, slotIndex) => {
+                const slotInfo = columnSlots[slotIndex];
+
+                // 기둥이 있는 슬롯이면 adjustedWidth 사용, 없으면 slotWidths 사용
+                let slotWidthMm = indexing.slotWidths?.[slotIndex] || indexing.columnWidth;
+                if (slotInfo?.hasColumn && slotInfo.adjustedWidth) {
+                  slotWidthMm = slotInfo.adjustedWidth;
+                  console.log(`🏗️ [바닥 슬롯 시각화] 기둥 슬롯 ${slotIndex} 너비 조정:`, {
+                    원본: indexing.slotWidths?.[slotIndex],
+                    조정: slotWidthMm
+                  });
+                }
+
+                const slotWidth = mmToThreeUnits(slotWidthMm);
+
+                return (
+                  <group key={`slot-${slotIndex}`}>
+                    {/* 바닥 슬롯 메쉬 */}
+                    <mesh position={[slotX, floorY, slotFloorZ]}>
+                      <boxGeometry args={[slotWidth, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
+                      <meshBasicMaterial
+                        color={primaryColor}
+                        transparent
+                        opacity={0.35}
+                      />
+                    </mesh>
+                    {/* 천장 슬롯 메쉬 - 2D 모드에서는 숨김 */}
+                    {viewMode !== '2D' && (
+                      <mesh position={[slotX, ceilingY, slotFloorZ]}>
+                        <boxGeometry args={[slotWidth, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
+                        <meshBasicMaterial
+                          color={primaryColor}
+                          transparent
+                          opacity={0.35}
+                        />
+                      </mesh>
+                    )}
+                    <lineSegments position={[slotX, floorY, slotFloorZ]}>
+                      <edgesGeometry args={[new THREE.BoxGeometry(slotWidth, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth)]} />
+                      <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
+                    </lineSegments>
+                  </group>
+                );
+              })}
             </group>
           );
         }
