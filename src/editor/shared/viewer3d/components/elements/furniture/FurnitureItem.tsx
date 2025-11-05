@@ -1126,6 +1126,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     furnitureWidthMm = placedModule.customWidth;
   } else {
     // 기본값 사용 전에 기둥이 있는지 확인
+    console.log('🔍 [FurnitureItem] 기둥 체크 조건:', {
+      moduleId: placedModule.id,
+      zone: placedModule.zone,
+      hasSlotInfo: !!slotInfo,
+      hasColumn: slotInfo?.hasColumn,
+      hasColumnObject: !!slotInfo?.column,
+      hasBoundaries: !!slotBoundaries,
+      slotInfo,
+      slotBoundaries
+    });
+
     // 기둥이 있으면 calculateFurnitureBounds로 조정된 너비 계산
     if (slotInfo && slotInfo.hasColumn && slotInfo.column && slotBoundaries) {
       const slotWidthM = indexing.columnWidth * 0.01;
