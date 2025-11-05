@@ -7,6 +7,7 @@ interface DropPosition {
   x: number;
   column: number;
   isDualFurniture: boolean;
+  zone?: 'normal' | 'dropped'; // 단내림 구역 정보
 }
 
 interface CurrentDragData {
@@ -153,7 +154,8 @@ export const useDropPositioning = (spaceInfo: SpaceInfo) => {
     return {
       x: targetPositionX,
       column: targetColumn,
-      isDualFurniture
+      isDualFurniture,
+      zone: 'normal' // 단내림이 없는 경우 기본값
     };
   };
 
