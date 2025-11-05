@@ -238,7 +238,7 @@ export const useFurnitureKeyboard = ({
                 adjustedWidth: adjustedWidth,
                 customWidth: customWidth,
                 zone: editingModule.zone, // 현재 zone 유지
-                isDualSlot: editingModule.isDualSlot ?? isDualFurniture // 기존 값 우선 유지
+                isDualSlot: editingModule.moduleId.includes('dual-') ? true : (editingModule.isDualSlot ?? isDualFurniture) // 원본이 듀얼이면 유지
               });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
@@ -354,7 +354,7 @@ export const useFurnitureKeyboard = ({
                 adjustedWidth: adjustedWidth,
                 customWidth: customWidth,
                 zone: editingModule.zone, // 현재 zone 유지
-                isDualSlot: editingModule.isDualSlot ?? isDualFurniture // 기존 값 우선 유지
+                isDualSlot: editingModule.moduleId.includes('dual-') ? true : (editingModule.isDualSlot ?? isDualFurniture) // 원본이 듀얼이면 유지
               });
             }
             // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
@@ -500,7 +500,7 @@ export const useFurnitureKeyboard = ({
                   customDepth: customDepth,
                   adjustedWidth: adjustedWidth,
                   customWidth: customWidth,
-                  isDualSlot: selectedModule.isDualSlot ?? isDualFurniture // 기존 값 우선 유지
+                  isDualSlot: selectedModule.moduleId.includes('dual-') ? true : (selectedModule.isDualSlot ?? isDualFurniture) // 원본이 듀얼이면 유지
                 });
               }
               // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
@@ -588,7 +588,7 @@ export const useFurnitureKeyboard = ({
                   customDepth: customDepth,
                   adjustedWidth: adjustedWidth,
                   customWidth: customWidth,
-                  isDualSlot: selectedModule.isDualSlot ?? isDualFurniture // 기존 값 우선 유지
+                  isDualSlot: selectedModule.moduleId.includes('dual-') ? true : (selectedModule.isDualSlot ?? isDualFurniture) // 원본이 듀얼이면 유지
                 });
               }
               // 이동할 수 없는 경우 현재 위치 유지 (아무 작업 안함)
