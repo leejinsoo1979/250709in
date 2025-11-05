@@ -57,39 +57,75 @@ const checkAdjacentUpperLowerToFull = (
   if (spaceInfo.droppedCeiling?.enabled && currentZone) {
     }
   
+  const indexing = calculateSpaceIndexing(spaceInfo);
+
   // 인접한 슬롯에 상부장/하부장이 있는지 확인
   // 왼쪽: 싱글 가구는 -1, 듀얼 가구는 시작 슬롯이 -2 위치에 있어야 함
-  // 단내림이 있으면 같은 zone에 있어야 함
   let leftAdjacentModule = allModules.find(m => {
-    // 단내림이 있으면 무조건 zone 체크 (currentZone이 undefined여도)
-    if (spaceInfo.droppedCeiling?.enabled) {
-      // 양쪽 모두 zone이 있어야 하고, 같아야 함
-      if (!m.zone || !currentZone || m.zone !== currentZone) return false;
+    // 같은 zone인 경우: 기존 slotIndex 로직
+    if (m.zone === currentZone) {
+      const isLeftDual = m.moduleId?.includes('dual-');
+      if (isLeftDual) {
+        return m.slotIndex === currentSlotIndex - 2;
+      } else {
+        return m.slotIndex === currentSlotIndex - 1;
+      }
     }
 
-    // 왼쪽에 있는 가구가 듀얼인 경우 처리
-    const isLeftDual = m.moduleId?.includes('dual-');
-    if (isLeftDual) {
-      // 듀얼 가구의 시작 슬롯이 currentSlotIndex - 2 위치에 있고,
-      // 듀얼이 차지하는 두 번째 슬롯(+1)이 현재 가구 바로 왼쪽(currentSlotIndex - 1)에 있는지 확인
-      return m.slotIndex === currentSlotIndex - 2;
-    } else {
-      // 싱글 가구는 바로 왼쪽 슬롯에 있어야 함
-      return m.slotIndex === currentSlotIndex - 1;
+    // 다른 zone인 경우: 경계 체크
+    if (spaceInfo.droppedCeiling?.enabled && m.zone && currentZone && m.zone !== currentZone) {
+      const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+
+      if (droppedPosition === 'right') {
+        // normal(왼쪽) - dropped(오른쪽)
+        // 현재가 dropped 시작이고, m이 normal 끝
+        return (
+          currentZone === 'dropped' && m.zone === 'normal' &&
+          currentSlotIndex === 0 && m.slotIndex === (indexing.zones?.normal?.columnCount ?? 0) - 1
+        );
+      } else {
+        // dropped(왼쪽) - normal(오른쪽)
+        // 현재가 normal 시작이고, m이 dropped 끝
+        return (
+          currentZone === 'normal' && m.zone === 'dropped' &&
+          currentSlotIndex === 0 && m.slotIndex === (indexing.zones?.dropped?.columnCount ?? 0) - 1
+        );
+      }
     }
+
+    return false;
   });
 
   // 오른쪽: 현재 가구가 듀얼이면 +2, 싱글이면 +1 위치 체크
-  // 단내림이 있으면 같은 zone에 있어야 함
   let rightAdjacentModule = allModules.find(m => {
-    // 단내림이 있으면 무조건 zone 체크 (currentZone이 undefined여도)
-    if (spaceInfo.droppedCeiling?.enabled) {
-      // 양쪽 모두 zone이 있어야 하고, 같아야 함
-      if (!m.zone || !currentZone || m.zone !== currentZone) return false;
+    // 같은 zone인 경우: 기존 slotIndex 로직
+    if (m.zone === currentZone) {
+      const targetSlot = isCurrentDual ? currentSlotIndex + 2 : currentSlotIndex + 1;
+      return m.slotIndex === targetSlot;
     }
 
-    const targetSlot = isCurrentDual ? currentSlotIndex + 2 : currentSlotIndex + 1;
-    return m.slotIndex === targetSlot;
+    // 다른 zone인 경우: 경계 체크
+    if (spaceInfo.droppedCeiling?.enabled && m.zone && currentZone && m.zone !== currentZone) {
+      const droppedPosition = spaceInfo.droppedCeiling.position || 'right';
+
+      if (droppedPosition === 'right') {
+        // normal(왼쪽) - dropped(오른쪽)
+        // 현재가 normal 끝이고, m이 dropped 시작
+        return (
+          currentZone === 'normal' && m.zone === 'dropped' &&
+          currentSlotIndex === (indexing.zones?.normal?.columnCount ?? 0) - 1 && m.slotIndex === 0
+        );
+      } else {
+        // dropped(왼쪽) - normal(오른쪽)
+        // 현재가 dropped 끝이고, m이 normal 시작
+        return (
+          currentZone === 'dropped' && m.zone === 'normal' &&
+          currentSlotIndex === (indexing.zones?.dropped?.columnCount ?? 0) - 1 && m.slotIndex === 0
+        );
+      }
+    }
+
+    return false;
   });
   
   // 왼쪽 인접 모듈이 상부장/하부장인지 확인
