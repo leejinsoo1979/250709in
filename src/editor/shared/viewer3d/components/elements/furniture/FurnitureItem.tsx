@@ -3062,7 +3062,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             if (indexing.threeUnitBoundaries && indexing.threeUnitBoundaries.length > normalizedSlotIndex + 2) {
               rightPanelX = indexing.threeUnitBoundaries[normalizedSlotIndex + 2] - endPanelWidth / 2;
             } else {
-              rightPanelX = slotBoundaries.right - endPanelWidth / 2;
+              // fallback: slotBoundaries.right는 첫 번째 슬롯의 오른쪽 경계이므로
+              // 두 번째 슬롯의 너비를 더해서 두 번째 슬롯의 오른쪽 경계를 계산
+              const secondSlotWidth = indexing.slotWidths && indexing.slotWidths[normalizedSlotIndex + 1]
+                ? indexing.slotWidths[normalizedSlotIndex + 1] * 0.01
+                : indexing.columnWidth * 0.01;
+              rightPanelX = slotBoundaries.right + secondSlotWidth - endPanelWidth / 2;
+
+              console.log('🟠 듀얼장 오른쪽 엔드패널 fallback 계산:', {
+                slotBoundariesRight: slotBoundaries.right,
+                secondSlotWidth,
+                rightPanelX
+              });
             }
           } else {
             // 싱글장: 현재 슬롯의 오른쪽 경계
