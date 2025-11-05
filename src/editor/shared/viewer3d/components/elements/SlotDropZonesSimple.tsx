@@ -3084,7 +3084,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const localIndex = slotLocalIndex;
 
           // 기둥 정보 확인 (단내림 구간에서도 기둥 조정 필요)
-          const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+          const columnSlots = analyzeColumnSlots(spaceInfo);
 
           if (isDual && localIndex < targetZone.columnCount - 1) {
             // 듀얼 가구: 두 슬롯의 너비 합
@@ -3172,7 +3172,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           let targetWidth;
           
           // 기둥 정보 확인
-          const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+          const columnSlots = analyzeColumnSlots(spaceInfo);
           const targetSlotInfo = columnSlots[hoveredSlotIndex];
 
           if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.adjustedWidth) {
@@ -3482,7 +3482,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         let adjustedPreviewX = previewX;
 
         // 기둥 슬롯 정보 확인
-        const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
+        const columnSlots = analyzeColumnSlots(spaceInfo);
         const targetSlotInfo = columnSlots[hoveredSlotIndex];
 
         // 기둥이 있는 슬롯인 경우 calculateFurnitureBounds 사용 (실제 배치와 동일)
