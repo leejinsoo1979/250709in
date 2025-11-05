@@ -184,7 +184,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   textureUrl={spaceInfo.materialConfig?.doorTexture}
                 />
                 
-                {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 방향으로 26mm 확장 */}
+                {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 방향으로 26mm 확장 + 사용자 오프셋 (앞에서 줄어듦) */}
                 {index === 0 && (() => {
                   const lowerTopPanelY = sectionCenterY + sectionHeight/2 - basicThickness/2;
 
@@ -192,15 +192,15 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
                   const lowerDepthDiff = depth - lowerSectionDepth;
 
-                  // 백패널 방향으로 26mm 확장 (하부 섹션 깊이 기준)
+                  // 백패널 방향으로 26mm 확장 (하부 섹션 깊이 기준) + 사용자 오프셋 적용
                   const backPanelThickness = depth - adjustedDepthForShelves;
                   const lowerAdjustedDepth = lowerSectionDepth - backPanelThickness;
                   const originalDepth = lowerAdjustedDepth - basicThickness;
-                  const extendedDepth = originalDepth + mmToThreeUnits(26);
+                  const extendedDepth = originalDepth + mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0);
 
-                  // Z 위치: 뒤쪽으로만 줄어들도록 + 26mm 확장 고려 (양수: 앞쪽 고정, 뒤쪽 줄어듦)
+                  // Z 위치: 뒤쪽으로만 줄어들도록 + 26mm 확장 고려 + 사용자 오프셋 적용 (양수: 앞쪽 고정, 뒤쪽 줄어듦)
                   const zOffset = lowerDepthDiff / 2;
-                  const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13) + zOffset;
+                  const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13) + zOffset - mmToThreeUnits(lowerSectionTopOffset || 0) / 2;
 
                   return (
                     <BoxWithEdges

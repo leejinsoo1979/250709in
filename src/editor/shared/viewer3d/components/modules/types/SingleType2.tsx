@@ -249,10 +249,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
                   return (
                     <>
-                      {/* 하부 섹션 상판 - 하부 섹션 깊이 적용 */}
+                      {/* 하부 섹션 상판 - 하부 섹션 깊이 적용 + 사용자 오프셋 (앞에서 줄어듦) */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, lowerDepth]}
-                        position={[0, lowerTopPanelY, lowerZOffset]}
+                        args={[innerWidth, basicThickness, lowerDepth - mmToThreeUnits(lowerSectionTopOffset || 0)]}
+                        position={[0, lowerTopPanelY, lowerZOffset - mmToThreeUnits(lowerSectionTopOffset || 0) / 2]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
