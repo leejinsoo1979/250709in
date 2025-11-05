@@ -907,8 +907,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       // 단내림 구역에 배치된 경우 단내림 높이 사용, 아니면 전체 높이 사용
       const isInDroppedZone = placedModule.zone === 'dropped';
-      const ceilingHeight = isInDroppedZone && spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.height
-        ? spaceInfo.droppedCeiling.height
+      const ceilingHeight = isInDroppedZone && spaceInfo.droppedCeiling?.enabled && spaceInfo.droppedCeiling?.dropHeight !== undefined
+        ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight // 전체 높이 - 내려온 높이
         : spaceInfo.height;
 
       // 상부장 상단 Y = 천장 높이 - 상부프레임 높이 (상부프레임 하단)
@@ -921,7 +921,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         zone: placedModule.zone,
         isInDroppedZone,
         전체높이: spaceInfo.height,
-        단내림높이: spaceInfo.droppedCeiling?.height,
+        단내림내려온높이: spaceInfo.droppedCeiling?.dropHeight,
+        단내림천장높이: isInDroppedZone && spaceInfo.droppedCeiling?.dropHeight !== undefined
+          ? spaceInfo.height - spaceInfo.droppedCeiling.dropHeight
+          : undefined,
         사용된높이: ceilingHeight,
         상부프레임: topFrameHeightMm,
         상부장높이: upperCabinetHeight,
