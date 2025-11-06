@@ -3045,43 +3045,48 @@ const Configurator: React.FC = () => {
           </>
         )}
 
-        {/* 좌측 사이드바 토글 버튼 */}
-        <button
-          className={`${styles.leftPanelToggle} ${activeSidebarTab ? styles.open : ''}`}
-          onClick={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
-          title={activeSidebarTab ? "사이드바 접기" : "사이드바 펼치기"}
-        >
-          <span className={styles.foldToggleIcon}>{activeSidebarTab ? '<' : '>'}</span>
-        </button>
+        {/* 좌측 사이드바 - 읽기 전용 모드에서는 모바일에서 완전히 숨김 */}
+        {!isReadOnly && (
+          <>
+            {/* 좌측 사이드바 토글 버튼 */}
+            <button
+              className={`${styles.leftPanelToggle} ${activeSidebarTab ? styles.open : ''}`}
+              onClick={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
+              title={activeSidebarTab ? "사이드바 접기" : "사이드바 펼치기"}
+            >
+              <span className={styles.foldToggleIcon}>{activeSidebarTab ? '<' : '>'}</span>
+            </button>
 
-        {/* 사이드바 - 읽기 전용 모드에서는 재질 탭만 보임 */}
-        <Sidebar
-          activeTab={activeSidebarTab}
-          onTabClick={handleSidebarTabClick}
-          isOpen={!!activeSidebarTab}
-          onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
-          onSave={saveProject}
-          readOnly={isReadOnly}
-        />
+            {/* 사이드바 - 읽기 전용 모드에서는 재질 탭만 보임 */}
+            <Sidebar
+              activeTab={activeSidebarTab}
+              onTabClick={handleSidebarTabClick}
+              isOpen={!!activeSidebarTab}
+              onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
+              onSave={saveProject}
+              readOnly={isReadOnly}
+            />
 
-        {/* 사이드바 컨텐츠 패널 */}
-        <div
-          className={styles.sidebarContent}
-          style={{
-            transform: activeSidebarTab ? 'translateX(0) scale(1)' : 'translateX(-100%) scale(0.95)',
-            opacity: activeSidebarTab ? 1 : 0,
-            pointerEvents: activeSidebarTab ? 'auto' : 'none'
-          }}
-        >
-          {renderSidebarContent()}
-        </div>
+            {/* 사이드바 컨텐츠 패널 */}
+            <div
+              className={styles.sidebarContent}
+              style={{
+                transform: activeSidebarTab ? 'translateX(0) scale(1)' : 'translateX(-100%) scale(0.95)',
+                opacity: activeSidebarTab ? 1 : 0,
+                pointerEvents: activeSidebarTab ? 'auto' : 'none'
+              }}
+            >
+              {renderSidebarContent()}
+            </div>
+          </>
+        )}
 
         {/* 중앙 뷰어 영역 */}
         <div
           className={styles.viewerArea}
           style={{
             position: 'absolute',
-            left: activeSidebarTab ? '304px' : '64px', /* 사이드바 너비만큼 */
+            left: isReadOnly ? '0' : (activeSidebarTab ? '304px' : '64px'), /* 읽기 전용 모드에서는 좌측 여백 없음 */
             right: isReadOnly ? '0' : (isRightPanelOpen ? '320px' : '0'), /* 읽기 전용 모드에서는 우측 패널 없음 */
             top: 0,
             bottom: 0,
