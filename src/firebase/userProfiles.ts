@@ -63,21 +63,31 @@ export const createOrUpdateUserProfile = async (
     }
 
     if (existingProfile.exists()) {
-      // 기존 프로필 업데이트
-      const updateData = {
-        ...profileData,
+      // 기존 프로필 업데이트 (undefined 값 제거)
+      const updateData: Record<string, any> = {
         updatedAt: serverTimestamp()
       };
+
+      // undefined가 아닌 값만 포함
+      Object.entries(profileData).forEach(([key, value]) => {
+        if (value !== undefined) {
+          updateData[key] = value;
+        }
+      });
 
       console.log('🔄 Firestore 프로필 업데이트:', updateData);
       await updateDoc(profileRef, updateData);
       console.log('✅ Firestore 프로필 업데이트 완료');
     } else {
-      // 새 프로필 생성
-      const newProfile = {
-        ...defaultProfile,
-        ...profileData
-      };
+      // 새 프로필 생성 (undefined 값 제거)
+      const newProfile: Record<string, any> = { ...defaultProfile };
+
+      // undefined가 아닌 값만 추가
+      Object.entries(profileData).forEach(([key, value]) => {
+        if (value !== undefined) {
+          newProfile[key] = value;
+        }
+      });
 
       console.log('🔄 새 Firestore 프로필 생성:', newProfile);
       await setDoc(profileRef, newProfile);
@@ -173,11 +183,17 @@ export const updateUserProfile = async (
       console.log('✅ Firebase Auth 프로필 업데이트 완료');
     }
 
-    // Firestore 프로필 업데이트
-    const updateData = {
-      ...updates,
+    // Firestore 프로필 업데이트 (undefined 값 제거)
+    const updateData: Record<string, any> = {
       updatedAt: serverTimestamp()
     };
+
+    // undefined가 아닌 값만 포함
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value !== undefined) {
+        updateData[key] = value;
+      }
+    });
 
     console.log('🔄 Firestore 프로필 업데이트:', updateData);
     await updateDoc(profileRef, updateData);
@@ -305,10 +321,16 @@ export const updateNotificationSettings = async (settings: {
       return await createOrUpdateUserProfile(settings);
     }
 
-    const updateData = {
-      ...settings,
+    // undefined 값 제거
+    const updateData: Record<string, any> = {
       updatedAt: serverTimestamp()
     };
+
+    Object.entries(settings).forEach(([key, value]) => {
+      if (value !== undefined) {
+        updateData[key] = value;
+      }
+    });
 
     await updateDoc(profileRef, updateData);
     console.log('✅ 알림 설정 업데이트 완료');
@@ -341,10 +363,16 @@ export const updatePrivacySettings = async (settings: {
       return await createOrUpdateUserProfile(settings);
     }
 
-    const updateData = {
-      ...settings,
+    // undefined 값 제거
+    const updateData: Record<string, any> = {
       updatedAt: serverTimestamp()
     };
+
+    Object.entries(settings).forEach(([key, value]) => {
+      if (value !== undefined) {
+        updateData[key] = value;
+      }
+    });
 
     await updateDoc(profileRef, updateData);
     console.log('✅ 개인정보 설정 업데이트 완료');

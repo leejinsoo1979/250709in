@@ -170,10 +170,8 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
       } else {
         console.log('✅ 프로필 저장 성공');
         alert('프로필이 저장되었습니다.');
-        // 프로필 새로고침
+        // 프로필 새로고침 (Auth는 자동 동기화됨)
         await loadProfile();
-        // 페이지 새로고침으로 Auth 상태 동기화
-        window.location.reload();
       }
     } catch (err) {
       console.error('❌ 프로필 저장 예외:', err);
