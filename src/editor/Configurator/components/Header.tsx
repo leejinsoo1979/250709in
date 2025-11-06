@@ -5,7 +5,7 @@ import { Settings, Menu, User, ChevronDown, Undo, Redo } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
 import { TbTableExport } from 'react-icons/tb';
-import { MdOutlineViewInAr } from "react-icons/md";
+import { HiViewfinderCircle } from "react-icons/hi2";
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -574,7 +574,7 @@ const Header: React.FC<HeaderProps> = ({
               className={styles.actionButton}
               onClick={() => setIsCameraMenuOpen(!isCameraMenuOpen)}
             >
-              <MdOutlineViewInAr size={20} />
+              <HiViewfinderCircle size={20} />
               뷰모드
               <ChevronDown size={16} style={{ marginLeft: '4px' }} />
             </button>
