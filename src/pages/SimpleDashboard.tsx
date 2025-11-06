@@ -3281,10 +3281,10 @@ const SimpleDashboard: React.FC = () => {
                                   alt={item.name}
                                 />
                                 
-                                {/* 디자인 카드 호버 오버레이 - 그리드 뷰에서만 표시 */}
-                                {viewMode === 'grid' && (
+                                {/* 디자인 카드 호버 오버레이 - 그리드 뷰에서만 표시 (휴지통 제외) */}
+                                {viewMode === 'grid' && activeMenu !== 'trash' && (
                                 <div className={styles.designCardOverlay}>
-                                  <button 
+                                  <button
                                     className={styles.overlayButton}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -3304,7 +3304,7 @@ const SimpleDashboard: React.FC = () => {
                                     <EyeIcon size={16} />
                                     디자인 미리보기
                                   </button>
-                                  <button 
+                                  <button
                                     className={`${styles.overlayButton} ${styles.primary}`}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -3480,8 +3480,8 @@ const SimpleDashboard: React.FC = () => {
                         <div className={styles.cardInfo}>
                           <div className={styles.cardTitle}>
                             {item.name}
-                            {/* 리스트 뷰에서만 제목 우측에 액션 버튼 표시 */}
-                            {viewMode === 'list' && (
+                            {/* 리스트 뷰에서만 제목 우측에 액션 버튼 표시 (휴지통 제외) */}
+                            {viewMode === 'list' && activeMenu !== 'trash' && (
                               <div className={styles.listActionButtons}>
                                 <button
                                   className={styles.listActionBtn}
