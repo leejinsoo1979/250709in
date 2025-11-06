@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { Timestamp } from 'firebase/firestore';
-import { motion, AnimatePresence } from 'framer-motion';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
 import { PiFolderFill, PiFolderPlus } from "react-icons/pi";
 import { AiOutlineFileMarkdown } from "react-icons/ai";
@@ -3049,7 +3048,7 @@ const SimpleDashboard: React.FC = () => {
                   return (
                     <>
                       {[1, 2, 3, 4].map((i) => (
-                        <motion.div 
+                        <div 
                           key={`skeleton-${i}`}
                           className={styles.designCard}
                           style={{ opacity: 0.3, pointerEvents: 'none' }}
@@ -3066,7 +3065,7 @@ const SimpleDashboard: React.FC = () => {
                             <div style={{ width: '60%', height: '16px', background: '#f0f0f0', borderRadius: '4px' }} />
                             <div style={{ width: '30%', height: '12px', background: '#f0f0f0', borderRadius: '4px', marginTop: '4px' }} />
                           </div>
-                        </motion.div>
+                        </div>
                       ))}
                     </>
                   );
@@ -3097,11 +3096,8 @@ const SimpleDashboard: React.FC = () => {
                 
                 return filteredItems.length > 0 ? (
                   filteredItems.map((item, index) => (
-                  <motion.div 
+                  <div 
                     key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ 
                       duration: 0.3, 
                       delay: index * 0.05,
                       ease: [0.4, 0, 0.2, 1]
@@ -3599,7 +3595,7 @@ const SimpleDashboard: React.FC = () => {
                         </div>
                       )
                     )}
-                  </motion.div>
+                  </div>
                 ))
                 ) : !projectsLoading ? (
                   // 빈 상태 표시 (로딩 중이 아닐 때만)
