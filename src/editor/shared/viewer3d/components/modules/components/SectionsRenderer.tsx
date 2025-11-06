@@ -499,10 +499,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   } else {
                     // 상부 섹션 (index > 0)
                     if (index > 0) {
-                      // 듀얼/싱글 모두 중간 분리판 상단부터 시작 (내경)
-                      bottomY = sectionBottomY + basicThickness;
+                      // 듀얼/싱글 모두 상부섹션 바닥판 상단부터 시작 (내경)
+                      // sectionBottomY는 하부 섹션 상판 하단
+                      // +basicThickness = 하부 섹션 상판 상단 (섹션 경계)
+                      // +basicThickness = 상부 섹션 바닥판 상단
+                      bottomY = sectionBottomY + basicThickness * 2;
 
-                      console.log('🔴🔴🔴 상부섹션 hanging bottomY 계산:', {
+                      console.log('🔴🔴🔴 상부섹션 hanging bottomY 계산 (수정됨):', {
                         furnitureId,
                         index,
                         sectionCenterY,
@@ -513,6 +516,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                         'sectionBottomY_mm': sectionBottomY * 100,
                         basicThickness,
                         'basicThickness_mm': basicThickness * 100,
+                        '하부상판상단_mm': (sectionBottomY + basicThickness) * 100,
+                        '상부바닥판상단_mm': (sectionBottomY + basicThickness * 2) * 100,
                         bottomY,
                         'bottomY_mm': bottomY * 100,
                         view2DDirection,
@@ -600,13 +605,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   // 2drawer-hanging의 하부 섹션만 특별 처리 (하부 프레임 있음)
                   const is2DrawerHangingLowerSection = furnitureId?.includes('2drawer-hanging') && index === 0;
 
-                  bottomY = index === 0 ? (-height/2 + basicThickness) : (sectionBottomY + basicThickness);
+                  // 상부 섹션(index > 0)은 상부섹션 바닥판 상단부터 시작 (하부상판 + 상부바닥판 = basicThickness * 2)
+                  bottomY = index === 0 ? (-height/2 + basicThickness) : (sectionBottomY + basicThickness * 2);
                   topY = is2DrawerHangingLowerSection ? (sectionTopY - basicThickness * 2) : (sectionTopY - basicThickness);
                   // 실제 거리로 내경 계산 (하드코딩 없음)
                   actualInternalHeight = (topY - bottomY) / 0.01;
 
                   if (index > 0) {
-                    console.log('🔴🔴🔴 상부섹션 drawer bottomY 계산:', {
+                    console.log('🔴🔴🔴 상부섹션 drawer bottomY 계산 (수정됨):', {
                       furnitureId,
                       index,
                       sectionCenterY,
@@ -617,6 +623,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       'sectionBottomY_mm': sectionBottomY * 100,
                       basicThickness,
                       'basicThickness_mm': basicThickness * 100,
+                      '하부상판상단_mm': (sectionBottomY + basicThickness) * 100,
+                      '상부바닥판상단_mm': (sectionBottomY + basicThickness * 2) * 100,
                       bottomY,
                       'bottomY_mm': bottomY * 100,
                       view2DDirection,
@@ -643,9 +651,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
                   const sectionTopY = sectionCenterY + sectionHeight/2;
 
-                  // 측면뷰에서 상부 섹션(index > 0)인 경우: 중간 분리판(basicThickness) 위에서 시작
+                  // 측면뷰에서 상부 섹션(index > 0)인 경우: 상부섹션 바닥판 상단부터 시작
                   if (isSideView && index > 0) {
-                    bottomY = sectionBottomY + basicThickness;
+                    bottomY = sectionBottomY + basicThickness * 2;
                     topY = sectionTopY;
                   } else {
                     bottomY = sectionBottomY;
