@@ -1261,12 +1261,12 @@ const Configurator: React.FC = () => {
   useEffect(() => {
     const loadActualDesignFileName = async () => {
       if (!currentProjectId || !user) return;
-      
+
       try {
         // 폴더 데이터 로드
         const { loadFolderData } = await import('@/firebase/projects');
         const folderResult = await loadFolderData(currentProjectId);
-        
+
         if (folderResult.folders && folderResult.folders.length > 0) {
           // 폴더에서 첫 번째 디자인파일 찾기
           for (const folder of folderResult.folders) {
@@ -1280,24 +1280,21 @@ const Configurator: React.FC = () => {
             }
           }
         }
-        
-        // 폴더에 디자인파일이 없으면 프로젝트명 사용
-        if (basicInfo.title && currentDesignFileName === '새로운 디자인') {
-          setCurrentDesignFileName(basicInfo.title);
-          console.log('📝 폴더에 디자인파일이 없어서 프로젝트명 사용:', basicInfo.title);
-        }
-        
+
+        // 폴더에 디자인파일이 없으면 '새로운 디자인' 유지 (프로젝트명 사용하지 않음)
+
       } catch (error) {
         console.error('폴더 데이터 로드 실패:', error);
       }
     };
-    
-    // URL에 디자인파일명이 없을 때만 폴더에서 찾기
+
+    // URL에 디자인파일명과 디자인파일ID가 모두 없을 때만 폴더에서 찾기
     const urlDesignFileName = searchParams.get('designFileName') || searchParams.get('fileName');
-    if (!urlDesignFileName && currentProjectId && user) {
+    const urlDesignFileId = searchParams.get('designFileId');
+    if (!urlDesignFileName && !urlDesignFileId && currentProjectId && user) {
       loadActualDesignFileName();
     }
-  }, [currentProjectId, user, basicInfo.title, currentDesignFileName, searchParams]);
+  }, [currentProjectId, user, searchParams]);
 
   // 공간 변경 시 가구 재배치 로직 복구
   useEffect(() => {
