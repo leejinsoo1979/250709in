@@ -187,7 +187,7 @@ const ViewerPage: React.FC = () => {
           </div>
           {/* Perspective/Orthographic 토글 (3D 모드일 때만) */}
           {viewMode === '3D' && (
-            <div className={styles.viewModeToggle} style={{ marginLeft: '12px' }}>
+            <div className={styles.viewModeToggle}>
               <button
                 className={`${styles.viewModeButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
                 onClick={() => setCameraMode('perspective')}
