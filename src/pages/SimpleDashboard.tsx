@@ -70,6 +70,11 @@ const SimpleDashboard: React.FC = () => {
   // URL 변경 시 activeMenu 동기화
   useEffect(() => {
     const menu = getMenuFromPath();
+    console.log('🔄 URL 변경 감지:', {
+      pathname: location.pathname,
+      extractedMenu: menu,
+      currentActiveMenu: activeMenu
+    });
     setActiveMenu(menu);
   }, [location.pathname]);
   const [sortBy, setSortBy] = useState<'date' | 'name'>('date');
@@ -719,6 +724,12 @@ const SimpleDashboard: React.FC = () => {
     const deletedProjectIds = new Set(deletedProjects.map(p => p.id));
 
     let filteredProjects: ProjectSummary[] = [];
+
+    console.log('🔍 getFilteredProjects 호출:', {
+      activeMenu,
+      deletedProjectsCount: deletedProjects.length,
+      allProjectsCount: allProjects.length
+    });
 
     switch (activeMenu) {
       case 'bookmarks':
