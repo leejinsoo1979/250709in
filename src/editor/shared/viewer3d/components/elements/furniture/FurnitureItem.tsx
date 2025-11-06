@@ -79,16 +79,20 @@ const checkAdjacentUpperLowerToFull = (
       if (droppedPosition === 'right') {
         // normal(왼쪽) - dropped(오른쪽)
         // 현재가 dropped 시작이고, m이 normal 끝
+        // 듀얼 가구도 고려: dropped zone 시작 (0)에 배치
+        const isAtNormalEnd = m.slotIndex === (indexing.zones?.normal?.columnCount ?? 0) - 1;
         return (
           currentZone === 'dropped' && m.zone === 'normal' &&
-          currentSlotIndex === 0 && m.slotIndex === (indexing.zones?.normal?.columnCount ?? 0) - 1
+          currentSlotIndex === 0 && isAtNormalEnd
         );
       } else {
         // dropped(왼쪽) - normal(오른쪽)
         // 현재가 normal 시작이고, m이 dropped 끝
+        // 듀얼 가구도 고려: normal zone 시작 (0)에 배치
+        const isAtDroppedEnd = m.slotIndex === (indexing.zones?.dropped?.columnCount ?? 0) - 1;
         return (
           currentZone === 'normal' && m.zone === 'dropped' &&
-          currentSlotIndex === 0 && m.slotIndex === (indexing.zones?.dropped?.columnCount ?? 0) - 1
+          currentSlotIndex === 0 && isAtDroppedEnd
         );
       }
     }
@@ -111,16 +115,26 @@ const checkAdjacentUpperLowerToFull = (
       if (droppedPosition === 'right') {
         // normal(왼쪽) - dropped(오른쪽)
         // 현재가 normal 끝이고, m이 dropped 시작
+        // 듀얼 가구는 2칸 차지: normal zone 끝 2칸 (columnCount-2, columnCount-1)
+        const normalColumnCount = indexing.zones?.normal?.columnCount ?? 0;
+        const isAtNormalEnd = isCurrentDual
+          ? currentSlotIndex === normalColumnCount - 2
+          : currentSlotIndex === normalColumnCount - 1;
         return (
           currentZone === 'normal' && m.zone === 'dropped' &&
-          currentSlotIndex === (indexing.zones?.normal?.columnCount ?? 0) - 1 && m.slotIndex === 0
+          isAtNormalEnd && m.slotIndex === 0
         );
       } else {
         // dropped(왼쪽) - normal(오른쪽)
         // 현재가 dropped 끝이고, m이 normal 시작
+        // 듀얼 가구는 2칸 차지: dropped zone 끝 2칸 (columnCount-2, columnCount-1)
+        const droppedColumnCount = indexing.zones?.dropped?.columnCount ?? 0;
+        const isAtDroppedEnd = isCurrentDual
+          ? currentSlotIndex === droppedColumnCount - 2
+          : currentSlotIndex === droppedColumnCount - 1;
         return (
           currentZone === 'dropped' && m.zone === 'normal' &&
-          currentSlotIndex === (indexing.zones?.dropped?.columnCount ?? 0) - 1 && m.slotIndex === 0
+          isAtDroppedEnd && m.slotIndex === 0
         );
       }
     }
