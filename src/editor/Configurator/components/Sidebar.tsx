@@ -21,6 +21,7 @@ interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void; // 폴딩 버튼 핸들러 추가
   onResetUnsavedChanges?: React.MutableRefObject<(() => void) | null>; // 저장 완료 후 상태 리셋을 위한 ref
+  onSave?: () => Promise<void>; // 저장 함수 추가
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -28,7 +29,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onTabClick,
   isOpen,
   onToggle,
-  onResetUnsavedChanges
+  onResetUnsavedChanges,
+  onSave
 }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -259,9 +261,17 @@ const Sidebar: React.FC<SidebarProps> = ({
                 className={styles.modalButtonCancel}
                 onClick={async () => {
                   setShowExitConfirm(false);
-                  // 저장하고 나가기 - onResetUnsavedChanges를 통해 저장 실행
-                  if (onResetUnsavedChanges?.current) {
-                    await onResetUnsavedChanges.current();
+                  // 저장하고 나가기 - 실제 저장 함수 호출
+                  console.log('💾 저장하고 나가기 시작');
+                  if (onSave) {
+                    try {
+                      await onSave();
+                      console.log('✅ 저장 완료 - 대시보드로 이동');
+                    } catch (error) {
+                      console.error('❌ 저장 실패:', error);
+                      alert('저장에 실패했습니다. 다시 시도해주세요.');
+                      return;
+                    }
                   }
                   navigate('/dashboard');
                 }}

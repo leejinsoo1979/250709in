@@ -1235,9 +1235,18 @@ const Configurator: React.FC = () => {
               }
 
               // 디자인파일 이름 설정
+              console.log('🔍 디자인파일 이름 체크:', {
+                hasName: !!designFile.name,
+                name: designFile.name,
+                designFileKeys: Object.keys(designFile),
+                fullDesignFile: designFile
+              });
+
               if (designFile.name) {
                 setCurrentDesignFileName(designFile.name);
                 console.log('📝 디자인파일명 설정:', designFile.name);
+              } else {
+                console.error('❌ 디자인파일에 name 필드가 없습니다!');
               }
             } else {
               console.error('디자인파일 로드 실패:', error);
@@ -2760,6 +2769,7 @@ const Configurator: React.FC = () => {
           onTabClick={handleSidebarTabClick}
           isOpen={!!activeSidebarTab}
           onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
+          onSave={saveProject}
         />
 
         {/* 사이드바 컨텐츠 패널 */}
