@@ -153,6 +153,10 @@ interface BaseFurnitureShellProps {
   // 렌더 모드
   renderMode?: 'solid' | 'wireframe';
 
+  // 엔드패널 여부
+  isLeftEndPanel?: boolean;
+  isRightEndPanel?: boolean;
+
   // 자식 컴포넌트 (내부 구조)
   children?: React.ReactNode;
 }
@@ -198,6 +202,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
   lowerSectionDepthMm,
   upperSectionDepthMm,
   lowerSectionTopOffsetMm,
+  isLeftEndPanel = false,
+  isRightEndPanel = false,
   textureUrl,
   panelGrainDirections,
   renderMode: renderModeProp,
@@ -337,6 +343,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerSectionHighlighted}
+                    isEndPanel={isLeftEndPanel}
                     panelName="(하)좌측"
                     panelGrainDirections={panelGrainDirections}
                     furnitureId={placedFurnitureId}
@@ -352,6 +359,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isUpperHighlighted}
+                    isEndPanel={isLeftEndPanel}
                     panelName="(상)좌측"
                     panelGrainDirections={panelGrainDirections}
                     furnitureId={placedFurnitureId}
@@ -367,6 +375,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     renderMode={renderMode}
                     isDragging={isDragging}
                     isHighlighted={isLowerSectionHighlighted}
+                    isEndPanel={isRightEndPanel}
                     panelName="(하)우측"
                     panelGrainDirections={panelGrainDirections}
                     furnitureId={placedFurnitureId}
@@ -381,6 +390,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     material={getSidePanelMaterial('(상)우측')}
                     renderMode={renderMode}
                     isDragging={isDragging}
+                    isEndPanel={isRightEndPanel}
                     isHighlighted={isUpperHighlighted}
                     panelName="(상)우측"
                     panelGrainDirections={panelGrainDirections}
@@ -402,6 +412,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               material={getSidePanelMaterial('좌측판')}
               renderMode={renderMode}
               isDragging={isDragging}
+              isEndPanel={isLeftEndPanel}
               panelName="좌측판"
               panelGrainDirections={panelGrainDirections}
                     furnitureId={placedFurnitureId}
@@ -416,6 +427,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
               material={getSidePanelMaterial('우측판')}
               renderMode={renderMode}
               isDragging={isDragging}
+              isEndPanel={isRightEndPanel}
               panelName="우측판"
               panelGrainDirections={panelGrainDirections}
                     furnitureId={placedFurnitureId}

@@ -314,14 +314,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return color;
     }
 
-    // 강조 상태일 때는 2D/3D 모드에 따라 다른 색상 사용
-    if (isHighlighted) {
+    // 엔드패널이거나 강조 상태일 때는 2D/3D 모드에 따라 다른 색상 사용
+    if (isEndPanel || isHighlighted) {
       if (viewMode === '2D') {
         // 2D 모드에서는 형광색 (neon green)
         return "#18CF23";
       } else {
-        // 3D 모드에서는 테마 색상
-        return highlightColor;
+        // 3D 모드에서는 테마 색상 (엔드패널은 3D에서 일반 색상)
+        return isEndPanel ? (renderMode === 'wireframe' ? (view2DTheme === 'dark' ? "#FF4500" : "#000000") : "#505050") : highlightColor;
       }
     }
 
