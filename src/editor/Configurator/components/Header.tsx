@@ -23,18 +23,17 @@ import { useTheme } from '@/contexts/ThemeContext';
 // Perspective Cube Icon (원근 투영 큐브 - 아래로 좁아짐)
 const PerspectiveCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-    {/* 상단면 */}
-    <path d="M12 3 L18 6 L12 9 L6 6 Z" />
-    {/* 좌측 앞면 */}
-    <path d="M6 6 L6 14" />
-    {/* 우측 앞면 */}
-    <path d="M18 6 L18 14" />
-    {/* 좌측 뒷면 */}
-    <path d="M12 9 L12 17" />
-    {/* 좌측면 하단 */}
-    <path d="M6 14 L12 17" />
-    {/* 우측면 하단 */}
-    <path d="M18 14 L12 17" />
+    {/* 상단면 (넓음) */}
+    <path d="M12 4 L20 7 L12 10 L4 7 Z" />
+    {/* 좌측면 (아래로 좁아짐) */}
+    <path d="M4 7 L8 17" />
+    {/* 우측면 (아래로 좁아짐) */}
+    <path d="M20 7 L16 17" />
+    {/* 중앙 수직선 */}
+    <path d="M12 10 L12 19" />
+    {/* 하단 좌우 연결 */}
+    <path d="M8 17 L12 19" />
+    <path d="M16 17 L12 19" />
   </svg>
 );
 
