@@ -169,11 +169,6 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
               <h2 className={styles.modalTitle}>
                 {loading ? '프로젝트 로딩 중...' : (project ? project.title : '프로젝트를 찾을 수 없음')}
               </h2>
-              {project && (
-                <span className={styles.projectInfo}>
-                  {viewMode} 미리보기
-                </span>
-              )}
             </div>
 
             {/* 2D/3D 및 Perspective/Orthographic 토글 버튼 - 중앙 정렬 */}

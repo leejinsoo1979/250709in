@@ -167,7 +167,6 @@ const ViewerPage: React.FC = () => {
       <div className={styles.viewerHeader}>
         <div className={styles.headerLeft}>
           <h1 className={styles.projectTitle}>{project.title}</h1>
-          <span className={styles.projectInfo}>{viewMode} 미리보기</span>
         </div>
         
         {/* 2D/3D 토글 및 Perspective/Orthographic 토글 */}
