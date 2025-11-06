@@ -3156,23 +3156,16 @@ const SimpleDashboard: React.FC = () => {
                           setBreadcrumbPath(['전체 프로젝트', selectedProject.title, folder.name]);
                         }
                       } else if (item.type === 'design') {
-                        console.log('🎨 디자인 카드 클릭 - 액션 팝업 표시', {
+                        console.log('🎨 디자인 카드 클릭', {
                           itemId: item.id,
                           projectId: item.project.id,
                           itemName: item.name,
                           hasDesignFile: !!item.designFile,
                           viewMode
                         });
-                        
-                        // 그리드 뷰에서는 바로 에디터로 이동
-                        if (viewMode !== 'list') {
-                          if (item.designFile && item.designFile.id) {
-                            navigate(`/configurator?projectId=${item.project.id}&designFileId=${item.designFile.id}`);
-                          } else {
-                            navigate(`/configurator?projectId=${item.project.id}&designFileName=${encodeURIComponent(item.name)}`);
-                          }
-                        }
-                        // 리스트 뷰에서는 카드 클릭 무시 (버튼으로만 동작)
+                        // 카드 클릭은 무시 - 오버레이 버튼을 통해서만 에디터로 이동
+                        // 그리드 뷰: 호버 시 오버레이 버튼 표시
+                        // 리스트 뷰: 우측 액션 버튼 클릭
                       }
                     }}
                   >
