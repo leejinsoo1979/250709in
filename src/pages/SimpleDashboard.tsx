@@ -95,6 +95,8 @@ const SimpleDashboard: React.FC = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareProjectId, setShareProjectId] = useState<string | null>(null);
   const [shareProjectName, setShareProjectName] = useState<string>('');
+  const [shareDesignFileId, setShareDesignFileId] = useState<string | null>(null);
+  const [shareDesignFileName, setShareDesignFileName] = useState<string>('');
 
   // Firebase 프로젝트 목록 상태
   const [firebaseProjects, setFirebaseProjects] = useState<ProjectSummary[]>([]);
@@ -845,7 +847,7 @@ const SimpleDashboard: React.FC = () => {
   };
   
   // 공유 프로젝트 처리 함수
-  const shareProject = async (projectId: string) => {
+  const shareProject = async (projectId: string, designFileId?: string, designFileName?: string) => {
     try {
       // 프로젝트 정보 가져오기
       const project = allProjects.find(p => p.id === projectId);
@@ -857,11 +859,13 @@ const SimpleDashboard: React.FC = () => {
       // ShareLinkModal 열기
       setShareProjectId(projectId);
       setShareProjectName(project.title);
+      setShareDesignFileId(designFileId || null);
+      setShareDesignFileName(designFileName || '');
       setShareModalOpen(true);
-      
+
       // 미래에는 Firebase에 공유 상태 업데이트
       // await updateProject(projectId, { shared: true, sharedAt: new Date() });
-      
+
     } catch (error) {
       console.error('프로젝트 공유 중 오류:', error);
       alert('프로젝트 공유 중 오류가 발생했습니다.');
@@ -1885,11 +1889,14 @@ const SimpleDashboard: React.FC = () => {
     } else if (moreMenu.itemType === 'design') {
       // 디자인 파일이 속한 프로젝트 찾기
       let designProjectId: string | null = null;
+      let designFile: any = null;
 
-      // projectDesignFiles에서 해당 디자인 파일이 속한 프로젝트 찾기
+      // projectDesignFiles에서 해당 디자인 파일이 속한 프로젝트와 파일 정보 찾기
       for (const [projectId, designFiles] of Object.entries(projectDesignFiles)) {
-        if (designFiles.some(df => df.id === moreMenu.itemId)) {
+        const foundDesign = designFiles.find(df => df.id === moreMenu.itemId);
+        if (foundDesign) {
           designProjectId = projectId;
+          designFile = foundDesign;
           break;
         }
       }
@@ -1897,10 +1904,16 @@ const SimpleDashboard: React.FC = () => {
       // 또는 현재 선택된 프로젝트 사용
       if (!designProjectId && selectedProjectId) {
         designProjectId = selectedProjectId;
+        // 선택된 프로젝트에서 디자인 파일 찾기
+        const selectedProjectDesigns = projectDesignFiles[selectedProjectId];
+        if (selectedProjectDesigns) {
+          designFile = selectedProjectDesigns.find(df => df.id === moreMenu.itemId);
+        }
       }
 
-      if (designProjectId) {
-        shareProject(designProjectId);
+      if (designProjectId && designFile) {
+        // 디자인 파일 정보와 함께 공유
+        shareProject(designProjectId, designFile.id, designFile.title);
       } else {
         alert('프로젝트 정보를 찾을 수 없습니다.');
       }
@@ -4036,10 +4049,14 @@ const SimpleDashboard: React.FC = () => {
         <ShareLinkModal
           projectId={shareProjectId}
           projectName={shareProjectName}
+          designFileId={shareDesignFileId}
+          designFileName={shareDesignFileName}
           onClose={() => {
             setShareModalOpen(false);
             setShareProjectId(null);
             setShareProjectName('');
+            setShareDesignFileId(null);
+            setShareDesignFileName('');
           }}
         />
       )}

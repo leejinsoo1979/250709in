@@ -7,12 +7,16 @@ import styles from './ShareLinkModal.module.css';
 interface ShareLinkModalProps {
   projectId: string;
   projectName: string;
+  designFileId?: string | null; // 특정 디자인 파일 공유 시 사용
+  designFileName?: string; // 특정 디자인 파일 공유 시 사용
   onClose: () => void;
 }
 
 export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
   projectId,
   projectName,
+  designFileId,
+  designFileName,
   onClose,
 }) => {
   const { user } = useAuth();
@@ -44,7 +48,9 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
         permission,
         expiresInDays,
         usePassword ? password : undefined,
-        useMaxUsage ? maxUsage : undefined
+        useMaxUsage ? maxUsage : undefined,
+        designFileId || undefined,
+        designFileName || undefined
       );
 
       setGeneratedLink(link);
@@ -86,9 +92,15 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
 
         {/* Body */}
         <div className={styles.body}>
-          <p className={styles.description}>
-            다양한 권한을 설정하여 설계도면을 공유할 수 있습니다.
-          </p>
+          {designFileName ? (
+            <p className={styles.description}>
+              <strong>"{designFileName}"</strong> 디자인 파일을 공유합니다.
+            </p>
+          ) : (
+            <p className={styles.description}>
+              다양한 권한을 설정하여 설계도면을 공유할 수 있습니다.
+            </p>
+          )}
 
           {/* 링크가 생성되지 않았을 때 */}
           {!generatedLink && (
