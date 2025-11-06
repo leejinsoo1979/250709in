@@ -106,16 +106,59 @@ service cloud.firestore {
 
     // Legacy(dualWrite 중만 허용)
     match /projects/{id} {
-      // 공유 링크를 위해 읽기는 모두 허용, 쓰기는 소유자만
-      allow read: if true;
-      allow write: if isSignedIn() &&
-        (request.auth.uid == (request.resource.data.userId != null ? request.resource.data.userId : resource.data.userId));
+      // 소유자 또는 공유받은 사람(editor 권한)이 읽기/쓰기 가능
+      allow read: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        exists(/databases/$(database)/documents/sharedProjectAccess/$(id + '_' + request.auth.uid))
+      );
+      allow write: if isSignedIn() && (
+        resource.data.userId == request.auth.uid ||
+        (exists(/databases/$(database)/documents/sharedProjectAccess/$(id + '_' + request.auth.uid)) &&
+         get(/databases/$(database)/documents/sharedProjectAccess/$(id + '_' + request.auth.uid)).data.permission == 'editor')
+      );
+      allow create: if isSignedIn();
     }
     match /designFiles/{id} {
       // 공유 링크를 위해 읽기는 모두 허용, 쓰기는 소유자만
       allow read: if true;
       allow write: if isSignedIn() &&
         (request.auth.uid == (request.resource.data.userId != null ? request.resource.data.userId : resource.data.userId));
+    }
+
+    // 공유 링크
+    match /shareLinks/{linkId} {
+      allow create: if isSignedIn();
+      allow read: if true; // 누구나 토큰으로 조회 가능
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn() && resource.data.createdBy == request.auth.uid;
+    }
+
+    // 공유 프로젝트 접근 권한
+    match /sharedProjectAccess/{accessId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
+    }
+
+    // 알림
+    match /notifications/{notificationId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // 변경 이력
+    match /projectHistory/{historyId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn();
+    }
+
+    // 공유 링크 접근 로그
+    match /shareLinkAccessLog/{logId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn();
     }
   }
 }
