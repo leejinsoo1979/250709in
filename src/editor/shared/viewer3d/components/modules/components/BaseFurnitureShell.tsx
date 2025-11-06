@@ -275,9 +275,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
 
   // 좌우 프레임에 사용할 material 결정 함수
   const getSidePanelMaterial = (panelName: string) => {
-    if (viewMode === '2D' && view2DDirection === 'front') {
-      return highlightMaterial;
-    }
+    // 2D 정면뷰에서는 엔드패널 여부와 관계없이 일반 재질 사용
+    // 엔드패널은 BoxWithEdges의 isHighlighted prop으로 별도 처리됨
     return getPanelMaterial(panelName);
   };
 
