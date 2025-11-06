@@ -25,6 +25,7 @@ import ProfileTab from '../components/collaboration/ProfileTab';
 import NotificationBadge from '../components/common/NotificationBadge';
 import ProjectViewerModal from '../components/common/ProjectViewerModal';
 import ThumbnailImage from '../components/common/ThumbnailImage';
+import ProfilePopup from '../editor/Configurator/components/ProfilePopup';
 // import { generateProjectThumbnail } from '../utils/thumbnailGenerator';
 import styles from './SimpleDashboard.module.css';
 
@@ -71,8 +72,11 @@ const SimpleDashboard: React.FC = () => {
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [sidebarImageError, setSidebarImageError] = useState(false);
   const [headerImageError, setHeaderImageError] = useState(false);
-  
-  
+
+  // 프로필 팝업 상태
+  const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
+  const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
+
   // Firebase 프로젝트 목록 상태
   const [firebaseProjects, setFirebaseProjects] = useState<ProjectSummary[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true); // 초기값을 true로 설정
@@ -2412,12 +2416,13 @@ const SimpleDashboard: React.FC = () => {
             {/* 프로필 영역은 항상 표시 - user가 없어도 기본 아이콘 표시 */}
             <div
               className={styles.userProfile}
-              onClick={() => {
-                setActiveMenu('profile');
-                setBreadcrumbPath([]);
-                setSelectedProjectId(null);
-                setCurrentFolderId(null);
-                navigate('/dashboard/profile');
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setProfilePopupPosition({
+                  top: rect.bottom + 8,
+                  right: window.innerWidth - rect.right
+                });
+                setIsProfilePopupOpen(!isProfilePopupOpen);
               }}
               style={{ cursor: 'pointer' }}
             >
@@ -3928,12 +3933,19 @@ const SimpleDashboard: React.FC = () => {
 
       {/* Step1 모달 - 새 디자인 생성 */}
       {isStep1ModalOpen && modalProjectId && (
-        <Step1 
+        <Step1
           onClose={handleCloseStep1Modal}
           projectId={modalProjectId}
           projectTitle={modalProjectTitle || undefined}
         />
       )}
+
+      {/* 프로필 팝업 */}
+      <ProfilePopup
+        isOpen={isProfilePopupOpen}
+        onClose={() => setIsProfilePopupOpen(false)}
+        position={profilePopupPosition}
+      />
     </div>
   );
 };
