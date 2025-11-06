@@ -3,7 +3,13 @@ import { ThreeEvent } from '@react-three/fiber';
 import { useFurnitureStore } from '@/store';
 import { useUIStore } from '@/store/uiStore';
 
-export const useFurnitureSelection = () => {
+interface UseFurnitureSelectionOptions {
+  readOnly?: boolean;
+}
+
+export const useFurnitureSelection = (options?: UseFurnitureSelectionOptions) => {
+  const { readOnly = false } = options || {};
+
   const editMode = useFurnitureStore(state => state.editMode);
   const editingModuleId = useFurnitureStore(state => state.editingModuleId);
   const setEditMode = useFurnitureStore(state => state.setEditMode);
@@ -17,17 +23,24 @@ export const useFurnitureSelection = () => {
 
   // 가구 클릭 핸들러 (더블클릭 편집모드)
   const handleFurnitureClick = (e: ThreeEvent<MouseEvent>, placedModuleId: string) => {
+    // 읽기 전용 모드에서는 편집 불가
+    if (readOnly) {
+      console.log('🚫 읽기 전용 모드 - 가구 편집 차단');
+      e.stopPropagation();
+      return;
+    }
+
     // 드래그였다면 클릭 이벤트 무시
     if (isDragging.current) return;
-    
+
     console.log('🖱️ 더블클릭 감지:', {
       placedModuleId,
       event: e.type,
       button: e.button
     });
-    
+
     e.stopPropagation();
-    
+
     if (viewMode === '3D') {
       setSelectedFurnitureId(placedModuleId);
     } else {

@@ -45,6 +45,7 @@ interface RoomProps {
   showFurniture?: boolean; // 가구 본체 표시 여부
   hideEdges?: boolean; // 외곽선 숨김 (PDF 캡처용)
   cameraModeOverride?: 'perspective' | 'orthographic'; // 카메라 모드 오버라이드
+  readOnly?: boolean; // 읽기 전용 모드 (viewer 권한)
 }
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
@@ -221,7 +222,8 @@ const Room: React.FC<RoomProps> = ({
   activeZone,
   showFurniture,
   hideEdges = false,
-  cameraModeOverride
+  cameraModeOverride,
+  readOnly = false
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
@@ -3328,7 +3330,7 @@ const Room: React.FC<RoomProps> = ({
               placedModules: filteredModules
             });
 
-            return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={showFurniture} />;
+            return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={showFurniture} readOnly={readOnly} />;
           })()}
         </>
       ) : (
@@ -3343,7 +3345,7 @@ const Room: React.FC<RoomProps> = ({
             selectedSlotIndex,
             timestamp: Date.now()
           })}
-          <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={showFurniture} />
+          <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={showFurniture} readOnly={readOnly} />
         </>
       )}
     </group>

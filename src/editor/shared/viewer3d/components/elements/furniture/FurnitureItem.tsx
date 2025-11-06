@@ -191,6 +191,7 @@ interface FurnitureItemProps {
   view2DDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
   renderMode: 'solid' | 'wireframe';
   showFurniture?: boolean; // 가구 본체 표시 여부
+  readOnly?: boolean; // 읽기 전용 모드 (viewer 권한)
   onPointerDown: (e: ThreeEvent<PointerEvent>, id: string) => void;
   onPointerMove: (e: ThreeEvent<PointerEvent>) => void;
   onPointerUp: () => void;
@@ -209,6 +210,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   view2DDirection,
   renderMode,
   showFurniture = true,
+  readOnly = false,
   onPointerDown,
   onPointerMove,
   onPointerUp,
@@ -3264,8 +3266,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
       
-      {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true이고 3D 모드일 때만 표시 */}
-      {showFurnitureEditHandles && showDimensions && viewMode === '3D' && (
+      {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true이고 3D 모드일 때만 표시, 읽기 전용 모드에서는 숨김 */}
+      {!readOnly && showFurnitureEditHandles && showDimensions && viewMode === '3D' && (
         <Html
           position={[
             adjustedPosition.x,

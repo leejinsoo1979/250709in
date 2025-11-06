@@ -15,6 +15,7 @@ interface PlacedFurnitureContainerProps {
   placedModules?: any[];
   activeZone?: 'normal' | 'dropped';
   showFurniture?: boolean;
+  readOnly?: boolean; // 읽기 전용 모드 (viewer 권한)
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
@@ -23,7 +24,8 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   renderMode,
   placedModules: propPlacedModules,
   activeZone,
-  showFurniture
+  showFurniture,
+  readOnly = false
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
@@ -137,9 +139,9 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
   // 커스텀 훅들 사용 - 조건부 호출 제거
   const isViewerOnly = !!propPlacedModules;
-  
+
   // 항상 훅을 호출하되, 결과를 조건부로 사용
-  const selectionStateFromHook = useFurnitureSelection();
+  const selectionStateFromHook = useFurnitureSelection({ readOnly });
   const dragHandlersFromHook = useFurnitureDrag({ spaceInfo });
   
   // 키보드 이벤트 훅 - 항상 호출
@@ -265,6 +267,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
             onPointerUp={dragHandlers.handlePointerUp}
             onDoubleClick={selectionState.handleFurnitureClick}
             showFurniture={showFurniture}
+            readOnly={readOnly}
           />
         );
       })}

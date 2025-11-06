@@ -980,6 +980,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showAxis={showAxis}
                 isStep2={isStep2}
                 showFurniture={showFurniture}
+                readOnly={readOnly}
               />
             </ThreeCanvas>
             <div style={{
@@ -1063,6 +1064,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showAxis={showAxis}
                 isStep2={isStep2}
                 showFurniture={showFurniture}
+                readOnly={readOnly}
               />
             </ThreeCanvas>
             <div style={{
@@ -1146,6 +1148,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showAxis={showAxis}
                 isStep2={isStep2}
                 showFurniture={showFurniture}
+                readOnly={readOnly}
               />
             </ThreeCanvas>
             <div style={{
@@ -1228,6 +1231,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showGuides={showGuides}
                 showAxis={showAxis}
                 isStep2={isStep2}
+                readOnly={readOnly}
                 showFurniture={showFurniture}
               />
             </ThreeCanvas>
@@ -1377,6 +1381,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               activeZone={activeZone}
               showFurniture={showFurniture}
               hideEdges={hideEdges}
+              readOnly={readOnly}
             />
             
             {/* 단내림 공간 렌더링 */}
@@ -1772,7 +1777,8 @@ const QuadrantContent: React.FC<{
   isStep2?: boolean;
   throttledUpdateColumn?: (id: string, updates: any) => void;
   showFurniture?: boolean;
-}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showDimensionsText, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone, showFurniture }) => {
+  readOnly?: boolean;
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showDimensionsText, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone, showFurniture, readOnly = false }) => {
   const { placedModules } = useFurnitureStore();
   const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
   const { activePopup } = useUIStore();
@@ -1850,6 +1856,7 @@ const QuadrantContent: React.FC<{
         materialConfig={materialConfig}
         activeZone={activeZone}
         showFurniture={showFurniture}
+        readOnly={readOnly}
       />
     </React.Suspense>
   );
