@@ -25,6 +25,8 @@ import NotificationBadge from '../components/common/NotificationBadge';
 import ProjectViewerModal from '../components/common/ProjectViewerModal';
 import ThumbnailImage from '../components/common/ThumbnailImage';
 import ProfilePopup from '../editor/Configurator/components/ProfilePopup';
+import { NotificationCenter } from '@/components/NotificationCenter';
+import { ShareLinkModal } from '@/components/ShareLinkModal';
 // import { generateProjectThumbnail } from '../utils/thumbnailGenerator';
 import styles from './SimpleDashboard.module.css';
 
@@ -88,6 +90,11 @@ const SimpleDashboard: React.FC = () => {
   // 프로필 팝업 상태
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
+
+  // 공유 링크 모달 상태
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareProjectId, setShareProjectId] = useState<string | null>(null);
+  const [shareProjectName, setShareProjectName] = useState<string>('');
 
   // Firebase 프로젝트 목록 상태
   const [firebaseProjects, setFirebaseProjects] = useState<ProjectSummary[]>([]);
@@ -2426,11 +2433,7 @@ const SimpleDashboard: React.FC = () => {
               <button className={styles.actionButton}>
                 <MessageIcon size={20} />
               </button>
-              <NotificationBadge>
-                <button className={styles.actionButton}>
-                  <BellIcon size={20} />
-                </button>
-              </NotificationBadge>
+              <NotificationCenter />
             </div>
             
             {/* 프로필 영역은 항상 표시 - user가 없어도 기본 아이콘 표시 */}
@@ -3196,9 +3199,25 @@ const SimpleDashboard: React.FC = () => {
                       </div>
                     )}
                     
+                    {/* 공유 버튼 (프로젝트 타입에만 표시) */}
+                    {item.type === 'project' && (
+                      <button
+                        className={styles.cardShareButton}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShareProjectId(item.project.id);
+                          setShareProjectName(item.project.title);
+                          setShareModalOpen(true);
+                        }}
+                        title="프로젝트 공유"
+                      >
+                        <ShareIcon size={16} />
+                      </button>
+                    )}
+
                     {/* 더보기 버튼을 카드 우측 상단에 배치 */}
                     {item.type !== 'new-design' && item.type !== 'loading' && (
-                      <button 
+                      <button
                         className={styles.cardActionButton}
                         onClick={(e) => {
                           e.stopPropagation();
@@ -3971,6 +3990,19 @@ const SimpleDashboard: React.FC = () => {
         onClose={() => setIsProfilePopupOpen(false)}
         position={profilePopupPosition}
       />
+
+      {/* 공유 링크 모달 */}
+      {shareModalOpen && shareProjectId && shareProjectName && (
+        <ShareLinkModal
+          projectId={shareProjectId}
+          projectName={shareProjectName}
+          onClose={() => {
+            setShareModalOpen(false);
+            setShareProjectId(null);
+            setShareProjectName('');
+          }}
+        />
+      )}
     </div>
   );
 };

@@ -230,12 +230,12 @@
 .navItem:hover {
   background: var(--theme-background-secondary) !important;
   color: var(--theme-text) !important;
-
+  transform: translateX(4px);
 }
 
 .navItem:hover::before {
   opacity: 0.08;
-
+  transform: translateX(0);
 }
 
 .navItem.active {
@@ -515,7 +515,7 @@
 
 .searchButton:hover {
   background: var(--theme-primary-hover);
-
+  transform: translateY(-50%) scale(1.05);
 }
 
 .searchButton:active {
@@ -1141,7 +1141,7 @@
 
 .designGrid.listView .cardCheckbox:hover {
   background: transparent !important;
-
+  transform: none !important;
 }
 
 /* 디자인 카드 호버 오버레이 */
@@ -1200,7 +1200,7 @@
 
 .overlayButton:hover {
   background: var(--theme-background-secondary, #f3f4f6);
-
+  transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -1253,7 +1253,7 @@
 
 .moreMenuItem:hover {
   background: var(--theme-background-secondary);
-
+  transform: translateX(2px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -1538,7 +1538,7 @@
   background: var(--theme-primary-light);
   border-color: var(--theme-primary);
   color: var(--theme-primary);
-
+  transform: translateY(-1px);
 }
 
 .listActionBtn svg {
@@ -1596,7 +1596,7 @@
 
 .designGrid.listView .designCard:hover {
   background: var(--theme-background-secondary, rgba(16, 185, 129, 0.03)) !important;
-
+  transform: none !important;
   box-shadow: none !important;
   border-bottom: 1px solid var(--theme-border, #e5e7eb);
   cursor: pointer;
@@ -2101,36 +2101,7 @@
 .cardActionButton:hover {
   background: var(--theme-surface);
   color: var(--theme-text);
-
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
-/* 공유 버튼 스타일 */
-.cardShareButton {
-  position: absolute;
-  top: 12px;
-  right: 48px; /* 더보기 버튼 왼쪽에 배치 */
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: var(--theme-surface, rgba(255, 255, 255, 0.95));
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--theme-text-secondary);
-  transition: all 0.2s;
-  z-index: 100;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  pointer-events: auto;
-}
-
-.cardShareButton:hover {
-  background: var(--theme-primary);
-  color: white;
-  transform: scale(1.1);
+  transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -2149,7 +2120,7 @@
 .designGrid.listView .cardActionButton:hover {
   background: var(--theme-background-secondary);
   border-color: var(--theme-border);
-
+  transform: none !important;
   box-shadow: none !important;
 }
 
@@ -2537,7 +2508,7 @@
 
 .createTeamBtn:hover {
   background: var(--theme-primary-hover);
-
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
@@ -2839,7 +2810,7 @@
 
 .emptyTrashBtn:hover {
   background: var(--theme-primary-hover, #059669);
-
+  transform: translateY(-1px);
   box-shadow: 0 2px 4px var(--theme-primary-light, rgba(16, 185, 129, 0.3));
 }
 
@@ -2861,7 +2832,7 @@
 
 .createDesignBtn:hover {
   background: var(--theme-primary-hover, #059669);
-
+  transform: translateY(-1px);
   box-shadow: 0 2px 4px var(--theme-primary-light, rgba(16, 185, 129, 0.3));
 }
 
@@ -2884,7 +2855,7 @@
 
 .bulkDeleteButton:hover {
   background: var(--theme-primary-hover);
-
+  transform: translateY(-2px);
   box-shadow: 0 4px 12px var(--theme-primary-light);
 }
 
@@ -2936,7 +2907,7 @@
 
 .popupButton:hover {
   background: var(--theme-background-secondary);
-
+  transform: translateX(2px);
 }
 
 .popupButton svg {
@@ -2964,7 +2935,7 @@
 
 .createDesignBtnInList:hover {
   background: var(--theme-primary-hover, #0051D5);
-
+  transform: translateY(-1px);
   box-shadow: 0 2px 4px var(--theme-primary-light, rgba(0, 122, 255, 0.2));
 }
 

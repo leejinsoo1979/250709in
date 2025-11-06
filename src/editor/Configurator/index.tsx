@@ -9,6 +9,7 @@ import { useFurnitureSpaceAdapter } from '@/editor/shared/furniture/hooks/useFur
 import { getProject, updateProject, createProject, createDesignFile } from '@/firebase/projects';
 import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture';
 import { useAuth } from '@/auth/AuthProvider';
+import { useProjectPermission } from '@/hooks/useProjectPermission';
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleById } from '@/data/modules';
@@ -63,6 +64,9 @@ const Configurator: React.FC = () => {
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
   const [currentDesignFileId, setCurrentDesignFileId] = useState<string | null>(null);
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
+
+  // 프로젝트 권한 확인
+  const { permission, canEdit, isOwner } = useProjectPermission(currentProjectId);
 
   // Store hooks
   const { setBasicInfo, basicInfo } = useProjectStore();

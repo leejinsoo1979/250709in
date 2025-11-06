@@ -20,6 +20,7 @@ import { SplitLoginForm } from '@/components/auth/SplitLoginForm';
 import FirebaseDebug from '@/components/FirebaseDebug';
 import FirebaseDataDebug from '@/components/debug/FirebaseDataDebug';
 import { TouchTestPage } from '@/components/TouchUI/TouchTestPage';
+import { ShareLinkAccess } from '@/pages/ShareLinkAccess';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -122,6 +123,8 @@ function AppContent() {
         } />
         {/* 공유 뷰어 라우트 */}
         <Route path="/viewer/:projectId" element={<ViewerPage />} />
+        {/* 공유 링크 접근 라우트 */}
+        <Route path="/share/:token" element={<ShareLinkAccess />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </>
