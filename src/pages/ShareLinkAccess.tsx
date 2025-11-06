@@ -56,11 +56,6 @@ export const ShareLinkAccess: React.FC = () => {
             setIsValidating(false);
             return;
           }
-
-          // 로그인 되어 있고 비밀번호 없으면 바로 권한 부여
-          if (user && !validation.link.password) {
-            await handleGrantAccess();
-          }
         }
 
         setIsValidating(false);
@@ -73,6 +68,14 @@ export const ShareLinkAccess: React.FC = () => {
 
     validateLink();
   }, [token, user, authLoading]);
+
+  // 로그인 후 자동 권한 부여 (비밀번호 없는 경우)
+  useEffect(() => {
+    if (user && link && !link.password && !success && !isGranting && !error) {
+      console.log('🔐 로그인 확인됨, 자동 권한 부여 시작');
+      handleGrantAccess();
+    }
+  }, [user, link, success, isGranting, error]);
 
   // 권한 부여 처리
   const handleGrantAccess = async () => {
