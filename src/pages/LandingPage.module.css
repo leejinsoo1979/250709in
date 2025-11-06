@@ -66,18 +66,18 @@
 
 .navButton {
   padding: 0.625rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
   border: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, background 0.2s;
 }
 
 .navButton:hover {
+  background: #5568d3;
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
 }
 
 .navButtonSecondary {
@@ -197,10 +197,7 @@
 }
 
 .heroTitleGradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #667eea;
 }
 
 .heroSubtitle {
@@ -223,19 +220,19 @@
   align-items: center;
   gap: 0.5rem;
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
   border: none;
   border-radius: 12px;
   font-size: 1.125rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: transform 0.3s, background 0.3s;
 }
 
 .primaryButton:hover {
+  background: #5568d3;
   transform: translateY(-3px);
-  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.4);
 }
 
 .secondaryButton {
@@ -486,19 +483,19 @@
 
 .demoButton {
   padding: 1rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
   border: none;
   border-radius: 12px;
   font-size: 1.125rem;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: transform 0.3s, background 0.3s;
 }
 
 .demoButton:hover {
+  background: #5568d3;
   transform: translateY(-3px);
-  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.4);
 }
 
 .demoVisual {
@@ -635,7 +632,7 @@
   display: inline-block;
   margin-left: 0.5rem;
   padding: 0.25rem 0.5rem;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #10b981;
   color: white;
   font-size: 0.75rem;
   border-radius: 6px;
@@ -682,7 +679,7 @@
   top: -12px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
   padding: 0.5rem 1.5rem;
   border-radius: 20px;
@@ -785,7 +782,7 @@
 .planButtonFeatured {
   width: 100%;
   padding: 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
   color: white;
   border: none;
   border-radius: 12px;
@@ -796,14 +793,14 @@
 }
 
 .planButtonFeatured:hover {
+  background: #5568d3;
   transform: translateY(-2px);
-  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.5);
 }
 
 /* CTA Section */
 .cta {
   padding: 8rem 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #667eea;
 }
 
 .ctaContent {
