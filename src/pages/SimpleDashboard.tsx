@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { Timestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
+import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
+import { BsFillFolderFill } from "react-icons/bs";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile } from '@/firebase/projects';
 import { signOutUser } from '@/firebase/auth';
@@ -2295,7 +2296,7 @@ const SimpleDashboard: React.FC = () => {
             }}
           >
             <div className={styles.navItemIcon}>
-              <FolderIcon size={20} />
+              <BsFillFolderFill size={20} />
             </div>
             <span>전체 프로젝트</span>
             <span className={styles.navItemCount}>{allProjects.length}</span>
@@ -2762,7 +2763,7 @@ const SimpleDashboard: React.FC = () => {
                             {isSelected && (
                               <button className={styles.createFolderBtn} onClick={handleCreateFolder}>
                                 <div className={styles.createFolderIcon}>
-                                  <FolderIcon size={16} />
+                                  <BsFillFolderFill size={16} />
                                   <PlusIcon size={12} />
                                 </div>
                                 <span>새로운 폴더</span>
@@ -2789,7 +2790,7 @@ const SimpleDashboard: React.FC = () => {
                               }}
                               style={{ cursor: 'pointer' }}
                             >
-                              <FolderIcon size={16} />
+                              <BsFillFolderFill size={16} />
                             </div>
                             <span>{folder.name}</span>
                             {folder.children && folder.children.length > 0 && (
@@ -3233,10 +3234,7 @@ const SimpleDashboard: React.FC = () => {
                         </div>
                       ) : item.type === 'folder' ? (
                         <div className={styles.folderIcon}>
-                          <svg className={styles.folderIconSvg} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 4h6l2 2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z" fill="var(--theme-primary, #10b981)"/>
-                            <path d="M4 6h16v10H4V6z" fill="var(--theme-primary, #10b981)" fillOpacity="0.7"/>
-                          </svg>
+                          <BsFillFolderFill size={48} style={{ color: 'var(--theme-primary, #10b981)' }} />
                         </div>
                       ) : (
                         (() => {
@@ -3378,7 +3376,7 @@ const SimpleDashboard: React.FC = () => {
                                 <div key={projectItem.id} className={styles.thumbnailItem}>
                                   {projectItem.type === 'folder' ? (
                                     <div className={styles.thumbnailFolder}>
-                                      <FolderIcon size={24} />
+                                      <BsFillFolderFill size={24} />
                                     </div>
                                   ) : projectItem.type === 'design' && projectItem.designFile ? (
                                     // 디자인 파일의 실제 썸네일 표시
@@ -3836,7 +3834,7 @@ const SimpleDashboard: React.FC = () => {
                   closeMoreMenu();
                 }}
               >
-                <FolderIcon size={14} />
+                <BsFillFolderFill size={14} />
                 복원하기
               </div>
             )}
