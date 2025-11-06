@@ -82,9 +82,9 @@
 
 .navButtonSecondary {
   padding: 0.625rem 1.5rem;
-  background: transparent;
-  color: #667eea;
-  border: 2px solid #667eea;
+  background: #000000;
+  color: #ffffff;
+  border: none;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
@@ -92,8 +92,7 @@
 }
 
 .navButtonSecondary:hover {
-  background: #667eea;
-  color: white;
+  background: #1f1f1f;
   transform: translateY(-2px);
 }
 
