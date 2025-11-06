@@ -22,18 +22,19 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 // Perspective Cube Icon (원근 투영 큐브)
 const PerspectiveCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-    {/* 앞면 정사각형 */}
-    <path d="M4 9 L4 19 L14 19 L14 9 L4 9" />
-    {/* 위쪽 면 */}
-    <path d="M4 9 L9 5 L19 5 L14 9" />
-    {/* 오른쪽 면 */}
-    <path d="M14 9 L19 5 L19 15 L14 19" />
-    {/* 뒷면 점선 */}
-    <path d="M9 5 L9 15" strokeDasharray="1.5 1.5" />
-    <path d="M9 15 L4 19" strokeDasharray="1.5 1.5" />
-    <path d="M9 15 L14 19" strokeDasharray="1.5 1.5" />
-    <path d="M9 15 L19 15" strokeDasharray="1.5 1.5" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+    {/* 앞면 사각형 */}
+    <path d="M5 10 L5 20 L15 20 L15 10 Z" />
+    {/* 앞면에서 뒤로 가는 선들 (원근감) */}
+    <path d="M5 10 L8 6" />
+    <path d="M15 10 L18 6" />
+    <path d="M5 20 L8 16" />
+    <path d="M15 20 L18 16" />
+    {/* 뒷면 모서리 (점선) */}
+    <path d="M8 6 L18 6" strokeDasharray="2 2" />
+    <path d="M18 6 L18 16" strokeDasharray="2 2" />
+    <path d="M18 16 L8 16" strokeDasharray="2 2" />
+    <path d="M8 16 L8 6" strokeDasharray="2 2" />
   </svg>
 );
 
