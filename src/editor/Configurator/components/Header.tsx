@@ -4,8 +4,9 @@ import styles from './Header.module.css';
 import { Settings, Menu, User, ChevronDown, Undo, Redo } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
-import { TbTableExport, TbCube, TbBox } from 'react-icons/tb';
+import { TbTableExport, TbBox } from 'react-icons/tb';
 import { HiViewfinderCircle } from "react-icons/hi2";
+import { PiCubeFocus } from "react-icons/pi";
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -588,7 +589,7 @@ const Header: React.FC<HeaderProps> = ({
                     setIsCameraMenuOpen(false);
                   }}
                 >
-                  <TbCube size={16} style={{ marginRight: '8px' }} />
+                  <PiCubeFocus size={16} style={{ marginRight: '8px' }} />
                   <span className={styles.checkmark}>
                     {cameraMode === 'perspective' && '✓'}
                   </span>
