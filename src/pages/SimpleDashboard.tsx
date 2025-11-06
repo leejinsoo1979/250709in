@@ -2459,12 +2459,25 @@ const SimpleDashboard: React.FC = () => {
           </div>
           <div className={styles.headerRight}>
             <div className={styles.headerActions}>
+              {/* 선택된 아이템 개수 표시 */}
+              {selectedCards.size > 0 && (
+                <div className={styles.selectionInfo}>
+                  <span>{selectedCards.size}개의 항목이 선택됨</span>
+                  <button
+                    className={styles.clearSelectionBtn}
+                    onClick={() => setSelectedCards(new Set())}
+                  >
+                    선택 해제
+                  </button>
+                </div>
+              )}
+
               <button className={styles.actionButton}>
                 <MessageIcon size={20} />
               </button>
               <NotificationCenter />
             </div>
-            
+
             {/* 프로필 영역은 항상 표시 - user가 없어도 기본 아이콘 표시 */}
             <div
               className={styles.userProfile}
@@ -2524,19 +2537,6 @@ const SimpleDashboard: React.FC = () => {
                 <h1 className={styles.subHeaderTitle}>휴지통</h1>
               )}
               {/* 북마크는 타이틀 없음 */}
-              
-              {/* 선택된 아이템 개수 표시 */}
-              {selectedCards.size > 0 && (
-                <div className={styles.selectionInfo}>
-                  <span>{selectedCards.size}개의 항목이 선택됨</span>
-                  <button 
-                    className={styles.clearSelectionBtn}
-                    onClick={() => setSelectedCards(new Set())}
-                  >
-                    선택 해제
-                  </button>
-                </div>
-              )}
             </div>
             
             {/* 우측 액션 버튼들 */}
