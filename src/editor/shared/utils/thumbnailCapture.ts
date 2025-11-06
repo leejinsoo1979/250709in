@@ -94,28 +94,8 @@ export const captureCanvasThumbnail = (
     tempCtx.fillStyle = '#f5f5f5';
     tempCtx.fillRect(0, 0, width, height);
 
-    // 원본 캔버스의 비율 계산
-    const sourceAspect = canvas.width / canvas.height;
-    const targetAspect = width / height;
-
-    let drawWidth = width;
-    let drawHeight = height;
-    let offsetX = 0;
-    let offsetY = 0;
-
-    // 원본 비율을 유지하면서 목표 크기에 맞춤 (contain 방식)
-    if (sourceAspect > targetAspect) {
-      // 원본이 더 넓음 - 너비를 기준으로 맞춤
-      drawHeight = width / sourceAspect;
-      offsetY = (height - drawHeight) / 2;
-    } else {
-      // 원본이 더 높음 - 높이를 기준으로 맞춤
-      drawWidth = height * sourceAspect;
-      offsetX = (width - drawWidth) / 2;
-    }
-
-    // 원본 캔버스를 비율을 유지하면서 썸네일 크기로 복사
-    tempCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, offsetX, offsetY, drawWidth, drawHeight);
+    // 원본 캔버스를 썸네일 크기로 리사이징 (비율이 이미 맞춰진 상태)
+    tempCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, width, height);
     
     // base64 이미지로 변환
     return tempCanvas.toDataURL('image/png', quality);
@@ -166,11 +146,17 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
     
     // 뷰 전환 후 렌더링 완료 대기 (시간 단축)
     await new Promise(resolve => setTimeout(resolve, 200));
-    
+
+    // 원본 캔버스의 비율 유지하여 썸네일 캡처
+    const aspectRatio = canvas.width / canvas.height;
+    const maxWidth = 400;
+    const thumbnailWidth = maxWidth;
+    const thumbnailHeight = Math.round(maxWidth / aspectRatio);
+
     // 썸네일 캡처
     const thumbnail = captureCanvasThumbnail(canvas, {
-      width: 300,
-      height: 200,
+      width: thumbnailWidth,
+      height: thumbnailHeight,
       quality: 0.8
     });
     
@@ -249,12 +235,23 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
     // 렌더링이 완료될 시간을 주기 위해 잠시 대기
     await new Promise(resolve => setTimeout(resolve, 300));
     
+    // 원본 캔버스의 비율 계산
+    const aspectRatio = canvas.width / canvas.height;
+    const maxWidth = 400;
+    const thumbnailWidth = maxWidth;
+    const thumbnailHeight = Math.round(maxWidth / aspectRatio);
+
+    console.log('📸 썸네일 크기 계산:', {
+      원본비율: aspectRatio.toFixed(2),
+      썸네일크기: `${thumbnailWidth}x${thumbnailHeight}`
+    });
+
     // 여러 번 시도하여 가장 좋은 결과 선택
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const thumbnail = captureCanvasThumbnail(canvas, {
-          width: 400,
-          height: 300,
+          width: thumbnailWidth,
+          height: thumbnailHeight,
           quality: 0.9
         });
         
