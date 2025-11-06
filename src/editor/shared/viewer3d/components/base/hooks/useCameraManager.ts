@@ -57,10 +57,10 @@ export const useCameraManager = (
 
     // 거리를 적절한 zoom으로 변환 (거리가 클수록 zoom이 작아져야 함)
     // 2D 모드에서는 거리가 2배이므로 zoom을 0.7배로 조정
-    // 3D Orthographic 모드에서도 perspective와 같은 거리감을 위해 zoom을 0.7배로 조정
+    // 3D Orthographic 모드에서는 perspective보다 크게 보이므로 zoom을 0.5배로 조정
     // 4분할 뷰에서는 화면이 1/4 크기이므로 zoom을 0.35배로 조정
     const is3DOrthographic = viewMode === '3D' && cameraMode === 'orthographic';
-    const zoomMultiplier = isSplitView ? 0.35 : (is2DMode ? 0.7 : (is3DOrthographic ? 0.7 : 1.0));
+    const zoomMultiplier = isSplitView ? 0.35 : (is2DMode ? 0.7 : (is3DOrthographic ? 0.5 : 1.0));
     const zoom = (1200 / distance) * zoomMultiplier;
     
     const canvasAspectRatio = window.innerWidth / window.innerHeight;

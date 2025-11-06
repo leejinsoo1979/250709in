@@ -166,55 +166,54 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
           {/* 모달 헤더 */}
           <div className={styles.modalHeader}>
             <div className={styles.headerLeft}>
-              <div className={styles.titleRow}>
-                <h2 className={styles.modalTitle}>
-                  {loading ? '프로젝트 로딩 중...' : (project ? project.title : '프로젝트를 찾을 수 없음')}
-                </h2>
-                {/* 2D/3D 토글 버튼 */}
-                {project && !loading && !error && (
-                  <>
-                    <div className={styles.viewModeToggle}>
-                      <button
-                        className={`${styles.viewModeButton} ${viewMode === '2D' ? styles.active : ''}`}
-                        onClick={() => setViewMode('2D')}
-                      >
-                        2D
-                      </button>
-                      <button
-                        className={`${styles.viewModeButton} ${viewMode === '3D' ? styles.active : ''}`}
-                        onClick={() => setViewMode('3D')}
-                      >
-                        3D
-                      </button>
-                    </div>
-                    {/* Perspective/Orthographic 토글 버튼 (3D 모드일 때만) */}
-                    {viewMode === '3D' && (
-                      <div className={styles.viewModeToggle}>
-                        <button
-                          className={`${styles.viewModeButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
-                          onClick={() => setCameraMode('perspective')}
-                          title="원근 투영"
-                        >
-                          Perspective
-                        </button>
-                        <button
-                          className={`${styles.viewModeButton} ${cameraMode === 'orthographic' ? styles.active : ''}`}
-                          onClick={() => setCameraMode('orthographic')}
-                          title="정투영"
-                        >
-                          Orthographic
-                        </button>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
+              <h2 className={styles.modalTitle}>
+                {loading ? '프로젝트 로딩 중...' : (project ? project.title : '프로젝트를 찾을 수 없음')}
+              </h2>
               {project && (
                 <span className={styles.projectInfo}>
                   {viewMode} 미리보기
                 </span>
               )}
             </div>
+
+            {/* 2D/3D 및 Perspective/Orthographic 토글 버튼 - 중앙 정렬 */}
+            {project && !loading && !error && (
+              <div className={styles.headerCenter}>
+                <div className={styles.viewModeToggle}>
+                  <button
+                    className={`${styles.viewModeButton} ${viewMode === '2D' ? styles.active : ''}`}
+                    onClick={() => setViewMode('2D')}
+                  >
+                    2D
+                  </button>
+                  <button
+                    className={`${styles.viewModeButton} ${viewMode === '3D' ? styles.active : ''}`}
+                    onClick={() => setViewMode('3D')}
+                  >
+                    3D
+                  </button>
+                </div>
+                {/* Perspective/Orthographic 토글 버튼 (3D 모드일 때만) */}
+                {viewMode === '3D' && (
+                  <div className={styles.viewModeToggle}>
+                    <button
+                      className={`${styles.viewModeButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
+                      onClick={() => setCameraMode('perspective')}
+                      title="원근 투영"
+                    >
+                      Perspective
+                    </button>
+                    <button
+                      className={`${styles.viewModeButton} ${cameraMode === 'orthographic' ? styles.active : ''}`}
+                      onClick={() => setCameraMode('orthographic')}
+                      title="정투영"
+                    >
+                      Orthographic
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className={styles.headerActions}>
               <button
