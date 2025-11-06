@@ -988,7 +988,7 @@
 
 .designGrid:not(.folderView):not(.listView) .designCard.folderCard:hover,
 .designGrid.folderView:not(.listView) .designCard:hover {
-  transform: translateY(-4px);
+  /* transform 제거 - 레이아웃 떨림 방지 */
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
   border-color: var(--theme-primary, #10b981);
 }
@@ -1410,7 +1410,7 @@
 
 .designCard:hover {
   box-shadow: var(--theme-shadow);
-  transform: translateY(-2px);
+  /* transform 제거 - 레이아웃 떨림 방지 */
   border: 2px solid var(--theme-primary);
 }
 
