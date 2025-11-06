@@ -233,22 +233,28 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
 
     setUploadingImage(true);
     try {
-      // 임리 압축
+      console.log('📤 프로필 사진 업로드 시작...');
+      // 이미지 압축
       const compressedFile = await compressImage(file, 400, 0.8);
-      
+
       const { photoURL, error } = await uploadProfileImage(compressedFile);
       if (error) {
         alert(error);
       } else {
+        console.log('✅ 프로필 사진 업로드 성공:', photoURL);
         alert('프로필 사진이 업데이트되었습니다.');
-        // Auth 상태 동기화를 위해 페이지 새로고침
-        window.location.reload();
+        // Auth 상태는 AuthProvider가 자동으로 감지하므로
+        // 짧은 대기 후 페이지 새로고침으로 이미지 캐시 갱신
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       }
     } catch (err) {
+      console.error('❌ 프로필 사진 업로드 에러:', err);
       alert('프로필 사진 업로드 중 오류가 발생했습니다.');
     } finally {
       setUploadingImage(false);
-      // 입력 배드로 스위트
+      // 입력 리셋
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -258,20 +264,26 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
   // 프로필 사진 삭제
   const handleImageDelete = async () => {
     if (!user?.photoURL) return;
-    
+
     if (!confirm('프로필 사진을 삭제하시겠습니까?')) return;
 
     setUploadingImage(true);
     try {
+      console.log('🗑️ 프로필 사진 삭제 시작...');
       const { error } = await deleteProfileImage();
       if (error) {
         alert(error);
       } else {
+        console.log('✅ 프로필 사진 삭제 성공');
         alert('프로필 사진이 삭제되었습니다.');
-        // Auth 상태 동기화를 위해 페이지 새로고침
-        window.location.reload();
+        // Auth 상태는 AuthProvider가 자동으로 감지하므로
+        // 짧은 대기 후 페이지 새로고침으로 이미지 캐시 갱신
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
       }
     } catch (err) {
+      console.error('❌ 프로필 사진 삭제 에러:', err);
       alert('프로필 사진 삭제 중 오류가 발생했습니다.');
     } finally {
       setUploadingImage(false);

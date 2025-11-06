@@ -31,26 +31,27 @@ export const uploadProfileImage = async (
     }
 
     // 기존 프로필 사진 삭제 (있다면)
-    try {
-      if (user.photoURL) {
-        const oldImageRef = ref(storage, `profile-images/${user.uid}`);
-        await deleteObject(oldImageRef);
-      }
-    } catch (error) {
-      // 기존 파일이 없거나 삭제 실패해도 계속 진행
-      console.warn('기존 프로필 사진 삭제 실패:', error);
-    }
+    // Storage의 오래된 파일들은 정리하지 않고 새 파일만 업로드
+    // (오래된 파일은 Storage 정리 작업으로 별도 처리)
 
-    // 새로운 파일 업로드
-    const imageRef = ref(storage, `profile-images/${user.uid}`);
+    // 새로운 파일 업로드 (캐시 버스팅을 위해 timestamp 추가)
+    const timestamp = Date.now();
+    const imageRef = ref(storage, `profile-images/${user.uid}_${timestamp}`);
     const snapshot = await uploadBytes(imageRef, file);
-    const photoURL = await getDownloadURL(snapshot.ref);
+    let photoURL = await getDownloadURL(snapshot.ref);
+
+    // 캐시 방지를 위해 URL에 timestamp 쿼리 파라미터 추가
+    photoURL = `${photoURL}?t=${timestamp}`;
+
+    console.log('📸 프로필 사진 업로드 완료:', photoURL);
 
     // Firebase Auth 프로필 업데이트
     await updateProfile(user, { photoURL });
+    console.log('✅ Auth 프로필 업데이트 완료');
 
     // Auth 상태 새로고침으로 UI에 즉시 반영
     await user.reload();
+    console.log('🔄 Auth 상태 새로고침 완료');
 
     return { photoURL, error: null };
   } catch (error) {
