@@ -383,10 +383,10 @@ const Configurator: React.FC = () => {
 
       if (project) {
         // 프로젝트 데이터를 설정하되, title은 Firebase의 title을 우선 사용
-        const projectTitle = project.title || project.projectData.title || '새 프로젝트';
+        const projectTitle = project.title || project.projectData?.title || '새 프로젝트';
         setBasicInfo({
           title: projectTitle,
-          location: project.projectData.location || ''
+          location: project.projectData?.location || ''
         });
         console.log('🔍 loadProject에서 설정한 title:', projectTitle);
         // installType 하이픈 문제 수정
