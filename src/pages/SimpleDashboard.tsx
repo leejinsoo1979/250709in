@@ -38,6 +38,11 @@ const SimpleDashboard: React.FC = () => {
   const location = useLocation();
   const { user, loading } = useAuth();
 
+  // URL 파라미터 파싱
+  const searchParams = new URLSearchParams(location.search);
+  const urlProjectId = searchParams.get('projectId');
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+
   // 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트 (로딩 완료 후에만)
   useEffect(() => {
     if (!loading && !user) {
@@ -46,37 +51,6 @@ const SimpleDashboard: React.FC = () => {
     }
   }, [user, loading, navigate]);
 
-  // 로딩 중이거나 로그인되지 않은 상태에서는 로딩 표시
-  if (loading) {
-    return (
-      <div style={{
-        width: '100vw',
-        height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'var(--theme-background, #ffffff)'
-      }}>
-        <div style={{
-          textAlign: 'center',
-          color: 'var(--theme-text, #000000)'
-        }}>
-          <div style={{ marginBottom: '16px' }}>로딩 중...</div>
-        </div>
-      </div>
-    );
-  }
-
-  // 로딩이 완료되었지만 사용자가 없는 경우
-  if (!user) {
-    return null;
-  }
-  
-  // URL 파라미터 파싱
-  const searchParams = new URLSearchParams(location.search);
-  const urlProjectId = searchParams.get('projectId');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  
   // 대시보드 진입 시 store의 isDirty 플래그 초기화
   useEffect(() => {
     const { markAsSaved: markProjectSaved } = useProjectStore.getState();
@@ -2228,6 +2202,32 @@ const SimpleDashboard: React.FC = () => {
         </div>
       </div>
     );
+  }
+
+  // 로딩 중일 때 로딩 표시
+  if (loading) {
+    return (
+      <div style={{
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--theme-background, #ffffff)'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          color: 'var(--theme-text, #000000)'
+        }}>
+          <div style={{ marginBottom: '16px' }}>로딩 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // 로딩이 완료되었지만 사용자가 없는 경우
+  if (!user) {
+    return null;
   }
 
   return (
