@@ -1148,6 +1148,29 @@ const Configurator: React.FC = () => {
           }
 
           console.log('✅ 디자인 파일명 변경 성공:', newName);
+
+          // BroadcastChannel로 대시보드에 알림
+          try {
+            // URL에서 projectId 가져오기 (currentProjectId가 없을 수 있음)
+            const urlProjectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
+            const effectiveProjectId = currentProjectId || urlProjectId;
+            const effectiveDesignFileId = currentDesignFileId || searchParams.get('designFileId');
+
+            const channel = new BroadcastChannel('project-updates');
+            channel.postMessage({
+              type: 'DESIGN_FILE_UPDATED',
+              projectId: effectiveProjectId,
+              designFileId: effectiveDesignFileId,
+              timestamp: Date.now()
+            });
+            console.log('📡 디자인 파일명 변경 알림 전송:', {
+              projectId: effectiveProjectId,
+              designFileId: effectiveDesignFileId
+            });
+            channel.close();
+          } catch (broadcastError) {
+            console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+          }
         } else {
           console.log('💾 [ERROR] Firebase 인증 필요');
           // 실패 시 이전 이름으로 복원
