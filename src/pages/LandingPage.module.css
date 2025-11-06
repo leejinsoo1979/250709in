@@ -19,11 +19,10 @@
 }
 
 .navContent {
-  max-width: 1400px;
+  max-width: calc(1400px + 4rem);
   margin: 0 auto;
   padding: 0 2rem;
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  display: flex;
   align-items: center;
   gap: 2rem;
 }
@@ -31,7 +30,7 @@
 .logo {
   display: flex;
   align-items: center;
-  justify-self: start;
+  flex-shrink: 0;
 }
 
 .logoImage {
@@ -44,13 +43,14 @@
   align-items: center;
   justify-content: center;
   gap: 2rem;
+  flex: 1;
 }
 
 .navButtons {
   display: flex;
   align-items: center;
-  justify-self: end;
   gap: 1rem;
+  flex-shrink: 0;
 }
 
 .navLink {
@@ -167,7 +167,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8rem 2rem 4rem;
+  padding: 8rem 0 4rem;
   overflow: hidden;
 }
 
@@ -184,8 +184,9 @@
 .heroWrapper {
   position: relative;
   z-index: 1;
-  max-width: 1400px;
+  max-width: calc(1400px + 4rem);
   width: 100%;
+  padding: 0 2rem;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
@@ -941,7 +942,7 @@
   }
 
   .navContent {
-    grid-template-columns: 1fr;
+    flex-direction: column;
     gap: 1rem;
   }
 
@@ -950,6 +951,7 @@
   }
 
   .navButtons {
-    justify-self: center;
+    width: 100%;
+    justify-content: center;
   }
 }
