@@ -1290,11 +1290,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   return (
     <ViewerThemeProvider viewMode={viewMode}>
       <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode} activeZone={activeZone}>
-        <div 
-        style={{ 
-          width: '100%', 
-          height: '100%', 
-          minHeight: '400px',
+        <div
+        style={{
+          width: '100%',
+          height: '100%',
+          minHeight: readOnly ? 'unset' : '400px',
           position: 'relative'
         }}
         onDrop={handleDrop}
