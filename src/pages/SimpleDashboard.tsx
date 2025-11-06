@@ -2762,9 +2762,7 @@ const SimpleDashboard: React.FC = () => {
                             {/* 새 폴더 생성 버튼 (선택된 프로젝트만) */}
                             {isSelected && (
                               <button className={styles.createFolderBtn} onClick={handleCreateFolder}>
-                                <div className={styles.createFolderIcon}>
-                                  <PiFolderPlus size={16} />
-                                </div>
+                                <PiFolderPlus size={16} style={{ marginRight: '8px' }} />
                                 <span>새로운 폴더</span>
                               </button>
                             )}
