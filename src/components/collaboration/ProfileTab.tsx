@@ -241,8 +241,8 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
         alert(error);
       } else {
         alert('프로필 사진이 업데이트되었습니다.');
-        // 프로필 데이터 새로고침
-        loadProfile();
+        // Auth 상태 동기화를 위해 페이지 새로고침
+        window.location.reload();
       }
     } catch (err) {
       alert('프로필 사진 업로드 중 오류가 발생했습니다.');
@@ -268,8 +268,8 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
         alert(error);
       } else {
         alert('프로필 사진이 삭제되었습니다.');
-        // 프로필 데이터 새로고침
-        loadProfile();
+        // Auth 상태 동기화를 위해 페이지 새로고침
+        window.location.reload();
       }
     } catch (err) {
       alert('프로필 사진 삭제 중 오류가 발생했습니다.');

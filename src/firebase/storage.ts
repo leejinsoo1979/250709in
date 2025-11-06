@@ -49,6 +49,9 @@ export const uploadProfileImage = async (
     // Firebase Auth 프로필 업데이트
     await updateProfile(user, { photoURL });
 
+    // Auth 상태 새로고침으로 UI에 즉시 반영
+    await user.reload();
+
     return { photoURL, error: null };
   } catch (error) {
     console.error('프로필 사진 업로드 에러:', error);
@@ -72,6 +75,9 @@ export const deleteProfileImage = async (): Promise<{ error: string | null }> =>
 
     // Firebase Auth 프로필에서 photoURL 제거
     await updateProfile(user, { photoURL: null });
+
+    // Auth 상태 새로고침으로 UI에 즉시 반영
+    await user.reload();
 
     return { error: null };
   } catch (error) {
