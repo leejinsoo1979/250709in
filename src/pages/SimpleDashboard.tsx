@@ -73,6 +73,18 @@ const SimpleDashboard: React.FC = () => {
   const [sidebarImageError, setSidebarImageError] = useState(false);
   const [headerImageError, setHeaderImageError] = useState(false);
 
+  // 프로필 사진 디버깅 및 에러 리셋
+  useEffect(() => {
+    if (user) {
+      console.log('🖼️ User photoURL:', user.photoURL);
+      console.log('🖼️ User displayName:', user.displayName);
+      console.log('🖼️ User email:', user.email);
+      // photoURL이 변경되면 에러 상태 리셋
+      setSidebarImageError(false);
+      setHeaderImageError(false);
+    }
+  }, [user?.photoURL]);
+
   // 프로필 팝업 상태
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
@@ -2245,17 +2257,19 @@ const SimpleDashboard: React.FC = () => {
           <div className={styles.userInfo}>
             <div className={styles.userAvatar}>
               {user?.photoURL && !sidebarImageError ? (
-                <img 
-                  src={user.photoURL} 
-                  alt="프로필" 
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
+                <img
+                  src={user.photoURL}
+                  alt="프로필"
+                  style={{
+                    width: '100%',
+                    height: '100%',
                     borderRadius: '50%',
                     objectFit: 'cover'
                   }}
-                  onError={() => setSidebarImageError(true)}
-                  onLoad={() => setSidebarImageError(false)}
+                  onError={(e) => {
+                    console.error('❌ Sidebar 프로필 이미지 로드 실패:', user.photoURL);
+                    setSidebarImageError(true);
+                  }}
                 />
               ) : (
                 <UserIcon size={16} />
@@ -2437,8 +2451,10 @@ const SimpleDashboard: React.FC = () => {
                       borderRadius: '50%',
                       objectFit: 'cover'
                     }}
-                    onError={() => setHeaderImageError(true)}
-                    onLoad={() => setHeaderImageError(false)}
+                    onError={(e) => {
+                      console.error('❌ Header 프로필 이미지 로드 실패:', user.photoURL);
+                      setHeaderImageError(true);
+                    }}
                   />
                 ) : (
                   <UserIcon size={14} />
