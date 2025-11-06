@@ -113,41 +113,35 @@ export const captureCanvasThumbnail = (
 // 정면 뷰로 전환하여 썸네일 캡처
 export const captureFrontViewThumbnail = async (): Promise<string | null> => {
   const canvas = findThreeCanvas();
-  
+
   if (!canvas) {
     console.warn('3D 캔버스를 찾을 수 없어 썸네일을 생성할 수 없습니다.');
     return null;
   }
-  
+
   // 캔버스가 보이는 상태인지 확인
   if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
     console.warn('캔버스가 보이지 않는 상태입니다.');
     return null;
   }
-  
-  console.log('📸 정면 뷰 썸네일 캡처 시작...');
-  
-  // 현재 뷰 상태 저장 (나중에 복원하기 위해)
-  const currentViewMode = document.querySelector('[data-view-mode]')?.getAttribute('data-view-mode');
-  const currentViewDirection = document.querySelector('[data-view-direction]')?.getAttribute('data-view-direction');
-  
+
+  console.log('📸 3D 정면 뷰 썸네일 캡처 시작...');
+
+  // UIStore에서 현재 뷰 상태 저장
+  const uiStoreState = useUIStore.getState();
+  const originalViewMode = uiStoreState.viewMode;
+  const originalView2DDirection = uiStoreState.view2DDirection;
+
   try {
-    // 3D 정면 뷰로 전환
-    const viewModeButton = document.querySelector('[data-view-mode="3D"]') as HTMLElement;
-    const frontViewButton = document.querySelector('[data-view-direction="front"]') as HTMLElement;
+    // UIStore를 사용하여 3D 정면 뷰로 강제 전환
+    console.log('📸 원래 뷰 모드:', originalViewMode, '방향:', originalView2DDirection);
 
-    if (viewModeButton) {
-      viewModeButton.click();
-      console.log('🔄 3D 모드로 전환');
-    }
+    uiStoreState.setViewMode('3D');
+    uiStoreState.setView2DDirection('front');
+    console.log('🔄 3D 정면 뷰로 강제 전환 완료');
 
-    if (frontViewButton) {
-      frontViewButton.click();
-      console.log('🔄 정면 뷰로 전환');
-    }
-
-    // 뷰 전환 후 렌더링 완료 대기
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // 뷰 전환 후 렌더링 완료 대기 (충분한 시간 제공)
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     // 원본 캔버스의 비율 유지하여 썸네일 캡처
     const aspectRatio = canvas.width / canvas.height;
@@ -155,39 +149,43 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
     const thumbnailWidth = maxWidth;
     const thumbnailHeight = Math.round(maxWidth / aspectRatio);
 
+    console.log('📸 썸네일 캡처 시도:', {
+      캔버스크기: `${canvas.width}x${canvas.height}`,
+      비율: aspectRatio.toFixed(2),
+      썸네일크기: `${thumbnailWidth}x${thumbnailHeight}`
+    });
+
     // 썸네일 캡처
     const thumbnail = captureCanvasThumbnail(canvas, {
       width: thumbnailWidth,
       height: thumbnailHeight,
-      quality: 0.8
+      quality: 0.9
     });
-    
+
     if (thumbnail && thumbnail.length > 1000) {
-      console.log('📸 정면 뷰 썸네일 캡처 성공');
+      console.log('✅ 3D 정면 뷰 썸네일 캡처 성공, 크기:', (thumbnail.length / 1024).toFixed(2), 'KB');
       return thumbnail;
-    }
-    
-  } catch (error) {
-    console.error('정면 뷰 썸네일 캡처 실패:', error);
-  } finally {
-    // 원래 뷰 상태로 복원
-    if (currentViewMode && currentViewMode !== '3D') {
-      const originalViewModeButton = document.querySelector(`[data-view-mode="${currentViewMode}"]`) as HTMLElement;
-      if (originalViewModeButton) {
-        originalViewModeButton.click();
-        console.log('🔄 원래 뷰 모드로 복원');
-      }
+    } else {
+      console.warn('⚠️ 썸네일 캡처 실패 또는 크기 부족');
     }
 
-    if (currentViewDirection && currentViewDirection !== 'front') {
-      const originalViewDirectionButton = document.querySelector(`[data-view-direction="${currentViewDirection}"]`) as HTMLElement;
-      if (originalViewDirectionButton) {
-        originalViewDirectionButton.click();
-        console.log('🔄 원래 뷰 방향으로 복원');
-      }
+  } catch (error) {
+    console.error('❌ 3D 정면 뷰 썸네일 캡처 실패:', error);
+  } finally {
+    // 원래 뷰 상태로 복원
+    try {
+      console.log('🔄 원래 뷰 모드로 복원:', originalViewMode, '방향:', originalView2DDirection);
+      uiStoreState.setViewMode(originalViewMode);
+      uiStoreState.setView2DDirection(originalView2DDirection);
+
+      // 복원 후 렌더링 대기
+      await new Promise(resolve => setTimeout(resolve, 100));
+      console.log('✅ 원래 뷰 모드로 복원 완료');
+    } catch (restoreError) {
+      console.error('❌ 뷰 모드 복원 실패:', restoreError);
     }
   }
-  
+
   return null;
 };
 
@@ -226,52 +224,16 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
     }
 
     // 항상 3D 정면 뷰로 전환하여 캡처 (현재 뷰 상태와 무관)
-    console.log('📸 썸네일 캡처 - 3D 정면 뷰로 전환...');
+    console.log('📸 썸네일 캡처 - 3D 정면 뷰로 강제 전환...');
     const frontViewThumbnail = await captureFrontViewThumbnail();
+
     if (frontViewThumbnail) {
       console.log('✅ 3D 정면 뷰 썸네일 캡처 성공');
       return frontViewThumbnail;
     }
 
-    console.warn('정면 뷰 캡처 실패 - 현재 뷰에서 캡처 시도');
-
-    // 정면 뷰 캡처 실패 시 현재 뷰에서 캡처 시도 (fallback)
-    await new Promise(resolve => setTimeout(resolve, 200));
-
-    // 원본 캔버스의 비율 계산
-    const aspectRatio = canvas.width / canvas.height;
-    const maxWidth = 400;
-    const thumbnailWidth = maxWidth;
-    const thumbnailHeight = Math.round(maxWidth / aspectRatio);
-
-    console.log('📸 현재 뷰 썸네일 크기 계산:', {
-      원본비율: aspectRatio.toFixed(2),
-      썸네일크기: `${thumbnailWidth}x${thumbnailHeight}`
-    });
-
-    // 현재 뷰에서 캡처 시도
-    for (let attempt = 1; attempt <= 3; attempt++) {
-      try {
-        const thumbnail = captureCanvasThumbnail(canvas, {
-          width: thumbnailWidth,
-          height: thumbnailHeight,
-          quality: 0.9
-        });
-
-        if (thumbnail && thumbnail.length > 1000) {
-          console.log(`📸 현재 뷰 썸네일 캡처 성공 (${attempt}번째 시도), 크기: ${(thumbnail.length / 1024).toFixed(2)}KB`);
-          return thumbnail;
-        }
-
-        if (attempt < 3) {
-          await new Promise(resolve => setTimeout(resolve, 200));
-        }
-      } catch (error) {
-        console.warn(`썸네일 캡처 시도 ${attempt} 실패:`, error);
-      }
-    }
-
-    console.warn('모든 썸네일 캡처 시도 실패');
+    // 3D 정면 뷰 캡처 실패 시 null 반환 (fallback 없음)
+    console.error('❌ 3D 정면 뷰 썸네일 캡처 실패 - null 반환');
     return null;
   } finally {
     // 원래 상태로 복원
