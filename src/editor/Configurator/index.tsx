@@ -649,6 +649,29 @@ const Configurator: React.FC = () => {
               setSaveStatus('success');
               console.log('✅ 디자인 파일 저장 성공');
 
+              // URL에 프로젝트명과 디자인파일명 유지 (새로고침 시에도 유지)
+              const currentParams = new URLSearchParams(window.location.search);
+              let urlNeedsUpdate = false;
+
+              // 프로젝트명 업데이트
+              if (basicInfo.title && currentParams.get('projectName') !== encodeURIComponent(basicInfo.title)) {
+                currentParams.set('projectName', encodeURIComponent(basicInfo.title));
+                urlNeedsUpdate = true;
+              }
+
+              // 디자인파일명 업데이트
+              const designFileName = currentDesignFileName || basicInfo.title;
+              if (designFileName && currentParams.get('designFileName') !== encodeURIComponent(designFileName)) {
+                currentParams.set('designFileName', encodeURIComponent(designFileName));
+                urlNeedsUpdate = true;
+              }
+
+              if (urlNeedsUpdate) {
+                const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+                window.history.replaceState({}, '', newUrl);
+                console.log('🔗 저장 후 URL 업데이트:', newUrl);
+              }
+
               // BroadcastChannel로 디자인 파일 업데이트 알림
               try {
                 const channel = new BroadcastChannel('project-updates');
@@ -703,8 +726,16 @@ const Configurator: React.FC = () => {
                 console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
               }
 
-              // URL 업데이트
-              navigate(`/configurator?projectId=${effectiveProjectId}&designFileId=${designFileId}`, { replace: true });
+              // URL 업데이트 (프로젝트명과 디자인파일명 포함)
+              const params = new URLSearchParams();
+              params.set('projectId', effectiveProjectId);
+              params.set('designFileId', designFileId);
+              if (basicInfo.title) {
+                params.set('projectName', encodeURIComponent(basicInfo.title));
+                params.set('designFileName', encodeURIComponent(basicInfo.title));
+              }
+              navigate(`/configurator?${params.toString()}`, { replace: true });
+              console.log('🔗 새 디자인 파일 생성 후 URL 업데이트');
             }
           }
 
@@ -2784,9 +2815,9 @@ const Configurator: React.FC = () => {
     <div className={styles.configurator}>
       {/* 헤더 */}
       <Header
-        title={currentDesignFileName || urlDesignFileName || basicInfo.title || "새로운 디자인"}
-        projectName={basicInfo.title || urlProjectName || "새로운 프로젝트"}
-        designFileName={currentDesignFileName || urlDesignFileName}
+        title={urlDesignFileName || currentDesignFileName || basicInfo.title || "새로운 디자인"}
+        projectName={urlProjectName || basicInfo.title || "새로운 프로젝트"}
+        designFileName={urlDesignFileName || currentDesignFileName}
         onSave={saveProject}
         onPrevious={handlePrevious}
         onHelp={handleHelp}

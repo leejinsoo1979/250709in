@@ -716,7 +716,7 @@ function PageInner(){
     return name ? decodeURIComponent(name) : null;
   }, [location.search]);
 
-  const projectName = basicInfo?.title || urlProjectName || 'New Project';
+  const projectName = urlProjectName || basicInfo?.title || 'New Project';
   
   // 컷팅 메소드 드롭다운 컴포넌트
   const CuttingMethodDropdown = () => {
