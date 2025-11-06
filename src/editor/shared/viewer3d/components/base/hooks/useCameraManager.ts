@@ -63,8 +63,18 @@ export const useCameraManager = (
     // zoomMultiplierOverride가 있으면 우선 적용 (미리보기 모드 등)
     const zoomMultiplier = zoomMultiplierOverride ?? (isSplitView ? 0.35 : (is2DMode ? 0.7 : 1.0));
     const zoom = (1200 / distance) * zoomMultiplier;
-    
-    const canvasAspectRatio = window.innerWidth / window.innerHeight;
+
+    // 실제 뷰어 영역의 aspect ratio 계산 (window 크기 대신)
+    // Canvas 요소의 실제 크기를 기준으로 계산
+    const getViewerAspectRatio = () => {
+      const canvas = document.querySelector('canvas');
+      if (canvas && canvas.clientWidth > 0 && canvas.clientHeight > 0) {
+        return canvas.clientWidth / canvas.clientHeight;
+      }
+      // fallback: window 크기 기준
+      return window.innerWidth / window.innerHeight;
+    };
+    const canvasAspectRatio = getViewerAspectRatio();
     
     // 기본 뷰포트 (Three.js 기본값과 동일)
     const viewportLeft = -1;
