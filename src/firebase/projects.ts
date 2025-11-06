@@ -432,9 +432,7 @@ const updateProjectStats = async (projectId: string) => {
 export const getProject = async (projectId: string): Promise<{ project: FirebaseProject | null; error: string | null }> => {
   try {
     const user = await getCurrentUserAsync();
-    if (!user) {
-      return { project: null, error: '로그인이 필요합니다.' };
-    }
+    // 비로그인 사용자도 프로젝트 조회 가능 (공유 링크 지원)
 
     const docRef = doc(db, PROJECTS_COLLECTION, projectId);
     const docSnap = await getDocFromServer(docRef);
@@ -444,10 +442,12 @@ export const getProject = async (projectId: string): Promise<{ project: Firebase
     }
 
     const data = docSnap.data();
-    
-    // 소유자 확인
-    if (data.userId !== user.uid) {
-      return { project: null, error: '프로젝트에 접근할 권한이 없습니다.' };
+
+    // 로그인한 사용자이고 소유자가 아니면 권한 확인 (공유 권한 체크)
+    // 비로그인 사용자는 읽기만 가능
+    if (user && data.userId !== user.uid) {
+      // 공유받은 프로젝트인지 확인 (향후 구현 가능)
+      // 현재는 모든 로그인 사용자가 조회 가능
     }
 
     const project: FirebaseProject = {
@@ -455,8 +455,10 @@ export const getProject = async (projectId: string): Promise<{ project: Firebase
       ...data,
     } as FirebaseProject;
 
-    // 마지막 열람 시간 업데이트 (임시로 비활성화 - Firebase 내부 에러 방지)
-    // await updateLastOpenedAt(projectId);
+    // 마지막 열람 시간 업데이트 (로그인한 소유자만)
+    // if (user && data.userId === user.uid) {
+    //   await updateLastOpenedAt(projectId);
+    // }
 
     return { project, error: null };
   } catch (error) {
@@ -470,9 +472,7 @@ export const getProject = async (projectId: string): Promise<{ project: Firebase
 export const getProjectById = async (projectId: string): Promise<{ project: any | null; error: string | null }> => {
   try {
     const user = await getCurrentUserAsync();
-    if (!user) {
-      return { project: null, error: '로그인이 필요합니다.' };
-    }
+    // 비로그인 사용자도 프로젝트 조회 가능 (공유 링크 지원)
 
     const docRef = doc(db, PROJECTS_COLLECTION, projectId);
     const docSnap = await getDocFromServer(docRef);
@@ -482,10 +482,12 @@ export const getProjectById = async (projectId: string): Promise<{ project: any 
     }
 
     const data = docSnap.data();
-    
-    // 소유자 확인
-    if (data.userId !== user.uid) {
-      return { project: null, error: '프로젝트에 접근할 권한이 없습니다.' };
+
+    // 로그인한 사용자이고 소유자가 아니면 권한 확인 (공유 권한 체크)
+    // 비로그인 사용자는 읽기만 가능
+    if (user && data.userId !== user.uid) {
+      // 공유받은 프로젝트인지 확인 (향후 구현 가능)
+      // 현재는 모든 로그인 사용자가 조회 가능
     }
 
     // 전체 데이터 반환 (뷰어에서 필요한 모든 데이터 포함)
