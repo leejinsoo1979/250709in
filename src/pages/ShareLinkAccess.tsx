@@ -51,8 +51,19 @@ export const ShareLinkAccess: React.FC = () => {
             return;
           }
 
-          // 로그인이 필요한 경우
-          if (!user && !authLoading) {
+          // 조회 권한(viewer)이면 비회원도 바로 프로젝트로 이동
+          if (validation.link.permission === 'viewer') {
+            console.log('👁️ 조회 권한 - 비회원 접근 허용, 프로젝트로 이동');
+            setSuccess(true);
+            setTimeout(() => {
+              navigate(`/configurator?projectId=${validation.link.projectId}`);
+            }, 2000);
+            setIsValidating(false);
+            return;
+          }
+
+          // 편집 권한(editor)이고 로그인 안 되어 있으면 로그인 요구
+          if (validation.link.permission === 'editor' && !user && !authLoading) {
             setIsValidating(false);
             return;
           }
@@ -69,10 +80,10 @@ export const ShareLinkAccess: React.FC = () => {
     validateLink();
   }, [token, user, authLoading]);
 
-  // 로그인 후 자동 권한 부여 (비밀번호 없는 경우)
+  // 편집 권한 - 로그인 후 자동 권한 부여 (비밀번호 없는 경우)
   useEffect(() => {
-    if (user && link && !link.password && !success && !isGranting && !error) {
-      console.log('🔐 로그인 확인됨, 자동 권한 부여 시작');
+    if (user && link && link.permission === 'editor' && !link.password && !success && !isGranting && !error) {
+      console.log('✏️ 편집 권한 - 로그인 확인됨, 자동 권한 부여 시작');
       handleGrantAccess();
     }
   }, [user, link, success, isGranting, error]);
@@ -128,6 +139,24 @@ export const ShareLinkAccess: React.FC = () => {
       setError('비밀번호를 입력해주세요.');
       return;
     }
+
+    // 비밀번호 확인
+    if (link && link.password !== password) {
+      setError('비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    // viewer 권한이면 바로 프로젝트로 이동 (로그인 불필요)
+    if (link && link.permission === 'viewer') {
+      console.log('👁️ 조회 권한 + 비밀번호 확인 완료 - 프로젝트로 이동');
+      setSuccess(true);
+      setTimeout(() => {
+        navigate(`/configurator?projectId=${link.projectId}`);
+      }, 2000);
+      return;
+    }
+
+    // editor 권한이면 권한 부여 필요
     await handleGrantAccess();
   };
 
@@ -172,7 +201,11 @@ export const ShareLinkAccess: React.FC = () => {
       <div className={styles.container}>
         <div className={styles.card}>
           <CheckCircle className={styles.successIcon} size={64} />
-          <h2 className={styles.title}>프로젝트 접근 권한이 부여되었습니다!</h2>
+          <h2 className={styles.title}>
+            {link?.permission === 'viewer'
+              ? '프로젝트를 조회합니다!'
+              : '프로젝트 접근 권한이 부여되었습니다!'}
+          </h2>
           <p className={styles.description}>
             곧 프로젝트로 이동합니다...
           </p>
@@ -215,8 +248,45 @@ export const ShareLinkAccess: React.FC = () => {
     );
   }
 
-  // 비밀번호 입력 필요 (로그인 후)
-  if (requiresPassword && user) {
+  // 비밀번호 입력 필요 (viewer는 비로그인 가능, editor는 로그인 필요)
+  if (requiresPassword) {
+    // editor 권한이고 로그인 안 되어 있으면 먼저 로그인 요구
+    if (link?.permission === 'editor' && !user) {
+      return (
+        <div className={styles.container}>
+          <div className={styles.card}>
+            <div className={styles.iconWrapper}>
+              <Lock size={48} />
+            </div>
+            <h2 className={styles.title}>로그인이 필요합니다</h2>
+            <p className={styles.description}>
+              이 프로젝트는 비밀번호로 보호되어 있으며, 편집 권한이 필요합니다. 먼저 로그인해주세요.
+            </p>
+            {link && (
+              <div className={styles.projectInfo}>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>프로젝트:</span>
+                  <span className={styles.infoValue}>{link.projectName}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>공유자:</span>
+                  <span className={styles.infoValue}>{link.createdByName}</span>
+                </div>
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>권한:</span>
+                  <span className={styles.infoValue}>편집 가능</span>
+                </div>
+              </div>
+            )}
+            <button className={styles.button} onClick={handleGoToLogin}>
+              로그인하기
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // viewer 권한이거나 editor + 로그인 완료: 비밀번호 입력
     return (
       <div className={styles.container}>
         <div className={styles.card}>
@@ -236,6 +306,12 @@ export const ShareLinkAccess: React.FC = () => {
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>공유자:</span>
                 <span className={styles.infoValue}>{link.createdByName}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>권한:</span>
+                <span className={styles.infoValue}>
+                  {link.permission === 'viewer' ? '조회만 가능' : '편집 가능'}
+                </span>
               </div>
             </div>
           )}
@@ -262,8 +338,8 @@ export const ShareLinkAccess: React.FC = () => {
     );
   }
 
-  // 로그인 필요 (로그인하지 않은 모든 경우)
-  if (!user && link) {
+  // 로그인 필요 (편집 권한이고 로그인하지 않은 경우)
+  if (!user && link && link.permission === 'editor') {
     return (
       <div className={styles.container}>
         <div className={styles.card}>
@@ -274,7 +350,7 @@ export const ShareLinkAccess: React.FC = () => {
           <p className={styles.description}>
             {requiresPassword
               ? '이 프로젝트는 비밀번호로 보호되어 있습니다. 먼저 로그인해주세요.'
-              : '프로젝트에 접근하려면 로그인해주세요'
+              : '편집 권한으로 프로젝트에 접근하려면 로그인해주세요'
             }
           </p>
           {link && (
@@ -286,6 +362,10 @@ export const ShareLinkAccess: React.FC = () => {
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>공유자:</span>
                 <span className={styles.infoValue}>{link.createdByName}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>권한:</span>
+                <span className={styles.infoValue}>편집 가능</span>
               </div>
             </div>
           )}
