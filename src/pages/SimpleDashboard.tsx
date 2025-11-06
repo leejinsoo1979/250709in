@@ -3096,14 +3096,8 @@ const SimpleDashboard: React.FC = () => {
                 
                 return filteredItems.length > 0 ? (
                   filteredItems.map((item, index) => (
-                  <div 
+                  <div
                     key={item.id}
-                      duration: 0.3, 
-                      delay: index * 0.05,
-                      ease: [0.4, 0, 0.2, 1]
-                    }}
-                    whileHover={{ y: -4, scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                     className={`${styles.designCard} ${item.type === 'new-design' ? styles.newDesign : ''} ${item.type === 'folder' ? styles.folderCard : ''}`}
                     data-design-id={item.type === 'design' ? item.id : undefined}
                     data-item-type={item.type}
