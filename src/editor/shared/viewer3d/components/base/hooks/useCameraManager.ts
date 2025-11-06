@@ -58,11 +58,10 @@ export const useCameraManager = (
 
     // 거리를 적절한 zoom으로 변환 (거리가 클수록 zoom이 작아져야 함)
     // 2D 모드에서는 거리가 2배이므로 zoom을 0.7배로 조정
-    // 3D Orthographic 모드는 perspective보다 작게 보이도록 zoom을 0.5배로 조정
+    // 3D Orthographic 모드는 perspective와 동일한 거리 사용 (zoom 1.0)
     // 4분할 뷰에서는 화면이 1/4 크기이므로 zoom을 0.35배로 조정
     // zoomMultiplierOverride가 있으면 우선 적용 (미리보기 모드 등)
-    const is3DOrthographic = viewMode === '3D' && cameraMode === 'orthographic';
-    const zoomMultiplier = zoomMultiplierOverride ?? (isSplitView ? 0.35 : (is2DMode ? 0.7 : (is3DOrthographic ? 0.5 : 1.0)));
+    const zoomMultiplier = zoomMultiplierOverride ?? (isSplitView ? 0.35 : (is2DMode ? 0.7 : 1.0));
     const zoom = (1200 / distance) * zoomMultiplier;
 
     // 실제 뷰어 영역의 aspect ratio 계산 (window 크기 대신)
