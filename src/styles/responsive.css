@@ -17,9 +17,9 @@
 }
 
 /* ================================
-   Mobile Devices (320px - 767px)
+   Mobile Devices (320px - 767px) - Portrait Only
    ================================ */
-@media screen and (max-width: 767px) {
+@media screen and (max-width: 767px) and (orientation: portrait) {
   /* Typography */
   html {
     font-size: 14px; /* Base font size for mobile */
@@ -89,9 +89,9 @@
 }
 
 /* ================================
-   Small Mobile (320px - 575px)
+   Small Mobile (320px - 575px) - Portrait Only
    ================================ */
-@media screen and (max-width: 575px) {
+@media screen and (max-width: 575px) and (orientation: portrait) {
   /* Extra small devices specific styles */
   .container {
     padding: 0 12px;
@@ -263,16 +263,93 @@
   .portrait-only {
     display: none !important;
   }
-  
+
   /* Adjust layouts for landscape */
   .viewer-container {
     width: 60%;
     height: 100vh;
   }
-  
+
   .controls-container {
     width: 40%;
     height: 100vh;
+  }
+}
+
+/* ================================
+   Mobile Landscape - Desktop UI
+   모바일 가로 모드에서는 데스크탑 UI 유지
+   ================================ */
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  /* Typography - desktop style */
+  html {
+    font-size: 16px;
+  }
+
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.75rem; }
+  h3 { font-size: 1.5rem; }
+  h4 { font-size: 1.25rem; }
+
+  /* Layout - desktop style */
+  .container {
+    padding: 0 32px;
+    max-width: none;
+  }
+
+  /* Grid System - desktop style */
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 24px;
+  }
+
+  /* Sidebar - desktop style */
+  .sidebar {
+    position: sticky;
+    left: 0;
+    width: auto;
+    height: 100vh;
+  }
+
+  /* Buttons - desktop style */
+  button, .button {
+    min-height: 36px;
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  /* Forms - desktop style */
+  input, textarea, select {
+    font-size: 14px;
+    padding: 8px;
+    width: auto;
+  }
+
+  /* Modal - desktop style */
+  .modal {
+    padding: 32px;
+    width: auto;
+    max-width: 800px;
+  }
+
+  /* Navigation - desktop style */
+  .nav {
+    flex-direction: row;
+  }
+
+  /* Cards - desktop style */
+  .card {
+    margin-bottom: 24px;
+  }
+
+  /* Show desktop elements */
+  .desktop-only {
+    display: initial !important;
+  }
+
+  /* Use row layout */
+  .flex-row {
+    flex-direction: row;
   }
 }
 
@@ -384,7 +461,7 @@
 .m-xl { margin: 48px; }
 
 /* Responsive Flex */
-@media (max-width: 767px) {
+@media (max-width: 767px) and (orientation: portrait) {
   .flex-column-mobile {
     flex-direction: column !important;
   }
