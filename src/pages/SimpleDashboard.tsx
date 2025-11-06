@@ -2265,9 +2265,12 @@ const SimpleDashboard: React.FC = () => {
           <div
             className={`${styles.navItem} ${activeMenu === 'all' ? styles.active : ''}`}
             onClick={() => {
+              console.log('🏠 전체 프로젝트 클릭');
               setActiveMenu('all');
               setSelectedProjectId(null);
+              setCurrentFolderId(null);
               setBreadcrumbPath(['전체 프로젝트']);
+              navigate('/dashboard');
             }}
           >
             <div className={styles.navItemIcon}>
