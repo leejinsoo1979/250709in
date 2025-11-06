@@ -1100,6 +1100,70 @@ const Configurator: React.FC = () => {
     }
   };
 
+  // 디자인 파일명 변경 핸들러
+  const handleDesignFileNameChange = async (newName: string) => {
+    const oldName = currentDesignFileName;
+
+    // 즉시 UI 업데이트
+    setCurrentDesignFileName(newName);
+
+    // URL 파라미터도 업데이트
+    const currentParams = new URLSearchParams(window.location.search);
+    currentParams.set('designFileName', encodeURIComponent(newName));
+    const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+    window.history.replaceState({}, '', newUrl);
+    console.log('🔗 디자인파일명 변경 후 URL 업데이트:', newUrl);
+
+    // 디자인 파일이 저장된 상태라면 자동 저장
+    if (currentDesignFileId) {
+      setSaving(true);
+      try {
+        if (isFirebaseConfigured() && user) {
+          const { updateDesignFile } = await import('@/firebase/projects');
+          const { error } = await updateDesignFile(currentDesignFileId, {
+            name: newName,
+            projectData: removeUndefinedValues(basicInfo),
+            spaceConfig: removeUndefinedValues(spaceInfo),
+            furniture: {
+              placedModules: removeUndefinedValues(placedModules)
+            }
+          });
+
+          if (error) {
+            console.error('디자인 파일명 변경 저장 실패:', error);
+            // 실패 시 이전 이름으로 복원
+            setCurrentDesignFileName(oldName);
+            const prevParams = new URLSearchParams(window.location.search);
+            prevParams.set('designFileName', encodeURIComponent(oldName));
+            window.history.replaceState({}, '', `${window.location.pathname}?${prevParams.toString()}`);
+            alert('디자인 파일명 변경에 실패했습니다: ' + error);
+            return;
+          }
+
+          console.log('✅ 디자인 파일명 변경 성공:', newName);
+        } else {
+          console.log('💾 [ERROR] Firebase 인증 필요');
+          // 실패 시 이전 이름으로 복원
+          setCurrentDesignFileName(oldName);
+          const prevParams = new URLSearchParams(window.location.search);
+          prevParams.set('designFileName', encodeURIComponent(oldName));
+          window.history.replaceState({}, '', `${window.location.pathname}?${prevParams.toString()}`);
+          alert('디자인 파일명을 변경하려면 로그인이 필요합니다.');
+        }
+      } catch (error) {
+        console.error('디자인 파일명 변경 실패:', error);
+        // 실패 시 이전 이름으로 복원
+        setCurrentDesignFileName(oldName);
+        const prevParams = new URLSearchParams(window.location.search);
+        prevParams.set('designFileName', encodeURIComponent(oldName));
+        window.history.replaceState({}, '', `${window.location.pathname}?${prevParams.toString()}`);
+        alert('디자인 파일명 변경 중 오류가 발생했습니다.');
+      } finally {
+        setSaving(false);
+      }
+    }
+  };
+
   // URL에서 디자인파일명 읽기 (별도 useEffect로 분리)
   useEffect(() => {
     const designFileName = searchParams.get('designFileName') || searchParams.get('fileName');
@@ -2830,6 +2894,7 @@ const Configurator: React.FC = () => {
         onNewProject={handleNewDesign}
         onSaveAs={handleSaveAs}
         onProjectNameChange={handleProjectNameChange}
+        onDesignFileNameChange={handleDesignFileNameChange}
         onFileTreeToggle={handleFileTreeToggle}
         isFileTreeOpen={isFileTreeOpen}
         onExportPDF={() => setIsConvertModalOpen(true)}

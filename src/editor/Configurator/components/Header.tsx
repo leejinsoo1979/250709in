@@ -41,6 +41,7 @@ interface HeaderProps {
   onNewProject?: () => void;
   onSaveAs?: () => void;
   onProjectNameChange?: (newName: string) => void;
+  onDesignFileNameChange?: (newName: string) => void; // 디자인 파일명 변경
   onDesignFileChange?: () => void; // 디자인 파일 선택/변경
   // 햄버거 메뉴 관련 props 추가
   onFileTreeToggle?: () => void;
@@ -69,6 +70,7 @@ const Header: React.FC<HeaderProps> = ({
   onNewProject,
   onSaveAs,
   onProjectNameChange,
+  onDesignFileNameChange,
   onDesignFileChange,
   onFileTreeToggle,
   isFileTreeOpen,
@@ -94,6 +96,8 @@ const Header: React.FC<HeaderProps> = ({
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
   const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
+  const [isEditingDesignName, setIsEditingDesignName] = useState(false);
+  const [editingDesignName, setEditingDesignName] = useState('');
   // UIStore에서 카메라 및 그림자 설정 가져오기
   const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled } = useUIStore();
   const { colors } = useThemeColors();
@@ -102,6 +106,7 @@ const Header: React.FC<HeaderProps> = ({
   const fileMenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const convertMenuRef = useRef<HTMLDivElement>(null);
   const cameraMenuRef = useRef<HTMLDivElement>(null);
+  const designNameInputRef = useRef<HTMLInputElement>(null);
   
   // HistoryStore에서 undo/redo 기능 가져오기
   const { canUndo, canRedo, undo, redo } = useHistoryStore();
@@ -141,6 +146,43 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleHelpClose = () => {
     setIsHelpModalOpen(false);
+  };
+
+  // 디자인명 편집 시작
+  const handleDesignNameClick = () => {
+    if (!designFileName || !onDesignFileNameChange) return;
+    setEditingDesignName(designFileName);
+    setIsEditingDesignName(true);
+    // input이 렌더링된 후 포커스
+    setTimeout(() => {
+      designNameInputRef.current?.focus();
+      designNameInputRef.current?.select();
+    }, 0);
+  };
+
+  // 디자인명 편집 저장
+  const handleDesignNameSave = () => {
+    if (editingDesignName.trim() && editingDesignName !== designFileName && onDesignFileNameChange) {
+      onDesignFileNameChange(editingDesignName.trim());
+    }
+    setIsEditingDesignName(false);
+  };
+
+  // 디자인명 편집 취소
+  const handleDesignNameCancel = () => {
+    setIsEditingDesignName(false);
+    setEditingDesignName('');
+  };
+
+  // 디자인명 입력 키 핸들러
+  const handleDesignNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleDesignNameSave();
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      handleDesignNameCancel();
+    }
   };
 
   const handleFileMenuToggle = () => {
@@ -277,12 +319,85 @@ const Header: React.FC<HeaderProps> = ({
             <div className={styles.designFileName}>
               {projectName && designFileName ? (
                 <>
-                  {projectName} <span className={styles.separator}>›</span> <span style={{ color: 'var(--theme-primary)' }}>{designFileName}</span>
+                  {projectName} <span className={styles.separator}>›</span>{' '}
+                  {isEditingDesignName ? (
+                    <input
+                      ref={designNameInputRef}
+                      type="text"
+                      value={editingDesignName}
+                      onChange={(e) => setEditingDesignName(e.target.value)}
+                      onKeyDown={handleDesignNameKeyDown}
+                      onBlur={handleDesignNameSave}
+                      className={styles.designNameInput}
+                      style={{
+                        color: 'var(--theme-primary)',
+                        background: 'transparent',
+                        border: '1px solid var(--theme-primary)',
+                        borderRadius: '4px',
+                        padding: '2px 6px',
+                        fontSize: 'inherit',
+                        fontFamily: 'inherit',
+                        outline: 'none',
+                        minWidth: '100px'
+                      }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        color: 'var(--theme-primary)',
+                        cursor: onDesignFileNameChange ? 'pointer' : 'default',
+                        textDecoration: onDesignFileNameChange ? 'underline' : 'none',
+                        textDecorationStyle: 'dotted',
+                        textUnderlineOffset: '3px'
+                      }}
+                      onClick={handleDesignNameClick}
+                      title={onDesignFileNameChange ? '클릭하여 디자인명 변경' : undefined}
+                    >
+                      {designFileName}
+                    </span>
+                  )}
                 </>
               ) : projectName ? (
                 projectName
               ) : designFileName ? (
-                <span style={{ color: 'var(--theme-primary)' }}>{designFileName}</span>
+                <>
+                  {isEditingDesignName ? (
+                    <input
+                      ref={designNameInputRef}
+                      type="text"
+                      value={editingDesignName}
+                      onChange={(e) => setEditingDesignName(e.target.value)}
+                      onKeyDown={handleDesignNameKeyDown}
+                      onBlur={handleDesignNameSave}
+                      className={styles.designNameInput}
+                      style={{
+                        color: 'var(--theme-primary)',
+                        background: 'transparent',
+                        border: '1px solid var(--theme-primary)',
+                        borderRadius: '4px',
+                        padding: '2px 6px',
+                        fontSize: 'inherit',
+                        fontFamily: 'inherit',
+                        outline: 'none',
+                        minWidth: '100px'
+                      }}
+                    />
+                  ) : (
+                    <span
+                      style={{
+                        color: 'var(--theme-primary)',
+                        cursor: onDesignFileNameChange ? 'pointer' : 'default',
+                        textDecoration: onDesignFileNameChange ? 'underline' : 'none',
+                        textDecorationStyle: 'dotted',
+                        textUnderlineOffset: '3px'
+                      }}
+                      onClick={handleDesignNameClick}
+                      title={onDesignFileNameChange ? '클릭하여 디자인명 변경' : undefined}
+                    >
+                      {designFileName}
+                    </span>
+                  )}
+                </>
               ) : (
                 '새로운 디자인'
               )}
