@@ -39,6 +39,7 @@ import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
 import ColumnEditModal from '@/editor/shared/controls/structure/ColumnEditModal';
 import ConvertModal from './components/ConvertModal';
 import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
+import { ShareLinkModal } from '@/components/ShareLinkModal';
 
 import { 
   WidthControl,
@@ -92,6 +93,7 @@ const Configurator: React.FC = () => {
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
   const [showPDFPreview, setShowPDFPreview] = useState(false); // PDF 미리보기 상태
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false); // 내보내기 모달 상태
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false); // 공유 모달 상태
   const [capturedViews, setCapturedViews] = useState<{
     top?: string;
     front?: string;
@@ -2940,12 +2942,15 @@ const Configurator: React.FC = () => {
         title={currentDesignFileName || urlDesignFileName || basicInfo.title || "새로운 디자인"}
         projectName={urlProjectName || basicInfo.title || "새로운 프로젝트"}
         designFileName={currentDesignFileName || urlDesignFileName}
+        projectId={currentProjectId}
+        designFileId={currentDesignFileId}
         onSave={saveProject}
         onPrevious={handlePrevious}
         onHelp={handleHelp}
         onConvert={handleConvert}
         onLogout={handleLogout}
         onProfile={handleProfile}
+        onShare={() => setIsShareModalOpen(true)}
         saving={saving}
         saveStatus={saveStatus}
         hasDoorsInstalled={hasDoorsInstalled}
@@ -3251,6 +3256,17 @@ const Configurator: React.FC = () => {
         onClose={() => setShowPDFPreview(false)}
         capturedViews={capturedViews}
       />
+
+      {/* 공유 링크 모달 */}
+      {isShareModalOpen && currentProjectId && (
+        <ShareLinkModal
+          projectId={currentProjectId}
+          projectName={urlProjectName || basicInfo.title || "프로젝트"}
+          designFileId={currentDesignFileId || undefined}
+          designFileName={currentDesignFileName || undefined}
+          onClose={() => setIsShareModalOpen(false)}
+        />
+      )}
 
     </div>
   );
