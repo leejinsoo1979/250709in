@@ -2959,11 +2959,28 @@ const Configurator: React.FC = () => {
         onConvert={handleConvert}
         onLogout={handleLogout}
         onProfile={handleProfile}
-        onShare={() => {
+        onShare={async () => {
+          // 디자인이 저장되지 않았으면 먼저 자동 저장
           if (!currentDesignFileId) {
-            alert('먼저 디자인을 저장해주세요.');
+            const confirmSave = confirm('공유하기 전에 먼저 저장해야 합니다. 지금 저장하시겠습니까?');
+            if (!confirmSave) return;
+
+            // 저장 실행
+            await handleSaveProject();
+
+            // 저장 후에도 designFileId가 없으면 에러
+            if (!currentDesignFileId) {
+              alert('저장에 실패했습니다. 다시 시도해주세요.');
+              return;
+            }
+          }
+
+          // furniture 데이터가 있는지 확인
+          if (placedModules.length === 0) {
+            alert('⚠️ 공유할 가구 데이터가 없습니다. 가구를 배치한 후 공유해주세요.');
             return;
           }
+
           setIsShareModalOpen(true);
         }}
         saving={saving}
