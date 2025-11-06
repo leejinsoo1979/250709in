@@ -4,8 +4,9 @@ import styles from './Header.module.css';
 import { Settings, Menu, User, ChevronDown, Undo, Redo } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
-import { TbTableExport } from 'react-icons/tb';
+import { TbTableExport, TbBoxAlignTopLeft } from 'react-icons/tb';
 import { HiViewfinderCircle } from "react-icons/hi2";
+import { MdViewInAr } from "react-icons/md";
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -588,6 +589,7 @@ const Header: React.FC<HeaderProps> = ({
                     setIsCameraMenuOpen(false);
                   }}
                 >
+                  <MdViewInAr size={16} style={{ marginRight: '8px' }} />
                   <span className={styles.checkmark}>
                     {cameraMode === 'perspective' && '✓'}
                   </span>
@@ -600,6 +602,7 @@ const Header: React.FC<HeaderProps> = ({
                     setIsCameraMenuOpen(false);
                   }}
                 >
+                  <TbBoxAlignTopLeft size={16} style={{ marginRight: '8px' }} />
                   <span className={styles.checkmark}>
                     {cameraMode === 'orthographic' && '✓'}
                   </span>
