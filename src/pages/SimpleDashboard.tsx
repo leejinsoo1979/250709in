@@ -4,6 +4,7 @@ import { Timestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
 import { PiFolderFill, PiFolderLight, PiFolderPlus } from "react-icons/pi";
+import { AiOutlineFileMarkdown } from "react-icons/ai";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile } from '@/firebase/projects';
 import { signOutUser } from '@/firebase/auth';
@@ -2871,14 +2872,7 @@ const SimpleDashboard: React.FC = () => {
                                   onMouseDown={(e) => e.preventDefault()}
                                 >
                                   <div className={styles.treeItemIcon}>
-                                    <div className={styles.designIcon}>
-                                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                                        <path d="M12 19l7-7 3 3-7 7-3-3z"/>
-                                        <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/>
-                                        <path d="M2 2l7.586 7.586"/>
-                                        <circle cx="11" cy="11" r="2"/>
-                                      </svg>
-                                    </div>
+                                    <AiOutlineFileMarkdown size={14} />
                                   </div>
                                   <span>{child.name}</span>
                                   <div className={styles.treeItemActions}>
