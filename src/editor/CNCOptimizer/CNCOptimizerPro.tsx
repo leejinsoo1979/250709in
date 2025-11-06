@@ -39,6 +39,28 @@ function PageInner(){
   const { panels: livePanels } = useLivePanelData();
   const { t, currentLanguage } = useTranslation();
   const { theme } = useTheme();
+
+  // URL에서 디자인파일 정보 가져오기
+  const [designFileName, setDesignFileName] = useState<string>('');
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const designFileId = searchParams.get('designFileId');
+    const fileName = searchParams.get('designFileName') || searchParams.get('fileName');
+
+    if (designFileId) {
+      // designFileId로 디자인파일 이름 가져오기
+      import('@/firebase/projects').then(({ getDesignFileById }) => {
+        getDesignFileById(designFileId).then(({ designFile }) => {
+          if (designFile?.name) {
+            setDesignFileName(designFile.name);
+          }
+        });
+      });
+    } else if (fileName) {
+      setDesignFileName(decodeURIComponent(fileName));
+    }
+  }, [location.search]);
   
   const { 
     panels, setPanels, 
@@ -768,7 +790,19 @@ function PageInner(){
         <div className={styles.headerLeft}>
           <Logo size="small" />
           <h1>{t('cnc.title')}</h1>
-          <span className={styles.projectName}>{projectName}</span>
+          <span className={styles.projectName}>
+            {projectName && designFileName ? (
+              <>
+                {projectName} <span style={{ margin: '0 8px', opacity: 0.5 }}>›</span> <span style={{ color: 'var(--theme-primary)' }}>{designFileName}</span>
+              </>
+            ) : projectName ? (
+              projectName
+            ) : designFileName ? (
+              <span style={{ color: 'var(--theme-primary)' }}>{designFileName}</span>
+            ) : (
+              'New Project'
+            )}
+          </span>
         </div>
         
         <div className={styles.headerRight}>
