@@ -57,14 +57,15 @@ button {
   height: 100vh;
 }
 
-/* Mobile Landscape - Fit desktop layout to screen */
+/* Mobile Landscape - Desktop layout scaled with scroll */
 @media screen and (max-width: 767px) and (orientation: landscape) {
   html, body {
-    overflow: hidden !important;
+    overflow: auto !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   #root {
-    overflow: hidden !important;
-    height: 100vh;
+    overflow: visible !important;
+    min-height: 100vh;
   }
 }

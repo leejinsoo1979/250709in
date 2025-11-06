@@ -2069,35 +2069,30 @@
 
 /* ================================
    Mobile Landscape (max-width: 767px) - Desktop Layout with Scale
-   데스크탑 레이아웃 그대로 scale로 축소하여 모든 요소 표시
+   데스크탑 비율 그대로 유지하면서 전체를 축소
    ================================ */
 @media screen and (max-width: 767px) and (orientation: landscape) {
-  /* body, html 스크롤 제거 - 화면에 딱 맞춤 */
+  /* 스크롤 허용 */
   :root {
-    overflow: hidden !important;
+    overflow: auto !important;
   }
 
   body {
-    overflow: hidden !important;
+    overflow: auto !important;
   }
 
-  /* 전체 configurator를 scale로 축소 - 가로만 축소하고 세로는 유지 */
+  /* 전체 configurator를 데스크탑 비율 그대로 scale로 축소 */
   .configurator {
-    transform: scaleX(0.75);
-    transform-origin: center center;
-    width: 133.333%; /* 100% / 0.75 */
-    height: 100vh;
-    overflow: hidden !important;
-    margin: 0 auto;
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%) scaleX(0.75);
+    transform: scale(0.55);
+    transform-origin: top center;
+    width: 181.818%; /* 100% / 0.55 */
+    height: 181.818%; /* 100% / 0.55 */
+    min-width: 100vw;
   }
 
   /* mainContent */
   .mainContent {
-    overflow: hidden !important;
-    height: calc(100vh - 56px);
+    overflow: visible !important;
   }
 
   /* viewerArea - 터치 이벤트 활성화 */
