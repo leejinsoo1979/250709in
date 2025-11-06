@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
 import { PiFolderFill, PiFolderLight, PiFolderPlus } from "react-icons/pi";
 import { AiOutlineFileMarkdown } from "react-icons/ai";
+import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile } from '@/firebase/projects';
 import { signOutUser } from '@/firebase/auth';
@@ -25,15 +26,6 @@ import ProjectViewerModal from '../components/common/ProjectViewerModal';
 import ThumbnailImage from '../components/common/ThumbnailImage';
 // import { generateProjectThumbnail } from '../utils/thumbnailGenerator';
 import styles from './SimpleDashboard.module.css';
-
-// 커스텀 프로젝트 아이콘 (단색, 네모+선 형태)
-const ProjectIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
-  <svg width={size} height={size} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="3" y="4" width="14" height="12" rx="2" stroke="#6b7280" strokeWidth="1.5" fill="none" />
-    <rect x="6" y="7" width="8" height="2" rx="1" fill="#6b7280" />
-    <rect x="6" y="11" width="5" height="1.5" rx="0.75" fill="#6b7280" />
-  </svg>
-);
 
 const SimpleDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -2735,7 +2727,7 @@ const SimpleDashboard: React.FC = () => {
                             </div>
                           )}
                           <div className={styles.treeItemIcon}>
-                            <ProjectIcon size={16} />
+                            <IoFileTrayStackedOutline size={16} />
                           </div>
                           <span>{project.title}</span>
                           {/* 디자인 파일 개수 표시 */}
