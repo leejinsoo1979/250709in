@@ -2260,6 +2260,8 @@ const SimpleDashboard: React.FC = () => {
                 <img
                   src={user.photoURL}
                   alt="프로필"
+                  referrerPolicy="no-referrer"
+                  crossOrigin="anonymous"
                   style={{
                     width: '100%',
                     height: '100%',
@@ -2449,6 +2451,8 @@ const SimpleDashboard: React.FC = () => {
                   <img
                     src={user.photoURL}
                     alt="프로필"
+                    referrerPolicy="no-referrer"
+                    crossOrigin="anonymous"
                     style={{
                       width: '100%',
                       height: '100%',
@@ -3444,12 +3448,14 @@ const SimpleDashboard: React.FC = () => {
                             <div className={styles.cardUser}>
                               <div className={styles.cardUserAvatar}>
                                 {user?.photoURL ? (
-                                  <img 
-                                    src={user.photoURL} 
-                                    alt="프로필" 
-                                    style={{ 
-                                      width: '100%', 
-                                      height: '100%', 
+                                  <img
+                                    src={user.photoURL}
+                                    alt="프로필"
+                                    referrerPolicy="no-referrer"
+                                    crossOrigin="anonymous"
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
                                       borderRadius: '50%',
                                       objectFit: 'cover'
                                     }}
@@ -3540,12 +3546,14 @@ const SimpleDashboard: React.FC = () => {
                             <div className={styles.cardUser}>
                               <div className={styles.cardUserAvatar}>
                                 {user?.photoURL ? (
-                                  <img 
-                                    src={user.photoURL} 
-                                    alt="프로필" 
-                                    style={{ 
-                                      width: '100%', 
-                                      height: '100%', 
+                                  <img
+                                    src={user.photoURL}
+                                    alt="프로필"
+                                    referrerPolicy="no-referrer"
+                                    crossOrigin="anonymous"
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
                                       borderRadius: '50%',
                                       objectFit: 'cover'
                                     }}
@@ -3588,12 +3596,14 @@ const SimpleDashboard: React.FC = () => {
                             <div className={styles.cardUser}>
                               <div className={styles.cardUserAvatar}>
                                 {user?.photoURL ? (
-                                  <img 
-                                    src={user.photoURL} 
-                                    alt="프로필" 
-                                    style={{ 
-                                      width: '100%', 
-                                      height: '100%', 
+                                  <img
+                                    src={user.photoURL}
+                                    alt="프로필"
+                                    referrerPolicy="no-referrer"
+                                    crossOrigin="anonymous"
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
                                       borderRadius: '50%',
                                       objectFit: 'cover'
                                     }}
