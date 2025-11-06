@@ -217,7 +217,7 @@ export class MaterialFactory {
     return this.getCachedMaterial(`edge-${color}`, () => {
       return new THREE.LineBasicMaterial({
         color: new THREE.Color(color),
-        linewidth: 1
+        linewidth: 0.5
       });
     }) as THREE.LineBasicMaterial;
   }

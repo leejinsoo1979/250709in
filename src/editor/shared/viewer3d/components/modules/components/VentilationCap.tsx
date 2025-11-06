@@ -150,7 +150,7 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
           {/* Rim 윤곽선 */}
           <primitive object={new LineSegments(rimEdges, new LineBasicMaterial({
             color: '#333333',
-            linewidth: 2,
+            linewidth: 1,
             opacity: 0.8,
             transparent: true,
             depthTest: true,
@@ -175,7 +175,7 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
           <primitive
             object={new LineSegments(perforatedEdges, new LineBasicMaterial({
               color: '#333333',
-              linewidth: 2,
+              linewidth: 1,
               opacity: 0.7,
               transparent: true,
               depthTest: true,
