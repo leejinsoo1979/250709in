@@ -98,7 +98,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
           {/* 플레이트 상단면 외곽선 */}
           <lineSegments position={[0, -plateHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(plateWidth, plateHeight, plateWidth)]} />
-            <lineBasicMaterial attach="material" color={edgeColor} />
+            <lineBasicMaterial attach="material" color={edgeColor} opacity={0.4} transparent />
           </lineSegments>
 
           {/* 원통 상단 원 */}
@@ -160,11 +160,11 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
         <>
           <lineSegments position={[0, -plateHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(plateWidth, plateHeight, plateWidth)]} />
-            <lineBasicMaterial attach="material" color={edgeColor} />
+            <lineBasicMaterial attach="material" color={edgeColor} opacity={0.4} transparent />
           </lineSegments>
           <lineSegments position={[0, -plateHeight - cylinderHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32)]} />
-            <lineBasicMaterial attach="material" color={edgeColor} />
+            <lineBasicMaterial attach="material" color={edgeColor} opacity={0.4} transparent />
           </lineSegments>
         </>
       ) : null}

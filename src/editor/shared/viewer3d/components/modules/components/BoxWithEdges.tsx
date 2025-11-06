@@ -439,7 +439,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                           : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
                             ? 0.1
                             : viewMode === '3D'
-                              ? 0.9
+                              ? 0.4
                               : 1
                     }
                     depthTest={viewMode === '3D'}
@@ -467,7 +467,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                         : isBackPanel && viewMode === '2D' && view2DDirection === 'front'
                           ? 0.1
                           : viewMode === '3D'
-                            ? 0.9
+                            ? 0.4
                             : 1
                   }
                   depthTest={viewMode === '3D'}
