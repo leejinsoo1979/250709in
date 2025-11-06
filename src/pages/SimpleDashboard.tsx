@@ -2413,22 +2413,56 @@ const SimpleDashboard: React.FC = () => {
               
               {/* 선택된 카드가 있을 때 휴지통으로 이동 버튼 */}
               {selectedCards.size > 0 && activeMenu !== 'trash' && (
-                <button 
+                <button
                   className={styles.bulkDeleteButton}
-                  onClick={() => {
+                  onClick={async () => {
                     if (window.confirm(`선택한 ${selectedCards.size}개 항목을 휴지통으로 이동하시겠습니까?`)) {
                       // 선택된 항목들을 휴지통으로 이동
-                      selectedCards.forEach(cardId => {
+                      for (const cardId of Array.from(selectedCards)) {
                         const item = sortedItems.find(i => i.id === cardId);
                         if (item) {
                           if (item.type === 'project') {
-                            moveToTrash(item.project);
-                          } else if (item.type === 'design' || item.type === 'folder') {
-                            // 디자인이나 폴더 삭제 로직
-                            console.log('삭제할 항목:', item);
+                            await moveToTrash(item.project);
+                          } else if (item.type === 'design') {
+                            // 디자인 파일 삭제
+                            console.log('디자인 파일 삭제:', item);
+                            const projectId = item.project.id;
+                            const { error } = await deleteDesignFile(cardId, projectId);
+                            if (error) {
+                              console.error('디자인 파일 삭제 실패:', error);
+                              alert(`디자인 파일 삭제 실패: ${error}`);
+                            } else {
+                              console.log('✅ 디자인 파일 삭제 완료:', cardId);
+                              // 프로젝트 디자인 파일 목록 새로고침
+                              await loadFirebaseProjects();
+                            }
+                          } else if (item.type === 'folder') {
+                            // 폴더 삭제 로직 - 폴더 안의 디자인 파일들도 함께 삭제
+                            console.log('폴더 삭제:', item);
+                            const projectId = item.project.id;
+                            const currentFolders = folders[projectId] || [];
+                            const targetFolder = currentFolders.find(f => f.id === cardId);
+
+                            // 폴더 안의 디자인 파일들을 먼저 삭제
+                            if (targetFolder?.children) {
+                              for (const child of targetFolder.children) {
+                                const { error } = await deleteDesignFile(child.id, projectId);
+                                if (error) {
+                                  console.error('폴더 내 디자인 파일 삭제 실패:', error);
+                                }
+                              }
+                            }
+
+                            // 폴더를 폴더 목록에서 제거
+                            const updatedFolders = currentFolders.filter(f => f.id !== cardId);
+                            await saveFolderDataToFirebase(projectId, updatedFolders);
+                            console.log('✅ 폴더 삭제 완료:', cardId);
+
+                            // 프로젝트 새로고침
+                            await loadFirebaseProjects();
                           }
                         }
-                      });
+                      }
                       // 선택 해제
                       setSelectedCards(new Set());
                     }
