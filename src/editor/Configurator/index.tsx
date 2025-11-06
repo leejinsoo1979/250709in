@@ -3084,7 +3084,7 @@ const Configurator: React.FC = () => {
           className={styles.viewerArea}
           style={{
             position: 'absolute',
-            left: isReadOnly ? '0' : (activeSidebarTab ? '304px' : '64px'), /* 읽기 전용 모드에서는 좌측 여백 없음 */
+            left: activeSidebarTab ? '304px' : '64px', /* 사이드바 상태에 맞춰 항상 조정 (모바일은 CSS로 override) */
             right: isReadOnly ? '0' : (isRightPanelOpen ? '320px' : '0'), /* 읽기 전용 모드에서는 우측 패널 없음 */
             top: 0,
             bottom: 0,
