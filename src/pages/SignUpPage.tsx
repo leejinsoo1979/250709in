@@ -46,7 +46,7 @@ export default function SignUpPage() {
   return (
     <div className={styles.container}>
       <div className={styles.formWrapper}>
-        <div className={styles.logo}>
+        <div className={styles.logo} onClick={() => navigate('/')}>
           <img src="/logo.png" alt="Logo" className={styles.logoImage} />
         </div>
 
