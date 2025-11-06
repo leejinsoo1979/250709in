@@ -68,14 +68,14 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
     doorColor: '#E0E0E0'
   };
 
-  // 카메라 위치 계산 (읽기 전용 뷰어는 거리를 1.5배로 증가)
+  // 카메라 위치 계산
   const cameraPosition = useMemo(() => {
     if (!spaceConfig) {
       return [0, 10, 30] as [number, number, number];
     }
     const { width, height, depth = 1500 } = spaceConfig;
     const baseDistance = calculateOptimalDistance(width, height, depth, placedModules.length);
-    const distance = baseDistance * 1.5; // 읽기 전용 뷰어에서는 1.5배 더 멀리 배치
+    const distance = baseDistance; // 기본 거리 사용
     const centerX = 0;
     const centerY = mmToThreeUnits(height * 0.5);
 
