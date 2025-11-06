@@ -1271,6 +1271,12 @@ const Configurator: React.FC = () => {
     const loadActualDesignFileName = async () => {
       if (!currentProjectId || !user) return;
 
+      // 이미 디자인파일명이 설정되어 있으면 폴더에서 찾지 않음
+      if (currentDesignFileName && currentDesignFileName !== '새로운 디자인') {
+        console.log('📝 디자인파일명이 이미 설정되어 있음:', currentDesignFileName);
+        return;
+      }
+
       try {
         // 폴더 데이터 로드
         const { loadFolderData } = await import('@/firebase/projects');
@@ -1303,7 +1309,7 @@ const Configurator: React.FC = () => {
     if (!urlDesignFileName && !urlDesignFileId && currentProjectId && user) {
       loadActualDesignFileName();
     }
-  }, [currentProjectId, user, searchParams]);
+  }, [currentProjectId, user, searchParams, currentDesignFileName]);
 
   // 공간 변경 시 가구 재배치 로직 복구
   useEffect(() => {
