@@ -471,18 +471,31 @@ const Configurator: React.FC = () => {
   // 디자인 파일 저장 (프로젝트가 아닌 디자인 파일로 저장)
   const saveProject = async () => {
     console.log('💾 [DEBUG] saveProject 함수 시작');
+
+    // URL 파라미터에서 직접 읽기 (상태가 아직 업데이트되지 않았을 수 있음)
+    const urlProjectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
+    const urlDesignFileId = searchParams.get('designFileId');
+
+    // currentProjectId가 없으면 URL에서 가져오기
+    const effectiveProjectId = currentProjectId || urlProjectId;
+    const effectiveDesignFileId = currentDesignFileId || urlDesignFileId;
+
     console.log('💾 [DEBUG] 현재 프로젝트 ID:', currentProjectId);
+    console.log('💾 [DEBUG] URL 프로젝트 ID:', urlProjectId);
+    console.log('💾 [DEBUG] 사용할 프로젝트 ID:', effectiveProjectId);
     console.log('💾 [DEBUG] 현재 디자인파일 ID:', currentDesignFileId);
+    console.log('💾 [DEBUG] URL 디자인파일 ID:', urlDesignFileId);
+    console.log('💾 [DEBUG] 사용할 디자인파일 ID:', effectiveDesignFileId);
     console.log('💾 [DEBUG] Firebase 설정:', isFirebaseConfigured());
     console.log('💾 [DEBUG] 사용자 상태:', !!user);
     console.log('💾 [DEBUG] 사용자 정보:', user ? { email: user.email, uid: user.uid } : 'null');
-    
+
     // Firebase 연결 및 인증 상태 테스트
     try {
       const { db, auth } = await import('@/firebase/config');
       console.log('💾 [DEBUG] Firestore db 객체:', !!db);
       console.log('💾 [DEBUG] Auth 객체:', !!auth);
-      
+
       // 현재 인증 상태 확인
       const currentAuthUser = auth.currentUser;
       console.log('💾 [DEBUG] auth.currentUser:', {
@@ -490,7 +503,7 @@ const Configurator: React.FC = () => {
         uid: currentAuthUser?.uid,
         email: currentAuthUser?.email
       });
-      
+
       // 토큰 확인
       if (currentAuthUser) {
         try {
@@ -503,11 +516,19 @@ const Configurator: React.FC = () => {
     } catch (dbError) {
       console.error('💾 [ERROR] Firebase 연결 실패:', dbError);
     }
-    
-    if (!currentProjectId) {
+
+    if (!effectiveProjectId) {
       console.error('💾 [ERROR] 프로젝트 ID가 없습니다');
       alert('저장할 프로젝트가 없습니다. 새 프로젝트를 먼저 생성해주세요.');
       return;
+    }
+
+    // 상태 동기화 (URL에서 읽은 값이 있으면 상태 업데이트)
+    if (effectiveProjectId && !currentProjectId) {
+      setCurrentProjectId(effectiveProjectId);
+    }
+    if (effectiveDesignFileId && !currentDesignFileId) {
+      setCurrentDesignFileId(effectiveDesignFileId);
     }
     
     setSaving(true);
@@ -569,13 +590,13 @@ const Configurator: React.FC = () => {
       
       if (firebaseConfigured && user) {
         console.log('💾 [DEBUG] Firebase 저장 모드 진입');
-        
+
         try {
           // 디자인 파일이 있으면 디자인 파일 업데이트, 없으면 새로 생성
-          if (currentDesignFileId) {
+          if (effectiveDesignFileId) {
             console.log('💾 [DEBUG] 기존 디자인 파일 업데이트');
             const { updateDesignFile } = await import('@/firebase/projects');
-            
+
             const updatePayload = {
               name: currentDesignFileName || basicInfo.title,
               projectData: removeUndefinedValues(basicInfo),
@@ -585,7 +606,7 @@ const Configurator: React.FC = () => {
               },
               thumbnail: thumbnail
             };
-            
+
             console.log('💾 [DEBUG] updateDesignFile 호출 전 데이터:', {
               name: updatePayload.name,
               spaceConfigKeys: Object.keys(updatePayload.spaceConfig || {}),
@@ -605,19 +626,18 @@ const Configurator: React.FC = () => {
                 };
               })
             });
-            
-            console.log('💾 [DEBUG] updateDesignFile 호출 직전, ID:', currentDesignFileId);
-            
-            if (!currentDesignFileId) {
+
+            console.log('💾 [DEBUG] updateDesignFile 호출 직전, ID:', effectiveDesignFileId);
+
+            if (!effectiveDesignFileId) {
               console.error('💾 [ERROR] 디자인 파일 ID가 없습니다!');
-              console.error('💾 [ERROR] currentDesignFileId:', currentDesignFileId);
-              console.error('💾 [ERROR] designFileId (prop):', designFileId);
+              console.error('💾 [ERROR] effectiveDesignFileId:', effectiveDesignFileId);
               setSaveStatus('error');
               alert('디자인 파일 ID가 없습니다. 새 디자인을 생성하거나 기존 디자인을 선택해주세요.');
               return;
             }
-            
-            const result = await updateDesignFile(currentDesignFileId, updatePayload);
+
+            const result = await updateDesignFile(effectiveDesignFileId, updatePayload);
             console.log('💾 [DEBUG] updateDesignFile 결과:', result);
             
             if (result.error) {
@@ -628,14 +648,14 @@ const Configurator: React.FC = () => {
             } else {
               setSaveStatus('success');
               console.log('✅ 디자인 파일 저장 성공');
-              
+
               // BroadcastChannel로 디자인 파일 업데이트 알림
               try {
                 const channel = new BroadcastChannel('project-updates');
-                channel.postMessage({ 
-                  type: 'DESIGN_FILE_UPDATED', 
-                  projectId: currentProjectId,
-                  designFileId: currentDesignFileId,
+                channel.postMessage({
+                  type: 'DESIGN_FILE_UPDATED',
+                  projectId: effectiveProjectId,
+                  designFileId: effectiveDesignFileId,
                   timestamp: Date.now()
                 });
                 console.log('📡 디자인 파일 업데이트 알림 전송');
@@ -649,7 +669,7 @@ const Configurator: React.FC = () => {
             const { createDesignFile } = await import('@/firebase/projects');
             const { id: designFileId, error } = await createDesignFile({
               name: basicInfo.title || '새 디자인',
-              projectId: currentProjectId,
+              projectId: effectiveProjectId,
               projectData: removeUndefinedValues(basicInfo),
               spaceConfig: removeUndefinedValues(spaceInfo),
               furniture: {
@@ -657,7 +677,7 @@ const Configurator: React.FC = () => {
               },
               thumbnail: thumbnail
             });
-            
+
             if (error) {
               console.error('💾 [ERROR] 디자인 파일 생성 실패:', error);
               setSaveStatus('error');
@@ -667,13 +687,13 @@ const Configurator: React.FC = () => {
               setCurrentDesignFileName(basicInfo.title);
               setSaveStatus('success');
               console.log('✅ 새 디자인 파일 생성 및 저장 성공');
-              
+
               // BroadcastChannel로 디자인 파일 생성 알림
               try {
                 const channel = new BroadcastChannel('project-updates');
-                channel.postMessage({ 
-                  type: 'DESIGN_FILE_UPDATED', 
-                  projectId: currentProjectId,
+                channel.postMessage({
+                  type: 'DESIGN_FILE_UPDATED',
+                  projectId: effectiveProjectId,
                   designFileId: designFileId,
                   timestamp: Date.now()
                 });
@@ -682,18 +702,18 @@ const Configurator: React.FC = () => {
               } catch (broadcastError) {
                 console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
               }
-              
+
               // URL 업데이트
-              navigate(`/configurator?projectId=${currentProjectId}&designFileId=${designFileId}`, { replace: true });
+              navigate(`/configurator?projectId=${effectiveProjectId}&designFileId=${designFileId}`, { replace: true });
             }
           }
-            
+
           // 다른 창(대시보드)에 프로젝트 업데이트 알림
           try {
             const channel = new BroadcastChannel('project-updates');
-            channel.postMessage({ 
-              type: 'PROJECT_SAVED', 
-              projectId: currentProjectId,
+            channel.postMessage({
+              type: 'PROJECT_SAVED',
+              projectId: effectiveProjectId,
               timestamp: Date.now()
             });
             console.log('💾 [DEBUG] BroadcastChannel 알림 전송 완료');
