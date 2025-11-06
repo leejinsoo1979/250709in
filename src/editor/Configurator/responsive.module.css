@@ -430,6 +430,12 @@
 /* ================================
    Read-Only Mode - Mobile Optimizations
    ================================ */
+/* PC에서는 모바일 전용 UI 숨김 */
+.readOnlyMode .materialPanel,
+.readOnlyMode .bottomNav {
+  display: none !important;
+}
+
 @media screen and (max-width: 767px) {
   /* 읽기 전용 모드 전용 모바일 최적화 */
   .readOnlyMode .configurator {
@@ -447,23 +453,24 @@
 
   /* 메인 컨텐츠 영역 */
   .readOnlyMode .mainContent {
-    position: relative !important;
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
+    position: fixed !important;
+    top: 56px !important; /* 헤더 아래 */
+    bottom: 260px !important; /* 재질+네비 위 */
+    left: 0 !important;
+    right: 0 !important;
     overflow: hidden !important;
   }
 
   /* 뷰어 영역 - 중앙에 크게 */
   .readOnlyMode .viewerArea {
-    position: relative !important;
+    position: absolute !important;
     left: 0 !important;
     right: 0 !important;
     top: 0 !important;
-    bottom: 200px !important; /* 하단 재질 UI 공간 확보 */
+    bottom: 0 !important;
     width: 100% !important;
-    height: auto !important;
-    flex: 1 !important;
+    height: 100% !important;
+    overflow: hidden !important;
   }
 
   /* 좌측 사이드바 완전히 숨김 */
