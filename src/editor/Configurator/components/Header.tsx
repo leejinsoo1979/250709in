@@ -164,8 +164,16 @@ const Header: React.FC<HeaderProps> = ({
   const handleDesignNameSave = () => {
     const newName = editingDesignName.trim();
 
+    console.log('💾 디자인명 저장 시도:', {
+      newName,
+      designFileName,
+      isChanged: newName !== designFileName,
+      hasCallback: !!onDesignFileNameChange
+    });
+
     // 이름이 변경되지 않았으면 그냥 닫기
     if (!newName || newName === designFileName) {
+      console.log('⏭️ 이름이 변경되지 않아서 편집 모드 종료');
       setIsEditingDesignName(false);
       return;
     }
@@ -173,9 +181,12 @@ const Header: React.FC<HeaderProps> = ({
     // 변경되었으면 확인 팝업 표시
     if (onDesignFileNameChange) {
       const confirmed = confirm(`디자인 파일명을 "${newName}"(으)로 바꾸시겠습니까?`);
+      console.log('❓ 확인 팝업 결과:', confirmed);
       if (confirmed) {
+        console.log('✅ 디자인파일명 변경 콜백 호출:', newName);
         onDesignFileNameChange(newName);
       } else {
+        console.log('❌ 사용자가 취소 - 원래 이름으로 복원');
         // 취소하면 원래 이름으로 복원
         setEditingDesignName(designFileName || '');
       }

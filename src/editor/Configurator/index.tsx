@@ -1102,10 +1102,17 @@ const Configurator: React.FC = () => {
 
   // 디자인 파일명 변경 핸들러
   const handleDesignFileNameChange = async (newName: string) => {
+    console.log('📝 디자인파일명 변경 시작:', {
+      oldName: currentDesignFileName,
+      newName,
+      currentDesignFileId
+    });
+
     const oldName = currentDesignFileName;
 
     // 즉시 UI 업데이트
     setCurrentDesignFileName(newName);
+    console.log('✅ currentDesignFileName 상태 업데이트:', newName);
 
     // URL 파라미터도 업데이트
     const currentParams = new URLSearchParams(window.location.search);
@@ -2879,9 +2886,9 @@ const Configurator: React.FC = () => {
     <div className={styles.configurator}>
       {/* 헤더 */}
       <Header
-        title={urlDesignFileName || currentDesignFileName || basicInfo.title || "새로운 디자인"}
+        title={currentDesignFileName || urlDesignFileName || basicInfo.title || "새로운 디자인"}
         projectName={urlProjectName || basicInfo.title || "새로운 프로젝트"}
-        designFileName={urlDesignFileName || currentDesignFileName}
+        designFileName={currentDesignFileName || urlDesignFileName}
         onSave={saveProject}
         onPrevious={handlePrevious}
         onHelp={handleHelp}
