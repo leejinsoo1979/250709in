@@ -370,9 +370,12 @@ const Configurator: React.FC = () => {
   const loadProject = async (projectId: string) => {
     setLoading(true);
     try {
+      console.log('🔄 프로젝트 로드 시작:', projectId);
       const { project, error } = await getProject(projectId);
+      console.log('📦 프로젝트 로드 결과:', { project, error });
+
       if (error) {
-        console.error('프로젝트 로드 에러:', error);
+        console.error('❌ 프로젝트 로드 에러:', error);
         alert('프로젝트를 불러오는데 실패했습니다: ' + error);
         navigate('/');
         return;
