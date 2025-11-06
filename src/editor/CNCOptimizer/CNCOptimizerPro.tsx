@@ -44,22 +44,54 @@ function PageInner(){
   const [designFileName, setDesignFileName] = useState<string>('');
 
   useEffect(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const designFileId = searchParams.get('designFileId');
-    const fileName = searchParams.get('designFileName') || searchParams.get('fileName');
+    const loadDesignFileName = async () => {
+      const searchParams = new URLSearchParams(location.search);
+      const designFileId = searchParams.get('designFileId');
+      const fileName = searchParams.get('designFileName') || searchParams.get('fileName');
 
-    if (designFileId) {
-      // designFileId로 디자인파일 이름 가져오기
-      import('@/firebase/projects').then(({ getDesignFileById }) => {
-        getDesignFileById(designFileId).then(({ designFile }) => {
-          if (designFile?.name) {
-            setDesignFileName(designFile.name);
-          }
-        });
+      console.log('🔍 CNC Optimizer URL 파라미터 체크:', {
+        designFileId,
+        fileName,
+        fullSearch: location.search,
+        allParams: Object.fromEntries(searchParams.entries())
       });
-    } else if (fileName) {
-      setDesignFileName(decodeURIComponent(fileName));
-    }
+
+      if (designFileId) {
+        console.log('📂 designFileId로 디자인파일 로드 시작:', designFileId);
+        try {
+          const { getDesignFileById } = await import('@/firebase/projects');
+          const { designFile, error } = await getDesignFileById(designFileId);
+
+          console.log('📂 디자인파일 로드 결과:', {
+            designFile,
+            error,
+            hasName: !!designFile?.name,
+            name: designFile?.name
+          });
+
+          if (error) {
+            console.error('❌ Firebase 에러:', error);
+          }
+
+          if (designFile?.name) {
+            console.log('✅ 디자인파일명 설정:', designFile.name);
+            setDesignFileName(designFile.name);
+          } else {
+            console.error('❌ 디자인파일에 name이 없음. designFile:', designFile);
+          }
+        } catch (err) {
+          console.error('❌ 디자인파일 로드 중 에러:', err);
+        }
+      } else if (fileName) {
+        const decodedName = decodeURIComponent(fileName);
+        console.log('✅ URL 파라미터에서 디자인파일명 설정:', decodedName);
+        setDesignFileName(decodedName);
+      } else {
+        console.log('⚠️ URL에 디자인파일 정보 없음');
+      }
+    };
+
+    loadDesignFileName();
   }, [location.search]);
   
   const { 
@@ -791,17 +823,35 @@ function PageInner(){
           <Logo size="small" />
           <h1>{t('cnc.title')}</h1>
           <span className={styles.projectName}>
-            {projectName && designFileName ? (
-              <>
-                {projectName} <span style={{ margin: '0 8px', opacity: 0.5 }}>›</span> <span style={{ color: 'var(--theme-primary)' }}>{designFileName}</span>
-              </>
-            ) : projectName ? (
-              projectName
-            ) : designFileName ? (
-              <span style={{ color: 'var(--theme-primary)' }}>{designFileName}</span>
-            ) : (
-              'New Project'
-            )}
+            {(() => {
+              console.log('🎯 CNC Optimizer 헤더 렌더링:', {
+                projectName,
+                designFileName,
+                hasProjectName: !!projectName,
+                hasDesignFileName: !!designFileName,
+                projectNameValue: projectName,
+                designFileNameValue: designFileName,
+                basicInfo
+              });
+
+              if (projectName && designFileName) {
+                console.log('✅ 프로젝트명과 디자인파일명 둘 다 있음');
+                return (
+                  <>
+                    {projectName} <span style={{ margin: '0 8px', opacity: 0.5 }}>›</span> <span style={{ color: 'var(--theme-primary)' }}>{designFileName}</span>
+                  </>
+                );
+              } else if (projectName) {
+                console.log('⚠️ 프로젝트명만 있음 (디자인파일명 없음)');
+                return projectName;
+              } else if (designFileName) {
+                console.log('⚠️ 디자인파일명만 있음 (프로젝트명 없음)');
+                return <span style={{ color: 'var(--theme-primary)' }}>{designFileName}</span>;
+              } else {
+                console.log('❌ 둘 다 없음');
+                return 'New Project';
+              }
+            })()}
           </span>
         </div>
         
