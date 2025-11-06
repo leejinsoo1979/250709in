@@ -212,7 +212,6 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
   }
 
   try {
-    // 먼저 현재 뷰에서 직접 캡처 시도
     const canvas = findThreeCanvas();
 
     if (!canvas) {
@@ -226,26 +225,31 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
       return null;
     }
 
-    console.log('📸 3D 캔버스 썸네일 캡처 시작...', {
-      canvasSize: `${canvas.width}x${canvas.height}`,
-      displaySize: `${canvas.offsetWidth}x${canvas.offsetHeight}`
-    });
+    // 항상 2D 정면 뷰로 전환하여 캡처 (현재 뷰 상태와 무관)
+    console.log('📸 썸네일 캡처 - 2D 정면 뷰로 전환...');
+    const frontViewThumbnail = await captureFrontViewThumbnail();
+    if (frontViewThumbnail) {
+      console.log('✅ 2D 정면 뷰 썸네일 캡처 성공');
+      return frontViewThumbnail;
+    }
 
-    // 렌더링이 완료될 시간을 주기 위해 잠시 대기
+    console.warn('정면 뷰 캡처 실패 - 현재 뷰에서 캡처 시도');
+
+    // 정면 뷰 캡처 실패 시 현재 뷰에서 캡처 시도 (fallback)
     await new Promise(resolve => setTimeout(resolve, 200));
-    
+
     // 원본 캔버스의 비율 계산
     const aspectRatio = canvas.width / canvas.height;
     const maxWidth = 400;
     const thumbnailWidth = maxWidth;
     const thumbnailHeight = Math.round(maxWidth / aspectRatio);
 
-    console.log('📸 썸네일 크기 계산:', {
+    console.log('📸 현재 뷰 썸네일 크기 계산:', {
       원본비율: aspectRatio.toFixed(2),
       썸네일크기: `${thumbnailWidth}x${thumbnailHeight}`
     });
 
-    // 여러 번 시도하여 가장 좋은 결과 선택
+    // 현재 뷰에서 캡처 시도
     for (let attempt = 1; attempt <= 3; attempt++) {
       try {
         const thumbnail = captureCanvasThumbnail(canvas, {
@@ -253,13 +257,12 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
           height: thumbnailHeight,
           quality: 0.9
         });
-        
-        if (thumbnail && thumbnail.length > 1000) { // 최소 크기 확인
-          console.log(`📸 썸네일 캡처 성공 (${attempt}번째 시도), 크기: ${(thumbnail.length / 1024).toFixed(2)}KB`);
-          return thumbnail; // base64 문자열 반환
+
+        if (thumbnail && thumbnail.length > 1000) {
+          console.log(`📸 현재 뷰 썸네일 캡처 성공 (${attempt}번째 시도), 크기: ${(thumbnail.length / 1024).toFixed(2)}KB`);
+          return thumbnail;
         }
-        
-        // 실패 시 200ms 대기 후 재시도
+
         if (attempt < 3) {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
@@ -267,14 +270,7 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
         console.warn(`썸네일 캡처 시도 ${attempt} 실패:`, error);
       }
     }
-    
-    // 모든 시도가 실패한 경우 정면 뷰로 전환하여 캡처 시도
-    console.log('📸 현재 뷰 캡처 실패, 정면 뷰로 전환하여 재시도...');
-    const frontViewThumbnail = await captureFrontViewThumbnail();
-    if (frontViewThumbnail) {
-      return frontViewThumbnail;
-    }
-    
+
     console.warn('모든 썸네일 캡처 시도 실패');
     return null;
   } finally {
