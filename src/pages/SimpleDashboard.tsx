@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-
 import { Timestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
-import { PiFolderFill } from "react-icons/pi";
+import { PiFolderFill, PiFolderLight } from "react-icons/pi";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile } from '@/firebase/projects';
 import { signOutUser } from '@/firebase/auth';
@@ -2763,7 +2763,7 @@ const SimpleDashboard: React.FC = () => {
                             {isSelected && (
                               <button className={styles.createFolderBtn} onClick={handleCreateFolder}>
                                 <div className={styles.createFolderIcon}>
-                                  <PiFolderFill size={16} />
+                                  <PiFolderLight size={16} />
                                   <PlusIcon size={12} />
                                 </div>
                                 <span>새로운 폴더</span>
@@ -2782,7 +2782,7 @@ const SimpleDashboard: React.FC = () => {
                             }}
                             style={{ cursor: 'pointer' }}
                           >
-                            <div 
+                            <div
                               className={styles.treeItemIcon}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -2790,7 +2790,7 @@ const SimpleDashboard: React.FC = () => {
                               }}
                               style={{ cursor: 'pointer' }}
                             >
-                              <PiFolderFill size={16} />
+                              <PiFolderLight size={16} />
                             </div>
                             <span>{folder.name}</span>
                             {folder.children && folder.children.length > 0 && (
