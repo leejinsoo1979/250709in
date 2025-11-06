@@ -151,7 +151,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
       <div className={styles.leftPanel}>
         <div className={styles.leftContent}>
           <div className={styles.logo}>
-            <Logo size="large" />
+            <Logo size="large" onClick={() => navigate('/')} />
           </div>
           
           <h1 className={styles.welcomeTitle}>Hey, Hello!</h1>

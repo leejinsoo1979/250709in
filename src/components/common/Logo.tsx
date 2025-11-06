@@ -3,9 +3,10 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 interface LogoProps {
   size?: 'small' | 'medium' | 'large';
+  onClick?: () => void;
 }
 
-const Logo: React.FC<LogoProps> = ({ size = 'medium' }) => {
+const Logo: React.FC<LogoProps> = ({ size = 'medium', onClick }) => {
   const { theme } = useTheme();
   
   // 크기별 설정
@@ -34,6 +35,7 @@ const Logo: React.FC<LogoProps> = ({ size = 'medium' }) => {
 
   return (
     <div
+      onClick={onClick}
       style={{
         display: 'flex',
         alignItems: 'center',
