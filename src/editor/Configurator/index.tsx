@@ -1369,10 +1369,12 @@ const Configurator: React.FC = () => {
         });
       } else if (designFileId && !skipLoad) {
         // designFileId가 있는 경우 디자인 파일 데이터 로드
-        console.log('📂 디자인파일 데이터 로드 시작:', designFileId);
+        console.log('📂 디자인파일 데이터 로드 시작:', designFileId, '/ 읽기전용:', isReadOnly);
 
-        import('@/firebase/projects').then(({ getDesignFileById, getProject }) => {
-          getDesignFileById(designFileId).then(async ({ designFile, error }) => {
+        import('@/firebase/projects').then(({ getDesignFileById, getDesignFileByIdPublic, getProject }) => {
+          // 읽기 전용 모드면 Public 함수 사용 (비회원 접근 가능), 아니면 일반 함수 사용
+          const loadDesignFile = isReadOnly ? getDesignFileByIdPublic : getDesignFileById;
+          loadDesignFile(designFileId).then(async ({ designFile, error }) => {
             if (designFile && !error) {
               console.log('✅ 디자인파일 로드 성공:', designFile);
 
