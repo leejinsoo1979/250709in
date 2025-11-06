@@ -444,9 +444,18 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             const shouldHide2HangingUpper = false; // 안전선반 윗칸 내경도 표시하도록 수정
 
             // 섹션 내경 치수 표시 조건 - 상부장/하부장 모듈에서는 칸 내경 치수 숨김 (선반 두께만 표시)
-            const isUpperCabinet = furnitureId?.startsWith('upper-') || furnitureId?.startsWith('dual-upper-');
-            const isLowerCabinet = furnitureId?.startsWith('lower-') || furnitureId?.startsWith('dual-lower-');
+            const isUpperCabinet = furnitureId?.includes('upper-cabinet');
+            const isLowerCabinet = furnitureId?.includes('lower-cabinet');
             const isUpperOrLowerCabinet = isUpperCabinet || isLowerCabinet;
+
+            console.log('🔍 SectionsRenderer 내경치수 체크:', {
+              furnitureId,
+              isUpperCabinet,
+              isLowerCabinet,
+              isUpperOrLowerCabinet,
+              category
+            });
+
             const shouldShow = !isUpperOrLowerCabinet && !hideSectionDimensions && showDimensions && showDimensionsText &&
                               !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) &&
                               (section.type === 'hanging' || section.type === 'drawer') &&
