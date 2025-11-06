@@ -521,7 +521,15 @@ const SimpleDashboard: React.FC = () => {
       // 휴지통 프로젝트 로드
       const savedTrash = localStorage.getItem(`trash_${user.uid}`);
       if (savedTrash) {
-        setDeletedProjects(JSON.parse(savedTrash));
+        const parsedTrash = JSON.parse(savedTrash);
+        console.log('🗑️ 휴지통 데이터 로드:', {
+          userId: user.uid,
+          trashCount: parsedTrash.length,
+          projects: parsedTrash.map((p: ProjectSummary) => ({ id: p.id, title: p.title }))
+        });
+        setDeletedProjects(parsedTrash);
+      } else {
+        console.log('🗑️ 휴지통 데이터 없음:', { userId: user.uid });
       }
     }
   }, [user]);
@@ -724,6 +732,10 @@ const SimpleDashboard: React.FC = () => {
         break;
       case 'trash':
         filteredProjects = deletedProjects;
+        console.log('🗑️ 휴지통 필터링:', {
+          deletedProjectsCount: deletedProjects.length,
+          projects: deletedProjects.map(p => ({ id: p.id, title: p.title }))
+        });
         break;
       case 'all':
       default:
