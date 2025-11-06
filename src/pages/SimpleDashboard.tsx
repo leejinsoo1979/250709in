@@ -6,6 +6,7 @@ import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, Fold
 import { PiFolderFill, PiFolderLight, PiFolderPlus } from "react-icons/pi";
 import { AiOutlineFileMarkdown } from "react-icons/ai";
 import { IoFileTrayStackedOutline } from "react-icons/io5";
+import { TiThSmall } from "react-icons/ti";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile } from '@/firebase/projects';
 import { signOutUser } from '@/firebase/auth';
@@ -2289,7 +2290,7 @@ const SimpleDashboard: React.FC = () => {
             }}
           >
             <div className={styles.navItemIcon}>
-              <FolderIcon size={20} />
+              <TiThSmall size={20} />
             </div>
             <span>전체 프로젝트</span>
             <span className={styles.navItemCount}>{allProjects.length}</span>
