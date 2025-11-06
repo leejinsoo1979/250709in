@@ -75,13 +75,12 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
     }
     const { width, height, depth = 1500 } = spaceConfig;
     const baseDistance = calculateOptimalDistance(width, height, depth, placedModules.length);
-    // orthographic 모드에서는 거리를 1.5배 증가시켜 팝업 크기에 맞게 조정
-    const distance = cameraMode === 'orthographic' ? baseDistance * 1.5 : baseDistance;
+    const distance = baseDistance;
     const centerX = 0;
     const centerY = mmToThreeUnits(height * 0.5);
 
     return [centerX, centerY, distance] as [number, number, number];
-  }, [spaceConfig?.width, spaceConfig?.height, spaceConfig?.depth, placedModules.length, cameraMode]);
+  }, [spaceConfig?.width, spaceConfig?.height, spaceConfig?.depth, placedModules.length]);
 
   if (!spaceConfig) {
     return (
@@ -119,6 +118,7 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
           view2DDirection="front"
           renderMode={renderMode}
           cameraMode={cameraMode}
+          zoomMultiplier={cameraMode === 'orthographic' ? 0.65 : undefined}
         >
           <React.Suspense fallback={null}>
             {/* 조명 시스템 */}

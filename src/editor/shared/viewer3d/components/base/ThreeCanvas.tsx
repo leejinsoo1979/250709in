@@ -35,6 +35,7 @@ interface ThreeCanvasProps {
   isSplitView?: boolean;
   style?: React.CSSProperties;
   cameraMode?: 'perspective' | 'orthographic';
+  zoomMultiplier?: number;
 }
 
 /**
@@ -51,7 +52,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   renderMode = 'wireframe',
   style,
   isSplitView = false,
-  cameraMode: cameraModeFromProps
+  cameraMode: cameraModeFromProps,
+  zoomMultiplier
 }) => {
   const CANVAS_DEBUG = false;
   const canvasLog = (...args: any[]) => {
@@ -171,7 +173,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   }, [spaceInfo?.droppedCeiling?.position, spaceInfo?.droppedCeiling?.enabled]);
   
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
-  const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView);
+  const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView, zoomMultiplier);
   const controlsConfig = useOrbitControlsConfig(camera.target, viewMode, camera.spaceWidth, camera.spaceHeight);
   
   // 기본: 한 손가락 회전, 두 손가락 줌+팬

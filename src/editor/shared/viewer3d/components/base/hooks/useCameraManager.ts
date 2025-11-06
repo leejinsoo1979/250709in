@@ -33,7 +33,8 @@ export const useCameraManager = (
   view2DDirection?: 'front' | 'left' | 'right' | 'top',
   cameraTarget?: [number, number, number],
   cameraUp?: [number, number, number],
-  isSplitView?: boolean
+  isSplitView?: boolean,
+  zoomMultiplierOverride?: number
 ): CameraConfig => {
   // 스토어에서 공간 정보 가져오기 (상위 의존성)
   const { spaceInfo } = useSpaceConfigStore();
@@ -59,7 +60,8 @@ export const useCameraManager = (
     // 2D 모드에서는 거리가 2배이므로 zoom을 0.7배로 조정
     // 3D Orthographic 모드는 perspective와 동일한 거리 사용 (zoom 1.0)
     // 4분할 뷰에서는 화면이 1/4 크기이므로 zoom을 0.35배로 조정
-    const zoomMultiplier = isSplitView ? 0.35 : (is2DMode ? 0.7 : 1.0);
+    // zoomMultiplierOverride가 있으면 우선 적용 (미리보기 모드 등)
+    const zoomMultiplier = zoomMultiplierOverride ?? (isSplitView ? 0.35 : (is2DMode ? 0.7 : 1.0));
     const zoom = (1200 / distance) * zoomMultiplier;
     
     const canvasAspectRatio = window.innerWidth / window.innerHeight;
@@ -85,7 +87,7 @@ export const useCameraManager = (
       canvasAspectRatio,
       zoom,
     };
-  }, [viewMode, view2DDirection, spaceInfo.height, spaceInfo.width, spaceInfo.depth, cameraPosition, cameraTarget, cameraUp, placedModules.length, isSplitView, cameraMode]);
+  }, [viewMode, view2DDirection, spaceInfo.height, spaceInfo.width, spaceInfo.depth, cameraPosition, cameraTarget, cameraUp, placedModules.length, isSplitView, cameraMode, zoomMultiplierOverride]);
 
   return cameraConfig;
 }; 
