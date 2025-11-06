@@ -13,6 +13,7 @@ import SimpleDashboard from '@/pages/SimpleDashboard';
 import TestDashboard from '@/pages/TestDashboard';
 import ViewerPage from '@/pages/ViewerPage';
 import LandingPage from '@/pages/LandingPage';
+import SignUpPage from '@/pages/SignUpPage';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { ModernLoginForm } from '@/components/auth/ModernLoginForm';
 import { UltraModernLoginForm } from '@/components/auth/UltraModernLoginForm';
@@ -98,6 +99,7 @@ function AppContent() {
         <Route path="/dashboard/*" element={<SimpleDashboard />} />
         {/* 인증 페이지 */}
         <Route path="/login" element={<SplitLoginForm />} />
+        <Route path="/signup" element={<SignUpPage />} />
         <Route path="/auth" element={<SplitLoginForm />} />
         <Route path="/auth/gradient" element={<GradientLoginForm />} />
         <Route path="/auth/ultra" element={<UltraModernLoginForm />} />

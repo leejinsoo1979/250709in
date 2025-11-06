@@ -91,7 +91,7 @@ export default function LandingPage() {
             <button onClick={() => navigate('/login')} className={styles.navButtonSecondary}>
               Login
             </button>
-            <button onClick={() => navigate('/auth')} className={styles.navButton}>
+            <button onClick={() => navigate('/signup')} className={styles.navButton}>
               Sign Up
             </button>
           </div>
