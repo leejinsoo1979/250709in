@@ -172,11 +172,19 @@
   z-index: 0;
 }
 
-.heroContent {
+.heroWrapper {
   position: relative;
   z-index: 1;
-  max-width: 1280px;
-  text-align: center;
+  max-width: 1400px;
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.heroContent {
+  text-align: left;
 }
 
 .heroTitle {
@@ -252,6 +260,21 @@
 .buttonIcon {
   width: 20px;
   height: 20px;
+}
+
+/* Hero Video */
+.heroVideoContainer {
+  position: relative;
+  width: 100%;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+}
+
+.heroVideo {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 /* Trusted By */
@@ -878,6 +901,15 @@
 
 /* Responsive */
 @media (max-width: 768px) {
+  .heroWrapper {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .heroContent {
+    text-align: center;
+  }
+
   .heroTitle {
     font-size: 2.5rem;
   }

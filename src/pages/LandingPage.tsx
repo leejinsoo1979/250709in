@@ -108,30 +108,44 @@ export default function LandingPage() {
           className={styles.heroBackground}
           style={{ transform: `translateY(${scrollY * 0.5}px)` }}
         />
-        <div className={styles.heroContent}>
-          <h1 className={styles.heroTitle}>
-            Design Your Perfect
-            <span className={styles.heroTitleGradient}> Furniture Space</span>
-          </h1>
-          <p className={styles.heroSubtitle}>
-            Professional 3D furniture design tool. Create, customize, and visualize your dream interior in real-time.
-          </p>
-          <div className={styles.heroButtons}>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className={styles.primaryButton}
+        <div className={styles.heroWrapper}>
+          <div className={styles.heroContent}>
+            <h1 className={styles.heroTitle}>
+              Design Your Perfect
+              <span className={styles.heroTitleGradient}> Furniture Space</span>
+            </h1>
+            <p className={styles.heroSubtitle}>
+              Professional 3D furniture design tool. Create, customize, and visualize your dream interior in real-time.
+            </p>
+            <div className={styles.heroButtons}>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className={styles.primaryButton}
+              >
+                Start Designing
+                <svg className={styles.buttonIcon} viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              <button
+                onClick={() => navigate('/viewer/demo')}
+                className={styles.secondaryButton}
+              >
+                View Demo
+              </button>
+            </div>
+          </div>
+          <div className={styles.heroVideoContainer}>
+            <video
+              className={styles.heroVideo}
+              autoPlay
+              loop
+              muted
+              playsInline
             >
-              Start Designing
-              <svg className={styles.buttonIcon} viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-            <button
-              onClick={() => navigate('/viewer/demo')}
-              className={styles.secondaryButton}
-            >
-              View Demo
-            </button>
+              <source src="https://uable.co.kr/videos/inshowconfigurator.mp4" type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
           </div>
         </div>
       </section>
