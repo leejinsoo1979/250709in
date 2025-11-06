@@ -1664,7 +1664,7 @@
 .designGrid.folderView:not(.listView) .designCard .designThumbnailImage {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .designGrid.folderView:not(.listView) .cardThumbnail.newDesign {
@@ -1775,7 +1775,7 @@
 .designGrid.listView .designThumbnailImage {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 /* 리스트 뷰 새 디자인 썸네일 */
@@ -1890,7 +1890,7 @@
 .thumbnailItem .thumbnailImage {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .thumbnailFolder {
@@ -1981,7 +1981,7 @@
 .designThumbnailImage {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .designThumbnailPlaceholder {
