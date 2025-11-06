@@ -44,14 +44,41 @@ const ProfileTab: React.FC = () => {
   // 프로필 로드
   const loadProfile = async () => {
     if (!user) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const { profile: fetchedProfile, error: fetchError } = await getUserProfile();
-      if (fetchError) {
-        setError(fetchError);
+
+      // 프로필이 없는 경우 (신규 사용자) 기본값으로 초기화
+      if (!fetchedProfile && !fetchError) {
+        console.log('프로필이 없습니다. 기본값으로 초기화합니다.');
+        setProfile(null);
+        setDisplayName(user.displayName || '');
+        setBio('');
+        setCompany('');
+        setWebsite('');
+        setLocation('');
+        setTeamNotifications(true);
+        setShareNotifications(true);
+        setEmailNotifications(true);
+        setIsPublicProfile(false);
+        setAllowTeamInvitations(true);
+      } else if (fetchError) {
+        console.error('프로필 로드 에러:', fetchError);
+        // 에러가 있어도 기본값으로 UI 표시
+        setProfile(null);
+        setDisplayName(user.displayName || '');
+        setBio('');
+        setCompany('');
+        setWebsite('');
+        setLocation('');
+        setTeamNotifications(true);
+        setShareNotifications(true);
+        setEmailNotifications(true);
+        setIsPublicProfile(false);
+        setAllowTeamInvitations(true);
       } else if (fetchedProfile) {
         setProfile(fetchedProfile);
         setDisplayName(fetchedProfile.displayName || '');
@@ -66,7 +93,19 @@ const ProfileTab: React.FC = () => {
         setAllowTeamInvitations(fetchedProfile.allowTeamInvitations);
       }
     } catch (err) {
-      setError('프로필을 불러오는 중 오류가 발생했습니다.');
+      console.error('프로필 로드 예외:', err);
+      // 예외가 발생해도 기본값으로 UI 표시
+      setProfile(null);
+      setDisplayName(user.displayName || '');
+      setBio('');
+      setCompany('');
+      setWebsite('');
+      setLocation('');
+      setTeamNotifications(true);
+      setShareNotifications(true);
+      setEmailNotifications(true);
+      setIsPublicProfile(false);
+      setAllowTeamInvitations(true);
     } finally {
       setLoading(false);
     }
@@ -266,16 +305,7 @@ const ProfileTab: React.FC = () => {
           </div>
         )}
 
-        {error && (
-          <div className={styles.errorState}>
-            <p className={styles.errorMessage}>{error}</p>
-            <button onClick={loadProfile} className={styles.retryButton}>
-              다시 시도
-            </button>
-          </div>
-        )}
-
-        {!loading && !error && (
+        {!loading && (
           <>
             {/* 프로필 정보 섹션 */}
             {activeSection === 'profile' && (
