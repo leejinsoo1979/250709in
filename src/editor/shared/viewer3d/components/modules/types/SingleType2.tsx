@@ -406,6 +406,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             mmToThreeUnits={baseFurniture.mmToThreeUnits}
             renderMode={renderMode}
             furnitureId={moduleData.id}
+            category={moduleData.category}
             placedFurnitureId={placedFurnitureId}
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}

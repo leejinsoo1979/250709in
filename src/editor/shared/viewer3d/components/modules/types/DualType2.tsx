@@ -482,6 +482,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               mmToThreeUnits={baseFurniture.mmToThreeUnits}
               renderMode={renderMode}
               furnitureId={moduleData.id}
+              category={moduleData.category}
               placedFurnitureId={placedFurnitureId}
               sectionDepths={sectionDepths}
               textureUrl={spaceInfo.materialConfig?.doorTexture}

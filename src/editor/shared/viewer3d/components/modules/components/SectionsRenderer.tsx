@@ -43,6 +43,9 @@ interface SectionsRendererProps {
   
   // 가구 ID (칸 강조용)
   furnitureId?: string;
+
+  // 가구 카테고리 (upper/lower/full)
+  category?: string;
   
   // 강조 상태
   isHighlighted?: boolean;
@@ -85,6 +88,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   calculateSectionHeight,
   mmToThreeUnits,
   furnitureId,
+  category,
   isHighlighted = false,
   isDragging = false,
   hideSectionDimensions = false,
@@ -440,11 +444,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             const shouldHide2HangingUpper = false; // 안전선반 윗칸 내경도 표시하도록 수정
 
             // 섹션 내경 치수 표시 조건 - 상부장/하부장 모듈에서는 칸 내경 치수 숨김 (선반 두께만 표시)
-            const shouldShow = false; // 내경 치수선 제거
-            // const shouldShow = !hideSectionDimensions && showDimensions && showDimensionsText &&
-            //                   !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) &&
-            //                   (section.type === 'hanging' || section.type === 'drawer') &&
-            //                   !shouldHide2HangingUpper;
+            const isUpperOrLowerCabinet = category === 'upper' || category === 'lower';
+            const shouldShow = !isUpperOrLowerCabinet && !hideSectionDimensions && showDimensions && showDimensionsText &&
+                              !(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right' || view2DDirection === 'top')) &&
+                              (section.type === 'hanging' || section.type === 'drawer') &&
+                              !shouldHide2HangingUpper;
 
             // 2hanging만 로그
             if (furnitureId?.includes('2hanging')) {
