@@ -417,12 +417,13 @@ const Configurator: React.FC = () => {
         console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
         
         setSpaceInfo(spaceConfig);
-        setPlacedModules(project.furniture.placedModules);
+        setPlacedModules(project.furniture?.placedModules || []);
         setCurrentProjectId(projectId);
-        
+
         // 디자인파일명 설정은 별도 useEffect에서 처리됨
-        
+
         console.log('✅ 프로젝트 로드 성공:', project.title);
+        console.log('🪑 배치된 가구 개수:', project.furniture?.placedModules?.length || 0);
         console.log('🎨 로드된 materialConfig:', project.spaceConfig.materialConfig);
         
         // 프로젝트 로드 후 derivedSpaceStore 명시적 재계산

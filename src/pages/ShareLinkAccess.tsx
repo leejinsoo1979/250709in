@@ -56,7 +56,8 @@ export const ShareLinkAccess: React.FC = () => {
             console.log('👁️ 조회 권한 - 비회원 접근 허용, 프로젝트로 이동');
             setSuccess(true);
             setTimeout(() => {
-              navigate(`/configurator?projectId=${validation.link.projectId}`);
+              const url = `/configurator?projectId=${validation.link.projectId}${validation.link.designFileName ? `&designFileName=${encodeURIComponent(validation.link.designFileName)}` : ''}`;
+              navigate(url);
             }, 2000);
             setIsValidating(false);
             return;
@@ -119,7 +120,8 @@ export const ShareLinkAccess: React.FC = () => {
 
         // 3초 후 프로젝트로 이동
         setTimeout(() => {
-          navigate(`/configurator?projectId=${result.projectId}`);
+          const url = `/configurator?projectId=${result.projectId}${link.designFileName ? `&designFileName=${encodeURIComponent(link.designFileName)}` : ''}`;
+          navigate(url);
         }, 3000);
       } else {
         setError(result.message);
@@ -151,7 +153,8 @@ export const ShareLinkAccess: React.FC = () => {
       console.log('👁️ 조회 권한 + 비밀번호 확인 완료 - 프로젝트로 이동');
       setSuccess(true);
       setTimeout(() => {
-        navigate(`/configurator?projectId=${link.projectId}`);
+        const url = `/configurator?projectId=${link.projectId}${link.designFileName ? `&designFileName=${encodeURIComponent(link.designFileName)}` : ''}`;
+        navigate(url);
       }, 2000);
       return;
     }

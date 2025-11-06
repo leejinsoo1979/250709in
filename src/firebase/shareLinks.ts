@@ -21,6 +21,7 @@ export interface ShareLink {
   token: string;
   projectId: string;
   projectName: string;
+  designFileName?: string; // 디자인파일명 추가
   createdBy: string;
   createdByName: string;
   permission: SharePermission;
@@ -87,7 +88,8 @@ export async function createShareLink(
   permission: SharePermission,
   expiresInDays: number = 7,
   password?: string,
-  maxUsage?: number
+  maxUsage?: number,
+  designFileName?: string
 ): Promise<ShareLink> {
   try {
     // 고유 토큰 생성
@@ -113,12 +115,15 @@ export async function createShareLink(
       isActive: true,
     };
 
-    // password와 maxUsage는 값이 있을 때만 추가
+    // password, maxUsage, designFileName은 값이 있을 때만 추가
     if (password !== undefined) {
       shareLink.password = password;
     }
     if (maxUsage !== undefined) {
       shareLink.maxUsage = maxUsage;
+    }
+    if (designFileName !== undefined) {
+      shareLink.designFileName = designFileName;
     }
 
     // Firestore에 저장
