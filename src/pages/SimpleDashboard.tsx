@@ -1884,8 +1884,16 @@ const SimpleDashboard: React.FC = () => {
     if (!moreMenu) return;
 
     if (moreMenu.itemType === 'project') {
-      // 프로젝트 공유
-      shareProject(moreMenu.itemId);
+      // 프로젝트 공유 - 첫 번째 디자인 파일과 함께 공유
+      const projectDesigns = projectDesignFiles[moreMenu.itemId];
+      if (projectDesigns && projectDesigns.length > 0) {
+        // 첫 번째 디자인 파일과 함께 공유
+        const firstDesign = projectDesigns[0];
+        shareProject(moreMenu.itemId, firstDesign.id, firstDesign.title);
+      } else {
+        // 디자인 파일이 없으면 프로젝트만 공유
+        shareProject(moreMenu.itemId);
+      }
     } else if (moreMenu.itemType === 'design') {
       // 디자인 파일이 속한 프로젝트 찾기
       let designProjectId: string | null = null;
