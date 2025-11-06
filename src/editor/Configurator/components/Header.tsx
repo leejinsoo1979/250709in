@@ -4,9 +4,8 @@ import styles from './Header.module.css';
 import { Settings, Menu, User, ChevronDown, Undo, Redo } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
-import { TbTableExport, TbBox } from 'react-icons/tb';
+import { TbTableExport } from 'react-icons/tb';
 import { HiViewfinderCircle } from "react-icons/hi2";
-import { PiCube } from "react-icons/pi";
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -20,6 +19,28 @@ import { useUIStore } from '@/store/uiStore';
 import { useHistoryStore } from '@/store/historyStore';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
+
+// Perspective Cube Icon (역원근 - 아래가 좁은 큐브)
+const PerspectiveCubeIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M12 2 L20 7 L20 17 L12 22 L4 17 L4 7 Z" strokeLinejoin="round" />
+    <path d="M12 2 L12 22" strokeDasharray="2 2" />
+    <path d="M4 7 L12 12 L20 7" />
+    <path d="M12 12 L12 22" />
+  </svg>
+);
+
+// Orthographic Cube Icon (직교 투영 - 평행선 큐브)
+const OrthographicCubeIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+    <path d="M4 8 L12 4 L20 8 L20 16 L12 20 L4 16 Z" strokeLinejoin="round" />
+    <path d="M12 4 L12 20" strokeDasharray="2 2" />
+    <path d="M4 8 L12 12 L20 8" />
+    <path d="M12 12 L12 20" />
+    <path d="M4 8 L4 16" />
+    <path d="M20 8 L20 16" />
+  </svg>
+);
 
 interface HeaderProps {
   title: string;
@@ -589,7 +610,9 @@ const Header: React.FC<HeaderProps> = ({
                     setIsCameraMenuOpen(false);
                   }}
                 >
-                  <PiCube size={16} style={{ marginRight: '8px' }} />
+                  <div style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+                    <PerspectiveCubeIcon size={16} />
+                  </div>
                   <span className={styles.checkmark}>
                     {cameraMode === 'perspective' && '✓'}
                   </span>
@@ -602,7 +625,9 @@ const Header: React.FC<HeaderProps> = ({
                     setIsCameraMenuOpen(false);
                   }}
                 >
-                  <TbBox size={16} style={{ marginRight: '8px' }} />
+                  <div style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+                    <OrthographicCubeIcon size={16} />
+                  </div>
                   <span className={styles.checkmark}>
                     {cameraMode === 'orthographic' && '✓'}
                   </span>
