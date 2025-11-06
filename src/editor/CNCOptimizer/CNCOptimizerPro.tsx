@@ -85,6 +85,15 @@ function PageInner(){
           if (designFile?.name) {
             console.log('✅ 디자인파일명 설정:', designFile.name);
             setDesignFileName(designFile.name);
+
+            // URL에 디자인파일명이 없으면 추가 (새로고침 시 유지하기 위해)
+            const currentParams = new URLSearchParams(window.location.search);
+            if (!currentParams.get('designFileName')) {
+              currentParams.set('designFileName', encodeURIComponent(designFile.name));
+              const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+              window.history.replaceState({}, '', newUrl);
+              console.log('🔗 CNC Optimizer URL에 디자인파일명 추가:', newUrl);
+            }
           } else {
             console.error('❌ 디자인파일에 name이 없음. designFile:', designFile);
           }
@@ -700,7 +709,14 @@ function PageInner(){
     }
   }, [livePanels, panels, stock, handleOptimize]);
 
-  const projectName = basicInfo?.title || 'New Project';
+  // URL 파라미터에서 프로젝트명 읽기 (fallback용)
+  const urlProjectName = useMemo(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const name = searchParams.get('projectName');
+    return name ? decodeURIComponent(name) : null;
+  }, [location.search]);
+
+  const projectName = basicInfo?.title || urlProjectName || 'New Project';
   
   // 컷팅 메소드 드롭다운 컴포넌트
   const CuttingMethodDropdown = () => {

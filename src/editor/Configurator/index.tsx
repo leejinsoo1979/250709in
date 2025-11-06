@@ -1163,6 +1163,15 @@ const Configurator: React.FC = () => {
 
             setBasicInfo({ title: project.title });
             console.log('📝 프로젝트명 설정:', project.title);
+
+            // URL에 프로젝트명이 없으면 추가 (새로고침 시 유지하기 위해)
+            const currentParams = new URLSearchParams(window.location.search);
+            if (!currentParams.get('projectName')) {
+              currentParams.set('projectName', encodeURIComponent(project.title));
+              const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+              window.history.replaceState({}, '', newUrl);
+              console.log('🔗 URL에 프로젝트명 추가:', newUrl);
+            }
           }
           setLoading(false);
         });
@@ -1181,6 +1190,15 @@ const Configurator: React.FC = () => {
                 if (project && !projectError) {
                   setBasicInfo({ title: project.title });
                   console.log('📝 프로젝트 데이터 설정:', project.title);
+
+                  // URL에 프로젝트명이 없으면 추가 (새로고침 시 유지하기 위해)
+                  const currentParams = new URLSearchParams(window.location.search);
+                  if (!currentParams.get('projectName')) {
+                    currentParams.set('projectName', encodeURIComponent(project.title));
+                    const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+                    window.history.replaceState({}, '', newUrl);
+                    console.log('🔗 URL에 프로젝트명 추가:', newUrl);
+                  }
                 }
               }
 
@@ -1254,6 +1272,15 @@ const Configurator: React.FC = () => {
               if (designFile.name) {
                 setCurrentDesignFileName(designFile.name);
                 console.log('📝 디자인파일명 설정:', designFile.name);
+
+                // URL에 디자인파일명이 없으면 추가 (새로고침 시 유지하기 위해)
+                const currentParams = new URLSearchParams(window.location.search);
+                if (!currentParams.get('designFileName')) {
+                  currentParams.set('designFileName', encodeURIComponent(designFile.name));
+                  const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+                  window.history.replaceState({}, '', newUrl);
+                  console.log('🔗 URL에 디자인파일명 추가:', newUrl);
+                }
               } else {
                 console.error('❌ 디자인파일에 name 필드가 없습니다!');
               }
@@ -2722,13 +2749,24 @@ const Configurator: React.FC = () => {
     console.log('💾 테스트: 브라우저 콘솔에서 window.testSaveProject()를 실행해보세요');
   }
 
+  // URL 파라미터에서 프로젝트명과 디자인파일명 읽기 (fallback용)
+  const urlProjectName = useMemo(() => {
+    const name = searchParams.get('projectName');
+    return name ? decodeURIComponent(name) : null;
+  }, [searchParams]);
+
+  const urlDesignFileName = useMemo(() => {
+    const name = searchParams.get('designFileName');
+    return name ? decodeURIComponent(name) : null;
+  }, [searchParams]);
+
   return (
     <div className={styles.configurator}>
       {/* 헤더 */}
       <Header
-        title={currentDesignFileName || basicInfo.title || "새로운 디자인"}
-        projectName={basicInfo.title || "새로운 프로젝트"}
-        designFileName={currentDesignFileName}
+        title={currentDesignFileName || urlDesignFileName || basicInfo.title || "새로운 디자인"}
+        projectName={basicInfo.title || urlProjectName || "새로운 프로젝트"}
+        designFileName={currentDesignFileName || urlDesignFileName}
         onSave={saveProject}
         onPrevious={handlePrevious}
         onHelp={handleHelp}
