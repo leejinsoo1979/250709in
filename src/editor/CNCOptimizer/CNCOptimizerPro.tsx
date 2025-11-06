@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { CNCProvider, useCNCStore } from './store';
 import { useLivePanelData } from './hooks/useLivePanelData';
 import { useProjectStore } from '@/store/core/projectStore';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Zap, Play, Pause, ChevronDown, ChevronRight, ChevronUp, Layout, Package, Grid3x3, Cpu, LogOut, Settings2 } from 'lucide-react';
 import Logo from '@/components/common/Logo';
 import { initializeTheme } from '@/theme';
@@ -34,6 +34,7 @@ import styles from './CNCOptimizerPro.module.css';
 
 function PageInner(){
   const navigate = useNavigate();
+  const location = useLocation();
   const { basicInfo } = useProjectStore();
   const { panels: livePanels } = useLivePanelData();
   const { t, currentLanguage } = useTranslation();
@@ -1243,11 +1244,12 @@ function PageInner(){
       />
       
       {/* Exit Confirmation Modal */}
-      <ExitConfirmModal 
+      <ExitConfirmModal
         isOpen={showExitConfirm}
         onConfirm={() => {
           console.log('Exit confirmed! Navigating to configurator...');
-          window.location.href = '/configurator';
+          // 현재 URL의 search params를 유지하면서 configurator로 이동
+          navigate(`/configurator${location.search}`);
         }}
         onCancel={() => setShowExitConfirm(false)}
       />
