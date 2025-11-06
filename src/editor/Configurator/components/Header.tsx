@@ -23,18 +23,14 @@ import { useTheme } from '@/contexts/ThemeContext';
 // Perspective Cube Icon (원근 투영 큐브)
 const PerspectiveCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-    {/* 앞면 사각형 */}
-    <path d="M5 10 L5 20 L15 20 L15 10 Z" />
-    {/* 앞면에서 뒤로 가는 선들 (원근감) */}
-    <path d="M5 10 L8 6" />
-    <path d="M15 10 L18 6" />
-    <path d="M5 20 L8 16" />
-    <path d="M15 20 L18 16" />
-    {/* 뒷면 모서리 (점선) */}
-    <path d="M8 6 L18 6" strokeDasharray="2 2" />
-    <path d="M18 6 L18 16" strokeDasharray="2 2" />
-    <path d="M18 16 L8 16" strokeDasharray="2 2" />
-    <path d="M8 16 L8 6" strokeDasharray="2 2" />
+    {/* 상단면 (마름모) */}
+    <path d="M12 3 L18 6 L12 9 L6 6 Z" />
+    {/* 좌측면 */}
+    <path d="M6 6 L6 15 L12 18" />
+    {/* 우측면 */}
+    <path d="M18 6 L18 15 L12 18" />
+    {/* 중앙 수직선 */}
+    <path d="M12 9 L12 18" />
   </svg>
 );
 
