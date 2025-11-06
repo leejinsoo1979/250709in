@@ -264,13 +264,21 @@ const Header: React.FC<HeaderProps> = ({
           <div className={styles.logo}>
             <Logo size="medium" />
           </div>
-          {designFileName && (
-            <div className={styles.projectInfo}>
-              <div className={styles.designFileName}>
-                {designFileName}
-              </div>
+          <div className={styles.projectInfo}>
+            <div className={styles.designFileName}>
+              {projectName && designFileName ? (
+                <>
+                  {projectName} <span className={styles.separator}>›</span> {designFileName}
+                </>
+              ) : projectName ? (
+                projectName
+              ) : designFileName ? (
+                designFileName
+              ) : (
+                '새로운 디자인'
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* 중앙 액션 버튼들 */}
