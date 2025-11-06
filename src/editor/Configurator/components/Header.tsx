@@ -24,15 +24,16 @@ import { useTheme } from '@/contexts/ThemeContext';
 const PerspectiveCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
     {/* 앞면 정사각형 */}
-    <path d="M6 8 L6 18 L16 18 L16 8 Z" strokeLinejoin="round" />
-    {/* 상단 면 (마름모) */}
-    <path d="M6 8 L11 4 L21 4 L16 8 Z" strokeLinejoin="round" />
-    {/* 우측 면 (평행사변형) */}
-    <path d="M16 8 L21 4 L21 14 L16 18 Z" strokeLinejoin="round" />
-    {/* 내부 점선 */}
-    <path d="M11 4 L11 14" strokeDasharray="2 2" />
-    <path d="M11 14 L16 18" strokeDasharray="2 2" />
-    <path d="M11 14 L6 18" strokeDasharray="2 2" />
+    <path d="M4 9 L4 19 L14 19 L14 9 L4 9" />
+    {/* 위쪽 면 */}
+    <path d="M4 9 L9 5 L19 5 L14 9" />
+    {/* 오른쪽 면 */}
+    <path d="M14 9 L19 5 L19 15 L14 19" />
+    {/* 뒷면 점선 */}
+    <path d="M9 5 L9 15" strokeDasharray="1.5 1.5" />
+    <path d="M9 15 L4 19" strokeDasharray="1.5 1.5" />
+    <path d="M9 15 L14 19" strokeDasharray="1.5 1.5" />
+    <path d="M9 15 L19 15" strokeDasharray="1.5 1.5" />
   </svg>
 );
 
