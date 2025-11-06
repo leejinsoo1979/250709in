@@ -81,6 +81,7 @@
     "@types/three": "^0.176.0",
     "@vitejs/plugin-react": "^4.4.1",
     "autoprefixer": "^10.4.21",
+    "babel-plugin-transform-remove-console": "^6.9.4",
     "eslint": "^9.25.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.19",

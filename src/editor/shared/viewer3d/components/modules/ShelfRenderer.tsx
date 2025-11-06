@@ -652,7 +652,6 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                         anchorX="center"
                         anchorY="middle"
                         rotation={[0, 0, Math.PI / 2]}
-                        renderOrder={998}
                       >
                         {Math.round(compartment.height * 100)}
                       </Text>
@@ -670,7 +669,6 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                       anchorX="center"
                       anchorY="middle"
                       rotation={[0, 0, Math.PI / 2]} // 텍스트를 270도 회전하여 세로로 표시 (읽기 쉽게)
-                      renderOrder={999}
                       onClick={(e: ThreeEvent<MouseEvent>) => {
                         e.stopPropagation();
                         if (compartmentId) {
@@ -813,7 +811,6 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
                     anchorX="center"
                     anchorY="middle"
                     rotation={[0, 0, Math.PI / 2]}
-                    renderOrder={998}
                   >
                     {compartmentHeightMm}
                   </Text>

@@ -82,17 +82,6 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
   const floatHeight = spaceInfo?.baseConfig?.floatHeight || 0;
   const showIndirectLight = false;
 
-  // 디버그: zone 값 확인
-  React.useEffect(() => {
-    console.log('🚪🔴 SingleType4 - zone prop:', {
-      zone,
-      moduleId: moduleData.id,
-      placedFurnitureId,
-      droppedCeilingEnabled: spaceInfo?.droppedCeiling?.enabled,
-      dropHeight: spaceInfo?.droppedCeiling?.dropHeight
-    });
-  }, [zone, moduleData.id, placedFurnitureId, spaceInfo?.droppedCeiling]);
-
   const sectionHeightsUnits = getSectionHeights();
   const unitsToMmFactor = (() => {
     const unit = mmToThreeUnits(1);
