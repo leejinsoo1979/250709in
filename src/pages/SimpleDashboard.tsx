@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-
 import { Timestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
-import { BsFillFolderFill } from "react-icons/bs";
+import { PiFolderFill } from "react-icons/pi";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile } from '@/firebase/projects';
 import { signOutUser } from '@/firebase/auth';
@@ -2763,7 +2763,7 @@ const SimpleDashboard: React.FC = () => {
                             {isSelected && (
                               <button className={styles.createFolderBtn} onClick={handleCreateFolder}>
                                 <div className={styles.createFolderIcon}>
-                                  <BsFillFolderFill size={16} />
+                                  <PiFolderFill size={16} />
                                   <PlusIcon size={12} />
                                 </div>
                                 <span>새로운 폴더</span>
@@ -2790,7 +2790,7 @@ const SimpleDashboard: React.FC = () => {
                               }}
                               style={{ cursor: 'pointer' }}
                             >
-                              <BsFillFolderFill size={16} />
+                              <PiFolderFill size={16} />
                             </div>
                             <span>{folder.name}</span>
                             {folder.children && folder.children.length > 0 && (
@@ -3234,7 +3234,7 @@ const SimpleDashboard: React.FC = () => {
                         </div>
                       ) : item.type === 'folder' ? (
                         <div className={styles.folderIcon}>
-                          <BsFillFolderFill size={48} style={{ color: 'var(--theme-primary, #10b981)' }} />
+                          <PiFolderFill size={48} style={{ color: 'var(--theme-primary, #10b981)' }} />
                         </div>
                       ) : (
                         (() => {
@@ -3376,7 +3376,7 @@ const SimpleDashboard: React.FC = () => {
                                 <div key={projectItem.id} className={styles.thumbnailItem}>
                                   {projectItem.type === 'folder' ? (
                                     <div className={styles.thumbnailFolder}>
-                                      <BsFillFolderFill size={24} />
+                                      <PiFolderFill size={24} />
                                     </div>
                                   ) : projectItem.type === 'design' && projectItem.designFile ? (
                                     // 디자인 파일의 실제 썸네일 표시
@@ -3834,7 +3834,7 @@ const SimpleDashboard: React.FC = () => {
                   closeMoreMenu();
                 }}
               >
-                <BsFillFolderFill size={14} />
+                <PiFolderFill size={14} />
                 복원하기
               </div>
             )}
