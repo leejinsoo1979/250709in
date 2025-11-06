@@ -2459,19 +2459,6 @@ const SimpleDashboard: React.FC = () => {
           </div>
           <div className={styles.headerRight}>
             <div className={styles.headerActions}>
-              {/* 선택된 아이템 개수 표시 */}
-              {selectedCards.size > 0 && (
-                <div className={styles.selectionInfo}>
-                  <span>{selectedCards.size}개의 항목이 선택됨</span>
-                  <button
-                    className={styles.clearSelectionBtn}
-                    onClick={() => setSelectedCards(new Set())}
-                  >
-                    선택 해제
-                  </button>
-                </div>
-              )}
-
               <button className={styles.actionButton}>
                 <MessageIcon size={20} />
               </button>
@@ -2541,6 +2528,19 @@ const SimpleDashboard: React.FC = () => {
             
             {/* 우측 액션 버튼들 */}
             <div className={styles.subHeaderActions}>
+              {/* 선택된 아이템 개수 표시 */}
+              {selectedCards.size > 0 && (
+                <div className={styles.selectionInfo}>
+                  <span>{selectedCards.size}개의 항목이 선택됨</span>
+                  <button
+                    className={styles.clearSelectionBtn}
+                    onClick={() => setSelectedCards(new Set())}
+                  >
+                    선택 해제
+                  </button>
+                </div>
+              )}
+
               {/* 검색바 */}
               <div className={styles.searchContainer}>
                 <div className={styles.searchIcon}>
