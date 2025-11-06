@@ -165,43 +165,44 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
           {/* 모달 헤더 */}
           <div className={styles.modalHeader}>
             <div className={styles.headerLeft}>
-              <h2 className={styles.modalTitle}>
-                {loading ? '프로젝트 로딩 중...' : (project ? project.title : '프로젝트를 찾을 수 없음')}
-              </h2>
+              <div className={styles.titleRow}>
+                <h2 className={styles.modalTitle}>
+                  {loading ? '프로젝트 로딩 중...' : (project ? project.title : '프로젝트를 찾을 수 없음')}
+                </h2>
+                {/* 2D/3D 토글 버튼 */}
+                {project && !loading && !error && (
+                  <div className={styles.viewModeToggle}>
+                    <button
+                      className={`${styles.viewModeButton} ${viewMode === '2D' ? styles.active : ''}`}
+                      onClick={() => setViewMode('2D')}
+                    >
+                      2D
+                    </button>
+                    <button
+                      className={`${styles.viewModeButton} ${viewMode === '3D' ? styles.active : ''}`}
+                      onClick={() => setViewMode('3D')}
+                    >
+                      3D
+                    </button>
+                  </div>
+                )}
+              </div>
               {project && (
                 <span className={styles.projectInfo}>
                   {viewMode} 미리보기
                 </span>
               )}
             </div>
-            
-            {/* 2D/3D 토글 버튼 */}
-            <div className={styles.headerCenter}>
-              <div className={styles.viewModeToggle}>
-                <button 
-                  className={`${styles.viewModeButton} ${viewMode === '2D' ? styles.active : ''}`}
-                  onClick={() => setViewMode('2D')}
-                >
-                  2D
-                </button>
-                <button 
-                  className={`${styles.viewModeButton} ${viewMode === '3D' ? styles.active : ''}`}
-                  onClick={() => setViewMode('3D')}
-                >
-                  3D
-                </button>
-              </div>
-            </div>
-            
+
             <div className={styles.headerActions}>
-              <button 
+              <button
                 className={styles.actionButton}
                 onClick={toggleFullscreen}
                 title={isFullscreen ? '창 모드' : '전체화면'}
               >
                 {isFullscreen ? <MinimizeIcon size={20} /> : <MaximizeIcon size={20} />}
               </button>
-              <button 
+              <button
                 className={styles.closeButton}
                 onClick={handleClose}
                 title="닫기"

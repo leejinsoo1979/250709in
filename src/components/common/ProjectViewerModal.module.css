@@ -53,7 +53,15 @@
 .headerLeft {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
+  flex: 1;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .modalTitle {
@@ -66,12 +74,6 @@
 .projectInfo {
   font-size: 14px;
   color: #6b7280;
-}
-
-.headerCenter {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
 }
 
 .viewModeToggle {
@@ -276,27 +278,52 @@
   .modalOverlay {
     padding: 10px;
   }
-  
+
   .modalContent {
     height: 90vh;
     max-height: none;
   }
-  
+
   .modalHeader {
     padding: 16px 20px;
+    flex-wrap: wrap;
   }
-  
+
+  .headerLeft {
+    width: 100%;
+    margin-bottom: 8px;
+  }
+
+  .titleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
   .modalTitle {
     font-size: 18px;
   }
-  
+
+  .viewModeToggle {
+    width: 100%;
+  }
+
+  .viewModeButton {
+    flex: 1;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
   .modalFooter {
     padding: 12px 20px;
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
   }
-  
+
   .editButton,
   .shareButton {
     width: 100%;
