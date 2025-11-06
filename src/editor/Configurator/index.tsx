@@ -51,6 +51,7 @@ import {
 import GapControls from '@/editor/shared/controls/customization/components/GapControls';
 
 import styles from './style.module.css';
+import responsiveStyles from './responsive.module.css';
 import rightPanelStyles from './components/RightPanel.module.css';
 
 const Configurator: React.FC = () => {
@@ -2941,7 +2942,7 @@ const Configurator: React.FC = () => {
   }
 
   return (
-    <div className={styles.configurator}>
+    <div className={`${styles.configurator} ${isReadOnly ? responsiveStyles.readOnlyMode : ''}`}>
       {/* 헤더 */}
       <Header
         title={currentDesignFileName || urlDesignFileName || basicInfo.title || "새로운 디자인"}
