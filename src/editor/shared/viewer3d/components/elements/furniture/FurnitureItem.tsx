@@ -3181,8 +3181,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 키큰장/듀얼장 중심 X 위치 (adjustedPosition.x에 이미 positionAdjustmentForEndPanel이 적용됨)
         const furnitureCenterX = adjustedPosition.x;
 
-        // 왼쪽 엔드패널 렌더링
-        if ((endPanelSide === 'left' || endPanelSide === 'both' || (isNoSurroundFirstSlot && needsEndPanelAdjustment)) && slotBoundaries) {
+        // 왼쪽 엔드패널 렌더링 (endPanelSide만 존중 - 바깥쪽 엔드패널 중복 방지)
+        if ((endPanelSide === 'left' || endPanelSide === 'both') && slotBoundaries) {
           // 엔드패널은 항상 슬롯 왼쪽 경계에 고정
           const leftPanelX = slotBoundaries.left + endPanelWidth / 2;
 
@@ -3192,8 +3192,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             zone: placedModule.zone
           });
         }
-        // 오른쪽 엔드패널 렌더링
-        if ((endPanelSide === 'right' || endPanelSide === 'both' || ((isNoSurroundLastSlot || isNoSurroundDualLastSlot) && needsEndPanelAdjustment)) && slotBoundaries) {
+        // 오른쪽 엔드패널 렌더링 (endPanelSide만 존중 - 바깥쪽 엔드패널 중복 방지)
+        if ((endPanelSide === 'right' || endPanelSide === 'both') && slotBoundaries) {
           // 듀얼장의 경우 두 번째 슬롯의 오른쪽 경계 사용
           let rightPanelX: number;
 
