@@ -479,15 +479,15 @@ const Header: React.FC<HeaderProps> = ({
           {readOnly && (
             <div style={{
               padding: '6px 12px',
-              backgroundColor: 'rgba(255, 152, 0, 0.1)',
-              border: '1px solid rgba(255, 152, 0, 0.3)',
+              backgroundColor: `${colors.primary}15`,
+              border: `1px solid ${colors.primary}40`,
               borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
               fontSize: '13px',
               fontWeight: '500',
-              color: 'var(--theme-warning, #ff9800)'
+              color: colors.primary
             }}>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
