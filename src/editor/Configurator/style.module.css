@@ -2068,32 +2068,33 @@
 }
 
 /* ================================
-   Mobile Landscape (max-width: 767px) - Optimized Desktop Layout
+   Mobile Landscape (max-width: 767px) - Desktop Layout with Scale
+   데스크탑 레이아웃 그대로 scale로 축소하여 모든 요소 표시
    ================================ */
 @media screen and (max-width: 767px) and (orientation: landscape) {
-  /* 좁은 사이드바 컨텐츠 */
+  /* 전체 configurator를 scale로 축소 */
+  .configurator {
+    transform: scale(0.65);
+    transform-origin: top left;
+    width: 153.846%; /* 100% / 0.65 */
+    height: 153.846%; /* 100% / 0.65 */
+  }
+
+  /* 데스크탑 레이아웃 강제 유지 - 커스텀 스타일 제거 */
   .sidebarContent {
-    left: 48px !important; /* Sidebar 너비에 맞춤 */
-    width: 192px !important; /* 좁게 */
+    /* 데스크탑 기본값 사용 */
   }
 
-  /* 뷰어 영역 조정 */
   .viewerArea {
-    left: 240px !important; /* 48px (sidebar) + 192px (sidebarContent) */
-    right: 0 !important; /* 우측 패널 없음 */
+    /* 데스크탑 기본값 사용 */
   }
 
-  /* 우측 패널 완전히 숨김 */
   .rightPanelContainer {
-    display: none !important;
-  }
-
-  .rightPanelToggle {
-    display: none !important;
+    /* 데스크탑 기본값 사용 - 표시됨 */
   }
 
   .rightPanel {
-    display: none !important;
+    /* 데스크탑 기본값 사용 - 표시됨 */
   }
 }
 
