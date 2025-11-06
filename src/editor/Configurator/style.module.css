@@ -2072,12 +2072,24 @@
    데스크탑 레이아웃 그대로 scale로 축소하여 모든 요소 표시
    ================================ */
 @media screen and (max-width: 767px) and (orientation: landscape) {
+  /* body, html 스크롤 허용 */
+  :root {
+    overflow-x: auto !important;
+    overflow-y: auto !important;
+  }
+
   /* 전체 configurator를 scale로 축소 */
   .configurator {
     transform: scale(0.65);
     transform-origin: top left;
     width: 153.846%; /* 100% / 0.65 */
     height: 153.846%; /* 100% / 0.65 */
+    overflow: visible !important;
+  }
+
+  /* mainContent도 overflow visible */
+  .mainContent {
+    overflow: visible !important;
   }
 
   /* 데스크탑 레이아웃 강제 유지 - 커스텀 스타일 제거 */
