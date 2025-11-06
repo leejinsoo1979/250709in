@@ -1,9 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { Space3DViewProvider } from './context/Space3DViewContext';
 import ThreeCanvas from './components/base/ThreeCanvas';
 import Room from './components/elements/Room';
 import CleanCAD2D from './components/elements/CleanCAD2D';
 import { calculateOptimalDistance, mmToThreeUnits } from './components/base/utils/threeUtils';
+import { useUIStore } from '@/store/uiStore';
 
 interface Space3DViewerReadOnlyProps {
   spaceConfig: any;
@@ -30,6 +31,34 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
     viewMode,
     renderMode
   });
+
+  // 미리보기 모드에서는 치수 표시 끄기
+  useEffect(() => {
+    const uiStore = useUIStore.getState();
+
+    // 현재 상태 저장
+    const prevShowDimensions = uiStore.showDimensions;
+    const prevShowDimensionsText = uiStore.showDimensionsText;
+
+    console.log('🔍 미리보기 모드 - 치수 표시 끄기:', {
+      prevShowDimensions,
+      prevShowDimensionsText
+    });
+
+    // 치수 표시 끄기
+    uiStore.setShowDimensions(false);
+    uiStore.setShowDimensionsText(false);
+
+    // 언마운트 시 원래 상태로 복원
+    return () => {
+      console.log('🔍 미리보기 모드 종료 - 치수 표시 복원:', {
+        prevShowDimensions,
+        prevShowDimensionsText
+      });
+      uiStore.setShowDimensions(prevShowDimensions);
+      uiStore.setShowDimensionsText(prevShowDimensionsText);
+    };
+  }, []);
 
   // 재질 설정
   const materialConfig = spaceConfig?.materialConfig || { 
