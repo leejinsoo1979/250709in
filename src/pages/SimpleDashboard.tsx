@@ -1583,11 +1583,11 @@ const SimpleDashboard: React.FC = () => {
   const handleMoreMenuOpen = (e: React.MouseEvent, itemId: string, itemName: string, itemType: 'folder' | 'design' | 'project') => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('📌 더보기 메뉴 열기:', { itemId, itemName, itemType, x: e.clientX, y: e.clientY });
+    console.log('📌 더보기 메뉴 열기:', { itemId, itemName, itemType });
     setMoreMenu({
       visible: true,
-      x: e.clientX,
-      y: e.clientY,
+      x: 0, // 더 이상 사용되지 않음
+      y: 0, // 더 이상 사용되지 않음
       itemId,
       itemName,
       itemType
@@ -3703,6 +3703,100 @@ const SimpleDashboard: React.FC = () => {
                         </div>
                       )
                     )}
+
+                    {/* 더보기 메뉴 - 각 카드 내부에 렌더링 */}
+                    {moreMenu && moreMenu.itemId === item.id && (
+                      <>
+                        <div
+                          className={styles.moreMenuBackdrop}
+                          onClick={closeMoreMenu}
+                        />
+                        <div className={styles.moreMenu}>
+                          <div
+                            className={styles.moreMenuItem}
+                            onClick={handleRenameItem}
+                          >
+                            <EditIcon size={14} />
+                            이름 바꾸기
+                          </div>
+                          <div
+                            className={styles.moreMenuItem}
+                            onClick={handleDuplicateItem}
+                          >
+                            <CopyIcon size={14} />
+                            복제하기
+                          </div>
+                          <div
+                            className={styles.moreMenuItem}
+                            onClick={handleShareItem}
+                          >
+                            <ShareIcon size={14} />
+                            공유하기
+                          </div>
+                          {(moreMenu.itemType === 'project' || moreMenu.itemType === 'design' || moreMenu.itemType === 'folder') && (
+                            <div
+                              className={styles.moreMenuItem}
+                              onClick={() => {
+                                if (moreMenu.itemType === 'project') {
+                                  toggleBookmark(moreMenu.itemId);
+                                } else if (moreMenu.itemType === 'design') {
+                                  toggleDesignBookmark(moreMenu.itemId);
+                                } else if (moreMenu.itemType === 'folder') {
+                                  toggleFolderBookmark(moreMenu.itemId);
+                                }
+                                closeMoreMenu();
+                              }}
+                            >
+                              <StarIcon size={14} />
+                              {moreMenu.itemType === 'project'
+                                ? (bookmarkedProjects.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
+                                : moreMenu.itemType === 'design'
+                                ? (bookmarkedDesigns.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
+                                : (bookmarkedFolders.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
+                              }
+                            </div>
+                          )}
+                          <div
+                            className={`${styles.moreMenuItem} ${styles.deleteItem}`}
+                            onClick={() => {
+                              if (activeMenu === 'trash') {
+                                if (window.confirm('정말로 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                                  handleDeleteItem();
+                                }
+                              } else {
+                                if (moreMenu.itemType === 'project') {
+                                  const project = allProjects.find(p => p.id === moreMenu.itemId);
+                                  if (project) {
+                                    moveToTrash(project);
+                                    closeMoreMenu();
+                                  }
+                                } else {
+                                  handleDeleteItem();
+                                }
+                              }
+                            }}
+                          >
+                            <TrashIcon size={14} />
+                            {activeMenu === 'trash' ? '영구 삭제' : '삭제하기'}
+                          </div>
+                          {activeMenu === 'trash' && (
+                            <div
+                              className={styles.moreMenuItem}
+                              onClick={() => {
+                                if (moreMenu.itemType === 'project') {
+                                  restoreFromTrash(moreMenu.itemId);
+                                } else if (moreMenu.itemType === 'design') {
+                                  restoreDesignFileFromTrash(moreMenu.itemId);
+                                }
+                                closeMoreMenu();
+                              }}
+                            >
+                              복원하기
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))
                 ) : !projectsLoading ? (
@@ -3832,109 +3926,6 @@ const SimpleDashboard: React.FC = () => {
             >
               삭제
             </div>
-          </div>
-        </>
-      )}
-
-      {/* 더보기 메뉴 */}
-      {console.log('🔍 moreMenu 상태:', moreMenu)}
-      {moreMenu && (
-        <>
-          <div 
-            className={styles.moreMenuBackdrop}
-            onClick={closeMoreMenu}
-          />
-          <div
-            className={styles.moreMenu}
-            style={{
-              position: 'fixed',
-              top: moreMenu.y,
-              left: moreMenu.x
-            }}
-          >
-            <div 
-              className={styles.moreMenuItem}
-              onClick={handleRenameItem}
-            >
-              <EditIcon size={14} />
-              이름 바꾸기
-            </div>
-            <div 
-              className={styles.moreMenuItem}
-              onClick={handleDuplicateItem}
-            >
-              <CopyIcon size={14} />
-              복제하기
-            </div>
-            <div 
-              className={styles.moreMenuItem}
-              onClick={handleShareItem}
-            >
-              <ShareIcon size={14} />
-              공유하기
-            </div>
-            {(moreMenu.itemType === 'project' || moreMenu.itemType === 'design' || moreMenu.itemType === 'folder') && (
-              <div 
-                className={styles.moreMenuItem}
-                onClick={() => {
-                  if (moreMenu.itemType === 'project') {
-                    toggleBookmark(moreMenu.itemId);
-                  } else if (moreMenu.itemType === 'design') {
-                    toggleDesignBookmark(moreMenu.itemId);
-                  } else if (moreMenu.itemType === 'folder') {
-                    toggleFolderBookmark(moreMenu.itemId);
-                  }
-                  closeMoreMenu();
-                }}
-              >
-                <StarIcon size={14} />
-                {moreMenu.itemType === 'project' 
-                  ? (bookmarkedProjects.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
-                  : moreMenu.itemType === 'design' 
-                  ? (bookmarkedDesigns.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
-                  : (bookmarkedFolders.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
-                }
-              </div>
-            )}
-            <div 
-              className={`${styles.moreMenuItem} ${styles.deleteItem}`}
-              onClick={() => {
-                if (activeMenu === 'trash') {
-                  if (window.confirm('정말로 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-                    handleDeleteItem();
-                  }
-                } else {
-                  if (moreMenu.itemType === 'project') {
-                    const project = allProjects.find(p => p.id === moreMenu.itemId);
-                    if (project) {
-                      moveToTrash(project);
-                      closeMoreMenu();
-                    }
-                  } else {
-                    handleDeleteItem();
-                  }
-                }
-              }}
-            >
-              <TrashIcon size={14} />
-              {activeMenu === 'trash' ? '영구 삭제' : '휴지통으로 이동'}
-            </div>
-            {activeMenu === 'trash' && (
-              <div
-                className={styles.moreMenuItem}
-                onClick={() => {
-                  if (moreMenu.itemType === 'project') {
-                    restoreFromTrash(moreMenu.itemId);
-                  } else if (moreMenu.itemType === 'design') {
-                    restoreDesignFileFromTrash(moreMenu.itemId);
-                  }
-                  closeMoreMenu();
-                }}
-              >
-                <PiFolderFill size={14} />
-                복원하기
-              </div>
-            )}
           </div>
         </>
       )}

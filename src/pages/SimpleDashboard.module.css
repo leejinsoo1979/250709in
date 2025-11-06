@@ -1223,7 +1223,9 @@
   padding: 8px;
   min-width: 160px;
   backdrop-filter: blur(10px);
-  position: fixed;
+  position: absolute;
+  top: 48px;
+  right: 12px;
 }
 
 /* 더보기 메뉴 백드롭 */
