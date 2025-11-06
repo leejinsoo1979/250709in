@@ -126,7 +126,13 @@ export const ShareLinkAccess: React.FC = () => {
 
         // 3초 후 프로젝트로 이동
         setTimeout(() => {
-          const url = `/configurator?projectId=${result.projectId}${link.designFileName ? `&designFileName=${encodeURIComponent(link.designFileName)}` : ''}`;
+          let url = `/configurator?projectId=${result.projectId}`;
+          if (link.designFileId) {
+            url += `&designFileId=${link.designFileId}`;
+          }
+          if (link.designFileName) {
+            url += `&designFileName=${encodeURIComponent(link.designFileName)}`;
+          }
           navigate(url);
         }, 3000);
       } else {
@@ -159,7 +165,13 @@ export const ShareLinkAccess: React.FC = () => {
       console.log('👁️ 조회 권한 + 비밀번호 확인 완료 - 프로젝트로 이동');
       setSuccess(true);
       setTimeout(() => {
-        const url = `/configurator?projectId=${link.projectId}${link.designFileName ? `&designFileName=${encodeURIComponent(link.designFileName)}` : ''}`;
+        let url = `/configurator?projectId=${link.projectId}&mode=readonly`;
+        if (link.designFileId) {
+          url += `&designFileId=${link.designFileId}`;
+        }
+        if (link.designFileName) {
+          url += `&designFileName=${encodeURIComponent(link.designFileName)}`;
+        }
         navigate(url);
       }, 2000);
       return;
