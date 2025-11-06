@@ -7,7 +7,7 @@ import { AiOutlineFileMarkdown } from "react-icons/ai";
 import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
 import { ProjectSummary } from '../firebase/types';
-import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile } from '@/firebase/projects';
+import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
 import { signOutUser } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -366,21 +366,39 @@ const SimpleDashboard: React.FC = () => {
     }
   }, [user]);
 
-  // 컴포넌트 마운트 시 데모 프로젝트 정리 및 Firebase 프로젝트 로드
+  // 컴포넌트 마운트 시 데모 프로젝트 정리 및 Firebase 프로젝트 실시간 구독
   useEffect(() => {
     // 컴포넌트 마운트 시 항상 데모 프로젝트 정리
     cleanupDemoProjects();
-    
-    if (user) {
-      console.log('🔥 사용자 로그인 감지, 프로젝트 로딩 시작:', user.email);
-      // 로그인 직후 Firebase Auth 토큰이 준비될 때까지 약간의 지연
-      setTimeout(() => {
-        loadFirebaseProjects();
-      }, 500);
-    } else {
+
+    if (!user) {
       console.log('⚠️ 사용자 없음, 프로젝트 로딩 건너뜀');
+      setProjectsLoading(false);
+      return;
     }
-  }, [user, loadFirebaseProjects]);
+
+    console.log('🔥 사용자 로그인 감지, 실시간 구독 시작:', user.email);
+
+    // 실시간 구독 설정 (약간의 지연 후)
+    const timeoutId = setTimeout(() => {
+      const unsubscribe = subscribeToUserProjects(user.uid, (projects) => {
+        console.log('🔔 프로젝트 실시간 업데이트 수신:', projects.length, '개');
+        setFirebaseProjects(projects);
+        setProjectsLoading(false);
+      });
+
+      // cleanup 시 구독 해제
+      return () => {
+        console.log('🔕 프로젝트 실시간 구독 해제');
+        unsubscribe();
+      };
+    }, 500);
+
+    // cleanup
+    return () => {
+      clearTimeout(timeoutId);
+    };
+  }, [user]);
   
   // 프로젝트 목록이 로드되면 각 프로젝트의 디자인 파일도 로드
   useEffect(() => {

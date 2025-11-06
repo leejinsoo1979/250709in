@@ -1,26 +1,28 @@
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
+import {
+  collection,
+  doc,
+  addDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
   serverTimestamp,
   Timestamp,
   setDoc,
   getDocFromServer,
   getDocsFromServer,
-  collectionGroup
+  collectionGroup,
+  onSnapshot
 } from 'firebase/firestore';
 import { db } from './config';
 import { getCurrentUserAsync } from './auth';
 import { FirebaseProject, CreateProjectData, ProjectSummary, CreateDesignFileData, DesignFile, DesignFileSummary } from './types';
 import { FLAGS } from '@/flags';
 import { listDesignFiles as repoListDesignFiles } from '@/services/designs.repo';
+import { recordProjectHistory } from './projectHistory';
 
 // 컬렉션 참조
 const PROJECTS_COLLECTION = 'projects';
@@ -547,8 +549,12 @@ export const updateProject = async (
     }
 
     console.log('🔥 Firebase 저장 - 최종 updateData:', updateData);
+
+    // 기존 데이터 가져오기 (변경 이력을 위해)
+    const oldData = docSnap.data();
+
     await updateDoc(docRef, updateData);
-    
+
     // 저장 후 실제 저장된 데이터 확인
     const verifyDocSnap = await getDoc(docRef);
     if (verifyDocSnap.exists()) {
@@ -556,7 +562,32 @@ export const updateProject = async (
       console.log('🔥 Firebase 저장 후 확인 - spaceConfig:', savedData.spaceConfig);
       console.log('🔥 Firebase 저장 후 확인 - materialConfig:', savedData.spaceConfig?.materialConfig);
     }
-    
+
+    // 변경 이력 기록
+    try {
+      let changeDescription = '';
+      if (updates.title) changeDescription = '프로젝트 제목 변경';
+      else if (updates.spaceConfig) changeDescription = '공간 설정 변경';
+      else if (updates.furniture) changeDescription = '가구 배치 변경';
+      else if (thumbnail) changeDescription = '썸네일 업데이트';
+      else changeDescription = '프로젝트 정보 변경';
+
+      await recordProjectHistory(
+        projectId,
+        oldData.title || '제목 없음',
+        'project_updated',
+        user.uid,
+        user.displayName || user.email || '사용자',
+        user.email,
+        {
+          description: changeDescription,
+        }
+      );
+    } catch (historyError) {
+      console.error('변경 이력 기록 실패:', historyError);
+      // 이력 기록 실패는 주요 기능에 영향 없음
+    }
+
     return { error: null };
   } catch (error) {
     console.error('프로젝트 업데이트 에러:', error);
@@ -935,6 +966,49 @@ export const getUserProjects = async (userId?: string): Promise<{ projects: Proj
   
   return listProjects(targetUserId);
 };
+
+/**
+ * 사용자의 프로젝트 목록 실시간 구독
+ * @param userId 사용자 ID
+ * @param callback 프로젝트 목록 변경 시 호출될 콜백
+ * @returns 구독 취소 함수
+ */
+export function subscribeToUserProjects(
+  userId: string,
+  callback: (projects: ProjectSummary[]) => void
+): () => void {
+  const q = query(
+    collection(db, PROJECTS_COLLECTION),
+    where('userId', '==', userId),
+    orderBy('updatedAt', 'desc')
+  );
+
+  const unsubscribe = onSnapshot(
+    q,
+    (snapshot) => {
+      const projects: ProjectSummary[] = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          title: data.title || '제목 없음',
+          thumbnail: data.thumbnail || null,
+          createdAt: data.createdAt || Timestamp.now(),
+          updatedAt: data.updatedAt || Timestamp.now(),
+          userId: data.userId,
+        };
+      });
+
+      console.log('🔔 프로젝트 실시간 업데이트:', projects.length, '개');
+      callback(projects);
+    },
+    (error) => {
+      console.error('❌ 프로젝트 구독 실패:', error);
+      callback([]);
+    }
+  );
+
+  return unsubscribe;
+}
 
 // 마지막 열람 시간 업데이트 (내부 함수) - Firebase 내부 에러로 인해 비활성화
 // const updateLastOpenedAt = async (projectId: string) => {
