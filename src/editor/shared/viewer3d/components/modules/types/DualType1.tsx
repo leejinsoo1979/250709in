@@ -298,8 +298,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
                 const safetyShelfPositionMm = section.shelfPositions?.find((pos: number) => pos > 0);
                 const hasFinishPanel = section.isTopFinishPanel && section.count === 1;
 
-                // 띄움 배치 여부 확인
-                const isFloating = lowerSectionTopOffset && lowerSectionTopOffset > 0;
+                // 띄움 배치 여부 확인 - spaceInfo의 baseConfig를 사용해야 함
+                const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
 
                 // 옷걸이 봉 Y 위치 계산
                 let rodYPosition: number;
