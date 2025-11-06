@@ -2272,11 +2272,19 @@ const SimpleDashboard: React.FC = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      // 엔터 키로도 검색 실행 (실시간 필터링이므로 실제로는 불필요하지만 UX 향상)
                       e.currentTarget.blur();
                     }
                   }}
                 />
+                <button
+                  className={styles.searchButton}
+                  onClick={() => {
+                    document.querySelector<HTMLInputElement>(`.${styles.searchInput}`)?.blur();
+                  }}
+                  title="검색"
+                >
+                  <SearchIcon size={16} />
+                </button>
                 {searchTerm && (
                   <button
                     className={styles.searchClearButton}
