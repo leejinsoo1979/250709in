@@ -156,7 +156,7 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
               showDimensions={false}  // 치수 숨김
               placedModules={placedModules}
               isReadOnly={true}  // 읽기 전용 모드
-              cameraMode={cameraMode}  // 카메라 모드 전달
+              cameraModeOverride={cameraMode}  // 카메라 모드 전달
             />
             
             {/* 미리보기 모드에서는 치수 표시 제거 */}
