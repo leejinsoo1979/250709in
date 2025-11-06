@@ -575,7 +575,7 @@ const Header: React.FC<HeaderProps> = ({
               onClick={() => setIsCameraMenuOpen(!isCameraMenuOpen)}
             >
               <MdOutlineViewInAr size={20} />
-              시점
+              뷰모드
               <ChevronDown size={16} style={{ marginLeft: '4px' }} />
             </button>
             
