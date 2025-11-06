@@ -212,39 +212,7 @@ export const ShareLinkAccess: React.FC = () => {
     );
   }
 
-  // 로그인 필요
-  if (!user && link) {
-    return (
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.iconWrapper}>
-            <Lock size={48} />
-          </div>
-          <h2 className={styles.title}>로그인이 필요합니다</h2>
-          <p className={styles.description}>
-            프로젝트에 접근하려면 로그인해주세요
-          </p>
-          {link && (
-            <div className={styles.projectInfo}>
-              <div className={styles.infoItem}>
-                <span className={styles.infoLabel}>프로젝트:</span>
-                <span className={styles.infoValue}>{link.projectName}</span>
-              </div>
-              <div className={styles.infoItem}>
-                <span className={styles.infoLabel}>공유자:</span>
-                <span className={styles.infoValue}>{link.createdByName}</span>
-              </div>
-            </div>
-          )}
-          <button className={styles.button} onClick={handleGoToLogin}>
-            로그인하기
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 비밀번호 입력 필요
+  // 비밀번호 입력 필요 (로그인 후)
   if (requiresPassword && user) {
     return (
       <div className={styles.container}>
@@ -291,5 +259,54 @@ export const ShareLinkAccess: React.FC = () => {
     );
   }
 
-  return null;
+  // 로그인 필요 (로그인하지 않은 모든 경우)
+  if (!user && link) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <div className={styles.iconWrapper}>
+            <Lock size={48} />
+          </div>
+          <h2 className={styles.title}>로그인이 필요합니다</h2>
+          <p className={styles.description}>
+            {requiresPassword
+              ? '이 프로젝트는 비밀번호로 보호되어 있습니다. 먼저 로그인해주세요.'
+              : '프로젝트에 접근하려면 로그인해주세요'
+            }
+          </p>
+          {link && (
+            <div className={styles.projectInfo}>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>프로젝트:</span>
+                <span className={styles.infoValue}>{link.projectName}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>공유자:</span>
+                <span className={styles.infoValue}>{link.createdByName}</span>
+              </div>
+            </div>
+          )}
+          <button className={styles.button} onClick={handleGoToLogin}>
+            로그인하기
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 모든 조건을 통과하지 못한 경우 (에러 처리)
+  return (
+    <div className={styles.container}>
+      <div className={styles.card}>
+        <XCircle className={styles.errorIcon} size={64} />
+        <h2 className={styles.title}>페이지를 표시할 수 없습니다</h2>
+        <p className={styles.description}>
+          링크가 유효하지 않거나 페이지를 로드하는 중 문제가 발생했습니다.
+        </p>
+        <button className={styles.button} onClick={() => navigate('/')}>
+          홈으로 돌아가기
+        </button>
+      </div>
+    </div>
+  );
 };
