@@ -106,7 +106,7 @@ const SimpleDashboard: React.FC = () => {
   
   // Firebase 프로젝트 목록 상태
   const [firebaseProjects, setFirebaseProjects] = useState<ProjectSummary[]>([]);
-  const [loading, setLoading] = useState(true); // 초기값을 true로 설정
+  const [projectsLoading, setProjectsLoading] = useState(true); // 초기값을 true로 설정
   const [error, setError] = useState<string | null>(null);
   
   // 디자인 파일 로딩 상태
@@ -261,19 +261,19 @@ const SimpleDashboard: React.FC = () => {
   const loadFirebaseProjects = useCallback(async (retryCount = 0) => {
     if (!user) {
       console.log('사용자가 로그인되지 않았습니다.');
-      setLoading(false); // 사용자가 없으면 로딩 종료
+      setProjectsLoading(false); // 사용자가 없으면 로딩 종료
       return;
     }
 
     console.log(`🔄 프로젝트 로드 시도 ${retryCount + 1}/3 - 사용자: ${user.email}`);
     if (retryCount === 0) {
-      setLoading(true); // 첫 시도일 때만 로딩 시작
+      setProjectsLoading(true); // 첫 시도일 때만 로딩 시작
     }
     setError(null);
-    
+
     try {
       const { projects, error } = await getUserProjects();
-      
+
       if (error) {
         // 재시도 로직
         if (retryCount < 2) {
@@ -283,14 +283,14 @@ const SimpleDashboard: React.FC = () => {
           }, 1000);
           return;
         }
-        
+
         setError(error);
         console.error('Firebase 프로젝트 로드 최종 실패:', error);
-        setLoading(false);
+        setProjectsLoading(false);
       } else {
         setFirebaseProjects(projects);
         console.log('✅ Firebase 프로젝트 로드 성공:', projects.length, '개');
-        setLoading(false); // 성공하면 바로 로딩 종료
+        setProjectsLoading(false); // 성공하면 바로 로딩 종료
       }
     } catch (err) {
       // 재시도 로직
@@ -301,10 +301,10 @@ const SimpleDashboard: React.FC = () => {
         }, 1000);
         return;
       }
-      
+
       setError('프로젝트 목록을 가져오는 중 오류가 발생했습니다.');
       console.error('Firebase 프로젝트 로드 최종 실패:', err);
-      setLoading(false); // 에러 발생 시에도 로딩 종료
+      setProjectsLoading(false); // 에러 발생 시에도 로딩 종료
     }
   }, [user]);
 
@@ -594,7 +594,7 @@ const SimpleDashboard: React.FC = () => {
     selectedProjectId,
     selectedProject: selectedProject?.title,
     activeMenu,
-    loading
+    projectsLoading
   });
 
   // selectedProjectId가 있고 프로젝트 정보가 로드되면 breadcrumb 업데이트
@@ -2208,7 +2208,7 @@ const SimpleDashboard: React.FC = () => {
   };
 
   // 로딩 상태 표시
-  if (loading) {
+  if (projectsLoading) {
     return (
       <div className={styles.dashboard}>
         <div className={styles.emptyState}>
@@ -3051,7 +3051,7 @@ const SimpleDashboard: React.FC = () => {
               })}
               {(() => {
                 // 로딩 중일 때는 스켈레톤 UI 표시
-                if (loading && sortedItems.length === 0) {
+                if (projectsLoading && sortedItems.length === 0) {
                   return (
                     <>
                       {[1, 2, 3, 4].map((i) => (
@@ -3617,15 +3617,15 @@ const SimpleDashboard: React.FC = () => {
                     )}
                   </motion.div>
                 ))
-                ) : !loading ? (
+                ) : !projectsLoading ? (
                   // 빈 상태 표시 (로딩 중이 아닐 때만)
                   <div className={styles.emptyState}>
                     <div className={styles.emptyStateTitle}>표시할 항목이 없습니다</div>
                   </div>
                 ) : null;
               })()}
-              
-              {user && sortedItems.length === 0 && !loading ? (
+
+              {user && sortedItems.length === 0 && !projectsLoading ? (
                 <div className={styles.emptyState}>
                   <div className={styles.emptyStateTitle}>
                     {activeMenu === 'bookmarks' && '북마크한 프로젝트가 없습니다'}
