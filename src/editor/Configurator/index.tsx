@@ -702,7 +702,7 @@ const Configurator: React.FC = () => {
             console.log('💾 [DEBUG] 새 디자인 파일 생성');
             const { createDesignFile } = await import('@/firebase/projects');
             const { id: designFileId, error } = await createDesignFile({
-              name: '새 디자인',
+              name: basicInfo.title || '새 디자인',
               projectId: effectiveProjectId,
               projectData: removeUndefinedValues(basicInfo),
               spaceConfig: removeUndefinedValues(spaceInfo),
@@ -718,7 +718,7 @@ const Configurator: React.FC = () => {
               alert('디자인 파일 생성에 실패했습니다: ' + error);
             } else if (designFileId) {
               setCurrentDesignFileId(designFileId);
-              setCurrentDesignFileName('새 디자인');
+              setCurrentDesignFileName(basicInfo.title);
               setSaveStatus('success');
               console.log('✅ 새 디자인 파일 생성 및 저장 성공');
 
@@ -743,7 +743,7 @@ const Configurator: React.FC = () => {
               params.set('designFileId', designFileId);
               if (basicInfo.title) {
                 params.set('projectName', encodeURIComponent(basicInfo.title));
-                params.set('designFileName', encodeURIComponent('새 디자인'));
+                params.set('designFileName', encodeURIComponent(basicInfo.title));
               }
               navigate(`/configurator?${params.toString()}`, { replace: true });
               console.log('🔗 새 디자인 파일 생성 후 URL 업데이트');
