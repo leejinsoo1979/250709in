@@ -200,7 +200,8 @@ const SimpleDashboard: React.FC = () => {
   const [bookmarkedFolders, setBookmarkedFolders] = useState<Set<string>>(new Set());
   const [sharedProjects, setSharedProjects] = useState<ProjectSummary[]>([]);
   const [deletedProjects, setDeletedProjects] = useState<ProjectSummary[]>([]);
-  
+  const [deletedDesignFiles, setDeletedDesignFiles] = useState<Array<{designFile: any, projectId: string, projectTitle: string}>>([]);
+
   // 파일트리 폴딩 상태
   const [isFileTreeCollapsed, setIsFileTreeCollapsed] = useState(false);
   
@@ -536,6 +537,20 @@ const SimpleDashboard: React.FC = () => {
       } else {
         console.log('🗑️ 휴지통 데이터 없음:', { userId: user.uid });
       }
+
+      // 휴지통 디자인 파일 로드
+      const savedDesignTrash = localStorage.getItem(`design_trash_${user.uid}`);
+      if (savedDesignTrash) {
+        const parsedDesignTrash = JSON.parse(savedDesignTrash);
+        console.log('🗑️ 휴지통 디자인 파일 데이터 로드:', {
+          userId: user.uid,
+          designTrashCount: parsedDesignTrash.length,
+          designs: parsedDesignTrash.map((d: any) => ({ id: d.designFile.id, name: d.designFile.name, projectTitle: d.projectTitle }))
+        });
+        setDeletedDesignFiles(parsedDesignTrash);
+      } else {
+        console.log('🗑️ 휴지통 디자인 파일 데이터 없음:', { userId: user.uid });
+      }
     }
   }, [user]);
 
@@ -668,31 +683,124 @@ const SimpleDashboard: React.FC = () => {
     }
   };
 
-  // 휴지통에서 복원 함수
+  // 디자인 파일을 휴지통으로 이동 함수
+  const moveDesignFileToTrash = async (designFile: any, projectId: string, projectTitle: string) => {
+    try {
+      console.log('🗑️ 디자인 파일을 휴지통으로 이동:', {
+        designFileId: designFile.id,
+        designFileName: designFile.name,
+        projectId,
+        projectTitle
+      });
+
+      // 로컬 상태에서 제거
+      setProjectDesignFiles(prev => ({
+        ...prev,
+        [projectId]: prev[projectId]?.filter(df => df.id !== designFile.id) || []
+      }));
+
+      // 휴지통에 추가
+      const deletedItem = {
+        designFile: {
+          ...designFile,
+          deletedAt: new Date().toISOString()
+        },
+        projectId,
+        projectTitle
+      };
+
+      const updatedDesignTrash = [...deletedDesignFiles, deletedItem];
+      setDeletedDesignFiles(updatedDesignTrash);
+
+      // localStorage에 휴지통 상태 저장
+      if (user) {
+        localStorage.setItem(`design_trash_${user.uid}`, JSON.stringify(updatedDesignTrash));
+      }
+
+      // 북마크에서도 제거
+      if (bookmarkedDesigns.has(designFile.id)) {
+        toggleDesignBookmark(designFile.id);
+      }
+
+      console.log('✅ 디자인 파일 휴지통 이동 완료:', designFile.id);
+    } catch (error) {
+      console.error('디자인 파일 휴지통 이동 중 오류:', error);
+      alert('디자인 파일 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 휴지통에서 복원 함수 (프로젝트)
   const restoreFromTrash = (projectId: string) => {
     const project = deletedProjects.find(p => p.id === projectId);
     if (project) {
       const updatedTrash = deletedProjects.filter(p => p.id !== projectId);
       setDeletedProjects(updatedTrash);
-      
+
       // deletedAt 속성 제거하고 복원
       const { deletedAt, ...restoredProject } = project as any;
       setFirebaseProjects(prev => [...prev, restoredProject]);
-      
+
       // localStorage 업데이트
       if (user) {
         localStorage.setItem(`trash_${user.uid}`, JSON.stringify(updatedTrash));
       }
     }
   };
+
+  // 휴지통에서 디자인 파일 복원 함수
+  const restoreDesignFileFromTrash = (designFileId: string) => {
+    const deletedItem = deletedDesignFiles.find(d => d.designFile.id === designFileId);
+    if (deletedItem) {
+      console.log('🔄 디자인 파일 복원:', {
+        designFileId,
+        designFileName: deletedItem.designFile.name,
+        projectId: deletedItem.projectId
+      });
+
+      const updatedDesignTrash = deletedDesignFiles.filter(d => d.designFile.id !== designFileId);
+      setDeletedDesignFiles(updatedDesignTrash);
+
+      // deletedAt 속성 제거하고 복원
+      const { deletedAt, ...restoredDesignFile } = deletedItem.designFile as any;
+
+      // 원래 프로젝트의 디자인 파일 목록에 추가
+      setProjectDesignFiles(prev => ({
+        ...prev,
+        [deletedItem.projectId]: [...(prev[deletedItem.projectId] || []), restoredDesignFile]
+      }));
+
+      // localStorage 업데이트
+      if (user) {
+        localStorage.setItem(`design_trash_${user.uid}`, JSON.stringify(updatedDesignTrash));
+      }
+
+      console.log('✅ 디자인 파일 복원 완료:', designFileId);
+    }
+  };
   
   // 휴지통 비우기 함수
-  const emptyTrash = () => {
+  const emptyTrash = async () => {
     if (window.confirm('휴지통을 비우시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      // Firebase에서 프로젝트 영구 삭제
+      for (const project of deletedProjects) {
+        await deleteProject(project.id);
+      }
+
+      // Firebase에서 디자인 파일 영구 삭제
+      for (const item of deletedDesignFiles) {
+        await deleteDesignFile(item.designFile.id, item.projectId);
+      }
+
+      // 로컬 상태 초기화
       setDeletedProjects([]);
+      setDeletedDesignFiles([]);
+
       if (user) {
         localStorage.removeItem(`trash_${user.uid}`);
+        localStorage.removeItem(`design_trash_${user.uid}`);
       }
+
+      console.log('🗑️ 휴지통 비우기 완료');
     }
   };
   
@@ -905,21 +1013,42 @@ const SimpleDashboard: React.FC = () => {
       allProjects: allProjects.map(p => ({id: p.id, title: p.title}))
     });
 
-    // 휴지통에서는 프로젝트 선택을 무시하고 삭제된 프로젝트 목록만 표시
+    // 휴지통에서는 프로젝트 선택을 무시하고 삭제된 프로젝트와 디자인 파일들을 표시
     if (activeMenu === 'trash') {
       const filteredProjects = getFilteredProjects();
-      console.log('🗑️ 휴지통 뷰 - 삭제된 프로젝트들:', {
+      console.log('🗑️ 휴지통 뷰 - 삭제된 항목들:', {
         deletedProjectsCount: filteredProjects.length,
-        filteredProjects: filteredProjects.map(p => ({id: p.id, title: p.title}))
+        deletedDesignFilesCount: deletedDesignFiles.length,
+        filteredProjects: filteredProjects.map(p => ({id: p.id, title: p.title})),
+        deletedDesigns: deletedDesignFiles.map(d => ({id: d.designFile.id, name: d.designFile.name, project: d.projectTitle}))
       });
 
-      return filteredProjects.map(project => ({
-        id: project.id,
-        type: 'project',
-        name: project.title,
-        project: project,
-        icon: ''
-      }));
+      const items = [];
+
+      // 삭제된 프로젝트들 추가
+      filteredProjects.forEach(project => {
+        items.push({
+          id: project.id,
+          type: 'project',
+          name: project.title,
+          project: project,
+          icon: ''
+        });
+      });
+
+      // 삭제된 디자인 파일들 추가
+      deletedDesignFiles.forEach(item => {
+        items.push({
+          id: item.designFile.id,
+          type: 'design',
+          name: item.designFile.name,
+          project: { id: item.projectId, title: item.projectTitle },
+          designFile: item.designFile,
+          isDeleted: true
+        });
+      });
+
+      return items;
     }
 
     if (selectedProjectId) {
@@ -1651,18 +1780,34 @@ const SimpleDashboard: React.FC = () => {
       } else if (moreMenu.itemType === 'design') {
         // 디자인 파일 삭제
         try {
-          if (selectedProjectId) {
-            const { error } = await deleteDesignFile(moreMenu.itemId, selectedProjectId);
-            
-            if (error) {
-              alert('디자인 파일 삭제 실패: ' + error);
-            } else {
-              // 로컬 상태에서 제거
-              setProjectDesignFiles(prev => ({
-                ...prev,
-                [selectedProjectId]: prev[selectedProjectId]?.filter(df => df.id !== moreMenu.itemId) || []
-              }));
-              
+          if (activeMenu === 'trash') {
+            // 휴지통에서 영구 삭제
+            const deletedItem = deletedDesignFiles.find(d => d.designFile.id === moreMenu.itemId);
+            if (deletedItem) {
+              const { error } = await deleteDesignFile(deletedItem.designFile.id, deletedItem.projectId);
+              if (error) {
+                alert('디자인 파일 삭제 실패: ' + error);
+              } else {
+                // 휴지통에서 제거
+                const updatedDesignTrash = deletedDesignFiles.filter(d => d.designFile.id !== moreMenu.itemId);
+                setDeletedDesignFiles(updatedDesignTrash);
+
+                // localStorage 업데이트
+                if (user) {
+                  localStorage.setItem(`design_trash_${user.uid}`, JSON.stringify(updatedDesignTrash));
+                }
+              }
+            }
+          } else {
+            // 일반 삭제 - 휴지통으로 이동
+            if (selectedProjectId) {
+              const designFile = projectDesignFiles[selectedProjectId]?.find(df => df.id === moreMenu.itemId);
+              const projectTitle = allProjects.find(p => p.id === selectedProjectId)?.title || '';
+
+              if (designFile) {
+                await moveDesignFileToTrash(designFile, selectedProjectId, projectTitle);
+              }
+
               // BroadcastChannel로 다른 창에 삭제 알림
               try {
                 const channel = new BroadcastChannel('project-updates');
@@ -2187,7 +2332,7 @@ const SimpleDashboard: React.FC = () => {
               <TrashIcon size={20} />
             </div>
             <span>휴지통</span>
-            <span className={styles.navItemCount}>{deletedProjects.length}</span>
+            <span className={styles.navItemCount}>{deletedProjects.length + deletedDesignFiles.length}</span>
           </div>
         </nav>
 
@@ -2424,31 +2569,30 @@ const SimpleDashboard: React.FC = () => {
                           if (item.type === 'project') {
                             await moveToTrash(item.project);
                           } else if (item.type === 'design') {
-                            // 디자인 파일 삭제
-                            console.log('디자인 파일 삭제:', item);
+                            // 디자인 파일 휴지통으로 이동
+                            console.log('디자인 파일 휴지통으로 이동:', item);
                             const projectId = item.project.id;
-                            const { error } = await deleteDesignFile(cardId, projectId);
-                            if (error) {
-                              console.error('디자인 파일 삭제 실패:', error);
-                              alert(`디자인 파일 삭제 실패: ${error}`);
-                            } else {
-                              console.log('✅ 디자인 파일 삭제 완료:', cardId);
-                              // 프로젝트 디자인 파일 목록 새로고침
-                              await loadFirebaseProjects();
+                            const projectTitle = item.project.title || '';
+                            const designFile = projectDesignFiles[projectId]?.find(df => df.id === cardId);
+
+                            if (designFile) {
+                              await moveDesignFileToTrash(designFile, projectId, projectTitle);
+                              console.log('✅ 디자인 파일 휴지통 이동 완료:', cardId);
                             }
                           } else if (item.type === 'folder') {
-                            // 폴더 삭제 로직 - 폴더 안의 디자인 파일들도 함께 삭제
+                            // 폴더 삭제 로직 - 폴더 안의 디자인 파일들도 함께 휴지통으로 이동
                             console.log('폴더 삭제:', item);
                             const projectId = item.project.id;
+                            const projectTitle = item.project.title || '';
                             const currentFolders = folders[projectId] || [];
                             const targetFolder = currentFolders.find(f => f.id === cardId);
 
-                            // 폴더 안의 디자인 파일들을 먼저 삭제
+                            // 폴더 안의 디자인 파일들을 먼저 휴지통으로 이동
                             if (targetFolder?.children) {
                               for (const child of targetFolder.children) {
-                                const { error } = await deleteDesignFile(child.id, projectId);
-                                if (error) {
-                                  console.error('폴더 내 디자인 파일 삭제 실패:', error);
+                                const designFile = projectDesignFiles[projectId]?.find(df => df.id === child.id);
+                                if (designFile) {
+                                  await moveDesignFileToTrash(designFile, projectId, projectTitle);
                                 }
                               }
                             }
@@ -2474,8 +2618,8 @@ const SimpleDashboard: React.FC = () => {
               )}
               
               {/* 휴지통 비우기 버튼 */}
-              {activeMenu === 'trash' && deletedProjects.length > 0 && (
-                <button 
+              {activeMenu === 'trash' && (deletedProjects.length > 0 || deletedDesignFiles.length > 0) && (
+                <button
                   className={styles.emptyTrashBtn}
                   onClick={emptyTrash}
                 >
@@ -3663,11 +3807,15 @@ const SimpleDashboard: React.FC = () => {
               <TrashIcon size={14} />
               {activeMenu === 'trash' ? '영구 삭제' : '휴지통으로 이동'}
             </div>
-            {activeMenu === 'trash' && moreMenu.itemType === 'project' && (
-              <div 
+            {activeMenu === 'trash' && (
+              <div
                 className={styles.moreMenuItem}
                 onClick={() => {
-                  restoreFromTrash(moreMenu.itemId);
+                  if (moreMenu.itemType === 'project') {
+                    restoreFromTrash(moreMenu.itemId);
+                  } else if (moreMenu.itemType === 'design') {
+                    restoreDesignFileFromTrash(moreMenu.itemId);
+                  }
                   closeMoreMenu();
                 }}
               >
