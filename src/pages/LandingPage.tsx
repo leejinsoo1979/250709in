@@ -516,7 +516,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className={styles.footerBottom}>
-          <p>© 2025 FurnitureDesigner. All rights reserved.</p>
+          <p>© 2025 Uable Corporation. All rights reserved.</p>
         </div>
       </footer>
     </div>
