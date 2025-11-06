@@ -502,6 +502,23 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       // 듀얼/싱글 모두 중간 분리판 상단부터 시작 (내경)
                       bottomY = sectionBottomY + basicThickness;
 
+                      console.log('🔴🔴🔴 상부섹션 hanging bottomY 계산:', {
+                        furnitureId,
+                        index,
+                        sectionCenterY,
+                        'sectionCenterY_mm': sectionCenterY * 100,
+                        sectionHeight,
+                        'sectionHeight_mm': sectionHeight * 100,
+                        sectionBottomY,
+                        'sectionBottomY_mm': sectionBottomY * 100,
+                        basicThickness,
+                        'basicThickness_mm': basicThickness * 100,
+                        bottomY,
+                        'bottomY_mm': bottomY * 100,
+                        view2DDirection,
+                        viewMode
+                      });
+
                       // 2D 우측뷰에서 상부섹션 치수가이드를 36mm 아래로 확장
                       if (view2DDirection === 'right') {
                         console.log('🟢 SectionsRenderer: 우측뷰 상부섹션 36mm 확장', {
@@ -587,6 +604,25 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   topY = is2DrawerHangingLowerSection ? (sectionTopY - basicThickness * 2) : (sectionTopY - basicThickness);
                   // 실제 거리로 내경 계산 (하드코딩 없음)
                   actualInternalHeight = (topY - bottomY) / 0.01;
+
+                  if (index > 0) {
+                    console.log('🔴🔴🔴 상부섹션 drawer bottomY 계산:', {
+                      furnitureId,
+                      index,
+                      sectionCenterY,
+                      'sectionCenterY_mm': sectionCenterY * 100,
+                      sectionHeight,
+                      'sectionHeight_mm': sectionHeight * 100,
+                      sectionBottomY,
+                      'sectionBottomY_mm': sectionBottomY * 100,
+                      basicThickness,
+                      'basicThickness_mm': basicThickness * 100,
+                      bottomY,
+                      'bottomY_mm': bottomY * 100,
+                      view2DDirection,
+                      viewMode
+                    });
+                  }
 
                   console.log('📏 DRAWER 섹션 치수:', {
                     index,
