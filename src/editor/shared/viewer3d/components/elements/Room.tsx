@@ -44,7 +44,7 @@ interface RoomProps {
   activeZone?: 'normal' | 'dropped'; // 활성 영역
   showFurniture?: boolean; // 가구 본체 표시 여부
   hideEdges?: boolean; // 외곽선 숨김 (PDF 캡처용)
-  cameraMode?: 'perspective' | 'orthographic'; // 카메라 모드
+  cameraModeOverride?: 'perspective' | 'orthographic'; // 카메라 모드 오버라이드
 }
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
@@ -221,7 +221,7 @@ const Room: React.FC<RoomProps> = ({
   activeZone,
   showFurniture,
   hideEdges = false,
-  cameraMode = 'perspective'
+  cameraModeOverride
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
@@ -247,9 +247,12 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode, selectedSlotIndex } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
+  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
-  
+
+  // props로 전달된 cameraMode가 있으면 우선 사용, 없으면 UIStore 값 사용
+  const cameraMode = cameraModeOverride || cameraModeFromStore;
+
   // Three.js hooks for camera tracking
   const { camera } = useThree();
   
