@@ -41,6 +41,8 @@ export interface Space3DViewProps extends ViewerBaseProps {
   activeZone?: 'normal' | 'dropped';
   /** 외곽선 숨김 (PDF 캡처 시 사용) */
   hideEdges?: boolean;
+  /** 읽기 전용 모드 (viewer 권한) */
+  readOnly?: boolean;
 }
 
 /**

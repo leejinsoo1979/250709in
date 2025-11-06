@@ -483,6 +483,13 @@ const Configurator: React.FC = () => {
   const saveProject = async () => {
     console.log('💾 [DEBUG] saveProject 함수 시작');
 
+    // 읽기 전용 모드에서는 저장 불가
+    if (isReadOnly) {
+      console.log('🚫 읽기 전용 모드 - 저장 차단');
+      alert('읽기 전용 모드에서는 저장할 수 없습니다.');
+      return;
+    }
+
     // URL 파라미터에서 직접 읽기 (상태가 아직 업데이트되지 않았을 수 있음)
     const urlProjectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
     const urlDesignFileId = searchParams.get('designFileId');
@@ -3159,6 +3166,7 @@ const Configurator: React.FC = () => {
               showFrame={true}
               svgSize={{ width: 800, height: 600 }}
               activeZone={undefined} // 두 구간 모두 배치 가능하도록 undefined 전달
+              readOnly={isReadOnly} // 읽기 전용 모드
             />
 
             {/* 측면뷰용 슬롯 선택 버튼 */}

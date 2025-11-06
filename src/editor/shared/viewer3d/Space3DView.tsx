@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { RxDimensions } from 'react-icons/rx';
 import { LuEraser } from 'react-icons/lu';
 import { Space3DViewProps } from './types';
@@ -50,7 +50,7 @@ import { useThrottle } from '@/editor/shared/hooks/useThrottle';
  * 2D 모드에서는 orthographic 카메라로 정면 뷰 제공
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
-  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false } = props;
+  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false, readOnly = false } = props;
   console.log('🌐 Space3DView - viewMode:', viewMode);
   console.log('🌐 Space3DView - props:', props);
   const location = useLocation();
@@ -59,8 +59,18 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture, isMeasureMode, toggleMeasureMode, isEraserMode } = useUIStore();
   const { colors } = useThemeColors(); // Move this to top level to follow rules of hooks
   const { theme } = useTheme();
-  const { placeFurniture } = useFurniturePlacement();
-  
+  const { placeFurniture: originalPlaceFurniture } = useFurniturePlacement();
+
+  // 읽기 전용 모드 체크를 포함한 placeFurniture wrapper
+  const placeFurniture = useCallback((slotIndex: number, zone?: 'normal' | 'dropped') => {
+    if (readOnly) {
+      console.log('🚫 읽기 전용 모드 - 가구 배치 차단');
+      alert('읽기 전용 모드에서는 가구를 배치할 수 없습니다.');
+      return;
+    }
+    originalPlaceFurniture(slotIndex, zone);
+  }, [readOnly, originalPlaceFurniture]);
+
   // 기둥 위치 업데이트를 8ms(120fps)로 제한하여 부드러운 움직임
   const throttledUpdateColumn = useThrottle((id: string, updates: any) => {
     updateColumn(id, updates);
