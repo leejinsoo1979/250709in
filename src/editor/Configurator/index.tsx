@@ -2948,7 +2948,13 @@ const Configurator: React.FC = () => {
         onConvert={handleConvert}
         onLogout={handleLogout}
         onProfile={handleProfile}
-        onShare={() => setIsShareModalOpen(true)}
+        onShare={() => {
+          if (!currentDesignFileId) {
+            alert('먼저 디자인을 저장해주세요.');
+            return;
+          }
+          setIsShareModalOpen(true);
+        }}
         saving={saving}
         saveStatus={saveStatus}
         hasDoorsInstalled={hasDoorsInstalled}
