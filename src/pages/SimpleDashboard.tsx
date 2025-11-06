@@ -2266,6 +2266,10 @@ const SimpleDashboard: React.FC = () => {
                     borderRadius: '50%',
                     objectFit: 'cover'
                   }}
+                  onLoad={() => {
+                    console.log('✅ Sidebar 프로필 이미지 로드 성공');
+                    setSidebarImageError(false);
+                  }}
                   onError={(e) => {
                     console.error('❌ Sidebar 프로필 이미지 로드 실패:', user.photoURL);
                     setSidebarImageError(true);
@@ -2450,6 +2454,10 @@ const SimpleDashboard: React.FC = () => {
                       height: '100%',
                       borderRadius: '50%',
                       objectFit: 'cover'
+                    }}
+                    onLoad={() => {
+                      console.log('✅ Header 프로필 이미지 로드 성공');
+                      setHeaderImageError(false);
                     }}
                     onError={(e) => {
                       console.error('❌ Header 프로필 이미지 로드 실패:', user.photoURL);
