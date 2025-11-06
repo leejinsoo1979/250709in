@@ -11,6 +11,7 @@ interface Space3DViewerReadOnlyProps {
   placedModules?: any[];
   viewMode?: '2D' | '3D';
   renderMode?: 'solid' | 'wireframe';
+  cameraMode?: 'perspective' | 'orthographic';
 }
 
 /**
@@ -21,7 +22,8 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
   spaceConfig,
   placedModules = [],
   viewMode = '3D',
-  renderMode = 'solid'
+  renderMode = 'solid',
+  cameraMode = 'perspective'
 }) => {
   console.log('🔍 Space3DViewerReadOnly 렌더링:', {
     hasSpaceConfig: !!spaceConfig,
@@ -109,11 +111,12 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
           position: 'relative'
         }}
       >
-        <ThreeCanvas 
+        <ThreeCanvas
           cameraPosition={cameraPosition}
           viewMode={viewMode}
           view2DDirection="front"
           renderMode={renderMode}
+          cameraMode={cameraMode}
         >
           <React.Suspense fallback={null}>
             {/* 조명 시스템 */}

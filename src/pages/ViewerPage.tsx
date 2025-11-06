@@ -13,6 +13,7 @@ const ViewerPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'2D' | '3D'>('3D');
+  const [cameraMode, setCameraMode] = useState<'perspective' | 'orthographic'>('perspective');
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
@@ -169,22 +170,41 @@ const ViewerPage: React.FC = () => {
           <span className={styles.projectInfo}>{viewMode} 미리보기</span>
         </div>
         
-        {/* 2D/3D 토글 */}
+        {/* 2D/3D 토글 및 Perspective/Orthographic 토글 */}
         <div className={styles.headerCenter}>
           <div className={styles.viewModeToggle}>
-            <button 
+            <button
               className={`${styles.viewModeButton} ${viewMode === '2D' ? styles.active : ''}`}
               onClick={() => setViewMode('2D')}
             >
               2D
             </button>
-            <button 
+            <button
               className={`${styles.viewModeButton} ${viewMode === '3D' ? styles.active : ''}`}
               onClick={() => setViewMode('3D')}
             >
               3D
             </button>
           </div>
+          {/* Perspective/Orthographic 토글 (3D 모드일 때만) */}
+          {viewMode === '3D' && (
+            <div className={styles.viewModeToggle} style={{ marginLeft: '12px' }}>
+              <button
+                className={`${styles.viewModeButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
+                onClick={() => setCameraMode('perspective')}
+                title="원근 투영"
+              >
+                Perspective
+              </button>
+              <button
+                className={`${styles.viewModeButton} ${cameraMode === 'orthographic' ? styles.active : ''}`}
+                onClick={() => setCameraMode('orthographic')}
+                title="정투영"
+              >
+                Orthographic
+              </button>
+            </div>
+          )}
         </div>
         
         <div className={styles.headerActions}>
@@ -221,11 +241,12 @@ const ViewerPage: React.FC = () => {
           placedModules: project.placedModules
         })}
         <Space3DViewerReadOnly
-          key={`${projectId}-${viewMode}`}
+          key={`${projectId}-${viewMode}-${cameraMode}`}
           spaceConfig={project.spaceInfo}
           placedModules={project.placedModules || []}
           viewMode={viewMode}
           renderMode="solid"
+          cameraMode={cameraMode}
         />
       </div>
 

@@ -20,6 +20,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [viewMode, setViewMode] = useState<'2D' | '3D'>(initialViewMode);
+  const [cameraMode, setCameraMode] = useState<'perspective' | 'orthographic'>('perspective');
 
   useEffect(() => {
     if (isOpen && projectId) {
@@ -171,20 +172,41 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                 </h2>
                 {/* 2D/3D 토글 버튼 */}
                 {project && !loading && !error && (
-                  <div className={styles.viewModeToggle}>
-                    <button
-                      className={`${styles.viewModeButton} ${viewMode === '2D' ? styles.active : ''}`}
-                      onClick={() => setViewMode('2D')}
-                    >
-                      2D
-                    </button>
-                    <button
-                      className={`${styles.viewModeButton} ${viewMode === '3D' ? styles.active : ''}`}
-                      onClick={() => setViewMode('3D')}
-                    >
-                      3D
-                    </button>
-                  </div>
+                  <>
+                    <div className={styles.viewModeToggle}>
+                      <button
+                        className={`${styles.viewModeButton} ${viewMode === '2D' ? styles.active : ''}`}
+                        onClick={() => setViewMode('2D')}
+                      >
+                        2D
+                      </button>
+                      <button
+                        className={`${styles.viewModeButton} ${viewMode === '3D' ? styles.active : ''}`}
+                        onClick={() => setViewMode('3D')}
+                      >
+                        3D
+                      </button>
+                    </div>
+                    {/* Perspective/Orthographic 토글 버튼 (3D 모드일 때만) */}
+                    {viewMode === '3D' && (
+                      <div className={styles.viewModeToggle}>
+                        <button
+                          className={`${styles.viewModeButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
+                          onClick={() => setCameraMode('perspective')}
+                          title="원근 투영"
+                        >
+                          Perspective
+                        </button>
+                        <button
+                          className={`${styles.viewModeButton} ${cameraMode === 'orthographic' ? styles.active : ''}`}
+                          onClick={() => setCameraMode('orthographic')}
+                          title="정투영"
+                        >
+                          Orthographic
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
               </div>
               {project && (
@@ -241,11 +263,12 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                   placedModulesCount: project.placedModules?.length || 0
                 })}
                 <Space3DViewerReadOnly
-                  key={`${projectId}-${viewMode}`}
+                  key={`${projectId}-${viewMode}-${cameraMode}`}
                   spaceConfig={project.spaceInfo}
                   placedModules={project.placedModules || []}
                   viewMode={viewMode}
                   renderMode="solid"
+                  cameraMode={cameraMode}
                 />
               </div>
             )}

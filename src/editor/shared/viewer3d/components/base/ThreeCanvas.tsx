@@ -34,6 +34,7 @@ interface ThreeCanvasProps {
   renderMode?: 'solid' | 'wireframe';
   isSplitView?: boolean;
   style?: React.CSSProperties;
+  cameraMode?: 'perspective' | 'orthographic';
 }
 
 /**
@@ -49,7 +50,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   view2DDirection = 'front',
   renderMode = 'wireframe',
   style,
-  isSplitView = false
+  isSplitView = false,
+  cameraMode: cameraModeFromProps
 }) => {
   const CANVAS_DEBUG = false;
   const canvasLog = (...args: any[]) => {
@@ -65,9 +67,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
   // 테마 컨텍스트
   const { theme } = useViewerTheme();
-  
+
   // UIStore에서 2D 뷰 테마, 카메라 설정, 측정 모드, 지우개 모드 가져오기
-  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode, cameraFov, shadowEnabled, isMeasureMode, isEraserMode } = useUIStore();
+  const { view2DTheme, isFurnitureDragging, isDraggingColumn, isSlotDragging, cameraMode: cameraModeFromStore, cameraFov, shadowEnabled, isMeasureMode, isEraserMode } = useUIStore();
+
+  // Props가 있으면 props를 사용, 없으면 UIStore 값을 사용
+  const cameraMode = cameraModeFromProps || cameraModeFromStore;
 
   // 커서 색상 (다크모드: 흰색, 라이트모드: 검정색)
   const cursorColor = view2DTheme === 'dark' ? 'white' : 'black';
