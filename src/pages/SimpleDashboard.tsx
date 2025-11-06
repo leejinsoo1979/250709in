@@ -3,7 +3,7 @@ import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-
 import { Timestamp } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
-import { PiFolderFill, PiFolderLight, PiFolderPlus } from "react-icons/pi";
+import { PiFolderFill, PiFolderPlus } from "react-icons/pi";
 import { AiOutlineFileMarkdown } from "react-icons/ai";
 import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
@@ -2781,7 +2781,7 @@ const SimpleDashboard: React.FC = () => {
                               }}
                               style={{ cursor: 'pointer' }}
                             >
-                              <PiFolderLight size={16} />
+                              <PiFolderFill size={16} style={{ color: 'var(--theme-primary, #10b981)' }} />
                             </div>
                             <span>{folder.name}</span>
                             {folder.children && folder.children.length > 0 && (
