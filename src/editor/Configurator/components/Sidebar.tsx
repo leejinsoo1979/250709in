@@ -210,7 +210,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* 공유하기 버튼 */}
-      <div style={{ padding: '16px 16px 8px 16px', borderTop: '1px solid var(--theme-border)', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ padding: '16px', borderTop: '1px solid var(--theme-border)', display: 'flex', justifyContent: 'center' }}>
         <button
           className={styles.settingsButton}
           title="공유하기"
@@ -224,7 +224,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* 설정 버튼 */}
-      <div style={{ padding: '8px 16px 16px 16px', borderTop: '1px solid var(--theme-border)', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ padding: '16px', borderTop: '1px solid var(--theme-border)', display: 'flex', justifyContent: 'center' }}>
         <button
           className={styles.settingsButton}
           title="설정"
