@@ -379,6 +379,15 @@ const SimpleDashboard: React.FC = () => {
 
     console.log('🔥 사용자 로그인 감지, 실시간 구독 시작:', user.email);
 
+    // 로그인 후 저장된 공유 링크가 있으면 리다이렉트
+    const pendingShareLink = localStorage.getItem('pendingShareLink');
+    if (pendingShareLink) {
+      console.log('🔗 저장된 공유 링크 발견, 리다이렉트:', pendingShareLink);
+      localStorage.removeItem('pendingShareLink');
+      navigate(pendingShareLink);
+      return;
+    }
+
     // 실시간 구독 설정 (약간의 지연 후)
     const timeoutId = setTimeout(() => {
       const unsubscribe = subscribeToUserProjects(user.uid, (projects) => {
@@ -398,7 +407,7 @@ const SimpleDashboard: React.FC = () => {
     return () => {
       clearTimeout(timeoutId);
     };
-  }, [user]);
+  }, [user, navigate]);
   
   // 프로젝트 목록이 로드되면 각 프로젝트의 디자인 파일도 로드
   useEffect(() => {

@@ -128,12 +128,27 @@ export const ShareLinkAccess: React.FC = () => {
     await handleGrantAccess();
   };
 
-  // 로그인 페이지로 이동
+  // 홈페이지로 이동 (로그인 필요)
   const handleGoToLogin = () => {
-    // 현재 URL을 리다이렉트 파라미터로 전달
-    const currentUrl = window.location.pathname + window.location.search;
-    navigate(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+    // 현재 링크를 localStorage에 저장
+    if (token) {
+      localStorage.setItem('pendingShareLink', `/share/${token}`);
+    }
+    // 홈페이지로 이동하면 로그인 화면이 표시됨
+    navigate('/');
   };
+
+  // 로그인 후 자동으로 링크 처리
+  useEffect(() => {
+    const pendingLink = localStorage.getItem('pendingShareLink');
+    if (pendingLink && user) {
+      localStorage.removeItem('pendingShareLink');
+      // 현재 링크와 저장된 링크가 같으면 권한 부여 진행
+      if (pendingLink === `/share/${token}`) {
+        // 이미 validateLink에서 처리됨
+      }
+    }
+  }, [user, token]);
 
   // 로딩 화면
   if (authLoading || isValidating) {
