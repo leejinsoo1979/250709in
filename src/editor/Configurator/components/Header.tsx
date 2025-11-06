@@ -277,12 +277,12 @@ const Header: React.FC<HeaderProps> = ({
             <div className={styles.designFileName}>
               {projectName && designFileName ? (
                 <>
-                  {projectName} <span className={styles.separator}>›</span> {designFileName}
+                  {projectName} <span className={styles.separator}>›</span> <span style={{ color: 'var(--theme-primary)' }}>{designFileName}</span>
                 </>
               ) : projectName ? (
                 projectName
               ) : designFileName ? (
-                designFileName
+                <span style={{ color: 'var(--theme-primary)' }}>{designFileName}</span>
               ) : (
                 '새로운 디자인'
               )}
