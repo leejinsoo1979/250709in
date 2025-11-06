@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './Header.module.css';
-import { Settings, Menu, User, ChevronDown, Camera, Undo, Redo } from 'lucide-react';
+import { Settings, Menu, User, ChevronDown, Undo, Redo } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
 import { TbTableExport } from 'react-icons/tb';
+import { MdOutlineViewInAr } from "react-icons/md";
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -569,12 +570,12 @@ const Header: React.FC<HeaderProps> = ({
 
           {/* 카메라 설정 드롭다운 */}
           <div className={styles.dropdownContainer} ref={cameraMenuRef}>
-            <button 
+            <button
               className={styles.actionButton}
               onClick={() => setIsCameraMenuOpen(!isCameraMenuOpen)}
             >
-              <Camera size={20} />
-              카메라
+              <MdOutlineViewInAr size={20} />
+              시점
               <ChevronDown size={16} style={{ marginLeft: '4px' }} />
             </button>
             
