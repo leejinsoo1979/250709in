@@ -499,27 +499,18 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   } else {
                     // 상부 섹션 (index > 0)
                     if (index > 0) {
-                      // 듀얼/싱글 모두 상부섹션 바닥판 상단부터 시작 (내경)
-                      // sectionBottomY는 하부 섹션 상판 하단
-                      // +basicThickness = 하부 섹션 상판 상단 (섹션 경계)
-                      // +basicThickness = 상부 섹션 바닥판 상단
-                      bottomY = sectionBottomY + basicThickness * 2;
+                      // 듀얼/싱글 모두 상부섹션 시작점부터 시작 (내경)
+                      // sectionBottomY = 상부섹션 영역 시작점 (섹션 경계)
+                      bottomY = sectionBottomY;
 
-                      console.log('🔴🔴🔴 상부섹션 hanging bottomY 계산 (수정됨):', {
+                      console.log('🔴🔴🔴 상부섹션 hanging bottomY:', {
                         furnitureId,
                         index,
-                        sectionCenterY,
-                        'sectionCenterY_mm': sectionCenterY * 100,
-                        sectionHeight,
-                        'sectionHeight_mm': sectionHeight * 100,
                         sectionBottomY,
                         'sectionBottomY_mm': sectionBottomY * 100,
-                        basicThickness,
-                        'basicThickness_mm': basicThickness * 100,
-                        '하부상판상단_mm': (sectionBottomY + basicThickness) * 100,
-                        '상부바닥판상단_mm': (sectionBottomY + basicThickness * 2) * 100,
                         bottomY,
                         'bottomY_mm': bottomY * 100,
+                        '섹션영역시작': '정확히 sectionBottomY',
                         view2DDirection,
                         viewMode
                       });
@@ -605,28 +596,21 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   // 2drawer-hanging의 하부 섹션만 특별 처리 (하부 프레임 있음)
                   const is2DrawerHangingLowerSection = furnitureId?.includes('2drawer-hanging') && index === 0;
 
-                  // 상부 섹션(index > 0)은 상부섹션 바닥판 상단부터 시작 (하부상판 + 상부바닥판 = basicThickness * 2)
-                  bottomY = index === 0 ? (-height/2 + basicThickness) : (sectionBottomY + basicThickness * 2);
+                  // 상부 섹션(index > 0)은 상부섹션 영역 시작점부터 시작
+                  bottomY = index === 0 ? (-height/2 + basicThickness) : sectionBottomY;
                   topY = is2DrawerHangingLowerSection ? (sectionTopY - basicThickness * 2) : (sectionTopY - basicThickness);
                   // 실제 거리로 내경 계산 (하드코딩 없음)
                   actualInternalHeight = (topY - bottomY) / 0.01;
 
                   if (index > 0) {
-                    console.log('🔴🔴🔴 상부섹션 drawer bottomY 계산 (수정됨):', {
+                    console.log('🔴🔴🔴 상부섹션 drawer bottomY:', {
                       furnitureId,
                       index,
-                      sectionCenterY,
-                      'sectionCenterY_mm': sectionCenterY * 100,
-                      sectionHeight,
-                      'sectionHeight_mm': sectionHeight * 100,
                       sectionBottomY,
                       'sectionBottomY_mm': sectionBottomY * 100,
-                      basicThickness,
-                      'basicThickness_mm': basicThickness * 100,
-                      '하부상판상단_mm': (sectionBottomY + basicThickness) * 100,
-                      '상부바닥판상단_mm': (sectionBottomY + basicThickness * 2) * 100,
                       bottomY,
                       'bottomY_mm': bottomY * 100,
+                      '섹션영역시작': '정확히 sectionBottomY',
                       view2DDirection,
                       viewMode
                     });
@@ -651,9 +635,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   const sectionBottomY = sectionCenterY - sectionHeight/2;
                   const sectionTopY = sectionCenterY + sectionHeight/2;
 
-                  // 측면뷰에서 상부 섹션(index > 0)인 경우: 상부섹션 바닥판 상단부터 시작
+                  // 측면뷰에서 상부 섹션(index > 0)인 경우: 상부섹션 영역 시작점부터
                   if (isSideView && index > 0) {
-                    bottomY = sectionBottomY + basicThickness * 2;
+                    bottomY = sectionBottomY;
                     topY = sectionTopY;
                   } else {
                     bottomY = sectionBottomY;
