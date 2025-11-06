@@ -20,14 +20,9 @@ export default function LandingPage() {
       <nav className={styles.nav}>
         <div className={styles.navContent}>
           <div className={styles.logo} onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-            <svg className={styles.logoIcon} width="32" height="32" viewBox="0 0 32 32" fill="none">
-              <rect x="6" y="8" width="20" height="16" stroke="currentColor" strokeWidth="2" fill="none"/>
-              <path d="M6 12 L26 12" stroke="currentColor" strokeWidth="2"/>
-              <path d="M8 24 L8 28 M24 24 L24 28" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            <span className={styles.logoText}>FurnitureDesigner</span>
+            <img src="/logo.png" alt="Logo" className={styles.logoImage} />
           </div>
-          <div className={styles.navLinks}>
+          <div className={styles.navMenu}>
             {/* Product Dropdown */}
             <div
               className={styles.dropdown}
@@ -91,7 +86,8 @@ export default function LandingPage() {
             </div>
 
             <a href="#pricing" className={styles.navLink}>Pricing</a>
-
+          </div>
+          <div className={styles.navButtons}>
             <button onClick={() => navigate('/login')} className={styles.navButtonSecondary}>
               Login
             </button>

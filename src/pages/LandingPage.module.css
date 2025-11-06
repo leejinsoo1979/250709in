@@ -19,31 +19,38 @@
 }
 
 .navContent {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 2rem;
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 200px 1fr 200px;
   align-items: center;
+  gap: 2rem;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #111827;
+  justify-self: start;
 }
 
-.logoIcon {
-  flex-shrink: 0;
+.logoImage {
+  height: 40px;
+  width: auto;
 }
 
-.navLinks {
+.navMenu {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 2rem;
+}
+
+.navButtons {
+  display: flex;
+  align-items: center;
+  justify-self: end;
+  gap: 1rem;
 }
 
 .navLink {
@@ -927,11 +934,16 @@
     grid-template-columns: 1fr;
   }
 
-  .navLinks {
+  .navContent {
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
 
-  .navLink {
+  .navMenu {
     display: none;
+  }
+
+  .navButtons {
+    justify-self: center;
   }
 }
