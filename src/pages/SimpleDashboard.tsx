@@ -97,7 +97,10 @@ const SimpleDashboard: React.FC = () => {
   
   // 브레드크럼 네비게이션 상태
   const [breadcrumbPath, setBreadcrumbPath] = useState<string[]>(['전체 프로젝트']);
-  
+
+  // 검색 상태
+  const [searchTerm, setSearchTerm] = useState<string>('');
+
   // 현재 폴더 상태
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   
@@ -706,22 +709,39 @@ const SimpleDashboard: React.FC = () => {
   const getFilteredProjects = () => {
     // 삭제된 프로젝트 ID 목록
     const deletedProjectIds = new Set(deletedProjects.map(p => p.id));
-    
+
+    let filteredProjects: ProjectSummary[] = [];
+
     switch (activeMenu) {
       case 'bookmarks':
         // 북마크된 프로젝트들 반환
-        return allProjects.filter(p => 
+        filteredProjects = allProjects.filter(p =>
           bookmarkedProjects.has(p.id) && !deletedProjectIds.has(p.id)
         );
+        break;
       case 'shared':
-        return sharedProjects.filter(p => !deletedProjectIds.has(p.id));
+        filteredProjects = sharedProjects.filter(p => !deletedProjectIds.has(p.id));
+        break;
       case 'trash':
-        return deletedProjects;
+        filteredProjects = deletedProjects;
+        break;
       case 'all':
       default:
         // 삭제된 프로젝트는 제외하고 반환
-        return allProjects.filter(p => !deletedProjectIds.has(p.id));
+        filteredProjects = allProjects.filter(p => !deletedProjectIds.has(p.id));
+        break;
     }
+
+    // 검색어로 필터링
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase().trim();
+      filteredProjects = filteredProjects.filter(p =>
+        p.title?.toLowerCase().includes(lowerSearch) ||
+        p.description?.toLowerCase().includes(lowerSearch)
+      );
+    }
+
+    return filteredProjects;
   };
   
   // 북마크된 디자인 파일들 가져오기
@@ -2236,6 +2256,8 @@ const SimpleDashboard: React.FC = () => {
                   type="text"
                   placeholder="프로젝트 검색..."
                   className={styles.searchInput}
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
               
