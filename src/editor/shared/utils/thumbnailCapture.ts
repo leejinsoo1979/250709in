@@ -132,22 +132,22 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
   const currentViewDirection = document.querySelector('[data-view-direction]')?.getAttribute('data-view-direction');
   
   try {
-    // 2D 정면 뷰로 전환
-    const viewModeButton = document.querySelector('[data-view-mode="2D"]') as HTMLElement;
+    // 3D 정면 뷰로 전환
+    const viewModeButton = document.querySelector('[data-view-mode="3D"]') as HTMLElement;
     const frontViewButton = document.querySelector('[data-view-direction="front"]') as HTMLElement;
-    
+
     if (viewModeButton) {
       viewModeButton.click();
-      console.log('🔄 2D 모드로 전환');
+      console.log('🔄 3D 모드로 전환');
     }
-    
+
     if (frontViewButton) {
       frontViewButton.click();
       console.log('🔄 정면 뷰로 전환');
     }
-    
-    // 뷰 전환 후 렌더링 완료 대기 (시간 단축)
-    await new Promise(resolve => setTimeout(resolve, 200));
+
+    // 뷰 전환 후 렌더링 완료 대기
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // 원본 캔버스의 비율 유지하여 썸네일 캡처
     const aspectRatio = canvas.width / canvas.height;
@@ -171,14 +171,14 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
     console.error('정면 뷰 썸네일 캡처 실패:', error);
   } finally {
     // 원래 뷰 상태로 복원
-    if (currentViewMode && currentViewMode !== '2D') {
+    if (currentViewMode && currentViewMode !== '3D') {
       const originalViewModeButton = document.querySelector(`[data-view-mode="${currentViewMode}"]`) as HTMLElement;
       if (originalViewModeButton) {
         originalViewModeButton.click();
         console.log('🔄 원래 뷰 모드로 복원');
       }
     }
-    
+
     if (currentViewDirection && currentViewDirection !== 'front') {
       const originalViewDirectionButton = document.querySelector(`[data-view-direction="${currentViewDirection}"]`) as HTMLElement;
       if (originalViewDirectionButton) {
@@ -225,11 +225,11 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
       return null;
     }
 
-    // 항상 2D 정면 뷰로 전환하여 캡처 (현재 뷰 상태와 무관)
-    console.log('📸 썸네일 캡처 - 2D 정면 뷰로 전환...');
+    // 항상 3D 정면 뷰로 전환하여 캡처 (현재 뷰 상태와 무관)
+    console.log('📸 썸네일 캡처 - 3D 정면 뷰로 전환...');
     const frontViewThumbnail = await captureFrontViewThumbnail();
     if (frontViewThumbnail) {
-      console.log('✅ 2D 정면 뷰 썸네일 캡처 성공');
+      console.log('✅ 3D 정면 뷰 썸네일 캡처 성공');
       return frontViewThumbnail;
     }
 
