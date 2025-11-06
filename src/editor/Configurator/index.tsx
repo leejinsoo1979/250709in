@@ -65,6 +65,9 @@ const Configurator: React.FC = () => {
   const [currentDesignFileId, setCurrentDesignFileId] = useState<string | null>(null);
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
 
+  // 읽기 전용 모드 (viewer 권한용)
+  const [isReadOnly, setIsReadOnly] = useState(false);
+
   // 프로젝트 권한 확인
   const { permission, canEdit, isOwner } = useProjectPermission(currentProjectId);
 
@@ -1258,10 +1261,20 @@ const Configurator: React.FC = () => {
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
 
+    // 읽기 전용 모드 설정 (viewer 권한)
+    if (mode === 'readonly') {
+      console.log('👁️ 읽기 전용 모드 활성화');
+      setIsReadOnly(true);
+    } else {
+      setIsReadOnly(false);
+    }
+
     console.log('🔍 useEffect 실행:', {
       urlProjectId: projectId,
       urlDesignFileId: designFileId,
       urlDesignFileName,
+      mode,
+      isReadOnly: mode === 'readonly',
       currentProjectId,
       currentDesignFileId,
       placedModulesCount: placedModules.length
@@ -2936,6 +2949,7 @@ const Configurator: React.FC = () => {
         onFileTreeToggle={handleFileTreeToggle}
         isFileTreeOpen={isFileTreeOpen}
         onExportPDF={() => setIsConvertModalOpen(true)}
+        readOnly={isReadOnly}
       />
 
       <div className={styles.mainContent}>
@@ -2969,43 +2983,49 @@ const Configurator: React.FC = () => {
           </>
         )}
 
-        {/* 좌측 사이드바 토글 버튼 - 항상 같은 위치에 고정 */}
-        <button
-          className={`${styles.leftPanelToggle} ${activeSidebarTab ? styles.open : ''}`}
-          onClick={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
-          title={activeSidebarTab ? "사이드바 접기" : "사이드바 펼치기"}
-        >
-          <span className={styles.foldToggleIcon}>{activeSidebarTab ? '<' : '>'}</span>
-        </button>
+        {/* 좌측 사이드바 토글 버튼 - 읽기 전용 모드에서는 숨김 */}
+        {!isReadOnly && (
+          <button
+            className={`${styles.leftPanelToggle} ${activeSidebarTab ? styles.open : ''}`}
+            onClick={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
+            title={activeSidebarTab ? "사이드바 접기" : "사이드바 펼치기"}
+          >
+            <span className={styles.foldToggleIcon}>{activeSidebarTab ? '<' : '>'}</span>
+          </button>
+        )}
 
-        {/* 사이드바 - 항상 표시 */}
-        <Sidebar
-          activeTab={activeSidebarTab}
-          onTabClick={handleSidebarTabClick}
-          isOpen={!!activeSidebarTab}
-          onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
-          onSave={saveProject}
-        />
+        {/* 사이드바 - 읽기 전용 모드에서는 숨김 */}
+        {!isReadOnly && (
+          <Sidebar
+            activeTab={activeSidebarTab}
+            onTabClick={handleSidebarTabClick}
+            isOpen={!!activeSidebarTab}
+            onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
+            onSave={saveProject}
+          />
+        )}
 
-        {/* 사이드바 컨텐츠 패널 */}
-        <div 
-          className={styles.sidebarContent}
-          style={{
-            transform: activeSidebarTab ? 'translateX(0) scale(1)' : 'translateX(-100%) scale(0.95)',
-            opacity: activeSidebarTab ? 1 : 0,
-            pointerEvents: activeSidebarTab ? 'auto' : 'none'
-          }}
-        >
-          {renderSidebarContent()}
-        </div>
+        {/* 사이드바 컨텐츠 패널 - 읽기 전용 모드에서는 숨김 */}
+        {!isReadOnly && (
+          <div
+            className={styles.sidebarContent}
+            style={{
+              transform: activeSidebarTab ? 'translateX(0) scale(1)' : 'translateX(-100%) scale(0.95)',
+              opacity: activeSidebarTab ? 1 : 0,
+              pointerEvents: activeSidebarTab ? 'auto' : 'none'
+            }}
+          >
+            {renderSidebarContent()}
+          </div>
+        )}
 
         {/* 중앙 뷰어 영역 */}
-        <div 
+        <div
           className={styles.viewerArea}
           style={{
             position: 'absolute',
-            left: activeSidebarTab ? '304px' : '64px', /* 64px는 사이드바 너비 */
-            right: isRightPanelOpen ? '320px' : '0',
+            left: isReadOnly ? '0' : (activeSidebarTab ? '304px' : '64px'), /* 읽기 전용 모드에서는 0, 아니면 사이드바 너비만큼 */
+            right: isReadOnly ? '0' : (isRightPanelOpen ? '320px' : '0'), /* 읽기 전용 모드에서는 우측 패널 없음 */
             top: 0,
             bottom: 0,
             transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), right 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -3147,23 +3167,26 @@ const Configurator: React.FC = () => {
 
         </div>
 
-        {/* 우측 패널 폴드/언폴드 버튼 */}
-        <button
-          className={`${styles.rightPanelToggle} ${isRightPanelOpen ? styles.open : ''}`}
-          onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
-          title={isRightPanelOpen ? "우측 패널 접기" : "우측 패널 펼치기"}
-        >
-          <span className={styles.foldToggleIcon}>{isRightPanelOpen ? '>' : '<'}</span>
-        </button>
+        {/* 우측 패널 폴드/언폴드 버튼 - 읽기 전용 모드에서는 숨김 */}
+        {!isReadOnly && (
+          <button
+            className={`${styles.rightPanelToggle} ${isRightPanelOpen ? styles.open : ''}`}
+            onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}
+            title={isRightPanelOpen ? "우측 패널 접기" : "우측 패널 펼치기"}
+          >
+            <span className={styles.foldToggleIcon}>{isRightPanelOpen ? '>' : '<'}</span>
+          </button>
+        )}
 
-        {/* 우측 패널 컨테이너 */}
-        <div 
-          className={styles.rightPanelContainer}
-          style={{
-            width: isRightPanelOpen ? '320px' : '0',
-            transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-          }}
-        >
+        {/* 우측 패널 컨테이너 - 읽기 전용 모드에서는 숨김 */}
+        {!isReadOnly && (
+          <div
+            className={styles.rightPanelContainer}
+            style={{
+              width: isRightPanelOpen ? '320px' : '0',
+              transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+            }}
+          >
 
           {/* 우측 패널 */}
           <div 
@@ -3191,7 +3214,8 @@ const Configurator: React.FC = () => {
             {renderRightPanelContent()}
           </div>
         </div>
-        </div>
+          </div>
+        )}
       </div>
 
       {/* 가구 편집 창들 - 기존 기능 유지 */}

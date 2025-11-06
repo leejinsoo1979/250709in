@@ -21,6 +21,7 @@ export interface ShareLink {
   token: string;
   projectId: string;
   projectName: string;
+  designFileId?: string; // 디자인파일 ID 추가
   designFileName?: string; // 디자인파일명 추가
   createdBy: string;
   createdByName: string;
@@ -89,6 +90,7 @@ export async function createShareLink(
   expiresInDays: number = 7,
   password?: string,
   maxUsage?: number,
+  designFileId?: string,
   designFileName?: string
 ): Promise<ShareLink> {
   try {
@@ -115,12 +117,15 @@ export async function createShareLink(
       isActive: true,
     };
 
-    // password, maxUsage, designFileName은 값이 있을 때만 추가
+    // password, maxUsage, designFileId, designFileName은 값이 있을 때만 추가
     if (password !== undefined) {
       shareLink.password = password;
     }
     if (maxUsage !== undefined) {
       shareLink.maxUsage = maxUsage;
+    }
+    if (designFileId !== undefined) {
+      shareLink.designFileId = designFileId;
     }
     if (designFileName !== undefined) {
       shareLink.designFileName = designFileName;

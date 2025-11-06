@@ -56,7 +56,13 @@ export const ShareLinkAccess: React.FC = () => {
             console.log('👁️ 조회 권한 - 비회원 접근 허용, 프로젝트로 이동');
             setSuccess(true);
             setTimeout(() => {
-              const url = `/configurator?projectId=${validation.link.projectId}${validation.link.designFileName ? `&designFileName=${encodeURIComponent(validation.link.designFileName)}` : ''}`;
+              let url = `/configurator?projectId=${validation.link.projectId}&mode=readonly`;
+              if (validation.link.designFileId) {
+                url += `&designFileId=${validation.link.designFileId}`;
+              }
+              if (validation.link.designFileName) {
+                url += `&designFileName=${encodeURIComponent(validation.link.designFileName)}`;
+              }
               navigate(url);
             }, 2000);
             setIsValidating(false);

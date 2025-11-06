@@ -77,6 +77,8 @@ interface HeaderProps {
   isFileTreeOpen?: boolean;
   // 내보내기 관련 props
   onExportPDF?: () => void; // 실제로는 ConvertModal을 열어줌
+  // 읽기 전용 모드
+  readOnly?: boolean; // viewer 권한용 읽기 전용 모드
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -103,7 +105,8 @@ const Header: React.FC<HeaderProps> = ({
   onDesignFileChange,
   onFileTreeToggle,
   isFileTreeOpen,
-  onExportPDF
+  onExportPDF,
+  readOnly = false
 }) => {
   console.log('🎯 Header 컴포넌트 렌더링:', {
     title,
@@ -462,28 +465,51 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* 중앙 액션 버튼들 */}
         <div className={styles.centerActions}>
-          {/* 파일 드롭다운 메뉴 */}
-          <div 
-            className={styles.fileMenuContainer}
-            onMouseEnter={handleFileMenuMouseEnter}
-            onMouseLeave={handleFileMenuMouseLeave}
-          >
-            <button 
-              className={styles.actionButton}
-              onClick={handleFileMenuToggle}
+          {/* 읽기 전용 모드 표시 */}
+          {readOnly && (
+            <div style={{
+              padding: '6px 12px',
+              backgroundColor: 'rgba(255, 152, 0, 0.1)',
+              border: '1px solid rgba(255, 152, 0, 0.3)',
+              borderRadius: '6px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '13px',
+              fontWeight: '500',
+              color: 'var(--theme-warning, #ff9800)'
+            }}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+              읽기 전용
+            </div>
+          )}
+
+          {/* 파일 드롭다운 메뉴 - 읽기 전용 모드에서는 숨김 */}
+          {!readOnly && (
+            <div
+              className={styles.fileMenuContainer}
+              onMouseEnter={handleFileMenuMouseEnter}
+              onMouseLeave={handleFileMenuMouseLeave}
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2"/>
-                <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2"/>
-                <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2"/>
-                <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2"/>
-                <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-              {t('common.file')}
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: '4px' }}>
-                <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-            </button>
+              <button
+                className={styles.actionButton}
+                onClick={handleFileMenuToggle}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2"/>
+                  <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2"/>
+                  <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2"/>
+                  <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+                {t('common.file')}
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: '4px' }}>
+                  <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+              </button>
             
             {isFileMenuOpen && (
               <div className={styles.fileDropdown}>
@@ -523,51 +549,58 @@ const Header: React.FC<HeaderProps> = ({
                 </button>
               </div>
             )}
-          </div>
+            </div>
+          )}
 
-          {/* 저장 버튼 - 파일 메뉴 바로 옆으로 이동 */}
-          <button 
-            className={styles.actionButton}
-            onClick={() => {
-              console.log('💾💾💾 [Header] 저장 버튼 클릭됨!');
-              console.log('💾💾💾 [Header] onSave 함수 존재 여부:', !!onSave);
-              console.log('💾💾💾 [Header] saving 상태:', saving);
-              if (onSave) {
-                console.log('💾💾💾 [Header] onSave 함수 호출 중...');
-                onSave();
-              } else {
-                console.error('💾💾💾 [Header] onSave 함수가 없습니다!');
-              }
-            }}
-            disabled={saving}
-          >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke="currentColor" strokeWidth="2"/>
-              <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" strokeWidth="2"/>
-              <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2"/>
-            </svg>
-            {saving ? t('common.saving') : t('common.save')}
-          </button>
+          {/* 저장 버튼 - 파일 메뉴 바로 옆으로 이동, 읽기 전용 모드에서는 숨김 */}
+          {!readOnly && (
+            <button
+              className={styles.actionButton}
+              onClick={() => {
+                console.log('💾💾💾 [Header] 저장 버튼 클릭됨!');
+                console.log('💾💾💾 [Header] onSave 함수 존재 여부:', !!onSave);
+                console.log('💾💾💾 [Header] saving 상태:', saving);
+                if (onSave) {
+                  console.log('💾💾💾 [Header] onSave 함수 호출 중...');
+                  onSave();
+                } else {
+                  console.error('💾💾💾 [Header] onSave 함수가 없습니다!');
+                }
+              }}
+              disabled={saving}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke="currentColor" strokeWidth="2"/>
+                <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" strokeWidth="2"/>
+                <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2"/>
+              </svg>
+              {saving ? t('common.saving') : t('common.save')}
+            </button>
+          )}
 
-          {/* Undo 버튼 */}
-          <button 
-            className={styles.actionButton}
-            onClick={handleUndo}
-            disabled={!canUndo()}
-            title="실행 취소 (Ctrl+Z)"
-          >
-            <Undo size={20} />
-          </button>
-          
-          {/* Redo 버튼 */}
-          <button 
-            className={styles.actionButton}
-            onClick={handleRedo}
-            disabled={!canRedo()}
-            title="다시 실행 (Ctrl+Y)"
-          >
-            <Redo size={20} />
-          </button>
+          {/* Undo 버튼 - 읽기 전용 모드에서는 숨김 */}
+          {!readOnly && (
+            <button
+              className={styles.actionButton}
+              onClick={handleUndo}
+              disabled={!canUndo()}
+              title="실행 취소 (Ctrl+Z)"
+            >
+              <Undo size={20} />
+            </button>
+          )}
+
+          {/* Redo 버튼 - 읽기 전용 모드에서는 숨김 */}
+          {!readOnly && (
+            <button
+              className={styles.actionButton}
+              onClick={handleRedo}
+              disabled={!canRedo()}
+              title="다시 실행 (Ctrl+Y)"
+            >
+              <Redo size={20} />
+            </button>
+          )}
 
           {onNext && (
             <button className={styles.actionButton} onClick={onNext}>
