@@ -2541,6 +2541,67 @@ const SimpleDashboard: React.FC = () => {
                 </div>
               )}
 
+              {/* 선택된 카드가 있을 때 휴지통으로 이동 버튼 */}
+              {selectedCards.size > 0 && activeMenu !== 'trash' && (
+                <button
+                  className={styles.bulkDeleteButton}
+                  onClick={async () => {
+                    if (window.confirm(`선택한 ${selectedCards.size}개 항목을 휴지통으로 이동하시겠습니까?`)) {
+                      // 선택된 항목들을 휴지통으로 이동
+                      for (const cardId of Array.from(selectedCards)) {
+                        const item = sortedItems.find(i => i.id === cardId);
+                        if (item) {
+                          if (item.type === 'project') {
+                            await moveToTrash(item.project);
+                          } else if (item.type === 'design') {
+                            // 디자인 파일 휴지통으로 이동
+                            console.log('디자인 파일 휴지통으로 이동:', item);
+                            const projectId = item.project.id;
+                            const projectTitle = item.project.title || '';
+                            const designFile = projectDesignFiles[projectId]?.find(df => df.id === cardId);
+
+                            if (designFile) {
+                              await moveDesignFileToTrash(designFile, projectId, projectTitle);
+                              console.log('✅ 디자인 파일 휴지통 이동 완료:', cardId);
+                            }
+                          } else if (item.type === 'folder') {
+                            // 폴더 삭제 로직 - 폴더 안의 디자인 파일들도 함께 휴지통으로 이동
+                            console.log('폴더 삭제:', item);
+                            const projectId = item.project.id;
+                            const projectTitle = item.project.title || '';
+                            const currentFolders = folders[projectId] || [];
+                            const targetFolder = currentFolders.find(f => f.id === cardId);
+
+                            // 폴더 안의 디자인 파일들을 먼저 휴지통으로 이동
+                            if (targetFolder?.children) {
+                              for (const child of targetFolder.children) {
+                                const designFile = projectDesignFiles[projectId]?.find(df => df.id === child.id);
+                                if (designFile) {
+                                  await moveDesignFileToTrash(designFile, projectId, projectTitle);
+                                }
+                              }
+                            }
+
+                            // 폴더를 폴더 목록에서 제거
+                            const updatedFolders = currentFolders.filter(f => f.id !== cardId);
+                            await saveFolderDataToFirebase(projectId, updatedFolders);
+                            console.log('✅ 폴더 삭제 완료:', cardId);
+
+                            // 프로젝트 새로고침
+                            await loadFirebaseProjects();
+                          }
+                        }
+                      }
+                      // 선택 해제
+                      setSelectedCards(new Set());
+                    }
+                  }}
+                >
+                  <TrashIcon size={16} />
+                  <span>휴지통으로 이동 ({selectedCards.size})</span>
+                </button>
+              )}
+
               {/* 검색바 */}
               <div className={styles.searchContainer}>
                 <div className={styles.searchIcon}>
@@ -2649,68 +2710,7 @@ const SimpleDashboard: React.FC = () => {
                   </button>
                 </div>
               )}
-              
-              {/* 선택된 카드가 있을 때 휴지통으로 이동 버튼 */}
-              {selectedCards.size > 0 && activeMenu !== 'trash' && (
-                <button
-                  className={styles.bulkDeleteButton}
-                  onClick={async () => {
-                    if (window.confirm(`선택한 ${selectedCards.size}개 항목을 휴지통으로 이동하시겠습니까?`)) {
-                      // 선택된 항목들을 휴지통으로 이동
-                      for (const cardId of Array.from(selectedCards)) {
-                        const item = sortedItems.find(i => i.id === cardId);
-                        if (item) {
-                          if (item.type === 'project') {
-                            await moveToTrash(item.project);
-                          } else if (item.type === 'design') {
-                            // 디자인 파일 휴지통으로 이동
-                            console.log('디자인 파일 휴지통으로 이동:', item);
-                            const projectId = item.project.id;
-                            const projectTitle = item.project.title || '';
-                            const designFile = projectDesignFiles[projectId]?.find(df => df.id === cardId);
 
-                            if (designFile) {
-                              await moveDesignFileToTrash(designFile, projectId, projectTitle);
-                              console.log('✅ 디자인 파일 휴지통 이동 완료:', cardId);
-                            }
-                          } else if (item.type === 'folder') {
-                            // 폴더 삭제 로직 - 폴더 안의 디자인 파일들도 함께 휴지통으로 이동
-                            console.log('폴더 삭제:', item);
-                            const projectId = item.project.id;
-                            const projectTitle = item.project.title || '';
-                            const currentFolders = folders[projectId] || [];
-                            const targetFolder = currentFolders.find(f => f.id === cardId);
-
-                            // 폴더 안의 디자인 파일들을 먼저 휴지통으로 이동
-                            if (targetFolder?.children) {
-                              for (const child of targetFolder.children) {
-                                const designFile = projectDesignFiles[projectId]?.find(df => df.id === child.id);
-                                if (designFile) {
-                                  await moveDesignFileToTrash(designFile, projectId, projectTitle);
-                                }
-                              }
-                            }
-
-                            // 폴더를 폴더 목록에서 제거
-                            const updatedFolders = currentFolders.filter(f => f.id !== cardId);
-                            await saveFolderDataToFirebase(projectId, updatedFolders);
-                            console.log('✅ 폴더 삭제 완료:', cardId);
-
-                            // 프로젝트 새로고침
-                            await loadFirebaseProjects();
-                          }
-                        }
-                      }
-                      // 선택 해제
-                      setSelectedCards(new Set());
-                    }
-                  }}
-                >
-                  <TrashIcon size={16} />
-                  <span>휴지통으로 이동 ({selectedCards.size})</span>
-                </button>
-              )}
-              
               {/* 휴지통 비우기 버튼 */}
               {activeMenu === 'trash' && (deletedProjects.length > 0 || deletedDesignFiles.length > 0) && (
                 <button
