@@ -27,23 +27,22 @@ const PerspectiveCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
     <path d="M12 2 L19 5 L12 8 L5 5 Z" />
     {/* 좌측면 (아래로 좁아짐) */}
     <path d="M5 5 L8 18" />
+    <path d="M12 8 L10 20" />
     {/* 우측면 (아래로 좁아짐) */}
     <path d="M19 5 L16 18" />
-    {/* 앞면 좌측 */}
-    <path d="M12 8 L10 18" />
-    {/* 앞면 우측 */}
-    <path d="M12 8 L14 18" />
+    <path d="M12 8 L14 20" />
     {/* 하단면 (점선) */}
-    <path d="M8 18 L12 20 L16 18" strokeDasharray="2 2" />
-    <path d="M10 18 L12 19.5 L14 18" strokeDasharray="2 2" />
+    <path d="M8 18 L10 20" strokeDasharray="2 2" />
+    <path d="M10 20 L14 20" strokeDasharray="2 2" />
+    <path d="M14 20 L16 18" strokeDasharray="2 2" />
+    <path d="M16 18 L8 18" strokeDasharray="2 2" />
   </svg>
 );
 
 // Orthographic Cube Icon (직교 투영 - 평행선 큐브)
 const OrthographicCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-    <path d="M4 8 L12 4 L20 8 L20 16 L12 20 L4 16 Z" strokeLinejoin="round" />
-    <path d="M12 4 L12 20" strokeDasharray="2 2" />
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 8 L12 4 L20 8 L20 16 L12 20 L4 16 Z" />
     <path d="M4 8 L12 12 L20 8" />
     <path d="M12 12 L12 20" />
     <path d="M4 8 L4 16" />
