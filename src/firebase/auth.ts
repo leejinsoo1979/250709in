@@ -18,6 +18,9 @@ import { FirebaseError } from 'firebase/app';
 import { auth } from './config';
 import { FLAGS } from '@/flags';
 
+// Re-export auth for convenience
+export { auth };
+
 // 구글 인증 제공자 생성
 const googleProvider = new GoogleAuthProvider();
 
