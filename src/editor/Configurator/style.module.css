@@ -2072,24 +2072,32 @@
    데스크탑 레이아웃 그대로 scale로 축소하여 모든 요소 표시
    ================================ */
 @media screen and (max-width: 767px) and (orientation: landscape) {
-  /* body, html 스크롤 허용 */
+  /* body, html 스크롤 제거 - 화면에 딱 맞춤 */
   :root {
-    overflow-x: auto !important;
-    overflow-y: auto !important;
+    overflow: hidden !important;
   }
 
-  /* 전체 configurator를 scale로 축소 */
+  body {
+    overflow: hidden !important;
+  }
+
+  /* 전체 configurator를 scale로 축소 - 가로만 축소하고 세로는 유지 */
   .configurator {
-    transform: scale(0.65);
-    transform-origin: top left;
-    width: 153.846%; /* 100% / 0.65 */
-    height: 153.846%; /* 100% / 0.65 */
-    overflow: visible !important;
+    transform: scaleX(0.75);
+    transform-origin: center center;
+    width: 133.333%; /* 100% / 0.75 */
+    height: 100vh;
+    overflow: hidden !important;
+    margin: 0 auto;
+    position: relative;
+    left: 50%;
+    transform: translateX(-50%) scaleX(0.75);
   }
 
-  /* mainContent도 overflow visible */
+  /* mainContent */
   .mainContent {
-    overflow: visible !important;
+    overflow: hidden !important;
+    height: calc(100vh - 56px);
   }
 
   /* viewerArea - 터치 이벤트 활성화 */
