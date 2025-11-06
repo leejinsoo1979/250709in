@@ -73,6 +73,78 @@
   box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
 }
 
+.navButtonSecondary {
+  padding: 0.625rem 1.5rem;
+  background: transparent;
+  color: #667eea;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.navButtonSecondary:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Dropdown Menu */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.chevron {
+  margin-left: 0.25rem;
+  transition: transform 0.2s;
+}
+
+.dropdown:hover .chevron {
+  transform: rotate(180deg);
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+  padding: 0.5rem;
+  z-index: 1000;
+  animation: dropdownFade 0.2s ease-out;
+}
+
+@keyframes dropdownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdownItem {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: #374151;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background 0.2s;
+  font-size: 0.95rem;
+}
+
+.dropdownItem:hover {
+  background: #f3f4f6;
+  color: #667eea;
+}
+
 /* Hero Section */
 .hero {
   position: relative;
@@ -452,12 +524,19 @@
 }
 
 .demoWindowContent {
-  padding: 4rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 0;
+  background: #000;
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 400px;
+  overflow: hidden;
+}
+
+.demoVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .demoPreview {

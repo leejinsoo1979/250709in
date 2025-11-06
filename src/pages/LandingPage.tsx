@@ -6,6 +6,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const [scrollY, setScrollY] = useState(0);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -18,16 +19,80 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className={styles.nav}>
         <div className={styles.navContent}>
-          <div className={styles.logo}>
+          <div className={styles.logo} onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
             <span className={styles.logoIcon}>🪑</span>
             <span className={styles.logoText}>FurnitureDesigner</span>
           </div>
           <div className={styles.navLinks}>
-            <a href="#features" className={styles.navLink}>Features</a>
-            <a href="#demo" className={styles.navLink}>Demo</a>
+            {/* Product Dropdown */}
+            <div
+              className={styles.dropdown}
+              onMouseEnter={() => setOpenDropdown('product')}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
+              <button className={styles.navLink}>
+                Product
+                <svg className={styles.chevron} width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {openDropdown === 'product' && (
+                <div className={styles.dropdownMenu}>
+                  <a href="#features" className={styles.dropdownItem}>3D Editor</a>
+                  <a href="#features" className={styles.dropdownItem}>Design Tools</a>
+                </div>
+              )}
+            </div>
+
+            {/* Solutions Dropdown */}
+            <div
+              className={styles.dropdown}
+              onMouseEnter={() => setOpenDropdown('solutions')}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
+              <button className={styles.navLink}>
+                Solutions
+                <svg className={styles.chevron} width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {openDropdown === 'solutions' && (
+                <div className={styles.dropdownMenu}>
+                  <a href="#features" className={styles.dropdownItem}>Configurators</a>
+                  <a href="#features" className={styles.dropdownItem}>DXF Export</a>
+                  <a href="#features" className={styles.dropdownItem}>Real-time Collaboration</a>
+                </div>
+              )}
+            </div>
+
+            {/* Resources Dropdown */}
+            <div
+              className={styles.dropdown}
+              onMouseEnter={() => setOpenDropdown('resources')}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
+              <button className={styles.navLink}>
+                Resources
+                <svg className={styles.chevron} width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M2 4l4 4 4-4" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </button>
+              {openDropdown === 'resources' && (
+                <div className={styles.dropdownMenu}>
+                  <a href="#demo" className={styles.dropdownItem}>Demo</a>
+                  <a href="#" className={styles.dropdownItem}>Help Center</a>
+                  <a href="#" className={styles.dropdownItem}>Examples</a>
+                </div>
+              )}
+            </div>
+
             <a href="#pricing" className={styles.navLink}>Pricing</a>
+
+            <button onClick={() => navigate('/login')} className={styles.navButtonSecondary}>
+              Login
+            </button>
             <button onClick={() => navigate('/auth')} className={styles.navButton}>
-              Sign In
+              Sign Up
             </button>
           </div>
         </div>
@@ -202,7 +267,16 @@ export default function LandingPage() {
                 </div>
               </div>
               <div className={styles.demoWindowContent}>
-                <div className={styles.demoPreview}>🛋️</div>
+                <video
+                  className={styles.demoVideo}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                >
+                  <source src="https://uable.co.kr/videos/inshowconfigurator.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
             </div>
           </div>
