@@ -104,10 +104,21 @@ const Configurator: React.FC = () => {
 
   // History Store
   const { saveState } = useHistoryStore();
-  
+
   // 히스토리 트래킹 활성화
   useHistoryTracking();
-  
+
+  // URL 파라미터에서 프로젝트명과 디자인파일명 읽기 (fallback용)
+  const urlProjectName = useMemo(() => {
+    const name = searchParams.get('projectName');
+    return name ? decodeURIComponent(name) : null;
+  }, [searchParams]);
+
+  const urlDesignFileName = useMemo(() => {
+    const name = searchParams.get('designFileName');
+    return name ? decodeURIComponent(name) : null;
+  }, [searchParams]);
+
   // 키보드 단축키 이벤트 리스너
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -2748,17 +2759,6 @@ const Configurator: React.FC = () => {
     };
     console.log('💾 테스트: 브라우저 콘솔에서 window.testSaveProject()를 실행해보세요');
   }
-
-  // URL 파라미터에서 프로젝트명과 디자인파일명 읽기 (fallback용)
-  const urlProjectName = useMemo(() => {
-    const name = searchParams.get('projectName');
-    return name ? decodeURIComponent(name) : null;
-  }, [searchParams]);
-
-  const urlDesignFileName = useMemo(() => {
-    const name = searchParams.get('designFileName');
-    return name ? decodeURIComponent(name) : null;
-  }, [searchParams]);
 
   return (
     <div className={styles.configurator}>
