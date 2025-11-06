@@ -25,99 +25,100 @@ const ViewerPage: React.FC = () => {
     console.log('🔥 ViewerPage - loadProject 시작:', { projectId });
     setLoading(true);
     setError(null);
-    
+
     try {
-      // Check if it's a design file ID or project ID
-      if (projectId?.startsWith('design_')) {
-        console.log('🔥 디자인 파일 로드 시도 (공유 링크):', projectId);
-        const designResult = await getDesignFileByIdPublic(projectId);
-        console.log('🔥 디자인 파일 로드 결과 (공유 링크):', designResult);
-        
-        if (designResult.designFile) {
-          const projectSummary: ProjectSummary = {
-            id: designResult.designFile.projectId,
-            title: designResult.designFile.name,
-            createdAt: designResult.designFile.createdAt,
-            updatedAt: designResult.designFile.updatedAt,
-            furnitureCount: designResult.designFile.furniture?.placedModules?.length || 0,
-            spaceSize: {
-              width: designResult.designFile.spaceConfig?.width || 3600,
-              height: designResult.designFile.spaceConfig?.height || 2400,
-              depth: designResult.designFile.spaceConfig?.depth || 1500,
-            },
-            thumbnail: designResult.designFile.thumbnail,
-            folderId: '',
-            spaceInfo: designResult.designFile.spaceConfig,
-            placedModules: designResult.designFile.furniture?.placedModules || []
-          };
-          
-          console.log('🔥 디자인 파일 로드 성공 (가구 포함):', {
-            designFileId: projectId,
-            name: designResult.designFile.name,
-            placedModulesCount: projectSummary.placedModules?.length || 0,
-            placedModules: projectSummary.placedModules
-          });
-          
-          setProject(projectSummary);
-        } else {
-          setError(designResult.error || '디자인 파일을 찾을 수 없습니다.');
-        }
-      } else {
-        console.log('🔥 프로젝트 로드 시도 (공유 링크):', projectId);
-        const result = await getProjectByIdPublic(projectId);
-        console.log('🔥 프로젝트 로드 결과 (공유 링크):', result);
-        if (result.project) {
-          const projectSummary: ProjectSummary = {
-            id: result.project.id,
-            title: result.project.title,
-            createdAt: result.project.createdAt,
-            updatedAt: result.project.updatedAt,
-            furnitureCount: result.project.stats?.furnitureCount || 0,
-            spaceSize: {
-              width: result.project.spaceConfig?.width || 3600,
-              height: result.project.spaceConfig?.height || 2400,
-              depth: result.project.spaceConfig?.depth || 1500,
-            },
-            thumbnail: result.project.thumbnail,
-            folderId: result.project.folderId,
-            spaceInfo: result.project.spaceConfig || {
-              width: 3600,
-              height: 2400,
-              depth: 1500,
-              installType: 'builtin',
-              surroundType: 'surround',
-              baseConfig: {
-                type: 'floor',
-                height: 65,
-                placementType: 'ground',
-              },
-              hasFloorFinish: false,
-              floorFinish: null,
-              wallConfig: {
-                left: true,
-                right: true,
-                top: true,
-              },
-              materialConfig: {
-                interiorColor: '#FFFFFF',
-                doorColor: '#E0E0E0',
-              },
-              columns: [],
-              frameSize: { upper: 50, left: 50, right: 50 },
-              gapConfig: { left: 2, right: 2 },
-            },
-            placedModules: result.project.furniture?.placedModules || []
-          };
-          console.log('🔥 프로젝트 로드 성공 (가구 포함):', {
-            title: projectSummary.title,
-            placedModulesCount: projectSummary.placedModules?.length || 0,
-            placedModules: projectSummary.placedModules
-          });
-          setProject(projectSummary);
-        } else {
-          setError(result.error || '프로젝트를 찾을 수 없습니다.');
-        }
+      // Try loading as design file first
+      console.log('🔥 디자인 파일 로드 시도 (공유 링크):', projectId);
+      const designResult = await getDesignFileByIdPublic(projectId!);
+      console.log('🔥 디자인 파일 로드 결과 (공유 링크):', designResult);
+
+      if (designResult.designFile) {
+        const projectSummary: ProjectSummary = {
+          id: designResult.designFile.projectId,
+          title: designResult.designFile.name,
+          createdAt: designResult.designFile.createdAt,
+          updatedAt: designResult.designFile.updatedAt,
+          furnitureCount: designResult.designFile.furniture?.placedModules?.length || 0,
+          spaceSize: {
+            width: designResult.designFile.spaceConfig?.width || 3600,
+            height: designResult.designFile.spaceConfig?.height || 2400,
+            depth: designResult.designFile.spaceConfig?.depth || 1500,
+          },
+          thumbnail: designResult.designFile.thumbnail,
+          folderId: '',
+          spaceInfo: designResult.designFile.spaceConfig,
+          placedModules: designResult.designFile.furniture?.placedModules || []
+        };
+
+        console.log('🔥 디자인 파일 로드 성공 (가구 포함):', {
+          designFileId: projectId,
+          name: designResult.designFile.name,
+          placedModulesCount: projectSummary.placedModules?.length || 0,
+          placedModules: projectSummary.placedModules
+        });
+
+        setProject(projectSummary);
+        return;
       }
+
+      // If design file not found, try loading as project
+      console.log('🔥 디자인 파일 없음, 프로젝트 로드 시도 (공유 링크):', projectId);
+      const result = await getProjectByIdPublic(projectId!);
+      console.log('🔥 프로젝트 로드 결과 (공유 링크):', result);
+
+      if (result.project) {
+        const projectSummary: ProjectSummary = {
+          id: result.project.id,
+          title: result.project.title,
+          createdAt: result.project.createdAt,
+          updatedAt: result.project.updatedAt,
+          furnitureCount: result.project.stats?.furnitureCount || 0,
+          spaceSize: {
+            width: result.project.spaceConfig?.width || 3600,
+            height: result.project.spaceConfig?.height || 2400,
+            depth: result.project.spaceConfig?.depth || 1500,
+          },
+          thumbnail: result.project.thumbnail,
+          folderId: result.project.folderId,
+          spaceInfo: result.project.spaceConfig || {
+            width: 3600,
+            height: 2400,
+            depth: 1500,
+            installType: 'builtin',
+            surroundType: 'surround',
+            baseConfig: {
+              type: 'floor',
+              height: 65,
+              placementType: 'ground',
+            },
+            hasFloorFinish: false,
+            floorFinish: null,
+            wallConfig: {
+              left: true,
+              right: true,
+              top: true,
+            },
+            materialConfig: {
+              interiorColor: '#FFFFFF',
+              doorColor: '#E0E0E0',
+            },
+            columns: [],
+            frameSize: { upper: 50, left: 50, right: 50 },
+            gapConfig: { left: 2, right: 2 },
+          },
+          placedModules: result.project.furniture?.placedModules || []
+        };
+        console.log('🔥 프로젝트 로드 성공 (가구 포함):', {
+          title: projectSummary.title,
+          placedModulesCount: projectSummary.placedModules?.length || 0,
+          placedModules: projectSummary.placedModules
+        });
+        setProject(projectSummary);
+        return;
+      }
+
+      // Both failed, show error
+      setError(result.error || designResult.error || '프로젝트를 찾을 수 없습니다.');
     } catch (err) {
       console.error('프로젝트 로드 실패:', err);
       setError('프로젝트를 불러오는 중 오류가 발생했습니다.');
