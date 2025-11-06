@@ -37,7 +37,7 @@
 }
 
 .logoIcon {
-  font-size: 1.75rem;
+  flex-shrink: 0;
 }
 
 .navLinks {
@@ -169,20 +169,8 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
-  opacity: 0.05;
+  background: #ffffff;
   z-index: 0;
-}
-
-.heroBackground::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-              radial-gradient(circle at 80% 80%, rgba(240, 147, 251, 0.1) 0%, transparent 50%);
 }
 
 .heroContent {
@@ -406,8 +394,10 @@
 }
 
 .featureIcon {
-  font-size: 3rem;
+  width: 64px;
+  height: 64px;
   margin-bottom: 1.5rem;
+  color: #667eea;
 }
 
 .featureTitle {

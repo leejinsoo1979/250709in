@@ -20,7 +20,11 @@ export default function LandingPage() {
       <nav className={styles.nav}>
         <div className={styles.navContent}>
           <div className={styles.logo} onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>
-            <span className={styles.logoIcon}>🪑</span>
+            <svg className={styles.logoIcon} width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <rect x="6" y="8" width="20" height="16" stroke="currentColor" strokeWidth="2" fill="none"/>
+              <path d="M6 12 L26 12" stroke="currentColor" strokeWidth="2"/>
+              <path d="M8 24 L8 28 M24 24 L24 28" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
             <span className={styles.logoText}>FurnitureDesigner</span>
           </div>
           <div className={styles.navLinks}>
@@ -129,33 +133,6 @@ export default function LandingPage() {
               View Demo
             </button>
           </div>
-
-          {/* Trusted By Section */}
-          <div className={styles.trustedBy}>
-            <p className={styles.trustedByText}>Trusted by professionals</p>
-            <div className={styles.trustedByLogos}>
-              <div className={styles.trustLogo}>🏢</div>
-              <div className={styles.trustLogo}>🏭</div>
-              <div className={styles.trustLogo}>🏗️</div>
-              <div className={styles.trustLogo}>🏪</div>
-            </div>
-          </div>
-        </div>
-
-        {/* 3D Floating Elements */}
-        <div className={styles.floatingElements}>
-          <div className={styles.floatingCard} style={{ animationDelay: '0s' }}>
-            <div className={styles.cardIcon}>📐</div>
-            <div className={styles.cardText}>Real-time 3D</div>
-          </div>
-          <div className={styles.floatingCard} style={{ animationDelay: '0.5s' }}>
-            <div className={styles.cardIcon}>🎨</div>
-            <div className={styles.cardText}>Custom Colors</div>
-          </div>
-          <div className={styles.floatingCard} style={{ animationDelay: '1s' }}>
-            <div className={styles.cardIcon}>📏</div>
-            <div className={styles.cardText}>Precise Measurements</div>
-          </div>
         </div>
       </section>
 
@@ -169,7 +146,10 @@ export default function LandingPage() {
 
           <div className={styles.featureGrid}>
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>🎯</div>
+              <svg className={styles.featureIcon} viewBox="0 0 48 48" fill="none">
+                <rect x="8" y="8" width="32" height="32" rx="4" stroke="currentColor" strokeWidth="2"/>
+                <path d="M24 18 L24 30 M18 24 L30 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
               <h3 className={styles.featureTitle}>3D Real-time Editor</h3>
               <p className={styles.featureDesc}>
                 Design and visualize your furniture in stunning 3D with instant updates
@@ -177,7 +157,11 @@ export default function LandingPage() {
             </div>
 
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>🎨</div>
+              <svg className={styles.featureIcon} viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="16" stroke="currentColor" strokeWidth="2"/>
+                <path d="M24 8 A16 16 0 0 1 40 24" stroke="currentColor" strokeWidth="2" fill="none"/>
+                <path d="M16 14 L24 24 L32 14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               <h3 className={styles.featureTitle}>Material Library</h3>
               <p className={styles.featureDesc}>
                 Choose from hundreds of materials, colors, and textures
@@ -185,7 +169,11 @@ export default function LandingPage() {
             </div>
 
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>📐</div>
+              <svg className={styles.featureIcon} viewBox="0 0 48 48" fill="none">
+                <path d="M12 36 L36 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M12 36 L18 30 M36 12 L30 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <circle cx="24" cy="24" r="2" fill="currentColor"/>
+              </svg>
               <h3 className={styles.featureTitle}>Precision Tools</h3>
               <p className={styles.featureDesc}>
                 Accurate measurements and dimensions for professional results
@@ -193,7 +181,10 @@ export default function LandingPage() {
             </div>
 
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>📥</div>
+              <svg className={styles.featureIcon} viewBox="0 0 48 48" fill="none">
+                <path d="M24 12 L24 28 M18 22 L24 28 L30 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M14 36 L34 36" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
               <h3 className={styles.featureTitle}>DXF Export</h3>
               <p className={styles.featureDesc}>
                 Export your designs in DXF format for manufacturing
@@ -201,7 +192,12 @@ export default function LandingPage() {
             </div>
 
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>🔄</div>
+              <svg className={styles.featureIcon} viewBox="0 0 48 48" fill="none">
+                <path d="M36 18 A12 12 0 1 1 24 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M36 18 L36 12 L30 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 30 A12 12 0 1 0 24 42" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M12 30 L12 36 L18 36" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
               <h3 className={styles.featureTitle}>Real-time Sync</h3>
               <p className={styles.featureDesc}>
                 Collaborate with your team in real-time
@@ -209,7 +205,11 @@ export default function LandingPage() {
             </div>
 
             <div className={styles.featureCard}>
-              <div className={styles.featureIcon}>💾</div>
+              <svg className={styles.featureIcon} viewBox="0 0 48 48" fill="none">
+                <path d="M18 20 L18 14 C18 11 20 9 24 9 C28 9 30 11 30 14 L30 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                <rect x="12" y="20" width="24" height="16" rx="2" stroke="currentColor" strokeWidth="2"/>
+                <circle cx="24" cy="28" r="2" fill="currentColor"/>
+              </svg>
               <h3 className={styles.featureTitle}>Cloud Storage</h3>
               <p className={styles.featureDesc}>
                 Save and access your projects from anywhere
