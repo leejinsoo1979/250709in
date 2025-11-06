@@ -820,15 +820,17 @@ const SimpleDashboard: React.FC = () => {
   // 공유 프로젝트 처리 함수
   const shareProject = async (projectId: string) => {
     try {
-      // 현재는 공유 링크만 생성
-      const shareUrl = `${window.location.origin}/configurator?projectId=${projectId}&shared=true`;
-      
-      if (navigator.clipboard) {
-        await navigator.clipboard.writeText(shareUrl);
-        alert('공유 링크가 클립보드에 복사되었습니다!');
-      } else {
-        prompt('공유 링크를 복사하세요:', shareUrl);
+      // 프로젝트 정보 가져오기
+      const project = allProjects.find(p => p.id === projectId);
+      if (!project) {
+        console.error('프로젝트를 찾을 수 없습니다:', projectId);
+        return;
       }
+
+      // ShareLinkModal 열기
+      setShareProjectId(projectId);
+      setShareProjectName(project.title);
+      setShareModalOpen(true);
       
       // 미래에는 Firebase에 공유 상태 업데이트
       // await updateProject(projectId, { shared: true, sharedAt: new Date() });
@@ -3197,22 +3199,6 @@ const SimpleDashboard: React.FC = () => {
                           onClick={(e) => e.stopPropagation()}
                         />
                       </div>
-                    )}
-                    
-                    {/* 공유 버튼 (프로젝트 타입에만 표시) */}
-                    {item.type === 'project' && (
-                      <button
-                        className={styles.cardShareButton}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShareProjectId(item.project.id);
-                          setShareProjectName(item.project.title);
-                          setShareModalOpen(true);
-                        }}
-                        title="프로젝트 공유"
-                      >
-                        <ShareIcon size={16} />
-                      </button>
                     )}
 
                     {/* 더보기 버튼을 카드 우측 상단에 배치 */}

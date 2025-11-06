@@ -2105,35 +2105,6 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-/* 공유 버튼 스타일 */
-.cardShareButton {
-  position: absolute;
-  top: 12px;
-  right: 48px; /* 더보기 버튼 왼쪽에 배치 */
-  width: 28px;
-  height: 28px;
-  border: none;
-  background: var(--theme-surface, rgba(255, 255, 255, 0.95));
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--theme-text-secondary);
-  transition: all 0.2s;
-  z-index: 100;
-  backdrop-filter: blur(4px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  pointer-events: auto;
-}
-
-.cardShareButton:hover {
-  background: var(--theme-primary);
-  color: white;
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
 /* 리스트 뷰 액션 버튼 스타일 */
 .designGrid.listView .cardActionButton {
   position: static;
