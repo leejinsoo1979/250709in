@@ -86,6 +86,13 @@ const Configurator: React.FC = () => {
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
+
+  // 읽기 전용 모드에서 재질 탭 자동 열기
+  useEffect(() => {
+    if (isReadOnly) {
+      setActiveSidebarTab('material');
+    }
+  }, [isReadOnly]);
   
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
@@ -2999,41 +3006,36 @@ const Configurator: React.FC = () => {
           </>
         )}
 
-        {/* 좌측 사이드바 토글 버튼 - 읽기 전용 모드에서는 숨김 */}
-        {!isReadOnly && (
-          <button
-            className={`${styles.leftPanelToggle} ${activeSidebarTab ? styles.open : ''}`}
-            onClick={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
-            title={activeSidebarTab ? "사이드바 접기" : "사이드바 펼치기"}
-          >
-            <span className={styles.foldToggleIcon}>{activeSidebarTab ? '<' : '>'}</span>
-          </button>
-        )}
+        {/* 좌측 사이드바 토글 버튼 */}
+        <button
+          className={`${styles.leftPanelToggle} ${activeSidebarTab ? styles.open : ''}`}
+          onClick={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
+          title={activeSidebarTab ? "사이드바 접기" : "사이드바 펼치기"}
+        >
+          <span className={styles.foldToggleIcon}>{activeSidebarTab ? '<' : '>'}</span>
+        </button>
 
-        {/* 사이드바 - 읽기 전용 모드에서는 숨김 */}
-        {!isReadOnly && (
-          <Sidebar
-            activeTab={activeSidebarTab}
-            onTabClick={handleSidebarTabClick}
-            isOpen={!!activeSidebarTab}
-            onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : 'module')}
-            onSave={saveProject}
-          />
-        )}
+        {/* 사이드바 - 읽기 전용 모드에서는 재질 탭만 보임 */}
+        <Sidebar
+          activeTab={activeSidebarTab}
+          onTabClick={handleSidebarTabClick}
+          isOpen={!!activeSidebarTab}
+          onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
+          onSave={saveProject}
+          readOnly={isReadOnly}
+        />
 
-        {/* 사이드바 컨텐츠 패널 - 읽기 전용 모드에서는 숨김 */}
-        {!isReadOnly && (
-          <div
-            className={styles.sidebarContent}
-            style={{
-              transform: activeSidebarTab ? 'translateX(0) scale(1)' : 'translateX(-100%) scale(0.95)',
-              opacity: activeSidebarTab ? 1 : 0,
-              pointerEvents: activeSidebarTab ? 'auto' : 'none'
-            }}
-          >
-            {renderSidebarContent()}
-          </div>
-        )}
+        {/* 사이드바 컨텐츠 패널 */}
+        <div
+          className={styles.sidebarContent}
+          style={{
+            transform: activeSidebarTab ? 'translateX(0) scale(1)' : 'translateX(-100%) scale(0.95)',
+            opacity: activeSidebarTab ? 1 : 0,
+            pointerEvents: activeSidebarTab ? 'auto' : 'none'
+          }}
+        >
+          {renderSidebarContent()}
+        </div>
 
         {/* 중앙 뷰어 영역 */}
         <div

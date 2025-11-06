@@ -23,6 +23,7 @@ interface SidebarProps {
   onToggle: () => void; // 폴딩 버튼 핸들러 추가
   onResetUnsavedChanges?: React.MutableRefObject<(() => void) | null>; // 저장 완료 후 상태 리셋을 위한 ref
   onSave?: () => Promise<void>; // 저장 함수 추가
+  readOnly?: boolean; // 읽기 전용 모드 (viewer 권한)
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -31,7 +32,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   onToggle,
   onResetUnsavedChanges,
-  onSave
+  onSave,
+  readOnly = false
 }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -161,7 +163,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   
   const themeColor = themeColorMap[theme.color] || '#10b981';
   
-  const tabs = [
+  const allTabs = [
     {
       id: 'module' as SidebarTab,
       icon: (
@@ -191,6 +193,9 @@ const Sidebar: React.FC<SidebarProps> = ({
       label: t('sidebar.etc')
     }
   ];
+
+  // 읽기 전용 모드에서는 재질 탭만 보이게
+  const tabs = readOnly ? allTabs.filter(tab => tab.id === 'material') : allTabs;
 
   return (
     <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>

@@ -80,7 +80,7 @@ interface HeaderProps {
   // 공유 관련 props
   onShare?: () => void; // 공유 버튼
   // 읽기 전용 모드
-  readOnly?: boolean; // viewer 권한용 읽기 전용 모드
+  readOnly?: boolean; // viewer 권한용 읽기 전용 모드 (디자인명 수정 불가)
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -185,6 +185,11 @@ const Header: React.FC<HeaderProps> = ({
 
   // 디자인명 편집 시작
   const handleDesignNameClick = () => {
+    // 읽기 전용 모드에서는 편집 불가
+    if (readOnly) {
+      console.log('🚫 읽기 전용 모드 - 디자인명 편집 차단');
+      return;
+    }
     if (!designFileName || !onDesignFileNameChange) return;
     setEditingDesignName(designFileName);
     setIsEditingDesignName(true);
@@ -408,13 +413,13 @@ const Header: React.FC<HeaderProps> = ({
                     <span
                       style={{
                         color: 'var(--theme-primary)',
-                        cursor: onDesignFileNameChange ? 'pointer' : 'default',
-                        textDecoration: onDesignFileNameChange ? 'underline' : 'none',
+                        cursor: (onDesignFileNameChange && !readOnly) ? 'pointer' : 'default',
+                        textDecoration: (onDesignFileNameChange && !readOnly) ? 'underline' : 'none',
                         textDecorationStyle: 'dotted',
                         textUnderlineOffset: '3px'
                       }}
                       onClick={handleDesignNameClick}
-                      title={onDesignFileNameChange ? '클릭하여 디자인명 변경' : undefined}
+                      title={(onDesignFileNameChange && !readOnly) ? '클릭하여 디자인명 변경' : undefined}
                     >
                       {designFileName}
                     </span>
@@ -449,13 +454,13 @@ const Header: React.FC<HeaderProps> = ({
                     <span
                       style={{
                         color: 'var(--theme-primary)',
-                        cursor: onDesignFileNameChange ? 'pointer' : 'default',
-                        textDecoration: onDesignFileNameChange ? 'underline' : 'none',
+                        cursor: (onDesignFileNameChange && !readOnly) ? 'pointer' : 'default',
+                        textDecoration: (onDesignFileNameChange && !readOnly) ? 'underline' : 'none',
                         textDecorationStyle: 'dotted',
                         textUnderlineOffset: '3px'
                       }}
                       onClick={handleDesignNameClick}
-                      title={onDesignFileNameChange ? '클릭하여 디자인명 변경' : undefined}
+                      title={(onDesignFileNameChange && !readOnly) ? '클릭하여 디자인명 변경' : undefined}
                     >
                       {designFileName}
                     </span>
