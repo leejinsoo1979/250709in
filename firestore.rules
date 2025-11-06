@@ -107,8 +107,8 @@ service cloud.firestore {
 
     // Legacy(dualWrite 중만 허용)
     match /projects/{id} {
-      // 소유자는 모든 권한, 공유받은 사람은 권한에 따라
-      allow read: if isSignedIn();
+      // 읽기는 누구나 가능 (공유 링크 지원), 쓰기는 소유자 또는 편집 권한이 있는 사람만
+      allow read: if true;
       allow write: if isSignedIn() && (
         resource.data.userId == request.auth.uid ||
         (exists(/databases/$(database)/documents/sharedProjectAccess/$(id + '_' + request.auth.uid)) &&
