@@ -390,7 +390,10 @@ const Configurator: React.FC = () => {
       if (error) {
         console.error('❌ 프로젝트 로드 에러:', error);
         alert('프로젝트를 불러오는데 실패했습니다: ' + error);
-        navigate('/');
+        // 읽기 전용 모드에서는 리다이렉트하지 않음
+        if (!isReadOnly) {
+          navigate('/');
+        }
         return;
       }
 
@@ -446,7 +449,10 @@ const Configurator: React.FC = () => {
     } catch (error) {
       console.error('프로젝트 로드 실패:', error);
       alert('프로젝트 로드 중 오류가 발생했습니다.');
-      navigate('/');
+      // 읽기 전용 모드에서는 리다이렉트하지 않음
+      if (!isReadOnly) {
+        navigate('/');
+      }
     } finally {
       setLoading(false);
     }
@@ -2071,7 +2077,18 @@ const Configurator: React.FC = () => {
   };
 
   const handleLogout = () => {
-    navigate('/login');
+    // 읽기 전용 모드에서는 로그아웃 시 현재 페이지 유지
+    if (isReadOnly) {
+      // Firebase logout만 수행하고 리다이렉트하지 않음
+      import('@/firebase/auth').then(({ logout }) => {
+        logout().then(() => {
+          // 로그아웃 후 페이지 새로고침하여 비회원 상태로 렌더링
+          window.location.reload();
+        });
+      });
+    } else {
+      navigate('/login');
+    }
   };
 
   const handleProfile = () => {
@@ -2957,7 +2974,7 @@ const Configurator: React.FC = () => {
         onPrevious={handlePrevious}
         onHelp={handleHelp}
         onConvert={handleConvert}
-        onLogout={handleLogout}
+        onLogout={isReadOnly ? undefined : handleLogout}
         onProfile={handleProfile}
         onShare={async () => {
           // 디자인이 저장되지 않았으면 먼저 자동 저장
