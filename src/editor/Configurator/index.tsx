@@ -727,7 +727,7 @@ const Configurator: React.FC = () => {
               alert('디자인 파일 생성에 실패했습니다: ' + error);
             } else if (designFileId) {
               setCurrentDesignFileId(designFileId);
-              setCurrentDesignFileName(basicInfo.title);
+              setCurrentDesignFileName('새 디자인');
               setSaveStatus('success');
               console.log('✅ 새 디자인 파일 생성 및 저장 성공');
 
@@ -1217,24 +1217,22 @@ const Configurator: React.FC = () => {
   // URL에서 디자인파일명 읽기 (별도 useEffect로 분리)
   useEffect(() => {
     const designFileName = searchParams.get('designFileName') || searchParams.get('fileName');
-    
+
     console.log('🔍 URL에서 가져온 designFileName:', designFileName);
-    console.log('🔍 현재 basicInfo.title:', basicInfo.title);
-    
+    console.log('🔍 현재 currentDesignFileName:', currentDesignFileName);
+
+    // URL에 designFileName이 있으면 설정
     if (designFileName) {
       const decodedFileName = decodeURIComponent(designFileName);
       setCurrentDesignFileName(decodedFileName);
       console.log('📝 URL 파라미터로 디자인파일명 설정:', decodedFileName);
-    } else if (basicInfo.title) {
-      // URL에 디자인파일명이 없으면 현재 작업중인 프로젝트명을 사용
-      setCurrentDesignFileName(basicInfo.title);
-      console.log('📝 프로젝트명으로 디자인파일명 설정:', basicInfo.title);
-    } else {
-      // 둘 다 없으면 기본값
-      setCurrentDesignFileName('새로운 디자인');
-      console.log('📝 기본값으로 디자인파일명 설정: 새로운 디자인');
     }
-  }, [searchParams, basicInfo.title]);
+    // currentDesignFileName이 이미 있으면 유지 (덮어쓰지 않음)
+    else if (!currentDesignFileName) {
+      setCurrentDesignFileName('새 디자인');
+      console.log('📝 기본값으로 디자인파일명 설정: 새 디자인');
+    }
+  }, [searchParams]);
 
   // 단내림 상태 변경 감지 및 컬럼 수 리셋
   useEffect(() => {
