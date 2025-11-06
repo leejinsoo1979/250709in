@@ -6,6 +6,13 @@ service firebase.storage {
       return isSignedIn() &&
              exists(/databases/(default)/documents/teams/$(teamId)/members/$(request.auth.uid));
     }
+
+    // 프로필 이미지 - 모든 로그인 사용자가 읽을 수 있고, 본인 파일만 쓸 수 있음
+    match /profile-images/{allFiles=**} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
     // 내보내기 산출물
     match /teams/{teamId}/designs/{designId}/versions/{rest=**} {
       allow read, write: if isTeamMember(teamId);
