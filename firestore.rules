@@ -12,6 +12,46 @@ service cloud.firestore {
       allow read, create, update: if isSignedIn() && uid == request.auth.uid;
     }
 
+    // userProfiles - 사용자 프로필 정보
+    match /userProfiles/{uid} {
+      allow read: if isSignedIn() && uid == request.auth.uid;
+      allow create, update: if isSignedIn() && uid == request.auth.uid;
+      allow delete: if isSignedIn() && uid == request.auth.uid;
+    }
+
+    // loginHistory - 로그인 기록
+    match /loginHistory/{historyId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false; // 로그인 기록은 수정/삭제 불가
+    }
+
+    // teamInvitations - 팀 초대
+    match /teamInvitations/{invitationId} {
+      // 초대받은 사람이 자신의 초대장을 볼 수 있음
+      allow read: if isSignedIn() && resource.data.inviteeEmail == request.auth.token.email;
+      // 팀 멤버가 초대장을 생성할 수 있음
+      allow create: if isSignedIn();
+      // 초대받은 사람이 초대장을 업데이트(수락/거절)할 수 있음
+      allow update: if isSignedIn() && resource.data.inviteeEmail == request.auth.token.email;
+      allow delete: if isSignedIn() && resource.data.inviterId == request.auth.uid;
+    }
+
+    // sharedProjects - 공유된 프로젝트
+    match /sharedProjects/{sharedId} {
+      // 공유받은 사람이 자신의 공유 프로젝트를 볼 수 있음
+      allow read: if isSignedIn() && resource.data.sharedWithUserId == request.auth.uid;
+      // 프로젝트 소유자가 공유를 생성할 수 있음
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      // 소유자나 공유받은 사람이 업데이트할 수 있음
+      allow update: if isSignedIn() && (
+        resource.data.ownerId == request.auth.uid ||
+        resource.data.sharedWithUserId == request.auth.uid
+      );
+      // 소유자만 삭제할 수 있음
+      allow delete: if isSignedIn() && resource.data.ownerId == request.auth.uid;
+    }
+
     // teams + subcollections
     match /teams/{teamId} {
       // 팀 문서
