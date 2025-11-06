@@ -89,13 +89,33 @@ export const captureCanvasThumbnail = (
     // 썸네일 크기 설정
     tempCanvas.width = width;
     tempCanvas.height = height;
-    
+
     // 배경색 설정 (투명도 방지)
     tempCtx.fillStyle = '#f5f5f5';
     tempCtx.fillRect(0, 0, width, height);
-    
-    // 원본 캔버스를 썸네일 크기로 리사이징하여 복사
-    tempCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, width, height);
+
+    // 원본 캔버스의 비율 계산
+    const sourceAspect = canvas.width / canvas.height;
+    const targetAspect = width / height;
+
+    let drawWidth = width;
+    let drawHeight = height;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    // 원본 비율을 유지하면서 목표 크기에 맞춤 (contain 방식)
+    if (sourceAspect > targetAspect) {
+      // 원본이 더 넓음 - 너비를 기준으로 맞춤
+      drawHeight = width / sourceAspect;
+      offsetY = (height - drawHeight) / 2;
+    } else {
+      // 원본이 더 높음 - 높이를 기준으로 맞춤
+      drawWidth = height * sourceAspect;
+      offsetX = (width - drawWidth) / 2;
+    }
+
+    // 원본 캔버스를 비율을 유지하면서 썸네일 크기로 복사
+    tempCtx.drawImage(canvas, 0, 0, canvas.width, canvas.height, offsetX, offsetY, drawWidth, drawHeight);
     
     // base64 이미지로 변환
     return tempCanvas.toDataURL('image/png', quality);
