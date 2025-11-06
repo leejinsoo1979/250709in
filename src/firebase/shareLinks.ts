@@ -108,12 +108,18 @@ export async function createShareLink(
       createdByName: userName,
       permission,
       expiresAt,
-      password,
       usageCount: 0,
-      maxUsage,
       createdAt: Timestamp.now(),
       isActive: true,
     };
+
+    // password와 maxUsage는 값이 있을 때만 추가
+    if (password !== undefined) {
+      shareLink.password = password;
+    }
+    if (maxUsage !== undefined) {
+      shareLink.maxUsage = maxUsage;
+    }
 
     // Firestore에 저장
     await setDoc(doc(db, 'shareLinks', linkId), shareLink);
