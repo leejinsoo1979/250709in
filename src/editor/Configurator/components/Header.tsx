@@ -20,13 +20,19 @@ import { useHistoryStore } from '@/store/historyStore';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
 
-// Perspective Cube Icon (역원근 - 아래가 좁은 큐브)
+// Perspective Cube Icon (원근 투영 큐브)
 const PerspectiveCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-    <path d="M12 2 L20 7 L20 17 L12 22 L4 17 L4 7 Z" strokeLinejoin="round" />
-    <path d="M12 2 L12 22" strokeDasharray="2 2" />
-    <path d="M4 7 L12 12 L20 7" />
-    <path d="M12 12 L12 22" />
+    {/* 앞면 정사각형 */}
+    <path d="M6 8 L6 18 L16 18 L16 8 Z" strokeLinejoin="round" />
+    {/* 상단 면 (마름모) */}
+    <path d="M6 8 L11 4 L21 4 L16 8 Z" strokeLinejoin="round" />
+    {/* 우측 면 (평행사변형) */}
+    <path d="M16 8 L21 4 L21 14 L16 18 Z" strokeLinejoin="round" />
+    {/* 내부 점선 */}
+    <path d="M11 4 L11 14" strokeDasharray="2 2" />
+    <path d="M11 14 L16 18" strokeDasharray="2 2" />
+    <path d="M11 14 L6 18" strokeDasharray="2 2" />
   </svg>
 );
 
