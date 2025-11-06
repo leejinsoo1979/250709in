@@ -360,7 +360,25 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
         {/* 조절발통 (네 모서리) - 띄움 배치 시에는 렌더링하지 않음 */}
         {(() => {
           const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
-          return !isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
+          const shouldHide = isFloating || (lowerSectionTopOffset && lowerSectionTopOffset > 0);
+
+          console.log('🦶 [DualType1 조절발 체크]', {
+            moduleId: moduleData.id,
+            isFloating,
+            lowerSectionTopOffset,
+            shouldHide,
+            placementType: spaceInfo?.baseConfig?.placementType,
+            showFurniture,
+            isDragging
+          });
+
+          if (shouldHide) {
+            console.log('  ✅ 조절발 숨김');
+            return null;
+          }
+
+          console.log('  ❌ 조절발 렌더링!');
+          return (
             <AdjustableFootsRenderer
               width={width}
               depth={depth}

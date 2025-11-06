@@ -231,21 +231,41 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
           )}
 
           {/* 조절발통 (네 모서리) - 띄움 배치 시에는 렌더링하지 않음 */}
-          {!isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
-            <AdjustableFootsRenderer
-              width={width}
-              depth={depth}
-              yOffset={-height / 2}
-              backZOffset={sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) : 0}
-              renderMode={renderMode}
-              isHighlighted={false}
-              isFloating={isFloating}
-              baseHeight={spaceInfo?.baseConfig?.height || 65}
-              baseDepth={spaceInfo?.baseConfig?.depth || 0}
-              viewMode={viewMode}
-              view2DDirection={view2DDirection}
-            />
-          )}
+          {(() => {
+            const shouldHide = isFloating || (lowerSectionTopOffset && lowerSectionTopOffset > 0);
+
+            console.log('🦶 [SingleType4 조절발 체크]', {
+              moduleId: moduleData.id,
+              isFloating,
+              lowerSectionTopOffset,
+              shouldHide,
+              placementType: spaceInfo?.baseConfig?.placementType,
+              showFurniture,
+              isDragging
+            });
+
+            if (shouldHide) {
+              console.log('  ✅ 조절발 숨김');
+              return null;
+            }
+
+            console.log('  ❌ 조절발 렌더링!');
+            return (
+              <AdjustableFootsRenderer
+                width={width}
+                depth={depth}
+                yOffset={-height / 2}
+                backZOffset={sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) : 0}
+                renderMode={renderMode}
+                isHighlighted={false}
+                isFloating={isFloating}
+                baseHeight={spaceInfo?.baseConfig?.height || 65}
+                baseDepth={spaceInfo?.baseConfig?.depth || 0}
+                viewMode={viewMode}
+                view2DDirection={view2DDirection}
+              />
+            );
+          })()}
         </BaseFurnitureShell>
       )}
       
