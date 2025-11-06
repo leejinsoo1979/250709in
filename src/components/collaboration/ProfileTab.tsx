@@ -18,14 +18,18 @@ import { signOutUser, changePassword, deleteAccount } from '../../firebase/auth'
 import { useNavigate } from 'react-router-dom';
 import styles from './CollaborationTabs.module.css';
 
-const ProfileTab: React.FC = () => {
+interface ProfileTabProps {
+  initialSection?: 'profile' | 'notifications' | 'privacy' | 'account' | 'subscription' | 'security';
+}
+
+const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<'profile' | 'notifications' | 'privacy' | 'account' | 'subscription' | 'security'>('profile');
+  const [activeSection, setActiveSection] = useState<'profile' | 'notifications' | 'privacy' | 'account' | 'subscription' | 'security'>(initialSection);
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -139,24 +143,40 @@ const ProfileTab: React.FC = () => {
 
   // 프로필 정보 저장
   const handleSaveProfile = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
     setSaving(true);
-    
+
     try {
-      const { error } = await updateUserProfile({
+      console.log('💾 프로필 저장 시작...');
+      const updates = {
         displayName: displayName.trim() || undefined,
         bio: bio.trim() || undefined,
         company: company.trim() || undefined,
         website: website.trim() || undefined,
         location: location.trim() || undefined
-      });
-      
+      };
+
+      console.log('📤 업데이트할 데이터:', updates);
+
+      const { error } = await updateUserProfile(updates);
+
       if (error) {
+        console.error('❌ 프로필 저장 실패:', error);
         alert(error);
       } else {
+        console.log('✅ 프로필 저장 성공');
         alert('프로필이 저장되었습니다.');
-        loadProfile(); // 새로고침
+        // 프로필 새로고침
+        await loadProfile();
+        // 페이지 새로고침으로 Auth 상태 동기화
+        window.location.reload();
       }
     } catch (err) {
+      console.error('❌ 프로필 저장 예외:', err);
       alert('프로필 저장 중 오류가 발생했습니다.');
     } finally {
       setSaving(false);

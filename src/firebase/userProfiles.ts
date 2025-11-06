@@ -1,18 +1,19 @@
-import { 
-  collection, 
-  doc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
-  where, 
-  orderBy, 
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  orderBy,
   serverTimestamp,
   Timestamp,
   setDoc
 } from 'firebase/firestore';
-import { db } from './config';
+import { updateProfile } from 'firebase/auth';
+import { db, auth } from './config';
 import { getCurrentUserAsync } from './auth';
 import { UserProfile } from './types';
 
@@ -52,22 +53,35 @@ export const createOrUpdateUserProfile = async (
       updatedAt: serverTimestamp() as Timestamp
     };
 
+    // displayName이 변경되면 Firebase Auth 프로필도 업데이트
+    if (profileData.displayName !== undefined && user) {
+      console.log('🔄 Firebase Auth 프로필 업데이트:', profileData.displayName);
+      await updateProfile(user, {
+        displayName: profileData.displayName
+      });
+      console.log('✅ Firebase Auth 프로필 업데이트 완료');
+    }
+
     if (existingProfile.exists()) {
       // 기존 프로필 업데이트
       const updateData = {
         ...profileData,
         updatedAt: serverTimestamp()
       };
-      
+
+      console.log('🔄 Firestore 프로필 업데이트:', updateData);
       await updateDoc(profileRef, updateData);
+      console.log('✅ Firestore 프로필 업데이트 완료');
     } else {
       // 새 프로필 생성
       const newProfile = {
         ...defaultProfile,
         ...profileData
       };
-      
+
+      console.log('🔄 새 Firestore 프로필 생성:', newProfile);
       await setDoc(profileRef, newProfile);
+      console.log('✅ 새 Firestore 프로필 생성 완료');
     }
 
     return { error: null };
@@ -138,24 +152,40 @@ export const updateUserProfile = async (
       return { error: '로그인이 필요합니다.' };
     }
 
+    console.log('🔄 프로필 업데이트 시작:', updates);
+
     const profileRef = doc(db, USER_PROFILES_COLLECTION, user.uid);
-    
+
     // 프로필 존재 확인
     const profileSnap = await getDoc(profileRef);
     if (!profileSnap.exists()) {
+      console.log('⚠️ 프로필이 존재하지 않음 - 새로 생성');
       // 프로필이 없으면 생성
       return await createOrUpdateUserProfile(updates);
     }
 
+    // displayName이 변경되면 Firebase Auth 프로필도 업데이트
+    if (updates.displayName !== undefined && user) {
+      console.log('🔄 Firebase Auth 프로필 업데이트:', updates.displayName);
+      await updateProfile(user, {
+        displayName: updates.displayName
+      });
+      console.log('✅ Firebase Auth 프로필 업데이트 완료');
+    }
+
+    // Firestore 프로필 업데이트
     const updateData = {
       ...updates,
       updatedAt: serverTimestamp()
     };
 
+    console.log('🔄 Firestore 프로필 업데이트:', updateData);
     await updateDoc(profileRef, updateData);
+    console.log('✅ Firestore 프로필 업데이트 완료');
+
     return { error: null };
   } catch (error) {
-    console.error('사용자 프로필 업데이트 에러:', error);
+    console.error('❌ 사용자 프로필 업데이트 에러:', error);
     return { error: '사용자 프로필 업데이트 중 오류가 발생했습니다.' };
   }
 };
@@ -264,17 +294,27 @@ export const updateNotificationSettings = async (settings: {
       return { error: '로그인이 필요합니다.' };
     }
 
+    console.log('🔄 알림 설정 업데이트 시작:', settings);
+
     const profileRef = doc(db, USER_PROFILES_COLLECTION, user.uid);
-    
+
+    // 프로필 존재 확인
+    const profileSnap = await getDoc(profileRef);
+    if (!profileSnap.exists()) {
+      console.log('⚠️ 프로필이 존재하지 않음 - 생성 필요');
+      return await createOrUpdateUserProfile(settings);
+    }
+
     const updateData = {
       ...settings,
       updatedAt: serverTimestamp()
     };
 
     await updateDoc(profileRef, updateData);
+    console.log('✅ 알림 설정 업데이트 완료');
     return { error: null };
   } catch (error) {
-    console.error('알림 설정 업데이트 에러:', error);
+    console.error('❌ 알림 설정 업데이트 에러:', error);
     return { error: '알림 설정 업데이트 중 오류가 발생했습니다.' };
   }
 };
@@ -290,17 +330,27 @@ export const updatePrivacySettings = async (settings: {
       return { error: '로그인이 필요합니다.' };
     }
 
+    console.log('🔄 개인정보 설정 업데이트 시작:', settings);
+
     const profileRef = doc(db, USER_PROFILES_COLLECTION, user.uid);
-    
+
+    // 프로필 존재 확인
+    const profileSnap = await getDoc(profileRef);
+    if (!profileSnap.exists()) {
+      console.log('⚠️ 프로필이 존재하지 않음 - 생성 필요');
+      return await createOrUpdateUserProfile(settings);
+    }
+
     const updateData = {
       ...settings,
       updatedAt: serverTimestamp()
     };
 
     await updateDoc(profileRef, updateData);
+    console.log('✅ 개인정보 설정 업데이트 완료');
     return { error: null };
   } catch (error) {
-    console.error('개인정보 설정 업데이트 에러:', error);
+    console.error('❌ 개인정보 설정 업데이트 에러:', error);
     return { error: '개인정보 설정 업데이트 중 오류가 발생했습니다.' };
   }
 };
