@@ -4,6 +4,7 @@ import styles from './Header.module.css';
 import { Settings, Menu, User, ChevronDown, Camera, Undo, Redo } from 'lucide-react';
 import { FaRegKeyboard } from 'react-icons/fa';
 import { SiConvertio } from 'react-icons/si';
+import { TbTableExport } from 'react-icons/tb';
 import HelpModal from './HelpModal';
 import SettingsPanel from '@/components/common/SettingsPanel';
 import Logo from '@/components/common/Logo';
@@ -73,6 +74,14 @@ const Header: React.FC<HeaderProps> = ({
   isFileTreeOpen,
   onExportPDF
 }) => {
+  console.log('🎯 Header 컴포넌트 렌더링:', {
+    title,
+    projectName,
+    designFileName,
+    projectId,
+    designFileId
+  });
+
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t, currentLanguage } = useTranslation();
@@ -496,18 +505,14 @@ const Header: React.FC<HeaderProps> = ({
         <div className={styles.rightActions}>
           {/* 내보내기 버튼 */}
           {onExportPDF && (
-            <button 
-              className={styles.convertButton} 
+            <button
+              className={styles.convertButton}
               onClick={() => {
                 console.log('내보내기 버튼 클릭됨');
                 onExportPDF(); // PDF 핸들러가 실제로는 ConvertModal을 열어줌
               }}
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '4px' }}>
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2"/>
-                <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2"/>
-                <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2"/>
-              </svg>
+              <TbTableExport size={20} style={{ marginRight: '4px' }} />
               {t('export.title')}
             </button>
           )}
