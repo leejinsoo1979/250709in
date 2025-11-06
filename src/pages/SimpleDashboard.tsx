@@ -2410,15 +2410,25 @@ const SimpleDashboard: React.FC = () => {
             </div>
             
             {/* 프로필 영역은 항상 표시 - user가 없어도 기본 아이콘 표시 */}
-            <div className={styles.userProfile}>
+            <div
+              className={styles.userProfile}
+              onClick={() => {
+                setActiveMenu('profile');
+                setBreadcrumbPath([]);
+                setSelectedProjectId(null);
+                setCurrentFolderId(null);
+                navigate('/dashboard/profile');
+              }}
+              style={{ cursor: 'pointer' }}
+            >
               <div className={styles.userProfileAvatar}>
                 {user?.photoURL && !headerImageError ? (
-                  <img 
-                    src={user.photoURL} 
-                    alt="프로필" 
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
+                  <img
+                    src={user.photoURL}
+                    alt="프로필"
+                    style={{
+                      width: '100%',
+                      height: '100%',
                       borderRadius: '50%',
                       objectFit: 'cover'
                     }}
