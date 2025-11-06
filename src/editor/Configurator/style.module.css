@@ -1,3 +1,6 @@
+/* Import responsive styles */
+@import './responsive.module.css';
+
 /* 메인 컨테이너 */
 .configurator {
   display: flex;
@@ -2062,5 +2065,35 @@
 .removeButton:hover {
   background: var(--theme-danger);
   color: white;
+}
+
+/* ================================
+   Mobile Landscape (max-width: 767px) - Optimized Desktop Layout
+   ================================ */
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  /* 좁은 사이드바 컨텐츠 */
+  .sidebarContent {
+    left: 48px !important; /* Sidebar 너비에 맞춤 */
+    width: 192px !important; /* 좁게 */
+  }
+
+  /* 뷰어 영역 조정 */
+  .viewerArea {
+    left: 240px !important; /* 48px (sidebar) + 192px (sidebarContent) */
+    right: 0 !important; /* 우측 패널 없음 */
+  }
+
+  /* 우측 패널 완전히 숨김 */
+  .rightPanelContainer {
+    display: none !important;
+  }
+
+  .rightPanelToggle {
+    display: none !important;
+  }
+
+  .rightPanel {
+    display: none !important;
+  }
 }
 

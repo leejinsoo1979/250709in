@@ -343,55 +343,85 @@
   box-shadow: 0 4px 12px var(--theme-primary-light);
 }
 
-/* 반응형 디자인 */
-@media (max-width: 768px) {
+/* 반응형 디자인 - Portrait Only */
+@media (max-width: 768px) and (orientation: portrait) {
   .sidebar {
     width: 56px;
   }
-  
+
   .tabButton {
     padding: 10px 6px;
     margin: 0 4px;
   }
-  
+
   .tabLabel {
     font-size: 11px;
   }
-  
+
   .userSection {
     padding: 12px;
   }
-  
+
   .avatar {
     width: 36px;
     height: 36px;
   }
-  
+
   .onlineIndicator {
     width: 14px;
     height: 14px;
     right: 4px;
   }
-  
+
   .modalContent {
     padding: 24px;
     margin: 0 20px;
   }
-  
+
   .modalTitle {
     font-size: 18px;
   }
-  
+
   .modalDescription {
     font-size: 14px;
   }
-  
+
   .modalActions {
     flex-direction: column-reverse;
   }
-  
+
   .modalButtonCancel,
   .modalButtonConfirm {
     width: 100%;
+  }
+}
+
+/* 모바일 Landscape - 데스크탑 스타일 유지 */
+@media (max-width: 767px) and (orientation: landscape) {
+  .sidebar {
+    width: 48px; /* 좁게 */
+  }
+
+  .tabButton {
+    padding: 8px 4px;
+    margin: 0 4px;
+  }
+
+  .tabLabel {
+    font-size: 10px;
+  }
+
+  .userSection {
+    padding: 8px;
+  }
+
+  .avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .onlineIndicator {
+    width: 12px;
+    height: 12px;
   }
 }
