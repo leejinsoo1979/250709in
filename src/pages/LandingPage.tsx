@@ -5,6 +5,7 @@ import styles from './LandingPage.module.css';
 export default function LandingPage() {
   const navigate = useNavigate();
   const [scrollY, setScrollY] = useState(0);
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -208,8 +209,190 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing Section */}
+      <section id="pricing" className={styles.pricing}>
+        <div className={styles.pricingContent}>
+          <h2 className={styles.sectionTitle}>Simple, transparent pricing</h2>
+          <p className={styles.sectionSubtitle}>
+            Choose the plan that's right for you
+          </p>
+
+          {/* Billing Toggle */}
+          <div className={styles.billingToggle}>
+            <span className={billingCycle === 'monthly' ? styles.active : ''}>Monthly</span>
+            <button
+              className={styles.toggleSwitch}
+              onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
+              aria-label="Toggle billing cycle"
+            >
+              <span className={billingCycle === 'yearly' ? styles.toggleActive : ''}></span>
+            </button>
+            <span className={billingCycle === 'yearly' ? styles.active : ''}>
+              Yearly
+              <span className={styles.discount}>Save 20%</span>
+            </span>
+          </div>
+
+          {/* Pricing Cards */}
+          <div className={styles.pricingGrid}>
+            {/* Free Plan */}
+            <div className={styles.pricingCard}>
+              <div className={styles.pricingHeader}>
+                <h3 className={styles.planName}>Free</h3>
+                <div className={styles.planPrice}>
+                  <span className={styles.currency}>$</span>
+                  <span className={styles.amount}>0</span>
+                  <span className={styles.period}>/month</span>
+                </div>
+                <p className={styles.planDesc}>Perfect for trying out</p>
+              </div>
+              <ul className={styles.featureList}>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Up to 3 projects
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Basic 3D editor
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Standard materials
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Community support
+                </li>
+              </ul>
+              <button onClick={() => navigate('/dashboard')} className={styles.planButton}>
+                Get Started
+              </button>
+            </div>
+
+            {/* Pro Plan */}
+            <div className={`${styles.pricingCard} ${styles.featured}`}>
+              <div className={styles.popularBadge}>Most Popular</div>
+              <div className={styles.pricingHeader}>
+                <h3 className={styles.planName}>Pro</h3>
+                <div className={styles.planPrice}>
+                  <span className={styles.currency}>$</span>
+                  <span className={styles.amount}>
+                    {billingCycle === 'monthly' ? '29' : '24'}
+                  </span>
+                  <span className={styles.period}>/month</span>
+                </div>
+                <p className={styles.planDesc}>For professional designers</p>
+              </div>
+              <ul className={styles.featureList}>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Unlimited projects
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Advanced 3D editor
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Premium materials
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  DXF export
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Priority support
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Real-time collaboration
+                </li>
+              </ul>
+              <button onClick={() => navigate('/dashboard')} className={styles.planButtonFeatured}>
+                Start Free Trial
+              </button>
+            </div>
+
+            {/* Enterprise Plan */}
+            <div className={styles.pricingCard}>
+              <div className={styles.pricingHeader}>
+                <h3 className={styles.planName}>Enterprise</h3>
+                <div className={styles.planPrice}>
+                  <span className={styles.currency}>$</span>
+                  <span className={styles.amount}>99</span>
+                  <span className={styles.period}>/month</span>
+                </div>
+                <p className={styles.planDesc}>For large teams</p>
+              </div>
+              <ul className={styles.featureList}>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Everything in Pro
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Unlimited team members
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Custom integrations
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Advanced analytics
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  Dedicated support
+                </li>
+                <li className={styles.featureItem}>
+                  <svg className={styles.checkIcon} viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                  SLA guarantee
+                </li>
+              </ul>
+              <button onClick={() => navigate('/dashboard')} className={styles.planButton}>
+                Contact Sales
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
-      <section id="pricing" className={styles.cta}>
+      <section className={styles.cta}>
         <div className={styles.ctaContent}>
           <h2 className={styles.ctaTitle}>Ready to start designing?</h2>
           <p className={styles.ctaSubtitle}>
