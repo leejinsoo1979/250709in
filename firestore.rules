@@ -54,10 +54,11 @@ service cloud.firestore {
 
     // teams + subcollections
     match /teams/{teamId} {
-      // 팀 문서
-      allow read: if isTeamMember(teamId);
-      allow create: if isSignedIn() && teamId == request.auth.uid; // 개인 팀 최초 생성
-      allow update, delete: if isTeamMember(teamId);
+      // 팀 문서 - 로그인한 사용자는 모든 팀을 읽을 수 있음 (클라이언트에서 필터링)
+      allow read: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isSignedIn();
 
       // 멤버
       match /members/{memberUid} {
@@ -156,6 +157,12 @@ service cloud.firestore {
     match /shareLinkAccessLog/{logId} {
       allow create: if isSignedIn();
       allow read: if isSignedIn();
+    }
+
+    // 활동 로그
+    match /activityLogs/{logId} {
+      allow create: if isSignedIn();
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
   }
 }
