@@ -1851,14 +1851,41 @@ const SimpleDashboard: React.FC = () => {
 
   const handleShareItem = () => {
     if (!moreMenu) return;
-    
+
     if (moreMenu.itemType === 'project') {
+      // 프로젝트 공유
       shareProject(moreMenu.itemId);
-    } else {
-      // 폴더나 파일 공유
-      alert('폴더/파일 공유 기능은 준비 중입니다.');
+    } else if (moreMenu.itemType === 'design') {
+      // 디자인 파일이 속한 프로젝트 찾기
+      let designProjectId: string | null = null;
+
+      // projectDesignFiles에서 해당 디자인 파일이 속한 프로젝트 찾기
+      for (const [projectId, designFiles] of Object.entries(projectDesignFiles)) {
+        if (designFiles.some(df => df.id === moreMenu.itemId)) {
+          designProjectId = projectId;
+          break;
+        }
+      }
+
+      // 또는 현재 선택된 프로젝트 사용
+      if (!designProjectId && selectedProjectId) {
+        designProjectId = selectedProjectId;
+      }
+
+      if (designProjectId) {
+        shareProject(designProjectId);
+      } else {
+        alert('프로젝트 정보를 찾을 수 없습니다.');
+      }
+    } else if (moreMenu.itemType === 'folder') {
+      // 폴더가 속한 프로젝트 공유
+      if (selectedProjectId) {
+        shareProject(selectedProjectId);
+      } else {
+        alert('프로젝트 정보를 찾을 수 없습니다.');
+      }
     }
-    
+
     closeMoreMenu();
   };
 
