@@ -109,13 +109,13 @@ service cloud.firestore {
       // 공유 링크를 위해 읽기는 모두 허용, 쓰기는 소유자만
       allow read: if true;
       allow write: if isSignedIn() &&
-        (request.auth.uid == (request.resource.data.userId ?? resource.data.userId));
+        (request.auth.uid == (request.resource.data.userId != null ? request.resource.data.userId : resource.data.userId));
     }
     match /designFiles/{id} {
       // 공유 링크를 위해 읽기는 모두 허용, 쓰기는 소유자만
       allow read: if true;
       allow write: if isSignedIn() &&
-        (request.auth.uid == (request.resource.data.userId ?? resource.data.userId));
+        (request.auth.uid == (request.resource.data.userId != null ? request.resource.data.userId : resource.data.userId));
     }
   }
 }
