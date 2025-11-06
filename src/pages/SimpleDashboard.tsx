@@ -36,17 +36,38 @@ const ProjectIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
 const SimpleDashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
-  
-  // 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트
+  const { user, loading } = useAuth();
+
+  // 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트 (로딩 완료 후에만)
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       console.log('🔒 사용자가 로그인되지 않음 - 로그인 페이지로 리다이렉트');
       navigate('/auth', { replace: true });
     }
-  }, [user, navigate]);
-  
-  // 로그인되지 않은 상태에서는 아무것도 렌더링하지 않음
+  }, [user, loading, navigate]);
+
+  // 로딩 중이거나 로그인되지 않은 상태에서는 로딩 표시
+  if (loading) {
+    return (
+      <div style={{
+        width: '100vw',
+        height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'var(--theme-background, #ffffff)'
+      }}>
+        <div style={{
+          textAlign: 'center',
+          color: 'var(--theme-text, #000000)'
+        }}>
+          <div style={{ marginBottom: '16px' }}>로딩 중...</div>
+        </div>
+      </div>
+    );
+  }
+
+  // 로딩이 완료되었지만 사용자가 없는 경우
   if (!user) {
     return null;
   }
