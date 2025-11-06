@@ -534,7 +534,7 @@ const Header: React.FC<HeaderProps> = ({
                   className={styles.dropdownItem}
                   onClick={() => {
                     console.log('CNC 옵티마이저 버튼 클릭됨');
-                    
+
                     // 현재 전체 상태를 sessionStorage에 저장
                     const currentState = {
                       projectId,
@@ -546,13 +546,21 @@ const Header: React.FC<HeaderProps> = ({
                     };
                     sessionStorage.setItem('configurator_state_backup', JSON.stringify(currentState));
                     console.log('💾 Configurator 상태 백업 완료');
-                    
-                    // 프로젝트 ID와 디자인 파일 ID를 URL 파라미터로 전달
+
+                    // 프로젝트 ID, 디자인 파일 ID, 디자인 파일명을 URL 파라미터로 전달
                     const params = new URLSearchParams();
                     if (projectId) params.set('projectId', projectId);
                     if (designFileId) params.set('designFileId', designFileId);
+                    if (designFileName) params.set('designFileName', encodeURIComponent(designFileName));
                     const queryString = params.toString();
-                    
+
+                    console.log('🔗 CNC Optimizer로 전달하는 파라미터:', {
+                      projectId,
+                      designFileId,
+                      designFileName,
+                      queryString
+                    });
+
                     // state로 현재 페이지 정보 전달
                     navigate(`/cnc-optimizer${queryString ? `?${queryString}` : ''}`, {
                       state: { fromConfigurator: true }

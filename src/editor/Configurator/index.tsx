@@ -1089,6 +1089,7 @@ const Configurator: React.FC = () => {
   useEffect(() => {
     const projectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
     const designFileId = searchParams.get('designFileId');
+    const urlDesignFileName = searchParams.get('designFileName') || searchParams.get('fileName');
     const mode = searchParams.get('mode');
     const skipLoad = searchParams.get('skipLoad') === 'true';
     const isNewDesign = searchParams.get('design') === 'new';
@@ -1096,10 +1097,18 @@ const Configurator: React.FC = () => {
     console.log('🔍 useEffect 실행:', {
       urlProjectId: projectId,
       urlDesignFileId: designFileId,
+      urlDesignFileName,
       currentProjectId,
       currentDesignFileId,
       placedModulesCount: placedModules.length
     });
+
+    // URL에 designFileName이 있으면 즉시 설정 (최우선순위)
+    if (urlDesignFileName) {
+      const decodedFileName = decodeURIComponent(urlDesignFileName);
+      console.log('🔗 URL에서 디자인파일명 바로 설정:', decodedFileName);
+      setCurrentDesignFileName(decodedFileName);
+    }
 
     // CNC에서 돌아오는 경우 - 이미 데이터가 로드되어 있으면 재로드하지 않음
     // 상태 업데이트 전에 먼저 체크해야 함!
@@ -1266,9 +1275,22 @@ const Configurator: React.FC = () => {
     }
   }, [searchParams]);
 
-  // 폴더에서 실제 디자인파일명 찾기
+  // 폴더에서 실제 디자인파일명 찾기 (URL에 designFileId나 designFileName이 없을 때만)
   useEffect(() => {
     const loadActualDesignFileName = async () => {
+      // URL 파라미터 확인
+      const urlDesignFileName = searchParams.get('designFileName') || searchParams.get('fileName');
+      const urlDesignFileId = searchParams.get('designFileId');
+
+      // URL에 디자인파일 정보가 있으면 폴더 lookup 완전히 skip
+      if (urlDesignFileName || urlDesignFileId) {
+        console.log('⏭️ URL에 디자인파일 정보가 있어서 폴더 lookup skip:', {
+          urlDesignFileName,
+          urlDesignFileId
+        });
+        return;
+      }
+
       if (!currentProjectId || !user) return;
 
       // 이미 디자인파일명이 설정되어 있으면 폴더에서 찾지 않음
@@ -1296,19 +1318,14 @@ const Configurator: React.FC = () => {
           }
         }
 
-        // 폴더에 디자인파일이 없으면 '새로운 디자인' 유지 (프로젝트명 사용하지 않음)
+        // 폴더에 디자인파일이 없으면 '새로운 디자인' 유지
 
       } catch (error) {
         console.error('폴더 데이터 로드 실패:', error);
       }
     };
 
-    // URL에 디자인파일명과 디자인파일ID가 모두 없을 때만 폴더에서 찾기
-    const urlDesignFileName = searchParams.get('designFileName') || searchParams.get('fileName');
-    const urlDesignFileId = searchParams.get('designFileId');
-    if (!urlDesignFileName && !urlDesignFileId && currentProjectId && user) {
-      loadActualDesignFileName();
-    }
+    loadActualDesignFileName();
   }, [currentProjectId, user, searchParams, currentDesignFileName]);
 
   // 공간 변경 시 가구 재배치 로직 복구

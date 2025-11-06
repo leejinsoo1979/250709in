@@ -56,8 +56,17 @@ function PageInner(){
         allParams: Object.fromEntries(searchParams.entries())
       });
 
+      // 1순위: URL 파라미터에 designFileName이 있으면 바로 사용
+      if (fileName) {
+        const decodedName = decodeURIComponent(fileName);
+        console.log('✅ URL 파라미터에서 디자인파일명 설정 (우선순위 1):', decodedName);
+        setDesignFileName(decodedName);
+        return;
+      }
+
+      // 2순위: designFileId로 Firebase에서 로드
       if (designFileId) {
-        console.log('📂 designFileId로 디자인파일 로드 시작:', designFileId);
+        console.log('📂 designFileId로 디자인파일 로드 시작 (우선순위 2):', designFileId);
         try {
           const { getDesignFileById } = await import('@/firebase/projects');
           const { designFile, error } = await getDesignFileById(designFileId);
@@ -82,10 +91,6 @@ function PageInner(){
         } catch (err) {
           console.error('❌ 디자인파일 로드 중 에러:', err);
         }
-      } else if (fileName) {
-        const decodedName = decodeURIComponent(fileName);
-        console.log('✅ URL 파라미터에서 디자인파일명 설정:', decodedName);
-        setDesignFileName(decodedName);
       } else {
         console.log('⚠️ URL에 디자인파일 정보 없음');
       }
