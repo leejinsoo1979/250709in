@@ -1050,15 +1050,30 @@ const SimpleDashboard: React.FC = () => {
   };
 
   const displayedItems = useMemo(() => {
-    const items = getDisplayedItems();
+    let items = getDisplayedItems();
+
+    // 검색어로 필터링
+    if (searchTerm.trim()) {
+      const lowerSearch = searchTerm.toLowerCase().trim();
+      items = items.filter(item => {
+        // '디자인 생성' 카드와 로딩 카드는 필터링하지 않음
+        if (item.type === 'new-design' || item.type === 'loading') {
+          return true;
+        }
+        // 프로젝트, 폴더, 디자인 파일 이름으로 검색
+        return item.name?.toLowerCase().includes(lowerSearch);
+      });
+    }
+
     console.log('💡 displayedItems 계산 완료:', {
       itemsCount: items.length,
       selectedProjectId,
       projectDesignFilesKeys: Object.keys(projectDesignFiles),
-      hasDesignFiles: projectDesignFiles[selectedProjectId]?.length > 0
+      hasDesignFiles: projectDesignFiles[selectedProjectId]?.length > 0,
+      searchTerm
     });
     return items;
-  }, [selectedProjectId, allProjects, activeMenu, currentFolderId, folders, projectDesignFiles]);
+  }, [selectedProjectId, allProjects, activeMenu, currentFolderId, folders, projectDesignFiles, searchTerm]);
   
   console.log('💡 displayedItems 최종 결과:', displayedItems);
   
@@ -2085,10 +2100,9 @@ const SimpleDashboard: React.FC = () => {
         
         {/* 네비게이션 메뉴 */}
         <nav className={styles.navSection}>
-          <div 
+          <div
             className={`${styles.navItem} ${activeMenu === 'all' ? styles.active : ''}`}
             onClick={() => {
-              navigate('/dashboard');
               setActiveMenu('all');
               setSelectedProjectId(null);
               setBreadcrumbPath(['전체 프로젝트']);
@@ -2100,12 +2114,12 @@ const SimpleDashboard: React.FC = () => {
             <span>전체 프로젝트</span>
             <span className={styles.navItemCount}>{allProjects.length}</span>
           </div>
-          
-          
-          <div 
+
+
+          <div
             className={`${styles.navItem} ${activeMenu === 'shared' ? styles.active : ''}`}
             onClick={() => {
-              navigate('/dashboard/shared');
+              setActiveMenu('shared');
               setSelectedProjectId(null);
               setBreadcrumbPath([]);
             }}
@@ -2116,11 +2130,11 @@ const SimpleDashboard: React.FC = () => {
             <span>공유 프로젝트</span>
             <span className={styles.navItemCount}>{sharedProjects.length}</span>
           </div>
-          
-          <div 
+
+          <div
             className={`${styles.navItem} ${activeMenu === 'profile' ? styles.active : ''}`}
             onClick={() => {
-              navigate('/dashboard/profile');
+              setActiveMenu('profile');
               setBreadcrumbPath([]);
             }}
           >
@@ -2129,11 +2143,11 @@ const SimpleDashboard: React.FC = () => {
             </div>
             <span>내 정보 관리</span>
           </div>
-          
-          <div 
+
+          <div
             className={`${styles.navItem} ${activeMenu === 'team' ? styles.active : ''}`}
             onClick={() => {
-              navigate('/dashboard/team');
+              setActiveMenu('team');
               setBreadcrumbPath([]);
             }}
           >
@@ -2143,10 +2157,11 @@ const SimpleDashboard: React.FC = () => {
             <span>팀 관리</span>
           </div>
           
-          <div 
+          <div
             className={`${styles.navItem} ${activeMenu === 'trash' ? styles.active : ''}`}
             onClick={() => {
-              navigate('/dashboard/trash');
+              console.log('🗑️ 휴지통 클릭');
+              setActiveMenu('trash');
               setSelectedProjectId(null);
               setBreadcrumbPath([]);
             }}
