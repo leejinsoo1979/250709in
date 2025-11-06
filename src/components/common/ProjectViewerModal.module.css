@@ -48,20 +48,24 @@
   border-bottom: 1px solid #e5e7eb;
   background: #ffffff;
   position: relative;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .headerLeft {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1;
+  min-width: 200px;
 }
 
 .titleRow {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex-wrap: wrap;
+  justify-content: center;
+  width: 100%;
 }
 
 .modalTitle {

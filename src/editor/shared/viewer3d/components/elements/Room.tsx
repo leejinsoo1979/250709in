@@ -44,6 +44,7 @@ interface RoomProps {
   activeZone?: 'normal' | 'dropped'; // 활성 영역
   showFurniture?: boolean; // 가구 본체 표시 여부
   hideEdges?: boolean; // 외곽선 숨김 (PDF 캡처용)
+  cameraMode?: 'perspective' | 'orthographic'; // 카메라 모드
 }
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
@@ -219,7 +220,8 @@ const Room: React.FC<RoomProps> = ({
   renderMode: renderModeProp,
   activeZone,
   showFurniture,
-  hideEdges = false
+  hideEdges = false,
+  cameraMode = 'perspective'
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
@@ -274,42 +276,18 @@ const Room: React.FC<RoomProps> = ({
         droppedWallMaterialRef.current.uniforms.opacity.value = 1;
       }
     } else if (viewMode === '3D' && cameraMode === 'orthographic') {
-      // orthographic 모드에서만 각도에 따른 투명도 적용
-      const cameraDirection = new THREE.Vector3();
-      camera.getWorldDirection(cameraDirection);
-      
-      // 각도 계산 - 카메라가 바라보는 방향
-      const angleY = Math.atan2(cameraDirection.x, cameraDirection.z);
-      const angleX = Math.atan2(cameraDirection.y, Math.sqrt(cameraDirection.x * cameraDirection.x + cameraDirection.z * cameraDirection.z));
-      
-      // 단내림 여부 확인
-      const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
-      const isLeftDropped = spaceInfo.droppedCeiling?.position === 'left';
-      const isRightDropped = spaceInfo.droppedCeiling?.position === 'right';
-      
-      // 벽이 카메라 반대편에 있을 때 투명하게
-      // 왼쪽 벽: 단내림이 있으면 불투명, 없으면 각도에 따라
-      const leftOpacity = (hasDroppedCeiling && isLeftDropped) ? 1 : (angleY > 0.2 ? 0.1 : 1);
-      
-      // 오른쪽 벽: 단내림이 있으면 불투명, 없으면 각도에 따라
-      const rightOpacity = (hasDroppedCeiling && isRightDropped) ? 1 : (angleY < -0.2 ? 0.1 : 1);
-      
-      // 천장: 카메라가 위에서 아래를 바라볼 때 투명 (angleX가 음수일 때)
-      const topOpacity = angleX < -0.1 ? 0.1 : 1;
-      
-      // ShaderMaterial의 uniform 업데이트
+      // orthographic 모드에서는 모든 그라데이션 메쉬 숨김
       if (leftWallMaterialRef.current && leftWallMaterialRef.current.uniforms) {
-        leftWallMaterialRef.current.uniforms.opacity.value = leftOpacity;
+        leftWallMaterialRef.current.uniforms.opacity.value = 0;
       }
       if (rightWallMaterialRef.current && rightWallMaterialRef.current.uniforms) {
-        rightWallMaterialRef.current.uniforms.opacity.value = rightOpacity;
+        rightWallMaterialRef.current.uniforms.opacity.value = 0;
       }
       if (topWallMaterialRef.current && topWallMaterialRef.current.uniforms) {
-        topWallMaterialRef.current.uniforms.opacity.value = topOpacity;
+        topWallMaterialRef.current.uniforms.opacity.value = 0;
       }
-      // 단내림 벽은 orthographic에서도 불투명하게 유지
       if (droppedWallMaterialRef.current && droppedWallMaterialRef.current.uniforms) {
-        droppedWallMaterialRef.current.uniforms.opacity.value = 1;
+        droppedWallMaterialRef.current.uniforms.opacity.value = 0;
       }
     }
   });

@@ -68,16 +68,17 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
     doorColor: '#E0E0E0'
   };
 
-  // 카메라 위치 계산
+  // 카메라 위치 계산 (읽기 전용 뷰어는 거리를 1.5배로 증가)
   const cameraPosition = useMemo(() => {
     if (!spaceConfig) {
-      return [0, 10, 20] as [number, number, number];
+      return [0, 10, 30] as [number, number, number];
     }
     const { width, height, depth = 1500 } = spaceConfig;
-    const distance = calculateOptimalDistance(width, height, depth, placedModules.length);
+    const baseDistance = calculateOptimalDistance(width, height, depth, placedModules.length);
+    const distance = baseDistance * 1.5; // 읽기 전용 뷰어에서는 1.5배 더 멀리 배치
     const centerX = 0;
     const centerY = mmToThreeUnits(height * 0.5);
-    
+
     return [centerX, centerY, distance] as [number, number, number];
   }, [spaceConfig?.width, spaceConfig?.height, spaceConfig?.depth, placedModules.length]);
 
@@ -146,15 +147,16 @@ const Space3DViewerReadOnly: React.FC<Space3DViewerReadOnlyProps> = ({
             <ambientLight intensity={viewMode === '2D' ? 0.8 : 0.5} color="#ffffff" />
             
             {/* Room 컴포넌트에 placedModules 전달 - 미리보기 모드에서는 치수와 가이드 숨김 */}
-            <Room 
-              spaceInfo={spaceConfig} 
-              viewMode={viewMode} 
-              materialConfig={materialConfig} 
+            <Room
+              spaceInfo={spaceConfig}
+              viewMode={viewMode}
+              materialConfig={materialConfig}
               showAll={false}  // 편집 아이콘들 숨김
               showFrame={true}  // 프레임은 표시
               showDimensions={false}  // 치수 숨김
               placedModules={placedModules}
               isReadOnly={true}  // 읽기 전용 모드
+              cameraMode={cameraMode}  // 카메라 모드 전달
             />
             
             {/* 미리보기 모드에서는 치수 표시 제거 */}
