@@ -6,6 +6,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { PaletteIcon, StructureIcon } from '@/components/common/Icons';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
 import { TbBoxAlignRight, TbBrandAsana } from 'react-icons/tb';
+import { PiShareNetworkLight } from "react-icons/pi";
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -208,8 +209,22 @@ const Sidebar: React.FC<SidebarProps> = ({
         ))}
       </div>
 
+      {/* 공유하기 버튼 */}
+      <div style={{ padding: '16px 16px 8px 16px', borderTop: '1px solid var(--theme-border)', display: 'flex', justifyContent: 'center' }}>
+        <button
+          className={styles.settingsButton}
+          title="공유하기"
+          onClick={() => {
+            // 공유하기 기능 (추후 구현)
+            alert('공유하기 기능은 준비 중입니다.');
+          }}
+        >
+          <PiShareNetworkLight size={20} />
+        </button>
+      </div>
+
       {/* 설정 버튼 */}
-      <div style={{ padding: '16px', borderTop: '1px solid var(--theme-border)', display: 'flex', justifyContent: 'center' }}>
+      <div style={{ padding: '8px 16px 16px 16px', display: 'flex', justifyContent: 'center' }}>
         <button
           className={styles.settingsButton}
           title="설정"
