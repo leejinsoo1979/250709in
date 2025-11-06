@@ -1,23 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { UserIcon, BellIcon, LockIcon, SaveIcon, CameraIcon, TrashIcon } from '../common/Icons';
+import { UserIcon, BellIcon, LockIcon, SaveIcon, CameraIcon, TrashIcon, SettingsIcon } from '../common/Icons';
+import { CreditCard, Shield, AlertTriangle, Mail, Key, LogOut } from 'lucide-react';
 import { UserProfile } from '../../firebase/types';
-import { 
-  getUserProfile, 
-  updateUserProfile, 
-  updateNotificationSettings, 
-  updatePrivacySettings 
+import {
+  getUserProfile,
+  updateUserProfile,
+  updateNotificationSettings,
+  updatePrivacySettings
 } from '../../firebase/userProfiles';
 import { uploadProfileImage, deleteProfileImage, compressImage } from '../../firebase/storage';
 import { useAuth } from '../../auth/AuthProvider';
+import { signOutUser } from '../../firebase/auth';
+import { useNavigate } from 'react-router-dom';
 import styles from './CollaborationTabs.module.css';
 
 const ProfileTab: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeSection, setActiveSection] = useState<'profile' | 'notifications' | 'privacy'>('profile');
+  const [activeSection, setActiveSection] = useState<'profile' | 'notifications' | 'privacy' | 'account' | 'subscription' | 'security'>('profile');
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -229,6 +233,27 @@ const ProfileTab: React.FC = () => {
           >
             <LockIcon size={16} />
             개인정보
+          </button>
+          <button
+            className={`${styles.sectionTab} ${activeSection === 'account' ? styles.active : ''}`}
+            onClick={() => setActiveSection('account')}
+          >
+            <SettingsIcon size={16} />
+            계정
+          </button>
+          <button
+            className={`${styles.sectionTab} ${activeSection === 'subscription' ? styles.active : ''}`}
+            onClick={() => setActiveSection('subscription')}
+          >
+            <CreditCard size={16} />
+            구독
+          </button>
+          <button
+            className={`${styles.sectionTab} ${activeSection === 'security' ? styles.active : ''}`}
+            onClick={() => setActiveSection('security')}
+          >
+            <Shield size={16} />
+            보안
           </button>
         </div>
       </div>
@@ -487,6 +512,189 @@ const ProfileTab: React.FC = () => {
                     <SaveIcon size={16} />
                     {saving ? '저장 중...' : '개인정보 설정 저장'}
                   </button>
+                </div>
+              </div>
+            )}
+
+            {/* 계정 설정 섹션 */}
+            {activeSection === 'account' && (
+              <div className={styles.accountSection}>
+                <h3>계정 설정</h3>
+                <p className={styles.sectionDescription}>
+                  계정 정보 및 인증 방법을 관리하세요.
+                </p>
+
+                <div className={styles.settingsGroup}>
+                  <div className={styles.settingItem}>
+                    <div className={styles.settingInfo}>
+                      <Mail size={20} />
+                      <div>
+                        <h4>이메일 주소</h4>
+                        <p>{user?.email}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.settingItem}>
+                    <div className={styles.settingInfo}>
+                      <Key size={20} />
+                      <div>
+                        <h4>비밀번호</h4>
+                        <p>마지막 변경: 30일 전</p>
+                      </div>
+                    </div>
+                    <button className={styles.secondaryButton}>
+                      비밀번호 변경
+                    </button>
+                  </div>
+
+                  <div className={styles.settingItem}>
+                    <div className={styles.settingInfo}>
+                      <div>
+                        <h4>연결된 계정</h4>
+                        <p>소셜 로그인 계정을 관리합니다.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className={styles.dangerZone}>
+                  <h4><AlertTriangle size={20} /> 위험 구역</h4>
+                  <div className={styles.dangerItem}>
+                    <div>
+                      <h5>계정 삭제</h5>
+                      <p>계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.</p>
+                    </div>
+                    <button className={styles.dangerButton}>
+                      계정 삭제
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* 구독 관리 섹션 */}
+            {activeSection === 'subscription' && (
+              <div className={styles.subscriptionSection}>
+                <h3>구독 관리</h3>
+                <p className={styles.sectionDescription}>
+                  현재 구독 플랜과 결제 정보를 확인하세요.
+                </p>
+
+                <div className={styles.currentPlan}>
+                  <div className={styles.planHeader}>
+                    <div>
+                      <h4>무료 플랜</h4>
+                      <p>기본 기능을 사용할 수 있습니다.</p>
+                    </div>
+                    <span className={styles.planBadge}>FREE</span>
+                  </div>
+
+                  <div className={styles.planFeatures}>
+                    <div className={styles.featureItem}>
+                      <span>✓</span> 프로젝트 5개까지
+                    </div>
+                    <div className={styles.featureItem}>
+                      <span>✓</span> 기본 3D 렌더링
+                    </div>
+                    <div className={styles.featureItem}>
+                      <span>✓</span> 커뮤니티 지원
+                    </div>
+                  </div>
+
+                  <button className={styles.upgradeButton}>
+                    <CreditCard size={16} />
+                    Pro로 업그레이드
+                  </button>
+                </div>
+
+                <div className={styles.usageStats}>
+                  <h4>사용량 통계</h4>
+                  <div className={styles.statItem}>
+                    <span>프로젝트</span>
+                    <span>3 / 5</span>
+                  </div>
+                  <div className={styles.statItem}>
+                    <span>저장 공간</span>
+                    <span>120MB / 500MB</span>
+                  </div>
+                  <div className={styles.statItem}>
+                    <span>팀 멤버</span>
+                    <span>1 / 1</span>
+                  </div>
+                </div>
+
+                <div className={styles.billingInfo}>
+                  <h4>결제 정보</h4>
+                  <p>현재 등록된 결제 수단이 없습니다.</p>
+                  <button className={styles.secondaryButton}>
+                    결제 수단 추가
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* 보안 섹션 */}
+            {activeSection === 'security' && (
+              <div className={styles.securitySection}>
+                <h3>보안 설정</h3>
+                <p className={styles.sectionDescription}>
+                  계정 보안을 강화하세요.
+                </p>
+
+                <div className={styles.settingsGroup}>
+                  <div className={styles.settingItem}>
+                    <div className={styles.settingInfo}>
+                      <Shield size={20} />
+                      <div>
+                        <h4>2단계 인증</h4>
+                        <p>추가 보안 계층으로 계정을 보호합니다.</p>
+                      </div>
+                    </div>
+                    <button className={styles.secondaryButton}>
+                      활성화
+                    </button>
+                  </div>
+
+                  <div className={styles.settingItem}>
+                    <div className={styles.settingInfo}>
+                      <div>
+                        <h4>로그인 기록</h4>
+                        <p>최근 계정 접속 내역을 확인합니다.</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.loginHistory}>
+                    <div className={styles.historyItem}>
+                      <div>
+                        <strong>현재 세션</strong>
+                        <p>Seoul, South Korea • Chrome on macOS</p>
+                        <p className={styles.timestamp}>방금 전</p>
+                      </div>
+                      <span className={styles.currentBadge}>활성</span>
+                    </div>
+                    <div className={styles.historyItem}>
+                      <div>
+                        <strong>이전 로그인</strong>
+                        <p>Seoul, South Korea • Safari on iPhone</p>
+                        <p className={styles.timestamp}>2일 전</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className={styles.settingItem}>
+                    <div className={styles.settingInfo}>
+                      <LogOut size={20} />
+                      <div>
+                        <h4>모든 기기에서 로그아웃</h4>
+                        <p>현재 기기를 제외한 모든 세션을 종료합니다.</p>
+                      </div>
+                    </div>
+                    <button className={styles.dangerButton}>
+                      로그아웃
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
