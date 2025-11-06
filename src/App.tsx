@@ -94,6 +94,7 @@ function AppContent() {
         <Route path="/" element={<SplitLoginForm />} />
         {/* 대시보드 페이지 */}
         <Route path="/dashboard" element={<SimpleDashboard />} />
+        <Route path="/dashboard/*" element={<SimpleDashboard />} />
         {/* 인증 페이지 */}
         <Route path="/auth" element={<SplitLoginForm />} />
         <Route path="/auth/gradient" element={<GradientLoginForm />} />
