@@ -3,6 +3,8 @@
  * 기존 3D 렌더링 로직에 최소한의 영향을 주면서 썸네일 생성
  */
 
+import { useUIStore } from '@/store/uiStore';
+
 // 3D 뷰어 컨테이너 찾기
 export const find3DViewerContainer = (): HTMLElement | null => {
   // Space3DView 컨테이너 찾기 (여러 가능한 셀렉터 시도)
@@ -192,48 +194,45 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
 // 프로젝트 저장 시 자동 썸네일 캡처 (base64 문자열 반환)
 export const captureProjectThumbnail = async (): Promise<string | null> => {
   // UI Store에서 치수 표시 상태 가져오기
-  const uiStore = (window as any).__uiStore;
-  let originalShowDimensions = true;
-  let originalShowDimensionsText = true;
-  
+  const uiStoreState = useUIStore.getState();
+  const originalShowDimensions = uiStoreState.showDimensions;
+  const originalShowDimensionsText = uiStoreState.showDimensionsText;
+
   // 치수 및 슬롯 가이드 임시 숨기기
-  if (uiStore) {
-    try {
-      const state = uiStore.getState();
-      originalShowDimensions = state.showDimensions;
-      originalShowDimensionsText = state.showDimensionsText;
-      
-      // 썸네일 캡처를 위해 일시적으로 숨기기
-      uiStore.getState().setShowDimensions(false);
-      uiStore.getState().setShowDimensionsText(false);
-      console.log('📸 썸네일 캡처를 위해 치수 및 슬롯 가이드 숨김');
-    } catch (e) {
-      console.warn('UI Store 접근 실패:', e);
-    }
+  try {
+    // 썸네일 캡처를 위해 일시적으로 숨기기
+    uiStoreState.setShowDimensions(false);
+    uiStoreState.setShowDimensionsText(false);
+    console.log('📸 썸네일 캡처를 위해 치수 및 슬롯 가이드 숨김');
+
+    // 치수가 사라지고 렌더링이 업데이트될 시간 대기
+    await new Promise(resolve => setTimeout(resolve, 300));
+  } catch (e) {
+    console.warn('UI Store 접근 실패:', e);
   }
-  
+
   try {
     // 먼저 현재 뷰에서 직접 캡처 시도
     const canvas = findThreeCanvas();
-    
+
     if (!canvas) {
       console.warn('3D 캔버스를 찾을 수 없어 기본 썸네일을 생성합니다.');
       return null;
     }
-    
+
     // 캔버스가 보이는 상태인지 확인
     if (canvas.offsetWidth === 0 || canvas.offsetHeight === 0) {
       console.warn('캔버스가 보이지 않는 상태입니다.');
       return null;
     }
-    
+
     console.log('📸 3D 캔버스 썸네일 캡처 시작...', {
       canvasSize: `${canvas.width}x${canvas.height}`,
       displaySize: `${canvas.offsetWidth}x${canvas.offsetHeight}`
     });
-    
+
     // 렌더링이 완료될 시간을 주기 위해 잠시 대기
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 200));
     
     // 원본 캔버스의 비율 계산
     const aspectRatio = canvas.width / canvas.height;
@@ -280,14 +279,13 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
     return null;
   } finally {
     // 원래 상태로 복원
-    if (uiStore) {
-      try {
-        uiStore.getState().setShowDimensions(originalShowDimensions);
-        uiStore.getState().setShowDimensionsText(originalShowDimensionsText);
-        console.log('📸 치수 및 슬롯 가이드 원래 상태로 복원');
-      } catch (e) {
-        console.warn('UI Store 복원 실패:', e);
-      }
+    try {
+      const uiStoreState = useUIStore.getState();
+      uiStoreState.setShowDimensions(originalShowDimensions);
+      uiStoreState.setShowDimensionsText(originalShowDimensionsText);
+      console.log('📸 치수 및 슬롯 가이드 원래 상태로 복원');
+    } catch (e) {
+      console.warn('UI Store 복원 실패:', e);
     }
   }
 };
