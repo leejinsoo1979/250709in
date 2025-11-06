@@ -120,7 +120,10 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
           <div className={styles.section}>
             <h4 className={styles.sectionTitle}>{t('profile.quickMenu')}</h4>
             <div className={styles.menuSection}>
-              <button className={styles.menuItem}>
+              <button className={styles.menuItem} onClick={() => {
+                onClose();
+                navigate('/dashboard/profile?section=account');
+              }}>
                 <div className={styles.menuLeft}>
                   <Settings size={18} />
                   <span>{t('profile.accountSettings')}</span>

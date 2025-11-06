@@ -37,6 +37,7 @@ const SimpleDashboard: React.FC = () => {
   // URL 파라미터 파싱
   const searchParams = new URLSearchParams(location.search);
   const urlProjectId = searchParams.get('projectId');
+  const urlSection = searchParams.get('section') as 'profile' | 'notifications' | 'privacy' | 'account' | 'subscription' | 'security' | null;
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   // 로그인하지 않은 사용자는 로그인 페이지로 리다이렉트 (로딩 완료 후에만)
@@ -3000,7 +3001,7 @@ const SimpleDashboard: React.FC = () => {
               <TeamsTab onTeamSelect={(teamId) => console.log('팀 선택:', teamId)} />
             )}
             {activeMenu === 'profile' && (
-              <ProfileTab />
+              <ProfileTab initialSection={urlSection || 'profile'} />
             )}
             
             {/* 기존 프로젝트 그리드 (all, trash, bookmarks 메뉴일 때만 표시) */}
