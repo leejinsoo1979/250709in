@@ -2092,12 +2092,20 @@
     overflow: visible !important;
   }
 
-  /* 데스크탑 레이아웃 강제 유지 - 커스텀 스타일 제거 */
-  .sidebarContent {
-    /* 데스크탑 기본값 사용 */
+  /* viewerArea - 터치 이벤트 활성화 */
+  .viewerArea {
+    touch-action: pan-x pan-y pinch-zoom !important;
+    pointer-events: auto !important;
   }
 
-  .viewerArea {
+  /* 3D 캔버스 터치 활성화 */
+  .viewerArea canvas {
+    touch-action: none !important;
+    pointer-events: auto !important;
+  }
+
+  /* 데스크탑 레이아웃 강제 유지 - 커스텀 스타일 제거 */
+  .sidebarContent {
     /* 데스크탑 기본값 사용 */
   }
 
