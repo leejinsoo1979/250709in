@@ -231,7 +231,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
           
           // 약간의 지연을 주어 로딩 화면이 보이도록 함
           setTimeout(() => {
-            navigate(`/configurator?projectId=${currentProjectId}&designFileId=${designFileResult.id}`, { replace: true });
+            navigate(`/configurator?projectId=${currentProjectId}&designFileId=${designFileResult.id}&designFileName=${encodeURIComponent(designFileName)}`, { replace: true });
           }, 100);
         } else {
           throw new Error(designFileResult.error || '디자인 파일 생성 실패');
