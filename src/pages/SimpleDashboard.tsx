@@ -3234,7 +3234,7 @@ const SimpleDashboard: React.FC = () => {
                         </div>
                       ) : item.type === 'folder' ? (
                         <div className={styles.folderIcon}>
-                          <PiFolderFill size={48} style={{ color: 'var(--theme-primary, #10b981)' }} />
+                          <PiFolderFill size={72} style={{ color: 'var(--theme-primary, #10b981)' }} />
                         </div>
                       ) : (
                         (() => {
