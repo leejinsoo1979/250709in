@@ -324,10 +324,10 @@ export const deleteUserProfile = async (): Promise<{ error: string | null }> => 
 };
 
 // 사용자 통계 가져오기
-export const getUserStats = async (): Promise<{ 
-  totalUsers: number; 
-  publicProfiles: number; 
-  error: string | null 
+export const getUserStats = async (): Promise<{
+  totalUsers: number;
+  publicProfiles: number;
+  error: string | null
 }> => {
   try {
     // 전체 사용자 수
@@ -354,5 +354,171 @@ export const getUserStats = async (): Promise<{
       publicProfiles: 0,
       error: '사용자 통계를 가져오는 중 오류가 발생했습니다.'
     };
+  }
+};
+
+// 로그인 기록 인터페이스
+export interface LoginHistory {
+  id: string;
+  userId: string;
+  timestamp: Timestamp;
+  ipAddress?: string;
+  userAgent: string;
+  location?: string;
+  device: string;
+  browser: string;
+  os: string;
+  isCurrent?: boolean;
+}
+
+// 로그인 기록 저장
+export const saveLoginHistory = async (): Promise<{ error: string | null }> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { error: '로그인이 필요합니다.' };
+    }
+
+    // User Agent 파싱
+    const ua = navigator.userAgent;
+    const device = /Mobile|Android|iPhone|iPad/.test(ua) ? 'Mobile' : 'Desktop';
+
+    let browser = 'Unknown';
+    if (ua.includes('Chrome')) browser = 'Chrome';
+    else if (ua.includes('Firefox')) browser = 'Firefox';
+    else if (ua.includes('Safari')) browser = 'Safari';
+    else if (ua.includes('Edge')) browser = 'Edge';
+
+    let os = 'Unknown';
+    if (ua.includes('Windows')) os = 'Windows';
+    else if (ua.includes('Mac')) os = 'macOS';
+    else if (ua.includes('Linux')) os = 'Linux';
+    else if (ua.includes('Android')) os = 'Android';
+    else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+
+    const loginData: Omit<LoginHistory, 'id'> = {
+      userId: user.uid,
+      timestamp: Timestamp.now(),
+      userAgent: ua,
+      device,
+      browser,
+      os,
+      location: 'Seoul, South Korea' // 실제로는 IP 기반 위치 서비스 사용
+    };
+
+    const loginHistoryRef = collection(db, 'loginHistory');
+    await setDoc(doc(loginHistoryRef), loginData);
+
+    return { error: null };
+  } catch (error) {
+    console.error('로그인 기록 저장 에러:', error);
+    return { error: '로그인 기록 저장 중 오류가 발생했습니다.' };
+  }
+};
+
+// 로그인 기록 가져오기
+export const getLoginHistory = async (limit: number = 10): Promise<{
+  history: LoginHistory[];
+  error: string | null
+}> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { history: [], error: '로그인이 필요합니다.' };
+    }
+
+    const historyQuery = query(
+      collection(db, 'loginHistory'),
+      where('userId', '==', user.uid),
+      orderBy('timestamp', 'desc')
+    );
+
+    const querySnapshot = await getDocs(historyQuery);
+    const history: LoginHistory[] = [];
+
+    querySnapshot.forEach((doc, index) => {
+      const data = doc.data();
+      history.push({
+        id: doc.id,
+        ...data,
+        isCurrent: index === 0 // 첫 번째가 현재 세션
+      } as LoginHistory);
+    });
+
+    return { history: history.slice(0, limit), error: null };
+  } catch (error) {
+    console.error('로그인 기록 가져오기 에러:', error);
+    return { history: [], error: '로그인 기록을 가져오는 중 오류가 발생했습니다.' };
+  }
+};
+
+// 사용량 통계 인터페이스
+export interface UsageStats {
+  projectCount: number;
+  storageUsed: number; // bytes
+  teamMemberCount: number;
+  maxProjects: number;
+  maxStorage: number; // bytes
+  maxTeamMembers: number;
+}
+
+// 사용량 통계 가져오기
+export const getUsageStats = async (): Promise<{
+  stats: UsageStats | null;
+  error: string | null;
+}> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { stats: null, error: '로그인이 필요합니다.' };
+    }
+
+    // 프로젝트 수 계산
+    const projectsQuery = query(
+      collection(db, 'projects'),
+      where('userId', '==', user.uid)
+    );
+    const projectsSnapshot = await getDocs(projectsQuery);
+    const projectCount = projectsSnapshot.size;
+
+    // 저장 공간 계산 (썸네일 크기 합산)
+    let storageUsed = 0;
+    projectsSnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.thumbnail) {
+        // Base64 썸네일 크기 계산 (대략적)
+        storageUsed += data.thumbnail.length * 0.75; // Base64는 원본의 약 133%
+      }
+    });
+
+    // 팀 멤버 수 계산
+    const teamsQuery = query(
+      collection(db, 'teams'),
+      where('ownerId', '==', user.uid)
+    );
+    const teamsSnapshot = await getDocs(teamsQuery);
+    let teamMemberCount = 1; // 본인 포함
+
+    teamsSnapshot.forEach((doc) => {
+      const data = doc.data();
+      if (data.members && Array.isArray(data.members)) {
+        teamMemberCount = Math.max(teamMemberCount, data.members.length);
+      }
+    });
+
+    // 무료 플랜 제한
+    const stats: UsageStats = {
+      projectCount,
+      storageUsed,
+      teamMemberCount,
+      maxProjects: 5,
+      maxStorage: 500 * 1024 * 1024, // 500MB
+      maxTeamMembers: 1
+    };
+
+    return { stats, error: null };
+  } catch (error) {
+    console.error('사용량 통계 가져오기 에러:', error);
+    return { stats: null, error: '사용량 통계를 가져오는 중 오류가 발생했습니다.' };
   }
 };

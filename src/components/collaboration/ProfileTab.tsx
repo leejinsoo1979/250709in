@@ -6,11 +6,15 @@ import {
   getUserProfile,
   updateUserProfile,
   updateNotificationSettings,
-  updatePrivacySettings
+  updatePrivacySettings,
+  getLoginHistory,
+  getUsageStats,
+  LoginHistory,
+  UsageStats
 } from '../../firebase/userProfiles';
 import { uploadProfileImage, deleteProfileImage, compressImage } from '../../firebase/storage';
 import { useAuth } from '../../auth/AuthProvider';
-import { signOutUser } from '../../firebase/auth';
+import { signOutUser, changePassword, deleteAccount } from '../../firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import styles from './CollaborationTabs.module.css';
 
@@ -40,6 +44,24 @@ const ProfileTab: React.FC = () => {
   // 개인정보 설정
   const [isPublicProfile, setIsPublicProfile] = useState(false);
   const [allowTeamInvitations, setAllowTeamInvitations] = useState(true);
+
+  // 로그인 기록
+  const [loginHistory, setLoginHistory] = useState<LoginHistory[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
+  // 사용량 통계
+  const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
+  const [loadingStats, setLoadingStats] = useState(false);
+
+  // 비밀번호 변경
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  // 계정 삭제
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
 
   // 프로필 로드
   const loadProfile = async () => {
@@ -241,6 +263,145 @@ const ProfileTab: React.FC = () => {
   // 파일 선택 대화상자 열기
   const handleImageButtonClick = () => {
     fileInputRef.current?.click();
+  };
+
+  // 로그인 기록 로드
+  const loadLoginHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const { history, error } = await getLoginHistory(10);
+      if (!error && history) {
+        setLoginHistory(history);
+      }
+    } catch (err) {
+      console.error('로그인 기록 로드 실패:', err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  // 사용량 통계 로드
+  const loadUsageStats = async () => {
+    setLoadingStats(true);
+    try {
+      const { stats, error } = await getUsageStats();
+      if (!error && stats) {
+        setUsageStats(stats);
+      }
+    } catch (err) {
+      console.error('사용량 통계 로드 실패:', err);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
+  // 섹션 변경 시 데이터 로드
+  useEffect(() => {
+    if (activeSection === 'security' && loginHistory.length === 0) {
+      loadLoginHistory();
+    }
+    if (activeSection === 'subscription' && !usageStats) {
+      loadUsageStats();
+    }
+  }, [activeSection]);
+
+  // 비밀번호 변경
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) {
+      alert('새 비밀번호가 일치하지 않습니다.');
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      alert('비밀번호는 최소 6자 이상이어야 합니다.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error } = await changePassword(currentPassword, newPassword);
+      if (error) {
+        alert(error);
+      } else {
+        alert('비밀번호가 변경되었습니다.');
+        setShowPasswordModal(false);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }
+    } catch (err) {
+      alert('비밀번호 변경 중 오류가 발생했습니다.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // 계정 삭제
+  const handleDeleteAccount = async () => {
+    if (!confirm('정말로 계정을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error } = await deleteAccount(deletePassword);
+      if (error) {
+        alert(error);
+      } else {
+        alert('계정이 삭제되었습니다.');
+        navigate('/login');
+      }
+    } catch (err) {
+      alert('계정 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setSaving(false);
+      setShowDeleteModal(false);
+    }
+  };
+
+  // 모든 기기에서 로그아웃
+  const handleLogoutAllDevices = async () => {
+    if (!confirm('모든 기기에서 로그아웃하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const { error } = await signOutUser();
+      if (error) {
+        alert(error);
+      } else {
+        alert('모든 기기에서 로그아웃되었습니다.');
+        navigate('/login');
+      }
+    } catch (err) {
+      alert('로그아웃 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 날짜 포맷팅 헬퍼
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return '방금 전';
+    if (minutes < 60) return `${minutes}분 전`;
+    if (hours < 24) return `${hours}시간 전`;
+    if (days < 7) return `${days}일 전`;
+    return date.toLocaleDateString('ko-KR');
+  };
+
+  // 저장 공간 포맷팅 헬퍼
+  const formatStorage = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
   };
 
   return (
@@ -570,12 +731,21 @@ const ProfileTab: React.FC = () => {
                       <Key size={20} />
                       <div>
                         <h4>비밀번호</h4>
-                        <p>마지막 변경: 30일 전</p>
+                        <p>
+                          {user?.providerData.some(p => p.providerId === 'password')
+                            ? '비밀번호를 변경할 수 있습니다'
+                            : '소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다'}
+                        </p>
                       </div>
                     </div>
-                    <button className={styles.secondaryButton}>
-                      비밀번호 변경
-                    </button>
+                    {user?.providerData.some(p => p.providerId === 'password') && (
+                      <button
+                        className={styles.secondaryButton}
+                        onClick={() => setShowPasswordModal(true)}
+                      >
+                        비밀번호 변경
+                      </button>
+                    )}
                   </div>
 
                   <div className={styles.settingItem}>
@@ -595,7 +765,10 @@ const ProfileTab: React.FC = () => {
                       <h5>계정 삭제</h5>
                       <p>계정을 영구적으로 삭제합니다. 이 작업은 되돌릴 수 없습니다.</p>
                     </div>
-                    <button className={styles.dangerButton}>
+                    <button
+                      className={styles.dangerButton}
+                      onClick={() => setShowDeleteModal(true)}
+                    >
                       계정 삭제
                     </button>
                   </div>
@@ -640,18 +813,30 @@ const ProfileTab: React.FC = () => {
 
                 <div className={styles.usageStats}>
                   <h4>사용량 통계</h4>
-                  <div className={styles.statItem}>
-                    <span>프로젝트</span>
-                    <span>3 / 5</span>
-                  </div>
-                  <div className={styles.statItem}>
-                    <span>저장 공간</span>
-                    <span>120MB / 500MB</span>
-                  </div>
-                  <div className={styles.statItem}>
-                    <span>팀 멤버</span>
-                    <span>1 / 1</span>
-                  </div>
+                  {loadingStats ? (
+                    <div style={{ padding: '20px', textAlign: 'center' }}>
+                      <div className={styles.spinner} />
+                    </div>
+                  ) : usageStats ? (
+                    <>
+                      <div className={styles.statItem}>
+                        <span>프로젝트</span>
+                        <span>{usageStats.projectCount} / {usageStats.maxProjects}</span>
+                      </div>
+                      <div className={styles.statItem}>
+                        <span>저장 공간</span>
+                        <span>{formatStorage(usageStats.storageUsed)} / {formatStorage(usageStats.maxStorage)}</span>
+                      </div>
+                      <div className={styles.statItem}>
+                        <span>팀 멤버</span>
+                        <span>{usageStats.teamMemberCount} / {usageStats.maxTeamMembers}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className={styles.statItem}>
+                      <span>통계를 불러오는 중...</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.billingInfo}>
@@ -696,21 +881,28 @@ const ProfileTab: React.FC = () => {
                   </div>
 
                   <div className={styles.loginHistory}>
-                    <div className={styles.historyItem}>
-                      <div>
-                        <strong>현재 세션</strong>
-                        <p>Seoul, South Korea • Chrome on macOS</p>
-                        <p className={styles.timestamp}>방금 전</p>
+                    {loadingHistory ? (
+                      <div style={{ padding: '20px', textAlign: 'center' }}>
+                        <div className={styles.spinner} />
                       </div>
-                      <span className={styles.currentBadge}>활성</span>
-                    </div>
-                    <div className={styles.historyItem}>
-                      <div>
-                        <strong>이전 로그인</strong>
-                        <p>Seoul, South Korea • Safari on iPhone</p>
-                        <p className={styles.timestamp}>2일 전</p>
+                    ) : loginHistory.length > 0 ? (
+                      loginHistory.map((history, index) => (
+                        <div key={history.id} className={styles.historyItem}>
+                          <div>
+                            <strong>{history.isCurrent ? '현재 세션' : '이전 로그인'}</strong>
+                            <p>{history.location || 'Unknown'} • {history.browser} on {history.os}</p>
+                            <p className={styles.timestamp}>{formatDate(history.timestamp)}</p>
+                          </div>
+                          {history.isCurrent && (
+                            <span className={styles.currentBadge}>활성</span>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div style={{ padding: '20px', textAlign: 'center', color: 'var(--theme-text-secondary)' }}>
+                        로그인 기록이 없습니다
                       </div>
-                    </div>
+                    )}
                   </div>
 
                   <div className={styles.settingItem}>
@@ -721,7 +913,10 @@ const ProfileTab: React.FC = () => {
                         <p>현재 기기를 제외한 모든 세션을 종료합니다.</p>
                       </div>
                     </div>
-                    <button className={styles.dangerButton}>
+                    <button
+                      className={styles.dangerButton}
+                      onClick={handleLogoutAllDevices}
+                    >
                       로그아웃
                     </button>
                   </div>
@@ -731,6 +926,104 @@ const ProfileTab: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* 비밀번호 변경 모달 */}
+      {showPasswordModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowPasswordModal(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>비밀번호 변경</h3>
+              <button onClick={() => setShowPasswordModal(false)}>×</button>
+            </div>
+            <div className={styles.modalContent}>
+              <div className={styles.formGroup}>
+                <label>현재 비밀번호</label>
+                <input
+                  type="password"
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="현재 비밀번호를 입력하세요"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>새 비밀번호</label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="새 비밀번호를 입력하세요 (최소 6자)"
+                />
+              </div>
+              <div className={styles.formGroup}>
+                <label>새 비밀번호 확인</label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="새 비밀번호를 다시 입력하세요"
+                />
+              </div>
+            </div>
+            <div className={styles.modalActions}>
+              <button onClick={() => setShowPasswordModal(false)}>
+                취소
+              </button>
+              <button
+                onClick={handleChangePassword}
+                disabled={saving || !currentPassword || !newPassword || !confirmPassword}
+              >
+                {saving ? '변경 중...' : '비밀번호 변경'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 계정 삭제 모달 */}
+      {showDeleteModal && (
+        <div className={styles.modalOverlay} onClick={() => setShowDeleteModal(false)}>
+          <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>계정 삭제</h3>
+              <button onClick={() => setShowDeleteModal(false)}>×</button>
+            </div>
+            <div className={styles.modalContent}>
+              <div style={{ marginBottom: '16px', color: 'var(--theme-danger, #dc3545)' }}>
+                <AlertTriangle size={48} style={{ marginBottom: '12px' }} />
+                <p style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>
+                  정말로 계정을 삭제하시겠습니까?
+                </p>
+                <p style={{ fontSize: '14px', color: 'var(--theme-text-secondary)' }}>
+                  이 작업은 되돌릴 수 없으며, 모든 프로젝트와 데이터가 영구적으로 삭제됩니다.
+                </p>
+              </div>
+              {user?.providerData.some(p => p.providerId === 'password') && (
+                <div className={styles.formGroup}>
+                  <label>비밀번호 확인</label>
+                  <input
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    placeholder="비밀번호를 입력하세요"
+                  />
+                </div>
+              )}
+            </div>
+            <div className={styles.modalActions}>
+              <button onClick={() => setShowDeleteModal(false)}>
+                취소
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                disabled={saving || (user?.providerData.some(p => p.providerId === 'password') && !deletePassword)}
+                style={{ background: 'var(--theme-danger, #dc3545)', borderColor: 'var(--theme-danger, #dc3545)' }}
+              >
+                {saving ? '삭제 중...' : '계정 삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

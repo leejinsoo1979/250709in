@@ -1,5 +1,5 @@
-import { 
-  signInWithEmailAndPassword, 
+import {
+  signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
@@ -7,7 +7,12 @@ import {
   onAuthStateChanged,
   User,
   updateProfile,
-  getRedirectResult
+  getRedirectResult,
+  updatePassword,
+  reauthenticateWithCredential,
+  EmailAuthProvider,
+  deleteUser,
+  reauthenticateWithPopup
 } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from './config';
@@ -203,16 +208,16 @@ async function ensurePersonalTeam(user: User) {
   try {
     const { doc, getDoc, setDoc, serverTimestamp, Timestamp } = await import('firebase/firestore');
     const { db } = await import('./config');
-    
+
     const teamId = `personal_${user.uid}`;
     const teamRef = doc(db, 'teams', teamId);
-    
+
     // 이미 팀이 있는지 확인
     const teamDoc = await getDoc(teamRef);
     if (teamDoc.exists()) {
       return;
     }
-    
+
     // 개인 팀 생성
     const team = {
       name: `${(user.email || 'User').split('@')[0]}'s Workspace`,
@@ -236,16 +241,120 @@ async function ensurePersonalTeam(user: User) {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
-    
+
     await setDoc(teamRef, team);
-    
+
     // localStorage에 email 저장 (나중에 팀 생성 시 사용)
     if (user.email) {
       localStorage.setItem('userEmail', user.email);
     }
-    
+
     console.log('✅ Personal team created:', teamId);
   } catch (error) {
     console.error('Failed to create personal team:', error);
   }
-} 
+}
+
+// 비밀번호 변경
+export const changePassword = async (currentPassword: string, newPassword: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user || !user.email) {
+      return { error: '로그인된 사용자가 없습니다.' };
+    }
+
+    // 이메일/비밀번호 제공자인지 확인
+    const isEmailProvider = user.providerData.some(
+      (provider) => provider.providerId === 'password'
+    );
+
+    if (!isEmailProvider) {
+      return { error: '소셜 로그인 사용자는 비밀번호를 변경할 수 없습니다.' };
+    }
+
+    // 재인증
+    const credential = EmailAuthProvider.credential(user.email, currentPassword);
+    await reauthenticateWithCredential(user, credential);
+
+    // 비밀번호 업데이트
+    await updatePassword(user, newPassword);
+
+    return { error: null };
+  } catch (error) {
+    const firebaseError = error as FirebaseError;
+
+    let errorMessage = '비밀번호 변경 중 오류가 발생했습니다.';
+    switch (firebaseError.code) {
+      case 'auth/wrong-password':
+        errorMessage = '현재 비밀번호가 올바르지 않습니다.';
+        break;
+      case 'auth/weak-password':
+        errorMessage = '새 비밀번호가 너무 약합니다. 6자 이상 입력해주세요.';
+        break;
+      case 'auth/requires-recent-login':
+        errorMessage = '보안을 위해 다시 로그인해주세요.';
+        break;
+    }
+
+    return { error: errorMessage };
+  }
+};
+
+// 계정 삭제
+export const deleteAccount = async (password?: string) => {
+  try {
+    const user = auth.currentUser;
+    if (!user) {
+      return { error: '로그인된 사용자가 없습니다.' };
+    }
+
+    // 재인증 (이메일/비밀번호 사용자)
+    const isEmailProvider = user.providerData.some(
+      (provider) => provider.providerId === 'password'
+    );
+
+    if (isEmailProvider && password && user.email) {
+      const credential = EmailAuthProvider.credential(user.email, password);
+      await reauthenticateWithCredential(user, credential);
+    } else if (!isEmailProvider) {
+      // 구글 사용자의 경우 팝업으로 재인증
+      await reauthenticateWithPopup(user, googleProvider);
+    }
+
+    // 사용자 데이터 삭제 (Firestore)
+    const { doc, deleteDoc, collection, query, where, getDocs } = await import('firebase/firestore');
+    const { db } = await import('./config');
+
+    // 사용자 프로필 삭제
+    const userProfileRef = doc(db, 'userProfiles', user.uid);
+    await deleteDoc(userProfileRef);
+
+    // 사용자의 프로젝트 삭제
+    const projectsRef = collection(db, 'projects');
+    const projectsQuery = query(projectsRef, where('userId', '==', user.uid));
+    const projectsSnapshot = await getDocs(projectsQuery);
+
+    for (const projectDoc of projectsSnapshot.docs) {
+      await deleteDoc(projectDoc.ref);
+    }
+
+    // 사용자 계정 삭제
+    await deleteUser(user);
+
+    return { error: null };
+  } catch (error) {
+    const firebaseError = error as FirebaseError;
+
+    let errorMessage = '계정 삭제 중 오류가 발생했습니다.';
+    switch (firebaseError.code) {
+      case 'auth/wrong-password':
+        errorMessage = '비밀번호가 올바르지 않습니다.';
+        break;
+      case 'auth/requires-recent-login':
+        errorMessage = '보안을 위해 다시 로그인 후 시도해주세요.';
+        break;
+    }
+
+    return { error: errorMessage };
+  }
+}; 

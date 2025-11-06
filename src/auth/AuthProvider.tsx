@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User } from 'firebase/auth';
 import { onAuthStateChange } from '@/firebase/auth';
+import { saveLoginHistory } from '@/firebase/userProfiles';
 
 // 인증 컨텍스트 타입
 interface AuthContextType {
@@ -40,16 +41,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       // Firebase 인증 상태 변화 감지
-      const unsubscribe = onAuthStateChange((user) => {
+      const unsubscribe = onAuthStateChange(async (user) => {
         setUser(user);
         setLoading(false);
-        
+
         // localStorage에 userId와 activeTeamId 설정 (개발 모드 조건 제거!)
         if (user) {
           console.log('🔐 사용자 로그인:', user.email);
           localStorage.setItem('userId', user.uid);
           if (!localStorage.getItem('activeTeamId')) {
             localStorage.setItem('activeTeamId', `personal_${user.uid}`);
+          }
+
+          // 로그인 기록 저장
+          try {
+            await saveLoginHistory();
+            console.log('✅ 로그인 기록 저장 완료');
+          } catch (err) {
+            console.error('❌ 로그인 기록 저장 실패:', err);
           }
         } else {
           console.log('🔐 사용자 로그아웃');
