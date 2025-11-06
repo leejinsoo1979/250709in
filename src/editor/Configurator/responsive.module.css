@@ -156,6 +156,69 @@
 }
 
 /* ================================
+   Mobile Landscape (max-width: 767px) - Desktop UI with optimized sizing
+   ================================ */
+@media screen and (max-width: 767px) and (orientation: landscape) {
+  .configurator {
+    display: flex;
+    flex-direction: row;
+    height: 100vh;
+  }
+
+  /* 좁은 사이드바 */
+  .sidebar {
+    width: 240px;
+    height: 100%;
+    position: relative;
+    transform: none;
+    border-right: 1px solid var(--theme-border);
+  }
+
+  /* 뷰어가 남은 공간 차지 */
+  .viewerContainer {
+    flex: 1;
+    height: 100%;
+    position: relative;
+  }
+
+  /* 우측 패널 숨김 */
+  .rightPanel {
+    display: none;
+  }
+
+  /* 모바일 전용 UI 요소 숨김 */
+  .floatingActionButton,
+  .sidebarHandle {
+    display: none;
+  }
+
+  /* 모듈 그리드 2열 */
+  .moduleGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  /* 헤더 */
+  .header {
+    height: 56px;
+    padding: 8px 12px;
+  }
+
+  .headerTitle {
+    font-size: 16px;
+  }
+
+  .headerActions {
+    gap: 8px;
+  }
+
+  .headerButton {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
+
+/* ================================
    Tablet Portrait (768px - 1023px)
    ================================ */
 @media screen and (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
