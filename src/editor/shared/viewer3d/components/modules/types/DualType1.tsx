@@ -3,6 +3,8 @@ import { useBaseFurniture, BaseFurnitureShell, SectionsRenderer, FurnitureTypePr
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import DoorModule from '../DoorModule';
 import { ClothingRod } from '../components/ClothingRod';
+import { AdjustableFootsRenderer } from '../components/AdjustableFootsRenderer';
+import { useUIStore } from '@/store/uiStore';
 
 /**
  * DualType1 컴포넌트
@@ -67,6 +69,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
     textureUrl,
     panelGrainDirections,
     depth,
+    width,
+    height,
     mmToThreeUnits,
     lowerSectionDepthMm: baseLowerSectionDepthMm,
     upperSectionDepthMm: baseUpperSectionDepthMm
@@ -76,7 +80,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   const lowerSectionDepthMm = lowerSectionDepth !== undefined ? lowerSectionDepth : baseLowerSectionDepthMm;
   const upperSectionDepthMm = upperSectionDepth !== undefined ? upperSectionDepth : baseUpperSectionDepthMm;
 
-  const { renderMode } = useSpace3DView();
+  const { renderMode, viewMode } = useSpace3DView();
+  const { view2DDirection } = useUIStore();
 
   // 섹션별 깊이 계산 (하부 섹션 0, 상부 섹션 1)
   const defaultDepth = depth;
@@ -351,6 +356,26 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
             })()}
           </>
         )}
+
+        {/* 조절발통 (네 모서리) - 띄움 배치 시에는 렌더링하지 않음 */}
+        {(() => {
+          const isFloating = spaceInfo?.baseConfig?.placementType === 'float';
+          return !isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
+            <AdjustableFootsRenderer
+              width={width}
+              depth={depth}
+              yOffset={-height / 2}
+              backZOffset={sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) : 0}
+              renderMode={renderMode}
+              isHighlighted={false}
+              isFloating={isFloating}
+              baseHeight={spaceInfo?.baseConfig?.height || 65}
+              baseDepth={spaceInfo?.baseConfig?.depth || 0}
+              viewMode={viewMode}
+              view2DDirection={view2DDirection}
+            />
+          );
+        })()}
       </BaseFurnitureShell>
 
       {/* 도어는 showFurniture와 관계없이 항상 렌더링 (도어 도면 출력용) */}
