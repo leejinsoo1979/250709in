@@ -364,14 +364,16 @@ const Header: React.FC<HeaderProps> = ({
       <div className={styles.container}>
         {/* 로고 영역 */}
         <div className={styles.logoSection}>
-          {/* 햄버거 메뉴 버튼 */}
-          <button 
-            className={`${styles.hamburgerButton} ${isFileTreeOpen ? styles.active : ''}`}
-            onClick={onFileTreeToggle}
-            title="파일 트리 열기/닫기"
-          >
-            <Menu size={20} />
-          </button>
+          {/* 햄버거 메뉴 버튼 - 읽기 전용 모드에서는 숨김 */}
+          {!readOnly && (
+            <button
+              className={`${styles.hamburgerButton} ${isFileTreeOpen ? styles.active : ''}`}
+              onClick={onFileTreeToggle}
+              title="파일 트리 열기/닫기"
+            >
+              <Menu size={20} />
+            </button>
+          )}
           
           <div className={styles.logo}>
             <Logo size="medium" />
@@ -733,8 +735,8 @@ const Header: React.FC<HeaderProps> = ({
 
         {/* 우측 액션 버튼들 */}
         <div className={styles.rightActions}>
-          {/* 내보내기 버튼 */}
-          {onExportPDF && (
+          {/* 내보내기 버튼 - 읽기 전용 모드에서는 숨김 */}
+          {!readOnly && onExportPDF && (
             <button
               className={styles.convertButton}
               onClick={() => {
@@ -747,87 +749,89 @@ const Header: React.FC<HeaderProps> = ({
             </button>
           )}
 
-          {/* CNC 옵티마이저 버튼 */}
-          <div className={styles.convertButtonContainer} ref={convertMenuRef}>
-            <button
-              className={styles.convertButton}
-              onClick={() => setIsConvertMenuOpen(!isConvertMenuOpen)}
-            >
-              <SiConvertio size={20} />
-              {t('common.converting')}
-              <ChevronDown size={16} style={{ marginLeft: '4px' }} />
-            </button>
-            
-            {isConvertMenuOpen && (
-              <div className={styles.dropdownMenu}>
-                <button 
-                  className={styles.dropdownItem}
-                  onClick={() => {
-                    console.log('CNC 옵티마이저 버튼 클릭됨');
+          {/* CNC 옵티마이저 버튼 - 읽기 전용 모드에서는 숨김 */}
+          {!readOnly && (
+            <div className={styles.convertButtonContainer} ref={convertMenuRef}>
+              <button
+                className={styles.convertButton}
+                onClick={() => setIsConvertMenuOpen(!isConvertMenuOpen)}
+              >
+                <SiConvertio size={20} />
+                {t('common.converting')}
+                <ChevronDown size={16} style={{ marginLeft: '4px' }} />
+              </button>
 
-                    // 현재 전체 상태를 sessionStorage에 저장
-                    const currentState = {
-                      projectId,
-                      designFileId,
-                      basicInfo: useProjectStore.getState().basicInfo,
-                      spaceInfo: useSpaceConfigStore.getState().spaceInfo,
-                      placedModules: useFurnitureStore.getState().placedModules,
-                      timestamp: Date.now()
-                    };
-                    sessionStorage.setItem('configurator_state_backup', JSON.stringify(currentState));
-                    console.log('💾 Configurator 상태 백업 완료');
-
-                    // 프로젝트 ID, 디자인 파일 ID, 프로젝트명, 디자인 파일명을 URL 파라미터로 전달
-                    const params = new URLSearchParams();
-                    if (projectId) params.set('projectId', projectId);
-                    if (designFileId) params.set('designFileId', designFileId);
-                    if (projectName) params.set('projectName', encodeURIComponent(projectName));
-                    if (designFileName) params.set('designFileName', encodeURIComponent(designFileName));
-                    const queryString = params.toString();
-
-                    console.log('🔗 CNC Optimizer로 전달하는 파라미터:', {
-                      projectId,
-                      designFileId,
-                      projectName,
-                      designFileName,
-                      queryString
-                    });
-
-                    // state로 현재 페이지 정보 전달
-                    navigate(`/cnc-optimizer${queryString ? `?${queryString}` : ''}`, {
-                      state: { fromConfigurator: true }
-                    });
-                    setIsConvertMenuOpen(false);
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
-                    <rect x="3" y="3" width="18" height="18" stroke="currentColor" strokeWidth="2"/>
-                    <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="2"/>
-                    <line x1="9" y1="3" x2="9" y2="21" stroke="currentColor" strokeWidth="2"/>
-                  </svg>
-                  {t('export.cuttingOptimizer')}
-                </button>
-                
-                {onConvert && (
-                  <button 
+              {isConvertMenuOpen && (
+                <div className={styles.dropdownMenu}>
+                  <button
                     className={styles.dropdownItem}
                     onClick={() => {
-                      onConvert();
+                      console.log('CNC 옵티마이저 버튼 클릭됨');
+
+                      // 현재 전체 상태를 sessionStorage에 저장
+                      const currentState = {
+                        projectId,
+                        designFileId,
+                        basicInfo: useProjectStore.getState().basicInfo,
+                        spaceInfo: useSpaceConfigStore.getState().spaceInfo,
+                        placedModules: useFurnitureStore.getState().placedModules,
+                        timestamp: Date.now()
+                      };
+                      sessionStorage.setItem('configurator_state_backup', JSON.stringify(currentState));
+                      console.log('💾 Configurator 상태 백업 완료');
+
+                      // 프로젝트 ID, 디자인 파일 ID, 프로젝트명, 디자인 파일명을 URL 파라미터로 전달
+                      const params = new URLSearchParams();
+                      if (projectId) params.set('projectId', projectId);
+                      if (designFileId) params.set('designFileId', designFileId);
+                      if (projectName) params.set('projectName', encodeURIComponent(projectName));
+                      if (designFileName) params.set('designFileName', encodeURIComponent(designFileName));
+                      const queryString = params.toString();
+
+                      console.log('🔗 CNC Optimizer로 전달하는 파라미터:', {
+                        projectId,
+                        designFileId,
+                        projectName,
+                        designFileName,
+                        queryString
+                      });
+
+                      // state로 현재 페이지 정보 전달
+                      navigate(`/cnc-optimizer${queryString ? `?${queryString}` : ''}`, {
+                        state: { fromConfigurator: true }
+                      });
                       setIsConvertMenuOpen(false);
                     }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
-                      <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-                      <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-                      <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
-                      <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                      <rect x="3" y="3" width="18" height="18" stroke="currentColor" strokeWidth="2"/>
+                      <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="2"/>
+                      <line x1="9" y1="3" x2="9" y2="21" stroke="currentColor" strokeWidth="2"/>
                     </svg>
-                    {t('export.drawingEditor')}
+                    {t('export.cuttingOptimizer')}
                   </button>
-                )}
-              </div>
-            )}
-          </div>
+
+                  {onConvert && (
+                    <button
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        onConvert();
+                        setIsConvertMenuOpen(false);
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
+                        <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                        <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2"/>
+                      </svg>
+                      {t('export.drawingEditor')}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           {user ? (
             <>
