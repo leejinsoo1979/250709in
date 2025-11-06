@@ -12,6 +12,7 @@ import Configurator from '@/editor/Configurator';
 import SimpleDashboard from '@/pages/SimpleDashboard';
 import TestDashboard from '@/pages/TestDashboard';
 import ViewerPage from '@/pages/ViewerPage';
+import LandingPage from '@/pages/LandingPage';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { ModernLoginForm } from '@/components/auth/ModernLoginForm';
 import { UltraModernLoginForm } from '@/components/auth/UltraModernLoginForm';
@@ -90,12 +91,13 @@ function AppContent() {
     <>
       <RouteChangeHandler />
       <Routes>
-        {/* 메인 페이지 - 로그인 페이지 표시 */}
-        <Route path="/" element={<SplitLoginForm />} />
+        {/* 메인 페이지 - 랜딩 페이지 */}
+        <Route path="/" element={<LandingPage />} />
         {/* 대시보드 페이지 */}
         <Route path="/dashboard" element={<SimpleDashboard />} />
         <Route path="/dashboard/*" element={<SimpleDashboard />} />
         {/* 인증 페이지 */}
+        <Route path="/login" element={<SplitLoginForm />} />
         <Route path="/auth" element={<SplitLoginForm />} />
         <Route path="/auth/gradient" element={<GradientLoginForm />} />
         <Route path="/auth/ultra" element={<UltraModernLoginForm />} />
