@@ -1161,15 +1161,18 @@ const Configurator: React.FC = () => {
         // designFileId가 있는 경우 디자인 파일 데이터 로드
         console.log('📂 디자인파일 데이터 로드 시작:', designFileId);
 
-        import('@/firebase/projects').then(({ getDesignFileById }) => {
-          getDesignFileById(designFileId).then(({ designFile, error }) => {
+        import('@/firebase/projects').then(({ getDesignFileById, getProject }) => {
+          getDesignFileById(designFileId).then(async ({ designFile, error }) => {
             if (designFile && !error) {
               console.log('✅ 디자인파일 로드 성공:', designFile);
 
-              // 프로젝트 기본 정보 설정
-              if (designFile.projectData) {
-                setBasicInfo(designFile.projectData);
-                console.log('📝 프로젝트 데이터 설정:', designFile.projectData);
+              // 프로젝트 기본 정보 설정 - projectId로 프로젝트 정보 가져오기
+              if (designFile.projectId) {
+                const { project, error: projectError } = await getProject(designFile.projectId);
+                if (project && !projectError) {
+                  setBasicInfo({ title: project.title });
+                  console.log('📝 프로젝트 데이터 설정:', project.title);
+                }
               }
 
               // 공간 설정
@@ -1232,9 +1235,9 @@ const Configurator: React.FC = () => {
               }
 
               // 디자인파일 이름 설정
-              if (designFile.fileName) {
-                setCurrentDesignFileName(designFile.fileName);
-                console.log('📝 디자인파일명 설정:', designFile.fileName);
+              if (designFile.name) {
+                setCurrentDesignFileName(designFile.name);
+                console.log('📝 디자인파일명 설정:', designFile.name);
               }
             } else {
               console.error('디자인파일 로드 실패:', error);
