@@ -904,7 +904,24 @@ const SimpleDashboard: React.FC = () => {
       allProjectsCount: allProjects.length,
       allProjects: allProjects.map(p => ({id: p.id, title: p.title}))
     });
-    
+
+    // 휴지통에서는 프로젝트 선택을 무시하고 삭제된 프로젝트 목록만 표시
+    if (activeMenu === 'trash') {
+      const filteredProjects = getFilteredProjects();
+      console.log('🗑️ 휴지통 뷰 - 삭제된 프로젝트들:', {
+        deletedProjectsCount: filteredProjects.length,
+        filteredProjects: filteredProjects.map(p => ({id: p.id, title: p.title}))
+      });
+
+      return filteredProjects.map(project => ({
+        id: project.id,
+        type: 'project',
+        name: project.title,
+        project: project,
+        icon: ''
+      }));
+    }
+
     if (selectedProjectId) {
       if (!selectedProject) {
         console.log('❌ 선택된 프로젝트를 찾을 수 없습니다:', selectedProjectId);
