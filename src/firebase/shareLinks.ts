@@ -474,3 +474,213 @@ export async function getProjectCollaborators(projectId: string): Promise<Projec
     return [];
   }
 }
+
+/**
+ * 이메일로 직접 사용자 초대 (Firebase Auth 사용자 조회)
+ */
+export async function inviteUserByEmail(
+  projectId: string,
+  projectName: string,
+  inviterUserId: string,
+  inviterUserName: string,
+  inviteeEmail: string,
+  permission: SharePermission
+): Promise<{ success: boolean; message: string; userId?: string }> {
+  try {
+    // 1. Firebase Auth에서 이메일로 사용자 조회 (Cloud Function 필요)
+    // 현재는 Firestore의 users 컬렉션이나 sharedProjectAccess에서 이미 초대된 사용자만 찾을 수 있음
+    // 실제로는 Firebase Admin SDK를 사용하는 Cloud Function이 필요함
+
+    // 임시 방안: users 컬렉션에서 이메일로 검색 (있다면)
+    const usersQuery = query(
+      collection(db, 'users'),
+      where('email', '==', inviteeEmail)
+    );
+    const usersSnapshot = await getDocs(usersQuery);
+
+    if (usersSnapshot.empty) {
+      return {
+        success: false,
+        message: '해당 이메일로 가입된 사용자를 찾을 수 없습니다. 먼저 회원가입이 필요합니다.'
+      };
+    }
+
+    const userData = usersSnapshot.docs[0].data();
+    const inviteeUserId = userData.uid || usersSnapshot.docs[0].id;
+    const inviteeUserName = userData.displayName || userData.email?.split('@')[0] || '사용자';
+    const inviteePhotoURL = userData.photoURL;
+
+    // 2. 이미 초대되었는지 확인
+    const accessDocRef = doc(db, 'sharedProjectAccess', `${projectId}_${inviteeUserId}`);
+    const accessDoc = await getDoc(accessDocRef);
+
+    if (accessDoc.exists()) {
+      return {
+        success: false,
+        message: '이미 이 프로젝트에 초대된 사용자입니다.'
+      };
+    }
+
+    // 3. 프로젝트 소유자인지 확인
+    const projectDoc = await getDoc(doc(db, 'projects', projectId));
+    if (!projectDoc.exists()) {
+      return {
+        success: false,
+        message: '프로젝트를 찾을 수 없습니다.'
+      };
+    }
+
+    const projectData = projectDoc.data();
+    if (projectData.userId === inviteeUserId) {
+      return {
+        success: false,
+        message: '프로젝트 소유자는 초대할 수 없습니다.'
+      };
+    }
+
+    // 4. 권한 부여
+    const accessData: any = {
+      projectId,
+      projectName,
+      userId: inviteeUserId,
+      userName: inviteeUserName,
+      userEmail: inviteeEmail,
+      sharedBy: inviterUserId,
+      sharedByName: inviterUserName,
+      permission,
+      sharedVia: 'email',
+      grantedAt: Timestamp.now(),
+    };
+
+    if (inviteePhotoURL) {
+      accessData.photoURL = inviteePhotoURL;
+    }
+
+    await setDoc(accessDocRef, accessData);
+
+    console.log('✅ 이메일로 사용자 초대 완료:', inviteeEmail);
+    return {
+      success: true,
+      message: '초대가 완료되었습니다.',
+      userId: inviteeUserId
+    };
+  } catch (error) {
+    console.error('❌ 이메일 초대 실패:', error);
+    return {
+      success: false,
+      message: '초대 중 오류가 발생했습니다.'
+    };
+  }
+}
+
+/**
+ * 이메일로 프로젝트 직접 초대 (회원가입된 사용자에게만)
+ */
+export async function shareProjectWithEmail(
+  projectId: string,
+  projectName: string,
+  ownerUserId: string,
+  ownerUserName: string,
+  targetEmail: string,
+  permission: SharePermission
+): Promise<{ success: boolean; message: string }> {
+  try {
+    // 1. 이메일로 사용자 찾기 (users 컬렉션에서 검색)
+    const usersQuery = query(collection(db, 'users'), where('email', '==', targetEmail));
+    const usersSnapshot = await getDocs(usersQuery);
+
+    if (usersSnapshot.empty) {
+      return {
+        success: false,
+        message: '해당 이메일로 가입된 사용자를 찾을 수 없습니다. 링크 공유를 사용하세요.',
+      };
+    }
+
+    const targetUserDoc = usersSnapshot.docs[0];
+    const targetUserData = targetUserDoc.data();
+    const targetUserId = targetUserDoc.id;
+
+    // 2. 본인에게 초대하는 경우 차단
+    if (targetUserId === ownerUserId) {
+      return {
+        success: false,
+        message: '자신에게는 초대할 수 없습니다.',
+      };
+    }
+
+    // 3. 이미 소유자인지 확인
+    const projectDoc = await getDoc(doc(db, 'projects', projectId));
+    if (!projectDoc.exists()) {
+      return { success: false, message: '프로젝트를 찾을 수 없습니다.' };
+    }
+
+    const projectData = projectDoc.data();
+    if (projectData.userId === targetUserId) {
+      return {
+        success: false,
+        message: '이미 프로젝트 소유자입니다.',
+      };
+    }
+
+    // 4. 이미 협업자인지 확인
+    const accessDocRef = doc(db, 'sharedProjectAccess', `${projectId}_${targetUserId}`);
+    const existingAccess = await getDoc(accessDocRef);
+
+    if (existingAccess.exists()) {
+      // 이미 있으면 권한만 업데이트
+      await updateDoc(accessDocRef, {
+        permission,
+        grantedAt: Timestamp.now(),
+      });
+
+      console.log('✅ 협업자 권한 업데이트 완료:', targetEmail, permission);
+      return {
+        success: true,
+        message: `${targetEmail}님의 권한이 업데이트되었습니다.`,
+      };
+    }
+
+    // 5. 새로운 협업자 추가
+    await setDoc(accessDocRef, {
+      projectId,
+      projectName,
+      userId: targetUserId,
+      userName: targetUserData.displayName || targetUserData.email?.split('@')[0] || '사용자',
+      userEmail: targetEmail,
+      sharedBy: ownerUserId,
+      sharedByName: ownerUserName,
+      permission,
+      sharedVia: 'email',
+      grantedAt: Timestamp.now(),
+      photoURL: targetUserData.photoURL || null,
+    });
+
+    // 6. 알림 생성 (notifications 컬렉션에 추가)
+    const notificationRef = doc(collection(db, 'notifications'));
+    await setDoc(notificationRef, {
+      userId: targetUserId,
+      type: 'project_shared',
+      title: '프로젝트 초대',
+      message: `${ownerUserName}님이 "${projectName}" 프로젝트에 초대했습니다.`,
+      projectId,
+      projectName,
+      sharedBy: ownerUserId,
+      sharedByName: ownerUserName,
+      permission,
+      read: false,
+      createdAt: Timestamp.now(),
+    });
+
+    console.log('✅ 이메일 초대 완료:', targetEmail, permission);
+    return {
+      success: true,
+      message: `${targetEmail}님을 프로젝트에 초대했습니다.`,
+    };
+  } catch (error) {
+    console.error('❌ 이메일 초대 실패:', error);
+    return {
+      success: false,
+      message: '초대 중 오류가 발생했습니다.',
+    };
+  }
+}
