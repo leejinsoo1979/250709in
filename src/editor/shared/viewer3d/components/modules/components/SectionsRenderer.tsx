@@ -552,27 +552,27 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   // 상단 가이드선 위치 결정
                   if (index === allSections.length - 1) {
                     // 마지막 섹션 (상부 섹션)
+                    // 띄움배치 여부 확인 (lowerSectionTopOffsetMm > 0이면 띄움배치)
+                    const isFloating = lowerSectionTopOffsetMm > 0;
+                    const isLastSection = index === allSections.length - 1;
+
+                    // 띄움배치 시 상부섹션은 18mm 확장
+                    const floatingAdjustment = (isFloating && isLastSection) ? mmToThreeUnits(18) : 0;
+
                     // hanging 섹션에서 안전선반이 있는 경우: 안전선반 하단까지
                     if (hasSafetyShelf) {
                       // 안전선반의 위치를 가져옴 (0이 아닌 첫 번째 값 = 안전선반, 섹션 하단 기준)
                       const safetyShelfPositionMm = section.shelfPositions.find(pos => pos > 0);
                       if (safetyShelfPositionMm !== undefined) {
                         // 안전선반 하단 Y 위치 = 섹션 하단 + 안전선반 위치(mm) - 안전선반 두께/2
-                        topY = sectionBottomY + (safetyShelfPositionMm * 0.01) - basicThickness / 2;
+                        topY = sectionBottomY + (safetyShelfPositionMm * 0.01) - basicThickness / 2 + floatingAdjustment;
                       } else {
-                        topY = height/2 - basicThickness;
+                        topY = height/2 - basicThickness + floatingAdjustment;
                       }
                     } else {
                       // 안전선반 없는 경우
                       const is2HangingUpperSection = (furnitureId?.includes('2hanging') || furnitureId?.includes('2drawer-hanging')) && index === 1;
                       const isDualFurniture = furnitureId?.includes('dual');
-
-                      // 띄움배치 여부 확인 (lowerSectionTopOffsetMm > 0이면 띄움배치)
-                      const isFloating = lowerSectionTopOffsetMm > 0;
-                      const isLastSection = index === allSections.length - 1;
-
-                      // 띄움배치 시 상부섹션은 18mm 확장
-                      const floatingAdjustment = (isFloating && isLastSection) ? mmToThreeUnits(18) : 0;
 
                       if (is2HangingUpperSection && isDualFurniture) {
                         // 듀얼 가구만: sectionTopY가 측판 상단 (전체 가구 상판 아래)
