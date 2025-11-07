@@ -567,16 +567,23 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       const is2HangingUpperSection = (furnitureId?.includes('2hanging') || furnitureId?.includes('2drawer-hanging')) && index === 1;
                       const isDualFurniture = furnitureId?.includes('dual');
 
+                      // 띄움배치 여부 확인 (lowerSectionTopOffsetMm > 0이면 띄움배치)
+                      const isFloating = lowerSectionTopOffsetMm > 0;
+                      const isLastSection = index === allSections.length - 1;
+
+                      // 띄움배치 시 상부섹션은 18mm 확장
+                      const floatingAdjustment = (isFloating && isLastSection) ? mmToThreeUnits(18) : 0;
+
                       if (is2HangingUpperSection && isDualFurniture) {
                         // 듀얼 가구만: sectionTopY가 측판 상단 (전체 가구 상판 아래)
                         // 내경은 상판 하단까지 (상판 두께를 빼야 함)
-                        topY = sectionTopY - basicThickness;
+                        topY = sectionTopY - basicThickness + floatingAdjustment;
                       } else if (is2HangingUpperSection) {
                         // 싱글 가구: bottomY + sectionHeight (원래 로직)
-                        topY = bottomY + sectionHeight;
+                        topY = bottomY + sectionHeight + floatingAdjustment;
                       } else {
                         // 일반 케이스: 상부 프레임 하단까지
-                        topY = height/2 - basicThickness;
+                        topY = height/2 - basicThickness + floatingAdjustment;
                       }
                     }
                   } else {
