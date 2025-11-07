@@ -870,11 +870,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     ? placedModule.isDualSlot
     : actualModuleData?.id.includes('dual-') || false;
 
-  
+
   // 상부장/하부장과 인접한 키큰장인지 확인 (actualModuleData가 있을 때만)
   const adjacentCheck = actualModuleData
     ? checkAdjacentUpperLowerToFull(placedModule, placedModules, spaceInfo)
     : { hasAdjacentUpperLower: false, adjacentSide: null };
+
+  // 🔴🔴🔴 키큰장 엔드패널 디버깅
+  if (actualModuleData?.category === 'full') {
+    console.log('🟢🟢🟢 [FurnitureItem] 키큰장 엔드패널 체크:', {
+      moduleId: placedModule.moduleId,
+      slotIndex: placedModule.slotIndex,
+      hasAdjacentUpperLower: adjacentCheck.hasAdjacentUpperLower,
+      adjacentSide: adjacentCheck.adjacentSide,
+      placedModulesCount: placedModules.length,
+      otherModules: placedModules.filter(m => m.id !== placedModule.id).map(m => ({
+        id: m.moduleId,
+        slotIndex: m.slotIndex,
+        category: getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo)?.category
+      }))
+    });
+  }
 
   
   // 마지막 슬롯인지 확인 (adjustedPosition 초기화 전에 필요)
@@ -1299,6 +1315,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동
   if (needsEndPanelAdjustment && endPanelSide) {
+    console.log('🔵🔵🔵 [FurnitureItem] 키큰장 폭 조정 시작:', {
+      moduleId: placedModule.moduleId,
+      originalWidth: originalFurnitureWidthMm,
+      endPanelSide,
+      isNoSurroundFirstSlot,
+      isNoSurroundLastSlot,
+      isNoSurroundDualLastSlot
+    });
 
     // 노서라운드 첫/마지막 슬롯에서는 특별 처리
     if (isNoSurroundFirstSlot || isNoSurroundLastSlot || isNoSurroundDualLastSlot) {
@@ -1334,8 +1358,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         positionAdjustmentForEndPanel = 0;
       }
     }
-    
+
     furnitureWidthMm = adjustedWidthForEndPanel; // 실제 가구 너비 업데이트
+
+    console.log('🟡🟡🟡 [FurnitureItem] 키큰장 폭 조정 완료:', {
+      moduleId: placedModule.moduleId,
+      originalWidth: originalFurnitureWidthMm,
+      adjustedWidth: furnitureWidthMm,
+      widthReduction: originalFurnitureWidthMm - furnitureWidthMm,
+      positionAdjustment: positionAdjustmentForEndPanel
+    });
   }
   
   // 노서라운드 모드에서 엔드패널 처리
