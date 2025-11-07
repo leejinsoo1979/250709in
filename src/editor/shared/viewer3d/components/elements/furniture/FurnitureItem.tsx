@@ -2379,8 +2379,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     background: 'rgba(70, 70, 70, 0.7)',
                     borderRadius: '24px',
                     padding: '10px 18px',
-                    boxShadow: '0 3px 12px rgba(0,0,0,0.25)',
-                    backdropFilter: 'blur(8px)'
+                    boxShadow: '0 3px 12px rgba(0,0,0,0.25)'
                   }}
                 >
                 {/* 잠금 버튼 */}
