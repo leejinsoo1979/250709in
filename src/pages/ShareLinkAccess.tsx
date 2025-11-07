@@ -101,12 +101,24 @@ export const ShareLinkAccess: React.FC = () => {
 
   // 권한 부여 처리
   const handleGrantAccess = async () => {
-    if (!user || !token || !link) return;
+    if (!user || !token || !link) {
+      console.error('❌ 권한 부여 조건 미충족:', { user: !!user, token: !!token, link: !!link });
+      return;
+    }
 
     setIsGranting(true);
     setError('');
 
     try {
+      console.log('🔑 권한 부여 시작:', {
+        token,
+        userId: user.uid,
+        userName: user.displayName || user.email,
+        email: user.email,
+        hasPassword: !!password,
+        hasPhotoURL: !!user.photoURL
+      });
+
       const result = await grantProjectAccessViaLink(
         token,
         user.uid,
@@ -115,6 +127,8 @@ export const ShareLinkAccess: React.FC = () => {
         password || undefined,
         user.photoURL || undefined // 프로필 사진 URL 전달
       );
+
+      console.log('🔑 권한 부여 결과:', result);
 
       if (result.success && result.projectId) {
         // 알림 생성

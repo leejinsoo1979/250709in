@@ -225,26 +225,37 @@ export async function grantProjectAccessViaLink(
   photoURL?: string // 프로필 사진 URL 추가
 ): Promise<{ success: boolean; message: string; projectId?: string; permission?: SharePermission }> {
   try {
+    console.log('🔑 grantProjectAccessViaLink 시작:', { token, userId, userName, userEmail });
+
     // 링크 검증
     const validation = await validateShareLink(token, password);
+    console.log('🔑 링크 재검증 결과:', validation);
+
     if (!validation.valid || !validation.link) {
+      console.error('❌ 링크 검증 실패:', validation.reason);
       return { success: false, message: validation.reason || '유효하지 않은 링크입니다.' };
     }
 
     const link = validation.link;
+    console.log('🔑 권한 부여 대상 프로젝트:', link.projectId);
 
     // 이미 프로젝트 소유자인지 확인
+    console.log('🔑 프로젝트 존재 확인 중...');
     const projectDoc = await getDoc(doc(db, 'projects', link.projectId));
     if (!projectDoc.exists()) {
+      console.error('❌ 프로젝트를 찾을 수 없습니다:', link.projectId);
       return { success: false, message: '프로젝트를 찾을 수 없습니다.' };
     }
 
     const projectData = projectDoc.data();
+    console.log('🔑 프로젝트 소유자 확인:', { projectOwner: projectData.userId, currentUser: userId });
     if (projectData.userId === userId) {
+      console.log('ℹ️ 이미 소유하고 있는 프로젝트');
       return { success: false, message: '이미 소유하고 있는 프로젝트입니다.' };
     }
 
     // Transaction으로 권한 부여 및 사용 횟수 증가
+    console.log('🔑 Transaction 시작...');
     await runTransaction(db, async (transaction) => {
       // 공유 프로젝트 접근 권한 문서 생성/업데이트
       const accessDocRef = doc(db, 'sharedProjectAccess', `${link.projectId}_${userId}`);
@@ -267,16 +278,23 @@ export async function grantProjectAccessViaLink(
         accessData.photoURL = photoURL;
       }
 
+      console.log('🔑 접근 권한 문서 생성:', {
+        docId: `${link.projectId}_${userId}`,
+        permission: link.permission,
+        hasPhotoURL: !!photoURL
+      });
       transaction.set(accessDocRef, accessData);
 
       // 링크 사용 횟수 증가
       const linkDocRef = doc(db, 'shareLinks', link.id);
+      console.log('🔑 링크 사용 횟수 증가:', link.usageCount, '→', link.usageCount + 1);
       transaction.update(linkDocRef, {
         usageCount: link.usageCount + 1,
       });
 
       // 접근 기록 저장
       const accessLogRef = doc(collection(db, 'shareLinkAccessLog'));
+      console.log('🔑 접근 기록 저장');
       transaction.set(accessLogRef, {
         linkId: link.id,
         userId,
@@ -287,6 +305,7 @@ export async function grantProjectAccessViaLink(
       });
     });
 
+    console.log('✅ Transaction 완료');
     console.log('✅ 프로젝트 접근 권한 부여 완료:', link.projectId);
     return {
       success: true,
@@ -294,9 +313,17 @@ export async function grantProjectAccessViaLink(
       projectId: link.projectId,
       permission: link.permission,
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('❌ 권한 부여 실패:', error);
-    return { success: false, message: '권한 부여 중 오류가 발생했습니다.' };
+    console.error('❌ 에러 상세:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    return {
+      success: false,
+      message: `권한 부여 중 오류가 발생했습니다: ${error.message || '알 수 없는 오류'}`
+    };
   }
 }
 
