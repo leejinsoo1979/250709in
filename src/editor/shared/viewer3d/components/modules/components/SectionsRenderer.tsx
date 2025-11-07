@@ -68,6 +68,9 @@ interface SectionsRendererProps {
 
   // 띄움 배치 시 치수 가이드 Y 오프셋 보정용 (mm)
   lowerSectionTopOffsetMm?: number;
+
+  // 띄움 배치 여부 (spaceInfo 기반)
+  isFloatingPlacement?: boolean;
 }
 
 /**
@@ -96,7 +99,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   sectionDepths,
   textureUrl,
   panelGrainDirections,
-  lowerSectionTopOffsetMm = 0
+  lowerSectionTopOffsetMm = 0,
+  isFloatingPlacement = false
 }) => {
   // UI 상태에서 치수 표시 여부 가져오기
   const showDimensions = useUIStore(state => state.showDimensions);
@@ -122,6 +126,9 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   const dimensionYOffset = (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right'))
     ? -mmToThreeUnits(lowerSectionTopOffsetMm)
     : 0;
+
+  // 띄움 여부는 명시적으로 받은 플래그를 우선 사용하고, 없으면 기존 lowerSectionTopOffset 기반 로직을 사용
+  const hasFloatingPlacement = isFloatingPlacement || (lowerSectionTopOffsetMm ?? 0) > 0;
 
   // 패널 비활성화용 material - 한 번만 생성하고 재사용
   const panelDimmedMaterial = React.useMemo(() => {
@@ -552,8 +559,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   // 상단 가이드선 위치 결정
                   if (index === allSections.length - 1) {
                     // 마지막 섹션 (상부 섹션)
-                    // 띄움배치 여부 확인 (lowerSectionTopOffsetMm > 0이면 띄움배치)
-                    const isFloating = lowerSectionTopOffsetMm > 0;
+                    // 띄움배치 여부 확인 (명시 플래그 우선, 없으면 lowerSectionTopOffsetMm 기준)
+                    const isFloating = hasFloatingPlacement;
                     const isLastSection = index === allSections.length - 1;
 
                     // 띄움배치 시 상부섹션은 18mm 확장
@@ -709,8 +716,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   const safetyShelfPositionMm = section.shelfPositions.find(pos => pos > 0);
                   if (safetyShelfPositionMm !== undefined) {
                     const sectionBottomY = sectionCenterY - sectionHeight/2;
-                    // 띄움배치 여부 확인
-                    const isFloating = lowerSectionTopOffsetMm > 0;
+                    // 띄움배치 여부 확인 (명시 플래그 우선)
+                    const isFloating = hasFloatingPlacement;
                     const floatingAdjustment = isFloating ? mmToThreeUnits(18) : 0;
                     // 안전선반 윗면
                     topCompartmentBottomY = sectionBottomY + (safetyShelfPositionMm * 0.01) + basicThickness / 2;

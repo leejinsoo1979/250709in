@@ -129,6 +129,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         furnitureId={moduleData.id}
                         lowerSectionTopOffsetMm={lowerSectionTopOffset}
+                        isFloatingPlacement={isFloating}
                       />
                     </group>
                     
@@ -156,6 +157,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         furnitureId={moduleData.id}
                         lowerSectionTopOffsetMm={lowerSectionTopOffset}
+                        isFloatingPlacement={isFloating}
                       />
                     </group>
                   </>
@@ -175,6 +177,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
                     mmToThreeUnits={baseFurniture.mmToThreeUnits}
                     renderMode={renderMode}
                     lowerSectionTopOffsetMm={lowerSectionTopOffset}
+                    isFloatingPlacement={isFloating}
                   />
                 )}
               </>

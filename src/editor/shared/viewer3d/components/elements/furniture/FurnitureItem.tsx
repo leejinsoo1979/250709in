@@ -1314,7 +1314,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
 
   // 키큰장이 상하부장과 인접했을 때 - 너비 조정 및 위치 이동
-  if (needsEndPanelAdjustment && endPanelSide) {
+  const hasColumnInSlot = !!(slotInfo && slotInfo.hasColumn && slotInfo.column);
+
+  if (needsEndPanelAdjustment && endPanelSide && !hasColumnInSlot) {
     console.log('🔵🔵🔵 [FurnitureItem] 키큰장 폭 조정 시작:', {
       moduleId: placedModule.moduleId,
       originalWidth: originalFurnitureWidthMm,
@@ -2076,6 +2078,33 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 배치 가능 - 깊이만 조정, 폭과 위치는 그대로
         adjustedDepthMm = remainingDepth;
       }
+    }
+  }
+
+  if (needsEndPanelAdjustment && endPanelSide && hasColumnInSlot) {
+    const baseWidthAfterColumn = furnitureWidthMm;
+    const reductionMap: Record<string, number> = {
+      left: END_PANEL_THICKNESS,
+      right: END_PANEL_THICKNESS,
+      both: END_PANEL_THICKNESS * 2
+    };
+
+    const reductionMm = reductionMap[endPanelSide] ?? 0;
+    let adjustedWidth = Math.max(150, baseWidthAfterColumn - reductionMm);
+    const appliedReductionMm = Math.max(0, baseWidthAfterColumn - adjustedWidth);
+
+    furnitureWidthMm = adjustedWidth;
+
+    if (appliedReductionMm > 0) {
+      const halfReductionUnits = mmToThreeUnits(appliedReductionMm / 2);
+      if (endPanelSide === 'left') {
+        // 왼쪽 엔드패널: 기둥 쪽을 고정하고 오른쪽 폭만 줄이므로 중심을 오른쪽으로 이동
+        positionAdjustmentForEndPanel += halfReductionUnits;
+      } else if (endPanelSide === 'right') {
+        // 오른쪽 엔드패널: 기둥 쪽을 고정하고 왼쪽 폭만 줄이므로 중심을 왼쪽으로 이동
+        positionAdjustmentForEndPanel -= halfReductionUnits;
+      }
+      // 양쪽 엔드패널(both)은 중심을 유지
     }
   }
 

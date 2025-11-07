@@ -488,6 +488,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
               lowerSectionTopOffsetMm={lowerSectionTopOffset}
+              isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
             />
 
             {/* 옷걸이 봉 렌더링 - hanging 섹션만 */}

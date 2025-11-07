@@ -224,6 +224,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 panelGrainDirections={panelGrainDirections}
                 sectionDepths={sectionDepths}
                 lowerSectionTopOffsetMm={lowerSectionTopOffset}
+                isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
               />
 
               {clothingRods}

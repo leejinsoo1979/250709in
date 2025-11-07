@@ -412,6 +412,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
               panelGrainDirections={panelGrainDirections}
             sectionDepths={sectionDepths}
             lowerSectionTopOffsetMm={lowerSectionTopOffset}
+            isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
           />
 
           {/* 옷걸이 봉 렌더링 - hanging 섹션만 */}

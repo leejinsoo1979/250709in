@@ -633,6 +633,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
               placedFurnitureId={placedFurnitureId}
               textureUrl={baseFurniture.textureUrl}
               panelGrainDirections={panelGrainDirections}
+              isFloatingPlacement={spaceInfo?.baseConfig?.placementType === 'float'}
             />
           )}
         </BaseFurnitureShell>
