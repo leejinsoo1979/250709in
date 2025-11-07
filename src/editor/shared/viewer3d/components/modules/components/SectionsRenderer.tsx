@@ -559,6 +559,16 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 띄움배치 시 상부섹션은 18mm 확장
                     const floatingAdjustment = (isFloating && isLastSection) ? mmToThreeUnits(18) : 0;
 
+                    console.log('🟢🟢🟢 [SectionsRenderer] 정면뷰 상부섹션 topY 계산:', {
+                      furnitureId,
+                      index,
+                      lowerSectionTopOffsetMm,
+                      isFloating,
+                      isLastSection,
+                      floatingAdjustment,
+                      'floatingAdjustment_mm': floatingAdjustment * 100
+                    });
+
                     // hanging 섹션에서 안전선반이 있는 경우: 안전선반 하단까지
                     if (hasSafetyShelf) {
                       // 안전선반의 위치를 가져옴 (0이 아닌 첫 번째 값 = 안전선반, 섹션 하단 기준)
@@ -574,16 +584,37 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       const is2HangingUpperSection = (furnitureId?.includes('2hanging') || furnitureId?.includes('2drawer-hanging')) && index === 1;
                       const isDualFurniture = furnitureId?.includes('dual');
 
+                      console.log('🔵🔵🔵 [SectionsRenderer] 안전선반 없는 경우:', {
+                        furnitureId,
+                        is2HangingUpperSection,
+                        isDualFurniture,
+                        sectionTopY,
+                        'sectionTopY_mm': sectionTopY * 100,
+                        bottomY,
+                        'bottomY_mm': bottomY * 100,
+                        sectionHeight,
+                        'sectionHeight_mm': sectionHeight * 100,
+                        'height/2': height/2,
+                        'height/2_mm': height/2 * 100,
+                        basicThickness,
+                        'basicThickness_mm': basicThickness * 100,
+                        floatingAdjustment,
+                        'floatingAdjustment_mm': floatingAdjustment * 100
+                      });
+
                       if (is2HangingUpperSection && isDualFurniture) {
                         // 듀얼 가구만: sectionTopY가 측판 상단 (전체 가구 상판 아래)
                         // 내경은 상판 하단까지 (상판 두께를 빼야 함)
                         topY = sectionTopY - basicThickness + floatingAdjustment;
+                        console.log('🟡 듀얼 가구 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       } else if (is2HangingUpperSection) {
                         // 싱글 가구: bottomY + sectionHeight (원래 로직)
                         topY = bottomY + sectionHeight + floatingAdjustment;
+                        console.log('🟡 싱글 가구 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       } else {
                         // 일반 케이스: 상부 프레임 하단까지
                         topY = height/2 - basicThickness + floatingAdjustment;
+                        console.log('🟡 일반 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       }
                     }
                   } else {
