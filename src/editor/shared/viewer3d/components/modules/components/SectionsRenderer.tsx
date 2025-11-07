@@ -678,10 +678,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                   const safetyShelfPositionMm = section.shelfPositions.find(pos => pos > 0);
                   if (safetyShelfPositionMm !== undefined) {
                     const sectionBottomY = sectionCenterY - sectionHeight/2;
+                    // 띄움배치 여부 확인
+                    const isFloating = lowerSectionTopOffsetMm > 0;
+                    const floatingAdjustment = isFloating ? mmToThreeUnits(18) : 0;
                     // 안전선반 윗면
                     topCompartmentBottomY = sectionBottomY + (safetyShelfPositionMm * 0.01) + basicThickness / 2;
-                    // 상부 프레임 하단
-                    topCompartmentTopY = height/2 - basicThickness;
+                    // 상부 프레임 하단 (띄움배치 시 18mm 확장)
+                    topCompartmentTopY = height/2 - basicThickness + floatingAdjustment;
                     // 안전선반 위 칸의 내경
                     topCompartmentHeight = (topCompartmentTopY - topCompartmentBottomY) / 0.01;
 
