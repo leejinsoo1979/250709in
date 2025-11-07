@@ -1954,6 +1954,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 마지막 슬롯도 일반 슬롯과 동일하게 처리 (특별 처리 제거)
   // threeUnitPositions가 이미 올바른 위치를 가지고 있음
 
+  const widthReductionBeforeColumn = Math.max(0, originalFurnitureWidthMm - furnitureWidthMm);
+
   // 기둥이 있는 모든 슬롯 처리 (단내림 구간 포함)
   if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && slotInfo.column) {
     // 기둥 타입에 따른 처리 방식 확인
@@ -1976,7 +1978,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 일반 폭 조정 방식: 가구 크기와 위치 조정
       // 기둥 침범 시에는 항상 폭 조정
       const slotHalfWidthM = (slotWidthMmForBounds * 0.01) / 2;
-      const furnitureHalfWidthM = (furnitureBounds.renderWidth * 0.01) / 2;
+      let furnitureHalfWidthM = (furnitureBounds.renderWidth * 0.01) / 2;
+      const originalHalfWidthM = furnitureHalfWidthM;
       const slotLeft = originalSlotCenterX - slotHalfWidthM;
       const slotRight = originalSlotCenterX + slotHalfWidthM;
 
@@ -1996,12 +1999,47 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         positionAdjustmentForEndPanel = appliedOffset;
       }
 
-      furnitureWidthMm = furnitureBounds.renderWidth;
+      let adjustedWidthAfterColumn = furnitureBounds.renderWidth;
+
+      let appliedReduction = 0;
+      if (widthReductionBeforeColumn > 0) {
+        const maxReduction = Math.max(0, adjustedWidthAfterColumn - 50); // 최소 폭 확보
+        appliedReduction = Math.min(widthReductionBeforeColumn, maxReduction);
+        if (appliedReduction > 0) {
+          adjustedWidthAfterColumn -= appliedReduction;
+          furnitureHalfWidthM = (adjustedWidthAfterColumn * 0.01) / 2;
+        }
+      }
+
+      if (appliedReduction > 0 && (needsEndPanelAdjustment || widthReduced)) {
+        const shiftSign = (() => {
+          if (positionAdjustmentForEndPanel > 0) return 1;
+          if (positionAdjustmentForEndPanel < 0) return -1;
+          if (endPanelSide === 'left') return 1;
+          if (endPanelSide === 'right') return -1;
+          return 0;
+        })();
+
+        if (shiftSign !== 0) {
+          const halfDiff = originalHalfWidthM - furnitureHalfWidthM;
+          let shiftedCenter = targetCenter + halfDiff * shiftSign;
+          const minCenter = slotLeft + furnitureHalfWidthM;
+          const maxCenter = slotRight - furnitureHalfWidthM;
+          shiftedCenter = Math.min(maxCenter, Math.max(minCenter, shiftedCenter));
+          targetCenter = shiftedCenter;
+        }
+      }
+
+      furnitureWidthMm = adjustedWidthAfterColumn;
       adjustedPosition = {
         ...adjustedPosition, // adjustedPosition 사용하여 상부장 Y 위치 보존
         x: targetCenter
       };
-      
+
+      if (needsEndPanelAdjustment || widthReduced) {
+        positionAdjustmentForEndPanel = targetCenter - furnitureBounds.center;
+      }
+
       // 기둥 변경으로 인한 폭 조정이 필요한 경우 실시간 업데이트
       if (!isFurnitureDragging && (
         placedModule.adjustedWidth !== furnitureWidthMm || 
@@ -2842,6 +2880,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             moduleData={actualModuleData}
             isDragging={isDraggingThis}
             isEditMode={isEditMode}
+            adjustedWidth={furnitureWidthMm}
             floatHeight={
               // **중요**: 저장된 값 무시하고 항상 현재 spaceInfo의 placementType을 우선 사용
               spaceInfo.baseConfig?.placementType === 'float'
