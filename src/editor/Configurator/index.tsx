@@ -88,6 +88,25 @@ const Configurator: React.FC = () => {
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
 
+  // 권한에 따라 읽기 전용 모드 설정
+  useEffect(() => {
+    // URL에서 mode=readonly가 있으면 그것을 우선
+    const mode = searchParams.get('mode');
+    if (mode === 'readonly') {
+      setIsReadOnly(true);
+      return;
+    }
+
+    // 권한에 따라 설정 (viewer는 읽기 전용, editor와 owner는 편집 가능)
+    if (permission === 'viewer') {
+      console.log('👁️ 공유 권한: 조회 전용 모드 활성화');
+      setIsReadOnly(true);
+    } else if (permission === 'editor' || permission === 'owner') {
+      console.log('✏️ 공유 권한: 편집 가능 모드 활성화');
+      setIsReadOnly(false);
+    }
+  }, [permission, searchParams]);
+
   // 읽기 전용 모드에서 재질 탭 자동 열기
   useEffect(() => {
     if (isReadOnly) {

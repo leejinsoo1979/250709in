@@ -211,7 +211,8 @@ export async function grantProjectAccessViaLink(
   userId: string,
   userName: string,
   userEmail: string,
-  password?: string
+  password?: string,
+  photoURL?: string // 프로필 사진 URL 추가
 ): Promise<{ success: boolean; message: string; projectId?: string; permission?: SharePermission }> {
   try {
     // 링크 검증
@@ -237,7 +238,7 @@ export async function grantProjectAccessViaLink(
     await runTransaction(db, async (transaction) => {
       // 공유 프로젝트 접근 권한 문서 생성/업데이트
       const accessDocRef = doc(db, 'sharedProjectAccess', `${link.projectId}_${userId}`);
-      transaction.set(accessDocRef, {
+      const accessData: any = {
         projectId: link.projectId,
         projectName: link.projectName,
         userId,
@@ -249,7 +250,14 @@ export async function grantProjectAccessViaLink(
         sharedVia: 'link',
         linkToken: token,
         grantedAt: Timestamp.now(),
-      });
+      };
+
+      // 프로필 사진이 있으면 저장
+      if (photoURL) {
+        accessData.photoURL = photoURL;
+      }
+
+      transaction.set(accessDocRef, accessData);
 
       // 링크 사용 횟수 증가
       const linkDocRef = doc(db, 'shareLinks', link.id);
@@ -422,5 +430,47 @@ export async function getSharedProjectsForUser(userId: string) {
   } catch (error) {
     console.error('❌ 공유 프로젝트 목록 조회 실패:', error);
     throw error;
+  }
+}
+
+/**
+ * 프로젝트의 협업자 목록 조회 (프로젝트에 접근 권한이 있는 모든 사용자)
+ */
+export interface ProjectCollaborator {
+  userId: string;
+  userName: string;
+  userEmail: string;
+  permission: SharePermission;
+  grantedAt: Timestamp;
+  photoURL?: string; // 프로필 사진 URL
+}
+
+export async function getProjectCollaborators(projectId: string): Promise<ProjectCollaborator[]> {
+  try {
+    // projectId로 시작하는 모든 sharedProjectAccess 문서 조회
+    const q = query(
+      collection(db, 'sharedProjectAccess'),
+      where('projectId', '==', projectId)
+    );
+    const snapshot = await getDocs(q);
+
+    const collaborators: ProjectCollaborator[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      collaborators.push({
+        userId: data.userId,
+        userName: data.userName,
+        userEmail: data.userEmail,
+        permission: data.permission as SharePermission,
+        grantedAt: data.grantedAt,
+        photoURL: data.photoURL, // 프로필 사진이 저장되어 있으면 사용
+      });
+    });
+
+    console.log('✅ 프로젝트 협업자 조회 완료:', projectId, collaborators.length, '명');
+    return collaborators;
+  } catch (error) {
+    console.error('❌ 프로젝트 협업자 조회 실패:', error);
+    return [];
   }
 }

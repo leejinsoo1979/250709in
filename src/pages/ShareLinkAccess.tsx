@@ -108,7 +108,8 @@ export const ShareLinkAccess: React.FC = () => {
         user.uid,
         user.displayName || user.email || '사용자',
         user.email || '',
-        password || undefined
+        password || undefined,
+        user.photoURL || undefined // 프로필 사진 URL 전달
       );
 
       if (result.success && result.projectId) {

@@ -8,6 +8,7 @@ import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
+import { getProjectCollaborators, type ProjectCollaborator } from '@/firebase/shareLinks';
 import { signOutUser } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -97,6 +98,9 @@ const SimpleDashboard: React.FC = () => {
   const [shareProjectName, setShareProjectName] = useState<string>('');
   const [shareDesignFileId, setShareDesignFileId] = useState<string | null>(null);
   const [shareDesignFileName, setShareDesignFileName] = useState<string>('');
+
+  // 프로젝트 협업자 목록 상태 (projectId를 key로 사용)
+  const [projectCollaborators, setProjectCollaborators] = useState<{[projectId: string]: ProjectCollaborator[]}>({});
 
   // Firebase 프로젝트 목록 상태
   const [firebaseProjects, setFirebaseProjects] = useState<ProjectSummary[]>([]);
@@ -424,7 +428,35 @@ const SimpleDashboard: React.FC = () => {
       });
     }
   }, [firebaseProjects, user, loadDesignFilesForProject]);
-  
+
+  // 프로젝트 목록이 로드되면 각 프로젝트의 협업자 정보도 로드
+  useEffect(() => {
+    if (firebaseProjects.length > 0) {
+      console.log('👥 프로젝트 협업자 정보 로딩 시작:', firebaseProjects.length, '개 프로젝트');
+
+      // 각 프로젝트의 협업자 가져오기
+      const fetchAllCollaborators = async () => {
+        const collaboratorsMap: {[projectId: string]: ProjectCollaborator[]} = {};
+
+        for (const project of firebaseProjects) {
+          try {
+            const collaborators = await getProjectCollaborators(project.id);
+            if (collaborators.length > 0) {
+              collaboratorsMap[project.id] = collaborators;
+              console.log(`✅ 프로젝트 ${project.title} 협업자:`, collaborators.length, '명');
+            }
+          } catch (error) {
+            console.error(`❌ 프로젝트 ${project.id} 협업자 조회 실패:`, error);
+          }
+        }
+
+        setProjectCollaborators(collaboratorsMap);
+      };
+
+      fetchAllCollaborators();
+    }
+  }, [firebaseProjects]);
+
   // firebaseProjects가 업데이트될 때 대기 중인 프로젝트 선택 처리
   useEffect(() => {
     const pendingProjectId = sessionStorage.getItem('pendingProjectSelect');
@@ -3610,13 +3642,14 @@ const SimpleDashboard: React.FC = () => {
                           
                           <div className={styles.cardFooter}>
                             <div className={styles.cardUser}>
+                              {/* 소유자 프로필 */}
                               <div className={styles.cardUserAvatar}>
                                 {user?.photoURL ? (
                                   <img
                                     src={user.photoURL}
                                     alt="프로필"
                                     referrerPolicy="no-referrer"
-                                    
+
                                     style={{
                                       width: '100%',
                                       height: '100%',
@@ -3632,6 +3665,72 @@ const SimpleDashboard: React.FC = () => {
                                 {user?.displayName || user?.email?.split('@')[0] || '이진수'}
                               </span>
                             </div>
+
+                            {/* 협업자 프로필 사진들 */}
+                            {projectCollaborators[item.project.id] && projectCollaborators[item.project.id].length > 0 && (
+                              <div className={styles.collaborators} style={{
+                                display: 'flex',
+                                gap: '4px',
+                                marginTop: '8px',
+                                paddingLeft: '4px'
+                              }}>
+                                {projectCollaborators[item.project.id].slice(0, 3).map((collaborator, idx) => (
+                                  <div
+                                    key={collaborator.userId}
+                                    title={`${collaborator.userName} (${collaborator.permission === 'editor' ? '편집 가능' : '조회만'})`}
+                                    style={{
+                                      width: '24px',
+                                      height: '24px',
+                                      borderRadius: '50%',
+                                      overflow: 'hidden',
+                                      border: '2px solid white',
+                                      backgroundColor: '#e0e0e0',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '10px',
+                                      fontWeight: 'bold',
+                                      color: '#666'
+                                    }}
+                                  >
+                                    {collaborator.photoURL ? (
+                                      <img
+                                        src={collaborator.photoURL}
+                                        alt={collaborator.userName}
+                                        referrerPolicy="no-referrer"
+                                        style={{
+                                          width: '100%',
+                                          height: '100%',
+                                          objectFit: 'cover'
+                                        }}
+                                      />
+                                    ) : (
+                                      <UserIcon size={10} />
+                                    )}
+                                  </div>
+                                ))}
+                                {projectCollaborators[item.project.id].length > 3 && (
+                                  <div
+                                    title={`+${projectCollaborators[item.project.id].length - 3}명 더`}
+                                    style={{
+                                      width: '24px',
+                                      height: '24px',
+                                      borderRadius: '50%',
+                                      border: '2px solid white',
+                                      backgroundColor: '#666',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '10px',
+                                      fontWeight: 'bold',
+                                      color: 'white'
+                                    }}
+                                  >
+                                    +{projectCollaborators[item.project.id].length - 3}
+                                  </div>
+                                )}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ) : (
