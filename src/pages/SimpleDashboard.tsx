@@ -735,13 +735,20 @@ const SimpleDashboard: React.FC = () => {
         projectTitle
       });
 
+      // Firebase에서 디자인 파일 즉시 삭제 (휴지통으로 이동 시 바로 삭제)
+      const { error } = await deleteDesignFile(designFile.id, projectId);
+      if (error) {
+        alert('디자인 파일 삭제 실패: ' + error);
+        return;
+      }
+
       // 로컬 상태에서 제거
       setProjectDesignFiles(prev => ({
         ...prev,
         [projectId]: prev[projectId]?.filter(df => df.id !== designFile.id) || []
       }));
 
-      // 휴지통에 추가
+      // 휴지통에 추가 (복원을 위한 정보 보관 - 하지만 Firebase에서는 이미 삭제됨)
       const deletedItem = {
         designFile: {
           ...designFile,
@@ -764,7 +771,7 @@ const SimpleDashboard: React.FC = () => {
         toggleDesignBookmark(designFile.id);
       }
 
-      console.log('✅ 디자인 파일 휴지통 이동 완료:', designFile.id);
+      console.log('✅ 디자인 파일 Firebase 삭제 및 휴지통 이동 완료:', designFile.id);
     } catch (error) {
       console.error('디자인 파일 휴지통 이동 중 오류:', error);
       alert('디자인 파일 삭제 중 오류가 발생했습니다.');
@@ -789,49 +796,31 @@ const SimpleDashboard: React.FC = () => {
     }
   };
 
-  // 휴지통에서 디자인 파일 복원 함수
+  // 휴지통에서 디자인 파일 복원 함수 (Firebase에서 이미 삭제되어 복원 불가)
   const restoreDesignFileFromTrash = (designFileId: string) => {
-    const deletedItem = deletedDesignFiles.find(d => d.designFile.id === designFileId);
-    if (deletedItem) {
-      console.log('🔄 디자인 파일 복원:', {
-        designFileId,
-        designFileName: deletedItem.designFile.name,
-        projectId: deletedItem.projectId
-      });
+    alert('디자인 파일은 이미 서버에서 삭제되어 복원할 수 없습니다.\n\n휴지통에서 항목만 제거됩니다.');
 
-      const updatedDesignTrash = deletedDesignFiles.filter(d => d.designFile.id !== designFileId);
-      setDeletedDesignFiles(updatedDesignTrash);
+    // 휴지통에서만 제거 (Firebase에 이미 없으므로 복원 불가)
+    const updatedDesignTrash = deletedDesignFiles.filter(d => d.designFile.id !== designFileId);
+    setDeletedDesignFiles(updatedDesignTrash);
 
-      // deletedAt 속성 제거하고 복원
-      const { deletedAt, ...restoredDesignFile } = deletedItem.designFile as any;
-
-      // 원래 프로젝트의 디자인 파일 목록에 추가
-      setProjectDesignFiles(prev => ({
-        ...prev,
-        [deletedItem.projectId]: [...(prev[deletedItem.projectId] || []), restoredDesignFile]
-      }));
-
-      // localStorage 업데이트
-      if (user) {
-        localStorage.setItem(`design_trash_${user.uid}`, JSON.stringify(updatedDesignTrash));
-      }
-
-      console.log('✅ 디자인 파일 복원 완료:', designFileId);
+    // localStorage 업데이트
+    if (user) {
+      localStorage.setItem(`design_trash_${user.uid}`, JSON.stringify(updatedDesignTrash));
     }
+
+    console.log('⚠️ 디자인 파일 복원 불가 - 휴지통에서만 제거:', designFileId);
   };
   
-  // 휴지통 비우기 함수
+  // 휴지통 비우기 함수 (이미 Firebase에서 삭제되었으므로 localStorage만 정리)
   const emptyTrash = async () => {
-    if (window.confirm('휴지통을 비우시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-      // Firebase에서 프로젝트 영구 삭제
+    if (window.confirm('휴지통을 비우시겠습니까?\n\n항목들은 이미 서버에서 삭제되어 있으며, 휴지통 기록만 지워집니다.')) {
+      // Firebase에서 프로젝트 영구 삭제 (프로젝트는 Firebase에 남아있음)
       for (const project of deletedProjects) {
         await deleteProject(project.id);
       }
 
-      // Firebase에서 디자인 파일 영구 삭제
-      for (const item of deletedDesignFiles) {
-        await deleteDesignFile(item.designFile.id, item.projectId);
-      }
+      // 디자인 파일은 이미 Firebase에서 삭제되었으므로 로컬만 정리
 
       // 로컬 상태 초기화
       setDeletedProjects([]);
@@ -842,7 +831,7 @@ const SimpleDashboard: React.FC = () => {
         localStorage.removeItem(`design_trash_${user.uid}`);
       }
 
-      console.log('🗑️ 휴지통 비우기 완료');
+      console.log('🗑️ 휴지통 비우기 완료 (디자인 파일은 이미 Firebase에서 삭제됨)');
     }
   };
   
@@ -1827,22 +1816,19 @@ const SimpleDashboard: React.FC = () => {
         // 디자인 파일 삭제
         try {
           if (activeMenu === 'trash') {
-            // 휴지통에서 영구 삭제
+            // 휴지통에서 영구 삭제 (이미 Firebase에서 삭제됨, localStorage만 정리)
             const deletedItem = deletedDesignFiles.find(d => d.designFile.id === moreMenu.itemId);
             if (deletedItem) {
-              const { error } = await deleteDesignFile(deletedItem.designFile.id, deletedItem.projectId);
-              if (error) {
-                alert('디자인 파일 삭제 실패: ' + error);
-              } else {
-                // 휴지통에서 제거
-                const updatedDesignTrash = deletedDesignFiles.filter(d => d.designFile.id !== moreMenu.itemId);
-                setDeletedDesignFiles(updatedDesignTrash);
+              // 이미 Firebase에서 삭제되었으므로 로컬만 정리
+              const updatedDesignTrash = deletedDesignFiles.filter(d => d.designFile.id !== moreMenu.itemId);
+              setDeletedDesignFiles(updatedDesignTrash);
 
-                // localStorage 업데이트
-                if (user) {
-                  localStorage.setItem(`design_trash_${user.uid}`, JSON.stringify(updatedDesignTrash));
-                }
+              // localStorage 업데이트
+              if (user) {
+                localStorage.setItem(`design_trash_${user.uid}`, JSON.stringify(updatedDesignTrash));
               }
+
+              console.log('✅ 디자인 파일 휴지통에서 제거 완료 (이미 Firebase에서 삭제됨):', moreMenu.itemId);
             }
           } else {
             // 일반 삭제 - 휴지통으로 이동
