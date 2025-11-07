@@ -644,7 +644,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     const sectionTopY = isLastSection ? (floatHeight + baseFrameHeight + internalHeight) : sectionEndY;
 
                     // 섹션 상단에서 상단판(basicThickness) 2개 두께를 뺀 위치가 내부 상단
-                    const topFrameBottomY = sectionTopY - basicThickness;
+                    // 띄움배치 시 상부섹션은 18mm 확장
+                    const floatingAdjustment = (isFloating && isLastSection) ? mmToThreeUnits(18) : 0;
+                    const topFrameBottomY = sectionTopY - basicThickness + floatingAdjustment;
                     const topFrameBottomMm = (topFrameBottomY - sectionStartY) / 0.01;
 
                     const heightMm = topFrameBottomMm - lastShelfTopMm; // 선반 상단부터 상단 프레임 하단까지
