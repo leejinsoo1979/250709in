@@ -26,6 +26,7 @@ export const ShareLinkAccess: React.FC = () => {
   // 초기 링크 검증
   useEffect(() => {
     if (!token) {
+      console.error('❌ 토큰이 없습니다');
       setError('유효하지 않은 링크입니다.');
       setIsValidating(false);
       return;
@@ -33,9 +34,12 @@ export const ShareLinkAccess: React.FC = () => {
 
     const validateLink = async () => {
       try {
+        console.log('🔍 링크 검증 시작:', token);
         const validation = await validateShareLink(token);
+        console.log('🔍 검증 결과:', validation);
 
         if (!validation.valid) {
+          console.error('❌ 링크 검증 실패:', validation.reason);
           setError(validation.reason || '유효하지 않은 링크입니다.');
           setIsValidating(false);
           return;
@@ -262,6 +266,14 @@ export const ShareLinkAccess: React.FC = () => {
           <XCircle className={styles.errorIcon} size={64} />
           <h2 className={styles.title}>링크 접근 실패</h2>
           <p className={styles.description}>{error}</p>
+          {token && (
+            <p className={styles.description} style={{ fontSize: '12px', color: '#666', marginTop: '8px' }}>
+              토큰: {token}
+            </p>
+          )}
+          <p className={styles.description} style={{ fontSize: '12px', color: '#999', marginTop: '8px' }}>
+            F12를 눌러 콘솔을 확인하면 자세한 오류를 볼 수 있습니다
+          </p>
           <button className={styles.button} onClick={() => navigate('/')}>
             홈으로 돌아가기
           </button>

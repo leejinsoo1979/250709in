@@ -147,14 +147,24 @@ export async function createShareLink(
  */
 export async function getShareLinkByToken(token: string): Promise<ShareLink | null> {
   try {
+    console.log('🔍 토큰으로 링크 조회:', token);
     const q = query(collection(db, 'shareLinks'), where('token', '==', token));
     const snapshot = await getDocs(q);
 
+    console.log('🔍 조회 결과:', snapshot.empty ? '결과 없음' : `${snapshot.size}개 발견`);
+
     if (snapshot.empty) {
+      console.error('❌ 토큰에 해당하는 링크를 찾을 수 없습니다:', token);
       return null;
     }
 
     const linkData = snapshot.docs[0].data() as ShareLink;
+    console.log('✅ 링크 데이터 조회 완료:', {
+      projectId: linkData.projectId,
+      permission: linkData.permission,
+      isActive: linkData.isActive,
+      expiresAt: linkData.expiresAt?.toDate?.()
+    });
     return linkData;
   } catch (error) {
     console.error('❌ 공유 링크 조회 실패:', error);
