@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Sidebar.module.css';
-import { LogOut, Settings } from 'lucide-react';
+import { LogOut, Settings, UserIcon } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { PaletteIcon, StructureIcon } from '@/components/common/Icons';
@@ -13,6 +13,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '@/i18n/useTranslation';
+import { getProjectCollaborators, type ProjectCollaborator } from '@/firebase/shareLinks';
 
 export type SidebarTab = 'module' | 'material' | 'structure' | 'etc';
 
@@ -24,6 +25,7 @@ interface SidebarProps {
   onResetUnsavedChanges?: React.MutableRefObject<(() => void) | null>; // 저장 완료 후 상태 리셋을 위한 ref
   onSave?: () => Promise<void>; // 저장 함수 추가
   readOnly?: boolean; // 읽기 전용 모드 (viewer 권한)
+  projectId?: string; // 현재 프로젝트 ID (협업자 정보 표시용)
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -33,21 +35,25 @@ const Sidebar: React.FC<SidebarProps> = ({
   onToggle,
   onResetUnsavedChanges,
   onSave,
-  readOnly = false
+  readOnly = false,
+  projectId
 }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
   const navigate = useNavigate();
   const { t, currentLanguage } = useTranslation();
-  
+
   // Store hooks for checking unsaved changes
   const projectStore = useProjectStore();
   const spaceConfigStore = useSpaceConfigStore();
   const furnitureStore = useFurnitureStore();
-  
+
   // Track initial state
   const [initialState, setInitialState] = useState<any>(null);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+
+  // 협업자 정보
+  const [collaborators, setCollaborators] = useState<ProjectCollaborator[]>([]);
   
   // 현재 상태를 초기 상태로 저장하는 함수
   const saveCurrentStateAsInitial = useCallback(() => {
@@ -89,7 +95,18 @@ const Sidebar: React.FC<SidebarProps> = ({
       onResetUnsavedChanges.current = saveCurrentStateAsInitial;
     }
   }, [onResetUnsavedChanges]);
-  
+
+  // 협업자 정보 가져오기
+  useEffect(() => {
+    if (projectId) {
+      getProjectCollaborators(projectId)
+        .then(setCollaborators)
+        .catch((error) => {
+          console.error('❌ 협업자 정보 조회 실패:', error);
+        });
+    }
+  }, [projectId]);
+
   // Check if there are unsaved changes
   const hasUnsavedChanges = () => {
     if (!initialState) return false;
@@ -241,6 +258,82 @@ const Sidebar: React.FC<SidebarProps> = ({
           <Settings size={20} />
         </button>
       </div>
+
+      {/* 협업자 프로필 표시 */}
+      {collaborators.length > 0 && (
+        <div style={{
+          padding: '16px',
+          borderTop: '1px solid var(--theme-border)',
+          maxHeight: '200px',
+          overflowY: 'auto'
+        }}>
+          <div style={{
+            fontSize: '11px',
+            color: 'var(--theme-text-secondary)',
+            marginBottom: '12px',
+            fontWeight: 600
+          }}>
+            협업자 ({collaborators.length})
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {collaborators.map((collaborator) => (
+              <div
+                key={collaborator.userId}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '6px 8px',
+                  borderRadius: '6px',
+                  backgroundColor: 'var(--theme-bg-tertiary)',
+                }}
+              >
+                <div style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  backgroundColor: '#e0e0e0',
+                  flexShrink: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {collaborator.photoURL ? (
+                    <img
+                      src={collaborator.photoURL}
+                      alt={collaborator.userName}
+                      referrerPolicy="no-referrer"
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <UserIcon size={14} color="#666" />
+                  )}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: '12px',
+                    fontWeight: 500,
+                    color: 'var(--theme-text-primary)',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    {collaborator.userName}
+                  </div>
+                  <div style={{
+                    fontSize: '10px',
+                    color: 'var(--theme-text-tertiary)',
+                    marginTop: '2px'
+                  }}>
+                    {collaborator.permission === 'editor' ? '편집 가능' : '조회만'}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 하단 나가기 버튼 */}
       <div className={styles.userSection}>

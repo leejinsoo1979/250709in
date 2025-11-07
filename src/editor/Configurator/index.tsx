@@ -3151,6 +3151,7 @@ const Configurator: React.FC = () => {
             onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
             onSave={saveProject}
             readOnly={isReadOnly}
+            projectId={projectId}
           />
 
           {/* 사이드바 컨텐츠 패널 */}
