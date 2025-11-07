@@ -2959,7 +2959,75 @@ const Configurator: React.FC = () => {
       console.log('💾💾💾 [테스트] 직접 저장 함수 호출');
       await saveProject();
     };
+
+    // 현재 프로젝트의 모든 디자인 파일 목록 확인
+    (window as any).listDesignFiles = async () => {
+      if (!currentProjectId) {
+        console.error('❌ 프로젝트 ID가 없습니다');
+        return;
+      }
+
+      try {
+        const { getDesignFiles } = await import('@/firebase/projects');
+        const { designFiles, error } = await getDesignFiles(currentProjectId);
+
+        if (error) {
+          console.error('❌ 디자인 파일 목록 조회 실패:', error);
+          return;
+        }
+
+        console.log('📁 현재 프로젝트의 디자인 파일 목록:');
+        console.table(designFiles.map(f => ({
+          ID: f.id,
+          이름: f.name,
+          생성일: new Date(f.createdAt).toLocaleString(),
+          수정일: new Date(f.updatedAt).toLocaleString()
+        })));
+
+        return designFiles;
+      } catch (error) {
+        console.error('❌ 디자인 파일 목록 조회 중 오류:', error);
+      }
+    };
+
+    // 디자인 파일 삭제
+    (window as any).deleteDesignFile = async (designFileId: string) => {
+      if (!currentProjectId) {
+        console.error('❌ 프로젝트 ID가 없습니다');
+        return;
+      }
+
+      if (!designFileId) {
+        console.error('❌ 삭제할 디자인 파일 ID를 입력하세요');
+        console.log('💡 사용법: window.deleteDesignFile("파일ID")');
+        console.log('💡 파일 목록 확인: window.listDesignFiles()');
+        return;
+      }
+
+      if (!confirm(`정말로 이 디자인 파일을 삭제하시겠습니까?\nID: ${designFileId}`)) {
+        console.log('❌ 삭제 취소됨');
+        return;
+      }
+
+      try {
+        const { deleteDesignFile } = await import('@/firebase/projects');
+        const { error } = await deleteDesignFile(designFileId, currentProjectId);
+
+        if (error) {
+          console.error('❌ 디자인 파일 삭제 실패:', error);
+          return;
+        }
+
+        console.log('✅ 디자인 파일 삭제 성공:', designFileId);
+        console.log('🔄 페이지를 새로고침하세요');
+      } catch (error) {
+        console.error('❌ 디자인 파일 삭제 중 오류:', error);
+      }
+    };
+
     console.log('💾 테스트: 브라우저 콘솔에서 window.testSaveProject()를 실행해보세요');
+    console.log('📁 파일 목록: window.listDesignFiles()');
+    console.log('🗑️ 파일 삭제: window.deleteDesignFile("파일ID")');
   }
 
   return (
