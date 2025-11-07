@@ -244,6 +244,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
               textureUrl={spaceInfo.materialConfig?.doorTexture}
               panelGrainDirections={panelGrainDirections}
               sectionDepths={sectionDepths}
+              lowerSectionTopOffsetMm={lowerSectionTopOffset}
             />
 
             {/* 옷걸이 봉 렌더링 - hanging 섹션에만 */}

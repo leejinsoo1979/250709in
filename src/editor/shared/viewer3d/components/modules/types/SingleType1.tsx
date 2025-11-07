@@ -223,6 +223,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
                 textureUrl={spaceInfo.materialConfig?.doorTexture}
                 panelGrainDirections={panelGrainDirections}
                 sectionDepths={sectionDepths}
+                lowerSectionTopOffsetMm={lowerSectionTopOffset}
               />
 
               {clothingRods}
