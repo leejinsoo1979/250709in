@@ -139,7 +139,7 @@ export default function LandingPage() {
               muted
               playsInline
             >
-              <source src="https://uable.co.kr/videos/inshowconfigurator.mp4" type="video/mp4" />
+              <source src="/video/intro.mp4" type="video/mp4" />
               Your browser does not support the video tag.
             </video>
           </div>
