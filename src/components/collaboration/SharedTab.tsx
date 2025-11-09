@@ -4,7 +4,6 @@ import { ProjectSummary } from '../../firebase/types';
 import { ProjectCollaborator } from '../../firebase/shareLinks';
 import { useAuth } from '../../auth/AuthProvider';
 import { PiFolderFill } from "react-icons/pi";
-import { BsThreeDotsVertical } from "react-icons/bs";
 import ThumbnailImage from '../common/ThumbnailImage';
 import styles from './CollaborationTabs.module.css';
 import dashboardStyles from '../../pages/SimpleDashboard.module.css';
@@ -145,7 +144,7 @@ const SharedTab: React.FC<SharedTabProps> = ({
                         onMoreMenuOpen(e, project.id, project.title, 'project');
                       }}
                     >
-                      <BsThreeDotsVertical size={16} />
+                      ⋯
                     </button>
                   )}
 
