@@ -33,101 +33,67 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
     console.log('🔥 ProjectViewerModal - loadProject 시작:', { projectId, designFileId });
     setLoading(true);
     setError(null);
-    
+
     try {
-      // 디자인 파일 ID가 있으면 디자인 파일 로드, 없으면 프로젝트 로드
-      if (designFileId) {
-        console.log('🔥 디자인 파일 로드 시도:', designFileId);
-        const designResult = await getDesignFileById(designFileId);
-        console.log('🔥 디자인 파일 로드 결과:', designResult);
-        
-        if (designResult.designFile) {
-          const projectSummary: ProjectSummary = {
-            id: designResult.designFile.projectId,
-            title: designResult.designFile.name,
-            createdAt: designResult.designFile.createdAt,
-            updatedAt: designResult.designFile.updatedAt,
-            furnitureCount: designResult.designFile.furniture?.placedModules?.length || 0,
-            spaceSize: {
-              width: designResult.designFile.spaceConfig?.width || 3600,
-              height: designResult.designFile.spaceConfig?.height || 2400,
-              depth: designResult.designFile.spaceConfig?.depth || 1500,
+      // 항상 프로젝트를 로드 (공유 링크와 동일한 가구 데이터를 표시하기 위해)
+      // designFileId는 무시하고 프로젝트의 최신 가구 데이터를 사용
+      console.log('🔥 프로젝트 로드 시도:', projectId);
+      const result = await getProjectById(projectId);
+
+      if (result.project) {
+        // Firebase 프로젝트 데이터를 뷰어용으로 변환
+        const projectSummary: ProjectSummary = {
+          id: result.project.id,
+          title: result.project.title,
+          createdAt: result.project.createdAt,
+          updatedAt: result.project.updatedAt,
+          furnitureCount: result.project.stats?.furnitureCount || 0,
+          spaceSize: {
+            width: result.project.spaceConfig?.width || 3600,
+            height: result.project.spaceConfig?.height || 2400,
+            depth: result.project.spaceConfig?.depth || 1500,
+          },
+          thumbnail: result.project.thumbnail,
+          folderId: result.project.folderId,
+          // 뷰어를 위한 추가 데이터 - 전체 프로젝트 데이터 사용
+          spaceInfo: result.project.spaceConfig || {
+            width: 3600,
+            height: 2400,
+            depth: 1500,
+            installType: 'builtin',  // installationType이 아닌 installType
+            surroundType: 'surround',
+            baseConfig: {
+              type: 'floor',
+              height: 65,
+              placementType: 'ground',
             },
-            thumbnail: designResult.designFile.thumbnail,
-            folderId: '',
-            spaceInfo: designResult.designFile.spaceConfig,
-            placedModules: designResult.designFile.furniture?.placedModules || []
-          };
-          
-          console.log('디자인 파일 로드:', {
-            designFileId,
-            name: designResult.designFile.name,
-            placedModulesCount: projectSummary.placedModules?.length || 0,
-            placedModules: projectSummary.placedModules,
-            spaceConfig: projectSummary.spaceInfo
-          });
-          
-          setProject(projectSummary);
-        } else {
-          setError(designResult.error || '디자인 파일을 찾을 수 없습니다.');
-        }
+            hasFloorFinish: false,
+            floorFinish: null,
+            wallConfig: {
+              left: true,
+              right: true,
+              top: true,
+            },
+            materialConfig: {
+              interiorColor: '#FFFFFF',
+              doorColor: '#E0E0E0', // Changed from #FFFFFF to light gray
+            },
+            columns: [],
+            frameSize: { upper: 50, left: 50, right: 50 },
+            gapConfig: { left: 2, right: 2 },
+          },
+          placedModules: result.project.furniture?.placedModules || []
+        };
+        console.log('🔥 프로젝트 뷰어 데이터 로드 (공유 링크와 동일):', {
+          title: projectSummary.title,
+          placedModulesCount: projectSummary.placedModules?.length || 0,
+          placedModulesData: projectSummary.placedModules,
+          spaceInfo: !!projectSummary.spaceInfo,
+          fullProjectData: result.project
+        });
+        setProject(projectSummary);
       } else {
-        const result = await getProjectById(projectId);
-        if (result.project) {
-          // Firebase 프로젝트 데이터를 뷰어용으로 변환
-          const projectSummary: ProjectSummary = {
-            id: result.project.id,
-            title: result.project.title,
-            createdAt: result.project.createdAt,
-            updatedAt: result.project.updatedAt,
-            furnitureCount: result.project.stats?.furnitureCount || 0,
-            spaceSize: {
-              width: result.project.spaceConfig?.width || 3600,
-              height: result.project.spaceConfig?.height || 2400,
-              depth: result.project.spaceConfig?.depth || 1500,
-            },
-            thumbnail: result.project.thumbnail,
-            folderId: result.project.folderId,
-            // 뷰어를 위한 추가 데이터 - 전체 프로젝트 데이터 사용
-            spaceInfo: result.project.spaceConfig || {
-              width: 3600,
-              height: 2400,
-              depth: 1500,
-              installType: 'builtin',  // installationType이 아닌 installType
-              surroundType: 'surround',
-              baseConfig: {
-                type: 'floor',
-                height: 65,
-                placementType: 'ground',
-              },
-              hasFloorFinish: false,
-              floorFinish: null,
-              wallConfig: {
-                left: true,
-                right: true,
-                top: true,
-              },
-              materialConfig: {
-                interiorColor: '#FFFFFF',
-                doorColor: '#E0E0E0', // Changed from #FFFFFF to light gray
-              },
-              columns: [],
-              frameSize: { upper: 50, left: 50, right: 50 },
-              gapConfig: { left: 2, right: 2 },
-            },
-            placedModules: result.project.furniture?.placedModules || []
-          };
-          console.log('프로젝트 뷰어 데이터 로드:', {
-            title: projectSummary.title,
-            placedModulesCount: projectSummary.placedModules?.length || 0,
-            placedModulesData: projectSummary.placedModules,
-            spaceInfo: !!projectSummary.spaceInfo,
-            fullProjectData: result.project
-          });
-          setProject(projectSummary);
-        } else {
-          setError(result.error || '프로젝트를 찾을 수 없습니다.');
-        }
+        setError(result.error || '프로젝트를 찾을 수 없습니다.');
       }
     } catch (err) {
       console.error('프로젝트 로드 실패:', err);
