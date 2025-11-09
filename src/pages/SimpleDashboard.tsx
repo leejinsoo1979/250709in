@@ -1231,8 +1231,9 @@ const SimpleDashboard: React.FC = () => {
   };
   
   // 프로젝트의 모든 파일과 폴더를 가져오는 함수
-  const getProjectItems = useCallback((projectId: string) => {
-    const project = allProjects.find(p => p.id === projectId);
+  const getProjectItems = useCallback((projectId: string, projectObj?: any) => {
+    // 전달받은 project 객체를 우선 사용, 없으면 allProjects에서 찾기
+    const project = projectObj || allProjects.find(p => p.id === projectId);
     if (!project) {
       console.log('❌ getProjectItems: 프로젝트를 찾을 수 없습니다:', projectId, 'allProjects:', allProjects.length);
       return [];
@@ -1247,7 +1248,8 @@ const SimpleDashboard: React.FC = () => {
       hasProjectDesignFiles: !!projectDesignFiles[projectId],
       projectDesignFilesCount: projectDesignFiles[projectId]?.length || 0,
       projectDesignFilesKeys: Object.keys(projectDesignFiles),
-      isLoading: designFilesLoading[projectId]
+      isLoading: designFilesLoading[projectId],
+      receivedProjectObj: !!projectObj
     });
 
     const projectFolders = folders[projectId] || [];
@@ -4065,7 +4067,7 @@ const SimpleDashboard: React.FC = () => {
                             designFilesCount: projectDesignFiles[item.project.id]?.length || 0
                           });
                           
-                          const projectItems = getProjectItems(item.project.id);
+                          const projectItems = getProjectItems(item.project.id, item.project);
                           
                           console.log('🎯 프로젝트 아이템 렌더링 확인:', {
                             projectId: item.project.id,
