@@ -20,7 +20,7 @@ export const ShareLinkModal: React.FC<ShareLinkModalProps> = ({
   onClose,
 }) => {
   const { user } = useAuth();
-  const [permission, setPermission] = useState<SharePermission>('viewer');
+  const [permission, setPermission] = useState<SharePermission>('editor'); // 기본값을 편집 가능으로 설정
 
   // 링크 공유 관련 상태
   const [expiresInDays, setExpiresInDays] = useState(7);
