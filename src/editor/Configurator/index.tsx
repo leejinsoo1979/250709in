@@ -115,13 +115,6 @@ const Configurator: React.FC = () => {
     }
   }, [permission, searchParams]);
 
-  // 읽기 전용 모드에서 재질 탭 자동 열기
-  useEffect(() => {
-    if (isReadOnly) {
-      setActiveSidebarTab('material');
-    }
-  }, [isReadOnly]);
-
   // 읽기 전용 모드에서 3D 정면 뷰로 초기화 (섬네일과 동일한 뷰)
   useEffect(() => {
     if (isReadOnly) {
