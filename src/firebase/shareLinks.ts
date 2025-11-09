@@ -313,6 +313,11 @@ export async function grantProjectAccessViaLink(
             updateData.designFileName = link.designFileName;
           }
 
+          // 호스트 프로필 정보 업데이트
+          if (sharedByPhotoURL) {
+            updateData.sharedByPhotoURL = sharedByPhotoURL;
+          }
+
           transaction.update(accessDocRef, updateData);
         } else {
           console.log('ℹ️ 이미 추가된 디자인 파일 - 업데이트 스킵:', link.designFileId);
@@ -689,6 +694,18 @@ export async function inviteUserByEmail(
       };
     }
 
+    // 3-1. 초대한 사람(호스트)의 프로필 정보 가져오기
+    let inviterPhotoURL: string | null = null;
+    try {
+      const inviterUserDoc = await getDoc(doc(db, 'users', inviterUserId));
+      if (inviterUserDoc.exists()) {
+        const inviterUserData = inviterUserDoc.data();
+        inviterPhotoURL = inviterUserData.photoURL || null;
+      }
+    } catch (error) {
+      console.error('초대한 사람 프로필 조회 실패:', error);
+    }
+
     // 4. 권한 부여
     const accessData: any = {
       projectId,
@@ -705,6 +722,10 @@ export async function inviteUserByEmail(
 
     if (inviteePhotoURL) {
       accessData.photoURL = inviteePhotoURL;
+    }
+
+    if (inviterPhotoURL) {
+      accessData.sharedByPhotoURL = inviterPhotoURL;
     }
 
     await setDoc(accessDocRef, accessData);
@@ -773,16 +794,34 @@ export async function shareProjectWithEmail(
       };
     }
 
-    // 4. 이미 협업자인지 확인
+    // 4. 프로젝트 소유자(공유한 사람)의 프로필 정보 가져오기
+    let ownerPhotoURL: string | null = null;
+    try {
+      const ownerUserDoc = await getDoc(doc(db, 'users', ownerUserId));
+      if (ownerUserDoc.exists()) {
+        const ownerUserData = ownerUserDoc.data();
+        ownerPhotoURL = ownerUserData.photoURL || null;
+      }
+    } catch (error) {
+      console.error('프로젝트 소유자 프로필 조회 실패:', error);
+    }
+
+    // 5. 이미 협업자인지 확인
     const accessDocRef = doc(db, 'sharedProjectAccess', `${projectId}_${targetUserId}`);
     const existingAccess = await getDoc(accessDocRef);
 
     if (existingAccess.exists()) {
       // 이미 있으면 권한만 업데이트
-      await updateDoc(accessDocRef, {
+      const updateData: any = {
         permission,
         grantedAt: Timestamp.now(),
-      });
+      };
+
+      if (ownerPhotoURL) {
+        updateData.sharedByPhotoURL = ownerPhotoURL;
+      }
+
+      await updateDoc(accessDocRef, updateData);
 
       console.log('✅ 협업자 권한 업데이트 완료:', targetEmail, permission);
       return {
@@ -791,8 +830,8 @@ export async function shareProjectWithEmail(
       };
     }
 
-    // 5. 새로운 협업자 추가
-    await setDoc(accessDocRef, {
+    // 6. 새로운 협업자 추가
+    const newAccessData: any = {
       projectId,
       projectName,
       userId: targetUserId,
@@ -804,7 +843,13 @@ export async function shareProjectWithEmail(
       sharedVia: 'email',
       grantedAt: Timestamp.now(),
       photoURL: targetUserData.photoURL || null,
-    });
+    };
+
+    if (ownerPhotoURL) {
+      newAccessData.sharedByPhotoURL = ownerPhotoURL;
+    }
+
+    await setDoc(accessDocRef, newAccessData);
 
     // 6. 알림 생성 (notifications 컬렉션에 추가)
     const notificationRef = doc(collection(db, 'notifications'));
