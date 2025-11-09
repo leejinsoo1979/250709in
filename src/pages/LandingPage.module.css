@@ -12,10 +12,74 @@
   left: 0;
   right: 0;
   z-index: 1000;
+  padding: 1rem 0;
+  transition: all 0.3s ease;
+}
+
+.navTransparent {
+  background: transparent;
+  border-bottom: 1px solid transparent;
+}
+
+.navTransparent .navLink,
+.navTransparent .navButtonSecondary {
+  color: #ffffff;
+}
+
+.navTransparent .logoImage {
+  filter: brightness(0) invert(1);
+}
+
+.navTransparent .navButton {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.navTransparent .navButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.navTransparent .navButtonSecondary {
+  background: transparent;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.navTransparent .navButtonSecondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.navTransparent .chevron {
+  color: #ffffff;
+}
+
+.navScrolled {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  padding: 1rem 0;
+}
+
+.navScrolled .navLink {
+  color: #6b7280;
+}
+
+.navScrolled .navButton {
+  background: #667eea;
+  color: white;
+}
+
+.navScrolled .navButton:hover {
+  background: #5568d3;
+}
+
+.navScrolled .navButtonSecondary {
+  color: #ffffff;
+  background: #000000;
+}
+
+.navScrolled .navButtonSecondary:hover {
+  background: #1f1f1f;
 }
 
 .navContent {
@@ -36,6 +100,7 @@
 .logoImage {
   height: 40px;
   width: auto;
+  transition: filter 0.3s ease;
 }
 
 .navMenu {
