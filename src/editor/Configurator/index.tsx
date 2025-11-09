@@ -416,6 +416,11 @@ const Configurator: React.FC = () => {
   // 프로젝트 데이터 로드
   const loadProject = async (projectId: string) => {
     setLoading(true);
+
+    // 프로젝트 로드 전에 store 초기화 (이전 데이터 제거)
+    console.log('🧹 프로젝트 로드 전 store 초기화');
+    setPlacedModules([]);
+
     try {
       console.log('🔄 프로젝트 로드 시작:', projectId);
       const { project, error } = await getProject(projectId);
@@ -1451,6 +1456,10 @@ const Configurator: React.FC = () => {
         console.log('📂 디자인파일 데이터 로드 시작:', designFileId, '/ 읽기전용:', isReadOnlyMode);
 
         import('@/firebase/projects').then(({ getDesignFileById, getDesignFileByIdPublic, getProject, getProjectByIdPublic }) => {
+          // 디자인 파일 로드 전에 store 초기화 (이전 데이터 제거)
+          console.log('🧹 디자인파일 로드 전 store 초기화');
+          setPlacedModules([]);
+
           // 읽기 전용 모드면 Public 함수 사용 (비회원 접근 가능), 아니면 일반 함수 사용
           const loadDesignFile = isReadOnlyMode ? getDesignFileByIdPublic : getDesignFileById;
           const loadProject = isReadOnlyMode ? getProjectByIdPublic : getProject;
@@ -1490,7 +1499,7 @@ const Configurator: React.FC = () => {
               }
 
               // 가구 배치 데이터 설정
-              if (designFile.furniture?.placedModules) {
+              if (designFile.furniture?.placedModules && designFile.furniture.placedModules.length > 0) {
                 // 상하부장 필터링 확인
                 const upperCabinets = designFile.furniture.placedModules.filter(m =>
                   m.moduleId?.includes('upper-cabinet')
@@ -1533,6 +1542,10 @@ const Configurator: React.FC = () => {
                     position: m.position
                   }))
                 });
+              } else {
+                // 가구 데이터가 없는 경우 빈 배열로 초기화
+                setPlacedModules([]);
+                console.log('🪑 가구 배치 데이터 초기화 (빈 디자인)');
               }
 
               // 디자인파일 이름 설정
