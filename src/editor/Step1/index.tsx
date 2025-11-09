@@ -65,17 +65,16 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
 
   // Step1 컴포넌트 마운트 시 처리
   useEffect(() => {
-    const projectId = searchParams.get('projectId');
-    
-    if (projectId) {
-      // URL에 프로젝트 ID가 있으면 해당 프로젝트 로드
-      loadProject(projectId);
-    } else {
-      // 새 프로젝트 시작 - 모든 데이터 초기화
-      // 모달로 열린 경우에는 항상 초기화
-      resetProject();
-      resetSpaceConfig();
-      clearAllModules();
+    // Step1은 항상 새 디자인을 생성하는 것이므로 store 초기화
+    console.log('🧹 Step1 마운트: 새 디자인 생성을 위해 store 초기화');
+    resetProject();
+    resetSpaceConfig();
+    clearAllModules();
+
+    // projectId prop이 있으면 프로젝트 정보만 설정 (가구는 빈 상태 유지)
+    if (projectId && projectTitle) {
+      console.log('📝 Step1: 프로젝트 정보만 설정 (가구 없음):', projectTitle);
+      setBasicInfo({ title: projectTitle, location: '' });
     }
   }, []);
 
