@@ -495,6 +495,42 @@ export interface ProjectCollaborator {
   photoURL?: string; // 프로필 사진 URL
 }
 
+/**
+ * 내가 생성한 공유 링크 조회
+ */
+export async function getMySharedLinks(userId: string) {
+  try {
+    const q = query(
+      collection(db, 'shareLinks'),
+      where('createdBy', '==', userId),
+      where('isActive', '==', true)
+    );
+    const snapshot = await getDocs(q);
+
+    const sharedLinks: any[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      sharedLinks.push({
+        id: doc.id,
+        projectId: data.projectId,
+        projectName: data.projectName,
+        designFileId: data.designFileId,
+        designFileName: data.designFileName,
+        permission: data.permission,
+        createdAt: data.createdAt,
+        expiresAt: data.expiresAt,
+        usageCount: data.usageCount,
+        maxUsage: data.maxUsage
+      });
+    });
+
+    return sharedLinks;
+  } catch (error) {
+    console.error('❌ 내가 공유한 링크 조회 실패:', error);
+    throw error;
+  }
+}
+
 export async function getProjectCollaborators(projectId: string): Promise<ProjectCollaborator[]> {
   try {
     // projectId로 시작하는 모든 sharedProjectAccess 문서 조회

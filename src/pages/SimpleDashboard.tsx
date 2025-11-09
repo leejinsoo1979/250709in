@@ -8,7 +8,7 @@ import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
-import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser } from '@/firebase/shareLinks';
+import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks } from '@/firebase/shareLinks';
 import { signOutUser } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -481,12 +481,54 @@ const SimpleDashboard: React.FC = () => {
         const shared = await getSharedProjectsForUser(user.uid);
         console.log('✅ 공유받은 프로젝트:', shared.length, '개');
 
+        // 내가 생성한 공유 링크 로드
+        const mySharedLinks = await getMySharedLinks(user.uid);
+        console.log('✅ 내가 생성한 공유 링크:', mySharedLinks.length, '개');
+
         // 공유한 프로젝트 (협업자가 있는 프로젝트)
-        const sharedByMe = firebaseProjects.filter(project => {
+        const sharedByMeProjects = firebaseProjects.filter(project => {
           const collaborators = projectCollaborators[project.id];
           return collaborators && collaborators.length > 0;
         });
-        console.log('✅ 공유한 프로젝트:', sharedByMe.length, '개');
+        console.log('✅ 협업자가 있는 프로젝트:', sharedByMeProjects.length, '개');
+
+        // 내가 생성한 공유 링크를 ProjectSummary로 변환
+        const sharedLinkSummaries: ProjectSummary[] = mySharedLinks.map(link => {
+          // 프로젝트 전체인지 디자인만인지 확인
+          const isDesignShare = !!link.designFileId;
+
+          return {
+            id: link.projectId,
+            title: link.projectName,
+            userId: user.uid,
+            createdAt: link.createdAt,
+            updatedAt: link.createdAt,
+            designFilesCount: isDesignShare ? 1 : 0,
+            lastDesignFileName: link.designFileName || null,
+            // 추가 정보 저장
+            sharedDesignFileId: link.designFileId,
+            sharedDesignFileName: link.designFileName
+          };
+        });
+
+        // 공유한 프로젝트 합치기 (중복 제거)
+        const sharedByMeMap = new Map<string, ProjectSummary>();
+
+        // 협업자가 있는 프로젝트 추가
+        sharedByMeProjects.forEach(p => {
+          sharedByMeMap.set(p.id, p);
+        });
+
+        // 공유 링크 추가 (프로젝트 ID가 같으면 병합, 디자인 공유는 별도로 추가)
+        sharedLinkSummaries.forEach(link => {
+          const key = link.sharedDesignFileId
+            ? `${link.id}_${link.sharedDesignFileId}`
+            : link.id;
+          sharedByMeMap.set(key, link);
+        });
+
+        const sharedByMe = Array.from(sharedByMeMap.values());
+        console.log('✅ 공유한 프로젝트 (통합):', sharedByMe.length, '개');
 
         // 공유받은 프로젝트 정보를 ProjectSummary로 변환
         const sharedProjectSummaries: ProjectSummary[] = shared.map(s => ({
