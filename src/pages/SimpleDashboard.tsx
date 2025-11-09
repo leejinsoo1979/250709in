@@ -4301,6 +4301,18 @@ const SimpleDashboard: React.FC = () => {
                                       // 공유받은 프로젝트: sharedByPhotoURL 또는 projectOwners에서 가져오기
                                       const sharedProject = item.project as any;
                                       photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
+
+                                      console.log('🖼️ 공유받은 프로젝트 프로필 표시:', {
+                                        projectId: item.project.id,
+                                        projectTitle: item.project.title,
+                                        isSharedProject,
+                                        sharedByPhotoURL: sharedProject.sharedByPhotoURL,
+                                        projectOwnerPhotoURL: projectOwners[item.project.userId]?.photoURL,
+                                        finalPhotoURL: photoURL,
+                                        projectOwnerId: item.project.userId,
+                                        currentUserId: user?.uid,
+                                        allProjectOwners: projectOwners
+                                      });
                                     } else {
                                       // 내 프로젝트: 내 프로필 사용
                                       photoURL = user?.photoURL;
