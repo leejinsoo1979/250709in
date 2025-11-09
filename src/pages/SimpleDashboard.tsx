@@ -4347,6 +4347,18 @@ const SimpleDashboard: React.FC = () => {
                                   })()}
                                 </div>
 
+                                {/* 생성자 닉네임 */}
+                                <span className={styles.cardUserName}>
+                                  {(() => {
+                                    const isSharedProject = item.project.userId !== user?.uid;
+                                    if (isSharedProject) {
+                                      const sharedProject = item.project as any;
+                                      return sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName || '생성자';
+                                    }
+                                    return user?.displayName || user?.email?.split('@')[0] || '이진수';
+                                  })()}
+                                </span>
+
                                 {/* 협업자 수 */}
                                 {(() => {
                                   const collaborators = projectCollaborators[item.project.id] || [];
