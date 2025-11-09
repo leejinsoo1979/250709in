@@ -1358,8 +1358,8 @@ const SimpleDashboard: React.FC = () => {
         if (currentFolder) {
           const items = [];
 
-          // 공유받은 프로젝트가 아닐 때만 디자인 생성 카드 추가
-          if (!isSharedWithMe) {
+          // 공유 탭이 아니고, 공유받은 프로젝트가 아닐 때만 디자인 생성 카드 추가
+          if (activeMenu !== 'shared' && !isSharedWithMe) {
             items.push({ id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' });
           }
 
@@ -1392,12 +1392,12 @@ const SimpleDashboard: React.FC = () => {
       });
       const items = [];
 
-      // 공유받은 프로젝트가 아닐 때만 디자인 생성 카드 추가
-      if (!isSharedWithMe) {
+      // 공유 탭이 아니고, 공유받은 프로젝트가 아닐 때만 디자인 생성 카드 추가
+      if (activeMenu !== 'shared' && !isSharedWithMe) {
         items.push({ id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' });
         console.log('✅ 디자인 생성 카드 추가됨:', items[0]);
       } else {
-        console.log('🔒 공유받은 프로젝트 - 디자인 생성 카드 제외');
+        console.log('🔒 디자인 생성 카드 제외 - activeMenu:', activeMenu, 'isSharedWithMe:', isSharedWithMe);
       }
       
       // 폴더들 추가
