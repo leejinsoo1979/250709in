@@ -556,28 +556,19 @@ const SimpleDashboard: React.FC = () => {
             console.log('🚫 조회 전용 공유 항목 제외:', s.projectName, 'permission:', s.permission);
             continue;
           }
-          // 공유한 사람(호스트)의 프로필 정보 가져오기
-          let sharedByPhotoURL = null;
-          let sharedByDisplayName = s.sharedByName;
-          try {
-            const userDocRef = doc(db, 'users', s.sharedBy);
-            const userDoc = await getDoc(userDocRef);
-            if (userDoc.exists()) {
-              const userData = userDoc.data();
-              sharedByPhotoURL = userData.photoURL || null;
-              sharedByDisplayName = userData.displayName || s.sharedByName;
+          // 공유한 사람(호스트)의 프로필 정보 - sharedProjectAccess 문서에 저장된 정보 사용
+          const sharedByPhotoURL = s.sharedByPhotoURL || null;
+          const sharedByDisplayName = s.sharedByName;
 
-              // 프로젝트 소유자 정보 캐싱
-              setProjectOwners(prev => ({
-                ...prev,
-                [s.sharedBy]: {
-                  displayName: sharedByDisplayName,
-                  photoURL: sharedByPhotoURL
-                }
-              }));
-            }
-          } catch (error) {
-            console.error('공유한 사람 프로필 조회 실패:', error);
+          // 프로젝트 소유자 정보 캐싱
+          if (sharedByDisplayName) {
+            setProjectOwners(prev => ({
+              ...prev,
+              [s.sharedBy]: {
+                displayName: sharedByDisplayName,
+                photoURL: sharedByPhotoURL
+              }
+            }));
           }
 
           // Firebase에서 designFileIds 배열로 가져오기 (새 형식) 또는 단일 designFileId (이전 형식)
