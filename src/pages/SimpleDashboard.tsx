@@ -1319,6 +1319,12 @@ const SimpleDashboard: React.FC = () => {
 
       // 공유받은 프로젝트인지 확인
       const isSharedWithMe = sharedWithMeProjects.some(p => p.id === selectedProjectId);
+      console.log('🔍 공유 프로젝트 체크:', {
+        selectedProjectId,
+        sharedWithMeCount: sharedWithMeProjects.length,
+        sharedWithMeIds: sharedWithMeProjects.map(p => p.id),
+        isSharedWithMe
+      });
 
       // 현재 폴더 내부에 있는 경우
       if (currentFolderId) {
