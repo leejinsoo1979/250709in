@@ -1897,11 +1897,17 @@ const SimpleDashboard: React.FC = () => {
   const handleMoreMenuOpen = (e: React.MouseEvent, itemId: string, itemName: string, itemType: 'folder' | 'design' | 'project') => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('📌 더보기 메뉴 열기:', { itemId, itemName, itemType });
+
+    // 클릭한 버튼의 위치 계산
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = rect.right - 160; // 메뉴 너비(160px)를 고려하여 오른쪽 정렬
+    const y = rect.bottom + 4; // 버튼 아래에 약간의 간격
+
+    console.log('📌 더보기 메뉴 열기:', { itemId, itemName, itemType, x, y });
     setMoreMenu({
       visible: true,
-      x: 0, // 더 이상 사용되지 않음
-      y: 0, // 더 이상 사용되지 않음
+      x,
+      y,
       itemId,
       itemName,
       itemType
@@ -4352,7 +4358,13 @@ const SimpleDashboard: React.FC = () => {
             className={styles.moreMenuBackdrop}
             onClick={closeMoreMenu}
           />
-          <div className={styles.moreMenuGlobal}>
+          <div
+            className={styles.moreMenuGlobal}
+            style={{
+              left: `${moreMenu.x}px`,
+              top: `${moreMenu.y}px`,
+            }}
+          >
             <div
               className={styles.moreMenuItem}
               onClick={handleRenameItem}
