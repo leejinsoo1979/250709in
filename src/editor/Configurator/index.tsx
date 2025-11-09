@@ -705,13 +705,32 @@ const Configurator: React.FC = () => {
 
             const result = await updateDesignFile(effectiveDesignFileId, updatePayload);
             console.log('💾 [DEBUG] updateDesignFile 결과:', result);
-            
+
             if (result.error) {
               console.error('💾 [ERROR] 디자인 파일 업데이트 실패:', result.error);
               console.error('💾 [ERROR] 전체 결과 객체:', result);
               setSaveStatus('error');
               alert('디자인 파일 저장에 실패했습니다: ' + result.error);
             } else {
+              // 디자인 파일 저장 성공 후 프로젝트도 업데이트 (공유 링크와 미리보기 모달에서 가구가 보이도록)
+              console.log('💾 프로젝트에도 가구 데이터 저장 시작');
+              try {
+                const projectUpdateResult = await updateProject(effectiveProjectId, {
+                  furniture: {
+                    placedModules: removeUndefinedValues(placedModules)
+                  },
+                  spaceConfig: removeUndefinedValues(spaceInfo)
+                }, thumbnail);
+
+                if (projectUpdateResult.error) {
+                  console.warn('⚠️ 프로젝트 업데이트 실패 (디자인 파일은 저장됨):', projectUpdateResult.error);
+                } else {
+                  console.log('✅ 프로젝트에도 가구 데이터 저장 완료');
+                }
+              } catch (projectUpdateError) {
+                console.warn('⚠️ 프로젝트 업데이트 실패 (디자인 파일은 저장됨):', projectUpdateError);
+              }
+
               setSaveStatus('success');
               console.log('✅ 디자인 파일 저장 성공');
 
@@ -772,6 +791,25 @@ const Configurator: React.FC = () => {
               setSaveStatus('error');
               alert('디자인 파일 생성에 실패했습니다: ' + error);
             } else if (designFileId) {
+              // 디자인 파일 생성 성공 후 프로젝트도 업데이트 (공유 링크와 미리보기 모달에서 가구가 보이도록)
+              console.log('💾 프로젝트에도 가구 데이터 저장 시작');
+              try {
+                const projectUpdateResult = await updateProject(effectiveProjectId, {
+                  furniture: {
+                    placedModules: removeUndefinedValues(placedModules)
+                  },
+                  spaceConfig: removeUndefinedValues(spaceInfo)
+                }, thumbnail);
+
+                if (projectUpdateResult.error) {
+                  console.warn('⚠️ 프로젝트 업데이트 실패 (디자인 파일은 저장됨):', projectUpdateResult.error);
+                } else {
+                  console.log('✅ 프로젝트에도 가구 데이터 저장 완료');
+                }
+              } catch (projectUpdateError) {
+                console.warn('⚠️ 프로젝트 업데이트 실패 (디자인 파일은 저장됨):', projectUpdateError);
+              }
+
               setCurrentDesignFileId(designFileId);
               setCurrentDesignFileName('새 디자인');
               setSaveStatus('success');
