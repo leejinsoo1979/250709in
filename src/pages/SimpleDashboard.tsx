@@ -3782,7 +3782,7 @@ const SimpleDashboard: React.FC = () => {
                         // 디자인 카드 (폴더 내부에서)
                         <div className={styles.cardInfo}>
                           <div className={styles.cardTitle}>
-                            {item.name}
+                            {item.project.title} &gt; {item.name}
                             {/* 리스트 뷰에서만 제목 우측에 액션 버튼 표시 (휴지통 제외) */}
                             {viewMode === 'list' && activeMenu !== 'trash' && (
                               <div className={styles.listActionButtons}>
