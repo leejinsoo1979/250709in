@@ -84,7 +84,11 @@ const Configurator: React.FC = () => {
   // 새로운 UI 상태들
   const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
   const [activeRightPanelTab, setActiveRightPanelTab] = useState<'slotA'>('slotA');
-  const [isRightPanelOpen, setIsRightPanelOpen] = useState(true);
+  const [isRightPanelOpen, setIsRightPanelOpen] = useState(() => {
+    // URL 파라미터로 패널 상태 초기화 (미리보기 팝업용)
+    const panelClosed = searchParams.get('panelClosed');
+    return panelClosed !== 'true';
+  });
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
 

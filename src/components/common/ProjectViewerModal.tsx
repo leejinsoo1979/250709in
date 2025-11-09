@@ -254,7 +254,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
             {project && !loading && !error && (
               <div className={styles.viewerContainer}>
                 <iframe
-                  src={`/configurator?projectId=${projectId}${designFileId ? `&designFileId=${designFileId}` : ''}&mode=readonly`}
+                  src={`/configurator?projectId=${projectId}${designFileId ? `&designFileId=${designFileId}` : ''}&mode=readonly&panelClosed=true`}
                   style={{
                     width: '100%',
                     height: '100%',
