@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShareIcon, UserIcon, ClockIcon, CopyIcon, TrashIcon, EditIcon } from '../common/Icons';
 import { ProjectSummary } from '../../firebase/types';
+import { ProjectCollaborator } from '../../firebase/shareLinks';
 import { useAuth } from '../../auth/AuthProvider';
 import { PiFolderFill } from "react-icons/pi";
 import ThumbnailImage from '../common/ThumbnailImage';
@@ -11,12 +12,16 @@ interface SharedTabProps {
   onProjectSelect?: (projectId: string) => void;
   sharedByMe?: ProjectSummary[]; // 내가 공유한 프로젝트
   sharedWithMe?: ProjectSummary[]; // 공유받은 프로젝트
+  projectDesignFiles?: { [projectId: string]: any[] }; // 프로젝트별 디자인 파일
+  projectCollaborators?: { [projectId: string]: ProjectCollaborator[] }; // 프로젝트별 협업자
 }
 
 const SharedTab: React.FC<SharedTabProps> = ({
   onProjectSelect,
   sharedByMe = [],
-  sharedWithMe = []
+  sharedWithMe = [],
+  projectDesignFiles = {},
+  projectCollaborators = {}
 }) => {
   const { user } = useAuth();
   const [activeSubTab, setActiveSubTab] = useState<'shared-by-me' | 'shared-with-me'>('shared-by-me');
@@ -82,6 +87,18 @@ const SharedTab: React.FC<SharedTabProps> = ({
               const sharedInfo = project as any;
               const isDesignShare = !!sharedInfo.sharedDesignFileId;
 
+              // 디자인 파일 데이터 가져오기
+              const designFiles = projectDesignFiles[project.id] || [];
+              const designFile = isDesignShare
+                ? designFiles.find(df => df.id === sharedInfo.sharedDesignFileId || df.name === sharedInfo.sharedDesignFileName)
+                : undefined;
+
+              // 협업자 정보 가져오기
+              const collaborators = projectCollaborators[project.id] || [];
+
+              // 표시할 사용자 결정 (내가 공유한 프로젝트면 현재 사용자, 공유받은 프로젝트면 협업자)
+              const displayUser = activeSubTab === 'shared-by-me' ? user : collaborators.find(c => c.userId === user?.uid);
+
               return (
                 <div
                   key={isDesignShare ? `${project.id}_${sharedInfo.sharedDesignFileId}` : project.id}
@@ -94,6 +111,12 @@ const SharedTab: React.FC<SharedTabProps> = ({
                       <div className={dashboardStyles.designThumbnail}>
                         <ThumbnailImage
                           project={project}
+                          designFile={designFile ? {
+                            thumbnail: designFile.thumbnail,
+                            updatedAt: designFile.updatedAt,
+                            spaceConfig: designFile.spaceConfig,
+                            furniture: designFile.furniture
+                          } : undefined}
                           className={dashboardStyles.designThumbnailImage}
                           alt={sharedInfo.sharedDesignFileName || project.title}
                         />
@@ -124,9 +147,9 @@ const SharedTab: React.FC<SharedTabProps> = ({
                     <div className={dashboardStyles.cardFooter}>
                       <div className={dashboardStyles.cardUser}>
                         <div className={dashboardStyles.cardUserAvatar}>
-                          {user?.photoURL ? (
+                          {displayUser?.photoURL || (displayUser as any)?.userPhotoURL ? (
                             <img
-                              src={user.photoURL}
+                              src={displayUser.photoURL || (displayUser as any).userPhotoURL}
                               alt="프로필"
                               referrerPolicy="no-referrer"
                               style={{
@@ -141,9 +164,16 @@ const SharedTab: React.FC<SharedTabProps> = ({
                           )}
                         </div>
                         <span className={dashboardStyles.cardUserName}>
-                          {user?.displayName || user?.email?.split('@')[0] || '사용자'}
+                          {activeSubTab === 'shared-by-me'
+                            ? (user?.displayName || user?.email?.split('@')[0] || '사용자')
+                            : ((displayUser as any)?.userName || (displayUser as any)?.userEmail?.split('@')[0] || '협업자')}
                         </span>
                       </div>
+                      {collaborators.length > 0 && activeSubTab === 'shared-by-me' && (
+                        <div className={dashboardStyles.cardBadge}>
+                          {collaborators.length}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
