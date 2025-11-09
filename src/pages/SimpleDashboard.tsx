@@ -3344,7 +3344,7 @@ const SimpleDashboard: React.FC = () => {
             </div>
 
             {/* 협업 탭들 */}
-            {activeMenu === 'shared' && (
+            {activeMenu === 'shared' && !selectedProjectId && (
               <SharedTab
                 sharedByMe={sharedByMeProjects}
                 sharedWithMe={sharedWithMeProjects}
@@ -3360,13 +3360,13 @@ const SimpleDashboard: React.FC = () => {
               <ProfileTab initialSection={urlSection || 'profile'} />
             )}
             
-            {/* 기존 프로젝트 그리드 (all, trash, bookmarks 메뉴일 때만 표시) */}
+            {/* 기존 프로젝트 그리드 (all, trash, bookmarks, shared 메뉴일 때 표시) */}
             {console.log('🔍 activeMenu 체크:', {
               activeMenu,
-              isAllTrashBookmarks: activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks',
-              shouldShowGrid: (activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks')
+              isAllTrashBookmarks: activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared',
+              shouldShowGrid: (activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared')
             })}
-            {(activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks') ? (
+            {(activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared') ? (
               <>
               {viewMode === 'list' && sortedItems.some(item => item.type !== 'new-design') && (
                 <div className={styles.listTableHeader}>
