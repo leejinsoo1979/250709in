@@ -228,6 +228,8 @@ const SimpleDashboard: React.FC = () => {
   const [bookmarkedDesigns, setBookmarkedDesigns] = useState<Set<string>>(new Set());
   const [bookmarkedFolders, setBookmarkedFolders] = useState<Set<string>>(new Set());
   const [sharedProjects, setSharedProjects] = useState<ProjectSummary[]>([]);
+  const [sharedByMeProjects, setSharedByMeProjects] = useState<ProjectSummary[]>([]); // 내가 공유한 프로젝트
+  const [sharedWithMeProjects, setSharedWithMeProjects] = useState<ProjectSummary[]>([]); // 공유받은 프로젝트
   const [deletedProjects, setDeletedProjects] = useState<ProjectSummary[]>([]);
   const [deletedDesignFiles, setDeletedDesignFiles] = useState<Array<{designFile: any, projectId: string, projectTitle: string}>>([]);
 
@@ -503,6 +505,10 @@ const SimpleDashboard: React.FC = () => {
         // 공유한 프로젝트와 공유받은 프로젝트 합치기
         const allSharedProjects = [...sharedByMe, ...sharedProjectSummaries];
         setSharedProjects(allSharedProjects);
+
+        // 분리된 state에도 저장
+        setSharedByMeProjects(sharedByMe);
+        setSharedWithMeProjects(sharedProjectSummaries);
 
         console.log('✅ 전체 공유 프로젝트:', allSharedProjects.length, '개');
       } catch (error) {
@@ -3190,22 +3196,26 @@ const SimpleDashboard: React.FC = () => {
 
             {/* 협업 탭들 */}
             {activeMenu === 'shared' && (
-              <SharedTab onProjectSelect={(projectId) => {
-                // 공유받은 프로젝트인 경우 designFileId 정보를 함께 전달
-                const sharedProject = sharedProjects.find(p => p.id === projectId);
-                const sharedInfo = sharedProject as any;
+              <SharedTab
+                sharedByMe={sharedByMeProjects}
+                sharedWithMe={sharedWithMeProjects}
+                onProjectSelect={(projectId) => {
+                  // 공유받은 프로젝트인 경우 designFileId 정보를 함께 전달
+                  const sharedProject = sharedProjects.find(p => p.id === projectId);
+                  const sharedInfo = sharedProject as any;
 
-                let url = `/configurator?projectId=${projectId}`;
-                if (sharedInfo?.sharedDesignFileId) {
-                  url += `&designFileId=${sharedInfo.sharedDesignFileId}`;
-                }
-                if (sharedInfo?.sharedDesignFileName) {
-                  url += `&designFileName=${encodeURIComponent(sharedInfo.sharedDesignFileName)}`;
-                }
+                  let url = `/configurator?projectId=${projectId}`;
+                  if (sharedInfo?.sharedDesignFileId) {
+                    url += `&designFileId=${sharedInfo.sharedDesignFileId}`;
+                  }
+                  if (sharedInfo?.sharedDesignFileName) {
+                    url += `&designFileName=${encodeURIComponent(sharedInfo.sharedDesignFileName)}`;
+                  }
 
-                console.log('🔗 공유 프로젝트 열기:', url);
-                navigate(url);
-              }} />
+                  console.log('🔗 공유 프로젝트 열기:', url);
+                  navigate(url);
+                }}
+              />
             )}
             {activeMenu === 'team' && (
               <TeamsTab onTeamSelect={(teamId) => console.log('팀 선택:', teamId)} />
