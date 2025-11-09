@@ -557,31 +557,8 @@ const SimpleDashboard: React.FC = () => {
             continue;
           }
           // 공유한 사람(호스트)의 프로필 정보 - sharedProjectAccess 문서에 저장된 정보 사용
-          let sharedByPhotoURL = s.sharedByPhotoURL || null;
+          const sharedByPhotoURL = s.sharedByPhotoURL || null;
           const sharedByDisplayName = s.sharedByName;
-
-          // sharedByPhotoURL이 없으면 users 컬렉션에서 조회 (마이그레이션)
-          if (!sharedByPhotoURL && s.sharedBy) {
-            try {
-              const userDocRef = doc(db, 'users', s.sharedBy);
-              const userDocSnap = await getDoc(userDocRef);
-              if (userDocSnap.exists()) {
-                const userData = userDocSnap.data();
-                sharedByPhotoURL = userData.photoURL || null;
-
-                // sharedProjectAccess 문서 업데이트 (다음 번에는 조회하지 않도록)
-                if (sharedByPhotoURL) {
-                  const accessDocRef = doc(db, 'sharedProjectAccess', `${s.projectId}_${user?.uid}`);
-                  await updateDoc(accessDocRef, {
-                    sharedByPhotoURL: sharedByPhotoURL
-                  });
-                  console.log('✅ sharedByPhotoURL 마이그레이션 완료:', s.projectName);
-                }
-              }
-            } catch (error) {
-              console.error('❌ 공유한 사람 프로필 조회 실패:', error);
-            }
-          }
 
           // 프로젝트 소유자 정보 캐싱
           if (sharedByDisplayName) {
@@ -603,7 +580,9 @@ const SimpleDashboard: React.FC = () => {
             projectName: s.projectName,
             designFileIds,
             designFileNames,
-            sharedBy: s.sharedBy
+            sharedBy: s.sharedBy,
+            sharedByPhotoURL: sharedByPhotoURL,
+            hasPhotoURL: !!sharedByPhotoURL
           });
 
           sharedProjectsMap.set(s.projectId, {
