@@ -149,7 +149,19 @@ const SharedTab: React.FC<SharedTabProps> = ({
                     </div>
                     <div className={dashboardStyles.cardMeta}>
                       <div className={dashboardStyles.cardDate}>
-                        {project.updatedAt?.toDate?.()?.toLocaleDateString('ko-KR') || '날짜 정보 없음'}
+                        {(() => {
+                          const dateToUse = project.updatedAt || project.createdAt;
+                          if (dateToUse && dateToUse.seconds) {
+                            return new Date(dateToUse.seconds * 1000).toLocaleString('ko-KR', {
+                              year: 'numeric',
+                              month: 'long',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            });
+                          }
+                          return '날짜 정보 없음';
+                        })()}
                       </div>
                     </div>
                     <div className={dashboardStyles.cardFooter}>
