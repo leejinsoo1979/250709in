@@ -2857,30 +2857,68 @@ const SimpleDashboard: React.FC = () => {
 
               {/* 선택된 카드가 있을 때 액션 버튼 */}
               {selectedCards.size > 0 && activeMenu !== 'trash' && (() => {
-                // 공유 프로젝트에서 호스트인 경우 공유해제 버튼 표시
-                const isSharedMenuAndHost =
-                  activeMenu === 'shared' &&
-                  selectedProjectId &&
-                  allProjects.find(p => p.id === selectedProjectId)?.userId === user?.uid;
+                // 공유 프로젝트 메뉴에서 처리
+                if (activeMenu === 'shared') {
+                  // 프로젝트를 선택하지 않은 상태 (목록 화면)
+                  if (!selectedProjectId) {
+                    // 선택된 카드들이 모두 본인 소유 프로젝트인지 확인
+                    const selectedProjectIds = Array.from(selectedCards);
+                    const allOwnedByUser = selectedProjectIds.every(cardId => {
+                      const project = [...sharedByMeProjects, ...sharedWithMeProjects].find(p => p.id === cardId);
+                      return project?.userId === user?.uid;
+                    });
 
-                if (isSharedMenuAndHost) {
-                  return (
-                    <button
-                      className={styles.bulkDeleteButton}
-                      onClick={async () => {
-                        if (window.confirm(`선택한 ${selectedCards.size}개 디자인의 공유를 취소하시겠습니까?`)) {
-                          // TODO: 공유 해제 로직 구현
-                          console.log('🔗 공유 해제:', Array.from(selectedCards));
-                          // 선택 해제
-                          setSelectedCards(new Set());
-                          alert('공유 해제 기능은 곧 구현됩니다.');
-                        }
-                      }}
-                    >
-                      <ShareIcon size={16} />
-                      <span>공유해제 ({selectedCards.size})</span>
-                    </button>
-                  );
+                    if (allOwnedByUser) {
+                      return (
+                        <button
+                          className={styles.bulkDeleteButton}
+                          onClick={async () => {
+                            if (window.confirm(`선택한 ${selectedCards.size}개 프로젝트의 공유를 취소하시겠습니까?`)) {
+                              // TODO: 공유 해제 로직 구현
+                              console.log('🔗 공유 해제:', Array.from(selectedCards));
+                              // 선택 해제
+                              setSelectedCards(new Set());
+                              alert('공유 해제 기능은 곧 구현됩니다.');
+                            }
+                          }}
+                        >
+                          <ShareIcon size={16} />
+                          <span>공유해제 ({selectedCards.size})</span>
+                        </button>
+                      );
+                    } else {
+                      // 공유받은 프로젝트는 체크 불가 (버튼 숨김)
+                      return null;
+                    }
+                  }
+                  // 프로젝트 내부 (디자인 선택 시)
+                  else {
+                    const selectedProj = [...sharedByMeProjects, ...sharedWithMeProjects].find(p => p.id === selectedProjectId);
+                    const isHost = selectedProj?.userId === user?.uid;
+
+                    if (isHost) {
+                      return (
+                        <button
+                          className={styles.bulkDeleteButton}
+                          onClick={async () => {
+                            if (window.confirm(`선택한 ${selectedCards.size}개 디자인의 공유를 취소하시겠습니까?`)) {
+                              // TODO: 공유 해제 로직 구현
+                              console.log('🔗 공유 해제:', Array.from(selectedCards));
+                              // 선택 해제
+                              setSelectedCards(new Set());
+                              alert('공유 해제 기능은 곧 구현됩니다.');
+                            }
+                          }}
+                        >
+                          <ShareIcon size={16} />
+                          <span>공유해제 ({selectedCards.size})</span>
+                        </button>
+                      );
+                    } else {
+                      // 공유받은 디자인은 삭제 불가
+                      return null;
+                    }
+                  }
                 }
 
                 // 일반 휴지통 이동 버튼

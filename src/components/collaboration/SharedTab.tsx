@@ -119,17 +119,19 @@ const SharedTab: React.FC<SharedTabProps> = ({
                     }
                   }}
                 >
-                  {/* 체크박스 */}
-                  <div className={dashboardStyles.cardCheckbox}>
-                    <input
-                      type="checkbox"
-                      checked={selectedCards.has(project.id)}
-                      onChange={(e) => {
-                        e.stopPropagation();
-                        onCardSelect?.(project.id);
-                      }}
-                    />
-                  </div>
+                  {/* 체크박스 - "내가 공유한 프로젝트"에서만 표시 */}
+                  {activeSubTab === 'shared-by-me' && (
+                    <div className={dashboardStyles.cardCheckbox}>
+                      <input
+                        type="checkbox"
+                        checked={selectedCards.has(project.id)}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          onCardSelect?.(project.id);
+                        }}
+                      />
+                    </div>
+                  )}
 
                   <div className={dashboardStyles.cardThumbnail}>
                     {/* 항상 프로젝트 카드 - 분할 썸네일 (2x2 그리드) */}
