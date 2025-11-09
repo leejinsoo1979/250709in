@@ -494,6 +494,14 @@ const Configurator: React.FC = () => {
 
           // 프로젝트 소유자가 현재 로그인한 사용자인 경우, 현재 사용자 정보 사용
           if (user && project.userId === user.uid) {
+            console.log('📸 현재 사용자 Auth 정보:', {
+              uid: user.uid,
+              displayName: user.displayName,
+              email: user.email,
+              photoURL: user.photoURL,
+              providerData: user.providerData
+            });
+
             const ownerData = {
               userId: user.uid,
               name: user.displayName || user.email || '소유자',

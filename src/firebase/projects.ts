@@ -68,6 +68,13 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
     // 팀 ID 가져오기
     const teamId = await getActiveTeamId();
     
+    console.log('📸 프로젝트 생성 시 사용자 정보:', {
+      uid: user.uid,
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL
+    });
+
     const newProject: Omit<FirebaseProject, 'id'> = {
       userId: user.uid,
       userName: user.displayName || undefined,

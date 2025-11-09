@@ -488,35 +488,46 @@ const Header: React.FC<HeaderProps> = ({
               marginLeft: '20px'
             }}>
               {/* Project owner */}
-              {owner && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <PiCrownDuotone
-                    size={20}
-                    color={colors.primary}
-                    style={{ opacity: 0.8 }}
-                  />
-                  <div style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: theme.mode === 'dark' ? '#2a2a2a' : '#f0f0f0'
-                  }}>
-                    {owner.photoURL ? (
-                      <img
-                        src={owner.photoURL}
-                        alt={owner.name}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                      />
-                    ) : (
-                      <User size={18} color={colors.primary} />
-                    )}
+              {owner && (() => {
+                console.log('👑 Owner 렌더링:', {
+                  userId: owner.userId,
+                  name: owner.name,
+                  photoURL: owner.photoURL,
+                  hasPhotoURL: !!owner.photoURL
+                });
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <PiCrownDuotone
+                      size={20}
+                      color={colors.primary}
+                      style={{ opacity: 0.8 }}
+                    />
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      overflow: 'hidden',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: theme.mode === 'dark' ? '#2a2a2a' : '#f0f0f0'
+                    }}>
+                      {owner.photoURL ? (
+                        <img
+                          src={owner.photoURL}
+                          alt={owner.name}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => {
+                            console.error('❌ Owner 이미지 로드 실패:', owner.photoURL);
+                          }}
+                        />
+                      ) : (
+                        <User size={18} color={colors.primary} />
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Members */}
               {collaborators.length > 0 && (
