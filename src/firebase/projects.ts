@@ -1139,14 +1139,27 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
         const sharedAccessQuery = query(
           collection(db, 'sharedProjectAccess'),
           where('userId', '==', user.uid),
-          where('projectId', '==', data.projectId),
-          where('isActive', '==', true)
+          where('projectId', '==', data.projectId)
         );
         const sharedAccessSnap = await getDocs(sharedAccessQuery);
 
         if (sharedAccessSnap.empty) {
           console.log('🔥 [Firebase] 공유 접근 권한 없음');
           return { designFile: null, error: '디자인 파일에 접근할 권한이 없습니다.' };
+        }
+
+        // 디자인 파일별 권한 확인
+        const accessDoc = sharedAccessSnap.docs[0];
+        const accessData = accessDoc.data();
+        const sharedDesignFileIds = accessData.designFileIds || [];
+
+        // designFileIds가 있으면 해당 디자인만 접근 가능
+        if (sharedDesignFileIds.length > 0 && !sharedDesignFileIds.includes(designFileId)) {
+          console.log('🔥 [Firebase] 이 디자인 파일에 대한 접근 권한 없음:', {
+            designFileId,
+            sharedDesignFileIds
+          });
+          return { designFile: null, error: '이 디자인 파일에 접근할 권한이 없습니다.' };
         }
 
         console.log('✅ [Firebase] 공유 접근 권한 확인됨');

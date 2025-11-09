@@ -259,6 +259,18 @@ export async function grantProjectAccessViaLink(
       };
     }
 
+    // 호스트(링크 생성자) 프로필 정보 가져오기
+    let sharedByPhotoURL: string | null = null;
+    try {
+      const hostUserDoc = await getDoc(doc(db, 'users', link.createdBy));
+      if (hostUserDoc.exists()) {
+        const hostUserData = hostUserDoc.data();
+        sharedByPhotoURL = hostUserData.photoURL || null;
+      }
+    } catch (error) {
+      console.error('호스트 프로필 조회 실패:', error);
+    }
+
     // Transaction으로 권한 부여 및 사용 횟수 증가
     console.log('🔑 Transaction 시작...');
     await runTransaction(db, async (transaction) => {
@@ -331,9 +343,14 @@ export async function grantProjectAccessViaLink(
           }
         }
 
-        // 프로필 사진이 있으면 저장
+        // 공유받은 사람의 프로필 사진
         if (photoURL) {
           accessData.photoURL = photoURL;
+        }
+
+        // 호스트(공유한 사람)의 프로필 사진
+        if (sharedByPhotoURL) {
+          accessData.sharedByPhotoURL = sharedByPhotoURL;
         }
 
         console.log('🔑 새 접근 권한 문서 생성:', {
