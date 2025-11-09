@@ -1301,6 +1301,10 @@ const SimpleDashboard: React.FC = () => {
   
   // 정렬 적용
   const sortedItems = [...displayedItems].sort((a, b) => {
+    // '디자인 생성' 카드는 항상 맨 앞에 고정
+    if (a.type === 'new-design') return -1;
+    if (b.type === 'new-design') return 1;
+
     if (sortBy === 'date') {
       // 최신순 정렬
       const dateA = a.project?.lastModified || new Date(0);
