@@ -21,7 +21,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ProjectCollaborator } from '@/firebase/shareLinks';
 import { PiCrownDuotone } from "react-icons/pi";
-import { GoPeople } from "react-icons/go";
+import { FiLink } from "react-icons/fi";
 
 // Perspective Cube Icon (원근 투영 큐브 - 아래로 좁아짐)
 const PerspectiveCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
@@ -518,7 +518,7 @@ const Header: React.FC<HeaderProps> = ({
               {/* Members */}
               {collaborators.length > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <GoPeople
+                  <FiLink
                     size={20}
                     color={colors.primary}
                     style={{ opacity: 0.8 }}
