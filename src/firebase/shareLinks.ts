@@ -293,6 +293,7 @@ export async function grantProjectAccessViaLink(
             designFileNames: existingDesignFileNames,
             designFileId: link.designFileId, // 호환성을 위해 마지막 파일 저장
             grantedAt: Timestamp.now(),
+            isActive: true,
           };
 
           if (link.designFileName) {
@@ -317,6 +318,7 @@ export async function grantProjectAccessViaLink(
           sharedVia: 'link',
           linkToken: token,
           grantedAt: Timestamp.now(),
+          isActive: true,
         };
 
         // 디자인 파일 정보가 있으면 배열로 저장
