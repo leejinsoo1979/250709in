@@ -84,13 +84,13 @@ const SharedTab: React.FC<SharedTabProps> = ({
 
               return (
                 <div
-                  key={project.id}
+                  key={isDesignShare ? `${project.id}_${sharedInfo.sharedDesignFileId}` : project.id}
                   className={dashboardStyles.designCard}
                   onClick={() => onProjectSelect?.(project.id)}
                 >
                   <div className={dashboardStyles.cardThumbnail}>
                     {isDesignShare ? (
-                      // 디자인 카드
+                      // 디자인 카드 - SimpleDashboard와 동일한 구조
                       <div className={dashboardStyles.designThumbnail}>
                         <ThumbnailImage
                           project={project}
@@ -99,28 +99,51 @@ const SharedTab: React.FC<SharedTabProps> = ({
                         />
                       </div>
                     ) : (
-                      // 프로젝트 카드
-                      <div className={dashboardStyles.projectThumbnail}>
-                        <div className={dashboardStyles.emptyThumbnailState}>
-                          <div className={dashboardStyles.emptyThumbnailIcon}>
-                            <PiFolderFill size={48} style={{ opacity: 0.3 }} />
-                          </div>
-                          <div className={dashboardStyles.emptyThumbnailText}>
-                            공유된 프로젝트
-                          </div>
+                      // 프로젝트 카드 - SimpleDashboard와 동일한 구조
+                      <div className={dashboardStyles.emptyThumbnailState}>
+                        <div className={dashboardStyles.emptyThumbnailIcon}>
+                          <PiFolderFill size={48} style={{ opacity: 0.3 }} />
+                        </div>
+                        <div className={dashboardStyles.emptyThumbnailText}>
+                          공유된 프로젝트
                         </div>
                       </div>
                     )}
                   </div>
 
-                  <div className={dashboardStyles.cardFooter}>
+                  {/* SimpleDashboard와 동일한 cardInfo 구조 */}
+                  <div className={dashboardStyles.cardInfo}>
                     <div className={dashboardStyles.cardTitle}>
                       {isDesignShare ? sharedInfo.sharedDesignFileName : project.title}
                     </div>
                     <div className={dashboardStyles.cardMeta}>
-                      <span className={dashboardStyles.cardDate}>
-                        {project.updatedAt?.toDate?.()?.toLocaleDateString() || '날짜 없음'}
-                      </span>
+                      <div className={dashboardStyles.cardDate}>
+                        {project.updatedAt?.toDate?.()?.toLocaleDateString('ko-KR') || '날짜 정보 없음'}
+                      </div>
+                    </div>
+                    <div className={dashboardStyles.cardFooter}>
+                      <div className={dashboardStyles.cardUser}>
+                        <div className={dashboardStyles.cardUserAvatar}>
+                          {user?.photoURL ? (
+                            <img
+                              src={user.photoURL}
+                              alt="프로필"
+                              referrerPolicy="no-referrer"
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                borderRadius: '50%',
+                                objectFit: 'cover'
+                              }}
+                            />
+                          ) : (
+                            <UserIcon size={12} />
+                          )}
+                        </div>
+                        <span className={dashboardStyles.cardUserName}>
+                          {user?.displayName || user?.email?.split('@')[0] || '사용자'}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
