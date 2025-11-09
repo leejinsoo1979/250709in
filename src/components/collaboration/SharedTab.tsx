@@ -234,6 +234,21 @@ const SharedTab: React.FC<SharedTabProps> = ({
                             ? (user?.displayName || user?.email?.split('@')[0] || '사용자')
                             : ((displayUser as any)?.displayName || (displayUser as any)?.email?.split('@')[0] || '협업자')}
                         </span>
+                        {/* 편집 권한 협업자 수 표시 (호스트 제외) */}
+                        {(() => {
+                          const editCollaborators = collaborators.filter(c => c.permission === 'editor');
+                          if (editCollaborators.length === 0) return null;
+                          return (
+                            <span style={{
+                              marginLeft: '8px',
+                              fontSize: '12px',
+                              color: '#666',
+                              fontWeight: '500'
+                            }}>
+                              {editCollaborators.length}명
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       {/* 협업자 프로필 사진들 - 편집 권한이 있는 협업자만 표시 */}
