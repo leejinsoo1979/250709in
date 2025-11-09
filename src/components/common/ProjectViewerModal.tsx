@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { XIcon, MaximizeIcon, MinimizeIcon } from './Icons';
 import { getProjectById, getDesignFileById } from '../../firebase/projects';
 import { ProjectSummary } from '../../firebase/types';
-import Space3DViewerReadOnly from '../../editor/shared/viewer3d/Space3DViewerReadOnly';
 import { createShareLink } from '../../firebase/shareLinks';
 import { useAuth } from '../../auth/AuthProvider';
 import styles from './ProjectViewerModal.module.css';
@@ -13,18 +12,14 @@ interface ProjectViewerModalProps {
   onClose: () => void;
   projectId: string;
   designFileId?: string;
-  initialViewMode?: '2D' | '3D';
 }
 
-const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose, projectId, designFileId, initialViewMode = '3D' }) => {
+const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose, projectId, designFileId }) => {
   const { user } = useAuth();
   const [project, setProject] = useState<ProjectSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  // 섬네일과 동일한 뷰로 초기화: 3D 정면 뷰 + perspective 카메라
-  const [viewMode, setViewMode] = useState<'2D' | '3D'>('3D');
-  const [cameraMode, setCameraMode] = useState<'perspective' | 'orthographic'>('perspective');
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
 
   useEffect(() => {
@@ -216,44 +211,9 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
               </h2>
             </div>
 
-            {/* 2D/3D 및 Perspective/Orthographic 토글 버튼 - 중앙 정렬 */}
-            {project && !loading && !error && (
-              <div className={styles.headerCenter}>
-                <div className={styles.viewModeToggle}>
-                  <button
-                    className={`${styles.viewModeButton} ${viewMode === '2D' ? styles.active : ''}`}
-                    onClick={() => setViewMode('2D')}
-                  >
-                    2D
-                  </button>
-                  <button
-                    className={`${styles.viewModeButton} ${viewMode === '3D' ? styles.active : ''}`}
-                    onClick={() => setViewMode('3D')}
-                  >
-                    3D
-                  </button>
-                </div>
-                {/* Perspective/Orthographic 토글 버튼 (3D 모드일 때만) */}
-                {viewMode === '3D' && (
-                  <div className={styles.viewModeToggle}>
-                    <button
-                      className={`${styles.viewModeButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
-                      onClick={() => setCameraMode('perspective')}
-                      title="원근 투영"
-                    >
-                      Perspective
-                    </button>
-                    <button
-                      className={`${styles.viewModeButton} ${cameraMode === 'orthographic' ? styles.active : ''}`}
-                      onClick={() => setCameraMode('orthographic')}
-                      title="정투영"
-                    >
-                      Orthographic
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
+            <div className={styles.headerCenter}>
+              {/* Configurator iframe이 뷰 모드 컨트롤을 처리 */}
+            </div>
 
             <div className={styles.headerActions}>
               <button
@@ -293,21 +253,15 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
 
             {project && !loading && !error && (
               <div className={styles.viewerContainer}>
-                {console.log('🎨 읽기 전용 뷰어 렌더링:', {
-                  projectId,
-                  viewMode,
-                  hasProject: !!project,
-                  hasSpaceInfo: !!project.spaceInfo,
-                  spaceInfo: project.spaceInfo,
-                  placedModulesCount: project.placedModules?.length || 0
-                })}
-                <Space3DViewerReadOnly
-                  key={`${projectId}-${viewMode}-${cameraMode}`}
-                  spaceConfig={project.spaceInfo}
-                  placedModules={project.placedModules || []}
-                  viewMode={viewMode}
-                  renderMode="solid"
-                  cameraMode={cameraMode}
+                <iframe
+                  src={`/configurator?projectId=${projectId}${designFileId ? `&designFileId=${designFileId}` : ''}&mode=readonly`}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    backgroundColor: '#f5f5f5'
+                  }}
+                  title="Project Preview"
                 />
               </div>
             )}
