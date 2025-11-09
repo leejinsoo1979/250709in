@@ -80,8 +80,6 @@ interface HeaderProps {
   isFileTreeOpen?: boolean;
   // 내보내기 관련 props
   onExportPDF?: () => void; // 실제로는 ConvertModal을 열어줌
-  // 공유 관련 props
-  onShare?: () => void; // 공유 버튼
   // 읽기 전용 모드
   readOnly?: boolean; // viewer 권한용 읽기 전용 모드 (디자인명 수정 불가)
 }
@@ -113,7 +111,6 @@ const Header: React.FC<HeaderProps> = ({
   onFileTreeToggle,
   isFileTreeOpen,
   onExportPDF,
-  onShare,
   readOnly = false
 }) => {
   console.log('🎯 Header 컴포넌트 렌더링:', {
@@ -698,24 +695,6 @@ const Header: React.FC<HeaderProps> = ({
                 <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2"/>
               </svg>
               {saving ? t('common.saving') : t('common.save')}
-            </button>
-          )}
-
-          {/* 공유 버튼 - 읽기 전용 모드에서는 숨김 */}
-          {!readOnly && onShare && (
-            <button
-              className={styles.actionButton}
-              onClick={onShare}
-              title="공유"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="2"/>
-                <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
-                <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="2"/>
-                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" stroke="currentColor" strokeWidth="2"/>
-                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-              공유
             </button>
           )}
 
