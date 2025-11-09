@@ -482,11 +482,21 @@ const Configurator: React.FC = () => {
 
         // 프로젝트 소유자 정보 설정
         if (project.userId) {
-          setProjectOwner({
-            userId: project.userId,
-            name: project.userName || project.userEmail || '소유자',
-            photoURL: project.userPhotoURL
-          });
+          // 프로젝트 소유자가 현재 로그인한 사용자인 경우, 현재 사용자 정보 사용
+          if (user && project.userId === user.uid) {
+            setProjectOwner({
+              userId: user.uid,
+              name: user.displayName || user.email || '소유자',
+              photoURL: user.photoURL || undefined
+            });
+          } else {
+            // 다른 사용자의 프로젝트인 경우 저장된 정보 사용
+            setProjectOwner({
+              userId: project.userId,
+              name: project.userName || project.userEmail || '소유자',
+              photoURL: project.userPhotoURL
+            });
+          }
         }
 
         // 디자인파일명 설정은 별도 useEffect에서 처리됨
@@ -1490,11 +1500,21 @@ const Configurator: React.FC = () => {
 
                   // 프로젝트 소유자 정보 설정
                   if (project.userId) {
-                    setProjectOwner({
-                      userId: project.userId,
-                      name: project.userName || project.userEmail || '소유자',
-                      photoURL: project.userPhotoURL
-                    });
+                    // 프로젝트 소유자가 현재 로그인한 사용자인 경우, 현재 사용자 정보 사용
+                    if (user && project.userId === user.uid) {
+                      setProjectOwner({
+                        userId: user.uid,
+                        name: user.displayName || user.email || '소유자',
+                        photoURL: user.photoURL || undefined
+                      });
+                    } else {
+                      // 다른 사용자의 프로젝트인 경우 저장된 정보 사용
+                      setProjectOwner({
+                        userId: project.userId,
+                        name: project.userName || project.userEmail || '소유자',
+                        photoURL: project.userPhotoURL
+                      });
+                    }
                   }
 
                   // URL에 프로젝트명이 없으면 추가 (새로고침 시 유지하기 위해)

@@ -70,6 +70,9 @@ export const createProject = async (projectData: CreateProjectData): Promise<{ i
     
     const newProject: Omit<FirebaseProject, 'id'> = {
       userId: user.uid,
+      userName: user.displayName || undefined,
+      userEmail: user.email || undefined,
+      userPhotoURL: user.photoURL || undefined,
       teamId: teamId || `personal_${user.uid}`, // 팀 ID 추가
       title: projectData.title,
       createdAt: serverTimestamp() as Timestamp,
