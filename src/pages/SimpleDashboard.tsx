@@ -3915,7 +3915,7 @@ const SimpleDashboard: React.FC = () => {
                 ) : null;
               })()}
 
-              {user && sortedItems.length === 0 && !projectsLoading && firebaseProjects.length === 0 ? (
+              {user && sortedItems.length === 0 && !projectsLoading && firebaseProjects.length === 0 && !selectedProjectId ? (
                 <div className={styles.emptyState}>
                   <div className={styles.emptyStateTitle}>
                     {activeMenu === 'bookmarks' && '북마크한 프로젝트가 없습니다'}
