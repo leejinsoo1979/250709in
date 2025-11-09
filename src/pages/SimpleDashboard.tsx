@@ -716,22 +716,22 @@ const SimpleDashboard: React.FC = () => {
 
   // URL의 projectId가 변경되면 해당 프로젝트 선택
   useEffect(() => {
-    if (urlProjectId && allProjects.length > 0) {
-      const projectExists = allProjects.some(p => p.id === urlProjectId);
-      if (projectExists && selectedProjectId !== urlProjectId) {
+    // 모든 프로젝트 배열 생성 (의존성 배열 문제 해결)
+    const allProjects = [...firebaseProjects, ...sharedByMeProjects, ...sharedWithMeProjects];
+
+    if (urlProjectId) {
+      const targetProject = allProjects.find(p => p.id === urlProjectId);
+      if (targetProject && selectedProjectId !== urlProjectId) {
         console.log('🔗 URL에서 프로젝트 ID 감지, 자동 선택:', urlProjectId);
         setSelectedProjectId(urlProjectId);
-        const targetProject = allProjects.find(p => p.id === urlProjectId);
-        if (targetProject) {
-          // URL에서 현재 메뉴를 가져와서 올바른 루트 경로 설정
-          const currentMenu = getMenuFromPath();
-          const rootPath = currentMenu === 'shared-by-me' ? '공유한 프로젝트' :
-                           currentMenu === 'shared-with-me' ? '공유받은 프로젝트' :
-                           '전체 프로젝트';
-          setBreadcrumbPath([rootPath, targetProject.title]);
-          loadFolderDataForProject(urlProjectId);
-          loadDesignFilesForProject(urlProjectId);
-        }
+        // URL에서 현재 메뉴를 가져와서 올바른 루트 경로 설정
+        const currentMenu = getMenuFromPath();
+        const rootPath = currentMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                         currentMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                         '전체 프로젝트';
+        setBreadcrumbPath([rootPath, targetProject.title]);
+        loadFolderDataForProject(urlProjectId);
+        loadDesignFilesForProject(urlProjectId);
       }
     } else if (!urlProjectId && selectedProjectId) {
       // URL에 projectId가 없으면 선택 해제
@@ -744,7 +744,7 @@ const SimpleDashboard: React.FC = () => {
                        '전체 프로젝트';
       setBreadcrumbPath([rootPath]);
     }
-  }, [urlProjectId, allProjects, selectedProjectId]);
+  }, [urlProjectId, firebaseProjects, sharedByMeProjects, sharedWithMeProjects, selectedProjectId]);
 
   // URL 변경 시 activeMenu 업데이트
   useEffect(() => {
@@ -849,8 +849,8 @@ const SimpleDashboard: React.FC = () => {
     }
   }, [user]);
 
-  // 사용자별 프로젝트 목록 결정
-  const allProjects = user ? firebaseProjects : [];
+  // 사용자별 프로젝트 목록 결정 (내 프로젝트 + 공유한 + 공유받은)
+  const allProjects = user ? [...firebaseProjects, ...sharedByMeProjects, ...sharedWithMeProjects] : [];
   
   // 선택된 프로젝트 정보를 메모이제이션
   const selectedProject = useMemo(() => {
