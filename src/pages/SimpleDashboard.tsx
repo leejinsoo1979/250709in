@@ -4160,109 +4160,134 @@ const SimpleDashboard: React.FC = () => {
                           </div>
                           
                           <div className={styles.cardFooter}>
-                            <div className={styles.cardUser}>
-                              {/* 소유자 프로필 */}
-                              <div className={styles.cardUserAvatar}>
-                                {(() => {
-                                  // 공유받은 프로젝트인 경우 프로젝트 소유자 프로필 표시
-                                  const isSharedProject = item.project.userId !== user?.uid;
-                                  const ownerInfo = isSharedProject ? projectOwners[item.project.userId] : null;
-                                  const photoURL = isSharedProject && ownerInfo?.photoURL ? ownerInfo.photoURL : user?.photoURL;
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                              <div className={styles.cardUser}>
+                                {/* 소유자 프로필 */}
+                                <div className={styles.cardUserAvatar}>
+                                  {(() => {
+                                    // 공유받은 프로젝트인 경우 프로젝트 소유자 프로필 표시
+                                    const isSharedProject = item.project.userId !== user?.uid;
+                                    const ownerInfo = isSharedProject ? projectOwners[item.project.userId] : null;
+                                    const photoURL = isSharedProject && ownerInfo?.photoURL ? ownerInfo.photoURL : user?.photoURL;
 
-                                  return photoURL ? (
-                                    <img
-                                      src={photoURL}
-                                      alt="프로필"
-                                      referrerPolicy="no-referrer"
-                                      style={{
-                                        width: '100%',
-                                        height: '100%',
-                                        borderRadius: '50%',
-                                        objectFit: 'cover'
-                                      }}
-                                    />
-                                  ) : (
-                                    <UserIcon size={12} />
-                                  );
-                                })()}
-                              </div>
-                              <span className={styles.cardUserName}>
-                                {(() => {
-                                  // 공유받은 프로젝트인 경우 프로젝트 소유자 이름 표시
-                                  const isSharedProject = item.project.userId !== user?.uid;
-                                  const ownerInfo = isSharedProject ? projectOwners[item.project.userId] : null;
-                                  return isSharedProject && ownerInfo?.displayName
-                                    ? ownerInfo.displayName
-                                    : (user?.displayName || user?.email?.split('@')[0] || '이진수');
-                                })()}
-                              </span>
-                            </div>
-
-                            {/* 협업자 프로필 사진들 */}
-                            {projectCollaborators[item.project.id] && projectCollaborators[item.project.id].length > 0 && (
-                              <div className={styles.collaborators} style={{
-                                display: 'flex',
-                                gap: '4px',
-                                marginTop: '8px',
-                                paddingLeft: '4px'
-                              }}>
-                                {projectCollaborators[item.project.id].slice(0, 3).map((collaborator, idx) => (
-                                  <div
-                                    key={collaborator.userId}
-                                    title={`${collaborator.userName} (${collaborator.permission === 'editor' ? '편집 가능' : '조회만'})`}
-                                    style={{
-                                      width: '24px',
-                                      height: '24px',
-                                      borderRadius: '50%',
-                                      overflow: 'hidden',
-                                      border: '2px solid white',
-                                      backgroundColor: '#e0e0e0',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      fontSize: '10px',
-                                      fontWeight: 'bold',
-                                      color: '#666'
-                                    }}
-                                  >
-                                    {collaborator.photoURL ? (
+                                    return photoURL ? (
                                       <img
-                                        src={collaborator.photoURL}
-                                        alt={collaborator.userName}
+                                        src={photoURL}
+                                        alt="프로필"
                                         referrerPolicy="no-referrer"
                                         style={{
                                           width: '100%',
                                           height: '100%',
+                                          borderRadius: '50%',
                                           objectFit: 'cover'
                                         }}
                                       />
                                     ) : (
-                                      <UserIcon size={10} />
-                                    )}
-                                  </div>
-                                ))}
-                                {projectCollaborators[item.project.id].length > 3 && (
-                                  <div
-                                    title={`+${projectCollaborators[item.project.id].length - 3}명 더`}
-                                    style={{
-                                      width: '24px',
-                                      height: '24px',
-                                      borderRadius: '50%',
-                                      border: '2px solid white',
-                                      backgroundColor: '#666',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      fontSize: '10px',
-                                      fontWeight: 'bold',
-                                      color: 'white'
-                                    }}
-                                  >
-                                    +{projectCollaborators[item.project.id].length - 3}
-                                  </div>
-                                )}
+                                      <UserIcon size={12} />
+                                    );
+                                  })()}
+                                </div>
+                                <span className={styles.cardUserName}>
+                                  {(() => {
+                                    // 공유받은 프로젝트인 경우 프로젝트 소유자 이름 표시
+                                    const isSharedProject = item.project.userId !== user?.uid;
+                                    const ownerInfo = isSharedProject ? projectOwners[item.project.userId] : null;
+                                    return isSharedProject && ownerInfo?.displayName
+                                      ? ownerInfo.displayName
+                                      : (user?.displayName || user?.email?.split('@')[0] || '이진수');
+                                  })()}
+                                </span>
                               </div>
-                            )}
+
+                              {/* 편집 권한 협업자 수 표시 (호스트 제외) - 우측 정렬 */}
+                              {(() => {
+                                const collaborators = projectCollaborators[item.project.id] || [];
+                                const editCollaborators = collaborators.filter(c => c.permission === 'editor');
+                                if (editCollaborators.length === 0) return null;
+                                return (
+                                  <span style={{
+                                    fontSize: '12px',
+                                    color: '#666',
+                                    fontWeight: '500'
+                                  }}>
+                                    외 {editCollaborators.length}명
+                                  </span>
+                                );
+                              })()}
+                            </div>
+
+                            {/* 협업자 프로필 사진들 - 호스트 아래에 표시 */}
+                            {(() => {
+                              const collaborators = projectCollaborators[item.project.id] || [];
+                              const editCollaborators = collaborators.filter(c => c.permission === 'editor');
+
+                              if (editCollaborators.length === 0) return null;
+
+                              return (
+                                <div className={styles.collaborators} style={{
+                                  display: 'flex',
+                                  gap: '4px',
+                                  marginTop: '8px',
+                                  paddingLeft: '4px'
+                                }}>
+                                  {editCollaborators.slice(0, 3).map((collaborator) => (
+                                    <div
+                                      key={collaborator.userId}
+                                      title={`${collaborator.userName} (편집 가능)`}
+                                      style={{
+                                        width: '24px',
+                                        height: '24px',
+                                        borderRadius: '50%',
+                                        overflow: 'hidden',
+                                        border: '2px solid white',
+                                        backgroundColor: '#e0e0e0',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '10px',
+                                        fontWeight: 'bold',
+                                        color: '#666'
+                                      }}
+                                    >
+                                      {collaborator.photoURL ? (
+                                        <img
+                                          src={collaborator.photoURL}
+                                          alt={collaborator.userName}
+                                          referrerPolicy="no-referrer"
+                                          style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover'
+                                          }}
+                                        />
+                                      ) : (
+                                        <UserIcon size={10} />
+                                      )}
+                                    </div>
+                                  ))}
+                                  {editCollaborators.length > 3 && (
+                                    <div
+                                      title={`+${editCollaborators.length - 3}명 더`}
+                                      style={{
+                                        width: '24px',
+                                        height: '24px',
+                                        borderRadius: '50%',
+                                        border: '2px solid white',
+                                        backgroundColor: '#f0f0f0',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '10px',
+                                        fontWeight: 'bold',
+                                        color: '#666'
+                                      }}
+                                    >
+                                      +{editCollaborators.length - 3}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                           </div>
                         </div>
                       ) : (
