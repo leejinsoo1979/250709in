@@ -633,6 +633,15 @@ const SimpleDashboard: React.FC = () => {
   useEffect(() => {
     const allShared = [...sharedByMeProjects, ...sharedWithMeProjects];
 
+    console.log('📁 공유 프로젝트 디자인 파일 로딩 체크:', {
+      sharedByMeCount: sharedByMeProjects.length,
+      sharedWithMeCount: sharedWithMeProjects.length,
+      totalSharedCount: allShared.length,
+      allSharedProjects: allShared.map(p => ({ id: p.id, title: p.title })),
+      projectDesignFilesKeys: Object.keys(projectDesignFiles),
+      designFilesLoadingKeys: Object.keys(designFilesLoading).filter(k => designFilesLoading[k])
+    });
+
     if (allShared.length > 0) {
       console.log('📁 공유 프로젝트 디자인 파일 로딩 시작:', allShared.length, '개');
 
@@ -641,10 +650,15 @@ const SimpleDashboard: React.FC = () => {
         !projectDesignFiles[project.id] && !designFilesLoading[project.id]
       );
 
+      console.log('📁 로딩 필요한 프로젝트:', {
+        count: projectsToLoad.length,
+        projects: projectsToLoad.map(p => ({ id: p.id, title: p.title }))
+      });
+
       if (projectsToLoad.length > 0) {
-        console.log(`📁 ${projectsToLoad.length}개 프로젝트의 디자인 파일 로딩 필요`);
+        console.log(`📁 ${projectsToLoad.length}개 프로젝트의 디자인 파일 로딩 시작`);
         projectsToLoad.forEach(project => {
-          console.log(`📁 공유 프로젝트 ${project.title}의 디자인 파일 로딩`);
+          console.log(`📁 공유 프로젝트 ${project.title} (${project.id})의 디자인 파일 로딩`);
           loadDesignFilesForProject(project.id);
         });
       }
@@ -1223,6 +1237,18 @@ const SimpleDashboard: React.FC = () => {
       console.log('❌ getProjectItems: 프로젝트를 찾을 수 없습니다:', projectId, 'allProjects:', allProjects.length);
       return [];
     }
+
+    console.log('🔍 getProjectItems 시작:', {
+      projectId,
+      projectTitle: project.title,
+      activeMenu,
+      isSharedByMe: activeMenu === 'shared-by-me',
+      isSharedWithMe: activeMenu === 'shared-with-me',
+      hasProjectDesignFiles: !!projectDesignFiles[projectId],
+      projectDesignFilesCount: projectDesignFiles[projectId]?.length || 0,
+      projectDesignFilesKeys: Object.keys(projectDesignFiles),
+      isLoading: designFilesLoading[projectId]
+    });
 
     const projectFolders = folders[projectId] || [];
     const items = [];
