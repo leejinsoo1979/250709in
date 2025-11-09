@@ -8,7 +8,7 @@ import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
-import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks } from '@/firebase/shareLinks';
+import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks, revokeDesignFileAccess, revokeProjectAccess } from '@/firebase/shareLinks';
 import { signOutUser } from '@/firebase/auth';
 import { db } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
@@ -4191,14 +4191,18 @@ const SimpleDashboard: React.FC = () => {
                             <CopyIcon size={14} />
                             복제하기
                           </div>
-                          <div
-                            className={styles.moreMenuItem}
-                            onClick={handleShareItem}
-                          >
-                            <ShareIcon size={14} />
-                            공유하기
-                          </div>
-                          {(moreMenu.itemType === 'project' || moreMenu.itemType === 'design' || moreMenu.itemType === 'folder') && (
+                          {/* 공유 탭이 아닐 때만 공유하기 버튼 표시 */}
+                          {activeMenu !== 'shared' && (
+                            <div
+                              className={styles.moreMenuItem}
+                              onClick={handleShareItem}
+                            >
+                              <ShareIcon size={14} />
+                              공유하기
+                            </div>
+                          )}
+                          {/* 공유 탭이 아닐 때만 북마크 버튼 표시 */}
+                          {activeMenu !== 'shared' && (moreMenu.itemType === 'project' || moreMenu.itemType === 'design' || moreMenu.itemType === 'folder') && (
                             <div
                               className={styles.moreMenuItem}
                               onClick={() => {
@@ -4221,10 +4225,58 @@ const SimpleDashboard: React.FC = () => {
                               }
                             </div>
                           )}
+                          {/* 공유 탭일 때는 공유 해제, 일반 탭일 때는 삭제하기 */}
                           <div
                             className={`${styles.moreMenuItem} ${styles.deleteItem}`}
-                            onClick={() => {
-                              if (activeMenu === 'trash') {
+                            onClick={async () => {
+                              if (activeMenu === 'shared') {
+                                // 공유 해제 로직
+                                if (window.confirm('공유를 해제하시겠습니까?')) {
+                                  console.log('🔗 공유 해제:', moreMenu.itemId, moreMenu.itemType);
+
+                                  if (moreMenu.itemType === 'design' && selectedProjectId && user) {
+                                    // 디자인 파일 공유 해제
+                                    const result = await revokeDesignFileAccess(selectedProjectId, user.uid, moreMenu.itemId);
+                                    if (result.success) {
+                                      // 공유받은 프로젝트 목록 새로고침
+                                      const shared = await getSharedProjectsForUser(user.uid);
+                                      const sharedProjectsMap = new Map<string, any>();
+
+                                      for (const s of shared) {
+                                        const designFileIds = s.designFileIds || (s.designFileId ? [s.designFileId] : []);
+                                        const designFileNames = s.designFileNames || (s.designFileName ? [s.designFileName] : []);
+
+                                        sharedProjectsMap.set(s.projectId, {
+                                          id: s.projectId,
+                                          title: s.projectName,
+                                          userId: s.sharedBy,
+                                          createdAt: s.grantedAt,
+                                          updatedAt: s.grantedAt,
+                                          designFilesCount: 0,
+                                          lastDesignFileName: null,
+                                          sharedDesignFileIds: designFileIds,
+                                          sharedDesignFileNames: designFileNames,
+                                          sharedDesignFileId: designFileIds[0] || null,
+                                          sharedDesignFileName: designFileNames[0] || null,
+                                        });
+                                      }
+
+                                      setSharedWithMeProjects(Array.from(sharedProjectsMap.values()));
+                                    }
+                                    alert(result.message);
+                                  } else if (moreMenu.itemType === 'project' && user) {
+                                    // 프로젝트 전체 공유 해제
+                                    const result = await revokeProjectAccess(moreMenu.itemId, user.uid);
+                                    if (result.success) {
+                                      // 공유받은 프로젝트 목록에서 제거
+                                      setSharedWithMeProjects(prev => prev.filter(p => p.id !== moreMenu.itemId));
+                                    }
+                                    alert(result.message);
+                                  }
+
+                                  closeMoreMenu();
+                                }
+                              } else if (activeMenu === 'trash') {
                                 if (window.confirm('정말로 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
                                   handleDeleteItem();
                                 }
@@ -4242,7 +4294,7 @@ const SimpleDashboard: React.FC = () => {
                             }}
                           >
                             <TrashIcon size={14} />
-                            {activeMenu === 'trash' ? '영구 삭제' : '삭제하기'}
+                            {activeMenu === 'shared' ? '공유 해제' : (activeMenu === 'trash' ? '영구 삭제' : '삭제하기')}
                           </div>
                           {activeMenu === 'trash' && (
                             <div

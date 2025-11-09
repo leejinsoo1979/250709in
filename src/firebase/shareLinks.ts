@@ -808,3 +808,93 @@ export async function shareProjectWithEmail(
     };
   }
 }
+
+/**
+ * 공유 프로젝트 접근 권한 해제
+ */
+export async function revokeProjectAccess(
+  projectId: string,
+  userId: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const accessDocRef = doc(db, 'sharedProjectAccess', `${projectId}_${userId}`);
+    await deleteDoc(accessDocRef);
+
+    console.log('✅ 프로젝트 접근 권한 해제 완료:', projectId, userId);
+    return {
+      success: true,
+      message: '공유가 해제되었습니다.',
+    };
+  } catch (error) {
+    console.error('❌ 접근 권한 해제 실패:', error);
+    return {
+      success: false,
+      message: '공유 해제 중 오류가 발생했습니다.',
+    };
+  }
+}
+
+/**
+ * 특정 디자인 파일의 공유 해제
+ */
+export async function revokeDesignFileAccess(
+  projectId: string,
+  userId: string,
+  designFileId: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const accessDocRef = doc(db, 'sharedProjectAccess', `${projectId}_${userId}`);
+    const accessDoc = await getDoc(accessDocRef);
+
+    if (!accessDoc.exists()) {
+      return {
+        success: false,
+        message: '공유 정보를 찾을 수 없습니다.',
+      };
+    }
+
+    const accessData = accessDoc.data();
+    const designFileIds = accessData.designFileIds || [];
+    const designFileNames = accessData.designFileNames || [];
+
+    // 해당 디자인 파일 ID 찾기
+    const index = designFileIds.indexOf(designFileId);
+
+    if (index === -1) {
+      return {
+        success: false,
+        message: '공유된 디자인 파일이 아닙니다.',
+      };
+    }
+
+    // 배열에서 제거
+    designFileIds.splice(index, 1);
+    designFileNames.splice(index, 1);
+
+    // 디자인 파일이 하나도 남지 않으면 문서 삭제
+    if (designFileIds.length === 0) {
+      await deleteDoc(accessDocRef);
+      console.log('✅ 모든 디자인 공유 해제 - 문서 삭제:', projectId, userId);
+    } else {
+      // 업데이트된 배열로 문서 업데이트
+      await updateDoc(accessDocRef, {
+        designFileIds,
+        designFileNames,
+        designFileId: designFileIds[0] || null,
+        designFileName: designFileNames[0] || null,
+      });
+      console.log('✅ 디자인 파일 공유 해제 완료:', designFileId);
+    }
+
+    return {
+      success: true,
+      message: '공유가 해제되었습니다.',
+    };
+  } catch (error) {
+    console.error('❌ 디자인 파일 공유 해제 실패:', error);
+    return {
+      success: false,
+      message: '공유 해제 중 오류가 발생했습니다.',
+    };
+  }
+}
