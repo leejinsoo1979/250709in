@@ -28,6 +28,7 @@ import ThumbnailImage from '../components/common/ThumbnailImage';
 import ProfilePopup from '../editor/Configurator/components/ProfilePopup';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { ShareLinkModal } from '@/components/ShareLinkModal';
+import RenameModal from '../components/common/RenameModal';
 // import { generateProjectThumbnail } from '../utils/thumbnailGenerator';
 import styles from './SimpleDashboard.module.css';
 
@@ -98,6 +99,14 @@ const SimpleDashboard: React.FC = () => {
   const [shareProjectName, setShareProjectName] = useState<string>('');
   const [shareDesignFileId, setShareDesignFileId] = useState<string | null>(null);
   const [shareDesignFileName, setShareDesignFileName] = useState<string>('');
+
+  // 이름 바꾸기 모달 상태
+  const [isRenameModalOpen, setIsRenameModalOpen] = useState(false);
+  const [renameTarget, setRenameTarget] = useState<{
+    id: string;
+    name: string;
+    type: 'folder' | 'design' | 'project';
+  } | null>(null);
 
   // 프로젝트 협업자 목록 상태 (projectId를 key로 사용)
   const [projectCollaborators, setProjectCollaborators] = useState<{[projectId: string]: ProjectCollaborator[]}>({});
@@ -1621,33 +1630,44 @@ const SimpleDashboard: React.FC = () => {
   };
 
   // 더보기 메뉴 액션 핸들러들
-  const handleRenameItem = async () => {
+  const handleRenameItem = () => {
     if (!moreMenu) return;
-    const newName = prompt('새 이름을 입력하세요:', moreMenu.itemName);
+    setRenameTarget({
+      id: moreMenu.itemId,
+      name: moreMenu.itemName,
+      type: moreMenu.itemType
+    });
+    setIsRenameModalOpen(true);
+    closeMoreMenu();
+  };
+
+  // 이름 변경 확인 핸들러
+  const handleConfirmRename = async (newName: string) => {
+    if (!renameTarget) return;
     if (newName && newName.trim()) {
-      if (moreMenu.itemType === 'project') {
+      if (renameTarget.type === 'project') {
         // 프로젝트 이름 변경
         try {
           const { updateProject } = await import('@/firebase/projects');
-          const result = await updateProject(moreMenu.itemId, {
+          const result = await updateProject(renameTarget.id, {
             title: newName.trim()
           });
-          
+
           if (result.error) {
             console.error('프로젝트 이름 변경 실패:', result.error);
             alert('프로젝트 이름 변경에 실패했습니다: ' + result.error);
             return;
           }
-          
+
           // 로컬 상태 업데이트
-          setFirebaseProjects(prev => prev.map(project => 
-            project.id === moreMenu.itemId 
+          setFirebaseProjects(prev => prev.map(project =>
+            project.id === renameTarget.id
               ? { ...project, title: newName.trim() }
               : project
           ));
-          
+
           // 현재 선택된 프로젝트인 경우 브레드크럼도 업데이트
-          if (selectedProjectId === moreMenu.itemId) {
+          if (selectedProjectId === renameTarget.id) {
             setBreadcrumbPath(prev => {
               const newPath = [...prev];
               const projectIndex = newPath.findIndex(path => path !== '전체 프로젝트');
@@ -1657,35 +1677,35 @@ const SimpleDashboard: React.FC = () => {
               return newPath;
             });
           }
-          
-          console.log('프로젝트 이름 변경 성공:', moreMenu.itemId, '→', newName.trim());
-          
+
+          console.log('프로젝트 이름 변경 성공:', renameTarget.id, '→', newName.trim());
+
           // BroadcastChannel로 다른 탭에 알림
           try {
             const channel = new BroadcastChannel('project-updates');
-            channel.postMessage({ 
-              type: 'PROJECT_UPDATED', 
+            channel.postMessage({
+              type: 'PROJECT_UPDATED',
               action: 'renamed',
-              projectId: moreMenu.itemId,
+              projectId: renameTarget.id,
               newName: newName.trim()
             });
             channel.close();
           } catch (error) {
             console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
           }
-          
+
         } catch (error) {
           console.error('프로젝트 이름 변경 중 오류:', error);
           alert('프로젝트 이름 변경 중 오류가 발생했습니다.');
         }
-      } else if (moreMenu.itemType === 'folder') {
+      } else if (renameTarget.type === 'folder') {
         // 폴더 이름 변경
-        const updatedFolders = folders[selectedProjectId!]?.map(folder => 
-          folder.id === moreMenu.itemId 
+        const updatedFolders = folders[selectedProjectId!]?.map(folder =>
+          folder.id === renameTarget.id
             ? { ...folder, name: newName.trim() }
             : folder
         ) || [];
-        
+
         setFolders(prev => ({
           ...prev,
           [selectedProjectId!]: updatedFolders
@@ -1693,43 +1713,43 @@ const SimpleDashboard: React.FC = () => {
 
         // Firebase에 저장
         await saveFolderDataToFirebase(selectedProjectId!, updatedFolders);
-      } else if (moreMenu.itemType === 'design') {
+      } else if (renameTarget.type === 'design') {
         // 디자인 파일 이름 변경
         try {
           // TODO: Firebase에서 실제 디자인파일 데이터 업데이트 필요
           // 현재는 로컬 상태만 업데이트
-          
+
           // 폴더 내부 디자인 파일인지 확인
           let isInFolder = false;
           if (selectedProjectId) {
             const projectFolders = folders[selectedProjectId] || [];
             for (const folder of projectFolders) {
-              if (folder.children.some(child => child.id === moreMenu.itemId)) {
+              if (folder.children.some(child => child.id === renameTarget.id)) {
                 isInFolder = true;
                 break;
               }
             }
           }
-          
+
           if (isInFolder) {
             // 폴더 내부 디자인 파일인 경우 - 폴더 데이터에서 이름 변경
             setFolders(prev => ({
               ...prev,
               [selectedProjectId!]: prev[selectedProjectId!]?.map(folder => ({
                 ...folder,
-                children: folder.children.map(child => 
-                  child.id === moreMenu.itemId 
+                children: folder.children.map(child =>
+                  child.id === renameTarget.id
                     ? { ...child, name: newName.trim() }
                     : child
                 )
               })) || []
             }));
-            
+
             // Firebase에 폴더 데이터 저장
             const updatedFolders = folders[selectedProjectId!]?.map(folder => ({
               ...folder,
-              children: folder.children.map(child => 
-                child.id === moreMenu.itemId 
+              children: folder.children.map(child =>
+                child.id === renameTarget.id
                   ? { ...child, name: newName.trim() }
                   : child
               )
@@ -1738,29 +1758,29 @@ const SimpleDashboard: React.FC = () => {
           } else {
             // 루트 레벨 디자인 파일인 경우 - Firebase 디자인파일 업데이트
             const { updateDesignFile } = await import('@/firebase/projects');
-            const result = await updateDesignFile(moreMenu.itemId, {
+            const result = await updateDesignFile(renameTarget.id, {
               name: newName.trim()
             });
-            
+
             if (result.error) {
               console.error('디자인파일 이름 변경 실패:', result.error);
               alert('디자인파일 이름 변경에 실패했습니다: ' + result.error);
               return;
             }
-            
-            console.log('루트 레벨 디자인파일 이름 변경 성공:', moreMenu.itemId, '→', newName.trim());
-            
+
+            console.log('루트 레벨 디자인파일 이름 변경 성공:', renameTarget.id, '→', newName.trim());
+
             // 프로젝트 목록을 새로고침하여 변경사항 반영
             await loadFirebaseProjects();
-            
+
             // BroadcastChannel로 다른 탭에 알림
             try {
               const channel = new BroadcastChannel('project-updates');
-              channel.postMessage({ 
-                type: 'PROJECT_UPDATED', 
+              channel.postMessage({
+                type: 'PROJECT_UPDATED',
                 action: 'design_renamed',
                 projectId: selectedProjectId,
-                designFileId: moreMenu.itemId,
+                designFileId: renameTarget.id,
                 newName: newName.trim()
               });
               channel.close();
@@ -1768,15 +1788,14 @@ const SimpleDashboard: React.FC = () => {
               console.warn('BroadcastChannel 전송 실패 (무시 가능):', error);
             }
           }
-          
+
         } catch (error) {
           console.error('디자인파일 이름 변경 중 오류:', error);
           alert('디자인파일 이름 변경 중 오류가 발생했습니다.');
         }
       }
-      console.log('이름 변경:', moreMenu.itemId, '→', newName);
+      console.log('이름 변경:', renameTarget.id, '→', newName);
     }
-    closeMoreMenu();
   };
 
   const handleDeleteItem = async () => {
@@ -4144,6 +4163,18 @@ const SimpleDashboard: React.FC = () => {
           }}
         />
       )}
+
+      {/* 이름 바꾸기 모달 */}
+      <RenameModal
+        isOpen={isRenameModalOpen}
+        onClose={() => {
+          setIsRenameModalOpen(false);
+          setRenameTarget(null);
+        }}
+        onConfirm={handleConfirmRename}
+        currentName={renameTarget?.name || ''}
+        title="이름 바꾸기"
+      />
     </div>
   );
 };
