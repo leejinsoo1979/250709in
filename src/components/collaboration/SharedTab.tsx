@@ -244,12 +244,8 @@ const SharedTab: React.FC<SharedTabProps> = ({
                               <span style={{
                                 fontSize: '12px',
                                 color: '#666',
-                                fontWeight: '500',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '4px'
+                                fontWeight: '500'
                               }}>
-                                <GoPeople size={14} />
                                 외 {editCollaborators.length}명
                               </span>
                             );
@@ -265,6 +261,7 @@ const SharedTab: React.FC<SharedTabProps> = ({
 
                           return (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <GoPeople size={14} />
                               {editCollaborators.slice(0, 3).map((collaborator) => (
                                 <div
                                   key={collaborator.userId}
