@@ -250,8 +250,13 @@ export async function grantProjectAccessViaLink(
     const projectData = projectDoc.data();
     console.log('🔑 프로젝트 소유자 확인:', { projectOwner: projectData.userId, currentUser: userId });
     if (projectData.userId === userId) {
-      console.log('ℹ️ 이미 소유하고 있는 프로젝트');
-      return { success: false, message: '이미 소유하고 있는 프로젝트입니다.' };
+      console.log('ℹ️ 프로젝트 소유자 - 바로 접근 허용');
+      return {
+        success: true,
+        message: '프로젝트 소유자입니다. 프로젝트로 이동합니다.',
+        projectId: link.projectId,
+        permission: 'owner' as SharePermission
+      };
     }
 
     // Transaction으로 권한 부여 및 사용 횟수 증가

@@ -22,6 +22,7 @@ export const ShareLinkAccess: React.FC = () => {
   const [error, setError] = useState('');
   const [requiresPassword, setRequiresPassword] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [isOwner, setIsOwner] = useState(false); // 프로젝트 소유자 여부
 
   // 초기 링크 검증
   useEffect(() => {
@@ -131,15 +132,22 @@ export const ShareLinkAccess: React.FC = () => {
       console.log('🔑 권한 부여 결과:', result);
 
       if (result.success && result.projectId) {
-        // 알림 생성
-        await createProjectSharedNotification(
-          user.uid,
-          result.projectId,
-          link.projectName,
-          link.createdBy,
-          link.createdByName,
-          result.permission || 'viewer'
-        );
+        // 소유자 여부 설정
+        if (result.permission === 'owner') {
+          setIsOwner(true);
+        }
+
+        // 알림 생성 (소유자가 아닌 경우에만)
+        if (result.permission !== 'owner') {
+          await createProjectSharedNotification(
+            user.uid,
+            result.projectId,
+            link.projectName,
+            link.createdBy,
+            link.createdByName,
+            result.permission || 'viewer'
+          );
+        }
 
         setSuccess(true);
 
@@ -242,7 +250,9 @@ export const ShareLinkAccess: React.FC = () => {
         <div className={styles.card}>
           <CheckCircle className={styles.successIcon} size={64} />
           <h2 className={styles.title}>
-            {link?.permission === 'viewer'
+            {isOwner
+              ? '프로젝트로 이동합니다!'
+              : link?.permission === 'viewer'
               ? '프로젝트를 조회합니다!'
               : '프로젝트 접근 권한이 부여되었습니다!'}
           </h2>
@@ -255,14 +265,16 @@ export const ShareLinkAccess: React.FC = () => {
                 <span className={styles.infoLabel}>프로젝트:</span>
                 <span className={styles.infoValue}>{link.projectName}</span>
               </div>
-              <div className={styles.infoItem}>
-                <span className={styles.infoLabel}>공유자:</span>
-                <span className={styles.infoValue}>{link.createdByName}</span>
-              </div>
+              {!isOwner && (
+                <div className={styles.infoItem}>
+                  <span className={styles.infoLabel}>공유자:</span>
+                  <span className={styles.infoValue}>{link.createdByName}</span>
+                </div>
+              )}
               <div className={styles.infoItem}>
                 <span className={styles.infoLabel}>권한:</span>
                 <span className={styles.infoValue}>
-                  {link.permission === 'viewer' ? '조회만 가능' : '편집 가능'}
+                  {isOwner ? '소유자' : link.permission === 'viewer' ? '조회만 가능' : '편집 가능'}
                 </span>
               </div>
             </div>
