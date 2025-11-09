@@ -278,6 +278,14 @@ export async function grantProjectAccessViaLink(
         grantedAt: Timestamp.now(),
       };
 
+      // 디자인 파일 정보가 있으면 저장
+      if (link.designFileId) {
+        accessData.designFileId = link.designFileId;
+      }
+      if (link.designFileName) {
+        accessData.designFileName = link.designFileName;
+      }
+
       // 프로필 사진이 있으면 저장
       if (photoURL) {
         accessData.photoURL = photoURL;
