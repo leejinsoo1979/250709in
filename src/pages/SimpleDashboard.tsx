@@ -1175,8 +1175,8 @@ const SimpleDashboard: React.FC = () => {
         break;
       case 'all':
       default:
-        // 삭제된 프로젝트는 제외하고 반환
-        filteredProjects = allProjects.filter(p => !deletedProjectIds.has(p.id));
+        // 전체 프로젝트는 내가 만든 프로젝트만 표시 (공유받은 프로젝트 제외)
+        filteredProjects = firebaseProjects.filter(p => !deletedProjectIds.has(p.id));
         break;
     }
 
