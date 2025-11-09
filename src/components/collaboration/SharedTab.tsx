@@ -145,7 +145,7 @@ const SharedTab: React.FC<SharedTabProps> = ({
                   {/* SimpleDashboard와 동일한 cardInfo 구조 */}
                   <div className={dashboardStyles.cardInfo}>
                     <div className={dashboardStyles.cardTitle}>
-                      {isDesignShare ? sharedInfo.sharedDesignFileName : project.title}
+                      {isDesignShare ? `${project.title} > ${sharedInfo.sharedDesignFileName}` : project.title}
                     </div>
                     <div className={dashboardStyles.cardMeta}>
                       <div className={dashboardStyles.cardDate}>
