@@ -4312,7 +4312,7 @@ const SimpleDashboard: React.FC = () => {
                               {/* 왼쪽: 왕관 + 호스트 프로필 + 외 n명 */}
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                 {/* 왕관 아이콘 */}
-                                <PiCrownDuotone size={14} />
+                                <PiCrownDuotone size={14} style={{ color: '#21b691' }} />
                                 {/* 호스트 프로필 */}
                                 <div className={styles.cardUserAvatar}>
                                   {(() => {
@@ -4479,7 +4479,7 @@ const SimpleDashboard: React.FC = () => {
                           
                           <div className={styles.cardFooter}>
                             <div className={styles.cardUser}>
-                              <PiCrownDuotone size={14} style={{ marginRight: '4px' }} />
+                              <PiCrownDuotone size={14} style={{ marginRight: '4px', color: '#21b691' }} />
                               <div className={styles.cardUserAvatar}>
                                 {(() => {
                                   // 공유받은 프로젝트인 경우 프로젝트 소유자 프로필 표시
