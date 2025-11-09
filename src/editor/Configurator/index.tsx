@@ -58,9 +58,10 @@ const Configurator: React.FC = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  // design=new인 경우 로딩을 건너뛰기 위해 초기값 설정
+  // design=new인 경우 또는 readonly 모드인 경우 로딩을 건너뛰기 위해 초기값 설정
   const isNewDesign = searchParams.get('design') === 'new';
-  const [loading, setLoading] = useState(!isNewDesign); // 새 디자인인 경우 로딩 건너뛰기
+  const isReadOnlyMode = searchParams.get('mode') === 'readonly';
+  const [loading, setLoading] = useState(!isNewDesign && !isReadOnlyMode); // 새 디자인이나 readonly 모드인 경우 로딩 건너뛰기
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
   const [currentProjectId, setCurrentProjectId] = useState<string | null>(null);
@@ -3006,10 +3007,11 @@ const Configurator: React.FC = () => {
     );
   };
 
-  if (loading) {
+  // readonly 모드가 아닐 때만 로딩 화면 표시
+  if (loading && !isReadOnly) {
     return (
       <div className={styles.loadingContainer}>
-        <LoadingSpinner 
+        <LoadingSpinner
           message="에디터를 준비하는 중..."
           size="large"
           type="spinner"
