@@ -264,39 +264,77 @@ export async function grantProjectAccessViaLink(
     await runTransaction(db, async (transaction) => {
       // 공유 프로젝트 접근 권한 문서 생성/업데이트
       const accessDocRef = doc(db, 'sharedProjectAccess', `${link.projectId}_${userId}`);
-      const accessData: any = {
-        projectId: link.projectId,
-        projectName: link.projectName,
-        userId,
-        userName,
-        userEmail,
-        sharedBy: link.createdBy,
-        sharedByName: link.createdByName,
-        permission: link.permission,
-        sharedVia: 'link',
-        linkToken: token,
-        grantedAt: Timestamp.now(),
-      };
 
-      // 디자인 파일 정보가 있으면 저장
-      if (link.designFileId) {
-        accessData.designFileId = link.designFileId;
-      }
-      if (link.designFileName) {
-        accessData.designFileName = link.designFileName;
-      }
+      // 기존 문서 확인
+      const existingDoc = await transaction.get(accessDocRef);
 
-      // 프로필 사진이 있으면 저장
-      if (photoURL) {
-        accessData.photoURL = photoURL;
-      }
+      if (existingDoc.exists() && link.designFileId) {
+        // 기존 문서가 있고 새로운 디자인 파일을 추가하는 경우
+        const existingData = existingDoc.data();
+        const existingDesignFileIds = existingData.designFileIds || (existingData.designFileId ? [existingData.designFileId] : []);
+        const existingDesignFileNames = existingData.designFileNames || (existingData.designFileName ? [existingData.designFileName] : []);
 
-      console.log('🔑 접근 권한 문서 생성:', {
-        docId: `${link.projectId}_${userId}`,
-        permission: link.permission,
-        hasPhotoURL: !!photoURL
-      });
-      transaction.set(accessDocRef, accessData);
+        // 중복 체크 후 추가
+        if (!existingDesignFileIds.includes(link.designFileId)) {
+          existingDesignFileIds.push(link.designFileId);
+          if (link.designFileName) {
+            existingDesignFileNames.push(link.designFileName);
+          }
+
+          console.log('🔑 기존 문서에 디자인 파일 추가:', {
+            projectId: link.projectId,
+            existingCount: existingDesignFileIds.length - 1,
+            newDesignFileId: link.designFileId,
+            totalCount: existingDesignFileIds.length
+          });
+
+          transaction.update(accessDocRef, {
+            designFileIds: existingDesignFileIds,
+            designFileNames: existingDesignFileNames,
+            designFileId: link.designFileId, // 호환성을 위해 마지막 파일 저장
+            designFileName: link.designFileName,
+            grantedAt: Timestamp.now(),
+          });
+        } else {
+          console.log('ℹ️ 이미 추가된 디자인 파일 - 업데이트 스킵:', link.designFileId);
+        }
+      } else {
+        // 새 문서 생성 또는 전체 프로젝트 공유
+        const accessData: any = {
+          projectId: link.projectId,
+          projectName: link.projectName,
+          userId,
+          userName,
+          userEmail,
+          sharedBy: link.createdBy,
+          sharedByName: link.createdByName,
+          permission: link.permission,
+          sharedVia: 'link',
+          linkToken: token,
+          grantedAt: Timestamp.now(),
+        };
+
+        // 디자인 파일 정보가 있으면 배열로 저장
+        if (link.designFileId) {
+          accessData.designFileIds = [link.designFileId];
+          accessData.designFileNames = link.designFileName ? [link.designFileName] : [];
+          accessData.designFileId = link.designFileId; // 호환성
+          accessData.designFileName = link.designFileName;
+        }
+
+        // 프로필 사진이 있으면 저장
+        if (photoURL) {
+          accessData.photoURL = photoURL;
+        }
+
+        console.log('🔑 새 접근 권한 문서 생성:', {
+          docId: `${link.projectId}_${userId}`,
+          permission: link.permission,
+          hasPhotoURL: !!photoURL,
+          designFileIds: accessData.designFileIds
+        });
+        transaction.set(accessDocRef, accessData);
+      }
 
       // 링크 사용 횟수 증가
       const linkDocRef = doc(db, 'shareLinks', link.id);
