@@ -1265,6 +1265,7 @@ const SimpleDashboard: React.FC = () => {
     // 실제 Firebase 디자인 파일들을 사용해서 표시
     const isDesignFilesLoading = designFilesLoading[projectId] || false;
     let actualDesignFiles = projectDesignFiles[projectId] || [];
+    const originalDesignFilesCount = actualDesignFiles.length;
 
     // 공유 메뉴에서는 공유 범위에 따라 필터링
     if (activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') {
@@ -1272,15 +1273,31 @@ const SimpleDashboard: React.FC = () => {
         ? sharedByMeProjects.find(p => p.id === projectId)
         : sharedWithMeProjects.find(p => p.id === projectId);
 
+      console.log('🔍 공유 프로젝트 필터링:', {
+        activeMenu,
+        projectId,
+        projectTitle: project.title,
+        sharedProjectFound: !!sharedProject,
+        sharedDesignFileIds: sharedProject ? (sharedProject as any).sharedDesignFileIds : null,
+        sharedDesignFileNames: sharedProject ? (sharedProject as any).sharedDesignFileNames : null,
+        originalDesignFilesCount
+      });
+
       if (sharedProject) {
         const sharedDesignFileIds = (sharedProject as any).sharedDesignFileIds || [];
         const sharedDesignFileNames = (sharedProject as any).sharedDesignFileNames || [];
 
         // sharedDesignFileIds가 있으면 해당 디자인만 표시
         if (sharedDesignFileIds.length > 0 || sharedDesignFileNames.length > 0) {
+          const beforeFilterCount = actualDesignFiles.length;
           actualDesignFiles = actualDesignFiles.filter(df =>
             sharedDesignFileIds.includes(df.id) || sharedDesignFileNames.includes(df.name)
           );
+          console.log('✅ 공유 범위 필터링 완료:', {
+            beforeFilterCount,
+            afterFilterCount: actualDesignFiles.length,
+            filteredDesignFiles: actualDesignFiles.map(df => ({ id: df.id, name: df.name }))
+          });
         }
       }
     }
