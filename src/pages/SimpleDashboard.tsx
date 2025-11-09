@@ -1318,9 +1318,17 @@ const SimpleDashboard: React.FC = () => {
       const projectFolders = folders[selectedProjectId] || [];
 
       // 공유받은 프로젝트인지 확인
-      const isSharedWithMe = sharedWithMeProjects.some(p => p.id === selectedProjectId);
+      // 1. sharedWithMeProjects에 있거나
+      // 2. activeMenu가 'shared'이고 본인 프로젝트가 아닌 경우
+      const isSharedWithMe =
+        sharedWithMeProjects.some(p => p.id === selectedProjectId) ||
+        (activeMenu === 'shared' && selectedProject.userId !== user?.uid);
+
       console.log('🔍 공유 프로젝트 체크:', {
         selectedProjectId,
+        activeMenu,
+        projectUserId: selectedProject.userId,
+        currentUserId: user?.uid,
         sharedWithMeCount: sharedWithMeProjects.length,
         sharedWithMeIds: sharedWithMeProjects.map(p => p.id),
         isSharedWithMe
@@ -2850,66 +2858,95 @@ const SimpleDashboard: React.FC = () => {
                 </div>
               )}
 
-              {/* 선택된 카드가 있을 때 휴지통으로 이동 버튼 */}
-              {selectedCards.size > 0 && activeMenu !== 'trash' && (
-                <button
-                  className={styles.bulkDeleteButton}
-                  onClick={async () => {
-                    if (window.confirm(`선택한 ${selectedCards.size}개 항목을 휴지통으로 이동하시겠습니까?`)) {
-                      // 선택된 항목들을 휴지통으로 이동
-                      for (const cardId of Array.from(selectedCards)) {
-                        const item = sortedItems.find(i => i.id === cardId);
-                        if (item) {
-                          if (item.type === 'project') {
-                            await moveToTrash(item.project);
-                          } else if (item.type === 'design') {
-                            // 디자인 파일 휴지통으로 이동
-                            console.log('디자인 파일 휴지통으로 이동:', item);
-                            const projectId = item.project.id;
-                            const projectTitle = item.project.title || '';
-                            const designFile = projectDesignFiles[projectId]?.find(df => df.id === cardId);
+              {/* 선택된 카드가 있을 때 액션 버튼 */}
+              {selectedCards.size > 0 && activeMenu !== 'trash' && (() => {
+                // 공유 프로젝트에서 호스트인 경우 공유해제 버튼 표시
+                const isSharedMenuAndHost =
+                  activeMenu === 'shared' &&
+                  selectedProjectId &&
+                  allProjects.find(p => p.id === selectedProjectId)?.userId === user?.uid;
 
-                            if (designFile) {
-                              await moveDesignFileToTrash(designFile, projectId, projectTitle);
-                              console.log('✅ 디자인 파일 휴지통 이동 완료:', cardId);
-                            }
-                          } else if (item.type === 'folder') {
-                            // 폴더 삭제 로직 - 폴더 안의 디자인 파일들도 함께 휴지통으로 이동
-                            console.log('폴더 삭제:', item);
-                            const projectId = item.project.id;
-                            const projectTitle = item.project.title || '';
-                            const currentFolders = folders[projectId] || [];
-                            const targetFolder = currentFolders.find(f => f.id === cardId);
+                if (isSharedMenuAndHost) {
+                  return (
+                    <button
+                      className={styles.bulkDeleteButton}
+                      onClick={async () => {
+                        if (window.confirm(`선택한 ${selectedCards.size}개 디자인의 공유를 취소하시겠습니까?`)) {
+                          // TODO: 공유 해제 로직 구현
+                          console.log('🔗 공유 해제:', Array.from(selectedCards));
+                          // 선택 해제
+                          setSelectedCards(new Set());
+                          alert('공유 해제 기능은 곧 구현됩니다.');
+                        }
+                      }}
+                    >
+                      <ShareIcon size={16} />
+                      <span>공유해제 ({selectedCards.size})</span>
+                    </button>
+                  );
+                }
 
-                            // 폴더 안의 디자인 파일들을 먼저 휴지통으로 이동
-                            if (targetFolder?.children) {
-                              for (const child of targetFolder.children) {
-                                const designFile = projectDesignFiles[projectId]?.find(df => df.id === child.id);
-                                if (designFile) {
-                                  await moveDesignFileToTrash(designFile, projectId, projectTitle);
+                // 일반 휴지통 이동 버튼
+                return (
+                  <button
+                    className={styles.bulkDeleteButton}
+                    onClick={async () => {
+                      if (window.confirm(`선택한 ${selectedCards.size}개 항목을 휴지통으로 이동하시겠습니까?`)) {
+                        // 선택된 항목들을 휴지통으로 이동
+                        for (const cardId of Array.from(selectedCards)) {
+                          const item = sortedItems.find(i => i.id === cardId);
+                          if (item) {
+                            if (item.type === 'project') {
+                              await moveToTrash(item.project);
+                            } else if (item.type === 'design') {
+                              // 디자인 파일 휴지통으로 이동
+                              console.log('디자인 파일 휴지통으로 이동:', item);
+                              const projectId = item.project.id;
+                              const projectTitle = item.project.title || '';
+                              const designFile = projectDesignFiles[projectId]?.find(df => df.id === cardId);
+
+                              if (designFile) {
+                                await moveDesignFileToTrash(designFile, projectId, projectTitle);
+                                console.log('✅ 디자인 파일 휴지통 이동 완료:', cardId);
+                              }
+                            } else if (item.type === 'folder') {
+                              // 폴더 삭제 로직 - 폴더 안의 디자인 파일들도 함께 휴지통으로 이동
+                              console.log('폴더 삭제:', item);
+                              const projectId = item.project.id;
+                              const projectTitle = item.project.title || '';
+                              const currentFolders = folders[projectId] || [];
+                              const targetFolder = currentFolders.find(f => f.id === cardId);
+
+                              // 폴더 안의 디자인 파일들을 먼저 휴지통으로 이동
+                              if (targetFolder?.children) {
+                                for (const child of targetFolder.children) {
+                                  const designFile = projectDesignFiles[projectId]?.find(df => df.id === child.id);
+                                  if (designFile) {
+                                    await moveDesignFileToTrash(designFile, projectId, projectTitle);
+                                  }
                                 }
                               }
+
+                              // 폴더를 폴더 목록에서 제거
+                              const updatedFolders = currentFolders.filter(f => f.id !== cardId);
+                              await saveFolderDataToFirebase(projectId, updatedFolders);
+                              console.log('✅ 폴더 삭제 완료:', cardId);
+
+                              // 프로젝트 새로고침
+                              await loadFirebaseProjects();
                             }
-
-                            // 폴더를 폴더 목록에서 제거
-                            const updatedFolders = currentFolders.filter(f => f.id !== cardId);
-                            await saveFolderDataToFirebase(projectId, updatedFolders);
-                            console.log('✅ 폴더 삭제 완료:', cardId);
-
-                            // 프로젝트 새로고침
-                            await loadFirebaseProjects();
                           }
                         }
+                        // 선택 해제
+                        setSelectedCards(new Set());
                       }
-                      // 선택 해제
-                      setSelectedCards(new Set());
-                    }
-                  }}
-                >
-                  <TrashIcon size={16} />
-                  <span>휴지통으로 이동 ({selectedCards.size})</span>
-                </button>
-              )}
+                    }}
+                  >
+                    <TrashIcon size={16} />
+                    <span>휴지통으로 이동 ({selectedCards.size})</span>
+                  </button>
+                );
+              })()}
 
               {/* 검색바 */}
               <div className={styles.searchContainer}>
