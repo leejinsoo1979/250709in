@@ -335,16 +335,18 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
-      {/* 하단 나가기 버튼 */}
-      <div className={styles.userSection}>
-        <button
-          className={styles.settingsButton}
-          title={t('sidebar.exitToDashboard')}
-          onClick={handleExitClick}
-        >
-          <LogOut size={20} style={{ transform: 'scaleX(-1)' }} />
-        </button>
-      </div>
+      {/* 하단 나가기 버튼 - 읽기 전용 모드에서는 숨김 */}
+      {!readOnly && (
+        <div className={styles.userSection}>
+          <button
+            className={styles.settingsButton}
+            title={t('sidebar.exitToDashboard')}
+            onClick={handleExitClick}
+          >
+            <LogOut size={20} style={{ transform: 'scaleX(-1)' }} />
+          </button>
+        </div>
+      )}
       
       {/* Exit Confirmation Modal */}
       {showExitConfirm && (
