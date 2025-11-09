@@ -15,7 +15,7 @@ import {
 import { db } from './config';
 
 // 알림 타입 정의
-export type NotificationType = 'project_shared' | 'project_access_granted' | 'team_invitation' | 'system';
+export type NotificationType = 'project_shared' | 'project_access_granted' | 'team_invitation' | 'share_removed' | 'system';
 
 export interface Notification {
   id: string;
@@ -101,6 +101,32 @@ export async function createProjectSharedNotification(
       sharedByName,
       permission,
       actionUrl: `/configurator?projectId=${projectId}`,
+    }
+  );
+}
+
+/**
+ * 공유 해제 알림 생성 (공유받은 사람이 공유를 해제한 경우)
+ */
+export async function createShareRemovedNotification(
+  userId: string, // 알림을 받을 사용자 (공유한 사람)
+  projectId: string,
+  projectName: string,
+  removedBy: string, // 공유를 해제한 사용자 ID
+  removedByName: string, // 공유를 해제한 사용자 이름
+  designFileName?: string // 디자인 파일명 (옵션)
+): Promise<void> {
+  const itemText = designFileName ? `디자인 파일 "${designFileName}"` : `프로젝트 "${projectName}"`;
+  await createNotification(
+    userId,
+    'share_removed',
+    '공유가 해제되었습니다',
+    `${removedByName}님이 ${itemText}의 공유를 해제했습니다`,
+    {
+      projectId,
+      projectName,
+      sharedBy: removedBy,
+      sharedByName: removedByName,
     }
   );
 }

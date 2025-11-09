@@ -12,6 +12,7 @@ import {
   runTransaction,
 } from 'firebase/firestore';
 import { db } from './config';
+import { createShareRemovedNotification } from './notifications';
 
 // 공유 링크 타입 정의
 export type SharePermission = 'viewer' | 'editor';
@@ -844,6 +845,49 @@ export async function revokeProjectAccess(
 ): Promise<{ success: boolean; message: string }> {
   try {
     const accessDocRef = doc(db, 'sharedProjectAccess', `${projectId}_${userId}`);
+
+    // 삭제 전에 문서 데이터 가져오기 (알림 전송을 위해)
+    const accessDoc = await getDoc(accessDocRef);
+
+    if (accessDoc.exists()) {
+      const accessData = accessDoc.data();
+
+      // 프로젝트 정보 가져오기
+      const projectDoc = await getDoc(doc(db, 'projects', projectId));
+
+      if (projectDoc.exists()) {
+        const projectData = projectDoc.data();
+        const projectOwnerId = projectData.userId;
+        const projectName = accessData.projectName || projectData.title || '프로젝트';
+
+        // 공유를 해제한 사용자 정보 가져오기
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        let userName = '사용자';
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          userName = userData.displayName || userData.userName || userData.email || '사용자';
+        }
+
+        // 프로젝트 소유자에게 알림 전송
+        if (projectOwnerId && projectOwnerId !== userId) {
+          try {
+            await createShareRemovedNotification(
+              projectOwnerId,
+              projectId,
+              projectName,
+              userId,
+              userName
+            );
+            console.log('✅ 공유 해제 알림 전송 완료:', projectOwnerId);
+          } catch (notifError) {
+            console.error('⚠️ 알림 전송 실패 (공유 해제는 계속 진행):', notifError);
+          }
+        }
+      }
+    }
+
+    // 접근 권한 문서 삭제
     await deleteDoc(accessDocRef);
 
     console.log('✅ 프로젝트 접근 권한 해제 완료:', projectId, userId);
@@ -893,9 +937,46 @@ export async function revokeDesignFileAccess(
       };
     }
 
+    // 제거될 디자인 파일 이름 저장 (알림용)
+    const removedDesignFileName = designFileNames[index] || '디자인 파일';
+
     // 배열에서 제거
     designFileIds.splice(index, 1);
     designFileNames.splice(index, 1);
+
+    // 프로젝트 정보 및 사용자 정보 가져오기 (알림 전송용)
+    const projectDoc = await getDoc(doc(db, 'projects', projectId));
+    if (projectDoc.exists()) {
+      const projectData = projectDoc.data();
+      const projectOwnerId = projectData.userId;
+      const projectName = accessData.projectName || projectData.title || '프로젝트';
+
+      // 공유를 해제한 사용자 정보 가져오기
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      let userName = '사용자';
+
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        userName = userData.displayName || userData.userName || userData.email || '사용자';
+      }
+
+      // 프로젝트 소유자에게 알림 전송
+      if (projectOwnerId && projectOwnerId !== userId) {
+        try {
+          await createShareRemovedNotification(
+            projectOwnerId,
+            projectId,
+            projectName,
+            userId,
+            userName,
+            removedDesignFileName
+          );
+          console.log('✅ 디자인 파일 공유 해제 알림 전송 완료:', projectOwnerId);
+        } catch (notifError) {
+          console.error('⚠️ 알림 전송 실패 (공유 해제는 계속 진행):', notifError);
+        }
+      }
+    }
 
     // 디자인 파일이 하나도 남지 않으면 문서 삭제
     if (designFileIds.length === 0) {
