@@ -2842,7 +2842,7 @@ const SimpleDashboard: React.FC = () => {
               <TiThSmall size={20} />
             </div>
             <span>전체 프로젝트</span>
-            <span className={styles.navItemCount}>{allProjects.length}</span>
+            <span className={styles.navItemCount}>{firebaseProjects.length}</span>
           </div>
 
 
