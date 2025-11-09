@@ -4187,11 +4187,12 @@ const SimpleDashboard: React.FC = () => {
                           <div className={styles.cardMeta}>
                             <div className={styles.cardDate}>
                               {(() => {
-                                const dateToUse = item.project.updatedAt || item.project.createdAt;
+                                // 디자인 파일의 updatedAt 사용
+                                const dateToUse = item.designFile?.updatedAt || item.designFile?.createdAt || item.project.updatedAt || item.project.createdAt;
                                 if (dateToUse && dateToUse.seconds) {
                                   return new Date(dateToUse.seconds * 1000).toLocaleString('ko-KR', {
                                     year: 'numeric',
-                                    month: 'long', 
+                                    month: 'long',
                                     day: 'numeric',
                                     hour: '2-digit',
                                     minute: '2-digit'
