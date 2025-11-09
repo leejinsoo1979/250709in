@@ -4190,25 +4190,46 @@ const SimpleDashboard: React.FC = () => {
                           <div className={styles.cardFooter}>
                             <div className={styles.cardUser}>
                               <div className={styles.cardUserAvatar}>
-                                {user?.photoURL ? (
-                                  <img
-                                    src={user.photoURL}
-                                    alt="프로필"
-                                    referrerPolicy="no-referrer"
-                                    
-                                    style={{
-                                      width: '100%',
-                                      height: '100%',
-                                      borderRadius: '50%',
-                                      objectFit: 'cover'
-                                    }}
-                                  />
-                                ) : (
-                                  <UserIcon size={12} />
-                                )}
+                                {(() => {
+                                  // 공유받은 프로젝트인 경우 프로젝트 소유자 프로필 표시
+                                  const isSharedProject = item.project.userId !== user?.uid;
+                                  let photoURL;
+
+                                  if (isSharedProject) {
+                                    // 공유받은 프로젝트: sharedByPhotoURL 또는 projectOwners에서 가져오기
+                                    const sharedProject = item.project as any;
+                                    photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
+                                  } else {
+                                    // 내 프로젝트: 내 프로필 사용
+                                    photoURL = user?.photoURL;
+                                  }
+
+                                  return photoURL ? (
+                                    <img
+                                      src={photoURL}
+                                      alt="프로필"
+                                      referrerPolicy="no-referrer"
+                                      style={{
+                                        width: '100%',
+                                        height: '100%',
+                                        borderRadius: '50%',
+                                        objectFit: 'cover'
+                                      }}
+                                    />
+                                  ) : (
+                                    <UserIcon size={12} />
+                                  );
+                                })()}
                               </div>
                               <span className={styles.cardUserName}>
-                                {user?.displayName || user?.email?.split('@')[0] || '이진수'}
+                                {(() => {
+                                  const isSharedProject = item.project.userId !== user?.uid;
+                                  if (isSharedProject) {
+                                    const sharedProject = item.project as any;
+                                    return sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName || '생성자';
+                                  }
+                                  return user?.displayName || user?.email?.split('@')[0] || '이진수';
+                                })()}
                               </span>
                             </div>
                             <div className={styles.cardBadge}>
@@ -4303,18 +4324,6 @@ const SimpleDashboard: React.FC = () => {
                                       // 공유받은 프로젝트: sharedByPhotoURL 또는 projectOwners에서 가져오기
                                       const sharedProject = item.project as any;
                                       photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
-
-                                      console.log('🖼️ 공유받은 프로젝트 프로필 표시:', {
-                                        projectId: item.project.id,
-                                        projectTitle: item.project.title,
-                                        isSharedProject,
-                                        sharedByPhotoURL: sharedProject.sharedByPhotoURL,
-                                        projectOwnerPhotoURL: projectOwners[item.project.userId]?.photoURL,
-                                        finalPhotoURL: photoURL,
-                                        projectOwnerId: item.project.userId,
-                                        currentUserId: user?.uid,
-                                        allProjectOwners: projectOwners
-                                      });
                                     } else {
                                       // 내 프로젝트: 내 프로필 사용
                                       photoURL = user?.photoURL;
@@ -4460,25 +4469,53 @@ const SimpleDashboard: React.FC = () => {
                             <div className={styles.cardUser}>
                               <PiCrownDuotone size={14} style={{ marginRight: '4px' }} />
                               <div className={styles.cardUserAvatar}>
-                                {user?.photoURL ? (
-                                  <img
-                                    src={user.photoURL}
-                                    alt="프로필"
-                                    referrerPolicy="no-referrer"
+                                {(() => {
+                                  // 공유받은 프로젝트인 경우 프로젝트 소유자 프로필 표시
+                                  const isSharedProject = item.project.userId !== user?.uid;
+                                  let photoURL;
+                                  let displayName;
 
-                                    style={{
-                                      width: '100%',
-                                      height: '100%',
-                                      borderRadius: '50%',
-                                      objectFit: 'cover'
-                                    }}
-                                  />
-                                ) : (
-                                  <UserIcon size={12} />
-                                )}
+                                  if (isSharedProject) {
+                                    // 공유받은 프로젝트: sharedByPhotoURL 또는 projectOwners에서 가져오기
+                                    const sharedProject = item.project as any;
+                                    photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
+                                    displayName = sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName;
+                                  } else {
+                                    // 내 프로젝트: 내 프로필 사용
+                                    photoURL = user?.photoURL;
+                                    displayName = user?.displayName || user?.email?.split('@')[0] || '이진수';
+                                  }
+
+                                  return (
+                                    <>
+                                      {photoURL ? (
+                                        <img
+                                          src={photoURL}
+                                          alt="프로필"
+                                          referrerPolicy="no-referrer"
+                                          style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            borderRadius: '50%',
+                                            objectFit: 'cover'
+                                          }}
+                                        />
+                                      ) : (
+                                        <UserIcon size={12} />
+                                      )}
+                                    </>
+                                  );
+                                })()}
                               </div>
                               <span className={styles.cardUserName}>
-                                {user?.displayName || user?.email?.split('@')[0] || '이진수'}
+                                {(() => {
+                                  const isSharedProject = item.project.userId !== user?.uid;
+                                  if (isSharedProject) {
+                                    const sharedProject = item.project as any;
+                                    return sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName || '생성자';
+                                  }
+                                  return user?.displayName || user?.email?.split('@')[0] || '이진수';
+                                })()}
                               </span>
                             </div>
                             <div className={styles.cardBadge}>
