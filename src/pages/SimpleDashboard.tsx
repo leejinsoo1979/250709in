@@ -1664,24 +1664,28 @@ const SimpleDashboard: React.FC = () => {
       // URL에서 projectId 제거
       navigate('/dashboard');
     } else {
-      // 새 프로젝트 선택
-      const targetProject = allProjects.find(p => p.id === projectId);
+      // 새 프로젝트 선택 - allProjects, 공유한 프로젝트, 공유받은 프로젝트에서 모두 검색
+      const targetProject =
+        allProjects.find(p => p.id === projectId) ||
+        sharedByMeProjects.find(p => p.id === projectId) ||
+        sharedWithMeProjects.find(p => p.id === projectId);
+
       if (targetProject) {
         setSelectedProjectId(projectId);
         setBreadcrumbPath(['전체 프로젝트', targetProject.title]);
         // URL에 projectId 추가
         navigate(`/dashboard?projectId=${projectId}`);
-        
+
         // 프로젝트를 선택하면 자동으로 확장
         setExpandedProjects(prev => {
           const newExpanded = new Set(prev);
           newExpanded.add(projectId);
           return newExpanded;
         });
-        
+
         // 프로젝트 선택 시 폴더 데이터 불러오기
         loadFolderDataForProject(projectId);
-        
+
         // 디자인 파일은 항상 새로 로드 (최신 데이터 보장)
         console.log('🔄 프로젝트 선택 시 디자인 파일 로드:', projectId);
         loadDesignFilesForProject(projectId);
