@@ -71,11 +71,9 @@ const Step1: React.FC<Step1Props> = ({ onClose, projectId, projectTitle }) => {
     resetSpaceConfig();
     clearAllModules();
 
-    // projectId prop이 있으면 프로젝트 정보만 설정 (가구는 빈 상태 유지)
-    if (projectId && projectTitle) {
-      console.log('📝 Step1: 프로젝트 정보만 설정 (가구 없음):', projectTitle);
-      setBasicInfo({ title: projectTitle, location: '' });
-    }
+    // projectId와 projectTitle은 prop으로 전달되어 헤더에 표시됨
+    // basicInfo.title은 비워서 사용자가 디자인 제목을 직접 입력하도록 함
+    console.log('📝 Step1: 디자인 제목 입력 필드 초기화 (빈 상태)');
   }, []);
 
   // 로딩 중일 때 표시할 UI
