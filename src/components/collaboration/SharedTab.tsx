@@ -4,6 +4,7 @@ import { ProjectSummary } from '../../firebase/types';
 import { ProjectCollaborator } from '../../firebase/shareLinks';
 import { useAuth } from '../../auth/AuthProvider';
 import { PiFolderFill } from "react-icons/pi";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import ThumbnailImage from '../common/ThumbnailImage';
 import styles from './CollaborationTabs.module.css';
 import dashboardStyles from '../../pages/SimpleDashboard.module.css';
@@ -16,6 +17,7 @@ interface SharedTabProps {
   projectCollaborators?: { [projectId: string]: ProjectCollaborator[] }; // 프로젝트별 협업자
   selectedCards?: Set<string>; // 선택된 카드
   onCardSelect?: (cardId: string) => void; // 카드 선택 핸들러
+  onMoreMenuOpen?: (e: React.MouseEvent, itemId: string, itemName: string, itemType: 'project') => void; // 더보기 메뉴
 }
 
 const SharedTab: React.FC<SharedTabProps> = ({
@@ -25,7 +27,8 @@ const SharedTab: React.FC<SharedTabProps> = ({
   projectDesignFiles = {},
   projectCollaborators = {},
   selectedCards = new Set(),
-  onCardSelect
+  onCardSelect,
+  onMoreMenuOpen
 }) => {
   const { user } = useAuth();
   const [activeSubTab, setActiveSubTab] = useState<'shared-by-me' | 'shared-with-me'>('shared-by-me');
@@ -131,6 +134,19 @@ const SharedTab: React.FC<SharedTabProps> = ({
                         }}
                       />
                     </div>
+                  )}
+
+                  {/* 더보기 버튼 */}
+                  {onMoreMenuOpen && (
+                    <button
+                      className={dashboardStyles.cardActionButton}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onMoreMenuOpen(e, project.id, project.title, 'project');
+                      }}
+                    >
+                      <BsThreeDotsVertical size={16} />
+                    </button>
                   )}
 
                   <div className={dashboardStyles.cardThumbnail}>

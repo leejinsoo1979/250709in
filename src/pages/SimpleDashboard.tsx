@@ -3624,6 +3624,7 @@ const SimpleDashboard: React.FC = () => {
                   const isCurrentlySelected = selectedCards.has(cardId);
                   handleCardSelect(cardId, !isCurrentlySelected);
                 }}
+                onMoreMenuOpen={handleMoreMenuOpen}
               />
             )}
             {activeMenu === 'team' && (
