@@ -10,6 +10,7 @@ import { getProject, updateProject, createProject, createDesignFile } from '@/fi
 import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectPermission } from '@/hooks/useProjectPermission';
+import { getProjectCollaborators, type ProjectCollaborator } from '@/firebase/shareLinks';
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleById } from '@/data/modules';
@@ -73,6 +74,10 @@ const Configurator: React.FC = () => {
 
   // 프로젝트 권한 확인
   const { permission, canEdit, isOwner } = useProjectPermission(currentProjectId);
+
+  // 협업자 및 소유자 정보
+  const [collaborators, setCollaborators] = useState<ProjectCollaborator[]>([]);
+  const [projectOwner, setProjectOwner] = useState<{ userId: string; name: string; photoURL?: string } | null>(null);
 
   // Store hooks
   const { setBasicInfo, basicInfo } = useProjectStore();
@@ -474,6 +479,15 @@ const Configurator: React.FC = () => {
         setSpaceInfo(spaceConfig);
         setPlacedModules(project.furniture?.placedModules || []);
         setCurrentProjectId(projectId);
+
+        // 프로젝트 소유자 정보 설정
+        if (project.userId) {
+          setProjectOwner({
+            userId: project.userId,
+            name: project.userName || project.userEmail || '소유자',
+            photoURL: project.userPhotoURL
+          });
+        }
 
         // 디자인파일명 설정은 별도 useEffect에서 처리됨
 
@@ -1474,6 +1488,15 @@ const Configurator: React.FC = () => {
                   setBasicInfo({ title: project.title });
                   console.log('📝 프로젝트 데이터 설정:', project.title);
 
+                  // 프로젝트 소유자 정보 설정
+                  if (project.userId) {
+                    setProjectOwner({
+                      userId: project.userId,
+                      name: project.userName || project.userEmail || '소유자',
+                      photoURL: project.userPhotoURL
+                    });
+                  }
+
                   // URL에 프로젝트명이 없으면 추가 (새로고침 시 유지하기 위해)
                   const currentParams = new URLSearchParams(window.location.search);
                   if (!currentParams.get('projectName')) {
@@ -1588,6 +1611,17 @@ const Configurator: React.FC = () => {
       }, 500);
     }
   }, [searchParams]);
+
+  // 협업자 정보 가져오기
+  useEffect(() => {
+    if (currentProjectId) {
+      getProjectCollaborators(currentProjectId)
+        .then(setCollaborators)
+        .catch((error) => {
+          console.error('❌ 협업자 정보 조회 실패:', error);
+        });
+    }
+  }, [currentProjectId]);
 
   // 폴더에서 실제 디자인파일명 찾기 (URL에 designFileId나 designFileName이 없을 때만)
   useEffect(() => {
@@ -3125,6 +3159,8 @@ const Configurator: React.FC = () => {
         designFileName={currentDesignFileName || urlDesignFileName}
         projectId={currentProjectId}
         designFileId={currentDesignFileId}
+        owner={projectOwner}
+        collaborators={collaborators}
         onSave={saveProject}
         onPrevious={handlePrevious}
         onHelp={handleHelp}

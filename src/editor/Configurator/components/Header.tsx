@@ -19,6 +19,7 @@ import { useUIStore } from '@/store/uiStore';
 import { useHistoryStore } from '@/store/historyStore';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
+import { ProjectCollaborator } from '@/firebase/shareLinks';
 
 // Perspective Cube Icon (원근 투영 큐브 - 아래로 좁아짐)
 const PerspectiveCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
@@ -54,6 +55,8 @@ interface HeaderProps {
   designFileName?: string; // 디자인 파일명 추가
   projectId?: string | null; // 프로젝트 ID 추가
   designFileId?: string | null; // 디자인 파일 ID 추가
+  owner?: { userId: string; name: string; photoURL?: string } | null; // 프로젝트 소유자
+  collaborators?: ProjectCollaborator[]; // 협업자 목록
   onSave: () => void;
   onPrevious?: () => void;
   onNext?: () => void;
@@ -89,6 +92,8 @@ const Header: React.FC<HeaderProps> = ({
   designFileName,
   projectId,
   designFileId,
+  owner,
+  collaborators = [],
   onSave,
   onPrevious,
   onNext,
@@ -471,6 +476,115 @@ const Header: React.FC<HeaderProps> = ({
               )}
             </div>
           </div>
+
+          {/* 소유자와 협업자 섹션 */}
+          {(owner || collaborators.length > 0) && (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '24px',
+              padding: '8px 20px',
+              marginLeft: '16px',
+              border: `2px solid ${colors.primary}`,
+              borderRadius: '50px',
+              background: theme.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.5)',
+              backdropFilter: 'blur(10px)'
+            }}>
+              {/* Project owner */}
+              {owner && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)'
+                  }}>
+                    Project owner
+                  </span>
+                  <div style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                    border: `2px solid ${colors.primary}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: theme.mode === 'dark' ? '#2a2a2a' : '#f0f0f0'
+                  }}>
+                    {owner.photoURL ? (
+                      <img
+                        src={owner.photoURL}
+                        alt={owner.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <User size={20} color={colors.primary} />
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Members */}
+              {collaborators.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    color: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)'
+                  }}>
+                    Members
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {collaborators.map((collab, index) => (
+                      <div
+                        key={`${collab.userId}-${index}`}
+                        style={{
+                          width: '36px',
+                          height: '36px',
+                          borderRadius: '50%',
+                          overflow: 'hidden',
+                          border: `2px solid ${colors.primary}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: theme.mode === 'dark' ? '#2a2a2a' : '#f0f0f0'
+                        }}
+                        title={collab.userName || collab.userEmail}
+                      >
+                        {collab.userPhotoURL ? (
+                          <img
+                            src={collab.userPhotoURL}
+                            alt={collab.userName || collab.userEmail}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <User size={20} color={colors.primary} />
+                        )}
+                      </div>
+                    ))}
+                    {/* + 버튼 (나중에 협업자 추가 기능) */}
+                    <div style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      border: `2px solid ${colors.primary}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      background: theme.mode === 'dark' ? '#2a2a2a' : '#f0f0f0',
+                      fontSize: '24px',
+                      fontWeight: '300',
+                      color: colors.primary
+                    }}
+                    title="협업자 추가">
+                      +
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 중앙 액션 버튼들 */}
