@@ -482,20 +482,34 @@ const Configurator: React.FC = () => {
 
         // 프로젝트 소유자 정보 설정
         if (project.userId) {
+          console.log('👤 프로젝트 소유자 정보:', {
+            projectUserId: project.userId,
+            currentUserId: user?.uid,
+            isOwner: user && project.userId === user.uid,
+            userName: project.userName,
+            userEmail: project.userEmail,
+            userPhotoURL: project.userPhotoURL,
+            currentUserPhotoURL: user?.photoURL
+          });
+
           // 프로젝트 소유자가 현재 로그인한 사용자인 경우, 현재 사용자 정보 사용
           if (user && project.userId === user.uid) {
-            setProjectOwner({
+            const ownerData = {
               userId: user.uid,
               name: user.displayName || user.email || '소유자',
               photoURL: user.photoURL || undefined
-            });
+            };
+            console.log('👑 소유자 정보 설정 (현재 사용자):', ownerData);
+            setProjectOwner(ownerData);
           } else {
             // 다른 사용자의 프로젝트인 경우 저장된 정보 사용
-            setProjectOwner({
+            const ownerData = {
               userId: project.userId,
               name: project.userName || project.userEmail || '소유자',
               photoURL: project.userPhotoURL
-            });
+            };
+            console.log('👑 소유자 정보 설정 (저장된 정보):', ownerData);
+            setProjectOwner(ownerData);
           }
         }
 
@@ -1500,20 +1514,34 @@ const Configurator: React.FC = () => {
 
                   // 프로젝트 소유자 정보 설정
                   if (project.userId) {
+                    console.log('👤 [디자인파일] 프로젝트 소유자 정보:', {
+                      projectUserId: project.userId,
+                      currentUserId: user?.uid,
+                      isOwner: user && project.userId === user.uid,
+                      userName: project.userName,
+                      userEmail: project.userEmail,
+                      userPhotoURL: project.userPhotoURL,
+                      currentUserPhotoURL: user?.photoURL
+                    });
+
                     // 프로젝트 소유자가 현재 로그인한 사용자인 경우, 현재 사용자 정보 사용
                     if (user && project.userId === user.uid) {
-                      setProjectOwner({
+                      const ownerData = {
                         userId: user.uid,
                         name: user.displayName || user.email || '소유자',
                         photoURL: user.photoURL || undefined
-                      });
+                      };
+                      console.log('👑 [디자인파일] 소유자 정보 설정 (현재 사용자):', ownerData);
+                      setProjectOwner(ownerData);
                     } else {
                       // 다른 사용자의 프로젝트인 경우 저장된 정보 사용
-                      setProjectOwner({
+                      const ownerData = {
                         userId: project.userId,
                         name: project.userName || project.userEmail || '소유자',
                         photoURL: project.userPhotoURL
-                      });
+                      };
+                      console.log('👑 [디자인파일] 소유자 정보 설정 (저장된 정보):', ownerData);
+                      setProjectOwner(ownerData);
                     }
                   }
 
@@ -1635,8 +1663,12 @@ const Configurator: React.FC = () => {
   // 협업자 정보 가져오기
   useEffect(() => {
     if (currentProjectId) {
+      console.log('🔍 협업자 정보 조회 시작:', currentProjectId);
       getProjectCollaborators(currentProjectId)
-        .then(setCollaborators)
+        .then((collabs) => {
+          console.log('✅ 협업자 정보 조회 성공:', collabs);
+          setCollaborators(collabs);
+        })
         .catch((error) => {
           console.error('❌ 협업자 정보 조회 실패:', error);
         });

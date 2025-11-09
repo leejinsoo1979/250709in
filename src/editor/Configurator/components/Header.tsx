@@ -120,7 +120,10 @@ const Header: React.FC<HeaderProps> = ({
     projectName,
     designFileName,
     projectId,
-    designFileId
+    designFileId,
+    owner,
+    collaborators,
+    collaboratorsCount: collaborators.length
   });
 
   const { user } = useAuth();
