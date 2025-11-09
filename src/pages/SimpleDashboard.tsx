@@ -4295,8 +4295,16 @@ const SimpleDashboard: React.FC = () => {
                                   {(() => {
                                     // 공유받은 프로젝트인 경우 프로젝트 소유자 프로필 표시
                                     const isSharedProject = item.project.userId !== user?.uid;
-                                    const ownerInfo = isSharedProject ? projectOwners[item.project.userId] : null;
-                                    const photoURL = isSharedProject && ownerInfo?.photoURL ? ownerInfo.photoURL : user?.photoURL;
+                                    let photoURL;
+
+                                    if (isSharedProject) {
+                                      // 공유받은 프로젝트: sharedByPhotoURL 또는 projectOwners에서 가져오기
+                                      const sharedProject = item.project as any;
+                                      photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
+                                    } else {
+                                      // 내 프로젝트: 내 프로필 사용
+                                      photoURL = user?.photoURL;
+                                    }
 
                                     return photoURL ? (
                                       <img
