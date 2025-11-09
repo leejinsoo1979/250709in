@@ -716,25 +716,35 @@ const SimpleDashboard: React.FC = () => {
 
   // URL의 projectId가 변경되면 해당 프로젝트 선택
   useEffect(() => {
-    if (urlProjectId && firebaseProjects.length > 0) {
-      const projectExists = firebaseProjects.some(p => p.id === urlProjectId);
+    if (urlProjectId && allProjects.length > 0) {
+      const projectExists = allProjects.some(p => p.id === urlProjectId);
       if (projectExists && selectedProjectId !== urlProjectId) {
         console.log('🔗 URL에서 프로젝트 ID 감지, 자동 선택:', urlProjectId);
         setSelectedProjectId(urlProjectId);
-        const targetProject = firebaseProjects.find(p => p.id === urlProjectId);
+        const targetProject = allProjects.find(p => p.id === urlProjectId);
         if (targetProject) {
-          setBreadcrumbPath(['전체 프로젝트', targetProject.title]);
+          // URL에서 현재 메뉴를 가져와서 올바른 루트 경로 설정
+          const currentMenu = getMenuFromPath();
+          const rootPath = currentMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                           currentMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                           '전체 프로젝트';
+          setBreadcrumbPath([rootPath, targetProject.title]);
           loadFolderDataForProject(urlProjectId);
           loadDesignFilesForProject(urlProjectId);
         }
       }
     } else if (!urlProjectId && selectedProjectId) {
       // URL에 projectId가 없으면 선택 해제
-      console.log('🔗 URL에 projectId가 없음, 전체 프로젝트로 돌아가기');
+      console.log('🔗 URL에 projectId가 없음, 현재 메뉴로 돌아가기');
       setSelectedProjectId(null);
-      setBreadcrumbPath(['전체 프로젝트']);
+      // URL에서 현재 메뉴를 가져와서 올바른 루트 경로 설정
+      const currentMenu = getMenuFromPath();
+      const rootPath = currentMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                       currentMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                       '전체 프로젝트';
+      setBreadcrumbPath([rootPath]);
     }
-  }, [urlProjectId, firebaseProjects, selectedProjectId]);
+  }, [urlProjectId, allProjects, selectedProjectId]);
 
   // URL 변경 시 activeMenu 업데이트
   useEffect(() => {
@@ -1800,11 +1810,15 @@ const SimpleDashboard: React.FC = () => {
   // 프로젝트 선택
   const handleProjectSelect = (projectId: string) => {
     if (selectedProjectId === projectId) {
-      // 같은 프로젝트 클릭 시 전체 프로젝트로 돌아가기
+      // 같은 프로젝트 클릭 시 현재 메뉴로 돌아가기
       setSelectedProjectId(null);
-      setBreadcrumbPath(['전체 프로젝트']);
-      // URL에서 projectId 제거
-      navigate('/dashboard');
+      const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                       activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                       '전체 프로젝트';
+      setBreadcrumbPath([rootPath]);
+      // URL에서 projectId 제거 (현재 메뉴 유지)
+      const menuPath = activeMenu === 'all' ? '' : `/${activeMenu}`;
+      navigate(`/dashboard${menuPath}`);
     } else {
       // 새 프로젝트 선택
       // activeMenu에 따라 적절한 프로젝트 리스트에서 찾기
