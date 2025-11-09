@@ -1228,6 +1228,22 @@
   right: 12px;
 }
 
+/* 전역 더보기 메뉴 (SharedTab 등에서 사용) */
+.moreMenuGlobal {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px var(--theme-shadow, rgba(0, 0, 0, 0.15)), 0 4px 6px rgba(0, 0, 0, 0.05);
+  z-index: 9999;
+  padding: 8px;
+  min-width: 160px;
+  backdrop-filter: blur(10px);
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 /* 더보기 메뉴 백드롭 */
 .moreMenuBackdrop {
   position: fixed;

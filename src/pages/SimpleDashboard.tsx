@@ -544,9 +544,15 @@ const SimpleDashboard: React.FC = () => {
         console.log('✅ 공유한 프로젝트 (통합):', sharedByMe.length, '개');
 
         // 공유받은 프로젝트 정보를 프로젝트 ID로 그룹화하여 중복 제거
+        // 편집 권한이 있는 항목만 필터링 (조회만 가능한 viewer 권한 제외)
         const sharedProjectsMap = new Map<string, any>();
 
         for (const s of shared) {
+          // 편집 권한('editor')이 있는 항목만 처리
+          if (s.permission !== 'editor') {
+            console.log('🚫 조회 전용 공유 항목 제외:', s.projectName, 'permission:', s.permission);
+            continue;
+          }
           // 공유한 사람(호스트)의 프로필 정보 가져오기
           let sharedByPhotoURL = null;
           let sharedByDisplayName = s.sharedByName;
@@ -4306,152 +4312,6 @@ const SimpleDashboard: React.FC = () => {
                         </div>
                       )
                     )}
-
-                    {/* 더보기 메뉴 - 각 카드 내부에 렌더링 */}
-                    {moreMenu && moreMenu.itemId === item.id && (
-                      <>
-                        <div
-                          className={styles.moreMenuBackdrop}
-                          onClick={closeMoreMenu}
-                        />
-                        <div className={styles.moreMenu}>
-                          <div
-                            className={styles.moreMenuItem}
-                            onClick={handleRenameItem}
-                          >
-                            <EditIcon size={14} />
-                            이름 바꾸기
-                          </div>
-                          <div
-                            className={styles.moreMenuItem}
-                            onClick={handleDuplicateItem}
-                          >
-                            <CopyIcon size={14} />
-                            복제하기
-                          </div>
-                          {/* 공유 탭이 아닐 때만 공유하기 버튼 표시 */}
-                          {activeMenu !== 'shared' && (
-                            <div
-                              className={styles.moreMenuItem}
-                              onClick={handleShareItem}
-                            >
-                              <ShareIcon size={14} />
-                              공유하기
-                            </div>
-                          )}
-                          {/* 공유 탭이 아닐 때만 북마크 버튼 표시 */}
-                          {activeMenu !== 'shared' && (moreMenu.itemType === 'project' || moreMenu.itemType === 'design' || moreMenu.itemType === 'folder') && (
-                            <div
-                              className={styles.moreMenuItem}
-                              onClick={() => {
-                                if (moreMenu.itemType === 'project') {
-                                  toggleBookmark(moreMenu.itemId);
-                                } else if (moreMenu.itemType === 'design') {
-                                  toggleDesignBookmark(moreMenu.itemId);
-                                } else if (moreMenu.itemType === 'folder') {
-                                  toggleFolderBookmark(moreMenu.itemId);
-                                }
-                                closeMoreMenu();
-                              }}
-                            >
-                              <StarIcon size={14} />
-                              {moreMenu.itemType === 'project'
-                                ? (bookmarkedProjects.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
-                                : moreMenu.itemType === 'design'
-                                ? (bookmarkedDesigns.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
-                                : (bookmarkedFolders.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
-                              }
-                            </div>
-                          )}
-                          {/* 공유 탭일 때는 공유 해제, 일반 탭일 때는 삭제하기 */}
-                          <div
-                            className={`${styles.moreMenuItem} ${styles.deleteItem}`}
-                            onClick={async () => {
-                              if (activeMenu === 'shared') {
-                                // 공유 해제 로직
-                                if (window.confirm('공유를 해제하시겠습니까?')) {
-                                  console.log('🔗 공유 해제:', moreMenu.itemId, moreMenu.itemType);
-
-                                  if (moreMenu.itemType === 'design' && selectedProjectId && user) {
-                                    // 디자인 파일 공유 해제
-                                    const result = await revokeDesignFileAccess(selectedProjectId, user.uid, moreMenu.itemId);
-                                    if (result.success) {
-                                      // 공유받은 프로젝트 목록 새로고침
-                                      const shared = await getSharedProjectsForUser(user.uid);
-                                      const sharedProjectsMap = new Map<string, any>();
-
-                                      for (const s of shared) {
-                                        const designFileIds = s.designFileIds || (s.designFileId ? [s.designFileId] : []);
-                                        const designFileNames = s.designFileNames || (s.designFileName ? [s.designFileName] : []);
-
-                                        sharedProjectsMap.set(s.projectId, {
-                                          id: s.projectId,
-                                          title: s.projectName,
-                                          userId: s.sharedBy,
-                                          createdAt: s.grantedAt,
-                                          updatedAt: s.grantedAt,
-                                          designFilesCount: 0,
-                                          lastDesignFileName: null,
-                                          sharedDesignFileIds: designFileIds,
-                                          sharedDesignFileNames: designFileNames,
-                                          sharedDesignFileId: designFileIds[0] || null,
-                                          sharedDesignFileName: designFileNames[0] || null,
-                                        });
-                                      }
-
-                                      setSharedWithMeProjects(Array.from(sharedProjectsMap.values()));
-                                    }
-                                    alert(result.message);
-                                  } else if (moreMenu.itemType === 'project' && user) {
-                                    // 프로젝트 전체 공유 해제
-                                    const result = await revokeProjectAccess(moreMenu.itemId, user.uid);
-                                    if (result.success) {
-                                      // 공유받은 프로젝트 목록에서 제거
-                                      setSharedWithMeProjects(prev => prev.filter(p => p.id !== moreMenu.itemId));
-                                    }
-                                    alert(result.message);
-                                  }
-
-                                  closeMoreMenu();
-                                }
-                              } else if (activeMenu === 'trash') {
-                                if (window.confirm('정말로 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
-                                  handleDeleteItem();
-                                }
-                              } else {
-                                if (moreMenu.itemType === 'project') {
-                                  const project = allProjects.find(p => p.id === moreMenu.itemId);
-                                  if (project) {
-                                    moveToTrash(project);
-                                    closeMoreMenu();
-                                  }
-                                } else {
-                                  handleDeleteItem();
-                                }
-                              }
-                            }}
-                          >
-                            <TrashIcon size={14} />
-                            {activeMenu === 'shared' ? '공유 해제' : (activeMenu === 'trash' ? '영구 삭제' : '삭제하기')}
-                          </div>
-                          {activeMenu === 'trash' && (
-                            <div
-                              className={styles.moreMenuItem}
-                              onClick={() => {
-                                if (moreMenu.itemType === 'project') {
-                                  restoreFromTrash(moreMenu.itemId);
-                                } else if (moreMenu.itemType === 'design') {
-                                  restoreDesignFileFromTrash(moreMenu.itemId);
-                                }
-                                closeMoreMenu();
-                              }}
-                            >
-                              복원하기
-                            </div>
-                          )}
-                        </div>
-                      </>
-                    )}
                   </div>
                 ))
                 ) : !projectsLoading && initialLoadComplete ? (
@@ -4484,6 +4344,152 @@ const SimpleDashboard: React.FC = () => {
           </section>
         </div>
       </main>
+
+      {/* 전역 더보기 메뉴 */}
+      {moreMenu && (
+        <>
+          <div
+            className={styles.moreMenuBackdrop}
+            onClick={closeMoreMenu}
+          />
+          <div className={styles.moreMenuGlobal}>
+            <div
+              className={styles.moreMenuItem}
+              onClick={handleRenameItem}
+            >
+              <EditIcon size={14} />
+              이름 바꾸기
+            </div>
+            <div
+              className={styles.moreMenuItem}
+              onClick={handleDuplicateItem}
+            >
+              <CopyIcon size={14} />
+              복제하기
+            </div>
+            {/* 공유 탭이 아닐 때만 공유하기 버튼 표시 */}
+            {activeMenu !== 'shared' && (
+              <div
+                className={styles.moreMenuItem}
+                onClick={handleShareItem}
+              >
+                <ShareIcon size={14} />
+                공유하기
+              </div>
+            )}
+            {/* 공유 탭이 아닐 때만 북마크 버튼 표시 */}
+            {activeMenu !== 'shared' && (moreMenu.itemType === 'project' || moreMenu.itemType === 'design' || moreMenu.itemType === 'folder') && (
+              <div
+                className={styles.moreMenuItem}
+                onClick={() => {
+                  if (moreMenu.itemType === 'project') {
+                    toggleBookmark(moreMenu.itemId);
+                  } else if (moreMenu.itemType === 'design') {
+                    toggleDesignBookmark(moreMenu.itemId);
+                  } else if (moreMenu.itemType === 'folder') {
+                    toggleFolderBookmark(moreMenu.itemId);
+                  }
+                  closeMoreMenu();
+                }}
+              >
+                <StarIcon size={14} />
+                {moreMenu.itemType === 'project'
+                  ? (bookmarkedProjects.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
+                  : moreMenu.itemType === 'design'
+                  ? (bookmarkedDesigns.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
+                  : (bookmarkedFolders.has(moreMenu.itemId) ? '북마크 해제' : '북마크 추가')
+                }
+              </div>
+            )}
+            {/* 공유 탭일 때는 공유 해제, 일반 탭일 때는 삭제하기 */}
+            <div
+              className={`${styles.moreMenuItem} ${styles.deleteItem}`}
+              onClick={async () => {
+                if (activeMenu === 'shared') {
+                  // 공유 해제 로직
+                  if (window.confirm('공유를 해제하시겠습니까?')) {
+                    console.log('🔗 공유 해제:', moreMenu.itemId, moreMenu.itemType);
+
+                    if (moreMenu.itemType === 'design' && selectedProjectId && user) {
+                      // 디자인 파일 공유 해제
+                      const result = await revokeDesignFileAccess(selectedProjectId, user.uid, moreMenu.itemId);
+                      if (result.success) {
+                        // 공유받은 프로젝트 목록 새로고침
+                        const shared = await getSharedProjectsForUser(user.uid);
+                        const sharedProjectsMap = new Map<string, any>();
+
+                        for (const s of shared) {
+                          const designFileIds = s.designFileIds || (s.designFileId ? [s.designFileId] : []);
+                          const designFileNames = s.designFileNames || (s.designFileName ? [s.designFileName] : []);
+
+                          sharedProjectsMap.set(s.projectId, {
+                            id: s.projectId,
+                            title: s.projectName,
+                            userId: s.sharedBy,
+                            createdAt: s.grantedAt,
+                            updatedAt: s.grantedAt,
+                            designFilesCount: 0,
+                            lastDesignFileName: null,
+                            sharedDesignFileIds: designFileIds,
+                            sharedDesignFileNames: designFileNames,
+                            sharedDesignFileId: designFileIds[0] || null,
+                            sharedDesignFileName: designFileNames[0] || null,
+                          });
+                        }
+
+                        setSharedWithMeProjects(Array.from(sharedProjectsMap.values()));
+                      }
+                      alert(result.message);
+                    } else if (moreMenu.itemType === 'project' && user) {
+                      // 프로젝트 전체 공유 해제
+                      const result = await revokeProjectAccess(moreMenu.itemId, user.uid);
+                      if (result.success) {
+                        // 공유받은 프로젝트 목록에서 제거
+                        setSharedWithMeProjects(prev => prev.filter(p => p.id !== moreMenu.itemId));
+                      }
+                      alert(result.message);
+                    }
+
+                    closeMoreMenu();
+                  }
+                } else if (activeMenu === 'trash') {
+                  if (window.confirm('정말로 영구 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                    handleDeleteItem();
+                  }
+                } else {
+                  if (moreMenu.itemType === 'project') {
+                    const project = allProjects.find(p => p.id === moreMenu.itemId);
+                    if (project) {
+                      moveToTrash(project);
+                      closeMoreMenu();
+                    }
+                  } else {
+                    handleDeleteItem();
+                  }
+                }
+              }}
+            >
+              <TrashIcon size={14} />
+              {activeMenu === 'shared' ? '공유 해제' : (activeMenu === 'trash' ? '영구 삭제' : '삭제하기')}
+            </div>
+            {activeMenu === 'trash' && (
+              <div
+                className={styles.moreMenuItem}
+                onClick={() => {
+                  if (moreMenu.itemType === 'project') {
+                    restoreFromTrash(moreMenu.itemId);
+                  } else if (moreMenu.itemType === 'design') {
+                    restoreDesignFileFromTrash(moreMenu.itemId);
+                  }
+                  closeMoreMenu();
+                }}
+              >
+                복원하기
+              </div>
+            )}
+          </div>
+        </>
+      )}
 
       {/* 프로젝트 생성 모달 */}
       {isCreateModalOpen && (
