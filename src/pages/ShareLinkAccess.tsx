@@ -23,6 +23,7 @@ export const ShareLinkAccess: React.FC = () => {
   const [requiresPassword, setRequiresPassword] = useState(false);
   const [success, setSuccess] = useState(false);
   const [isOwner, setIsOwner] = useState(false); // 프로젝트 소유자 여부
+  const [showAcceptModal, setShowAcceptModal] = useState(false); // 편집 권한 수락 확인 모달
 
   // 초기 링크 검증
   useEffect(() => {
@@ -92,13 +93,14 @@ export const ShareLinkAccess: React.FC = () => {
     validateLink();
   }, [token, user, authLoading]);
 
-  // 편집 권한 - 로그인 후 자동 권한 부여 (비밀번호 없는 경우)
+  // 편집 권한 - 로그인 후 수락 모달 표시 (비밀번호 없는 경우)
   useEffect(() => {
-    if (user && link && link.permission === 'editor' && !link.password && !success && !isGranting && !error) {
-      console.log('✏️ 편집 권한 - 로그인 확인됨, 자동 권한 부여 시작');
-      handleGrantAccess();
+    if (user && link && link.permission === 'editor' && !link.password && !success && !isGranting && !error && !showAcceptModal) {
+      console.log('✏️ 편집 권한 - 로그인 확인됨, 수락 확인 모달 표시');
+      setShowAcceptModal(true);
+      setIsValidating(false);
     }
-  }, [user, link, success, isGranting, error]);
+  }, [user, link, success, isGranting, error, showAcceptModal]);
 
   // 권한 부여 처리
   const handleGrantAccess = async () => {
@@ -243,6 +245,65 @@ export const ShareLinkAccess: React.FC = () => {
     );
   }
 
+  // 편집 권한 수락 확인 모달
+  if (showAcceptModal && link && link.permission === 'editor' && user) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.card}>
+          <CheckCircle className={styles.successIcon} size={64} style={{ color: '#10b981' }} />
+          <h2 className={styles.title}>협업 초대</h2>
+          <p className={styles.description}>
+            {link.createdByName}님이 프로젝트에 초대했습니다.
+          </p>
+          {link && (
+            <div className={styles.projectInfo}>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>프로젝트:</span>
+                <span className={styles.infoValue}>{link.projectName}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>공유자:</span>
+                <span className={styles.infoValue}>{link.createdByName}</span>
+              </div>
+              <div className={styles.infoItem}>
+                <span className={styles.infoLabel}>권한:</span>
+                <span className={styles.infoValue}>편집 가능</span>
+              </div>
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '12px', marginTop: '24px', width: '100%' }}>
+            <button
+              className={styles.button}
+              onClick={() => navigate('/')}
+              style={{
+                flex: 1,
+                backgroundColor: '#6b7280',
+                color: 'white'
+              }}
+            >
+              거절
+            </button>
+            <button
+              className={styles.button}
+              onClick={async () => {
+                setShowAcceptModal(false);
+                await handleGrantAccess();
+              }}
+              disabled={isGranting}
+              style={{
+                flex: 1,
+                backgroundColor: '#10b981',
+                color: 'white'
+              }}
+            >
+              {isGranting ? '수락 중...' : '수락'}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // 성공 화면
   if (success) {
     return (
@@ -318,9 +379,9 @@ export const ShareLinkAccess: React.FC = () => {
             <div className={styles.iconWrapper}>
               <Lock size={48} />
             </div>
-            <h2 className={styles.title}>로그인이 필요합니다</h2>
+            <h2 className={styles.title}>회원가입이 필요합니다</h2>
             <p className={styles.description}>
-              이 프로젝트는 비밀번호로 보호되어 있으며, 편집 권한이 필요합니다. 먼저 로그인해주세요.
+              이 프로젝트는 비밀번호로 보호되어 있으며, 편집 권한으로 접근하려면 회원가입 후 로그인이 필요합니다.
             </p>
             {link && (
               <div className={styles.projectInfo}>
@@ -339,7 +400,7 @@ export const ShareLinkAccess: React.FC = () => {
               </div>
             )}
             <button className={styles.button} onClick={handleGoToLogin}>
-              로그인하기
+              회원가입 / 로그인하기
             </button>
           </div>
         </div>
@@ -406,12 +467,9 @@ export const ShareLinkAccess: React.FC = () => {
           <div className={styles.iconWrapper}>
             <Lock size={48} />
           </div>
-          <h2 className={styles.title}>로그인이 필요합니다</h2>
+          <h2 className={styles.title}>회원가입이 필요합니다</h2>
           <p className={styles.description}>
-            {requiresPassword
-              ? '이 프로젝트는 비밀번호로 보호되어 있습니다. 먼저 로그인해주세요.'
-              : '편집 권한으로 프로젝트에 접근하려면 로그인해주세요'
-            }
+            편집 권한으로 프로젝트에 접근하려면 회원가입 후 로그인이 필요합니다.
           </p>
           {link && (
             <div className={styles.projectInfo}>
@@ -430,7 +488,7 @@ export const ShareLinkAccess: React.FC = () => {
             </div>
           )}
           <button className={styles.button} onClick={handleGoToLogin}>
-            로그인하기
+            회원가입 / 로그인하기
           </button>
         </div>
       </div>
