@@ -4431,6 +4431,9 @@ const SimpleDashboard: React.FC = () => {
                         const sharedProjectsMap = new Map<string, any>();
 
                         for (const s of shared) {
+                          // 편집 권한이 있는 항목만 필터링
+                          if (s.permission !== 'editor') continue;
+
                           const designFileIds = s.designFileIds || (s.designFileId ? [s.designFileId] : []);
                           const designFileNames = s.designFileNames || (s.designFileName ? [s.designFileName] : []);
 
@@ -4453,13 +4456,26 @@ const SimpleDashboard: React.FC = () => {
                       }
                       alert(result.message);
                     } else if (moreMenu.itemType === 'project' && user) {
-                      // 프로젝트 전체 공유 해제
-                      const result = await revokeProjectAccess(moreMenu.itemId, user.uid);
-                      if (result.success) {
-                        // 공유받은 프로젝트 목록에서 제거
-                        setSharedWithMeProjects(prev => prev.filter(p => p.id !== moreMenu.itemId));
+                      // 프로젝트가 내가 공유한 것인지 확인
+                      const isSharedByMe = sharedByMeProjects.some(p => p.id === moreMenu.itemId);
+
+                      if (isSharedByMe) {
+                        // 내가 공유한 프로젝트 - 모든 사용자의 접근 권한 해제
+                        const result = await revokeAllProjectAccess(moreMenu.itemId);
+                        if (result.success) {
+                          // sharedByMeProjects 목록에서 제거
+                          setSharedByMeProjects(prev => prev.filter(p => p.id !== moreMenu.itemId));
+                        }
+                        alert(result.message);
+                      } else {
+                        // 공유받은 프로젝트 - 내 접근 권한만 해제
+                        const result = await revokeProjectAccess(moreMenu.itemId, user.uid);
+                        if (result.success) {
+                          // 공유받은 프로젝트 목록에서 제거
+                          setSharedWithMeProjects(prev => prev.filter(p => p.id !== moreMenu.itemId));
+                        }
+                        alert(result.message);
                       }
-                      alert(result.message);
                     }
 
                     closeMoreMenu();
