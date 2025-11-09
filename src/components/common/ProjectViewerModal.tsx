@@ -5,6 +5,7 @@ import { getProjectById, getDesignFileById } from '../../firebase/projects';
 import { ProjectSummary } from '../../firebase/types';
 import { createShareLink } from '../../firebase/shareLinks';
 import { useAuth } from '../../auth/AuthProvider';
+import { Md3dRotation } from 'react-icons/md';
 import styles from './ProjectViewerModal.module.css';
 
 interface ProjectViewerModalProps {
@@ -21,6 +22,8 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isGeneratingLink, setIsGeneratingLink] = useState(false);
+  const [isViewerLoaded, setIsViewerLoaded] = useState(false);
+  const [isIframeLoading, setIsIframeLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen && projectId) {
@@ -140,11 +143,18 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
 
   const handleClose = () => {
     setIsFullscreen(false);
+    setIsViewerLoaded(false);
+    setIsIframeLoading(false);
     onClose();
   };
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
+  };
+
+  const handle3DViewer = () => {
+    setIsIframeLoading(true);
+    setIsViewerLoaded(true);
   };
 
   const handleShare = async () => {
@@ -253,16 +263,95 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
 
             {project && !loading && !error && (
               <div className={styles.viewerContainer}>
-                <iframe
-                  src={`/configurator?projectId=${projectId}${designFileId ? `&designFileId=${designFileId}` : ''}&mode=readonly&panelClosed=true`}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    border: 'none',
-                    backgroundColor: '#f5f5f5'
-                  }}
-                  title="Project Preview"
-                />
+                {!isViewerLoaded ? (
+                  // 썸네일 이미지와 3D 버튼
+                  <div
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '100%',
+                      backgroundColor: '#f5f5f5'
+                    }}
+                  >
+                    {/* 썸네일 이미지 */}
+                    {project.thumbnail && (
+                      <img
+                        src={project.thumbnail}
+                        alt={project.title}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain'
+                        }}
+                      />
+                    )}
+
+                    {/* 중앙 3D 버튼 */}
+                    <button
+                      onClick={handle3DViewer}
+                      style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: '80px',
+                        height: '80px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+                        border: '3px solid white',
+                        color: 'white',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: 'all 0.3s ease',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';
+                        e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
+                        e.currentTarget.style.transform = 'translate(-50%, -50%) scale(1)';
+                      }}
+                    >
+                      <Md3dRotation size={40} />
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    {/* 로딩 상태 */}
+                    {isIframeLoading && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        zIndex: 10,
+                        textAlign: 'center'
+                      }}>
+                        <div className={styles.spinner} />
+                        <p style={{ marginTop: '16px', color: '#666' }}>3D 뷰어 로딩 중...</p>
+                      </div>
+                    )}
+
+                    {/* Configurator iframe */}
+                    <iframe
+                      src={`/configurator?projectId=${projectId}${designFileId ? `&designFileId=${designFileId}` : ''}&mode=readonly&panelClosed=true`}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        backgroundColor: '#f5f5f5',
+                        opacity: isIframeLoading ? 0 : 1,
+                        transition: 'opacity 0.3s ease'
+                      }}
+                      title="Project Preview"
+                      onLoad={() => setIsIframeLoading(false)}
+                    />
+                  </>
+                )}
               </div>
             )}
           </div>
