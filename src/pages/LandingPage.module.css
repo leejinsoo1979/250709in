@@ -515,10 +515,10 @@
 }
 
 .demoContent {
-  max-width: 1280px;
+  max-width: 1400px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: 1fr 1.3fr;
   gap: 4rem;
   align-items: center;
 }
