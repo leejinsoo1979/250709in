@@ -1775,8 +1775,9 @@ const SimpleDashboard: React.FC = () => {
                          activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
                          '전체 프로젝트';
         setBreadcrumbPath([rootPath, targetProject.title]);
-        // URL에 projectId 추가
-        navigate(`/dashboard?projectId=${projectId}`);
+        // URL에 projectId 추가 (activeMenu에 맞는 경로 사용)
+        const menuPath = activeMenu === 'all' ? '' : `/${activeMenu}`;
+        navigate(`/dashboard${menuPath}?projectId=${projectId}`);
 
         // 프로젝트를 선택하면 자동으로 확장
         setExpandedProjects(prev => {
@@ -1801,8 +1802,9 @@ const SimpleDashboard: React.FC = () => {
                          activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
                          '전체 프로젝트';
         setBreadcrumbPath([rootPath, '로딩 중...']);
-        // URL에 projectId 추가
-        navigate(`/dashboard?projectId=${projectId}`);
+        // URL에 projectId 추가 (activeMenu에 맞는 경로 사용)
+        const menuPath = activeMenu === 'all' ? '' : `/${activeMenu}`;
+        navigate(`/dashboard${menuPath}?projectId=${projectId}`);
         
         // 프로젝트를 선택하면 자동으로 확장
         setExpandedProjects(prev => {
@@ -3076,8 +3078,9 @@ const SimpleDashboard: React.FC = () => {
                       return null;
                     }
                   }
-                  // 프로젝트 내부 (디자인 선택 시)
-                  else {
+                }
+                // 프로젝트 내부 (디자인 선택 시)
+                else {
                     const selectedProj = [...sharedByMeProjects, ...sharedWithMeProjects].find(p => p.id === selectedProjectId);
                     const isHost = selectedProj?.userId === user?.uid;
 
