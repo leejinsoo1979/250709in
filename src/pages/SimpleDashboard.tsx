@@ -449,14 +449,16 @@ const SimpleDashboard: React.FC = () => {
 
   // 프로젝트 목록이 로드되면 각 프로젝트의 협업자 정보도 로드
   useEffect(() => {
-    if (firebaseProjects.length > 0) {
-      console.log('👥 프로젝트 협업자 정보 로딩 시작:', firebaseProjects.length, '개 프로젝트');
+    const allProjects = [...firebaseProjects, ...sharedByMeProjects, ...sharedWithMeProjects];
+
+    if (allProjects.length > 0) {
+      console.log('👥 프로젝트 협업자 정보 로딩 시작:', allProjects.length, '개 프로젝트');
 
       // 각 프로젝트의 협업자 가져오기
       const fetchAllCollaborators = async () => {
         const collaboratorsMap: {[projectId: string]: ProjectCollaborator[]} = {};
 
-        for (const project of firebaseProjects) {
+        for (const project of allProjects) {
           try {
             const collaborators = await getProjectCollaborators(project.id);
             if (collaborators.length > 0) {
@@ -473,7 +475,7 @@ const SimpleDashboard: React.FC = () => {
 
       fetchAllCollaborators();
     }
-  }, [firebaseProjects]);
+  }, [firebaseProjects, sharedByMeProjects, sharedWithMeProjects]);
 
   // 공유받은 프로젝트 로드
   useEffect(() => {
