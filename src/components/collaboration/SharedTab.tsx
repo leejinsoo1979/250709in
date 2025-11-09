@@ -236,71 +236,78 @@ const SharedTab: React.FC<SharedTabProps> = ({
                         </span>
                       </div>
 
-                      {/* 협업자 프로필 사진들 - "내가 공유한 프로젝트"에서만 표시 */}
-                      {collaborators.length > 0 && activeSubTab === 'shared-by-me' && (
-                        <div style={{
-                          display: 'flex',
-                          gap: '4px',
-                          marginTop: '8px',
-                          paddingLeft: '4px'
-                        }}>
-                          {collaborators.slice(0, 3).map((collaborator) => (
-                            <div
-                              key={collaborator.userId}
-                              title={`${collaborator.userName} (${collaborator.permission === 'editor' ? '편집 가능' : '조회만'})`}
-                              style={{
-                                width: '24px',
-                                height: '24px',
-                                borderRadius: '50%',
-                                overflow: 'hidden',
-                                border: '2px solid white',
-                                backgroundColor: '#e0e0e0',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '10px',
-                                fontWeight: 'bold',
-                                color: '#666'
-                              }}
-                            >
-                              {collaborator.photoURL ? (
-                                <img
-                                  src={collaborator.photoURL}
-                                  alt={collaborator.userName}
-                                  referrerPolicy="no-referrer"
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover'
-                                  }}
-                                />
-                              ) : (
-                                <UserIcon size={10} />
-                              )}
-                            </div>
-                          ))}
-                          {collaborators.length > 3 && (
-                            <div
-                              title={`+${collaborators.length - 3}명 더`}
-                              style={{
-                                width: '24px',
-                                height: '24px',
-                                borderRadius: '50%',
-                                border: '2px solid white',
-                                backgroundColor: '#f0f0f0',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontSize: '10px',
-                                fontWeight: 'bold',
-                                color: '#666'
-                              }}
-                            >
-                              +{collaborators.length - 3}
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {/* 협업자 프로필 사진들 - 편집 권한이 있는 협업자만 표시 */}
+                      {(() => {
+                        // 편집 권한('editor')이 있는 협업자만 필터링
+                        const editCollaborators = collaborators.filter(c => c.permission === 'editor');
+
+                        if (editCollaborators.length === 0) return null;
+
+                        return (
+                          <div style={{
+                            display: 'flex',
+                            gap: '4px',
+                            marginTop: '8px',
+                            paddingLeft: '4px'
+                          }}>
+                            {editCollaborators.slice(0, 3).map((collaborator) => (
+                              <div
+                                key={collaborator.userId}
+                                title={`${collaborator.userName} (편집 가능)`}
+                                style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '50%',
+                                  overflow: 'hidden',
+                                  border: '2px solid white',
+                                  backgroundColor: '#e0e0e0',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '10px',
+                                  fontWeight: 'bold',
+                                  color: '#666'
+                                }}
+                              >
+                                {collaborator.photoURL ? (
+                                  <img
+                                    src={collaborator.photoURL}
+                                    alt={collaborator.userName}
+                                    referrerPolicy="no-referrer"
+                                    style={{
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'cover'
+                                    }}
+                                  />
+                                ) : (
+                                  <UserIcon size={10} />
+                                )}
+                              </div>
+                            ))}
+                            {editCollaborators.length > 3 && (
+                              <div
+                                title={`+${editCollaborators.length - 3}명 더`}
+                                style={{
+                                  width: '24px',
+                                  height: '24px',
+                                  borderRadius: '50%',
+                                  border: '2px solid white',
+                                  backgroundColor: '#f0f0f0',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '10px',
+                                  fontWeight: 'bold',
+                                  color: '#666'
+                                }}
+                              >
+                                +{editCollaborators.length - 3}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
                 </div>
