@@ -55,13 +55,19 @@ export const ShareLinkAccess: React.FC = () => {
             return;
           }
 
-          // 조회 권한(viewer)이면 비회원도 바로 뷰어 페이지로 이동
+          // 조회 권한(viewer)이면 비회원도 바로 프로젝트로 이동
           if (validation.link.permission === 'viewer') {
-            console.log('👁️ 조회 권한 - 비회원 접근 허용, 뷰어 페이지로 이동');
+            console.log('👁️ 조회 권한 - 비회원 접근 허용, 프로젝트로 이동');
             setSuccess(true);
             setTimeout(() => {
-              const viewerId = validation.link.designFileId || validation.link.projectId;
-              navigate(`/viewer/${viewerId}`);
+              let url = `/configurator?projectId=${validation.link.projectId}&mode=readonly`;
+              if (validation.link.designFileId) {
+                url += `&designFileId=${validation.link.designFileId}`;
+              }
+              if (validation.link.designFileName) {
+                url += `&designFileName=${encodeURIComponent(validation.link.designFileName)}`;
+              }
+              navigate(url);
             }, 2000);
             setIsValidating(false);
             return;
@@ -173,13 +179,19 @@ export const ShareLinkAccess: React.FC = () => {
       return;
     }
 
-    // viewer 권한이면 바로 뷰어 페이지로 이동 (로그인 불필요)
+    // viewer 권한이면 바로 프로젝트로 이동 (로그인 불필요)
     if (link && link.permission === 'viewer') {
-      console.log('👁️ 조회 권한 + 비밀번호 확인 완료 - 뷰어 페이지로 이동');
+      console.log('👁️ 조회 권한 + 비밀번호 확인 완료 - 프로젝트로 이동');
       setSuccess(true);
       setTimeout(() => {
-        const viewerId = link.designFileId || link.projectId;
-        navigate(`/viewer/${viewerId}`);
+        let url = `/configurator?projectId=${link.projectId}&mode=readonly`;
+        if (link.designFileId) {
+          url += `&designFileId=${link.designFileId}`;
+        }
+        if (link.designFileName) {
+          url += `&designFileName=${encodeURIComponent(link.designFileName)}`;
+        }
+        navigate(url);
       }, 2000);
       return;
     }
