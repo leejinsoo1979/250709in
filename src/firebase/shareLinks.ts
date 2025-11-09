@@ -288,13 +288,18 @@ export async function grantProjectAccessViaLink(
             totalCount: existingDesignFileIds.length
           });
 
-          transaction.update(accessDocRef, {
+          const updateData: any = {
             designFileIds: existingDesignFileIds,
             designFileNames: existingDesignFileNames,
             designFileId: link.designFileId, // 호환성을 위해 마지막 파일 저장
-            designFileName: link.designFileName,
             grantedAt: Timestamp.now(),
-          });
+          };
+
+          if (link.designFileName) {
+            updateData.designFileName = link.designFileName;
+          }
+
+          transaction.update(accessDocRef, updateData);
         } else {
           console.log('ℹ️ 이미 추가된 디자인 파일 - 업데이트 스킵:', link.designFileId);
         }
@@ -319,7 +324,9 @@ export async function grantProjectAccessViaLink(
           accessData.designFileIds = [link.designFileId];
           accessData.designFileNames = link.designFileName ? [link.designFileName] : [];
           accessData.designFileId = link.designFileId; // 호환성
-          accessData.designFileName = link.designFileName;
+          if (link.designFileName) {
+            accessData.designFileName = link.designFileName;
+          }
         }
 
         // 프로필 사진이 있으면 저장
