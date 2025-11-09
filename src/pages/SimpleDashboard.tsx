@@ -1429,8 +1429,9 @@ const SimpleDashboard: React.FC = () => {
       // 실제 Firebase에서 가져온 디자인 파일들을 표시
       let actualDesignFiles = projectDesignFiles[selectedProjectId] || [];
 
-      // 공유받은 프로젝트인 경우 공유 범위에 따라 필터링
-      const sharedProject = sharedWithMeProjects.find(p => p.id === selectedProjectId);
+      // 공유 프로젝트인 경우 공유 범위에 따라 필터링 (내가 공유한 프로젝트 + 공유받은 프로젝트)
+      const sharedProject = sharedWithMeProjects.find(p => p.id === selectedProjectId) ||
+                            sharedByMeProjects.find(p => p.id === selectedProjectId);
       console.log('🔍 공유 프로젝트 필터링 체크:', {
         selectedProjectId,
         sharedProject: sharedProject ? {
@@ -1448,13 +1449,13 @@ const SimpleDashboard: React.FC = () => {
         const sharedDesignFileNames = (sharedProject as any).sharedDesignFileNames || [];
 
         if (sharedDesignFileIds.length > 0 || sharedDesignFileNames.length > 0) {
-          console.log('🔒 공유받은 디자인 - 필터링 적용:', {
+          console.log('🔒 공유 디자인 - 필터링 적용:', {
             projectId: selectedProjectId,
             sharedDesignFileIds,
             sharedDesignFileNames,
             필터링전: actualDesignFiles.length
           });
-          // 공유받은 디자인 파일만 필터링
+          // 공유한/받은 디자인 파일만 필터링
           actualDesignFiles = actualDesignFiles.filter(df =>
             sharedDesignFileIds.includes(df.id) || sharedDesignFileNames.includes(df.name)
           );
