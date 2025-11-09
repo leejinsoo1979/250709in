@@ -3446,11 +3446,11 @@ const SimpleDashboard: React.FC = () => {
         )}
 
         <div className={styles.content}>
-          {/* 프로젝트 트리 - 전체 프로젝트 메뉴일 때만 표시 */}
-          {activeMenu === 'all' && allProjects.length > 0 && (
+          {/* 프로젝트 트리 - 전체 프로젝트 메뉴일 때만 표시 (내가 만든 프로젝트만) */}
+          {activeMenu === 'all' && firebaseProjects.length > 0 && (
           <aside className={`${styles.projectTree} ${isFileTreeCollapsed ? styles.collapsed : ''}`}>
             <div className={styles.treeHeader}>
-              <button 
+              <button
                 className={styles.treeToggleButton}
                 onClick={() => setIsFileTreeCollapsed(!isFileTreeCollapsed)}
                 aria-label={isFileTreeCollapsed ? "파일트리 펼치기" : "파일트리 접기"}
@@ -3461,7 +3461,7 @@ const SimpleDashboard: React.FC = () => {
               </button>
               <div className={styles.projectSelectorContainer}>
                 <SimpleProjectDropdown
-                  projects={allProjects}
+                  projects={firebaseProjects}
                   currentProject={selectedProject}
                   onProjectSelect={(project) => {
                     console.log('🎯 SimpleDashboard - 프로젝트 선택됨:', project.id, project.title);
@@ -3470,12 +3470,12 @@ const SimpleDashboard: React.FC = () => {
                 />
               </div>
             </div>
-            
+
             <div className={styles.treeContent}>
-              {allProjects.length > 0 ? (
+              {firebaseProjects.length > 0 ? (
                 <div>
-                  {/* 모든 프로젝트 표시 */}
-                  {allProjects.map(project => {
+                  {/* 내가 만든 프로젝트만 표시 */}
+                  {firebaseProjects.map(project => {
                     const isExpanded = expandedProjects.has(project.id);
                     const isSelected = selectedProjectId === project.id;
                     const projectFolders = folders[project.id] || [];
