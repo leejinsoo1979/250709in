@@ -3528,12 +3528,15 @@ const SimpleDashboard: React.FC = () => {
                             {/* 폴더 목록 */}
                             {projectFolders.map(folder => (
                               <div key={folder.id}>
-                          <div 
+                          <div
                             className={styles.treeItem}
                             onClick={() => {
                               // 폴더 클릭 시 해당 폴더로 이동
                               setCurrentFolderId(folder.id);
-                              setBreadcrumbPath(['전체 프로젝트', selectedProject.title, folder.name]);
+                              const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                                               activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                                               '전체 프로젝트';
+                              setBreadcrumbPath([rootPath, selectedProject.title, folder.name]);
                             }}
                             style={{ cursor: 'pointer' }}
                           >
@@ -3588,10 +3591,13 @@ const SimpleDashboard: React.FC = () => {
                                     if (selectedProjectId !== child.projectId && child.projectId) {
                                       handleProjectSelect(child.projectId);
                                     }
-                                    
+
                                     // 2. 해당 폴더로 이동
                                     setCurrentFolderId(folder.id);
-                                    setBreadcrumbPath(['전체 프로젝트', selectedProject.title, folder.name]);
+                                    const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                                                     activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                                                     '전체 프로젝트';
+                                    setBreadcrumbPath([rootPath, selectedProject.title, folder.name]);
                                     
                                     // 3. 잠시 대기 후 디자인 카드로 스크롤
                                     setTimeout(() => {
@@ -3883,7 +3889,10 @@ const SimpleDashboard: React.FC = () => {
                         setCurrentFolderId(item.id);
                         const folder = folders[selectedProjectId!]?.find(f => f.id === item.id);
                         if (folder && selectedProject) {
-                          setBreadcrumbPath(['전체 프로젝트', selectedProject.title, folder.name]);
+                          const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                                           activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                                           '전체 프로젝트';
+                          setBreadcrumbPath([rootPath, selectedProject.title, folder.name]);
                         }
                       } else if (item.type === 'design') {
                         console.log('🎨 디자인 카드 클릭', {
