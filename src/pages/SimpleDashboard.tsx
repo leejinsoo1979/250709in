@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, doc, getDoc } from 'firebase/firestore';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
 import { PiFolderFill, PiFolderPlus } from "react-icons/pi";
 import { AiOutlineFileMarkdown } from "react-icons/ai";
@@ -10,6 +10,7 @@ import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
 import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks } from '@/firebase/shareLinks';
 import { signOutUser } from '@/firebase/auth';
+import { db } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -530,22 +531,35 @@ const SimpleDashboard: React.FC = () => {
         const sharedByMe = Array.from(sharedByMeMap.values());
         console.log('✅ 공유한 프로젝트 (통합):', sharedByMe.length, '개');
 
-        // 공유받은 프로젝트 정보를 ProjectSummary로 변환
-        const sharedProjectSummaries: ProjectSummary[] = shared.map(s => ({
-          id: s.projectId,
-          title: s.projectName,
-          userId: s.sharedBy,
-          createdAt: s.grantedAt,
-          updatedAt: s.grantedAt,
-          designFilesCount: s.designFileId ? 1 : 0,
-          lastDesignFileName: s.designFileName || null,
-          // 추가 정보 저장
-          sharedDesignFileId: s.designFileId,
-          sharedDesignFileName: s.designFileName,
-          // 공유받은 사람(현재 사용자) 정보
-          sharedUserName: s.userName,
-          sharedUserEmail: s.userEmail,
-          sharedUserPhotoURL: s.photoURL
+        // 공유받은 프로젝트 정보를 ProjectSummary로 변환 (공유한 사람의 프로필 정보 포함)
+        const sharedProjectSummaries: ProjectSummary[] = await Promise.all(shared.map(async s => {
+          // 공유한 사람(호스트)의 프로필 정보 가져오기
+          let sharedByPhotoURL = null;
+          try {
+            const userDocRef = doc(db, 'users', s.sharedBy);
+            const userDoc = await getDoc(userDocRef);
+            if (userDoc.exists()) {
+              sharedByPhotoURL = userDoc.data().photoURL || null;
+            }
+          } catch (error) {
+            console.error('공유한 사람 프로필 조회 실패:', error);
+          }
+
+          return {
+            id: s.projectId,
+            title: s.projectName,
+            userId: s.sharedBy,
+            createdAt: s.grantedAt,
+            updatedAt: s.grantedAt,
+            designFilesCount: s.designFileId ? 1 : 0,
+            lastDesignFileName: s.designFileName || null,
+            // 추가 정보 저장
+            sharedDesignFileId: s.designFileId,
+            sharedDesignFileName: s.designFileName,
+            // 공유한 사람(호스트) 정보
+            sharedByName: s.sharedByName,
+            sharedByPhotoURL: sharedByPhotoURL
+          };
         }));
 
         // 공유한 프로젝트와 공유받은 프로젝트 합치기

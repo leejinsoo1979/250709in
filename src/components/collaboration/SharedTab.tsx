@@ -100,12 +100,11 @@ const SharedTab: React.FC<SharedTabProps> = ({
               const displayUser = activeSubTab === 'shared-by-me'
                 ? user
                 : {
-                    // 공유받은 프로젝트의 경우 sharedProjectAccess에 저장된 사용자 정보 사용
-                    photoURL: sharedInfo.sharedUserPhotoURL,
-                    userName: sharedInfo.sharedUserName,
-                    userEmail: sharedInfo.sharedUserEmail,
-                    displayName: sharedInfo.sharedUserName,
-                    email: sharedInfo.sharedUserEmail
+                    // 공유받은 프로젝트의 경우 공유한 사람(호스트)의 프로필 정보 사용
+                    photoURL: sharedInfo.sharedByPhotoURL,
+                    userName: sharedInfo.sharedByName,
+                    displayName: sharedInfo.sharedByName,
+                    email: null
                   };
 
               return (
