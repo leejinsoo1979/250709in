@@ -320,7 +320,14 @@ export async function grantProjectAccessViaLink(
 
           transaction.update(accessDocRef, updateData);
         } else {
-          console.log('ℹ️ 이미 추가된 디자인 파일 - 업데이트 스킵:', link.designFileId);
+          console.log('ℹ️ 이미 추가된 디자인 파일 - sharedByPhotoURL만 업데이트:', link.designFileId);
+          // 이미 추가된 파일이어도 sharedByPhotoURL은 업데이트
+          if (sharedByPhotoURL) {
+            const photoUpdateData: any = {
+              sharedByPhotoURL: sharedByPhotoURL
+            };
+            transaction.update(accessDocRef, photoUpdateData);
+          }
         }
       } else {
         // 새 문서 생성 또는 전체 프로젝트 공유
