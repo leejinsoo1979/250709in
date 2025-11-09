@@ -113,7 +113,20 @@ const Configurator: React.FC = () => {
       setActiveSidebarTab('material');
     }
   }, [isReadOnly]);
-  
+
+  // 읽기 전용 모드에서 3D 정면 뷰로 초기화 (섬네일과 동일한 뷰)
+  useEffect(() => {
+    if (isReadOnly) {
+      const uiStore = useUIStore.getState();
+      uiStore.setViewMode('3D');
+      uiStore.setView2DDirection('front');
+      uiStore.setCameraMode('perspective');
+      uiStore.setShowDimensions(false);
+      uiStore.setShowDimensionsText(false);
+      console.log('📸 읽기 전용 모드: 3D 정면 뷰로 초기화 (섬네일과 동일)');
+    }
+  }, [isReadOnly]);
+
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
   const [showAll, setShowAll] = useState(true);
