@@ -4199,7 +4199,10 @@ const SimpleDashboard: React.FC = () => {
                                 {/* 협업자 수 */}
                                 {(() => {
                                   const collaborators = projectCollaborators[item.project.id] || [];
-                                  const editCollaborators = collaborators.filter(c => c.permission === 'editor');
+                                  // 편집 권한이 있고 프로젝트 소유자(호스트)가 아닌 협업자만 필터링
+                                  const editCollaborators = collaborators.filter(c =>
+                                    c.permission === 'editor' && c.userId !== item.project.userId
+                                  );
                                   if (editCollaborators.length === 0) return null;
                                   return (
                                     <span style={{
@@ -4216,7 +4219,10 @@ const SimpleDashboard: React.FC = () => {
                               {/* 우측: 협업자 프로필 이미지들 */}
                               {(() => {
                                 const collaborators = projectCollaborators[item.project.id] || [];
-                                const editCollaborators = collaborators.filter(c => c.permission === 'editor');
+                                // 편집 권한이 있고 프로젝트 소유자(호스트)가 아닌 협업자만 필터링
+                                const editCollaborators = collaborators.filter(c =>
+                                  c.permission === 'editor' && c.userId !== item.project.userId
+                                );
 
                                 if (editCollaborators.length === 0) return null;
 
