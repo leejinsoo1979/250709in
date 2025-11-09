@@ -209,6 +209,7 @@
   min-height: 100vh;
   padding: 0 2rem;
   max-width: 900px;
+  background: transparent;
 }
 
 .heroTitle {
