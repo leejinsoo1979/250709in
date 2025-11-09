@@ -527,10 +527,35 @@ export const updateProject = async (
 
     const docRef = doc(db, PROJECTS_COLLECTION, projectId);
     
-    // 먼저 소유자 확인 (서버에서 직접 가져오기)
+    // 먼저 소유자이거나 공유 접근 권한이 있는지 확인 (서버에서 직접 가져오기)
     const docSnap = await getDocFromServer(docRef);
-    if (!docSnap.exists() || docSnap.data().userId !== user.uid) {
-      return { error: '프로젝트에 접근할 권한이 없습니다.' };
+    if (!docSnap.exists()) {
+      return { error: '프로젝트를 찾을 수 없습니다.' };
+    }
+
+    const isOwner = docSnap.data().userId === user.uid;
+
+    if (!isOwner) {
+      // 소유자가 아니면 공유 접근 권한 확인 (editor 권한만 수정 가능)
+      const sharedAccessQuery = query(
+        collection(db, 'sharedProjectAccess'),
+        where('userId', '==', user.uid),
+        where('projectId', '==', projectId),
+        where('isActive', '==', true)
+      );
+      const sharedAccessSnap = await getDocs(sharedAccessQuery);
+
+      if (sharedAccessSnap.empty) {
+        return { error: '프로젝트에 접근할 권한이 없습니다.' };
+      }
+
+      // editor 권한이 있는지 확인
+      const sharedAccess = sharedAccessSnap.docs[0].data();
+      if (sharedAccess.permission !== 'editor') {
+        return { error: '프로젝트를 수정할 권한이 없습니다.' };
+      }
+
+      console.log('✅ [Firebase] 공유 편집 권한 확인됨');
     }
 
     const updateData = {
@@ -1095,9 +1120,26 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
         }
       }
     } else {
-      // root 프로젝트인 경우 기존 방식대로 확인
-      if (projectSnap.data().userId !== user.uid) {
-        return { designFile: null, error: '디자인 파일에 접근할 권한이 없습니다.' };
+      // root 프로젝트인 경우 소유자이거나 공유 접근 권한이 있는지 확인
+      const projectData = projectSnap.data();
+      const isOwner = projectData.userId === user.uid;
+
+      if (!isOwner) {
+        // 소유자가 아니면 공유 접근 권한 확인
+        const sharedAccessQuery = query(
+          collection(db, 'sharedProjectAccess'),
+          where('userId', '==', user.uid),
+          where('projectId', '==', data.projectId),
+          where('isActive', '==', true)
+        );
+        const sharedAccessSnap = await getDocs(sharedAccessQuery);
+
+        if (sharedAccessSnap.empty) {
+          console.log('🔥 [Firebase] 공유 접근 권한 없음');
+          return { designFile: null, error: '디자인 파일에 접근할 권한이 없습니다.' };
+        }
+
+        console.log('✅ [Firebase] 공유 접근 권한 확인됨');
       }
     }
 
