@@ -221,11 +221,11 @@ const SimpleDashboard: React.FC = () => {
     const path = location.pathname.replace('/dashboard', '');
     if (path === '' || path === '/') return 'all';
     const menu = path.substring(1); // Remove leading slash
-    return menu as 'all' | 'bookmarks' | 'shared' | 'profile' | 'team' | 'trash';
+    return menu as 'all' | 'bookmarks' | 'shared-by-me' | 'shared-with-me' | 'profile' | 'team' | 'trash';
   };
-  
+
   // 메뉴 상태 추가 - URL과 동기화
-  const [activeMenu, setActiveMenu] = useState<'all' | 'bookmarks' | 'shared' | 'profile' | 'team' | 'trash'>(getMenuFromPath());
+  const [activeMenu, setActiveMenu] = useState<'all' | 'bookmarks' | 'shared-by-me' | 'shared-with-me' | 'profile' | 'team' | 'trash'>(getMenuFromPath());
   const [bookmarkedProjects, setBookmarkedProjects] = useState<Set<string>>(new Set());
   const [bookmarkedDesigns, setBookmarkedDesigns] = useState<Set<string>>(new Set());
   const [bookmarkedFolders, setBookmarkedFolders] = useState<Set<string>>(new Set());
@@ -678,7 +678,9 @@ const SimpleDashboard: React.FC = () => {
     if (selectedProjectId && firebaseProjects.length > 0) {
       const selectedProject = firebaseProjects.find(p => p.id === selectedProjectId);
       if (selectedProject && breadcrumbPath[1] === '로딩 중...') {
-        const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+        const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                         activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                         '전체 프로젝트';
         setBreadcrumbPath([rootPath, selectedProject.title]);
       }
 
@@ -839,12 +841,16 @@ const SimpleDashboard: React.FC = () => {
   const selectedProject = useMemo(() => {
     if (!selectedProjectId) return null;
 
-    // activeMenu가 'shared'일 때는 공유 프로젝트에서 먼저 검색
+    // activeMenu가 'shared-by-me' 또는 'shared-with-me'일 때는 공유 프로젝트에서 먼저 검색
     let project = null;
-    if (activeMenu === 'shared') {
+    if (activeMenu === 'shared-by-me') {
+      project = sharedByMeProjects.find(p => p.id === selectedProjectId) ||
+                allProjects.find(p => p.id === selectedProjectId) ||
+                sharedWithMeProjects.find(p => p.id === selectedProjectId);
+    } else if (activeMenu === 'shared-with-me') {
       project = sharedWithMeProjects.find(p => p.id === selectedProjectId) ||
-                sharedByMeProjects.find(p => p.id === selectedProjectId) ||
-                allProjects.find(p => p.id === selectedProjectId);
+                allProjects.find(p => p.id === selectedProjectId) ||
+                sharedByMeProjects.find(p => p.id === selectedProjectId);
     } else {
       project = allProjects.find(p => p.id === selectedProjectId) ||
                 sharedByMeProjects.find(p => p.id === selectedProjectId) ||
@@ -877,7 +883,9 @@ const SimpleDashboard: React.FC = () => {
   useEffect(() => {
     if (selectedProject && breadcrumbPath[1] === '로딩 중...') {
       console.log('📝 Breadcrumb 업데이트:', selectedProject.title);
-      const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+      const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                       activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                       '전체 프로젝트';
       setBreadcrumbPath([rootPath, selectedProject.title]);
     }
   }, [selectedProject, breadcrumbPath, activeMenu]);
@@ -1430,9 +1438,10 @@ const SimpleDashboard: React.FC = () => {
       let actualDesignFiles = projectDesignFiles[selectedProjectId] || [];
 
       // 공유 탭에서만 공유 범위에 따라 필터링
-      if (activeMenu === 'shared') {
-        const sharedProject = sharedWithMeProjects.find(p => p.id === selectedProjectId) ||
-                              sharedByMeProjects.find(p => p.id === selectedProjectId);
+      if (activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') {
+        const sharedProject = activeMenu === 'shared-by-me'
+          ? sharedByMeProjects.find(p => p.id === selectedProjectId)
+          : sharedWithMeProjects.find(p => p.id === selectedProjectId);
         console.log('🔍 공유 프로젝트 필터링 체크:', {
           selectedProjectId,
           activeMenu,
@@ -1740,19 +1749,28 @@ const SimpleDashboard: React.FC = () => {
       navigate('/dashboard');
     } else {
       // 새 프로젝트 선택
-      // activeMenu가 'shared'일 때는 공유받은 프로젝트를 먼저 확인
-      const targetProject = activeMenu === 'shared'
-        ? (sharedWithMeProjects.find(p => p.id === projectId) ||
-           sharedByMeProjects.find(p => p.id === projectId) ||
-           allProjects.find(p => p.id === projectId))
-        : (allProjects.find(p => p.id === projectId) ||
-           sharedByMeProjects.find(p => p.id === projectId) ||
-           sharedWithMeProjects.find(p => p.id === projectId));
+      // activeMenu에 따라 적절한 프로젝트 리스트에서 찾기
+      let targetProject = null;
+      if (activeMenu === 'shared-by-me') {
+        targetProject = sharedByMeProjects.find(p => p.id === projectId) ||
+                        allProjects.find(p => p.id === projectId) ||
+                        sharedWithMeProjects.find(p => p.id === projectId);
+      } else if (activeMenu === 'shared-with-me') {
+        targetProject = sharedWithMeProjects.find(p => p.id === projectId) ||
+                        allProjects.find(p => p.id === projectId) ||
+                        sharedByMeProjects.find(p => p.id === projectId);
+      } else {
+        targetProject = allProjects.find(p => p.id === projectId) ||
+                        sharedByMeProjects.find(p => p.id === projectId) ||
+                        sharedWithMeProjects.find(p => p.id === projectId);
+      }
 
       if (targetProject) {
         setSelectedProjectId(projectId);
         // activeMenu에 따라 breadcrumb 첫 번째 항목 설정
-        const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+        const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                         activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                         '전체 프로젝트';
         setBreadcrumbPath([rootPath, targetProject.title]);
         // URL에 projectId 추가
         navigate(`/dashboard?projectId=${projectId}`);
@@ -1776,7 +1794,9 @@ const SimpleDashboard: React.FC = () => {
         console.warn('프로젝트를 찾을 수 없습니다. 일단 선택만 진행합니다:', projectId);
         setSelectedProjectId(projectId);
         // activeMenu에 따라 breadcrumb 첫 번째 항목 설정
-        const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+        const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                         activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                         '전체 프로젝트';
         setBreadcrumbPath([rootPath, '로딩 중...']);
         // URL에 projectId 추가
         navigate(`/dashboard?projectId=${projectId}`);
@@ -1801,14 +1821,24 @@ const SimpleDashboard: React.FC = () => {
       // 루트 경로 클릭 (전체 프로젝트 또는 공유 프로젝트)
       setSelectedProjectId(null);
       setCurrentFolderId(null);
-      const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+      const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                       activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                       '전체 프로젝트';
       setBreadcrumbPath([rootPath]);
-      // URL을 전체 프로젝트로 업데이트
-      navigate('/dashboard');
+      // URL을 해당 메뉴로 업데이트
+      if (activeMenu === 'shared-by-me') {
+        navigate('/dashboard/shared-by-me');
+      } else if (activeMenu === 'shared-with-me') {
+        navigate('/dashboard/shared-with-me');
+      } else {
+        navigate('/dashboard');
+      }
     } else if (index === 1 && selectedProjectId && selectedProject) {
       // 프로젝트 클릭 - 폴더에서 나가기
       setCurrentFolderId(null);
-      const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+      const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                       activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                       '전체 프로젝트';
       setBreadcrumbPath([rootPath, selectedProject.title]);
       // URL을 해당 프로젝트로 업데이트
       navigate(`/dashboard?projectId=${selectedProjectId}`);
@@ -1967,7 +1997,9 @@ const SimpleDashboard: React.FC = () => {
           if (selectedProjectId === renameTarget.id) {
             setBreadcrumbPath(prev => {
               const newPath = [...prev];
-              const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+              const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+                               activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+                               '전체 프로젝트';
               const projectIndex = newPath.findIndex(path => path !== rootPath);
               if (projectIndex !== -1) {
                 newPath[projectIndex] = newName.trim();
@@ -2741,18 +2773,35 @@ const SimpleDashboard: React.FC = () => {
 
 
           <div
-            className={`${styles.navItem} ${activeMenu === 'shared' ? styles.active : ''}`}
+            className={`${styles.navItem} ${activeMenu === 'shared-by-me' ? styles.active : ''}`}
             onClick={() => {
-              setActiveMenu('shared');
+              setActiveMenu('shared-by-me');
               setSelectedProjectId(null);
-              setBreadcrumbPath([]);
+              setBreadcrumbPath(['공유한 프로젝트']);
+              navigate('/dashboard/shared-by-me');
             }}
           >
             <div className={styles.navItemIcon}>
               <ShareIcon size={20} />
             </div>
-            <span>공유 프로젝트</span>
-            <span className={styles.navItemCount}>{sharedProjects.length}</span>
+            <span>공유한 프로젝트</span>
+            <span className={styles.navItemCount}>{sharedByMeProjects.length}</span>
+          </div>
+
+          <div
+            className={`${styles.navItem} ${activeMenu === 'shared-with-me' ? styles.active : ''}`}
+            onClick={() => {
+              setActiveMenu('shared-with-me');
+              setSelectedProjectId(null);
+              setBreadcrumbPath(['공유받은 프로젝트']);
+              navigate('/dashboard/shared-with-me');
+            }}
+          >
+            <div className={styles.navItemIcon}>
+              <ShareIcon size={20} />
+            </div>
+            <span>공유받은 프로젝트</span>
+            <span className={styles.navItemCount}>{sharedWithMeProjects.length}</span>
           </div>
 
           <div
@@ -2895,7 +2944,7 @@ const SimpleDashboard: React.FC = () => {
         </header>
 
         {/* 서브헤더 - 프로젝트 관련 메뉴에서만 표시 */}
-        {(activeMenu === 'all' || activeMenu === 'bookmarks' || activeMenu === 'trash' || activeMenu === 'shared') && (
+        {(activeMenu === 'all' || activeMenu === 'bookmarks' || activeMenu === 'trash' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') && (
         <div className={styles.subHeader}>
           <div className={styles.subHeaderContent}>
             {/* 메뉴별 타이틀 표시 (좌측) */}
@@ -2927,22 +2976,23 @@ const SimpleDashboard: React.FC = () => {
               {/* 선택된 카드가 있을 때 액션 버튼 */}
               {selectedCards.size > 0 && activeMenu !== 'trash' && (() => {
                 // 공유 프로젝트 메뉴에서 처리
-                if (activeMenu === 'shared') {
+                if (activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') {
                   // 프로젝트를 선택하지 않은 상태 (목록 화면)
                   if (!selectedProjectId) {
-                    // 선택된 카드들이 모두 본인 소유 프로젝트인지 확인
-                    const selectedProjectIds = Array.from(selectedCards);
-                    const allOwnedByUser = selectedProjectIds.every(cardId => {
-                      const project = [...sharedByMeProjects, ...sharedWithMeProjects].find(p => p.id === cardId);
-                      return project?.userId === user?.uid;
-                    });
+                    // "공유한 프로젝트" 메뉴에서만 공유 취소 버튼 표시
+                    if (activeMenu === 'shared-by-me') {
+                      const selectedProjectIds = Array.from(selectedCards);
+                      const allOwnedByUser = selectedProjectIds.every(cardId => {
+                        const project = sharedByMeProjects.find(p => p.id === cardId);
+                        return project?.userId === user?.uid;
+                      });
 
-                    if (allOwnedByUser) {
-                      return (
-                        <button
-                          className={styles.bulkDeleteButton}
-                          onClick={async () => {
-                            if (window.confirm(`선택한 ${selectedCards.size}개 프로젝트의 공유를 취소하시겠습니까?`)) {
+                      if (allOwnedByUser) {
+                        return (
+                          <button
+                            className={styles.bulkDeleteButton}
+                            onClick={async () => {
+                              if (window.confirm(`선택한 ${selectedCards.size}개 프로젝트의 공유를 취소하시겠습니까?`)) {
                               console.log('🔗 프로젝트 공유 해제:', Array.from(selectedCards));
 
                               let totalCount = 0;
