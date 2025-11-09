@@ -4,7 +4,8 @@ import { XIcon, MaximizeIcon, MinimizeIcon } from './Icons';
 import { getProjectById, getDesignFileById } from '../../firebase/projects';
 import { ProjectSummary } from '../../firebase/types';
 import Space3DViewerReadOnly from '../../editor/shared/viewer3d/Space3DViewerReadOnly';
-import { ShareLinkModal } from '../ShareLinkModal';
+import { createShareLink } from '../../firebase/shareLinks';
+import { useAuth } from '../../auth/AuthProvider';
 import styles from './ProjectViewerModal.module.css';
 
 interface ProjectViewerModalProps {
@@ -16,6 +17,7 @@ interface ProjectViewerModalProps {
 }
 
 const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose, projectId, designFileId, initialViewMode = '3D' }) => {
+  const { user } = useAuth();
   const [project, setProject] = useState<ProjectSummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   // 섬네일과 동일한 뷰로 초기화: 3D 정면 뷰 + perspective 카메라
   const [viewMode, setViewMode] = useState<'2D' | '3D'>('3D');
   const [cameraMode, setCameraMode] = useState<'perspective' | 'orthographic'>('perspective');
-  const [showShareModal, setShowShareModal] = useState(false);
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
 
   useEffect(() => {
     if (isOpen && projectId) {
@@ -148,6 +150,44 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
 
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
+  };
+
+  const handleShare = async () => {
+    if (!user || !project) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    setIsGeneratingLink(true);
+    try {
+      console.log('🔗 조회 권한 공유 링크 생성 중:', { projectId, designFileId, projectName: project.title });
+
+      const link = await createShareLink(
+        projectId,
+        project.title,
+        user.uid,
+        user.displayName || user.email || '사용자',
+        'viewer', // 조회 권한
+        7, // 7일 만료
+        undefined, // 비밀번호 없음
+        undefined, // 사용 횟수 제한 없음
+        designFileId || undefined, // 디자인 파일 ID
+        undefined // 디자인 파일명
+      );
+
+      const shareUrl = `${window.location.origin}/share/${link.token}`;
+
+      // 클립보드에 복사
+      await navigator.clipboard.writeText(shareUrl);
+      alert(`조회 권한 공유 링크가 클립보드에 복사되었습니다!\n\n${shareUrl}\n\n※ 7일간 유효하며, 조회만 가능합니다.`);
+
+      console.log('✅ 공유 링크 생성 완료:', link.token);
+    } catch (error: any) {
+      console.error('❌ 공유 링크 생성 실패:', error);
+      alert('공유 링크 생성에 실패했습니다: ' + (error.message || '알 수 없는 오류'));
+    } finally {
+      setIsGeneratingLink(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -331,24 +371,15 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
               </div>
               <button
                 className={styles.shareButton}
-                onClick={() => setShowShareModal(true)}
+                onClick={handleShare}
+                disabled={isGeneratingLink}
               >
-                공유하기
+                {isGeneratingLink ? '링크 생성 중...' : '공유하기'}
               </button>
             </div>
           )}
         </motion.div>
       </motion.div>
-
-      {/* 공유 링크 모달 */}
-      {showShareModal && project && (
-        <ShareLinkModal
-          projectId={projectId}
-          projectName={project.title}
-          designFileId={designFileId}
-          onClose={() => setShowShareModal(false)}
-        />
-      )}
     </AnimatePresence>
   );
 };
