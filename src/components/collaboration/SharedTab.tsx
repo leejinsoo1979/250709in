@@ -211,47 +211,49 @@ const SharedTab: React.FC<SharedTabProps> = ({
                       </div>
                     </div>
                     <div className={dashboardStyles.cardFooter}>
-                      <div className={dashboardStyles.cardUser}>
-                        <div className={dashboardStyles.cardUserAvatar}>
-                          {displayUser?.photoURL ? (
-                            <img
-                              src={displayUser.photoURL}
-                              alt="프로필"
-                              referrerPolicy="no-referrer"
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                borderRadius: '50%',
-                                objectFit: 'cover'
-                              }}
-                            />
-                          ) : (
-                            <UserIcon size={12} />
-                          )}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                        <div className={dashboardStyles.cardUser}>
+                          <div className={dashboardStyles.cardUserAvatar}>
+                            {displayUser?.photoURL ? (
+                              <img
+                                src={displayUser.photoURL}
+                                alt="프로필"
+                                referrerPolicy="no-referrer"
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  borderRadius: '50%',
+                                  objectFit: 'cover'
+                                }}
+                              />
+                            ) : (
+                              <UserIcon size={12} />
+                            )}
+                          </div>
+                          <span className={dashboardStyles.cardUserName}>
+                            {activeSubTab === 'shared-by-me'
+                              ? (user?.displayName || user?.email?.split('@')[0] || '사용자')
+                              : ((displayUser as any)?.displayName || (displayUser as any)?.email?.split('@')[0] || '협업자')}
+                          </span>
                         </div>
-                        <span className={dashboardStyles.cardUserName}>
-                          {activeSubTab === 'shared-by-me'
-                            ? (user?.displayName || user?.email?.split('@')[0] || '사용자')
-                            : ((displayUser as any)?.displayName || (displayUser as any)?.email?.split('@')[0] || '협업자')}
-                        </span>
-                        {/* 편집 권한 협업자 수 표시 (호스트 제외) */}
+
+                        {/* 편집 권한 협업자 수 표시 (호스트 제외) - 우측 정렬 */}
                         {(() => {
                           const editCollaborators = collaborators.filter(c => c.permission === 'editor');
                           if (editCollaborators.length === 0) return null;
                           return (
                             <span style={{
-                              marginLeft: '8px',
                               fontSize: '12px',
                               color: '#666',
                               fontWeight: '500'
                             }}>
-                              {editCollaborators.length}명
+                              외 {editCollaborators.length}명
                             </span>
                           );
                         })()}
                       </div>
 
-                      {/* 협업자 프로필 사진들 - 편집 권한이 있는 협업자만 표시 */}
+                      {/* 협업자 프로필 사진들 - 호스트 아래에 표시 */}
                       {(() => {
                         // 편집 권한('editor')이 있는 협업자만 필터링
                         const editCollaborators = collaborators.filter(c => c.permission === 'editor');
