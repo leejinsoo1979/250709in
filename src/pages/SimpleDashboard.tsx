@@ -3346,22 +3346,7 @@ const SimpleDashboard: React.FC = () => {
                 sharedWithMe={sharedWithMeProjects}
                 projectDesignFiles={projectDesignFiles}
                 projectCollaborators={projectCollaborators}
-                onProjectSelect={(projectId) => {
-                  // 공유받은 프로젝트인 경우 designFileId 정보를 함께 전달
-                  const sharedProject = sharedProjects.find(p => p.id === projectId);
-                  const sharedInfo = sharedProject as any;
-
-                  let url = `/configurator?projectId=${projectId}`;
-                  if (sharedInfo?.sharedDesignFileId) {
-                    url += `&designFileId=${sharedInfo.sharedDesignFileId}`;
-                  }
-                  if (sharedInfo?.sharedDesignFileName) {
-                    url += `&designFileName=${encodeURIComponent(sharedInfo.sharedDesignFileName)}`;
-                  }
-
-                  console.log('🔗 공유 프로젝트 열기:', url);
-                  navigate(url);
-                }}
+                onProjectSelect={handleProjectSelect}
               />
             )}
             {activeMenu === 'team' && (
