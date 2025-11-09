@@ -146,8 +146,15 @@ export const captureFrontViewThumbnail = async (): Promise<string | null> => {
     uiStoreState.setCameraMode('perspective');  // 원근 투영으로 강제 설정
     console.log('🔄 3D 정면 뷰 + perspective 카메라로 강제 전환 완료');
 
-    // 뷰 전환 후 렌더링 완료 대기 (충분한 시간 제공)
-    await new Promise(resolve => setTimeout(resolve, 500));
+    // 뷰 전환 후 렌더링 완료 대기
+    await new Promise(resolve => setTimeout(resolve, 250));
+
+    // 카메라를 중앙으로 정렬 (ThreeCanvas의 resetCamera 호출)
+    console.log('🎯 카메라 중앙 정렬 중...');
+    window.dispatchEvent(new Event('reset-camera-for-settings'));
+
+    // 카메라 리셋 후 렌더링 완료 대기
+    await new Promise(resolve => setTimeout(resolve, 250));
 
     // 원본 캔버스의 비율 유지하여 썸네일 캡처
     const aspectRatio = canvas.width / canvas.height;
@@ -215,7 +222,7 @@ export const captureProjectThumbnail = async (): Promise<string | null> => {
     console.log('📸 썸네일 캡처를 위해 치수 및 슬롯 가이드 숨김');
 
     // 치수가 사라지고 렌더링이 업데이트될 시간 대기
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 200));
   } catch (e) {
     console.warn('UI Store 접근 실패:', e);
   }
