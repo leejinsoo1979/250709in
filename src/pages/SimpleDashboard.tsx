@@ -579,6 +579,28 @@ const SimpleDashboard: React.FC = () => {
     loadSharedProjects();
   }, [user, firebaseProjects, projectCollaborators]);
 
+  // 공유 프로젝트(내가 공유한 + 공유받은)의 디자인 파일 로드
+  useEffect(() => {
+    const allShared = [...sharedByMeProjects, ...sharedWithMeProjects];
+
+    if (allShared.length > 0) {
+      console.log('📁 공유 프로젝트 디자인 파일 로딩 시작:', allShared.length, '개');
+
+      // 아직 로드되지 않은 프로젝트만 필터링
+      const projectsToLoad = allShared.filter(project =>
+        !projectDesignFiles[project.id] && !designFilesLoading[project.id]
+      );
+
+      if (projectsToLoad.length > 0) {
+        console.log(`📁 ${projectsToLoad.length}개 프로젝트의 디자인 파일 로딩 필요`);
+        projectsToLoad.forEach(project => {
+          console.log(`📁 공유 프로젝트 ${project.title}의 디자인 파일 로딩`);
+          loadDesignFilesForProject(project.id);
+        });
+      }
+    }
+  }, [sharedByMeProjects, sharedWithMeProjects, projectDesignFiles, designFilesLoading, loadDesignFilesForProject]);
+
   // firebaseProjects가 업데이트될 때 대기 중인 프로젝트 선택 처리
   useEffect(() => {
     const pendingProjectId = sessionStorage.getItem('pendingProjectSelect');
