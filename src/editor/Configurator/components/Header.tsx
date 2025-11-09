@@ -481,119 +481,132 @@ const Header: React.FC<HeaderProps> = ({
           </div>
 
           {/* 소유자와 협업자 섹션 */}
-          {(owner || collaborators.length > 0) && (
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '20px',
-              marginLeft: '20px'
-            }}>
-              {/* Project owner */}
-              {owner && (() => {
-                console.log('👑 Owner 렌더링:', {
-                  userId: owner.userId,
-                  name: owner.name,
-                  photoURL: owner.photoURL,
-                  hasPhotoURL: !!owner.photoURL
-                });
-                return (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <PiCrownDuotone
-                      size={20}
-                      color={colors.primary}
-                      style={{ opacity: 0.8 }}
-                    />
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      overflow: 'hidden',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      background: theme.mode === 'dark' ? '#2a2a2a' : '#f0f0f0'
-                    }}>
-                      {owner.photoURL ? (
-                        <img
-                          src={owner.photoURL}
-                          alt={owner.name}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          onError={(e) => {
-                            console.error('❌ Owner 이미지 로드 실패:', owner.photoURL);
-                          }}
-                        />
-                      ) : (
-                        <User size={18} color={colors.primary} />
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
+          {(owner || collaborators.length > 0) && (() => {
+            // 현재 사용자가 프로젝트 오너인지 확인
+            const isProjectOwner = user?.uid === owner?.userId;
 
-              {/* Members */}
-              {collaborators.length > 0 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FiLink
-                    size={20}
-                    color={colors.primary}
-                    style={{ opacity: 0.8 }}
-                  />
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {collaborators.map((collab, index) => (
-                      <div
-                        key={`${collab.userId}-${index}`}
-                        style={{
-                          width: '32px',
-                          height: '32px',
-                          borderRadius: '50%',
-                          overflow: 'hidden',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: theme.mode === 'dark' ? '#2a2a2a' : '#f0f0f0'
-                        }}
-                        title={collab.userName || collab.userEmail}
-                      >
-                        {collab.photoURL ? (
+            // 협업자인 경우 자신의 프로필만 필터링
+            const displayCollaborators = isProjectOwner
+              ? collaborators
+              : collaborators.filter(collab => collab.userId === user?.uid);
+
+            return (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '20px',
+                marginLeft: '20px'
+              }}>
+                {/* Project owner */}
+                {owner && (() => {
+                  console.log('👑 Owner 렌더링:', {
+                    userId: owner.userId,
+                    name: owner.name,
+                    photoURL: owner.photoURL,
+                    hasPhotoURL: !!owner.photoURL,
+                    isProjectOwner
+                  });
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <PiCrownDuotone
+                        size={20}
+                        color={colors.primary}
+                        style={{ opacity: 0.8 }}
+                      />
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: theme.mode === 'dark' ? '#2a2a2a' : '#f0f0f0'
+                      }}>
+                        {owner.photoURL ? (
                           <img
-                            src={collab.photoURL}
-                            alt={collab.userName || collab.userEmail}
+                            src={owner.photoURL}
+                            alt={owner.name}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              console.error('❌ Owner 이미지 로드 실패:', owner.photoURL);
+                            }}
                           />
                         ) : (
                           <User size={18} color={colors.primary} />
                         )}
                       </div>
-                    ))}
-                    {/* 협업자 추가 버튼 */}
-                    <div style={{
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      background: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                      transition: 'all 0.2s ease'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
-                    }}
-                    title="협업자 추가">
-                      <GoPersonAdd
-                        size={18}
-                        color={theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.4)'}
-                      />
+                    </div>
+                  );
+                })()}
+
+                {/* Members */}
+                {displayCollaborators.length > 0 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FiLink
+                      size={20}
+                      color={colors.primary}
+                      style={{ opacity: 0.8 }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      {displayCollaborators.map((collab, index) => (
+                        <div
+                          key={`${collab.userId}-${index}`}
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            overflow: 'hidden',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: theme.mode === 'dark' ? '#2a2a2a' : '#f0f0f0'
+                          }}
+                          title={collab.userName || collab.userEmail}
+                        >
+                          {collab.photoURL ? (
+                            <img
+                              src={collab.photoURL}
+                              alt={collab.userName || collab.userEmail}
+                              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <User size={18} color={colors.primary} />
+                          )}
+                        </div>
+                      ))}
+                      {/* 협업자 추가 버튼 - 프로젝트 오너만 보임 */}
+                      {isProjectOwner && (
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          background: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+                          transition: 'all 0.2s ease'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+                        }}
+                        title="협업자 추가">
+                          <GoPersonAdd
+                            size={18}
+                            color={theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.4)'}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* 중앙 액션 버튼들 */}
