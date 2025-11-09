@@ -85,13 +85,9 @@ const SharedTab: React.FC<SharedTabProps> = ({
           <div className={dashboardStyles.designGrid}>
             {currentProjects.map((project) => {
               const sharedInfo = project as any;
-              const isDesignShare = !!sharedInfo.sharedDesignFileId;
 
               // 디자인 파일 데이터 가져오기
               const designFiles = projectDesignFiles[project.id] || [];
-              const designFile = isDesignShare
-                ? designFiles.find(df => df.id === sharedInfo.sharedDesignFileId || df.name === sharedInfo.sharedDesignFileName)
-                : undefined;
 
               // 협업자 정보 가져오기
               const collaborators = projectCollaborators[project.id] || [];
@@ -109,71 +105,54 @@ const SharedTab: React.FC<SharedTabProps> = ({
 
               return (
                 <div
-                  key={isDesignShare ? `${project.id}_${sharedInfo.sharedDesignFileId}` : project.id}
+                  key={project.id}
                   className={dashboardStyles.designCard}
                   onClick={() => onProjectSelect?.(project.id)}
                 >
                   <div className={dashboardStyles.cardThumbnail}>
-                    {isDesignShare ? (
-                      // 디자인 카드 - SimpleDashboard와 동일한 구조
-                      <div className={dashboardStyles.designThumbnail}>
-                        <ThumbnailImage
-                          project={project}
-                          designFile={designFile ? {
-                            thumbnail: designFile.thumbnail,
-                            updatedAt: designFile.updatedAt,
-                            spaceConfig: designFile.spaceConfig,
-                            furniture: designFile.furniture
-                          } : undefined}
-                          className={dashboardStyles.designThumbnailImage}
-                          alt={sharedInfo.sharedDesignFileName || project.title}
-                        />
-                      </div>
-                    ) : (
-                      // 프로젝트 카드 - 분할 썸네일 (2x2 그리드)
-                      (() => {
-                        if (designFiles.length === 0) {
-                          return (
-                            <div className={dashboardStyles.emptyThumbnailState}>
-                              <div className={dashboardStyles.emptyThumbnailIcon}>
-                                <PiFolderFill size={48} style={{ opacity: 0.3 }} />
-                              </div>
-                              <div className={dashboardStyles.emptyThumbnailText}>
-                                생성된 파일이 없습니다
-                              </div>
-                            </div>
-                          );
-                        }
-
-                        const displayItems = designFiles.slice(0, 4); // 최대 4개만 표시
-
+                    {/* 항상 프로젝트 카드 - 분할 썸네일 (2x2 그리드) */}
+                    {(() => {
+                      if (designFiles.length === 0) {
                         return (
-                          <div className={dashboardStyles.thumbnailGrid}>
-                            {displayItems.map((designFile, index) => (
-                              <div key={designFile.id || index} className={dashboardStyles.thumbnailItem}>
-                                <ThumbnailImage
-                                  project={project}
-                                  designFile={{
-                                    thumbnail: designFile.thumbnail,
-                                    updatedAt: designFile.updatedAt,
-                                    spaceConfig: designFile.spaceConfig,
-                                    furniture: designFile.furniture
-                                  }}
-                                  className={dashboardStyles.thumbnailImage}
-                                  alt={designFile.name || `디자인 ${index + 1}`}
-                                />
-                              </div>
-                            ))}
+                          <div className={dashboardStyles.emptyThumbnailState}>
+                            <div className={dashboardStyles.emptyThumbnailIcon}>
+                              <PiFolderFill size={48} style={{ opacity: 0.3 }} />
+                            </div>
+                            <div className={dashboardStyles.emptyThumbnailText}>
+                              생성된 파일이 없습니다
+                            </div>
                           </div>
                         );
-                      })()
-                    )}
+                      }
+
+                      const displayItems = designFiles.slice(0, 4); // 최대 4개만 표시
+
+                      return (
+                        <div className={dashboardStyles.thumbnailGrid}>
+                          {displayItems.map((designFile, index) => (
+                            <div key={designFile.id || index} className={dashboardStyles.thumbnailItem}>
+                              <ThumbnailImage
+                                project={project}
+                                designFile={{
+                                  thumbnail: designFile.thumbnail,
+                                  updatedAt: designFile.updatedAt,
+                                  spaceConfig: designFile.spaceConfig,
+                                  furniture: designFile.furniture
+                                }}
+                                className={dashboardStyles.thumbnailImage}
+                                alt={designFile.name || `디자인 ${index + 1}`}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* SimpleDashboard와 동일한 cardInfo 구조 */}
                   <div className={dashboardStyles.cardInfo}>
                     <div className={dashboardStyles.cardTitle}>
-                      {isDesignShare ? `${project.title} > ${sharedInfo.sharedDesignFileName}` : project.title}
+                      {project.title}
                     </div>
                     <div className={dashboardStyles.cardMeta}>
                       <div className={dashboardStyles.cardDate}>
