@@ -669,12 +669,13 @@ const SimpleDashboard: React.FC = () => {
     if (selectedProjectId && firebaseProjects.length > 0) {
       const selectedProject = firebaseProjects.find(p => p.id === selectedProjectId);
       if (selectedProject && breadcrumbPath[1] === '로딩 중...') {
-        setBreadcrumbPath(['전체 프로젝트', selectedProject.title]);
+        const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+        setBreadcrumbPath([rootPath, selectedProject.title]);
       }
-      
+
       // handleProjectSelect에서 이미 로드하므로 여기서는 로드하지 않음
     }
-  }, [selectedProjectId, firebaseProjects, breadcrumbPath, projectDesignFiles]); // projectDesignFiles 의존성 추가
+  }, [selectedProjectId, firebaseProjects, breadcrumbPath, projectDesignFiles, activeMenu]); // projectDesignFiles 의존성 추가
 
   // 윈도우 포커스 시 프로젝트 데이터 새로고침
   useEffect(() => {
@@ -867,9 +868,10 @@ const SimpleDashboard: React.FC = () => {
   useEffect(() => {
     if (selectedProject && breadcrumbPath[1] === '로딩 중...') {
       console.log('📝 Breadcrumb 업데이트:', selectedProject.title);
-      setBreadcrumbPath(['전체 프로젝트', selectedProject.title]);
+      const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+      setBreadcrumbPath([rootPath, selectedProject.title]);
     }
-  }, [selectedProject, breadcrumbPath]);
+  }, [selectedProject, breadcrumbPath, activeMenu]);
 
   // 프로젝트 북마크 토글 함수
   const toggleBookmark = (projectId: string) => {
@@ -1736,7 +1738,9 @@ const SimpleDashboard: React.FC = () => {
 
       if (targetProject) {
         setSelectedProjectId(projectId);
-        setBreadcrumbPath(['전체 프로젝트', targetProject.title]);
+        // activeMenu에 따라 breadcrumb 첫 번째 항목 설정
+        const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+        setBreadcrumbPath([rootPath, targetProject.title]);
         // URL에 projectId 추가
         navigate(`/dashboard?projectId=${projectId}`);
 
@@ -1754,11 +1758,13 @@ const SimpleDashboard: React.FC = () => {
         console.log('🔄 프로젝트 선택 시 디자인 파일 로드:', projectId);
         loadDesignFilesForProject(projectId);
       } else {
-        // 프로젝트를 찾을 수 없는 경우에도 일단 선택은 하되, 
+        // 프로젝트를 찾을 수 없는 경우에도 일단 선택은 하되,
         // 나중에 프로젝트 목록이 업데이트되면 breadcrumb 업데이트
         console.warn('프로젝트를 찾을 수 없습니다. 일단 선택만 진행합니다:', projectId);
         setSelectedProjectId(projectId);
-        setBreadcrumbPath(['전체 프로젝트', '로딩 중...']);
+        // activeMenu에 따라 breadcrumb 첫 번째 항목 설정
+        const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+        setBreadcrumbPath([rootPath, '로딩 중...']);
         // URL에 projectId 추가
         navigate(`/dashboard?projectId=${projectId}`);
         
@@ -1779,16 +1785,18 @@ const SimpleDashboard: React.FC = () => {
   // 브레드크럼 클릭 핸들러
   const handleBreadcrumbClick = (index: number) => {
     if (index === 0) {
-      // 전체 프로젝트 클릭
+      // 루트 경로 클릭 (전체 프로젝트 또는 공유 프로젝트)
       setSelectedProjectId(null);
       setCurrentFolderId(null);
-      setBreadcrumbPath(['전체 프로젝트']);
+      const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+      setBreadcrumbPath([rootPath]);
       // URL을 전체 프로젝트로 업데이트
       navigate('/dashboard');
     } else if (index === 1 && selectedProjectId && selectedProject) {
       // 프로젝트 클릭 - 폴더에서 나가기
       setCurrentFolderId(null);
-      setBreadcrumbPath(['전체 프로젝트', selectedProject.title]);
+      const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+      setBreadcrumbPath([rootPath, selectedProject.title]);
       // URL을 해당 프로젝트로 업데이트
       navigate(`/dashboard?projectId=${selectedProjectId}`);
     } else if (index === 2 && currentFolderId) {
@@ -1940,7 +1948,8 @@ const SimpleDashboard: React.FC = () => {
           if (selectedProjectId === renameTarget.id) {
             setBreadcrumbPath(prev => {
               const newPath = [...prev];
-              const projectIndex = newPath.findIndex(path => path !== '전체 프로젝트');
+              const rootPath = activeMenu === 'shared' ? '공유 프로젝트' : '전체 프로젝트';
+              const projectIndex = newPath.findIndex(path => path !== rootPath);
               if (projectIndex !== -1) {
                 newPath[projectIndex] = newName.trim();
               }
@@ -3587,9 +3596,9 @@ const SimpleDashboard: React.FC = () => {
             {/* 파일 경로 (브레드크럼) */}
             <div className={styles.breadcrumb}>
               {activeMenu === 'bookmarks' && <h2 className={styles.pageTitle}>북마크</h2>}
-              {activeMenu === 'all' && breadcrumbPath.map((item, index) => (
+              {(activeMenu === 'all' || activeMenu === 'shared') && breadcrumbPath.map((item, index) => (
                 <React.Fragment key={index}>
-                  <span 
+                  <span
                     className={`${styles.breadcrumbItem} ${index === breadcrumbPath.length - 1 ? styles.active : ''}`}
                     onClick={() => handleBreadcrumbClick(index)}
                   >
