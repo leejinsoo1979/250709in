@@ -3910,8 +3910,8 @@ const SimpleDashboard: React.FC = () => {
                     )}
                   </div>
                 ))
-                ) : !projectsLoading ? (
-                  // 빈 상태 표시 (로딩 중이 아닐 때만)
+                ) : !projectsLoading && initialLoadComplete ? (
+                  // 빈 상태 표시 (초기 로딩 완료 후에만)
                   <div className={styles.emptyState}>
                     <div className={styles.emptyStateTitle}>표시할 항목이 없습니다</div>
                   </div>
