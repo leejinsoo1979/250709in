@@ -1232,10 +1232,10 @@ const SimpleDashboard: React.FC = () => {
       console.log('❌ getProjectItems: 프로젝트를 찾을 수 없습니다:', projectId, 'allProjects:', allProjects.length);
       return [];
     }
-    
+
     const projectFolders = folders[projectId] || [];
     const items = [];
-    
+
     // 폴더들 추가
     projectFolders.forEach(folder => {
       items.push({
@@ -1245,7 +1245,7 @@ const SimpleDashboard: React.FC = () => {
         project: project
       });
     });
-    
+
     // 폴더 내부 파일들 추가
     projectFolders.forEach(folder => {
       folder.children.forEach(child => {
@@ -1257,14 +1257,33 @@ const SimpleDashboard: React.FC = () => {
         });
       });
     });
-    
+
     // 루트 레벨 디자인 파일 추가 (실제 Firebase 디자인 파일들 기반)
     const allFolderChildren = projectFolders.flatMap(folder => folder.children);
     const folderChildIds = new Set(allFolderChildren.map(child => child.id));
-    
+
     // 실제 Firebase 디자인 파일들을 사용해서 표시
     const isDesignFilesLoading = designFilesLoading[projectId] || false;
-    const actualDesignFiles = projectDesignFiles[projectId] || [];
+    let actualDesignFiles = projectDesignFiles[projectId] || [];
+
+    // 공유 메뉴에서는 공유 범위에 따라 필터링
+    if (activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') {
+      const sharedProject = activeMenu === 'shared-by-me'
+        ? sharedByMeProjects.find(p => p.id === projectId)
+        : sharedWithMeProjects.find(p => p.id === projectId);
+
+      if (sharedProject) {
+        const sharedDesignFileIds = (sharedProject as any).sharedDesignFileIds || [];
+        const sharedDesignFileNames = (sharedProject as any).sharedDesignFileNames || [];
+
+        // sharedDesignFileIds가 있으면 해당 디자인만 표시
+        if (sharedDesignFileIds.length > 0 || sharedDesignFileNames.length > 0) {
+          actualDesignFiles = actualDesignFiles.filter(df =>
+            sharedDesignFileIds.includes(df.id) || sharedDesignFileNames.includes(df.name)
+          );
+        }
+      }
+    }
     console.log('🔥 getProjectItems - 디자인 파일 상태 확인:', {
       projectId,
       projectTitle: project.title,
@@ -1300,9 +1319,9 @@ const SimpleDashboard: React.FC = () => {
         }
       });
     }
-    
+
     return items;
-  }, [allProjects, folders, projectDesignFiles, designFilesLoading]);
+  }, [allProjects, folders, projectDesignFiles, designFilesLoading, activeMenu, sharedByMeProjects, sharedWithMeProjects]);
 
   // 메인에 표시할 항목들 결정
   const getDisplayedItems = () => {
