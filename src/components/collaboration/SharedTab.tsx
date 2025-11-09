@@ -130,14 +130,19 @@ const SharedTab: React.FC<SharedTabProps> = ({
                         />
                       </div>
                     ) : (
-                      // 프로젝트 카드 - SimpleDashboard와 동일한 구조
-                      <div className={dashboardStyles.emptyThumbnailState}>
-                        <div className={dashboardStyles.emptyThumbnailIcon}>
-                          <PiFolderFill size={48} style={{ opacity: 0.3 }} />
-                        </div>
-                        <div className={dashboardStyles.emptyThumbnailText}>
-                          공유된 프로젝트
-                        </div>
+                      // 프로젝트 카드 - 마지막 디자인 파일 썸네일 표시
+                      <div className={dashboardStyles.designThumbnail}>
+                        <ThumbnailImage
+                          project={project}
+                          designFile={designFiles.length > 0 ? {
+                            thumbnail: designFiles[0].thumbnail,
+                            updatedAt: designFiles[0].updatedAt,
+                            spaceConfig: designFiles[0].spaceConfig,
+                            furniture: designFiles[0].furniture
+                          } : undefined}
+                          className={dashboardStyles.designThumbnailImage}
+                          alt={project.title}
+                        />
                       </div>
                     )}
                   </div>
