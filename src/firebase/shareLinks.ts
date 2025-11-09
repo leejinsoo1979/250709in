@@ -907,23 +907,35 @@ export async function revokeAllProjectAccess(
 ): Promise<{ success: boolean; message: string; count: number }> {
   try {
     // 해당 프로젝트의 모든 접근 권한 문서 조회
-    const q = query(
+    const accessQuery = query(
       collection(db, 'sharedProjectAccess'),
       where('projectId', '==', projectId)
     );
-    const snapshot = await getDocs(q);
+    const accessSnapshot = await getDocs(accessQuery);
 
-    console.log(`🔗 프로젝트 ${projectId}의 공유 해제 - ${snapshot.size}개 권한 발견`);
+    console.log(`🔗 프로젝트 ${projectId}의 공유 해제 - ${accessSnapshot.size}개 권한 발견`);
 
-    // 모든 문서 삭제
-    const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+    // 해당 프로젝트의 모든 공유 링크 조회
+    const linksQuery = query(
+      collection(db, 'shareLinks'),
+      where('projectId', '==', projectId)
+    );
+    const linksSnapshot = await getDocs(linksQuery);
+
+    console.log(`🔗 프로젝트 ${projectId}의 공유 링크 - ${linksSnapshot.size}개 발견`);
+
+    // 모든 접근 권한 문서와 공유 링크 삭제
+    const deletePromises = [
+      ...accessSnapshot.docs.map(doc => deleteDoc(doc.ref)),
+      ...linksSnapshot.docs.map(doc => deleteDoc(doc.ref))
+    ];
     await Promise.all(deletePromises);
 
-    console.log(`✅ 프로젝트 공유 해제 완료: ${snapshot.size}명의 접근 권한 제거`);
+    console.log(`✅ 프로젝트 공유 해제 완료: ${accessSnapshot.size}명의 접근 권한 및 ${linksSnapshot.size}개의 링크 제거`);
     return {
       success: true,
-      message: `${snapshot.size}명의 공유가 해제되었습니다.`,
-      count: snapshot.size,
+      message: `${accessSnapshot.size}명의 공유가 해제되었습니다.`,
+      count: accessSnapshot.size,
     };
   } catch (error) {
     console.error('❌ 프로젝트 공유 해제 실패:', error);
@@ -952,8 +964,20 @@ export async function revokeAllDesignFileAccess(
 
     console.log(`🔗 디자인 파일 ${designFileId} 공유 해제 - ${snapshot.size}개 문서 확인`);
 
+    // 해당 디자인 파일의 공유 링크 조회 및 삭제
+    const linksQuery = query(
+      collection(db, 'shareLinks'),
+      where('projectId', '==', projectId),
+      where('designFileId', '==', designFileId)
+    );
+    const linksSnapshot = await getDocs(linksQuery);
+    console.log(`🔗 디자인 파일 ${designFileId} 공유 링크 - ${linksSnapshot.size}개 발견`);
+
     let count = 0;
     const updatePromises: Promise<void>[] = [];
+
+    // 공유 링크 삭제
+    updatePromises.push(...linksSnapshot.docs.map(doc => deleteDoc(doc.ref)));
 
     for (const docSnapshot of snapshot.docs) {
       const data = docSnapshot.data();
@@ -988,7 +1012,7 @@ export async function revokeAllDesignFileAccess(
 
     await Promise.all(updatePromises);
 
-    console.log(`✅ 디자인 파일 공유 해제 완료: ${count}명의 접근 권한 제거`);
+    console.log(`✅ 디자인 파일 공유 해제 완료: ${count}명의 접근 권한 및 ${linksSnapshot.size}개의 링크 제거`);
     return {
       success: true,
       message: `${count}명의 공유가 해제되었습니다.`,
