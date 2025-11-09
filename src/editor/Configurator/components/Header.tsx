@@ -22,6 +22,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { ProjectCollaborator } from '@/firebase/shareLinks';
 import { PiCrownDuotone } from "react-icons/pi";
 import { FiLink } from "react-icons/fi";
+import { GoPersonAdd } from "react-icons/go";
 
 // Perspective Cube Icon (원근 투영 큐브 - 아래로 좁아짐)
 const PerspectiveCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
@@ -564,7 +565,7 @@ const Header: React.FC<HeaderProps> = ({
                         )}
                       </div>
                     ))}
-                    {/* + 버튼 (나중에 협업자 추가 기능) */}
+                    {/* 협업자 추가 버튼 */}
                     <div style={{
                       width: '32px',
                       height: '32px',
@@ -574,9 +575,6 @@ const Header: React.FC<HeaderProps> = ({
                       justifyContent: 'center',
                       cursor: 'pointer',
                       background: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
-                      fontSize: '20px',
-                      fontWeight: '300',
-                      color: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.4)',
                       transition: 'all 0.2s ease'
                     }}
                     onMouseEnter={(e) => {
@@ -586,7 +584,10 @@ const Header: React.FC<HeaderProps> = ({
                       e.currentTarget.style.background = theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
                     }}
                     title="협업자 추가">
-                      +
+                      <GoPersonAdd
+                        size={18}
+                        color={theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.4)'}
+                      />
                     </div>
                   </div>
                 </div>
