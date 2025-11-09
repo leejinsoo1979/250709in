@@ -19,7 +19,8 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [viewMode, setViewMode] = useState<'2D' | '3D'>(initialViewMode);
+  // 섬네일과 동일한 뷰로 초기화: 3D 정면 뷰 + perspective 카메라
+  const [viewMode, setViewMode] = useState<'2D' | '3D'>('3D');
   const [cameraMode, setCameraMode] = useState<'perspective' | 'orthographic'>('perspective');
 
   useEffect(() => {
