@@ -114,6 +114,7 @@ const SimpleDashboard: React.FC = () => {
   // Firebase 프로젝트 목록 상태
   const [firebaseProjects, setFirebaseProjects] = useState<ProjectSummary[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(true); // 초기값을 true로 설정
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false); // 초기 로딩 완료 플래그
   const [error, setError] = useState<string | null>(null);
   
   // 디자인 파일 로딩 상태
@@ -298,6 +299,7 @@ const SimpleDashboard: React.FC = () => {
         setFirebaseProjects(projects);
         console.log('✅ Firebase 프로젝트 로드 성공:', projects.length, '개');
         setProjectsLoading(false); // 성공하면 바로 로딩 종료
+        setInitialLoadComplete(true); // 초기 로딩 완료
       }
     } catch (err) {
       // 재시도 로직
@@ -409,6 +411,7 @@ const SimpleDashboard: React.FC = () => {
         console.log('🔔 프로젝트 실시간 업데이트 수신:', projects.length, '개');
         setFirebaseProjects(projects);
         setProjectsLoading(false);
+        setInitialLoadComplete(true); // 초기 로딩 완료
       });
 
       // cleanup 시 구독 해제
