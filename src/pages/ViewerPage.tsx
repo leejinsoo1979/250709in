@@ -5,6 +5,7 @@ import { ProjectSummary } from '@/firebase/types';
 import Space3DViewerReadOnly from '@/editor/shared/viewer3d/Space3DViewerReadOnly';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { XIcon, MaximizeIcon, MinimizeIcon } from '@/components/common/Icons';
+import { ShareLinkModal } from '@/components/ShareLinkModal';
 import styles from './ViewerPage.module.css';
 
 const ViewerPage: React.FC = () => {
@@ -16,6 +17,8 @@ const ViewerPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'2D' | '3D'>('3D');
   const [cameraMode, setCameraMode] = useState<'perspective' | 'orthographic'>('perspective');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [actualDesignFileId, setActualDesignFileId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     if (projectId) {
@@ -60,6 +63,7 @@ const ViewerPage: React.FC = () => {
         });
 
         setProject(projectSummary);
+        setActualDesignFileId(projectId); // 실제 디자인 파일 ID 저장
         return;
       }
 
@@ -215,16 +219,9 @@ const ViewerPage: React.FC = () => {
           >
             {isFullscreen ? <MinimizeIcon size={20} /> : <MaximizeIcon size={20} />}
           </button>
-          <button 
+          <button
             className={styles.shareButton}
-            onClick={() => {
-              const shareUrl = window.location.href;
-              navigator.clipboard.writeText(shareUrl).then(() => {
-                alert(`공유 링크가 클립보드에 복사되었습니다!\n${shareUrl}`);
-              }).catch(() => {
-                prompt('공유 링크를 복사하세요:', shareUrl);
-              });
-            }}
+            onClick={() => setIsShareModalOpen(true)}
           >
             공유하기
           </button>
@@ -304,6 +301,16 @@ const ViewerPage: React.FC = () => {
           }</span>
         </div>
       </div>
+
+      {/* 공유 링크 모달 */}
+      {isShareModalOpen && project && (
+        <ShareLinkModal
+          projectId={project.id}
+          projectName={project.title}
+          designFileId={actualDesignFileId}
+          onClose={() => setIsShareModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
