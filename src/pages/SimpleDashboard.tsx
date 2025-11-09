@@ -8,7 +8,7 @@ import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
-import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks, revokeDesignFileAccess, revokeProjectAccess } from '@/firebase/shareLinks';
+import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks, revokeDesignFileAccess, revokeProjectAccess, revokeAllProjectAccess, revokeAllDesignFileAccess } from '@/firebase/shareLinks';
 import { signOutUser } from '@/firebase/auth';
 import { db } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
@@ -2915,11 +2915,74 @@ const SimpleDashboard: React.FC = () => {
                           className={styles.bulkDeleteButton}
                           onClick={async () => {
                             if (window.confirm(`선택한 ${selectedCards.size}개 프로젝트의 공유를 취소하시겠습니까?`)) {
-                              // TODO: 공유 해제 로직 구현
-                              console.log('🔗 공유 해제:', Array.from(selectedCards));
+                              console.log('🔗 프로젝트 공유 해제:', Array.from(selectedCards));
+
+                              let totalCount = 0;
+                              const selectedProjectIds = Array.from(selectedCards);
+
+                              // 각 프로젝트의 공유 해제
+                              for (const projectId of selectedProjectIds) {
+                                const result = await revokeAllProjectAccess(projectId);
+                                if (result.success) {
+                                  totalCount += result.count;
+                                }
+                              }
+
                               // 선택 해제
                               setSelectedCards(new Set());
-                              alert('공유 해제 기능은 곧 구현됩니다.');
+
+                              // 공유한 프로젝트 목록 새로고침
+                              if (user) {
+                                const mySharedLinks = await getMySharedLinks(user.uid);
+                                const sharedByMeMap = new Map<string, any>();
+
+                                // 협업자가 있는 프로젝트 추가
+                                const sharedByMeProjects = firebaseProjects.filter(project => {
+                                  const collaborators = projectCollaborators[project.id];
+                                  return collaborators && collaborators.length > 0;
+                                });
+
+                                sharedByMeProjects.forEach(p => {
+                                  sharedByMeMap.set(p.id, {
+                                    ...p,
+                                    sharedDesignFileIds: [],
+                                    sharedDesignFileNames: []
+                                  });
+                                });
+
+                                // 공유 링크를 프로젝트별로 그룹화
+                                mySharedLinks.forEach(link => {
+                                  if (!sharedByMeMap.has(link.projectId)) {
+                                    sharedByMeMap.set(link.projectId, {
+                                      id: link.projectId,
+                                      title: link.projectName,
+                                      userId: user.uid,
+                                      createdAt: link.createdAt,
+                                      updatedAt: link.createdAt,
+                                      designFilesCount: 0,
+                                      lastDesignFileName: null,
+                                      sharedDesignFileIds: link.designFileId ? [link.designFileId] : [],
+                                      sharedDesignFileNames: link.designFileName ? [link.designFileName] : [],
+                                    });
+                                  } else if (link.designFileId) {
+                                    const existing = sharedByMeMap.get(link.projectId);
+                                    if (!existing.sharedDesignFileIds) {
+                                      existing.sharedDesignFileIds = [];
+                                      existing.sharedDesignFileNames = [];
+                                    }
+                                    if (!existing.sharedDesignFileIds.includes(link.designFileId)) {
+                                      existing.sharedDesignFileIds.push(link.designFileId);
+                                      if (link.designFileName) {
+                                        existing.sharedDesignFileNames.push(link.designFileName);
+                                      }
+                                    }
+                                  }
+                                });
+
+                                setSharedByMeProjects(Array.from(sharedByMeMap.values()));
+                              }
+
+                              alert(`${totalCount}명의 공유가 해제되었습니다.`);
                             }
                           }}
                         >
@@ -2943,11 +3006,76 @@ const SimpleDashboard: React.FC = () => {
                           className={styles.bulkDeleteButton}
                           onClick={async () => {
                             if (window.confirm(`선택한 ${selectedCards.size}개 디자인의 공유를 취소하시겠습니까?`)) {
-                              // TODO: 공유 해제 로직 구현
-                              console.log('🔗 공유 해제:', Array.from(selectedCards));
+                              console.log('🔗 디자인 파일 공유 해제:', Array.from(selectedCards));
+
+                              let totalCount = 0;
+                              const selectedDesignIds = Array.from(selectedCards);
+
+                              // 각 디자인 파일의 공유 해제
+                              if (selectedProjectId) {
+                                for (const designFileId of selectedDesignIds) {
+                                  const result = await revokeAllDesignFileAccess(selectedProjectId, designFileId);
+                                  if (result.success) {
+                                    totalCount += result.count;
+                                  }
+                                }
+                              }
+
                               // 선택 해제
                               setSelectedCards(new Set());
-                              alert('공유 해제 기능은 곧 구현됩니다.');
+
+                              // 공유한 프로젝트 목록 새로고침
+                              if (user) {
+                                const mySharedLinks = await getMySharedLinks(user.uid);
+                                const sharedByMeMap = new Map<string, any>();
+
+                                // 협업자가 있는 프로젝트 추가
+                                const sharedByMeProjects = firebaseProjects.filter(project => {
+                                  const collaborators = projectCollaborators[project.id];
+                                  return collaborators && collaborators.length > 0;
+                                });
+
+                                sharedByMeProjects.forEach(p => {
+                                  sharedByMeMap.set(p.id, {
+                                    ...p,
+                                    sharedDesignFileIds: [],
+                                    sharedDesignFileNames: []
+                                  });
+                                });
+
+                                // 공유 링크를 프로젝트별로 그룹화
+                                mySharedLinks.forEach(link => {
+                                  if (!sharedByMeMap.has(link.projectId)) {
+                                    sharedByMeMap.set(link.projectId, {
+                                      id: link.projectId,
+                                      title: link.projectName,
+                                      userId: user.uid,
+                                      createdAt: link.createdAt,
+                                      updatedAt: link.createdAt,
+                                      designFilesCount: 0,
+                                      lastDesignFileName: null,
+                                      sharedDesignFileIds: link.designFileId ? [link.designFileId] : [],
+                                      sharedDesignFileNames: link.designFileName ? [link.designFileName] : [],
+                                    });
+                                  } else if (link.designFileId) {
+                                    const existing = sharedByMeMap.get(link.projectId);
+                                    if (!existing.sharedDesignFileIds) {
+                                      existing.sharedDesignFileIds = [];
+                                      existing.sharedDesignFileNames = [];
+                                    }
+                                    if (!existing.sharedDesignFileIds.includes(link.designFileId)) {
+                                      existing.sharedDesignFileIds.push(link.designFileId);
+                                      if (link.designFileName) {
+                                        existing.sharedDesignFileNames.push(link.designFileName);
+                                      }
+                                    }
+                                  }
+                                });
+
+                                setSharedByMeProjects(Array.from(sharedByMeMap.values()));
+                              }
+
+                              alert(`${totalCount}명의 공유가 해제되었습니다.`);
                             }
                           }}
                         >
