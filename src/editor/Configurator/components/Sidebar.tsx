@@ -335,6 +335,86 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       )}
 
+      {/* 협업자 프로필 섹션 */}
+      {collaborators.length > 0 && (
+        <div className={styles.collaboratorsSection} style={{
+          padding: '12px 16px',
+          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+          marginTop: 'auto'
+        }}>
+          <div style={{
+            fontSize: '11px',
+            color: 'rgba(255, 255, 255, 0.6)',
+            marginBottom: '8px',
+            fontWeight: '500'
+          }}>
+            협업자 ({collaborators.length})
+          </div>
+          <div style={{
+            display: 'flex',
+            gap: '6px',
+            flexWrap: 'wrap'
+          }}>
+            {collaborators.slice(0, 5).map((collaborator) => (
+              <div
+                key={collaborator.userId}
+                title={`${collaborator.userName} (${collaborator.permission === 'editor' ? '편집 가능' : '조회만'})`}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  overflow: 'hidden',
+                  border: '2px solid rgba(255, 255, 255, 0.2)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  cursor: 'pointer'
+                }}
+              >
+                {collaborator.photoURL ? (
+                  <img
+                    src={collaborator.photoURL}
+                    alt={collaborator.userName}
+                    referrerPolicy="no-referrer"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover'
+                    }}
+                  />
+                ) : (
+                  <UserIcon size={14} />
+                )}
+              </div>
+            ))}
+            {collaborators.length > 5 && (
+              <div
+                title={`+${collaborators.length - 5}명 더`}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  border: '2px solid rgba(255, 255, 255, 0.2)',
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  color: 'white'
+                }}
+              >
+                +{collaborators.length - 5}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* 하단 나가기 버튼 - 읽기 전용 모드에서는 숨김 */}
       {!readOnly && (
         <div className={styles.userSection}>

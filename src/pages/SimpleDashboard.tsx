@@ -8,7 +8,7 @@ import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
-import { getProjectCollaborators, type ProjectCollaborator } from '@/firebase/shareLinks';
+import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser } from '@/firebase/shareLinks';
 import { signOutUser } from '@/firebase/auth';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -468,6 +468,47 @@ const SimpleDashboard: React.FC = () => {
       fetchAllCollaborators();
     }
   }, [firebaseProjects]);
+
+  // 공유받은 프로젝트 로드
+  useEffect(() => {
+    const loadSharedProjects = async () => {
+      if (!user) return;
+
+      try {
+        // 공유받은 프로젝트 로드
+        const shared = await getSharedProjectsForUser(user.uid);
+        console.log('✅ 공유받은 프로젝트:', shared.length, '개');
+
+        // 공유한 프로젝트 (협업자가 있는 프로젝트)
+        const sharedByMe = firebaseProjects.filter(project => {
+          const collaborators = projectCollaborators[project.id];
+          return collaborators && collaborators.length > 0;
+        });
+        console.log('✅ 공유한 프로젝트:', sharedByMe.length, '개');
+
+        // 공유받은 프로젝트 정보를 ProjectSummary로 변환
+        const sharedProjectSummaries: ProjectSummary[] = shared.map(s => ({
+          id: s.projectId,
+          title: s.projectName,
+          userId: s.sharedBy,
+          createdAt: s.grantedAt,
+          updatedAt: s.grantedAt,
+          designFilesCount: 0,
+          lastDesignFileName: null
+        }));
+
+        // 공유한 프로젝트와 공유받은 프로젝트 합치기
+        const allSharedProjects = [...sharedByMe, ...sharedProjectSummaries];
+        setSharedProjects(allSharedProjects);
+
+        console.log('✅ 전체 공유 프로젝트:', allSharedProjects.length, '개');
+      } catch (error) {
+        console.error('❌ 공유 프로젝트 로드 실패:', error);
+      }
+    };
+
+    loadSharedProjects();
+  }, [user, firebaseProjects, projectCollaborators]);
 
   // firebaseProjects가 업데이트될 때 대기 중인 프로젝트 선택 처리
   useEffect(() => {
