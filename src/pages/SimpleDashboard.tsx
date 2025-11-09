@@ -541,7 +541,11 @@ const SimpleDashboard: React.FC = () => {
           lastDesignFileName: s.designFileName || null,
           // 추가 정보 저장
           sharedDesignFileId: s.designFileId,
-          sharedDesignFileName: s.designFileName
+          sharedDesignFileName: s.designFileName,
+          // 공유받은 사람(현재 사용자) 정보
+          sharedUserName: s.userName,
+          sharedUserEmail: s.userEmail,
+          sharedUserPhotoURL: s.photoURL
         }));
 
         // 공유한 프로젝트와 공유받은 프로젝트 합치기

@@ -96,8 +96,17 @@ const SharedTab: React.FC<SharedTabProps> = ({
               // 협업자 정보 가져오기
               const collaborators = projectCollaborators[project.id] || [];
 
-              // 표시할 사용자 결정 (내가 공유한 프로젝트면 현재 사용자, 공유받은 프로젝트면 협업자)
-              const displayUser = activeSubTab === 'shared-by-me' ? user : collaborators.find(c => c.userId === user?.uid);
+              // 표시할 사용자 결정
+              const displayUser = activeSubTab === 'shared-by-me'
+                ? user
+                : {
+                    // 공유받은 프로젝트의 경우 sharedProjectAccess에 저장된 사용자 정보 사용
+                    photoURL: sharedInfo.sharedUserPhotoURL,
+                    userName: sharedInfo.sharedUserName,
+                    userEmail: sharedInfo.sharedUserEmail,
+                    displayName: sharedInfo.sharedUserName,
+                    email: sharedInfo.sharedUserEmail
+                  };
 
               return (
                 <div
@@ -147,9 +156,9 @@ const SharedTab: React.FC<SharedTabProps> = ({
                     <div className={dashboardStyles.cardFooter}>
                       <div className={dashboardStyles.cardUser}>
                         <div className={dashboardStyles.cardUserAvatar}>
-                          {displayUser?.photoURL || (displayUser as any)?.userPhotoURL ? (
+                          {displayUser?.photoURL ? (
                             <img
-                              src={displayUser.photoURL || (displayUser as any).userPhotoURL}
+                              src={displayUser.photoURL}
                               alt="프로필"
                               referrerPolicy="no-referrer"
                               style={{
@@ -166,7 +175,7 @@ const SharedTab: React.FC<SharedTabProps> = ({
                         <span className={dashboardStyles.cardUserName}>
                           {activeSubTab === 'shared-by-me'
                             ? (user?.displayName || user?.email?.split('@')[0] || '사용자')
-                            : ((displayUser as any)?.userName || (displayUser as any)?.userEmail?.split('@')[0] || '협업자')}
+                            : ((displayUser as any)?.displayName || (displayUser as any)?.email?.split('@')[0] || '협업자')}
                         </span>
                       </div>
                       {collaborators.length > 0 && activeSubTab === 'shared-by-me' && (
