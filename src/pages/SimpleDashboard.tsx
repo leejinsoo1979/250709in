@@ -828,10 +828,29 @@ const SimpleDashboard: React.FC = () => {
   // 선택된 프로젝트 정보를 메모이제이션
   const selectedProject = useMemo(() => {
     if (!selectedProjectId) return null;
-    const project = allProjects.find(p => p.id === selectedProjectId);
-    console.log('🔍 selectedProject 업데이트:', { selectedProjectId, found: !!project, allProjectsCount: allProjects.length });
+
+    // activeMenu가 'shared'일 때는 공유 프로젝트에서 먼저 검색
+    let project = null;
+    if (activeMenu === 'shared') {
+      project = sharedWithMeProjects.find(p => p.id === selectedProjectId) ||
+                sharedByMeProjects.find(p => p.id === selectedProjectId) ||
+                allProjects.find(p => p.id === selectedProjectId);
+    } else {
+      project = allProjects.find(p => p.id === selectedProjectId) ||
+                sharedByMeProjects.find(p => p.id === selectedProjectId) ||
+                sharedWithMeProjects.find(p => p.id === selectedProjectId);
+    }
+
+    console.log('🔍 selectedProject 업데이트:', {
+      selectedProjectId,
+      activeMenu,
+      found: !!project,
+      projectUserId: project?.userId,
+      currentUserId: user?.uid,
+      allProjectsCount: allProjects.length
+    });
     return project || null;
-  }, [selectedProjectId, allProjects]);
+  }, [selectedProjectId, allProjects, sharedWithMeProjects, sharedByMeProjects, activeMenu, user?.uid]);
   
   console.log('🔍 현재 상태 확인:', {
     user: !!user,
