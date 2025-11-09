@@ -14,6 +14,8 @@ interface SharedTabProps {
   sharedWithMe?: ProjectSummary[]; // 공유받은 프로젝트
   projectDesignFiles?: { [projectId: string]: any[] }; // 프로젝트별 디자인 파일
   projectCollaborators?: { [projectId: string]: ProjectCollaborator[] }; // 프로젝트별 협업자
+  selectedCards?: Set<string>; // 선택된 카드
+  onCardSelect?: (cardId: string) => void; // 카드 선택 핸들러
 }
 
 const SharedTab: React.FC<SharedTabProps> = ({
@@ -21,7 +23,9 @@ const SharedTab: React.FC<SharedTabProps> = ({
   sharedByMe = [],
   sharedWithMe = [],
   projectDesignFiles = {},
-  projectCollaborators = {}
+  projectCollaborators = {},
+  selectedCards = new Set(),
+  onCardSelect
 }) => {
   const { user } = useAuth();
   const [activeSubTab, setActiveSubTab] = useState<'shared-by-me' | 'shared-with-me'>('shared-by-me');
@@ -107,8 +111,26 @@ const SharedTab: React.FC<SharedTabProps> = ({
                 <div
                   key={project.id}
                   className={dashboardStyles.designCard}
-                  onClick={() => onProjectSelect?.(project.id)}
+                  onClick={(e) => {
+                    // 체크박스 클릭이 아닌 경우에만 프로젝트 선택
+                    const target = e.target as HTMLElement;
+                    if (!target.closest('input[type="checkbox"]')) {
+                      onProjectSelect?.(project.id);
+                    }
+                  }}
                 >
+                  {/* 체크박스 */}
+                  <div className={dashboardStyles.cardCheckbox}>
+                    <input
+                      type="checkbox"
+                      checked={selectedCards.has(project.id)}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        onCardSelect?.(project.id);
+                      }}
+                    />
+                  </div>
+
                   <div className={dashboardStyles.cardThumbnail}>
                     {/* 항상 프로젝트 카드 - 분할 썸네일 (2x2 그리드) */}
                     {(() => {

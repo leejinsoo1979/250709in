@@ -3403,6 +3403,11 @@ const SimpleDashboard: React.FC = () => {
                 projectDesignFiles={projectDesignFiles}
                 projectCollaborators={projectCollaborators}
                 onProjectSelect={handleProjectSelect}
+                selectedCards={selectedCards}
+                onCardSelect={(cardId) => {
+                  const isCurrentlySelected = selectedCards.has(cardId);
+                  handleCardSelect(cardId, !isCurrentlySelected);
+                }}
               />
             )}
             {activeMenu === 'team' && (
