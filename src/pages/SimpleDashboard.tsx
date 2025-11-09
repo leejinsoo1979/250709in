@@ -1314,17 +1314,23 @@ const SimpleDashboard: React.FC = () => {
       }
       
       console.log('✅ 선택된 프로젝트 찾음:', selectedProject.title);
-      
+
       const projectFolders = folders[selectedProjectId] || [];
-      
+
+      // 공유받은 프로젝트인지 확인
+      const isSharedWithMe = sharedWithMeProjects.some(p => p.id === selectedProjectId);
+
       // 현재 폴더 내부에 있는 경우
       if (currentFolderId) {
         const currentFolder = projectFolders.find(f => f.id === currentFolderId);
         if (currentFolder) {
-          const items = [
-            { id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' }
-          ];
-          
+          const items = [];
+
+          // 공유받은 프로젝트가 아닐 때만 디자인 생성 카드 추가
+          if (!isSharedWithMe) {
+            items.push({ id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' });
+          }
+
           // 폴더 내부 파일들 추가
           currentFolder.children.forEach(child => {
             items.push({
@@ -1335,26 +1341,32 @@ const SimpleDashboard: React.FC = () => {
               icon: ''
             });
           });
-          
+
           return items;
         }
       }
-      
+
       // 프로젝트 루트 레벨
       console.log('📁 프로젝트 루트 레벨 아이템 생성:', {
         currentFolderId,
         activeMenu,
         selectedProjectId,
+        isSharedWithMe,
         '프로젝트 루트 레벨 조건': {
           '선택된 프로젝트 있음': !!selectedProjectId,
           '현재 폴더 없음': currentFolderId === null,
           '프로젝트 메뉴': activeMenu === 'project'
         }
       });
-      const items = [
-        { id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' }
-      ];
-      console.log('✅ 디자인 생성 카드 추가됨:', items[0]);
+      const items = [];
+
+      // 공유받은 프로젝트가 아닐 때만 디자인 생성 카드 추가
+      if (!isSharedWithMe) {
+        items.push({ id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' });
+        console.log('✅ 디자인 생성 카드 추가됨:', items[0]);
+      } else {
+        console.log('🔒 공유받은 프로젝트 - 디자인 생성 카드 제외');
+      }
       
       // 폴더들 추가
       projectFolders.forEach(folder => {
