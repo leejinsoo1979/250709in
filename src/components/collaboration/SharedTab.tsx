@@ -94,7 +94,18 @@ const SharedTab: React.FC<SharedTabProps> = ({
               const sharedInfo = project as any;
 
               // 디자인 파일 데이터 가져오기
-              const designFiles = projectDesignFiles[project.id] || [];
+              let designFiles = projectDesignFiles[project.id] || [];
+
+              // 공유 범위에 따라 디자인 파일 필터링
+              const sharedDesignFileIds = (project as any).sharedDesignFileIds || [];
+              const sharedDesignFileNames = (project as any).sharedDesignFileNames || [];
+
+              // sharedDesignFileIds가 있으면 해당 디자인만 표시
+              if (sharedDesignFileIds.length > 0 || sharedDesignFileNames.length > 0) {
+                designFiles = designFiles.filter(df =>
+                  sharedDesignFileIds.includes(df.id) || sharedDesignFileNames.includes(df.name)
+                );
+              }
 
               // 협업자 정보 가져오기
               const collaborators = projectCollaborators[project.id] || [];
