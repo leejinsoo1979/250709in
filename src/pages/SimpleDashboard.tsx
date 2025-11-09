@@ -4471,7 +4471,7 @@ const SimpleDashboard: React.FC = () => {
               복제하기
             </div>
             {/* 공유 탭이 아닐 때만 공유하기 버튼 표시 */}
-            {activeMenu !== 'shared' && (
+            {activeMenu !== 'shared-by-me' && activeMenu !== 'shared-with-me' && (
               <div
                 className={styles.moreMenuItem}
                 onClick={handleShareItem}
@@ -4481,7 +4481,7 @@ const SimpleDashboard: React.FC = () => {
               </div>
             )}
             {/* 공유 탭이 아닐 때만 북마크 버튼 표시 */}
-            {activeMenu !== 'shared' && (moreMenu.itemType === 'project' || moreMenu.itemType === 'design' || moreMenu.itemType === 'folder') && (
+            {activeMenu !== 'shared-by-me' && activeMenu !== 'shared-with-me' && (moreMenu.itemType === 'project' || moreMenu.itemType === 'design' || moreMenu.itemType === 'folder') && (
               <div
                 className={styles.moreMenuItem}
                 onClick={() => {
