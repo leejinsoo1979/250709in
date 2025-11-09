@@ -1343,19 +1343,14 @@ const SimpleDashboard: React.FC = () => {
 
       const projectFolders = folders[selectedProjectId] || [];
 
-      // 공유받은 프로젝트인지 확인
-      // 1. sharedWithMeProjects에 있거나
-      // 2. activeMenu가 'shared'이고 본인 프로젝트가 아닌 경우
-      const inSharedWithMeList = sharedWithMeProjects.some(p => p.id === selectedProjectId);
-      const isSharedMenuAndNotOwner = activeMenu === 'shared' && selectedProject.userId !== user?.uid;
-      const isSharedWithMe = inSharedWithMeList || isSharedMenuAndNotOwner;
+      // 공유받은 프로젝트인지 확인 (sharedWithMeProjects에 있는 경우만)
+      const isSharedWithMe = sharedWithMeProjects.some(p => p.id === selectedProjectId);
 
-      console.log('🔍 공유 프로젝트 체크 - activeMenu:', activeMenu);
-      console.log('🔍 공유 프로젝트 체크 - projectUserId:', selectedProject.userId);
-      console.log('🔍 공유 프로젝트 체크 - currentUserId:', user?.uid);
-      console.log('🔍 공유 프로젝트 체크 - inSharedWithMeList:', inSharedWithMeList);
-      console.log('🔍 공유 프로젝트 체크 - isSharedMenuAndNotOwner:', isSharedMenuAndNotOwner);
-      console.log('🔍 공유 프로젝트 체크 - 최종 isSharedWithMe:', isSharedWithMe);
+      console.log('🔍 공유받은 프로젝트 체크:', {
+        selectedProjectId,
+        isSharedWithMe,
+        sharedWithMeCount: sharedWithMeProjects.length
+      });
 
       // 현재 폴더 내부에 있는 경우
       if (currentFolderId) {
