@@ -130,20 +130,43 @@ const SharedTab: React.FC<SharedTabProps> = ({
                         />
                       </div>
                     ) : (
-                      // 프로젝트 카드 - 마지막 디자인 파일 썸네일 표시
-                      <div className={dashboardStyles.designThumbnail}>
-                        <ThumbnailImage
-                          project={project}
-                          designFile={designFiles.length > 0 ? {
-                            thumbnail: designFiles[0].thumbnail,
-                            updatedAt: designFiles[0].updatedAt,
-                            spaceConfig: designFiles[0].spaceConfig,
-                            furniture: designFiles[0].furniture
-                          } : undefined}
-                          className={dashboardStyles.designThumbnailImage}
-                          alt={project.title}
-                        />
-                      </div>
+                      // 프로젝트 카드 - 분할 썸네일 (2x2 그리드)
+                      (() => {
+                        if (designFiles.length === 0) {
+                          return (
+                            <div className={dashboardStyles.emptyThumbnailState}>
+                              <div className={dashboardStyles.emptyThumbnailIcon}>
+                                <PiFolderFill size={48} style={{ opacity: 0.3 }} />
+                              </div>
+                              <div className={dashboardStyles.emptyThumbnailText}>
+                                생성된 파일이 없습니다
+                              </div>
+                            </div>
+                          );
+                        }
+
+                        const displayItems = designFiles.slice(0, 4); // 최대 4개만 표시
+
+                        return (
+                          <div className={dashboardStyles.thumbnailGrid}>
+                            {displayItems.map((designFile, index) => (
+                              <div key={designFile.id || index} className={dashboardStyles.thumbnailItem}>
+                                <ThumbnailImage
+                                  project={project}
+                                  designFile={{
+                                    thumbnail: designFile.thumbnail,
+                                    updatedAt: designFile.updatedAt,
+                                    spaceConfig: designFile.spaceConfig,
+                                    furniture: designFile.furniture
+                                  }}
+                                  className={dashboardStyles.thumbnailImage}
+                                  alt={designFile.name || `디자인 ${index + 1}`}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })()
                     )}
                   </div>
 
