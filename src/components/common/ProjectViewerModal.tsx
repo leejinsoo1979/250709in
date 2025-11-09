@@ -4,6 +4,7 @@ import { XIcon, MaximizeIcon, MinimizeIcon } from './Icons';
 import { getProjectById, getDesignFileById } from '../../firebase/projects';
 import { ProjectSummary } from '../../firebase/types';
 import Space3DViewerReadOnly from '../../editor/shared/viewer3d/Space3DViewerReadOnly';
+import { ShareLinkModal } from '../ShareLinkModal';
 import styles from './ProjectViewerModal.module.css';
 
 interface ProjectViewerModalProps {
@@ -22,6 +23,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   // 섬네일과 동일한 뷰로 초기화: 3D 정면 뷰 + perspective 카메라
   const [viewMode, setViewMode] = useState<'2D' | '3D'>('3D');
   const [cameraMode, setCameraMode] = useState<'perspective' | 'orthographic'>('perspective');
+  const [showShareModal, setShowShareModal] = useState(false);
 
   useEffect(() => {
     if (isOpen && projectId) {
@@ -291,19 +293,9 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                   })()
                 }</span>
               </div>
-              <button 
+              <button
                 className={styles.shareButton}
-                onClick={() => {
-                  // 디자인 파일이 있으면 디자인 파일 ID로, 없으면 프로젝트 ID로 공유
-                  const shareId = designFileId || projectId;
-                  const shareUrl = `${window.location.origin}/viewer/${shareId}`;
-                  navigator.clipboard.writeText(shareUrl).then(() => {
-                    alert(`공유 링크가 클립보드에 복사되었습니다!\n${shareUrl}`);
-                  }).catch(() => {
-                    // 복사 실패 시 직접 표시
-                    prompt('공유 링크를 복사하세요:', shareUrl);
-                  });
-                }}
+                onClick={() => setShowShareModal(true)}
               >
                 공유하기
               </button>
@@ -311,6 +303,16 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
           )}
         </motion.div>
       </motion.div>
+
+      {/* 공유 링크 모달 */}
+      {showShareModal && project && (
+        <ShareLinkModal
+          projectId={projectId}
+          projectName={project.title}
+          designFileId={designFileId}
+          onClose={() => setShowShareModal(false)}
+        />
+      )}
     </AnimatePresence>
   );
 };
