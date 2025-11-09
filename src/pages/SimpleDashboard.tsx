@@ -1145,8 +1145,11 @@ const SimpleDashboard: React.FC = () => {
           bookmarkedProjects.has(p.id) && !deletedProjectIds.has(p.id)
         );
         break;
-      case 'shared':
-        filteredProjects = sharedProjects.filter(p => !deletedProjectIds.has(p.id));
+      case 'shared-by-me':
+        filteredProjects = sharedByMeProjects.filter(p => !deletedProjectIds.has(p.id));
+        break;
+      case 'shared-with-me':
+        filteredProjects = sharedWithMeProjects.filter(p => !deletedProjectIds.has(p.id));
         break;
       case 'trash':
         filteredProjects = deletedProjects;
@@ -1378,7 +1381,7 @@ const SimpleDashboard: React.FC = () => {
           const items = [];
 
           // 공유 탭이 아니고, 공유받은 프로젝트가 아닐 때만 디자인 생성 카드 추가
-          if (activeMenu !== 'shared' && !isSharedWithMe) {
+          if (activeMenu !== 'shared-by-me' && activeMenu !== 'shared-with-me' && !isSharedWithMe) {
             items.push({ id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' });
           }
 
@@ -1412,7 +1415,7 @@ const SimpleDashboard: React.FC = () => {
       const items = [];
 
       // 공유 탭이 아니고, 공유받은 프로젝트가 아닐 때만 디자인 생성 카드 추가
-      if (activeMenu !== 'shared' && !isSharedWithMe) {
+      if (activeMenu !== 'shared-by-me' && activeMenu !== 'shared-with-me' && !isSharedWithMe) {
         items.push({ id: 'new-design', type: 'new-design', name: '디자인 생성', project: selectedProject, icon: '+' });
         console.log('✅ 디자인 생성 카드 추가됨:', items[0]);
       } else {
@@ -3665,7 +3668,7 @@ const SimpleDashboard: React.FC = () => {
             {/* 파일 경로 (브레드크럼) */}
             <div className={styles.breadcrumb}>
               {activeMenu === 'bookmarks' && <h2 className={styles.pageTitle}>북마크</h2>}
-              {(activeMenu === 'all' || activeMenu === 'shared') && breadcrumbPath.map((item, index) => (
+              {(activeMenu === 'all' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') && breadcrumbPath.map((item, index) => (
                 <React.Fragment key={index}>
                   <span
                     className={`${styles.breadcrumbItem} ${index === breadcrumbPath.length - 1 ? styles.active : ''}`}
@@ -3680,22 +3683,7 @@ const SimpleDashboard: React.FC = () => {
               ))}
             </div>
 
-            {/* 협업 탭들 */}
-            {activeMenu === 'shared' && !selectedProjectId && (
-              <SharedTab
-                sharedByMe={sharedByMeProjects}
-                sharedWithMe={sharedWithMeProjects}
-                projectDesignFiles={projectDesignFiles}
-                projectCollaborators={projectCollaborators}
-                onProjectSelect={handleProjectSelect}
-                selectedCards={selectedCards}
-                onCardSelect={(cardId) => {
-                  const isCurrentlySelected = selectedCards.has(cardId);
-                  handleCardSelect(cardId, !isCurrentlySelected);
-                }}
-                onMoreMenuOpen={handleMoreMenuOpen}
-              />
-            )}
+            {/* 협업 탭들 - SharedTab 제거, 각 메뉴별로 직접 프로젝트 카드 표시 */}
             {activeMenu === 'team' && (
               <TeamsTab onTeamSelect={(teamId) => console.log('팀 선택:', teamId)} />
             )}
@@ -3703,13 +3691,13 @@ const SimpleDashboard: React.FC = () => {
               <ProfileTab initialSection={urlSection || 'profile'} />
             )}
             
-            {/* 기존 프로젝트 그리드 (all, trash, bookmarks, shared 메뉴일 때 표시) */}
+            {/* 기존 프로젝트 그리드 (all, trash, bookmarks, shared-by-me, shared-with-me 메뉴일 때 표시) */}
             {console.log('🔍 activeMenu 체크:', {
               activeMenu,
-              isAllTrashBookmarks: activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared',
-              shouldShowGrid: (activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared')
+              isAllTrashBookmarks: activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me',
+              shouldShowGrid: (activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me')
             })}
-            {(activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared') ? (
+            {(activeMenu === 'all' || activeMenu === 'trash' || activeMenu === 'bookmarks' || activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') ? (
               <>
               {viewMode === 'list' && sortedItems.some(item => item.type !== 'new-design') && (
                 <div className={styles.listTableHeader}>
@@ -4410,13 +4398,15 @@ const SimpleDashboard: React.FC = () => {
                 <div className={styles.emptyState}>
                   <div className={styles.emptyStateTitle}>
                     {activeMenu === 'bookmarks' && '북마크한 프로젝트가 없습니다'}
-                    {activeMenu === 'shared' && '공유된 프로젝트가 없습니다'}
+                    {activeMenu === 'shared-by-me' && '공유한 프로젝트가 없습니다'}
+                    {activeMenu === 'shared-with-me' && '공유받은 프로젝트가 없습니다'}
                     {activeMenu === 'trash' && '휴지통이 비어있습니다'}
                     {activeMenu === 'all' && '아직 생성된 프로젝트가 없습니다'}
                   </div>
                   <div className={styles.emptyStateSubtitle}>
                     {activeMenu === 'bookmarks' && '프로젝트를 북마크하려면 ⋯ 메뉴를 사용하세요'}
-                    {activeMenu === 'shared' && '다른 사용자가 공유한 프로젝트가 여기에 표시됩니다'}
+                    {activeMenu === 'shared-by-me' && '프로젝트를 공유하면 여기에 표시됩니다'}
+                    {activeMenu === 'shared-with-me' && '다른 사용자가 공유한 프로젝트가 여기에 표시됩니다'}
                     {activeMenu === 'trash' && '삭제된 프로젝트가 여기에 표시됩니다'}
                     {activeMenu === 'all' && '새 프로젝트를 생성해보세요'}
                   </div>
@@ -4495,7 +4485,7 @@ const SimpleDashboard: React.FC = () => {
             <div
               className={`${styles.moreMenuItem} ${styles.deleteItem}`}
               onClick={async () => {
-                if (activeMenu === 'shared') {
+                if (activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me') {
                   // 공유 해제 로직
                   if (window.confirm('공유를 해제하시겠습니까?')) {
                     console.log('🔗 공유 해제:', moreMenu.itemId, moreMenu.itemType);
@@ -4576,7 +4566,7 @@ const SimpleDashboard: React.FC = () => {
               }}
             >
               <TrashIcon size={14} />
-              {activeMenu === 'shared' ? '공유 해제' : (activeMenu === 'trash' ? '영구 삭제' : '삭제하기')}
+              {activeMenu === 'shared-by-me' || activeMenu === 'shared-with-me' ? '공유 해제' : (activeMenu === 'trash' ? '영구 삭제' : '삭제하기')}
             </div>
             {activeMenu === 'trash' && (
               <div
