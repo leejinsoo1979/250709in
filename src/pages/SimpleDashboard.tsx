@@ -1710,11 +1710,15 @@ const SimpleDashboard: React.FC = () => {
       // URL에서 projectId 제거
       navigate('/dashboard');
     } else {
-      // 새 프로젝트 선택 - allProjects, 공유한 프로젝트, 공유받은 프로젝트에서 모두 검색
-      const targetProject =
-        allProjects.find(p => p.id === projectId) ||
-        sharedByMeProjects.find(p => p.id === projectId) ||
-        sharedWithMeProjects.find(p => p.id === projectId);
+      // 새 프로젝트 선택
+      // activeMenu가 'shared'일 때는 공유받은 프로젝트를 먼저 확인
+      const targetProject = activeMenu === 'shared'
+        ? (sharedWithMeProjects.find(p => p.id === projectId) ||
+           sharedByMeProjects.find(p => p.id === projectId) ||
+           allProjects.find(p => p.id === projectId))
+        : (allProjects.find(p => p.id === projectId) ||
+           sharedByMeProjects.find(p => p.id === projectId) ||
+           sharedWithMeProjects.find(p => p.id === projectId));
 
       if (targetProject) {
         setSelectedProjectId(projectId);
