@@ -12,6 +12,7 @@ const ViewerPage: React.FC = () => {
   const [project, setProject] = useState<ProjectSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // 섬네일과 동일한 뷰로 초기화: 3D 정면 뷰 + perspective 카메라
   const [viewMode, setViewMode] = useState<'2D' | '3D'>('3D');
   const [cameraMode, setCameraMode] = useState<'perspective' | 'orthographic'>('perspective');
   const [isFullscreen, setIsFullscreen] = useState(false);
