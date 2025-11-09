@@ -20,6 +20,8 @@ import { useHistoryStore } from '@/store/historyStore';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ProjectCollaborator } from '@/firebase/shareLinks';
+import { PiCrownDuotone } from "react-icons/pi";
+import { GoPeople } from "react-icons/go";
 
 // Perspective Cube Icon (원근 투영 큐브 - 아래로 좁아짐)
 const PerspectiveCubeIcon: React.FC<{ size?: number }> = ({ size = 20 }) => (
@@ -485,13 +487,11 @@ const Header: React.FC<HeaderProps> = ({
               {/* Project owner */}
               {owner && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    color: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)'
-                  }}>
-                    Project owner
-                  </span>
+                  <PiCrownDuotone
+                    size={20}
+                    color={colors.primary}
+                    style={{ opacity: 0.8 }}
+                  />
                   <div style={{
                     width: '32px',
                     height: '32px',
@@ -518,13 +518,11 @@ const Header: React.FC<HeaderProps> = ({
               {/* Members */}
               {collaborators.length > 0 && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    color: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(0, 0, 0, 0.5)'
-                  }}>
-                    Members
-                  </span>
+                  <GoPeople
+                    size={20}
+                    color={colors.primary}
+                    style={{ opacity: 0.8 }}
+                  />
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {collaborators.map((collab, index) => (
                       <div
