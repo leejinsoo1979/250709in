@@ -542,9 +542,9 @@ const Header: React.FC<HeaderProps> = ({
                         }}
                         title={collab.userName || collab.userEmail}
                       >
-                        {collab.userPhotoURL ? (
+                        {collab.photoURL ? (
                           <img
-                            src={collab.userPhotoURL}
+                            src={collab.photoURL}
                             alt={collab.userName || collab.userEmail}
                             style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                           />
