@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { Timestamp, doc, getDoc } from 'firebase/firestore';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
-import { PiFolderFill, PiFolderPlus } from "react-icons/pi";
+import { PiFolderFill, PiFolderPlus, PiCrownDuotone } from "react-icons/pi";
+import { GoPeople } from "react-icons/go";
 import { AiOutlineFileMarkdown } from "react-icons/ai";
 import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
@@ -4162,6 +4163,8 @@ const SimpleDashboard: React.FC = () => {
                           <div className={styles.cardFooter}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                               <div className={styles.cardUser}>
+                                {/* 왕관 아이콘 */}
+                                <PiCrownDuotone size={14} style={{ marginRight: '4px' }} />
                                 {/* 소유자 프로필 */}
                                 <div className={styles.cardUserAvatar}>
                                   {(() => {
@@ -4208,8 +4211,12 @@ const SimpleDashboard: React.FC = () => {
                                   <span style={{
                                     fontSize: '12px',
                                     color: '#666',
-                                    fontWeight: '500'
+                                    fontWeight: '500',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
                                   }}>
+                                    <GoPeople size={14} />
                                     외 {editCollaborators.length}명
                                   </span>
                                 );
@@ -4316,13 +4323,14 @@ const SimpleDashboard: React.FC = () => {
                           
                           <div className={styles.cardFooter}>
                             <div className={styles.cardUser}>
+                              <PiCrownDuotone size={14} style={{ marginRight: '4px' }} />
                               <div className={styles.cardUserAvatar}>
                                 {user?.photoURL ? (
                                   <img
                                     src={user.photoURL}
                                     alt="프로필"
                                     referrerPolicy="no-referrer"
-                                    
+
                                     style={{
                                       width: '100%',
                                       height: '100%',

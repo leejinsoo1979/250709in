@@ -3,7 +3,8 @@ import { ShareIcon, UserIcon, ClockIcon, CopyIcon, TrashIcon, EditIcon } from '.
 import { ProjectSummary } from '../../firebase/types';
 import { ProjectCollaborator } from '../../firebase/shareLinks';
 import { useAuth } from '../../auth/AuthProvider';
-import { PiFolderFill } from "react-icons/pi";
+import { PiFolderFill, PiCrownDuotone } from "react-icons/pi";
+import { GoPeople } from "react-icons/go";
 import ThumbnailImage from '../common/ThumbnailImage';
 import styles from './CollaborationTabs.module.css';
 import dashboardStyles from '../../pages/SimpleDashboard.module.css';
@@ -213,6 +214,7 @@ const SharedTab: React.FC<SharedTabProps> = ({
                     <div className={dashboardStyles.cardFooter}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                         <div className={dashboardStyles.cardUser}>
+                          <PiCrownDuotone size={14} style={{ marginRight: '4px' }} />
                           <div className={dashboardStyles.cardUserAvatar}>
                             {displayUser?.photoURL ? (
                               <img
@@ -245,8 +247,12 @@ const SharedTab: React.FC<SharedTabProps> = ({
                             <span style={{
                               fontSize: '12px',
                               color: '#666',
-                              fontWeight: '500'
+                              fontWeight: '500',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px'
                             }}>
+                              <GoPeople size={14} />
                               외 {editCollaborators.length}명
                             </span>
                           );
