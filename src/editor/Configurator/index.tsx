@@ -82,7 +82,11 @@ const Configurator: React.FC = () => {
   const { viewMode, setViewMode, doorsOpen, toggleDoors, view2DDirection, setView2DDirection, showDimensions, toggleDimensions, showDimensionsText, toggleDimensionsText, setHighlightedFrame, selectedColumnId, setSelectedColumnId, activePopup, openColumnEditModal, closeAllPopups, showGuides, toggleGuides, showAxis, toggleAxis, activeDroppedCeilingTab, setActiveDroppedCeilingTab, showFurniture, setShowFurniture, setShadowEnabled, toggleIndividualDoor } = useUIStore();
 
   // 새로운 UI 상태들
-  const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>('module');
+  const [activeSidebarTab, setActiveSidebarTab] = useState<SidebarTab | null>(() => {
+    // readonly 모드일 때는 좌측 사이드바 접힌 상태로 시작
+    const mode = searchParams.get('mode');
+    return mode === 'readonly' ? null : 'module';
+  });
   const [activeRightPanelTab, setActiveRightPanelTab] = useState<'slotA'>('slotA');
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(() => {
     // URL 파라미터로 패널 상태 초기화 (미리보기 팝업용)
