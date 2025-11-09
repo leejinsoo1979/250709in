@@ -262,7 +262,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
             )}
 
             {project && !loading && !error && (
-              <div className={styles.viewerContainer}>
+              <div className={styles.viewerContainer} style={{ position: 'relative' }}>
                 {!isViewerLoaded ? (
                   // 썸네일 이미지와 3D 버튼
                   <div
@@ -320,19 +320,24 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                     </button>
                   </div>
                 ) : (
-                  <>
+                  <div style={{ position: 'relative', width: '100%', height: '100%' }}>
                     {/* 로딩 상태 */}
                     {isIframeLoading && (
                       <div style={{
                         position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        zIndex: 10,
-                        textAlign: 'center'
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#f5f5f5',
+                        zIndex: 10
                       }}>
                         <div className={styles.spinner} />
-                        <p style={{ marginTop: '16px', color: '#666' }}>3D 뷰어 로딩 중...</p>
+                        <p style={{ marginTop: '16px', color: '#666', fontSize: '14px' }}>3D 뷰어 로딩 중...</p>
                       </div>
                     )}
 
@@ -350,7 +355,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                       title="Project Preview"
                       onLoad={() => setIsIframeLoading(false)}
                     />
-                  </>
+                  </div>
                 )}
               </div>
             )}
