@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { ShareIcon, UserIcon, ClockIcon, CopyIcon, TrashIcon, EditIcon } from '../common/Icons';
 import { ProjectSummary } from '../../firebase/types';
 import { useAuth } from '../../auth/AuthProvider';
+import { PiFolderFill } from "react-icons/pi";
+import ThumbnailImage from '../common/ThumbnailImage';
 import styles from './CollaborationTabs.module.css';
+import dashboardStyles from '../../pages/SimpleDashboard.module.css';
 
 interface SharedTabProps {
   onProjectSelect?: (projectId: string) => void;
@@ -74,36 +77,50 @@ const SharedTab: React.FC<SharedTabProps> = ({
         )}
 
         {currentProjects.length > 0 && (
-          <div className={styles.shareGrid}>
+          <div className={dashboardStyles.designGrid}>
             {currentProjects.map((project) => {
               const sharedInfo = project as any;
+              const isDesignShare = !!sharedInfo.sharedDesignFileId;
+
               return (
                 <div
                   key={project.id}
-                  className={styles.shareCard}
+                  className={dashboardStyles.designCard}
                   onClick={() => onProjectSelect?.(project.id)}
                 >
-                  <div className={styles.shareHeader}>
-                    <div className={styles.shareIcon}>
-                      <ShareIcon size={20} />
-                    </div>
+                  <div className={dashboardStyles.cardThumbnail}>
+                    {isDesignShare ? (
+                      // 디자인 카드
+                      <div className={dashboardStyles.designThumbnail}>
+                        <ThumbnailImage
+                          project={project}
+                          className={dashboardStyles.designThumbnailImage}
+                          alt={sharedInfo.sharedDesignFileName || project.title}
+                        />
+                      </div>
+                    ) : (
+                      // 프로젝트 카드
+                      <div className={dashboardStyles.projectThumbnail}>
+                        <div className={dashboardStyles.emptyThumbnailState}>
+                          <div className={dashboardStyles.emptyThumbnailIcon}>
+                            <PiFolderFill size={48} style={{ opacity: 0.3 }} />
+                          </div>
+                          <div className={dashboardStyles.emptyThumbnailText}>
+                            공유된 프로젝트
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  <div className={styles.shareContent}>
-                    <h4 className={styles.shareTitle}>{project.title}</h4>
-                    <div className={styles.shareMeta}>
-                      {activeSubTab === 'shared-with-me' && sharedInfo.sharedDesignFileName && (
-                        <div className={styles.shareUser}>
-                          <EditIcon size={14} />
-                          <span>{sharedInfo.sharedDesignFileName}</span>
-                        </div>
-                      )}
-                      <div className={styles.shareTime}>
-                        <ClockIcon size={14} />
-                        <span>
-                          {project.updatedAt?.toDate?.()?.toLocaleDateString() || '날짜 없음'}
-                        </span>
-                      </div>
+                  <div className={dashboardStyles.cardFooter}>
+                    <div className={dashboardStyles.cardTitle}>
+                      {isDesignShare ? sharedInfo.sharedDesignFileName : project.title}
+                    </div>
+                    <div className={dashboardStyles.cardMeta}>
+                      <span className={dashboardStyles.cardDate}>
+                        {project.updatedAt?.toDate?.()?.toLocaleDateString() || '날짜 없음'}
+                      </span>
                     </div>
                   </div>
                 </div>
