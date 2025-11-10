@@ -539,14 +539,14 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
                           </div>
                         )}
                       </div>
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        style={{ display: 'none' }}
-                      />
                     </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}
+                    />
                     <div className={styles.avatarActions}>
                       <button
                         className={styles.avatarActionButton}
