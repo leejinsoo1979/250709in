@@ -1366,7 +1366,7 @@
 /* 리스트 테이블 헤더 */
 .listTableHeader {
   display: grid;
-  grid-template-columns: 40px minmax(200px, 1fr) 120px 300px 100px;
+  grid-template-columns: 40px 56px minmax(200px, 1fr) 140px 280px 120px;
   gap: 16px;
   padding: 12px 20px;
   padding-left: 20px;
@@ -1394,11 +1394,11 @@
 }
 
 .headerColumn:nth-child(2) {
-  justify-content: flex-start;
+  display: none; /* 썸네일 컬럼 숨김 */
 }
 
 .headerColumn:nth-child(3) {
-  justify-content: center;
+  justify-content: flex-start;
 }
 
 .headerColumn:nth-child(4) {
@@ -1406,6 +1406,10 @@
 }
 
 .headerColumn:nth-child(5) {
+  justify-content: center;
+}
+
+.headerColumn:nth-child(6) {
   justify-content: center;
 }
 
@@ -1432,9 +1436,9 @@
 /* 리스트 뷰 카드 스타일 */
 .designGrid.listView .designCard {
   display: grid;
-  grid-template-columns: 40px 56px minmax(200px, 1fr) 120px 300px 100px;
+  grid-template-columns: 40px 56px minmax(200px, 1fr) 140px 280px 120px;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
   padding: 12px 20px;
   min-height: 64px;
   border-radius: 0;
@@ -1577,10 +1581,10 @@
   grid-column: 5;
   grid-row: 1;
   margin: 0;
-  justify-self: flex-start;
+  justify-self: center;
   align-self: center;
   overflow: visible;
-  padding-left: 8px;
+  padding-left: 0;
 }
 
 .designGrid.listView .cardUser {
@@ -2166,9 +2170,9 @@
 
 .designGrid.listView .cardUser {
   width: 100%;
-  max-width: 280px;
+  max-width: 260px;
   justify-content: flex-start;
-  padding-left: 8px;
+  padding-left: 0;
 }
 
 .cardUser {
