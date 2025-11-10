@@ -1668,20 +1668,31 @@ const Configurator: React.FC = () => {
     }
   }, [searchParams]);
 
-  // 협업자 정보 가져오기
+  // 협업자 정보 가져오기 (현재 디자인 파일 기준으로 필터링)
   useEffect(() => {
-    if (currentProjectId) {
-      console.log('🔍 협업자 정보 조회 시작:', currentProjectId);
+    if (currentProjectId && currentDesignFileId) {
+      console.log('🔍 협업자 정보 조회 시작:', { projectId: currentProjectId, designFileId: currentDesignFileId });
       getProjectCollaborators(currentProjectId)
         .then((collabs) => {
-          console.log('✅ 협업자 정보 조회 성공:', collabs);
-          setCollaborators(collabs);
+          // 현재 디자인 파일에 접근 권한이 있는 협업자만 필터링
+          const filteredCollabs = collabs.filter(collab =>
+            collab.designFileIds && collab.designFileIds.includes(currentDesignFileId)
+          );
+          console.log('✅ 협업자 정보 조회 성공:', {
+            전체: collabs.length,
+            현재파일: filteredCollabs.length,
+            협업자: filteredCollabs
+          });
+          setCollaborators(filteredCollabs);
         })
         .catch((error) => {
           console.error('❌ 협업자 정보 조회 실패:', error);
         });
+    } else if (currentProjectId && !currentDesignFileId) {
+      // 디자인 파일이 없는 경우 (Step0 등) 협업자 초기화
+      setCollaborators([]);
     }
-  }, [currentProjectId]);
+  }, [currentProjectId, currentDesignFileId]);
 
   // 폴더에서 실제 디자인파일명 찾기 (URL에 designFileId나 designFileName이 없을 때만)
   useEffect(() => {
