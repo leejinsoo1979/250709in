@@ -560,8 +560,8 @@ const SimpleDashboard: React.FC = () => {
           const sharedByPhotoURL = s.sharedByPhotoURL || null;
           const sharedByDisplayName = s.sharedByName;
 
-          // 프로젝트 소유자 정보 캐싱
-          if (sharedByDisplayName) {
+          // 프로젝트 소유자 정보 캐싱 (이름 또는 사진이 있으면 저장)
+          if (sharedByDisplayName || sharedByPhotoURL) {
             setProjectOwners(prev => ({
               ...prev,
               [s.sharedBy]: {
