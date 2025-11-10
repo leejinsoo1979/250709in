@@ -12,7 +12,7 @@ import {
   LoginHistory,
   UsageStats
 } from '../../firebase/userProfiles';
-import { uploadProfileImage, deleteProfileImage, compressImage } from '../../firebase/storage';
+import { uploadProfileImage, deleteProfileImage } from '../../firebase/storage';
 import { useAuth } from '../../auth/AuthProvider';
 import { signOutUser, changePassword, deleteAccount } from '../../firebase/auth';
 import { useNavigate } from 'react-router-dom';
@@ -229,47 +229,21 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
   // 프로필 사진 업로드
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    console.log('📂 파일 선택:', file ? file.name : '없음');
-
-    if (!file) {
-      console.log('⚠️ 파일이 선택되지 않았습니다.');
-      return;
-    }
-
-    console.log('📤 프로필 사진 업로드 시작...', {
-      name: file.name,
-      size: `${(file.size / 1024).toFixed(2)}KB`,
-      type: file.type
-    });
+    if (!file) return;
 
     setUploadingImage(true);
     try {
-      // 이미지 압축
-      console.log('🔄 이미지 압축 시작...');
-      const compressedFile = await compressImage(file, 400, 0.8);
-      console.log('✅ 이미지 압축 완료');
-
-      console.log('☁️ Firebase Storage 업로드 시작...');
-      const { photoURL, error } = await uploadProfileImage(compressedFile);
-
+      const { photoURL, error } = await uploadProfileImage(file);
       if (error) {
-        console.error('❌ 업로드 실패:', error);
-        alert(`업로드 실패: ${error}`);
+        alert(error);
       } else {
-        console.log('✅ 프로필 사진 업로드 성공:', photoURL);
         alert('프로필 사진이 업데이트되었습니다.');
-        // Auth 상태는 AuthProvider가 자동으로 감지하므로
-        // 짧은 대기 후 페이지 새로고침으로 이미지 캐시 갱신
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        window.location.reload();
       }
     } catch (err: any) {
-      console.error('❌ 프로필 사진 업로드 예외:', err);
-      alert(`프로필 사진 업로드 중 오류가 발생했습니다.\n${err?.message || err}`);
+      alert('프로필 사진 업로드 실패');
     } finally {
       setUploadingImage(false);
-      // 입력 리셋
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -278,28 +252,19 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
 
   // 프로필 사진 삭제
   const handleImageDelete = async () => {
-    if (!user?.photoURL) return;
-
-    if (!confirm('프로필 사진을 삭제하시겠습니까?')) return;
+    if (!user?.photoURL || !confirm('프로필 사진을 삭제하시겠습니까?')) return;
 
     setUploadingImage(true);
     try {
-      console.log('🗑️ 프로필 사진 삭제 시작...');
       const { error } = await deleteProfileImage();
       if (error) {
         alert(error);
       } else {
-        console.log('✅ 프로필 사진 삭제 성공');
         alert('프로필 사진이 삭제되었습니다.');
-        // Auth 상태는 AuthProvider가 자동으로 감지하므로
-        // 짧은 대기 후 페이지 새로고침으로 이미지 캐시 갱신
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        window.location.reload();
       }
     } catch (err) {
-      console.error('❌ 프로필 사진 삭제 에러:', err);
-      alert('프로필 사진 삭제 중 오류가 발생했습니다.');
+      alert('프로필 사진 삭제 실패');
     } finally {
       setUploadingImage(false);
     }
@@ -307,15 +272,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
 
   // 파일 선택 대화상자 열기
   const handleImageButtonClick = () => {
-    console.log('🎯 프로필 사진 변경 버튼 클릭');
-    console.log('📂 fileInputRef:', fileInputRef.current ? '존재함' : '없음');
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-      console.log('✅ 파일 선택 대화상자 열기 시도');
-    } else {
-      console.error('❌ fileInputRef가 없습니다!');
-      alert('파일 선택 기능이 초기화되지 않았습니다. 페이지를 새로고침해주세요.');
-    }
+    fileInputRef.current?.click();
   };
 
   // 로그인 기록 로드
@@ -550,14 +507,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
                     <div className={styles.avatarActions}>
                       <button
                         className={styles.avatarActionButton}
-                        onClick={() => {
-                          console.log('🔥🔥🔥 버튼 클릭됨!');
-                          alert('버튼 클릭됨!');
-                          handleImageButtonClick();
-                        }}
+                        onClick={handleImageButtonClick}
                         disabled={uploadingImage}
                         title="프로필 사진 변경"
-                        style={{ pointerEvents: 'auto', cursor: 'pointer', zIndex: 1000 }}
                       >
                         <CameraIcon size={18} />
                         <span>사진 변경</span>
@@ -568,7 +520,6 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
                           onClick={handleImageDelete}
                           disabled={uploadingImage}
                           title="프로필 사진 삭제"
-                          style={{ pointerEvents: 'auto', cursor: 'pointer', zIndex: 1000 }}
                         >
                           <TrashIcon size={18} />
                           <span>사진 삭제</span>

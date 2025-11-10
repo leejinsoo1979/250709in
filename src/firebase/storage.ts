@@ -21,42 +21,28 @@ export const uploadProfileImage = async (
     // 파일 유효성 검사
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(file.type)) {
-      return { photoURL: null, error: '지원되지 않는 파일 형식입니다. (JPEG, PNG, GIF, WebP만 지원)' };
+      return { photoURL: null, error: 'JPEG, PNG, GIF, WebP만 지원됩니다.' };
     }
 
     // 파일 크기 검사 (5MB 제한)
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      return { photoURL: null, error: '파일 크기가 너무 큽니다. (최대 5MB)' };
+    if (file.size > 5 * 1024 * 1024) {
+      return { photoURL: null, error: '파일 크기는 5MB 이하여야 합니다.' };
     }
 
-    // 기존 프로필 사진 삭제 (있다면)
-    // Storage의 오래된 파일들은 정리하지 않고 새 파일만 업로드
-    // (오래된 파일은 Storage 정리 작업으로 별도 처리)
-
-    // 새로운 파일 업로드 (캐시 버스팅을 위해 timestamp 추가)
+    // 업로드
     const timestamp = Date.now();
     const imageRef = ref(storage, `profile-images/${user.uid}_${timestamp}`);
     const snapshot = await uploadBytes(imageRef, file);
-    let photoURL = await getDownloadURL(snapshot.ref);
+    const photoURL = await getDownloadURL(snapshot.ref);
 
-    // 캐시 방지를 위해 URL에 timestamp 쿼리 파라미터 추가
-    photoURL = `${photoURL}?t=${timestamp}`;
-
-    console.log('📸 프로필 사진 업로드 완료:', photoURL);
-
-    // Firebase Auth 프로필 업데이트
+    // Auth 프로필 업데이트
     await updateProfile(user, { photoURL });
-    console.log('✅ Auth 프로필 업데이트 완료');
-
-    // Auth 상태 새로고침으로 UI에 즉시 반영
     await user.reload();
-    console.log('🔄 Auth 상태 새로고침 완료');
 
     return { photoURL, error: null };
   } catch (error) {
     console.error('프로필 사진 업로드 에러:', error);
-    return { photoURL: null, error: '프로필 사진 업로드 중 오류가 발생했습니다.' };
+    return { photoURL: null, error: '업로드 실패' };
   }
 };
 
@@ -68,22 +54,14 @@ export const deleteProfileImage = async (): Promise<{ error: string | null }> =>
       return { error: '로그인이 필요합니다.' };
     }
 
-    // Storage에서 파일 삭제
-    if (user.photoURL) {
-      const imageRef = ref(storage, `profile-images/${user.uid}`);
-      await deleteObject(imageRef);
-    }
-
-    // Firebase Auth 프로필에서 photoURL 제거
+    // Auth 프로필에서 photoURL 제거
     await updateProfile(user, { photoURL: null });
-
-    // Auth 상태 새로고침으로 UI에 즉시 반영
     await user.reload();
 
     return { error: null };
   } catch (error) {
     console.error('프로필 사진 삭제 에러:', error);
-    return { error: '프로필 사진 삭제 중 오류가 발생했습니다.' };
+    return { error: '삭제 실패' };
   }
 };
 
