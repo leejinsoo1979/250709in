@@ -179,6 +179,15 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                   </div>
                 </div>
               )}
+              <button
+                className={styles.upgradeButton}
+                onClick={() => {
+                  onClose();
+                  navigate('/dashboard/profile?section=subscription');
+                }}
+              >
+                플랜 업그레이드
+              </button>
             </div>
           </div>
         </div>

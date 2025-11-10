@@ -341,6 +341,30 @@
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
 }
 
+.upgradeButton {
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--theme-primary, #10b981);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 4px;
+}
+
+.upgradeButton:hover {
+  background: var(--theme-primary-dark, #059669);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.upgradeButton:active {
+  transform: translateY(0);
+}
+
 /* 다크 모드 대응 */
 @media (prefers-color-scheme: dark) {
   .popup {
