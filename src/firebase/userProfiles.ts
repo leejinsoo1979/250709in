@@ -138,7 +138,18 @@ export const getUserProfile = async (userId?: string): Promise<{ profile: UserPr
     }
 
     const profileData = profileSnap.data() as UserProfile;
-    
+
+    // credits 필드가 없는 기존 사용자 처리 (자동 초기화)
+    if (profileData.credits === undefined) {
+      console.log('⚠️ 기존 사용자 credits 필드 없음 - 200으로 초기화');
+      const profileRef = doc(db, USER_PROFILES_COLLECTION, targetUserId);
+      await updateDoc(profileRef, {
+        credits: 200,
+        updatedAt: serverTimestamp()
+      });
+      profileData.credits = 200;
+    }
+
     // 다른 사용자의 프로필을 요청한 경우 공개 설정 확인
     if (userId && userId !== (await getCurrentUserAsync())?.uid) {
       if (!profileData.isPublicProfile) {

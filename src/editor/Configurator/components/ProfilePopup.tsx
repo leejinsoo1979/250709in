@@ -31,7 +31,7 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
 
       getUserProfile().then(({ profile }) => {
         if (profile) {
-          setCredits(profile.credits || 0);
+          setCredits(profile.credits ?? 200); // undefined면 200으로 표시
         }
       });
     }
