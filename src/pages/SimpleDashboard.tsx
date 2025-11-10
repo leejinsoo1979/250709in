@@ -3791,6 +3791,7 @@ const SimpleDashboard: React.FC = () => {
                       onChange={() => handleSelectAll(sortedItems)}
                     />
                   </div>
+                  <div className={styles.headerColumn}></div>
                   <div className={styles.headerColumn}>제목</div>
                   <div className={styles.headerColumn}>마지막 수정일</div>
                   <div className={styles.headerColumn}>등록자</div>

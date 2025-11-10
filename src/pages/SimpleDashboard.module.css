@@ -1394,7 +1394,7 @@
 }
 
 .headerColumn:nth-child(2) {
-  display: none; /* 썸네일 컬럼 숨김 */
+  justify-content: center;
 }
 
 .headerColumn:nth-child(3) {
