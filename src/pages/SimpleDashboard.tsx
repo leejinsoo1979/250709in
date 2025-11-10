@@ -9,6 +9,7 @@ import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
 import { TfiShare, TfiShareAlt } from "react-icons/tfi";
 import { BsBookmarkStarFill } from "react-icons/bs";
+import { VscLink } from "react-icons/vsc";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
 import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks, revokeDesignFileAccess, revokeProjectAccess, revokeAllProjectAccess, revokeAllDesignFileAccess } from '@/firebase/shareLinks';
@@ -4548,83 +4549,102 @@ const SimpleDashboard: React.FC = () => {
                                 })()}
                               </div>
 
-                              {/* 우측: 협업자 프로필 이미지들 */}
-                              {(() => {
-                                const collaborators = projectCollaborators[item.project.id] || [];
-                                // 편집 권한이 있고 프로젝트 소유자(호스트)가 아닌 협업자만 필터링
-                                // 그리고 이 디자인 파일을 공유받은 협업자만 표시
-                                const editCollaborators = collaborators.filter(c =>
-                                  c.permission === 'editor' &&
-                                  c.userId !== item.project.userId &&
-                                  (c.designFileIds && c.designFileIds.length > 0 && c.designFileIds.includes(item.designFile.id))
-                                );
+                              {/* 우측: 협업자 프로필 이미지들 + 공유 링크 아이콘 */}
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                {(() => {
+                                  const collaborators = projectCollaborators[item.project.id] || [];
+                                  // 편집 권한이 있고 프로젝트 소유자(호스트)가 아닌 협업자만 필터링
+                                  // 그리고 이 디자인 파일을 공유받은 협업자만 표시
+                                  const editCollaborators = collaborators.filter(c =>
+                                    c.permission === 'editor' &&
+                                    c.userId !== item.project.userId &&
+                                    (c.designFileIds && c.designFileIds.length > 0 && c.designFileIds.includes(item.designFile.id))
+                                  );
 
-                                if (editCollaborators.length === 0) return null;
+                                  if (editCollaborators.length === 0) return null;
 
-                                return (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, flexWrap: 'nowrap' }}>
-                                    <GoPeople size={14} style={{ flexShrink: 0 }} />
-                                    {editCollaborators.slice(0, 3).map((collaborator) => (
-                                      <div
-                                        key={collaborator.userId}
-                                        title={`${collaborator.userName} (편집 가능)`}
-                                        style={{
-                                          width: '24px',
-                                          height: '24px',
-                                          minWidth: '24px',
-                                          minHeight: '24px',
-                                          borderRadius: '50%',
-                                          overflow: 'hidden',
-                                          border: '2px solid white',
-                                          backgroundColor: '#e0e0e0',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          fontSize: '10px',
-                                          fontWeight: 'bold',
-                                          color: '#666',
-                                          flexShrink: 0
-                                        }}
-                                      >
-                                        {collaborator.photoURL ? (
-                                          <img
-                                            src={collaborator.photoURL}
-                                            alt={collaborator.userName}
-                                            referrerPolicy="no-referrer"
-                                            style={{
-                                              width: '100%',
-                                              height: '100%',
-                                              objectFit: 'cover'
-                                            }}
-                                          />
-                                        ) : (
-                                          <UserIcon size={10} />
-                                        )}
-                                      </div>
-                                    ))}
-                                    {editCollaborators.length > 3 && (
-                                      <div
-                                        title={`+${editCollaborators.length - 3}명 더`}
-                                        style={{
-                                          width: '24px',
-                                          height: '24px',
-                                          borderRadius: '50%',
-                                          border: '2px solid white',
-                                          backgroundColor: '#f0f0f0',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          fontSize: '10px',
-                                          fontWeight: 'bold',
-                                          color: '#666'
-                                        }}
-                                      >
-                                        +{editCollaborators.length - 3}
-                                      </div>
-                                    )}
-                                  </div>
-                                );
-                              })()}
+                                  return (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, flexWrap: 'nowrap' }}>
+                                      <GoPeople size={14} style={{ flexShrink: 0 }} />
+                                      {editCollaborators.slice(0, 3).map((collaborator) => (
+                                        <div
+                                          key={collaborator.userId}
+                                          title={`${collaborator.userName} (편집 가능)`}
+                                          style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            minWidth: '24px',
+                                            minHeight: '24px',
+                                            borderRadius: '50%',
+                                            overflow: 'hidden',
+                                            border: '2px solid white',
+                                            backgroundColor: '#e0e0e0',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '10px',
+                                            fontWeight: 'bold',
+                                            color: '#666',
+                                            flexShrink: 0
+                                          }}
+                                        >
+                                          {collaborator.photoURL ? (
+                                            <img
+                                              src={collaborator.photoURL}
+                                              alt={collaborator.userName}
+                                              referrerPolicy="no-referrer"
+                                              style={{
+                                                width: '100%',
+                                                height: '100%',
+                                                objectFit: 'cover'
+                                              }}
+                                            />
+                                          ) : (
+                                            <UserIcon size={10} />
+                                          )}
+                                        </div>
+                                      ))}
+                                      {editCollaborators.length > 3 && (
+                                        <div
+                                          title={`+${editCollaborators.length - 3}명 더`}
+                                          style={{
+                                            width: '24px',
+                                            height: '24px',
+                                            borderRadius: '50%',
+                                            border: '2px solid white',
+                                            backgroundColor: '#f0f0f0',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '10px',
+                                            fontWeight: 'bold',
+                                            color: '#666'
+                                          }}
+                                        >
+                                          +{editCollaborators.length - 3}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+
+                                {/* 공유된 디자인인 경우 링크 아이콘 표시 */}
+                                {(() => {
+                                  const isSharedProject = item.project.userId !== user?.uid;
+                                  if (!isSharedProject) return null;
+
+                                  return (
+                                    <VscLink
+                                      size={18}
+                                      style={{
+                                        color: 'var(--theme-primary, #10b981)',
+                                        flexShrink: 0
+                                      }}
+                                      title="공유된 디자인"
+                                    />
+                                  );
+                                })()}
+                              </div>
                             </div>
                           </div>
                         </div>
