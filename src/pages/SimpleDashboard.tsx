@@ -4363,8 +4363,11 @@ const SimpleDashboard: React.FC = () => {
                                 {(() => {
                                   const collaborators = projectCollaborators[item.project.id] || [];
                                   // 편집 권한이 있고 프로젝트 소유자(호스트)가 아닌 협업자만 필터링
+                                  // 그리고 이 디자인 파일을 공유받은 협업자만 표시
                                   const editCollaborators = collaborators.filter(c =>
-                                    c.permission === 'editor' && c.userId !== item.project.userId
+                                    c.permission === 'editor' &&
+                                    c.userId !== item.project.userId &&
+                                    (c.designFileIds && c.designFileIds.length > 0 && c.designFileIds.includes(item.designFile.id))
                                   );
                                   if (editCollaborators.length === 0) return null;
                                   return (
@@ -4383,8 +4386,11 @@ const SimpleDashboard: React.FC = () => {
                               {(() => {
                                 const collaborators = projectCollaborators[item.project.id] || [];
                                 // 편집 권한이 있고 프로젝트 소유자(호스트)가 아닌 협업자만 필터링
+                                // 그리고 이 디자인 파일을 공유받은 협업자만 표시
                                 const editCollaborators = collaborators.filter(c =>
-                                  c.permission === 'editor' && c.userId !== item.project.userId
+                                  c.permission === 'editor' &&
+                                  c.userId !== item.project.userId &&
+                                  (c.designFileIds && c.designFileIds.length > 0 && c.designFileIds.includes(item.designFile.id))
                                 );
 
                                 if (editCollaborators.length === 0) return null;

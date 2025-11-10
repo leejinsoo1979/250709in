@@ -570,6 +570,7 @@ export interface ProjectCollaborator {
   permission: SharePermission;
   grantedAt: Timestamp;
   photoURL?: string; // 프로필 사진 URL
+  designFileIds?: string[]; // 공유된 디자인 파일 ID 목록
 }
 
 /**
@@ -627,6 +628,7 @@ export async function getProjectCollaborators(projectId: string): Promise<Projec
         permission: data.permission as SharePermission,
         grantedAt: data.grantedAt,
         photoURL: data.photoURL, // 프로필 사진이 저장되어 있으면 사용
+        designFileIds: data.designFileIds || [], // 공유된 디자인 파일 ID 목록
       });
     });
 
