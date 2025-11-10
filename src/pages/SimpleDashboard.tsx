@@ -4375,7 +4375,7 @@ const SimpleDashboard: React.FC = () => {
                                 <BsBookmarkStarFill
                                   size={16}
                                   style={{
-                                    color: '#FFC107',
+                                    color: 'var(--theme-primary, #10b981)',
                                     flexShrink: 0
                                   }}
                                 />
