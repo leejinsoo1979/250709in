@@ -229,17 +229,32 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
   // 프로필 사진 업로드
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    console.log('📂 파일 선택:', file ? file.name : '없음');
+
+    if (!file) {
+      console.log('⚠️ 파일이 선택되지 않았습니다.');
+      return;
+    }
+
+    console.log('📤 프로필 사진 업로드 시작...', {
+      name: file.name,
+      size: `${(file.size / 1024).toFixed(2)}KB`,
+      type: file.type
+    });
 
     setUploadingImage(true);
     try {
-      console.log('📤 프로필 사진 업로드 시작...');
       // 이미지 압축
+      console.log('🔄 이미지 압축 시작...');
       const compressedFile = await compressImage(file, 400, 0.8);
+      console.log('✅ 이미지 압축 완료');
 
+      console.log('☁️ Firebase Storage 업로드 시작...');
       const { photoURL, error } = await uploadProfileImage(compressedFile);
+
       if (error) {
-        alert(error);
+        console.error('❌ 업로드 실패:', error);
+        alert(`업로드 실패: ${error}`);
       } else {
         console.log('✅ 프로필 사진 업로드 성공:', photoURL);
         alert('프로필 사진이 업데이트되었습니다.');
@@ -249,9 +264,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
           window.location.reload();
         }, 500);
       }
-    } catch (err) {
-      console.error('❌ 프로필 사진 업로드 에러:', err);
-      alert('프로필 사진 업로드 중 오류가 발생했습니다.');
+    } catch (err: any) {
+      console.error('❌ 프로필 사진 업로드 예외:', err);
+      alert(`프로필 사진 업로드 중 오류가 발생했습니다.\n${err?.message || err}`);
     } finally {
       setUploadingImage(false);
       // 입력 리셋
@@ -292,7 +307,15 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
 
   // 파일 선택 대화상자 열기
   const handleImageButtonClick = () => {
-    fileInputRef.current?.click();
+    console.log('🎯 프로필 사진 변경 버튼 클릭');
+    console.log('📂 fileInputRef:', fileInputRef.current ? '존재함' : '없음');
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+      console.log('✅ 파일 선택 대화상자 열기 시도');
+    } else {
+      console.error('❌ fileInputRef가 없습니다!');
+      alert('파일 선택 기능이 초기화되지 않았습니다. 페이지를 새로고침해주세요.');
+    }
   };
 
   // 로그인 기록 로드
