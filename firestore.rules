@@ -117,10 +117,15 @@ service cloud.firestore {
       allow create: if isSignedIn();
     }
     match /designFiles/{id} {
-      // 공유 링크를 위해 읽기는 모두 허용, 쓰기는 소유자만
+      // 공유 링크를 위해 읽기는 모두 허용, 쓰기는 소유자 또는 편집 권한이 있는 사람만
       allow read: if true;
-      allow write: if isSignedIn() &&
-        (request.auth.uid == (request.resource.data.userId != null ? request.resource.data.userId : resource.data.userId));
+      allow write: if isSignedIn() && (
+        // 소유자인 경우
+        request.auth.uid == (request.resource.data.userId != null ? request.resource.data.userId : resource.data.userId) ||
+        // 또는 해당 프로젝트에 대한 editor 권한이 있는 경우
+        (exists(/databases/$(database)/documents/sharedProjectAccess/$((request.resource.data.projectId != null ? request.resource.data.projectId : resource.data.projectId) + '_' + request.auth.uid)) &&
+         get(/databases/$(database)/documents/sharedProjectAccess/$((request.resource.data.projectId != null ? request.resource.data.projectId : resource.data.projectId) + '_' + request.auth.uid)).data.permission == 'editor')
+      );
     }
 
     // 공유 링크
