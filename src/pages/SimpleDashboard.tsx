@@ -4323,7 +4323,7 @@ const SimpleDashboard: React.FC = () => {
                               {/* 왼쪽: 왕관 + 호스트 프로필 + 외 n명 */}
                               <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'nowrap', whiteSpace: 'nowrap', flexShrink: 0 }}>
                                 {/* 왕관 아이콘 */}
-                                <PiCrownDuotone size={14} style={{ color: 'var(--theme-primary)' }} />
+                                <PiCrownDuotone size={14} style={{ color: 'var(--theme-primary)', flexShrink: 0 }} />
                                 {/* 호스트 프로필 */}
                                 <div className={styles.cardUserAvatar}>
                                   {(() => {
@@ -4419,8 +4419,8 @@ const SimpleDashboard: React.FC = () => {
                                 if (editCollaborators.length === 0) return null;
 
                                 return (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <GoPeople size={14} />
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0, flexWrap: 'nowrap' }}>
+                                    <GoPeople size={14} style={{ flexShrink: 0 }} />
                                     {editCollaborators.slice(0, 3).map((collaborator) => (
                                       <div
                                         key={collaborator.userId}
@@ -4428,6 +4428,8 @@ const SimpleDashboard: React.FC = () => {
                                         style={{
                                           width: '24px',
                                           height: '24px',
+                                          minWidth: '24px',
+                                          minHeight: '24px',
                                           borderRadius: '50%',
                                           overflow: 'hidden',
                                           border: '2px solid white',
@@ -4437,7 +4439,8 @@ const SimpleDashboard: React.FC = () => {
                                           justifyContent: 'center',
                                           fontSize: '10px',
                                           fontWeight: 'bold',
-                                          color: '#666'
+                                          color: '#666',
+                                          flexShrink: 0
                                         }}
                                       >
                                         {collaborator.photoURL ? (
