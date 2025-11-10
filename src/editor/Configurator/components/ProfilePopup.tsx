@@ -1,9 +1,10 @@
-import React from 'react';
-import { X, User, Mail, Calendar, Shield, LogOut, Settings, ChevronRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, User, Mail, Calendar, Shield, LogOut, Settings, ChevronRight, CreditCard } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { signOutUser } from '@/firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/i18n/useTranslation';
+import { getUsageStats, UsageStats } from '@/firebase/userProfiles';
 import styles from './ProfilePopup.module.css';
 
 interface ProfilePopupProps {
@@ -16,6 +17,18 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   const { user } = useAuth();
   const navigate = useNavigate();
   const { t, currentLanguage } = useTranslation();
+  const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
+
+  // 사용량 통계 가져오기
+  useEffect(() => {
+    if (isOpen && user) {
+      getUsageStats().then(({ stats }) => {
+        if (stats) {
+          setUsageStats(stats);
+        }
+      });
+    }
+  }, [isOpen, user]);
 
   if (!isOpen || !user) return null;
 
@@ -144,10 +157,29 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
             </div>
           </div>
 
-          {/* UID (개발자용) - 더 작게 */}
-          <div className={styles.uidSection}>
-            <span className={styles.uidLabel}>User ID</span>
-            <code className={styles.uid}>{user.uid}</code>
+          {/* 구독 정보 */}
+          <div className={styles.subscriptionSection}>
+            <div className={styles.subscriptionHeader}>
+              <CreditCard size={16} />
+              <span className={styles.subscriptionLabel}>구독 플랜</span>
+            </div>
+            <div className={styles.subscriptionContent}>
+              <div className={styles.planBadge}>무료 플랜</div>
+              {usageStats && (
+                <div className={styles.planStats}>
+                  <div className={styles.planStat}>
+                    <span className={styles.statLabel}>프로젝트</span>
+                    <span className={styles.statValue}>{usageStats.projectCount} / {usageStats.maxProjects}</span>
+                  </div>
+                  <div className={styles.planStat}>
+                    <span className={styles.statLabel}>저장 공간</span>
+                    <span className={styles.statValue}>
+                      {(usageStats.storageUsed / (1024 * 1024)).toFixed(1)}MB / {usageStats.maxStorage / (1024 * 1024)}MB
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
