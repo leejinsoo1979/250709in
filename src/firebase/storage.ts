@@ -1,68 +1,44 @@
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
-  deleteObject 
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL
 } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
-import { storage } from './config';
-import { getCurrentUserAsync } from './auth';
+import { storage, auth } from './config';
 
 // 프로필 사진 업로드
-export const uploadProfileImage = async (
-  file: File
-): Promise<{ photoURL: string | null; error: string | null }> => {
-  try {
-    const user = await getCurrentUserAsync();
-    if (!user) {
-      return { photoURL: null, error: '로그인이 필요합니다.' };
-    }
+export const uploadProfileImage = async (file: File): Promise<string> => {
+  const user = auth.currentUser;
+  if (!user) throw new Error('로그인이 필요합니다.');
 
-    // 파일 유효성 검사
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      return { photoURL: null, error: 'JPEG, PNG, GIF, WebP만 지원됩니다.' };
-    }
-
-    // 파일 크기 검사 (5MB 제한)
-    if (file.size > 5 * 1024 * 1024) {
-      return { photoURL: null, error: '파일 크기는 5MB 이하여야 합니다.' };
-    }
-
-    // 업로드
-    const timestamp = Date.now();
-    const imageRef = ref(storage, `profile-images/${user.uid}_${timestamp}`);
-    const snapshot = await uploadBytes(imageRef, file);
-    const photoURL = await getDownloadURL(snapshot.ref);
-
-    // Auth 프로필 업데이트
-    await updateProfile(user, { photoURL });
-    await user.reload();
-
-    return { photoURL, error: null };
-  } catch (error) {
-    console.error('프로필 사진 업로드 에러:', error);
-    return { photoURL: null, error: '업로드 실패' };
+  // 파일 유효성 검사
+  const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    throw new Error('JPEG, PNG, GIF, WebP만 지원됩니다.');
   }
+
+  if (file.size > 5 * 1024 * 1024) {
+    throw new Error('파일 크기는 5MB 이하여야 합니다.');
+  }
+
+  // Storage에 업로드
+  const timestamp = Date.now();
+  const storageRef = ref(storage, `profile-images/${user.uid}_${timestamp}`);
+  await uploadBytes(storageRef, file);
+  const photoURL = await getDownloadURL(storageRef);
+
+  // Auth 프로필 업데이트
+  await updateProfile(user, { photoURL });
+
+  return photoURL;
 };
 
 // 프로필 사진 삭제
-export const deleteProfileImage = async (): Promise<{ error: string | null }> => {
-  try {
-    const user = await getCurrentUserAsync();
-    if (!user) {
-      return { error: '로그인이 필요합니다.' };
-    }
+export const deleteProfileImage = async (): Promise<void> => {
+  const user = auth.currentUser;
+  if (!user) throw new Error('로그인이 필요합니다.');
 
-    // Auth 프로필에서 photoURL 제거
-    await updateProfile(user, { photoURL: null });
-    await user.reload();
-
-    return { error: null };
-  } catch (error) {
-    console.error('프로필 사진 삭제 에러:', error);
-    return { error: '삭제 실패' };
-  }
+  await updateProfile(user, { photoURL: null });
 };
 
 // 이미지 파일 압축 (선택적)

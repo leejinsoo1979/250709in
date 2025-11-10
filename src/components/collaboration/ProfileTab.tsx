@@ -233,16 +233,12 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
 
     setUploadingImage(true);
     try {
-      const { photoURL, error } = await uploadProfileImage(file);
-      if (error) {
-        alert(error);
-      } else {
-        alert('프로필 사진이 업데이트되었습니다.');
-        // 프로필 다시 로드
-        await loadProfile();
-      }
+      await uploadProfileImage(file);
+      await user?.reload();
+      alert('프로필 사진이 업데이트되었습니다.');
+      await loadProfile();
     } catch (err: any) {
-      alert('업로드 실패');
+      alert(err.message || '업로드 실패');
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) {
@@ -257,16 +253,12 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
 
     setUploadingImage(true);
     try {
-      const { error } = await deleteProfileImage();
-      if (error) {
-        alert(error);
-      } else {
-        alert('프로필 사진이 삭제되었습니다.');
-        // 프로필 다시 로드
-        await loadProfile();
-      }
-    } catch (err) {
-      alert('프로필 사진 삭제 실패');
+      await deleteProfileImage();
+      await user?.reload();
+      alert('프로필 사진이 삭제되었습니다.');
+      await loadProfile();
+    } catch (err: any) {
+      alert(err.message || '프로필 사진 삭제 실패');
     } finally {
       setUploadingImage(false);
     }
