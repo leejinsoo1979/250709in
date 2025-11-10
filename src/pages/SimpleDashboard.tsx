@@ -4628,10 +4628,17 @@ const SimpleDashboard: React.FC = () => {
                                   );
                                 })()}
 
-                                {/* 공유된 디자인인 경우 링크 아이콘 표시 */}
+                                {/* 공유된 디자인인 경우 링크 아이콘 표시 (협업자가 있는 경우만) */}
                                 {(() => {
-                                  const isSharedProject = item.project.userId !== user?.uid;
-                                  if (!isSharedProject) return null;
+                                  const collaborators = projectCollaborators[item.project.id] || [];
+                                  const editCollaborators = collaborators.filter(c =>
+                                    c.permission === 'editor' &&
+                                    c.userId !== item.project.userId &&
+                                    (c.designFileIds && c.designFileIds.length > 0 && c.designFileIds.includes(item.designFile.id))
+                                  );
+
+                                  // 협업자가 있는 경우에만 링크 아이콘 표시
+                                  if (editCollaborators.length === 0) return null;
 
                                   return (
                                     <VscLink
