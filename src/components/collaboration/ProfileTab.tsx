@@ -502,7 +502,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
             {activeSection === 'profile' && (
               <div className={styles.profileSection}>
                 <div className={styles.profileHeader}>
-                  <div className={styles.profileAvatarWrapper}>
+                  <div className={styles.profileLeft}>
                     <div className={styles.profileAvatarContainer}>
                       <div className={styles.profileAvatar}>
                         {user?.photoURL ? (
