@@ -4368,19 +4368,20 @@ const SimpleDashboard: React.FC = () => {
                       ) : item.type === 'design' ? (
                         // 디자인 카드 (폴더 내부에서)
                         <div className={styles.cardInfo}>
-                          <div className={styles.cardTitle}>
-                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <div className={styles.cardTitle} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                            <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                               {item.project.title} &gt; {item.name}
-                              {bookmarkedDesigns.has(item.id) && (
-                                <BsBookmarkStarFill
-                                  size={16}
-                                  style={{
-                                    color: 'var(--theme-primary, #10b981)',
-                                    flexShrink: 0
-                                  }}
-                                />
-                              )}
                             </span>
+                            {bookmarkedDesigns.has(item.id) && (
+                              <BsBookmarkStarFill
+                                size={16}
+                                style={{
+                                  color: 'var(--theme-primary, #10b981)',
+                                  flexShrink: 0,
+                                  marginLeft: '8px'
+                                }}
+                              />
+                            )}
                             {/* 리스트 뷰에서만 제목 우측에 액션 버튼 표시 (휴지통 제외) */}
                             {viewMode === 'list' && activeMenu !== 'trash' && (
                               <div className={styles.listActionButtons}>
