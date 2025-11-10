@@ -550,6 +550,7 @@ const SimpleDashboard: React.FC = () => {
         // 공유받은 프로젝트 정보를 프로젝트 ID로 그룹화하여 중복 제거
         // 편집 권한이 있는 항목만 필터링 (조회만 가능한 viewer 권한 제외)
         const sharedProjectsMap = new Map<string, any>();
+        const missingOwnerIds = new Set<string>();
 
         for (const s of shared) {
           // 편집 권한('editor')이 있는 항목만 처리
@@ -586,23 +587,82 @@ const SimpleDashboard: React.FC = () => {
             hasPhotoURL: !!sharedByPhotoURL
           });
 
+          const existingSharedProject = sharedProjectsMap.get(s.projectId);
+          const mergedDesignFileIds = Array.from(new Set([...(existingSharedProject?.sharedDesignFileIds || []), ...designFileIds]));
+          const mergedDesignFileNames = Array.from(new Set([...(existingSharedProject?.sharedDesignFileNames || []), ...designFileNames]));
+          const mergedSharedByPhotoURL = sharedByPhotoURL ?? existingSharedProject?.sharedByPhotoURL ?? null;
+          const mergedSharedByName = sharedByDisplayName || existingSharedProject?.sharedByName || '생성자';
+
           sharedProjectsMap.set(s.projectId, {
             id: s.projectId,
-            title: s.projectName,
+            title: s.projectName || existingSharedProject?.title || '공유 프로젝트',
             userId: s.sharedBy,
-            createdAt: s.grantedAt,
-            updatedAt: s.grantedAt,
-            designFilesCount: 0,
-            lastDesignFileName: null,
-            // 공유받은 디자인 파일 ID 목록 (배열로 저장)
-            sharedDesignFileIds: designFileIds,
-            sharedDesignFileNames: designFileNames,
-            // 첫 번째 디자인 정보 (호환성)
-            sharedDesignFileId: designFileIds[0] || null,
-            sharedDesignFileName: designFileNames[0] || null,
-            // 공유한 사람(호스트) 정보
-            sharedByName: sharedByDisplayName,
-            sharedByPhotoURL: sharedByPhotoURL
+            createdAt: existingSharedProject?.createdAt || s.grantedAt,
+            updatedAt: s.grantedAt || existingSharedProject?.updatedAt,
+            designFilesCount: mergedDesignFileIds.length,
+            lastDesignFileName: mergedDesignFileNames[mergedDesignFileNames.length - 1] || existingSharedProject?.lastDesignFileName || null,
+            sharedDesignFileIds: mergedDesignFileIds,
+            sharedDesignFileNames: mergedDesignFileNames,
+            sharedDesignFileId: mergedDesignFileIds[0] || existingSharedProject?.sharedDesignFileId || null,
+            sharedDesignFileName: mergedDesignFileNames[0] || existingSharedProject?.sharedDesignFileName || null,
+            sharedByName: mergedSharedByName,
+            sharedByPhotoURL: mergedSharedByPhotoURL
+          });
+
+          if (!mergedSharedByPhotoURL) {
+            missingOwnerIds.add(s.sharedBy);
+          }
+        }
+
+        if (missingOwnerIds.size > 0) {
+          const fetchedOwners = await Promise.all(
+            Array.from(missingOwnerIds).map(async ownerId => {
+              try {
+                const ownerDoc = await getDoc(doc(db, 'users', ownerId));
+                if (ownerDoc.exists()) {
+                  const data = ownerDoc.data() as any;
+                  return {
+                    ownerId,
+                    displayName:
+                      data.displayName ||
+                      data.name ||
+                      data.userName ||
+                      data.email?.split?.('@')?.[0] ||
+                      '생성자',
+                    photoURL: data.photoURL || data.photoUrl || data.avatarUrl || null
+                  };
+                }
+              } catch (error) {
+                console.error('❌ 공유 호스트 프로필 조회 실패:', { ownerId, error });
+              }
+              return {
+                ownerId,
+                displayName: '생성자',
+                photoURL: null
+              };
+            })
+          );
+
+          setProjectOwners(prev => {
+            const next = { ...prev };
+            fetchedOwners.forEach(owner => {
+              next[owner.ownerId] = {
+                displayName: owner.displayName || next[owner.ownerId]?.displayName || '생성자',
+                photoURL: owner.photoURL ?? next[owner.ownerId]?.photoURL ?? null
+              };
+            });
+            return next;
+          });
+
+          const ownerLookup = new Map(fetchedOwners.map(owner => [owner.ownerId, owner]));
+          sharedProjectsMap.forEach((project, projectId) => {
+            const owner = ownerLookup.get(project.userId);
+            if (!owner) return;
+            sharedProjectsMap.set(projectId, {
+              ...project,
+              sharedByName: owner.displayName || project.sharedByName,
+              sharedByPhotoURL: owner.photoURL || project.sharedByPhotoURL
+            });
           });
         }
 
@@ -1195,16 +1255,18 @@ const SimpleDashboard: React.FC = () => {
     return filteredProjects;
   };
   
-  // 북마크된 디자인 파일들 가져오기
-  const getBookmarkedDesignItems = () => {
+  // 북마크된 디자인 파일들 가져오기 (useMemo로 캐싱하여 중복 방지)
+  const bookmarkedDesignItems = useMemo(() => {
     const items = [];
-    
+    const addedIds = new Set(); // 중복 방지
+
     // 전체 프로젝트를 순회하며 북마크된 디자인 파일 찾기
     allProjects.forEach(project => {
       const designFiles = projectDesignFiles[project.id] || [];
-      
+
       designFiles.forEach(designFile => {
-        if (bookmarkedDesigns.has(designFile.id)) {
+        if (bookmarkedDesigns.has(designFile.id) && !addedIds.has(designFile.id)) {
+          addedIds.add(designFile.id);
           items.push({
             id: designFile.id,
             type: 'design',
@@ -1215,20 +1277,23 @@ const SimpleDashboard: React.FC = () => {
         }
       });
     });
-    
+
+    console.log('📋 북마크된 디자인 아이템:', items.length);
     return items;
-  };
+  }, [allProjects, projectDesignFiles, bookmarkedDesigns]);
   
-  // 북마크된 폴더들 가져오기
-  const getBookmarkedFolderItems = () => {
+  // 북마크된 폴더들 가져오기 (useMemo로 캐싱하여 중복 방지)
+  const bookmarkedFolderItems = useMemo(() => {
     const items = [];
-    
+    const addedIds = new Set(); // 중복 방지
+
     // 전체 프로젝트를 순회하며 북마크된 폴더 찾기
     allProjects.forEach(project => {
       const projectFolders = folders[project.id] || [];
-      
+
       projectFolders.forEach(folder => {
-        if (bookmarkedFolders.has(folder.id)) {
+        if (bookmarkedFolders.has(folder.id) && !addedIds.has(folder.id)) {
+          addedIds.add(folder.id);
           items.push({
             id: folder.id,
             type: 'folder',
@@ -1239,9 +1304,10 @@ const SimpleDashboard: React.FC = () => {
         }
       });
     });
-    
+
+    console.log('📋 북마크된 폴더 아이템:', items.length);
     return items;
-  };
+  }, [allProjects, folders, bookmarkedFolders]);
   
   // 프로젝트의 모든 파일과 폴더를 가져오는 함수
   const getProjectItems = useCallback((projectId: string, projectObj?: any) => {
@@ -1588,12 +1654,10 @@ const SimpleDashboard: React.FC = () => {
         });
       });
 
-      // 북마크된 디자인 파일들
-      const bookmarkedDesignItems = getBookmarkedDesignItems();
+      // 북마크된 디자인 파일들 (useMemo로 캐싱된 값 사용)
       items.push(...bookmarkedDesignItems);
 
-      // 북마크된 폴더들
-      const bookmarkedFolderItems = getBookmarkedFolderItems();
+      // 북마크된 폴더들 (useMemo로 캐싱된 값 사용)
       items.push(...bookmarkedFolderItems);
 
       console.log('📋 북마크 뷰 - 전체 아이템:', {
@@ -1636,6 +1700,15 @@ const SimpleDashboard: React.FC = () => {
   const displayedItems = useMemo(() => {
     let items = getDisplayedItems();
 
+    // 전체 프로젝트 메뉴에서는 디자인 타입 제외 (프로젝트만 표시)
+    if (activeMenu === 'all' && !selectedProjectId) {
+      items = items.filter(item => item.type === 'project' || item.type === 'new-design');
+      console.log('🚫 전체 프로젝트 - 디자인 제외 필터링:', {
+        filteredCount: items.length,
+        types: [...new Set(items.map(i => i.type))]
+      });
+    }
+
     // 검색어로 필터링
     if (searchTerm.trim()) {
       const lowerSearch = searchTerm.toLowerCase().trim();
@@ -1654,10 +1727,12 @@ const SimpleDashboard: React.FC = () => {
       selectedProjectId,
       projectDesignFilesKeys: Object.keys(projectDesignFiles),
       hasDesignFiles: projectDesignFiles[selectedProjectId]?.length > 0,
-      searchTerm
+      searchTerm,
+      activeMenu,
+      itemTypes: [...new Set(items.map(i => i.type))]
     });
     return items;
-  }, [selectedProjectId, allProjects, activeMenu, currentFolderId, folders, projectDesignFiles, searchTerm]);
+  }, [selectedProjectId, allProjects, activeMenu, currentFolderId, folders, projectDesignFiles, searchTerm, bookmarkedDesignItems, bookmarkedFolderItems]);
   
   console.log('💡 displayedItems 최종 결과:', displayedItems);
   
