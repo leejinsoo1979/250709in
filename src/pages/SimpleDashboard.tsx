@@ -7,6 +7,7 @@ import { GoPeople } from "react-icons/go";
 import { AiOutlineFileMarkdown } from "react-icons/ai";
 import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
+import { TfiShareAlt } from "react-icons/tfi";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
 import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks, revokeDesignFileAccess, revokeProjectAccess, revokeAllProjectAccess, revokeAllDesignFileAccess } from '@/firebase/shareLinks';
@@ -2874,7 +2875,7 @@ const SimpleDashboard: React.FC = () => {
             }}
           >
             <div className={styles.navItemIcon}>
-              <ShareIcon size={20} />
+              <TfiShareAlt size={20} />
             </div>
             <span>공유받은 프로젝트</span>
             <span className={styles.navItemCount}>{sharedWithMeProjects.length}</span>
