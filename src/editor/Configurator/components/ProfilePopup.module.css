@@ -315,12 +315,18 @@
 
 .creditInfo {
   padding: 10px 12px;
-  background: rgba(59, 130, 246, 0.1);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: var(--theme-background, #f9fafb);
+  border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 8px;
   display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.creditLeft {
+  display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 2px;
 }
 
 .creditHeader {
@@ -333,27 +339,26 @@
 }
 
 .creditHeader svg {
-  color: #3b82f6;
+  color: var(--theme-primary, #10b981);
 }
 
 .creditAmount {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
-  color: #3b82f6;
+  color: var(--theme-text, #111827);
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
 }
 
 .creditUnit {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 500;
   color: var(--theme-text-secondary, #6b7280);
   margin-left: 4px;
 }
 
 .creditNote {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--theme-text-secondary, #6b7280);
-  font-style: italic;
 }
 
 .planStats {

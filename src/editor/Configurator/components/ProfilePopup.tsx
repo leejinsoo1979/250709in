@@ -175,15 +175,17 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
 
               {/* 크레딧 정보 */}
               <div className={styles.creditInfo}>
-                <div className={styles.creditHeader}>
-                  <Coins size={16} />
-                  <span>보유 크레딧</span>
+                <div className={styles.creditLeft}>
+                  <div className={styles.creditHeader}>
+                    <Coins size={14} />
+                    <span>보유 크레딧</span>
+                  </div>
+                  <div className={styles.creditNote}>
+                    디자인 파일당 20 소모
+                  </div>
                 </div>
                 <div className={styles.creditAmount}>
                   {credits} <span className={styles.creditUnit}>크레딧</span>
-                </div>
-                <div className={styles.creditNote}>
-                  디자인 파일 생성 시 20 크레딧 소모
                 </div>
               </div>
 
@@ -192,12 +194,6 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                   <div className={styles.planStat}>
                     <span className={styles.statLabel}>프로젝트</span>
                     <span className={styles.statValue}>{usageStats.projectCount} / {usageStats.maxProjects}</span>
-                  </div>
-                  <div className={styles.planStat}>
-                    <span className={styles.statLabel}>저장 공간</span>
-                    <span className={styles.statValue}>
-                      {(usageStats.storageUsed / (1024 * 1024)).toFixed(1)}MB / {usageStats.maxStorage / (1024 * 1024)}MB
-                    </span>
                   </div>
                 </div>
               )}
