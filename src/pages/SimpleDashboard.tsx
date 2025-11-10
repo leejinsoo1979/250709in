@@ -4374,7 +4374,7 @@ const SimpleDashboard: React.FC = () => {
                             </span>
                             {bookmarkedDesigns.has(item.id) && (
                               <BsBookmarkStarFill
-                                size={16}
+                                size={20}
                                 style={{
                                   color: 'var(--theme-primary, #10b981)',
                                   flexShrink: 0,
