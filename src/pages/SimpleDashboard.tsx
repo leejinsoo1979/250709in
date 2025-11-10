@@ -3582,7 +3582,21 @@ const SimpleDashboard: React.FC = () => {
                     const isExpanded = expandedProjects.has(project.id);
                     const isSelected = selectedProjectId === project.id;
                     const projectFolders = folders[project.id] || [];
-                    const designFiles = projectDesignFiles[project.id] || [];
+                    const rawDesignFiles = projectDesignFiles[project.id] || [];
+
+                    // sortBy 상태에 따라 디자인 파일 정렬
+                    const designFiles = [...rawDesignFiles].sort((a, b) => {
+                      if (sortBy === 'date') {
+                        // 최신순 정렬
+                        const dateA = a.updatedAt || a.createdAt || { seconds: 0 };
+                        const dateB = b.updatedAt || b.createdAt || { seconds: 0 };
+                        return dateB.seconds - dateA.seconds;
+                      } else {
+                        // 이름순 정렬
+                        return a.name.localeCompare(b.name, 'ko');
+                      }
+                    });
+
                     const hasContent = projectFolders.length > 0 || designFiles.length > 0 || project.furnitureCount > 0;
                     
                     return (
@@ -3698,7 +3712,20 @@ const SimpleDashboard: React.FC = () => {
                           {/* 폴더 내부 파일들 */}
                           {folder.expanded && folder.children && folder.children.length > 0 ? (
                             <div className={styles.folderChildren}>
-                              {folder.children.map(child => (
+                              {(() => {
+                                // sortBy 상태에 따라 폴더 내 파일 정렬
+                                const sortedChildren = [...folder.children].sort((a, b) => {
+                                  if (sortBy === 'date') {
+                                    // 최신순 정렬 (폴더 children에는 updatedAt이 없을 수 있으므로 name으로 대체)
+                                    // children은 파일명만 있는 경우가 많으므로 이름순으로 정렬
+                                    return a.name.localeCompare(b.name, 'ko');
+                                  } else {
+                                    // 이름순 정렬
+                                    return a.name.localeCompare(b.name, 'ko');
+                                  }
+                                });
+                                return sortedChildren;
+                              })().map(child => (
                                 <div 
                                   key={child.id} 
                                   className={`${styles.treeItem} ${styles.childItem}`}
