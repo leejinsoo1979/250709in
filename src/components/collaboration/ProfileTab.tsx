@@ -550,9 +550,14 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
                     <div className={styles.avatarActions}>
                       <button
                         className={styles.avatarActionButton}
-                        onClick={handleImageButtonClick}
+                        onClick={() => {
+                          console.log('🔥🔥🔥 버튼 클릭됨!');
+                          alert('버튼 클릭됨!');
+                          handleImageButtonClick();
+                        }}
                         disabled={uploadingImage}
                         title="프로필 사진 변경"
+                        style={{ pointerEvents: 'auto', cursor: 'pointer', zIndex: 1000 }}
                       >
                         <CameraIcon size={18} />
                         <span>사진 변경</span>
@@ -563,6 +568,7 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
                           onClick={handleImageDelete}
                           disabled={uploadingImage}
                           title="프로필 사진 삭제"
+                          style={{ pointerEvents: 'auto', cursor: 'pointer', zIndex: 1000 }}
                         >
                           <TrashIcon size={18} />
                           <span>사진 삭제</span>
