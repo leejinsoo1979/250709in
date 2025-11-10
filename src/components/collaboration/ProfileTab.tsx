@@ -502,18 +502,27 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
             {activeSection === 'profile' && (
               <div className={styles.profileSection}>
                 <div className={styles.profileHeader}>
-                  <div className={styles.profileAvatarContainer}>
-                    <div className={styles.profileAvatar}>
-                      {user?.photoURL ? (
-                        <img src={user.photoURL} alt="프로필" />
-                      ) : (
-                        <UserIcon size={48} />
-                      )}
-                      {uploadingImage && (
-                        <div className={styles.uploadingOverlay}>
-                          <div className={styles.spinner} />
-                        </div>
-                      )}
+                  <div className={styles.profileAvatarWrapper}>
+                    <div className={styles.profileAvatarContainer}>
+                      <div className={styles.profileAvatar}>
+                        {user?.photoURL ? (
+                          <img src={user.photoURL} alt="프로필" />
+                        ) : (
+                          <UserIcon size={48} />
+                        )}
+                        {uploadingImage && (
+                          <div className={styles.uploadingOverlay}>
+                            <div className={styles.spinner} />
+                          </div>
+                        )}
+                      </div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        style={{ display: 'none' }}
+                      />
                     </div>
                     <div className={styles.avatarActions}>
                       <button
@@ -522,26 +531,21 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
                         disabled={uploadingImage}
                         title="프로필 사진 변경"
                       >
-                        <CameraIcon size={16} />
+                        <CameraIcon size={18} />
+                        <span>사진 변경</span>
                       </button>
                       {user?.photoURL && (
                         <button
-                          className={styles.avatarActionButton}
+                          className={`${styles.avatarActionButton} ${styles.deleteButton}`}
                           onClick={handleImageDelete}
                           disabled={uploadingImage}
                           title="프로필 사진 삭제"
                         >
-                          <TrashIcon size={16} />
+                          <TrashIcon size={18} />
+                          <span>사진 삭제</span>
                         </button>
                       )}
                     </div>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      style={{ display: 'none' }}
-                    />
                   </div>
                   <div className={styles.profileBasicInfo}>
                     <h3>{user?.displayName || user?.email}</h3>
