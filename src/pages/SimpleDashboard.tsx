@@ -615,7 +615,7 @@ const SimpleDashboard: React.FC = () => {
         }
 
         if (missingOwnerIds.size > 0) {
-          const fetchedOwners = await Promise.all(
+          const fetchedOwners: { ownerId: string; displayName: string; photoURL: string | null }[] = await Promise.all(
             Array.from(missingOwnerIds).map(async ownerId => {
               try {
                 const ownerDoc = await getDoc(doc(db, 'users', ownerId));
@@ -4368,7 +4368,19 @@ const SimpleDashboard: React.FC = () => {
                         // 디자인 카드 (폴더 내부에서)
                         <div className={styles.cardInfo}>
                           <div className={styles.cardTitle}>
-                            {item.project.title} &gt; {item.name}
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              {item.project.title} &gt; {item.name}
+                              {bookmarkedDesigns.has(item.id) && (
+                                <StarIcon
+                                  size={16}
+                                  style={{
+                                    color: '#FFC107',
+                                    fill: '#FFC107',
+                                    flexShrink: 0
+                                  }}
+                                />
+                              )}
+                            </span>
                             {/* 리스트 뷰에서만 제목 우측에 액션 버튼 표시 (휴지통 제외) */}
                             {viewMode === 'list' && activeMenu !== 'trash' && (
                               <div className={styles.listActionButtons}>
@@ -4795,6 +4807,7 @@ const SimpleDashboard: React.FC = () => {
                         // 공유받은 프로젝트 목록 새로고침
                         const shared = await getSharedProjectsForUser(user.uid);
                         const sharedProjectsMap = new Map<string, any>();
+                        const missingOwnerIds = new Set<string>();
 
                         for (const s of shared) {
                           // 편집 권한이 있는 항목만 필터링
@@ -4802,19 +4815,85 @@ const SimpleDashboard: React.FC = () => {
 
                           const designFileIds = s.designFileIds || (s.designFileId ? [s.designFileId] : []);
                           const designFileNames = s.designFileNames || (s.designFileName ? [s.designFileName] : []);
+                          const sharedByPhotoURL = s.sharedByPhotoURL || null;
+                          const sharedByDisplayName = s.sharedByName;
+
+                          const existingSharedProject = sharedProjectsMap.get(s.projectId);
+                          const mergedDesignFileIds = Array.from(new Set([...(existingSharedProject?.sharedDesignFileIds || []), ...designFileIds]));
+                          const mergedDesignFileNames = Array.from(new Set([...(existingSharedProject?.sharedDesignFileNames || []), ...designFileNames]));
+                          const mergedSharedByPhotoURL = sharedByPhotoURL ?? existingSharedProject?.sharedByPhotoURL ?? null;
+                          const mergedSharedByName = sharedByDisplayName || existingSharedProject?.sharedByName || '생성자';
 
                           sharedProjectsMap.set(s.projectId, {
                             id: s.projectId,
-                            title: s.projectName,
+                            title: s.projectName || existingSharedProject?.title || '공유 프로젝트',
                             userId: s.sharedBy,
-                            createdAt: s.grantedAt,
-                            updatedAt: s.grantedAt,
-                            designFilesCount: 0,
-                            lastDesignFileName: null,
-                            sharedDesignFileIds: designFileIds,
-                            sharedDesignFileNames: designFileNames,
-                            sharedDesignFileId: designFileIds[0] || null,
-                            sharedDesignFileName: designFileNames[0] || null,
+                            createdAt: existingSharedProject?.createdAt || s.grantedAt,
+                            updatedAt: s.grantedAt || existingSharedProject?.updatedAt,
+                            designFilesCount: mergedDesignFileIds.length,
+                            lastDesignFileName: mergedDesignFileNames[mergedDesignFileNames.length - 1] || existingSharedProject?.lastDesignFileName || null,
+                            sharedDesignFileIds: mergedDesignFileIds,
+                            sharedDesignFileNames: mergedDesignFileNames,
+                            sharedDesignFileId: mergedDesignFileIds[0] || existingSharedProject?.sharedDesignFileId || null,
+                            sharedDesignFileName: mergedDesignFileNames[0] || existingSharedProject?.sharedDesignFileName || null,
+                            sharedByName: mergedSharedByName,
+                            sharedByPhotoURL: mergedSharedByPhotoURL
+                          });
+
+                          if (!mergedSharedByPhotoURL) {
+                            missingOwnerIds.add(s.sharedBy);
+                          }
+                        }
+
+        if (missingOwnerIds.size > 0) {
+                          const fetchedOwners: { ownerId: string; displayName: string; photoURL: string | null }[] = await Promise.all(
+                            Array.from(missingOwnerIds).map(async ownerId => {
+                              try {
+                                const ownerDoc = await getDoc(doc(db, 'users', ownerId));
+                                if (ownerDoc.exists()) {
+                                  const data = ownerDoc.data() as any;
+                                  return {
+                                    ownerId,
+                                    displayName:
+                                      data.displayName ||
+                                      data.name ||
+                                      data.userName ||
+                                      data.email?.split?.('@')?.[0] ||
+                                      '생성자',
+                                    photoURL: data.photoURL || data.photoUrl || data.avatarUrl || null
+                                  };
+                                }
+                              } catch (error) {
+                                console.error('❌ 공유 호스트 프로필 조회 실패:', { ownerId, error });
+                              }
+                              return {
+                                ownerId,
+                                displayName: '생성자',
+                                photoURL: null
+                              };
+                            })
+                          );
+
+                          setProjectOwners(prev => {
+                            const next = { ...prev };
+                            fetchedOwners.forEach(owner => {
+                              next[owner.ownerId] = {
+                                displayName: owner.displayName || next[owner.ownerId]?.displayName || '생성자',
+                                photoURL: owner.photoURL ?? next[owner.ownerId]?.photoURL ?? null
+                              };
+                            });
+                            return next;
+                          });
+
+                          const ownerLookup = new Map(fetchedOwners.map(owner => [owner.ownerId, owner]));
+                          sharedProjectsMap.forEach((project, projectId) => {
+                            const owner = ownerLookup.get(project.userId);
+                            if (!owner) return;
+                            sharedProjectsMap.set(projectId, {
+                              ...project,
+                              sharedByName: owner.displayName || project.sharedByName,
+                              sharedByPhotoURL: owner.photoURL || project.sharedByPhotoURL
+                            });
                           });
                         }
 
