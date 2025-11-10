@@ -1575,7 +1575,7 @@ const SimpleDashboard: React.FC = () => {
     // 북마크 메뉴인 경우 프로젝트와 디자인 파일 모두 표시
     if (activeMenu === 'bookmarks') {
       const items = [];
-      
+
       // 북마크된 프로젝트들
       const filteredProjects = getFilteredProjects();
       filteredProjects.forEach(project => {
@@ -1587,25 +1587,25 @@ const SimpleDashboard: React.FC = () => {
           icon: ''
         });
       });
-      
+
       // 북마크된 디자인 파일들
       const bookmarkedDesignItems = getBookmarkedDesignItems();
       items.push(...bookmarkedDesignItems);
-      
+
       // 북마크된 폴더들
       const bookmarkedFolderItems = getBookmarkedFolderItems();
       items.push(...bookmarkedFolderItems);
-      
+
       console.log('📋 북마크 뷰 - 전체 아이템:', {
         totalItems: items.length,
         projectsCount: filteredProjects.length,
         designsCount: bookmarkedDesignItems.length,
         foldersCount: bookmarkedFolderItems.length
       });
-      
+
       return items;
     }
-    
+
     // 메뉴별 프로젝트 필터링 적용
     const filteredProjects = getFilteredProjects();
     console.log('📋 전체 프로젝트 뷰 - 필터링된 프로젝트들:', {
@@ -1614,14 +1614,23 @@ const SimpleDashboard: React.FC = () => {
       filteredProjectsCount: filteredProjects.length,
       filteredProjects: filteredProjects.map(p => ({id: p.id, title: p.title}))
     });
-    
-    return filteredProjects.map(project => ({ 
-      id: project.id, 
-      type: 'project', 
-      name: project.title, 
-      project: project, 
-      icon: '' 
+
+    // 전체 프로젝트 메뉴에서는 오직 프로젝트만 표시 (디자인 파일 제외)
+    const projectItems = filteredProjects.map(project => ({
+      id: project.id,
+      type: 'project' as const,
+      name: project.title,
+      project: project,
+      icon: ''
     }));
+
+    console.log('✅ 최종 프로젝트 아이템:', {
+      activeMenu,
+      itemCount: projectItems.length,
+      allAreProjects: projectItems.every(item => item.type === 'project')
+    });
+
+    return projectItems;
   };
 
   const displayedItems = useMemo(() => {
