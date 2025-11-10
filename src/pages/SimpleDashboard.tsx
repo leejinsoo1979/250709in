@@ -4198,6 +4198,17 @@ const SimpleDashboard: React.FC = () => {
                                   if (isSharedProject) {
                                     // 공유받은 프로젝트: sharedByPhotoURL 또는 projectOwners에서 가져오기
                                     const sharedProject = item.project as any;
+                                    console.log('🖼️ [폴더 카드] 프로필 이미지 디버그:', {
+                                      folderName: item.name,
+                                      projectId: item.project.id,
+                                      projectTitle: item.project.title,
+                                      projectUserId: item.project.userId,
+                                      sharedByPhotoURL: sharedProject.sharedByPhotoURL,
+                                      sharedByName: sharedProject.sharedByName,
+                                      projectOwnersData: projectOwners[item.project.userId],
+                                      hasSharedByPhotoURL: !!sharedProject.sharedByPhotoURL,
+                                      hasProjectOwnerPhotoURL: !!projectOwners[item.project.userId]?.photoURL
+                                    });
                                     photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
                                   } else {
                                     // 내 프로젝트: 내 프로필 사용
@@ -4323,6 +4334,16 @@ const SimpleDashboard: React.FC = () => {
                                     if (isSharedProject) {
                                       // 공유받은 프로젝트: sharedByPhotoURL 또는 projectOwners에서 가져오기
                                       const sharedProject = item.project as any;
+                                      console.log('🖼️ [디자인 카드] 프로필 이미지 디버그:', {
+                                        designName: item.name,
+                                        projectId: item.project.id,
+                                        projectUserId: item.project.userId,
+                                        sharedByPhotoURL: sharedProject.sharedByPhotoURL,
+                                        sharedByName: sharedProject.sharedByName,
+                                        projectOwnersData: projectOwners[item.project.userId],
+                                        hasSharedByPhotoURL: !!sharedProject.sharedByPhotoURL,
+                                        hasProjectOwnerPhotoURL: !!projectOwners[item.project.userId]?.photoURL
+                                      });
                                       photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
                                     } else {
                                       // 내 프로젝트: 내 프로필 사용
@@ -4496,6 +4517,16 @@ const SimpleDashboard: React.FC = () => {
                                   if (isSharedProject) {
                                     // 공유받은 프로젝트: sharedByPhotoURL 또는 projectOwners에서 가져오기
                                     const sharedProject = item.project as any;
+                                    console.log('🖼️ [프로젝트 카드] 프로필 이미지 디버그:', {
+                                      projectTitle: item.project.title,
+                                      projectId: item.project.id,
+                                      projectUserId: item.project.userId,
+                                      sharedByPhotoURL: sharedProject.sharedByPhotoURL,
+                                      sharedByName: sharedProject.sharedByName,
+                                      projectOwnersData: projectOwners[item.project.userId],
+                                      hasSharedByPhotoURL: !!sharedProject.sharedByPhotoURL,
+                                      hasProjectOwnerPhotoURL: !!projectOwners[item.project.userId]?.photoURL
+                                    });
                                     photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
                                     displayName = sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName;
                                   } else {
