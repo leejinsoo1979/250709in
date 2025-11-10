@@ -2859,7 +2859,7 @@ const SimpleDashboard: React.FC = () => {
             }}
           >
             <div className={styles.navItemIcon}>
-              <TfiShare size={26} />
+              <TfiShare size={30} />
             </div>
             <span>공유한 프로젝트</span>
             <span className={styles.navItemCount}>{sharedByMeProjects.length}</span>
@@ -2875,7 +2875,7 @@ const SimpleDashboard: React.FC = () => {
             }}
           >
             <div className={styles.navItemIcon}>
-              <TfiShareAlt size={22} />
+              <TfiShareAlt size={20} />
             </div>
             <span>공유받은 프로젝트</span>
             <span className={styles.navItemCount}>{sharedWithMeProjects.length}</span>
