@@ -1366,7 +1366,7 @@
 /* 리스트 테이블 헤더 */
 .listTableHeader {
   display: grid;
-  grid-template-columns: 40px minmax(200px, 1fr) 150px 240px 100px;
+  grid-template-columns: 40px minmax(200px, 1fr) 130px 280px 100px;
   gap: 16px;
   padding: 12px 20px;
   padding-left: 20px;
@@ -1432,7 +1432,7 @@
 /* 리스트 뷰 카드 스타일 */
 .designGrid.listView .designCard {
   display: grid;
-  grid-template-columns: 40px 56px minmax(200px, 1fr) 150px 240px 100px;
+  grid-template-columns: 40px 56px minmax(200px, 1fr) 130px 280px 100px;
   align-items: center;
   gap: 12px;
   padding: 12px 20px;
@@ -2160,19 +2160,23 @@
 }
 
 .designGrid.listView .cardUser {
-  width: 220px;
-  justify-content: center;
+  width: 260px;
+  justify-content: flex-start;
+  padding-left: 8px;
 }
 
 .cardUser {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-shrink: 0;
 }
 
 .cardUserAvatar {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
   border-radius: 50%;
   background: var(--theme-background-secondary);
   display: flex;
@@ -2180,12 +2184,19 @@
   justify-content: center;
   color: var(--theme-text-muted);
   font-size: 12px;
+  flex-shrink: 0;
+  object-fit: cover;
 }
 
 .cardUserName {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--theme-text-muted);
   font-weight: 400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .cardBadge {
