@@ -8,6 +8,7 @@ import { AiOutlineFileMarkdown } from "react-icons/ai";
 import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
 import { TfiShare, TfiShareAlt } from "react-icons/tfi";
+import { BsBookmarkStarFill } from "react-icons/bs";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
 import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks, revokeDesignFileAccess, revokeProjectAccess, revokeAllProjectAccess, revokeAllDesignFileAccess } from '@/firebase/shareLinks';
@@ -4371,11 +4372,10 @@ const SimpleDashboard: React.FC = () => {
                             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                               {item.project.title} &gt; {item.name}
                               {bookmarkedDesigns.has(item.id) && (
-                                <StarIcon
+                                <BsBookmarkStarFill
                                   size={16}
                                   style={{
                                     color: '#FFC107',
-                                    fill: '#FFC107',
                                     flexShrink: 0
                                   }}
                                 />
