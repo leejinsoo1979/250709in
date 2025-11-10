@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { Timestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
+import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, BookmarkIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
 import { PiFolderFill, PiFolderPlus, PiCrownDuotone } from "react-icons/pi";
 import { GoPeople } from "react-icons/go";
 import { AiOutlineFileMarkdown } from "react-icons/ai";
@@ -251,7 +251,7 @@ const SimpleDashboard: React.FC = () => {
   const [projectDesignFiles, setProjectDesignFiles] = useState<{[projectId: string]: any[]}>({});
 
   // 프로젝트 소유자 정보 캐시 (userId -> {displayName, photoURL})
-  const [projectOwners, setProjectOwners] = useState<{[userId: string]: {displayName: string, photoURL?: string}}>({});
+  const [projectOwners, setProjectOwners] = useState<{[userId: string]: {displayName: string, photoURL?: string | null}}>({});
 
   // 로컬 스토리지에서 데모 프로젝트 삭제
   const cleanupDemoProjects = useCallback(() => {
@@ -271,6 +271,116 @@ const SimpleDashboard: React.FC = () => {
     
     console.log(`🧹 총 ${deletedCount}개의 데모 프로젝트 관련 항목 삭제됨`);
   }, []);
+
+  // 공유받은 프로젝트 생성자 프로필 정보 로드 (sharedByPhotoURL이 없는 경우 대비)
+  useEffect(() => {
+    if (!user) return;
+
+    const ownerIdsToFetch = new Set<string>();
+
+    [...sharedWithMeProjects, ...sharedByMeProjects].forEach(project => {
+      const ownerId = project.userId;
+      if (!ownerId || ownerId === user.uid) return;
+
+      const cachedOwner = projectOwners[ownerId];
+      const hasCachedPhoto = typeof cachedOwner?.photoURL === 'string' && cachedOwner.photoURL.length > 0;
+      const alreadyFetchedWithoutPhoto = cachedOwner?.photoURL === null;
+      if (hasCachedPhoto || alreadyFetchedWithoutPhoto) {
+        return; // 이미 사진을 가지고 있거나 한 번 조회했음
+      }
+
+      const hasInlinePhoto = Boolean((project as any)?.sharedByPhotoURL);
+      if (!hasInlinePhoto) {
+        ownerIdsToFetch.add(ownerId);
+      }
+    });
+
+    if (ownerIdsToFetch.size === 0) return;
+
+    let isMounted = true;
+
+    const fetchOwnerProfiles = async () => {
+      const owners = await Promise.all(
+        Array.from(ownerIdsToFetch).map(async ownerId => {
+          try {
+            const ownerDoc = await getDoc(doc(db, 'users', ownerId));
+            if (ownerDoc.exists()) {
+              const data = ownerDoc.data() as any;
+              return {
+                ownerId,
+                displayName:
+                  data.displayName ||
+                  data.name ||
+                  data.userName ||
+                  data.email?.split?.('@')?.[0] ||
+                  '생성자',
+                photoURL: data.photoURL || data.photoUrl || data.avatarUrl || null
+              };
+            }
+          } catch (error) {
+            console.error('❌ 프로젝트 생성자 정보 조회 실패:', { ownerId, error });
+          }
+          return {
+            ownerId,
+            displayName: '생성자',
+            photoURL: null
+          };
+        })
+      );
+
+      if (!isMounted) return;
+
+      setProjectOwners(prev => {
+        const next = { ...prev };
+        owners.forEach(({ ownerId, displayName, photoURL }) => {
+          next[ownerId] = {
+            displayName: displayName || prev[ownerId]?.displayName || '생성자',
+            photoURL: photoURL ?? prev[ownerId]?.photoURL ?? null
+          };
+        });
+        return next;
+      });
+    };
+
+    fetchOwnerProfiles();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [sharedWithMeProjects, sharedByMeProjects, user?.uid, projectOwners]);
+
+  // 캐시에 주입된 생성자 프로필 정보를 공유 프로젝트 객체에도 반영
+  useEffect(() => {
+    if (!projectOwners || Object.keys(projectOwners).length === 0) return;
+
+    setSharedWithMeProjects(prev => {
+      let updated = false;
+      const next = prev.map(project => {
+        const owner = project.userId ? projectOwners[project.userId] : undefined;
+        if (!owner) return project;
+
+        const nextFields: any = {};
+        if (!project.sharedByPhotoURL && owner.photoURL) {
+          nextFields.sharedByPhotoURL = owner.photoURL;
+        }
+        if ((!project.sharedByName || project.sharedByName === '생성자') && owner.displayName) {
+          nextFields.sharedByName = owner.displayName;
+        }
+
+        if (Object.keys(nextFields).length === 0) {
+          return project;
+        }
+
+        updated = true;
+        return {
+          ...project,
+          ...nextFields
+        };
+      });
+
+      return updated ? next : prev;
+    });
+  }, [projectOwners]);
 
   // Firebase에서 프로젝트 목록 가져오기
   const loadFirebaseProjects = useCallback(async (retryCount = 0) => {
@@ -565,8 +675,8 @@ const SimpleDashboard: React.FC = () => {
             setProjectOwners(prev => ({
               ...prev,
               [s.sharedBy]: {
-                displayName: sharedByDisplayName,
-                photoURL: sharedByPhotoURL
+                displayName: sharedByDisplayName || prev[s.sharedBy]?.displayName || '생성자',
+                photoURL: sharedByPhotoURL ?? prev[s.sharedBy]?.photoURL
               }
             }));
           }
@@ -575,34 +685,37 @@ const SimpleDashboard: React.FC = () => {
           const designFileIds = s.designFileIds || (s.designFileId ? [s.designFileId] : []);
           const designFileNames = s.designFileNames || (s.designFileName ? [s.designFileName] : []);
 
-          console.log('🔍 공유받은 프로젝트 생성:', {
-            projectId: s.projectId,
-            projectName: s.projectName,
-            designFileIds,
-            designFileNames,
-            sharedBy: s.sharedBy,
-            sharedByPhotoURL: sharedByPhotoURL,
-            hasPhotoURL: !!sharedByPhotoURL
-          });
+        console.log('🔍 공유받은 프로젝트 생성:', {
+          projectId: s.projectId,
+          projectName: s.projectName,
+          designFileIds,
+          designFileNames,
+          sharedBy: s.sharedBy,
+          sharedByPhotoURL: sharedByPhotoURL,
+          hasPhotoURL: !!sharedByPhotoURL
+        });
 
-          sharedProjectsMap.set(s.projectId, {
-            id: s.projectId,
-            title: s.projectName,
-            userId: s.sharedBy,
-            createdAt: s.grantedAt,
-            updatedAt: s.grantedAt,
-            designFilesCount: 0,
-            lastDesignFileName: null,
-            // 공유받은 디자인 파일 ID 목록 (배열로 저장)
-            sharedDesignFileIds: designFileIds,
-            sharedDesignFileNames: designFileNames,
-            // 첫 번째 디자인 정보 (호환성)
-            sharedDesignFileId: designFileIds[0] || null,
-            sharedDesignFileName: designFileNames[0] || null,
-            // 공유한 사람(호스트) 정보
-            sharedByName: sharedByDisplayName,
-            sharedByPhotoURL: sharedByPhotoURL
-          });
+        const existingSharedProject = sharedProjectsMap.get(s.projectId);
+        const mergedDesignFileIds = Array.from(new Set([...(existingSharedProject?.sharedDesignFileIds || []), ...designFileIds]));
+        const mergedDesignFileNames = Array.from(new Set([...(existingSharedProject?.sharedDesignFileNames || []), ...designFileNames]));
+        const mergedSharedByPhotoURL = sharedByPhotoURL ?? existingSharedProject?.sharedByPhotoURL ?? null;
+        const mergedSharedByName = sharedByDisplayName || existingSharedProject?.sharedByName || '생성자';
+
+        sharedProjectsMap.set(s.projectId, {
+          id: s.projectId,
+          title: s.projectName || existingSharedProject?.title || '공유 프로젝트',
+          userId: s.sharedBy,
+          createdAt: existingSharedProject?.createdAt || s.grantedAt,
+          updatedAt: s.grantedAt || existingSharedProject?.updatedAt,
+          designFilesCount: mergedDesignFileIds.length,
+          lastDesignFileName: mergedDesignFileNames[mergedDesignFileNames.length - 1] || existingSharedProject?.lastDesignFileName || null,
+          sharedDesignFileIds: mergedDesignFileIds,
+          sharedDesignFileNames: mergedDesignFileNames,
+          sharedDesignFileId: mergedDesignFileIds[0] || existingSharedProject?.sharedDesignFileId || null,
+          sharedDesignFileName: mergedDesignFileNames[0] || existingSharedProject?.sharedDesignFileName || null,
+          sharedByName: mergedSharedByName,
+          sharedByPhotoURL: mergedSharedByPhotoURL
+        });
         }
 
         const sharedProjectSummaries = Array.from(sharedProjectsMap.values());
@@ -2881,6 +2994,22 @@ const SimpleDashboard: React.FC = () => {
           </div>
 
           <div
+            className={`${styles.navItem} ${activeMenu === 'bookmarks' ? styles.active : ''}`}
+            onClick={() => {
+              setActiveMenu('bookmarks');
+              setSelectedProjectId(null);
+              setBreadcrumbPath(['북마크']);
+              navigate('/dashboard/bookmarks');
+            }}
+          >
+            <div className={styles.navItemIcon}>
+              <BookmarkIcon size={20} />
+            </div>
+            <span>북마크</span>
+            <span className={styles.navItemCount}>{bookmarkedProjects.size + bookmarkedFolders.size}</span>
+          </div>
+
+          <div
             className={`${styles.navItem} ${activeMenu === 'profile' ? styles.active : ''}`}
             onClick={() => {
               setActiveMenu('profile');
@@ -4695,18 +4824,39 @@ const SimpleDashboard: React.FC = () => {
                           const designFileIds = s.designFileIds || (s.designFileId ? [s.designFileId] : []);
                           const designFileNames = s.designFileNames || (s.designFileName ? [s.designFileName] : []);
 
+                          const sharedByPhotoURL = s.sharedByPhotoURL || null;
+                          const sharedByDisplayName = s.sharedByName;
+
+                          if (sharedByDisplayName) {
+                            setProjectOwners(prev => ({
+                              ...prev,
+                              [s.sharedBy]: {
+                                displayName: sharedByDisplayName || prev[s.sharedBy]?.displayName || '생성자',
+                                photoURL: sharedByPhotoURL ?? prev[s.sharedBy]?.photoURL
+                              }
+                            }));
+                          }
+
+                          const existingSharedProject = sharedProjectsMap.get(s.projectId);
+                          const mergedDesignFileIds = Array.from(new Set([...(existingSharedProject?.sharedDesignFileIds || []), ...designFileIds]));
+                          const mergedDesignFileNames = Array.from(new Set([...(existingSharedProject?.sharedDesignFileNames || []), ...designFileNames]));
+                          const mergedSharedByPhotoURL = sharedByPhotoURL ?? existingSharedProject?.sharedByPhotoURL ?? null;
+                          const mergedSharedByName = sharedByDisplayName || existingSharedProject?.sharedByName || '생성자';
+
                           sharedProjectsMap.set(s.projectId, {
                             id: s.projectId,
-                            title: s.projectName,
+                            title: s.projectName || existingSharedProject?.title || '공유 프로젝트',
                             userId: s.sharedBy,
-                            createdAt: s.grantedAt,
-                            updatedAt: s.grantedAt,
-                            designFilesCount: 0,
-                            lastDesignFileName: null,
-                            sharedDesignFileIds: designFileIds,
-                            sharedDesignFileNames: designFileNames,
-                            sharedDesignFileId: designFileIds[0] || null,
-                            sharedDesignFileName: designFileNames[0] || null,
+                            createdAt: existingSharedProject?.createdAt || s.grantedAt,
+                            updatedAt: s.grantedAt || existingSharedProject?.updatedAt,
+                            designFilesCount: mergedDesignFileIds.length,
+                            lastDesignFileName: mergedDesignFileNames[mergedDesignFileNames.length - 1] || existingSharedProject?.lastDesignFileName || null,
+                            sharedDesignFileIds: mergedDesignFileIds,
+                            sharedDesignFileNames: mergedDesignFileNames,
+                            sharedDesignFileId: mergedDesignFileIds[0] || existingSharedProject?.sharedDesignFileId || null,
+                            sharedDesignFileName: mergedDesignFileNames[0] || existingSharedProject?.sharedDesignFileName || null,
+                            sharedByName: mergedSharedByName,
+                            sharedByPhotoURL: mergedSharedByPhotoURL
                           });
                         }
 
