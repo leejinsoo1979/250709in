@@ -1577,14 +1577,15 @@
   grid-column: 5;
   grid-row: 1;
   margin: 0;
-  justify-self: center;
+  justify-self: flex-start;
   align-self: center;
+  overflow: visible;
+  padding-left: 8px;
 }
 
 .designGrid.listView .cardUser {
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
   color: var(--theme-text, #374151);
 }
 
@@ -2205,8 +2206,8 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
+  flex-shrink: 0;
+  max-width: 120px;
 }
 
 .cardBadge {

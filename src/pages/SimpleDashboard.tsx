@@ -4321,7 +4321,7 @@ const SimpleDashboard: React.FC = () => {
                           <div className={styles.cardFooter}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                               {/* 왼쪽: 왕관 + 호스트 프로필 + 외 n명 */}
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', flexWrap: 'nowrap', whiteSpace: 'nowrap', flexShrink: 0 }}>
                                 {/* 왕관 아이콘 */}
                                 <PiCrownDuotone size={14} style={{ color: 'var(--theme-primary)' }} />
                                 {/* 호스트 프로필 */}
@@ -4395,7 +4395,9 @@ const SimpleDashboard: React.FC = () => {
                                     <span style={{
                                       fontSize: '12px',
                                       color: '#666',
-                                      fontWeight: '500'
+                                      fontWeight: '500',
+                                      flexShrink: 0,
+                                      whiteSpace: 'nowrap'
                                     }}>
                                       외 {editCollaborators.length}명
                                     </span>
