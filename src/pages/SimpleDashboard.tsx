@@ -2848,6 +2848,23 @@ const SimpleDashboard: React.FC = () => {
             <span className={styles.navItemCount}>{firebaseProjects.length}</span>
           </div>
 
+          <div
+            className={`${styles.navItem} ${activeMenu === 'bookmarks' ? styles.active : ''}`}
+            onClick={() => {
+              console.log('⭐ 북마크 클릭');
+              setActiveMenu('bookmarks');
+              setSelectedProjectId(null);
+              setCurrentFolderId(null);
+              setBreadcrumbPath(['북마크']);
+              navigate('/dashboard/bookmarks');
+            }}
+          >
+            <div className={styles.navItemIcon}>
+              <StarIcon size={20} />
+            </div>
+            <span>북마크</span>
+            <span className={styles.navItemCount}>{bookmarkedProjects.size + bookmarkedDesigns.size + bookmarkedFolders.size}</span>
+          </div>
 
           <div
             className={`${styles.navItem} ${activeMenu === 'shared-by-me' ? styles.active : ''}`}
