@@ -3314,6 +3314,42 @@ const Configurator: React.FC = () => {
             onToggle={() => setActiveSidebarTab(activeSidebarTab ? null : (isReadOnly ? 'material' : 'module'))}
             onSave={saveProject}
             readOnly={isReadOnly}
+            onShare={async () => {
+              if (isReadOnly) {
+                // 읽기 전용 모드: 현재 URL을 복사
+                try {
+                  await navigator.clipboard.writeText(window.location.href);
+                  alert('📋 읽기 전용 링크가 복사되었습니다.');
+                } catch (error) {
+                  console.error('링크 복사 실패:', error);
+                  alert('링크 복사에 실패했습니다.');
+                }
+              } else {
+                // 편집 모드: 공유 모달 열기
+                // 디자인이 저장되지 않았으면 먼저 자동 저장
+                if (!currentDesignFileId) {
+                  const confirmSave = confirm('공유하기 전에 먼저 저장해야 합니다. 지금 저장하시겠습니까?');
+                  if (!confirmSave) return;
+
+                  // 저장 실행
+                  await handleSaveProject();
+
+                  // 저장 후에도 designFileId가 없으면 에러
+                  if (!currentDesignFileId) {
+                    alert('저장에 실패했습니다. 다시 시도해주세요.');
+                    return;
+                  }
+                }
+
+                // furniture 데이터가 있는지 확인
+                if (placedModules.length === 0) {
+                  alert('⚠️ 공유할 가구 데이터가 없습니다. 가구를 배치한 후 공유해주세요.');
+                  return;
+                }
+
+                setIsShareModalOpen(true);
+              }
+            }}
           />
 
           {/* 사이드바 컨텐츠 패널 */}

@@ -24,6 +24,7 @@ interface SidebarProps {
   onResetUnsavedChanges?: React.MutableRefObject<(() => void) | null>; // 저장 완료 후 상태 리셋을 위한 ref
   onSave?: () => Promise<void>; // 저장 함수 추가
   readOnly?: boolean; // 읽기 전용 모드 (viewer 권한)
+  onShare?: () => void; // 공유하기 함수 추가
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -33,7 +34,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   onToggle,
   onResetUnsavedChanges,
   onSave,
-  readOnly = false
+  readOnly = false,
+  onShare
 }) => {
   const { user } = useAuth();
   const { theme } = useTheme();
@@ -218,10 +220,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div style={{ padding: '16px', borderTop: '1px solid var(--theme-border)', display: 'flex', justifyContent: 'center' }}>
         <button
           className={styles.settingsButton}
-          title="공유하기"
+          title={readOnly ? "읽기 전용 링크 복사" : "공유하기"}
           onClick={() => {
-            // 공유하기 기능 (추후 구현)
-            alert('공유하기 기능은 준비 중입니다.');
+            if (onShare) {
+              onShare();
+            }
           }}
         >
           <PiShareNetworkLight size={20} />
