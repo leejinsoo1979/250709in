@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { X, User, Mail, Calendar, Shield, LogOut, Settings, ChevronRight, CreditCard } from 'lucide-react';
+import { X, User, Mail, Calendar, Shield, LogOut, Settings, ChevronRight, CreditCard, Coins } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { signOutUser } from '@/firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/i18n/useTranslation';
-import { getUsageStats, UsageStats } from '@/firebase/userProfiles';
+import { getUsageStats, UsageStats, getUserProfile } from '@/firebase/userProfiles';
 import styles from './ProfilePopup.module.css';
 
 interface ProfilePopupProps {
@@ -18,13 +18,20 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   const navigate = useNavigate();
   const { t, currentLanguage } = useTranslation();
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
+  const [credits, setCredits] = useState<number>(0);
 
-  // 사용량 통계 가져오기
+  // 사용량 통계 및 크레딧 가져오기
   useEffect(() => {
     if (isOpen && user) {
       getUsageStats().then(({ stats }) => {
         if (stats) {
           setUsageStats(stats);
+        }
+      });
+
+      getUserProfile().then(({ profile }) => {
+        if (profile) {
+          setCredits(profile.credits || 0);
         }
       });
     }
@@ -165,6 +172,21 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
             </div>
             <div className={styles.subscriptionContent}>
               <div className={styles.planBadge}>무료 플랜</div>
+
+              {/* 크레딧 정보 */}
+              <div className={styles.creditInfo}>
+                <div className={styles.creditHeader}>
+                  <Coins size={16} />
+                  <span>보유 크레딧</span>
+                </div>
+                <div className={styles.creditAmount}>
+                  {credits} <span className={styles.creditUnit}>크레딧</span>
+                </div>
+                <div className={styles.creditNote}>
+                  디자인 파일 생성 시 20 크레딧 소모
+                </div>
+              </div>
+
               {usageStats && (
                 <div className={styles.planStats}>
                   <div className={styles.planStat}>

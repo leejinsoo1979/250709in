@@ -23,6 +23,7 @@ import { FirebaseProject, CreateProjectData, ProjectSummary, CreateDesignFileDat
 import { FLAGS } from '@/flags';
 import { listDesignFiles as repoListDesignFiles } from '@/services/designs.repo';
 import { recordProjectHistory } from './projectHistory';
+import { deductCredits } from './userProfiles';
 
 // 컬렉션 참조
 const PROJECTS_COLLECTION = 'projects';
@@ -198,6 +199,15 @@ export const createDesignFile = async (data: CreateDesignFileData): Promise<{ id
       uid: user.uid,
       email: user.email
     });
+
+    // 크레딧 확인 및 차감
+    console.log('💰 [createDesignFile] 크레딧 확인 중...');
+    const { success, remainingCredits, error: creditError } = await deductCredits(20);
+    if (!success) {
+      console.error('🚫 [createDesignFile] 크레딧 부족:', creditError);
+      return { id: null, error: creditError || '크레딧이 부족합니다.' };
+    }
+    console.log('✅ [createDesignFile] 크레딧 차감 완료. 남은 크레딧:', remainingCredits);
 
     const teamId = await getActiveTeamId();
     const now = serverTimestamp() as Timestamp;

@@ -185,16 +185,19 @@ export interface UserProfile {
   company?: string;
   website?: string;
   location?: string;
-  
+
+  // 크레딧 시스템
+  credits: number; // 사용 가능한 크레딧 (무료 플랜 기본: 200)
+
   // 협업 관련 설정
   teamNotifications: boolean;
   shareNotifications: boolean;
   emailNotifications: boolean;
-  
+
   // 계정 설정
   isPublicProfile: boolean; // 다른 사용자가 프로필을 볼 수 있는지
   allowTeamInvitations: boolean; // 팀 초대를 받을 수 있는지
-  
+
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }

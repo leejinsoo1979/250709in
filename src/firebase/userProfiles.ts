@@ -44,6 +44,7 @@ export const createOrUpdateUserProfile = async (
       company: '',
       website: '',
       location: '',
+      credits: 200, // 무료 플랜 기본 크레딧
       teamNotifications: true,
       shareNotifications: true,
       emailNotifications: true,
@@ -598,5 +599,120 @@ export const getUsageStats = async (): Promise<{
   } catch (error) {
     console.error('사용량 통계 가져오기 에러:', error);
     return { stats: null, error: '사용량 통계를 가져오는 중 오류가 발생했습니다.' };
+  }
+};
+
+// 크레딧 확인
+export const checkCredits = async (requiredCredits: number = 20): Promise<{
+  hasEnough: boolean;
+  currentCredits: number;
+  error: string | null;
+}> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { hasEnough: false, currentCredits: 0, error: '로그인이 필요합니다.' };
+    }
+
+    const { profile, error } = await getUserProfile();
+    if (error || !profile) {
+      return { hasEnough: false, currentCredits: 0, error: error || '프로필을 찾을 수 없습니다.' };
+    }
+
+    const currentCredits = profile.credits || 0;
+    return {
+      hasEnough: currentCredits >= requiredCredits,
+      currentCredits,
+      error: null
+    };
+  } catch (error) {
+    console.error('크레딧 확인 에러:', error);
+    return { hasEnough: false, currentCredits: 0, error: '크레딧 확인 중 오류가 발생했습니다.' };
+  }
+};
+
+// 크레딧 차감
+export const deductCredits = async (amount: number = 20): Promise<{
+  success: boolean;
+  remainingCredits: number;
+  error: string | null;
+}> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { success: false, remainingCredits: 0, error: '로그인이 필요합니다.' };
+    }
+
+    // 현재 크레딧 확인
+    const { hasEnough, currentCredits, error: checkError } = await checkCredits(amount);
+    if (checkError) {
+      return { success: false, remainingCredits: 0, error: checkError };
+    }
+
+    if (!hasEnough) {
+      return {
+        success: false,
+        remainingCredits: currentCredits,
+        error: `크레딧이 부족합니다. (필요: ${amount}, 보유: ${currentCredits})`
+      };
+    }
+
+    // 크레딧 차감
+    const profileRef = doc(db, USER_PROFILES_COLLECTION, user.uid);
+    const newCredits = currentCredits - amount;
+
+    await updateDoc(profileRef, {
+      credits: newCredits,
+      updatedAt: serverTimestamp()
+    });
+
+    console.log(`✅ 크레딧 차감 완료: ${currentCredits} → ${newCredits} (-${amount})`);
+
+    return {
+      success: true,
+      remainingCredits: newCredits,
+      error: null
+    };
+  } catch (error) {
+    console.error('크레딧 차감 에러:', error);
+    return { success: false, remainingCredits: 0, error: '크레딧 차감 중 오류가 발생했습니다.' };
+  }
+};
+
+// 크레딧 추가 (관리자용 또는 결제 후)
+export const addCredits = async (amount: number): Promise<{
+  success: boolean;
+  newCredits: number;
+  error: string | null;
+}> => {
+  try {
+    const user = await getCurrentUserAsync();
+    if (!user) {
+      return { success: false, newCredits: 0, error: '로그인이 필요합니다.' };
+    }
+
+    const { profile, error } = await getUserProfile();
+    if (error || !profile) {
+      return { success: false, newCredits: 0, error: error || '프로필을 찾을 수 없습니다.' };
+    }
+
+    const profileRef = doc(db, USER_PROFILES_COLLECTION, user.uid);
+    const newCredits = (profile.credits || 0) + amount;
+
+    await updateDoc(profileRef, {
+      credits: newCredits,
+      updatedAt: serverTimestamp()
+    });
+
+    console.log(`✅ 크레딧 추가 완료: ${profile.credits} → ${newCredits} (+${amount})`);
+
+    return {
+      success: true,
+      newCredits,
+      error: null
+    };
+  } catch (error) {
+    console.error('크레딧 추가 에러:', error);
+    return { success: false, newCredits: 0, error: '크레딧 추가 중 오류가 발생했습니다.' };
   }
 };
