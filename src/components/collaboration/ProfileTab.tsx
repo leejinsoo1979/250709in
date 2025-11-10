@@ -238,10 +238,11 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
         alert(error);
       } else {
         alert('프로필 사진이 업데이트되었습니다.');
-        window.location.reload();
+        // 프로필 다시 로드
+        await loadProfile();
       }
     } catch (err: any) {
-      alert('프로필 사진 업로드 실패');
+      alert('업로드 실패');
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) {
@@ -261,7 +262,8 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
         alert(error);
       } else {
         alert('프로필 사진이 삭제되었습니다.');
-        window.location.reload();
+        // 프로필 다시 로드
+        await loadProfile();
       }
     } catch (err) {
       alert('프로필 사진 삭제 실패');
