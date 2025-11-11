@@ -365,8 +365,12 @@ const SimpleDashboard: React.FC = () => {
           [projectId]: designFiles
         }));
 
-        // 디자인 파일 소유자들의 프로필 정보 가져오기
-        const ownerIds = new Set(designFiles.map(df => df.userId).filter(Boolean));
+        // 디자인 파일 소유자들 + 프로젝트 소유자 프로필 정보 가져오기
+        const ownerIds = new Set([
+          ...designFiles.map(df => df.userId).filter(Boolean),
+          // 프로젝트 소유자도 추가 (공유받은 프로젝트의 경우 필요)
+          ...(firebaseProjects.filter(p => p.id === projectId).map(p => p.userId).filter(Boolean))
+        ]);
 
         if (ownerIds.size > 0) {
           const fetchedOwners = await Promise.all(
@@ -395,11 +399,17 @@ const SimpleDashboard: React.FC = () => {
           setProjectOwners(prev => {
             const next = { ...prev };
             fetchedOwners.forEach(owner => {
-              // 이미 있는 owner는 덮어쓰지 않음 (기존 캐시 유지)
-              if (!next[owner.ownerId]) {
+              // 새로 가져온 정보로 업데이트 (실제 프로필 정보가 있으면 덮어씀)
+              if (owner.displayName !== '생성자' || owner.photoURL) {
                 next[owner.ownerId] = {
                   displayName: owner.displayName,
                   photoURL: owner.photoURL
+                };
+              } else if (!next[owner.ownerId]) {
+                // 프로필 정보가 없고 기존에도 없으면 "생성자"로 저장
+                next[owner.ownerId] = {
+                  displayName: '생성자',
+                  photoURL: null
                 };
               }
             });
@@ -4504,41 +4514,62 @@ const SimpleDashboard: React.FC = () => {
                                 {/* 호스트 프로필 */}
                                 <div className={styles.cardUserAvatar}>
                                   {(() => {
-                                    // 디자인 파일 소유자 프로필 표시
-                                    const designFileOwnerId = item.designFile.userId || item.project.userId;
-                                    const isMyDesign = designFileOwnerId === user?.uid;
+                                    const isMyProject = item.project.userId === user?.uid;
 
-                                    const photoURL = isMyDesign
-                                      ? user?.photoURL
-                                      : projectOwners[designFileOwnerId]?.photoURL;
+                                    if (isMyProject) {
+                                      // 내 프로젝트: 내 프로필 사용
+                                      return user?.photoURL ? (
+                                        <img
+                                          src={user.photoURL}
+                                          alt="프로필"
+                                          referrerPolicy="no-referrer"
+                                          style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            borderRadius: '50%',
+                                            objectFit: 'cover'
+                                          }}
+                                        />
+                                      ) : (
+                                        <UserIcon size={12} />
+                                      );
+                                    } else {
+                                      // 공유받은 프로젝트: sharedByPhotoURL 우선, 없으면 projectOwners에서
+                                      const sharedProject = item.project as any;
+                                      const photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
 
-                                    return photoURL ? (
-                                      <img
-                                        src={photoURL}
-                                        alt="프로필"
-                                        referrerPolicy="no-referrer"
-                                        style={{
-                                          width: '100%',
-                                          height: '100%',
-                                          borderRadius: '50%',
-                                          objectFit: 'cover'
-                                        }}
-                                      />
-                                    ) : (
-                                      <UserIcon size={12} />
-                                    );
+                                      return photoURL ? (
+                                        <img
+                                          src={photoURL}
+                                          alt="프로필"
+                                          referrerPolicy="no-referrer"
+                                          style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            borderRadius: '50%',
+                                            objectFit: 'cover'
+                                          }}
+                                        />
+                                      ) : (
+                                        <UserIcon size={12} />
+                                      );
+                                    }
                                   })()}
                                 </div>
 
                                 {/* 생성자 닉네임 */}
                                 <span className={styles.cardUserName}>
                                   {(() => {
-                                    const designFileOwnerId = item.designFile.userId || item.project.userId;
-                                    const isMyDesign = designFileOwnerId === user?.uid;
+                                    const isMyProject = item.project.userId === user?.uid;
 
-                                    return isMyDesign
-                                      ? (user?.displayName || user?.email?.split('@')[0] || '이진수')
-                                      : (projectOwners[designFileOwnerId]?.displayName || '생성자');
+                                    if (isMyProject) {
+                                      // 내 프로젝트
+                                      return user?.displayName || user?.email?.split('@')[0] || '이진수';
+                                    } else {
+                                      // 공유받은 프로젝트: sharedByName 우선, 없으면 projectOwners에서
+                                      const sharedProject = item.project as any;
+                                      return sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName || '';
+                                    }
                                   })()}
                                 </span>
 
