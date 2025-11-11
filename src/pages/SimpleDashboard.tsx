@@ -4412,7 +4412,7 @@ const SimpleDashboard: React.FC = () => {
                                   const isSharedProject = item.project.userId !== user?.uid;
                                   if (isSharedProject) {
                                     const sharedProject = item.project as any;
-                                    return sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName || '생성자';
+                                    return sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName || '';
                                   }
                                   return user?.displayName || user?.email?.split('@')[0] || '이진수';
                                 })()}
@@ -4775,7 +4775,7 @@ const SimpleDashboard: React.FC = () => {
                                   const isSharedProject = item.project.userId !== user?.uid;
                                   if (isSharedProject) {
                                     const sharedProject = item.project as any;
-                                    return sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName || '생성자';
+                                    return sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName || '';
                                   }
                                   return user?.displayName || user?.email?.split('@')[0] || '이진수';
                                 })()}
