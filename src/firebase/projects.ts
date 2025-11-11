@@ -820,6 +820,43 @@ export const updateDesignFile = async (
       return { error: '디자인파일을 찾을 수 없습니다.' };
     }
 
+    // ✅ 권한 확인: 파일 소유자이거나 프로젝트 편집 권한이 있어야 함
+    console.log('🔐🔐🔐 [updateDesignFile] 권한 확인:', {
+      designFileName: designData.name,
+      designFileId,
+      projectId,
+      currentUserId: user.uid,
+      fileUserId: designData.userId,
+      isOwner: user.uid === designData.userId,
+      foundPath,
+      전체디자인데이터: designData
+    });
+
+    // 파일 소유자가 아닌 경우, 프로젝트 편집 권한 확인
+    if (user.uid !== designData.userId) {
+      console.log('🔐 [updateDesignFile] 파일 소유자가 아님, 프로젝트 편집 권한 확인 중...');
+
+      // sharedProjectAccess에서 편집 권한 확인
+      const accessId = `${projectId}_${user.uid}`;
+      const accessRef = doc(db, 'sharedProjectAccess', accessId);
+      const accessSnap = await getDocFromServer(accessRef);
+
+      if (!accessSnap.exists()) {
+        console.error('🚫 [updateDesignFile] 공유 접근 권한 없음');
+        return { error: '이 디자인 파일을 수정할 권한이 없습니다. 파일 소유자이거나 프로젝트 편집 권한이 필요합니다.' };
+      }
+
+      const accessData = accessSnap.data();
+      if (accessData.permission !== 'editor') {
+        console.error('🚫 [updateDesignFile] 편집 권한 없음, 현재 권한:', accessData.permission);
+        return { error: '이 디자인 파일을 수정할 권한이 없습니다. 편집 권한이 필요합니다.' };
+      }
+
+      console.log('✅ [updateDesignFile] 프로젝트 편집 권한 확인됨');
+    } else {
+      console.log('✅ [updateDesignFile] 파일 소유자 확인됨');
+    }
+
     // spaceConfig가 있는 경우 자동 계산 필드들을 제거
     let spaceConfigClean = undefined;
     if (updates.spaceConfig) {
