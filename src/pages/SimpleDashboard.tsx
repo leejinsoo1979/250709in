@@ -367,11 +367,10 @@ const SimpleDashboard: React.FC = () => {
 
         // 디자인 파일 소유자들의 프로필 정보 가져오기
         const ownerIds = new Set(designFiles.map(df => df.userId).filter(Boolean));
-        const missingOwnerIds = Array.from(ownerIds).filter(ownerId => !projectOwners[ownerId]);
 
-        if (missingOwnerIds.length > 0) {
+        if (ownerIds.size > 0) {
           const fetchedOwners = await Promise.all(
-            missingOwnerIds.map(async ownerId => {
+            Array.from(ownerIds).map(async ownerId => {
               try {
                 const ownerDoc = await getDocFromServer(doc(db, 'users', ownerId));
                 if (ownerDoc.exists()) {
@@ -396,10 +395,13 @@ const SimpleDashboard: React.FC = () => {
           setProjectOwners(prev => {
             const next = { ...prev };
             fetchedOwners.forEach(owner => {
-              next[owner.ownerId] = {
-                displayName: owner.displayName,
-                photoURL: owner.photoURL
-              };
+              // 이미 있는 owner는 덮어쓰지 않음 (기존 캐시 유지)
+              if (!next[owner.ownerId]) {
+                next[owner.ownerId] = {
+                  displayName: owner.displayName,
+                  photoURL: owner.photoURL
+                };
+              }
             });
             return next;
           });
@@ -411,7 +413,7 @@ const SimpleDashboard: React.FC = () => {
       // 로딩 상태 해제
       setDesignFilesLoading(prev => ({ ...prev, [projectId]: false }));
     }
-  }, [user, projectOwners]);
+  }, [user]);
 
   // Firebase에 폴더 데이터 저장하기
   const saveFolderDataToFirebase = useCallback(async (projectId: string, folderData: FolderData[]) => {
