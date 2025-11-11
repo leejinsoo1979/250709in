@@ -620,7 +620,8 @@ const SimpleDashboard: React.FC = () => {
           const fetchedOwners: { ownerId: string; displayName: string; photoURL: string | null }[] = await Promise.all(
             Array.from(missingOwnerIds).map(async ownerId => {
               try {
-                const ownerDoc = await getDoc(doc(db, 'users', ownerId));
+                // 캐시 대신 서버에서 직접 가져오기 (최신 프로필 이미지 보장)
+                const ownerDoc = await getDocFromServer(doc(db, 'users', ownerId));
                 if (ownerDoc.exists()) {
                   const data = ownerDoc.data() as any;
                   return {
@@ -4904,7 +4905,8 @@ const SimpleDashboard: React.FC = () => {
                           const fetchedOwners: { ownerId: string; displayName: string; photoURL: string | null }[] = await Promise.all(
                             Array.from(missingOwnerIds).map(async ownerId => {
                               try {
-                                const ownerDoc = await getDoc(doc(db, 'users', ownerId));
+                                // 캐시 대신 서버에서 직접 가져오기 (최신 프로필 이미지 보장)
+                                const ownerDoc = await getDocFromServer(doc(db, 'users', ownerId));
                                 if (ownerDoc.exists()) {
                                   const data = ownerDoc.data() as any;
                                   return {
