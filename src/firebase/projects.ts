@@ -736,27 +736,10 @@ export const updateDesignFile = async (
   }
 ): Promise<{ error: string | null }> => {
   try {
-    console.log('🔥 [updateDesignFile] 시작:', {
-      designFileId,
-      hasName: !!updates.name,
-      hasSpaceConfig: !!updates.spaceConfig,
-      hasFurniture: !!updates.furniture,
-      hasThumbnail: !!updates.thumbnail,
-      hasProjectData: !!updates.projectData,
-      furnitureCount: updates.furniture?.placedModules?.length || 0
-    });
-
     const user = await getCurrentUserAsync();
     if (!user) {
-      console.error('🔥 [updateDesignFile] 사용자 인증 실패');
-      console.error('🔥 [updateDesignFile] getCurrentUserAsync 결과:', user);
       return { error: '로그인이 필요합니다.' };
     }
-    
-    console.log('🔥 [updateDesignFile] 인증된 사용자:', {
-      uid: user.uid,
-      email: user.email
-    });
 
     // 디자인 파일을 찾기 위한 변수들
     let designDocRef = null;
@@ -775,7 +758,6 @@ export const updateDesignFile = async (
       designData = legacySnap.data();
       projectId = designData.projectId;
       foundPath = 'legacy';
-      console.log('🔥 Legacy path에서 디자인 찾음:', { designFileId, projectId });
     }
     
     // 2. Legacy에서 못 찾았으면 team-scoped path 시도
@@ -791,7 +773,6 @@ export const updateDesignFile = async (
           designData = teamSnap.data();
           projectId = designData.projectId;
           foundPath = 'team-scoped';
-          console.log('🔥 Team-scoped path에서 디자인 찾음:', { designFileId, teamId, projectId });
         }
       }
     }
@@ -809,7 +790,6 @@ export const updateDesignFile = async (
           docSnap = nestedSnap;
           designData = nestedSnap.data();
           foundPath = 'nested';
-          console.log('🔥 Nested path에서 디자인 찾음:', { designFileId, teamId, projectId });
         }
       }
     }
@@ -821,40 +801,20 @@ export const updateDesignFile = async (
     }
 
     // ✅ 권한 확인: 파일 소유자이거나 프로젝트 편집 권한이 있어야 함
-    console.log('🔐🔐🔐 [updateDesignFile] 권한 확인:', {
-      designFileName: designData.name,
-      designFileId,
-      projectId,
-      currentUserId: user.uid,
-      fileUserId: designData.userId,
-      isOwner: user.uid === designData.userId,
-      foundPath,
-      전체디자인데이터: designData
-    });
-
-    // 파일 소유자가 아닌 경우, 프로젝트 편집 권한 확인
     if (user.uid !== designData.userId) {
-      console.log('🔐 [updateDesignFile] 파일 소유자가 아님, 프로젝트 편집 권한 확인 중...');
-
       // sharedProjectAccess에서 편집 권한 확인
       const accessId = `${projectId}_${user.uid}`;
       const accessRef = doc(db, 'sharedProjectAccess', accessId);
       const accessSnap = await getDocFromServer(accessRef);
 
       if (!accessSnap.exists()) {
-        console.error('🚫 [updateDesignFile] 공유 접근 권한 없음');
         return { error: '이 디자인 파일을 수정할 권한이 없습니다. 파일 소유자이거나 프로젝트 편집 권한이 필요합니다.' };
       }
 
       const accessData = accessSnap.data();
       if (accessData.permission !== 'editor') {
-        console.error('🚫 [updateDesignFile] 편집 권한 없음, 현재 권한:', accessData.permission);
         return { error: '이 디자인 파일을 수정할 권한이 없습니다. 편집 권한이 필요합니다.' };
       }
-
-      console.log('✅ [updateDesignFile] 프로젝트 편집 권한 확인됨');
-    } else {
-      console.log('✅ [updateDesignFile] 파일 소유자 확인됨');
     }
 
     // spaceConfig가 있는 경우 자동 계산 필드들을 제거
@@ -878,36 +838,9 @@ export const updateDesignFile = async (
     
     // Firebase는 undefined 값을 허용하지 않으므로 모든 undefined 값을 제거
     const updateData = removeUndefinedValues(updateDataRaw);
-    
-    console.log('🧹 [updateDesignFile] undefined 값 제거 완료');
-    console.log('🔥 [updateDesignFile] 업데이트 데이터:', {
-      foundPath,
-      hasUpdatedAt: !!updateData.updatedAt,
-      keys: Object.keys(updateData),
-      furnitureModulesCount: updateData.furniture?.placedModules?.length || 0,
-      furnitureDetails: updateData.furniture?.placedModules?.map((m: any) => ({
-        id: m.id,
-        moduleId: m.moduleId,
-        slotIndex: m.slotIndex,
-        isUpperCabinet: m.moduleId?.includes('upper-cabinet'),
-        isLowerCabinet: m.moduleId?.includes('lower-cabinet')
-      }))
-    });
 
     // 찾은 경로에 업데이트
-    console.log('🔥 [updateDesignFile] Firestore updateDoc 호출 직전');
-    console.log('🔥 [updateDesignFile] designDocRef path:', designDocRef.path);
-    console.log('🔥 [updateDesignFile] updateData keys:', Object.keys(updateData));
-    
-    try {
-      await updateDoc(designDocRef, updateData);
-      console.log('🔥 [updateDesignFile] Firestore updateDoc 성공');
-    } catch (updateError: any) {
-      console.error('🔥 [updateDesignFile] Firestore updateDoc 실패:', updateError);
-      console.error('🔥 [updateDesignFile] 에러 코드:', updateError.code);
-      console.error('🔥 [updateDesignFile] 에러 메시지:', updateError.message);
-      throw updateError;
-    }
+    await updateDoc(designDocRef, updateData);
     
     // Dual-write if enabled
     if (FLAGS.dualWrite) {
@@ -947,18 +880,6 @@ export const updateDesignFile = async (
       }
     }
     
-    // 저장 후 즉시 확인 (서버에서 직접 가져오기)
-    console.log('🔥 [updateDesignFile] 저장 직후 확인 시작');
-    const verifyDoc = await getDocFromServer(designDocRef);
-    if (verifyDoc.exists()) {
-      const savedData = verifyDoc.data();
-      console.log('🔥 [updateDesignFile] 저장 직후 확인:', {
-        savedFurnitureCount: savedData.furniture?.placedModules?.length || 0,
-        savedUpdatedAt: savedData.updatedAt,
-        savedSpaceConfigKeys: savedData.spaceConfig ? Object.keys(savedData.spaceConfig) : []
-      });
-    }
-    
     // 디자인파일이 업데이트되면 해당 프로젝트의 썸네일도 업데이트
     if (updates.thumbnail && projectId) {
       try {
@@ -967,20 +888,14 @@ export const updateDesignFile = async (
           thumbnail: updates.thumbnail,
           updatedAt: serverTimestamp()
         });
-        console.log(`프로젝트 썸네일도 업데이트됨: ${projectId}`);
       } catch (projectUpdateError) {
         console.warn('프로젝트 썸네일 업데이트 실패:', projectUpdateError);
       }
     }
-    
-    console.log(`디자인파일 업데이트 완료: ${designFileId}`);
+
     return { error: null };
   } catch (error: any) {
-    console.error('🔥 [updateDesignFile] 최종 에러:', error);
-    console.error('🔥 [updateDesignFile] 에러 타입:', error.constructor.name);
-    console.error('🔥 [updateDesignFile] 에러 코드:', error.code);
-    console.error('🔥 [updateDesignFile] 에러 메시지:', error.message);
-    console.error('🔥 [updateDesignFile] 에러 스택:', error.stack);
+    console.error('디자인파일 업데이트 에러:', error);
     
     // Firebase 에러 코드에 따른 구체적인 메시지
     let errorMessage = '디자인파일 업데이트 중 오류가 발생했습니다.';
@@ -1018,37 +933,22 @@ export const deleteDesignFile = async (designFileId: string, projectId: string):
     }
 
     const designData = designSnap.data();
-    console.log('🗑️ [deleteDesignFile] 권한 확인:', {
-      currentUserId: user.uid,
-      fileUserId: designData.userId,
-      isOwner: user.uid === designData.userId,
-      designFileId,
-      projectId
-    });
 
     // ✅ 권한 확인: 파일 소유자이거나 프로젝트 편집 권한이 있어야 함
     if (user.uid !== designData.userId) {
-      console.log('🗑️ [deleteDesignFile] 파일 소유자가 아님, 프로젝트 편집 권한 확인 중...');
-
       // sharedProjectAccess에서 편집 권한 확인
       const accessId = `${projectId}_${user.uid}`;
       const accessRef = doc(db, 'sharedProjectAccess', accessId);
       const accessSnap = await getDocFromServer(accessRef);
 
       if (!accessSnap.exists()) {
-        console.error('🚫 [deleteDesignFile] 공유 접근 권한 없음');
         return { error: '이 디자인 파일을 삭제할 권한이 없습니다. 파일 소유자이거나 프로젝트 편집 권한이 필요합니다.' };
       }
 
       const accessData = accessSnap.data();
       if (accessData.permission !== 'editor') {
-        console.error('🚫 [deleteDesignFile] 편집 권한 없음, 현재 권한:', accessData.permission);
         return { error: '이 디자인 파일을 삭제할 권한이 없습니다. 편집 권한이 필요합니다.' };
       }
-
-      console.log('✅ [deleteDesignFile] 프로젝트 편집 권한 확인됨');
-    } else {
-      console.log('✅ [deleteDesignFile] 파일 소유자 확인됨');
     }
 
     // 디자인파일 삭제
