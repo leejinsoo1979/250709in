@@ -4908,7 +4908,7 @@ const SimpleDashboard: React.FC = () => {
                           const mergedDesignFileIds = Array.from(new Set([...(existingSharedProject?.sharedDesignFileIds || []), ...designFileIds]));
                           const mergedDesignFileNames = Array.from(new Set([...(existingSharedProject?.sharedDesignFileNames || []), ...designFileNames]));
                           const mergedSharedByPhotoURL = sharedByPhotoURL ?? existingSharedProject?.sharedByPhotoURL ?? null;
-                          const mergedSharedByName = sharedByDisplayName || existingSharedProject?.sharedByName || '생성자';
+                          const mergedSharedByName = sharedByDisplayName || existingSharedProject?.sharedByName || '';
 
                           sharedProjectsMap.set(s.projectId, {
                             id: s.projectId,
@@ -4946,7 +4946,7 @@ const SimpleDashboard: React.FC = () => {
                                       data.name ||
                                       data.userName ||
                                       data.email?.split?.('@')?.[0] ||
-                                      '생성자',
+                                      '',
                                     photoURL: data.photoURL || data.photoUrl || data.avatarUrl || null
                                   };
                                 }
@@ -4955,7 +4955,7 @@ const SimpleDashboard: React.FC = () => {
                               }
                               return {
                                 ownerId,
-                                displayName: '생성자',
+                                displayName: '',
                                 photoURL: null
                               };
                             })
@@ -4965,7 +4965,7 @@ const SimpleDashboard: React.FC = () => {
                             const next = { ...prev };
                             fetchedOwners.forEach(owner => {
                               next[owner.ownerId] = {
-                                displayName: owner.displayName || next[owner.ownerId]?.displayName || '생성자',
+                                displayName: owner.displayName || next[owner.ownerId]?.displayName || '',
                                 photoURL: owner.photoURL ?? next[owner.ownerId]?.photoURL ?? null
                               };
                             });
