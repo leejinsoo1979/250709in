@@ -360,27 +360,6 @@ const SimpleDashboard: React.FC = () => {
       if (error) {
         console.error('❌ 디자인 파일 불러오기 에러:', error);
       } else {
-        console.log('✅ 불러온 디자인 파일들:', {
-          projectId,
-          designFiles,
-          designFilesCount: designFiles?.length || 0,
-          timestamp: new Date().toISOString()
-        });
-
-        // 🔍 각 디자인 파일의 소유자 정보 확인 (디버깅용)
-        designFiles.forEach(df => {
-          console.log(`🔍🔍🔍 [디자인 파일 로드됨] ${df.name}:`, {
-            id: df.id,
-            name: df.name,
-            userId: df.userId,
-            projectId: df.projectId,
-            currentUserId: user.uid,
-            isOwner: df.userId === user.uid,
-            소유자일치여부: df.userId === user.uid ? 'YES' : 'NO',
-            전체데이터: df
-          });
-        });
-
         setProjectDesignFiles(prev => ({
           ...prev,
           [projectId]: designFiles
@@ -2148,37 +2127,6 @@ const SimpleDashboard: React.FC = () => {
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     const x = rect.right - 160; // 메뉴 너비(160px)를 고려하여 오른쪽 정렬
     const y = rect.bottom + 4; // 버튼 아래에 약간의 간격
-
-    console.log('📌 더보기 메뉴 열기:', { itemId, itemName, itemType, x, y });
-
-    // 🔍 디자인 파일인 경우 상세 정보 출력
-    if (itemType === 'design' && user) {
-      // 모든 프로젝트의 디자인 파일에서 해당 ID 찾기
-      let foundDesign: any = null;
-      let foundProjectId: string | null = null;
-
-      Object.entries(projectDesignFiles).forEach(([projId, designs]) => {
-        const design = designs.find(d => d.id === itemId);
-        if (design) {
-          foundDesign = design;
-          foundProjectId = projId;
-        }
-      });
-
-      if (foundDesign) {
-        console.log('🔍🔍🔍 [디자인 파일 클릭] 상세 정보:', {
-          디자인파일명: foundDesign.name,
-          디자인파일ID: foundDesign.id,
-          프로젝트ID: foundDesign.projectId || foundProjectId,
-          파일소유자ID: foundDesign.userId,
-          현재로그인ID: user.uid,
-          소유자일치: foundDesign.userId === user.uid,
-          전체데이터: foundDesign
-        });
-      } else {
-        console.warn('⚠️ 디자인 파일을 찾을 수 없음:', itemId);
-      }
-    }
 
     setMoreMenu({
       visible: true,
