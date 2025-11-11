@@ -366,6 +366,19 @@ const SimpleDashboard: React.FC = () => {
           designFilesCount: designFiles?.length || 0,
           timestamp: new Date().toISOString()
         });
+
+        // 🔍 각 디자인 파일의 소유자 정보 확인 (디버깅용)
+        designFiles.forEach(df => {
+          console.log(`🔍 [디자인 파일 상세] ${df.name}:`, {
+            id: df.id,
+            name: df.name,
+            userId: df.userId,
+            projectId: df.projectId,
+            currentUserId: user.uid,
+            isOwner: df.userId === user.uid
+          });
+        });
+
         setProjectDesignFiles(prev => ({
           ...prev,
           [projectId]: designFiles
