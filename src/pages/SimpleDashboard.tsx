@@ -364,6 +364,50 @@ const SimpleDashboard: React.FC = () => {
           ...prev,
           [projectId]: designFiles
         }));
+
+        // 디자인 파일 소유자들의 프로필 정보 가져오기
+        const ownerIds = new Set(designFiles.map(df => df.userId).filter(Boolean));
+        const missingOwnerIds = Array.from(ownerIds).filter(ownerId => !projectOwners[ownerId]);
+
+        if (missingOwnerIds.length > 0) {
+          const { getDocFromServer } = await import('firebase/firestore');
+          const { doc } = await import('firebase/firestore');
+          const { db } = await import('@/firebase/config');
+
+          const fetchedOwners = await Promise.all(
+            missingOwnerIds.map(async ownerId => {
+              try {
+                const ownerDoc = await getDocFromServer(doc(db, 'users', ownerId));
+                if (ownerDoc.exists()) {
+                  const data = ownerDoc.data() as any;
+                  return {
+                    ownerId,
+                    displayName: data.displayName || data.name || data.userName || data.email?.split?.('@')?.[0] || '생성자',
+                    photoURL: data.photoURL || data.photoUrl || data.avatarUrl || null
+                  };
+                }
+              } catch (error) {
+                console.error('프로필 조회 실패:', { ownerId, error });
+              }
+              return {
+                ownerId,
+                displayName: '생성자',
+                photoURL: null
+              };
+            })
+          );
+
+          setProjectOwners(prev => {
+            const next = { ...prev };
+            fetchedOwners.forEach(owner => {
+              next[owner.ownerId] = {
+                displayName: owner.displayName,
+                photoURL: owner.photoURL
+              };
+            });
+            return next;
+          });
+        }
       }
     } catch (err) {
       console.error('❌ 디자인 파일 불러오기 중 오류:', err);
@@ -371,7 +415,7 @@ const SimpleDashboard: React.FC = () => {
       // 로딩 상태 해제
       setDesignFilesLoading(prev => ({ ...prev, [projectId]: false }));
     }
-  }, [user]);
+  }, [user, projectOwners]);
 
   // Firebase에 폴더 데이터 저장하기
   const saveFolderDataToFirebase = useCallback(async (projectId: string, folderData: FolderData[]) => {
