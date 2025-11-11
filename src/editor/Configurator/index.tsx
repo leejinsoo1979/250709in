@@ -950,29 +950,20 @@ const Configurator: React.FC = () => {
         return;
       }
 
-      // 기본 설정으로 새 디자인 생성
+      // 기본 설정으로 새 디자인 생성 (DEFAULT_SPACE_VALUES 사용)
       const defaultSpaceConfig = {
-        width: 4000,
-        height: 2400,
-        depth: 3000,
-        frameThickness: 20,
-        frameColor: '#E5E5DC',
-        frameColorName: 'Beige',
-        subdivisionMode: 'none' as const,
+        width: DEFAULT_SPACE_VALUES.WIDTH,
+        height: DEFAULT_SPACE_VALUES.HEIGHT,
+        depth: DEFAULT_SPACE_VALUES.DEPTH,
+        installType: 'builtin' as const,
+        wallConfig: {
+          left: true,
+          right: true,
+        },
+        hasFloorFinish: false,
         columns: [], // 빈 배열로 초기화하여 spaceInfo.columns?.map() 오류 방지
-        rows: 0,
-        showHorizontalLines: false,
-        enableSnapping: true,
-        snapDistance: 10,
-        gridVisible: true,
-        gridSize: 100,
-        selectedFinish: 'natural-wood' as const,
-        material: {
-          type: 'laminate' as const,
-          finish: 'natural-wood' as const,
-          colorName: 'Natural Wood',
-          colorCode: '#D2B48C'
-        }
+        walls: [],
+        panelBs: []
       };
 
       if (isFirebaseConfigured() && user) {
