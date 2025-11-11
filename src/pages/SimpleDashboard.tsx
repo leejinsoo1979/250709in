@@ -368,13 +368,6 @@ const SimpleDashboard: React.FC = () => {
         // 디자인 파일 소유자들의 프로필 정보 가져오기
         const ownerIds = new Set(designFiles.map(df => df.userId).filter(Boolean));
 
-        console.log('🔍 [loadDesignFilesForProject] 디자인 파일 소유자 정보 로드:', {
-          projectId,
-          designFileCount: designFiles.length,
-          ownerIds: Array.from(ownerIds),
-          designFiles: designFiles.map(df => ({ id: df.id, name: df.name, userId: df.userId }))
-        });
-
         if (ownerIds.size > 0) {
           const fetchedOwners = await Promise.all(
             Array.from(ownerIds).map(async ownerId => {
@@ -382,11 +375,6 @@ const SimpleDashboard: React.FC = () => {
                 const ownerDoc = await getDocFromServer(doc(db, 'users', ownerId));
                 if (ownerDoc.exists()) {
                   const data = ownerDoc.data() as any;
-                  console.log('✅ [loadDesignFilesForProject] 소유자 프로필 조회 성공:', {
-                    ownerId,
-                    displayName: data.displayName,
-                    photoURL: data.photoURL
-                  });
                   return {
                     ownerId,
                     displayName: data.displayName || data.name || data.userName || data.email?.split?.('@')?.[0] || '생성자',
@@ -394,7 +382,7 @@ const SimpleDashboard: React.FC = () => {
                   };
                 }
               } catch (error) {
-                console.error('❌ [loadDesignFilesForProject] 프로필 조회 실패:', { ownerId, error });
+                console.error('프로필 조회 실패:', { ownerId, error });
               }
               return {
                 ownerId,
@@ -4386,17 +4374,6 @@ const SimpleDashboard: React.FC = () => {
                                   if (isSharedProject) {
                                     // 공유받은 프로젝트: sharedByPhotoURL 또는 projectOwners에서 가져오기
                                     const sharedProject = item.project as any;
-                                    console.log('🖼️ [폴더 카드] 프로필 이미지 디버그:', {
-                                      folderName: item.name,
-                                      projectId: item.project.id,
-                                      projectTitle: item.project.title,
-                                      projectUserId: item.project.userId,
-                                      sharedByPhotoURL: sharedProject.sharedByPhotoURL,
-                                      sharedByName: sharedProject.sharedByName,
-                                      projectOwnersData: projectOwners[item.project.userId],
-                                      hasSharedByPhotoURL: !!sharedProject.sharedByPhotoURL,
-                                      hasProjectOwnerPhotoURL: !!projectOwners[item.project.userId]?.photoURL
-                                    });
                                     photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
                                   } else {
                                     // 내 프로젝트: 내 프로필 사용
@@ -4530,16 +4507,6 @@ const SimpleDashboard: React.FC = () => {
                                     // 디자인 파일 소유자 프로필 표시
                                     const designFileOwnerId = item.designFile.userId || item.project.userId;
                                     const isMyDesign = designFileOwnerId === user?.uid;
-
-                                    console.log('🖼️ [디자인 카드] 소유자 결정:', {
-                                      designName: item.name,
-                                      designFileUserId: item.designFile.userId,
-                                      projectUserId: item.project.userId,
-                                      finalOwnerId: designFileOwnerId,
-                                      currentUserId: user?.uid,
-                                      isMyDesign,
-                                      ownerProfile: projectOwners[designFileOwnerId]
-                                    });
 
                                     const photoURL = isMyDesign
                                       ? user?.photoURL
@@ -4743,16 +4710,6 @@ const SimpleDashboard: React.FC = () => {
                                   if (isSharedProject) {
                                     // 공유받은 프로젝트: sharedByPhotoURL 또는 projectOwners에서 가져오기
                                     const sharedProject = item.project as any;
-                                    console.log('🖼️ [프로젝트 카드] 프로필 이미지 디버그:', {
-                                      projectTitle: item.project.title,
-                                      projectId: item.project.id,
-                                      projectUserId: item.project.userId,
-                                      sharedByPhotoURL: sharedProject.sharedByPhotoURL,
-                                      sharedByName: sharedProject.sharedByName,
-                                      projectOwnersData: projectOwners[item.project.userId],
-                                      hasSharedByPhotoURL: !!sharedProject.sharedByPhotoURL,
-                                      hasProjectOwnerPhotoURL: !!projectOwners[item.project.userId]?.photoURL
-                                    });
                                     photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
                                     displayName = sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName;
                                   } else {
