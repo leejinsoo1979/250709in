@@ -801,7 +801,8 @@ export const updateDesignFile = async (
     }
 
     // ✅ 권한 확인: 파일 소유자이거나 프로젝트 편집 권한이 있어야 함
-    if (user.uid !== designData.userId) {
+    // userId가 없거나 현재 사용자와 일치하지 않는 경우
+    if (designData.userId && user.uid !== designData.userId) {
       // sharedProjectAccess에서 편집 권한 확인
       const accessId = `${projectId}_${user.uid}`;
       const accessRef = doc(db, 'sharedProjectAccess', accessId);
@@ -814,6 +815,14 @@ export const updateDesignFile = async (
       const accessData = accessSnap.data();
       if (accessData.permission !== 'editor') {
         return { error: '이 디자인 파일을 수정할 권한이 없습니다. 편집 권한이 필요합니다.' };
+      }
+    } else if (!designData.userId) {
+      // userId가 없는 경우 프로젝트 소유자 확인
+      const projectRef = doc(db, 'projects', projectId);
+      const projectSnap = await getDocFromServer(projectRef);
+
+      if (projectSnap.exists() && projectSnap.data().userId !== user.uid) {
+        return { error: '이 디자인 파일을 수정할 권한이 없습니다.' };
       }
     }
 
@@ -934,20 +943,44 @@ export const deleteDesignFile = async (designFileId: string, projectId: string):
 
     const designData = designSnap.data();
 
+    // 디버깅: 디자인 파일 소유자 정보 확인
+    console.log('🗑️🗑️🗑️ [deleteDesignFile] 디자인 파일 정보:', {
+      designFileId,
+      projectId,
+      designFileName: designData.name,
+      designFileUserId: designData.userId,
+      currentUserId: user.uid,
+      isOwner: user.uid === designData.userId,
+      userIdExists: !!designData.userId
+    });
+
     // ✅ 권한 확인: 파일 소유자이거나 프로젝트 편집 권한이 있어야 함
-    if (user.uid !== designData.userId) {
+    // userId가 없거나 현재 사용자와 일치하지 않는 경우
+    if (designData.userId && user.uid !== designData.userId) {
       // sharedProjectAccess에서 편집 권한 확인
       const accessId = `${projectId}_${user.uid}`;
       const accessRef = doc(db, 'sharedProjectAccess', accessId);
       const accessSnap = await getDocFromServer(accessRef);
 
       if (!accessSnap.exists()) {
+        console.error('🚫 [deleteDesignFile] 공유 접근 권한 없음');
         return { error: '이 디자인 파일을 삭제할 권한이 없습니다. 파일 소유자이거나 프로젝트 편집 권한이 필요합니다.' };
       }
 
       const accessData = accessSnap.data();
       if (accessData.permission !== 'editor') {
+        console.error('🚫 [deleteDesignFile] 편집 권한 없음');
         return { error: '이 디자인 파일을 삭제할 권한이 없습니다. 편집 권한이 필요합니다.' };
+      }
+    } else if (!designData.userId) {
+      // userId가 없는 경우 프로젝트 소유자 확인
+      console.warn('⚠️ [deleteDesignFile] 디자인 파일에 userId 없음, 프로젝트 소유자 확인');
+      const projectRef = doc(db, 'projects', projectId);
+      const projectSnap = await getDocFromServer(projectRef);
+
+      if (projectSnap.exists() && projectSnap.data().userId !== user.uid) {
+        console.error('🚫 [deleteDesignFile] 프로젝트 소유자 아님');
+        return { error: '이 디자인 파일을 삭제할 권한이 없습니다.' };
       }
     }
 
