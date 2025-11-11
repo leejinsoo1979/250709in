@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
-import { Timestamp, doc, getDoc, updateDoc } from 'firebase/firestore';
+import { Timestamp, doc, getDoc, getDocFromServer, updateDoc } from 'firebase/firestore';
 import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
 import { PiFolderFill, PiFolderPlus, PiCrownDuotone } from "react-icons/pi";
 import { GoPeople } from "react-icons/go";
@@ -370,10 +370,6 @@ const SimpleDashboard: React.FC = () => {
         const missingOwnerIds = Array.from(ownerIds).filter(ownerId => !projectOwners[ownerId]);
 
         if (missingOwnerIds.length > 0) {
-          const { getDocFromServer } = await import('firebase/firestore');
-          const { doc } = await import('firebase/firestore');
-          const { db } = await import('@/firebase/config');
-
           const fetchedOwners = await Promise.all(
             missingOwnerIds.map(async ownerId => {
               try {
