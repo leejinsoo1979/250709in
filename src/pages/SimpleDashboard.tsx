@@ -1119,11 +1119,19 @@ const SimpleDashboard: React.FC = () => {
       });
 
       // Firebase에서 디자인 파일 즉시 삭제 (휴지통으로 이동 시 바로 삭제)
+      console.log('🗑️ deleteDesignFile 호출:', {
+        designFileId: designFile.id,
+        projectId,
+        userId: designFile.userId,
+        currentUserId: user?.uid
+      });
       const { error } = await deleteDesignFile(designFile.id, projectId);
       if (error) {
+        console.error('🗑️ 삭제 실패:', error);
         alert('디자인 파일 삭제 실패: ' + error);
         return;
       }
+      console.log('🗑️ 삭제 성공');
 
       // 로컬 상태에서 제거
       setProjectDesignFiles(prev => ({
