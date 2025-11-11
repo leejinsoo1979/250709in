@@ -662,7 +662,7 @@ const SimpleDashboard: React.FC = () => {
                 const ownerDoc = await getDocFromServer(doc(db, 'users', ownerId));
                 if (ownerDoc.exists()) {
                   const data = ownerDoc.data() as any;
-                  return {
+                  const result = {
                     ownerId,
                     displayName:
                       data.displayName ||
@@ -672,6 +672,17 @@ const SimpleDashboard: React.FC = () => {
                       '',
                     photoURL: data.photoURL || data.photoUrl || data.avatarUrl || null
                   };
+                  console.log('✅ 프로필 조회 성공:', {
+                    ownerId,
+                    displayName: result.displayName,
+                    photoURL: result.photoURL,
+                    rawData: {
+                      photoURL: data.photoURL,
+                      photoUrl: data.photoUrl,
+                      avatarUrl: data.avatarUrl
+                    }
+                  });
+                  return result;
                 }
               } catch (error) {
                 console.error('❌ 공유 호스트 프로필 조회 실패:', { ownerId, error });
@@ -691,6 +702,11 @@ const SimpleDashboard: React.FC = () => {
                 displayName: owner.displayName || next[owner.ownerId]?.displayName || '',
                 photoURL: owner.photoURL ?? next[owner.ownerId]?.photoURL ?? null
               };
+              console.log('💾 projectOwners 업데이트:', {
+                ownerId: owner.ownerId,
+                displayName: next[owner.ownerId].displayName,
+                photoURL: next[owner.ownerId].photoURL
+              });
             });
             return next;
           });
@@ -699,11 +715,22 @@ const SimpleDashboard: React.FC = () => {
           sharedProjectsMap.forEach((project, projectId) => {
             const owner = ownerLookup.get(project.userId);
             if (!owner) return;
-            sharedProjectsMap.set(projectId, {
+            const updatedProject = {
               ...project,
               sharedByName: owner.displayName || project.sharedByName,
               sharedByPhotoURL: owner.photoURL || project.sharedByPhotoURL
+            };
+            console.log('🔄 sharedProjectsMap 업데이트:', {
+              projectId,
+              userId: project.userId,
+              ownerDisplayName: owner.displayName,
+              ownerPhotoURL: owner.photoURL,
+              previousSharedByName: project.sharedByName,
+              previousSharedByPhotoURL: project.sharedByPhotoURL,
+              updatedSharedByName: updatedProject.sharedByName,
+              updatedSharedByPhotoURL: updatedProject.sharedByPhotoURL
             });
+            sharedProjectsMap.set(projectId, updatedProject);
           });
         }
 
@@ -4530,6 +4557,14 @@ const SimpleDashboard: React.FC = () => {
                                       const sharedProject = item.project as any;
                                       const photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
 
+                                      console.log('🖼️ 디자인 카드 프로필 이미지:', {
+                                        projectId: item.project.id,
+                                        userId: item.project.userId,
+                                        sharedByPhotoURL: sharedProject.sharedByPhotoURL,
+                                        projectOwnersPhotoURL: projectOwners[item.project.userId]?.photoURL,
+                                        finalPhotoURL: photoURL
+                                      });
+
                                       return photoURL ? (
                                         <img
                                           src={photoURL}
@@ -4735,6 +4770,15 @@ const SimpleDashboard: React.FC = () => {
                                     const sharedProject = item.project as any;
                                     photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
                                     displayName = sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName;
+
+                                    console.log('🖼️ 프로젝트 카드 프로필 이미지:', {
+                                      projectId: item.project.id,
+                                      userId: item.project.userId,
+                                      sharedByPhotoURL: sharedProject.sharedByPhotoURL,
+                                      projectOwnersPhotoURL: projectOwners[item.project.userId]?.photoURL,
+                                      finalPhotoURL: photoURL,
+                                      displayName
+                                    });
                                   } else {
                                     // 내 프로젝트: 내 프로필 사용
                                     photoURL = user?.photoURL;
