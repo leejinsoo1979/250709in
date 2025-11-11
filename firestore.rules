@@ -175,5 +175,16 @@ service cloud.firestore {
       allow create: if isSignedIn();
       allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
+
+    // 폴더 데이터
+    match /folderData/{projectId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && (
+        get(/databases/$(database)/documents/projects/$(projectId)).data.userId == request.auth.uid ||
+        (exists(/databases/$(database)/documents/sharedProjectAccess/$(projectId + '_' + request.auth.uid)) &&
+         get(/databases/$(database)/documents/sharedProjectAccess/$(projectId + '_' + request.auth.uid)).data.permission == 'editor')
+      );
+      allow create: if isSignedIn();
+    }
   }
 }
