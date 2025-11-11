@@ -368,6 +368,13 @@ const SimpleDashboard: React.FC = () => {
         // 디자인 파일 소유자들의 프로필 정보 가져오기
         const ownerIds = new Set(designFiles.map(df => df.userId).filter(Boolean));
 
+        console.log('🔍 [loadDesignFilesForProject] 디자인 파일 소유자 정보 로드:', {
+          projectId,
+          designFileCount: designFiles.length,
+          ownerIds: Array.from(ownerIds),
+          designFiles: designFiles.map(df => ({ id: df.id, name: df.name, userId: df.userId }))
+        });
+
         if (ownerIds.size > 0) {
           const fetchedOwners = await Promise.all(
             Array.from(ownerIds).map(async ownerId => {
@@ -375,6 +382,11 @@ const SimpleDashboard: React.FC = () => {
                 const ownerDoc = await getDocFromServer(doc(db, 'users', ownerId));
                 if (ownerDoc.exists()) {
                   const data = ownerDoc.data() as any;
+                  console.log('✅ [loadDesignFilesForProject] 소유자 프로필 조회 성공:', {
+                    ownerId,
+                    displayName: data.displayName,
+                    photoURL: data.photoURL
+                  });
                   return {
                     ownerId,
                     displayName: data.displayName || data.name || data.userName || data.email?.split?.('@')?.[0] || '생성자',
@@ -382,7 +394,7 @@ const SimpleDashboard: React.FC = () => {
                   };
                 }
               } catch (error) {
-                console.error('프로필 조회 실패:', { ownerId, error });
+                console.error('❌ [loadDesignFilesForProject] 프로필 조회 실패:', { ownerId, error });
               }
               return {
                 ownerId,
@@ -4515,26 +4527,15 @@ const SimpleDashboard: React.FC = () => {
                                 {/* 호스트 프로필 */}
                                 <div className={styles.cardUserAvatar}>
                                   {(() => {
-                                    // 공유받은 프로젝트인 경우 프로젝트 소유자 프로필 표시
-                                    const isSharedProject = item.project.userId !== user?.uid;
+                                    // 디자인 파일 소유자 프로필 표시
+                                    const designFileOwnerId = item.designFile.userId;
                                     let photoURL;
 
-                                    if (isSharedProject) {
-                                      // 공유받은 프로젝트: sharedByPhotoURL 또는 projectOwners에서 가져오기
-                                      const sharedProject = item.project as any;
-                                      console.log('🖼️ [디자인 카드] 프로필 이미지 디버그:', {
-                                        designName: item.name,
-                                        projectId: item.project.id,
-                                        projectUserId: item.project.userId,
-                                        sharedByPhotoURL: sharedProject.sharedByPhotoURL,
-                                        sharedByName: sharedProject.sharedByName,
-                                        projectOwnersData: projectOwners[item.project.userId],
-                                        hasSharedByPhotoURL: !!sharedProject.sharedByPhotoURL,
-                                        hasProjectOwnerPhotoURL: !!projectOwners[item.project.userId]?.photoURL
-                                      });
-                                      photoURL = sharedProject.sharedByPhotoURL || projectOwners[item.project.userId]?.photoURL;
+                                    if (designFileOwnerId && designFileOwnerId !== user?.uid) {
+                                      // 다른 사람의 디자인 파일: projectOwners에서 가져오기
+                                      photoURL = projectOwners[designFileOwnerId]?.photoURL;
                                     } else {
-                                      // 내 프로젝트: 내 프로필 사용
+                                      // 내 디자인 파일: 내 프로필 사용
                                       photoURL = user?.photoURL;
                                     }
 
@@ -4559,10 +4560,10 @@ const SimpleDashboard: React.FC = () => {
                                 {/* 생성자 닉네임 */}
                                 <span className={styles.cardUserName}>
                                   {(() => {
-                                    const isSharedProject = item.project.userId !== user?.uid;
-                                    if (isSharedProject) {
-                                      const sharedProject = item.project as any;
-                                      return sharedProject.sharedByName || projectOwners[item.project.userId]?.displayName || '생성자';
+                                    const designFileOwnerId = item.designFile.userId;
+                                    if (designFileOwnerId && designFileOwnerId !== user?.uid) {
+                                      // 다른 사람의 디자인 파일
+                                      return projectOwners[designFileOwnerId]?.displayName || '생성자';
                                     }
                                     return user?.displayName || user?.email?.split('@')[0] || '이진수';
                                   })()}
