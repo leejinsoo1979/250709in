@@ -369,13 +369,15 @@ const SimpleDashboard: React.FC = () => {
 
         // 🔍 각 디자인 파일의 소유자 정보 확인 (디버깅용)
         designFiles.forEach(df => {
-          console.log(`🔍 [디자인 파일 상세] ${df.name}:`, {
+          console.log(`🔍🔍🔍 [디자인 파일 로드됨] ${df.name}:`, {
             id: df.id,
             name: df.name,
             userId: df.userId,
             projectId: df.projectId,
             currentUserId: user.uid,
-            isOwner: df.userId === user.uid
+            isOwner: df.userId === user.uid,
+            소유자일치여부: df.userId === user.uid ? 'YES' : 'NO',
+            전체데이터: df
           });
         });
 
