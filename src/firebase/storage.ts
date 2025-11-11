@@ -4,7 +4,8 @@ import {
   getDownloadURL
 } from 'firebase/storage';
 import { updateProfile } from 'firebase/auth';
-import { storage, auth } from './config';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { storage, auth, db } from './config';
 
 // 프로필 사진 업로드
 export const uploadProfileImage = async (file: File): Promise<string> => {
@@ -30,6 +31,28 @@ export const uploadProfileImage = async (file: File): Promise<string> => {
   // Auth 프로필 업데이트
   await updateProfile(user, { photoURL });
 
+  // users 컬렉션 업데이트
+  try {
+    const userDocRef = doc(db, 'users', user.uid);
+    await updateDoc(userDocRef, {
+      photoURL,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('users 컬렉션 업데이트 실패:', error);
+  }
+
+  // userProfiles 컬렉션 업데이트
+  try {
+    const profileDocRef = doc(db, 'userProfiles', user.uid);
+    await updateDoc(profileDocRef, {
+      photoURL,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('userProfiles 컬렉션 업데이트 실패:', error);
+  }
+
   return photoURL;
 };
 
@@ -39,6 +62,28 @@ export const deleteProfileImage = async (): Promise<void> => {
   if (!user) throw new Error('로그인이 필요합니다.');
 
   await updateProfile(user, { photoURL: null });
+
+  // users 컬렉션 업데이트
+  try {
+    const userDocRef = doc(db, 'users', user.uid);
+    await updateDoc(userDocRef, {
+      photoURL: null,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('users 컬렉션 업데이트 실패:', error);
+  }
+
+  // userProfiles 컬렉션 업데이트
+  try {
+    const profileDocRef = doc(db, 'userProfiles', user.uid);
+    await updateDoc(profileDocRef, {
+      photoURL: null,
+      updatedAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.error('userProfiles 컬렉션 업데이트 실패:', error);
+  }
 };
 
 // 이미지 파일 압축 (선택적)
