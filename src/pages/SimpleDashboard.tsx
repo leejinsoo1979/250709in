@@ -376,15 +376,35 @@ const SimpleDashboard: React.FC = () => {
           const fetchedOwners = await Promise.all(
             Array.from(ownerIds).map(async ownerId => {
               try {
+                // users 컬렉션에서 프로필 정보 가져오기
                 const ownerDoc = await getDocFromServer(doc(db, 'users', ownerId));
+                let displayName = '';
+                let photoURL = null;
+
                 if (ownerDoc.exists()) {
                   const data = ownerDoc.data() as any;
-                  return {
-                    ownerId,
-                    displayName: data.displayName || data.name || data.userName || data.email?.split?.('@')?.[0] || '',
-                    photoURL: data.photoURL || data.photoUrl || data.avatarUrl || null
-                  };
+                  displayName = data.displayName || data.name || data.userName || data.email?.split?.('@')?.[0] || '';
+                  photoURL = data.photoURL || data.photoUrl || data.avatarUrl || null;
                 }
+
+                // photoURL이 없으면 userProfiles 컬렉션도 확인
+                if (!photoURL) {
+                  try {
+                    const profileDoc = await getDocFromServer(doc(db, 'userProfiles', ownerId));
+                    if (profileDoc.exists()) {
+                      const profileData = profileDoc.data() as any;
+                      photoURL = profileData.photoURL || profileData.photoUrl || profileData.avatarUrl || null;
+                      // displayName도 없었다면 userProfiles에서 가져오기
+                      if (!displayName) {
+                        displayName = profileData.displayName || profileData.name || profileData.userName || '';
+                      }
+                    }
+                  } catch (profileError) {
+                    console.error('userProfiles 조회 실패:', { ownerId, profileError });
+                  }
+                }
+
+                return { ownerId, displayName, photoURL };
               } catch (error) {
                 console.error('프로필 조회 실패:', { ownerId, error });
               }
@@ -658,32 +678,42 @@ const SimpleDashboard: React.FC = () => {
           const fetchedOwners: { ownerId: string; displayName: string; photoURL: string | null }[] = await Promise.all(
             Array.from(missingOwnerIds).map(async ownerId => {
               try {
-                // 캐시 대신 서버에서 직접 가져오기 (최신 프로필 이미지 보장)
+                // users 컬렉션에서 프로필 정보 가져오기
                 const ownerDoc = await getDocFromServer(doc(db, 'users', ownerId));
+                let displayName = '';
+                let photoURL = null;
+
                 if (ownerDoc.exists()) {
                   const data = ownerDoc.data() as any;
-                  const result = {
-                    ownerId,
-                    displayName:
-                      data.displayName ||
-                      data.name ||
-                      data.userName ||
-                      data.email?.split?.('@')?.[0] ||
-                      '',
-                    photoURL: data.photoURL || data.photoUrl || data.avatarUrl || null
-                  };
-                  console.log('✅ 프로필 조회 성공:', {
-                    ownerId,
-                    displayName: result.displayName,
-                    photoURL: result.photoURL,
-                    rawData: {
-                      photoURL: data.photoURL,
-                      photoUrl: data.photoUrl,
-                      avatarUrl: data.avatarUrl
-                    }
-                  });
-                  return result;
+                  displayName = data.displayName || data.name || data.userName || data.email?.split?.('@')?.[0] || '';
+                  photoURL = data.photoURL || data.photoUrl || data.avatarUrl || null;
                 }
+
+                // photoURL이 없으면 userProfiles 컬렉션도 확인
+                if (!photoURL) {
+                  try {
+                    const profileDoc = await getDocFromServer(doc(db, 'userProfiles', ownerId));
+                    if (profileDoc.exists()) {
+                      const profileData = profileDoc.data() as any;
+                      photoURL = profileData.photoURL || profileData.photoUrl || profileData.avatarUrl || null;
+                      // displayName도 없었다면 userProfiles에서 가져오기
+                      if (!displayName) {
+                        displayName = profileData.displayName || profileData.name || profileData.userName || '';
+                      }
+                    }
+                  } catch (profileError) {
+                    console.error('userProfiles 조회 실패:', { ownerId, profileError });
+                  }
+                }
+
+                const result = { ownerId, displayName, photoURL };
+                console.log('✅ 프로필 조회 성공:', {
+                  ownerId,
+                  displayName: result.displayName,
+                  photoURL: result.photoURL,
+                  source: ownerDoc.exists() ? 'users' : 'none'
+                });
+                return result;
               } catch (error) {
                 console.error('❌ 공유 호스트 프로필 조회 실패:', { ownerId, error });
               }
@@ -4979,21 +5009,35 @@ const SimpleDashboard: React.FC = () => {
                           const fetchedOwners: { ownerId: string; displayName: string; photoURL: string | null }[] = await Promise.all(
                             Array.from(missingOwnerIds).map(async ownerId => {
                               try {
-                                // 캐시 대신 서버에서 직접 가져오기 (최신 프로필 이미지 보장)
+                                // users 컬렉션에서 프로필 정보 가져오기
                                 const ownerDoc = await getDocFromServer(doc(db, 'users', ownerId));
+                                let displayName = '';
+                                let photoURL = null;
+
                                 if (ownerDoc.exists()) {
                                   const data = ownerDoc.data() as any;
-                                  return {
-                                    ownerId,
-                                    displayName:
-                                      data.displayName ||
-                                      data.name ||
-                                      data.userName ||
-                                      data.email?.split?.('@')?.[0] ||
-                                      '',
-                                    photoURL: data.photoURL || data.photoUrl || data.avatarUrl || null
-                                  };
+                                  displayName = data.displayName || data.name || data.userName || data.email?.split?.('@')?.[0] || '';
+                                  photoURL = data.photoURL || data.photoUrl || data.avatarUrl || null;
                                 }
+
+                                // photoURL이 없으면 userProfiles 컬렉션도 확인
+                                if (!photoURL) {
+                                  try {
+                                    const profileDoc = await getDocFromServer(doc(db, 'userProfiles', ownerId));
+                                    if (profileDoc.exists()) {
+                                      const profileData = profileDoc.data() as any;
+                                      photoURL = profileData.photoURL || profileData.photoUrl || profileData.avatarUrl || null;
+                                      // displayName도 없었다면 userProfiles에서 가져오기
+                                      if (!displayName) {
+                                        displayName = profileData.displayName || profileData.name || profileData.userName || '';
+                                      }
+                                    }
+                                  } catch (profileError) {
+                                    console.error('userProfiles 조회 실패:', { ownerId, profileError });
+                                  }
+                                }
+
+                                return { ownerId, displayName, photoURL };
                               } catch (error) {
                                 console.error('❌ 공유 호스트 프로필 조회 실패:', { ownerId, error });
                               }
