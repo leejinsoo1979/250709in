@@ -4528,16 +4528,22 @@ const SimpleDashboard: React.FC = () => {
                                 <div className={styles.cardUserAvatar}>
                                   {(() => {
                                     // 디자인 파일 소유자 프로필 표시
-                                    const designFileOwnerId = item.designFile.userId;
-                                    let photoURL;
+                                    const designFileOwnerId = item.designFile.userId || item.project.userId;
+                                    const isMyDesign = designFileOwnerId === user?.uid;
 
-                                    if (designFileOwnerId && designFileOwnerId !== user?.uid) {
-                                      // 다른 사람의 디자인 파일: projectOwners에서 가져오기
-                                      photoURL = projectOwners[designFileOwnerId]?.photoURL;
-                                    } else {
-                                      // 내 디자인 파일: 내 프로필 사용
-                                      photoURL = user?.photoURL;
-                                    }
+                                    console.log('🖼️ [디자인 카드] 소유자 결정:', {
+                                      designName: item.name,
+                                      designFileUserId: item.designFile.userId,
+                                      projectUserId: item.project.userId,
+                                      finalOwnerId: designFileOwnerId,
+                                      currentUserId: user?.uid,
+                                      isMyDesign,
+                                      ownerProfile: projectOwners[designFileOwnerId]
+                                    });
+
+                                    const photoURL = isMyDesign
+                                      ? user?.photoURL
+                                      : projectOwners[designFileOwnerId]?.photoURL;
 
                                     return photoURL ? (
                                       <img
@@ -4560,12 +4566,12 @@ const SimpleDashboard: React.FC = () => {
                                 {/* 생성자 닉네임 */}
                                 <span className={styles.cardUserName}>
                                   {(() => {
-                                    const designFileOwnerId = item.designFile.userId;
-                                    if (designFileOwnerId && designFileOwnerId !== user?.uid) {
-                                      // 다른 사람의 디자인 파일
-                                      return projectOwners[designFileOwnerId]?.displayName || '생성자';
-                                    }
-                                    return user?.displayName || user?.email?.split('@')[0] || '이진수';
+                                    const designFileOwnerId = item.designFile.userId || item.project.userId;
+                                    const isMyDesign = designFileOwnerId === user?.uid;
+
+                                    return isMyDesign
+                                      ? (user?.displayName || user?.email?.split('@')[0] || '이진수')
+                                      : (projectOwners[designFileOwnerId]?.displayName || '생성자');
                                   })()}
                                 </span>
 
