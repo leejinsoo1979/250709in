@@ -408,6 +408,36 @@ const SimpleDashboard: React.FC = () => {
     }
   }, [user]);
 
+  // 🔍 디버그 함수 - 특정 디자인 파일 조회
+  useEffect(() => {
+    (window as any).debugDesignFile = async (designFileId: string) => {
+      const { getDocFromServer } = await import('firebase/firestore');
+      const { doc } = await import('firebase/firestore');
+      const { db } = await import('@/firebase/config');
+
+      const docRef = doc(db, 'designFiles', designFileId);
+      const docSnap = await getDocFromServer(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        console.log('🔍🔍🔍🔍🔍 Firebase 직접 조회 결과:', {
+          id: designFileId,
+          name: data.name,
+          userId: data.userId,
+          projectId: data.projectId,
+          createdAt: data.createdAt,
+          updatedAt: data.updatedAt,
+          전체데이터: data
+        });
+        return data;
+      } else {
+        console.log('❌ 문서를 찾을 수 없음:', designFileId);
+        return null;
+      }
+    };
+    console.log('✅ 디버그 함수 등록됨. 콘솔에서 debugDesignFile("디자인ID") 실행 가능');
+  }, []);
+
   // 컴포넌트 마운트 시 데모 프로젝트 정리 및 Firebase 프로젝트 실시간 구독
   useEffect(() => {
     // 컴포넌트 마운트 시 항상 데모 프로젝트 정리
