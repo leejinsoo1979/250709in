@@ -6,7 +6,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useFurnitureSpaceAdapter } from '@/editor/shared/furniture/hooks/useFurnitureSpaceAdapter';
-import { getProject, updateProject, createProject, createDesignFile } from '@/firebase/projects';
+import { getProject, updateProject, createProject, createDesignFile, getDesignFiles } from '@/firebase/projects';
 import { captureProjectThumbnail, generateDefaultThumbnail } from '@/editor/shared/utils/thumbnailCapture';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectPermission } from '@/hooks/useProjectPermission';
@@ -935,16 +935,16 @@ const Configurator: React.FC = () => {
   // 새 디자인 생성 함수 (현재 프로젝트 내에)
   const handleNewDesign = async () => {
     console.log('🎨 [DEBUG] handleNewDesign 함수 시작');
-    
+
     if (!currentProjectId) {
       alert('프로젝트가 선택되지 않았습니다.');
       return;
     }
-    
+
     try {
       const confirmed = confirm('현재 작업 내용이 사라집니다. 새 디자인을 시작하시겠습니까?');
       console.log('🎨 [DEBUG] 사용자 확인 응답:', confirmed);
-      
+
       if (!confirmed) {
         console.log('🎨 [DEBUG] 사용자가 취소함');
         return;
@@ -959,7 +959,7 @@ const Configurator: React.FC = () => {
         frameColor: '#E5E5DC',
         frameColorName: 'Beige',
         subdivisionMode: 'none' as const,
-        columns: 0,
+        columns: [], // 빈 배열로 초기화하여 spaceInfo.columns?.map() 오류 방지
         rows: 0,
         showHorizontalLines: false,
         enableSnapping: true,
@@ -976,9 +976,36 @@ const Configurator: React.FC = () => {
       };
 
       if (isFirebaseConfigured() && user) {
+        // 현재 프로젝트의 기존 디자인 파일 목록 가져오기
+        console.log('🔍 기존 디자인 파일 목록 조회 중...');
+        const { designFiles } = await getDesignFiles(currentProjectId);
+
+        // "untitle" 패턴의 이름 찾기 및 자동 증가 번호 계산
+        const untitlePattern = /^untitle(?:\((\d+)\))?$/;
+        const existingNumbers: number[] = [];
+
+        designFiles.forEach(file => {
+          const match = file.name.match(untitlePattern);
+          if (match) {
+            const num = match[1] ? parseInt(match[1], 10) : 0;
+            existingNumbers.push(num);
+          }
+        });
+
+        // 다음 사용 가능한 번호 찾기
+        let nextNumber = 0;
+        if (existingNumbers.length > 0) {
+          existingNumbers.sort((a, b) => a - b);
+          nextNumber = existingNumbers[existingNumbers.length - 1] + 1;
+        }
+
+        // 디자인명 생성
+        const designName = nextNumber === 0 ? 'untitle' : `untitle(${nextNumber})`;
+        console.log('📝 생성될 디자인명:', designName, '(기존 untitle 개수:', existingNumbers.length, ')');
+
         // Firebase에 새 디자인파일 생성
         const result = await createDesignFile({
-          name: `디자인 ${new Date().toLocaleTimeString()}`,
+          name: designName,
           projectId: currentProjectId,
           spaceConfig: defaultSpaceConfig,
           furniture: { placedModules: [] }
@@ -992,17 +1019,18 @@ const Configurator: React.FC = () => {
 
         if (result.id) {
           console.log('🎨 [DEBUG] 새 디자인 생성 성공:', result.id);
-          
+
           // 상태 업데이트 (프로젝트는 그대로, 디자인만 초기화)
           setSpaceInfo(defaultSpaceConfig);
           setPlacedModules([]);
           setCurrentDesignFileId(result.id);
-          
+          setCurrentDesignFileName(designName);
+
           // derivedSpaceStore 재계산
           derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
-          
+
           console.log('✅ 새 디자인파일 생성 완료:', result.id);
-          alert('새 디자인이 생성되었습니다!');
+          alert(`새 디자인 "${designName}"이(가) 생성되었습니다!`);
         }
       } else {
         // 데모 모드에서는 단순히 상태만 초기화
