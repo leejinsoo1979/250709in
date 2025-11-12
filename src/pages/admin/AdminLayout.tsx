@@ -50,15 +50,7 @@ const AdminLayout = () => {
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <VscServerProcess size={32} className={styles.logo} />
-          <h1 className={styles.title}>비펀 관리자</h1>
-          {adminRole && (
-            <span className={styles.roleBadge}>
-              {adminRole === 'super' && '슈퍼 관리자'}
-              {adminRole === 'admin' && '관리자'}
-              {adminRole === 'support' && '지원팀'}
-              {adminRole === 'sales' && '영업팀'}
-            </span>
-          )}
+          <span className={styles.title}>관리자 모드</span>
         </div>
 
         <nav className={styles.nav}>
