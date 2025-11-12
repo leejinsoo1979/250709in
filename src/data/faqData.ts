@@ -79,11 +79,11 @@ export const faqData: FAQ[] = [
   // 기술 지원
   {
     keywords: ['도움', 'help', '문의', '지원', 'support'],
-    answer: '추가 도움이 필요하시면 support@coohom.com으로 문의해 주세요. 평일 09:00-18:00에 답변드립니다.',
+    answer: '추가 도움이 필요하시면 support@uable.co.kr로 문의해 주세요. 평일 09:00-18:00에 답변드립니다.',
   },
   {
     keywords: ['버그', 'bug', '오류', 'error', '문제'],
-    answer: '버그를 발견하셨다면 support@coohom.com으로 상세한 내용을 보내주세요. 스크린샷과 함께 보내주시면 더 빠르게 해결할 수 있습니다.',
+    answer: '버그를 발견하셨다면 support@uable.co.kr로 상세한 내용을 보내주세요. 스크린샷과 함께 보내주시면 더 빠르게 해결할 수 있습니다.',
   },
 
   // 튜토리얼
@@ -165,5 +165,5 @@ export function matchQuestion(userInput: string, defaultMessage?: string): strin
     return defaultMessage;
   }
 
-  return `죄송합니다. 정확히 이해하지 못했습니다. 😅\n\n다음과 같은 주제로 질문해 주세요:\n\n• 프로젝트 저장 및 불러오기\n• 가구 배치 및 편집\n• 공간 설정 및 재질\n• 2D/3D 뷰 전환\n• DXF 내보내기\n• 플랜 및 계정\n\n또는 support@coohom.com으로 문의해 주세요!`;
+  return `죄송합니다. 정확히 이해하지 못했습니다. 😅\n\n다음과 같은 주제로 질문해 주세요:\n\n• 프로젝트 저장 및 불러오기\n• 가구 배치 및 편집\n• 공간 설정 및 재질\n• 2D/3D 뷰 전환\n• DXF 내보내기\n• 플랜 및 계정\n\n또는 support@uable.co.kr로 문의해 주세요!`;
 }
