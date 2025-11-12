@@ -62,10 +62,13 @@
   align-items: center;
   justify-content: center;
   gap: 12px;
+  padding: 12px;
+  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+  border-radius: 12px;
 }
 
 .logo {
-  color: var(--theme-primary, #667eea);
+  color: white;
   flex-shrink: 0;
 }
 
@@ -73,7 +76,7 @@
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: var(--theme-primary, #667eea);
+  color: white;
 }
 
 .profileSection {
