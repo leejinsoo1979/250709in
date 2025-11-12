@@ -4,7 +4,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { UsersIcon } from '@/components/common/Icons';
-import { HiOutlineChartBar, HiOutlineBriefcase, HiOutlineTrendingUp, HiOutlineClock, HiOutlineUserGroup, HiOutlineMail } from 'react-icons/hi';
+import { HiOutlineChartBar, HiOutlineBriefcase, HiOutlineTrendingUp, HiOutlineClock, HiOutlineUserGroup, HiOutlineMail, HiOutlineOfficeBuilding } from 'react-icons/hi';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import styles from './Dashboard.module.css';
 
