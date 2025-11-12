@@ -67,23 +67,32 @@
 .editButton {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
+  gap: 8px;
+  padding: 12px 24px;
   background: var(--theme-primary, #667eea);
   border: none;
   border-radius: 8px;
   color: white;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px var(--theme-primary-shadow, rgba(102, 126, 234, 0.25));
+  white-space: nowrap;
+}
+
+.editButton span {
+  display: inline-block;
 }
 
 .editButton:hover {
   background: var(--theme-primary-dark, #5568d3);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px var(--theme-primary-shadow, rgba(102, 126, 234, 0.4));
+}
+
+.editButton:active {
+  transform: translateY(0);
 }
 
 .greetingDisplay {

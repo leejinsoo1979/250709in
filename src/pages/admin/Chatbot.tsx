@@ -306,9 +306,10 @@ const Chatbot = () => {
             <button
               className={styles.editButton}
               onClick={() => setIsEditingGreeting(true)}
+              type="button"
             >
-              <HiOutlinePencil size={18} />
-              수정
+              <HiOutlinePencil size={20} />
+              <span>수정</span>
             </button>
           )}
         </div>
