@@ -185,6 +185,9 @@ const Users = () => {
                 <tr key={targetUser.id}>
                   <td>
                     <div className={styles.userInfo}>
+                      {targetUser.isSuperAdmin && (
+                        <GiImperialCrown className={styles.crownIcon} />
+                      )}
                       <div className={styles.avatar}>
                         {targetUser.photoURL ? (
                           <img src={targetUser.photoURL} alt={targetUser.displayName || targetUser.email} />
@@ -203,10 +206,7 @@ const Users = () => {
                   <td>
                     <div className={styles.roleBadges}>
                       {targetUser.isSuperAdmin && (
-                        <>
-                          <span className={styles.superAdminBadge}>슈퍼 관리자</span>
-                          <GiImperialCrown className={styles.crownIcon} />
-                        </>
+                        <span className={styles.superAdminBadge}>슈퍼 관리자</span>
                       )}
                       {targetUser.isAdmin && !targetUser.isSuperAdmin && (
                         <span className={styles.adminBadge}>관리자</span>
