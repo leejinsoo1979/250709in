@@ -117,6 +117,18 @@
   background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
   color: var(--theme-primary, #667eea);
   font-weight: 600;
+  position: relative;
+}
+
+.navItemActive::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--theme-primary, #667eea);
+  border-radius: 0 4px 4px 0;
 }
 
 .navItemActive svg {
