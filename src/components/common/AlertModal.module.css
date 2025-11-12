@@ -96,38 +96,6 @@
   transform: translateY(0);
 }
 
-/* 다크 모드 지원 */
-@media (prefers-color-scheme: dark) {
-  .modal {
-    background-color: #2a2a2a;
-    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
-  }
-  
-  .header {
-    border-bottom-color: #444444;
-  }
-  
-  .title {
-    color: #ffffff;
-  }
-  
-  .message {
-    color: #cccccc;
-  }
-  
-  .footer {
-    border-top-color: #444444;
-  }
-  
-  .confirmButton {
-    background-color: #4a4a4a;
-  }
-  
-  .confirmButton:hover {
-    background-color: #5a5a5a;
-  }
-}
-
 .cancelButton {
   padding: 10px 32px;
   background-color: transparent;
@@ -148,21 +116,4 @@
 
 .cancelButton:active {
   background-color: var(--theme-background-active, #eeeeee);
-}
-
-/* 다크 모드에서 취소 버튼 */
-@media (prefers-color-scheme: dark) {
-  .cancelButton {
-    color: #ffffff;
-    border-color: #666666;
-  }
-  
-  .cancelButton:hover {
-    background-color: #3a3a3a;
-    border-color: #888888;
-  }
-  
-  .cancelButton:active {
-    background-color: #333333;
-  }
 }
