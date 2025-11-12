@@ -564,28 +564,12 @@ const Users = () => {
             <div className={styles.planSelector}>
               <div className={styles.currentPlanSection}>
                 <span className={styles.sectionLabel}>현재 플랜</span>
-                <div
-                  className={styles.planCardSmall}
-                  style={
-                    planDialog.currentPlan !== 'free'
-                      ? {
-                          backgroundColor: `${PLANS[planDialog.currentPlan].color}15`,
-                          borderColor: PLANS[planDialog.currentPlan].color
-                        }
-                      : {}
-                  }
+                <span
+                  className={`${styles.planBadge} ${planDialog.currentPlan === 'free' ? styles.planBadgeFree : ''}`}
+                  style={planDialog.currentPlan !== 'free' ? { backgroundColor: PLANS[planDialog.currentPlan].color } : {}}
                 >
-                  <span
-                    className={styles.planName}
-                    style={
-                      planDialog.currentPlan !== 'free'
-                        ? { color: PLANS[planDialog.currentPlan].color }
-                        : {}
-                    }
-                  >
-                    {PLANS[planDialog.currentPlan].name}
-                  </span>
-                </div>
+                  {PLANS[planDialog.currentPlan].name}
+                </span>
               </div>
 
               <div className={styles.planGridSection}>
@@ -600,10 +584,10 @@ const Users = () => {
                         planDialog.newPlan === planType && planType !== 'free'
                           ? {
                               borderColor: PLANS[planType].color,
-                              backgroundColor: `${PLANS[planType].color}08`
+                              backgroundColor: `${PLANS[planType].color}15`
                             }
                           : planType !== 'free'
-                          ? { borderColor: `${PLANS[planType].color}40` }
+                          ? { borderColor: `${PLANS[planType].color}60` }
                           : {}
                       }
                     >
