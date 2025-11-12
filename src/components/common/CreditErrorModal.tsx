@@ -130,7 +130,7 @@ const CreditErrorModal: React.FC<CreditErrorModalProps> = ({
             <div className={creditStyles.priceSection}>
               <div className={creditStyles.priceTag}>
                 <span className={creditStyles.currency}>₩</span>
-                <span className={creditStyles.price}>9,900</span>
+                <span className={creditStyles.price}>29,000</span>
                 <span className={creditStyles.period}>/월</span>
               </div>
               <button className={creditStyles.upgradeButton} onClick={handleRecharge}>
