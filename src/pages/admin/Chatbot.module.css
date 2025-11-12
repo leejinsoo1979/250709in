@@ -48,6 +48,83 @@
   box-shadow: 0 6px 16px var(--theme-primary-shadow, rgba(102, 126, 234, 0.4));
 }
 
+/* 인사말 섹션 */
+.greetingSection {
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.greetingHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.editButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 6px;
+  color: var(--theme-primary, #667eea);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.editButton:hover {
+  background: var(--theme-background, #f9fafb);
+  border-color: var(--theme-primary, #667eea);
+}
+
+.greetingDisplay {
+  padding: 16px;
+  background: var(--theme-background, #f9fafb);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.greetingForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.greetingActions {
+  display: flex;
+  gap: 12px;
+}
+
+.saveButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--theme-primary, #667eea);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.saveButton:hover {
+  background: var(--theme-primary-dark, #5568d3);
+}
+
 /* 필터 */
 .filters {
   display: flex;

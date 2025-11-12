@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { collection, query, orderBy, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
+import { collection, query, orderBy, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Timestamp, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
-import { HiOutlineChatAlt2, HiOutlineTrash, HiOutlinePencil, HiOutlinePlus, HiOutlineCheck, HiOutlineX } from 'react-icons/hi';
+import { HiOutlineChatAlt2, HiOutlineTrash, HiOutlinePencil, HiOutlinePlus, HiOutlineCheck, HiOutlineX, HiOutlineChatAlt } from 'react-icons/hi';
 import styles from './Chatbot.module.css';
 
 interface ChatbotQA {
@@ -17,6 +17,12 @@ interface ChatbotQA {
   updatedAt: Timestamp;
 }
 
+interface ChatbotSettings {
+  greeting: string;
+  updatedAt: Timestamp;
+  updatedBy: string;
+}
+
 const Chatbot = () => {
   const { user } = useAuth();
   const [qas, setQAs] = useState<ChatbotQA[]>([]);
@@ -25,6 +31,11 @@ const Chatbot = () => {
   const [isAdding, setIsAdding] = useState(false);
 
   console.log('🔴 렌더링:', { isAdding, editingId });
+
+  // 인사말 상태
+  const [greeting, setGreeting] = useState('');
+  const [greetingLoading, setGreetingLoading] = useState(true);
+  const [isEditingGreeting, setIsEditingGreeting] = useState(false);
 
   // 폼 상태
   const [question, setQuestion] = useState('');
@@ -42,10 +53,49 @@ const Chatbot = () => {
   useEffect(() => {
     console.log('🟢 Chatbot 컴포넌트 마운트됨');
     loadQAs();
+    loadGreeting();
     return () => {
       console.log('🔴 Chatbot 컴포넌트 언마운트됨');
     };
   }, []);
+
+  const loadGreeting = async () => {
+    try {
+      setGreetingLoading(true);
+      const docRef = doc(db, 'chatbotSettings', 'general');
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        const data = docSnap.data() as ChatbotSettings;
+        setGreeting(data.greeting || '안녕하세요! 무엇을 도와드릴까요?');
+      } else {
+        setGreeting('안녕하세요! 무엇을 도와드릴까요?');
+      }
+    } catch (error) {
+      console.error('인사말 로드 실패:', error);
+      setGreeting('안녕하세요! 무엇을 도와드릴까요?');
+    } finally {
+      setGreetingLoading(false);
+    }
+  };
+
+  const saveGreeting = async () => {
+    if (!user) return;
+
+    try {
+      const docRef = doc(db, 'chatbotSettings', 'general');
+      await setDoc(docRef, {
+        greeting,
+        updatedAt: serverTimestamp(),
+        updatedBy: user.uid
+      });
+      alert('인사말이 저장되었습니다.');
+      setIsEditingGreeting(false);
+    } catch (error) {
+      console.error('인사말 저장 실패:', error);
+      alert('인사말 저장에 실패했습니다.');
+    }
+  };
 
   useEffect(() => {
     console.log('🔍 상태 변경:', { isAdding, editingId, question, answer });
@@ -221,7 +271,7 @@ const Chatbot = () => {
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>챗봇 관리</h1>
-          <p className={styles.subtitle}>챗봇 Q&A를 관리합니다.</p>
+          <p className={styles.subtitle}>챗봇 Q&A 및 인사말을 관리합니다.</p>
         </div>
         <button
           className={styles.addButton}
@@ -243,6 +293,59 @@ const Chatbot = () => {
           <HiOutlinePlus size={20} />
           Q&A 추가
         </button>
+      </div>
+
+      {/* 인사말 설정 */}
+      <div className={styles.greetingSection}>
+        <div className={styles.greetingHeader}>
+          <h2 className={styles.sectionTitle}>
+            <HiOutlineChatAlt size={20} />
+            챗봇 인사말
+          </h2>
+          {!isEditingGreeting && (
+            <button
+              className={styles.editButton}
+              onClick={() => setIsEditingGreeting(true)}
+            >
+              <HiOutlinePencil size={18} />
+              수정
+            </button>
+          )}
+        </div>
+        {isEditingGreeting ? (
+          <div className={styles.greetingForm}>
+            <textarea
+              className={styles.textarea}
+              value={greeting}
+              onChange={(e) => setGreeting(e.target.value)}
+              placeholder="챗봇 인사말을 입력하세요..."
+              rows={3}
+            />
+            <div className={styles.greetingActions}>
+              <button
+                className={styles.saveButton}
+                onClick={saveGreeting}
+              >
+                <HiOutlineCheck size={18} />
+                저장
+              </button>
+              <button
+                className={styles.cancelButton}
+                onClick={() => {
+                  setIsEditingGreeting(false);
+                  loadGreeting();
+                }}
+              >
+                <HiOutlineX size={18} />
+                취소
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.greetingDisplay}>
+            {greetingLoading ? '로딩 중...' : greeting}
+          </div>
+        )}
       </div>
 
       {/* 필터 */}
