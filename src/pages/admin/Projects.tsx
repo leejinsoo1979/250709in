@@ -59,6 +59,9 @@ const Projects = () => {
         for (const projectDoc of projectsSnapshot.docs) {
           const data = projectDoc.data();
 
+          // 프로젝트 이름 확인 - 실제 사용되는 필드명은 'title'
+          const projectName = data.title || data.projectName || data.name || data.project_name || '이름 없음';
+
           // 디자인 파일 수 조회
           const designFilesSnapshot = await getDocs(
             query(
@@ -92,10 +95,10 @@ const Projects = () => {
 
           projectsData.push({
             id: projectDoc.id,
-            projectName: data.projectName || '이름 없음',
-            userId: data.userId || '',
-            userName: data.userName || '',
-            userEmail: data.userEmail || '',
+            projectName: projectName,
+            userId: data.userId || data.user_id || '',
+            userName: data.userName || data.user_name || '',
+            userEmail: data.userEmail || data.user_email || '',
             createdAt: data.createdAt?.toDate?.() || null,
             updatedAt: data.updatedAt?.toDate?.() || null,
             designFileCount: projectDesignFiles.length,
