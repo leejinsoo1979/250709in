@@ -68,31 +68,34 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 8px 16px;
+  width: 36px;
+  height: 36px;
   background: var(--theme-surface, #ffffff);
   border: 1px solid var(--theme-border, #e5e7eb);
-  border-radius: 6px;
-  color: var(--theme-text, #1f2937);
-  font-size: 13px;
-  font-weight: 500;
+  border-radius: 8px;
+  color: var(--theme-text-secondary, #6b7280);
   cursor: pointer;
-  transition: all 0.15s ease;
-  white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
 .editButton svg {
-  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.editButton span {
+  display: none;
 }
 
 .editButton:hover {
-  background: var(--theme-background, #f9fafb);
+  background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
   border-color: var(--theme-primary, #667eea);
   color: var(--theme-primary, #667eea);
+  transform: translateY(-1px);
 }
 
 .editButton:active {
-  transform: scale(0.98);
+  transform: translateY(0);
 }
 
 .greetingDisplay {
