@@ -241,13 +241,14 @@
 }
 
 .revokeButton {
-  background: #ef4444;
-  color: white;
+  background: var(--theme-background, #f3f4f6);
+  color: var(--theme-text, #1f2937);
+  border: 1px solid var(--theme-border, #e5e7eb);
 }
 
 .revokeButton:hover {
-  background: #dc2626;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  background: var(--theme-background-hover, #e5e7eb);
+  border-color: var(--theme-text-secondary, #6b7280);
 }
 
 .disabledText {
@@ -468,13 +469,12 @@
 }
 
 .confirmRevokeButton {
-  background: #ef4444;
-  color: white;
+  background: var(--theme-background, #f3f4f6);
+  color: var(--theme-text, #1f2937);
 }
 
 .confirmRevokeButton:hover {
-  background: #dc2626;
-  box-shadow: 0 2px 12px rgba(239, 68, 68, 0.4);
+  background: var(--theme-background-hover, #e5e7eb);
 }
 
 /* 로딩 */
