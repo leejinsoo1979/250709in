@@ -3,7 +3,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { getUserProjectPermission, type SharePermission } from '@/firebase/shareLinks';
 import { isSuperAdmin } from '@/firebase/admins';
 
-export type ProjectPermission = SharePermission | 'owner' | 'admin' | null;
+export type ProjectPermission = SharePermission | 'owner' | null;
 
 export interface ProjectPermissionState {
   permission: ProjectPermission;
@@ -31,10 +31,10 @@ export function useProjectPermission(projectId: string | null): ProjectPermissio
     const checkPermission = async () => {
       setLoading(true);
       try {
-        // 관리자는 모든 프로젝트에 접근 가능
+        // 관리자는 viewer 권한으로 모든 프로젝트 조회 가능 (수정 불가)
         if (isSuperAdmin(user.email || '')) {
-          console.log('👑 관리자 권한으로 프로젝트 접근:', projectId);
-          setPermission('admin');
+          console.log('👑 관리자 권한으로 프로젝트 접근 (viewer):', projectId);
+          setPermission('viewer');
           setLoading(false);
           return;
         }
@@ -52,7 +52,7 @@ export function useProjectPermission(projectId: string | null): ProjectPermissio
     checkPermission();
   }, [projectId, user]);
 
-  const isOwner = permission === 'owner' || permission === 'admin';
+  const isOwner = permission === 'owner';
   const canEdit = isOwner || permission === 'editor';
   const canView = isOwner || permission === 'editor' || permission === 'viewer';
 
