@@ -203,10 +203,10 @@ const Users = () => {
                   <td>
                     <div className={styles.roleBadges}>
                       {targetUser.isSuperAdmin && (
-                        <span className={styles.superAdminBadge}>
+                        <>
+                          <span className={styles.superAdminBadge}>슈퍼 관리자</span>
                           <GiImperialCrown className={styles.crownIcon} />
-                          슈퍼 관리자
-                        </span>
+                        </>
                       )}
                       {targetUser.isAdmin && !targetUser.isSuperAdmin && (
                         <span className={styles.adminBadge}>관리자</span>

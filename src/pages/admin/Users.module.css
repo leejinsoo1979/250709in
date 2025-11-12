@@ -233,18 +233,16 @@
 }
 
 .superAdminBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
 .crownIcon {
-  font-size: 16px;
+  font-size: 18px;
   color: #ffd700;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3));
+  vertical-align: middle;
 }
 
 .adminBadge {
