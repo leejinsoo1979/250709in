@@ -231,7 +231,7 @@ const Messages = () => {
           messageId: messageDoc.id,
           senderId: user.uid,
           senderName: user.displayName || user.email || '관리자',
-          read: false,
+          isRead: false,
           createdAt: serverTimestamp()
         })
       );
