@@ -100,6 +100,9 @@
 
 .radioLabel input[type="radio"] {
   cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--theme-primary, #667eea);
 }
 
 .radioLabel input[type="radio"]:checked + svg {
@@ -164,6 +167,9 @@
 
 .checkboxLabel input[type="checkbox"] {
   cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--theme-primary, #667eea);
 }
 
 /* 사용자 목록 */
@@ -191,6 +197,9 @@
 
 .userItem input[type="checkbox"] {
   cursor: pointer;
+  width: 18px;
+  height: 18px;
+  accent-color: var(--theme-primary, #667eea);
 }
 
 .userAvatar {
