@@ -319,10 +319,15 @@
 }
 
 .superAdminText {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
   color: var(--theme-primary, #10b981);
   letter-spacing: -0.2px;
+  border: 1px solid var(--theme-primary, #10b981);
+  background: var(--theme-primary-light, rgba(16, 185, 129, 0.1));
 }
 
 /* 플랜 배지 */
