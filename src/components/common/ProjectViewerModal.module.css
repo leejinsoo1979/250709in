@@ -29,6 +29,7 @@
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  border: 2px solid #ffffff;
 }
 
 .modalContent.fullscreenContent {
@@ -37,6 +38,7 @@
   max-width: none;
   max-height: none;
   border-radius: 0;
+  border: none;
 }
 
 /* 모달 헤더 */
