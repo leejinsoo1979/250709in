@@ -3,7 +3,7 @@ import { useNavigate, Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAdmin } from '@/hooks/useAdmin';
 import { UserIcon, UsersIcon, SettingsIcon, LogOutIcon } from '@/components/common/Icons';
-import { HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder, HiOutlineShare, HiOutlineClipboardList, HiOutlineShieldCheck, HiOutlineMail, HiOutlineChatAlt2 } from 'react-icons/hi';
+import { HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder, HiOutlineShare, HiOutlineClipboardList, HiOutlineShieldCheck, HiOutlineMail, HiOutlineChatAlt2, HiOutlineKey } from 'react-icons/hi';
 import { VscServerProcess } from 'react-icons/vsc';
 import { GiImperialCrown } from 'react-icons/gi';
 import styles from './AdminLayout.module.css';
@@ -151,6 +151,14 @@ const AdminLayout = () => {
           >
             <HiOutlineChatAlt2 size={20} />
             <span>챗봇 관리</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/api-keys"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineKey size={20} />
+            <span>API 키 관리</span>
           </NavLink>
 
           <NavLink

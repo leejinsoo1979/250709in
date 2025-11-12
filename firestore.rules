@@ -255,5 +255,14 @@ service cloud.firestore {
       allow read: if isAdmin();
       allow write: if isAdmin();
     }
+
+    // API 키 - 본인 키만 읽기/쓰기 가능
+    match /apiKeys/{keyId} {
+      allow read: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if false; // API 키는 수정 불가
+    }
   }
 }

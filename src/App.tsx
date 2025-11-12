@@ -26,6 +26,7 @@ import AdminLogs from '@/pages/admin/Logs';
 import AdminMessages from '@/pages/admin/Messages';
 import AdminChatbot from '@/pages/admin/Chatbot';
 import AdminSettings from '@/pages/admin/Settings';
+import AdminApiKeys from '@/pages/admin/ApiKeys';
 import PlaceholderPage from '@/pages/admin/PlaceholderPage';
 import { HiOutlineCreditCard, HiOutlineLockClosed } from 'react-icons/hi';
 import { SettingsIcon } from '@/components/common/Icons';
@@ -130,6 +131,7 @@ function AppContent() {
           <Route path="logs" element={<AdminLogs />} />
           <Route path="messages" element={<AdminMessages />} />
           <Route path="chatbot" element={<AdminChatbot />} />
+          <Route path="api-keys" element={<AdminApiKeys />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="billing" element={<PlaceholderPage title="결제 관리" description="구독 플랜, 결제 내역, 청구서 관리 기능이 곧 제공됩니다." icon={<HiOutlineCreditCard size={40} />} />} />
           <Route path="security" element={<PlaceholderPage title="보안 설정" description="2FA, IP 제한, 감사 로그 등 보안 기능이 곧 제공됩니다." icon={<HiOutlineLockClosed size={40} />} />} />
