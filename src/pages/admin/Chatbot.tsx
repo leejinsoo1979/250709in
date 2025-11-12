@@ -279,7 +279,7 @@ const Chatbot = () => {
         {/* 폼 */}
         {console.log('조건 체크:', { isAdding, editingId, show: isAdding || editingId })}
         {(isAdding || editingId) ? (
-          <div className={styles.formSection} style={{ border: '2px solid red' }}>
+          <div className={styles.formSection}>
             <div className={styles.formHeader}>
               <h2 className={styles.sectionTitle}>
                 <HiOutlineChatAlt2 size={20} />
