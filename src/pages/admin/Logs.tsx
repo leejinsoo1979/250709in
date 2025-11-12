@@ -458,9 +458,8 @@ const Logs = () => {
                 </thead>
                 <tbody>
                   {filteredShareLinkAccessLog.map(log => {
-                    const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
                     const shareUrl = log.shareLinkToken
-                      ? `${baseUrl}/share/${log.shareLinkToken}`
+                      ? `https://in-f8873.vercel.app/share/${log.shareLinkToken}`
                       : '';
 
                     return (
