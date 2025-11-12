@@ -5,6 +5,7 @@
   max-width: 95vw;
   max-height: 90vh;
   overflow: hidden;
+  border: 2px solid #ffffff;
 }
 
 /* X 버튼 */
