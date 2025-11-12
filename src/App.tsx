@@ -45,6 +45,7 @@ import CNCOptimizerTest from '@/editor/CNCOptimizer/CNCOptimizerTest';
 import Test2DViewer from '@/pages/Test2DViewer';
 import CanvasDuplicateTest from '@/test/CanvasDuplicateTest';
 import { initializeTheme } from '@/theme';
+import { logPageView } from '@/firebase/analytics';
 
 // AR 뷰어는 lazy loading으로 처리 (모바일에서만 사용)
 const ARViewer = lazy(() => import('@/editor/ar-viewer/ARViewer'));
@@ -64,6 +65,11 @@ function RouteChangeHandler() {
     // 라우트 변경 감지
     // React Three Fiber가 자체적으로 정리하므로 간섭하지 않음
     // console.log('Route changed to:', location.pathname);
+
+    // Firebase Analytics 페이지 뷰 로깅
+    const pageName = location.pathname;
+    const pageTitle = document.title || pageName;
+    logPageView(pageName, pageTitle);
   }, [location.pathname]);
 
   return null;

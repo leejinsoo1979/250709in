@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
+import { getAnalytics, Analytics } from 'firebase/analytics';
 
 // Firebase 설정 (환경변수에서 가져오기)
 const firebaseConfig = {
@@ -10,7 +11,8 @@ const firebaseConfig = {
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID?.trim(),
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET?.trim(),
   messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID?.trim(),
-  appId: import.meta.env.VITE_FIREBASE_APP_ID?.trim()
+  appId: import.meta.env.VITE_FIREBASE_APP_ID?.trim(),
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID?.trim()
 };
 
 // Firebase 설정 확인 (개발 모드 및 프로덕션 모두)
@@ -21,6 +23,7 @@ console.log('🔥 Firebase Config Status:', {
   storageBucket: firebaseConfig.storageBucket || '❌ Missing',
   messagingSenderId: firebaseConfig.messagingSenderId ? '✅ Set' : '❌ Missing',
   appId: firebaseConfig.appId ? '✅ Set' : '❌ Missing',
+  measurementId: firebaseConfig.measurementId ? '✅ Set' : '❌ Missing',
   environment: import.meta.env.MODE,
   currentDomain: typeof window !== 'undefined' ? window.location.hostname : 'N/A'
 });
@@ -41,5 +44,18 @@ if (typeof window !== 'undefined') {
 }
 
 export const storage = getStorage(app);
+
+// Firebase Analytics 초기화 (브라우저 환경에서만)
+let analytics: Analytics | null = null;
+if (typeof window !== 'undefined' && firebaseConfig.measurementId) {
+  try {
+    analytics = getAnalytics(app);
+    console.log('📊 Firebase Analytics initialized');
+  } catch (error) {
+    console.warn('⚠️ Firebase Analytics initialization failed:', error);
+  }
+}
+
+export { analytics };
 
 export default app; 
