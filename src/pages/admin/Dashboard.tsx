@@ -377,7 +377,7 @@ const Dashboard = () => {
 
       {/* 주요 통계 카드 */}
       <div className={styles.statsGrid}>
-        <div className={styles.statCard}>
+        <div className={styles.statCard} onClick={() => navigate('/admin/users')}>
           <div className={styles.statIcon}>
             <UsersIcon size={28} />
           </div>
@@ -393,7 +393,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className={styles.statCard}>
+        <div className={styles.statCard} onClick={() => navigate('/admin/users')}>
           <div className={styles.statIcon}>
             <HiOutlineUserGroup size={28} />
           </div>
@@ -408,7 +408,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className={styles.statCard}>
+        <div className={styles.statCard} onClick={() => navigate('/admin/subscriptions')}>
           <div className={styles.statIcon}>
             <HiOutlineCreditCard size={28} />
           </div>
@@ -423,7 +423,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className={styles.statCard}>
+        <div className={styles.statCard} onClick={() => navigate('/admin/users')}>
           <div className={styles.statIcon}>
             <HiOutlineTrendingUp size={28} />
           </div>
@@ -438,7 +438,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className={styles.statCard}>
+        <div className={styles.statCard} onClick={() => navigate('/admin/teams')}>
           <div className={styles.statIcon}>
             <HiOutlineOfficeBuilding size={28} />
           </div>
@@ -451,7 +451,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className={styles.statCard}>
+        <div className={styles.statCard} onClick={() => navigate('/admin/projects')}>
           <div className={styles.statIcon}>
             <HiOutlineChartBar size={28} />
           </div>
