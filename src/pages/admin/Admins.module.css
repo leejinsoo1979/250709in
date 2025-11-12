@@ -279,6 +279,17 @@
   flex-shrink: 0;
 }
 
+.superAdminText {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-primary, #10b981);
+  border: 1px solid var(--theme-primary, #10b981);
+  background: transparent;
+}
+
 /* 확인 다이얼로그 */
 .dialogOverlay {
   position: fixed;

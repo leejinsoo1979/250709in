@@ -274,7 +274,7 @@ const Admins = () => {
                   </td>
                   <td>
                     {targetUser.isSuperAdmin ? (
-                      <span className={styles.disabledText}>수정 불가</span>
+                      <span className={styles.superAdminText}>절대 권한</span>
                     ) : targetUser.isAdmin ? (
                       <button
                         className={styles.revokeButton}
