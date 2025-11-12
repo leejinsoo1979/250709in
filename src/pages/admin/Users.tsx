@@ -7,7 +7,7 @@ import { SearchIcon } from '@/components/common/Icons';
 import { getAllAdmins, isSuperAdmin } from '@/firebase/admins';
 import { updateUserPlan, PLANS, PlanType } from '@/firebase/plans';
 import { GiImperialCrown } from 'react-icons/gi';
-import { FaUser } from 'react-icons/fa';
+import { FiUser } from 'react-icons/fi';
 import { PiMedal } from 'react-icons/pi';
 import styles from './Users.module.css';
 
@@ -433,7 +433,7 @@ const Users = () => {
                       ) : targetUser.isAdmin ? (
                         <PiMedal className={styles.medalIcon} />
                       ) : (
-                        <FaUser className={styles.userIcon} />
+                        <FiUser className={styles.userIcon} />
                       )}
                       <div className={styles.avatar}>
                         {targetUser.photoURL ? (
