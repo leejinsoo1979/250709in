@@ -283,6 +283,17 @@
   color: var(--theme-text-secondary, #6b7280);
 }
 
+.fileLink {
+  color: var(--theme-primary, #667eea);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.fileLink:hover {
+  color: var(--theme-primary-dark, #5568d3);
+  text-decoration: underline;
+}
+
 .emptyState {
   padding: 40px 20px;
   text-align: center;

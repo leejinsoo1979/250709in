@@ -385,20 +385,32 @@ export default function UserDetail() {
             <div className={styles.emptyState}>디자인 파일이 없습니다</div>
           ) : (
             <div className={styles.listContainer}>
-              {designFiles.map(file => (
-                <div key={file.id} className={styles.listItem}>
-                  <div className={styles.listItemHeader}>
-                    <strong>{file.fileName}</strong>
-                    <span className={styles.listItemSize}>
-                      {(file.fileSize / 1024).toFixed(2)} KB
-                    </span>
+              {designFiles.map(file => {
+                const fileUrl = `/configurator/${file.projectId}`;
+                return (
+                  <div key={file.id} className={styles.listItem}>
+                    <div className={styles.listItemHeader}>
+                      <strong>
+                        <a
+                          href={fileUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={styles.fileLink}
+                        >
+                          {file.fileName}
+                        </a>
+                      </strong>
+                      <span className={styles.listItemSize}>
+                        {(file.fileSize / 1024).toFixed(2)} KB
+                      </span>
+                    </div>
+                    <div className={styles.listItemMeta}>
+                      <span>프로젝트: {file.projectId}</span>
+                      <span>생성: {file.createdAt ? new Date(file.createdAt.toMillis()).toLocaleDateString('ko-KR') : '-'}</span>
+                    </div>
                   </div>
-                  <div className={styles.listItemMeta}>
-                    <span>프로젝트: {file.projectId}</span>
-                    <span>생성: {file.createdAt ? new Date(file.createdAt.toMillis()).toLocaleDateString('ko-KR') : '-'}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
