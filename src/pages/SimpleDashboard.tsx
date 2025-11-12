@@ -542,15 +542,39 @@ const SimpleDashboard: React.FC = () => {
 
         for (const project of allProjects) {
           try {
+            console.log(`🔍 협업자 조회 시도: ${project.title} (${project.id})`, {
+              isSharedWithMe: sharedWithMeProjects.some(p => p.id === project.id),
+              projectUserId: project.userId,
+              currentUserId: user?.uid
+            });
             const collaborators = await getProjectCollaborators(project.id);
+            console.log(`📋 협업자 조회 결과: ${project.title}`, {
+              count: collaborators.length,
+              collaborators: collaborators.map(c => ({
+                userId: c.userId,
+                userName: c.userName,
+                permission: c.permission,
+                designFileIds: c.designFileIds
+              }))
+            });
             if (collaborators.length > 0) {
               collaboratorsMap[project.id] = collaborators;
               console.log(`✅ 프로젝트 ${project.title} 협업자:`, collaborators.length, '명');
+            } else {
+              console.log(`⚠️ 프로젝트 ${project.title} 협업자 없음`);
             }
           } catch (error) {
             console.error(`❌ 프로젝트 ${project.id} 협업자 조회 실패:`, error);
           }
         }
+
+        console.log('📊 최종 협업자 맵:', {
+          totalProjects: Object.keys(collaboratorsMap).length,
+          projects: Object.entries(collaboratorsMap).map(([id, collabs]) => ({
+            projectId: id,
+            count: collabs.length
+          }))
+        });
 
         setProjectCollaborators(collaboratorsMap);
       };
@@ -5126,23 +5150,43 @@ const SimpleDashboard: React.FC = () => {
                     } else if (moreMenu.itemType === 'project' && user) {
                       // 프로젝트가 내가 공유한 것인지 확인
                       const isSharedByMe = sharedByMeProjects.some(p => p.id === moreMenu.itemId);
+                      const isSharedWithMe = sharedWithMeProjects.some(p => p.id === moreMenu.itemId);
+
+                      console.log('🔗 공유 해제 시도:', {
+                        projectId: moreMenu.itemId,
+                        isSharedByMe,
+                        isSharedWithMe,
+                        userId: user.uid,
+                        sharedByMeCount: sharedByMeProjects.length,
+                        sharedWithMeCount: sharedWithMeProjects.length
+                      });
 
                       if (isSharedByMe) {
                         // 내가 공유한 프로젝트 - 모든 사용자의 접근 권한 해제
+                        console.log('📤 내가 공유한 프로젝트 - 모든 권한 해제');
                         const result = await revokeAllProjectAccess(moreMenu.itemId);
+                        console.log('📤 결과:', result);
                         if (result.success) {
                           // sharedByMeProjects 목록에서 제거
                           setSharedByMeProjects(prev => prev.filter(p => p.id !== moreMenu.itemId));
                         }
                         alert(result.message);
-                      } else {
+                      } else if (isSharedWithMe) {
                         // 공유받은 프로젝트 - 내 접근 권한만 해제
+                        console.log('📥 공유받은 프로젝트 - 내 권한만 해제');
                         const result = await revokeProjectAccess(moreMenu.itemId, user.uid);
+                        console.log('📥 결과:', result);
                         if (result.success) {
                           // 공유받은 프로젝트 목록에서 제거
                           setSharedWithMeProjects(prev => prev.filter(p => p.id !== moreMenu.itemId));
+                          console.log('✅ sharedWithMeProjects에서 제거됨');
+                        } else {
+                          console.error('❌ 공유 해제 실패:', result.message);
                         }
                         alert(result.message);
+                      } else {
+                        console.warn('⚠️ 프로젝트가 sharedByMe나 sharedWithMe 목록에 없음');
+                        alert('이 프로젝트는 공유된 프로젝트가 아닙니다.');
                       }
                     }
 
