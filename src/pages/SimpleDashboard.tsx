@@ -275,6 +275,18 @@ const SimpleDashboard: React.FC = () => {
     console.log(`🧹 총 ${deletedCount}개의 데모 프로젝트 관련 항목 삭제됨`);
   }, []);
 
+  // user 변경 추적 (디버깅용)
+  useEffect(() => {
+    console.log('👤 user 상태 변경:', {
+      exists: !!user,
+      uid: user?.uid,
+      email: user?.email,
+      displayName: user?.displayName,
+      photoURL: user?.photoURL,
+      timestamp: new Date().toISOString()
+    });
+  }, [user, user?.photoURL, user?.displayName]);
+
   // Firebase에서 프로젝트 목록 가져오기
   const loadFirebaseProjects = useCallback(async (retryCount = 0) => {
     if (!user) {
