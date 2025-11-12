@@ -947,12 +947,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
             transform: 'translateX(-50%)'
           }} />
           {/* 좌측 상단: 정면 뷰 */}
-          <div 
+          <div
             onClick={() => setActiveQuadrant(activeQuadrant === 'front' ? null : 'front')}
-            style={{ 
-              position: 'relative', 
-              overflow: 'hidden', 
-              backgroundColor: '#121212',
+            style={{
+              position: 'relative',
+              overflow: 'hidden',
+              backgroundColor: '#ffffff',
               border: activeQuadrant === 'front' ? '3px solid #00ffcc' : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',
@@ -1031,12 +1031,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </div>
 
           {/* 우측 상단: 상부 뷰 */}
-          <div 
+          <div
             onClick={() => setActiveQuadrant(activeQuadrant === 'top' ? null : 'top')}
-            style={{ 
-              position: 'relative', 
-              overflow: 'hidden', 
-              backgroundColor: '#121212',
+            style={{
+              position: 'relative',
+              overflow: 'hidden',
+              backgroundColor: '#ffffff',
               border: activeQuadrant === 'top' ? '3px solid #00ffcc' : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',
@@ -1115,12 +1115,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </div>
 
           {/* 좌측 하단: 좌측면 뷰 */}
-          <div 
+          <div
             onClick={() => setActiveQuadrant(activeQuadrant === 'left' ? null : 'left')}
-            style={{ 
-              position: 'relative', 
-              overflow: 'hidden', 
-              backgroundColor: '#121212',
+            style={{
+              position: 'relative',
+              overflow: 'hidden',
+              backgroundColor: '#ffffff',
               border: activeQuadrant === 'left' ? '3px solid #00ffcc' : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',
@@ -1199,12 +1199,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </div>
 
           {/* 우측 하단: 우측면 뷰 */}
-          <div 
+          <div
             onClick={() => setActiveQuadrant(activeQuadrant === 'right' ? null : 'right')}
-            style={{ 
-              position: 'relative', 
-              overflow: 'hidden', 
-              backgroundColor: '#121212',
+            style={{
+              position: 'relative',
+              overflow: 'hidden',
+              backgroundColor: '#ffffff',
               border: activeQuadrant === 'right' ? '3px solid #00ffcc' : '1px solid transparent',
               transition: 'border 0.3s ease',
               boxSizing: 'border-box',

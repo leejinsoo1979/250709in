@@ -91,14 +91,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 반응형 감지
   const { isTouchDevice, isMobile, isTablet } = useResponsive();
   
-  // 테마에 따른 배경색 결정
+  // 테마에 따른 배경색 결정 - 무조건 라이트 테마
   const getBackgroundColor = useCallback(() => {
-    if (viewMode === '2D') {
-      // 2D 모드에서는 2D 전용 테마에 따른 배경색 사용
-      return view2DTheme === 'dark' ? '#000000' : '#ffffff';
-    }
-    return CANVAS_SETTINGS.BACKGROUND_COLOR;
-  }, [viewMode, view2DTheme]);
+    // 디자인 미리보기는 항상 라이트 테마
+    return '#ffffff';
+  }, []);
   
   // 마운트 상태 관리
   const [mounted, setMounted] = useState(false);
