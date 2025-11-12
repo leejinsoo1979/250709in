@@ -35,7 +35,7 @@ const Dashboard = () => {
           getCountFromServer(collection(db, 'users')),
           getCountFromServer(collection(db, 'organizations')),
           getCountFromServer(collection(db, 'projects')),
-          getCountFromServer(collection(db, 'designs'))
+          getCountFromServer(collection(db, 'designFiles'))
         ]);
 
         setStats({
@@ -66,7 +66,7 @@ const Dashboard = () => {
       setStats(prev => ({ ...prev, totalProjects: snapshot.size }));
     });
 
-    const unsubscribeDesigns = onSnapshot(collection(db, 'designs'), (snapshot) => {
+    const unsubscribeDesigns = onSnapshot(collection(db, 'designFiles'), (snapshot) => {
       setStats(prev => ({ ...prev, totalDesigns: snapshot.size }));
     });
 

@@ -2,9 +2,31 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function isSignedIn() { return request.auth != null; }
+    function isSuperAdmin() {
+      return isSignedIn() && request.auth.token.email == 'sbbc212@gmail.com';
+    }
+    function isAdmin() {
+      return isSignedIn() && (
+        isSuperAdmin() ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
     function isTeamMember(teamId) {
       return isSignedIn() &&
              exists(/databases/$(database)/documents/teams/$(teamId)/members/$(request.auth.uid));
+    }
+
+    // admins - 관리자 권한 정보 (슈퍼 관리자만 관리)
+    match /admins/{adminId} {
+      allow read: if isAdmin();
+      allow write: if isSuperAdmin();
+    }
+
+    // organizations - 조직 정보 (관리자만 모든 조직 읽기 가능)
+    match /organizations/{orgId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin();
     }
 
     // users - 다른 사람 프로필 읽기 허용 (프로필 이미지, 이름 표시용)
