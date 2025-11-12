@@ -221,9 +221,13 @@ const Messages = () => {
         recipientCount: recipients.length
       });
 
+      console.log('✅ 메시지 저장 완료:', messageDoc.id);
+
       // 각 수신자에게 알림 생성
-      const notificationPromises = recipients.map(recipientId =>
-        addDoc(collection(db, 'notifications'), {
+      console.log('📧 알림 생성 시작:', recipients.length, '명');
+      const notificationPromises = recipients.map(recipientId => {
+        console.log('  - 알림 생성 대상:', recipientId);
+        return addDoc(collection(db, 'notifications'), {
           userId: recipientId,
           type: 'message',
           title: title.trim(),
@@ -233,10 +237,16 @@ const Messages = () => {
           senderName: user.displayName || user.email || '관리자',
           isRead: false,
           createdAt: serverTimestamp()
-        })
-      );
+        });
+      });
 
-      await Promise.all(notificationPromises);
+      try {
+        await Promise.all(notificationPromises);
+        console.log('✅ 모든 알림 생성 완료');
+      } catch (notificationError) {
+        console.error('❌ 알림 생성 실패:', notificationError);
+        alert(`메시지는 발송되었으나 알림 생성에 실패했습니다: ${notificationError.message}`);
+      }
 
       alert(`메시지가 ${recipients.length}명에게 발송되었습니다.`);
 

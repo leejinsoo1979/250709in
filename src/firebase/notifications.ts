@@ -35,7 +35,6 @@ export interface Notification {
   messageId?: string;
   senderId?: string;
   senderName?: string;
-  read?: boolean;
 }
 
 /**
