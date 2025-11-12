@@ -130,7 +130,8 @@
 
 .projectCardActive {
   border-color: var(--theme-primary, #667eea);
-  background: var(--theme-primary-light, rgba(102, 126, 234, 0.05));
+  border-width: 3px;
+  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
 }
 
 .projectCardHeader {

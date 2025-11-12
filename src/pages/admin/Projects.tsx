@@ -150,14 +150,22 @@ const Projects = () => {
         const data = doc.data();
         // 해당 프로젝트의 파일만 필터링
         if (data.projectId === projectId) {
+          // 디버깅: 첫 번째 파일의 전체 데이터 구조 확인
+          if (filesData.length === 0) {
+            console.log('📄 첫 번째 디자인 파일 원본 데이터:', data);
+          }
+
+          // 다양한 필드명 시도
+          const fileName = data.fileName || data.filename || data.name || data.file_name || data.title || `파일_${doc.id.substring(0, 8)}`;
+
           filesData.push({
             id: doc.id,
-            fileName: data.fileName || '파일명 없음',
+            fileName: fileName,
             userId: data.userId || '',
             projectId: data.projectId || '',
             createdAt: data.createdAt?.toDate?.() || null,
             updatedAt: data.updatedAt?.toDate?.() || null,
-            fileSize: data.fileSize || 0
+            fileSize: data.fileSize || data.size || 0
           });
         }
       });
