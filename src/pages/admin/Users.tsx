@@ -122,6 +122,7 @@ const Users = () => {
 
   // 사용자 상세 정보 조회
   const openUserDetails = async (user: UserData) => {
+    console.log('👤 사용자 상세 정보 열기:', user);
     setSelectedUser(user);
     setUserDetailsLoading(true);
 
@@ -678,7 +679,7 @@ const Users = () => {
 
     {/* 사용자 상세 정보 */}
     {selectedUser && (
-      <div className={styles.userDetailsSection}>
+      <div className={styles.userDetailsSection} id="user-details-section">
         <div className={styles.userDetailsHeader}>
           <div className={styles.userDetailsTitle}>
             <div className={styles.userDetailsAvatar}>
