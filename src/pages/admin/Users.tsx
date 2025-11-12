@@ -8,7 +8,7 @@ import { updateUserPlan, PLANS, PlanType } from '@/firebase/plans';
 import { GiImperialCrown } from 'react-icons/gi';
 import { FaUser } from 'react-icons/fa';
 import { PiMedal } from 'react-icons/pi';
-import { HiOutlineFolder, HiOutlineCube } from 'react-icons/hi';
+import { HiOutlineFolder, HiOutlineCube, HiOutlineLink, HiOutlineEye, HiOutlineClock } from 'react-icons/hi';
 import styles from './Users.module.css';
 
 interface UserData {
@@ -36,6 +36,9 @@ const Users = () => {
   const [userDetailsLoading, setUserDetailsLoading] = useState(false);
   const [userProjects, setUserProjects] = useState<any[]>([]);
   const [userDesignFiles, setUserDesignFiles] = useState<any[]>([]);
+  const [userShareLinks, setUserShareLinks] = useState<any[]>([]);
+  const [userSharedAccess, setUserSharedAccess] = useState<any[]>([]);
+  const [userAccessLogs, setUserAccessLogs] = useState<any[]>([]);
   const [planDialog, setPlanDialog] = useState<{
     show: boolean;
     userId: string;
@@ -151,6 +154,58 @@ const Users = () => {
         }));
 
       setUserDesignFiles(userFilesList);
+
+      // 사용자가 생성한 공유 링크 조회
+      const shareLinksQuery = query(collection(db, 'shareLinks'));
+      const shareLinksSnapshot = await getDocs(shareLinksQuery);
+      const userShareLinksList = shareLinksSnapshot.docs
+        .filter(doc => doc.data().createdBy === user.id)
+        .map(doc => ({
+          id: doc.id,
+          projectId: doc.data().projectId || '',
+          token: doc.data().token || '',
+          createdAt: doc.data().createdAt?.toDate?.() || null,
+          expiresAt: doc.data().expiresAt?.toDate?.() || null,
+          viewCount: doc.data().viewCount || 0,
+          isActive: doc.data().isActive !== false
+        }));
+
+      setUserShareLinks(userShareLinksList);
+
+      // 사용자가 접근 권한을 받은 프로젝트 조회
+      const sharedAccessQuery = query(collection(db, 'sharedProjectAccess'));
+      const sharedAccessSnapshot = await getDocs(sharedAccessQuery);
+      const userSharedAccessList = sharedAccessSnapshot.docs
+        .filter(doc => doc.data().userId === user.id)
+        .map(doc => ({
+          id: doc.id,
+          projectId: doc.data().projectId || '',
+          permission: doc.data().permission || 'viewer',
+          sharedAt: doc.data().sharedAt?.toDate?.() || null,
+          sharedBy: doc.data().sharedBy || ''
+        }));
+
+      setUserSharedAccess(userSharedAccessList);
+
+      // 사용자의 공유 링크 접근 로그 조회
+      const accessLogsQuery = query(collection(db, 'shareLinkAccessLog'));
+      const accessLogsSnapshot = await getDocs(accessLogsQuery);
+      const userAccessLogsList = accessLogsSnapshot.docs
+        .filter(doc => doc.data().userId === user.id)
+        .map(doc => ({
+          id: doc.id,
+          shareLinkId: doc.data().shareLinkId || '',
+          accessedAt: doc.data().accessedAt?.toDate?.() || null,
+          ipAddress: doc.data().ipAddress || '',
+          userAgent: doc.data().userAgent || ''
+        }))
+        .sort((a, b) => {
+          if (!a.accessedAt) return 1;
+          if (!b.accessedAt) return -1;
+          return b.accessedAt.getTime() - a.accessedAt.getTime();
+        });
+
+      setUserAccessLogs(userAccessLogsList);
     } catch (error) {
       console.error('❌ 사용자 상세 정보 조회 실패:', error);
     } finally {
@@ -163,6 +218,9 @@ const Users = () => {
     setSelectedUser(null);
     setUserProjects([]);
     setUserDesignFiles([]);
+    setUserShareLinks([]);
+    setUserSharedAccess([]);
+    setUserAccessLogs([]);
   };
 
   // 플랜 변경 다이얼로그 열기
@@ -564,12 +622,9 @@ const Users = () => {
             <div className={styles.planSelector}>
               <div className={styles.currentPlanSection}>
                 <span className={styles.sectionLabel}>현재 플랜</span>
-                <span
-                  className={`${styles.planBadge} ${planDialog.currentPlan === 'free' ? styles.planBadgeFree : ''}`}
-                  style={planDialog.currentPlan !== 'free' ? { backgroundColor: PLANS[planDialog.currentPlan].color } : {}}
-                >
-                  {PLANS[planDialog.currentPlan].name}
-                </span>
+                <div className={styles.planCardSmall}>
+                  <span className={styles.planName}>{PLANS[planDialog.currentPlan].name}</span>
+                </div>
               </div>
 
               <div className={styles.planGridSection}>
@@ -580,41 +635,11 @@ const Users = () => {
                       key={planType}
                       className={`${styles.planCard} ${planDialog.newPlan === planType ? styles.planCardActive : ''}`}
                       onClick={() => setPlanDialog({ ...planDialog, newPlan: planType })}
-                      style={
-                        planDialog.newPlan === planType && planType !== 'free'
-                          ? {
-                              borderColor: PLANS[planType].color,
-                              backgroundColor: `${PLANS[planType].color}15`
-                            }
-                          : planType !== 'free'
-                          ? { borderColor: `${PLANS[planType].color}60` }
-                          : {}
-                      }
                     >
                       <div className={styles.planCardHeader}>
-                        <span
-                          className={styles.planCardName}
-                          style={
-                            planType !== 'free'
-                              ? { color: PLANS[planType].color }
-                              : {}
-                          }
-                        >
-                          {PLANS[planType].name}
-                        </span>
+                        <span className={styles.planCardName}>{PLANS[planType].name}</span>
                         {planDialog.newPlan === planType && (
-                          <svg
-                            className={styles.checkIcon}
-                            width="20"
-                            height="20"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                            style={
-                              planType !== 'free'
-                                ? { color: PLANS[planType].color }
-                                : {}
-                            }
-                          >
+                          <svg className={styles.checkIcon} width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
