@@ -259,9 +259,9 @@
 
 .tableCount {
   font-size: 13px;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text, #6b7280);
   font-weight: 500;
-  background: var(--theme-surface-hover, #f9fafb);
+  background: var(--theme-background, #f9fafb);
   padding: 4px 12px;
   border-radius: 8px;
 }
