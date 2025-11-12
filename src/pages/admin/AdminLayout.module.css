@@ -99,15 +99,28 @@
   transition: all 0.2s ease;
 }
 
+.navItem svg {
+  color: var(--theme-text-secondary, #6b7280);
+  transition: all 0.2s ease;
+}
+
 .navItem:hover {
   background: var(--theme-background-hover, #f3f4f6);
   color: var(--theme-text, #1f2937);
+}
+
+.navItem:hover svg {
+  color: var(--theme-primary, #667eea);
 }
 
 .navItemActive {
   background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
   color: var(--theme-primary, #667eea);
   font-weight: 600;
+}
+
+.navItemActive svg {
+  color: var(--theme-primary, #667eea);
 }
 
 .sidebarFooter {
@@ -131,10 +144,19 @@
   transition: all 0.2s ease;
 }
 
+.backButton svg {
+  color: var(--theme-text-secondary, #6b7280);
+  transition: all 0.2s ease;
+}
+
 .backButton:hover {
   background: var(--theme-background-hover, #f3f4f6);
   border-color: var(--theme-border-hover, #d1d5db);
   color: var(--theme-text, #1f2937);
+}
+
+.backButton:hover svg {
+  color: var(--theme-primary, #667eea);
 }
 
 /* 메인 컨텐츠 */
