@@ -1,5 +1,9 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, collection, addDoc, serverTimestamp, getDocs, query } from 'firebase/firestore';
+import * as dotenv from 'dotenv';
+
+// .env 파일 로드
+dotenv.config();
 
 // Firebase 설정 (환경변수에서 가져오기)
 const firebaseConfig = {
@@ -9,7 +13,6 @@ const firebaseConfig = {
   storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.VITE_FIREBASE_APP_ID,
-  measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Firebase 초기화
