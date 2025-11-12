@@ -28,6 +28,8 @@ export const NotificationCenter: React.FC = () => {
     const unsubscribeNotifications = subscribeToNotifications(
       user.uid,
       (newNotifications) => {
+        console.log('🔔 알림 업데이트:', newNotifications.length, '개');
+        console.log('  - 메시지 타입:', newNotifications.filter(n => n.type === 'message').length, '개');
         setNotifications(newNotifications);
       }
     );
@@ -41,6 +43,15 @@ export const NotificationCenter: React.FC = () => {
       unsubscribeUnreadCount();
     };
   }, [user]);
+
+  // selectedMessage 변경 감지
+  useEffect(() => {
+    if (selectedMessage) {
+      console.log('💬 메시지 팝업 열림:', selectedMessage);
+    } else {
+      console.log('💬 메시지 팝업 닫힘');
+    }
+  }, [selectedMessage]);
 
   // 외부 클릭 감지
   useEffect(() => {
@@ -63,6 +74,10 @@ export const NotificationCenter: React.FC = () => {
   }, [isOpen]);
 
   const handleNotificationClick = async (notification: Notification) => {
+    console.log('🔔 알림 클릭:', notification);
+    console.log('  - type:', notification.type);
+    console.log('  - title:', notification.title);
+
     // 읽지 않은 알림이면 읽음 처리
     if (!notification.isRead) {
       await markNotificationAsRead(notification.id);
@@ -70,11 +85,13 @@ export const NotificationCenter: React.FC = () => {
 
     // 메시지 타입이면 팝업으로 표시
     if (notification.type === 'message') {
+      console.log('✉️ 메시지 알림 → 팝업 열기');
       setSelectedMessage(notification);
       setIsOpen(false);
       return;
     }
 
+    console.log('📍 다른 타입 알림 → URL 이동');
     // 액션 URL이 있으면 이동
     if (notification.actionUrl) {
       navigate(notification.actionUrl);
