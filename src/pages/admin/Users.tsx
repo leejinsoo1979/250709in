@@ -674,34 +674,33 @@ const Users = () => {
         </div>
       )}
 
-      {/* 사용자 상세 정보 모달 */}
+      {/* 사용자 상세 정보 */}
       {selectedUser && (
-        <div className={styles.dialogOverlay} onClick={closeUserDetails}>
-          <div className={styles.userDetailsDialog} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.userDetailsHeader}>
-              <div className={styles.userDetailsTitle}>
-                <div className={styles.userDetailsAvatar}>
-                  {selectedUser.photoURL ? (
-                    <img src={selectedUser.photoURL} alt={selectedUser.displayName || selectedUser.email} />
-                  ) : (
-                    <div className={styles.userDetailsAvatarPlaceholder}>
-                      {(selectedUser.displayName || selectedUser.email || '?').charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div>
-                  <h2>{selectedUser.displayName || '이름 없음'}</h2>
-                  <p>{selectedUser.email}</p>
-                </div>
+        <div className={styles.userDetailsSection}>
+          <div className={styles.userDetailsHeader}>
+            <div className={styles.userDetailsTitle}>
+              <div className={styles.userDetailsAvatar}>
+                {selectedUser.photoURL ? (
+                  <img src={selectedUser.photoURL} alt={selectedUser.displayName || selectedUser.email} />
+                ) : (
+                  <div className={styles.userDetailsAvatarPlaceholder}>
+                    {(selectedUser.displayName || selectedUser.email || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
               </div>
-              <button className={styles.closeButton} onClick={closeUserDetails}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div>
+                <h2>{selectedUser.displayName || '이름 없음'}</h2>
+                <p>{selectedUser.email}</p>
+              </div>
             </div>
+            <button className={styles.closeButton} onClick={closeUserDetails}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
 
-            <div className={styles.userDetailsContent}>
+          <div className={styles.userDetailsContent}>
               {/* 기본 정보 */}
               <div className={styles.userDetailsSection}>
                 <h3 className={styles.userDetailsSectionTitle}>기본 정보</h3>
