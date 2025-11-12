@@ -257,11 +257,25 @@ export default function UserDetail() {
           <div className={styles.infoGrid}>
             <div className={styles.infoItem}>
               <label>프로젝트 수</label>
-              <div>{user.projectCount || 0}개</div>
+              <div>{projects.length}개</div>
+            </div>
+            <div className={styles.infoItem}>
+              <label>디자인 파일 수</label>
+              <div>{designFiles.length}개</div>
+            </div>
+            <div className={styles.infoItem}>
+              <label>공유 링크 수</label>
+              <div>{shareLinks.length}개</div>
+            </div>
+            <div className={styles.infoItem}>
+              <label>총 조회수</label>
+              <div>{shareLinks.reduce((sum, link) => sum + link.viewCount, 0)}회</div>
             </div>
             <div className={styles.infoItem}>
               <label>스토리지 사용량</label>
-              <div>{user.storageUsed ? `${(user.storageUsed / 1024 / 1024).toFixed(2)} MB` : '0 MB'}</div>
+              <div>{designFiles.reduce((sum, file) => sum + file.fileSize, 0) > 0
+                ? `${(designFiles.reduce((sum, file) => sum + file.fileSize, 0) / 1024 / 1024).toFixed(2)} MB`
+                : '0 MB'}</div>
             </div>
           </div>
         </section>
