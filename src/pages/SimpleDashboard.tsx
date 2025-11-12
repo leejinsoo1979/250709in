@@ -1256,20 +1256,56 @@ const SimpleDashboard: React.FC = () => {
     }
   };
 
-  // 휴지통에서 디자인 파일 복원 함수 (Firebase에서 이미 삭제되어 복원 불가)
-  const restoreDesignFileFromTrash = (designFileId: string) => {
-    alert('디자인 파일은 이미 서버에서 삭제되어 복원할 수 없습니다.\n\n휴지통에서 항목만 제거됩니다.');
-
-    // 휴지통에서만 제거 (Firebase에 이미 없으므로 복원 불가)
-    const updatedDesignTrash = deletedDesignFiles.filter(d => d.designFile.id !== designFileId);
-    setDeletedDesignFiles(updatedDesignTrash);
-
-    // localStorage 업데이트
-    if (user) {
-      localStorage.setItem(`design_trash_${user.uid}`, JSON.stringify(updatedDesignTrash));
+  // 휴지통에서 디자인 파일 복원 함수
+  const restoreDesignFileFromTrash = async (designFileId: string) => {
+    const deletedItem = deletedDesignFiles.find(d => d.designFile.id === designFileId);
+    if (!deletedItem) {
+      alert('복원할 디자인 파일을 찾을 수 없습니다.');
+      return;
     }
 
-    console.log('⚠️ 디자인 파일 복원 불가 - 휴지통에서만 제거:', designFileId);
+    try {
+      console.log('♻️ 디자인 파일 복원 시도:', {
+        designFileId,
+        projectId: deletedItem.projectId,
+        designFileName: deletedItem.designFile.name
+      });
+
+      // Firebase에 디자인 파일 재생성
+      const { createDesignFile } = await import('@/firebase/projects');
+      const { id, deletedAt, ...designFileData } = deletedItem.designFile;
+
+      const result = await createDesignFile({
+        name: designFileData.name || '복원된 디자인',
+        projectId: deletedItem.projectId,
+        spaceConfig: designFileData.spaceConfig || {},
+        furniture: designFileData.furniture || { placedModules: [] },
+        thumbnail: designFileData.thumbnail
+      });
+
+      if (result.id) {
+        console.log('✅ 디자인 파일 복원 성공:', result.id);
+
+        // 휴지통에서 제거
+        const updatedDesignTrash = deletedDesignFiles.filter(d => d.designFile.id !== designFileId);
+        setDeletedDesignFiles(updatedDesignTrash);
+
+        // localStorage 업데이트
+        if (user) {
+          localStorage.setItem(`design_trash_${user.uid}`, JSON.stringify(updatedDesignTrash));
+        }
+
+        // 프로젝트의 디자인 파일 목록 새로고침
+        await loadDesignFilesForProject(deletedItem.projectId);
+
+        alert('디자인 파일이 복원되었습니다.');
+      } else {
+        throw new Error(result.error || '디자인 파일 복원 실패');
+      }
+    } catch (error) {
+      console.error('❌ 디자인 파일 복원 실패:', error);
+      alert('디자인 파일 복원 중 오류가 발생했습니다: ' + (error instanceof Error ? error.message : '알 수 없는 오류'));
+    }
   };
   
   // 휴지통 비우기 함수 (이미 Firebase에서 삭제되었으므로 localStorage만 정리)

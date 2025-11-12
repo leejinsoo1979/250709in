@@ -2264,7 +2264,23 @@ const Configurator: React.FC = () => {
   };
 
   // 이전/다음 버튼 핸들러
-  const handlePrevious = () => {
+  const handlePrevious = async () => {
+    // 저장하지 않은 빈 디자인 파일인지 확인
+    const { placedModules } = useFurnitureStore.getState();
+    const hasContent = placedModules && placedModules.length > 0;
+
+    // 가구가 없고, 디자인 파일 ID가 있으면 빈 디자인으로 간주
+    if (!hasContent && currentDesignFileId && currentProjectId) {
+      console.log('🗑️ 빈 디자인 파일 삭제:', currentDesignFileId);
+      try {
+        const { deleteDesignFile } = await import('@/firebase/projects');
+        await deleteDesignFile(currentDesignFileId, currentProjectId);
+        console.log('✅ 빈 디자인 파일 삭제 완료');
+      } catch (error) {
+        console.error('❌ 빈 디자인 파일 삭제 실패:', error);
+      }
+    }
+
     navigate('/dashboard?step=2');
   };
 
