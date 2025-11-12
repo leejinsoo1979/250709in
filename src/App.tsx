@@ -48,7 +48,6 @@ import Test2DViewer from '@/pages/Test2DViewer';
 import CanvasDuplicateTest from '@/test/CanvasDuplicateTest';
 import { initializeTheme } from '@/theme';
 import { logPageView } from '@/firebase/analytics';
-import { Chatbot } from '@/components/Chatbot';
 
 // AR 뷰어는 lazy loading으로 처리 (모바일에서만 사용)
 const ARViewer = lazy(() => import('@/editor/ar-viewer/ARViewer'));
@@ -169,9 +168,6 @@ function AppContent() {
         <Route path="/share/:token" element={<ShareLinkAccess />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-
-      {/* 챗봇 - 모든 페이지에서 표시 */}
-      <Chatbot />
     </>
   );
 }

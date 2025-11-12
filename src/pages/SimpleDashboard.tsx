@@ -38,6 +38,7 @@ import { ShareLinkModal } from '@/components/ShareLinkModal';
 import RenameModal from '../components/common/RenameModal';
 import CreditErrorModal from '@/components/common/CreditErrorModal';
 import { PopupManager } from '@/components/PopupManager';
+import { Chatbot } from '@/components/Chatbot';
 // import { generateProjectThumbnail } from '../utils/thumbnailGenerator';
 import styles from './SimpleDashboard.module.css';
 
@@ -5526,6 +5527,9 @@ const SimpleDashboard: React.FC = () => {
 
       {/* 팝업 매니저 */}
       <PopupManager />
+
+      {/* 챗봇 - 대시보드에서만 표시 */}
+      <Chatbot />
     </div>
   );
 };
