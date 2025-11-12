@@ -68,6 +68,9 @@
 }
 
 .label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 14px;
   font-weight: 600;
   color: var(--theme-text, #1f2937);
@@ -253,6 +256,108 @@
   outline: none;
   border-color: var(--theme-primary, #667eea);
   box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+}
+
+/* 이미지 업로드 */
+.imageUploadContainer {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.imageUploadContainer .input {
+  flex: 1;
+}
+
+.uploadButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 20px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.uploadButton:hover:not(:disabled) {
+  background: var(--theme-background, #f9fafb);
+  border-color: var(--theme-primary, #667eea);
+  color: var(--theme-primary, #667eea);
+}
+
+.uploadButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.imagePreview {
+  margin-top: 12px;
+  border-radius: 8px;
+  overflow: hidden;
+  max-width: 300px;
+  border: 1px solid var(--theme-border, #e5e7eb);
+}
+
+.imagePreview img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* 날짜 입력 */
+.dateDisplay {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--theme-primary, #667eea);
+}
+
+.dateInput {
+  padding: 12px 16px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.dateInput:focus {
+  outline: none;
+  border-color: var(--theme-primary, #667eea);
+  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+}
+
+/* 달력 팝업 테마 */
+.dateInput::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 4px;
+  transition: all 0.2s ease;
+}
+
+.dateInput::-webkit-calendar-picker-indicator:hover {
+  background: var(--theme-background, #f9fafb);
+}
+
+.dateInput::-webkit-datetime-edit-fields-wrapper {
+  padding: 0;
+}
+
+.dateInput::-webkit-datetime-edit {
+  padding: 0;
+}
+
+.dateInput::-webkit-datetime-edit-text {
+  color: var(--theme-text-secondary, #6b7280);
+  padding: 0 2px;
 }
 
 .textarea {

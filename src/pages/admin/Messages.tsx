@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { collection, query, orderBy, getDocs, addDoc, serverTimestamp, Timestamp, updateDoc, doc, deleteDoc } from 'firebase/firestore';
-import { db } from '@/firebase/config';
+import { db, storage } from '@/firebase/config';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { useAuth } from '@/auth/AuthProvider';
-import { HiOutlineMail, HiOutlineUserGroup, HiOutlineUser, HiOutlinePaperAirplane, HiOutlineBell, HiOutlineCalendar, HiOutlineEye, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineMail, HiOutlineUserGroup, HiOutlineUser, HiOutlinePaperAirplane, HiOutlineBell, HiOutlineCalendar, HiOutlineEye, HiOutlineTrash, HiOutlinePhotograph } from 'react-icons/hi';
 import { SearchIcon } from '@/components/common/Icons';
 import styles from './Messages.module.css';
 
@@ -63,6 +64,8 @@ const Messages = () => {
   const [popupEndDate, setPopupEndDate] = useState('');
   const [popupPriority, setPopupPriority] = useState(1);
   const [popupShowOnce, setPopupShowOnce] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 사용자 목록 로드
   useEffect(() => {
@@ -325,6 +328,46 @@ const Messages = () => {
       alert('팝업 생성에 실패했습니다.');
     } finally {
       setSending(false);
+    }
+  };
+
+  // 이미지 업로드
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // 이미지 파일만 허용
+    if (!file.type.startsWith('image/')) {
+      alert('이미지 파일만 업로드 가능합니다.');
+      return;
+    }
+
+    // 파일 크기 제한 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('파일 크기는 5MB 이하여야 합니다.');
+      return;
+    }
+
+    try {
+      setUploading(true);
+
+      // Firebase Storage에 업로드
+      const timestamp = Date.now();
+      const storageRef = ref(storage, `popups/${timestamp}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+
+      setPopupImageUrl(downloadURL);
+      alert('이미지가 업로드되었습니다.');
+    } catch (error) {
+      console.error('이미지 업로드 실패:', error);
+      alert('이미지 업로드에 실패했습니다.');
+    } finally {
+      setUploading(false);
+      // input 초기화
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -607,13 +650,36 @@ const Messages = () => {
               {/* 이미지 URL */}
               <div className={styles.formGroup}>
                 <label className={styles.label}>이미지 URL (선택사항)</label>
-                <input
-                  type="text"
-                  placeholder="https://example.com/image.jpg"
-                  value={popupImageUrl}
-                  onChange={(e) => setPopupImageUrl(e.target.value)}
-                  className={styles.input}
-                />
+                <div className={styles.imageUploadContainer}>
+                  <input
+                    type="text"
+                    placeholder="https://example.com/image.jpg"
+                    value={popupImageUrl}
+                    onChange={(e) => setPopupImageUrl(e.target.value)}
+                    className={styles.input}
+                  />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ display: 'none' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className={styles.uploadButton}
+                  >
+                    <HiOutlinePhotograph size={18} />
+                    {uploading ? '업로드 중...' : '이미지 첨부'}
+                  </button>
+                </div>
+                {popupImageUrl && (
+                  <div className={styles.imagePreview}>
+                    <img src={popupImageUrl} alt="Preview" />
+                  </div>
+                )}
               </div>
 
               {/* 날짜 설정 */}
@@ -622,12 +688,23 @@ const Messages = () => {
                   <label className={styles.label}>
                     <HiOutlineCalendar size={16} />
                     시작일
+                    {popupStartDate && (
+                      <span className={styles.dateDisplay}>
+                        {new Date(popupStartDate).toLocaleString('ko-KR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    )}
                   </label>
                   <input
                     type="datetime-local"
                     value={popupStartDate}
                     onChange={(e) => setPopupStartDate(e.target.value)}
-                    className={styles.input}
+                    className={styles.dateInput}
                   />
                 </div>
 
@@ -635,12 +712,23 @@ const Messages = () => {
                   <label className={styles.label}>
                     <HiOutlineCalendar size={16} />
                     종료일
+                    {popupEndDate && (
+                      <span className={styles.dateDisplay}>
+                        {new Date(popupEndDate).toLocaleString('ko-KR', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    )}
                   </label>
                   <input
                     type="datetime-local"
                     value={popupEndDate}
                     onChange={(e) => setPopupEndDate(e.target.value)}
-                    className={styles.input}
+                    className={styles.dateInput}
                   />
                 </div>
               </div>
