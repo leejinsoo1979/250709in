@@ -138,6 +138,11 @@
   color: var(--theme-warning-text, #d97706);
 }
 
+.notice svg {
+  color: var(--theme-warning-text, #d97706);
+  flex-shrink: 0;
+}
+
 .noticeTitle {
   margin: 0 0 8px 0;
   font-size: 15px;
