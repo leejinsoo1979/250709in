@@ -284,7 +284,7 @@
   text-align: left;
   font-size: 13px;
   font-weight: 600;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text, #6b7280);
   white-space: nowrap;
 }
 
