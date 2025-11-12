@@ -342,7 +342,17 @@ export default function UserDetail() {
                       style={{ cursor: 'pointer' }}
                     >
                       <div className={styles.listItemHeader}>
-                        <strong>{project.title}</strong>
+                        <strong>
+                          <a
+                            href={`/configurator/${project.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={styles.projectLink}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {project.title}
+                          </a>
+                        </strong>
                         <div className={styles.projectItemRight}>
                           <span className={styles.fileCount}>파일 {projectFiles.length}개</span>
                           <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>

@@ -294,6 +294,17 @@
   text-decoration: underline;
 }
 
+.projectLink {
+  color: var(--theme-primary, #667eea);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.projectLink:hover {
+  color: var(--theme-primary-dark, #5568d3);
+  text-decoration: underline;
+}
+
 .emptyState {
   padding: 40px 20px;
   text-align: center;
