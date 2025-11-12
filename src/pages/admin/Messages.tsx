@@ -468,7 +468,66 @@ const Messages = () => {
       {activeTab === 'messages' ? (
         /* 메시지 발송 탭 */
         <div className={messageType === 'individual' ? styles.contentSplit : styles.content}>
-        {/* 메시지 작성 */}
+        {/* 개별 선택 시 사용자 목록 (좌측) */}
+        {messageType === 'individual' && (
+          <div className={styles.userSelectionSection}>
+            <h2 className={styles.sectionTitle}>
+              수신자 선택 ({selectedUsers.length}명 선택됨)
+            </h2>
+
+            {/* 검색 */}
+            <div className={styles.searchBox}>
+              <SearchIcon size={18} />
+              <input
+                type="text"
+                placeholder="이메일, 이름, ID로 검색..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.searchInput}
+              />
+            </div>
+
+            {/* 전체 선택 */}
+            <div className={styles.selectAllRow}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
+                  onChange={toggleSelectAll}
+                />
+                <span>전체 선택 ({filteredUsers.length}명)</span>
+              </label>
+            </div>
+
+            {/* 사용자 목록 */}
+            <div className={styles.userList}>
+              {filteredUsers.map(u => (
+                <label key={u.uid} className={styles.userItem}>
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(u.uid)}
+                    onChange={() => toggleUserSelection(u.uid)}
+                  />
+                  <div className={styles.userAvatar}>
+                    {u.photoURL ? (
+                      <img src={u.photoURL} alt={u.displayName || u.email} />
+                    ) : (
+                      <div className={styles.avatarPlaceholder}>
+                        {(u.displayName || u.email).charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </div>
+                  <div className={styles.userInfo}>
+                    <span className={styles.userName}>{u.displayName || '이름 없음'}</span>
+                    <span className={styles.userEmail}>{u.email}</span>
+                  </div>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 메시지 작성 (우측) */}
         <div className={styles.composeSection}>
           <h2 className={styles.sectionTitle}>
             <HiOutlineMail size={20} />
@@ -538,65 +597,6 @@ const Messages = () => {
             </button>
           </div>
         </div>
-
-        {/* 개별 선택 시 사용자 목록 (우측) */}
-        {messageType === 'individual' && (
-          <div className={styles.userSelectionSection}>
-            <h2 className={styles.sectionTitle}>
-              수신자 선택 ({selectedUsers.length}명 선택됨)
-            </h2>
-
-            {/* 검색 */}
-            <div className={styles.searchBox}>
-              <SearchIcon size={18} />
-              <input
-                type="text"
-                placeholder="이메일, 이름, ID로 검색..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className={styles.searchInput}
-              />
-            </div>
-
-            {/* 전체 선택 */}
-            <div className={styles.selectAllRow}>
-              <label className={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  checked={selectedUsers.length === filteredUsers.length && filteredUsers.length > 0}
-                  onChange={toggleSelectAll}
-                />
-                <span>전체 선택 ({filteredUsers.length}명)</span>
-              </label>
-            </div>
-
-            {/* 사용자 목록 */}
-            <div className={styles.userList}>
-              {filteredUsers.map(u => (
-                <label key={u.uid} className={styles.userItem}>
-                  <input
-                    type="checkbox"
-                    checked={selectedUsers.includes(u.uid)}
-                    onChange={() => toggleUserSelection(u.uid)}
-                  />
-                  <div className={styles.userAvatar}>
-                    {u.photoURL ? (
-                      <img src={u.photoURL} alt={u.displayName || u.email} />
-                    ) : (
-                      <div className={styles.avatarPlaceholder}>
-                        {(u.displayName || u.email).charAt(0).toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <div className={styles.userInfo}>
-                    <span className={styles.userName}>{u.displayName || '이름 없음'}</span>
-                    <span className={styles.userEmail}>{u.email}</span>
-                  </div>
-                </label>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
       ) : activeTab === 'history' ? (
         /* 발송 기록 탭 */
