@@ -193,15 +193,31 @@ export const NotificationCenter: React.FC = () => {
                         {formatTime(notification.createdAt)}
                       </span>
                     </div>
-                    <button
-                      className={styles.deleteButton}
-                      onClick={(e) =>
-                        handleDeleteNotification(e, notification.id)
-                      }
-                      title="삭제"
-                    >
-                      <X size={16} />
-                    </button>
+                    <div className={styles.itemActions}>
+                      {notification.type === 'message' && (
+                        <button
+                          className={styles.viewButton}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            console.log('👁️ 보기 버튼 클릭:', notification);
+                            setSelectedMessage(notification);
+                            setIsOpen(false);
+                          }}
+                          title="보기"
+                        >
+                          보기
+                        </button>
+                      )}
+                      <button
+                        className={styles.deleteButton}
+                        onClick={(e) =>
+                          handleDeleteNotification(e, notification.id)
+                        }
+                        title="삭제"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}

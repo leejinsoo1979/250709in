@@ -225,6 +225,34 @@
   color: var(--theme-text-muted);
 }
 
+.itemActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.viewButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  background: var(--theme-primary);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.viewButton:hover {
+  background: var(--theme-primary-dark, #5568d3);
+  transform: translateY(-1px);
+}
+
 .deleteButton {
   display: flex;
   align-items: center;
