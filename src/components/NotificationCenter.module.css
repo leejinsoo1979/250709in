@@ -67,7 +67,7 @@
   flex-direction: column;
   overflow: hidden;
   animation: slideDown 0.2s ease;
-  z-index: 1000;
+  z-index: 10000;
 }
 
 @keyframes slideDown {
