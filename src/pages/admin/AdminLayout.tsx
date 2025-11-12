@@ -3,7 +3,7 @@ import { useNavigate, Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAdmin } from '@/hooks/useAdmin';
 import { UserIcon, UsersIcon, SettingsIcon, LogOutIcon } from '@/components/common/Icons';
-import { HiOutlineOfficeBuilding, HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder, HiOutlineShare, HiOutlineClipboardList, HiOutlineShieldCheck } from 'react-icons/hi';
+import { HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder, HiOutlineShare, HiOutlineClipboardList, HiOutlineShieldCheck, HiOutlineMail } from 'react-icons/hi';
 import { VscServerProcess } from 'react-icons/vsc';
 import { GiImperialCrown } from 'react-icons/gi';
 import styles from './AdminLayout.module.css';
@@ -106,14 +106,6 @@ const AdminLayout = () => {
           )}
 
           <NavLink
-            to="/admin/organizations"
-            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
-          >
-            <HiOutlineOfficeBuilding size={20} />
-            <span>조직 관리</span>
-          </NavLink>
-
-          <NavLink
             to="/admin/teams"
             className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
           >
@@ -143,6 +135,14 @@ const AdminLayout = () => {
           >
             <HiOutlineClipboardList size={20} />
             <span>로그 및 알림</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/messages"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineMail size={20} />
+            <span>메시지 관리</span>
           </NavLink>
 
           <NavLink
