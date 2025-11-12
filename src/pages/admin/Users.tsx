@@ -243,16 +243,20 @@ const Users = () => {
                       : '-'}
                   </td>
                   <td>
-                    <button
-                      className={styles.changePlanButton}
-                      onClick={() => openPlanDialog(
-                        targetUser.id,
-                        targetUser.displayName || targetUser.email,
-                        targetUser.plan || 'free'
-                      )}
-                    >
-                      플랜 변경
-                    </button>
+                    {targetUser.isSuperAdmin ? (
+                      <span className={styles.superAdminText}>절대 권한</span>
+                    ) : (
+                      <button
+                        className={styles.changePlanButton}
+                        onClick={() => openPlanDialog(
+                          targetUser.id,
+                          targetUser.displayName || targetUser.email,
+                          targetUser.plan || 'free'
+                        )}
+                      >
+                        플랜 변경
+                      </button>
+                    )}
                   </td>
                 </tr>
               ))}

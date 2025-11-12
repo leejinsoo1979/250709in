@@ -318,6 +318,13 @@
   color: var(--theme-text-secondary, #9ca3af);
 }
 
+.superAdminText {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-primary, #10b981);
+  letter-spacing: -0.2px;
+}
+
 /* 플랜 배지 */
 .planBadge {
   display: inline-block;
