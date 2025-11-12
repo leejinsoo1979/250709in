@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation, Routes, Route, Navigate } from 'react-router-dom';
 import { Timestamp, doc, getDoc, getDocFromServer, updateDoc } from 'firebase/firestore';
-import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, MessageIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
+import { UserIcon, HomeIcon, UsersIcon, SettingsIcon, LogOutIcon, PlusIcon, FolderIcon, StarIcon, TrashIcon, SearchIcon, BellIcon, CalendarIcon, EditIcon, CopyIcon, ShareIcon, MoreHorizontalIcon, EyeIcon } from '../components/common/Icons';
 import { PiFolderFill, PiFolderPlus, PiCrownDuotone } from "react-icons/pi";
 import { GoPeople } from "react-icons/go";
 import { AiOutlineFileMarkdown } from "react-icons/ai";
@@ -3288,9 +3288,6 @@ const SimpleDashboard: React.FC = () => {
                   <span>관리자</span>
                 </button>
               )}
-              <button className={styles.actionButton}>
-                <MessageIcon size={20} />
-              </button>
               <NotificationCenter />
             </div>
 
