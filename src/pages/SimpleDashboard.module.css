@@ -588,6 +588,27 @@
   color: var(--theme-primary);
 }
 
+.adminButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  cursor: pointer;
+  color: var(--theme-text);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.adminButton:hover {
+  background: var(--theme-primary-light);
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+}
+
 .userProfile {
   display: flex;
   align-items: center;

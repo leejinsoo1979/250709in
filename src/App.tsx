@@ -14,6 +14,7 @@ import TestDashboard from '@/pages/TestDashboard';
 import ViewerPage from '@/pages/ViewerPage';
 import LandingPage from '@/pages/LandingPage';
 import SignUpPage from '@/pages/SignUpPage';
+import AdminDashboard from '@/pages/AdminDashboard';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { ModernLoginForm } from '@/components/auth/ModernLoginForm';
 import { UltraModernLoginForm } from '@/components/auth/UltraModernLoginForm';
@@ -97,6 +98,8 @@ function AppContent() {
         {/* 대시보드 페이지 */}
         <Route path="/dashboard" element={<SimpleDashboard />} />
         <Route path="/dashboard/*" element={<SimpleDashboard />} />
+        {/* 관리자 페이지 */}
+        <Route path="/admin" element={<AdminDashboard />} />
         {/* 인증 페이지 */}
         <Route path="/login" element={<SplitLoginForm />} />
         <Route path="/signup" element={<SignUpPage />} />

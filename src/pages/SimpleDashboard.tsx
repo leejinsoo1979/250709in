@@ -17,6 +17,7 @@ import { signOutUser } from '@/firebase/auth';
 import { checkCredits } from '@/firebase/userProfiles';
 import { db } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
+import { useAdmin } from '@/hooks/useAdmin';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -43,6 +44,7 @@ const SimpleDashboard: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, loading } = useAuth();
+  const { isAdmin } = useAdmin(user);
 
   // URL 파라미터 파싱
   const searchParams = new URLSearchParams(location.search);
@@ -3273,6 +3275,16 @@ const SimpleDashboard: React.FC = () => {
           </div>
           <div className={styles.headerRight}>
             <div className={styles.headerActions}>
+              {isAdmin && (
+                <button
+                  className={styles.adminButton}
+                  onClick={() => navigate('/admin')}
+                  title="관리자 페이지"
+                >
+                  <SettingsIcon size={20} />
+                  <span>관리자</span>
+                </button>
+              )}
               <button className={styles.actionButton}>
                 <MessageIcon size={20} />
               </button>
