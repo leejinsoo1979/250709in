@@ -212,6 +212,61 @@
   color: var(--theme-text-muted, #9ca3af);
 }
 
+/* 라디오 그룹 스타일 */
+.radioGroup {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.radioLabel {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 20px;
+  background: var(--theme-surface, #ffffff);
+  border: 2px solid var(--theme-border, #e5e7eb);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-height: 60px;
+}
+
+.radioLabel:hover {
+  border-color: var(--theme-primary, #667eea);
+  background: var(--theme-primary-light, rgba(102, 126, 234, 0.05));
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.radioLabel input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.radioLabel input[type="radio"]:checked + span {
+  color: var(--theme-primary, #667eea);
+  font-weight: 700;
+}
+
+.radioLabel:has(input[type="radio"]:checked) {
+  border-color: var(--theme-primary, #667eea);
+  background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  box-shadow: 0 4px 16px var(--theme-primary-shadow, rgba(102, 126, 234, 0.3));
+}
+
+.radioLabel span {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--theme-text, #1f2937);
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
 /* 안내 메시지 */
 .notice {
   display: flex;

@@ -68,31 +68,34 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  background: var(--theme-surface, #ffffff);
-  border: 1px solid var(--theme-border, #e5e7eb);
-  border-radius: 6px;
-  color: var(--theme-primary, #667eea);
+  padding: 10px 20px;
+  background: var(--theme-primary, #667eea);
+  border: none;
+  border-radius: 8px;
+  color: white;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px var(--theme-primary-shadow, rgba(102, 126, 234, 0.25));
 }
 
 .editButton:hover {
-  background: var(--theme-background, #f9fafb);
-  border-color: var(--theme-primary, #667eea);
+  background: var(--theme-primary-dark, #5568d3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--theme-primary-shadow, rgba(102, 126, 234, 0.4));
 }
 
 .greetingDisplay {
-  padding: 16px;
+  padding: 20px;
   background: var(--theme-background, #f9fafb);
   border: 1px solid var(--theme-border, #e5e7eb);
-  border-radius: 8px;
+  border-radius: 12px;
   color: var(--theme-text, #1f2937);
-  font-size: 14px;
-  line-height: 1.6;
+  font-size: 15px;
+  line-height: 1.8;
   white-space: pre-wrap;
+  font-weight: 500;
 }
 
 .greetingForm {
@@ -113,16 +116,19 @@
   padding: 10px 20px;
   background: var(--theme-primary, #667eea);
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   color: white;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px var(--theme-primary-shadow, rgba(102, 126, 234, 0.25));
 }
 
 .saveButton:hover {
   background: var(--theme-primary-dark, #5568d3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--theme-primary-shadow, rgba(102, 126, 234, 0.4));
 }
 
 /* 필터 */
