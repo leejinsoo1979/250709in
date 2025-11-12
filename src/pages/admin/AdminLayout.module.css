@@ -1,7 +1,8 @@
 .container {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
   background: var(--theme-background, #f9fafb);
+  overflow: hidden;
 }
 
 /* 로딩 */
@@ -43,10 +44,9 @@
   border-right: 1px solid var(--theme-border, #e5e7eb);
   display: flex;
   flex-direction: column;
-  position: sticky;
-  top: 0;
   height: 100vh;
   overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .sidebarHeader {
@@ -265,6 +265,7 @@
 /* 메인 컨텐츠 */
 .main {
   flex: 1;
+  height: 100vh;
   overflow-y: auto;
   background: var(--theme-background, #f9fafb);
 }
