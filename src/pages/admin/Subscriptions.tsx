@@ -241,7 +241,7 @@ const Subscriptions = () => {
       {/* 통계 카드 */}
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+          <div className={styles.statIcon}>
             <HiOutlineCash size={24} />
           </div>
           <div className={styles.statContent}>
@@ -255,7 +255,7 @@ const Subscriptions = () => {
         </div>
 
         <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' }}>
+          <div className={styles.statIcon}>
             <HiOutlineCreditCard size={24} />
           </div>
           <div className={styles.statContent}>
@@ -269,7 +269,7 @@ const Subscriptions = () => {
         </div>
 
         <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' }}>
+          <div className={styles.statIcon}>
             <HiOutlineCheck size={24} />
           </div>
           <div className={styles.statContent}>
@@ -283,7 +283,7 @@ const Subscriptions = () => {
         </div>
 
         <div className={styles.statCard}>
-          <div className={styles.statIcon} style={{ background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }}>
+          <div className={styles.statIcon}>
             <HiOutlineX size={24} />
           </div>
           <div className={styles.statContent}>
