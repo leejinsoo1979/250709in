@@ -16,10 +16,15 @@ export const useAdmin = (user: User | null) => {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
-      console.log('🔐 useAdmin: 권한 체크 시작', { user: !!user, email: user?.email });
+      console.log('🔐 useAdmin: 권한 체크 시작', {
+        hasUser: !!user,
+        email: user?.email,
+        uid: user?.uid,
+        emailVerified: user?.emailVerified
+      });
 
       if (!user || !user.email) {
-        console.log('🔐 useAdmin: user 없음');
+        console.log('🔐 useAdmin: user 없음 - 권한 없음으로 설정');
         setIsAdmin(false);
         setIsSuperAdmin(false);
         setAdminRole(null);
@@ -28,19 +33,27 @@ export const useAdmin = (user: User | null) => {
       }
 
       setLoading(true); // 체크 시작 시 로딩 상태로 설정
+      console.log('🔐 useAdmin: 로딩 시작...');
 
       try {
         // 슈퍼 관리자 체크
         const isSuperAdminUser = user.email.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim();
+        console.log('🔐 useAdmin: 슈퍼 관리자 체크', {
+          userEmail: user.email.toLowerCase().trim(),
+          superAdminEmail: SUPER_ADMIN_EMAIL.toLowerCase().trim(),
+          isSuperAdmin: isSuperAdminUser
+        });
 
         if (isSuperAdminUser) {
-          console.log('🔐 useAdmin: 슈퍼 관리자');
+          console.log('✅ useAdmin: 슈퍼 관리자 확인됨!');
           setIsAdmin(true);
           setIsSuperAdmin(true);
           setAdminRole('super');
           setLoading(false);
           return;
         }
+
+        console.log('🔐 useAdmin: 슈퍼 관리자 아님 - Firestore admins 컬렉션 체크 중...');
 
         // Firestore admins 컬렉션 체크
         const adminDoc = await getDoc(doc(db, 'admins', user.uid));
