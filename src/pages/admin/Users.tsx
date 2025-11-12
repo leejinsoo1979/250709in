@@ -565,8 +565,8 @@ const Users = () => {
                   </td>
                   <td>
                     <span
-                      className={`${styles.planBadge} ${(targetUser.plan || 'free') === 'free' ? styles.planBadgeFree : ''}`}
-                      style={(targetUser.plan || 'free') !== 'free' ? { backgroundColor: PLANS[targetUser.plan || 'free'].color, color: 'white' } : {}}
+                      className={styles.planBadge}
+                      style={{ backgroundColor: PLANS[targetUser.plan || 'free'].color, color: 'white' }}
                     >
                       {PLANS[targetUser.plan || 'free'].name}
                     </span>
@@ -713,8 +713,8 @@ const Users = () => {
                   <div className={styles.userDetailsItem}>
                     <span className={styles.userDetailsLabel}>플랜</span>
                     <span
-                      className={`${styles.planBadge} ${(selectedUser.plan || 'free') === 'free' ? styles.planBadgeFree : ''}`}
-                      style={(selectedUser.plan || 'free') !== 'free' ? { backgroundColor: PLANS[selectedUser.plan || 'free'].color, color: 'white' } : {}}
+                      className={styles.planBadge}
+                      style={{ backgroundColor: PLANS[selectedUser.plan || 'free'].color, color: 'white' }}
                     >
                       {PLANS[selectedUser.plan || 'free'].name}
                     </span>
