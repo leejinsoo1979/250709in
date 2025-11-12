@@ -614,7 +614,7 @@ const Users = () => {
         {/* 플랜 변경 다이얼로그 */}
         {planDialog.show && (
           <div className={styles.dialogOverlay}>
-          <div className={styles.dialog}>
+            <div className={styles.dialog}>
             <h3 className={styles.dialogTitle}>플랜 변경</h3>
             <p className={styles.dialogMessage}>
               <strong>{planDialog.userName}</strong>님의 플랜을 변경합니다.
@@ -671,9 +671,9 @@ const Users = () => {
                 변경
               </button>
             </div>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* 사용자 상세 정보 */}
       {selectedUser && (
