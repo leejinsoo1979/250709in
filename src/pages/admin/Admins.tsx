@@ -45,6 +45,10 @@ const Admins = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'role' | 'name-asc' | 'name-desc'>('role');
+  const [filterRole, setFilterRole] = useState<'all' | 'superadmin' | 'admin' | 'user'>('all');
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [roleFilterDropdownOpen, setRoleFilterDropdownOpen] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
     show: boolean;
     userId: string;
@@ -195,14 +199,55 @@ const Admins = () => {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const query = searchQuery.toLowerCase();
-    return (
-      user.email?.toLowerCase().includes(query) ||
-      user.displayName?.toLowerCase().includes(query) ||
-      user.id.toLowerCase().includes(query)
-    );
-  });
+  // Click outside 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (sortDropdownOpen && !target.closest(`.${styles.customFilterDropdown}`)) {
+        setSortDropdownOpen(false);
+      }
+      if (roleFilterDropdownOpen && !target.closest(`.${styles.customFilterDropdown}`)) {
+        setRoleFilterDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sortDropdownOpen, roleFilterDropdownOpen]);
+
+  const filteredUsers = users
+    .filter(user => {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch =
+        user.email?.toLowerCase().includes(query) ||
+        user.displayName?.toLowerCase().includes(query) ||
+        user.id.toLowerCase().includes(query);
+
+      const matchesRole =
+        filterRole === 'all' ||
+        (filterRole === 'superadmin' && user.isSuperAdmin) ||
+        (filterRole === 'admin' && user.isAdmin && !user.isSuperAdmin) ||
+        (filterRole === 'user' && !user.isAdmin && !user.isSuperAdmin);
+
+      return matchesSearch && matchesRole;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'role':
+          if (a.isSuperAdmin !== b.isSuperAdmin) return a.isSuperAdmin ? -1 : 1;
+          if (a.isAdmin !== b.isAdmin) return a.isAdmin ? -1 : 1;
+          return (a.displayName || a.email).localeCompare(b.displayName || b.email);
+        case 'name-asc':
+          const nameA = (a.displayName || a.email || '').toLowerCase();
+          const nameB = (b.displayName || b.email || '').toLowerCase();
+          return nameA.localeCompare(nameB);
+        case 'name-desc':
+          const nameA2 = (a.displayName || a.email || '').toLowerCase();
+          const nameB2 = (b.displayName || b.email || '').toLowerCase();
+          return nameB2.localeCompare(nameA2);
+        default:
+          return 0;
+      }
+    });
 
   // 통계
   const stats = {
@@ -223,17 +268,183 @@ const Admins = () => {
         </div>
       </div>
 
-      {/* 검색 */}
+      {/* 검색 및 필터 */}
       <div className={styles.toolbar}>
-        <div className={styles.searchBox}>
-          <SearchIcon size={20} />
-          <input
-            type="text"
-            placeholder="이메일, 이름, UID로 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={styles.searchInput}
-          />
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>검색</label>
+          <div className={styles.searchBox}>
+            <SearchIcon size={20} />
+            <input
+              type="text"
+              placeholder="이메일, 이름, UID로 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={styles.searchInput}
+            />
+          </div>
+        </div>
+
+        <div className={styles.filters}>
+          {/* 정렬 드롭다운 */}
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>정렬</label>
+            <div className={styles.customFilterDropdown}>
+              <button
+                type="button"
+                className={styles.filterButton}
+                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+              >
+                <span>
+                  {sortBy === 'role' && '권한별'}
+                  {sortBy === 'name-asc' && '이름 가나다순'}
+                  {sortBy === 'name-desc' && '이름 역순'}
+                </span>
+                <svg
+                  className={`${styles.dropdownIcon} ${sortDropdownOpen ? styles.dropdownIconOpen : ''}`}
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {sortDropdownOpen && (
+                <div className={styles.filterDropdownMenu}>
+                  <button
+                    className={`${styles.filterDropdownItem} ${sortBy === 'role' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setSortBy('role');
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    권한별
+                    {sortBy === 'role' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${sortBy === 'name-asc' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setSortBy('name-asc');
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    이름 가나다순
+                    {sortBy === 'name-asc' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${sortBy === 'name-desc' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setSortBy('name-desc');
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    이름 역순
+                    {sortBy === 'name-desc' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 권한 필터 드롭다운 */}
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>권한</label>
+            <div className={styles.customFilterDropdown}>
+              <button
+                type="button"
+                className={styles.filterButton}
+                onClick={() => setRoleFilterDropdownOpen(!roleFilterDropdownOpen)}
+              >
+                <span>
+                  {filterRole === 'all' && '전체'}
+                  {filterRole === 'superadmin' && '슈퍼 관리자'}
+                  {filterRole === 'admin' && '관리자'}
+                  {filterRole === 'user' && '일반 사용자'}
+                </span>
+                <svg
+                  className={`${styles.dropdownIcon} ${roleFilterDropdownOpen ? styles.dropdownIconOpen : ''}`}
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {roleFilterDropdownOpen && (
+                <div className={styles.filterDropdownMenu}>
+                  <button
+                    className={`${styles.filterDropdownItem} ${filterRole === 'all' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setFilterRole('all');
+                      setRoleFilterDropdownOpen(false);
+                    }}
+                  >
+                    전체
+                    {filterRole === 'all' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${filterRole === 'superadmin' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setFilterRole('superadmin');
+                      setRoleFilterDropdownOpen(false);
+                    }}
+                  >
+                    슈퍼 관리자
+                    {filterRole === 'superadmin' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${filterRole === 'admin' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setFilterRole('admin');
+                      setRoleFilterDropdownOpen(false);
+                    }}
+                  >
+                    관리자
+                    {filterRole === 'admin' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${filterRole === 'user' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setFilterRole('user');
+                      setRoleFilterDropdownOpen(false);
+                    }}
+                  >
+                    일반 사용자
+                    {filterRole === 'user' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
