@@ -53,6 +53,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             localStorage.setItem('activeTeamId', `personal_${user.uid}`);
           }
 
+          // users 컬렉션에 사용자 정보 저장 (관리자 페이지용)
+          try {
+            const { doc, setDoc, getDoc, serverTimestamp } = await import('firebase/firestore');
+            const { db } = await import('@/firebase/config');
+
+            const userRef = doc(db, 'users', user.uid);
+            const userDoc = await getDoc(userRef);
+
+            if (!userDoc.exists()) {
+              // 신규 사용자 - users 컬렉션에 저장
+              await setDoc(userRef, {
+                email: user.email,
+                displayName: user.displayName || '',
+                photoURL: user.photoURL || '',
+                createdAt: serverTimestamp(),
+                lastLoginAt: serverTimestamp()
+              });
+              console.log('✅ users 컬렉션에 신규 사용자 저장');
+            } else {
+              // 기존 사용자 - lastLoginAt만 업데이트
+              const { updateDoc } = await import('firebase/firestore');
+              await updateDoc(userRef, {
+                lastLoginAt: serverTimestamp(),
+                displayName: user.displayName || '',
+                photoURL: user.photoURL || ''
+              });
+              console.log('✅ users 컬렉션 lastLoginAt 업데이트');
+            }
+          } catch (err) {
+            console.error('❌ users 컬렉션 저장 실패:', err);
+          }
+
           // 로그인 기록 저장
           try {
             await saveLoginHistory();
