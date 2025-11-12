@@ -135,9 +135,15 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  white-space: nowrap;
 }
 
 .saveButton svg {
+  color: white !important;
+  flex-shrink: 0;
+}
+
+.saveButton span {
   color: white !important;
 }
 
@@ -248,22 +254,37 @@
 .cancelButton {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
+  gap: 8px;
+  padding: 12px 24px;
   background: var(--theme-surface, #ffffff);
   border: 1px solid var(--theme-border, #e5e7eb);
-  border-radius: 6px;
-  color: var(--theme-text-secondary, #6b7280);
-  font-size: 14px;
+  border-radius: 8px;
+  color: var(--theme-text, #1f2937);
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.cancelButton svg {
+  color: var(--theme-text, #1f2937);
+  flex-shrink: 0;
+}
+
+.cancelButton span {
+  color: var(--theme-text, #1f2937);
 }
 
 .cancelButton:hover {
   background: var(--theme-background, #f9fafb);
   border-color: var(--theme-primary, #667eea);
-  color: var(--theme-primary, #667eea);
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.cancelButton:active {
+  transform: translateY(0);
 }
 
 .form {

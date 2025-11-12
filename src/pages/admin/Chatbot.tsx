@@ -326,9 +326,10 @@ const Chatbot = () => {
               <button
                 className={styles.saveButton}
                 onClick={saveGreeting}
+                type="button"
               >
-                <HiOutlineCheck size={18} />
-                저장
+                <HiOutlineCheck size={20} />
+                <span>저장</span>
               </button>
               <button
                 className={styles.cancelButton}
@@ -336,9 +337,10 @@ const Chatbot = () => {
                   setIsEditingGreeting(false);
                   loadGreeting();
                 }}
+                type="button"
               >
-                <HiOutlineX size={18} />
-                취소
+                <HiOutlineX size={20} />
+                <span>취소</span>
               </button>
             </div>
           </div>
