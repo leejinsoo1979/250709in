@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import { checkAdminRole, isAdmin, isSuperAdmin, AdminRole } from '@/firebase/admin';
 
-// 환경 변수에서 슈퍼 관리자 UID 가져오기
-const SUPER_ADMIN_UID = import.meta.env.VITE_SUPER_ADMIN_UID;
+// 환경 변수에서 슈퍼 관리자 이메일 가져오기
+const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL;
 
 export const useAdmin = (user: User | null) => {
   const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
@@ -24,8 +24,8 @@ export const useAdmin = (user: User | null) => {
       try {
         setLoading(true);
 
-        // 1순위: 환경 변수의 슈퍼 관리자 UID 확인 (하드코딩된 슈퍼 관리자)
-        if (SUPER_ADMIN_UID && user.uid === SUPER_ADMIN_UID) {
+        // 1순위: 환경 변수의 슈퍼 관리자 이메일 확인 (프로젝트 소유자)
+        if (SUPER_ADMIN_EMAIL && user.email === SUPER_ADMIN_EMAIL) {
           setAdminRole('super');
           setIsAdminUser(true);
           setIsSuperAdminUser(true);
