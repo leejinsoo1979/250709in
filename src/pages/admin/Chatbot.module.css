@@ -69,26 +69,29 @@
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: var(--theme-primary, #667eea);
+  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
   border: none;
   border-radius: 8px;
-  color: white;
+  color: white !important;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px var(--theme-primary-shadow, rgba(102, 126, 234, 0.25));
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
   white-space: nowrap;
 }
 
+.editButton svg {
+  color: white !important;
+}
+
 .editButton span {
-  display: inline-block;
+  color: white !important;
 }
 
 .editButton:hover {
-  background: var(--theme-primary-dark, #5568d3);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px var(--theme-primary-shadow, rgba(102, 126, 234, 0.4));
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
 }
 
 .editButton:active {
@@ -121,23 +124,30 @@
 .saveButton {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  background: var(--theme-primary, #667eea);
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
   border: none;
   border-radius: 8px;
-  color: white;
-  font-size: 14px;
+  color: white !important;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px var(--theme-primary-shadow, rgba(102, 126, 234, 0.25));
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.saveButton svg {
+  color: white !important;
 }
 
 .saveButton:hover {
-  background: var(--theme-primary-dark, #5568d3);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px var(--theme-primary-shadow, rgba(102, 126, 234, 0.4));
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.saveButton:active {
+  transform: translateY(0);
 }
 
 /* 필터 */
