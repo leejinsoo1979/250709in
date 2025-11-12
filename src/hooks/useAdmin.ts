@@ -2,14 +2,8 @@ import { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
 import { checkAdminRole, isAdmin, isSuperAdmin, AdminRole } from '@/firebase/admin';
 
-// 환경 변수에서 슈퍼 관리자 이메일 가져오기
-const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL;
-
-// 개발 환경에서 환경 변수 로드 확인
-if (import.meta.env.DEV) {
-  console.log('🔧 환경 변수 로드 확인:');
-  console.log('VITE_SUPER_ADMIN_EMAIL =', SUPER_ADMIN_EMAIL);
-}
+// 슈퍼 관리자 이메일 (프로젝트 소유자)
+const SUPER_ADMIN_EMAIL = 'sbbc212@gmail.com';
 
 export const useAdmin = (user: User | null) => {
   const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
@@ -30,18 +24,8 @@ export const useAdmin = (user: User | null) => {
       try {
         setLoading(true);
 
-        // 개발 환경에서 디버깅 정보 출력
-        if (import.meta.env.DEV) {
-          console.log('=== 관리자 권한 체크 ===');
-          console.log('현재 로그인 이메일:', user.email);
-          console.log('슈퍼 관리자 이메일:', SUPER_ADMIN_EMAIL);
-          console.log('일치 여부:', user.email === SUPER_ADMIN_EMAIL);
-          console.log('====================');
-        }
-
-        // 1순위: 환경 변수의 슈퍼 관리자 이메일 확인 (프로젝트 소유자)
-        if (SUPER_ADMIN_EMAIL && user.email === SUPER_ADMIN_EMAIL) {
-          console.log('✅ 슈퍼 관리자 권한 확인됨!');
+        // 1순위: 슈퍼 관리자 이메일 확인
+        if (user.email === SUPER_ADMIN_EMAIL) {
           setAdminRole('super');
           setIsAdminUser(true);
           setIsSuperAdminUser(true);
