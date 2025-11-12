@@ -9,7 +9,7 @@ import { IoFileTrayStackedOutline } from "react-icons/io5";
 import { TiThSmall } from "react-icons/ti";
 import { TfiShare, TfiShareAlt } from "react-icons/tfi";
 import { BsBookmarkStarFill } from "react-icons/bs";
-import { VscLink } from "react-icons/vsc";
+import { VscLink, VscServerProcess } from "react-icons/vsc";
 import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
 import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks, revokeDesignFileAccess, revokeProjectAccess, revokeAllProjectAccess, revokeAllDesignFileAccess } from '@/firebase/shareLinks';
@@ -3281,7 +3281,7 @@ const SimpleDashboard: React.FC = () => {
                   onClick={() => navigate('/admin')}
                   title="관리자 페이지"
                 >
-                  <SettingsIcon size={20} />
+                  <VscServerProcess size={20} />
                   <span>관리자</span>
                 </button>
               )}

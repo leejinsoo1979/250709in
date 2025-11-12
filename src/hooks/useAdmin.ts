@@ -12,38 +12,41 @@ export const useAdmin = (user: User | null) => {
   const [isSuperAdminUser, setIsSuperAdminUser] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // 마지막으로 체크한 UID 저장
-  const lastCheckedUid = useRef<string>('');
+  // 이미 체크했는지 여부 (한 번만 실행)
+  const hasChecked = useRef<boolean>(false);
 
   useEffect(() => {
     // user가 없으면 초기화
     if (!user) {
-      setAdminRole(null);
-      setIsAdminUser(false);
-      setIsSuperAdminUser(false);
-      setLoading(false);
-      lastCheckedUid.current = '';
+      if (hasChecked.current) {
+        setAdminRole(null);
+        setIsAdminUser(false);
+        setIsSuperAdminUser(false);
+        setLoading(false);
+        hasChecked.current = false;
+      }
       return;
     }
 
-    // 같은 UID는 다시 체크하지 않음 (무한 루프 방지)
-    if (lastCheckedUid.current === user.uid) {
+    // 이미 체크했으면 스킵 (무한 루프 방지)
+    if (hasChecked.current) {
       return;
     }
 
-    lastCheckedUid.current = user.uid;
+    hasChecked.current = true;
 
-    // 슈퍼 관리자 이메일 체크 (단순 비교)
-    const isSuperAdmin = user.email === SUPER_ADMIN_EMAIL;
+    // 슈퍼 관리자 이메일 체크
+    const userEmail = user.email?.toLowerCase().trim() || '';
+    const adminEmail = SUPER_ADMIN_EMAIL.toLowerCase().trim();
+    const isSuperAdmin = userEmail === adminEmail;
 
-    console.log('👤 로그인 이메일:', user.email);
-    console.log('🔑 슈퍼 관리자:', isSuperAdmin ? 'YES' : 'NO');
+    console.log('🔐 Admin Check - Email:', user.email, '/ Super Admin:', isSuperAdmin);
 
     setAdminRole(isSuperAdmin ? 'super' : null);
     setIsAdminUser(isSuperAdmin);
     setIsSuperAdminUser(isSuperAdmin);
     setLoading(false);
-  }, [user?.uid]);
+  }, [user]);
 
   return {
     adminRole,
