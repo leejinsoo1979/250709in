@@ -30,11 +30,11 @@
 }
 
 .value.required {
-  color: var(--theme-warning, #ff9800);
+  color: #ff9800;
 }
 
 .value.shortage {
-  color: var(--theme-error, #f44336);
+  color: #f44336;
 }
 
 .divider {
@@ -63,40 +63,4 @@
 
 .rechargeButton:active {
   transform: translateY(0);
-}
-
-/* 다크 모드 지원 */
-@media (prefers-color-scheme: dark) {
-  .creditInfo {
-    background: #2a2a2a;
-    border: 1px solid #444444;
-  }
-
-  .label {
-    color: #b0b0b0;
-  }
-
-  .value {
-    color: #ffffff;
-  }
-
-  .value.required {
-    color: #ffb74d;
-  }
-
-  .value.shortage {
-    color: #ef5350;
-  }
-
-  .divider {
-    background: #444444;
-  }
-
-  .rechargeButton {
-    background-color: #4a4a4a;
-  }
-
-  .rechargeButton:hover {
-    background-color: #5a5a5a;
-  }
 }
