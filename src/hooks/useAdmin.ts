@@ -1,69 +1,49 @@
 import { useState, useEffect, useRef } from 'react';
 import { User } from 'firebase/auth';
-import { checkAdminRole, isAdmin, isSuperAdmin, AdminRole } from '@/firebase/admin';
 
-// 슈퍼 관리자 이메일 (프로젝트 소유자) - 항상 최고 권한
+// 슈퍼 관리자 이메일 (프로젝트 소유자)
 const SUPER_ADMIN_EMAIL = 'sbbc212@gmail.com';
+
+export type AdminRole = 'super' | 'admin' | 'support' | 'sales';
 
 export const useAdmin = (user: User | null) => {
   const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
   const [isAdminUser, setIsAdminUser] = useState<boolean>(false);
   const [isSuperAdminUser, setIsSuperAdminUser] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
 
-  // 이미 체크한 UID를 저장 (중복 체크 방지)
-  const checkedUidRef = useRef<string | null>(null);
+  // 마지막으로 체크한 UID 저장
+  const lastCheckedUid = useRef<string>('');
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      // user가 없으면 초기화
-      if (!user) {
-        setAdminRole(null);
-        setIsAdminUser(false);
-        setIsSuperAdminUser(false);
-        setLoading(false);
-        checkedUidRef.current = null;
-        return;
-      }
+    // user가 없으면 초기화
+    if (!user) {
+      setAdminRole(null);
+      setIsAdminUser(false);
+      setIsSuperAdminUser(false);
+      setLoading(false);
+      lastCheckedUid.current = '';
+      return;
+    }
 
-      // 이미 체크한 UID면 스킵 (무한 루프 방지)
-      if (checkedUidRef.current === user.uid) {
-        return;
-      }
+    // 같은 UID는 다시 체크하지 않음 (무한 루프 방지)
+    if (lastCheckedUid.current === user.uid) {
+      return;
+    }
 
-      checkedUidRef.current = user.uid;
-      setLoading(true);
+    lastCheckedUid.current = user.uid;
 
-      try {
-        // 1순위: 하드코딩된 슈퍼 관리자 이메일 체크
-        if (user.email === SUPER_ADMIN_EMAIL) {
-          setAdminRole('super');
-          setIsAdminUser(true);
-          setIsSuperAdminUser(true);
-          setLoading(false);
-          return;
-        }
+    // 슈퍼 관리자 이메일 체크 (단순 비교)
+    const isSuperAdmin = user.email === SUPER_ADMIN_EMAIL;
 
-        // 2순위: Firebase admins 컬렉션에서 권한 확인
-        const role = await checkAdminRole(user.uid);
-        const adminStatus = await isAdmin(user.uid);
-        const superAdminStatus = await isSuperAdmin(user.uid);
+    console.log('👤 로그인 이메일:', user.email);
+    console.log('🔑 슈퍼 관리자:', isSuperAdmin ? 'YES' : 'NO');
 
-        setAdminRole(role);
-        setIsAdminUser(adminStatus);
-        setIsSuperAdminUser(superAdminStatus);
-      } catch (error) {
-        console.error('관리자 권한 확인 오류:', error);
-        setAdminRole(null);
-        setIsAdminUser(false);
-        setIsSuperAdminUser(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAdmin();
-  }, [user?.uid, user?.email]);
+    setAdminRole(isSuperAdmin ? 'super' : null);
+    setIsAdminUser(isSuperAdmin);
+    setIsSuperAdminUser(isSuperAdmin);
+    setLoading(false);
+  }, [user?.uid]);
 
   return {
     adminRole,
