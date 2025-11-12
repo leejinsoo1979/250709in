@@ -4,6 +4,8 @@ import { useAuth } from '@/auth/AuthProvider';
 import { useAdmin } from '@/hooks/useAdmin';
 import { collection, getDocs, getCountFromServer } from 'firebase/firestore';
 import { db } from '@/firebase/config';
+import { UserIcon, UsersIcon, SettingsIcon } from '@/components/common/Icons';
+import { HiOutlineOfficeBuilding, HiOutlineChartBar, HiOutlineBriefcase, HiOutlineCreditCard, HiOutlineLockClosed } from 'react-icons/hi';
 import styles from './AdminDashboard.module.css';
 
 interface AdminStats {
@@ -127,7 +129,9 @@ const AdminDashboard = () => {
         {/* 통계 카드 */}
         <div className={styles.statsGrid}>
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>👥</div>
+            <div className={styles.statIcon}>
+              <UsersIcon size={24} />
+            </div>
             <div className={styles.statContent}>
               <h3 className={styles.statLabel}>전체 사용자</h3>
               <p className={styles.statValue}>
@@ -137,7 +141,9 @@ const AdminDashboard = () => {
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>🏢</div>
+            <div className={styles.statIcon}>
+              <HiOutlineOfficeBuilding size={24} />
+            </div>
             <div className={styles.statContent}>
               <h3 className={styles.statLabel}>조직</h3>
               <p className={styles.statValue}>
@@ -147,7 +153,9 @@ const AdminDashboard = () => {
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>📊</div>
+            <div className={styles.statIcon}>
+              <HiOutlineChartBar size={24} />
+            </div>
             <div className={styles.statContent}>
               <h3 className={styles.statLabel}>프로젝트</h3>
               <p className={styles.statValue}>
@@ -157,7 +165,9 @@ const AdminDashboard = () => {
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>💼</div>
+            <div className={styles.statIcon}>
+              <HiOutlineBriefcase size={24} />
+            </div>
             <div className={styles.statContent}>
               <h3 className={styles.statLabel}>디자인 파일</h3>
               <p className={styles.statValue}>
@@ -172,32 +182,44 @@ const AdminDashboard = () => {
           <h2 className={styles.sectionTitle}>퀵 액션</h2>
           <div className={styles.actionGrid}>
             <button className={styles.actionCard} disabled>
-              <span className={styles.actionIcon}>👥</span>
+              <span className={styles.actionIcon}>
+                <UserIcon size={20} />
+              </span>
               <span className={styles.actionLabel}>사용자 관리</span>
             </button>
 
             <button className={styles.actionCard} disabled>
-              <span className={styles.actionIcon}>🏢</span>
+              <span className={styles.actionIcon}>
+                <HiOutlineOfficeBuilding size={20} />
+              </span>
               <span className={styles.actionLabel}>조직 관리</span>
             </button>
 
             <button className={styles.actionCard} disabled>
-              <span className={styles.actionIcon}>💳</span>
+              <span className={styles.actionIcon}>
+                <HiOutlineCreditCard size={20} />
+              </span>
               <span className={styles.actionLabel}>결제 관리</span>
             </button>
 
             <button className={styles.actionCard} disabled>
-              <span className={styles.actionIcon}>📊</span>
+              <span className={styles.actionIcon}>
+                <HiOutlineChartBar size={20} />
+              </span>
               <span className={styles.actionLabel}>통계 분석</span>
             </button>
 
             <button className={styles.actionCard} disabled>
-              <span className={styles.actionIcon}>🔒</span>
+              <span className={styles.actionIcon}>
+                <HiOutlineLockClosed size={20} />
+              </span>
               <span className={styles.actionLabel}>보안 설정</span>
             </button>
 
             <button className={styles.actionCard} disabled>
-              <span className={styles.actionIcon}>⚙️</span>
+              <span className={styles.actionIcon}>
+                <SettingsIcon size={20} />
+              </span>
               <span className={styles.actionLabel}>시스템 설정</span>
             </button>
           </div>
@@ -206,7 +228,7 @@ const AdminDashboard = () => {
         {/* 개발 중 안내 */}
         <div className={styles.section}>
           <div className={styles.notice}>
-            <h3>🚧 개발 중</h3>
+            <h3>개발 중</h3>
             <p>관리자 페이지는 현재 개발 중입니다.</p>
             <p>곧 다양한 관리 기능이 추가될 예정입니다.</p>
           </div>

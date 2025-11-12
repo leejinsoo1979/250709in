@@ -121,14 +121,15 @@
 }
 
 .statIcon {
-  font-size: 40px;
   width: 64px;
   height: 64px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--theme-background, #f9fafb);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
 }
 
 .statContent {
@@ -194,7 +195,15 @@
 }
 
 .actionIcon {
-  font-size: 32px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
 }
 
 .actionLabel {
