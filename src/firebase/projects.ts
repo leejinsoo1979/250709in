@@ -1082,6 +1082,13 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
       return { designFile: null, error: '로그인이 필요합니다.' };
     }
 
+    // 관리자 권한 확인
+    const { isSuperAdmin } = await import('./admins');
+    const isAdmin = isSuperAdmin(user.email || '');
+    if (isAdmin) {
+      console.log('👑 [Firebase] 관리자 권한으로 디자인 파일 접근:', designFileId);
+    }
+
     const docRef = doc(db, 'designFiles', designFileId);
     console.log('🔥 [Firebase] Firestore 문서 조회 중... (서버에서 직접)');
     // 캐시를 무시하고 서버에서 직접 가져오기
@@ -1146,8 +1153,8 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
       const projectData = projectSnap.data();
       const isOwner = projectData.userId === user.uid;
 
-      if (!isOwner) {
-        // 소유자가 아니면 공유 접근 권한 확인
+      if (!isOwner && !isAdmin) {
+        // 소유자나 관리자가 아니면 공유 접근 권한 확인
         const sharedAccessQuery = query(
           collection(db, 'sharedProjectAccess'),
           where('userId', '==', user.uid),
