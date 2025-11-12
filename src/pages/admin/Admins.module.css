@@ -135,6 +135,13 @@
   gap: 12px;
 }
 
+.userInfo > svg,
+.userInfo > .crownIcon,
+.userInfo > .userIcon {
+  width: 24px;
+  min-width: 24px;
+}
+
 .avatar {
   width: 40px;
   height: 40px;
@@ -246,6 +253,30 @@
 .disabledText {
   font-size: 13px;
   color: var(--theme-text-secondary, #9ca3af);
+}
+
+.crownIcon {
+  font-size: 24px;
+  color: var(--theme-primary, #10b981);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.userIcon {
+  font-size: 24px;
+  color: var(--theme-text-secondary, #6b7280);
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.iconPlaceholder {
+  width: 24px;
+  min-width: 24px;
+  height: 24px;
+  flex-shrink: 0;
 }
 
 /* 확인 다이얼로그 */

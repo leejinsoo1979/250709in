@@ -9,6 +9,8 @@ import {
   revokeAdminRole,
   isSuperAdmin
 } from '@/firebase/admins';
+import { GiImperialCrown } from 'react-icons/gi';
+import { FaUser } from 'react-icons/fa';
 import styles from './Admins.module.css';
 
 interface UserData {
@@ -232,6 +234,13 @@ const Admins = () => {
                 <tr key={targetUser.id}>
                   <td>
                     <div className={styles.userInfo}>
+                      {targetUser.isSuperAdmin ? (
+                        <GiImperialCrown className={styles.crownIcon} />
+                      ) : !targetUser.isAdmin ? (
+                        <FaUser className={styles.userIcon} />
+                      ) : (
+                        <span className={styles.iconPlaceholder} />
+                      )}
                       <div className={styles.avatar}>
                         {targetUser.photoURL ? (
                           <img src={targetUser.photoURL} alt={targetUser.displayName || targetUser.email} />
