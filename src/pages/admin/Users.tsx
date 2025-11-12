@@ -610,9 +610,10 @@ const Users = () => {
         )}
       </div>
 
-      {/* 플랜 변경 다이얼로그 */}
-      {planDialog.show && (
-        <div className={styles.dialogOverlay}>
+      <>
+        {/* 플랜 변경 다이얼로그 */}
+        {planDialog.show && (
+          <div className={styles.dialogOverlay}>
           <div className={styles.dialog}>
             <h3 className={styles.dialogTitle}>플랜 변경</h3>
             <p className={styles.dialogMessage}>
@@ -939,6 +940,7 @@ const Users = () => {
           </div>
         </div>
       )}
+      </>
     </div>
   );
 };
