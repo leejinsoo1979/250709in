@@ -247,15 +247,18 @@ const Users = () => {
 
       {/* 검색 및 필터 */}
       <div className={styles.toolbar}>
-        <div className={styles.searchBox}>
-          <SearchIcon size={20} />
-          <input
-            type="text"
-            placeholder="이메일, 이름, UID로 검색..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className={styles.searchInput}
-          />
+        <div className={styles.filterGroup}>
+          <label className={styles.filterLabel}>검색</label>
+          <div className={styles.searchBox}>
+            <SearchIcon size={20} />
+            <input
+              type="text"
+              placeholder="이메일, 이름, UID로 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={styles.searchInput}
+            />
+          </div>
         </div>
 
         <div className={styles.filters}>
