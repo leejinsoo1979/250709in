@@ -539,7 +539,6 @@
 
 .dialog {
   background: var(--theme-surface, white);
-  border: 2px solid white;
   border-radius: 12px;
   padding: 24px;
   max-width: 420px;
