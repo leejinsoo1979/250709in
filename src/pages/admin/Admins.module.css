@@ -264,6 +264,15 @@
   height: 24px;
 }
 
+.medalIcon {
+  font-size: 24px;
+  color: var(--theme-primary, #10b981);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
 .userIcon {
   font-size: 24px;
   color: var(--theme-text-secondary, #6b7280);
