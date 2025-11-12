@@ -37,6 +37,7 @@ import { NotificationCenter } from '@/components/NotificationCenter';
 import { ShareLinkModal } from '@/components/ShareLinkModal';
 import RenameModal from '../components/common/RenameModal';
 import CreditErrorModal from '@/components/common/CreditErrorModal';
+import { PopupManager } from '@/components/PopupManager';
 // import { generateProjectThumbnail } from '../utils/thumbnailGenerator';
 import styles from './SimpleDashboard.module.css';
 
@@ -5525,6 +5526,9 @@ const SimpleDashboard: React.FC = () => {
           setIsProfilePopupOpen(true);
         }}
       />
+
+      {/* 팝업 매니저 */}
+      <PopupManager />
     </div>
   );
 };

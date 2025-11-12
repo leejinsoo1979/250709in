@@ -228,5 +228,19 @@ service cloud.firestore {
       );
       allow create: if isSignedIn();
     }
+
+    // 메시지 - 관리자만 접근 가능
+    match /messages/{messageId} {
+      allow read, list: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
+
+    // 팝업 - 관리자만 접근 가능
+    match /popups/{popupId} {
+      allow read, list: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
   }
 }
