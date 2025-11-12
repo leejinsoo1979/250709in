@@ -682,261 +682,261 @@ const Users = () => {
         <div className={styles.userDetailsHeader}>
           <div className={styles.userDetailsTitle}>
             <div className={styles.userDetailsAvatar}>
-                {selectedUser.photoURL ? (
-                  <img src={selectedUser.photoURL} alt={selectedUser.displayName || selectedUser.email} />
-                ) : (
-                  <div className={styles.userDetailsAvatarPlaceholder}>
-                    {(selectedUser.displayName || selectedUser.email || '?').charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div>
-                <h2>{selectedUser.displayName || '이름 없음'}</h2>
-                <p>{selectedUser.email}</p>
-              </div>
+              {selectedUser.photoURL ? (
+                <img src={selectedUser.photoURL} alt={selectedUser.displayName || selectedUser.email} />
+              ) : (
+                <div className={styles.userDetailsAvatarPlaceholder}>
+                  {(selectedUser.displayName || selectedUser.email || '?').charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div>
+              <h2>{selectedUser.displayName || '이름 없음'}</h2>
+              <p>{selectedUser.email}</p>
+            </div>
             </div>
             <button className={styles.closeButton} onClick={closeUserDetails}>
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
             </button>
           </div>
 
           <div className={styles.userDetailsContent}>
-              {/* 기본 정보 */}
-              <div className={styles.detailsBlock}>
-                <h3 className={styles.userDetailsSectionTitle}>기본 정보</h3>
-                <div className={styles.userDetailsGrid}>
-                  <div className={styles.userDetailsItem}>
-                    <span className={styles.userDetailsLabel}>UID</span>
-                    <code className={styles.userDetailsValue}>{selectedUser.id}</code>
-                  </div>
-                  <div className={styles.userDetailsItem}>
-                    <span className={styles.userDetailsLabel}>플랜</span>
-                    <span
-                      className={styles.planBadge}
-                      style={{ backgroundColor: PLANS[selectedUser.plan || 'free'].color, color: 'white' }}
-                    >
-                      {PLANS[selectedUser.plan || 'free'].name}
-                    </span>
-                  </div>
-                  <div className={styles.userDetailsItem}>
-                    <span className={styles.userDetailsLabel}>가입일</span>
-                    <span className={styles.userDetailsValue}>
-                      {selectedUser.createdAt?.toLocaleString('ko-KR') || '-'}
-                    </span>
-                  </div>
-                  <div className={styles.userDetailsItem}>
-                    <span className={styles.userDetailsLabel}>최근 로그인</span>
-                    <span className={styles.userDetailsValue}>
-                      {selectedUser.lastLoginAt?.toLocaleString('ko-KR') || '-'}
-                    </span>
-                  </div>
+            {/* 기본 정보 */}
+            <div className={styles.detailsBlock}>
+              <h3 className={styles.userDetailsSectionTitle}>기본 정보</h3>
+              <div className={styles.userDetailsGrid}>
+                <div className={styles.userDetailsItem}>
+                  <span className={styles.userDetailsLabel}>UID</span>
+                  <code className={styles.userDetailsValue}>{selectedUser.id}</code>
+                </div>
+                <div className={styles.userDetailsItem}>
+                  <span className={styles.userDetailsLabel}>플랜</span>
+                  <span
+                    className={styles.planBadge}
+                    style={{ backgroundColor: PLANS[selectedUser.plan || 'free'].color, color: 'white' }}
+                  >
+                    {PLANS[selectedUser.plan || 'free'].name}
+                  </span>
+                </div>
+                <div className={styles.userDetailsItem}>
+                  <span className={styles.userDetailsLabel}>가입일</span>
+                  <span className={styles.userDetailsValue}>
+                    {selectedUser.createdAt?.toLocaleString('ko-KR') || '-'}
+                  </span>
+                </div>
+                <div className={styles.userDetailsItem}>
+                  <span className={styles.userDetailsLabel}>최근 로그인</span>
+                  <span className={styles.userDetailsValue}>
+                    {selectedUser.lastLoginAt?.toLocaleString('ko-KR') || '-'}
+                  </span>
                 </div>
               </div>
+            </div>
 
-              {/* 프로젝트 */}
-              <div className={styles.detailsBlock}>
-                <h3 className={styles.userDetailsSectionTitle}>
-                  프로젝트 ({userProjects.length})
-                </h3>
-                {userDetailsLoading ? (
-                  <div className={styles.userDetailsLoading}>로딩 중...</div>
-                ) : userProjects.length === 0 ? (
-                  <div className={styles.userDetailsEmpty}>프로젝트가 없습니다</div>
-                ) : (
-                  <div className={styles.userDetailsList}>
-                    {userProjects.map(project => (
-                      <div key={project.id} className={styles.userDetailsListItem}>
-                        <div className={styles.userDetailsListItemIcon}>
-                          <HiOutlineFolder size={20} />
-                        </div>
-                        <div className={styles.userDetailsListItemContent}>
-                          <span className={styles.userDetailsListItemTitle}>{project.title}</span>
-                          <span className={styles.userDetailsListItemMeta}>
-                            생성: {project.createdAt?.toLocaleDateString('ko-KR') || '-'}
-                          </span>
-                        </div>
+            {/* 프로젝트 */}
+            <div className={styles.detailsBlock}>
+              <h3 className={styles.userDetailsSectionTitle}>
+                프로젝트 ({userProjects.length})
+              </h3>
+              {userDetailsLoading ? (
+                <div className={styles.userDetailsLoading}>로딩 중...</div>
+              ) : userProjects.length === 0 ? (
+                <div className={styles.userDetailsEmpty}>프로젝트가 없습니다</div>
+              ) : (
+                <div className={styles.userDetailsList}>
+                  {userProjects.map(project => (
+                    <div key={project.id} className={styles.userDetailsListItem}>
+                      <div className={styles.userDetailsListItemIcon}>
+                        <HiOutlineFolder size={20} />
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      <div className={styles.userDetailsListItemContent}>
+                        <span className={styles.userDetailsListItemTitle}>{project.title}</span>
+                        <span className={styles.userDetailsListItemMeta}>
+                          생성: {project.createdAt?.toLocaleDateString('ko-KR') || '-'}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-              {/* 디자인 파일 */}
-              <div className={styles.detailsBlock}>
-                <h3 className={styles.userDetailsSectionTitle}>
-                  디자인 파일 ({userDesignFiles.length})
-                </h3>
-                {userDetailsLoading ? (
-                  <div className={styles.userDetailsLoading}>로딩 중...</div>
-                ) : userDesignFiles.length === 0 ? (
-                  <div className={styles.userDetailsEmpty}>디자인 파일이 없습니다</div>
-                ) : (
-                  <div className={styles.userDetailsList}>
-                    {userDesignFiles.slice(0, 10).map(file => (
-                      <div key={file.id} className={styles.userDetailsListItem}>
-                        <div className={styles.userDetailsListItemIcon}>
-                          <HiOutlineCube size={20} />
-                        </div>
-                        <div className={styles.userDetailsListItemContent}>
-                          <span className={styles.userDetailsListItemTitle}>{file.fileName}</span>
-                          <span className={styles.userDetailsListItemMeta}>
-                            {(file.fileSize / 1024).toFixed(1)} KB · {file.createdAt?.toLocaleDateString('ko-KR') || '-'}
-                          </span>
-                        </div>
+            {/* 디자인 파일 */}
+            <div className={styles.detailsBlock}>
+              <h3 className={styles.userDetailsSectionTitle}>
+                디자인 파일 ({userDesignFiles.length})
+              </h3>
+              {userDetailsLoading ? (
+                <div className={styles.userDetailsLoading}>로딩 중...</div>
+              ) : userDesignFiles.length === 0 ? (
+                <div className={styles.userDetailsEmpty}>디자인 파일이 없습니다</div>
+              ) : (
+                <div className={styles.userDetailsList}>
+                  {userDesignFiles.slice(0, 10).map(file => (
+                    <div key={file.id} className={styles.userDetailsListItem}>
+                      <div className={styles.userDetailsListItemIcon}>
+                        <HiOutlineCube size={20} />
                       </div>
-                    ))}
-                    {userDesignFiles.length > 10 && (
-                      <div className={styles.userDetailsMoreInfo}>
-                        +{userDesignFiles.length - 10}개 더 보기
+                      <div className={styles.userDetailsListItemContent}>
+                        <span className={styles.userDetailsListItemTitle}>{file.fileName}</span>
+                        <span className={styles.userDetailsListItemMeta}>
+                          {(file.fileSize / 1024).toFixed(1)} KB · {file.createdAt?.toLocaleDateString('ko-KR') || '-'}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                    </div>
+                  ))}
+                  {userDesignFiles.length > 10 && (
+                    <div className={styles.userDetailsMoreInfo}>
+                      +{userDesignFiles.length - 10}개 더 보기
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-              {/* 생성한 공유 링크 */}
-              <div className={styles.detailsBlock}>
-                <h3 className={styles.userDetailsSectionTitle}>
-                  생성한 공유 링크 ({userShareLinks.length})
-                </h3>
-                {userDetailsLoading ? (
-                  <div className={styles.userDetailsLoading}>로딩 중...</div>
-                ) : userShareLinks.length === 0 ? (
-                  <div className={styles.userDetailsEmpty}>생성한 공유 링크가 없습니다</div>
-                ) : (
-                  <div className={styles.userDetailsList}>
-                    {userShareLinks.slice(0, 5).map(link => (
-                      <div key={link.id} className={styles.userDetailsListItem}>
-                        <div className={styles.userDetailsListItemIcon}>
-                          <HiOutlineLink size={20} />
-                        </div>
-                        <div className={styles.userDetailsListItemContent}>
-                          <span className={styles.userDetailsListItemTitle}>
-                            <code>{link.token.slice(0, 20)}...</code>
-                          </span>
-                          <span className={styles.userDetailsListItemMeta}>
-                            <HiOutlineEye size={14} /> {link.viewCount} 조회 ·
-                            {link.isActive ? ' 활성' : ' 비활성'} ·
-                            생성: {link.createdAt?.toLocaleDateString('ko-KR') || '-'}
-                          </span>
-                        </div>
+            {/* 생성한 공유 링크 */}
+            <div className={styles.detailsBlock}>
+              <h3 className={styles.userDetailsSectionTitle}>
+                생성한 공유 링크 ({userShareLinks.length})
+              </h3>
+              {userDetailsLoading ? (
+                <div className={styles.userDetailsLoading}>로딩 중...</div>
+              ) : userShareLinks.length === 0 ? (
+                <div className={styles.userDetailsEmpty}>생성한 공유 링크가 없습니다</div>
+              ) : (
+                <div className={styles.userDetailsList}>
+                  {userShareLinks.slice(0, 5).map(link => (
+                    <div key={link.id} className={styles.userDetailsListItem}>
+                      <div className={styles.userDetailsListItemIcon}>
+                        <HiOutlineLink size={20} />
                       </div>
-                    ))}
-                    {userShareLinks.length > 5 && (
-                      <div className={styles.userDetailsMoreInfo}>
-                        +{userShareLinks.length - 5}개 더 보기
+                      <div className={styles.userDetailsListItemContent}>
+                        <span className={styles.userDetailsListItemTitle}>
+                          <code>{link.token.slice(0, 20)}...</code>
+                        </span>
+                        <span className={styles.userDetailsListItemMeta}>
+                          <HiOutlineEye size={14} /> {link.viewCount} 조회 ·
+                          {link.isActive ? ' 활성' : ' 비활성'} ·
+                          생성: {link.createdAt?.toLocaleDateString('ko-KR') || '-'}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                    </div>
+                  ))}
+                  {userShareLinks.length > 5 && (
+                    <div className={styles.userDetailsMoreInfo}>
+                      +{userShareLinks.length - 5}개 더 보기
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-              {/* 접근 권한 받은 프로젝트 */}
-              <div className={styles.detailsBlock}>
-                <h3 className={styles.userDetailsSectionTitle}>
-                  접근 권한 받은 프로젝트 ({userSharedAccess.length})
-                </h3>
-                {userDetailsLoading ? (
-                  <div className={styles.userDetailsLoading}>로딩 중...</div>
-                ) : userSharedAccess.length === 0 ? (
-                  <div className={styles.userDetailsEmpty}>접근 권한이 없습니다</div>
-                ) : (
-                  <div className={styles.userDetailsList}>
-                    {userSharedAccess.slice(0, 5).map(access => (
-                      <div key={access.id} className={styles.userDetailsListItem}>
-                        <div className={styles.userDetailsListItemIcon}>
-                          <HiOutlineFolder size={20} />
-                        </div>
-                        <div className={styles.userDetailsListItemContent}>
-                          <span className={styles.userDetailsListItemTitle}>
-                            프로젝트 ID: {access.projectId.slice(0, 12)}...
-                          </span>
-                          <span className={styles.userDetailsListItemMeta}>
-                            권한: {access.permission === 'owner' ? '소유자' : access.permission === 'editor' ? '편집자' : '뷰어'} ·
-                            공유일: {access.sharedAt?.toLocaleDateString('ko-KR') || '-'}
-                          </span>
-                        </div>
+            {/* 접근 권한 받은 프로젝트 */}
+            <div className={styles.detailsBlock}>
+              <h3 className={styles.userDetailsSectionTitle}>
+                접근 권한 받은 프로젝트 ({userSharedAccess.length})
+              </h3>
+              {userDetailsLoading ? (
+                <div className={styles.userDetailsLoading}>로딩 중...</div>
+              ) : userSharedAccess.length === 0 ? (
+                <div className={styles.userDetailsEmpty}>접근 권한이 없습니다</div>
+              ) : (
+                <div className={styles.userDetailsList}>
+                  {userSharedAccess.slice(0, 5).map(access => (
+                    <div key={access.id} className={styles.userDetailsListItem}>
+                      <div className={styles.userDetailsListItemIcon}>
+                        <HiOutlineFolder size={20} />
                       </div>
-                    ))}
-                    {userSharedAccess.length > 5 && (
-                      <div className={styles.userDetailsMoreInfo}>
-                        +{userSharedAccess.length - 5}개 더 보기
+                      <div className={styles.userDetailsListItemContent}>
+                        <span className={styles.userDetailsListItemTitle}>
+                          프로젝트 ID: {access.projectId.slice(0, 12)}...
+                        </span>
+                        <span className={styles.userDetailsListItemMeta}>
+                          권한: {access.permission === 'owner' ? '소유자' : access.permission === 'editor' ? '편집자' : '뷰어'} ·
+                          공유일: {access.sharedAt?.toLocaleDateString('ko-KR') || '-'}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                    </div>
+                  ))}
+                  {userSharedAccess.length > 5 && (
+                    <div className={styles.userDetailsMoreInfo}>
+                      +{userSharedAccess.length - 5}개 더 보기
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-              {/* 최근 접근 로그 */}
-              <div className={styles.detailsBlock}>
-                <h3 className={styles.userDetailsSectionTitle}>
-                  최근 접근 로그 ({userAccessLogs.length})
-                </h3>
-                {userDetailsLoading ? (
-                  <div className={styles.userDetailsLoading}>로딩 중...</div>
-                ) : userAccessLogs.length === 0 ? (
-                  <div className={styles.userDetailsEmpty}>접근 로그가 없습니다</div>
-                ) : (
-                  <div className={styles.userDetailsList}>
-                    {userAccessLogs.slice(0, 10).map(log => (
-                      <div key={log.id} className={styles.userDetailsListItem}>
-                        <div className={styles.userDetailsListItemIcon}>
-                          <HiOutlineClock size={20} />
-                        </div>
-                        <div className={styles.userDetailsListItemContent}>
-                          <span className={styles.userDetailsListItemTitle}>
-                            링크 ID: {log.shareLinkId.slice(0, 12)}...
-                          </span>
-                          <span className={styles.userDetailsListItemMeta}>
-                            IP: {log.ipAddress || '알 수 없음'} ·
-                            {log.accessedAt?.toLocaleString('ko-KR') || '-'}
-                          </span>
-                        </div>
+            {/* 최근 접근 로그 */}
+            <div className={styles.detailsBlock}>
+              <h3 className={styles.userDetailsSectionTitle}>
+                최근 접근 로그 ({userAccessLogs.length})
+              </h3>
+              {userDetailsLoading ? (
+                <div className={styles.userDetailsLoading}>로딩 중...</div>
+              ) : userAccessLogs.length === 0 ? (
+                <div className={styles.userDetailsEmpty}>접근 로그가 없습니다</div>
+              ) : (
+                <div className={styles.userDetailsList}>
+                  {userAccessLogs.slice(0, 10).map(log => (
+                    <div key={log.id} className={styles.userDetailsListItem}>
+                      <div className={styles.userDetailsListItemIcon}>
+                        <HiOutlineClock size={20} />
                       </div>
-                    ))}
-                    {userAccessLogs.length > 10 && (
-                      <div className={styles.userDetailsMoreInfo}>
-                        +{userAccessLogs.length - 10}개 더 보기
+                      <div className={styles.userDetailsListItemContent}>
+                        <span className={styles.userDetailsListItemTitle}>
+                          링크 ID: {log.shareLinkId.slice(0, 12)}...
+                        </span>
+                        <span className={styles.userDetailsListItemMeta}>
+                          IP: {log.ipAddress || '알 수 없음'} ·
+                          {log.accessedAt?.toLocaleString('ko-KR') || '-'}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                )}
-              </div>
+                    </div>
+                  ))}
+                  {userAccessLogs.length > 10 && (
+                    <div className={styles.userDetailsMoreInfo}>
+                      +{userAccessLogs.length - 10}개 더 보기
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-              {/* 활동 통계 */}
-              <div className={styles.detailsBlock}>
-                <h3 className={styles.userDetailsSectionTitle}>활동 통계</h3>
-                <div className={styles.userDetailsGrid}>
-                  <div className={styles.userDetailsItem}>
-                    <span className={styles.userDetailsLabel}>총 프로젝트</span>
-                    <span className={styles.userDetailsValue}>{userProjects.length}개</span>
-                  </div>
-                  <div className={styles.userDetailsItem}>
-                    <span className={styles.userDetailsLabel}>총 디자인 파일</span>
-                    <span className={styles.userDetailsValue}>{userDesignFiles.length}개</span>
-                  </div>
-                  <div className={styles.userDetailsItem}>
-                    <span className={styles.userDetailsLabel}>생성한 공유 링크</span>
-                    <span className={styles.userDetailsValue}>{userShareLinks.length}개</span>
-                  </div>
-                  <div className={styles.userDetailsItem}>
-                    <span className={styles.userDetailsLabel}>접근 권한</span>
-                    <span className={styles.userDetailsValue}>{userSharedAccess.length}개</span>
-                  </div>
-                  <div className={styles.userDetailsItem}>
-                    <span className={styles.userDetailsLabel}>총 접근 로그</span>
-                    <span className={styles.userDetailsValue}>{userAccessLogs.length}회</span>
-                  </div>
-                  <div className={styles.userDetailsItem}>
-                    <span className={styles.userDetailsLabel}>총 조회수</span>
-                    <span className={styles.userDetailsValue}>
-                      {userShareLinks.reduce((sum, link) => sum + link.viewCount, 0)}회
-                    </span>
-                  </div>
+            {/* 활동 통계 */}
+            <div className={styles.detailsBlock}>
+              <h3 className={styles.userDetailsSectionTitle}>활동 통계</h3>
+              <div className={styles.userDetailsGrid}>
+                <div className={styles.userDetailsItem}>
+                  <span className={styles.userDetailsLabel}>총 프로젝트</span>
+                  <span className={styles.userDetailsValue}>{userProjects.length}개</span>
+                </div>
+                <div className={styles.userDetailsItem}>
+                  <span className={styles.userDetailsLabel}>총 디자인 파일</span>
+                  <span className={styles.userDetailsValue}>{userDesignFiles.length}개</span>
+                </div>
+                <div className={styles.userDetailsItem}>
+                  <span className={styles.userDetailsLabel}>생성한 공유 링크</span>
+                  <span className={styles.userDetailsValue}>{userShareLinks.length}개</span>
+                </div>
+                <div className={styles.userDetailsItem}>
+                  <span className={styles.userDetailsLabel}>접근 권한</span>
+                  <span className={styles.userDetailsValue}>{userSharedAccess.length}개</span>
+                </div>
+                <div className={styles.userDetailsItem}>
+                  <span className={styles.userDetailsLabel}>총 접근 로그</span>
+                  <span className={styles.userDetailsValue}>{userAccessLogs.length}회</span>
+                </div>
+                <div className={styles.userDetailsItem}>
+                  <span className={styles.userDetailsLabel}>총 조회수</span>
+                  <span className={styles.userDetailsValue}>
+                    {userShareLinks.reduce((sum, link) => sum + link.viewCount, 0)}회
+                  </span>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         </div>
