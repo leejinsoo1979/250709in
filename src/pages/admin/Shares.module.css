@@ -1,0 +1,324 @@
+.container {
+  padding: 40px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header {
+  margin-bottom: 24px;
+}
+
+.title {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--theme-text, #1f2937);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+/* 탭 */
+.tabs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  border-bottom: 2px solid var(--theme-border, #e5e7eb);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  color: var(--theme-text-secondary, #6b7280);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab:hover {
+  color: var(--theme-primary, #667eea);
+}
+
+.tabActive {
+  color: var(--theme-primary, #667eea);
+  border-bottom-color: var(--theme-primary, #667eea);
+}
+
+/* 컨텐츠 */
+.content {
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 24px;
+  min-height: 600px;
+}
+
+/* 검색 */
+.searchBar {
+  margin-bottom: 20px;
+}
+
+.searchInput {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 16px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--theme-primary, #667eea);
+  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+}
+
+.searchInput::placeholder {
+  color: var(--theme-text-muted, #9ca3af);
+}
+
+/* 로딩 */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--theme-border, #e5e7eb);
+  border-top-color: var(--theme-primary, #667eea);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+/* 테이블 */
+.tableContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  background: var(--theme-background, #f9fafb);
+  border-bottom: 2px solid var(--theme-border, #e5e7eb);
+}
+
+.table th {
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+  transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background: var(--theme-background, #f9fafb);
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table td {
+  padding: 16px;
+  font-size: 14px;
+  color: var(--theme-text, #1f2937);
+}
+
+/* 프로젝트 정보 */
+.projectInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.projectIcon {
+  color: var(--theme-primary, #667eea);
+  flex-shrink: 0;
+}
+
+.projectName {
+  font-weight: 600;
+  color: var(--theme-text, #1f2937);
+}
+
+/* 사용자 정보 */
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.userName {
+  font-weight: 600;
+  color: var(--theme-text, #1f2937);
+}
+
+.userEmail {
+  font-size: 13px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+/* 토큰 */
+.token {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.token code {
+  background: var(--theme-background, #f3f4f6);
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* 카운트 */
+.count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.count svg {
+  color: var(--theme-primary, #667eea);
+}
+
+/* 날짜 */
+.date {
+  color: var(--theme-text-secondary, #6b7280);
+  font-size: 13px;
+}
+
+/* 배지 */
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 권한 배지 */
+.permissionOwner {
+  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+  color: white;
+}
+
+.permissionEditor {
+  background: var(--theme-primary-light, rgba(102, 126, 234, 0.2));
+  color: var(--theme-primary, #667eea);
+}
+
+.permissionViewer {
+  background: var(--theme-background, #f3f4f6);
+  color: var(--theme-text-muted, #9ca3af);
+}
+
+/* 상태 배지 */
+.statusActive {
+  background: var(--theme-success-light, rgba(16, 185, 129, 0.2));
+  color: var(--theme-success, #10b981);
+}
+
+.statusInactive {
+  background: var(--theme-background, #f3f4f6);
+  color: var(--theme-text-muted, #9ca3af);
+}
+
+.statusExpired {
+  background: var(--theme-error-light, rgba(239, 68, 68, 0.2));
+  color: var(--theme-error, #ef4444);
+}
+
+/* Empty State */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.emptyState svg {
+  color: var(--theme-text-muted, #9ca3af);
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 14px;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .tab {
+    white-space: nowrap;
+  }
+
+  .searchInput {
+    max-width: 100%;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px 8px;
+  }
+}

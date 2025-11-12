@@ -3,7 +3,7 @@ import { useNavigate, Outlet, NavLink } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
 import { useAdmin } from '@/hooks/useAdmin';
 import { UserIcon, UsersIcon, SettingsIcon, LogOutIcon } from '@/components/common/Icons';
-import { HiOutlineOfficeBuilding, HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder } from 'react-icons/hi';
+import { HiOutlineOfficeBuilding, HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder, HiOutlineShare } from 'react-icons/hi';
 import { VscServerProcess } from 'react-icons/vsc';
 import styles from './AdminLayout.module.css';
 
@@ -101,6 +101,14 @@ const AdminLayout = () => {
           >
             <HiOutlineFolder size={20} />
             <span>프로젝트 관리</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/shares"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineShare size={20} />
+            <span>공유 관리</span>
           </NavLink>
 
           <NavLink
