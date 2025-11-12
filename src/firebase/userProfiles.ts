@@ -625,6 +625,20 @@ export const checkCredits = async (requiredCredits: number = 20): Promise<{
       return { hasEnough: false, currentCredits: 0, error: '로그인이 필요합니다.' };
     }
 
+    // 슈퍼 관리자 권한 체크
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      if (userData.role === 'superadmin') {
+        console.log('✅ 슈퍼 관리자 권한 - 크레딧 체크 무시');
+        return {
+          hasEnough: true,
+          currentCredits: 999999, // 무제한 표시
+          error: null
+        };
+      }
+    }
+
     const { profile, error } = await getUserProfile();
     if (error || !profile) {
       return { hasEnough: false, currentCredits: 0, error: error || '프로필을 찾을 수 없습니다.' };
@@ -652,6 +666,20 @@ export const deductCredits = async (amount: number = 20): Promise<{
     const user = await getCurrentUserAsync();
     if (!user) {
       return { success: false, remainingCredits: 0, error: '로그인이 필요합니다.' };
+    }
+
+    // 슈퍼 관리자 권한 체크
+    const userDoc = await getDoc(doc(db, 'users', user.uid));
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      if (userData.role === 'superadmin') {
+        console.log('✅ 슈퍼 관리자 권한 - 크레딧 차감 무시');
+        return {
+          success: true,
+          remainingCredits: 999999, // 무제한 표시
+          error: null
+        };
+      }
     }
 
     // 현재 크레딧 확인

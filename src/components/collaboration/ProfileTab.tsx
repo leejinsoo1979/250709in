@@ -16,6 +16,8 @@ import { uploadProfileImage, deleteProfileImage } from '../../firebase/storage';
 import { useAuth } from '../../auth/AuthProvider';
 import { signOutUser, changePassword, deleteAccount } from '../../firebase/auth';
 import { useNavigate } from 'react-router-dom';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../../firebase/config';
 import styles from './CollaborationTabs.module.css';
 
 interface ProfileTabProps {
@@ -57,6 +59,9 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [loadingStats, setLoadingStats] = useState(false);
 
+  // 슈퍼 관리자 권한
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
   // 비밀번호 변경
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
@@ -75,6 +80,13 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
     setError(null);
 
     try {
+      // 슈퍼 관리자 권한 체크
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setIsSuperAdmin(userData.role === 'superadmin');
+      }
+
       const { profile: fetchedProfile, error: fetchError } = await getUserProfile();
 
       // 프로필이 없는 경우 (신규 사용자) 기본값으로 초기화
@@ -795,28 +807,46 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
                 <div className={styles.currentPlan}>
                   <div className={styles.planHeader}>
                     <div>
-                      <h4>무료 플랜</h4>
-                      <p>기본 기능을 사용할 수 있습니다.</p>
+                      <h4>{isSuperAdmin ? '무제한 플랜' : '무료 플랜'}</h4>
+                      <p>{isSuperAdmin ? '모든 기능을 무제한으로 사용할 수 있습니다.' : '기본 기능을 사용할 수 있습니다.'}</p>
                     </div>
-                    <span className={styles.planBadge}>FREE</span>
+                    <span className={styles.planBadge}>{isSuperAdmin ? 'UNLIMITED' : 'FREE'}</span>
                   </div>
 
                   <div className={styles.planFeatures}>
-                    <div className={styles.featureItem}>
-                      <span>✓</span> 프로젝트 5개까지
-                    </div>
-                    <div className={styles.featureItem}>
-                      <span>✓</span> 기본 3D 렌더링
-                    </div>
-                    <div className={styles.featureItem}>
-                      <span>✓</span> 커뮤니티 지원
-                    </div>
+                    {isSuperAdmin ? (
+                      <>
+                        <div className={styles.featureItem}>
+                          <span>✓</span> 무제한 프로젝트
+                        </div>
+                        <div className={styles.featureItem}>
+                          <span>✓</span> 무제한 크레딧
+                        </div>
+                        <div className={styles.featureItem}>
+                          <span>✓</span> 모든 기능 사용 가능
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className={styles.featureItem}>
+                          <span>✓</span> 프로젝트 5개까지
+                        </div>
+                        <div className={styles.featureItem}>
+                          <span>✓</span> 기본 3D 렌더링
+                        </div>
+                        <div className={styles.featureItem}>
+                          <span>✓</span> 커뮤니티 지원
+                        </div>
+                      </>
+                    )}
                   </div>
 
-                  <button className={styles.upgradeButton}>
-                    <CreditCard size={16} />
-                    Pro로 업그레이드
-                  </button>
+                  {!isSuperAdmin && (
+                    <button className={styles.upgradeButton}>
+                      <CreditCard size={16} />
+                      Pro로 업그레이드
+                    </button>
+                  )}
                 </div>
 
                 <div className={styles.usageStats}>

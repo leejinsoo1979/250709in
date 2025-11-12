@@ -5,6 +5,8 @@ import { signOutUser } from '@/firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/i18n/useTranslation';
 import { getUsageStats, UsageStats, getUserProfile } from '@/firebase/userProfiles';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/firebase/config';
 import styles from './ProfilePopup.module.css';
 
 interface ProfilePopupProps {
@@ -19,19 +21,39 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   const { t, currentLanguage } = useTranslation();
   const [usageStats, setUsageStats] = useState<UsageStats | null>(null);
   const [credits, setCredits] = useState<number>(0);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean>(false);
 
   // 사용량 통계 및 크레딧 가져오기
   useEffect(() => {
     if (isOpen && user) {
-      getUsageStats().then(({ stats }) => {
-        if (stats) {
-          setUsageStats(stats);
+      // 슈퍼 관리자 권한 체크
+      getDoc(doc(db, 'users', user.uid)).then((userDoc) => {
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const isSuperAdminUser = userData.role === 'superadmin';
+          setIsSuperAdmin(isSuperAdminUser);
+
+          if (isSuperAdminUser) {
+            setCredits(999999); // 무제한 크레딧 표시
+          } else {
+            getUserProfile().then(({ profile }) => {
+              if (profile) {
+                setCredits(profile.credits ?? 200);
+              }
+            });
+          }
+        } else {
+          getUserProfile().then(({ profile }) => {
+            if (profile) {
+              setCredits(profile.credits ?? 200);
+            }
+          });
         }
       });
 
-      getUserProfile().then(({ profile }) => {
-        if (profile) {
-          setCredits(profile.credits ?? 200); // undefined면 200으로 표시
+      getUsageStats().then(({ stats }) => {
+        if (stats) {
+          setUsageStats(stats);
         }
       });
     }
@@ -171,7 +193,7 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
               <span className={styles.subscriptionLabel}>구독 플랜</span>
             </div>
             <div className={styles.subscriptionContent}>
-              <div className={styles.planBadge}>무료 플랜</div>
+              <div className={styles.planBadge}>{isSuperAdmin ? '무제한 플랜' : '무료 플랜'}</div>
 
               {/* 크레딧 정보 */}
               <div className={styles.creditInfo}>
@@ -181,15 +203,15 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                     <span>보유 크레딧</span>
                   </div>
                   <div className={styles.creditNote}>
-                    디자인 파일당 20 소모
+                    {isSuperAdmin ? '무제한 사용 가능' : '디자인 파일당 20 소모'}
                   </div>
                 </div>
                 <div className={styles.creditAmount}>
-                  {credits} <span className={styles.creditUnit}>크레딧</span>
+                  {isSuperAdmin ? '∞' : credits} <span className={styles.creditUnit}>{isSuperAdmin ? '' : '크레딧'}</span>
                 </div>
               </div>
 
-              {usageStats && (
+              {usageStats && !isSuperAdmin && (
                 <div className={styles.planStats}>
                   <div className={styles.planStat}>
                     <span className={styles.statLabel}>프로젝트</span>
@@ -197,15 +219,17 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                   </div>
                 </div>
               )}
-              <button
-                className={styles.upgradeButton}
-                onClick={() => {
-                  onClose();
-                  navigate('/dashboard/profile?section=subscription');
-                }}
-              >
-                플랜 업그레이드
-              </button>
+              {!isSuperAdmin && (
+                <button
+                  className={styles.upgradeButton}
+                  onClick={() => {
+                    onClose();
+                    navigate('/dashboard/profile?section=subscription');
+                  }}
+                >
+                  플랜 업그레이드
+                </button>
+              )}
             </div>
           </div>
         </div>
