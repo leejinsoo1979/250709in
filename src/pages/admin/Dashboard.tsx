@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
-import { collection, getCountFromServer, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { UsersIcon } from '@/components/common/Icons';
 import { HiOutlineOfficeBuilding, HiOutlineChartBar, HiOutlineBriefcase, HiOutlineTrendingUp, HiOutlineClock, HiOutlineUserGroup } from 'react-icons/hi';
@@ -54,20 +54,39 @@ const Dashboard = () => {
       try {
         setStatsLoading(true);
 
-        // 기본 통계
+        // 기본 통계 - getDocs로 변경 (getCountFromServer 권한 문제 해결)
         console.log('📊 기본 통계 조회 중...');
+
+        const usersQuery = query(collection(db, 'users'));
+        const orgsQuery = query(collection(db, 'organizations'));
+        const projectsQuery = query(collection(db, 'projects'));
+        const designsQuery = query(collection(db, 'designFiles'));
+
+        console.log('📊 쿼리 실행 중...');
         const [usersSnapshot, orgsSnapshot, projectsSnapshot, designsSnapshot] = await Promise.all([
-          getCountFromServer(collection(db, 'users')),
-          getCountFromServer(collection(db, 'organizations')),
-          getCountFromServer(collection(db, 'projects')),
-          getCountFromServer(collection(db, 'designFiles'))
+          getDocs(usersQuery).catch(err => {
+            console.error('❌ users 조회 실패:', err);
+            return { size: 0, docs: [] };
+          }),
+          getDocs(orgsQuery).catch(err => {
+            console.error('❌ organizations 조회 실패:', err);
+            return { size: 0, docs: [] };
+          }),
+          getDocs(projectsQuery).catch(err => {
+            console.error('❌ projects 조회 실패:', err);
+            return { size: 0, docs: [] };
+          }),
+          getDocs(designsQuery).catch(err => {
+            console.error('❌ designFiles 조회 실패:', err);
+            return { size: 0, docs: [] };
+          })
         ]);
 
         console.log('📊 기본 통계 결과:', {
-          users: usersSnapshot.data().count,
-          orgs: orgsSnapshot.data().count,
-          projects: projectsSnapshot.data().count,
-          designs: designsSnapshot.data().count
+          users: usersSnapshot.size,
+          orgs: orgsSnapshot.size,
+          projects: projectsSnapshot.size,
+          designs: designsSnapshot.size
         });
 
         // 오늘 가입한 사용자 (오늘 00:00:00부터)
@@ -80,8 +99,11 @@ const Dashboard = () => {
           collection(db, 'users'),
           where('createdAt', '>=', todayTimestamp)
         );
-        const newUsersTodaySnapshot = await getCountFromServer(newUsersTodayQuery);
-        console.log('📊 오늘 신규 사용자:', newUsersTodaySnapshot.data().count);
+        const newUsersTodaySnapshot = await getDocs(newUsersTodayQuery).catch(err => {
+          console.error('❌ 오늘 신규 사용자 조회 실패:', err);
+          return { size: 0, docs: [] };
+        });
+        console.log('📊 오늘 신규 사용자:', newUsersTodaySnapshot.size);
 
         // 이번 달 가입한 사용자 (이번 달 1일 00:00:00부터)
         const firstDayOfMonth = new Date();
@@ -94,8 +116,11 @@ const Dashboard = () => {
           collection(db, 'users'),
           where('createdAt', '>=', monthTimestamp)
         );
-        const newUsersMonthSnapshot = await getCountFromServer(newUsersMonthQuery);
-        console.log('📊 이번 달 신규 사용자:', newUsersMonthSnapshot.data().count);
+        const newUsersMonthSnapshot = await getDocs(newUsersMonthQuery).catch(err => {
+          console.error('❌ 이번 달 신규 사용자 조회 실패:', err);
+          return { size: 0, docs: [] };
+        });
+        console.log('📊 이번 달 신규 사용자:', newUsersMonthSnapshot.size);
 
         // 활성 사용자 (최근 7일 이내 로그인)
         const weekAgo = new Date();
@@ -107,17 +132,20 @@ const Dashboard = () => {
           collection(db, 'users'),
           where('lastLoginAt', '>=', weekTimestamp)
         );
-        const activeUsersSnapshot = await getCountFromServer(activeUsersQuery);
-        console.log('📊 활성 사용자:', activeUsersSnapshot.data().count);
+        const activeUsersSnapshot = await getDocs(activeUsersQuery).catch(err => {
+          console.error('❌ 활성 사용자 조회 실패:', err);
+          return { size: 0, docs: [] };
+        });
+        console.log('📊 활성 사용자:', activeUsersSnapshot.size);
 
         const statsData = {
-          totalUsers: usersSnapshot.data().count,
-          totalOrganizations: orgsSnapshot.data().count,
-          totalProjects: projectsSnapshot.data().count,
-          totalDesigns: designsSnapshot.data().count,
-          activeUsers: activeUsersSnapshot.data().count,
-          newUsersThisMonth: newUsersMonthSnapshot.data().count,
-          newUsersToday: newUsersTodaySnapshot.data().count
+          totalUsers: usersSnapshot.size,
+          totalOrganizations: orgsSnapshot.size,
+          totalProjects: projectsSnapshot.size,
+          totalDesigns: designsSnapshot.size,
+          activeUsers: activeUsersSnapshot.size,
+          newUsersThisMonth: newUsersMonthSnapshot.size,
+          newUsersToday: newUsersTodaySnapshot.size
         };
 
         console.log('📊 최종 통계 데이터:', statsData);
