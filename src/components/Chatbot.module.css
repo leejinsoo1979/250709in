@@ -5,7 +5,7 @@
   right: 24px;
   width: 64px;
   height: 64px;
-  background: #4169ff;
+  background: var(--theme-primary, #667eea);
   border: none;
   border-radius: 50%;
   color: white;
@@ -13,18 +13,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 24px rgba(65, 105, 255, 0.4);
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
   transition: all 0.3s ease;
   z-index: 9998;
 }
 
 .floatingButton:hover {
   transform: scale(1.05);
-  box-shadow: 0 12px 32px rgba(65, 105, 255, 0.5);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.5);
 }
 
 .floatingButton.open {
-  background: #667eea;
+  background: var(--theme-primary-dark, #5568d3);
 }
 
 /* 챗봇 컨테이너 */
@@ -57,7 +57,7 @@
 
 /* 헤더 */
 .header {
-  background: #4169ff;
+  background: var(--theme-primary, #667eea);
   padding: 20px;
   color: white;
 }
@@ -77,7 +77,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #4169ff;
+  color: var(--theme-primary, #667eea);
 }
 
 .onlineDot {
@@ -139,7 +139,7 @@
 .botAvatar {
   width: 32px;
   height: 32px;
-  background: #4169ff;
+  background: var(--theme-primary, #667eea);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -162,7 +162,7 @@
 }
 
 .userMessage .messageBubble {
-  background: #4169ff;
+  background: var(--theme-primary, #667eea);
   color: white;
   border-radius: 16px 16px 4px 16px;
 }
@@ -195,7 +195,7 @@
 }
 
 .input:focus {
-  border-color: #4169ff;
+  border-color: var(--theme-primary, #667eea);
 }
 
 .input::placeholder {
@@ -205,7 +205,7 @@
 .sendButton {
   width: 40px;
   height: 40px;
-  background: #4169ff;
+  background: var(--theme-primary, #667eea);
   border: none;
   border-radius: 50%;
   color: white;
@@ -218,7 +218,7 @@
 }
 
 .sendButton:hover:not(:disabled) {
-  background: #3557e6;
+  background: var(--theme-primary-dark, #5568d3);
   transform: scale(1.05);
 }
 
