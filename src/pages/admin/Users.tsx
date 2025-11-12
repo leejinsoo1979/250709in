@@ -694,13 +694,13 @@ const Users = () => {
               <h2>{selectedUser.displayName || '이름 없음'}</h2>
               <p>{selectedUser.email}</p>
             </div>
-            </div>
-            <button className={styles.closeButton} onClick={closeUserDetails}>
+          </div>
+          <button className={styles.closeButton} onClick={closeUserDetails}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
-            </button>
-          </div>
+          </button>
+        </div>
 
           <div className={styles.userDetailsContent}>
             {/* 기본 정보 */}
@@ -936,11 +936,10 @@ const Users = () => {
                   </span>
                 </div>
               </div>
-            </div>
-            </div>
           </div>
         </div>
-      )}
+      </div>
+    )}
     </>
   );
 };
