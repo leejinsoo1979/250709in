@@ -24,6 +24,8 @@ const Chatbot = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
 
+  console.log('🔴 렌더링:', { isAdding, editingId });
+
   // 폼 상태
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
@@ -262,7 +264,8 @@ const Chatbot = () => {
 
       <div className={styles.content}>
         {/* 폼 */}
-        {(isAdding || editingId) && (
+        {console.log('조건 체크:', { isAdding, editingId, show: isAdding || editingId })}
+        {(isAdding || editingId) ? (
           <div className={styles.formSection} style={{ border: '2px solid red' }}>
             <div className={styles.formHeader}>
               <h2 className={styles.sectionTitle}>
@@ -360,6 +363,8 @@ const Chatbot = () => {
               </button>
             </div>
           </div>
+        ) : (
+          console.log('❌ 폼 숨김')
         )}
 
         {/* Q&A 목록 */}
