@@ -22,7 +22,7 @@ export const Chatbot: React.FC = () => {
       setMessages([
         {
           id: '1',
-          text: 'Hi there!\n\nI\'m Coo, your friendly customer support assistant.\n\n(support@coohom.com)',
+          text: 'Hi there!\n\nI\'m Befun chatbot, your friendly customer support assistant.\n\n(support@coohom.com)',
           isBot: true,
           timestamp: new Date(),
         },
@@ -96,7 +96,7 @@ export const Chatbot: React.FC = () => {
                 <MessageCircle size={24} />
                 <span className={styles.onlineDot} />
               </div>
-              <span className={styles.title}>Coo</span>
+              <span className={styles.title}>Befun chatbot</span>
             </div>
           </div>
 
