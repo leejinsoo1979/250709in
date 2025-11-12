@@ -245,6 +245,12 @@
   flex-shrink: 0;
 }
 
+.userIcon {
+  font-size: 20px;
+  color: var(--theme-text-secondary, #6b7280);
+  flex-shrink: 0;
+}
+
 .adminBadge {
   background: var(--theme-primary, #10b981);
   color: white;

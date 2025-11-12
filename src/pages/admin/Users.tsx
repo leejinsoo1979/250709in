@@ -6,6 +6,7 @@ import { SearchIcon } from '@/components/common/Icons';
 import { getAllAdmins, isSuperAdmin } from '@/firebase/admins';
 import { updateUserPlan, PLANS, PlanType } from '@/firebase/plans';
 import { GiImperialCrown } from 'react-icons/gi';
+import { FaUser } from 'react-icons/fa';
 import styles from './Users.module.css';
 
 interface UserData {
@@ -185,9 +186,11 @@ const Users = () => {
                 <tr key={targetUser.id}>
                   <td>
                     <div className={styles.userInfo}>
-                      {targetUser.isSuperAdmin && (
+                      {targetUser.isSuperAdmin ? (
                         <GiImperialCrown className={styles.crownIcon} />
-                      )}
+                      ) : !targetUser.isAdmin ? (
+                        <FaUser className={styles.userIcon} />
+                      ) : null}
                       <div className={styles.avatar}>
                         {targetUser.photoURL ? (
                           <img src={targetUser.photoURL} alt={targetUser.displayName || targetUser.email} />
