@@ -182,11 +182,12 @@
 }
 
 .filterDropdownItem:hover {
-  background: var(--theme-background-hover, #f3f4f6);
+  background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  color: var(--theme-primary, #667eea);
 }
 
 .filterDropdownItemActive {
-  background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  background: var(--theme-primary-light, rgba(102, 126, 234, 0.15));
   color: var(--theme-primary, #667eea);
 }
 
