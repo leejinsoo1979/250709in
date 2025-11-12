@@ -94,20 +94,52 @@ export const faqData: FAQ[] = [
 ];
 
 /**
- * 사용자 질문과 FAQ 매칭
+ * 두 문자열 간의 유사도 계산 (0~1 사이 값)
+ * Jaccard 유사도 기반
+ */
+function calculateSimilarity(str1: string, str2: string): number {
+  const words1 = new Set(str1.toLowerCase().split(/\s+/));
+  const words2 = new Set(str2.toLowerCase().split(/\s+/));
+
+  const intersection = new Set([...words1].filter(x => words2.has(x)));
+  const union = new Set([...words1, ...words2]);
+
+  return intersection.size / union.size;
+}
+
+/**
+ * 사용자 질문과 FAQ 매칭 (유사도 기반)
  * @param userInput 사용자 입력
  * @param defaultMessage 매칭 실패 시 기본 메시지 (Firebase에서 불러온 값 사용)
  */
 export function matchQuestion(userInput: string, defaultMessage?: string): string {
   const input = userInput.toLowerCase().trim();
 
-  // 키워드 매칭
+  // 유사도 기반 매칭
+  let bestMatch: { faq: FAQ; score: number } | null = null;
+
   for (const faq of faqData) {
+    // 모든 키워드와 유사도 계산
     for (const keyword of faq.keywords) {
-      if (input.includes(keyword.toLowerCase())) {
+      const keywordLower = keyword.toLowerCase();
+
+      // 정확한 매칭은 최고 점수
+      if (input.includes(keywordLower) || keywordLower.includes(input)) {
         return faq.answer;
       }
+
+      // 유사도 계산
+      const similarity = calculateSimilarity(input, keywordLower);
+
+      if (!bestMatch || similarity > bestMatch.score) {
+        bestMatch = { faq, score: similarity };
+      }
     }
+  }
+
+  // 유사도 임계값: 0.3 이상이면 답변 반환
+  if (bestMatch && bestMatch.score >= 0.3) {
+    return bestMatch.faq.answer;
   }
 
   // 매칭 실패 시 기본 답변 (Firebase 설정값 우선)
