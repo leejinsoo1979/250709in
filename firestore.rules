@@ -250,6 +250,12 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // 챗봇 설정 - 관리자만 쓰기, 모든 사용자는 읽기 가능
+    match /chatbotSettings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
     // 시스템 설정 - 관리자만 접근 가능
     match /systemSettings/{settingId} {
       allow read: if isAdmin();
