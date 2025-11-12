@@ -21,6 +21,7 @@ interface TeamMember {
   userId: string;
   email: string;
   displayName: string;
+  photoURL?: string;
   role: string;
   joinedAt: Date | null;
   status: string;
@@ -96,17 +97,41 @@ const Teams = () => {
       const membersSnapshot = await getDocs(collection(db, 'teams', teamId, 'members'));
 
       const membersData: TeamMember[] = [];
-      membersSnapshot.forEach(doc => {
-        const data = doc.data();
+
+      // 각 멤버에 대해 users 컬렉션에서 추가 정보 조회
+      for (const memberDoc of membersSnapshot.docs) {
+        const data = memberDoc.data();
+        const userId = memberDoc.id;
+
+        // users 컬렉션에서 실제 사용자 정보 조회
+        let photoURL = '';
+        let displayName = data.displayName || '이름 없음';
+        let email = data.email || '';
+
+        try {
+          const userDocRef = doc(db, 'users', userId);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            photoURL = userData.photoURL || '';
+            displayName = userData.displayName || userData.name || displayName;
+            email = userData.email || email;
+          }
+        } catch (error) {
+          console.warn('⚠️ 사용자 정보 조회 실패:', userId, error);
+        }
+
         membersData.push({
-          userId: doc.id,
-          email: data.email || '',
-          displayName: data.displayName || '이름 없음',
+          userId,
+          email,
+          displayName,
+          photoURL,
           role: data.role || 'member',
           joinedAt: data.joinedAt?.toDate?.() || null,
           status: data.status || 'active'
         });
-      });
+      }
 
       console.log('👥 멤버 데이터:', membersData);
       setTeamMembers(membersData);
@@ -258,6 +283,7 @@ const Teams = () => {
                   <thead>
                     <tr>
                       <th>사용자</th>
+                      <th>UID</th>
                       <th>이메일</th>
                       <th>역할</th>
                       <th>상태</th>
@@ -274,10 +300,19 @@ const Teams = () => {
                           <td>
                             <div className={styles.memberInfo}>
                               <div className={styles.memberAvatar}>
-                                {member.displayName.charAt(0).toUpperCase()}
+                                {member.photoURL ? (
+                                  <img src={member.photoURL} alt={member.displayName} />
+                                ) : (
+                                  <div className={styles.avatarPlaceholder}>
+                                    {member.displayName.charAt(0).toUpperCase()}
+                                  </div>
+                                )}
                               </div>
                               <span className={styles.memberName}>{member.displayName}</span>
                             </div>
+                          </td>
+                          <td>
+                            <span className={styles.uid}>{member.userId}</span>
                           </td>
                           <td className={styles.memberEmail}>{member.email}</td>
                           <td>
