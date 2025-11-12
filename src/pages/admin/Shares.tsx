@@ -68,7 +68,8 @@ const Shares = () => {
           if (data.projectId) {
             const projectDoc = await getDoc(doc(db, 'projects', data.projectId)).catch(() => null);
             if (projectDoc?.exists()) {
-              projectName = projectDoc.data()?.projectName || '';
+              const projectData = projectDoc.data();
+              projectName = projectData?.title || projectData?.projectName || projectData?.name || '';
             }
           }
 
@@ -123,7 +124,8 @@ const Shares = () => {
           if (data.projectId) {
             const projectDoc = await getDoc(doc(db, 'projects', data.projectId)).catch(() => null);
             if (projectDoc?.exists()) {
-              projectName = projectDoc.data()?.projectName || '';
+              const projectData = projectDoc.data();
+              projectName = projectData?.title || projectData?.projectName || projectData?.name || '';
             }
           }
 
@@ -249,7 +251,7 @@ const Shares = () => {
         <div className={styles.searchBar}>
           <input
             type="text"
-            placeholder={selectedTab === 'links' ? '프로젝트명, 생성자, 토큰으로 검색...' : '프로젝트명, 사용자, 공유자로 검색...'}
+            placeholder={selectedTab === 'links' ? '프로젝트명, 생성자, 링크 코드로 검색...' : '프로젝트명, 사용자, 공유자로 검색...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={styles.searchInput}
@@ -274,7 +276,7 @@ const Shares = () => {
                 <thead>
                   <tr>
                     <th>프로젝트</th>
-                    <th>토큰</th>
+                    <th>링크 코드</th>
                     <th>생성자</th>
                     <th>조회수</th>
                     <th>접근 로그</th>

@@ -199,26 +199,30 @@
   color: var(--theme-text-secondary, #6b7280);
 }
 
-/* 토큰 */
+/* 링크 코드 */
 .token {
   font-family: 'Courier New', monospace;
-  font-size: 13px;
+  font-size: 12px;
   color: var(--theme-text-secondary, #6b7280);
+  white-space: nowrap;
 }
 
 .token code {
   background: var(--theme-background, #f3f4f6);
   padding: 4px 8px;
   border-radius: 4px;
+  border: 1px solid var(--theme-border, #e5e7eb);
 }
 
 /* 카운트 */
 .count {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
   color: var(--theme-text-secondary, #6b7280);
   white-space: nowrap;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .count svg {
@@ -229,7 +233,8 @@
 /* 날짜 */
 .date {
   color: var(--theme-text-secondary, #6b7280);
-  font-size: 13px;
+  font-size: 14px;
+  white-space: nowrap;
 }
 
 /* 배지 */
