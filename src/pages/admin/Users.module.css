@@ -215,6 +215,186 @@
   margin: 0;
 }
 
+/* 권한 배지 */
+.roleBadges {
+  display: flex;
+  gap: 6px;
+}
+
+.superAdminBadge,
+.adminBadge,
+.userBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.superAdminBadge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.adminBadge {
+  background: var(--theme-primary, #10b981);
+  color: white;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.userBadge {
+  background: var(--theme-background, #f3f4f6);
+  color: var(--theme-text-secondary, #6b7280);
+  border: 1px solid var(--theme-border, #e5e7eb);
+}
+
+/* 관리 버튼 */
+.grantButton,
+.revokeButton {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.grantButton {
+  background: var(--theme-primary, #10b981);
+  color: white;
+}
+
+.grantButton:hover {
+  background: var(--theme-primary-hover, #059669);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.revokeButton {
+  background: #ef4444;
+  color: white;
+}
+
+.revokeButton:hover {
+  background: #dc2626;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.disabledText {
+  font-size: 13px;
+  color: var(--theme-text-secondary, #9ca3af);
+}
+
+/* 확인 다이얼로그 */
+.dialogOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.dialog {
+  background: var(--theme-surface, white);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 420px;
+  width: 90%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.dialogTitle {
+  margin: 0 0 16px 0;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--theme-text, #1f2937);
+}
+
+.dialogMessage {
+  margin: 0 0 24px 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.dialogMessage strong {
+  color: var(--theme-text, #1f2937);
+  font-weight: 600;
+}
+
+.dialogActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.cancelButton,
+.confirmButton,
+.confirmRevokeButton {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.cancelButton {
+  background: var(--theme-background, #f3f4f6);
+  color: var(--theme-text, #1f2937);
+}
+
+.cancelButton:hover {
+  background: var(--theme-background-hover, #e5e7eb);
+}
+
+.confirmButton {
+  background: var(--theme-primary, #10b981);
+  color: white;
+}
+
+.confirmButton:hover {
+  background: var(--theme-primary-hover, #059669);
+  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.4);
+}
+
+.confirmRevokeButton {
+  background: #ef4444;
+  color: white;
+}
+
+.confirmRevokeButton:hover {
+  background: #dc2626;
+  box-shadow: 0 2px 12px rgba(239, 68, 68, 0.4);
+}
+
 /* 반응형 */
 @media (max-width: 1024px) {
   .container {
