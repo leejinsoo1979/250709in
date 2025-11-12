@@ -134,6 +134,34 @@
   color: var(--theme-primary, #667eea);
 }
 
+/* 차트 그리드 */
+.chartsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.chartCard {
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 24px;
+  transition: all 0.2s ease;
+}
+
+.chartCard:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-color: var(--theme-primary, #667eea);
+}
+
+.chartTitle {
+  margin: 0 0 20px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--theme-text, #1f2937);
+}
+
 /* 섹션 */
 .section {
   background: var(--theme-surface, #ffffff);
@@ -291,5 +319,9 @@
   .activityTable th,
   .activityTable td {
     padding: 12px 8px;
+  }
+
+  .chartsGrid {
+    grid-template-columns: 1fr;
   }
 }
