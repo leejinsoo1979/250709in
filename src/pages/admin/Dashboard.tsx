@@ -276,7 +276,7 @@ const Dashboard = () => {
       <div className={styles.statsGrid}>
         <div className={styles.statCard}>
           <div className={styles.statIcon}>
-            <UsersIcon size={24} />
+            <UsersIcon size={28} />
           </div>
           <div className={styles.statContent}>
             <h3 className={styles.statLabel}>전체 사용자</h3>
@@ -292,7 +292,7 @@ const Dashboard = () => {
 
         <div className={styles.statCard}>
           <div className={styles.statIcon}>
-            <HiOutlineUserGroup size={24} />
+            <HiOutlineUserGroup size={28} />
           </div>
           <div className={styles.statContent}>
             <h3 className={styles.statLabel}>활성 사용자 (7일)</h3>
@@ -307,7 +307,7 @@ const Dashboard = () => {
 
         <div className={styles.statCard}>
           <div className={styles.statIcon}>
-            <HiOutlineTrendingUp size={24} />
+            <HiOutlineTrendingUp size={28} />
           </div>
           <div className={styles.statContent}>
             <h3 className={styles.statLabel}>이번 달 신규 가입</h3>
@@ -322,7 +322,7 @@ const Dashboard = () => {
 
         <div className={styles.statCard}>
           <div className={styles.statIcon}>
-            <HiOutlineOfficeBuilding size={24} />
+            <HiOutlineOfficeBuilding size={28} />
           </div>
           <div className={styles.statContent}>
             <h3 className={styles.statLabel}>조직</h3>
@@ -335,7 +335,7 @@ const Dashboard = () => {
 
         <div className={styles.statCard}>
           <div className={styles.statIcon}>
-            <HiOutlineChartBar size={24} />
+            <HiOutlineChartBar size={28} />
           </div>
           <div className={styles.statContent}>
             <h3 className={styles.statLabel}>프로젝트</h3>
@@ -350,7 +350,7 @@ const Dashboard = () => {
 
         <div className={styles.statCard}>
           <div className={styles.statIcon}>
-            <HiOutlineBriefcase size={24} />
+            <HiOutlineBriefcase size={28} />
           </div>
           <div className={styles.statContent}>
             <h3 className={styles.statLabel}>디자인 파일</h3>
