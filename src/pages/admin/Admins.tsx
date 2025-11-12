@@ -23,6 +23,22 @@ interface UserData {
   isSuperAdmin?: boolean;
 }
 
+interface Permission {
+  id: string;
+  label: string;
+  description: string;
+}
+
+const PERMISSIONS: Permission[] = [
+  { id: 'dashboard', label: '대시보드 접근', description: '관리자 대시보드 조회' },
+  { id: 'users', label: '사용자 관리', description: '사용자 목록 조회 및 플랜 변경' },
+  { id: 'projects', label: '프로젝트 관리', description: '모든 프로젝트 조회 및 관리' },
+  { id: 'teams', label: '팀 관리', description: '팀 목록 조회 및 관리' },
+  { id: 'shares', label: '공유 관리', description: '공유 링크 및 접근 권한 관리' },
+  { id: 'logs', label: '로그 조회', description: '시스템 로그 및 활동 내역 조회' },
+  { id: 'notifications', label: '알림 관리', description: '알림 내역 조회 및 관리' }
+];
+
 const Admins = () => {
   const { user } = useAuth();
   const [users, setUsers] = useState<UserData[]>([]);
@@ -34,6 +50,9 @@ const Admins = () => {
     userName: string;
     isGranting: boolean;
   }>({ show: false, userId: '', userName: '', isGranting: false });
+  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(
+    PERMISSIONS.map(p => p.id)
+  );
 
   const currentUserIsSuperAdmin = isSuperAdmin(user?.email);
 
@@ -105,8 +124,18 @@ const Admins = () => {
     fetchUsers();
   }, []);
 
+  // 권한 토글
+  const togglePermission = (permissionId: string) => {
+    setSelectedPermissions(prev =>
+      prev.includes(permissionId)
+        ? prev.filter(id => id !== permissionId)
+        : [...prev, permissionId]
+    );
+  };
+
   // 권한 부여 확인 다이얼로그 열기
   const openGrantDialog = (userId: string, userName: string) => {
+    setSelectedPermissions(PERMISSIONS.map(p => p.id)); // 모든 권한 선택으로 초기화
     setConfirmDialog({
       show: true,
       userId,
@@ -311,6 +340,29 @@ const Admins = () => {
                 ? '관리자 권한을 부여하시겠습니까?'
                 : '관리자 권한을 해제하시겠습니까?'}
             </p>
+
+            {confirmDialog.isGranting && (
+              <div className={styles.permissionsBox}>
+                <p className={styles.permissionsTitle}>부여할 권한 선택</p>
+                <div className={styles.permissionsList}>
+                  {PERMISSIONS.map(permission => (
+                    <label key={permission.id} className={styles.permissionItem}>
+                      <input
+                        type="checkbox"
+                        checked={selectedPermissions.includes(permission.id)}
+                        onChange={() => togglePermission(permission.id)}
+                        className={styles.permissionCheckbox}
+                      />
+                      <div className={styles.permissionInfo}>
+                        <span className={styles.permissionLabel}>{permission.label}</span>
+                        <span className={styles.permissionDescription}>{permission.description}</span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className={styles.dialogActions}>
               <button
                 className={styles.cancelButton}
