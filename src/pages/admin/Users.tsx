@@ -5,6 +5,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { SearchIcon } from '@/components/common/Icons';
 import { getAllAdmins, isSuperAdmin } from '@/firebase/admins';
 import { updateUserPlan, PLANS, PlanType } from '@/firebase/plans';
+import { GiImperialCrown } from 'react-icons/gi';
 import styles from './Users.module.css';
 
 interface UserData {
@@ -202,7 +203,10 @@ const Users = () => {
                   <td>
                     <div className={styles.roleBadges}>
                       {targetUser.isSuperAdmin && (
-                        <span className={styles.superAdminBadge}>슈퍼 관리자</span>
+                        <span className={styles.superAdminBadge}>
+                          <GiImperialCrown className={styles.crownIcon} />
+                          슈퍼 관리자
+                        </span>
                       )}
                       {targetUser.isAdmin && !targetUser.isSuperAdmin && (
                         <span className={styles.adminBadge}>관리자</span>
