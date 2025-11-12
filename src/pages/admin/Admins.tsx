@@ -10,7 +10,7 @@ import {
   isSuperAdmin
 } from '@/firebase/admins';
 import { GiImperialCrown } from 'react-icons/gi';
-import { FaUser } from 'react-icons/fa';
+import { FiUser } from 'react-icons/fi';
 import { PiMedal } from 'react-icons/pi';
 import styles from './Admins.module.css';
 
@@ -480,7 +480,7 @@ const Admins = () => {
                       ) : targetUser.isAdmin ? (
                         <PiMedal className={styles.medalIcon} />
                       ) : (
-                        <FaUser className={styles.userIcon} />
+                        <FiUser className={styles.userIcon} />
                       )}
                       <div className={styles.avatar}>
                         {targetUser.photoURL ? (
