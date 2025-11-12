@@ -292,6 +292,7 @@ const Users = () => {
     });
 
   return (
+    <>
     <div className={styles.container}>
       <div className={styles.header}>
         <div>
@@ -609,9 +610,9 @@ const Users = () => {
           </table>
         )}
       </div>
+    </div>
 
-      <>
-        {/* 플랜 변경 다이얼로그 */}
+      {/* 플랜 변경 다이얼로그 */}
         {planDialog.show && (
           <div className={styles.dialogOverlay}>
             <div className={styles.dialog}>
@@ -940,8 +941,7 @@ const Users = () => {
           </div>
         </div>
       )}
-      </>
-    </div>
+    </>
   );
 };
 
