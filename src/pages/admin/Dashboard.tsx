@@ -43,13 +43,19 @@ const Dashboard = () => {
 
   // Firebase 통계 데이터 가져오기
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      console.log('📊 Dashboard: user 없음');
+      return;
+    }
+
+    console.log('📊 Dashboard: 통계 데이터 가져오기 시작');
 
     const fetchStats = async () => {
       try {
         setStatsLoading(true);
 
         // 기본 통계
+        console.log('📊 기본 통계 조회 중...');
         const [usersSnapshot, orgsSnapshot, projectsSnapshot, designsSnapshot] = await Promise.all([
           getCountFromServer(collection(db, 'users')),
           getCountFromServer(collection(db, 'organizations')),
@@ -57,16 +63,25 @@ const Dashboard = () => {
           getCountFromServer(collection(db, 'designFiles'))
         ]);
 
+        console.log('📊 기본 통계 결과:', {
+          users: usersSnapshot.data().count,
+          orgs: orgsSnapshot.data().count,
+          projects: projectsSnapshot.data().count,
+          designs: designsSnapshot.data().count
+        });
+
         // 오늘 가입한 사용자 (오늘 00:00:00부터)
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const todayTimestamp = Timestamp.fromDate(today);
 
+        console.log('📊 오늘 신규 사용자 조회 중...', today);
         const newUsersTodayQuery = query(
           collection(db, 'users'),
           where('createdAt', '>=', todayTimestamp)
         );
         const newUsersTodaySnapshot = await getCountFromServer(newUsersTodayQuery);
+        console.log('📊 오늘 신규 사용자:', newUsersTodaySnapshot.data().count);
 
         // 이번 달 가입한 사용자 (이번 달 1일 00:00:00부터)
         const firstDayOfMonth = new Date();
@@ -74,24 +89,28 @@ const Dashboard = () => {
         firstDayOfMonth.setHours(0, 0, 0, 0);
         const monthTimestamp = Timestamp.fromDate(firstDayOfMonth);
 
+        console.log('📊 이번 달 신규 사용자 조회 중...', firstDayOfMonth);
         const newUsersMonthQuery = query(
           collection(db, 'users'),
           where('createdAt', '>=', monthTimestamp)
         );
         const newUsersMonthSnapshot = await getCountFromServer(newUsersMonthQuery);
+        console.log('📊 이번 달 신규 사용자:', newUsersMonthSnapshot.data().count);
 
         // 활성 사용자 (최근 7일 이내 로그인)
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
         const weekTimestamp = Timestamp.fromDate(weekAgo);
 
+        console.log('📊 활성 사용자 조회 중...', weekAgo);
         const activeUsersQuery = query(
           collection(db, 'users'),
           where('lastLoginAt', '>=', weekTimestamp)
         );
         const activeUsersSnapshot = await getCountFromServer(activeUsersQuery);
+        console.log('📊 활성 사용자:', activeUsersSnapshot.data().count);
 
-        setStats({
+        const statsData = {
           totalUsers: usersSnapshot.data().count,
           totalOrganizations: orgsSnapshot.data().count,
           totalProjects: projectsSnapshot.data().count,
@@ -99,9 +118,12 @@ const Dashboard = () => {
           activeUsers: activeUsersSnapshot.data().count,
           newUsersThisMonth: newUsersMonthSnapshot.data().count,
           newUsersToday: newUsersTodaySnapshot.data().count
-        });
+        };
+
+        console.log('📊 최종 통계 데이터:', statsData);
+        setStats(statsData);
       } catch (error) {
-        console.error('통계 데이터 가져오기 오류:', error);
+        console.error('❌ 통계 데이터 가져오기 오류:', error);
       } finally {
         setStatsLoading(false);
       }
@@ -127,17 +149,24 @@ const Dashboard = () => {
 
   // 최근 활동 가져오기
   useEffect(() => {
-    if (!user) return;
+    if (!user) {
+      console.log('📋 최근 활동: user 없음');
+      return;
+    }
+
+    console.log('📋 최근 활동 가져오기 시작');
 
     const fetchRecentActivities = async () => {
       try {
         // 최근 생성된 사용자
+        console.log('📋 최근 사용자 조회 중...');
         const recentUsersQuery = query(
           collection(db, 'users'),
           orderBy('createdAt', 'desc'),
           limit(10)
         );
         const usersSnapshot = await getDocs(recentUsersQuery);
+        console.log('📋 최근 사용자 개수:', usersSnapshot.size);
 
         const activities: RecentActivity[] = [];
         usersSnapshot.forEach(doc => {
@@ -153,12 +182,14 @@ const Dashboard = () => {
         });
 
         // 최근 생성된 프로젝트
+        console.log('📋 최근 프로젝트 조회 중...');
         const recentProjectsQuery = query(
           collection(db, 'projects'),
           orderBy('createdAt', 'desc'),
           limit(5)
         );
         const projectsSnapshot = await getDocs(recentProjectsQuery);
+        console.log('📋 최근 프로젝트 개수:', projectsSnapshot.size);
 
         projectsSnapshot.forEach(doc => {
           const data = doc.data();
@@ -175,9 +206,13 @@ const Dashboard = () => {
         // 시간순 정렬
         activities.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
-        setRecentActivities(activities.slice(0, 10));
+        const finalActivities = activities.slice(0, 10);
+        console.log('📋 최종 활동 데이터 개수:', finalActivities.length);
+        console.log('📋 최종 활동 데이터:', finalActivities);
+
+        setRecentActivities(finalActivities);
       } catch (error) {
-        console.error('최근 활동 가져오기 오류:', error);
+        console.error('❌ 최근 활동 가져오기 오류:', error);
       }
     };
 
