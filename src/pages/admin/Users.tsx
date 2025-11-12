@@ -1,14 +1,8 @@
 import { useEffect, useState } from 'react';
 import { collection, query, getDocs, DocumentData } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { useAuth } from '@/auth/AuthProvider';
 import { SearchIcon } from '@/components/common/Icons';
-import {
-  getAllAdmins,
-  grantAdminRole,
-  revokeAdminRole,
-  isSuperAdmin
-} from '@/firebase/admins';
+import { getAllAdmins, isSuperAdmin } from '@/firebase/admins';
 import styles from './Users.module.css';
 
 interface UserData {
@@ -23,18 +17,9 @@ interface UserData {
 }
 
 const Users = () => {
-  const { user } = useAuth();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [confirmDialog, setConfirmDialog] = useState<{
-    show: boolean;
-    userId: string;
-    userName: string;
-    isGranting: boolean;
-  }>({ show: false, userId: '', userName: '', isGranting: false });
-
-  const currentUserIsSuperAdmin = isSuperAdmin(user?.email);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -91,62 +76,6 @@ const Users = () => {
     fetchUsers();
   }, []);
 
-  // 권한 부여 확인 다이얼로그 열기
-  const openGrantDialog = (userId: string, userName: string) => {
-    setConfirmDialog({
-      show: true,
-      userId,
-      userName,
-      isGranting: true
-    });
-  };
-
-  // 권한 해제 확인 다이얼로그 열기
-  const openRevokeDialog = (userId: string, userName: string) => {
-    setConfirmDialog({
-      show: true,
-      userId,
-      userName,
-      isGranting: false
-    });
-  };
-
-  // 권한 부여/해제 실행
-  const handleConfirm = async () => {
-    const { userId, isGranting } = confirmDialog;
-
-    try {
-      if (isGranting) {
-        const targetUser = users.find(u => u.id === userId);
-        if (!targetUser) return;
-
-        await grantAdminRole(
-          userId,
-          { email: targetUser.email, displayName: targetUser.displayName || '' },
-          user?.uid || ''
-        );
-        alert('✅ 관리자 권한이 부여되었습니다.');
-      } else {
-        await revokeAdminRole(userId);
-        alert('✅ 관리자 권한이 해제되었습니다.');
-      }
-
-      // 사용자 목록 새로고침
-      const adminsMap = await getAllAdmins();
-      setUsers(prevUsers =>
-        prevUsers.map(u =>
-          u.id === userId
-            ? { ...u, isAdmin: adminsMap.has(userId) }
-            : u
-        )
-      );
-    } catch (error) {
-      alert('❌ 작업 실패: ' + (error as Error).message);
-    } finally {
-      setConfirmDialog({ show: false, userId: '', userName: '', isGranting: false });
-    }
-  };
-
   const filteredUsers = users.filter(user => {
     const query = searchQuery.toLowerCase();
     return (
@@ -200,7 +129,6 @@ const Users = () => {
                 <th>UID</th>
                 <th>가입일</th>
                 <th>최근 로그인</th>
-                {currentUserIsSuperAdmin && <th>관리</th>}
               </tr>
             </thead>
             <tbody>
@@ -249,68 +177,12 @@ const Users = () => {
                       ? targetUser.lastLoginAt.toLocaleString('ko-KR')
                       : '-'}
                   </td>
-                  {currentUserIsSuperAdmin && (
-                    <td>
-                      {targetUser.isSuperAdmin ? (
-                        <span className={styles.disabledText}>수정 불가</span>
-                      ) : targetUser.isAdmin ? (
-                        <button
-                          className={styles.revokeButton}
-                          onClick={() => openRevokeDialog(targetUser.id, targetUser.displayName || targetUser.email)}
-                        >
-                          권한 해제
-                        </button>
-                      ) : (
-                        <button
-                          className={styles.grantButton}
-                          onClick={() => openGrantDialog(targetUser.id, targetUser.displayName || targetUser.email)}
-                        >
-                          관리자 지정
-                        </button>
-                      )}
-                    </td>
-                  )}
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
-
-      {/* 권한 변경 확인 다이얼로그 */}
-      {confirmDialog.show && (
-        <div className={styles.dialogOverlay}>
-          <div className={styles.dialog}>
-            <h3 className={styles.dialogTitle}>
-              {confirmDialog.isGranting ? '관리자 권한 부여' : '관리자 권한 해제'}
-            </h3>
-            <p className={styles.dialogMessage}>
-              <strong>{confirmDialog.userName}</strong>님에게{' '}
-              {confirmDialog.isGranting
-                ? '관리자 권한을 부여하시겠습니까?'
-                : '관리자 권한을 해제하시겠습니까?'}
-            </p>
-            <div className={styles.dialogActions}>
-              <button
-                className={styles.cancelButton}
-                onClick={() =>
-                  setConfirmDialog({ show: false, userId: '', userName: '', isGranting: false })
-                }
-              >
-                취소
-              </button>
-              <button
-                className={
-                  confirmDialog.isGranting ? styles.confirmButton : styles.confirmRevokeButton
-                }
-                onClick={handleConfirm}
-              >
-                {confirmDialog.isGranting ? '권한 부여' : '권한 해제'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
