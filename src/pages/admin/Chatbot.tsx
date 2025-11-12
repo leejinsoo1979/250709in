@@ -106,7 +106,9 @@ const Chatbot = () => {
     }
 
     try {
-      await addDoc(collection(db, 'chatbotQAs'), {
+      console.log('🔄 Q&A 추가 시도...', { question, answer, category, priority, isActive });
+
+      const docRef = await addDoc(collection(db, 'chatbotQAs'), {
         question: question.trim(),
         answer: answer.trim(),
         category,
@@ -117,12 +119,14 @@ const Chatbot = () => {
         updatedAt: serverTimestamp()
       });
 
+      console.log('✅ Q&A 추가 성공:', docRef.id);
       alert('Q&A가 추가되었습니다.');
       resetForm();
-      loadQAs();
-    } catch (error) {
-      console.error('Q&A 추가 실패:', error);
-      alert('Q&A 추가에 실패했습니다.');
+      await loadQAs();
+    } catch (error: any) {
+      console.error('❌ Q&A 추가 실패:', error);
+      console.error('에러 상세:', error.message, error.code);
+      alert(`Q&A 추가에 실패했습니다.\n${error.message}`);
     }
   };
 
