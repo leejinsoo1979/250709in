@@ -40,10 +40,9 @@ const CreditErrorModal: React.FC<CreditErrorModalProps> = ({
               <circle cx="12" cy="16" r="1" fill="currentColor"/>
             </svg>
           </div>
-          <h2 className={creditStyles.modalTitle}>크레딧이 부족합니다</h2>
+          <h2 className={creditStyles.modalTitle}>무료 크레딧이 모두 소진되었습니다</h2>
           <p className={creditStyles.modalDescription}>
-            디자인 파일을 생성하려면 크레딧이 필요합니다.<br/>
-            크레딧을 충전하신 후 다시 시도해주세요.
+            현재 <strong>Free 플랜</strong>을 사용 중이며, 제공된 무료 크레딧을 모두 사용하셨습니다.
           </p>
         </div>
 
@@ -78,12 +77,27 @@ const CreditErrorModal: React.FC<CreditErrorModalProps> = ({
           </span>
         </div>
 
+        <div className={creditStyles.upgradeBox}>
+          <div className={creditStyles.upgradeHeader}>
+            <svg className={creditStyles.crownIcon} width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2L15 8L22 9L17 14L18 21L12 18L6 21L7 14L2 9L9 8L12 2Z" fill="currentColor"/>
+            </svg>
+            <span className={creditStyles.upgradeTitle}>Pro 플랜으로 업그레이드하세요</span>
+          </div>
+          <ul className={creditStyles.benefitList}>
+            <li>✓ 매월 1,000 크레딧 자동 충전</li>
+            <li>✓ 무제한 디자인 파일 생성</li>
+            <li>✓ 프리미엄 템플릿 무료 이용</li>
+            <li>✓ 우선 고객 지원</li>
+          </ul>
+        </div>
+
         <div className={creditStyles.modalFooter}>
           <button className={creditStyles.cancelBtn} onClick={onClose}>
-            취소
+            나중에 하기
           </button>
-          <button className={creditStyles.rechargeBtn} onClick={handleRecharge}>
-            크레딧 충전하기
+          <button className={creditStyles.upgradeBtn} onClick={handleRecharge}>
+            Pro 플랜 구독하기
           </button>
         </div>
       </div>

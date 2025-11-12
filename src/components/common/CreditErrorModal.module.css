@@ -1,6 +1,6 @@
 /* 모달 커스텀 */
 .creditModal {
-  width: 480px;
+  width: 520px;
   max-width: 90vw;
 }
 
@@ -117,6 +117,44 @@
   color: #d32f2f;
 }
 
+/* 업그레이드 안내 박스 */
+.upgradeBox {
+  padding: 24px 32px;
+  background: linear-gradient(135deg, #fffbf0 0%, #fff8e1 100%);
+  border: 2px dashed #ffa726;
+  margin: 0;
+}
+
+.upgradeHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.crownIcon {
+  color: #f57c00;
+}
+
+.upgradeTitle {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--theme-text, #1a1a1a);
+}
+
+.benefitList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.benefitList li {
+  font-size: 14px;
+  line-height: 2;
+  color: var(--theme-text-secondary, #666666);
+  padding-left: 0;
+}
+
 /* 푸터 버튼 */
 .modalFooter {
   padding: 20px 32px;
@@ -168,4 +206,28 @@
 .rechargeBtn:active {
   transform: translateY(0);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.upgradeBtn {
+  padding: 11px 28px;
+  background: linear-gradient(135deg, #f57c00 0%, #ff9800 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 12px rgba(245, 124, 0, 0.3);
+}
+
+.upgradeBtn:hover {
+  background: linear-gradient(135deg, #ef6c00 0%, #f57c00 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(245, 124, 0, 0.4);
+}
+
+.upgradeBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(245, 124, 0, 0.3);
 }
