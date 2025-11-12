@@ -1,210 +1,341 @@
-/* 모달 커스텀 */
+/* 모달 사이즈 */
 .creditModal {
-  width: 520px;
-  max-width: 90vw;
+  width: 900px;
+  max-width: 95vw;
+  max-height: 90vh;
+  overflow: hidden;
 }
 
-/* 헤더 영역 */
-.modalHeader {
-  padding: 32px 32px 24px;
-  text-align: center;
-  border-bottom: 1px solid var(--theme-border, #e8e8e8);
-}
-
-.iconWrapper {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 64px;
-  height: 64px;
-  border-radius: 50%;
-  background: var(--theme-background, #f5f5f5);
-  border: 2px solid var(--theme-border, #e0e0e0);
-  margin-bottom: 16px;
-}
-
-.cardIcon {
+/* X 버튼 */
+.closeButton {
+  position: absolute;
+  top: 16px;
+  right: 16px;
   width: 32px;
   height: 32px;
-  color: var(--theme-primary, #1a1a1a);
-}
-
-.modalTitle {
-  margin: 0 0 12px;
-  font-size: 22px;
-  font-weight: 700;
-  color: var(--theme-text, #1a1a1a);
-  letter-spacing: -0.3px;
-}
-
-.modalDescription {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.6;
-  color: var(--theme-text-secondary, #666666);
-}
-
-/* 크레딧 정보 박스 */
-.creditInfoBox {
+  border: none;
+  background: transparent;
+  color: var(--theme-text-secondary, #999999);
+  cursor: pointer;
+  border-radius: 4px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 24px 32px;
-  background: var(--theme-background, #fafafa);
-  border-bottom: 1px solid var(--theme-border, #e8e8e8);
-}
-
-.creditDetail {
-  flex: 1;
-  text-align: center;
-}
-
-.creditLabel {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--theme-text-secondary, #888888);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-}
-
-.creditAmount {
-  display: flex;
-  align-items: baseline;
   justify-content: center;
-  gap: 4px;
+  transition: all 0.2s ease;
+  z-index: 1;
 }
 
-.creditNumber {
+.closeButton:hover {
+  background: var(--theme-background-hover, #f5f5f5);
+  color: var(--theme-text, #1a1a1a);
+}
+
+/* 레이아웃 */
+.modalLayout {
+  display: flex;
+  gap: 0;
+  height: 100%;
+}
+
+/* 왼쪽 패널 */
+.leftPanel {
+  flex: 0 0 340px;
+  padding: 40px 32px;
+  background: var(--theme-background, #fafafa);
+  border-right: 1px solid var(--theme-border, #e8e8e8);
+}
+
+.currentPlanCard {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.planBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e0e0e0);
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-secondary, #666666);
+  width: fit-content;
+}
+
+.badgeIcon {
+  width: 14px;
+  height: 14px;
+}
+
+.planTitle {
+  margin: 0;
   font-size: 28px;
   font-weight: 700;
   color: var(--theme-text, #1a1a1a);
   letter-spacing: -0.5px;
 }
 
-.creditUnit {
+.planSubtitle {
+  margin: -12px 0 0;
   font-size: 14px;
+  line-height: 1.5;
+  color: var(--theme-text-secondary, #666666);
+}
+
+.creditStatus {
+  padding: 20px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e8e8e8);
+  border-radius: 8px;
+}
+
+.creditRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.creditLabel {
+  font-size: 14px;
+  color: var(--theme-text-secondary, #666666);
+}
+
+.creditValue {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text, #1a1a1a);
+}
+
+.dividerLine {
+  height: 1px;
+  background: var(--theme-border, #e8e8e8);
+  margin: 8px 0;
+}
+
+.creditLabelBold {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--theme-text, #1a1a1a);
+}
+
+.creditValueBold {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--theme-primary, #1a1a1a);
+}
+
+.upgradeInfo {
+  padding: 16px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e8e8e8);
+  border-radius: 8px;
+}
+
+.upgradeText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--theme-text-secondary, #666666);
+}
+
+.upgradeText strong {
+  color: var(--theme-primary, #1a1a1a);
+  font-weight: 700;
+}
+
+/* 오른쪽 패널 */
+.rightPanel {
+  flex: 1;
+  padding: 40px 32px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.comparisonTitle {
+  margin: 0 0 24px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--theme-text, #1a1a1a);
+}
+
+/* 테이블 */
+.comparisonTable {
+  flex: 1;
+  border: 1px solid var(--theme-border, #e8e8e8);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tableHeader {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  background: var(--theme-background, #fafafa);
+  border-bottom: 2px solid var(--theme-border, #e8e8e8);
+}
+
+.featureCol {
+  padding: 16px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--theme-text-secondary, #666666);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.planCol {
+  padding: 16px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--theme-text-secondary, #666666);
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.proPlanCol {
+  background: var(--theme-primary, #1a1a1a);
+  color: white;
+}
+
+.tableBody {
+  display: flex;
+  flex-direction: column;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  border-bottom: 1px solid var(--theme-border, #e8e8e8);
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.featureCell {
+  padding: 16px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text, #1a1a1a);
+  background: var(--theme-surface, #ffffff);
+}
+
+.valueCell {
+  padding: 16px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text-secondary, #666666);
+  text-align: center;
+  background: var(--theme-surface, #ffffff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.proValue {
+  background: var(--theme-background, #fafafa);
+  color: var(--theme-primary, #1a1a1a);
+  font-weight: 700;
+}
+
+/* 가격 섹션 */
+.priceSection {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 2px solid var(--theme-border, #e8e8e8);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.priceTag {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.currency {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--theme-text-secondary, #666666);
+}
+
+.price {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--theme-text, #1a1a1a);
+  letter-spacing: -1px;
+}
+
+.period {
+  font-size: 16px;
   font-weight: 500;
   color: var(--theme-text-secondary, #666666);
 }
 
-.creditDivider {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--theme-text-secondary, #cccccc);
-  margin: 0 16px;
-}
-
-/* 부족 크레딧 강조 박스 */
-.shortageBox {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 20px 32px;
-  background: var(--theme-background, #fafafa);
-  border-bottom: 1px solid var(--theme-border, #e8e8e8);
-}
-
-.shortageLabel {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--theme-text-secondary, #666666);
-}
-
-.shortageAmount {
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--theme-text, #1a1a1a);
-}
-
-/* 업그레이드 안내 박스 */
-.upgradeBox {
-  padding: 24px 32px;
-  background: var(--theme-background, #fafafa);
-  border-top: 2px solid var(--theme-border, #e0e0e0);
-  margin: 0;
-}
-
-.upgradeHeader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-}
-
-.crownIcon {
-  color: var(--theme-primary, #1a1a1a);
-}
-
-.upgradeTitle {
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--theme-text, #1a1a1a);
-}
-
-.benefitList {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.benefitList li {
-  font-size: 14px;
-  line-height: 2;
-  color: var(--theme-text-secondary, #666666);
-  padding-left: 0;
-}
-
-/* 푸터 버튼 */
-.modalFooter {
-  padding: 20px 32px;
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-}
-
-.cancelBtn {
-  padding: 11px 24px;
-  background: transparent;
-  color: var(--theme-text-secondary, #666666);
-  border: 1px solid var(--theme-border, #e0e0e0);
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.cancelBtn:hover {
-  background: var(--theme-background-hover, #f5f5f5);
-  border-color: var(--theme-border-hover, #cccccc);
-}
-
-.cancelBtn:active {
-  background: var(--theme-background-active, #eeeeee);
-}
-
-.upgradeBtn {
-  padding: 11px 28px;
+.upgradeButton {
+  padding: 14px 32px;
   background: var(--theme-primary, #1a1a1a);
   color: white;
   border: none;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-.upgradeBtn:hover {
+.upgradeButton:hover {
   background: var(--theme-primary-hover, #333333);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
-.upgradeBtn:active {
+.upgradeButton:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .creditModal {
+    width: 100vw;
+    max-width: 100vw;
+    max-height: 100vh;
+  }
+
+  .modalLayout {
+    flex-direction: column;
+  }
+
+  .leftPanel {
+    flex: 0 0 auto;
+    border-right: none;
+    border-bottom: 1px solid var(--theme-border, #e8e8e8);
+  }
+
+  .tableHeader,
+  .tableRow {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+
+  .priceSection {
+    flex-direction: column;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .priceTag {
+    justify-content: center;
+  }
+
+  .upgradeButton {
+    width: 100%;
+  }
 }
