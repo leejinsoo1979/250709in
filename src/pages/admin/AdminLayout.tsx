@@ -193,20 +193,17 @@ const AdminLayout = () => {
             <span>시스템 설정</span>
           </NavLink>
         </nav>
-
-        <div className={styles.sidebarFooter}>
-          <button
-            onClick={() => navigate('/dashboard')}
-            className={styles.backButton}
-          >
-            <LogOutIcon size={18} />
-            <span>대시보드로 돌아가기</span>
-          </button>
-        </div>
       </aside>
 
       {/* 메인 컨텐츠 */}
       <main className={styles.main}>
+        <button
+          onClick={() => navigate('/dashboard')}
+          className={styles.backButton}
+        >
+          <LogOutIcon size={18} />
+          <span>대시보드로 돌아가기</span>
+        </button>
         <Outlet />
       </main>
     </div>

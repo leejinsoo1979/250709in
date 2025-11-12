@@ -226,25 +226,33 @@
   color: var(--theme-primary, #667eea);
 }
 
-.sidebarFooter {
-  padding: 16px 12px;
-  border-top: 1px solid var(--theme-border, #e5e7eb);
+/* 메인 컨텐츠 */
+.main {
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  background: var(--theme-background, #f9fafb);
+  position: relative;
 }
 
 .backButton {
+  position: fixed;
+  top: 24px;
+  right: 24px;
   display: flex;
   align-items: center;
   gap: 8px;
-  width: 100%;
-  padding: 12px 16px;
-  background: transparent;
+  padding: 12px 20px;
+  background: var(--theme-surface, #ffffff);
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 8px;
   color: var(--theme-text-secondary, #6b7280);
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
 }
 
 .backButton svg {
@@ -253,27 +261,28 @@
 }
 
 .backButton:hover {
-  background: var(--theme-background-hover, #f3f4f6);
-  border-color: var(--theme-border-hover, #d1d5db);
-  color: var(--theme-text, #1f2937);
+  background: var(--theme-primary, #667eea);
+  border-color: var(--theme-primary, #667eea);
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
 }
 
 .backButton:hover svg {
-  color: var(--theme-primary, #667eea);
-}
-
-/* 메인 컨텐츠 */
-.main {
-  flex: 1;
-  height: 100vh;
-  overflow-y: auto;
-  background: var(--theme-background, #f9fafb);
+  color: white;
 }
 
 /* 반응형 */
 @media (max-width: 1024px) {
   .sidebar {
     width: 240px;
+  }
+
+  .backButton {
+    top: 16px;
+    right: 16px;
+    padding: 10px 16px;
+    font-size: 13px;
   }
 }
 
@@ -295,6 +304,17 @@
   }
 
   .navItem span {
+    display: none;
+  }
+
+  .backButton {
+    top: 12px;
+    right: 12px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .backButton span {
     display: none;
   }
 }
