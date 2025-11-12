@@ -1,0 +1,268 @@
+.container {
+  padding: 40px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.title {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--theme-text, #1f2937);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+/* 검색 toolbar */
+.toolbar {
+  margin-bottom: 24px;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  max-width: 400px;
+}
+
+.searchBox svg {
+  color: var(--theme-text-secondary, #6b7280);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+/* 테이블 */
+.tableContainer {
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  background: var(--theme-background, #f9fafb);
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+}
+
+.table th {
+  padding: 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+  transition: background 0.2s ease;
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: var(--theme-background-hover, #f3f4f6);
+}
+
+.table td {
+  padding: 16px;
+  font-size: 14px;
+  color: var(--theme-text, #1f2937);
+}
+
+/* 조직 정보 */
+.orgInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.orgIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.orgName {
+  font-weight: 500;
+  color: var(--theme-text, #1f2937);
+}
+
+/* 뱃지들 */
+.statusBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusTrial {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.statusActive {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.statusExpired {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.statusCancelled {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+.planBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: var(--theme-background, #f9fafb);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--theme-text-secondary, #6b7280);
+  letter-spacing: 0.5px;
+}
+
+.actionButton {
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 6px;
+  color: var(--theme-text, #1f2937);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  background: var(--theme-background-hover, #f3f4f6);
+  border-color: var(--theme-primary, #10b981);
+  color: var(--theme-primary, #10b981);
+}
+
+/* 로딩 */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--theme-border, #e5e7eb);
+  border-top-color: var(--theme-primary, #10b981);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--theme-text-secondary, #6b7280);
+  font-size: 14px;
+}
+
+.emptyState p {
+  margin: 0;
+}
+
+/* 반응형 */
+@media (max-width: 1024px) {
+  .container {
+    padding: 20px;
+  }
+
+  .table {
+    font-size: 13px;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .searchBox {
+    max-width: 100%;
+  }
+
+  .table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

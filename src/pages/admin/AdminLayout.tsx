@@ -1,0 +1,134 @@
+import { useEffect } from 'react';
+import { useNavigate, Outlet, NavLink } from 'react-router-dom';
+import { useAuth } from '@/auth/AuthProvider';
+import { useAdmin } from '@/hooks/useAdmin';
+import { UserIcon, UsersIcon, SettingsIcon, LogOutIcon } from '@/components/common/Icons';
+import { HiOutlineOfficeBuilding, HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed } from 'react-icons/hi';
+import { VscServerProcess } from 'react-icons/vsc';
+import styles from './AdminLayout.module.css';
+
+const AdminLayout = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { adminRole, isAdmin, isSuperAdmin, loading } = useAdmin(user);
+
+  useEffect(() => {
+    // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+    if (!user) {
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    console.log('🔐 AdminLayout 권한 체크:', { loading, user: !!user, isAdmin, isSuperAdmin });
+    // 관리자가 아닌 경우 대시보드로 리다이렉트
+    if (!loading && user && !isAdmin) {
+      console.error('❌ 관리자 권한 없음 - 리다이렉트');
+      alert('관리자 권한이 필요합니다.');
+      navigate('/dashboard');
+    }
+  }, [loading, user, isAdmin, isSuperAdmin, navigate]);
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>
+          <div className={styles.spinner}></div>
+          <p>권한 확인 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || !isAdmin) {
+    return null;
+  }
+
+  return (
+    <div className={styles.container}>
+      {/* 사이드바 */}
+      <aside className={styles.sidebar}>
+        <div className={styles.sidebarHeader}>
+          <VscServerProcess size={32} className={styles.logo} />
+          <h1 className={styles.title}>비펀 관리자</h1>
+          {adminRole && (
+            <span className={styles.roleBadge}>
+              {adminRole === 'super' && '슈퍼 관리자'}
+              {adminRole === 'admin' && '관리자'}
+              {adminRole === 'support' && '지원팀'}
+              {adminRole === 'sales' && '영업팀'}
+            </span>
+          )}
+        </div>
+
+        <nav className={styles.nav}>
+          <NavLink
+            to="/admin"
+            end
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineChartBar size={20} />
+            <span>대시보드</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/users"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <UsersIcon size={20} />
+            <span>사용자 관리</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/organizations"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineOfficeBuilding size={20} />
+            <span>조직 관리</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/billing"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineCreditCard size={20} />
+            <span>결제 관리</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/security"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineLockClosed size={20} />
+            <span>보안 설정</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/settings"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <SettingsIcon size={20} />
+            <span>시스템 설정</span>
+          </NavLink>
+        </nav>
+
+        <div className={styles.sidebarFooter}>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className={styles.backButton}
+          >
+            <LogOutIcon size={18} />
+            <span>대시보드로 돌아가기</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* 메인 컨텐츠 */}
+      <main className={styles.main}>
+        <Outlet />
+      </main>
+    </div>
+  );
+};
+
+export default AdminLayout;

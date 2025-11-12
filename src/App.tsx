@@ -14,7 +14,13 @@ import TestDashboard from '@/pages/TestDashboard';
 import ViewerPage from '@/pages/ViewerPage';
 import LandingPage from '@/pages/LandingPage';
 import SignUpPage from '@/pages/SignUpPage';
-import AdminDashboard from '@/pages/AdminDashboard';
+import AdminLayout from '@/pages/admin/AdminLayout';
+import AdminDashboard from '@/pages/admin/Dashboard';
+import AdminUsers from '@/pages/admin/Users';
+import AdminOrganizations from '@/pages/admin/Organizations';
+import PlaceholderPage from '@/pages/admin/PlaceholderPage';
+import { HiOutlineCreditCard, HiOutlineLockClosed } from 'react-icons/hi';
+import { SettingsIcon } from '@/components/common/Icons';
 import { LoginForm } from '@/components/auth/LoginForm';
 import { ModernLoginForm } from '@/components/auth/ModernLoginForm';
 import { UltraModernLoginForm } from '@/components/auth/UltraModernLoginForm';
@@ -99,7 +105,14 @@ function AppContent() {
         <Route path="/dashboard" element={<SimpleDashboard />} />
         <Route path="/dashboard/*" element={<SimpleDashboard />} />
         {/* 관리자 페이지 */}
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="organizations" element={<AdminOrganizations />} />
+          <Route path="billing" element={<PlaceholderPage title="결제 관리" description="구독 플랜, 결제 내역, 청구서 관리 기능이 곧 제공됩니다." icon={<HiOutlineCreditCard size={40} />} />} />
+          <Route path="security" element={<PlaceholderPage title="보안 설정" description="2FA, IP 제한, 감사 로그 등 보안 기능이 곧 제공됩니다." icon={<HiOutlineLockClosed size={40} />} />} />
+          <Route path="settings" element={<PlaceholderPage title="시스템 설정" description="환경 변수, API 키, Webhook 연동 등 설정 기능이 곧 제공됩니다." icon={<SettingsIcon size={40} />} />} />
+        </Route>
         {/* 인증 페이지 */}
         <Route path="/login" element={<SplitLoginForm />} />
         <Route path="/signup" element={<SignUpPage />} />
