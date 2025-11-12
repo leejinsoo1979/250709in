@@ -11,6 +11,7 @@ import { generateDefaultThumbnail, dataURLToBlob } from '@/editor/shared/utils/t
 import { serverTimestamp, Timestamp } from 'firebase/firestore';
 import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
+import CreditErrorModal from '@/components/common/CreditErrorModal';
 
 // 컨트롤 컴포넌트들 import
 import { InstallType } from '@/editor/shared/controls/types';
@@ -34,6 +35,13 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
   const [saving, setSaving] = useState(false);
   const viewMode = '3D'; // 3D 뷰만 사용
   const [viewerKey, setViewerKey] = useState(0);
+
+  // 크레딧 에러 모달 상태
+  const [creditError, setCreditError] = useState({
+    isOpen: false,
+    currentCredits: 0,
+    requiredCredits: 0
+  });
   
   const { basicInfo, projectId: storeProjectId, projectTitle: storeProjectTitle } = useProjectStore();
   
@@ -239,7 +247,24 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
       }
     } catch (error) {
       console.error('프로젝트 생성 오류:', error);
-      alert(`프로젝트 생성 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+
+      // 크레딧 부족 에러인지 확인
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류';
+      const creditErrorMatch = errorMessage.match(/크레딧이 부족합니다\. \(필요: (\d+), 보유: (\d+)\)/);
+
+      if (creditErrorMatch) {
+        // 크레딧 부족 에러 - 커스텀 모달 표시
+        const requiredCredits = parseInt(creditErrorMatch[1], 10);
+        const currentCredits = parseInt(creditErrorMatch[2], 10);
+        setCreditError({
+          isOpen: true,
+          currentCredits,
+          requiredCredits
+        });
+      } else {
+        // 일반 에러 - 기존 alert 사용
+        alert(`프로젝트 생성 중 오류가 발생했습니다: ${errorMessage}`);
+      }
     } finally {
       setSaving(false);
     }
@@ -825,6 +850,18 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
           </button>
         </div>
       </div>
+
+      {/* 크레딧 부족 모달 */}
+      <CreditErrorModal
+        isOpen={creditError.isOpen}
+        currentCredits={creditError.currentCredits}
+        requiredCredits={creditError.requiredCredits}
+        onClose={() => setCreditError({ ...creditError, isOpen: false })}
+        onRecharge={() => {
+          // 프로필 팝업 열기
+          window.dispatchEvent(new CustomEvent('openProfilePopup'));
+        }}
+      />
     </div>
   );
 };

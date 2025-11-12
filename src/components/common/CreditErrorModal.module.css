@@ -1,0 +1,263 @@
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal {
+  background: linear-gradient(145deg, #ffffff, #f8f9fa);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  width: 440px;
+  max-width: 90vw;
+  animation: slideUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.iconContainer {
+  display: flex;
+  justify-content: center;
+  padding: 32px 24px 8px;
+}
+
+.icon {
+  font-size: 64px;
+  animation: bounce 0.6s ease-out;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.1));
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.05);
+  }
+}
+
+.content {
+  padding: 8px 32px 24px;
+  text-align: center;
+}
+
+.title {
+  margin: 0 0 12px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1a1a1a;
+  letter-spacing: -0.5px;
+}
+
+.description {
+  margin: 0 0 24px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #666666;
+}
+
+.creditInfo {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e8e8e8;
+}
+
+.creditRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.creditRow:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  font-size: 14px;
+  color: #666666;
+  font-weight: 500;
+}
+
+.value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.value.required {
+  color: #ff9800;
+}
+
+.value.shortage {
+  color: #f44336;
+}
+
+.divider {
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e0e0e0, transparent);
+  margin: 16px 0;
+}
+
+.footer {
+  padding: 20px 24px;
+  background: #f8f9fa;
+  border-top: 1px solid #e8e8e8;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.cancelButton {
+  padding: 12px 28px;
+  background-color: #ffffff;
+  color: #666666;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 100px;
+}
+
+.cancelButton:hover {
+  background-color: #f5f5f5;
+  border-color: #cccccc;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.cancelButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.rechargeButton {
+  padding: 12px 28px;
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 140px;
+  box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+.rechargeButton:hover {
+  background: linear-gradient(135deg, #45a049, #3d8b40);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+}
+
+.rechargeButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .modal {
+    background: linear-gradient(145deg, #2a2a2a, #1f1f1f);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+    border: 1px solid #404040;
+  }
+
+  .title {
+    color: #ffffff;
+  }
+
+  .description {
+    color: #b0b0b0;
+  }
+
+  .creditInfo {
+    background: #1f1f1f;
+    border: 1px solid #404040;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .label {
+    color: #b0b0b0;
+  }
+
+  .value {
+    color: #ffffff;
+  }
+
+  .value.required {
+    color: #ffb74d;
+  }
+
+  .value.shortage {
+    color: #ef5350;
+  }
+
+  .divider {
+    background: linear-gradient(to right, transparent, #404040, transparent);
+  }
+
+  .footer {
+    background: #1f1f1f;
+    border-top: 1px solid #404040;
+  }
+
+  .cancelButton {
+    background-color: #2a2a2a;
+    color: #ffffff;
+    border: 1px solid #555555;
+  }
+
+  .cancelButton:hover {
+    background-color: #3a3a3a;
+    border-color: #666666;
+  }
+
+  .cancelButton:active {
+    background-color: #333333;
+  }
+
+  .rechargeButton {
+    background: linear-gradient(135deg, #66bb6a, #4caf50);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
+  }
+
+  .rechargeButton:hover {
+    background: linear-gradient(135deg, #4caf50, #43a047);
+    box-shadow: 0 6px 20px rgba(76, 175, 80, 0.5);
+  }
+}
