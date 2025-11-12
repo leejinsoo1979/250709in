@@ -12,28 +12,31 @@ export const useAdmin = (user: User | null) => {
   const [isSuperAdminUser, setIsSuperAdminUser] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
-  // 이미 체크했는지 여부 (한 번만 실행)
-  const hasChecked = useRef<boolean>(false);
+  // 마지막으로 체크한 user의 UID와 이메일 저장
+  const lastCheckedUserRef = useRef<{ uid: string; email: string } | null>(null);
 
   useEffect(() => {
     // user가 없으면 초기화
     if (!user) {
-      if (hasChecked.current) {
-        setAdminRole(null);
-        setIsAdminUser(false);
-        setIsSuperAdminUser(false);
-        setLoading(false);
-        hasChecked.current = false;
-      }
+      setAdminRole(null);
+      setIsAdminUser(false);
+      setIsSuperAdminUser(false);
+      setLoading(false);
+      lastCheckedUserRef.current = null;
       return;
     }
 
-    // 이미 체크했으면 스킵 (무한 루프 방지)
-    if (hasChecked.current) {
+    // 같은 user는 다시 체크하지 않음 (무한 루프 방지)
+    const currentUserKey = { uid: user.uid, email: user.email || '' };
+    if (
+      lastCheckedUserRef.current &&
+      lastCheckedUserRef.current.uid === currentUserKey.uid &&
+      lastCheckedUserRef.current.email === currentUserKey.email
+    ) {
       return;
     }
 
-    hasChecked.current = true;
+    lastCheckedUserRef.current = currentUserKey;
 
     // 슈퍼 관리자 이메일 체크
     const userEmail = user.email?.toLowerCase().trim() || '';

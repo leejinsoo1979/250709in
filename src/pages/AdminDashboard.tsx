@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User } from 'firebase/auth';
-import { getCurrentUser } from '@/firebase/auth';
+import { useAuth } from '@/auth/AuthProvider';
 import { useAdmin } from '@/hooks/useAdmin';
 import { collection, getDocs, getCountFromServer } from 'firebase/firestore';
 import { db } from '@/firebase/config';
@@ -16,7 +15,7 @@ interface AdminStats {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useAuth();
   const { adminRole, isAdmin, isSuperAdmin, loading } = useAdmin(user);
   const [stats, setStats] = useState<AdminStats>({
     totalUsers: 0,
@@ -27,14 +26,11 @@ const AdminDashboard = () => {
   const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
-    const currentUser = getCurrentUser();
-    setUser(currentUser);
-
     // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-    if (!currentUser) {
+    if (!user) {
       navigate('/login');
     }
-  }, [navigate]);
+  }, [user, navigate]);
 
   useEffect(() => {
     // 관리자가 아닌 경우 대시보드로 리다이렉트
