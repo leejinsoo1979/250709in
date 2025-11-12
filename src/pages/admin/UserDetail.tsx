@@ -20,6 +20,7 @@ interface UserData {
   role?: string;
   projectCount?: number;
   storageUsed?: number;
+  credits?: number;
 }
 
 interface Project {
@@ -283,6 +284,10 @@ export default function UserDetail() {
               <div>{designFiles.reduce((sum, file) => sum + file.fileSize, 0) > 0
                 ? `${(designFiles.reduce((sum, file) => sum + file.fileSize, 0) / 1024 / 1024).toFixed(2)} MB`
                 : '0 MB'}</div>
+            </div>
+            <div className={styles.infoItem}>
+              <label>크레딧</label>
+              <div>{user.credits !== undefined ? `${user.credits} 크레딧` : '0 크레딧'}</div>
             </div>
           </div>
         </section>
