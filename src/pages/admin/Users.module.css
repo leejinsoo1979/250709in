@@ -202,6 +202,14 @@
   flex-shrink: 0;
 }
 
+/* 메인 컨텐츠 영역 */
+.mainContent {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 24px;
+  align-items: start;
+}
+
 /* 테이블 */
 .tableContainer {
   background: var(--theme-surface, #ffffff);
@@ -758,14 +766,27 @@
   font-weight: bold;
 }
 
-/* 사용자 상세 정보 섹션 */
-.userDetailsSection {
-  margin-top: 32px;
+/* 사용자 상세 정보 패널 */
+.userDetailsPanel {
+  position: sticky;
+  top: 24px;
   background: var(--theme-surface, white);
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 12px;
   overflow: hidden;
-  animation: slideDown 0.3s ease;
+  max-height: calc(100vh - 100px);
+  animation: slideInRight 0.3s ease;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 @keyframes slideDown {
@@ -856,6 +877,8 @@
 
 .userDetailsContent {
   padding: 24px;
+  overflow-y: auto;
+  max-height: calc(100vh - 220px);
 }
 
 .detailsBlock {
@@ -1007,6 +1030,21 @@
 
   .customFilterDropdown {
     min-width: 160px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .mainContent {
+    grid-template-columns: 1fr;
+  }
+
+  .userDetailsPanel {
+    position: static;
+    max-height: none;
+  }
+
+  .userDetailsContent {
+    max-height: 600px;
   }
 }
 
