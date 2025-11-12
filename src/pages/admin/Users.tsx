@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { collection, query, orderBy, limit, getDocs, onSnapshot, DocumentData } from 'firebase/firestore';
+import { collection, query, getDocs, DocumentData } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { SearchIcon } from '@/components/common/Icons';
 import styles from './Users.module.css';
@@ -19,34 +19,50 @@ const Users = () => {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Firebase users 컬렉션 실시간 구독
-    const usersQuery = query(
-      collection(db, 'users'),
-      orderBy('createdAt', 'desc'),
-      limit(100)
-    );
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        console.log('👥 사용자 목록 조회 중...');
 
-    const unsubscribe = onSnapshot(usersQuery, (snapshot) => {
-      const usersData: UserData[] = [];
-      snapshot.forEach((doc) => {
-        const data = doc.data() as DocumentData;
-        usersData.push({
-          id: doc.id,
-          email: data.email || '',
-          displayName: data.displayName || data.name || '',
-          photoURL: data.photoURL || '',
-          createdAt: data.createdAt?.toDate?.() || null,
-          lastLoginAt: data.lastLoginAt?.toDate?.() || null
+        // users 컬렉션 조회 (orderBy 제거하여 인덱스 문제 방지)
+        const usersQuery = query(collection(db, 'users'));
+        const usersSnapshot = await getDocs(usersQuery).catch(err => {
+          console.error('❌ users 조회 실패:', err);
+          return { docs: [] };
         });
-      });
-      setUsers(usersData);
-      setLoading(false);
-    }, (error) => {
-      console.error('사용자 데이터 가져오기 오류:', error);
-      setLoading(false);
-    });
 
-    return () => unsubscribe();
+        console.log('👥 사용자 수:', usersSnapshot.docs.length);
+
+        const usersData: UserData[] = [];
+        usersSnapshot.docs.forEach((doc) => {
+          const data = doc.data() as DocumentData;
+          usersData.push({
+            id: doc.id,
+            email: data.email || '',
+            displayName: data.displayName || data.name || '',
+            photoURL: data.photoURL || '',
+            createdAt: data.createdAt?.toDate?.() || null,
+            lastLoginAt: data.lastLoginAt?.toDate?.() || null
+          });
+        });
+
+        // 클라이언트에서 정렬 (createdAt 기준 내림차순)
+        usersData.sort((a, b) => {
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return b.createdAt.getTime() - a.createdAt.getTime();
+        });
+
+        console.log('👥 사용자 데이터:', usersData);
+        setUsers(usersData);
+      } catch (error) {
+        console.error('❌ 사용자 데이터 가져오기 오류:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
   }, []);
 
   const filteredUsers = users.filter(user => {
