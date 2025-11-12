@@ -28,8 +28,9 @@
 .toolbar {
   margin-bottom: 24px;
   display: flex;
-  gap: 12px;
+  gap: 20px;
   align-items: flex-end;
+  justify-content: space-between;
   flex-wrap: wrap;
 }
 
@@ -80,6 +81,11 @@
   flex-direction: column;
   gap: 6px;
   min-width: 180px;
+}
+
+.filterGroup:first-child {
+  flex: 1;
+  max-width: 500px;
 }
 
 .filterLabel {
