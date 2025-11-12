@@ -287,6 +287,36 @@
   color: var(--theme-text-secondary, #9ca3af);
 }
 
+/* 플랜 배지 */
+.planBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 플랜 변경 버튼 */
+.changePlanButton {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: var(--theme-primary, #10b981);
+  color: white;
+  transition: all 0.2s ease;
+}
+
+.changePlanButton:hover {
+  background: var(--theme-primary-hover, #059669);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
 /* 확인 다이얼로그 */
 .dialogOverlay {
   position: fixed;
@@ -385,6 +415,13 @@
   box-shadow: 0 2px 12px rgba(16, 185, 129, 0.4);
 }
 
+.confirmButton:disabled {
+  background: var(--theme-background, #e5e7eb);
+  color: var(--theme-text-secondary, #9ca3af);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 .confirmRevokeButton {
   background: #ef4444;
   color: white;
@@ -393,6 +430,75 @@
 .confirmRevokeButton:hover {
   background: #dc2626;
   box-shadow: 0 2px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* 플랜 선택기 */
+.planSelector {
+  margin: 20px 0;
+}
+
+.planLabel {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--theme-text, #1f2937);
+}
+
+.currentPlan {
+  margin-bottom: 20px;
+}
+
+.planSelect {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text, #1f2937);
+  background: var(--theme-surface, white);
+  border: 2px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 20px;
+}
+
+.planSelect:hover {
+  border-color: var(--theme-primary, #10b981);
+}
+
+.planSelect:focus {
+  outline: none;
+  border-color: var(--theme-primary, #10b981);
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* 플랜 정보 */
+.planInfo {
+  padding: 16px;
+  background: var(--theme-background, #f9fafb);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+}
+
+.planInfoTitle {
+  margin: 0 0 12px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--theme-text, #1f2937);
+}
+
+.planFeatures {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.planFeatures li {
+  padding: 6px 0;
+  font-size: 13px;
+  color: var(--theme-text-secondary, #6b7280);
+  line-height: 1.5;
 }
 
 /* 반응형 */

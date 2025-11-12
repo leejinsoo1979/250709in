@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { collection, query, getDocs, DocumentData } from 'firebase/firestore';
 import { db } from '@/firebase/config';
+import { useAuth } from '@/auth/AuthProvider';
 import { SearchIcon } from '@/components/common/Icons';
 import { getAllAdmins, isSuperAdmin } from '@/firebase/admins';
+import { updateUserPlan, PLANS, PlanType } from '@/firebase/plans';
 import styles from './Users.module.css';
 
 interface UserData {
@@ -14,12 +16,23 @@ interface UserData {
   lastLoginAt?: Date;
   isAdmin?: boolean;
   isSuperAdmin?: boolean;
+  plan?: PlanType;
 }
 
 const Users = () => {
+  const { user } = useAuth();
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [planDialog, setPlanDialog] = useState<{
+    show: boolean;
+    userId: string;
+    userName: string;
+    currentPlan: PlanType;
+    newPlan: PlanType;
+  }>({ show: false, userId: '', userName: '', currentPlan: 'free', newPlan: 'free' });
+
+  const isAdminUser = user && (isSuperAdmin(user.email) || getAllAdmins().then(admins => admins.has(user.uid)));
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -53,7 +66,8 @@ const Users = () => {
             createdAt: data.createdAt?.toDate?.() || null,
             lastLoginAt: data.lastLoginAt?.toDate?.() || null,
             isAdmin: adminsMap.has(doc.id),
-            isSuperAdmin: isSuperAdmin(userEmail)
+            isSuperAdmin: isSuperAdmin(userEmail),
+            plan: (data.plan as PlanType) || 'free'
           });
         });
 
@@ -75,6 +89,38 @@ const Users = () => {
 
     fetchUsers();
   }, []);
+
+  // 플랜 변경 다이얼로그 열기
+  const openPlanDialog = (userId: string, userName: string, currentPlan: PlanType) => {
+    setPlanDialog({
+      show: true,
+      userId,
+      userName,
+      currentPlan,
+      newPlan: currentPlan
+    });
+  };
+
+  // 플랜 변경 실행
+  const handlePlanChange = async () => {
+    const { userId, newPlan } = planDialog;
+
+    try {
+      await updateUserPlan(userId, newPlan);
+      alert(`✅ 플랜이 ${PLANS[newPlan].name}(으)로 변경되었습니다.`);
+
+      // 사용자 목록 새로고침
+      setUsers(prevUsers =>
+        prevUsers.map(u =>
+          u.id === userId ? { ...u, plan: newPlan } : u
+        )
+      );
+    } catch (error) {
+      alert('❌ 플랜 변경 실패: ' + (error as Error).message);
+    } finally {
+      setPlanDialog({ show: false, userId: '', userName: '', currentPlan: 'free', newPlan: 'free' });
+    }
+  };
 
   const filteredUsers = users.filter(user => {
     const query = searchQuery.toLowerCase();
@@ -126,9 +172,11 @@ const Users = () => {
                 <th>사용자</th>
                 <th>이메일</th>
                 <th>권한</th>
+                <th>플랜</th>
                 <th>UID</th>
                 <th>가입일</th>
                 <th>최근 로그인</th>
+                <th>관리</th>
               </tr>
             </thead>
             <tbody>
@@ -165,6 +213,14 @@ const Users = () => {
                     </div>
                   </td>
                   <td>
+                    <span
+                      className={styles.planBadge}
+                      style={{ backgroundColor: PLANS[targetUser.plan || 'free'].color }}
+                    >
+                      {PLANS[targetUser.plan || 'free'].name}
+                    </span>
+                  </td>
+                  <td>
                     <code className={styles.uid}>{targetUser.id.substring(0, 12)}...</code>
                   </td>
                   <td>
@@ -177,12 +233,91 @@ const Users = () => {
                       ? targetUser.lastLoginAt.toLocaleString('ko-KR')
                       : '-'}
                   </td>
+                  <td>
+                    <button
+                      className={styles.changePlanButton}
+                      onClick={() => openPlanDialog(
+                        targetUser.id,
+                        targetUser.displayName || targetUser.email,
+                        targetUser.plan || 'free'
+                      )}
+                    >
+                      플랜 변경
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         )}
       </div>
+
+      {/* 플랜 변경 다이얼로그 */}
+      {planDialog.show && (
+        <div className={styles.dialogOverlay}>
+          <div className={styles.dialog}>
+            <h3 className={styles.dialogTitle}>플랜 변경</h3>
+            <p className={styles.dialogMessage}>
+              <strong>{planDialog.userName}</strong>님의 플랜을 변경합니다.
+            </p>
+
+            <div className={styles.planSelector}>
+              <label className={styles.planLabel}>현재 플랜</label>
+              <div className={styles.currentPlan}>
+                <span
+                  className={styles.planBadge}
+                  style={{ backgroundColor: PLANS[planDialog.currentPlan].color }}
+                >
+                  {PLANS[planDialog.currentPlan].name}
+                </span>
+              </div>
+
+              <label className={styles.planLabel}>새 플랜</label>
+              <select
+                className={styles.planSelect}
+                value={planDialog.newPlan}
+                onChange={(e) => setPlanDialog({ ...planDialog, newPlan: e.target.value as PlanType })}
+              >
+                {(Object.keys(PLANS) as PlanType[]).map((planType) => (
+                  <option key={planType} value={planType}>
+                    {PLANS[planType].name}
+                  </option>
+                ))}
+              </select>
+
+              {/* 선택된 플랜 정보 */}
+              <div className={styles.planInfo}>
+                <h4 className={styles.planInfoTitle}>
+                  {PLANS[planDialog.newPlan].name} 플랜
+                </h4>
+                <ul className={styles.planFeatures}>
+                  {PLANS[planDialog.newPlan].features.map((feature, index) => (
+                    <li key={index}>✓ {feature}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className={styles.dialogActions}>
+              <button
+                className={styles.cancelButton}
+                onClick={() =>
+                  setPlanDialog({ show: false, userId: '', userName: '', currentPlan: 'free', newPlan: 'free' })
+                }
+              >
+                취소
+              </button>
+              <button
+                className={styles.confirmButton}
+                onClick={handlePlanChange}
+                disabled={planDialog.currentPlan === planDialog.newPlan}
+              >
+                변경
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
