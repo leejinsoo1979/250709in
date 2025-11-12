@@ -88,6 +88,14 @@ const AdminLayout = () => {
           </NavLink>
 
           <NavLink
+            to="/admin/teams"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <UserIcon size={20} />
+            <span>팀 관리</span>
+          </NavLink>
+
+          <NavLink
             to="/admin/billing"
             className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
           >
