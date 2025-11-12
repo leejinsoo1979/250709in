@@ -3,7 +3,6 @@ import { useAuth } from '@/auth/AuthProvider';
 import { collection, query, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { HiOutlineFolder, HiOutlineCube, HiOutlineUsers, HiOutlineShare } from 'react-icons/hi';
-import { FaUser } from 'react-icons/fa';
 import styles from './Projects.module.css';
 
 interface ProjectData {
@@ -12,6 +11,7 @@ interface ProjectData {
   userId: string;
   ownerName?: string;
   ownerEmail?: string;
+  ownerPhotoURL?: string;
   createdAt: Date | null;
   updatedAt: Date | null;
   designFileCount: number;
@@ -97,6 +97,7 @@ const Projects = () => {
           // 프로젝트 소유자 정보 조회
           let ownerName = '';
           let ownerEmail = '';
+          let ownerPhotoURL = '';
           const userId = data.userId || data.user_id || '';
           if (userId) {
             const userDoc = await getDoc(doc(db, 'users', userId)).catch(() => null);
@@ -104,6 +105,7 @@ const Projects = () => {
               const userData = userDoc.data();
               ownerName = userData?.displayName || userData?.name || '';
               ownerEmail = userData?.email || '';
+              ownerPhotoURL = userData?.photoURL || '';
             }
           }
 
@@ -113,6 +115,7 @@ const Projects = () => {
             userId: userId,
             ownerName: ownerName,
             ownerEmail: ownerEmail,
+            ownerPhotoURL: ownerPhotoURL,
             createdAt: data.createdAt?.toDate?.() || null,
             updatedAt: data.updatedAt?.toDate?.() || null,
             designFileCount: projectDesignFiles.length,
@@ -243,14 +246,22 @@ const Projects = () => {
                     <div className={styles.projectInfo}>
                       <h3 className={styles.projectName}>{project.projectName}</h3>
                       <div className={styles.projectOwnerInfo}>
-                        <FaUser className={styles.ownerIcon} size={14} />
+                        <div className={styles.ownerAvatar}>
+                          {project.ownerPhotoURL ? (
+                            <img src={project.ownerPhotoURL} alt={project.ownerName || project.ownerEmail} />
+                          ) : (
+                            <div className={styles.ownerAvatarPlaceholder}>
+                              {(project.ownerName || project.ownerEmail || '?').charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                        </div>
                         <div className={styles.ownerDetails}>
                           <span className={styles.ownerName}>
-                            {project.ownerName || project.ownerEmail || '소유자 정보 없음'}
+                            {project.ownerName || '이름 없음'}
                           </span>
-                          {project.ownerName && project.ownerEmail && (
-                            <span className={styles.ownerEmail}>{project.ownerEmail}</span>
-                          )}
+                          <span className={styles.ownerEmail}>
+                            {project.ownerEmail || '이메일 없음'}
+                          </span>
                           <code className={styles.ownerUid}>UID: {project.userId.substring(0, 12)}...</code>
                         </div>
                       </div>
