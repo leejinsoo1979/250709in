@@ -33,6 +33,7 @@ dist-ssr
 # Firebase
 .firebase
 firebase-debug.log
+serviceAccountKey.json
 
 # OS generated files
 Thumbs.db
