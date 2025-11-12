@@ -33,8 +33,28 @@ const Users = () => {
     currentPlan: PlanType;
     newPlan: PlanType;
   }>({ show: false, userId: '', userName: '', currentPlan: 'free', newPlan: 'free' });
+  const [planDropdownOpen, setPlanDropdownOpen] = useState(false);
+
+  // 플랜 선택 핸들러
+  const handlePlanSelect = (planType: PlanType) => {
+    setPlanDialog({ ...planDialog, newPlan: planType });
+    setPlanDropdownOpen(false);
+  };
 
   const isAdminUser = user && (isSuperAdmin(user.email) || getAllAdmins().then(admins => admins.has(user.uid)));
+
+  // 드롭다운 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (planDropdownOpen && !target.closest(`.${styles.customDropdown}`)) {
+        setPlanDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [planDropdownOpen]);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -101,6 +121,7 @@ const Users = () => {
       currentPlan,
       newPlan: currentPlan
     });
+    setPlanDropdownOpen(false);
   };
 
   // 플랜 변경 실행
@@ -121,6 +142,7 @@ const Users = () => {
       alert('❌ 플랜 변경 실패: ' + (error as Error).message);
     } finally {
       setPlanDialog({ show: false, userId: '', userName: '', currentPlan: 'free', newPlan: 'free' });
+      setPlanDropdownOpen(false);
     }
   };
 
@@ -286,17 +308,62 @@ const Users = () => {
               </div>
 
               <label className={styles.planLabel}>새 플랜</label>
-              <select
-                className={styles.planSelect}
-                value={planDialog.newPlan}
-                onChange={(e) => setPlanDialog({ ...planDialog, newPlan: e.target.value as PlanType })}
-              >
-                {(Object.keys(PLANS) as PlanType[]).map((planType) => (
-                  <option key={planType} value={planType}>
-                    {PLANS[planType].name}
-                  </option>
-                ))}
-              </select>
+              <div className={styles.customDropdown}>
+                <button
+                  type="button"
+                  className={styles.dropdownButton}
+                  onClick={() => setPlanDropdownOpen(!planDropdownOpen)}
+                >
+                  <span
+                    className={styles.planBadge}
+                    style={{ backgroundColor: PLANS[planDialog.newPlan].color }}
+                  >
+                    {PLANS[planDialog.newPlan].name}
+                  </span>
+                  <svg
+                    className={`${styles.dropdownIcon} ${planDropdownOpen ? styles.dropdownIconOpen : ''}`}
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+
+                {planDropdownOpen && (
+                  <div className={styles.dropdownMenu}>
+                    {(Object.keys(PLANS) as PlanType[]).map((planType) => (
+                      <button
+                        key={planType}
+                        type="button"
+                        className={`${styles.dropdownItem} ${planDialog.newPlan === planType ? styles.dropdownItemActive : ''}`}
+                        onClick={() => handlePlanSelect(planType)}
+                      >
+                        <span
+                          className={styles.planBadge}
+                          style={{ backgroundColor: PLANS[planType].color }}
+                        >
+                          {PLANS[planType].name}
+                        </span>
+                        {planDialog.newPlan === planType && (
+                          <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* 선택된 플랜 정보 */}
               <div className={styles.planInfo}>
@@ -314,9 +381,10 @@ const Users = () => {
             <div className={styles.dialogActions}>
               <button
                 className={styles.cancelButton}
-                onClick={() =>
-                  setPlanDialog({ show: false, userId: '', userName: '', currentPlan: 'free', newPlan: 'free' })
-                }
+                onClick={() => {
+                  setPlanDialog({ show: false, userId: '', userName: '', currentPlan: 'free', newPlan: 'free' });
+                  setPlanDropdownOpen(false);
+                }}
               >
                 취소
               </button>
