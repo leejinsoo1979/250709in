@@ -27,7 +27,8 @@
     "prod:build": "NODE_ENV=production npm run build",
     "prod:deploy": "npm run prod:build && firebase deploy",
     "migrate:designs:nested": "cross-env TEAM_ID=$TEAM_ID ts-node --transpile-only scripts/migrate-designs-to-projects.ts",
-    "migrate:qas": "tsx src/scripts/migrateQAs.ts"
+    "migrate:qas": "tsx src/scripts/migrateQAs.ts",
+    "seed:chatbot": "tsx scripts/seedChatbotQA.ts"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.14",

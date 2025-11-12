@@ -2,8 +2,9 @@ import { useState, useEffect } from 'react';
 import { collection, query, orderBy, getDocs, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, Timestamp, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
-import { HiOutlineChatAlt2, HiOutlineTrash, HiOutlinePencil, HiOutlinePlus, HiOutlineCheck, HiOutlineX, HiOutlineChatAlt } from 'react-icons/hi';
+import { HiOutlineChatAlt2, HiOutlineTrash, HiOutlinePencil, HiOutlinePlus, HiOutlineCheck, HiOutlineX, HiOutlineChatAlt, HiOutlineDownload } from 'react-icons/hi';
 import styles from './Chatbot.module.css';
+import { faqData } from '@/data/faqData';
 
 interface ChatbotQA {
   id: string;
@@ -188,6 +189,84 @@ const Chatbot = () => {
       console.error('에러 상세:', error.message, error.code);
       // 컬렉션이 없거나 데이터가 없는 경우는 에러로 처리하지 않음
       setQAs([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 초기 FAQ 데이터 추가
+  const importInitialFAQs = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `faqData.ts에서 ${faqData.length}개의 FAQ를 가져와 Firebase에 추가합니다.\n\n진행하시겠습니까?`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setLoading(true);
+
+      // 카테고리 매핑
+      const categoryMap: Record<string, string> = {
+        '프로젝트': '기능',
+        '가구': '기능',
+        '공간': '기능',
+        '뷰': '기능',
+        'DXF': '기능',
+        '계정': '일반',
+        '지원': '기술지원',
+        '튜토리얼': '일반',
+        '챗봇': '기술지원',
+      };
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (let i = 0; i < faqData.length; i++) {
+        const faq = faqData[i];
+
+        try {
+          // 질문 텍스트는 첫 번째 한글 키워드 사용
+          const koreanKeyword = faq.keywords.find(k => /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(k));
+          const question = koreanKeyword || faq.keywords[0];
+
+          // 카테고리 추론
+          let category = '일반';
+          for (const [key, value] of Object.entries(categoryMap)) {
+            if (faq.keywords.some(k => k.includes(key))) {
+              category = value;
+              break;
+            }
+          }
+
+          const qaData = {
+            question: `${question}는 어떻게 하나요?`,
+            answer: faq.answer,
+            category,
+            isActive: true,
+            priority: i + 1,
+            createdBy: user.uid,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          };
+
+          await addDoc(collection(db, 'chatbotQAs'), qaData);
+          successCount++;
+        } catch (error) {
+          console.error(`FAQ ${i + 1} 추가 실패:`, error);
+          errorCount++;
+        }
+      }
+
+      alert(`✅ 초기 FAQ 데이터 추가 완료!\n\n성공: ${successCount}개\n실패: ${errorCount}개`);
+      loadQAs();
+    } catch (error: any) {
+      console.error('초기 FAQ 추가 실패:', error);
+      alert(`초기 FAQ 추가에 실패했습니다.\n${error.message || '알 수 없는 오류'}`);
     } finally {
       setLoading(false);
     }
@@ -484,6 +563,15 @@ const Chatbot = () => {
             </button>
           ))}
         </div>
+        <button
+          className={styles.importButton}
+          onClick={importInitialFAQs}
+          disabled={loading}
+          type="button"
+        >
+          <HiOutlineDownload size={20} />
+          <span>초기 FAQ 데이터 추가 ({faqData.length}개)</span>
+        </button>
       </div>
 
       <div className={styles.content}>
