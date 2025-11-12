@@ -17,6 +17,7 @@ import SignUpPage from '@/pages/SignUpPage';
 import AdminLayout from '@/pages/admin/AdminLayout';
 import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminUsers from '@/pages/admin/Users';
+import AdminUserDetail from '@/pages/admin/UserDetail';
 import AdminAdmins from '@/pages/admin/Admins';
 import AdminOrganizations from '@/pages/admin/Organizations';
 import AdminTeams from '@/pages/admin/Teams';
@@ -119,6 +120,7 @@ function AppContent() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index element={<AdminDashboard />} />
           <Route path="users" element={<AdminUsers />} />
+          <Route path="users/:userId" element={<AdminUserDetail />} />
           <Route path="admins" element={<AdminAdmins />} />
           <Route path="organizations" element={<AdminOrganizations />} />
           <Route path="teams" element={<AdminTeams />} />
