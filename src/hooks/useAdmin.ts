@@ -16,6 +16,8 @@ export const useAdmin = (user: User | null) => {
 
   useEffect(() => {
     const checkAdminStatus = async () => {
+      console.log('🔐 useAdmin: 권한 체크 시작', { user: !!user, email: user?.email });
+
       if (!user || !user.email) {
         console.log('🔐 useAdmin: user 없음');
         setIsAdmin(false);
@@ -24,6 +26,8 @@ export const useAdmin = (user: User | null) => {
         setLoading(false);
         return;
       }
+
+      setLoading(true); // 체크 시작 시 로딩 상태로 설정
 
       try {
         // 슈퍼 관리자 체크
@@ -64,7 +68,7 @@ export const useAdmin = (user: User | null) => {
     };
 
     checkAdminStatus();
-  }, [user?.uid, user?.email]);
+  }, [user]); // user 전체를 의존성으로 설정
 
   return {
     adminRole,
