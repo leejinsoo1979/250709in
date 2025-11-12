@@ -335,6 +335,9 @@
   gap: 24px;
   visibility: visible !important;
   opacity: 1 !important;
+  position: relative;
+  z-index: 1500;
+  overflow: visible;
 }
 
 /* 헤더 내부 요소들도 항상 표시 */

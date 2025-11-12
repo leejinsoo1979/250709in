@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { faqData, matchQuestion } from '@/data/faqData';
+import { useScrollLock } from '@/hooks/useScrollLock';
 import styles from './Chatbot.module.css';
 
 interface Message {
@@ -15,6 +17,7 @@ export const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  useScrollLock(isOpen);
 
   // 초기 환영 메시지
   useEffect(() => {
@@ -77,6 +80,16 @@ export const Chatbot: React.FC = () => {
 
   return (
     <>
+      {/* 배경 오버레이 */}
+      {isOpen &&
+        createPortal(
+          <div
+            className={styles.overlay}
+            onClick={() => setIsOpen(false)}
+          />,
+          document.body
+        )}
+
       {/* 플로팅 버튼 */}
       <button
         className={`${styles.floatingButton} ${isOpen ? styles.open : ''}`}

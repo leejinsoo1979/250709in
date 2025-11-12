@@ -154,19 +154,27 @@ const AdminLayout = () => {
           </NavLink>
 
           <NavLink
-            to="/admin/api-keys"
+            to="/admin/api-keys-all"
             className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
           >
             <HiOutlineKey size={20} />
-            <span>API 키 관리</span>
+            <span>전체 API 키</span>
           </NavLink>
 
           <NavLink
-            to="/admin/optimizer-api-keys"
+            to="/admin/api-keys-configurator"
             className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
           >
             <HiOutlineKey size={20} />
-            <span>옵티마이저 API 키</span>
+            <span>컨피규레이터 API</span>
+          </NavLink>
+
+          <NavLink
+            to="/admin/api-keys-optimizer"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineKey size={20} />
+            <span>옵티마이저 API</span>
           </NavLink>
 
           <NavLink

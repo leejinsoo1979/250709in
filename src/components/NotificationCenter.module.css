@@ -70,6 +70,18 @@
   z-index: 999998 !important;
 }
 
+.dropdownOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  z-index: 999997 !important;
+  animation: fadeIn 0.2s ease;
+}
+
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -293,6 +305,7 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
