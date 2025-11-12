@@ -27,8 +27,6 @@ import AdminMessages from '@/pages/admin/Messages';
 import AdminChatbot from '@/pages/admin/Chatbot';
 import AdminSettings from '@/pages/admin/Settings';
 import AdminAllApiKeys from '@/pages/admin/AllApiKeys';
-import AdminConfiguratorApiKeys from '@/pages/admin/ApiKeys';
-import AdminOptimizerApiKeys from '@/pages/admin/OptimizerApiKeys';
 import AdminSubscriptions from '@/pages/admin/Subscriptions';
 import PlaceholderPage from '@/pages/admin/PlaceholderPage';
 import { HiOutlineCreditCard, HiOutlineLockClosed } from 'react-icons/hi';
@@ -134,9 +132,7 @@ function AppContent() {
           <Route path="logs" element={<AdminLogs />} />
           <Route path="messages" element={<AdminMessages />} />
           <Route path="chatbot" element={<AdminChatbot />} />
-          <Route path="api-keys-all" element={<AdminAllApiKeys />} />
-          <Route path="api-keys-configurator" element={<AdminConfiguratorApiKeys />} />
-          <Route path="api-keys-optimizer" element={<AdminOptimizerApiKeys />} />
+          <Route path="api-keys" element={<AdminAllApiKeys />} />
           <Route path="subscriptions" element={<AdminSubscriptions />} />
           <Route path="settings" element={<AdminSettings />} />
           <Route path="billing" element={<PlaceholderPage title="결제 관리" description="PG사 연동, 결제 내역, 청구서 관리 기능이 곧 제공됩니다." icon={<HiOutlineCreditCard size={40} />} />} />
