@@ -160,32 +160,30 @@ const Logs = () => {
         for (const logDoc of shareLinkAccessLogSnapshot.docs) {
           const data = logDoc.data();
 
-          // 로그에 이미 저장된 프로젝트 정보 사용 (새 로그)
+          // 로그에 이미 저장된 정보 사용 (새 로그)
           let projectId = data.projectId || '';
           let projectName = data.projectName || '';
-          let shareLinkToken = '';
+          let shareLinkToken = data.shareLinkToken || '';
 
-          // 프로젝트 정보가 없으면 (기존 로그) ShareLink 조회
-          if (!projectId && (data.shareLinkId || data.linkId)) {
-            const shareLinkDoc = await getDoc(doc(db, 'shareLinks', data.shareLinkId || data.linkId)).catch(() => null);
-            if (shareLinkDoc?.exists()) {
-              shareLinkToken = shareLinkDoc.data()?.token || '';
-              projectId = shareLinkDoc.data()?.projectId || '';
-
-              // 프로젝트명 조회
-              if (projectId) {
-                const projectDoc = await getDoc(doc(db, 'projects', projectId)).catch(() => null);
-                if (projectDoc?.exists()) {
-                  projectName = projectDoc.data()?.projectName || projectDoc.data()?.title || '';
-                }
-              }
-            }
-          } else {
-            // 새 로그는 토큰만 별도 조회
+          // 정보가 없으면 (기존 로그) ShareLink 조회
+          if (!projectId || !shareLinkToken) {
             if (data.shareLinkId || data.linkId) {
               const shareLinkDoc = await getDoc(doc(db, 'shareLinks', data.shareLinkId || data.linkId)).catch(() => null);
               if (shareLinkDoc?.exists()) {
-                shareLinkToken = shareLinkDoc.data()?.token || '';
+                if (!shareLinkToken) {
+                  shareLinkToken = shareLinkDoc.data()?.token || '';
+                }
+                if (!projectId) {
+                  projectId = shareLinkDoc.data()?.projectId || '';
+
+                  // 프로젝트명 조회
+                  if (projectId) {
+                    const projectDoc = await getDoc(doc(db, 'projects', projectId)).catch(() => null);
+                    if (projectDoc?.exists()) {
+                      projectName = projectDoc.data()?.projectName || projectDoc.data()?.title || '';
+                    }
+                  }
+                }
               }
             }
           }
