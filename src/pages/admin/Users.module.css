@@ -96,7 +96,7 @@
 }
 
 .table tbody tr:hover {
-  background: var(--theme-background-hover, #f3f4f6);
+  background: var(--theme-secondary-bg-hover, #f3f4f6);
 }
 
 .table td {
