@@ -95,8 +95,10 @@ export const faqData: FAQ[] = [
 
 /**
  * 사용자 질문과 FAQ 매칭
+ * @param userInput 사용자 입력
+ * @param defaultMessage 매칭 실패 시 기본 메시지 (Firebase에서 불러온 값 사용)
  */
-export function matchQuestion(userInput: string): string {
+export function matchQuestion(userInput: string, defaultMessage?: string): string {
   const input = userInput.toLowerCase().trim();
 
   // 키워드 매칭
@@ -108,6 +110,10 @@ export function matchQuestion(userInput: string): string {
     }
   }
 
-  // 매칭 실패 시 기본 답변
+  // 매칭 실패 시 기본 답변 (Firebase 설정값 우선)
+  if (defaultMessage) {
+    return defaultMessage;
+  }
+
   return `죄송합니다. 정확히 이해하지 못했습니다. 😅\n\n다음과 같은 주제로 질문해 주세요:\n\n• 프로젝트 저장 및 불러오기\n• 가구 배치 및 편집\n• 공간 설정 및 재질\n• 2D/3D 뷰 전환\n• DXF 내보내기\n• 플랜 및 계정\n\n또는 support@coohom.com으로 문의해 주세요!`;
 }

@@ -37,6 +37,10 @@ const Chatbot = () => {
   const [greetingLoading, setGreetingLoading] = useState(true);
   const [isEditingGreeting, setIsEditingGreeting] = useState(false);
 
+  // 기본 메시지 상태
+  const [defaultMessage, setDefaultMessage] = useState('');
+  const [isEditingDefaultMessage, setIsEditingDefaultMessage] = useState(false);
+
   // 폼 상태
   const [question, setQuestion] = useState('');
   const [answer, setAnswer] = useState('');
@@ -66,14 +70,17 @@ const Chatbot = () => {
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        const data = docSnap.data() as ChatbotSettings;
+        const data = docSnap.data();
         setGreeting(data.greeting || '안녕하세요! 무엇을 도와드릴까요?');
+        setDefaultMessage(data.defaultMessage || '');
       } else {
         setGreeting('안녕하세요! 무엇을 도와드릴까요?');
+        setDefaultMessage('');
       }
     } catch (error) {
-      console.error('인사말 로드 실패:', error);
+      console.error('챗봇 설정 로드 실패:', error);
       setGreeting('안녕하세요! 무엇을 도와드릴까요?');
+      setDefaultMessage('');
     } finally {
       setGreetingLoading(false);
     }
@@ -101,11 +108,41 @@ const Chatbot = () => {
       console.log('✅ 인사말 저장 성공');
       alert('인사말이 저장되었습니다.');
       setIsEditingGreeting(false);
-      loadGreeting(); // 저장 후 다시 로드
+      loadGreeting();
     } catch (error: any) {
       console.error('❌ 인사말 저장 실패:', error);
       console.error('에러 상세:', error.message, error.code);
       alert(`인사말 저장에 실패했습니다.\n${error.message || '알 수 없는 오류'}`);
+    }
+  };
+
+  const saveDefaultMessage = async () => {
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    if (!defaultMessage.trim()) {
+      alert('기본 메시지를 입력해주세요.');
+      return;
+    }
+
+    try {
+      console.log('💾 기본 메시지 저장 시작:', defaultMessage);
+      const docRef = doc(db, 'chatbotSettings', 'general');
+      await setDoc(docRef, {
+        defaultMessage: defaultMessage.trim(),
+        updatedAt: serverTimestamp(),
+        updatedBy: user.uid
+      }, { merge: true });
+      console.log('✅ 기본 메시지 저장 성공');
+      alert('기본 메시지가 저장되었습니다.');
+      setIsEditingDefaultMessage(false);
+      loadGreeting();
+    } catch (error: any) {
+      console.error('❌ 기본 메시지 저장 실패:', error);
+      console.error('에러 상세:', error.message, error.code);
+      alert(`기본 메시지 저장에 실패했습니다.\n${error.message || '알 수 없는 오류'}`);
     }
   };
 
@@ -359,6 +396,62 @@ const Chatbot = () => {
         ) : (
           <div className={styles.greetingDisplay}>
             {greetingLoading ? '로딩 중...' : greeting}
+          </div>
+        )}
+      </div>
+
+      {/* 기본 메시지 설정 */}
+      <div className={styles.greetingSection}>
+        <div className={styles.greetingHeader}>
+          <h2 className={styles.sectionTitle}>
+            <HiOutlineChatAlt size={20} />
+            질문 매칭 실패 시 기본 메시지
+          </h2>
+          {!isEditingDefaultMessage && (
+            <button
+              className={styles.editButton}
+              onClick={() => setIsEditingDefaultMessage(true)}
+              type="button"
+            >
+              <HiOutlinePencil size={20} />
+              <span>수정</span>
+            </button>
+          )}
+        </div>
+        {isEditingDefaultMessage ? (
+          <div className={styles.greetingForm}>
+            <textarea
+              className={styles.textarea}
+              value={defaultMessage}
+              onChange={(e) => setDefaultMessage(e.target.value)}
+              placeholder="FAQ에 없는 질문을 받았을 때 보여줄 메시지를 입력하세요..."
+              rows={6}
+            />
+            <div className={styles.greetingActions}>
+              <button
+                className={styles.saveButton}
+                onClick={saveDefaultMessage}
+                type="button"
+              >
+                <HiOutlineCheck size={20} />
+                <span>저장</span>
+              </button>
+              <button
+                className={styles.cancelButton}
+                onClick={() => {
+                  setIsEditingDefaultMessage(false);
+                  loadGreeting();
+                }}
+                type="button"
+              >
+                <HiOutlineX size={20} />
+                <span>취소</span>
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className={styles.greetingDisplay}>
+            {greetingLoading ? '로딩 중...' : (defaultMessage || '(기본 메시지 미설정 - 하드코딩된 메시지 사용)')}
           </div>
         )}
       </div>

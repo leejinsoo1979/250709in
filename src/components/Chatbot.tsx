@@ -19,12 +19,13 @@ export const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [greeting, setGreeting] = useState('안녕하세요! 무엇을 도와드릴까요?');
+  const [defaultMessage, setDefaultMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useScrollLock(isOpen);
 
-  // 인사말 로드
+  // 인사말 및 기본 메시지 로드
   useEffect(() => {
-    const loadGreeting = async () => {
+    const loadSettings = async () => {
       try {
         const docRef = doc(db, 'chatbotSettings', 'general');
         const docSnap = await getDoc(docRef);
@@ -32,13 +33,14 @@ export const Chatbot: React.FC = () => {
         if (docSnap.exists()) {
           const data = docSnap.data();
           setGreeting(data.greeting || '안녕하세요! 무엇을 도와드릴까요?');
+          setDefaultMessage(data.defaultMessage || '');
         }
       } catch (error) {
-        console.error('인사말 로드 실패:', error);
+        console.error('챗봇 설정 로드 실패:', error);
       }
     };
 
-    loadGreeting();
+    loadSettings();
   }, []);
 
   // 초기 환영 메시지
@@ -86,7 +88,7 @@ export const Chatbot: React.FC = () => {
 
     // FAQ 매칭
     setTimeout(() => {
-      const answer = matchQuestion(input.trim());
+      const answer = matchQuestion(input.trim(), defaultMessage);
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
         text: answer,
