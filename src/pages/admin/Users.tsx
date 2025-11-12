@@ -29,6 +29,8 @@ const Users = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'name-asc' | 'name-desc'>('date-desc');
   const [filterPlan, setFilterPlan] = useState<PlanType | 'all'>('all');
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const [planFilterDropdownOpen, setPlanFilterDropdownOpen] = useState(false);
   const [planDialog, setPlanDialog] = useState<{
     show: boolean;
     userId: string;
@@ -94,6 +96,21 @@ const Users = () => {
 
     fetchUsers();
   }, []);
+
+  // Click outside 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (sortDropdownOpen && !target.closest(`.${styles.customFilterDropdown}`)) {
+        setSortDropdownOpen(false);
+      }
+      if (planFilterDropdownOpen && !target.closest(`.${styles.customFilterDropdown}`)) {
+        setPlanFilterDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sortDropdownOpen, planFilterDropdownOpen]);
 
   // 플랜 변경 다이얼로그 열기
   const openPlanDialog = (userId: string, userName: string, currentPlan: PlanType) => {
@@ -189,32 +206,180 @@ const Users = () => {
         </div>
 
         <div className={styles.filters}>
+          {/* 정렬 드롭다운 */}
           <div className={styles.filterGroup}>
             <label className={styles.filterLabel}>정렬</label>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as any)}
-              className={styles.filterSelect}
-            >
-              <option value="date-desc">가입일 최신순</option>
-              <option value="date-asc">가입일 오래된순</option>
-              <option value="name-asc">이름 가나다순</option>
-              <option value="name-desc">이름 역순</option>
-            </select>
+            <div className={styles.customFilterDropdown}>
+              <button
+                type="button"
+                className={styles.filterButton}
+                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+              >
+                <span>
+                  {sortBy === 'date-desc' && '가입일 최신순'}
+                  {sortBy === 'date-asc' && '가입일 오래된순'}
+                  {sortBy === 'name-asc' && '이름 가나다순'}
+                  {sortBy === 'name-desc' && '이름 역순'}
+                </span>
+                <svg
+                  className={`${styles.dropdownIcon} ${sortDropdownOpen ? styles.dropdownIconOpen : ''}`}
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {sortDropdownOpen && (
+                <div className={styles.filterDropdownMenu}>
+                  <button
+                    className={`${styles.filterDropdownItem} ${sortBy === 'date-desc' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setSortBy('date-desc');
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    가입일 최신순
+                    {sortBy === 'date-desc' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${sortBy === 'date-asc' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setSortBy('date-asc');
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    가입일 오래된순
+                    {sortBy === 'date-asc' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${sortBy === 'name-asc' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setSortBy('name-asc');
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    이름 가나다순
+                    {sortBy === 'name-asc' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${sortBy === 'name-desc' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setSortBy('name-desc');
+                      setSortDropdownOpen(false);
+                    }}
+                  >
+                    이름 역순
+                    {sortBy === 'name-desc' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
+          {/* 플랜 필터 드롭다운 */}
           <div className={styles.filterGroup}>
             <label className={styles.filterLabel}>플랜</label>
-            <select
-              value={filterPlan}
-              onChange={(e) => setFilterPlan(e.target.value as any)}
-              className={styles.filterSelect}
-            >
-              <option value="all">전체</option>
-              <option value="free">무료</option>
-              <option value="pro">프로</option>
-              <option value="enterprise">엔터프라이즈</option>
-            </select>
+            <div className={styles.customFilterDropdown}>
+              <button
+                type="button"
+                className={styles.filterButton}
+                onClick={() => setPlanFilterDropdownOpen(!planFilterDropdownOpen)}
+              >
+                <span>
+                  {filterPlan === 'all' && '전체'}
+                  {filterPlan === 'free' && '무료'}
+                  {filterPlan === 'pro' && '프로'}
+                  {filterPlan === 'enterprise' && '엔터프라이즈'}
+                </span>
+                <svg
+                  className={`${styles.dropdownIcon} ${planFilterDropdownOpen ? styles.dropdownIconOpen : ''}`}
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {planFilterDropdownOpen && (
+                <div className={styles.filterDropdownMenu}>
+                  <button
+                    className={`${styles.filterDropdownItem} ${filterPlan === 'all' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setFilterPlan('all');
+                      setPlanFilterDropdownOpen(false);
+                    }}
+                  >
+                    전체
+                    {filterPlan === 'all' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${filterPlan === 'free' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setFilterPlan('free');
+                      setPlanFilterDropdownOpen(false);
+                    }}
+                  >
+                    무료
+                    {filterPlan === 'free' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${filterPlan === 'pro' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setFilterPlan('pro');
+                      setPlanFilterDropdownOpen(false);
+                    }}
+                  >
+                    프로
+                    {filterPlan === 'pro' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                  <button
+                    className={`${styles.filterDropdownItem} ${filterPlan === 'enterprise' ? styles.filterDropdownItemActive : ''}`}
+                    onClick={() => {
+                      setFilterPlan('enterprise');
+                      setPlanFilterDropdownOpen(false);
+                    }}
+                  >
+                    엔터프라이즈
+                    {filterPlan === 'enterprise' && (
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

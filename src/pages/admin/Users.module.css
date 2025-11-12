@@ -84,7 +84,18 @@
   letter-spacing: 0.5px;
 }
 
-.filterSelect {
+/* 커스텀 필터 드롭다운 */
+.customFilterDropdown {
+  position: relative;
+  min-width: 180px;
+}
+
+.filterButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   padding: 10px 14px;
   background: var(--theme-surface, #ffffff);
   border: 1px solid var(--theme-border, #e5e7eb);
@@ -94,17 +105,88 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 160px;
 }
 
-.filterSelect:hover {
+.filterButton:hover {
   border-color: var(--theme-primary, #667eea);
+  background: var(--theme-background, #f9fafb);
 }
 
-.filterSelect:focus {
+.filterButton:focus {
   outline: none;
   border-color: var(--theme-primary, #667eea);
   box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+}
+
+.filterButton span {
+  flex: 1;
+  text-align: left;
+}
+
+.dropdownIcon {
+  color: var(--theme-text-secondary, #6b7280);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dropdownIconOpen {
+  transform: rotate(180deg);
+}
+
+.filterDropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--theme-surface, white);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  overflow: hidden;
+  animation: filterDropdownSlideDown 0.2s ease;
+}
+
+@keyframes filterDropdownSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filterDropdownItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterDropdownItem:hover {
+  background: var(--theme-background-hover, #f3f4f6);
+}
+
+.filterDropdownItemActive {
+  background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  color: var(--theme-primary, #667eea);
+}
+
+.filterDropdownItem svg {
+  color: var(--theme-primary, #667eea);
+  flex-shrink: 0;
 }
 
 /* 테이블 */
@@ -672,8 +754,8 @@
     padding: 12px;
   }
 
-  .filterSelect {
-    min-width: 140px;
+  .customFilterDropdown {
+    min-width: 160px;
   }
 }
 
@@ -702,7 +784,7 @@
     min-width: 140px;
   }
 
-  .filterSelect {
+  .customFilterDropdown {
     min-width: 100%;
   }
 
