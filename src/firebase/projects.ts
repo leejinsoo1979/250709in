@@ -1135,12 +1135,12 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
       const teamPath = projectDoc.ref.parent.parent?.id; // teams/{teamId}
       
       // 팀 멤버 확인
-      if (teamPath) {
+      if (teamPath && !isAdmin) {
         const teamRef = doc(db, 'teams', teamPath);
         const teamSnap = await getDocFromServer(teamRef);
         if (teamSnap.exists()) {
           const teamData = teamSnap.data();
-          const isTeamMember = teamData.members?.some((m: any) => 
+          const isTeamMember = teamData.members?.some((m: any) =>
             m.userId === user.uid || m.email === user.email
           );
           if (!isTeamMember) {
