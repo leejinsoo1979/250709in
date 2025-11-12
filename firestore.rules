@@ -242,5 +242,12 @@ service cloud.firestore {
       allow create: if isAdmin();
       allow update, delete: if isAdmin();
     }
+
+    // 챗봇 Q&A - 관리자만 쓰기, 모든 사용자는 읽기 가능
+    match /chatbotQAs/{qaId} {
+      allow read, list: if isSignedIn();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin();
+    }
   }
 }
