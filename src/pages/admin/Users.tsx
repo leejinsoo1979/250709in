@@ -245,8 +245,8 @@ const Users = () => {
                   </td>
                   <td>
                     <span
-                      className={styles.planBadge}
-                      style={{ backgroundColor: PLANS[targetUser.plan || 'free'].color }}
+                      className={`${styles.planBadge} ${(targetUser.plan || 'free') === 'free' ? styles.planBadgeFree : ''}`}
+                      style={(targetUser.plan || 'free') !== 'free' ? { backgroundColor: PLANS[targetUser.plan || 'free'].color } : {}}
                     >
                       {PLANS[targetUser.plan || 'free'].name}
                     </span>
@@ -300,8 +300,8 @@ const Users = () => {
               <label className={styles.planLabel}>현재 플랜</label>
               <div className={styles.currentPlan}>
                 <span
-                  className={styles.planBadge}
-                  style={{ backgroundColor: PLANS[planDialog.currentPlan].color }}
+                  className={`${styles.planBadge} ${planDialog.currentPlan === 'free' ? styles.planBadgeFree : ''}`}
+                  style={planDialog.currentPlan !== 'free' ? { backgroundColor: PLANS[planDialog.currentPlan].color } : {}}
                 >
                   {PLANS[planDialog.currentPlan].name}
                 </span>
@@ -315,8 +315,8 @@ const Users = () => {
                   onClick={() => setPlanDropdownOpen(!planDropdownOpen)}
                 >
                   <span
-                    className={styles.planBadge}
-                    style={{ backgroundColor: PLANS[planDialog.newPlan].color }}
+                    className={`${styles.planBadge} ${planDialog.newPlan === 'free' ? styles.planBadgeFree : ''}`}
+                    style={planDialog.newPlan !== 'free' ? { backgroundColor: PLANS[planDialog.newPlan].color } : {}}
                   >
                     {PLANS[planDialog.newPlan].name}
                   </span>
@@ -345,8 +345,8 @@ const Users = () => {
                         onClick={() => handlePlanSelect(planType)}
                       >
                         <span
-                          className={styles.planBadge}
-                          style={{ backgroundColor: PLANS[planType].color }}
+                          className={`${styles.planBadge} ${planType === 'free' ? styles.planBadgeFree : ''}`}
+                          style={planType !== 'free' ? { backgroundColor: PLANS[planType].color } : {}}
                         >
                           {PLANS[planType].name}
                         </span>

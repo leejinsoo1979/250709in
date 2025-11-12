@@ -341,6 +341,11 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+.planBadgeFree {
+  background: var(--theme-text-secondary, #6b7280);
+  color: white;
+}
+
 /* 플랜 변경 버튼 */
 .changePlanButton {
   padding: 6px 14px;
