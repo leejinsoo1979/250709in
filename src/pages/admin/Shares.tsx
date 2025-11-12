@@ -1,47 +1,53 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/auth/AuthProvider';
-import { collection, query, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, query, getDocs, doc, getDoc, where } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { HiOutlineShare, HiOutlineLink, HiOutlineUsers, HiOutlineEye } from 'react-icons/hi';
+import { HiOutlineShare, HiOutlineLink, HiOutlineUsers, HiOutlineChevronDown, HiOutlineChevronRight } from 'react-icons/hi';
 import styles from './Shares.module.css';
 
-interface ShareLink {
-  id: string;
-  projectId: string;
-  projectName?: string;
-  token: string;
-  createdBy: string;
-  createdByEmail?: string;
-  createdAt: Date | null;
-  expiresAt: Date | null;
-  viewCount: number;
-  isActive: boolean;
-  accessCount: number;
+interface ProjectOwner {
+  userId: string;
+  email: string;
+  displayName: string;
 }
 
-interface SharedAccess {
-  id: string;
-  projectId: string;
-  projectName?: string;
+interface Collaborator {
   userId: string;
-  userEmail?: string;
-  userName?: string;
-  sharedBy: string;
-  sharedByEmail?: string;
-  permission: string;
+  email: string;
+  displayName: string;
+  permission: 'viewer' | 'editor';
+  sharedVia: 'link' | 'email';
   sharedAt: Date | null;
-  lastAccessedAt: Date | null;
+  linkToken?: string;
+}
+
+interface ProjectShare {
+  projectId: string;
+  projectName: string;
+  owner: ProjectOwner;
+  collaborators: Collaborator[];
+  shareLinks: ShareLinkInfo[];
+  totalCollaborators: number;
+  totalLinks: number;
+}
+
+interface ShareLinkInfo {
+  id: string;
+  token: string;
+  permission: string;
+  createdAt: Date | null;
+  expiresAt: Date | null;
+  isActive: boolean;
+  usageCount: number;
 }
 
 const Shares = () => {
   const { user } = useAuth();
-  const [shareLinks, setShareLinks] = useState<ShareLink[]>([]);
-  const [sharedAccesses, setSharedAccesses] = useState<SharedAccess[]>([]);
+  const [projectShares, setProjectShares] = useState<ProjectShare[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTab, setSelectedTab] = useState<'links' | 'access'>('links');
+  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
 
-  // 공유 링크 및 공유 접근 권한 가져오기
   useEffect(() => {
     if (!user) {
       console.log('🔗 Shares: user 없음');
@@ -53,119 +59,105 @@ const Shares = () => {
         setLoading(true);
         console.log('🔗 공유 데이터 조회 중...');
 
-        // ShareLinks 조회
-        const shareLinksQuery = query(collection(db, 'shareLinks'));
-        const shareLinksSnapshot = await getDocs(shareLinksQuery);
+        // 모든 프로젝트 조회
+        const projectsSnapshot = await getDocs(collection(db, 'projects'));
+        const projectSharesData: ProjectShare[] = [];
 
-        console.log('🔗 공유 링크 개수:', shareLinksSnapshot.size);
+        for (const projectDoc of projectsSnapshot.docs) {
+          const projectData = projectDoc.data();
+          const projectId = projectDoc.id;
+          const projectName = projectData.title || projectData.projectName || projectData.name || '이름 없음';
 
-        const linksData: ShareLink[] = [];
-        for (const linkDoc of shareLinksSnapshot.docs) {
-          const data = linkDoc.data();
-
-          // 프로젝트 정보 조회
-          let projectName = '';
-          if (data.projectId) {
-            const projectDoc = await getDoc(doc(db, 'projects', data.projectId)).catch(() => null);
-            if (projectDoc?.exists()) {
-              const projectData = projectDoc.data();
-              projectName = projectData?.title || projectData?.projectName || projectData?.name || '';
+          // 프로젝트 소유자 정보
+          let ownerEmail = '';
+          let ownerDisplayName = '';
+          if (projectData.userId) {
+            const ownerDoc = await getDoc(doc(db, 'users', projectData.userId)).catch(() => null);
+            if (ownerDoc?.exists()) {
+              const ownerData = ownerDoc.data();
+              ownerEmail = ownerData.email || '';
+              ownerDisplayName = ownerData.displayName || ownerData.userName || ownerEmail.split('@')[0] || '사용자';
             }
           }
 
-          // 생성자 정보 조회
-          let createdByEmail = '';
-          if (data.createdBy) {
-            const userDoc = await getDoc(doc(db, 'users', data.createdBy)).catch(() => null);
-            if (userDoc?.exists()) {
-              createdByEmail = userDoc.data()?.email || '';
-            }
-          }
+          const owner: ProjectOwner = {
+            userId: projectData.userId || '',
+            email: ownerEmail,
+            displayName: ownerDisplayName
+          };
 
-          // 접근 로그 개수 조회
-          const accessLogsSnapshot = await getDocs(
-            collection(db, 'shareLinkAccessLog')
-          ).catch(() => ({ size: 0, docs: [] }));
-
-          const linkAccessLogs = accessLogsSnapshot.docs.filter(
-            log => log.data().shareLinkId === linkDoc.id
+          // 협업자 조회 (sharedProjectAccess)
+          const accessQuery = query(
+            collection(db, 'sharedProjectAccess'),
+            where('projectId', '==', projectId)
           );
+          const accessSnapshot = await getDocs(accessQuery);
 
-          linksData.push({
-            id: linkDoc.id,
-            projectId: data.projectId || '',
-            projectName,
-            token: data.token || '',
-            createdBy: data.createdBy || '',
-            createdByEmail,
-            createdAt: data.createdAt?.toDate?.() || null,
-            expiresAt: data.expiresAt?.toDate?.() || null,
-            viewCount: data.viewCount || 0,
-            isActive: data.isActive !== false,
-            accessCount: linkAccessLogs.length
-          });
+          const collaborators: Collaborator[] = [];
+          for (const accessDoc of accessSnapshot.docs) {
+            const accessData = accessDoc.data();
+
+            let userEmail = accessData.userEmail || '';
+            let userDisplayName = accessData.userName || '';
+
+            // 사용자 정보 조회
+            if (accessData.userId && (!userEmail || !userDisplayName)) {
+              const userDoc = await getDoc(doc(db, 'users', accessData.userId)).catch(() => null);
+              if (userDoc?.exists()) {
+                const userData = userDoc.data();
+                userEmail = userData.email || userEmail;
+                userDisplayName = userData.displayName || userData.userName || userEmail.split('@')[0];
+              }
+            }
+
+            collaborators.push({
+              userId: accessData.userId || '',
+              email: userEmail,
+              displayName: userDisplayName,
+              permission: accessData.permission || 'viewer',
+              sharedVia: accessData.sharedVia || 'link',
+              sharedAt: accessData.grantedAt?.toDate?.() || accessData.sharedAt?.toDate?.() || null,
+              linkToken: accessData.linkToken || ''
+            });
+          }
+
+          // 공유 링크 조회
+          const linksQuery = query(
+            collection(db, 'shareLinks'),
+            where('projectId', '==', projectId)
+          );
+          const linksSnapshot = await getDocs(linksQuery);
+
+          const shareLinks: ShareLinkInfo[] = [];
+          for (const linkDoc of linksSnapshot.docs) {
+            const linkData = linkDoc.data();
+            shareLinks.push({
+              id: linkDoc.id,
+              token: linkData.token || '',
+              permission: linkData.permission || 'viewer',
+              createdAt: linkData.createdAt?.toDate?.() || null,
+              expiresAt: linkData.expiresAt?.toDate?.() || null,
+              isActive: linkData.isActive !== false,
+              usageCount: linkData.usageCount || 0
+            });
+          }
+
+          // 협업자나 링크가 있는 프로젝트만 추가
+          if (collaborators.length > 0 || shareLinks.length > 0) {
+            projectSharesData.push({
+              projectId,
+              projectName,
+              owner,
+              collaborators,
+              shareLinks,
+              totalCollaborators: collaborators.length,
+              totalLinks: shareLinks.length
+            });
+          }
         }
 
-        console.log('🔗 공유 링크 데이터:', linksData);
-        setShareLinks(linksData);
-
-        // SharedProjectAccess 조회
-        const sharedAccessQuery = query(collection(db, 'sharedProjectAccess'));
-        const sharedAccessSnapshot = await getDocs(sharedAccessQuery);
-
-        console.log('👥 공유 접근 권한 개수:', sharedAccessSnapshot.size);
-
-        const accessData: SharedAccess[] = [];
-        for (const accessDoc of sharedAccessSnapshot.docs) {
-          const data = accessDoc.data();
-
-          // 프로젝트 정보 조회
-          let projectName = '';
-          if (data.projectId) {
-            const projectDoc = await getDoc(doc(db, 'projects', data.projectId)).catch(() => null);
-            if (projectDoc?.exists()) {
-              const projectData = projectDoc.data();
-              projectName = projectData?.title || projectData?.projectName || projectData?.name || '';
-            }
-          }
-
-          // 사용자 정보 조회
-          let userEmail = '';
-          let userName = '';
-          if (data.userId) {
-            const userDoc = await getDoc(doc(db, 'users', data.userId)).catch(() => null);
-            if (userDoc?.exists()) {
-              userEmail = userDoc.data()?.email || '';
-              userName = userDoc.data()?.displayName || '';
-            }
-          }
-
-          // 공유자 정보 조회
-          let sharedByEmail = '';
-          if (data.sharedBy) {
-            const sharedByDoc = await getDoc(doc(db, 'users', data.sharedBy)).catch(() => null);
-            if (sharedByDoc?.exists()) {
-              sharedByEmail = sharedByDoc.data()?.email || '';
-            }
-          }
-
-          accessData.push({
-            id: accessDoc.id,
-            projectId: data.projectId || '',
-            projectName,
-            userId: data.userId || '',
-            userEmail,
-            userName,
-            sharedBy: data.sharedBy || '',
-            sharedByEmail,
-            permission: data.permission || 'viewer',
-            sharedAt: data.sharedAt?.toDate?.() || null,
-            lastAccessedAt: data.lastAccessedAt?.toDate?.() || null
-          });
-        }
-
-        console.log('👥 공유 접근 권한 데이터:', accessData);
-        setSharedAccesses(accessData);
+        console.log('🔗 프로젝트 공유 데이터:', projectSharesData.length);
+        setProjectShares(projectSharesData);
       } catch (error) {
         console.error('❌ 공유 데이터 조회 실패:', error);
       } finally {
@@ -177,26 +169,29 @@ const Shares = () => {
   }, [user]);
 
   // 검색 필터링
-  const filteredShareLinks = shareLinks.filter(link => {
+  const filteredProjects = projectShares.filter(project => {
     const query = searchQuery.toLowerCase();
     return (
-      link.projectName?.toLowerCase().includes(query) ||
-      link.createdByEmail?.toLowerCase().includes(query) ||
-      link.token.toLowerCase().includes(query) ||
-      link.id.toLowerCase().includes(query)
+      project.projectName.toLowerCase().includes(query) ||
+      project.owner.email.toLowerCase().includes(query) ||
+      project.owner.displayName.toLowerCase().includes(query) ||
+      project.collaborators.some(c =>
+        c.email.toLowerCase().includes(query) ||
+        c.displayName.toLowerCase().includes(query)
+      )
     );
   });
 
-  const filteredSharedAccesses = sharedAccesses.filter(access => {
-    const query = searchQuery.toLowerCase();
-    return (
-      access.projectName?.toLowerCase().includes(query) ||
-      access.userEmail?.toLowerCase().includes(query) ||
-      access.userName?.toLowerCase().includes(query) ||
-      access.sharedByEmail?.toLowerCase().includes(query) ||
-      access.id.toLowerCase().includes(query)
-    );
-  });
+  // 프로젝트 펼침/접힘
+  const toggleProject = (projectId: string) => {
+    const newExpanded = new Set(expandedProjects);
+    if (newExpanded.has(projectId)) {
+      newExpanded.delete(projectId);
+    } else {
+      newExpanded.add(projectId);
+    }
+    setExpandedProjects(newExpanded);
+  };
 
   // 권한 배지
   const getPermissionBadge = (permission: string) => {
@@ -208,42 +203,40 @@ const Shares = () => {
     return permissionMap[permission] || permissionMap.viewer;
   };
 
-  // 상태 배지
-  const getStatusBadge = (isActive: boolean, expiresAt: Date | null) => {
-    if (!isActive) {
-      return { label: '비활성', className: styles.statusInactive };
-    }
-    if (expiresAt && expiresAt < new Date()) {
-      return { label: '만료됨', className: styles.statusExpired };
-    }
-    return { label: '활성', className: styles.statusActive };
-  };
-
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>공유 관리</h1>
-          <p className={styles.subtitle}>공유 링크 및 접근 권한 관리</p>
+          <p className={styles.subtitle}>프로젝트별 소유자 및 협업자 현황</p>
         </div>
-      </div>
-
-      {/* 탭 */}
-      <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${selectedTab === 'links' ? styles.tabActive : ''}`}
-          onClick={() => setSelectedTab('links')}
-        >
-          <HiOutlineLink size={20} />
-          <span>공유 링크 ({shareLinks.length})</span>
-        </button>
-        <button
-          className={`${styles.tab} ${selectedTab === 'access' ? styles.tabActive : ''}`}
-          onClick={() => setSelectedTab('access')}
-        >
-          <HiOutlineUsers size={20} />
-          <span>접근 권한 ({sharedAccesses.length})</span>
-        </button>
+        <div className={styles.stats}>
+          <div className={styles.statCard}>
+            <HiOutlineShare size={24} />
+            <div>
+              <div className={styles.statValue}>{projectShares.length}</div>
+              <div className={styles.statLabel}>공유된 프로젝트</div>
+            </div>
+          </div>
+          <div className={styles.statCard}>
+            <HiOutlineUsers size={24} />
+            <div>
+              <div className={styles.statValue}>
+                {projectShares.reduce((sum, p) => sum + p.totalCollaborators, 0)}
+              </div>
+              <div className={styles.statLabel}>총 협업자</div>
+            </div>
+          </div>
+          <div className={styles.statCard}>
+            <HiOutlineLink size={24} />
+            <div>
+              <div className={styles.statValue}>
+                {projectShares.reduce((sum, p) => sum + p.totalLinks, 0)}
+              </div>
+              <div className={styles.statLabel}>활성 링크</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className={styles.content}>
@@ -251,7 +244,7 @@ const Shares = () => {
         <div className={styles.searchBar}>
           <input
             type="text"
-            placeholder={selectedTab === 'links' ? '프로젝트명, 생성자, 링크 코드로 검색...' : '프로젝트명, 사용자, 공유자로 검색...'}
+            placeholder="프로젝트명, 소유자, 협업자로 검색..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={styles.searchInput}
@@ -263,127 +256,196 @@ const Shares = () => {
             <div className={styles.spinner}></div>
             <p>공유 데이터를 불러오는 중...</p>
           </div>
-        ) : selectedTab === 'links' ? (
-          /* 공유 링크 테이블 */
-          filteredShareLinks.length === 0 ? (
-            <div className={styles.emptyState}>
-              <HiOutlineLink size={48} />
-              <p>공유 링크가 없습니다</p>
-            </div>
-          ) : (
-            <div className={styles.tableContainer}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>프로젝트</th>
-                    <th>링크 코드</th>
-                    <th>생성자</th>
-                    <th>조회수</th>
-                    <th>접근 로그</th>
-                    <th>상태</th>
-                    <th>생성일</th>
-                    <th>만료일</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredShareLinks.map(link => {
-                    const statusBadge = getStatusBadge(link.isActive, link.expiresAt);
-                    return (
-                      <tr key={link.id}>
-                        <td>
-                          <div className={styles.projectInfo}>
-                            <HiOutlineShare size={20} className={styles.projectIcon} />
-                            <span className={styles.projectName}>
-                              {link.projectName || '프로젝트 정보 없음'}
-                            </span>
-                          </div>
-                        </td>
-                        <td className={styles.token}>
-                          <code>{link.token.slice(0, 16)}...</code>
-                        </td>
-                        <td className={styles.userEmail}>{link.createdByEmail}</td>
-                        <td className={styles.count}>
-                          <HiOutlineEye size={16} /> {link.viewCount}
-                        </td>
-                        <td className={styles.count}>{link.accessCount}</td>
-                        <td>
-                          <span className={`${styles.badge} ${statusBadge.className}`}>
-                            {statusBadge.label}
-                          </span>
-                        </td>
-                        <td className={styles.date}>
-                          {link.createdAt?.toLocaleDateString('ko-KR') || '-'}
-                        </td>
-                        <td className={styles.date}>
-                          {link.expiresAt?.toLocaleDateString('ko-KR') || '무제한'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )
+        ) : filteredProjects.length === 0 ? (
+          <div className={styles.emptyState}>
+            <HiOutlineShare size={48} />
+            <p>공유된 프로젝트가 없습니다</p>
+          </div>
         ) : (
-          /* 공유 접근 권한 테이블 */
-          filteredSharedAccesses.length === 0 ? (
-            <div className={styles.emptyState}>
-              <HiOutlineUsers size={48} />
-              <p>공유 접근 권한이 없습니다</p>
-            </div>
-          ) : (
-            <div className={styles.tableContainer}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>프로젝트</th>
-                    <th>사용자</th>
-                    <th>권한</th>
-                    <th>공유자</th>
-                    <th>공유일</th>
-                    <th>최근 접근</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredSharedAccesses.map(access => {
-                    const permissionBadge = getPermissionBadge(access.permission);
-                    return (
-                      <tr key={access.id}>
-                        <td>
-                          <div className={styles.projectInfo}>
-                            <HiOutlineShare size={20} className={styles.projectIcon} />
-                            <span className={styles.projectName}>
-                              {access.projectName || '프로젝트 정보 없음'}
-                            </span>
-                          </div>
-                        </td>
-                        <td>
-                          <div className={styles.userInfo}>
-                            <span className={styles.userName}>{access.userName || access.userEmail}</span>
-                            {access.userName && (
-                              <span className={styles.userEmail}>{access.userEmail}</span>
-                            )}
-                          </div>
-                        </td>
-                        <td>
-                          <span className={`${styles.badge} ${permissionBadge.className}`}>
-                            {permissionBadge.label}
+          <div className={styles.projectList}>
+            {filteredProjects.map(project => {
+              const isExpanded = expandedProjects.has(project.projectId);
+              return (
+                <div key={project.projectId} className={styles.projectCard}>
+                  {/* 프로젝트 헤더 */}
+                  <div
+                    className={styles.projectHeader}
+                    onClick={() => toggleProject(project.projectId)}
+                  >
+                    <div className={styles.projectHeaderLeft}>
+                      {isExpanded ? (
+                        <HiOutlineChevronDown size={20} className={styles.chevron} />
+                      ) : (
+                        <HiOutlineChevronRight size={20} className={styles.chevron} />
+                      )}
+                      <HiOutlineShare size={20} className={styles.projectIcon} />
+                      <div>
+                        <div className={styles.projectName}>{project.projectName}</div>
+                        <div className={styles.projectMeta}>
+                          <span className={styles.ownerInfo}>
+                            소유자: {project.owner.displayName} ({project.owner.email})
                           </span>
-                        </td>
-                        <td className={styles.userEmail}>{access.sharedByEmail}</td>
-                        <td className={styles.date}>
-                          {access.sharedAt?.toLocaleDateString('ko-KR') || '-'}
-                        </td>
-                        <td className={styles.date}>
-                          {access.lastAccessedAt?.toLocaleDateString('ko-KR') || '접근 안함'}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.projectHeaderRight}>
+                      <div className={styles.badge}>
+                        <HiOutlineUsers size={16} />
+                        {project.totalCollaborators}명
+                      </div>
+                      <div className={styles.badge}>
+                        <HiOutlineLink size={16} />
+                        {project.totalLinks}개
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 프로젝트 상세 */}
+                  {isExpanded && (
+                    <div className={styles.projectDetails}>
+                      {/* 협업자 목록 */}
+                      {project.collaborators.length > 0 && (
+                        <div className={styles.section}>
+                          <h3 className={styles.sectionTitle}>
+                            <HiOutlineUsers size={18} />
+                            협업자 ({project.collaborators.length}명)
+                          </h3>
+                          <div className={styles.tableContainer}>
+                            <table className={styles.table}>
+                              <thead>
+                                <tr>
+                                  <th>사용자</th>
+                                  <th>이메일</th>
+                                  <th>권한</th>
+                                  <th>공유 방식</th>
+                                  <th>공유 링크</th>
+                                  <th>공유일</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {project.collaborators.map((collab, idx) => {
+                                  const permissionBadge = getPermissionBadge(collab.permission);
+                                  const shareUrl = collab.linkToken
+                                    ? `${window.location.origin}/share/${collab.linkToken}`
+                                    : '';
+                                  return (
+                                    <tr key={`${collab.userId}-${idx}`}>
+                                      <td className={styles.userName}>{collab.displayName}</td>
+                                      <td className={styles.userEmail}>{collab.email}</td>
+                                      <td>
+                                        <span className={`${styles.badge} ${permissionBadge.className}`}>
+                                          {permissionBadge.label}
+                                        </span>
+                                      </td>
+                                      <td>
+                                        <span className={styles.sharedVia}>
+                                          {collab.sharedVia === 'email' ? '이메일 초대' : '링크'}
+                                        </span>
+                                      </td>
+                                      <td>
+                                        {shareUrl ? (
+                                          <a
+                                            href={shareUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className={styles.linkUrl}
+                                          >
+                                            {shareUrl}
+                                          </a>
+                                        ) : (
+                                          <span className={styles.noLink}>-</span>
+                                        )}
+                                      </td>
+                                      <td className={styles.date}>
+                                        {collab.sharedAt?.toLocaleDateString('ko-KR') || '-'}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 공유 링크 목록 */}
+                      {project.shareLinks.length > 0 && (
+                        <div className={styles.section}>
+                          <h3 className={styles.sectionTitle}>
+                            <HiOutlineLink size={18} />
+                            공유 링크 ({project.shareLinks.length}개)
+                          </h3>
+                          <div className={styles.tableContainer}>
+                            <table className={styles.table}>
+                              <thead>
+                                <tr>
+                                  <th>링크 URL</th>
+                                  <th>권한</th>
+                                  <th>사용 횟수</th>
+                                  <th>상태</th>
+                                  <th>생성일</th>
+                                  <th>만료일</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {project.shareLinks.map(link => {
+                                  const permissionBadge = getPermissionBadge(link.permission);
+                                  const shareUrl = `${window.location.origin}/share/${link.token}`;
+                                  const isExpired = link.expiresAt && link.expiresAt < new Date();
+                                  const statusClass = !link.isActive
+                                    ? styles.statusInactive
+                                    : isExpired
+                                    ? styles.statusExpired
+                                    : styles.statusActive;
+                                  const statusLabel = !link.isActive
+                                    ? '비활성'
+                                    : isExpired
+                                    ? '만료됨'
+                                    : '활성';
+
+                                  return (
+                                    <tr key={link.id}>
+                                      <td>
+                                        <a
+                                          href={shareUrl}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className={styles.linkUrl}
+                                        >
+                                          {shareUrl}
+                                        </a>
+                                      </td>
+                                      <td>
+                                        <span className={`${styles.badge} ${permissionBadge.className}`}>
+                                          {permissionBadge.label}
+                                        </span>
+                                      </td>
+                                      <td className={styles.count}>{link.usageCount}회</td>
+                                      <td>
+                                        <span className={`${styles.badge} ${statusClass}`}>
+                                          {statusLabel}
+                                        </span>
+                                      </td>
+                                      <td className={styles.date}>
+                                        {link.createdAt?.toLocaleDateString('ko-KR') || '-'}
+                                      </td>
+                                      <td className={styles.date}>
+                                        {link.expiresAt?.toLocaleDateString('ko-KR') || '무제한'}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
