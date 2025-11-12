@@ -332,7 +332,15 @@ const Chatbot = () => {
               </div>
 
               <button
-                onClick={editingId ? handleUpdate : handleAdd}
+                type="button"
+                onClick={() => {
+                  console.log('버튼 클릭됨');
+                  if (editingId) {
+                    handleUpdate();
+                  } else {
+                    handleAdd();
+                  }
+                }}
                 className={styles.submitButton}
               >
                 <HiOutlineCheck size={18} />
