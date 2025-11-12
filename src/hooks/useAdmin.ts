@@ -9,6 +9,7 @@ export type AdminRole = 'super' | 'admin' | 'support' | 'sales';
 export const useAdmin = (user: User | null) => {
   const result = useMemo(() => {
     if (!user || !user.email) {
+      console.log('🔐 useAdmin: user 없음');
       return {
         adminRole: null,
         isAdmin: false,
@@ -18,6 +19,12 @@ export const useAdmin = (user: User | null) => {
     }
 
     const isSuperAdmin = user.email.toLowerCase().trim() === SUPER_ADMIN_EMAIL.toLowerCase().trim();
+
+    console.log('🔐 useAdmin 체크:', {
+      userEmail: user.email,
+      isSuperAdmin,
+      superAdminEmail: SUPER_ADMIN_EMAIL
+    });
 
     return {
       adminRole: isSuperAdmin ? ('super' as AdminRole) : null,

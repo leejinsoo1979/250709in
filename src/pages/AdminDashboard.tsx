@@ -33,12 +33,14 @@ const AdminDashboard = () => {
   }, [user, navigate]);
 
   useEffect(() => {
+    console.log('🔐 AdminDashboard 권한 체크:', { loading, user: !!user, isAdmin, isSuperAdmin });
     // 관리자가 아닌 경우 대시보드로 리다이렉트
     if (!loading && user && !isAdmin) {
+      console.error('❌ 관리자 권한 없음 - 리다이렉트');
       alert('관리자 권한이 필요합니다.');
       navigate('/dashboard');
     }
-  }, [loading, user, isAdmin, navigate]);
+  }, [loading, user, isAdmin, isSuperAdmin, navigate]);
 
   // Firebase 통계 데이터 가져오기
   useEffect(() => {

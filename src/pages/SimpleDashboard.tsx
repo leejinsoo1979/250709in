@@ -46,6 +46,8 @@ const SimpleDashboard: React.FC = () => {
   const { user, loading } = useAuth();
   const { isAdmin } = useAdmin(user);
 
+  console.log('🔐 SimpleDashboard:', { user: user?.email, isAdmin });
+
   // URL 파라미터 파싱
   const searchParams = new URLSearchParams(location.search);
   const urlProjectId = searchParams.get('projectId');
