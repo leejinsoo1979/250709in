@@ -12,7 +12,9 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
   deleteUser,
-  reauthenticateWithPopup
+  reauthenticateWithPopup,
+  setPersistence,
+  browserLocalPersistence
 } from 'firebase/auth';
 import { FirebaseError } from 'firebase/app';
 import { auth } from './config';
@@ -20,6 +22,11 @@ import { FLAGS } from '@/flags';
 
 // Re-export auth for convenience
 export { auth };
+
+// Firebase 인증 상태 유지 설정 (브라우저 닫아도 유지)
+setPersistence(auth, browserLocalPersistence).catch((error) => {
+  console.error('❌ Firebase persistence 설정 실패:', error);
+});
 
 // 구글 인증 제공자 생성
 const googleProvider = new GoogleAuthProvider();
@@ -38,13 +45,16 @@ googleProvider.addScope('email');
 // 이메일/비밀번호로 로그인
 export const signInWithEmail = async (email: string, password: string) => {
   try {
+    // 인증 상태 유지 설정 (새로고침 시에도 로그인 유지)
+    await setPersistence(auth, browserLocalPersistence);
+
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    
+
     // 팀 자동 생성 (최초 로그인 시)
     if (FLAGS.teamScope) {
       await ensurePersonalTeam(userCredential.user);
     }
-    
+
     return { user: userCredential.user, error: null };
   } catch (error) {
     const firebaseError = error as FirebaseError;
@@ -55,15 +65,18 @@ export const signInWithEmail = async (email: string, password: string) => {
 // 구글로 로그인 (팝업 방식 - 데스크톱)
 export const signInWithGoogle = async () => {
   try {
+    // 인증 상태 유지 설정 (새로고침 시에도 로그인 유지)
+    await setPersistence(auth, browserLocalPersistence);
+
     // 디버깅: 현재 환경 정보 출력
     console.log('🔐 구글 로그인 시도');
     console.log('🔐 현재 도메인:', window.location.hostname);
     console.log('🔐 Auth Domain:', import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || 'in-f8873.firebaseapp.com');
     console.log('🔐 환경:', import.meta.env.MODE);
-    
+
     // 모바일 환경 체크
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    
+
     if (isMobile) {
       // 모바일에서는 리다이렉트 방식 사용
       const { signInWithRedirect } = await import('firebase/auth');
@@ -134,18 +147,21 @@ export const signInWithGoogle = async () => {
 // 이메일/비밀번호로 회원가입
 export const signUpWithEmail = async (email: string, password: string, displayName?: string) => {
   try {
+    // 인증 상태 유지 설정 (새로고침 시에도 로그인 유지)
+    await setPersistence(auth, browserLocalPersistence);
+
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    
+
     // 사용자 이름 설정
     if (displayName && userCredential.user) {
       await updateProfile(userCredential.user, { displayName });
     }
-    
+
     // 팀 자동 생성 (신규 가입 시)
     if (FLAGS.teamScope) {
       await ensurePersonalTeam(userCredential.user);
     }
-    
+
     return { user: userCredential.user, error: null };
   } catch (error) {
     const firebaseError = error as FirebaseError;

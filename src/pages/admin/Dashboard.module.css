@@ -53,7 +53,7 @@
   border-color: var(--theme-primary, #667eea);
   color: white;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 12px var(--theme-primary-shadow, rgba(102, 126, 234, 0.3));
 }
 
 /* 통계 카드 */
@@ -87,10 +87,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
   color: white;
   border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 4px 16px var(--theme-primary-shadow, rgba(102, 126, 234, 0.3));
   flex-shrink: 0;
 }
 
@@ -192,10 +192,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
   color: white;
   border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 2px 8px var(--theme-primary-shadow, rgba(102, 126, 234, 0.2));
 }
 
 .activityUser {
