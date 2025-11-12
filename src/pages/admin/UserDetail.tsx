@@ -359,21 +359,24 @@ export default function UserDetail() {
                     {isExpanded && projectFiles.length > 0 && (
                       <div className={styles.projectFiles}>
                         {projectFiles.map(file => {
-                          const fileUrl = `/configurator?projectId=${file.projectId}&designFileId=${file.id}`;
+                          const fileUrl = `https://250709in.vercel.app/configurator?projectId=${file.projectId}&designFileId=${file.id}`;
                           return (
                             <div key={file.id} className={styles.fileItem}>
                               <div className={styles.fileItemHeader}>
+                                <span className={styles.fileName}>{file.fileName}</span>
+                                <span className={styles.fileSize}>
+                                  {(file.fileSize / 1024).toFixed(2)} KB
+                                </span>
+                              </div>
+                              <div className={styles.fileItemMeta}>
                                 <a
                                   href={fileUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className={styles.fileName}
+                                  className={styles.fileUrl}
                                 >
-                                  {file.fileName}
+                                  {fileUrl}
                                 </a>
-                                <span className={styles.fileSize}>
-                                  {(file.fileSize / 1024).toFixed(2)} KB
-                                </span>
                               </div>
                               <div className={styles.fileItemMeta}>
                                 <span>생성: {file.createdAt ? new Date(file.createdAt.toMillis()).toLocaleDateString('ko-KR') : '-'}</span>
@@ -401,23 +404,24 @@ export default function UserDetail() {
           ) : (
             <div className={styles.listContainer}>
               {designFiles.map(file => {
-                const fileUrl = `/configurator?projectId=${file.projectId}&designFileId=${file.id}`;
+                const fileUrl = `https://250709in.vercel.app/configurator?projectId=${file.projectId}&designFileId=${file.id}`;
                 return (
                   <div key={file.id} className={styles.listItem}>
                     <div className={styles.listItemHeader}>
-                      <strong>
-                        <a
-                          href={fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={styles.fileLink}
-                        >
-                          {file.fileName}
-                        </a>
-                      </strong>
+                      <strong className={styles.fileName}>{file.fileName}</strong>
                       <span className={styles.listItemSize}>
                         {(file.fileSize / 1024).toFixed(2)} KB
                       </span>
+                    </div>
+                    <div className={styles.listItemMeta}>
+                      <a
+                        href={fileUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={styles.fileUrl}
+                      >
+                        {fileUrl}
+                      </a>
                     </div>
                     <div className={styles.listItemMeta}>
                       <span>프로젝트: {file.projectId}</span>
