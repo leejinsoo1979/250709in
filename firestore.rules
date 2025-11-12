@@ -249,5 +249,11 @@ service cloud.firestore {
       allow create: if isAdmin();
       allow update, delete: if isAdmin();
     }
+
+    // 시스템 설정 - 관리자만 접근 가능
+    match /systemSettings/{settingId} {
+      allow read: if isAdmin();
+      allow write: if isAdmin();
+    }
   }
 }
