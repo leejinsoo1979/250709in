@@ -44,36 +44,41 @@ const Chatbot = () => {
   const loadQAs = async () => {
     try {
       setLoading(true);
-      const qasQuery = query(collection(db, 'chatbotQAs'), orderBy('createdAt', 'desc'));
-      const snapshot = await getDocs(qasQuery);
+      const snapshot = await getDocs(collection(db, 'chatbotQAs'));
       const qasList: ChatbotQA[] = [];
       snapshot.forEach((doc) => {
         const data = doc.data();
         qasList.push({
           id: doc.id,
-          question: data.question,
-          answer: data.answer,
-          category: data.category,
-          isActive: data.isActive,
+          question: data.question || '',
+          answer: data.answer || '',
+          category: data.category || '일반',
+          isActive: data.isActive !== undefined ? data.isActive : true,
           priority: data.priority || 1,
-          createdBy: data.createdBy,
+          createdBy: data.createdBy || '',
           createdAt: data.createdAt,
           updatedAt: data.updatedAt
         });
       });
 
-      // 클라이언트 사이드에서 우선순위로 정렬
+      // 클라이언트 사이드에서 정렬
       qasList.sort((a, b) => {
         if (b.priority !== a.priority) {
           return b.priority - a.priority;
         }
-        return b.createdAt.toMillis() - a.createdAt.toMillis();
+        if (a.createdAt && b.createdAt) {
+          return b.createdAt.toMillis() - a.createdAt.toMillis();
+        }
+        return 0;
       });
 
       setQAs(qasList);
-    } catch (error) {
-      console.error('Q&A 로드 실패:', error);
-      alert('Q&A 로드에 실패했습니다.');
+      console.log('✅ Q&A 로드 성공:', qasList.length, '개');
+    } catch (error: any) {
+      console.error('❌ Q&A 로드 실패:', error);
+      console.error('에러 상세:', error.message, error.code);
+      // 컬렉션이 없거나 데이터가 없는 경우는 에러로 처리하지 않음
+      setQAs([]);
     } finally {
       setLoading(false);
     }
