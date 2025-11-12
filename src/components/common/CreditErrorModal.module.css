@@ -202,8 +202,9 @@
 }
 
 .proPlanCol {
-  background: var(--theme-primary, #1a1a1a);
+  background: linear-gradient(135deg, rgba(107, 70, 193, 0.95) 0%, rgba(124, 58, 237, 0.95) 100%);
   color: white;
+  font-weight: 800;
 }
 
 .tableBody {
@@ -242,8 +243,8 @@
 }
 
 .proValue {
-  background: var(--theme-background, #fafafa);
-  color: var(--theme-primary, #1a1a1a);
+  background: linear-gradient(135deg, rgba(107, 70, 193, 0.85) 0%, rgba(124, 58, 237, 0.85) 100%);
+  color: white;
   font-weight: 700;
 }
 
@@ -284,7 +285,7 @@
 
 .upgradeButton {
   padding: 14px 32px;
-  background: var(--theme-primary, #1a1a1a);
+  background: linear-gradient(135deg, rgba(107, 70, 193, 0.95) 0%, rgba(124, 58, 237, 0.95) 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -292,18 +293,18 @@
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
 }
 
 .upgradeButton:hover {
-  background: var(--theme-primary-hover, #333333);
+  background: linear-gradient(135deg, rgba(124, 58, 237, 1) 0%, rgba(139, 92, 246, 1) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
 }
 
 .upgradeButton:active {
   transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.3);
 }
 
 /* 반응형 */
