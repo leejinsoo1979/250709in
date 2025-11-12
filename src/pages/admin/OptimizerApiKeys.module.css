@@ -1,0 +1,480 @@
+.container {
+  padding: 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 32px;
+  gap: 20px;
+}
+
+.title {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--theme-text, #1f2937);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.createButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--theme-primary, #667eea);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px var(--theme-primary-shadow, rgba(102, 126, 234, 0.25));
+}
+
+.createButton:hover {
+  background: var(--theme-primary-dark, #5568d3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--theme-primary-shadow, rgba(102, 126, 234, 0.4));
+}
+
+/* 생성 폼 */
+.createForm {
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text, #1f2937);
+}
+
+.input {
+  padding: 12px 16px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.input:focus {
+  outline: none;
+  border-color: var(--theme-primary, #667eea);
+  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+}
+
+.formActions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.cancelButton {
+  padding: 10px 20px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 6px;
+  color: var(--theme-text-secondary, #6b7280);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: var(--theme-background, #f9fafb);
+  border-color: var(--theme-primary, #667eea);
+  color: var(--theme-primary, #667eea);
+}
+
+.submitButton {
+  padding: 10px 20px;
+  background: var(--theme-primary, #667eea);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.submitButton:hover {
+  background: var(--theme-primary-dark, #5568d3);
+}
+
+/* 커스텀 셀렉트 */
+.customSelect {
+  position: relative;
+}
+
+.selectTrigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.selectTrigger:hover {
+  border-color: var(--theme-primary, #667eea);
+}
+
+.selectTrigger svg {
+  color: var(--theme-text-secondary, #6b7280);
+  transition: transform 0.2s ease;
+}
+
+.selectDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.selectOption {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--theme-text, #1f2937);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.selectOption:hover {
+  background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  color: var(--theme-primary, #667eea);
+}
+
+.selectDivider {
+  height: 1px;
+  background: var(--theme-border, #e5e7eb);
+  margin: 8px 0;
+}
+
+.customInputWrapper {
+  padding: 8px;
+}
+
+.customInput {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 6px;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.customInput:focus {
+  outline: none;
+  border-color: var(--theme-primary, #667eea);
+  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+}
+
+.customInput::placeholder {
+  color: var(--theme-text-muted, #9ca3af);
+}
+
+/* 안내 메시지 */
+.notice {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+  margin-bottom: 24px;
+}
+
+.notice svg {
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.noticeTitle {
+  margin: 0 0 8px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--theme-text, #1f2937);
+}
+
+.noticeText {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--theme-text, #1f2937);
+}
+
+/* API 키 목록 */
+.keysList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.keyCard {
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.keyCard:hover {
+  border-color: var(--theme-primary, #667eea);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.keyHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.keyInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.keyName {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--theme-text, #1f2937);
+}
+
+.keyDates {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.keyDate {
+  font-size: 12px;
+  color: var(--theme-text-muted, #9ca3af);
+}
+
+.keyExpiry {
+  font-size: 12px;
+  color: var(--theme-text-secondary, #6b7280);
+  font-weight: 500;
+}
+
+.expiredBadge {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.deleteButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 6px;
+  color: var(--theme-text-secondary, #6b7280);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.deleteButton:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.keyContent {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.keyValue {
+  flex: 1;
+  padding: 12px 16px;
+  background: var(--theme-background, #f9fafb);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.keyCode {
+  font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+  font-size: 13px;
+  color: var(--theme-text, #1f2937);
+  white-space: nowrap;
+}
+
+.keyActions {
+  display: flex;
+  gap: 8px;
+}
+
+.actionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 6px;
+  color: var(--theme-text-secondary, #6b7280);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionButton:hover {
+  background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  border-color: var(--theme-primary, #667eea);
+  color: var(--theme-primary, #667eea);
+}
+
+.keyFooter {
+  padding-top: 12px;
+  border-top: 1px solid var(--theme-border, #e5e7eb);
+  font-size: 12px;
+  color: var(--theme-text-muted, #9ca3af);
+}
+
+/* 빈 상태 */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.emptyButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--theme-primary, #667eea);
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-top: 8px;
+}
+
+.emptyButton:hover {
+  background: var(--theme-primary-dark, #5568d3);
+}
+
+/* 로딩 */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--theme-border, #e5e7eb);
+  border-top-color: var(--theme-primary, #667eea);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .createButton {
+    justify-content: center;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .keyContent {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .keyActions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}

@@ -162,6 +162,14 @@ const AdminLayout = () => {
           </NavLink>
 
           <NavLink
+            to="/admin/optimizer-api-keys"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineKey size={20} />
+            <span>옵티마이저 API 키</span>
+          </NavLink>
+
+          <NavLink
             to="/admin/subscriptions"
             className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
           >
