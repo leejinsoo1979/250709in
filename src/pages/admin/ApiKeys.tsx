@@ -13,6 +13,7 @@ interface ApiKey {
   userName: string;
   userEmail: string;
   createdAt: Timestamp;
+  expiresAt?: Timestamp;
   lastUsed?: Timestamp;
 }
 
@@ -22,6 +23,7 @@ const ApiKeys = () => {
   const [loading, setLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
+  const [expiryDays, setExpiryDays] = useState<number>(0); // 0 = 무제한
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -50,6 +52,7 @@ const ApiKeys = () => {
           userName: data.userName,
           userEmail: data.userEmail,
           createdAt: data.createdAt,
+          expiresAt: data.expiresAt,
           lastUsed: data.lastUsed,
         });
       });
@@ -87,6 +90,15 @@ const ApiKeys = () => {
 
     try {
       const newKey = generateApiKey();
+
+      // 유효기간 계산
+      let expiresAt = null;
+      if (expiryDays > 0) {
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + expiryDays);
+        expiresAt = Timestamp.fromDate(expiryDate);
+      }
+
       await addDoc(collection(db, 'apiKeys'), {
         name: newKeyName.trim(),
         key: newKey,
@@ -94,10 +106,12 @@ const ApiKeys = () => {
         userName: user.displayName || '',
         userEmail: user.email || '',
         createdAt: serverTimestamp(),
+        expiresAt: expiresAt,
       });
 
       alert('API 키가 생성되었습니다.\n\n⚠️ 키를 안전한 곳에 보관하세요. 다시 확인할 수 없습니다.');
       setNewKeyName('');
+      setExpiryDays(0);
       setIsAdding(false);
       loadApiKeys();
     } catch (error) {
@@ -181,6 +195,20 @@ const ApiKeys = () => {
               autoFocus
             />
           </div>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>유효기간</label>
+            <select
+              value={expiryDays}
+              onChange={(e) => setExpiryDays(Number(e.target.value))}
+              className={styles.input}
+            >
+              <option value={0}>무제한</option>
+              <option value={30}>30일</option>
+              <option value={90}>90일</option>
+              <option value={180}>180일</option>
+              <option value={365}>1년</option>
+            </select>
+          </div>
           <div className={styles.formActions}>
             <button className={styles.cancelButton} onClick={() => setIsAdding(false)}>
               취소
@@ -222,9 +250,24 @@ const ApiKeys = () => {
               <div className={styles.keyHeader}>
                 <div className={styles.keyInfo}>
                   <h3 className={styles.keyName}>{apiKey.name}</h3>
-                  <span className={styles.keyDate}>
-                    생성: {new Date(apiKey.createdAt.toMillis()).toLocaleString('ko-KR')}
-                  </span>
+                  <div className={styles.keyDates}>
+                    <span className={styles.keyDate}>
+                      생성: {new Date(apiKey.createdAt.toMillis()).toLocaleString('ko-KR')}
+                    </span>
+                    {apiKey.expiresAt && (
+                      <span className={styles.keyExpiry}>
+                        만료: {new Date(apiKey.expiresAt.toMillis()).toLocaleString('ko-KR')}
+                        {apiKey.expiresAt.toMillis() < Date.now() && (
+                          <span className={styles.expiredBadge}> (만료됨)</span>
+                        )}
+                      </span>
+                    )}
+                    {!apiKey.expiresAt && (
+                      <span className={styles.keyExpiry}>
+                        유효기간: 무제한
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <button
                   className={styles.deleteButton}
