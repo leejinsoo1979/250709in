@@ -41,6 +41,10 @@ const Chatbot = () => {
     loadQAs();
   }, []);
 
+  useEffect(() => {
+    console.log('🔍 상태 변경:', { isAdding, editingId, question, answer });
+  }, [isAdding, editingId, question, answer]);
+
   const loadQAs = async () => {
     try {
       setLoading(true);
@@ -214,9 +218,11 @@ const Chatbot = () => {
         <button
           className={styles.addButton}
           onClick={() => {
+            console.log('Q&A 추가 버튼 클릭됨');
             setIsAdding(true);
             setEditingId(null);
             resetForm();
+            console.log('isAdding 상태:', true);
           }}
         >
           <HiOutlinePlus size={20} />
@@ -257,7 +263,7 @@ const Chatbot = () => {
       <div className={styles.content}>
         {/* 폼 */}
         {(isAdding || editingId) && (
-          <div className={styles.formSection}>
+          <div className={styles.formSection} style={{ border: '2px solid red' }}>
             <div className={styles.formHeader}>
               <h2 className={styles.sectionTitle}>
                 <HiOutlineChatAlt2 size={20} />
@@ -276,7 +282,10 @@ const Chatbot = () => {
                   type="text"
                   placeholder="사용자가 물어볼 질문을 입력하세요"
                   value={question}
-                  onChange={(e) => setQuestion(e.target.value)}
+                  onChange={(e) => {
+                    console.log('질문 입력:', e.target.value);
+                    setQuestion(e.target.value);
+                  }}
                   className={styles.input}
                 />
               </div>
@@ -286,7 +295,10 @@ const Chatbot = () => {
                 <textarea
                   placeholder="챗봇이 답변할 내용을 입력하세요"
                   value={answer}
-                  onChange={(e) => setAnswer(e.target.value)}
+                  onChange={(e) => {
+                    console.log('답변 입력:', e.target.value);
+                    setAnswer(e.target.value);
+                  }}
                   className={styles.textarea}
                   rows={6}
                 />
