@@ -482,46 +482,121 @@
 /* 플랜 선택기 */
 .planSelector {
   margin: 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
-.planLabel {
+.sectionLabel {
   display: block;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
   font-size: 13px;
   font-weight: 600;
   color: var(--theme-text, #1f2937);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.currentPlan {
-  margin-bottom: 20px;
+/* 현재 플랜 섹션 */
+.currentPlanSection {
+  display: flex;
+  flex-direction: column;
 }
 
-/* 플랜 정보 */
-.planInfo {
-  padding: 16px;
+.planCardSmall {
+  padding: 12px 16px;
   background: var(--theme-background, #f9fafb);
-  border: 1px solid var(--theme-border, #e5e7eb);
-  border-radius: 8px;
+  border: 2px solid var(--theme-border, #e5e7eb);
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  max-width: fit-content;
 }
 
-.planInfoTitle {
-  margin: 0 0 12px 0;
+.planName {
   font-size: 15px;
   font-weight: 700;
   color: var(--theme-text, #1f2937);
 }
 
-.planFeatures {
+/* 플랜 그리드 섹션 */
+.planGridSection {
+  display: flex;
+  flex-direction: column;
+}
+
+.planGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+/* 플랜 카드 */
+.planCard {
+  padding: 16px;
+  background: var(--theme-surface, white);
+  border: 2px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.planCard:hover {
+  border-color: var(--theme-primary, #10b981);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+  transform: translateY(-2px);
+}
+
+.planCardActive {
+  border-color: var(--theme-primary, #10b981);
+  background: var(--theme-primary-light, rgba(16, 185, 129, 0.05));
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+}
+
+.planCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.planCardName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--theme-text, #1f2937);
+}
+
+.checkIcon {
+  color: var(--theme-primary, #10b981);
+  flex-shrink: 0;
+}
+
+.planCardFeatures {
   margin: 0;
   padding: 0;
   list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.planFeatures li {
-  padding: 6px 0;
-  font-size: 13px;
+.planCardFeatures li {
+  font-size: 12px;
   color: var(--theme-text-secondary, #6b7280);
   line-height: 1.5;
+  padding-left: 16px;
+  position: relative;
+}
+
+.planCardFeatures li::before {
+  content: '•';
+  position: absolute;
+  left: 4px;
+  color: var(--theme-primary, #10b981);
+  font-weight: bold;
 }
 
 /* 반응형 */
