@@ -191,7 +191,7 @@ export default function UserDetail() {
             <span>·</span>
             <span>{user.emailVerified ? '인증됨' : '미인증'}</span>
             <span>·</span>
-            <span>{PLANS[user.plan || 'free'].name}</span>
+            <span>{user.role === 'superadmin' ? '무제한 플랜' : PLANS[user.plan || 'free'].name}</span>
           </div>
         </div>
       </div>
@@ -230,13 +230,13 @@ export default function UserDetail() {
           <div className={styles.planInfo}>
             <span
               className={styles.planBadge}
-              style={{ backgroundColor: PLANS[user.plan || 'free'].color }}
+              style={{ backgroundColor: user.role === 'superadmin' ? '#667eea' : PLANS[user.plan || 'free'].color }}
             >
-              {PLANS[user.plan || 'free'].name}
+              {user.role === 'superadmin' ? '무제한 플랜' : PLANS[user.plan || 'free'].name}
             </span>
             <div className={styles.planFeatures}>
-              <div>최대 프로젝트: {PLANS[user.plan || 'free'].maxProjects}개</div>
-              <div>스토리지: {PLANS[user.plan || 'free'].storageLimit}GB</div>
+              <div>최대 프로젝트: {user.role === 'superadmin' ? '무제한' : `${PLANS[user.plan || 'free'].maxProjects}개`}</div>
+              <div>스토리지: {user.role === 'superadmin' ? '무제한' : `${PLANS[user.plan || 'free'].storageLimit}GB`}</div>
             </div>
           </div>
         </section>
@@ -292,7 +292,7 @@ export default function UserDetail() {
             </div>
             <div className={styles.infoItem}>
               <label>크레딧</label>
-              <div>{user.credits !== undefined ? `${user.credits} 크레딧` : '0 크레딧'}</div>
+              <div>{user.role === 'superadmin' ? '무제한' : (user.credits !== undefined ? `${user.credits} 크레딧` : '0 크레딧')}</div>
             </div>
           </div>
         </section>
