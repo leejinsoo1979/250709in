@@ -7,7 +7,7 @@ export const faqData: FAQ[] = [
   // 프로젝트 관련
   {
     keywords: ['프로젝트', '저장', '세이브', 'save', 'project'],
-    answer: '프로젝트는 자동으로 저장됩니다. 상단의 "저장" 버튼을 클릭하거나 Ctrl+S (Mac: Cmd+S)를 눌러 수동 저장할 수도 있습니다.',
+    answer: '프로젝트는 자동으로 저장됩니다. 상단의 "저장" 버튼을 클릭하거나 Ctrl+S (Mac: Cmd+S)를 눌러 수동으로 저장할 수도 있습니다.',
   },
   {
     keywords: ['불러오기', '로드', 'load', '열기', 'open'],
@@ -39,7 +39,7 @@ export const faqData: FAQ[] = [
   // 공간 설정
   {
     keywords: ['공간', '방', 'space', 'room', '치수'],
-    answer: '좌측 패널의 "공간 설정"에서 방의 가로, 세로, 높이를 설정할 수 있습니다. 벽 재질과 바닥 재질도 선택 가능합니다.',
+    answer: '좌측 패널의 "공간 설정"에서 방의 가로, 세로, 높이를 설정할 수 있습니다. 벽 재질과 바닥 재질도 선택할 수 있습니다.',
   },
   {
     keywords: ['재질', 'material', '텍스처', 'texture'],
