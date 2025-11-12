@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, addDoc, deleteDoc, doc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
-import { HiOutlineKey, HiOutlinePlus, HiOutlineTrash, HiOutlineCopy, HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
+import { HiOutlineKey, HiOutlinePlus, HiOutlineTrash, HiOutlineClipboard, HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 import styles from './ApiKeys.module.css';
 
 interface ApiKey {
@@ -258,7 +258,7 @@ const ApiKeys = () => {
                     onClick={() => copyToClipboard(apiKey.key)}
                     title="복사"
                   >
-                    <HiOutlineCopy size={18} />
+                    <HiOutlineClipboard size={18} />
                   </button>
                 </div>
               </div>
