@@ -19,7 +19,6 @@ import AdminDashboard from '@/pages/admin/Dashboard';
 import AdminUsers from '@/pages/admin/Users';
 import AdminUserDetail from '@/pages/admin/UserDetail';
 import AdminAdmins from '@/pages/admin/Admins';
-import AdminOrganizations from '@/pages/admin/Organizations';
 import AdminTeams from '@/pages/admin/Teams';
 import AdminProjects from '@/pages/admin/Projects';
 import AdminShares from '@/pages/admin/Shares';
@@ -123,7 +122,6 @@ function AppContent() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="users/:userId" element={<AdminUserDetail />} />
           <Route path="admins" element={<AdminAdmins />} />
-          <Route path="organizations" element={<AdminOrganizations />} />
           <Route path="teams" element={<AdminTeams />} />
           <Route path="projects" element={<AdminProjects />} />
           <Route path="shares" element={<AdminShares />} />
