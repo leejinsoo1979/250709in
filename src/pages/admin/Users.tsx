@@ -612,76 +612,76 @@ const Users = () => {
       </div>
     </div>
 
-      {/* 플랜 변경 다이얼로그 */}
-        {planDialog.show && (
-          <div className={styles.dialogOverlay}>
-            <div className={styles.dialog}>
-            <h3 className={styles.dialogTitle}>플랜 변경</h3>
-            <p className={styles.dialogMessage}>
-              <strong>{planDialog.userName}</strong>님의 플랜을 변경합니다.
-            </p>
+    {/* 플랜 변경 다이얼로그 */}
+    {planDialog.show && (
+      <div className={styles.dialogOverlay}>
+        <div className={styles.dialog}>
+          <h3 className={styles.dialogTitle}>플랜 변경</h3>
+          <p className={styles.dialogMessage}>
+            <strong>{planDialog.userName}</strong>님의 플랜을 변경합니다.
+          </p>
 
-            <div className={styles.planSelector}>
-              <div className={styles.currentPlanSection}>
-                <span className={styles.sectionLabel}>현재 플랜</span>
-                <div className={styles.planCardSmall}>
-                  <span className={styles.planName}>{PLANS[planDialog.currentPlan].name}</span>
-                </div>
+          <div className={styles.planSelector}>
+            <div className={styles.currentPlanSection}>
+              <span className={styles.sectionLabel}>현재 플랜</span>
+              <div className={styles.planCardSmall}>
+                <span className={styles.planName}>{PLANS[planDialog.currentPlan].name}</span>
               </div>
+            </div>
 
-              <div className={styles.planGridSection}>
-                <span className={styles.sectionLabel}>새 플랜 선택</span>
-                <div className={styles.planGrid}>
-                  {(Object.keys(PLANS) as PlanType[]).map((planType) => (
-                    <div
-                      key={planType}
-                      className={`${styles.planCard} ${planDialog.newPlan === planType ? styles.planCardActive : ''}`}
-                      onClick={() => setPlanDialog({ ...planDialog, newPlan: planType })}
-                    >
-                      <div className={styles.planCardHeader}>
-                        <span className={styles.planCardName}>{PLANS[planType].name}</span>
-                        {planDialog.newPlan === planType && (
-                          <svg className={styles.checkIcon} width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                          </svg>
-                        )}
-                      </div>
-                      <ul className={styles.planCardFeatures}>
-                        {PLANS[planType].features.slice(0, 3).map((feature, index) => (
-                          <li key={index}>{feature}</li>
-                        ))}
-                      </ul>
+            <div className={styles.planGridSection}>
+              <span className={styles.sectionLabel}>새 플랜 선택</span>
+              <div className={styles.planGrid}>
+                {(Object.keys(PLANS) as PlanType[]).map((planType) => (
+                  <div
+                    key={planType}
+                    className={`${styles.planCard} ${planDialog.newPlan === planType ? styles.planCardActive : ''}`}
+                    onClick={() => setPlanDialog({ ...planDialog, newPlan: planType })}
+                  >
+                    <div className={styles.planCardHeader}>
+                      <span className={styles.planCardName}>{PLANS[planType].name}</span>
+                      {planDialog.newPlan === planType && (
+                        <svg className={styles.checkIcon} width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
                     </div>
-                  ))}
-                </div>
+                    <ul className={styles.planCardFeatures}>
+                      {PLANS[planType].features.slice(0, 3).map((feature, index) => (
+                        <li key={index}>{feature}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
               </div>
-            </div>
-
-            <div className={styles.dialogActions}>
-              <button
-                className={styles.cancelButton}
-                onClick={() => setPlanDialog({ show: false, userId: '', userName: '', currentPlan: 'free', newPlan: 'free' })}
-              >
-                취소
-              </button>
-              <button
-                className={styles.confirmButton}
-                onClick={handlePlanChange}
-                disabled={planDialog.currentPlan === planDialog.newPlan}
-              >
-                변경
-              </button>
-            </div>
             </div>
           </div>
-        )}
 
-      {/* 사용자 상세 정보 */}
-      {selectedUser && (
-        <div className={styles.userDetailsSection}>
-          <div className={styles.userDetailsHeader}>
-            <div className={styles.userDetailsTitle}>
-              <div className={styles.userDetailsAvatar}>
+          <div className={styles.dialogActions}>
+            <button
+              className={styles.cancelButton}
+              onClick={() => setPlanDialog({ show: false, userId: '', userName: '', currentPlan: 'free', newPlan: 'free' })}
+            >
+              취소
+            </button>
+            <button
+              className={styles.confirmButton}
+              onClick={handlePlanChange}
+              disabled={planDialog.currentPlan === planDialog.newPlan}
+            >
+              변경
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {/* 사용자 상세 정보 */}
+    {selectedUser && (
+      <div className={styles.userDetailsSection}>
+        <div className={styles.userDetailsHeader}>
+          <div className={styles.userDetailsTitle}>
+            <div className={styles.userDetailsAvatar}>
                 {selectedUser.photoURL ? (
                   <img src={selectedUser.photoURL} alt={selectedUser.displayName || selectedUser.email} />
                 ) : (
