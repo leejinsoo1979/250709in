@@ -35,6 +35,7 @@ interface DesignFile {
   fileName: string;
   projectId: string;
   createdAt: any;
+  updatedAt?: any;
   fileSize: number;
 }
 
@@ -127,6 +128,7 @@ export default function UserDetail() {
               fileName: data.name || data.fileName || '파일명 없음',
               projectId: data.projectId || '',
               createdAt: data.createdAt,
+              updatedAt: data.updatedAt,
               fileSize: data.size || data.fileSize || 0
             };
           });
@@ -356,19 +358,32 @@ export default function UserDetail() {
 
                     {isExpanded && projectFiles.length > 0 && (
                       <div className={styles.projectFiles}>
-                        {projectFiles.map(file => (
-                          <div key={file.id} className={styles.fileItem}>
-                            <div className={styles.fileItemHeader}>
-                              <span className={styles.fileName}>{file.fileName}</span>
-                              <span className={styles.fileSize}>
-                                {(file.fileSize / 1024).toFixed(2)} KB
-                              </span>
+                        {projectFiles.map(file => {
+                          const fileUrl = `/configurator/${file.projectId}`;
+                          return (
+                            <div key={file.id} className={styles.fileItem}>
+                              <div className={styles.fileItemHeader}>
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={styles.fileName}
+                                >
+                                  {file.fileName}
+                                </a>
+                                <span className={styles.fileSize}>
+                                  {(file.fileSize / 1024).toFixed(2)} KB
+                                </span>
+                              </div>
+                              <div className={styles.fileItemMeta}>
+                                <span>생성: {file.createdAt ? new Date(file.createdAt.toMillis()).toLocaleDateString('ko-KR') : '-'}</span>
+                                {file.updatedAt && (
+                                  <span>수정: {new Date(file.updatedAt.toMillis()).toLocaleDateString('ko-KR')}</span>
+                                )}
+                              </div>
                             </div>
-                            <div className={styles.fileItemMeta}>
-                              <span>생성: {file.createdAt ? new Date(file.createdAt.toMillis()).toLocaleDateString('ko-KR') : '-'}</span>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -407,6 +422,9 @@ export default function UserDetail() {
                     <div className={styles.listItemMeta}>
                       <span>프로젝트: {file.projectId}</span>
                       <span>생성: {file.createdAt ? new Date(file.createdAt.toMillis()).toLocaleDateString('ko-KR') : '-'}</span>
+                      {file.updatedAt && (
+                        <span>수정: {new Date(file.updatedAt.toMillis()).toLocaleDateString('ko-KR')}</span>
+                      )}
                     </div>
                   </div>
                 );

@@ -351,7 +351,14 @@
 .fileName {
   font-size: 13px;
   font-weight: 500;
-  color: var(--theme-text, #1f2937);
+  color: var(--theme-primary, #667eea);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.fileName:hover {
+  color: var(--theme-primary-dark, #5568d3);
+  text-decoration: underline;
 }
 
 .fileSize {
