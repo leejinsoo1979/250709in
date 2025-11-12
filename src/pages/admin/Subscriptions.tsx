@@ -3,7 +3,7 @@ import { collection, query, getDocs, orderBy, where } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
 import { SearchIcon } from '@/components/common/Icons';
-import { HiOutlineCreditCard, HiOutlineCheck, HiOutlineX, HiOutlineTrendingUp, HiOutlineTrendingDown, HiOutlineUsers, HiOutlineCash } from 'react-icons/hi';
+import { HiOutlineCreditCard, HiOutlineCheck, HiOutlineX, HiOutlineTrendingUp, HiOutlineTrendingDown, HiOutlineUsers, HiOutlineCash, HiOutlineChartPie, HiOutlineChartBar } from 'react-icons/hi';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import styles from './Subscriptions.module.css';
 
@@ -301,39 +301,53 @@ const Subscriptions = () => {
       <div className={styles.chartsGrid}>
         <div className={styles.chartCard}>
           <h3 className={styles.chartTitle}>플랜별 구독자 분포</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={stats.planDistribution}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                outerRadius={100}
-                fill="#8884d8"
-                dataKey="value"
-              >
-                {stats.planDistribution.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+          {stats.planDistribution.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={stats.planDistribution}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={100}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  {stats.planDistribution.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className={styles.emptyChart}>
+              <HiOutlineChartPie size={48} />
+              <p>구독자 데이터가 없습니다</p>
+            </div>
+          )}
         </div>
 
         <div className={styles.chartCard}>
           <h3 className={styles.chartTitle}>플랜별 매출</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={stats.revenueByPlan}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="plan" />
-              <YAxis />
-              <Tooltip formatter={(value) => formatCurrency(value as number)} />
-              <Bar dataKey="revenue" fill={themeColor} />
-            </BarChart>
-          </ResponsiveContainer>
+          {stats.revenueByPlan.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.revenueByPlan}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="plan" />
+                <YAxis />
+                <Tooltip formatter={(value) => formatCurrency(value as number)} />
+                <Bar dataKey="revenue" fill={themeColor} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className={styles.emptyChart}>
+              <HiOutlineChartBar size={48} />
+              <p>매출 데이터가 없습니다</p>
+            </div>
+          )}
         </div>
       </div>
 
