@@ -217,14 +217,14 @@
   display: flex;
   gap: 16px;
   padding: 20px;
-  background: rgba(245, 158, 11, 0.15);
-  border: 1px solid rgba(245, 158, 11, 0.4);
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 12px;
   margin-bottom: 24px;
 }
 
 .notice svg {
-  color: #fbbf24;
+  color: var(--theme-primary, #667eea);
   flex-shrink: 0;
 }
 
@@ -232,14 +232,14 @@
   margin: 0 0 8px 0;
   font-size: 15px;
   font-weight: 700;
-  color: #fbbf24;
+  color: var(--theme-text, #1f2937);
 }
 
 .noticeText {
   margin: 0;
   font-size: 13px;
   line-height: 1.6;
-  color: #fde68a;
+  color: var(--theme-text-secondary, #6b7280);
 }
 
 /* API 키 목록 */
