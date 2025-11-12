@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Bell, X, Check, CheckCheck } from 'lucide-react';
+import { Bell, X, Check } from 'lucide-react';
+import { BsBellFill } from 'react-icons/bs';
 import { useAuth } from '@/auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -11,6 +12,7 @@ import {
   deleteNotification,
   type Notification,
 } from '@/firebase/notifications';
+import { useScrollLock } from '@/hooks/useScrollLock';
 import styles from './NotificationCenter.module.css';
 
 export const NotificationCenter: React.FC = () => {
@@ -21,6 +23,7 @@ export const NotificationCenter: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [selectedMessage, setSelectedMessage] = useState<Notification | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  useScrollLock(isOpen || Boolean(selectedMessage));
 
   // 알림 실시간 구독
   useEffect(() => {
@@ -134,6 +137,15 @@ export const NotificationCenter: React.FC = () => {
 
   return (
     <>
+      {isOpen &&
+        createPortal(
+          <div
+            className={styles.dropdownOverlay}
+            onClick={() => setIsOpen(false)}
+          />,
+          document.body
+        )}
+
       <div className={styles.container} ref={dropdownRef}>
         {/* Bell Icon */}
         <button
@@ -161,7 +173,7 @@ export const NotificationCenter: React.FC = () => {
                   onClick={handleMarkAllAsRead}
                   title="모두 읽음 처리"
                 >
-                  <CheckCheck size={18} />
+                  <BsBellFill size={18} />
                 </button>
               )}
             </div>
