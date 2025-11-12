@@ -4,7 +4,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { UsersIcon } from '@/components/common/Icons';
-import { HiOutlineChartBar, HiOutlineBriefcase, HiOutlineTrendingUp, HiOutlineClock, HiOutlineUserGroup, HiOutlineMail, HiOutlineOfficeBuilding } from 'react-icons/hi';
+import { HiOutlineChartBar, HiOutlineBriefcase, HiOutlineTrendingUp, HiOutlineClock, HiOutlineUserGroup, HiOutlineMail, HiOutlineOfficeBuilding, HiOutlineCreditCard } from 'react-icons/hi';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import styles from './Dashboard.module.css';
 
@@ -16,6 +16,7 @@ interface AdminStats {
   activeUsers: number;
   newUsersThisMonth: number;
   newUsersToday: number;
+  subscribedUsers: number;
 }
 
 interface RecentActivity {
@@ -42,7 +43,8 @@ const Dashboard = () => {
     totalDesigns: 0,
     activeUsers: 0,
     newUsersThisMonth: 0,
-    newUsersToday: 0
+    newUsersToday: 0,
+    subscribedUsers: 0
   });
   const [statsLoading, setStatsLoading] = useState(true);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
@@ -156,6 +158,18 @@ const Dashboard = () => {
         });
         console.log('📊 활성 사용자:', activeUsersSnapshot.size);
 
+        // 구독 사용자 (유료 플랜 사용자) 계산
+        console.log('💳 구독 사용자 조회 중...');
+        let subscribedUsersCount = 0;
+        usersSnapshot.docs.forEach((doc) => {
+          const data = doc.data();
+          const plan = data.plan || 'free';
+          if (plan !== 'free' && plan !== 'Free') {
+            subscribedUsersCount++;
+          }
+        });
+        console.log('💳 구독 사용자:', subscribedUsersCount);
+
         const statsData = {
           totalUsers: usersSnapshot.size,
           totalOrganizations: orgsSnapshot.size,
@@ -163,7 +177,8 @@ const Dashboard = () => {
           totalDesigns: designsSnapshot.size,
           activeUsers: activeUsersSnapshot.size,
           newUsersThisMonth: newUsersMonthSnapshot.size,
-          newUsersToday: newUsersTodaySnapshot.size
+          newUsersToday: newUsersTodaySnapshot.size,
+          subscribedUsers: subscribedUsersCount
         };
 
         console.log('📊 최종 통계 데이터:', statsData);
@@ -389,6 +404,21 @@ const Dashboard = () => {
             </p>
             <span className={styles.statChange}>
               {stats.totalUsers > 0 ? Math.round((stats.activeUsers / stats.totalUsers) * 100) : 0}% 활성률
+            </span>
+          </div>
+        </div>
+
+        <div className={styles.statCard}>
+          <div className={styles.statIcon}>
+            <HiOutlineCreditCard size={28} />
+          </div>
+          <div className={styles.statContent}>
+            <h3 className={styles.statLabel}>구독 사용자</h3>
+            <p className={styles.statValue}>
+              {statsLoading ? '...' : stats.subscribedUsers.toLocaleString()}
+            </p>
+            <span className={styles.statChange}>
+              {stats.totalUsers > 0 ? Math.round((stats.subscribedUsers / stats.totalUsers) * 100) : 0}% 유료 전환율
             </span>
           </div>
         </div>
