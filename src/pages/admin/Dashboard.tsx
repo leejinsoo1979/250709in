@@ -4,7 +4,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { collection, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { UsersIcon } from '@/components/common/Icons';
-import { HiOutlineOfficeBuilding, HiOutlineChartBar, HiOutlineBriefcase, HiOutlineTrendingUp, HiOutlineClock, HiOutlineUserGroup } from 'react-icons/hi';
+import { HiOutlineChartBar, HiOutlineBriefcase, HiOutlineTrendingUp, HiOutlineClock, HiOutlineUserGroup, HiOutlineMail } from 'react-icons/hi';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import styles from './Dashboard.module.css';
 
@@ -342,9 +342,9 @@ const Dashboard = () => {
             <UsersIcon size={18} />
             사용자 관리
           </button>
-          <button className={styles.actionButton} onClick={() => navigate('/admin/organizations')}>
-            <HiOutlineOfficeBuilding size={18} />
-            조직 관리
+          <button className={styles.actionButton} onClick={() => navigate('/admin/messages')}>
+            <HiOutlineMail size={18} />
+            메시지 관리
           </button>
         </div>
       </div>
