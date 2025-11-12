@@ -40,7 +40,11 @@ const Chatbot = () => {
   const categories = ['일반', '기능', '결제', '기술지원', '기타'];
 
   useEffect(() => {
+    console.log('🟢 Chatbot 컴포넌트 마운트됨');
     loadQAs();
+    return () => {
+      console.log('🔴 Chatbot 컴포넌트 언마운트됨');
+    };
   }, []);
 
   useEffect(() => {
@@ -219,12 +223,19 @@ const Chatbot = () => {
         </div>
         <button
           className={styles.addButton}
-          onClick={() => {
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             console.log('Q&A 추가 버튼 클릭됨');
+            console.log('클릭 전 isAdding:', isAdding);
             setIsAdding(true);
             setEditingId(null);
             resetForm();
-            console.log('isAdding 상태:', true);
+            console.log('setIsAdding(true) 호출 완료');
+            setTimeout(() => {
+              console.log('1초 후 isAdding 확인 필요 - 다음 렌더링에서');
+            }, 1000);
           }}
         >
           <HiOutlinePlus size={20} />
