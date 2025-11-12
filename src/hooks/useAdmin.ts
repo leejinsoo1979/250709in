@@ -5,6 +5,12 @@ import { checkAdminRole, isAdmin, isSuperAdmin, AdminRole } from '@/firebase/adm
 // 환경 변수에서 슈퍼 관리자 이메일 가져오기
 const SUPER_ADMIN_EMAIL = import.meta.env.VITE_SUPER_ADMIN_EMAIL;
 
+// 개발 환경에서 환경 변수 로드 확인
+if (import.meta.env.DEV) {
+  console.log('🔧 환경 변수 로드 확인:');
+  console.log('VITE_SUPER_ADMIN_EMAIL =', SUPER_ADMIN_EMAIL);
+}
+
 export const useAdmin = (user: User | null) => {
   const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
   const [isAdminUser, setIsAdminUser] = useState<boolean>(false);
