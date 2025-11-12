@@ -276,7 +276,7 @@
 }
 
 .table thead {
-  background: var(--theme-surface-hover, #f9fafb);
+  background: var(--theme-background, #f9fafb);
 }
 
 .table th {
@@ -284,7 +284,9 @@
   text-align: left;
   font-size: 13px;
   font-weight: 600;
-  color: var(--theme-text, #6b7280);
+  color: var(--theme-text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   white-space: nowrap;
 }
 
