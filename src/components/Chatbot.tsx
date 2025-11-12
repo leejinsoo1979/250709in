@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { MessageCircle, X, Send } from 'lucide-react';
 import { faqData, matchQuestion } from '@/data/faqData';
 import { useScrollLock } from '@/hooks/useScrollLock';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/firebase/config';
 import styles from './Chatbot.module.css';
 
 interface Message {
@@ -16,8 +18,28 @@ export const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
+  const [greeting, setGreeting] = useState('안녕하세요! 무엇을 도와드릴까요?');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   useScrollLock(isOpen);
+
+  // 인사말 로드
+  useEffect(() => {
+    const loadGreeting = async () => {
+      try {
+        const docRef = doc(db, 'chatbotSettings', 'general');
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          setGreeting(data.greeting || '안녕하세요! 무엇을 도와드릴까요?');
+        }
+      } catch (error) {
+        console.error('인사말 로드 실패:', error);
+      }
+    };
+
+    loadGreeting();
+  }, []);
 
   // 초기 환영 메시지
   useEffect(() => {
@@ -25,19 +47,13 @@ export const Chatbot: React.FC = () => {
       setMessages([
         {
           id: '1',
-          text: 'Hi there!\n\nI\'m Befun chatbot, your friendly customer support assistant.\n\n(support@coohom.com)',
-          isBot: true,
-          timestamp: new Date(),
-        },
-        {
-          id: '2',
-          text: 'Is there anything I can help with?',
+          text: greeting,
           isBot: true,
           timestamp: new Date(),
         },
       ]);
     }
-  }, [isOpen]);
+  }, [isOpen, greeting]);
 
   // 메시지 자동 스크롤
   useEffect(() => {
