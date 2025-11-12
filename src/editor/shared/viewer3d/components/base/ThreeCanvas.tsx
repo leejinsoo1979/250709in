@@ -130,7 +130,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   });
   
   
-  // 테마나 뷰모드 변경 시 캔버스 재생성 - renderMode 제외
+  // 뷰모드 변경 시 캔버스 재생성 (테마는 무시)
   useEffect(() => {
     // 뷰 모드 변경 시 해당 모드의 초기 상태 리셋 - 제거
     // 초기 상태를 null로 리셋하면 스페이스 키 누를 때 초기값이 없어서 문제 발생
@@ -140,7 +140,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     //   initialCameraSetup.current.zoom2D = null;
     // }
     setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
-  }, [theme, viewMode, view2DDirection, view2DTheme]);
+  }, [viewMode, view2DDirection]);
   
   // 단내림 설정 변경 시 캔버스 강제 업데이트
   useEffect(() => {
@@ -269,12 +269,12 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     }
   }, [viewMode, shadowEnabled]);
 
-  // 테마 변경 시 배경색 업데이트
+  // 배경색 업데이트 (라이트 테마 강제)
   useEffect(() => {
     if (rendererRef.current) {
       const newBgColor = getBackgroundColor();
       rendererRef.current.setClearColor(new THREE.Color(newBgColor), 1.0);
-      
+
       // Scene 배경색도 업데이트
       const canvas = canvasRef.current;
       if (canvas) {
@@ -284,7 +284,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         }
       }
     }
-  }, [theme.mode, viewMode, view2DTheme, getBackgroundColor]);
+  }, [getBackgroundColor]);
   
   // WebGL 컨텍스트 정리 함수 (더 부드러운 접근)
   const cleanupWebGL = useCallback(() => {
@@ -857,7 +857,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         shadows={viewMode === '3D' && shadowEnabled}
         style={{
           ...style,
-          background: viewMode === '2D' && theme.mode === 'dark' ? '#121212' : viewMode === '2D' ? '#ffffff' : CANVAS_SETTINGS.BACKGROUND_COLOR,
+          background: '#ffffff',
           cursor: (isEraserMode && viewMode === '2D')
             ? (view2DTheme === 'dark'
                 ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="white"><path d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z"/></svg>') 12 12, pointer`
