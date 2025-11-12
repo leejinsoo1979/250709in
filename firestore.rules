@@ -144,6 +144,13 @@ service cloud.firestore {
          get(/databases/$(database)/documents/sharedProjectAccess/$(id + '_' + request.auth.uid)).data.permission == 'editor')
       );
       allow create: if isSignedIn();
+
+      // 관리자는 프로젝트 하위의 디자인 파일을 조회할 수 있음
+      match /designs/{designId} {
+        allow read: if isAdmin() || true; // 관리자 또는 공유 링크 지원
+        allow list: if isAdmin();
+        allow write: if isSignedIn();
+      }
     }
     match /designFiles/{id} {
       // 공유 링크를 위해 읽기는 모두 허용
