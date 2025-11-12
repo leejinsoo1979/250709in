@@ -450,28 +450,45 @@ const Logs = () => {
                 <thead>
                   <tr>
                     <th>프로젝트</th>
-                    <th>토큰</th>
+                    <th>공유 링크</th>
                     <th>IP 주소</th>
                     <th>User Agent</th>
                     <th>접근 시간</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredShareLinkAccessLog.map(log => (
-                    <tr key={log.id}>
-                      <td className={styles.projectName}>
-                        {log.projectName || '프로젝트 정보 없음'}
-                      </td>
-                      <td className={styles.token}>
-                        <code>{log.shareLinkToken?.slice(0, 16)}...</code>
-                      </td>
-                      <td className={styles.ipAddress}>{log.ipAddress}</td>
-                      <td className={styles.userAgent}>{log.userAgent}</td>
-                      <td className={styles.timestamp}>
-                        {log.accessedAt?.toLocaleString('ko-KR') || '-'}
-                      </td>
-                    </tr>
-                  ))}
+                  {filteredShareLinkAccessLog.map(log => {
+                    const shareUrl = log.shareLinkToken
+                      ? `${window.location.origin}/share/${log.shareLinkToken}`
+                      : '';
+
+                    return (
+                      <tr key={log.id}>
+                        <td className={styles.projectName}>
+                          {log.projectName || '프로젝트 정보 없음'}
+                        </td>
+                        <td className={styles.shareLink}>
+                          {shareUrl ? (
+                            <a
+                              href={shareUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.linkUrl}
+                            >
+                              {shareUrl}
+                            </a>
+                          ) : (
+                            <span className={styles.noLink}>링크 정보 없음</span>
+                          )}
+                        </td>
+                        <td className={styles.ipAddress}>{log.ipAddress || '-'}</td>
+                        <td className={styles.userAgent}>{log.userAgent || '-'}</td>
+                        <td className={styles.timestamp}>
+                          {log.accessedAt?.toLocaleString('ko-KR') || '-'}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

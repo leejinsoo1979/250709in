@@ -230,6 +230,31 @@
   border-radius: 4px;
 }
 
+.shareLink {
+  max-width: 500px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.linkUrl {
+  color: var(--theme-primary, #667eea);
+  text-decoration: none;
+  font-size: 13px;
+  word-break: break-all;
+  transition: color 0.2s ease;
+}
+
+.linkUrl:hover {
+  color: var(--theme-primary-dark, #5568d3);
+  text-decoration: underline;
+}
+
+.noLink {
+  color: var(--theme-text-muted, #9ca3af);
+  font-size: 13px;
+  font-style: italic;
+}
+
 /* 배지 */
 .badge {
   display: inline-block;
