@@ -14,6 +14,7 @@ import { ProjectSummary } from '../firebase/types';
 import { getUserProjects, createProject, saveFolderData, loadFolderData, FolderData, getDesignFiles, deleteProject, deleteDesignFile, subscribeToUserProjects } from '@/firebase/projects';
 import { getProjectCollaborators, type ProjectCollaborator, getSharedProjectsForUser, getMySharedLinks, revokeDesignFileAccess, revokeProjectAccess, revokeAllProjectAccess, revokeAllDesignFileAccess } from '@/firebase/shareLinks';
 import { signOutUser } from '@/firebase/auth';
+import { checkCredits } from '@/firebase/userProfiles';
 import { db } from '@/firebase/config';
 import { useAuth } from '@/auth/AuthProvider';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -34,6 +35,7 @@ import ProfilePopup from '../editor/Configurator/components/ProfilePopup';
 import { NotificationCenter } from '@/components/NotificationCenter';
 import { ShareLinkModal } from '@/components/ShareLinkModal';
 import RenameModal from '../components/common/RenameModal';
+import CreditErrorModal from '@/components/common/CreditErrorModal';
 // import { generateProjectThumbnail } from '../utils/thumbnailGenerator';
 import styles from './SimpleDashboard.module.css';
 
@@ -97,6 +99,13 @@ const SimpleDashboard: React.FC = () => {
   // 프로필 팝업 상태
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
+
+  // 크레딧 에러 모달 상태
+  const [creditError, setCreditError] = useState({
+    isOpen: false,
+    currentCredits: 0,
+    requiredCredits: 0
+  });
 
   // 공유 링크 모달 상태
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -2909,37 +2918,55 @@ const SimpleDashboard: React.FC = () => {
   };
 
   // 새로운 디자인 시작
-  const handleCreateDesign = (projectId?: string, projectTitle?: string) => {
+  const handleCreateDesign = async (projectId?: string, projectTitle?: string) => {
     console.log('🚀 handleCreateDesign 호출됨:', { projectId, projectTitle, user: !!user });
-    
-    if (user) {
-      if (!projectId) {
-        alert('프로젝트를 먼저 선택해주세요.');
-        return;
-      }
-      
-      // 프로젝트 제목 찾기
-      const project = allProjects.find(p => p.id === projectId);
-      const title = projectTitle || project?.title || '새 프로젝트';
-      
-      console.log('✅ projectId 확인됨, Step1 모달 열기 준비');
-      
-      // projectStore에 projectId와 프로젝트명 설정
-      const { setProjectId, setProjectTitle, resetBasicInfo } = useProjectStore.getState();
-      setProjectId(projectId);
-      setProjectTitle(title);
-      resetBasicInfo(); // 이전 디자인 정보 초기화
-      
-      // 모달에 전달할 projectId와 title을 state에 저장
-      setModalProjectId(projectId);
-      setModalProjectTitle(title);
-      
-      // Step1 모달 열기 - 새 디자인 생성
-      console.log('📝 Step1 모달 열기 with projectId:', projectId, 'title:', title);
-      setIsStep1ModalOpen(true);
-    } else {
+
+    if (!user) {
       alert('로그인이 필요합니다.');
+      return;
     }
+
+    if (!projectId) {
+      alert('프로젝트를 먼저 선택해주세요.');
+      return;
+    }
+
+    // 크레딧 체크 먼저 수행
+    console.log('💰 크레딧 체크 시작...');
+    const { hasEnough, currentCredits, error } = await checkCredits(20);
+
+    if (!hasEnough) {
+      console.log('❌ 크레딧 부족:', { currentCredits, requiredCredits: 20 });
+      // 크레딧 부족 모달 표시
+      setCreditError({
+        isOpen: true,
+        currentCredits,
+        requiredCredits: 20
+      });
+      return;
+    }
+
+    console.log('✅ 크레딧 충분:', currentCredits);
+
+    // 프로젝트 제목 찾기
+    const project = allProjects.find(p => p.id === projectId);
+    const title = projectTitle || project?.title || '새 프로젝트';
+
+    console.log('✅ projectId 확인됨, Step1 모달 열기 준비');
+
+    // projectStore에 projectId와 프로젝트명 설정
+    const { setProjectId, setProjectTitle, resetBasicInfo } = useProjectStore.getState();
+    setProjectId(projectId);
+    setProjectTitle(title);
+    resetBasicInfo(); // 이전 디자인 정보 초기화
+
+    // 모달에 전달할 projectId와 title을 state에 저장
+    setModalProjectId(projectId);
+    setModalProjectTitle(title);
+
+    // Step1 모달 열기 - 새 디자인 생성
+    console.log('📝 Step1 모달 열기 with projectId:', projectId, 'title:', title);
+    setIsStep1ModalOpen(true);
   };
 
   // Step1 모달 닫기
@@ -5471,6 +5498,18 @@ const SimpleDashboard: React.FC = () => {
         onConfirm={handleConfirmRename}
         currentName={renameTarget?.name || ''}
         title="이름 바꾸기"
+      />
+
+      {/* 크레딧 부족 모달 */}
+      <CreditErrorModal
+        isOpen={creditError.isOpen}
+        currentCredits={creditError.currentCredits}
+        requiredCredits={creditError.requiredCredits}
+        onClose={() => setCreditError({ ...creditError, isOpen: false })}
+        onRecharge={() => {
+          setCreditError({ ...creditError, isOpen: false });
+          setIsProfilePopupOpen(true);
+        }}
       />
     </div>
   );
