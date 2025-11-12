@@ -41,6 +41,7 @@ service cloud.firestore {
     // userProfiles - 사용자 프로필 정보 (다른 사람 프로필 읽기 허용)
     match /userProfiles/{uid} {
       allow read: if isSignedIn();
+      allow list: if isAdmin(); // 관리자는 전체 프로필 목록 조회 가능
       allow create, update: if isSignedIn() && uid == request.auth.uid;
       allow delete: if isSignedIn() && uid == request.auth.uid;
     }

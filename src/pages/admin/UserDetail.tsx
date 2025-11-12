@@ -83,7 +83,14 @@ export default function UserDetail() {
 
         // userProfiles에서 크레딧 정보 가져오기
         const userProfileDoc = await getDoc(doc(db, 'userProfiles', userId));
-        const credits = userProfileDoc.exists() ? userProfileDoc.data().credits : 0;
+        let credits = 0;
+        if (userProfileDoc.exists()) {
+          const profileData = userProfileDoc.data();
+          credits = profileData.credits !== undefined ? profileData.credits : 0;
+          console.log(`✅ 크레딧 정보 로드: ${credits}`);
+        } else {
+          console.log('⚠️ userProfiles 문서가 없습니다.');
+        }
 
         setUser({ ...userData, uid: userDoc.id, credits });
 
