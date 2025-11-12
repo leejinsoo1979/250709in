@@ -466,7 +466,7 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className={styles.statCard}>
+        <div className={styles.statCard} onClick={() => navigate('/admin/projects')}>
           <div className={styles.statIcon}>
             <HiOutlineBriefcase size={28} />
           </div>
