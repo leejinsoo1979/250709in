@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/auth/AuthProvider';
-import { collection, getCountFromServer, onSnapshot, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, getCountFromServer, query, where, orderBy, limit, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { UsersIcon } from '@/components/common/Icons';
 import { HiOutlineOfficeBuilding, HiOutlineChartBar, HiOutlineBriefcase, HiOutlineTrendingUp, HiOutlineClock, HiOutlineUserGroup } from 'react-icons/hi';
@@ -131,19 +131,14 @@ const Dashboard = () => {
 
     fetchStats();
 
-    // 실시간 사용자 수 업데이트
-    const unsubscribeUsers = onSnapshot(collection(db, 'users'), (snapshot) => {
-      setStats(prev => ({ ...prev, totalUsers: snapshot.size }));
-    });
-
-    // 실시간 프로젝트 수 업데이트
-    const unsubscribeProjects = onSnapshot(collection(db, 'projects'), (snapshot) => {
-      setStats(prev => ({ ...prev, totalProjects: snapshot.size }));
-    });
+    // 30초마다 통계 갱신
+    const intervalId = setInterval(() => {
+      console.log('📊 통계 자동 갱신...');
+      fetchStats();
+    }, 30000);
 
     return () => {
-      unsubscribeUsers();
-      unsubscribeProjects();
+      clearInterval(intervalId);
     };
   }, [user]);
 
