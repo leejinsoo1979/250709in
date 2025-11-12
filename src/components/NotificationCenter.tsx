@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Bell, X, Check, CheckCheck } from 'lucide-react';
 import { useAuth } from '@/auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
@@ -236,7 +237,7 @@ export const NotificationCenter: React.FC = () => {
       </div>
 
       {/* Message Modal */}
-      {selectedMessage && (
+      {selectedMessage && createPortal(
         <div
           className={styles.modalOverlay}
           onClick={() => setSelectedMessage(null)}
@@ -267,7 +268,8 @@ export const NotificationCenter: React.FC = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
