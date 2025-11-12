@@ -15,7 +15,7 @@ import {
 import { db } from './config';
 
 // 알림 타입 정의
-export type NotificationType = 'project_shared' | 'project_access_granted' | 'team_invitation' | 'share_removed' | 'system';
+export type NotificationType = 'project_shared' | 'project_access_granted' | 'team_invitation' | 'share_removed' | 'system' | 'message';
 
 export interface Notification {
   id: string;
@@ -31,6 +31,11 @@ export interface Notification {
   actionUrl?: string;
   isRead: boolean;
   createdAt: Timestamp;
+  // 메시지 알림용 필드
+  messageId?: string;
+  senderId?: string;
+  senderName?: string;
+  read?: boolean;
 }
 
 /**

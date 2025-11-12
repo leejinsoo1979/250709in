@@ -209,7 +209,8 @@ const Messages = () => {
         ? users.map(u => u.uid)
         : selectedUsers;
 
-      await addDoc(collection(db, 'messages'), {
+      // 메시지 저장
+      const messageDoc = await addDoc(collection(db, 'messages'), {
         title: title.trim(),
         content: content.trim(),
         recipients,
@@ -219,6 +220,23 @@ const Messages = () => {
         type: messageType,
         recipientCount: recipients.length
       });
+
+      // 각 수신자에게 알림 생성
+      const notificationPromises = recipients.map(recipientId =>
+        addDoc(collection(db, 'notifications'), {
+          userId: recipientId,
+          type: 'message',
+          title: title.trim(),
+          message: content.trim(),
+          messageId: messageDoc.id,
+          senderId: user.uid,
+          senderName: user.displayName || user.email || '관리자',
+          read: false,
+          createdAt: serverTimestamp()
+        })
+      );
+
+      await Promise.all(notificationPromises);
 
       alert(`메시지가 ${recipients.length}명에게 발송되었습니다.`);
 
