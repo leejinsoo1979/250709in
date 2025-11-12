@@ -173,23 +173,12 @@ export default function UserDetail() {
         <div className={styles.profileInfo}>
           <h2>{user.displayName || '이름 없음'}</h2>
           <p>{user.email}</p>
-          <div className={styles.profileBadges}>
-            {user.disabled ? (
-              <span className={styles.statusBadge} data-status="disabled">비활성</span>
-            ) : (
-              <span className={styles.statusBadge} data-status="active">활성</span>
-            )}
-            {user.emailVerified ? (
-              <span className={styles.statusBadge} data-status="verified">인증됨</span>
-            ) : (
-              <span className={styles.statusBadge} data-status="unverified">미인증</span>
-            )}
-            <span
-              className={styles.planBadge}
-              style={{ backgroundColor: PLANS[user.plan || 'free'].color }}
-            >
-              {PLANS[user.plan || 'free'].name}
-            </span>
+          <div className={styles.profileMeta}>
+            <span>{user.disabled ? '비활성 계정' : '활성 계정'}</span>
+            <span>·</span>
+            <span>{user.emailVerified ? '이메일 인증됨' : '이메일 미인증'}</span>
+            <span>·</span>
+            <span>{PLANS[user.plan || 'free'].name} 플랜</span>
           </div>
         </div>
       </div>

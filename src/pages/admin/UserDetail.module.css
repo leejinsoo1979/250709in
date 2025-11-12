@@ -225,10 +225,13 @@
   color: var(--theme-text-secondary, #6b7280);
 }
 
-.profileBadges {
+.profileMeta {
   display: flex;
   gap: 8px;
+  align-items: center;
   flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
 }
 
 .listContainer {
@@ -323,7 +326,7 @@
     align-items: center;
   }
 
-  .profileBadges {
+  .profileMeta {
     justify-content: center;
   }
 
