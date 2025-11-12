@@ -8,6 +8,7 @@ import { updateUserPlan, PLANS, PlanType } from '@/firebase/plans';
 import { GiImperialCrown } from 'react-icons/gi';
 import { FaUser } from 'react-icons/fa';
 import { PiMedal } from 'react-icons/pi';
+import { HiOutlineFolder, HiOutlineCube } from 'react-icons/hi';
 import styles from './Users.module.css';
 
 interface UserData {
@@ -31,6 +32,10 @@ const Users = () => {
   const [filterPlan, setFilterPlan] = useState<PlanType | 'all'>('all');
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
   const [planFilterDropdownOpen, setPlanFilterDropdownOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  const [userDetailsLoading, setUserDetailsLoading] = useState(false);
+  const [userProjects, setUserProjects] = useState<any[]>([]);
+  const [userDesignFiles, setUserDesignFiles] = useState<any[]>([]);
   const [planDialog, setPlanDialog] = useState<{
     show: boolean;
     userId: string;
@@ -111,6 +116,54 @@ const Users = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [sortDropdownOpen, planFilterDropdownOpen]);
+
+  // 사용자 상세 정보 조회
+  const openUserDetails = async (user: UserData) => {
+    setSelectedUser(user);
+    setUserDetailsLoading(true);
+
+    try {
+      // 사용자의 프로젝트 조회
+      const projectsQuery = query(collection(db, 'projects'));
+      const projectsSnapshot = await getDocs(projectsQuery);
+      const userProjectsList = projectsSnapshot.docs
+        .filter(doc => doc.data().userId === user.id)
+        .map(doc => ({
+          id: doc.id,
+          title: doc.data().title || doc.data().projectName || '제목 없음',
+          createdAt: doc.data().createdAt?.toDate?.() || null,
+          updatedAt: doc.data().updatedAt?.toDate?.() || null
+        }));
+
+      setUserProjects(userProjectsList);
+
+      // 사용자의 디자인 파일 조회
+      const designFilesQuery = query(collection(db, 'designFiles'));
+      const designFilesSnapshot = await getDocs(designFilesQuery);
+      const userFilesList = designFilesSnapshot.docs
+        .filter(doc => doc.data().userId === user.id)
+        .map(doc => ({
+          id: doc.id,
+          fileName: doc.data().fileName || '파일명 없음',
+          projectId: doc.data().projectId || '',
+          createdAt: doc.data().createdAt?.toDate?.() || null,
+          fileSize: doc.data().fileSize || 0
+        }));
+
+      setUserDesignFiles(userFilesList);
+    } catch (error) {
+      console.error('❌ 사용자 상세 정보 조회 실패:', error);
+    } finally {
+      setUserDetailsLoading(false);
+    }
+  };
+
+  // 사용자 상세 정보 닫기
+  const closeUserDetails = () => {
+    setSelectedUser(null);
+    setUserProjects([]);
+    setUserDesignFiles([]);
+  };
 
   // 플랜 변경 다이얼로그 열기
   const openPlanDialog = (userId: string, userName: string, currentPlan: PlanType) => {
@@ -411,7 +464,7 @@ const Users = () => {
             </thead>
             <tbody>
               {filteredUsers.map((targetUser) => (
-                <tr key={targetUser.id}>
+                <tr key={targetUser.id} onClick={() => openUserDetails(targetUser)} className={styles.clickableRow}>
                   <td>
                     <div className={styles.userInfo}>
                       {targetUser.isSuperAdmin ? (
@@ -476,11 +529,14 @@ const Users = () => {
                     ) : (
                       <button
                         className={styles.changePlanButton}
-                        onClick={() => openPlanDialog(
-                          targetUser.id,
-                          targetUser.displayName || targetUser.email,
-                          targetUser.plan || 'free'
-                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openPlanDialog(
+                            targetUser.id,
+                            targetUser.displayName || targetUser.email,
+                            targetUser.plan || 'free'
+                          );
+                        }}
                       >
                         플랜 변경
                       </button>
@@ -552,6 +608,131 @@ const Users = () => {
               >
                 변경
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 사용자 상세 정보 모달 */}
+      {selectedUser && (
+        <div className={styles.dialogOverlay} onClick={closeUserDetails}>
+          <div className={styles.userDetailsDialog} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.userDetailsHeader}>
+              <div className={styles.userDetailsTitle}>
+                <div className={styles.userDetailsAvatar}>
+                  {selectedUser.photoURL ? (
+                    <img src={selectedUser.photoURL} alt={selectedUser.displayName || selectedUser.email} />
+                  ) : (
+                    <div className={styles.userDetailsAvatarPlaceholder}>
+                      {(selectedUser.displayName || selectedUser.email || '?').charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <h2>{selectedUser.displayName || '이름 없음'}</h2>
+                  <p>{selectedUser.email}</p>
+                </div>
+              </div>
+              <button className={styles.closeButton} onClick={closeUserDetails}>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className={styles.userDetailsContent}>
+              {/* 기본 정보 */}
+              <div className={styles.userDetailsSection}>
+                <h3 className={styles.userDetailsSectionTitle}>기본 정보</h3>
+                <div className={styles.userDetailsGrid}>
+                  <div className={styles.userDetailsItem}>
+                    <span className={styles.userDetailsLabel}>UID</span>
+                    <code className={styles.userDetailsValue}>{selectedUser.id}</code>
+                  </div>
+                  <div className={styles.userDetailsItem}>
+                    <span className={styles.userDetailsLabel}>플랜</span>
+                    <span
+                      className={`${styles.planBadge} ${(selectedUser.plan || 'free') === 'free' ? styles.planBadgeFree : ''}`}
+                      style={(selectedUser.plan || 'free') !== 'free' ? { backgroundColor: PLANS[selectedUser.plan || 'free'].color } : {}}
+                    >
+                      {PLANS[selectedUser.plan || 'free'].name}
+                    </span>
+                  </div>
+                  <div className={styles.userDetailsItem}>
+                    <span className={styles.userDetailsLabel}>가입일</span>
+                    <span className={styles.userDetailsValue}>
+                      {selectedUser.createdAt?.toLocaleString('ko-KR') || '-'}
+                    </span>
+                  </div>
+                  <div className={styles.userDetailsItem}>
+                    <span className={styles.userDetailsLabel}>최근 로그인</span>
+                    <span className={styles.userDetailsValue}>
+                      {selectedUser.lastLoginAt?.toLocaleString('ko-KR') || '-'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* 프로젝트 */}
+              <div className={styles.userDetailsSection}>
+                <h3 className={styles.userDetailsSectionTitle}>
+                  프로젝트 ({userProjects.length})
+                </h3>
+                {userDetailsLoading ? (
+                  <div className={styles.userDetailsLoading}>로딩 중...</div>
+                ) : userProjects.length === 0 ? (
+                  <div className={styles.userDetailsEmpty}>프로젝트가 없습니다</div>
+                ) : (
+                  <div className={styles.userDetailsList}>
+                    {userProjects.map(project => (
+                      <div key={project.id} className={styles.userDetailsListItem}>
+                        <div className={styles.userDetailsListItemIcon}>
+                          <HiOutlineFolder size={20} />
+                        </div>
+                        <div className={styles.userDetailsListItemContent}>
+                          <span className={styles.userDetailsListItemTitle}>{project.title}</span>
+                          <span className={styles.userDetailsListItemMeta}>
+                            생성: {project.createdAt?.toLocaleDateString('ko-KR') || '-'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* 디자인 파일 */}
+              <div className={styles.userDetailsSection}>
+                <h3 className={styles.userDetailsSectionTitle}>
+                  디자인 파일 ({userDesignFiles.length})
+                </h3>
+                {userDetailsLoading ? (
+                  <div className={styles.userDetailsLoading}>로딩 중...</div>
+                ) : userDesignFiles.length === 0 ? (
+                  <div className={styles.userDetailsEmpty}>디자인 파일이 없습니다</div>
+                ) : (
+                  <div className={styles.userDetailsList}>
+                    {userDesignFiles.slice(0, 10).map(file => (
+                      <div key={file.id} className={styles.userDetailsListItem}>
+                        <div className={styles.userDetailsListItemIcon}>
+                          <HiOutlineCube size={20} />
+                        </div>
+                        <div className={styles.userDetailsListItemContent}>
+                          <span className={styles.userDetailsListItemTitle}>{file.fileName}</span>
+                          <span className={styles.userDetailsListItemMeta}>
+                            {(file.fileSize / 1024).toFixed(1)} KB · {file.createdAt?.toLocaleDateString('ko-KR') || '-'}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {userDesignFiles.length > 10 && (
+                      <div className={styles.userDetailsMoreInfo}>
+                        +{userDesignFiles.length - 10}개 더 보기
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
