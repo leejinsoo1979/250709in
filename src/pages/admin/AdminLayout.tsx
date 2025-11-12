@@ -162,6 +162,14 @@ const AdminLayout = () => {
           </NavLink>
 
           <NavLink
+            to="/admin/subscriptions"
+            className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
+          >
+            <HiOutlineCreditCard size={20} />
+            <span>구독 관리</span>
+          </NavLink>
+
+          <NavLink
             to="/admin/billing"
             className={({ isActive }) => isActive ? `${styles.navItem} ${styles.navItemActive}` : styles.navItem}
           >
