@@ -1,4 +1,5 @@
 import React from 'react';
+import { ImCreditCard } from "react-icons/im";
 import styles from './AlertModal.module.css';
 import creditStyles from './CreditErrorModal.module.css';
 
@@ -34,11 +35,7 @@ const CreditErrorModal: React.FC<CreditErrorModalProps> = ({
       <div className={`${styles.modal} ${creditStyles.creditModal}`} onClick={(e) => e.stopPropagation()}>
         <div className={creditStyles.modalHeader}>
           <div className={creditStyles.iconWrapper}>
-            <svg className={creditStyles.warningIcon} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2"/>
-              <path d="M12 8V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              <circle cx="12" cy="16" r="1" fill="currentColor"/>
-            </svg>
+            <ImCreditCard className={creditStyles.cardIcon} />
           </div>
           <h2 className={creditStyles.modalTitle}>무료 크레딧이 모두 소진되었습니다</h2>
           <p className={creditStyles.modalDescription}>
