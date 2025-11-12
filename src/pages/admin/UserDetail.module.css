@@ -290,6 +290,70 @@
   font-size: 14px;
 }
 
+.projectItem {
+  display: flex;
+  flex-direction: column;
+}
+
+.projectItemRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fileCount {
+  font-size: 13px;
+  color: var(--theme-text-secondary, #6b7280);
+  font-weight: 500;
+}
+
+.expandIcon {
+  font-size: 12px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.projectFiles {
+  margin-top: 8px;
+  margin-left: 16px;
+  padding-left: 16px;
+  border-left: 2px solid var(--theme-border, #e5e7eb);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.fileItem {
+  padding: 12px;
+  background: var(--theme-surface, white);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 4px;
+}
+
+.fileItemHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+  gap: 12px;
+}
+
+.fileName {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text, #1f2937);
+}
+
+.fileSize {
+  font-size: 12px;
+  color: var(--theme-text-secondary, #6b7280);
+  flex-shrink: 0;
+}
+
+.fileItemMeta {
+  font-size: 11px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
 @media (max-width: 1024px) {
   .content {
     grid-template-columns: 1fr;

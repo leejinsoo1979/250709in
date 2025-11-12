@@ -54,6 +54,7 @@ export default function UserDetail() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [designFiles, setDesignFiles] = useState<DesignFile[]>([]);
   const [shareLinks, setShareLinks] = useState<ShareLink[]>([]);
+  const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -287,20 +288,52 @@ export default function UserDetail() {
             <div className={styles.emptyState}>프로젝트가 없습니다</div>
           ) : (
             <div className={styles.listContainer}>
-              {projects.map(project => (
-                <div key={project.id} className={styles.listItem}>
-                  <div className={styles.listItemHeader}>
-                    <strong>{project.title}</strong>
-                    <span className={styles.listItemId}>{project.id}</span>
-                  </div>
-                  <div className={styles.listItemMeta}>
-                    <span>생성: {project.createdAt ? new Date(project.createdAt.toMillis()).toLocaleDateString('ko-KR') : '-'}</span>
-                    {project.updatedAt && (
-                      <span>수정: {new Date(project.updatedAt.toMillis()).toLocaleDateString('ko-KR')}</span>
+              {projects.map(project => {
+                const projectFiles = designFiles.filter(file => file.projectId === project.id);
+                const isExpanded = expandedProjectId === project.id;
+
+                return (
+                  <div key={project.id} className={styles.projectItem}>
+                    <div
+                      className={styles.listItem}
+                      onClick={() => setExpandedProjectId(isExpanded ? null : project.id)}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      <div className={styles.listItemHeader}>
+                        <strong>{project.title}</strong>
+                        <div className={styles.projectItemRight}>
+                          <span className={styles.fileCount}>파일 {projectFiles.length}개</span>
+                          <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
+                        </div>
+                      </div>
+                      <div className={styles.listItemMeta}>
+                        <span>생성: {project.createdAt ? new Date(project.createdAt.toMillis()).toLocaleDateString('ko-KR') : '-'}</span>
+                        {project.updatedAt && (
+                          <span>수정: {new Date(project.updatedAt.toMillis()).toLocaleDateString('ko-KR')}</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {isExpanded && projectFiles.length > 0 && (
+                      <div className={styles.projectFiles}>
+                        {projectFiles.map(file => (
+                          <div key={file.id} className={styles.fileItem}>
+                            <div className={styles.fileItemHeader}>
+                              <span className={styles.fileName}>{file.fileName}</span>
+                              <span className={styles.fileSize}>
+                                {(file.fileSize / 1024).toFixed(2)} KB
+                              </span>
+                            </div>
+                            <div className={styles.fileItemMeta}>
+                              <span>생성: {file.createdAt ? new Date(file.createdAt.toMillis()).toLocaleDateString('ko-KR') : '-'}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
