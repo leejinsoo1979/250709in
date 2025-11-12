@@ -574,11 +574,41 @@ const Users = () => {
                       key={planType}
                       className={`${styles.planCard} ${planDialog.newPlan === planType ? styles.planCardActive : ''}`}
                       onClick={() => setPlanDialog({ ...planDialog, newPlan: planType })}
+                      style={
+                        planDialog.newPlan === planType && planType !== 'free'
+                          ? {
+                              borderColor: PLANS[planType].color,
+                              backgroundColor: `${PLANS[planType].color}08`
+                            }
+                          : planType !== 'free'
+                          ? { borderColor: `${PLANS[planType].color}40` }
+                          : {}
+                      }
                     >
                       <div className={styles.planCardHeader}>
-                        <span className={styles.planCardName}>{PLANS[planType].name}</span>
+                        <span
+                          className={styles.planCardName}
+                          style={
+                            planType !== 'free'
+                              ? { color: PLANS[planType].color }
+                              : {}
+                          }
+                        >
+                          {PLANS[planType].name}
+                        </span>
                         {planDialog.newPlan === planType && (
-                          <svg className={styles.checkIcon} width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                          <svg
+                            className={styles.checkIcon}
+                            width="20"
+                            height="20"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                            style={
+                              planType !== 'free'
+                                ? { color: PLANS[planType].color }
+                                : {}
+                            }
+                          >
                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                           </svg>
                         )}
