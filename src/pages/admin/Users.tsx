@@ -702,7 +702,7 @@ const Users = () => {
 
           <div className={styles.userDetailsContent}>
               {/* 기본 정보 */}
-              <div className={styles.userDetailsSection}>
+              <div className={styles.detailsBlock}>
                 <h3 className={styles.userDetailsSectionTitle}>기본 정보</h3>
                 <div className={styles.userDetailsGrid}>
                   <div className={styles.userDetailsItem}>
@@ -734,7 +734,7 @@ const Users = () => {
               </div>
 
               {/* 프로젝트 */}
-              <div className={styles.userDetailsSection}>
+              <div className={styles.detailsBlock}>
                 <h3 className={styles.userDetailsSectionTitle}>
                   프로젝트 ({userProjects.length})
                 </h3>
@@ -762,7 +762,7 @@ const Users = () => {
               </div>
 
               {/* 디자인 파일 */}
-              <div className={styles.userDetailsSection}>
+              <div className={styles.detailsBlock}>
                 <h3 className={styles.userDetailsSectionTitle}>
                   디자인 파일 ({userDesignFiles.length})
                 </h3>
@@ -795,7 +795,7 @@ const Users = () => {
               </div>
 
               {/* 생성한 공유 링크 */}
-              <div className={styles.userDetailsSection}>
+              <div className={styles.detailsBlock}>
                 <h3 className={styles.userDetailsSectionTitle}>
                   생성한 공유 링크 ({userShareLinks.length})
                 </h3>
@@ -832,7 +832,7 @@ const Users = () => {
               </div>
 
               {/* 접근 권한 받은 프로젝트 */}
-              <div className={styles.userDetailsSection}>
+              <div className={styles.detailsBlock}>
                 <h3 className={styles.userDetailsSectionTitle}>
                   접근 권한 받은 프로젝트 ({userSharedAccess.length})
                 </h3>
@@ -868,7 +868,7 @@ const Users = () => {
               </div>
 
               {/* 최근 접근 로그 */}
-              <div className={styles.userDetailsSection}>
+              <div className={styles.detailsBlock}>
                 <h3 className={styles.userDetailsSectionTitle}>
                   최근 접근 로그 ({userAccessLogs.length})
                 </h3>
@@ -904,7 +904,7 @@ const Users = () => {
               </div>
 
               {/* 활동 통계 */}
-              <div className={styles.userDetailsSection}>
+              <div className={styles.detailsBlock}>
                 <h3 className={styles.userDetailsSectionTitle}>활동 통계</h3>
                 <div className={styles.userDetailsGrid}>
                   <div className={styles.userDetailsItem}>

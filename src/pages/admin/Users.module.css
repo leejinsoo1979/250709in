@@ -852,22 +852,11 @@
   padding: 24px;
 }
 
-.userDetailsContent > .userDetailsSection {
-  margin-bottom: 24px;
-  background: transparent;
-  border: none;
-  padding: 0;
-}
-
-.userDetailsContent > .userDetailsSection:last-child {
-  margin-bottom: 0;
-}
-
-.userDetailsContent .userDetailsSection {
+.detailsBlock {
   margin-bottom: 32px;
 }
 
-.userDetailsContent .userDetailsSection:last-child {
+.detailsBlock:last-child {
   margin-bottom: 0;
 }
 
