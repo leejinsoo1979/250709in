@@ -3,12 +3,28 @@ import { useNavigate } from 'react-router-dom';
 import { User } from 'firebase/auth';
 import { getCurrentUser } from '@/firebase/auth';
 import { useAdmin } from '@/hooks/useAdmin';
+import { collection, getDocs, getCountFromServer } from 'firebase/firestore';
+import { db } from '@/firebase/config';
 import styles from './AdminDashboard.module.css';
+
+interface AdminStats {
+  totalUsers: number;
+  totalOrganizations: number;
+  totalProjects: number;
+  totalDesigns: number;
+}
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const { adminRole, isAdmin, isSuperAdmin, loading } = useAdmin(user);
+  const [stats, setStats] = useState<AdminStats>({
+    totalUsers: 0,
+    totalOrganizations: 0,
+    totalProjects: 0,
+    totalDesigns: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   useEffect(() => {
     const currentUser = getCurrentUser();
@@ -27,6 +43,46 @@ const AdminDashboard = () => {
       navigate('/dashboard');
     }
   }, [loading, user, isAdmin, navigate]);
+
+  // Firebase 통계 데이터 가져오기
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (!user || !isAdmin) return;
+
+      try {
+        setStatsLoading(true);
+
+        // 전체 사용자 수 (users 컬렉션)
+        const usersSnapshot = await getCountFromServer(collection(db, 'users'));
+        const totalUsers = usersSnapshot.data().count;
+
+        // 전체 조직 수 (organizations 컬렉션)
+        const orgsSnapshot = await getCountFromServer(collection(db, 'organizations'));
+        const totalOrganizations = orgsSnapshot.data().count;
+
+        // 전체 프로젝트 수 (projects 컬렉션)
+        const projectsSnapshot = await getCountFromServer(collection(db, 'projects'));
+        const totalProjects = projectsSnapshot.data().count;
+
+        // 전체 디자인 파일 수 (designs 컬렉션)
+        const designsSnapshot = await getCountFromServer(collection(db, 'designs'));
+        const totalDesigns = designsSnapshot.data().count;
+
+        setStats({
+          totalUsers,
+          totalOrganizations,
+          totalProjects,
+          totalDesigns
+        });
+      } catch (error) {
+        console.error('통계 데이터 가져오기 오류:', error);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, [user, isAdmin]);
 
   if (loading) {
     return (
@@ -76,7 +132,9 @@ const AdminDashboard = () => {
             <div className={styles.statIcon}>👥</div>
             <div className={styles.statContent}>
               <h3 className={styles.statLabel}>전체 사용자</h3>
-              <p className={styles.statValue}>-</p>
+              <p className={styles.statValue}>
+                {statsLoading ? '...' : stats.totalUsers.toLocaleString()}
+              </p>
             </div>
           </div>
 
@@ -84,7 +142,9 @@ const AdminDashboard = () => {
             <div className={styles.statIcon}>🏢</div>
             <div className={styles.statContent}>
               <h3 className={styles.statLabel}>조직</h3>
-              <p className={styles.statValue}>-</p>
+              <p className={styles.statValue}>
+                {statsLoading ? '...' : stats.totalOrganizations.toLocaleString()}
+              </p>
             </div>
           </div>
 
@@ -92,15 +152,19 @@ const AdminDashboard = () => {
             <div className={styles.statIcon}>📊</div>
             <div className={styles.statContent}>
               <h3 className={styles.statLabel}>프로젝트</h3>
-              <p className={styles.statValue}>-</p>
+              <p className={styles.statValue}>
+                {statsLoading ? '...' : stats.totalProjects.toLocaleString()}
+              </p>
             </div>
           </div>
 
           <div className={styles.statCard}>
-            <div className={styles.statIcon}>💰</div>
+            <div className={styles.statIcon}>💼</div>
             <div className={styles.statContent}>
-              <h3 className={styles.statLabel}>활성 구독</h3>
-              <p className={styles.statValue}>-</p>
+              <h3 className={styles.statLabel}>디자인 파일</h3>
+              <p className={styles.statValue}>
+                {statsLoading ? '...' : stats.totalDesigns.toLocaleString()}
+              </p>
             </div>
           </div>
         </div>
