@@ -67,7 +67,7 @@
   flex-direction: column;
   overflow: hidden;
   animation: slideDown 0.2s ease;
-  z-index: 10000;
+  z-index: 999998 !important;
 }
 
 @keyframes slideDown {
@@ -296,7 +296,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100000;
+  z-index: 999999 !important;
   animation: fadeIn 0.2s ease;
   padding: 20px;
 }
@@ -323,6 +323,7 @@
   animation: slideUp 0.3s ease;
   margin: auto;
   position: relative;
+  z-index: 1000000 !important;
 }
 
 @keyframes slideUp {
