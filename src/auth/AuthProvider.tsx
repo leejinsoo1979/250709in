@@ -55,22 +55,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           // users 컬렉션에 사용자 정보 저장 (관리자 페이지용)
           try {
-            const { doc, setDoc, getDoc, serverTimestamp } = await import('firebase/firestore');
+            const { doc, setDoc, getDoc, serverTimestamp, Timestamp } = await import('firebase/firestore');
             const { db } = await import('@/firebase/config');
 
             const userRef = doc(db, 'users', user.uid);
             const userDoc = await getDoc(userRef);
 
             if (!userDoc.exists()) {
-              // 신규 사용자 - users 컬렉션에 저장
+              // users 컬렉션에 문서가 없는 경우 - Firebase Auth의 실제 가입일 사용
+              const authCreationTime = user.metadata.creationTime
+                ? Timestamp.fromDate(new Date(user.metadata.creationTime))
+                : serverTimestamp();
+
               await setDoc(userRef, {
                 email: user.email,
                 displayName: user.displayName || '',
                 photoURL: user.photoURL || '',
-                createdAt: serverTimestamp(),
+                createdAt: authCreationTime, // Firebase Auth의 실제 가입일 사용
                 lastLoginAt: serverTimestamp()
               });
-              console.log('✅ users 컬렉션에 신규 사용자 저장');
+              console.log('✅ users 컬렉션에 사용자 정보 동기화 (실제 가입일 사용)');
             } else {
               // 기존 사용자 - lastLoginAt만 업데이트
               const { updateDoc } = await import('firebase/firestore');
