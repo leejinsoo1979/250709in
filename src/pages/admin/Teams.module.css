@@ -130,7 +130,8 @@
 
 .teamCardActive {
   border-color: var(--theme-primary, #667eea);
-  background: var(--theme-primary-light, rgba(102, 126, 234, 0.05));
+  border-width: 3px;
+  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
 }
 
 .teamCardHeader {
@@ -258,11 +259,12 @@
 }
 
 .memberAvatar {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
+  border: 2px solid var(--theme-primary, #667eea);
 }
 
 .memberAvatar img {
@@ -277,10 +279,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
   color: white;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .memberName {
@@ -289,13 +291,14 @@
 }
 
 .uid {
-  font-family: 'Courier New', monospace;
-  font-size: 12px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 11px;
   padding: 4px 8px;
-  background: var(--theme-background, #f9fafb);
+  background: var(--theme-surface, #ffffff);
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 4px;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-muted, #9ca3af);
+  display: inline-block;
 }
 
 .memberEmail {

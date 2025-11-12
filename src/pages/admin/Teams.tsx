@@ -312,7 +312,7 @@ const Teams = () => {
                             </div>
                           </td>
                           <td>
-                            <span className={styles.uid}>{member.userId}</span>
+                            <code className={styles.uid}>{member.userId.substring(0, 12)}...</code>
                           </td>
                           <td className={styles.memberEmail}>{member.email}</td>
                           <td>
