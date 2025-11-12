@@ -5,6 +5,7 @@ import { useAdmin } from '@/hooks/useAdmin';
 import { UserIcon, UsersIcon, SettingsIcon, LogOutIcon } from '@/components/common/Icons';
 import { HiOutlineOfficeBuilding, HiOutlineChartBar, HiOutlineCreditCard, HiOutlineLockClosed, HiOutlineFolder, HiOutlineShare, HiOutlineClipboardList, HiOutlineShieldCheck } from 'react-icons/hi';
 import { VscServerProcess } from 'react-icons/vsc';
+import { GiImperialCrown } from 'react-icons/gi';
 import styles from './AdminLayout.module.css';
 
 const AdminLayout = () => {
@@ -49,8 +50,28 @@ const AdminLayout = () => {
       {/* 사이드바 */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
-          <VscServerProcess size={32} className={styles.logo} />
-          <span className={styles.title}>관리자 모드</span>
+          <div className={styles.headerTop}>
+            <VscServerProcess size={32} className={styles.logo} />
+            <span className={styles.title}>관리자 모드</span>
+          </div>
+          {isSuperAdmin && user && (
+            <div className={styles.profileSection}>
+              <GiImperialCrown className={styles.crownIcon} />
+              <div className={styles.profileAvatar}>
+                {user.photoURL ? (
+                  <img src={user.photoURL} alt={user.displayName || user.email || ''} />
+                ) : (
+                  <div className={styles.avatarPlaceholder}>
+                    {(user.displayName || user.email || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+              <div className={styles.profileInfo}>
+                <span className={styles.profileName}>{user.displayName || '관리자'}</span>
+                <span className={styles.profileEmail}>{user.email}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         <nav className={styles.nav}>
