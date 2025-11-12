@@ -326,7 +326,7 @@ const Shares = () => {
                                 {project.collaborators.map((collab, idx) => {
                                   const permissionBadge = getPermissionBadge(collab.permission);
                                   const shareUrl = collab.linkToken
-                                    ? `https://in-f8873.vercel.app/share/${collab.linkToken}`
+                                    ? `https://250709in.vercel.app/share/${collab.linkToken}`
                                     : '';
                                   return (
                                     <tr key={`${collab.userId}-${idx}`}>
@@ -390,7 +390,7 @@ const Shares = () => {
                               <tbody>
                                 {project.shareLinks.map(link => {
                                   const permissionBadge = getPermissionBadge(link.permission);
-                                  const shareUrl = `https://in-f8873.vercel.app/share/${link.token}`;
+                                  const shareUrl = `https://250709in.vercel.app/share/${link.token}`;
                                   const isExpired = link.expiresAt && link.expiresAt < new Date();
                                   const statusClass = !link.isActive
                                     ? styles.statusInactive

@@ -459,7 +459,7 @@ const Logs = () => {
                 <tbody>
                   {filteredShareLinkAccessLog.map(log => {
                     const shareUrl = log.shareLinkToken
-                      ? `https://in-f8873.vercel.app/share/${log.shareLinkToken}`
+                      ? `https://250709in.vercel.app/share/${log.shareLinkToken}`
                       : '';
 
                     return (
