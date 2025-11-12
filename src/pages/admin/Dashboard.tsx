@@ -493,10 +493,10 @@ const Dashboard = () => {
           <ResponsiveContainer width="100%" height={300}>
             <BarChart
               data={[
-                { name: '사용자', value: stats.totalUsers, color: '#667eea' },
-                { name: '조직', value: stats.totalOrganizations, color: '#764ba2' },
-                { name: '프로젝트', value: stats.totalProjects, color: '#f093fb' },
-                { name: '디자인', value: stats.totalDesigns, color: '#4facfe' }
+                { name: '사용자', value: stats.totalUsers },
+                { name: '조직', value: stats.totalOrganizations },
+                { name: '프로젝트', value: stats.totalProjects },
+                { name: '디자인', value: stats.totalDesigns }
               ]}
             >
               <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
@@ -510,16 +510,7 @@ const Dashboard = () => {
                   padding: '8px 12px'
                 }}
               />
-              <Bar dataKey="value" radius={[8, 8, 0, 0]}>
-                {[
-                  { name: '사용자', value: stats.totalUsers, color: '#667eea' },
-                  { name: '조직', value: stats.totalOrganizations, color: '#764ba2' },
-                  { name: '프로젝트', value: stats.totalProjects, color: '#f093fb' },
-                  { name: '디자인', value: stats.totalDesigns, color: '#4facfe' }
-                ].map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
+              <Bar dataKey="value" fill="#667eea" radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -543,7 +534,7 @@ const Dashboard = () => {
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
                 {[
-                  { name: '활성 사용자', value: stats.activeUsers, color: '#10b981' },
+                  { name: '활성 사용자', value: stats.activeUsers, color: '#667eea' },
                   { name: '비활성 사용자', value: Math.max(0, stats.totalUsers - stats.activeUsers), color: '#e5e7eb' }
                 ].map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
