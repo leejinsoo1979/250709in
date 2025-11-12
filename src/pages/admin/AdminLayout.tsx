@@ -200,9 +200,9 @@ const AdminLayout = () => {
         <button
           onClick={() => navigate('/dashboard')}
           className={styles.backButton}
+          title="대시보드로 돌아가기"
         >
-          <LogOutIcon size={18} />
-          <span>대시보드로 돌아가기</span>
+          <LogOutIcon size={24} />
         </button>
         <Outlet />
       </main>

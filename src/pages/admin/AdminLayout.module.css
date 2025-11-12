@@ -237,39 +237,36 @@
 
 .backButton {
   position: fixed;
-  top: 24px;
+  bottom: 24px;
   right: 24px;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 12px 20px;
-  background: var(--theme-surface, #ffffff);
-  border: 1px solid var(--theme-border, #e5e7eb);
-  border-radius: 8px;
-  color: var(--theme-text-secondary, #6b7280);
-  font-size: 14px;
-  font-weight: 600;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  background: var(--theme-primary, #667eea);
+  border: none;
+  border-radius: 50%;
+  color: white;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
   z-index: 1000;
 }
 
+.backButton span {
+  display: none;
+}
+
 .backButton svg {
-  color: var(--theme-text-secondary, #6b7280);
+  color: white;
   transition: all 0.2s ease;
 }
 
 .backButton:hover {
-  background: var(--theme-primary, #667eea);
-  border-color: var(--theme-primary, #667eea);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
-.backButton:hover svg {
-  color: white;
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
 }
 
 /* 반응형 */
@@ -279,10 +276,10 @@
   }
 
   .backButton {
-    top: 16px;
-    right: 16px;
-    padding: 10px 16px;
-    font-size: 13px;
+    bottom: 20px;
+    right: 20px;
+    width: 52px;
+    height: 52px;
   }
 }
 
@@ -308,13 +305,9 @@
   }
 
   .backButton {
-    top: 12px;
-    right: 12px;
-    padding: 8px 12px;
-    font-size: 12px;
-  }
-
-  .backButton span {
-    display: none;
+    bottom: 16px;
+    right: 16px;
+    width: 48px;
+    height: 48px;
   }
 }
