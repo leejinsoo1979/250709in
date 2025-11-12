@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/auth/AuthProvider';
-import { collection, query, getDocs, Timestamp } from 'firebase/firestore';
+import { collection, query, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { HiOutlineFolder, HiOutlineCube, HiOutlineUsers, HiOutlineShare } from 'react-icons/hi';
 import styles from './Projects.module.css';
@@ -9,8 +9,8 @@ interface ProjectData {
   id: string;
   projectName: string;
   userId: string;
-  userName?: string;
-  userEmail?: string;
+  ownerName?: string;
+  ownerEmail?: string;
   createdAt: Date | null;
   updatedAt: Date | null;
   designFileCount: number;
@@ -93,12 +93,25 @@ const Projects = () => {
             doc => doc.data().projectId === projectDoc.id
           );
 
+          // 프로젝트 소유자 정보 조회
+          let ownerName = '';
+          let ownerEmail = '';
+          const userId = data.userId || data.user_id || '';
+          if (userId) {
+            const userDoc = await getDoc(doc(db, 'users', userId)).catch(() => null);
+            if (userDoc?.exists()) {
+              const userData = userDoc.data();
+              ownerName = userData?.displayName || userData?.name || '';
+              ownerEmail = userData?.email || '';
+            }
+          }
+
           projectsData.push({
             id: projectDoc.id,
             projectName: projectName,
-            userId: data.userId || data.user_id || '',
-            userName: data.userName || data.user_name || '',
-            userEmail: data.userEmail || data.user_email || '',
+            userId: userId,
+            ownerName: ownerName,
+            ownerEmail: ownerEmail,
             createdAt: data.createdAt?.toDate?.() || null,
             updatedAt: data.updatedAt?.toDate?.() || null,
             designFileCount: projectDesignFiles.length,
@@ -166,8 +179,8 @@ const Projects = () => {
     const query = searchQuery.toLowerCase();
     return (
       project.projectName?.toLowerCase().includes(query) ||
-      project.userName?.toLowerCase().includes(query) ||
-      project.userEmail?.toLowerCase().includes(query) ||
+      project.ownerName?.toLowerCase().includes(query) ||
+      project.ownerEmail?.toLowerCase().includes(query) ||
       project.id.toLowerCase().includes(query)
     );
   });
@@ -197,7 +210,7 @@ const Projects = () => {
             <h2 className={styles.sectionTitle}>프로젝트 목록 ({projects.length})</h2>
             <input
               type="text"
-              placeholder="프로젝트명, 사용자, ID로 검색..."
+              placeholder="프로젝트명, 소유자, ID로 검색..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className={styles.searchInput}
@@ -229,7 +242,7 @@ const Projects = () => {
                     <div className={styles.projectInfo}>
                       <h3 className={styles.projectName}>{project.projectName}</h3>
                       <p className={styles.projectOwner}>
-                        {project.userName || project.userEmail}
+                        {project.ownerName || project.ownerEmail || 'Unknown'}
                       </p>
                     </div>
                   </div>
