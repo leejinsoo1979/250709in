@@ -588,9 +588,10 @@
   align-items: center;
   gap: 4px;
   padding: 4px 12px;
-  background: var(--theme-success-light, rgba(16, 185, 129, 0.2));
-  color: var(--theme-success, #10b981);
-  border-radius: 12px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-primary, #667eea);
+  color: var(--theme-primary, #667eea);
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -601,9 +602,10 @@
   align-items: center;
   gap: 4px;
   padding: 4px 12px;
-  background: var(--theme-background, #f3f4f6);
-  color: var(--theme-text-muted, #9ca3af);
-  border-radius: 12px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  color: var(--theme-text-secondary, #6b7280);
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
@@ -614,11 +616,12 @@
   align-items: center;
   gap: 4px;
   padding: 4px 12px;
-  background: var(--theme-primary-light, rgba(102, 126, 234, 0.2));
-  color: var(--theme-primary, #667eea);
-  border-radius: 12px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  color: var(--theme-text-secondary, #6b7280);
+  border-radius: 6px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -627,11 +630,12 @@
   align-items: center;
   gap: 4px;
   padding: 4px 12px;
-  background: var(--theme-warning-light, rgba(245, 158, 11, 0.2));
-  color: var(--theme-warning, #f59e0b);
-  border-radius: 12px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  color: var(--theme-text-secondary, #6b7280);
+  border-radius: 6px;
   font-size: 12px;
-  font-weight: 600;
+  font-weight: 500;
   white-space: nowrap;
 }
 
@@ -660,9 +664,9 @@
 
 .actionButton {
   padding: 8px 16px;
-  background: var(--theme-primary, #667eea);
-  color: white;
-  border: none;
+  background: var(--theme-surface, #ffffff);
+  color: var(--theme-primary, #667eea);
+  border: 1px solid var(--theme-primary, #667eea);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
@@ -671,8 +675,8 @@
 }
 
 .actionButton:hover {
-  background: var(--theme-primary-dark, #5568d3);
-  transform: translateY(-1px);
+  background: var(--theme-primary, #667eea);
+  color: white;
 }
 
 .deleteButton {
@@ -680,9 +684,9 @@
   align-items: center;
   gap: 6px;
   padding: 8px 16px;
-  background: var(--theme-error-light, rgba(239, 68, 68, 0.1));
-  color: var(--theme-error, #ef4444);
-  border: none;
+  background: var(--theme-surface, #ffffff);
+  color: var(--theme-text-secondary, #6b7280);
+  border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
@@ -691,9 +695,9 @@
 }
 
 .deleteButton:hover {
-  background: var(--theme-error, #ef4444);
-  color: white;
-  transform: translateY(-1px);
+  background: var(--theme-background, #f9fafb);
+  color: var(--theme-text, #1f2937);
+  border-color: var(--theme-text-secondary, #6b7280);
 }
 
 /* 반응형 */
