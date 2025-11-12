@@ -1102,7 +1102,7 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
 
     const data = docSnap.data();
     console.log('🔥 [Firebase] 디자인 파일 원본 데이터:', data);
-    console.log('🔥 [Firebase] 디자인 파일 가구 데이터:', { 
+    console.log('🔥 [Firebase] 디자인 파일 가구 데이터:', {
       hasData: !!data,
       projectId: data?.projectId,
       hasFurniture: !!data?.furniture,
@@ -1110,7 +1110,24 @@ export const getDesignFileById = async (designFileId: string): Promise<{ designF
       placedModules: data?.furniture?.placedModules,
       furnitureCount: data?.furniture?.placedModules?.length || 0
     });
-    
+
+    // 관리자는 권한 체크 건너뛰고 바로 데이터 반환
+    if (isAdmin) {
+      console.log('👑 [Firebase] 관리자 - 권한 체크 건너뛰고 데이터 반환');
+      const designFile: DesignFile = {
+        id: docSnap.id,
+        name: data.name,
+        projectId: data.projectId,
+        folderId: data.folderId,
+        spaceConfig: data.spaceConfig,
+        furniture: data.furniture || { placedModules: [] },
+        thumbnail: data.thumbnail,
+        createdAt: data.createdAt,
+        updatedAt: data.updatedAt,
+      };
+      return { designFile, error: null };
+    }
+
     // 디자인 파일이 속한 프로젝트의 권한 확인
     // Multi-path 아키텍처에서는 프로젝트가 teams/{teamId}/projects/{projectId}에 있음
     const projectRef = doc(db, PROJECTS_COLLECTION, data.projectId);
