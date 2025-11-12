@@ -382,11 +382,14 @@ export async function grantProjectAccessViaLink(
         usageCount: link.usageCount + 1,
       });
 
-      // 접근 기록 저장
+      // 접근 기록 저장 (프로젝트 정보 포함)
       const accessLogRef = doc(collection(db, 'shareLinkAccessLog'));
       console.log('🔑 접근 기록 저장');
       transaction.set(accessLogRef, {
-        linkId: link.id,
+        shareLinkId: link.id,
+        linkId: link.id, // 호환성 유지
+        projectId: link.projectId,
+        projectName: link.projectName,
         userId,
         userName,
         userEmail,
