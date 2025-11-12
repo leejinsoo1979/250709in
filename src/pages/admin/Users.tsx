@@ -26,6 +26,8 @@ const Users = () => {
   const [users, setUsers] = useState<UserData[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'name-asc' | 'name-desc'>('date-desc');
+  const [filterPlan, setFilterPlan] = useState<PlanType | 'all'>('all');
   const [planDialog, setPlanDialog] = useState<{
     show: boolean;
     userId: string;
@@ -124,25 +126,55 @@ const Users = () => {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const query = searchQuery.toLowerCase();
-    return (
-      user.email?.toLowerCase().includes(query) ||
-      user.displayName?.toLowerCase().includes(query) ||
-      user.id.toLowerCase().includes(query)
-    );
-  });
+  // 필터링 및 정렬
+  const filteredUsers = users
+    .filter(user => {
+      const query = searchQuery.toLowerCase();
+      const matchesSearch =
+        user.email?.toLowerCase().includes(query) ||
+        user.displayName?.toLowerCase().includes(query) ||
+        user.id.toLowerCase().includes(query);
+
+      const matchesPlan = filterPlan === 'all' || user.plan === filterPlan;
+
+      return matchesSearch && matchesPlan;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'date-desc':
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return b.createdAt.getTime() - a.createdAt.getTime();
+        case 'date-asc':
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return a.createdAt.getTime() - b.createdAt.getTime();
+        case 'name-asc':
+          const nameA = (a.displayName || a.email || '').toLowerCase();
+          const nameB = (b.displayName || b.email || '').toLowerCase();
+          return nameA.localeCompare(nameB);
+        case 'name-desc':
+          const nameA2 = (a.displayName || a.email || '').toLowerCase();
+          const nameB2 = (b.displayName || b.email || '').toLowerCase();
+          return nameB2.localeCompare(nameA2);
+        default:
+          return 0;
+      }
+    });
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>사용자 관리</h1>
-          <p className={styles.subtitle}>전체 {users.length}명의 사용자</p>
+          <p className={styles.subtitle}>
+            전체 {users.length}명
+            {filteredUsers.length !== users.length && ` · 필터링 ${filteredUsers.length}명`}
+          </p>
         </div>
       </div>
 
-      {/* 검색 */}
+      {/* 검색 및 필터 */}
       <div className={styles.toolbar}>
         <div className={styles.searchBox}>
           <SearchIcon size={20} />
@@ -153,6 +185,36 @@ const Users = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className={styles.searchInput}
           />
+        </div>
+
+        <div className={styles.filters}>
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>정렬</label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className={styles.filterSelect}
+            >
+              <option value="date-desc">가입일 최신순</option>
+              <option value="date-asc">가입일 오래된순</option>
+              <option value="name-asc">이름 가나다순</option>
+              <option value="name-desc">이름 역순</option>
+            </select>
+          </div>
+
+          <div className={styles.filterGroup}>
+            <label className={styles.filterLabel}>플랜</label>
+            <select
+              value={filterPlan}
+              onChange={(e) => setFilterPlan(e.target.value as any)}
+              className={styles.filterSelect}
+            >
+              <option value="all">전체</option>
+              <option value="free">무료</option>
+              <option value="pro">프로</option>
+              <option value="enterprise">엔터프라이즈</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -275,39 +337,38 @@ const Users = () => {
             </p>
 
             <div className={styles.planSelector}>
-              <label className={styles.planLabel}>현재 플랜</label>
-              <div className={styles.currentPlan}>
-                <span
-                  className={`${styles.planBadge} ${planDialog.currentPlan === 'free' ? styles.planBadgeFree : ''}`}
-                  style={planDialog.currentPlan !== 'free' ? { backgroundColor: PLANS[planDialog.currentPlan].color } : {}}
-                >
-                  {PLANS[planDialog.currentPlan].name}
-                </span>
+              <div className={styles.currentPlanSection}>
+                <span className={styles.sectionLabel}>현재 플랜</span>
+                <div className={styles.planCardSmall}>
+                  <span className={styles.planName}>{PLANS[planDialog.currentPlan].name}</span>
+                </div>
               </div>
 
-              <label className={styles.planLabel}>새 플랜</label>
-              <select
-                className={styles.planSelect}
-                value={planDialog.newPlan}
-                onChange={(e) => setPlanDialog({ ...planDialog, newPlan: e.target.value as PlanType })}
-              >
-                {(Object.keys(PLANS) as PlanType[]).map((planType) => (
-                  <option key={planType} value={planType}>
-                    {PLANS[planType].name}
-                  </option>
-                ))}
-              </select>
-
-              {/* 선택된 플랜 정보 */}
-              <div className={styles.planInfo}>
-                <h4 className={styles.planInfoTitle}>
-                  {PLANS[planDialog.newPlan].name} 플랜
-                </h4>
-                <ul className={styles.planFeatures}>
-                  {PLANS[planDialog.newPlan].features.map((feature, index) => (
-                    <li key={index}>✓ {feature}</li>
+              <div className={styles.planGridSection}>
+                <span className={styles.sectionLabel}>새 플랜 선택</span>
+                <div className={styles.planGrid}>
+                  {(Object.keys(PLANS) as PlanType[]).map((planType) => (
+                    <div
+                      key={planType}
+                      className={`${styles.planCard} ${planDialog.newPlan === planType ? styles.planCardActive : ''}`}
+                      onClick={() => setPlanDialog({ ...planDialog, newPlan: planType })}
+                    >
+                      <div className={styles.planCardHeader}>
+                        <span className={styles.planCardName}>{PLANS[planType].name}</span>
+                        {planDialog.newPlan === planType && (
+                          <svg className={styles.checkIcon} width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </div>
+                      <ul className={styles.planCardFeatures}>
+                        {PLANS[planType].features.slice(0, 3).map((feature, index) => (
+                          <li key={index}>{feature}</li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </div>
             </div>
 

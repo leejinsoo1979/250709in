@@ -27,6 +27,10 @@
 /* 검색 toolbar */
 .toolbar {
   margin-bottom: 24px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  flex-wrap: wrap;
 }
 
 .searchBox {
@@ -37,7 +41,8 @@
   background: var(--theme-surface, #ffffff);
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 8px;
-  max-width: 400px;
+  flex: 1;
+  min-width: 300px;
 }
 
 .searchBox svg {
@@ -56,6 +61,50 @@
 
 .searchInput::placeholder {
   color: var(--theme-text-secondary, #6b7280);
+}
+
+/* 필터 */
+.filters {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filterLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filterSelect {
+  padding: 10px 14px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 160px;
+}
+
+.filterSelect:hover {
+  border-color: var(--theme-primary, #667eea);
+}
+
+.filterSelect:focus {
+  outline: none;
+  border-color: var(--theme-primary, #667eea);
+  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
 }
 
 /* 테이블 */
@@ -613,6 +662,10 @@
   .table td {
     padding: 12px;
   }
+
+  .filterSelect {
+    min-width: 140px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -621,8 +674,27 @@
     gap: 16px;
   }
 
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .searchBox {
-    max-width: 100%;
+    min-width: 100%;
+  }
+
+  .filters {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .filterGroup {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .filterSelect {
+    min-width: 100%;
   }
 
   .table {
