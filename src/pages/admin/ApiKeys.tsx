@@ -24,6 +24,8 @@ const ApiKeys = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [newKeyName, setNewKeyName] = useState('');
   const [expiryDays, setExpiryDays] = useState<number>(0); // 0 = 무제한
+  const [customDays, setCustomDays] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -112,6 +114,8 @@ const ApiKeys = () => {
       alert('API 키가 생성되었습니다.\n\n⚠️ 키를 안전한 곳에 보관하세요. 다시 확인할 수 없습니다.');
       setNewKeyName('');
       setExpiryDays(0);
+      setCustomDays('');
+      setShowDropdown(false);
       setIsAdding(false);
       loadApiKeys();
     } catch (error) {
@@ -197,17 +201,96 @@ const ApiKeys = () => {
           </div>
           <div className={styles.formGroup}>
             <label className={styles.label}>유효기간</label>
-            <select
-              value={expiryDays}
-              onChange={(e) => setExpiryDays(Number(e.target.value))}
-              className={styles.input}
-            >
-              <option value={0}>무제한</option>
-              <option value={30}>30일</option>
-              <option value={90}>90일</option>
-              <option value={180}>180일</option>
-              <option value={365}>1년</option>
-            </select>
+            <div className={styles.customSelect}>
+              <div
+                className={styles.selectTrigger}
+                onClick={() => setShowDropdown(!showDropdown)}
+              >
+                <span>
+                  {expiryDays === 0 ? '무제한' :
+                   expiryDays === 30 ? '30일' :
+                   expiryDays === 90 ? '90일' :
+                   expiryDays === 180 ? '180일' :
+                   expiryDays === 365 ? '1년' :
+                   `${expiryDays}일`}
+                </span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor">
+                  <path d="M6 8L2 4h8L6 8z" />
+                </svg>
+              </div>
+              {showDropdown && (
+                <div className={styles.selectDropdown}>
+                  <div
+                    className={styles.selectOption}
+                    onClick={() => {
+                      setExpiryDays(0);
+                      setCustomDays('');
+                      setShowDropdown(false);
+                    }}
+                  >
+                    무제한
+                  </div>
+                  <div
+                    className={styles.selectOption}
+                    onClick={() => {
+                      setExpiryDays(30);
+                      setCustomDays('');
+                      setShowDropdown(false);
+                    }}
+                  >
+                    30일
+                  </div>
+                  <div
+                    className={styles.selectOption}
+                    onClick={() => {
+                      setExpiryDays(90);
+                      setCustomDays('');
+                      setShowDropdown(false);
+                    }}
+                  >
+                    90일
+                  </div>
+                  <div
+                    className={styles.selectOption}
+                    onClick={() => {
+                      setExpiryDays(180);
+                      setCustomDays('');
+                      setShowDropdown(false);
+                    }}
+                  >
+                    180일
+                  </div>
+                  <div
+                    className={styles.selectOption}
+                    onClick={() => {
+                      setExpiryDays(365);
+                      setCustomDays('');
+                      setShowDropdown(false);
+                    }}
+                  >
+                    1년
+                  </div>
+                  <div className={styles.selectDivider}></div>
+                  <div className={styles.customInputWrapper}>
+                    <input
+                      type="number"
+                      placeholder="직접 입력 (일)"
+                      value={customDays}
+                      onChange={(e) => {
+                        setCustomDays(e.target.value);
+                        const days = Number(e.target.value);
+                        if (days > 0) {
+                          setExpiryDays(days);
+                        }
+                      }}
+                      className={styles.customInput}
+                      min="1"
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
           <div className={styles.formActions}>
             <button className={styles.cancelButton} onClick={() => setIsAdding(false)}>
