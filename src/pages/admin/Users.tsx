@@ -190,7 +190,9 @@ const Users = () => {
                         <GiImperialCrown className={styles.crownIcon} />
                       ) : !targetUser.isAdmin ? (
                         <FaUser className={styles.userIcon} />
-                      ) : null}
+                      ) : (
+                        <span className={styles.iconPlaceholder} />
+                      )}
                       <div className={styles.avatar}>
                         {targetUser.photoURL ? (
                           <img src={targetUser.photoURL} alt={targetUser.displayName || targetUser.email} />
