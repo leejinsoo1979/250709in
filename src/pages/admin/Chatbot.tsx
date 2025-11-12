@@ -44,7 +44,7 @@ const Chatbot = () => {
   const loadQAs = async () => {
     try {
       setLoading(true);
-      const qasQuery = query(collection(db, 'chatbotQAs'), orderBy('priority', 'desc'), orderBy('createdAt', 'desc'));
+      const qasQuery = query(collection(db, 'chatbotQAs'), orderBy('createdAt', 'desc'));
       const snapshot = await getDocs(qasQuery);
       const qasList: ChatbotQA[] = [];
       snapshot.forEach((doc) => {
@@ -61,6 +61,15 @@ const Chatbot = () => {
           updatedAt: data.updatedAt
         });
       });
+
+      // 클라이언트 사이드에서 우선순위로 정렬
+      qasList.sort((a, b) => {
+        if (b.priority !== a.priority) {
+          return b.priority - a.priority;
+        }
+        return b.createdAt.toMillis() - a.createdAt.toMillis();
+      });
+
       setQAs(qasList);
     } catch (error) {
       console.error('Q&A 로드 실패:', error);
