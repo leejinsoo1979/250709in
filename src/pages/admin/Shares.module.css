@@ -218,10 +218,12 @@
   align-items: center;
   gap: 6px;
   color: var(--theme-text-secondary, #6b7280);
+  white-space: nowrap;
 }
 
 .count svg {
   color: var(--theme-primary, #667eea);
+  flex-shrink: 0;
 }
 
 /* 날짜 */
