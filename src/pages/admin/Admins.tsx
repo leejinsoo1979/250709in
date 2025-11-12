@@ -40,7 +40,7 @@ const Admins = () => {
     return (
       <div className={styles.container}>
         <div className={styles.accessDenied}>
-          <h2>⚠️ 접근 권한 없음</h2>
+          <h2>접근 권한 없음</h2>
           <p>슈퍼 관리자만 이 페이지에 접근할 수 있습니다.</p>
         </div>
       </div>
@@ -304,7 +304,7 @@ const Admins = () => {
             </p>
             {confirmDialog.isGranting && (
               <div className={styles.warningBox}>
-                <p>⚠️ 관리자는 다음 권한을 갖습니다:</p>
+                <p>관리자는 다음 권한을 갖습니다</p>
                 <ul>
                   <li>모든 관리자 페이지 접근</li>
                   <li>모든 사용자/팀/프로젝트 조회</li>
