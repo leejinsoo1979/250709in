@@ -80,7 +80,12 @@ export default function UserDetail() {
         }
 
         const userData = userDoc.data() as UserData;
-        setUser({ ...userData, uid: userDoc.id });
+
+        // userProfiles에서 크레딧 정보 가져오기
+        const userProfileDoc = await getDoc(doc(db, 'userProfiles', userId));
+        const credits = userProfileDoc.exists() ? userProfileDoc.data().credits : 0;
+
+        setUser({ ...userData, uid: userDoc.id, credits });
 
         // 프로젝트 조회
         const projectsQuery = query(collection(db, 'projects'), where('userId', '==', userId));
