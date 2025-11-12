@@ -10,25 +10,34 @@ import styles from './AdminLayout.module.css';
 
 const AdminLayout = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { adminRole, isAdmin, isSuperAdmin, loading } = useAdmin(user);
+  const { user, loading: authLoading } = useAuth();
+  const { adminRole, isAdmin, isSuperAdmin, loading: adminLoading } = useAdmin(user);
+
+  // 인증 및 권한 체크가 모두 완료된 상태
+  const loading = authLoading || adminLoading;
 
   useEffect(() => {
+    console.log('🔐 AdminLayout 상태:', { authLoading, adminLoading, user: !!user, isAdmin, isSuperAdmin });
+
+    // 로딩 중이면 아무것도 하지 않음 (Firebase 인증 복원 대기)
+    if (loading) {
+      return;
+    }
+
     // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
     if (!user) {
+      console.log('🔐 user 없음 - 로그인 페이지로 이동');
       navigate('/login');
+      return;
     }
-  }, [user, navigate]);
 
-  useEffect(() => {
-    console.log('🔐 AdminLayout 권한 체크:', { loading, user: !!user, isAdmin, isSuperAdmin });
     // 관리자가 아닌 경우 대시보드로 리다이렉트
-    if (!loading && user && !isAdmin) {
-      console.error('❌ 관리자 권한 없음 - 리다이렉트');
+    if (!isAdmin) {
+      console.error('❌ 관리자 권한 없음 - 대시보드로 이동');
       alert('관리자 권한이 필요합니다.');
       navigate('/dashboard');
     }
-  }, [loading, user, isAdmin, isSuperAdmin, navigate]);
+  }, [loading, user, isAdmin, isSuperAdmin, navigate, authLoading, adminLoading]);
 
   if (loading) {
     return (
