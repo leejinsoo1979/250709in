@@ -174,11 +174,11 @@ export default function UserDetail() {
           <h2>{user.displayName || '이름 없음'}</h2>
           <p>{user.email}</p>
           <div className={styles.profileMeta}>
-            <span>{user.disabled ? '비활성 계정' : '활성 계정'}</span>
+            <span>{user.disabled ? '비활성' : '활성'}</span>
             <span>·</span>
-            <span>{user.emailVerified ? '이메일 인증됨' : '이메일 미인증'}</span>
+            <span>{user.emailVerified ? '인증됨' : '미인증'}</span>
             <span>·</span>
-            <span>{PLANS[user.plan || 'free'].name} 플랜</span>
+            <span>{PLANS[user.plan || 'free'].name}</span>
           </div>
         </div>
       </div>
