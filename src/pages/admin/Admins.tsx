@@ -311,16 +311,6 @@ const Admins = () => {
                 ? '관리자 권한을 부여하시겠습니까?'
                 : '관리자 권한을 해제하시겠습니까?'}
             </p>
-            {confirmDialog.isGranting && (
-              <div className={styles.warningBox}>
-                <p>관리자는 다음 권한을 갖습니다</p>
-                <ul>
-                  <li>모든 관리자 페이지 접근</li>
-                  <li>모든 사용자/팀/프로젝트 조회</li>
-                  <li>시스템 로그 확인</li>
-                </ul>
-              </div>
-            )}
             <div className={styles.dialogActions}>
               <button
                 className={styles.cancelButton}
