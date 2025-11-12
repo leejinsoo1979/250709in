@@ -27,6 +27,11 @@ interface RecentActivity {
   timestamp: Date;
 }
 
+interface DailyUserData {
+  date: string;
+  users: number;
+}
+
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -41,6 +46,7 @@ const Dashboard = () => {
   });
   const [statsLoading, setStatsLoading] = useState(true);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [dailyUserData, setDailyUserData] = useState<DailyUserData[]>([]);
 
   // Firebase 통계 데이터 가져오기
   useEffect(() => {
@@ -169,6 +175,76 @@ const Dashboard = () => {
     return () => {
       clearInterval(intervalId);
     };
+  }, [user]);
+
+  // 일별 사용자 증가 데이터 가져오기
+  useEffect(() => {
+    if (!user) {
+      console.log('📈 일별 사용자 데이터: user 없음');
+      return;
+    }
+
+    console.log('📈 일별 사용자 증가 데이터 가져오기 시작');
+
+    const fetchDailyUserData = async () => {
+      try {
+        // 지난 7일간의 날짜 배열 생성
+        const dates: Date[] = [];
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date();
+          date.setDate(date.getDate() - i);
+          date.setHours(0, 0, 0, 0);
+          dates.push(date);
+        }
+
+        // 모든 사용자 가져오기
+        console.log('📈 전체 사용자 조회 중...');
+        const usersQuery = query(collection(db, 'users'));
+        const usersSnapshot = await getDocs(usersQuery);
+
+        console.log('📈 전체 사용자 수:', usersSnapshot.size);
+
+        // 날짜별로 사용자 수 계산 (누적)
+        const dailyData: DailyUserData[] = dates.map((date, index) => {
+          const nextDate = new Date(date);
+          nextDate.setDate(nextDate.getDate() + 1);
+
+          // 해당 날짜까지 가입한 사용자 수 계산 (누적)
+          let count = 0;
+          usersSnapshot.forEach(doc => {
+            const userData = doc.data();
+            if (userData.createdAt) {
+              const userCreatedAt = userData.createdAt.toDate();
+              if (userCreatedAt <= nextDate) {
+                count++;
+              }
+            }
+          });
+
+          // 날짜 레이블 생성
+          let dateLabel: string;
+          if (index === 6) {
+            dateLabel = '오늘';
+          } else if (index === 5) {
+            dateLabel = '1일전';
+          } else {
+            dateLabel = `${6 - index}일전`;
+          }
+
+          return {
+            date: dateLabel,
+            users: count
+          };
+        });
+
+        console.log('📈 일별 사용자 데이터:', dailyData);
+        setDailyUserData(dailyData);
+      } catch (error) {
+        console.error('❌ 일별 사용자 데이터 가져오기 오류:', error);
+      }
+    };
+
+    fetchDailyUserData();
   }, [user]);
 
   // 최근 활동 가져오기
@@ -372,15 +448,15 @@ const Dashboard = () => {
           <h3 className={styles.chartTitle}>사용자 증가 추이 (최근 7일)</h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart
-              data={[
-                { date: '7일전', users: Math.max(0, stats.totalUsers - 70) },
-                { date: '6일전', users: Math.max(0, stats.totalUsers - 60) },
-                { date: '5일전', users: Math.max(0, stats.totalUsers - 48) },
-                { date: '4일전', users: Math.max(0, stats.totalUsers - 35) },
-                { date: '3일전', users: Math.max(0, stats.totalUsers - 20) },
-                { date: '2일전', users: Math.max(0, stats.totalUsers - 10) },
-                { date: '1일전', users: Math.max(0, stats.totalUsers - 5) },
-                { date: '오늘', users: stats.totalUsers }
+              data={dailyUserData.length > 0 ? dailyUserData : [
+                { date: '7일전', users: 0 },
+                { date: '6일전', users: 0 },
+                { date: '5일전', users: 0 },
+                { date: '4일전', users: 0 },
+                { date: '3일전', users: 0 },
+                { date: '2일전', users: 0 },
+                { date: '1일전', users: 0 },
+                { date: '오늘', users: 0 }
               ]}
             >
               <defs>
