@@ -217,7 +217,7 @@
   display: flex;
   gap: 16px;
   padding: 20px;
-  background: var(--theme-surface, #ffffff);
+  background: var(--theme-background, #f9fafb);
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 12px;
   margin-bottom: 24px;
