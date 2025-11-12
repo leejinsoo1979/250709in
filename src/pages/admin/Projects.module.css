@@ -158,16 +158,49 @@
 }
 
 .projectName {
-  margin: 0 0 4px 0;
+  margin: 0 0 8px 0;
   font-size: 16px;
   font-weight: 600;
   color: var(--theme-text, #1f2937);
 }
 
-.projectOwner {
-  margin: 0;
-  font-size: 13px;
+.projectOwnerInfo {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--theme-background, #f9fafb);
+  border-radius: 8px;
+}
+
+.ownerIcon {
+  color: var(--theme-primary, #667eea);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.ownerDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ownerName {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text, #1f2937);
+}
+
+.ownerEmail {
+  font-size: 12px;
   color: var(--theme-text-secondary, #6b7280);
+}
+
+.ownerUid {
+  font-size: 11px;
+  color: var(--theme-text-muted, #9ca3af);
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
 }
 
 .projectStats {

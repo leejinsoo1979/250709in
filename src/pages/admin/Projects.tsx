@@ -3,6 +3,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { collection, query, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { HiOutlineFolder, HiOutlineCube, HiOutlineUsers, HiOutlineShare } from 'react-icons/hi';
+import { FaUser } from 'react-icons/fa';
 import styles from './Projects.module.css';
 
 interface ProjectData {
@@ -241,9 +242,18 @@ const Projects = () => {
                     </div>
                     <div className={styles.projectInfo}>
                       <h3 className={styles.projectName}>{project.projectName}</h3>
-                      <p className={styles.projectOwner}>
-                        {project.ownerName || project.ownerEmail || 'Unknown'}
-                      </p>
+                      <div className={styles.projectOwnerInfo}>
+                        <FaUser className={styles.ownerIcon} size={14} />
+                        <div className={styles.ownerDetails}>
+                          <span className={styles.ownerName}>
+                            {project.ownerName || project.ownerEmail || '소유자 정보 없음'}
+                          </span>
+                          {project.ownerName && project.ownerEmail && (
+                            <span className={styles.ownerEmail}>{project.ownerEmail}</span>
+                          )}
+                          <code className={styles.ownerUid}>UID: {project.userId.substring(0, 12)}...</code>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
