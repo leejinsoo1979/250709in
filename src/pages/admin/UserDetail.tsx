@@ -97,44 +97,61 @@ export default function UserDetail() {
         // 프로젝트 조회
         const projectsQuery = query(collection(db, 'projects'), where('userId', '==', userId));
         const projectsSnapshot = await getDocs(projectsQuery);
-        const projectsList = projectsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          title: doc.data().title || doc.data().projectName || '제목 없음',
-          createdAt: doc.data().createdAt,
-          updatedAt: doc.data().updatedAt
-        }));
+        console.log(`📊 프로젝트 수: ${projectsSnapshot.docs.length}개`);
+        const projectsList = projectsSnapshot.docs.map(doc => {
+          const data = doc.data();
+          console.log('프로젝트 데이터:', { id: doc.id, ...data });
+          return {
+            id: doc.id,
+            title: data.title || data.projectName || '제목 없음',
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt
+          };
+        });
         setProjects(projectsList);
 
         // 디자인 파일 조회 - designFiles 컬렉션에서 projectId로 필터링
-        const designFilesQuery = query(
-          collection(db, 'designFiles'),
-          where('projectId', 'in', projectsList.map(p => p.id))
-        );
-        const designFilesSnapshot = await getDocs(designFilesQuery);
-        const filesList = designFilesSnapshot.docs.map(doc => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            fileName: data.name || data.fileName || '파일명 없음',
-            projectId: data.projectId || '',
-            createdAt: data.createdAt,
-            fileSize: data.size || data.fileSize || 0
-          };
-        });
+        let filesList: DesignFile[] = [];
+        if (projectsList.length > 0) {
+          const designFilesQuery = query(
+            collection(db, 'designFiles'),
+            where('projectId', 'in', projectsList.map(p => p.id))
+          );
+          const designFilesSnapshot = await getDocs(designFilesQuery);
+          console.log(`📄 디자인 파일 수: ${designFilesSnapshot.docs.length}개`);
+          filesList = designFilesSnapshot.docs.map(doc => {
+            const data = doc.data();
+            console.log('디자인 파일 데이터:', { id: doc.id, ...data });
+            return {
+              id: doc.id,
+              fileName: data.name || data.fileName || '파일명 없음',
+              projectId: data.projectId || '',
+              createdAt: data.createdAt,
+              fileSize: data.size || data.fileSize || 0
+            };
+          });
+        } else {
+          console.log('⚠️ 프로젝트가 없어서 디자인 파일을 조회하지 않습니다.');
+        }
         setDesignFiles(filesList);
 
         // 공유 링크 조회
         const shareLinksQuery = query(collection(db, 'shareLinks'), where('createdBy', '==', userId));
         const shareLinksSnapshot = await getDocs(shareLinksQuery);
-        const linksList = shareLinksSnapshot.docs.map(doc => ({
-          id: doc.id,
-          projectId: doc.data().projectId || '',
-          token: doc.data().token || '',
-          createdAt: doc.data().createdAt,
-          expiresAt: doc.data().expiresAt,
-          viewCount: doc.data().viewCount || 0,
-          isActive: doc.data().isActive !== false
-        }));
+        console.log(`🔗 공유 링크 수: ${shareLinksSnapshot.docs.length}개`);
+        const linksList = shareLinksSnapshot.docs.map(doc => {
+          const data = doc.data();
+          console.log('공유 링크 데이터:', { id: doc.id, ...data });
+          return {
+            id: doc.id,
+            projectId: data.projectId || '',
+            token: data.token || '',
+            createdAt: data.createdAt,
+            expiresAt: data.expiresAt,
+            viewCount: data.viewCount || 0,
+            isActive: data.isActive !== false
+          };
+        });
         setShareLinks(linksList);
 
         setError(null);
