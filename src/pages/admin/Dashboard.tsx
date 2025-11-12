@@ -48,6 +48,17 @@ const Dashboard = () => {
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [dailyUserData, setDailyUserData] = useState<DailyUserData[]>([]);
 
+  // 테마 색상 가져오기
+  const getThemeColor = (variableName: string, fallback: string) => {
+    if (typeof window !== 'undefined') {
+      const color = getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+      return color || fallback;
+    }
+    return fallback;
+  };
+
+  const themeColor = getThemeColor('--theme-primary', '#667eea');
+
   // Firebase 통계 데이터 가져오기
   useEffect(() => {
     if (!user) {
@@ -461,17 +472,17 @@ const Dashboard = () => {
             >
               <defs>
                 <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#667eea" stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor="#667eea" stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor={themeColor} stopOpacity={0.8}/>
+                  <stop offset="95%" stopColor={themeColor} stopOpacity={0.1}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="date" stroke="#6b7280" fontSize={12} />
-              <YAxis stroke="#6b7280" fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" stroke={getThemeColor('--theme-border', '#e5e7eb')} />
+              <XAxis dataKey="date" stroke={getThemeColor('--theme-text-secondary', '#6b7280')} fontSize={12} />
+              <YAxis stroke={getThemeColor('--theme-text-secondary', '#6b7280')} fontSize={12} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: getThemeColor('--theme-surface', 'white'),
+                  border: `1px solid ${getThemeColor('--theme-border', '#e5e7eb')}`,
                   borderRadius: '8px',
                   padding: '8px 12px'
                 }}
@@ -479,7 +490,7 @@ const Dashboard = () => {
               <Area
                 type="monotone"
                 dataKey="users"
-                stroke="#667eea"
+                stroke={themeColor}
                 strokeWidth={2}
                 fill="url(#colorUsers)"
               />
@@ -499,18 +510,18 @@ const Dashboard = () => {
                 { name: '디자인', value: stats.totalDesigns }
               ]}
             >
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis dataKey="name" stroke="#6b7280" fontSize={12} />
-              <YAxis stroke="#6b7280" fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" stroke={getThemeColor('--theme-border', '#e5e7eb')} />
+              <XAxis dataKey="name" stroke={getThemeColor('--theme-text-secondary', '#6b7280')} fontSize={12} />
+              <YAxis stroke={getThemeColor('--theme-text-secondary', '#6b7280')} fontSize={12} />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: getThemeColor('--theme-surface', 'white'),
+                  border: `1px solid ${getThemeColor('--theme-border', '#e5e7eb')}`,
                   borderRadius: '8px',
                   padding: '8px 12px'
                 }}
               />
-              <Bar dataKey="value" fill="#667eea" radius={[8, 8, 0, 0]} />
+              <Bar dataKey="value" fill={themeColor} radius={[8, 8, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -534,16 +545,16 @@ const Dashboard = () => {
                 label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
                 {[
-                  { name: '활성 사용자', value: stats.activeUsers, color: '#667eea' },
-                  { name: '비활성 사용자', value: Math.max(0, stats.totalUsers - stats.activeUsers), color: '#e5e7eb' }
+                  { name: '활성 사용자', value: stats.activeUsers, color: themeColor },
+                  { name: '비활성 사용자', value: Math.max(0, stats.totalUsers - stats.activeUsers), color: getThemeColor('--theme-border', '#e5e7eb') }
                 ].map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
               <Tooltip
                 contentStyle={{
-                  backgroundColor: 'white',
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: getThemeColor('--theme-surface', 'white'),
+                  border: `1px solid ${getThemeColor('--theme-border', '#e5e7eb')}`,
                   borderRadius: '8px',
                   padding: '8px 12px'
                 }}
