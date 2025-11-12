@@ -52,7 +52,7 @@ export const useAdmin = (user: User | null) => {
     };
 
     checkAdmin();
-  }, [user]);
+  }, [user?.uid, user?.email]); // user 객체 대신 uid와 email만 의존성으로 사용
 
   return {
     adminRole,
