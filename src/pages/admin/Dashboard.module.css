@@ -36,24 +36,23 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 20px;
-  background: var(--theme-surface, #ffffff);
-  border: 1px solid var(--theme-border, #e5e7eb);
+  padding: 12px 24px;
+  background: var(--theme-primary, #667eea);
+  border: none;
   border-radius: 8px;
-  color: var(--theme-text, #1f2937);
+  color: white;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
+  box-shadow: 0 2px 8px var(--theme-primary-shadow, rgba(102, 126, 234, 0.25));
 }
 
 .actionButton:hover {
-  background: var(--theme-primary, #667eea);
-  border-color: var(--theme-primary, #667eea);
-  color: white;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--theme-primary-shadow, rgba(102, 126, 234, 0.3));
+  background: var(--theme-primary-dark, #5568d3);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px var(--theme-primary-shadow, rgba(102, 126, 234, 0.4));
 }
 
 /* 통계 카드 */
