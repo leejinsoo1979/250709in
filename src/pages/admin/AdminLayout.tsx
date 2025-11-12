@@ -67,7 +67,10 @@ const AdminLayout = () => {
                 )}
               </div>
               <div className={styles.profileInfo}>
-                <span className={styles.profileName}>{user.displayName || '관리자'}</span>
+                <div className={styles.profileNameRow}>
+                  <span className={styles.profileName}>{user.displayName || '관리자'}</span>
+                  <span className={styles.superAdminBadge}>슈퍼 관리자</span>
+                </div>
                 <span className={styles.profileEmail}>{user.email}</span>
               </div>
             </div>

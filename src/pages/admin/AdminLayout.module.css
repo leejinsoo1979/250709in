@@ -87,11 +87,15 @@
 
 .crownIcon {
   font-size: 24px;
-  color: var(--theme-primary, #10b981);
+  color: var(--theme-primary, #10b981) !important;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
   flex-shrink: 0;
   width: 24px;
   height: 24px;
+}
+
+.crownIcon path {
+  fill: var(--theme-primary, #10b981);
 }
 
 .profileAvatar {
@@ -129,6 +133,12 @@
   gap: 4px;
 }
 
+.profileNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .profileName {
   font-size: 14px;
   font-weight: 700;
@@ -136,6 +146,19 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.superAdminBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 2px 6px rgba(102, 126, 234, 0.3);
+  flex-shrink: 0;
 }
 
 .profileEmail {
