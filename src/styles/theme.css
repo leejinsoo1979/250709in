@@ -18,6 +18,8 @@
   --theme-primary-hover: hsl(var(--theme-600));
   --theme-primary-light: hsl(var(--theme) / 0.2);
   --theme-primary-dark: hsl(var(--theme-700));
+  --theme-primary-gradient: linear-gradient(135deg, hsl(var(--theme-500)) 0%, hsl(var(--theme-700)) 100%);
+  --theme-primary-shadow: rgba(102, 126, 234, 0.3);
   
   --theme-background: #121212;
   --theme-background-secondary: #121212;
@@ -66,7 +68,9 @@
 /* ThemeContext에서 동적으로 설정되는 CSS 변수를 사용 */
 [data-theme="light"] {
   /* primary 색상은 ThemeContext에서 설정됨 - 사용자가 선택한 테마 색상 사용 */
-  
+  --theme-primary-gradient: linear-gradient(135deg, hsl(var(--theme-500)) 0%, hsl(var(--theme-700)) 100%);
+  --theme-primary-shadow: rgba(102, 126, 234, 0.2);
+
   --theme-background: #ffffff;
   --theme-background-secondary: #f8fafc;
   --theme-surface: #ffffff;
