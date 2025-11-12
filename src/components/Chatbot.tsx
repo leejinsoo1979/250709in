@@ -53,7 +53,17 @@ export const Chatbot: React.FC = () => {
         },
       ]);
     }
-  }, [isOpen, greeting]);
+  }, [isOpen]);
+
+  // 인사말 변경 시 첫 메시지 업데이트
+  useEffect(() => {
+    if (messages.length > 0 && messages[0].id === '1' && messages[0].text !== greeting) {
+      setMessages(prev => [
+        { ...prev[0], text: greeting },
+        ...prev.slice(1)
+      ]);
+    }
+  }, [greeting]);
 
   // 메시지 자동 스크롤
   useEffect(() => {
