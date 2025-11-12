@@ -92,24 +92,23 @@ export default function UserDetail() {
         }));
         setProjects(projectsList);
 
-        // 디자인 파일 조회 - 실제로는 projects/{projectId}/designs 경로에 저장됨
-        // 모든 프로젝트의 designs 서브컬렉션을 조회
-        const allDesignFiles: DesignFile[] = [];
-        for (const project of projectsList) {
-          const designsQuery = query(collection(db, `projects/${project.id}/designs`));
-          const designsSnapshot = await getDocs(designsQuery);
-          designsSnapshot.docs.forEach(doc => {
-            const data = doc.data();
-            allDesignFiles.push({
-              id: doc.id,
-              fileName: data.name || data.fileName || '파일명 없음',
-              projectId: project.id,
-              createdAt: data.createdAt,
-              fileSize: data.size || data.fileSize || 0
-            });
-          });
-        }
-        setDesignFiles(allDesignFiles);
+        // 디자인 파일 조회 - designFiles 컬렉션에서 projectId로 필터링
+        const designFilesQuery = query(
+          collection(db, 'designFiles'),
+          where('projectId', 'in', projectsList.map(p => p.id))
+        );
+        const designFilesSnapshot = await getDocs(designFilesQuery);
+        const filesList = designFilesSnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            fileName: data.name || data.fileName || '파일명 없음',
+            projectId: data.projectId || '',
+            createdAt: data.createdAt,
+            fileSize: data.size || data.fileSize || 0
+          };
+        });
+        setDesignFiles(filesList);
 
         // 공유 링크 조회
         const shareLinksQuery = query(collection(db, 'shareLinks'), where('createdBy', '==', userId));
