@@ -202,19 +202,13 @@ const Chatbot = () => {
     }
 
     const confirmed = window.confirm(
-      `faqData.ts에서 ${faqData.length}개의 FAQ를 가져와 Firebase에 추가합니다.\n\n기존 데이터는 모두 삭제되고 새로운 데이터로 대체됩니다.\n\n진행하시겠습니까?`
+      `faqData.ts에서 ${faqData.length}개의 FAQ를 Firebase에 추가합니다.\n\n기존 데이터는 유지되며 새로운 데이터가 추가됩니다.\n\n진행하시겠습니까?`
     );
 
     if (!confirmed) return;
 
     try {
       setLoading(true);
-
-      // 기존 데이터 모두 삭제
-      const snapshot = await getDocs(collection(db, 'chatbotQAs'));
-      const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
-      await Promise.all(deletePromises);
-      console.log(`✅ 기존 FAQ ${snapshot.size}개 삭제 완료`);
 
       // 카테고리 매핑
       const categoryMap: Record<string, string> = {
@@ -256,6 +250,23 @@ const Chatbot = () => {
         '모바일': '일반',
         '회전': '기능',
         '크기': '기능',
+        '시작': '일반',
+        '추천': '일반',
+        '가로': '기능',
+        '깊이': '기능',
+        '벽막힘': '기능',
+        '세미스탠딩': '기능',
+        '스탠딩': '기능',
+        '단내림': '기능',
+        '노서라운드': '기능',
+        '서라운드': '기능',
+        '엔드패널': '기능',
+        '밀도': '기능',
+        '병합': '기능',
+        '파일명': '기능',
+        '겹침': '기술지원',
+        '충돌': '기술지원',
+        '반영안됨': '기술지원',
       };
 
       let successCount = 0;
@@ -297,7 +308,7 @@ const Chatbot = () => {
         }
       }
 
-      alert(`✅ 초기 FAQ 데이터 추가 완료!\n\n삭제: ${snapshot.size}개\n추가 성공: ${successCount}개\n추가 실패: ${errorCount}개`);
+      alert(`✅ 초기 FAQ 데이터 추가 완료!\n\n추가 성공: ${successCount}개\n추가 실패: ${errorCount}개`);
       loadQAs();
     } catch (error: any) {
       console.error('초기 FAQ 추가 실패:', error);
