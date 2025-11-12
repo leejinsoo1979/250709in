@@ -80,20 +80,32 @@ const Chatbot = () => {
   };
 
   const saveGreeting = async () => {
-    if (!user) return;
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    if (!greeting.trim()) {
+      alert('인사말을 입력해주세요.');
+      return;
+    }
 
     try {
+      console.log('💾 인사말 저장 시작:', greeting);
       const docRef = doc(db, 'chatbotSettings', 'general');
       await setDoc(docRef, {
-        greeting,
+        greeting: greeting.trim(),
         updatedAt: serverTimestamp(),
         updatedBy: user.uid
-      });
+      }, { merge: true });
+      console.log('✅ 인사말 저장 성공');
       alert('인사말이 저장되었습니다.');
       setIsEditingGreeting(false);
-    } catch (error) {
-      console.error('인사말 저장 실패:', error);
-      alert('인사말 저장에 실패했습니다.');
+      loadGreeting(); // 저장 후 다시 로드
+    } catch (error: any) {
+      console.error('❌ 인사말 저장 실패:', error);
+      console.error('에러 상세:', error.message, error.code);
+      alert(`인사말 저장에 실패했습니다.\n${error.message || '알 수 없는 오류'}`);
     }
   };
 
