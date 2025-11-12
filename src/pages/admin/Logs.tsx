@@ -458,8 +458,9 @@ const Logs = () => {
                 </thead>
                 <tbody>
                   {filteredShareLinkAccessLog.map(log => {
+                    const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
                     const shareUrl = log.shareLinkToken
-                      ? `${window.location.origin}/share/${log.shareLinkToken}`
+                      ? `${baseUrl}/share/${log.shareLinkToken}`
                       : '';
 
                     return (

@@ -325,8 +325,9 @@ const Shares = () => {
                               <tbody>
                                 {project.collaborators.map((collab, idx) => {
                                   const permissionBadge = getPermissionBadge(collab.permission);
+                                  const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
                                   const shareUrl = collab.linkToken
-                                    ? `${window.location.origin}/share/${collab.linkToken}`
+                                    ? `${baseUrl}/share/${collab.linkToken}`
                                     : '';
                                   return (
                                     <tr key={`${collab.userId}-${idx}`}>
@@ -390,7 +391,8 @@ const Shares = () => {
                               <tbody>
                                 {project.shareLinks.map(link => {
                                   const permissionBadge = getPermissionBadge(link.permission);
-                                  const shareUrl = `${window.location.origin}/share/${link.token}`;
+                                  const baseUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+                                  const shareUrl = `${baseUrl}/share/${link.token}`;
                                   const isExpired = link.expiresAt && link.expiresAt < new Date();
                                   const statusClass = !link.isActive
                                     ? styles.statusInactive
