@@ -122,7 +122,15 @@ export default function UserDetail() {
           console.log(`📄 디자인 파일 수: ${designFilesSnapshot.docs.length}개`);
           filesList = designFilesSnapshot.docs.map(doc => {
             const data = doc.data();
-            console.log('디자인 파일 데이터:', { id: doc.id, ...data });
+            console.log('디자인 파일 데이터:', {
+              id: doc.id,
+              name: data.name,
+              fileName: data.fileName,
+              projectId: data.projectId,
+              hasFurniture: !!data.furniture,
+              placedModulesCount: data.furniture?.placedModules?.length || 0,
+              spaceConfig: !!data.spaceConfig
+            });
             return {
               id: doc.id,
               fileName: data.name || data.fileName || '파일명 없음',
