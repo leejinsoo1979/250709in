@@ -1,0 +1,402 @@
+.container {
+  padding: 40px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+}
+
+.title {
+  margin: 0 0 8px 0;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--theme-text, #1f2937);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+/* 검색 toolbar */
+.toolbar {
+  margin-bottom: 24px;
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  flex: 1;
+  min-width: 300px;
+}
+
+.searchBox svg {
+  color: var(--theme-text-secondary, #6b7280);
+  flex-shrink: 0;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+/* 필터 */
+.filters {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.filterGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.filterLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* 커스텀 필터 드롭다운 */
+.customFilterDropdown {
+  position: relative;
+  min-width: 180px;
+}
+
+.filterButton {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterButton:hover {
+  border-color: var(--theme-primary, #667eea);
+  background: var(--theme-background, #f9fafb);
+}
+
+.filterButton:focus {
+  outline: none;
+  border-color: var(--theme-primary, #667eea);
+  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+}
+
+.filterButton span {
+  flex: 1;
+  text-align: left;
+}
+
+.dropdownIcon {
+  color: var(--theme-text-secondary, #6b7280);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.dropdownIconOpen {
+  transform: rotate(180deg);
+}
+
+.filterDropdownMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--theme-surface, white);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  overflow: hidden;
+  animation: filterDropdownSlideDown 0.2s ease;
+}
+
+@keyframes filterDropdownSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filterDropdownItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: transparent;
+  border: none;
+  color: var(--theme-text, #1f2937);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filterDropdownItem:hover {
+  background: var(--theme-background-hover, #f3f4f6);
+}
+
+.filterDropdownItemActive {
+  background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  color: var(--theme-primary, #667eea);
+}
+
+.filterDropdownItem svg {
+  color: var(--theme-primary, #667eea);
+  flex-shrink: 0;
+}
+
+/* 테이블 */
+.tableContainer {
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e5e7eb);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  background: var(--theme-background, #f9fafb);
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+}
+
+.table th {
+  padding: 16px;
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--theme-text-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--theme-border, #e5e7eb);
+  transition: background 0.2s ease;
+}
+
+.table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: var(--theme-primary-light, rgba(102, 126, 234, 0.05));
+}
+
+.table td {
+  padding: 16px;
+  font-size: 14px;
+  color: var(--theme-text, #1f2937);
+}
+
+/* 사용자 정보 */
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userName {
+  font-weight: 600;
+  color: var(--theme-text, #1f2937);
+  margin-bottom: 4px;
+}
+
+.userEmail {
+  font-size: 13px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+/* 플랜 배지 */
+.planBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--theme-primary, #667eea);
+  color: white;
+  text-transform: capitalize;
+}
+
+/* 금액 */
+.amount {
+  font-weight: 600;
+  color: var(--theme-text, #1f2937);
+}
+
+/* 상태 배지 */
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.statusActive {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.statusCancelled {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.statusExpired {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+/* 로딩 */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--theme-border, #e5e7eb);
+  border-top-color: var(--theme-primary, #667eea);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--theme-text-secondary, #6b7280);
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--theme-text-secondary, #6b7280);
+  font-size: 14px;
+}
+
+.emptyState p {
+  margin: 0;
+}
+
+/* 반응형 */
+@media (max-width: 1024px) {
+  .container {
+    padding: 20px;
+  }
+
+  .table {
+    font-size: 13px;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px;
+  }
+
+  .customFilterDropdown {
+    min-width: 160px;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .searchBox {
+    min-width: 100%;
+  }
+
+  .filters {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .filterGroup {
+    flex: 1;
+    min-width: 140px;
+  }
+
+  .customFilterDropdown {
+    min-width: 100%;
+  }
+
+  .table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}
