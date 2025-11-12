@@ -8,6 +8,7 @@ import { db } from './config';
 export interface AdminData {
   email: string;
   displayName: string;
+  role: 'admin' | 'support' | 'sales';
   grantedAt: Date;
   grantedBy: string; // 권한을 부여한 사람의 UID
 }
@@ -15,16 +16,17 @@ export interface AdminData {
 /**
  * 관리자 권한 부여
  */
-export async function grantAdminRole(userId: string, userData: { email: string; displayName: string }, grantedBy: string): Promise<void> {
+export async function grantAdminRole(userId: string, userData: { email: string; displayName: string }, grantedBy: string, role: 'admin' | 'support' | 'sales' = 'admin'): Promise<void> {
   try {
     const adminRef = doc(db, 'admins', userId);
     await setDoc(adminRef, {
       email: userData.email,
       displayName: userData.displayName,
+      role: role,
       grantedAt: new Date(),
       grantedBy
     });
-    console.log('✅ 관리자 권한 부여 성공:', userId);
+    console.log('✅ 관리자 권한 부여 성공:', userId, 'role:', role);
   } catch (error) {
     console.error('❌ 관리자 권한 부여 실패:', error);
     throw error;
@@ -73,6 +75,7 @@ export async function getAllAdmins(): Promise<Map<string, AdminData>> {
       adminsMap.set(doc.id, {
         email: data.email,
         displayName: data.displayName,
+        role: data.role || 'admin',
         grantedAt: data.grantedAt?.toDate?.() || new Date(),
         grantedBy: data.grantedBy
       });
