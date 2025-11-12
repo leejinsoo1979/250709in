@@ -241,13 +241,14 @@
 }
 
 .revokeButton {
-  background: var(--theme-background, #f3f4f6);
-  color: var(--theme-text, #1f2937);
+  background: transparent;
+  color: var(--theme-text-secondary, #6b7280);
   border: 1px solid var(--theme-border, #e5e7eb);
 }
 
 .revokeButton:hover {
-  background: var(--theme-background-hover, #e5e7eb);
+  background: var(--theme-background, #f3f4f6);
+  color: var(--theme-text, #1f2937);
   border-color: var(--theme-text-secondary, #6b7280);
 }
 
@@ -450,31 +451,39 @@
 }
 
 .cancelButton {
-  background: var(--theme-background, #f3f4f6);
-  color: var(--theme-text, #1f2937);
+  background: transparent;
+  color: var(--theme-text-secondary, #6b7280);
+  border: 1px solid var(--theme-border, #e5e7eb);
 }
 
 .cancelButton:hover {
-  background: var(--theme-background-hover, #e5e7eb);
+  background: var(--theme-background, #f3f4f6);
+  color: var(--theme-text, #1f2937);
+  border-color: var(--theme-text-secondary, #6b7280);
 }
 
 .confirmButton {
   background: var(--theme-primary, #10b981);
   color: white;
+  border: 1px solid var(--theme-primary, #10b981);
 }
 
 .confirmButton:hover {
   background: var(--theme-primary-hover, #059669);
+  border-color: var(--theme-primary-hover, #059669);
   box-shadow: 0 2px 12px rgba(16, 185, 129, 0.4);
 }
 
 .confirmRevokeButton {
-  background: var(--theme-background, #f3f4f6);
-  color: var(--theme-text, #1f2937);
+  background: transparent;
+  color: var(--theme-text-secondary, #6b7280);
+  border: 1px solid var(--theme-border, #e5e7eb);
 }
 
 .confirmRevokeButton:hover {
-  background: var(--theme-background-hover, #e5e7eb);
+  background: var(--theme-background, #f3f4f6);
+  color: var(--theme-text, #1f2937);
+  border-color: var(--theme-text-secondary, #6b7280);
 }
 
 /* 로딩 */
