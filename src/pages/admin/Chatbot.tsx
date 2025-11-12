@@ -100,8 +100,6 @@ const Chatbot = () => {
     setCategory('일반');
     setPriority(1);
     setIsActive(true);
-    setEditingId(null);
-    setIsAdding(false);
   };
 
   const handleAdd = async () => {
@@ -131,6 +129,8 @@ const Chatbot = () => {
 
       console.log('✅ Q&A 추가 성공:', docRef.id);
       alert('Q&A가 추가되었습니다.');
+      setEditingId(null);
+      setIsAdding(false);
       resetForm();
       await loadQAs();
     } catch (error: any) {
@@ -169,6 +169,8 @@ const Chatbot = () => {
       });
 
       alert('Q&A가 수정되었습니다.');
+      setEditingId(null);
+      setIsAdding(false);
       resetForm();
       loadQAs();
     } catch (error) {
@@ -283,7 +285,11 @@ const Chatbot = () => {
                 <HiOutlineChatAlt2 size={20} />
                 {editingId ? 'Q&A 수정' : 'Q&A 추가'}
               </h2>
-              <button className={styles.cancelButton} onClick={resetForm}>
+              <button className={styles.cancelButton} onClick={() => {
+                setEditingId(null);
+                setIsAdding(false);
+                resetForm();
+              }}>
                 <HiOutlineX size={20} />
                 취소
               </button>
