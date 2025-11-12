@@ -41,8 +41,7 @@
   background: var(--theme-surface, #ffffff);
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 8px;
-  flex: 1;
-  min-width: 300px;
+  width: 400px;
 }
 
 .searchBox svg {
