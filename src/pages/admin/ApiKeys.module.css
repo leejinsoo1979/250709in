@@ -131,23 +131,25 @@
   display: flex;
   gap: 16px;
   padding: 20px;
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--theme-warning-light, rgba(245, 158, 11, 0.1));
+  border: 1px solid var(--theme-warning, rgba(245, 158, 11, 0.3));
   border-radius: 12px;
   margin-bottom: 24px;
-  color: #d97706;
+  color: var(--theme-warning-text, #d97706);
 }
 
 .noticeTitle {
   margin: 0 0 8px 0;
   font-size: 15px;
   font-weight: 700;
+  color: var(--theme-warning-text, #d97706);
 }
 
 .noticeText {
   margin: 0;
   font-size: 13px;
   line-height: 1.6;
+  color: var(--theme-warning-text, #d97706);
 }
 
 /* API 키 목록 */
