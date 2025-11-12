@@ -368,6 +368,12 @@ export default function UserDetail() {
                       <div className={styles.projectFiles}>
                         {projectFiles.map(file => {
                           const fileUrl = `https://250709in.vercel.app/configurator?projectId=${file.projectId}&designFileId=${file.id}`;
+                          console.log('🔗 링크 생성:', {
+                            fileName: file.fileName,
+                            fileId: file.id,
+                            projectId: file.projectId,
+                            url: fileUrl
+                          });
                           return (
                             <div key={file.id} className={styles.fileItem}>
                               <div className={styles.fileItemHeader}>
@@ -413,6 +419,12 @@ export default function UserDetail() {
             <div className={styles.listContainer}>
               {designFiles.map(file => {
                 const fileUrl = `https://250709in.vercel.app/configurator?projectId=${file.projectId}&designFileId=${file.id}`;
+                console.log('🔗 디자인 파일 섹션 링크:', {
+                  fileName: file.fileName,
+                  fileId: file.id,
+                  projectId: file.projectId,
+                  url: fileUrl
+                });
                 return (
                   <div key={file.id} className={styles.listItem}>
                     <div className={styles.listItemHeader}>

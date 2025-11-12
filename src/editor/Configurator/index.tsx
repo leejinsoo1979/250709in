@@ -1518,7 +1518,13 @@ const Configurator: React.FC = () => {
       } else if (designFileId && !skipLoad) {
         // designFileId가 있는 경우 디자인 파일 데이터 로드
         const isReadOnlyMode = mode === 'readonly';
-        console.log('📂 디자인파일 데이터 로드 시작:', designFileId, '/ 읽기전용:', isReadOnlyMode);
+        console.log('📂 디자인파일 데이터 로드 시작:', {
+          designFileId,
+          projectId,
+          isReadOnlyMode,
+          currentDesignFileId,
+          currentProjectId
+        });
 
         import('@/firebase/projects').then(({ getDesignFileById, getDesignFileByIdPublic, getProject, getProjectByIdPublic }) => {
           // 디자인 파일 로드 전에 store 초기화 (이전 데이터 제거)
@@ -1528,9 +1534,16 @@ const Configurator: React.FC = () => {
           // 읽기 전용 모드면 Public 함수 사용 (비회원 접근 가능), 아니면 일반 함수 사용
           const loadDesignFile = isReadOnlyMode ? getDesignFileByIdPublic : getDesignFileById;
           const loadProject = isReadOnlyMode ? getProjectByIdPublic : getProject;
+          console.log('🔥 getDesignFileById 호출:', designFileId);
           loadDesignFile(designFileId).then(async ({ designFile, error }) => {
             if (designFile && !error) {
-              console.log('✅ 디자인파일 로드 성공:', designFile);
+              console.log('✅ 디자인파일 로드 성공:', {
+                id: designFile.id,
+                name: designFile.name,
+                projectId: designFile.projectId,
+                furnitureCount: designFile.furniture?.placedModules?.length || 0,
+                spaceConfig: !!designFile.spaceConfig
+              });
 
               // 프로젝트 기본 정보 설정 - projectId로 프로젝트 정보 가져오기
               if (designFile.projectId) {
