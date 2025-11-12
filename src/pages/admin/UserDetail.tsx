@@ -342,17 +342,7 @@ export default function UserDetail() {
                       style={{ cursor: 'pointer' }}
                     >
                       <div className={styles.listItemHeader}>
-                        <strong>
-                          <a
-                            href={`/configurator/${project.id}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={styles.projectLink}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {project.title}
-                          </a>
-                        </strong>
+                        <strong>{project.title}</strong>
                         <div className={styles.projectItemRight}>
                           <span className={styles.fileCount}>파일 {projectFiles.length}개</span>
                           <span className={styles.expandIcon}>{isExpanded ? '▼' : '▶'}</span>
@@ -369,7 +359,7 @@ export default function UserDetail() {
                     {isExpanded && projectFiles.length > 0 && (
                       <div className={styles.projectFiles}>
                         {projectFiles.map(file => {
-                          const fileUrl = `/configurator/${file.projectId}`;
+                          const fileUrl = `/configurator?projectId=${file.projectId}&designFileId=${file.id}`;
                           return (
                             <div key={file.id} className={styles.fileItem}>
                               <div className={styles.fileItemHeader}>
@@ -411,7 +401,7 @@ export default function UserDetail() {
           ) : (
             <div className={styles.listContainer}>
               {designFiles.map(file => {
-                const fileUrl = `/configurator/${file.projectId}`;
+                const fileUrl = `/configurator?projectId=${file.projectId}&designFileId=${file.id}`;
                 return (
                   <div key={file.id} className={styles.listItem}>
                     <div className={styles.listItemHeader}>
