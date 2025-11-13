@@ -137,15 +137,6 @@ export const NotificationCenter: React.FC = () => {
 
   return (
     <>
-      {isOpen &&
-        createPortal(
-          <div
-            className={styles.dropdownOverlay}
-            onClick={() => setIsOpen(false)}
-          />,
-          document.body
-        )}
-
       <div className={styles.container} ref={dropdownRef}>
         {/* Bell Icon */}
         <button
@@ -160,10 +151,16 @@ export const NotificationCenter: React.FC = () => {
             </span>
           )}
         </button>
+      </div>
 
-        {/* Dropdown */}
-        {isOpen && (
-          <div className={styles.dropdown}>
+      {/* Dropdown with Overlay */}
+      {isOpen && createPortal(
+        <>
+          <div
+            className={styles.dropdownOverlay}
+            onClick={() => setIsOpen(false)}
+          />
+          <div className={styles.dropdown} ref={dropdownRef}>
             {/* Header */}
             <div className={styles.header}>
               <h3 className={styles.title}>알림</h3>
@@ -245,8 +242,9 @@ export const NotificationCenter: React.FC = () => {
               </div>
             )}
           </div>
-        )}
-      </div>
+        </>,
+        document.body
+      )}
 
       {/* Message Modal */}
       {selectedMessage && createPortal(
