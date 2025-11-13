@@ -584,10 +584,10 @@ const Configurator: React.FC = () => {
   const saveProject = async () => {
     console.log('💾 [DEBUG] saveProject 함수 시작');
 
-    // 읽기 전용 모드에서는 저장 불가
-    if (isReadOnly) {
-      console.log('🚫 읽기 전용 모드 - 저장 차단');
-      alert('읽기 전용 모드에서는 저장할 수 없습니다.');
+    // 읽기 전용 모드 또는 편집 권한이 없으면 저장 불가
+    if (isReadOnly || !canEdit) {
+      console.log('🚫 저장 차단 - isReadOnly:', isReadOnly, '/ canEdit:', canEdit);
+      alert(isReadOnly ? '읽기 전용 모드에서는 저장할 수 없습니다.' : '편집 권한이 없습니다.');
       return;
     }
 
