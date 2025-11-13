@@ -32,15 +32,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    // iframe 내부에서 readonly 모드로 실행되는 경우 Auth 초기화 건너뛰기 (COOP 에러 방지)
+    // iframe 내부에서 readonly 모드로 실행되는 경우
+    // COOP 에러는 방지하지만, 기존 로그인 상태는 확인
     const isInIframe = window.self !== window.top;
     const urlParams = new URLSearchParams(window.location.search);
     const isReadOnly = urlParams.get('mode') === 'readonly';
 
+    // iframe readonly 모드에서는 팝업 등 인증 액션은 차단하지만,
+    // 기존 세션 확인은 허용 (COOP 에러 발생 안함)
     if (isInIframe && isReadOnly) {
-      console.log('👁️ iframe readonly 모드 - Firebase Auth 초기화 건너뜀 (COOP 에러 방지)');
-      setLoading(false);
-      return;
+      console.log('👁️ iframe readonly 모드 - 팝업 차단, 세션 확인은 허용');
+      // Firebase Auth 초기화는 진행 (세션만 확인)
     }
 
     // Firebase 설정이 안되어 있으면 로딩 즉시 종료
