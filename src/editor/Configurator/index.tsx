@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useSpaceConfigStore, SPACE_LIMITS, DEFAULT_SPACE_VALUES } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -113,6 +113,9 @@ const Configurator: React.FC = () => {
   });
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
+
+  // readonly 모드에서 로드 완료 추적 (무한 루프 방지)
+  const hasLoadedInReadonlyRef = useRef(false);
 
   // 권한에 따라 읽기 전용 모드 설정
   // isReadOnly는 이제 useMemo로 계산되므로 이 useEffect 제거
@@ -1434,6 +1437,12 @@ const Configurator: React.FC = () => {
     const skipLoad = skipLoadParam;
     const isNewDesign = isNewDesignParam;
 
+    // readonly 모드에서 이미 로드됐으면 재실행 방지 (무한 루프 방지)
+    if (mode === 'readonly' && hasLoadedInReadonlyRef.current) {
+      console.log('✅ readonly 모드 - 이미 로드 완료, useEffect 재실행 건너뜀 (무한 루프 방지)');
+      return;
+    }
+
     // 읽기 전용 모드는 useMemo로 계산됨 (상태 업데이트 제거로 리로드 루프 방지)
     if (mode === 'readonly') {
       console.log('👁️ 읽기 전용 모드 활성화 (useMemo로 처리됨)');
@@ -1714,6 +1723,13 @@ const Configurator: React.FC = () => {
             } else {
               console.error('디자인파일 로드 실패:', error);
             }
+
+            // readonly 모드에서 로드 완료 표시 (무한 루프 방지)
+            if (mode === 'readonly') {
+              hasLoadedInReadonlyRef.current = true;
+              console.log('✅ readonly 모드 로드 완료 - ref 설정');
+            }
+
             setLoading(false);
           });
         });
