@@ -1428,7 +1428,8 @@ export const loadFolderData = async (
     }
 
     const folderDocRef = doc(db, 'projectFolders', `${user.uid}_${projectId}`);
-    const docSnap = await getDocFromServer(folderDocRef);
+    // getDocFromServer 대신 getDoc 사용 (캐시 우선 → 권한 에러 방지)
+    const docSnap = await getDoc(folderDocRef);
 
     if (!docSnap.exists()) {
       return { folders: [], error: null };
