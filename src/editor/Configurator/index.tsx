@@ -73,7 +73,9 @@ const Configurator: React.FC = () => {
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
 
   // 프로젝트 권한 확인 (readonly 모드에서는 권한 체크 건너뛰기)
-  const { permission, canEdit, isOwner } = useProjectPermission(currentProjectId, isReadOnlyMode);
+  // readonly 모드에서는 URL에서 직접 projectId 읽기
+  const permissionProjectId = isReadOnlyMode ? projectIdParam : currentProjectId;
+  const { permission, canEdit, isOwner } = useProjectPermission(permissionProjectId, isReadOnlyMode);
 
   // 읽기 전용 모드 계산 (상태 변경 없이 useMemo로 계산)
   const isReadOnly = useMemo(() => {
@@ -1471,16 +1473,21 @@ const Configurator: React.FC = () => {
       return;
     }
 
-    // 프로젝트 ID가 변경된 경우에만 상태 업데이트
-    if (projectId && projectId !== currentProjectId) {
-      setCurrentProjectId(projectId);
-      console.log('📝 프로젝트 ID 업데이트:', projectId);
-    }
+      // readonly 모드에서는 상태 업데이트를 하지 않음 (리로드 루프 방지)
+    if (mode !== 'readonly') {
+      // 프로젝트 ID가 변경된 경우에만 상태 업데이트
+      if (projectId && projectId !== currentProjectId) {
+        setCurrentProjectId(projectId);
+        console.log('📝 프로젝트 ID 업데이트:', projectId);
+      }
 
-    // designFileId가 변경된 경우에만 상태 업데이트
-    if (designFileId && designFileId !== currentDesignFileId) {
-      setCurrentDesignFileId(designFileId);
-      console.log('📝 디자인파일 ID 업데이트:', designFileId);
+      // designFileId가 변경된 경우에만 상태 업데이트
+      if (designFileId && designFileId !== currentDesignFileId) {
+        setCurrentDesignFileId(designFileId);
+        console.log('📝 디자인파일 ID 업데이트:', designFileId);
+      }
+    } else {
+      console.log('👁️ readonly 모드 - ID 상태 업데이트 건너뜀 (리로드 루프 방지)');
     }
 
     if (projectId) {
