@@ -1424,12 +1424,11 @@ export const loadFolderData = async (
   try {
     const user = await getCurrentUserAsync();
     if (!user) {
-      return { folders: [], error: null }; // 로그인 안되어도 에러 안냄
+      return { folders: [], error: '로그인이 필요합니다.' };
     }
 
     const folderDocRef = doc(db, 'projectFolders', `${user.uid}_${projectId}`);
-    // getDocFromServer 대신 getDoc 사용 (캐시 우선 → 권한 에러 방지)
-    const docSnap = await getDoc(folderDocRef);
+    const docSnap = await getDocFromServer(folderDocRef);
 
     if (!docSnap.exists()) {
       return { folders: [], error: null };
@@ -1438,8 +1437,7 @@ export const loadFolderData = async (
     const data = docSnap.data();
     return { folders: data.folders || [], error: null };
   } catch (error) {
-    // 권한 에러는 무시하고 빈 배열 반환 (폴더 없는 것으로 처리)
-    console.warn('폴더 데이터 불러오기 실패 (무시됨):', error);
-    return { folders: [], error: null };
+    console.error('폴더 데이터 불러오기 에러:', error);
+    return { folders: [], error: '폴더 데이터 불러오기 중 오류가 발생했습니다.' };
   }
 }; 

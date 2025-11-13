@@ -1377,12 +1377,6 @@ const Configurator: React.FC = () => {
 
   // URL에서 디자인파일명 읽기 (별도 useEffect로 분리)
   useEffect(() => {
-    // readonly 모드에서는 setState 호출 금지 (리로드 루프 방지)
-    if (isReadOnlyMode) {
-      console.log('👁️ readonly 모드 - 디자인파일명 useEffect 건너뜀 (리로드 루프 방지)');
-      return;
-    }
-
     const designFileName = searchParams.get('designFileName') || searchParams.get('fileName');
 
     console.log('🔍 URL에서 가져온 designFileName:', designFileName);
@@ -1399,26 +1393,21 @@ const Configurator: React.FC = () => {
       setCurrentDesignFileName('새 디자인');
       console.log('📝 기본값으로 디자인파일명 설정: 새 디자인');
     }
-  }, [searchParams, isReadOnlyMode]);
+  }, [searchParams]);
 
   // 단내림 상태 변경 감지 및 컬럼 수 리셋
   useEffect(() => {
-    // readonly 모드에서는 setState 호출 금지 (리로드 루프 방지)
-    if (isReadOnlyMode) {
-      return;
-    }
-
     // 이전 상태를 추적하기 위한 ref가 필요하지만, 여기서는 단순히 비활성화될 때 처리
     if (!spaceInfo.droppedCeiling?.enabled && spaceInfo.customColumnCount) {
       const internalSpace = calculateInternalSpace(spaceInfo);
       const defaultColumnCount = SpaceCalculator.getDefaultColumnCount(internalSpace.width);
-
+      
       console.log('🔧 [Configurator] Dropped ceiling disabled, checking column count:', {
         currentColumnCount: spaceInfo.customColumnCount,
         defaultColumnCount,
         internalWidth: internalSpace.width
       });
-
+      
       // 현재 컬럼 수가 기본값과 다르면 리셋
       if (spaceInfo.customColumnCount !== defaultColumnCount) {
         console.log('🔧 [Configurator] Resetting column count to default:', defaultColumnCount);
@@ -1429,7 +1418,7 @@ const Configurator: React.FC = () => {
         });
       }
     }
-  }, [spaceInfo.droppedCeiling?.enabled, isReadOnlyMode]);
+  }, [spaceInfo.droppedCeiling?.enabled]);
 
   // URL에서 프로젝트 ID 읽기 및 로드
   // searchParams에서 필요한 값들을 미리 추출 (의존성 배열에서 객체 비교 문제 방지)
@@ -1471,13 +1460,10 @@ const Configurator: React.FC = () => {
     });
 
     // URL에 designFileName이 있으면 즉시 설정 (최우선순위)
-    // readonly 모드에서는 setState 호출 금지 (리로드 루프 방지)
-    if (urlDesignFileName && mode !== 'readonly') {
+    if (urlDesignFileName) {
       const decodedFileName = decodeURIComponent(urlDesignFileName);
       console.log('🔗 URL에서 디자인파일명 바로 설정:', decodedFileName);
       setCurrentDesignFileName(decodedFileName);
-    } else if (urlDesignFileName && mode === 'readonly') {
-      console.log('👁️ readonly 모드 - 디자인파일명 setState 건너뜀 (리로드 루프 방지)');
     }
 
     // CNC에서 돌아오는 경우 - 이미 데이터가 로드되어 있으면 재로드하지 않음
@@ -1560,8 +1546,7 @@ const Configurator: React.FC = () => {
         const isAlreadyLoaded = designFileId === currentDesignFileId && (placedModules.length > 0 || spaceInfo.width > 0);
         if (isAlreadyLoaded && mode === 'readonly') {
           console.log('✅ readonly 모드 - 이미 로드된 디자인 재사용 (2중 렌더링 방지):', designFileId);
-          // readonly 모드에서는 setState 호출 금지 (리로드 루프 방지)
-          // setLoading(false) 제거
+          setLoading(false);
           return;
         }
 
@@ -1578,13 +1563,6 @@ const Configurator: React.FC = () => {
         // readonly 모드에서는 항상 Public API 사용 (권한 체크 없이 접근)
         import('@/firebase/projects').then(({ getDesignFileByIdPublic, getProjectByIdPublic }) => {
           console.log('🔥 getDesignFileByIdPublic 호출 (readonly 모드):', designFileId);
-
-          // readonly 모드에서는 이 시점에 ref를 true로 설정 (setState 전에 설정하여 리렌더링 차단)
-          if (mode === 'readonly') {
-            hasLoadedInReadonlyRef.current = true;
-            console.log('✅ readonly 모드 - ref 먼저 설정 (setState 리렌더링 차단)');
-          }
-
           getDesignFileByIdPublic(designFileId).then(async ({ designFile, error }) => {
             if (designFile && !error) {
               console.log('✅ 디자인파일 로드 성공:', {
@@ -1746,12 +1724,13 @@ const Configurator: React.FC = () => {
               console.error('디자인파일 로드 실패:', error);
             }
 
-            // readonly 모드에서는 setLoading 호출 금지 (리렌더링 방지, ref는 이미 위에서 설정됨)
-            if (mode !== 'readonly') {
-              setLoading(false);
-            } else {
-              console.log('👁️ readonly 모드 - setLoading 건너뜀 (리렌더링 방지)');
+            // readonly 모드에서 로드 완료 표시 (무한 루프 방지)
+            if (mode === 'readonly') {
+              hasLoadedInReadonlyRef.current = true;
+              console.log('✅ readonly 모드 로드 완료 - ref 설정');
             }
+
+            setLoading(false);
           });
         });
       } else {
