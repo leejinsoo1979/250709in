@@ -10,6 +10,13 @@ const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.loc
 const isReadOnlyMode = urlParams?.get('mode') === 'readonly';
 const shouldBlockFirebase = isInIframe && isReadOnlyMode;
 
+console.log('🔍 Firebase 초기화 체크:', {
+  isInIframe,
+  isReadOnlyMode,
+  shouldBlockFirebase,
+  url: typeof window !== 'undefined' ? window.location.href : 'N/A'
+});
+
 if (shouldBlockFirebase) {
   console.log('🚫 iframe readonly 모드 - Firebase 초기화 완전 차단 (COOP 에러 방지)');
 }
