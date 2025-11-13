@@ -1429,7 +1429,7 @@ const Configurator: React.FC = () => {
   const projectIdParam = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
   const designFileIdParam = searchParams.get('designFileId');
   const urlDesignFileNameParam = searchParams.get('designFileName') || searchParams.get('fileName');
-  const modeParam = searchParams.get('mode');
+  // modeParam은 이미 위에서 선언됨
   const skipLoadParam = searchParams.get('skipLoad') === 'true';
   const isNewDesignParam = searchParams.get('design') === 'new';
 
