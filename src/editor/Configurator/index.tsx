@@ -1564,6 +1564,12 @@ const Configurator: React.FC = () => {
         import('@/firebase/projects').then(({ getDesignFileByIdPublic, getProjectByIdPublic }) => {
           console.log('🔥 getDesignFileByIdPublic 호출 (readonly 모드):', designFileId);
           getDesignFileByIdPublic(designFileId).then(async ({ designFile, error }) => {
+            // readonly 모드에서는 데이터 로드 전에 ref 먼저 설정 (setState 리렌더링 차단)
+            if (mode === 'readonly') {
+              hasLoadedInReadonlyRef.current = true;
+              console.log('✅ readonly 모드 - ref 먼저 설정 (setState 리렌더링 차단)');
+            }
+
             if (designFile && !error) {
               console.log('✅ 디자인파일 로드 성공:', {
                 id: designFile.id,
@@ -1722,12 +1728,6 @@ const Configurator: React.FC = () => {
               }
             } else {
               console.error('디자인파일 로드 실패:', error);
-            }
-
-            // readonly 모드에서 로드 완료 표시 (무한 루프 방지)
-            if (mode === 'readonly') {
-              hasLoadedInReadonlyRef.current = true;
-              console.log('✅ readonly 모드 로드 완료 - ref 설정');
             }
 
             setLoading(false);
