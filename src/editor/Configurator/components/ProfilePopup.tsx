@@ -26,15 +26,31 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
   // 사용량 통계 및 크레딧 가져오기
   useEffect(() => {
     if (isOpen && user) {
-      // 슈퍼 관리자 권한 체크
-      getDoc(doc(db, 'users', user.uid)).then((userDoc) => {
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const isSuperAdminUser = userData.role === 'superadmin';
-          setIsSuperAdmin(isSuperAdminUser);
+      // 슈퍼 관리자 권한 체크 (이메일로도 확인)
+      const superAdminEmails = ['sbbc212@gmail.com'];
+      const isEmailSuperAdmin = superAdminEmails.includes(user.email || '');
 
-          if (isSuperAdminUser) {
-            setCredits(999999); // 무제한 크레딧 표시
+      if (isEmailSuperAdmin) {
+        console.log('✅ 슈퍼 관리자 이메일 감지:', user.email);
+        setIsSuperAdmin(true);
+        setCredits(999999); // 무제한 크레딧 표시
+      } else {
+        // users 컬렉션에서도 role 체크
+        getDoc(doc(db, 'users', user.uid)).then((userDoc) => {
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            const isSuperAdminUser = userData.role === 'superadmin';
+            setIsSuperAdmin(isSuperAdminUser);
+
+            if (isSuperAdminUser) {
+              setCredits(999999); // 무제한 크레딧 표시
+            } else {
+              getUserProfile().then(({ profile }) => {
+                if (profile) {
+                  setCredits(profile.credits ?? 200);
+                }
+              });
+            }
           } else {
             getUserProfile().then(({ profile }) => {
               if (profile) {
@@ -42,14 +58,8 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
               }
             });
           }
-        } else {
-          getUserProfile().then(({ profile }) => {
-            if (profile) {
-              setCredits(profile.credits ?? 200);
-            }
-          });
-        }
-      });
+        });
+      }
 
       getUsageStats().then(({ stats }) => {
         if (stats) {
