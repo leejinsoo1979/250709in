@@ -356,8 +356,9 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                       </div>
                     )}
 
-                    {/* Configurator iframe */}
+                    {/* Configurator iframe - key로 강제 재마운트 */}
                     <iframe
+                      key={`${projectId}-${designFileId}-${isOpen}`}
                       src={`/configurator?projectId=${projectId}${designFileId ? `&designFileId=${designFileId}` : ''}&mode=readonly&panelClosed=true`}
                       style={{
                         width: '100%',
@@ -369,7 +370,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                       }}
                       title="Project Preview"
                       onLoad={() => {
-                        console.log('🎬 iframe onLoad 이벤트');
+                        console.log('🎬 iframe onLoad 이벤트:', { projectId, designFileId });
                         setIsIframeLoading(false);
                       }}
                       onError={(e) => {
