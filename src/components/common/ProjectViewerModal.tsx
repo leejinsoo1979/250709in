@@ -25,26 +25,27 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   const [isViewerLoaded, setIsViewerLoaded] = useState(false);
   const [isIframeLoading, setIsIframeLoading] = useState(false);
 
+  // 모달 열림/닫힘 처리 (상태 초기화만, 로드는 하지 않음)
   useEffect(() => {
-    console.log('🔍 ProjectViewerModal useEffect:', { isOpen, projectId, designFileId });
-
-    // 모달이 닫히면 상태 초기화
     if (!isOpen) {
       console.log('🧹 모달 닫힘 - 상태 초기화');
+      // 모달이 닫힐 때만 초기화
       setProject(null);
       setError(null);
-      setIsIframeLoading(true);
-      return;
+      setIsViewerLoaded(false);
+      setIsIframeLoading(false);
     }
+  }, [isOpen]);
 
-    // 모달이 열리면 항상 새로 로드 (이전 데이터 표시 방지)
-    if (isOpen && projectId) {
-      console.log('🔄 모달 열림 - 프로젝트 새로 로드');
-      setProject(null); // 이전 데이터 초기화
-      setIsIframeLoading(true);
+  // 프로젝트 데이터 로드 (projectId, designFileId 변경 시에만)
+  useEffect(() => {
+    console.log('🔍 ProjectViewerModal 데이터 로드:', { projectId, designFileId });
+
+    if (projectId) {
+      console.log('🔄 프로젝트 로드 시작:', { projectId, designFileId });
       loadProject();
     }
-  }, [isOpen, projectId, designFileId]);
+  }, [projectId, designFileId]);
 
   const loadProject = async () => {
     console.log('🔥 ProjectViewerModal - loadProject 시작:', { projectId, designFileId });
