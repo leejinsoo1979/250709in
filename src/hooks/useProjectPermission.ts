@@ -31,16 +31,20 @@ export function useProjectPermission(projectId: string | null): ProjectPermissio
     const checkPermission = async () => {
       setLoading(true);
       try {
-        // 관리자는 viewer 권한으로 모든 프로젝트 조회 가능 (수정 불가)
-        if (isSuperAdmin(user.email || '')) {
+        // 먼저 일반 권한 확인 (소유자, editor, viewer)
+        const perm = await getUserProjectPermission(projectId, user.uid);
+
+        // 권한이 있으면 그대로 사용
+        if (perm) {
+          setPermission(perm);
+        } else if (isSuperAdmin(user.email || '')) {
+          // 권한이 없는데 관리자면 viewer로 접근 가능
           console.log('👑 관리자 권한으로 프로젝트 접근 (viewer):', projectId);
           setPermission('viewer');
-          setLoading(false);
-          return;
+        } else {
+          // 권한도 없고 관리자도 아니면 null
+          setPermission(null);
         }
-
-        const perm = await getUserProjectPermission(projectId, user.uid);
-        setPermission(perm);
       } catch (error) {
         console.error('권한 확인 실패:', error);
         setPermission(null);
