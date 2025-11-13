@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XIcon, MaximizeIcon, MinimizeIcon } from './Icons';
 import { getProjectById, getDesignFileById } from '../../firebase/projects';
@@ -7,6 +7,57 @@ import { createShareLink } from '../../firebase/shareLinks';
 import { useAuth } from '../../auth/AuthProvider';
 import { Md3dRotation } from 'react-icons/md';
 import styles from './ProjectViewerModal.module.css';
+
+// iframe을 별도 컴포넌트로 분리 (리렌더링 방지)
+const IframeViewer = memo(({ projectId, designFileId }: { projectId: string; designFileId?: string }) => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  console.log('🎬 IframeViewer 렌더링:', { projectId, designFileId });
+
+  return (
+    <>
+      {isLoading && (
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: '#f5f5f5',
+          zIndex: 10
+        }}>
+          <div className={styles.spinner} />
+          <p style={{ marginTop: '16px', color: '#666', fontSize: '14px' }}>3D 뷰어 로딩 중...</p>
+        </div>
+      )}
+
+      <iframe
+        src={`/configurator?projectId=${projectId}${designFileId ? `&designFileId=${designFileId}` : ''}&mode=readonly&panelClosed=true`}
+        style={{
+          width: '100%',
+          height: '100%',
+          border: 'none',
+          backgroundColor: '#f5f5f5',
+          opacity: isLoading ? 0 : 1,
+          transition: 'opacity 0.3s ease'
+        }}
+        title="Project Preview"
+        onLoad={() => {
+          console.log('🎬 iframe onLoad 이벤트:', { projectId, designFileId });
+          setIsLoading(false);
+        }}
+        onError={(e) => {
+          console.error('❌ iframe 로드 에러:', e);
+          setIsLoading(false);
+        }}
+      />
+    </>
+  );
+});
 
 interface ProjectViewerModalProps {
   isOpen: boolean;
@@ -351,49 +402,8 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                   </div>
                 ) : (
                   <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                    {/* 로딩 상태 */}
-                    {isIframeLoading && (
-                      <div style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: '#f5f5f5',
-                        zIndex: 10
-                      }}>
-                        <div className={styles.spinner} />
-                        <p style={{ marginTop: '16px', color: '#666', fontSize: '14px' }}>3D 뷰어 로딩 중...</p>
-                      </div>
-                    )}
-
-                    {/* Configurator iframe - key로 강제 재마운트 */}
-                    <iframe
-                      key={`${projectId}-${designFileId}`}
-                      src={`/configurator?projectId=${projectId}${designFileId ? `&designFileId=${designFileId}` : ''}&mode=readonly&panelClosed=true`}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        border: 'none',
-                        backgroundColor: '#f5f5f5',
-                        opacity: isIframeLoading ? 0 : 1,
-                        transition: 'opacity 0.3s ease'
-                      }}
-                      title="Project Preview"
-                      onLoad={() => {
-                        console.log('🎬 iframe onLoad 이벤트:', { projectId, designFileId });
-                        setIsIframeLoading(false);
-                      }}
-                      onError={(e) => {
-                        console.error('❌ iframe 로드 에러:', e);
-                        setIsIframeLoading(false);
-                        setError('미리보기를 불러올 수 없습니다.');
-                      }}
-                    />
+                    {/* iframe을 별도 컴포넌트로 분리 - 부모 리렌더링과 무관하게 동작 */}
+                    <IframeViewer projectId={projectId} designFileId={designFileId} />
                   </div>
                 )}
               </div>
