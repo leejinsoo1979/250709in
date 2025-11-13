@@ -433,10 +433,13 @@ const Configurator: React.FC = () => {
 
       if (error) {
         console.error('❌ 프로젝트 로드 에러:', error);
-        alert('프로젝트를 불러오는데 실패했습니다: ' + error);
-        // 읽기 전용 모드에서는 리다이렉트하지 않음
-        if (!isReadOnly) {
+        // 읽기 전용 모드에서는 alert도 표시하지 않음
+        const mode = searchParams.get('mode');
+        if (mode !== 'readonly') {
+          alert('프로젝트를 불러오는데 실패했습니다: ' + error);
           navigate('/');
+        } else {
+          console.log('👁️ 읽기 전용 모드 - 에러 무시');
         }
         return;
       }
@@ -533,10 +536,13 @@ const Configurator: React.FC = () => {
       }
     } catch (error) {
       console.error('프로젝트 로드 실패:', error);
-      alert('프로젝트 로드 중 오류가 발생했습니다.');
-      // 읽기 전용 모드에서는 리다이렉트하지 않음
-      if (!isReadOnly) {
+      // 읽기 전용 모드에서는 alert도 표시하지 않음
+      const mode = searchParams.get('mode');
+      if (mode !== 'readonly') {
+        alert('프로젝트 로드 중 오류가 발생했습니다.');
         navigate('/');
+      } else {
+        console.log('👁️ 읽기 전용 모드 - 에러 무시');
       }
     } finally {
       setLoading(false);
@@ -1512,13 +1518,18 @@ const Configurator: React.FC = () => {
             setBasicInfo({ title: project.title });
             console.log('📝 프로젝트명 설정:', project.title);
 
-            // URL에 프로젝트명이 없으면 추가 (새로고침 시 유지하기 위해)
-            const currentParams = new URLSearchParams(window.location.search);
-            if (!currentParams.get('projectName')) {
-              currentParams.set('projectName', encodeURIComponent(project.title));
-              const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
-              window.history.replaceState({}, '', newUrl);
-              console.log('🔗 URL에 프로젝트명 추가:', newUrl);
+            // 읽기 전용 모드에서는 URL 변경 금지
+            if (mode !== 'readonly') {
+              // URL에 프로젝트명이 없으면 추가 (새로고침 시 유지하기 위해)
+              const currentParams = new URLSearchParams(window.location.search);
+              if (!currentParams.get('projectName')) {
+                currentParams.set('projectName', encodeURIComponent(project.title));
+                const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+                window.history.replaceState({}, '', newUrl);
+                console.log('🔗 URL에 프로젝트명 추가:', newUrl);
+              }
+            } else {
+              console.log('👁️ 읽기 전용 모드 - URL 변경 건너뜀');
             }
           }
           setLoading(false);
@@ -1593,13 +1604,18 @@ const Configurator: React.FC = () => {
                     }
                   }
 
-                  // URL에 프로젝트명이 없으면 추가 (새로고침 시 유지하기 위해)
-                  const currentParams = new URLSearchParams(window.location.search);
-                  if (!currentParams.get('projectName')) {
-                    currentParams.set('projectName', encodeURIComponent(project.title));
-                    const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
-                    window.history.replaceState({}, '', newUrl);
-                    console.log('🔗 URL에 프로젝트명 추가:', newUrl);
+                  // 읽기 전용 모드에서는 URL 변경 금지
+                  if (mode !== 'readonly') {
+                    // URL에 프로젝트명이 없으면 추가 (새로고침 시 유지하기 위해)
+                    const currentParams = new URLSearchParams(window.location.search);
+                    if (!currentParams.get('projectName')) {
+                      currentParams.set('projectName', encodeURIComponent(project.title));
+                      const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+                      window.history.replaceState({}, '', newUrl);
+                      console.log('🔗 URL에 프로젝트명 추가:', newUrl);
+                    }
+                  } else {
+                    console.log('👁️ 읽기 전용 모드 - URL 변경 건너뜀');
                   }
                 }
               }
@@ -1679,13 +1695,18 @@ const Configurator: React.FC = () => {
                 setCurrentDesignFileName(designFile.name);
                 console.log('📝 디자인파일명 설정:', designFile.name);
 
-                // URL에 디자인파일명이 없으면 추가 (새로고침 시 유지하기 위해)
-                const currentParams = new URLSearchParams(window.location.search);
-                if (!currentParams.get('designFileName')) {
-                  currentParams.set('designFileName', encodeURIComponent(designFile.name));
-                  const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
-                  window.history.replaceState({}, '', newUrl);
-                  console.log('🔗 URL에 디자인파일명 추가:', newUrl);
+                // 읽기 전용 모드에서는 URL 변경 금지 (무한 루프 방지)
+                if (mode !== 'readonly') {
+                  // URL에 디자인파일명이 없으면 추가 (새로고침 시 유지하기 위해)
+                  const currentParams = new URLSearchParams(window.location.search);
+                  if (!currentParams.get('designFileName')) {
+                    currentParams.set('designFileName', encodeURIComponent(designFile.name));
+                    const newUrl = `${window.location.pathname}?${currentParams.toString()}`;
+                    window.history.replaceState({}, '', newUrl);
+                    console.log('🔗 URL에 디자인파일명 추가:', newUrl);
+                  }
+                } else {
+                  console.log('👁️ 읽기 전용 모드 - URL 변경 건너뜀');
                 }
               } else {
                 console.error('❌ 디자인파일에 name 필드가 없습니다!');
