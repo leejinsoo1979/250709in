@@ -1548,16 +1548,14 @@ const Configurator: React.FC = () => {
           currentProjectId
         });
 
-        import('@/firebase/projects').then(({ getDesignFileById, getDesignFileByIdPublic, getProject, getProjectByIdPublic }) => {
+        // readonly 모드에서는 항상 Public API 사용 (권한 체크 없이 접근)
+        import('@/firebase/projects').then(({ getDesignFileByIdPublic, getProjectByIdPublic }) => {
           // 디자인 파일 로드 전에 store 초기화 (이전 데이터 제거)
           console.log('🧹 디자인파일 로드 전 store 초기화');
           setPlacedModules([]);
 
-          // 읽기 전용 모드면 Public 함수 사용 (비회원 접근 가능), 아니면 일반 함수 사용
-          const loadDesignFile = isReadOnlyMode ? getDesignFileByIdPublic : getDesignFileById;
-          const loadProject = isReadOnlyMode ? getProjectByIdPublic : getProject;
-          console.log('🔥 getDesignFileById 호출:', designFileId);
-          loadDesignFile(designFileId).then(async ({ designFile, error }) => {
+          console.log('🔥 getDesignFileByIdPublic 호출 (readonly 모드):', designFileId);
+          getDesignFileByIdPublic(designFileId).then(async ({ designFile, error }) => {
             if (designFile && !error) {
               console.log('✅ 디자인파일 로드 성공:', {
                 id: designFile.id,
@@ -1569,7 +1567,7 @@ const Configurator: React.FC = () => {
 
               // 프로젝트 기본 정보 설정 - projectId로 프로젝트 정보 가져오기
               if (designFile.projectId) {
-                const { project, error: projectError } = await loadProject(designFile.projectId);
+                const { project, error: projectError } = await getProjectByIdPublic(designFile.projectId);
                 if (project && !projectError) {
                   setBasicInfo({ title: project.title });
                   console.log('📝 프로젝트 데이터 설정:', project.title);
