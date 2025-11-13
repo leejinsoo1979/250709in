@@ -32,6 +32,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
+    // iframe 내부에서 readonly 모드로 실행되는 경우 Auth 초기화 건너뛰기 (COOP 에러 방지)
+    const isInIframe = window.self !== window.top;
+    const urlParams = new URLSearchParams(window.location.search);
+    const isReadOnly = urlParams.get('mode') === 'readonly';
+
+    if (isInIframe && isReadOnly) {
+      console.log('👁️ iframe readonly 모드 - Firebase Auth 초기화 건너뜀 (COOP 에러 방지)');
+      setLoading(false);
+      return;
+    }
+
     // Firebase 설정이 안되어 있으면 로딩 즉시 종료
     if (!isFirebaseConfigured()) {
       console.warn('⚠️ Firebase 환경변수가 설정되지 않았습니다. 로딩을 종료합니다.');

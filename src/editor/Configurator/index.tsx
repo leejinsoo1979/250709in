@@ -59,9 +59,11 @@ const Configurator: React.FC = () => {
   const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  // design=new인 경우 또는 readonly 모드인 경우 로딩을 건너뛰기 위해 초기값 설정
-  const isNewDesign = searchParams.get('design') === 'new';
+
+  // readonly 모드 체크
   const isReadOnlyMode = searchParams.get('mode') === 'readonly';
+  const isNewDesign = searchParams.get('design') === 'new';
+
   const [loading, setLoading] = useState(!isNewDesign && !isReadOnlyMode); // 새 디자인이나 readonly 모드인 경우 로딩 건너뛰기
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'success' | 'error'>('idle');
