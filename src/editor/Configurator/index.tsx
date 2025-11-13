@@ -1460,10 +1460,13 @@ const Configurator: React.FC = () => {
     });
 
     // URL에 designFileName이 있으면 즉시 설정 (최우선순위)
-    if (urlDesignFileName) {
+    // readonly 모드에서는 setState 호출 금지 (리로드 루프 방지)
+    if (urlDesignFileName && mode !== 'readonly') {
       const decodedFileName = decodeURIComponent(urlDesignFileName);
       console.log('🔗 URL에서 디자인파일명 바로 설정:', decodedFileName);
       setCurrentDesignFileName(decodedFileName);
+    } else if (urlDesignFileName && mode === 'readonly') {
+      console.log('👁️ readonly 모드 - 디자인파일명 setState 건너뜀 (리로드 루프 방지)');
     }
 
     // CNC에서 돌아오는 경우 - 이미 데이터가 로드되어 있으면 재로드하지 않음
@@ -1546,7 +1549,8 @@ const Configurator: React.FC = () => {
         const isAlreadyLoaded = designFileId === currentDesignFileId && (placedModules.length > 0 || spaceInfo.width > 0);
         if (isAlreadyLoaded && mode === 'readonly') {
           console.log('✅ readonly 모드 - 이미 로드된 디자인 재사용 (2중 렌더링 방지):', designFileId);
-          setLoading(false);
+          // readonly 모드에서는 setState 호출 금지 (리로드 루프 방지)
+          // setLoading(false) 제거
           return;
         }
 
