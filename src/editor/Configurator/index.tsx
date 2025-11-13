@@ -1533,6 +1533,14 @@ const Configurator: React.FC = () => {
           setLoading(false);
         });
       } else if (designFileId && !skipLoad) {
+        // readonly 모드에서 이미 로드된 디자인이면 재로드하지 않음 (2중 렌더링 방지)
+        const isAlreadyLoaded = designFileId === currentDesignFileId && (placedModules.length > 0 || spaceInfo.width > 0);
+        if (isAlreadyLoaded && mode === 'readonly') {
+          console.log('✅ readonly 모드 - 이미 로드된 디자인 재사용 (2중 렌더링 방지):', designFileId);
+          setLoading(false);
+          return;
+        }
+
         // designFileId가 있는 경우 디자인 파일 데이터 로드
         const isReadOnlyMode = mode === 'readonly';
         console.log('📂 디자인파일 데이터 로드 시작:', {
@@ -1545,9 +1553,6 @@ const Configurator: React.FC = () => {
 
         // readonly 모드에서는 항상 Public API 사용 (권한 체크 없이 접근)
         import('@/firebase/projects').then(({ getDesignFileByIdPublic, getProjectByIdPublic }) => {
-          // 디자인 파일 로드 전에 store 초기화 제거 (2중 렌더링 방지)
-          // setPlacedModules([]) 제거 - 로딩 중에도 이전 데이터 유지로 깜빡임 방지
-
           console.log('🔥 getDesignFileByIdPublic 호출 (readonly 모드):', designFileId);
           getDesignFileByIdPublic(designFileId).then(async ({ designFile, error }) => {
             if (designFile && !error) {
