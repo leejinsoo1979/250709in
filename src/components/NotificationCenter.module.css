@@ -67,7 +67,8 @@
   flex-direction: column;
   overflow: hidden;
   animation: slideDown 0.2s ease;
-  z-index: 999998 !important;
+  z-index: 999999 !important;
+  pointer-events: auto;
 }
 
 .dropdownOverlay {
@@ -78,8 +79,9 @@
   bottom: 0;
   background: rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(8px);
-  z-index: 999997 !important;
+  z-index: 999996 !important;
   animation: fadeIn 0.2s ease;
+  pointer-events: auto;
 }
 
 @keyframes slideDown {
