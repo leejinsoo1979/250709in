@@ -72,11 +72,17 @@ const Configurator: React.FC = () => {
   const [currentDesignFileId, setCurrentDesignFileId] = useState<string | null>(null);
   const [currentDesignFileName, setCurrentDesignFileName] = useState<string>('');
 
-  // 읽기 전용 모드 (viewer 권한용)
-  const [isReadOnly, setIsReadOnly] = useState(false);
-
   // 프로젝트 권한 확인 (readonly 모드에서는 권한 체크 건너뛰기)
   const { permission, canEdit, isOwner } = useProjectPermission(currentProjectId, isReadOnlyMode);
+
+  // 읽기 전용 모드 계산 (상태 변경 없이 useMemo로 계산)
+  const isReadOnly = useMemo(() => {
+    // URL mode=readonly가 최우선
+    if (isReadOnlyMode) return true;
+    // viewer 권한이면 읽기 전용
+    if (permission === 'viewer') return true;
+    return false;
+  }, [isReadOnlyMode, permission]);
 
   // 협업자 및 소유자 정보
   const [collaborators, setCollaborators] = useState<ProjectCollaborator[]>([]);
@@ -106,23 +112,7 @@ const Configurator: React.FC = () => {
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
 
   // 권한에 따라 읽기 전용 모드 설정
-  useEffect(() => {
-    // URL에서 mode=readonly가 있으면 그것을 우선
-    const mode = searchParams.get('mode');
-    if (mode === 'readonly') {
-      setIsReadOnly(true);
-      return;
-    }
-
-    // 권한에 따라 설정 (viewer는 읽기 전용, editor와 owner는 편집 가능)
-    if (permission === 'viewer') {
-      console.log('👁️ 공유 권한: 조회 전용 모드 활성화');
-      setIsReadOnly(true);
-    } else if (permission === 'editor' || permission === 'owner') {
-      console.log('✏️ 공유 권한: 편집 가능 모드 활성화');
-      setIsReadOnly(false);
-    }
-  }, [permission, searchParams]);
+  // isReadOnly는 이제 useMemo로 계산되므로 이 useEffect 제거
 
   // 읽기 전용 모드에서 3D 정면 뷰로 초기화 (섬네일과 동일한 뷰)
   useEffect(() => {
@@ -1441,12 +1431,9 @@ const Configurator: React.FC = () => {
     const skipLoad = skipLoadParam;
     const isNewDesign = isNewDesignParam;
 
-    // 읽기 전용 모드 설정 (viewer 권한)
+    // 읽기 전용 모드는 useMemo로 계산됨 (상태 업데이트 제거로 리로드 루프 방지)
     if (mode === 'readonly') {
-      console.log('👁️ 읽기 전용 모드 활성화');
-      setIsReadOnly(true);
-    } else {
-      setIsReadOnly(false);
+      console.log('👁️ 읽기 전용 모드 활성화 (useMemo로 처리됨)');
     }
 
     console.log('🔍 useEffect 실행:', {
