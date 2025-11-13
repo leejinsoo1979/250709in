@@ -64,6 +64,7 @@ const Configurator: React.FC = () => {
   const modeParam = searchParams.get('mode');
   const isReadOnlyMode = modeParam === 'readonly';
   const isNewDesign = searchParams.get('design') === 'new';
+  const projectIdParam = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
 
   const [loading, setLoading] = useState(!isNewDesign && !isReadOnlyMode); // 새 디자인이나 readonly 모드인 경우 로딩 건너뛰기
   const [saving, setSaving] = useState(false);
@@ -1418,7 +1419,7 @@ const Configurator: React.FC = () => {
 
   // URL에서 프로젝트 ID 읽기 및 로드
   // searchParams에서 필요한 값들을 미리 추출 (의존성 배열에서 객체 비교 문제 방지)
-  const projectIdParam = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
+  // projectIdParam은 이미 위에서 선언됨
   const designFileIdParam = searchParams.get('designFileId');
   const urlDesignFileNameParam = searchParams.get('designFileName') || searchParams.get('fileName');
   // modeParam은 이미 위에서 선언됨
