@@ -1377,6 +1377,12 @@ const Configurator: React.FC = () => {
 
   // URL에서 디자인파일명 읽기 (별도 useEffect로 분리)
   useEffect(() => {
+    // readonly 모드에서는 setState 호출 금지 (리로드 루프 방지)
+    if (isReadOnlyMode) {
+      console.log('👁️ readonly 모드 - 디자인파일명 useEffect 건너뜀 (리로드 루프 방지)');
+      return;
+    }
+
     const designFileName = searchParams.get('designFileName') || searchParams.get('fileName');
 
     console.log('🔍 URL에서 가져온 designFileName:', designFileName);
@@ -1393,21 +1399,26 @@ const Configurator: React.FC = () => {
       setCurrentDesignFileName('새 디자인');
       console.log('📝 기본값으로 디자인파일명 설정: 새 디자인');
     }
-  }, [searchParams]);
+  }, [searchParams, isReadOnlyMode]);
 
   // 단내림 상태 변경 감지 및 컬럼 수 리셋
   useEffect(() => {
+    // readonly 모드에서는 setState 호출 금지 (리로드 루프 방지)
+    if (isReadOnlyMode) {
+      return;
+    }
+
     // 이전 상태를 추적하기 위한 ref가 필요하지만, 여기서는 단순히 비활성화될 때 처리
     if (!spaceInfo.droppedCeiling?.enabled && spaceInfo.customColumnCount) {
       const internalSpace = calculateInternalSpace(spaceInfo);
       const defaultColumnCount = SpaceCalculator.getDefaultColumnCount(internalSpace.width);
-      
+
       console.log('🔧 [Configurator] Dropped ceiling disabled, checking column count:', {
         currentColumnCount: spaceInfo.customColumnCount,
         defaultColumnCount,
         internalWidth: internalSpace.width
       });
-      
+
       // 현재 컬럼 수가 기본값과 다르면 리셋
       if (spaceInfo.customColumnCount !== defaultColumnCount) {
         console.log('🔧 [Configurator] Resetting column count to default:', defaultColumnCount);
@@ -1418,7 +1429,7 @@ const Configurator: React.FC = () => {
         });
       }
     }
-  }, [spaceInfo.droppedCeiling?.enabled]);
+  }, [spaceInfo.droppedCeiling?.enabled, isReadOnlyMode]);
 
   // URL에서 프로젝트 ID 읽기 및 로드
   // searchParams에서 필요한 값들을 미리 추출 (의존성 배열에서 객체 비교 문제 방지)
