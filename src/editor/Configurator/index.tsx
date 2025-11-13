@@ -60,8 +60,9 @@ const Configurator: React.FC = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // readonly 모드 체크
-  const isReadOnlyMode = searchParams.get('mode') === 'readonly';
+  // URL 파라미터 미리 추출
+  const modeParam = searchParams.get('mode');
+  const isReadOnlyMode = modeParam === 'readonly';
   const isNewDesign = searchParams.get('design') === 'new';
 
   const [loading, setLoading] = useState(!isNewDesign && !isReadOnlyMode); // 새 디자인이나 readonly 모드인 경우 로딩 건너뛰기
@@ -75,7 +76,7 @@ const Configurator: React.FC = () => {
   const [isReadOnly, setIsReadOnly] = useState(false);
 
   // 프로젝트 권한 확인 (readonly 모드에서는 권한 체크 건너뛰기)
-  const { permission, canEdit, isOwner } = useProjectPermission(currentProjectId, modeParam === 'readonly');
+  const { permission, canEdit, isOwner } = useProjectPermission(currentProjectId, isReadOnlyMode);
 
   // 협업자 및 소유자 정보
   const [collaborators, setCollaborators] = useState<ProjectCollaborator[]>([]);
