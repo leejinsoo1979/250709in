@@ -1545,9 +1545,8 @@ const Configurator: React.FC = () => {
 
         // readonly 모드에서는 항상 Public API 사용 (권한 체크 없이 접근)
         import('@/firebase/projects').then(({ getDesignFileByIdPublic, getProjectByIdPublic }) => {
-          // 디자인 파일 로드 전에 store 초기화 (이전 데이터 제거)
-          console.log('🧹 디자인파일 로드 전 store 초기화');
-          setPlacedModules([]);
+          // 디자인 파일 로드 전에 store 초기화 제거 (2중 렌더링 방지)
+          // setPlacedModules([]) 제거 - 로딩 중에도 이전 데이터 유지로 깜빡임 방지
 
           console.log('🔥 getDesignFileByIdPublic 호출 (readonly 모드):', designFileId);
           getDesignFileByIdPublic(designFileId).then(async ({ designFile, error }) => {
