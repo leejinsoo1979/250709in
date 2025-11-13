@@ -32,15 +32,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   };
 
   useEffect(() => {
-    // iframe 내부에서 readonly 모드로 실행되는 경우 Auth 완전 차단
+    // iframe 내부에서 readonly 모드로 실행되는 경우
     const isInIframe = window.self !== window.top;
     const urlParams = new URLSearchParams(window.location.search);
     const isReadOnly = urlParams.get('mode') === 'readonly';
 
     if (isInIframe && isReadOnly) {
-      console.log('👁️ iframe readonly 모드 - Firebase Auth 완전 차단 (리로드 방지)');
+      console.log('👁️ iframe readonly 모드 - Firebase Auth 리스너 차단 (로그인 상태는 부모에서 가져옴)');
+      // Firebase Auth 리스너는 실행하지 않지만, 로딩은 완료 상태로 설정
+      // 실제 user 상태는 onAuthStateChange를 실행하지 않으므로 null로 유지됨
+      // 하지만 readonly 모드에서는 user 정보가 필요없으므로 문제없음
       setLoading(false);
-      setUser(null);
       return;
     }
 

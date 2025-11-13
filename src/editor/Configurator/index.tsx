@@ -3303,7 +3303,7 @@ const Configurator: React.FC = () => {
         onHelp={handleHelp}
         onConvert={handleConvert}
         onLogout={isReadOnly ? undefined : handleLogout}
-        onProfile={handleProfile}
+        onProfile={isReadOnly ? undefined : handleProfile}
         onShare={async () => {
           // 디자인이 저장되지 않았으면 먼저 자동 저장
           if (!currentDesignFileId) {

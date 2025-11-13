@@ -956,56 +956,61 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           )}
 
-          {user ? (
+          {/* onProfile이 있을 때만 프로필 영역 표시 (readonly 모드에서는 숨김) */}
+          {onProfile && (
             <>
-              {onLogout && (
-                <button className={styles.logoutButton} onClick={onLogout}>
+              {user ? (
+                <>
+                  {onLogout && (
+                    <button className={styles.logoutButton} onClick={onLogout}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2"/>
+                        <polyline points="16,17 21,12 16,7" stroke="currentColor" strokeWidth="2"/>
+                        <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2"/>
+                      </svg>
+                      {currentLanguage === 'ko' ? '로그아웃' : t('common.logout')}
+                    </button>
+                  )}
+
+                  {/* 프로필 */}
+                  <div
+                    ref={profileButtonRef}
+                    className={styles.userProfile}
+                    onClick={handleProfileClick}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <div className={styles.userProfileAvatar}>
+                      {user?.photoURL && !imageError ? (
+                        <img
+                          src={user.photoURL}
+                          alt={user.displayName || user.email || '사용자'}
+                          className={styles.profileImage}
+                          onError={() => setImageError(true)}
+                          onLoad={() => setImageError(false)}
+                        />
+                      ) : (
+                        <User size={16} />
+                      )}
+                    </div>
+                    <span className={styles.userProfileName}>
+                      {user?.displayName || user?.email?.split('@')[0] || '사용자'}
+                    </span>
+                  </div>
+                </>
+              ) : (
+                <button
+                  className={styles.loginButton}
+                  onClick={() => navigate('/login')}
+                >
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2"/>
-                    <polyline points="16,17 21,12 16,7" stroke="currentColor" strokeWidth="2"/>
-                    <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2"/>
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="currentColor" strokeWidth="2"/>
+                    <polyline points="10 17 15 12 10 7" stroke="currentColor" strokeWidth="2"/>
+                    <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2"/>
                   </svg>
-                  {currentLanguage === 'ko' ? '로그아웃' : t('common.logout')}
+                  {currentLanguage === 'ko' ? '로그인' : t('common.login')}
                 </button>
               )}
-
-              {/* 프로필은 항상 표시 - onProfile이 없어도 표시 */}
-              <div 
-                ref={profileButtonRef}
-                className={styles.userProfile} 
-                onClick={onProfile ? handleProfileClick : undefined}
-                style={{ cursor: onProfile ? 'pointer' : 'default' }}
-              >
-                <div className={styles.userProfileAvatar}>
-                  {user?.photoURL && !imageError ? (
-                    <img 
-                      src={user.photoURL} 
-                      alt={user.displayName || user.email || '사용자'} 
-                      className={styles.profileImage}
-                      onError={() => setImageError(true)}
-                      onLoad={() => setImageError(false)}
-                    />
-                  ) : (
-                    <User size={16} />
-                  )}
-                </div>
-                <span className={styles.userProfileName}>
-                  {user?.displayName || user?.email?.split('@')[0] || '사용자'}
-                </span>
-              </div>
             </>
-          ) : (
-            <button 
-              className={styles.loginButton} 
-              onClick={() => navigate('/login')}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="currentColor" strokeWidth="2"/>
-                <polyline points="10 17 15 12 10 7" stroke="currentColor" strokeWidth="2"/>
-                <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-              {currentLanguage === 'ko' ? '로그인' : t('common.login')}
-            </button>
           )}
         </div>
       </div>
