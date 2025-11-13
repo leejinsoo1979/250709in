@@ -374,7 +374,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
 
                     {/* Configurator iframe - key로 강제 재마운트 */}
                     <iframe
-                      key={`${projectId}-${designFileId}-${isOpen}`}
+                      key={`${projectId}-${designFileId}`}
                       src={`/configurator?projectId=${projectId}${designFileId ? `&designFileId=${designFileId}` : ''}&mode=readonly&panelClosed=true`}
                       style={{
                         width: '100%',
