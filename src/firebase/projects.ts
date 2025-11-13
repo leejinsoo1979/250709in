@@ -1424,7 +1424,7 @@ export const loadFolderData = async (
   try {
     const user = await getCurrentUserAsync();
     if (!user) {
-      return { folders: [], error: '로그인이 필요합니다.' };
+      return { folders: [], error: null }; // 로그인 안되어도 에러 안냄
     }
 
     const folderDocRef = doc(db, 'projectFolders', `${user.uid}_${projectId}`);
@@ -1438,7 +1438,8 @@ export const loadFolderData = async (
     const data = docSnap.data();
     return { folders: data.folders || [], error: null };
   } catch (error) {
-    console.error('폴더 데이터 불러오기 에러:', error);
-    return { folders: [], error: '폴더 데이터 불러오기 중 오류가 발생했습니다.' };
+    // 권한 에러는 무시하고 빈 배열 반환 (폴더 없는 것으로 처리)
+    console.warn('폴더 데이터 불러오기 실패 (무시됨):', error);
+    return { folders: [], error: null };
   }
 }; 
