@@ -370,6 +370,8 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                         transition: 'opacity 0.3s ease'
                       }}
                       title="Project Preview"
+                      referrerPolicy="same-origin"
+                      allow="same-origin"
                       onLoad={() => {
                         console.log('🎬 iframe onLoad 이벤트:', { projectId, designFileId });
                         setIsIframeLoading(false);
