@@ -53,8 +53,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
     // 모달이 열리면 항상 새로 로드 (이전 데이터 표시 방지)
     if (isOpen && projectId) {
       console.log('🔄 모달 열림 - 프로젝트 새로 로드');
-      setProject(null); // 이전 데이터 초기화
-      setIsIframeLoading(true);
+      // setState 제거 - 리렌더링 방지
       loadedKeyRef.current = currentKey;
       loadProject();
     }
