@@ -27,12 +27,21 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
 
   useEffect(() => {
     console.log('🔍 ProjectViewerModal useEffect:', { isOpen, projectId, designFileId });
+
+    // 모달이 닫히면 상태 초기화
+    if (!isOpen) {
+      console.log('🧹 모달 닫힘 - 상태 초기화');
+      setProject(null);
+      setError(null);
+      setIsIframeLoading(true);
+      return;
+    }
+
+    // 모달이 열리면 항상 새로 로드 (이전 데이터 표시 방지)
     if (isOpen && projectId) {
-      // 이미 로드된 프로젝트면 재로드하지 않음
-      if (project && project.id === projectId) {
-        console.log('✅ 이미 로드된 프로젝트 - 재로드 건너뜀');
-        return;
-      }
+      console.log('🔄 모달 열림 - 프로젝트 새로 로드');
+      setProject(null); // 이전 데이터 초기화
+      setIsIframeLoading(true);
       loadProject();
     }
   }, [isOpen, projectId, designFileId]);
