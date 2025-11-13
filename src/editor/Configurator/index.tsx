@@ -1416,13 +1416,21 @@ const Configurator: React.FC = () => {
   }, [spaceInfo.droppedCeiling?.enabled]);
 
   // URL에서 프로젝트 ID 읽기 및 로드
+  // searchParams에서 필요한 값들을 미리 추출 (의존성 배열에서 객체 비교 문제 방지)
+  const projectIdParam = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
+  const designFileIdParam = searchParams.get('designFileId');
+  const urlDesignFileNameParam = searchParams.get('designFileName') || searchParams.get('fileName');
+  const modeParam = searchParams.get('mode');
+  const skipLoadParam = searchParams.get('skipLoad') === 'true';
+  const isNewDesignParam = searchParams.get('design') === 'new';
+
   useEffect(() => {
-    const projectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
-    const designFileId = searchParams.get('designFileId');
-    const urlDesignFileName = searchParams.get('designFileName') || searchParams.get('fileName');
-    const mode = searchParams.get('mode');
-    const skipLoad = searchParams.get('skipLoad') === 'true';
-    const isNewDesign = searchParams.get('design') === 'new';
+    const projectId = projectIdParam;
+    const designFileId = designFileIdParam;
+    const urlDesignFileName = urlDesignFileNameParam;
+    const mode = modeParam;
+    const skipLoad = skipLoadParam;
+    const isNewDesign = isNewDesignParam;
 
     // 읽기 전용 모드 설정 (viewer 권한)
     if (mode === 'readonly') {
@@ -1698,7 +1706,8 @@ const Configurator: React.FC = () => {
         setLoading(false);
       }, 500);
     }
-  }, [searchParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectIdParam, designFileIdParam, urlDesignFileNameParam, modeParam, skipLoadParam, isNewDesignParam]);
 
   // 협업자 정보 가져오기 (현재 디자인 파일 기준으로 필터링)
   useEffect(() => {
