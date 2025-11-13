@@ -1733,6 +1733,12 @@ const Configurator: React.FC = () => {
 
   // 협업자 정보 가져오기 (현재 디자인 파일 기준으로 필터링)
   useEffect(() => {
+    // readonly 모드에서는 협업자 정보 조회 건너뛰기
+    if (isReadOnly) {
+      console.log('👁️ readonly 모드 - 협업자 정보 조회 건너뜀');
+      return;
+    }
+
     if (currentProjectId && currentDesignFileId) {
       console.log('🔍 협업자 정보 조회 시작:', { projectId: currentProjectId, designFileId: currentDesignFileId });
       getProjectCollaborators(currentProjectId)
@@ -1755,7 +1761,7 @@ const Configurator: React.FC = () => {
       // 디자인 파일이 없는 경우 (Step0 등) 협업자 초기화
       setCollaborators([]);
     }
-  }, [currentProjectId, currentDesignFileId]);
+  }, [currentProjectId, currentDesignFileId, isReadOnly]);
 
   // 폴더에서 실제 디자인파일명 찾기 (URL에 designFileId나 designFileName이 없을 때만)
   useEffect(() => {
