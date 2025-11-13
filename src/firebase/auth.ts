@@ -24,9 +24,14 @@ import { FLAGS } from '@/flags';
 export { auth };
 
 // Firebase 인증 상태 유지 설정 (브라우저 닫아도 유지)
-setPersistence(auth, browserLocalPersistence).catch((error) => {
-  console.error('❌ Firebase persistence 설정 실패:', error);
-});
+// readonly 모드에서는 auth가 null이므로 체크
+if (auth) {
+  setPersistence(auth, browserLocalPersistence).catch((error) => {
+    console.error('❌ Firebase persistence 설정 실패:', error);
+  });
+} else {
+  console.log('🚫 Firebase Auth null - persistence 설정 건너뜀 (readonly 모드)');
+}
 
 // 구글 인증 제공자 생성
 const googleProvider = new GoogleAuthProvider();
