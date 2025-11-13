@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XIcon, MaximizeIcon, MinimizeIcon } from './Icons';
 import { getProjectById, getDesignFileById } from '../../firebase/projects';
@@ -25,8 +25,13 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   const [isViewerLoaded, setIsViewerLoaded] = useState(false);
   const [isIframeLoading, setIsIframeLoading] = useState(false);
 
+  // 로드 완료 추적 (무한 루프 방지)
+  const hasLoadedRef = useRef(false);
+  const loadedKeyRef = useRef('');
+
   useEffect(() => {
-    console.log('🔍 ProjectViewerModal useEffect:', { isOpen, projectId, designFileId });
+    const currentKey = `${isOpen}-${projectId}-${designFileId}`;
+    console.log('🔍 ProjectViewerModal useEffect:', { isOpen, projectId, designFileId, currentKey, loadedKey: loadedKeyRef.current });
 
     // 모달이 닫히면 상태 초기화
     if (!isOpen) {
@@ -34,6 +39,14 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
       setProject(null);
       setError(null);
       setIsIframeLoading(true);
+      hasLoadedRef.current = false;
+      loadedKeyRef.current = '';
+      return;
+    }
+
+    // 이미 로드된 경우 재실행 방지 (무한 루프 방지)
+    if (currentKey === loadedKeyRef.current && hasLoadedRef.current) {
+      console.log('✅ 이미 로드 완료 - useEffect 재실행 건너뜀 (무한 루프 방지)');
       return;
     }
 
@@ -42,6 +55,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
       console.log('🔄 모달 열림 - 프로젝트 새로 로드');
       setProject(null); // 이전 데이터 초기화
       setIsIframeLoading(true);
+      loadedKeyRef.current = currentKey;
       loadProject();
     }
   }, [isOpen, projectId, designFileId]);
@@ -153,6 +167,8 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
       setError('프로젝트를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
+      hasLoadedRef.current = true;
+      console.log('✅ 모달 로드 완료 - ref 설정');
     }
   };
 
