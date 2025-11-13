@@ -2347,18 +2347,12 @@ const Configurator: React.FC = () => {
   };
 
   const handleLogout = () => {
-    // 읽기 전용 모드에서는 로그아웃 시 현재 페이지 유지
+    // 읽기 전용 모드에서는 로그아웃 불가
     if (isReadOnly) {
-      // Firebase logout만 수행하고 리다이렉트하지 않음
-      import('@/firebase/auth').then(({ logout }) => {
-        logout().then(() => {
-          // 로그아웃 후 페이지 새로고침하여 비회원 상태로 렌더링
-          window.location.reload();
-        });
-      });
-    } else {
-      navigate('/login');
+      console.log('👁️ 읽기 전용 모드 - 로그아웃 차단');
+      return;
     }
+    navigate('/login');
   };
 
   const handleProfile = () => {
@@ -3365,9 +3359,17 @@ const Configurator: React.FC = () => {
             />
             {/* 파일 트리 패널 */}
             <div className={styles.fileTreePanel}>
-              <DashboardFileTree 
+              <DashboardFileTree
                 onFileSelect={(projectId, designFileId, designFileName) => {
                   console.log('🗂️ 파일트리에서 선택된 파일:', { projectId, designFileId, designFileName });
+
+                  // 읽기 전용 모드에서는 파일 선택 차단
+                  if (isReadOnly) {
+                    console.log('👁️ 읽기 전용 모드 - 파일 선택 차단');
+                    setIsFileTreeOpen(false);
+                    return;
+                  }
+
                   // 디자인 파일 선택 시 해당 프로젝트 로드
                   navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}&designFileName=${encodeURIComponent(designFileName)}`);
                   setIsFileTreeOpen(false); // 파일트리 닫기
@@ -3376,6 +3378,14 @@ const Configurator: React.FC = () => {
                 }}
                 onCreateNew={() => {
                   console.log('🆕 파일트리에서 새 파일 생성 요청');
+
+                  // 읽기 전용 모드에서는 새 파일 생성 차단
+                  if (isReadOnly) {
+                    console.log('👁️ 읽기 전용 모드 - 새 파일 생성 차단');
+                    setIsFileTreeOpen(false);
+                    return;
+                  }
+
                   handleNewProject();
                   setIsFileTreeOpen(false); // 파일트리 닫기
                 }}
