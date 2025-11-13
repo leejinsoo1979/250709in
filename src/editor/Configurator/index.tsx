@@ -72,8 +72,8 @@ const Configurator: React.FC = () => {
   // 읽기 전용 모드 (viewer 권한용)
   const [isReadOnly, setIsReadOnly] = useState(false);
 
-  // 프로젝트 권한 확인
-  const { permission, canEdit, isOwner } = useProjectPermission(currentProjectId);
+  // 프로젝트 권한 확인 (readonly 모드에서는 권한 체크 건너뛰기)
+  const { permission, canEdit, isOwner } = useProjectPermission(currentProjectId, modeParam === 'readonly');
 
   // 협업자 및 소유자 정보
   const [collaborators, setCollaborators] = useState<ProjectCollaborator[]>([]);

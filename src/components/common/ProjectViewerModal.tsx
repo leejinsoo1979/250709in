@@ -26,7 +26,13 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   const [isIframeLoading, setIsIframeLoading] = useState(false);
 
   useEffect(() => {
+    console.log('🔍 ProjectViewerModal useEffect:', { isOpen, projectId, designFileId });
     if (isOpen && projectId) {
+      // 이미 로드된 프로젝트면 재로드하지 않음
+      if (project && project.id === projectId) {
+        console.log('✅ 이미 로드된 프로젝트 - 재로드 건너뜀');
+        return;
+      }
       loadProject();
     }
   }, [isOpen, projectId, designFileId]);
@@ -353,7 +359,15 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                         transition: 'opacity 0.3s ease'
                       }}
                       title="Project Preview"
-                      onLoad={() => setIsIframeLoading(false)}
+                      onLoad={() => {
+                        console.log('🎬 iframe onLoad 이벤트');
+                        setIsIframeLoading(false);
+                      }}
+                      onError={(e) => {
+                        console.error('❌ iframe 로드 에러:', e);
+                        setIsIframeLoading(false);
+                        setError('미리보기를 불러올 수 없습니다.');
+                      }}
                     />
                   </div>
                 )}
