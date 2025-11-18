@@ -50,7 +50,7 @@ import { useThrottle } from '@/editor/shared/hooks/useThrottle';
  * 2D 모드에서는 orthographic 카메라로 정면 뷰 제공
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
-  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false, readOnly = false } = props;
+  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false, readOnly = false, sceneRef } = props;
   console.log('🌐 Space3DView - viewMode:', viewMode);
   console.log('🌐 Space3DView - props:', props);
   const location = useLocation();
@@ -1307,6 +1307,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           viewMode={viewMode}
           view2DDirection={view2DDirection}
           renderMode={renderMode}
+          sceneRef={sceneRef}
         >
           <React.Suspense fallback={null}>
             {/* 배경 클릭 감지용 평면 - selectedFurnitureId 해제 */}

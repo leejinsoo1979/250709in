@@ -17,6 +17,7 @@ import { getModuleById } from '@/data/modules';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useHistoryStore } from '@/store/historyStore';
 import { useHistoryTracking } from './hooks/useHistoryTracking';
+import { useGLBExport } from '@/editor/shared/hooks/useGLBExport';
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
@@ -116,6 +117,12 @@ const Configurator: React.FC = () => {
 
   // readonly 모드에서 로드 완료 추적 (무한 루프 방지)
   const hasLoadedInReadonlyRef = useRef(false);
+
+  // 3D 씬 참조 (GLB 내보내기용)
+  const sceneRef = useRef<any>(null);
+
+  // GLB 내보내기 훅
+  const { exportToGLB, canExportGLB } = useGLBExport();
 
   // 권한에 따라 읽기 전용 모드 설정
   // isReadOnly는 이제 useMemo로 계산되므로 이 useEffect 제거
@@ -2385,6 +2392,39 @@ const Configurator: React.FC = () => {
     setIsFileTreeOpen(!isFileTreeOpen);
   };
 
+  // GLB 내보내기 핸들러
+  const handleExportGLB = async () => {
+    console.log('🔧 GLB 내보내기 시작...');
+
+    if (!sceneRef.current) {
+      alert('3D 씬이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.');
+      console.error('❌ scene ref가 없습니다');
+      return;
+    }
+
+    if (!canExportGLB(sceneRef.current)) {
+      alert('내보낼 3D 모델이 없습니다.');
+      console.error('❌ 내보낼 모델이 없습니다');
+      return;
+    }
+
+    // 파일명 생성
+    const projectName = basicInfo.title || 'furniture-design';
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `${projectName}-${timestamp}.glb`;
+
+    console.log('📦 GLB 파일 생성:', filename);
+
+    const result = await exportToGLB(sceneRef.current, filename);
+
+    if (result.success) {
+      alert(`GLB 파일이 다운로드되었습니다: ${filename}`);
+      console.log('✅ GLB 내보내기 성공');
+    } else {
+      alert(`GLB 내보내기 실패: ${result.error}`);
+      console.error('❌ GLB 내보내기 실패:', result.error);
+    }
+  };
 
 
 
@@ -3366,6 +3406,7 @@ const Configurator: React.FC = () => {
         onFileTreeToggle={handleFileTreeToggle}
         isFileTreeOpen={isFileTreeOpen}
         onExportPDF={() => setIsConvertModalOpen(true)}
+        onExportGLB={handleExportGLB}
         readOnly={isReadOnly}
       />
 
@@ -3627,6 +3668,7 @@ const Configurator: React.FC = () => {
               svgSize={{ width: 800, height: 600 }}
               activeZone={undefined} // 두 구간 모두 배치 가능하도록 undefined 전달
               readOnly={isReadOnly} // 읽기 전용 모드
+              sceneRef={sceneRef} // GLB 내보내기용 씬 참조
             />
 
             {/* 측면뷰용 슬롯 선택 버튼 */}

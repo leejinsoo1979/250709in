@@ -83,6 +83,7 @@ interface HeaderProps {
   isFileTreeOpen?: boolean;
   // 내보내기 관련 props
   onExportPDF?: () => void; // 실제로는 ConvertModal을 열어줌
+  onExportGLB?: () => void; // GLB 파일 내보내기
   // 읽기 전용 모드
   readOnly?: boolean; // viewer 권한용 읽기 전용 모드 (디자인명 수정 불가)
 }
@@ -114,6 +115,7 @@ const Header: React.FC<HeaderProps> = ({
   onFileTreeToggle,
   isFileTreeOpen,
   onExportPDF,
+  onExportGLB,
   readOnly = false
 }) => {
   console.log('🎯 Header 컴포넌트 렌더링:', {
@@ -676,8 +678,26 @@ const Header: React.FC<HeaderProps> = ({
                   </svg>
                   {currentLanguage === 'ko' ? '새 디자인' : t('project.newProject')}
                 </button>
-                <button 
-                  className={styles.dropdownItem} 
+                <button
+                  className={styles.dropdownItem}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('📦 Header - GLB로 다운로드 버튼 클릭됨');
+                    setFileMenuOpen(false);
+                    onExportGLB?.();
+                  }}
+                  disabled={!onExportGLB}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                  GLB로 다운로드
+                </button>
+                <button
+                  className={styles.dropdownItem}
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();

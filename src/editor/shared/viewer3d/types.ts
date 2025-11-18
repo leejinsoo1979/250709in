@@ -43,6 +43,8 @@ export interface Space3DViewProps extends ViewerBaseProps {
   hideEdges?: boolean;
   /** 읽기 전용 모드 (viewer 권한) */
   readOnly?: boolean;
+  /** 3D 씬 참조 (GLB 내보내기용) */
+  sceneRef?: React.MutableRefObject<any>;
 }
 
 /**

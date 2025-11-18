@@ -36,6 +36,8 @@ interface ThreeCanvasProps {
   style?: React.CSSProperties;
   cameraMode?: 'perspective' | 'orthographic';
   zoomMultiplier?: number;
+  /** 3D 씬 참조 (GLB 내보내기용) */
+  sceneRef?: React.MutableRefObject<any>;
 }
 
 /**
@@ -53,7 +55,8 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   style,
   isSplitView = false,
   cameraMode: cameraModeFromProps,
-  zoomMultiplier
+  zoomMultiplier,
+  sceneRef
 }) => {
   const CANVAS_DEBUG = false;
   const canvasLog = (...args: any[]) => {
@@ -885,16 +888,22 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         onCreated={({ gl, scene }) => {
           try {
             canvasLog('🎨 Canvas 생성 시작:', { canvasKey, viewMode });
-            
+
             // 기존 renderer가 있으면 정리
             if (rendererRef.current && rendererRef.current !== gl) {
               canvasLog('🧹 기존 renderer 정리');
               rendererRef.current.dispose();
             }
-            
+
             // renderer 참조 저장
             canvasRef.current = gl.domElement;
             rendererRef.current = gl;
+
+            // GLB 내보내기를 위한 scene 참조 저장
+            if (sceneRef) {
+              sceneRef.current = scene;
+              canvasLog('✅ Scene ref 저장 완료 (GLB 내보내기용)');
+            }
             
             // Canvas 요소에 드래그 이벤트 리스너 추가
             const canvas = gl.domElement;
