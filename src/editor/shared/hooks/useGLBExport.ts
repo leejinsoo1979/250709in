@@ -27,9 +27,9 @@ export const useGLBExport = () => {
       const furnitureGroup = new THREE.Group();
       furnitureGroup.name = 'FurnitureExport';
 
-      // 스케일 조정: mmToThreeUnits (0.01)을 상쇄하고 mm 단위로 변환
-      // Three.js 1 unit = 100mm였으므로, 100배 확대하여 mm 단위로 만듦
-      furnitureGroup.scale.set(100, 100, 100);
+      // 스케일 조정: Three.js는 1 unit = 100mm, GLB 표준은 1 unit = 1m
+      // 600mm 가구 = Three.js 6 units → GLB 0.6 units (0.6m) 되도록 0.1배
+      furnitureGroup.scale.set(0.1, 0.1, 0.1);
 
       console.log('🔍 Scene children 전체 목록:');
       scene.traverse((child: any) => {
