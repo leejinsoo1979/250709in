@@ -2402,9 +2402,15 @@ const Configurator: React.FC = () => {
       return;
     }
 
+    console.log('✅ Scene ref 확인:', {
+      scene: sceneRef.current,
+      childrenCount: sceneRef.current?.children?.length,
+      children: sceneRef.current?.children
+    });
+
     if (!canExportGLB(sceneRef.current)) {
       alert('내보낼 3D 모델이 없습니다.');
-      console.error('❌ 내보낼 모델이 없습니다');
+      console.error('❌ 내보낼 모델이 없습니다, children:', sceneRef.current.children);
       return;
     }
 

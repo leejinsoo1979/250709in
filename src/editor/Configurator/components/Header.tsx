@@ -684,7 +684,7 @@ const Header: React.FC<HeaderProps> = ({
                     e.preventDefault();
                     e.stopPropagation();
                     console.log('📦 Header - GLB로 다운로드 버튼 클릭됨');
-                    setFileMenuOpen(false);
+                    setIsFileMenuOpen(false);
                     onExportGLB?.();
                   }}
                   disabled={!onExportGLB}
