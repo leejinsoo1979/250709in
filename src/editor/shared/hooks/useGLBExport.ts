@@ -27,6 +27,10 @@ export const useGLBExport = () => {
       const furnitureGroup = new THREE.Group();
       furnitureGroup.name = 'FurnitureExport';
 
+      // 스케일 조정: mmToThreeUnits (0.01)을 상쇄하고 mm 단위로 변환
+      // Three.js 1 unit = 100mm였으므로, 100배 확대하여 mm 단위로 만듦
+      furnitureGroup.scale.set(100, 100, 100);
+
       console.log('🔍 Scene children 전체 목록:');
       scene.traverse((child: any) => {
         if (child.isMesh || child.isGroup) {
@@ -36,26 +40,41 @@ export const useGLBExport = () => {
 
       console.log('🔍 가구 필터링 시작...');
 
-      // 제외할 요소들 (공간, 조명, 헬퍼 등)
+      // 제외할 요소들 (공간, 조명, 헬퍼, 치수 라벨 등)
       const excludePatterns = [
-        'Wall', 'Floor', 'Ceiling',
-        'DirectionalLight', 'AmbientLight', 'HemisphereLight',
-        'GridHelper', 'AxesHelper',
-        'Camera'
+        'Wall', 'Floor', 'Ceiling', 'Room',
+        'DirectionalLight', 'AmbientLight', 'HemisphereLight', 'PointLight', 'SpotLight',
+        'GridHelper', 'AxesHelper', 'Grid',
+        'Camera',
+        'Text', 'Dimension', 'Label', 'Html', // 치수 라벨 제외
+        'Guide', 'Line', 'Arrow', 'Marker', // 가이드 라인 제외
+        'Plane', 'PlacementPlane', // 배치 평면 제외
+        'Environment', 'Sky', // 환경 제외
       ];
 
-      // scene의 모든 자식을 순회하며 Group 단위로 복사
+      // scene의 모든 자식을 순회하며 가구만 복사
       scene.children.forEach((child: any) => {
         const childName = child.name || '';
-        const shouldExclude = excludePatterns.some(pattern => childName.includes(pattern));
+        const childType = child.type || '';
 
-        if (!shouldExclude && (child.isGroup || child.isMesh)) {
+        // 1. excludePatterns에 해당하는 것 제외
+        const shouldExclude = excludePatterns.some(pattern =>
+          childName.includes(pattern) || childType.includes(pattern)
+        );
+
+        // 2. Sprite 타입도 제외 (Text는 Sprite로 렌더링됨)
+        const isSprite = childType === 'Sprite';
+
+        // 3. Light 타입 제외
+        const isLight = child.isLight;
+
+        if (!shouldExclude && !isSprite && !isLight && (child.isGroup || child.isMesh)) {
           console.log('✅ 포함 (Group/Mesh):', child.name, '/ type:', child.type);
           // Group 전체를 복제 (가구와 모든 부속품 포함)
           const cloned = child.clone(true); // true = recursive clone
           furnitureGroup.add(cloned);
         } else {
-          console.log('❌ 제외:', child.name, '/ type:', child.type);
+          console.log('❌ 제외:', child.name, '/ type:', child.type, '/ isLight:', isLight, '/ isSprite:', isSprite);
         }
       });
 
