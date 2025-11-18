@@ -27,34 +27,39 @@ export const useGLBExport = () => {
       const furnitureGroup = new THREE.Group();
       furnitureGroup.name = 'FurnitureExport';
 
-      console.log('🔍 Scene children 필터링 시작...');
-
-      // scene의 모든 자식을 순회하며 가구 관련 요소만 복사
+      console.log('🔍 Scene children 전체 목록:');
       scene.traverse((child: any) => {
-        // 제외할 요소들 (벽, 바닥, 조명, 카메라 등)
-        const excludeNames = [
-          'Room', 'Wall', 'Floor', 'Ceiling', 'Grid',
-          'Light', 'Camera', 'Helper', 'Background',
-          'ColumnAsset', 'WallAsset', 'ColumnGhost',
-          'ColumnLabel', 'ColumnDistance'
-        ];
-
-        const shouldExclude = excludeNames.some(name =>
-          child.name?.includes(name) || child.type?.includes(name)
-        );
-
-        // Mesh이면서 제외 대상이 아닌 경우만 포함
-        if (child.isMesh && !shouldExclude) {
-          console.log('✅ 포함:', child.name || child.type);
-          // 원본 mesh를 복제하여 추가
-          const clonedMesh = child.clone();
-          furnitureGroup.add(clonedMesh);
-        } else if (shouldExclude && child.isMesh) {
-          console.log('❌ 제외:', child.name || child.type);
+        if (child.isMesh || child.isGroup) {
+          console.log('  - name:', child.name, '/ type:', child.type, '/ parent:', child.parent?.name);
         }
       });
 
-      console.log('📦 추출된 가구 mesh 개수:', furnitureGroup.children.length);
+      console.log('🔍 가구 필터링 시작...');
+
+      // 제외할 요소들 (공간, 조명, 헬퍼 등)
+      const excludePatterns = [
+        'Wall', 'Floor', 'Ceiling',
+        'DirectionalLight', 'AmbientLight', 'HemisphereLight',
+        'GridHelper', 'AxesHelper',
+        'Camera'
+      ];
+
+      // scene의 모든 자식을 순회하며 Group 단위로 복사
+      scene.children.forEach((child: any) => {
+        const childName = child.name || '';
+        const shouldExclude = excludePatterns.some(pattern => childName.includes(pattern));
+
+        if (!shouldExclude && (child.isGroup || child.isMesh)) {
+          console.log('✅ 포함 (Group/Mesh):', child.name, '/ type:', child.type);
+          // Group 전체를 복제 (가구와 모든 부속품 포함)
+          const cloned = child.clone(true); // true = recursive clone
+          furnitureGroup.add(cloned);
+        } else {
+          console.log('❌ 제외:', child.name, '/ type:', child.type);
+        }
+      });
+
+      console.log('📦 추출된 가구 그룹/메쉬 개수:', furnitureGroup.children.length);
 
       if (furnitureGroup.children.length === 0) {
         throw new Error('내보낼 가구가 없습니다.');
@@ -123,21 +128,20 @@ export const useGLBExport = () => {
   const canExportGLB = useCallback((scene?: Scene | Group): boolean => {
     if (!scene) return false;
 
-    // 제외할 요소 이름
-    const excludeNames = [
-      'Room', 'Wall', 'Floor', 'Ceiling', 'Grid',
-      'Light', 'Camera', 'Helper', 'Background',
-      'ColumnAsset', 'WallAsset', 'ColumnGhost',
-      'ColumnLabel', 'ColumnDistance'
+    // 제외 패턴
+    const excludePatterns = [
+      'Wall', 'Floor', 'Ceiling',
+      'DirectionalLight', 'AmbientLight', 'HemisphereLight',
+      'GridHelper', 'AxesHelper',
+      'Camera'
     ];
 
-    // 가구 mesh가 있는지 확인
+    // 가구가 있는지 확인
     let hasFurniture = false;
-    scene.traverse((child: any) => {
-      const shouldExclude = excludeNames.some(name =>
-        child.name?.includes(name) || child.type?.includes(name)
-      );
-      if (child.isMesh && !shouldExclude) {
+    scene.children.forEach((child: any) => {
+      const childName = child.name || '';
+      const shouldExclude = excludePatterns.some(pattern => childName.includes(pattern));
+      if (!shouldExclude && (child.isGroup || child.isMesh)) {
         hasFurniture = true;
       }
     });
