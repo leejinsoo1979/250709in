@@ -51,6 +51,9 @@ const DesignCard: React.FC<DesignCardProps> = ({ design, onEdit, onCopy, onDelet
     }
   };
 
+  // 임시로 카드 개수 계산 (실제로는 design 객체에서 가져와야 함)
+  const viewCount = design.viewCount || 4;
+
   return (
     <div className={styles.designCard} onClick={handleCardClick}>
       <div className={styles.cardThumbnail}>
@@ -61,23 +64,29 @@ const DesignCard: React.FC<DesignCardProps> = ({ design, onEdit, onCopy, onDelet
             <span className={styles.placeholderIcon}>📦</span>
           </div>
         )}
-        
+
+        {/* View more 배지 */}
+        <div className={styles.viewBadge}>
+          <span className={styles.viewBadgeIcon}>📷</span>
+          <span>View more ({viewCount})</span>
+        </div>
+
         <div className={styles.cardActions}>
-          <button 
+          <button
             className={styles.actionButton}
             onClick={(e) => handleAction('copy', e)}
             title="복사"
           >
             📋
           </button>
-          <button 
+          <button
             className={styles.actionButton}
             onClick={(e) => handleAction('edit', e)}
             title="편집"
           >
             ✏️
           </button>
-          <button 
+          <button
             className={styles.actionButton}
             onClick={(e) => handleAction('delete', e)}
             title="삭제"
@@ -86,7 +95,7 @@ const DesignCard: React.FC<DesignCardProps> = ({ design, onEdit, onCopy, onDelet
           </button>
         </div>
       </div>
-      
+
       <div className={styles.cardInfo}>
         <h3 className={styles.cardTitle}>{design.name}</h3>
         <p className={styles.cardAuthor}>작성자: {design.author}</p>

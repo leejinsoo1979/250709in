@@ -1,7 +1,6 @@
 .designGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 20px;
+  column-count: 4;
+  column-gap: 24px;
   padding: 24px;
 }
 
@@ -9,11 +8,15 @@
 .designCard {
   background: var(--theme-surface, #ffffff);
   border: 1px solid var(--theme-border, #e5e7eb);
-  border-radius: 12px;
+  border-radius: 18px;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
+  break-inside: avoid;
+  margin-bottom: 24px;
+  display: inline-block;
+  width: 100%;
 }
 
 .designCard:hover {
@@ -115,7 +118,7 @@
 .createDesignCard {
   background: #ffffff;
   border: 2px dashed #d1d5db;
-  border-radius: 12px;
+  border-radius: 18px;
   height: 280px;
   display: flex;
   flex-direction: column;
@@ -124,6 +127,9 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
+  break-inside: avoid;
+  margin-bottom: 24px;
+  width: 100%;
 }
 
 .createDesignCard:hover {
@@ -216,16 +222,44 @@
   background: #2563eb;
 }
 
+/* 뷰 배지 */
+.viewBadge {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #ffffff;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+}
+
+.viewBadgeIcon {
+  font-size: 14px;
+}
+
 /* 반응형 */
-@media (max-width: 768px) {
+@media (max-width: 1600px) {
   .designGrid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 16px;
-    padding: 16px;
+    column-count: 3;
   }
-  
-  .createDesignCard,
-  .designCard {
-    height: 240px;
+}
+
+@media (max-width: 1024px) {
+  .designGrid {
+    column-count: 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .designGrid {
+    column-count: 1;
+    padding: 16px;
   }
 }
