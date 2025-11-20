@@ -1,6 +1,7 @@
 .designGrid {
-  column-count: 4;
-  column-gap: 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
   padding: 24px;
 }
 
@@ -13,10 +14,36 @@
   cursor: pointer;
   transition: all 0.2s ease;
   position: relative;
-  break-inside: avoid;
-  margin-bottom: 24px;
-  display: inline-block;
-  width: 100%;
+}
+
+/* 체크무늬 패턴: 짝수 행의 홀수 열 + 홀수 행의 짝수 열 = 큰 썸네일 */
+.designCard:nth-child(8n+2),
+.designCard:nth-child(8n+4),
+.designCard:nth-child(8n+5),
+.designCard:nth-child(8n+7) {
+  grid-row: span 2;
+}
+
+.designCard:nth-child(8n+2) .cardThumbnail,
+.designCard:nth-child(8n+4) .cardThumbnail,
+.designCard:nth-child(8n+5) .cardThumbnail,
+.designCard:nth-child(8n+7) .cardThumbnail {
+  height: 400px;
+}
+
+/* 작은 썸네일 */
+.designCard:nth-child(8n+1),
+.designCard:nth-child(8n+3),
+.designCard:nth-child(8n+6),
+.designCard:nth-child(8n+8) {
+  grid-row: span 1;
+}
+
+.designCard:nth-child(8n+1) .cardThumbnail,
+.designCard:nth-child(8n+3) .cardThumbnail,
+.designCard:nth-child(8n+6) .cardThumbnail,
+.designCard:nth-child(8n+8) .cardThumbnail {
+  height: 200px;
 }
 
 .designCard:hover {
@@ -119,7 +146,6 @@
   background: #ffffff;
   border: 2px dashed #d1d5db;
   border-radius: 18px;
-  height: 280px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -127,9 +153,8 @@
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
-  break-inside: avoid;
-  margin-bottom: 24px;
-  width: 100%;
+  grid-row: span 1;
+  min-height: 200px;
 }
 
 .createDesignCard:hover {
@@ -247,19 +272,74 @@
 /* 반응형 */
 @media (max-width: 1600px) {
   .designGrid {
-    column-count: 3;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* 3컬럼 체크무늬 패턴 */
+  .designCard:nth-child(6n+2),
+  .designCard:nth-child(6n+4),
+  .designCard:nth-child(6n+6) {
+    grid-row: span 2;
+  }
+
+  .designCard:nth-child(6n+2) .cardThumbnail,
+  .designCard:nth-child(6n+4) .cardThumbnail,
+  .designCard:nth-child(6n+6) .cardThumbnail {
+    height: 400px;
+  }
+
+  .designCard:nth-child(6n+1),
+  .designCard:nth-child(6n+3),
+  .designCard:nth-child(6n+5) {
+    grid-row: span 1;
+  }
+
+  .designCard:nth-child(6n+1) .cardThumbnail,
+  .designCard:nth-child(6n+3) .cardThumbnail,
+  .designCard:nth-child(6n+5) .cardThumbnail {
+    height: 200px;
   }
 }
 
 @media (max-width: 1024px) {
   .designGrid {
-    column-count: 2;
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 2컬럼 체크무늬 패턴 */
+  .designCard:nth-child(4n+2),
+  .designCard:nth-child(4n+3) {
+    grid-row: span 2;
+  }
+
+  .designCard:nth-child(4n+2) .cardThumbnail,
+  .designCard:nth-child(4n+3) .cardThumbnail {
+    height: 400px;
+  }
+
+  .designCard:nth-child(4n+1),
+  .designCard:nth-child(4n+4) {
+    grid-row: span 1;
+  }
+
+  .designCard:nth-child(4n+1) .cardThumbnail,
+  .designCard:nth-child(4n+4) .cardThumbnail {
+    height: 200px;
   }
 }
 
 @media (max-width: 640px) {
   .designGrid {
-    column-count: 1;
+    grid-template-columns: 1fr;
     padding: 16px;
+  }
+
+  /* 1컬럼은 모두 같은 높이 */
+  .designCard {
+    grid-row: span 1;
+  }
+
+  .designCard .cardThumbnail {
+    height: 240px;
   }
 }
