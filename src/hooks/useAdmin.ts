@@ -8,13 +8,20 @@ const SUPER_ADMIN_EMAIL = 'sbbc212@gmail.com';
 
 export type AdminRole = 'super' | 'admin' | 'support' | 'sales';
 
-export const useAdmin = (user: User | null) => {
+export const useAdmin = (user: User | null, authLoading?: boolean) => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [adminRole, setAdminRole] = useState<AdminRole | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // authLoading이 true이면 Firebase 인증 복원 대기 중이므로 권한 체크 건너뛰기
+    if (authLoading) {
+      console.log('🔐 useAdmin: authLoading=true, Firebase 인증 복원 대기 중...');
+      setLoading(true);
+      return;
+    }
+
     // user가 변경되면 즉시 로딩 상태로 만들고 이전 권한 정보 초기화
     setLoading(true);
     setIsAdmin(false);
@@ -86,7 +93,7 @@ export const useAdmin = (user: User | null) => {
     };
 
     checkAdminStatus();
-  }, [user]); // user 전체를 의존성으로 설정
+  }, [user, authLoading]); // user와 authLoading을 의존성으로 설정
 
   return {
     adminRole,

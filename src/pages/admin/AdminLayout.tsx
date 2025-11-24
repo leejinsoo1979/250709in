@@ -11,7 +11,7 @@ import styles from './AdminLayout.module.css';
 const AdminLayout = () => {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { adminRole, isAdmin, isSuperAdmin, loading: adminLoading } = useAdmin(user);
+  const { adminRole, isAdmin, isSuperAdmin, loading: adminLoading } = useAdmin(user, authLoading);
 
   // 인증 및 권한 체크가 모두 완료된 상태
   const loading = authLoading || adminLoading;
