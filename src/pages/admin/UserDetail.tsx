@@ -3,6 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/firebase/config';
 import { PLANS } from '@/firebase/plans';
+import {
+  ArrowLeft, User, Mail, Calendar, Shield, Package,
+  FileText, Link as LinkIcon, Eye, HardDrive, Coins,
+  CheckCircle, XCircle, Building, Users
+} from 'lucide-react';
 import styles from './UserDetail.module.css';
 
 interface UserData {
@@ -201,31 +206,48 @@ export default function UserDetail() {
     <div className={styles.container}>
       <div className={styles.header}>
         <button onClick={() => navigate('/admin/users')} className={styles.backButton}>
-          ← 목록으로
+          <ArrowLeft size={18} />
+          <span>목록으로</span>
         </button>
         <h1>사용자 상세 정보</h1>
       </div>
 
       {/* 프로필 카드 */}
       <div className={styles.profileCard}>
-        <div className={styles.profileImage}>
-          {user.photoURL ? (
-            <img src={user.photoURL} alt={user.displayName || user.email || 'User'} />
-          ) : (
-            <div className={styles.profilePlaceholder}>
-              {(user.displayName || user.email || '?').charAt(0).toUpperCase()}
-            </div>
-          )}
+        <div className={styles.profileImageWrapper}>
+          <div className={styles.profileImage}>
+            {user.photoURL ? (
+              <img src={user.photoURL} alt={user.displayName || user.email || 'User'} />
+            ) : (
+              <div className={styles.profilePlaceholder}>
+                <User size={48} />
+              </div>
+            )}
+          </div>
+          <div className={styles.statusIndicator} data-status={user.disabled ? 'inactive' : 'active'} />
         </div>
         <div className={styles.profileInfo}>
           <h2>{user.displayName || '이름 없음'}</h2>
-          <p>{user.email}</p>
-          <div className={styles.profileMeta}>
-            <span>{user.disabled ? '비활성' : '활성'}</span>
-            <span>·</span>
-            <span>{user.emailVerified ? '인증됨' : '미인증'}</span>
-            <span>·</span>
-            <span>{user.role === 'superadmin' ? '무제한 플랜' : PLANS[user.plan || 'free'].name}</span>
+          <div className={styles.emailRow}>
+            <Mail size={16} />
+            <p>{user.email}</p>
+          </div>
+          <div className={styles.profileBadges}>
+            <div className={styles.badge} data-variant={user.disabled ? 'danger' : 'success'}>
+              {user.disabled ? <XCircle size={14} /> : <CheckCircle size={14} />}
+              <span>{user.disabled ? '비활성' : '활성'}</span>
+            </div>
+            <div className={styles.badge} data-variant={user.emailVerified ? 'info' : 'warning'}>
+              {user.emailVerified ? <CheckCircle size={14} /> : <XCircle size={14} />}
+              <span>{user.emailVerified ? '인증됨' : '미인증'}</span>
+            </div>
+            <div
+              className={styles.planBadge}
+              style={{ backgroundColor: user.role === 'superadmin' ? '#667eea' : PLANS[user.plan || 'free'].color }}
+            >
+              <Shield size={14} />
+              <span>{user.role === 'superadmin' ? '무제한 플랜' : PLANS[user.plan || 'free'].name}</span>
+            </div>
           </div>
         </div>
       </div>
@@ -233,14 +255,23 @@ export default function UserDetail() {
       <div className={styles.content}>
         {/* 기본 정보 */}
         <section className={styles.section}>
-          <h2>기본 정보</h2>
+          <div className={styles.sectionHeader}>
+            <User size={20} />
+            <h2>기본 정보</h2>
+          </div>
           <div className={styles.infoGrid}>
             <div className={styles.infoItem}>
-              <label>사용자 ID</label>
+              <label>
+                <Shield size={14} />
+                <span>사용자 ID</span>
+              </label>
               <div className={styles.monospace}>{user.uid}</div>
             </div>
             <div className={styles.infoItem}>
-              <label>가입일</label>
+              <label>
+                <Calendar size={14} />
+                <span>가입일</span>
+              </label>
               <div>
                 {user.createdAt
                   ? new Date(user.createdAt.toMillis()).toLocaleString('ko-KR')
@@ -248,7 +279,10 @@ export default function UserDetail() {
               </div>
             </div>
             <div className={styles.infoItem}>
-              <label>마지막 로그인</label>
+              <label>
+                <Calendar size={14} />
+                <span>마지막 로그인</span>
+              </label>
               <div>
                 {user.lastLoginAt
                   ? new Date(user.lastLoginAt.toMillis()).toLocaleString('ko-KR')
@@ -260,35 +294,57 @@ export default function UserDetail() {
 
         {/* 플랜 정보 */}
         <section className={styles.section}>
-          <h2>플랜 정보</h2>
+          <div className={styles.sectionHeader}>
+            <Package size={20} />
+            <h2>플랜 정보</h2>
+          </div>
           <div className={styles.planInfo}>
-            <span
-              className={styles.planBadge}
+            <div
+              className={styles.planBadgeLarge}
               style={{ backgroundColor: user.role === 'superadmin' ? '#667eea' : PLANS[user.plan || 'free'].color }}
             >
-              {user.role === 'superadmin' ? '무제한 플랜' : PLANS[user.plan || 'free'].name}
-            </span>
+              <Shield size={18} />
+              <span>{user.role === 'superadmin' ? '무제한 플랜' : PLANS[user.plan || 'free'].name}</span>
+            </div>
             <div className={styles.planFeatures}>
-              <div>최대 프로젝트: {user.role === 'superadmin' ? '무제한' : `${PLANS[user.plan || 'free'].maxProjects}개`}</div>
-              <div>스토리지: {user.role === 'superadmin' ? '무제한' : `${PLANS[user.plan || 'free'].storageLimit}GB`}</div>
+              <div className={styles.planFeature}>
+                <Package size={16} />
+                <span>최대 프로젝트: {user.role === 'superadmin' ? '무제한' : `${PLANS[user.plan || 'free'].maxProjects}개`}</span>
+              </div>
+              <div className={styles.planFeature}>
+                <HardDrive size={16} />
+                <span>스토리지: {user.role === 'superadmin' ? '무제한' : `${PLANS[user.plan || 'free'].storageLimit}GB`}</span>
+              </div>
             </div>
           </div>
         </section>
 
         {/* 소속 정보 */}
         <section className={styles.section}>
-          <h2>소속 정보</h2>
+          <div className={styles.sectionHeader}>
+            <Building size={20} />
+            <h2>소속 정보</h2>
+          </div>
           <div className={styles.infoGrid}>
             <div className={styles.infoItem}>
-              <label>조직</label>
+              <label>
+                <Building size={14} />
+                <span>조직</span>
+              </label>
               <div>{user.organization || '-'}</div>
             </div>
             <div className={styles.infoItem}>
-              <label>역할</label>
+              <label>
+                <Shield size={14} />
+                <span>역할</span>
+              </label>
               <div>{user.role || '-'}</div>
             </div>
             <div className={styles.infoItem}>
-              <label>팀</label>
+              <label>
+                <Users size={14} />
+                <span>팀</span>
+              </label>
               <div>
                 {user.teams && user.teams.length > 0
                   ? user.teams.join(', ')
@@ -300,40 +356,80 @@ export default function UserDetail() {
 
         {/* 사용 현황 */}
         <section className={styles.section}>
-          <h2>사용 현황</h2>
-          <div className={styles.infoGrid}>
-            <div className={styles.infoItem}>
-              <label>프로젝트 수</label>
-              <div>{projects.length}개</div>
+          <div className={styles.sectionHeader}>
+            <Package size={20} />
+            <h2>사용 현황</h2>
+          </div>
+          <div className={styles.statsGrid}>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} data-color="blue">
+                <Package size={24} />
+              </div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>프로젝트</div>
+                <div className={styles.statValue}>{projects.length}</div>
+              </div>
             </div>
-            <div className={styles.infoItem}>
-              <label>디자인 파일 수</label>
-              <div>{designFiles.length}개</div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} data-color="purple">
+                <FileText size={24} />
+              </div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>디자인 파일</div>
+                <div className={styles.statValue}>{designFiles.length}</div>
+              </div>
             </div>
-            <div className={styles.infoItem}>
-              <label>공유 링크 수</label>
-              <div>{shareLinks.length}개</div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} data-color="green">
+                <LinkIcon size={24} />
+              </div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>공유 링크</div>
+                <div className={styles.statValue}>{shareLinks.length}</div>
+              </div>
             </div>
-            <div className={styles.infoItem}>
-              <label>총 조회수</label>
-              <div>{shareLinks.reduce((sum, link) => sum + link.viewCount, 0)}회</div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} data-color="orange">
+                <Eye size={24} />
+              </div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>총 조회수</div>
+                <div className={styles.statValue}>{shareLinks.reduce((sum, link) => sum + link.viewCount, 0)}</div>
+              </div>
             </div>
-            <div className={styles.infoItem}>
-              <label>스토리지 사용량</label>
-              <div>{designFiles.reduce((sum, file) => sum + file.fileSize, 0) > 0
-                ? `${(designFiles.reduce((sum, file) => sum + file.fileSize, 0) / 1024 / 1024).toFixed(2)} MB`
-                : '0 MB'}</div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} data-color="indigo">
+                <HardDrive size={24} />
+              </div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>스토리지 사용량</div>
+                <div className={styles.statValue}>
+                  {designFiles.reduce((sum, file) => sum + file.fileSize, 0) > 0
+                    ? `${(designFiles.reduce((sum, file) => sum + file.fileSize, 0) / 1024 / 1024).toFixed(2)} MB`
+                    : '0 MB'}
+                </div>
+              </div>
             </div>
-            <div className={styles.infoItem}>
-              <label>크레딧</label>
-              <div>{user.role === 'superadmin' ? '무제한' : (user.credits !== undefined ? `${user.credits} 크레딧` : '0 크레딧')}</div>
+            <div className={styles.statCard}>
+              <div className={styles.statIcon} data-color="yellow">
+                <Coins size={24} />
+              </div>
+              <div className={styles.statInfo}>
+                <div className={styles.statLabel}>크레딧</div>
+                <div className={styles.statValue}>
+                  {user.role === 'superadmin' ? '무제한' : (user.credits !== undefined ? user.credits : 0)}
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* 프로젝트 */}
         <section className={styles.section}>
-          <h2>프로젝트 ({projects.length})</h2>
+          <div className={styles.sectionHeader}>
+            <Package size={20} />
+            <h2>프로젝트 ({projects.length})</h2>
+          </div>
           {projects.length === 0 ? (
             <div className={styles.emptyState}>프로젝트가 없습니다</div>
           ) : (
@@ -412,7 +508,10 @@ export default function UserDetail() {
 
         {/* 디자인 파일 */}
         <section className={styles.section}>
-          <h2>디자인 파일 ({designFiles.length})</h2>
+          <div className={styles.sectionHeader}>
+            <FileText size={20} />
+            <h2>디자인 파일 ({designFiles.length})</h2>
+          </div>
           {designFiles.length === 0 ? (
             <div className={styles.emptyState}>디자인 파일이 없습니다</div>
           ) : (
@@ -459,7 +558,10 @@ export default function UserDetail() {
 
         {/* 공유 링크 */}
         <section className={styles.section}>
-          <h2>공유 링크 ({shareLinks.length})</h2>
+          <div className={styles.sectionHeader}>
+            <LinkIcon size={20} />
+            <h2>공유 링크 ({shareLinks.length})</h2>
+          </div>
           {shareLinks.length === 0 ? (
             <div className={styles.emptyState}>공유 링크가 없습니다</div>
           ) : (
