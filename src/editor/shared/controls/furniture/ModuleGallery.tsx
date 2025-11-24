@@ -1046,14 +1046,19 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
     console.log('🔍 getIconPath 디버깅:', {
       moduleId,
       moduleKey,
+      allKeys: Object.keys(FURNITURE_ICONS),
       found: !!FURNITURE_ICONS[moduleKey],
       result: FURNITURE_ICONS[moduleKey] || 'fallback to single-2drawer-hanging'
     });
 
     // FURNITURE_ICONS에 정확히 매칭되는 키가 있으면 사용
     if (FURNITURE_ICONS[moduleKey]) {
+      console.log('✅ 매칭 성공:', moduleKey, '→', FURNITURE_ICONS[moduleKey]);
       return FURNITURE_ICONS[moduleKey];
     }
+
+    console.error('❌ 매칭 실패! fallback 사용:', moduleKey);
+    console.log('사용 가능한 키들:', Object.keys(FURNITURE_ICONS));
 
     // fallback: 기본 키큰장 이미지
     return FURNITURE_ICONS['single-2drawer-hanging'];
