@@ -195,7 +195,7 @@ export const NotificationCenter: React.FC = () => {
                       <div className={styles.itemHeader}>
                         <h4 className={styles.itemTitle}>{notification.title}</h4>
                         {!notification.isRead && (
-                          <span className={styles.unreadDot} />
+                          <span className={styles.newBadge}>NEW</span>
                         )}
                       </div>
                       <p className={styles.itemMessage}>{notification.message}</p>
