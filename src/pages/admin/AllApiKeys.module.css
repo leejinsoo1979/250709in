@@ -370,18 +370,18 @@
 }
 
 .scopeBadge[data-scope="all"] {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
 }
 
 .scopeBadge[data-scope="configurator"] {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background: var(--theme-accent-light);
+  color: var(--theme-accent);
 }
 
 .scopeBadge[data-scope="optimizer"] {
-  background: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  background: var(--theme-warning-light);
+  color: var(--theme-warning);
 }
 
 .deleteButton {
@@ -399,9 +399,9 @@
 }
 
 .deleteButton:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444;
-  color: #ef4444;
+  background: var(--theme-danger-light);
+  border-color: var(--theme-danger);
+  color: var(--theme-danger);
 }
 
 .keyContent {

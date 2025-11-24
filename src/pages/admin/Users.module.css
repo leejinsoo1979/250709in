@@ -456,23 +456,23 @@
 }
 
 .grantButton {
-  background: var(--theme-primary, #10b981);
-  color: white;
+  background: var(--theme-accent);
+  color: var(--theme-surface);
 }
 
 .grantButton:hover {
-  background: var(--theme-primary-hover, #059669);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  background: var(--theme-accent-hover);
+  box-shadow: 0 2px 8px var(--theme-shadow);
 }
 
 .revokeButton {
-  background: #ef4444;
-  color: white;
+  background: var(--theme-danger);
+  color: var(--theme-surface);
 }
 
 .revokeButton:hover {
-  background: #dc2626;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+  background: var(--theme-danger-hover);
+  box-shadow: 0 2px 8px var(--theme-shadow);
 }
 
 .disabledText {
@@ -486,8 +486,8 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--theme-primary, #10b981);
-  border: 1px solid var(--theme-primary, #10b981);
+  color: var(--theme-primary);
+  border: 1px solid var(--theme-primary);
   background: transparent;
 }
 
@@ -617,13 +617,13 @@
 }
 
 .confirmButton {
-  background: var(--theme-primary, #10b981);
-  color: white;
+  background: var(--theme-accent);
+  color: var(--theme-surface);
 }
 
 .confirmButton:hover {
-  background: var(--theme-primary-hover, #059669);
-  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.4);
+  background: var(--theme-accent-hover);
+  box-shadow: 0 2px 12px var(--theme-shadow);
 }
 
 .confirmButton:disabled {
@@ -634,13 +634,13 @@
 }
 
 .confirmRevokeButton {
-  background: #ef4444;
-  color: white;
+  background: var(--theme-danger);
+  color: var(--theme-surface);
 }
 
 .confirmRevokeButton:hover {
-  background: #dc2626;
-  box-shadow: 0 2px 12px rgba(239, 68, 68, 0.4);
+  background: var(--theme-danger-hover);
+  box-shadow: 0 2px 12px var(--theme-shadow);
 }
 
 /* 플랜 선택기 */

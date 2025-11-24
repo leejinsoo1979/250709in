@@ -374,9 +374,9 @@
 }
 
 .deleteButton:hover {
-  background: rgba(239, 68, 68, 0.1);
-  border-color: #ef4444;
-  color: #ef4444;
+  background: var(--theme-danger-light);
+  border-color: var(--theme-danger);
+  color: var(--theme-danger);
 }
 
 .keyContent {

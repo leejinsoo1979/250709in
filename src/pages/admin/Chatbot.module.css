@@ -134,22 +134,22 @@
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px var(--theme-shadow);
   white-space: nowrap;
 }
 
 .saveButton svg {
-  color: white !important;
+  color: var(--theme-surface);
   flex-shrink: 0;
 }
 
 .saveButton span {
-  color: white !important;
+  color: var(--theme-surface);
 }
 
 .saveButton:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 6px 16px var(--theme-shadow);
 }
 
 .saveButton:active {
@@ -233,13 +233,13 @@
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  box-shadow: 0 2px 8px var(--theme-shadow);
 }
 
 .importButton:hover:not(:disabled) {
-  background: #059669;
+  background: var(--theme-accent-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 6px 16px var(--theme-shadow);
 }
 
 .importButton:disabled {
