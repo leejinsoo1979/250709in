@@ -4,7 +4,6 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { createProject } from '@/services/projectDataService';
 import { getCurrentUserAsync } from '@/firebase/auth';
 import { serverTimestamp } from 'firebase/firestore';
-import { generateDefaultThumbnail, dataURLToBlob } from '@/editor/shared/utils/thumbnailCapture';
 import Input from '@/components/common/Input';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import styles from './Step1BasicInfo.module.css';
@@ -276,17 +275,6 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
                     return;
                   }
 
-                  // 기본 썸네일 생성 (현재 spaceInfo를 기반으로)
-                  let thumbnailBlob: Blob | undefined;
-                  try {
-                    const thumbnail = generateDefaultThumbnail(spaceInfo, 0);
-                    thumbnailBlob = dataURLToBlob(thumbnail);
-                    console.log('📸 Step1 - 기본 썸네일 생성 성공');
-                  } catch (thumbnailError) {
-                    console.error('📸 Step1 - 썸네일 생성 실패:', thumbnailError);
-                    thumbnailBlob = undefined;
-                  }
-
                   const currentTimestamp = serverTimestamp();
                   const projectData = {
                     userId: user.uid,
@@ -328,7 +316,7 @@ const Step1BasicInfo: React.FC<Step1BasicInfoProps> = ({ onNext, onClose, projec
                     }
                   };
 
-                  const result = await createProject(projectData, thumbnailBlob);
+                  const result = await createProject(projectData);
                   
                   if (result.success && result.data) {
                     setProjectId(result.data); // 프로젝트 ID 저장
