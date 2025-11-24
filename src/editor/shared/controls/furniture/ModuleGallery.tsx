@@ -15,8 +15,8 @@ import { useTranslation } from '@/i18n/useTranslation';
 // import.meta.env.BASE_URL을 사용하여 GitHub Pages base path 자동 적용
 const getImagePath = (filename: string) => {
   const encodedFilename = encodeURIComponent(filename);
-  const path = `${import.meta.env.BASE_URL}images/furniture-thumbnails/${encodedFilename}`;
-  return path;
+  // public 폴더의 파일은 /로 시작하는 절대 경로로 접근
+  return `/images/furniture-thumbnails/${encodedFilename}`;
 };
 
 const FURNITURE_ICONS: Record<string, string> = {
