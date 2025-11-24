@@ -260,7 +260,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     e.dataTransfer.setData('text/plain', module.id);
     e.dataTransfer.effectAllowed = 'copy';
 
-    // 드래그 고스트 이미지 설정 - Canvas로 매번 새로 생성
+    // 드래그 고스트 이미지 설정 - Canvas로 매번 새로 생성 (타임스탬프로 캐싱 방지)
     const thumbnailElement = e.currentTarget as HTMLElement;
     const imgElement = thumbnailElement.querySelector('img') as HTMLImageElement;
 
@@ -290,10 +290,17 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
           // 이미지 그리기
           ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
 
+          // 캐싱 방지: 투명한 픽셀에 타임스탬프 추가 (시각적으로 보이지 않음)
+          const timestamp = Date.now().toString();
+          ctx.globalAlpha = 0.01; // 거의 투명
+          ctx.fillStyle = `rgb(${timestamp.slice(-3)}, ${timestamp.slice(-2)}, ${timestamp.slice(-1)})`;
+          ctx.fillRect(0, 0, 1, 1);
+          ctx.globalAlpha = 1.0;
+
           // 고스트 이미지로 설정
           e.dataTransfer.setDragImage(canvas, canvas.width / 2, canvas.height / 2);
 
-          console.log('🎨 고스트 생성:', module.name, canvas.width, 'x', canvas.height);
+          console.log('🎨 고스트 생성:', module.name, iconPath, timestamp);
         }
       } catch (error) {
         console.error('고스트 생성 실패:', error);
