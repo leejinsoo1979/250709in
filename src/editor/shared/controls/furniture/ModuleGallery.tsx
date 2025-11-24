@@ -1137,9 +1137,12 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
       <div className={styles.thumbnailGrid}>
         {currentModules.length > 0 ? (
           currentModules.map(module => {
-            const iconPath = getIconPath(module.id);
+            // module.thumbnail이 있으면 우선 사용, 없으면 getIconPath 사용
+            const iconPath = module.thumbnail
+              ? `${import.meta.env.BASE_URL}${module.thumbnail.replace(/^\//, '')}`
+              : getIconPath(module.id);
             const isValid = isModuleValid(module);
-            
+
             return (
               <ThumbnailItem
                 key={module.id}
