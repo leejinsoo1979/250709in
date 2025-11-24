@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/auth/AuthProvider';
 import { collection, query, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebase/config';
-import { HiOutlineFolder, HiOutlineCube, HiOutlineUsers, HiOutlineShare } from 'react-icons/hi';
+import {
+  Folder, FolderOpen, FileText, Users, Share2,
+  Calendar, HardDrive, Search, User, Package
+} from 'lucide-react';
 import styles from './Projects.module.css';
 
 interface ProjectData {
@@ -209,9 +212,14 @@ const Projects = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div>
-          <h1 className={styles.title}>프로젝트 관리</h1>
-          <p className={styles.subtitle}>전체 프로젝트 및 디자인 파일 관리</p>
+        <div className={styles.headerContent}>
+          <div className={styles.headerIcon}>
+            <Package size={32} />
+          </div>
+          <div>
+            <h1 className={styles.title}>프로젝트 관리</h1>
+            <p className={styles.subtitle}>전체 프로젝트 및 디자인 파일 관리</p>
+          </div>
         </div>
       </div>
 
@@ -219,14 +227,20 @@ const Projects = () => {
         {/* 프로젝트 목록 */}
         <div className={styles.projectsSection}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>프로젝트 목록 ({projects.length})</h2>
-            <input
-              type="text"
-              placeholder="프로젝트명, 소유자, ID로 검색..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={styles.searchInput}
-            />
+            <div className={styles.sectionTitleWrapper}>
+              <FolderOpen size={20} />
+              <h2 className={styles.sectionTitle}>프로젝트 목록 ({projects.length})</h2>
+            </div>
+            <div className={styles.searchWrapper}>
+              <Search size={18} className={styles.searchIcon} />
+              <input
+                type="text"
+                placeholder="프로젝트명, 소유자, ID로 검색..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className={styles.searchInput}
+              />
+            </div>
           </div>
 
           {loading ? (
@@ -236,7 +250,9 @@ const Projects = () => {
             </div>
           ) : filteredProjects.length === 0 ? (
             <div className={styles.emptyState}>
-              <HiOutlineFolder size={48} />
+              <div className={styles.emptyIcon}>
+                <Folder size={56} />
+              </div>
               <p>프로젝트가 없습니다</p>
             </div>
           ) : (
@@ -249,7 +265,7 @@ const Projects = () => {
                 >
                   <div className={styles.projectCardHeader}>
                     <div className={styles.projectIcon}>
-                      <HiOutlineFolder size={24} />
+                      {selectedProject === project.id ? <FolderOpen size={28} /> : <Folder size={28} />}
                     </div>
                     <div className={styles.projectInfo}>
                       <h3 className={styles.projectName}>{project.projectName}</h3>
@@ -259,7 +275,7 @@ const Projects = () => {
                             <img src={project.ownerPhotoURL} alt={project.ownerName || project.ownerEmail} />
                           ) : (
                             <div className={styles.ownerAvatarPlaceholder}>
-                              {(project.ownerName || project.ownerEmail || '?').charAt(0).toUpperCase()}
+                              <User size={20} />
                             </div>
                           )}
                         </div>
@@ -278,19 +294,34 @@ const Projects = () => {
 
                   <div className={styles.projectStats}>
                     <div className={styles.stat}>
-                      <HiOutlineCube size={16} />
-                      <span>{project.designFileCount} 파일</span>
+                      <div className={styles.statIcon} data-color="blue">
+                        <FileText size={18} />
+                      </div>
+                      <div className={styles.statInfo}>
+                        <span className={styles.statLabel}>파일</span>
+                        <span className={styles.statValue}>{project.designFileCount}</span>
+                      </div>
                     </div>
                     {project.isShared && (
                       <div className={styles.stat}>
-                        <HiOutlineShare size={16} />
-                        <span>공유됨</span>
+                        <div className={styles.statIcon} data-color="green">
+                          <Share2 size={18} />
+                        </div>
+                        <div className={styles.statInfo}>
+                          <span className={styles.statLabel}>공유</span>
+                          <span className={styles.statValue}>활성</span>
+                        </div>
                       </div>
                     )}
                     {project.collaboratorCount > 0 && (
                       <div className={styles.stat}>
-                        <HiOutlineUsers size={16} />
-                        <span>{project.collaboratorCount} 협업자</span>
+                        <div className={styles.statIcon} data-color="purple">
+                          <Users size={18} />
+                        </div>
+                        <div className={styles.statInfo}>
+                          <span className={styles.statLabel}>협업자</span>
+                          <span className={styles.statValue}>{project.collaboratorCount}</span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -313,9 +344,12 @@ const Projects = () => {
         {selectedProject && (
           <div className={styles.detailSection}>
             <div className={styles.sectionHeader}>
-              <h2 className={styles.sectionTitle}>
-                디자인 파일 ({designFiles.length})
-              </h2>
+              <div className={styles.sectionTitleWrapper}>
+                <FileText size={20} />
+                <h2 className={styles.sectionTitle}>
+                  디자인 파일 ({designFiles.length})
+                </h2>
+              </div>
             </div>
 
             {filesLoading ? (
@@ -325,7 +359,9 @@ const Projects = () => {
               </div>
             ) : designFiles.length === 0 ? (
               <div className={styles.emptyState}>
-                <HiOutlineCube size={48} />
+                <div className={styles.emptyIcon}>
+                  <FileText size={56} />
+                </div>
                 <p>디자인 파일이 없습니다</p>
               </div>
             ) : (
@@ -345,7 +381,7 @@ const Projects = () => {
                         <td>
                           <div className={styles.fileInfo}>
                             <div className={styles.fileIcon}>
-                              <HiOutlineCube size={20} />
+                              <FileText size={20} />
                             </div>
                             <span className={styles.fileName}>{file.fileName}</span>
                           </div>
