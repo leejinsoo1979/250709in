@@ -885,13 +885,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   };
   
   // ThumbnailItem 컴포넌트 내부 계속...
-  
-  // 상하부장 모듈인지 확인
-  const isCabinetModule = module.category === 'upper' || module.category === 'lower';
 
   return (
     <>
-      <div 
+      <div
         className={`${styles.thumbnailItem} ${!isValid ? styles.disabled : ''} ${selectedFurnitureId === module.id ? styles.selected : ''}`}
         draggable={isValid}
         onDragStart={handleDragStart}
@@ -901,43 +898,11 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         title={isValid ? `클릭하여 선택 또는 드래그하여 배치: ${module.name}` : '현재 공간에 배치할 수 없습니다'}
       >
         <div className={styles.thumbnailImage}>
-          {isCabinetModule ? (
-            // 상하부장용 커스텀 썸네일
-            <div style={{
-              width: '100%',
-              height: '100%',
-              backgroundColor: module.color || '#8B7355',
-              borderRadius: '4px',
-              border: '2px solid rgba(0,0,0,0.1)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              position: 'relative'
-            }}>
-              {/* 카테고리 아이콘 */}
-              <div style={{ 
-                fontSize: '24px', 
-                opacity: 0.7
-              }}>
-                {module.category === 'upper' ? '⬆️' : '⬇️'}
-              </div>
-              {/* 카테고리 라벨 */}
-              <div style={{
-                fontSize: '12px',
-                marginTop: '4px',
-                opacity: 0.8
-              }}>
-                {module.category === 'upper' ? '상부장' : '하부장'}
-              </div>
-            </div>
-          ) : (
-            // 기존 이미지 기반 썸네일
-            <img 
-              src={iconPath} 
-              alt={module.name}
-              onError={(e) => {
-                // 이미지 로드 실패 시 기본 이미지로 대체 (한 번만 실행)
+          <img
+            src={iconPath}
+            alt={module.name}
+            onError={(e) => {
+              // 이미지 로드 실패 시 기본 이미지로 대체 (한 번만 실행)
                 const img = e.target as HTMLImageElement;
                 if (!img.dataset.fallbackAttempted) {
                   img.dataset.fallbackAttempted = 'true';
@@ -945,7 +910,6 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
                 }
               }}
             />
-          )}
         </div>
         {!isValid && <div className={styles.disabledOverlay} />}
       </div>
