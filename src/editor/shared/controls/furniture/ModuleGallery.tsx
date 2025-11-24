@@ -20,17 +20,29 @@ const getImagePath = (filename: string) => {
 
 const FURNITURE_ICONS: Record<string, string> = {
   'single-2drawer-hanging': getImagePath('single-2drawer-hanging.png'),
-  'single-2hanging': getImagePath('single-2hanging.png'), 
+  'single-2hanging': getImagePath('single-2hanging.png'),
   'single-4drawer-hanging': getImagePath('single-4drawer-hanging.png'),
   'dual-2drawer-hanging': getImagePath('dual-2drawer-hanging.png'),
   'dual-2hanging': getImagePath('dual-2hanging.png'),
   'dual-4drawer-hanging': getImagePath('dual-4drawer-hanging.png'),
   'dual-2drawer-styler': getImagePath('dual-2drawer-styler.png'),
   'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
-  // 상부장 타입들
-  'upper-cabinet-shelf': getImagePath('upper-cabinet-shelf.png'),
-  'upper-cabinet-open': getImagePath('upper-cabinet-open.png'),
-  'upper-cabinet-mixed': getImagePath('upper-cabinet-mixed.png'),
+  // 싱글 상부장
+  'upper-cabinet-shelf': getImagePath('상부장 선반형.png'),
+  'upper-cabinet-2tier': getImagePath('상부장 2단형.png'),
+  'upper-cabinet-open': getImagePath('상부장 오픈형.png'),
+  'upper-cabinet-mixed': getImagePath('상부장 혼합형.png'),
+  // 싱글 하부장
+  'lower-cabinet-basic': getImagePath('하부장.png'),
+  'lower-cabinet-2tier': getImagePath('하부장 2단형.png'),
+  // 듀얼 상부장
+  'dual-upper-cabinet-shelf': getImagePath('듀얼 상부장 선반형.png'),
+  'dual-upper-cabinet-2tier': getImagePath('듀얼 상부장2단형.png'),
+  'dual-upper-cabinet-open': getImagePath('듀얼 상부장 오픈형.png'),
+  'dual-upper-cabinet-mixed': getImagePath('듀얼 상부장 혼합형.png'),
+  // 듀얼 하부장
+  'dual-lower-cabinet-basic': getImagePath('듀얼 하부장.png'),
+  'dual-lower-cabinet-2tier': getImagePath('듀얼 하부장 2단형.png'),
 };
 
 // 모듈 타입 정의
@@ -1101,10 +1113,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
       <div className={styles.thumbnailGrid}>
         {currentModules.length > 0 ? (
           currentModules.map(module => {
-            // module.thumbnail이 있으면 우선 사용, 없으면 getIconPath 사용
-            const iconPath = module.thumbnail
-              ? `${import.meta.env.BASE_URL}${module.thumbnail.replace(/^\//, '')}`
-              : getIconPath(module.id);
+            const iconPath = getIconPath(module.id);
             const isValid = isModuleValid(module);
 
             return (
