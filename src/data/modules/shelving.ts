@@ -678,6 +678,7 @@ const createUpperCabinet1 = (columnWidth: number, maxHeight?: number): ModuleDat
   return {
     ...base,
     hasDoor: true, // 상부장은 기본적으로 도어 있음
+    thumbnail: '/images/furniture-thumbnails/상부장 선반형.png',
     modelConfig: {
       ...base.modelConfig,
       sections: [
@@ -713,6 +714,7 @@ const createUpperCabinet4 = (columnWidth: number, maxHeight?: number): ModuleDat
   
   return {
     ...base,
+    thumbnail: '/images/furniture-thumbnails/상부장 2단형.png',
     modelConfig: {
       ...base.modelConfig,
       sections: [
@@ -747,6 +749,7 @@ const createUpperCabinet2 = (columnWidth: number): ModuleData => {
   
   return {
     ...base,
+    thumbnail: '/images/furniture-thumbnails/상부장 오픈형.png',
     modelConfig: {
       ...base.modelConfig,
       sections: [
@@ -780,6 +783,7 @@ const createUpperCabinet3 = (columnWidth: number): ModuleData => {
   
   return {
     ...base,
+    thumbnail: '/images/furniture-thumbnails/상부장 혼합형.png',
     modelConfig: {
       ...base.modelConfig,
       sections: [
@@ -823,6 +827,7 @@ const createLowerCabinet1 = (columnWidth: number): ModuleData => {
     ...base,
     isDynamic: true, // 동적 크기 조절 가능
     defaultDepth: 600, // 기본 깊이 600mm
+    thumbnail: '/images/furniture-thumbnails/하부장.png',
     modelConfig: {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, // 18mm 패널 두께
@@ -861,6 +866,7 @@ const createLowerCabinet2 = (columnWidth: number): ModuleData => {
     ...base,
     isDynamic: true, // 동적 크기 조절 가능
     defaultDepth: 600, // 기본 깊이 600mm
+    thumbnail: '/images/furniture-thumbnails/하부장 2단형.png',
     modelConfig: {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, // 18mm 패널 두께
@@ -901,6 +907,7 @@ const createDualUpperCabinet1 = (dualWidth: number): ModuleData => {
   
   return {
     ...base,
+    thumbnail: '/images/furniture-thumbnails/듀얼 상부장 선반형.png',
     modelConfig: {
       ...base.modelConfig,
       leftSections: [
@@ -943,6 +950,7 @@ const createDualUpperCabinet2 = (dualWidth: number): ModuleData => {
   
   return {
     ...base,
+    thumbnail: '/images/furniture-thumbnails/듀얼 상부장2단형.png',
     modelConfig: {
       ...base.modelConfig,
       leftSections: [
@@ -985,6 +993,7 @@ const createDualUpperCabinet3 = (dualWidth: number): ModuleData => {
   
   return {
     ...base,
+    thumbnail: '/images/furniture-thumbnails/듀얼 상부장 오픈형.png',
     modelConfig: {
       ...base.modelConfig,
       leftSections: [
@@ -1025,6 +1034,7 @@ const createDualUpperCabinet4 = (dualWidth: number): ModuleData => {
   
   return {
     ...base,
+    thumbnail: '/images/furniture-thumbnails/듀얼 상부장 혼합형.png',
     modelConfig: {
       ...base.modelConfig,
       leftSections: [
@@ -1083,6 +1093,7 @@ const createDualLowerCabinet1 = (dualWidth: number): ModuleData => {
     ...base,
     isDynamic: true, // 동적 크기 조절 가능
     defaultDepth: 600, // 기본 깊이 600mm
+    thumbnail: '/images/furniture-thumbnails/듀얼 하부장.png',
     modelConfig: {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, // 18mm 패널 두께
@@ -1129,6 +1140,7 @@ const createDualLowerCabinet2 = (dualWidth: number): ModuleData => {
     ...base,
     isDynamic: true, // 동적 크기 조절 가능
     defaultDepth: 600, // 기본 깊이 600mm
+    thumbnail: '/images/furniture-thumbnails/듀얼 하부장 2단형.png',
     modelConfig: {
       ...base.modelConfig,
       basicThickness: FURNITURE_SPECS.BASIC_THICKNESS, // 18mm 패널 두께
