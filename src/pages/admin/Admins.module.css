@@ -345,7 +345,7 @@
 }
 
 .adminBadge {
-  background: var(--theme-accent);
+  background: var(--theme-success);
   color: var(--theme-surface);
   box-shadow: 0 2px 8px var(--theme-shadow);
 }
@@ -369,12 +369,12 @@
 }
 
 .grantButton {
-  background: var(--theme-accent);
+  background: var(--theme-success);
   color: var(--theme-surface);
 }
 
 .grantButton:hover {
-  background: var(--theme-accent-hover);
+  background: var(--theme-success-hover);
   box-shadow: 0 2px 8px var(--theme-shadow);
 }
 
@@ -406,7 +406,7 @@
 
 .medalIcon {
   font-size: 24px;
-  color: var(--theme-accent);
+  color: var(--theme-success);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
   flex-shrink: 0;
   width: 24px;
@@ -601,14 +601,14 @@
 }
 
 .confirmButton {
-  background: var(--theme-accent);
+  background: var(--theme-success);
   color: var(--theme-surface);
-  border: 1px solid var(--theme-accent);
+  border: 1px solid var(--theme-success);
 }
 
 .confirmButton:hover {
-  background: var(--theme-accent-hover);
-  border-color: var(--theme-accent-hover);
+  background: var(--theme-success-hover);
+  border-color: var(--theme-success-hover);
   box-shadow: 0 2px 12px var(--theme-shadow);
 }
 

@@ -375,8 +375,8 @@
 }
 
 .scopeBadge[data-scope="configurator"] {
-  background: var(--theme-accent-light);
-  color: var(--theme-accent);
+  background: var(--theme-success-light);
+  color: var(--theme-success);
 }
 
 .scopeBadge[data-scope="optimizer"] {

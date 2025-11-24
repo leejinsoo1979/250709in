@@ -456,12 +456,12 @@
 }
 
 .grantButton {
-  background: var(--theme-accent);
+  background: var(--theme-success);
   color: var(--theme-surface);
 }
 
 .grantButton:hover {
-  background: var(--theme-accent-hover);
+  background: var(--theme-success-hover);
   box-shadow: 0 2px 8px var(--theme-shadow);
 }
 
@@ -617,12 +617,12 @@
 }
 
 .confirmButton {
-  background: var(--theme-accent);
+  background: var(--theme-success);
   color: var(--theme-surface);
 }
 
 .confirmButton:hover {
-  background: var(--theme-accent-hover);
+  background: var(--theme-success-hover);
   box-shadow: 0 2px 12px var(--theme-shadow);
 }
 

@@ -237,7 +237,7 @@
 }
 
 .importButton:hover:not(:disabled) {
-  background: var(--theme-accent-hover);
+  background: var(--theme-success-hover);
   transform: translateY(-2px);
   box-shadow: 0 6px 16px var(--theme-shadow);
 }
