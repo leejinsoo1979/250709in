@@ -117,19 +117,18 @@
   gap: 6px;
   padding: 6px 12px;
   background: transparent;
-  border: 1px solid var(--theme-primary, #3b82f6);
+  border: none;
   border-radius: 6px;
-  color: var(--theme-primary, #3b82f6);
+  color: var(--theme-text-secondary, #6b7280);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .markAllButton:hover {
-  background: var(--theme-primary, #3b82f6);
-  color: white;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+  background: var(--theme-background-secondary, rgba(255, 255, 255, 0.05));
+  color: var(--theme-primary, #3b82f6);
 }
 
 /* List */
@@ -182,25 +181,13 @@
   align-items: flex-start;
   gap: 12px;
   padding: 16px 20px;
-  border-bottom: 1px solid var(--theme-border);
+  border-bottom: 1px solid var(--theme-border, rgba(255, 255, 255, 0.05));
   cursor: pointer;
   transition: all 0.2s ease;
-  position: relative;
-}
-
-.item::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: transparent;
-  transition: background 0.2s ease;
 }
 
 .item:hover {
-  background: var(--theme-background-secondary, rgba(0, 0, 0, 0.02));
+  background: var(--theme-background-secondary, rgba(255, 255, 255, 0.03));
 }
 
 .item:last-child {
@@ -208,15 +195,11 @@
 }
 
 .item.unread {
-  background: rgba(59, 130, 246, 0.08);
-}
-
-.item.unread::before {
-  background: var(--theme-primary, #3b82f6);
+  background: transparent;
 }
 
 .item.unread:hover {
-  background: rgba(59, 130, 246, 0.12);
+  background: var(--theme-background-secondary, rgba(255, 255, 255, 0.03));
 }
 
 .itemContent {
@@ -269,22 +252,19 @@
   align-items: center;
   justify-content: center;
   padding: 6px 12px;
-  background: var(--theme-primary, #3b82f6);
+  background: rgba(255, 255, 255, 0.1);
   border: none;
   border-radius: 6px;
-  color: white;
+  color: var(--theme-text, #ffffff);
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
 }
 
 .viewButton:hover {
-  background: var(--theme-primary-dark, #2563eb);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .deleteButton {
@@ -296,15 +276,15 @@
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: var(--theme-text-secondary, #6b7280);
+  color: var(--theme-text-secondary, rgba(255, 255, 255, 0.4));
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
 .deleteButton:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--theme-text, rgba(255, 255, 255, 0.8));
 }
 
 /* Footer */
