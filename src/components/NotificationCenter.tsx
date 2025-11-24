@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { Bell, X, Check } from 'lucide-react';
-import { BsBellFill } from 'react-icons/bs';
 import { useAuth } from '@/auth/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -170,7 +169,8 @@ export const NotificationCenter: React.FC = () => {
                   onClick={handleMarkAllAsRead}
                   title="모두 읽음 처리"
                 >
-                  <BsBellFill size={18} />
+                  <Check size={16} style={{ marginRight: '4px' }} />
+                  모두 읽음
                 </button>
               )}
             </div>
@@ -276,6 +276,21 @@ export const NotificationCenter: React.FC = () => {
                 <span>•</span>
                 <span>{formatTime(selectedMessage.createdAt)}</span>
               </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button
+                className={styles.confirmButton}
+                onClick={async () => {
+                  // 읽지 않은 메시지면 읽음 처리
+                  if (!selectedMessage.isRead) {
+                    await markNotificationAsRead(selectedMessage.id);
+                  }
+                  setSelectedMessage(null);
+                }}
+              >
+                <Check size={18} style={{ marginRight: '6px' }} />
+                확인
+              </button>
             </div>
           </div>
         </div>,
