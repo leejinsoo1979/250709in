@@ -859,15 +859,17 @@ const ProfileTab: React.FC<ProfileTabProps> = ({ initialSection = 'profile' }) =
                     <>
                       <div className={styles.statItem}>
                         <span>프로젝트</span>
-                        <span>{usageStats.projectCount} / {usageStats.maxProjects}</span>
+                        <span>{usageStats.projectCount} / {usageStats.maxProjects === -1 ? '∞' : usageStats.maxProjects}</span>
                       </div>
                       <div className={styles.statItem}>
                         <span>저장 공간</span>
-                        <span>{formatStorage(usageStats.storageUsed)} / {formatStorage(usageStats.maxStorage)}</span>
+                        <span>
+                          {formatStorage(usageStats.storageUsed)} / {usageStats.maxStorage === -1 ? '∞' : formatStorage(usageStats.maxStorage)}
+                        </span>
                       </div>
                       <div className={styles.statItem}>
                         <span>팀 멤버</span>
-                        <span>{usageStats.teamMemberCount} / {usageStats.maxTeamMembers}</span>
+                        <span>{usageStats.teamMemberCount} / {usageStats.maxTeamMembers === -1 ? '∞' : usageStats.maxTeamMembers}</span>
                       </div>
                     </>
                   ) : (

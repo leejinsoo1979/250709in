@@ -225,7 +225,9 @@ const ProfilePopup: React.FC<ProfilePopupProps> = ({ isOpen, onClose, position }
                 <div className={styles.planStats}>
                   <div className={styles.planStat}>
                     <span className={styles.statLabel}>프로젝트</span>
-                    <span className={styles.statValue}>{usageStats.projectCount} / {usageStats.maxProjects}</span>
+                    <span className={styles.statValue}>
+                      {usageStats.projectCount} / {usageStats.maxProjects === -1 ? '∞' : usageStats.maxProjects}
+                    </span>
                   </div>
                 </div>
               )}
