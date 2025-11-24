@@ -263,10 +263,34 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     // 드래그 고스트 이미지 설정 - 썸네일 이미지를 고스트로 사용
     const thumbnailElement = e.currentTarget as HTMLElement;
     const imgElement = thumbnailElement.querySelector('img');
-    if (imgElement) {
-      // 썸네일 자체를 고스트로 사용 (중앙 기준)
-      const rect = thumbnailElement.getBoundingClientRect();
-      e.dataTransfer.setDragImage(thumbnailElement, rect.width / 2, rect.height / 2);
+    if (imgElement && imgElement.complete) {
+      // 고스트용 이미지 컨테이너 생성 (매번 새로 생성하여 캐싱 방지)
+      const ghostContainer = document.createElement('div');
+      ghostContainer.style.position = 'absolute';
+      ghostContainer.style.left = '-9999px';
+      ghostContainer.style.width = '120px';
+      ghostContainer.style.height = 'auto';
+      ghostContainer.style.padding = '8px';
+      ghostContainer.style.background = 'white';
+      ghostContainer.style.borderRadius = '8px';
+      ghostContainer.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+
+      // 이미지 복제
+      const ghostImg = imgElement.cloneNode(true) as HTMLImageElement;
+      ghostImg.style.width = '100%';
+      ghostImg.style.height = 'auto';
+      ghostImg.style.display = 'block';
+
+      ghostContainer.appendChild(ghostImg);
+      document.body.appendChild(ghostContainer);
+
+      // 고스트 이미지로 설정
+      e.dataTransfer.setDragImage(ghostContainer, 60, 60);
+
+      // 드래그 시작 후 제거
+      setTimeout(() => {
+        document.body.removeChild(ghostContainer);
+      }, 0);
     }
 
     // 전역 드래그 상태 설정
