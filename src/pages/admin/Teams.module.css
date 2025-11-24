@@ -41,8 +41,8 @@
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid var(--theme-border, #e5e7eb);
-  border-top-color: var(--theme-primary, #667eea);
+  border: 4px solid var(--theme-border);
+  border-top-color: var(--theme-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -98,8 +98,8 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--theme-primary, #667eea);
-  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
 .searchInput::placeholder {
@@ -123,15 +123,15 @@
 }
 
 .teamCard:hover {
-  border-color: var(--theme-primary, #667eea);
+  border-color: var(--theme-primary);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px var(--theme-primary-shadow, rgba(102, 126, 234, 0.2));
+  box-shadow: 0 4px 12px var(--theme-shadow);
 }
 
 .teamCardActive {
-  border-color: var(--theme-primary, #667eea);
+  border-color: var(--theme-primary);
   border-width: 3px;
-  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
 .teamCardHeader {
@@ -147,8 +147,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
   border-radius: 12px;
   flex-shrink: 0;
 }
@@ -191,7 +191,7 @@
 }
 
 .stat svg {
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
 }
 
 .teamMeta {
@@ -264,7 +264,7 @@
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  border: 2px solid var(--theme-primary, #667eea);
+  border: 2px solid var(--theme-primary);
 }
 
 .memberAvatar img {
@@ -279,8 +279,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
   font-weight: 600;
   font-size: 16px;
 }
@@ -321,13 +321,13 @@
 }
 
 .roleOwner {
-  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
 }
 
 .roleAdmin {
-  background: var(--theme-primary-light, rgba(102, 126, 234, 0.2));
-  color: var(--theme-primary, #667eea);
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
 }
 
 .roleMember {
@@ -341,8 +341,8 @@
 }
 
 .statusActive {
-  background: var(--theme-success-light, rgba(16, 185, 129, 0.2));
-  color: var(--theme-success, #10b981);
+  background: var(--theme-success-light);
+  color: var(--theme-success);
 }
 
 .statusInactive {
@@ -351,8 +351,8 @@
 }
 
 .statusPending {
-  background: var(--theme-warning-light, rgba(245, 158, 11, 0.2));
-  color: var(--theme-warning, #f59e0b);
+  background: var(--theme-warning-light);
+  color: var(--theme-warning);
 }
 
 /* Empty State */
