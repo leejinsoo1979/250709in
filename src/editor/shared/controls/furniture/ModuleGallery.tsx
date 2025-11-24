@@ -14,7 +14,8 @@ import { useTranslation } from '@/i18n/useTranslation';
 // 가구 아이콘 매핑 - 각 가구 타입에 맞는 이미지 사용
 // import.meta.env.BASE_URL을 사용하여 GitHub Pages base path 자동 적용
 const getImagePath = (filename: string) => {
-  const path = `${import.meta.env.BASE_URL}images/furniture-thumbnails/${filename}`;
+  const encodedFilename = encodeURIComponent(filename);
+  const path = `${import.meta.env.BASE_URL}images/furniture-thumbnails/${encodedFilename}`;
   return path;
 };
 
