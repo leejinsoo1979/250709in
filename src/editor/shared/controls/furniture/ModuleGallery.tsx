@@ -260,6 +260,15 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     e.dataTransfer.setData('text/plain', module.id);
     e.dataTransfer.effectAllowed = 'copy';
 
+    // 드래그 고스트 이미지 설정 - 썸네일 이미지를 고스트로 사용
+    const thumbnailElement = e.currentTarget as HTMLElement;
+    const imgElement = thumbnailElement.querySelector('img');
+    if (imgElement) {
+      // 썸네일 자체를 고스트로 사용 (중앙 기준)
+      const rect = thumbnailElement.getBoundingClientRect();
+      e.dataTransfer.setDragImage(thumbnailElement, rect.width / 2, rect.height / 2);
+    }
+
     // 전역 드래그 상태 설정
     setCurrentDragData(dragData);
   };
