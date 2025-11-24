@@ -91,7 +91,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 6px; /* 패딩 통일 */
+  padding: 2px; /* 패딩 줄여서 이미지 크게 */
   user-select: none;
 }
 
@@ -164,8 +164,8 @@
 }
 
 .thumbnailImage img {
-  max-width: 100%;
-  max-height: 100%;
+  max-width: 130%;
+  max-height: 130%;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
