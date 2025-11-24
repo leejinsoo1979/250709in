@@ -37,7 +37,7 @@
   background: var(--theme-surface, #ffffff);
   border: 1px solid var(--theme-border, #e5e7eb);
   border-radius: 12px;
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
   transition: all 0.2s ease;
 }
 
@@ -85,8 +85,8 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--theme-primary, #667eea);
-  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
 .searchInput::placeholder {
@@ -107,7 +107,7 @@
   width: 40px;
   height: 40px;
   border: 4px solid var(--theme-border, #e5e7eb);
-  border-top-color: var(--theme-primary, #667eea);
+  border-top-color: var(--theme-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -264,7 +264,7 @@
 }
 
 .projectIcon {
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
   flex-shrink: 0;
 }
 
@@ -325,7 +325,7 @@
 
 /* 링크 URL */
 .linkUrl {
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
   text-decoration: none;
   font-size: 13px;
   word-break: break-all;
@@ -333,7 +333,7 @@
 }
 
 .linkUrl:hover {
-  color: var(--theme-primary-dark, #5568d3);
+  color: var(--theme-primary-dark);
   text-decoration: underline;
 }
 
@@ -358,13 +358,13 @@
 
 /* 권한 배지 */
 .permissionOwner {
-  background: var(--theme-primary-light, rgba(102, 126, 234, 0.2));
-  color: var(--theme-primary, #667eea);
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
 }
 
 .permissionEditor {
-  background: var(--theme-success-light, rgba(16, 185, 129, 0.2));
-  color: var(--theme-success, #10b981);
+  background: var(--theme-success-light);
+  color: var(--theme-success);
 }
 
 .permissionViewer {
@@ -374,8 +374,8 @@
 
 /* 상태 배지 */
 .statusActive {
-  background: var(--theme-success-light, rgba(16, 185, 129, 0.2));
-  color: var(--theme-success, #10b981);
+  background: var(--theme-success-light);
+  color: var(--theme-success);
 }
 
 .statusInactive {
@@ -384,8 +384,8 @@
 }
 
 .statusExpired {
-  background: var(--theme-error-light, rgba(239, 68, 68, 0.2));
-  color: var(--theme-error, #ef4444);
+  background: var(--theme-danger-light);
+  color: var(--theme-danger);
 }
 
 /* Empty State */

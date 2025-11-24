@@ -151,7 +151,7 @@
   display: inline-block;
   padding: 8px 16px;
   border-radius: 4px;
-  color: white;
+  color: var(--theme-surface);
   font-weight: 500;
   font-size: 14px;
   width: fit-content;
@@ -284,24 +284,24 @@
 }
 
 .fileLink {
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .fileLink:hover {
-  color: var(--theme-primary-dark, #5568d3);
+  color: var(--theme-primary-dark);
   text-decoration: underline;
 }
 
 .projectLink {
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .projectLink:hover {
-  color: var(--theme-primary-dark, #5568d3);
+  color: var(--theme-primary-dark);
   text-decoration: underline;
 }
 
@@ -362,13 +362,13 @@
 .fileName {
   font-size: 13px;
   font-weight: 500;
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
   text-decoration: none;
   transition: color 0.2s ease;
 }
 
 .fileName:hover {
-  color: var(--theme-primary-dark, #5568d3);
+  color: var(--theme-primary-dark);
   text-decoration: underline;
 }
 

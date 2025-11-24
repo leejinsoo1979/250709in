@@ -57,9 +57,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: var(--theme-surface);
   flex-shrink: 0;
-  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+  background: var(--theme-primary);
 }
 
 .statContent {
@@ -173,7 +173,7 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--theme-primary, #667eea);
+  border-color: var(--theme-primary);
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -204,7 +204,7 @@
 
 .filterButton:hover {
   background: var(--theme-surface-hover, #f9fafb);
-  border-color: var(--theme-primary, #667eea);
+  border-color: var(--theme-primary);
 }
 
 .dropdownArrow {
@@ -351,7 +351,7 @@
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--theme-surface, white);
+  color: var(--theme-surface);
   white-space: nowrap;
 }
 
@@ -365,23 +365,23 @@
 }
 
 .statusActive {
-  background: #d1fae5;
-  color: #065f46;
+  background: var(--theme-success-light);
+  color: var(--theme-success);
 }
 
 .statusCancelled {
-  background: #fee2e2;
-  color: #991b1b;
+  background: var(--theme-danger-light);
+  color: var(--theme-danger);
 }
 
 .statusExpired {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--theme-background);
+  color: var(--theme-text-secondary);
 }
 
 .amount {
   font-weight: 600;
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
 }
 
 .intervalBadge {
@@ -424,7 +424,7 @@
   width: 40px;
   height: 40px;
   border: 3px solid var(--theme-border, #e5e7eb);
-  border-top-color: var(--theme-primary, #667eea);
+  border-top-color: var(--theme-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
   margin-bottom: 16px;

@@ -94,7 +94,7 @@
 }
 
 .radioLabel:hover {
-  border-color: var(--theme-primary, #667eea);
+  border-color: var(--theme-primary);
   background: var(--theme-surface, #ffffff);
 }
 
@@ -102,11 +102,11 @@
   cursor: pointer;
   width: 18px;
   height: 18px;
-  accent-color: var(--theme-primary, #667eea);
+  accent-color: var(--theme-primary);
 }
 
 .radioLabel input[type="radio"]:checked + svg {
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
 }
 
 .radioLabel span {
@@ -169,7 +169,7 @@
   cursor: pointer;
   width: 18px;
   height: 18px;
-  accent-color: var(--theme-primary, #667eea);
+  accent-color: var(--theme-primary);
 }
 
 /* 사용자 목록 */
@@ -199,7 +199,7 @@
   cursor: pointer;
   width: 18px;
   height: 18px;
-  accent-color: var(--theme-primary, #667eea);
+  accent-color: var(--theme-primary);
 }
 
 .userAvatar {
@@ -222,8 +222,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
   font-weight: 600;
   font-size: 14px;
 }
@@ -263,8 +263,8 @@
 
 .input:focus {
   outline: none;
-  border-color: var(--theme-primary, #667eea);
-  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
 /* Select 드롭다운 */
@@ -311,8 +311,8 @@ select.input:focus {
 
 .uploadButton:hover:not(:disabled) {
   background: var(--theme-background, #f9fafb);
-  border-color: var(--theme-primary, #667eea);
-  color: var(--theme-primary, #667eea);
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
 }
 
 .uploadButton:disabled {
@@ -339,7 +339,7 @@ select.input:focus {
   margin-left: auto;
   font-size: 13px;
   font-weight: 400;
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
 }
 
 .dateInput {
@@ -355,8 +355,8 @@ select.input:focus {
 
 .dateInput:focus {
   outline: none;
-  border-color: var(--theme-primary, #667eea);
-  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
 /* 달력 팝업 테마 */
@@ -398,8 +398,8 @@ select.input:focus {
 
 .textarea:focus {
   outline: none;
-  border-color: var(--theme-primary, #667eea);
-  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
 /* 발송 버튼 */
@@ -409,8 +409,8 @@ select.input:focus {
   justify-content: center;
   gap: 8px;
   padding: 14px 24px;
-  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
   border: none;
   border-radius: 8px;
   font-size: 15px;
@@ -421,7 +421,7 @@ select.input:focus {
 
 .sendButton:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 16px var(--theme-primary-shadow, rgba(102, 126, 234, 0.3));
+  box-shadow: 0 8px 16px var(--theme-shadow);
 }
 
 .sendButton:disabled {
@@ -443,7 +443,7 @@ select.input:focus {
   width: 40px;
   height: 40px;
   border: 4px solid var(--theme-border, #e5e7eb);
-  border-top-color: var(--theme-primary, #667eea);
+  border-top-color: var(--theme-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -498,7 +498,7 @@ select.input:focus {
 }
 
 .messageCard:hover {
-  border-color: var(--theme-primary, #667eea);
+  border-color: var(--theme-primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -520,8 +520,8 @@ select.input:focus {
 .messageBadge {
   display: inline-block;
   padding: 4px 12px;
-  background: var(--theme-primary-light, rgba(102, 126, 234, 0.2));
-  color: var(--theme-primary, #667eea);
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
   border-radius: 12px;
   font-size: 12px;
   font-weight: 600;
@@ -575,8 +575,8 @@ select.input:focus {
 }
 
 .tabActive {
-  color: var(--theme-primary, #667eea);
-  border-bottom-color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
+  border-bottom-color: var(--theme-primary);
 }
 
 /* 폼 행 */
@@ -596,7 +596,7 @@ select.input:focus {
 }
 
 .popupCard:hover {
-  border-color: var(--theme-primary, #667eea);
+  border-color: var(--theme-primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -613,8 +613,8 @@ select.input:focus {
   gap: 4px;
   padding: 4px 12px;
   background: var(--theme-surface, #ffffff);
-  border: 1px solid var(--theme-primary, #667eea);
-  color: var(--theme-primary, #667eea);
+  border: 1px solid var(--theme-primary);
+  color: var(--theme-primary);
   border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
@@ -689,8 +689,8 @@ select.input:focus {
 .actionButton {
   padding: 8px 16px;
   background: var(--theme-surface, #ffffff);
-  color: var(--theme-primary, #667eea);
-  border: 1px solid var(--theme-primary, #667eea);
+  color: var(--theme-primary);
+  border: 1px solid var(--theme-primary);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
@@ -699,8 +699,8 @@ select.input:focus {
 }
 
 .actionButton:hover {
-  background: var(--theme-primary, #667eea);
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
 }
 
 .deleteButton {
