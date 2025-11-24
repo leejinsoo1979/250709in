@@ -501,8 +501,8 @@ const Dashboard = () => {
             >
               <defs>
                 <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor={themeColor} stopOpacity={0.8}/>
-                  <stop offset="95%" stopColor={themeColor} stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor={themeColor} stopOpacity={0.8} />
+                  <stop offset="95%" stopColor={themeColor} stopOpacity={0.1} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke={getThemeColor('--theme-border')} />
@@ -563,7 +563,7 @@ const Dashboard = () => {
               <Pie
                 data={[
                   { name: '활성 사용자', value: stats.activeUsers, color: themeColor },
-                  { name: '비활성 사용자', value: Math.max(0, stats.totalUsers - stats.activeUsers), color: getThemeColor('--theme-border') }
+                  { name: '비활성 사용자', value: Math.max(0, stats.totalUsers - stats.activeUsers), color: getThemeColor('--theme-text-secondary') }
                 ]}
                 cx="50%"
                 cy="50%"
@@ -575,7 +575,7 @@ const Dashboard = () => {
               >
                 {[
                   { name: '활성 사용자', value: stats.activeUsers, color: themeColor },
-                  { name: '비활성 사용자', value: Math.max(0, stats.totalUsers - stats.activeUsers), color: getThemeColor('--theme-border') }
+                  { name: '비활성 사용자', value: Math.max(0, stats.totalUsers - stats.activeUsers), color: getThemeColor('--theme-text-secondary') }
                 ].map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
