@@ -46,6 +46,8 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-lower-cabinet-2tier': getImagePath('듀얼 하부장 2단형.png'),
 };
 
+console.log('📦 FURNITURE_ICONS 생성됨:', FURNITURE_ICONS);
+
 // 모듈 타입 정의
 type ModuleType = 'all' | 'single' | 'dual';
 
@@ -1042,7 +1044,19 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
     const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거
-    return FURNITURE_ICONS[moduleKey] || FURNITURE_ICONS['single-2drawer-hanging'];
+    const result = FURNITURE_ICONS[moduleKey] || FURNITURE_ICONS['single-2drawer-hanging'];
+
+    // 상부장/하부장만 로그 출력
+    if (moduleKey.includes('upper-cabinet') || moduleKey.includes('lower-cabinet')) {
+      console.log('🔍', {
+        moduleId,
+        moduleKey,
+        found: !!FURNITURE_ICONS[moduleKey],
+        path: result
+      });
+    }
+
+    return result;
   };
 
   // 가구 유효성 검사 (간단 버전)
