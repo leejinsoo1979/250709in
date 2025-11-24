@@ -16,6 +16,7 @@ import { updateProfile } from 'firebase/auth';
 import { db, auth } from './config';
 import { getCurrentUserAsync } from './auth';
 import { UserProfile } from './types';
+import { getUserPlan, getPlanLimits, PlanType } from './plans';
 
 // 컬렉션 참조
 const USER_PROFILES_COLLECTION = 'userProfiles';
@@ -35,6 +36,10 @@ export const createOrUpdateUserProfile = async (
     // 기존 프로필 확인
     const existingProfile = await getDoc(profileRef);
     
+    // 사용자 플랜 가져오기 (기본값: free)
+    const userPlan: PlanType = await getUserPlan(user.uid);
+    const planLimits = getPlanLimits(userPlan);
+
     const defaultProfile: UserProfile = {
       uid: user.uid,
       email: user.email || '',
@@ -44,7 +49,7 @@ export const createOrUpdateUserProfile = async (
       company: '',
       website: '',
       location: '',
-      credits: 200, // 무료 플랜 기본 크레딧
+      credits: planLimits.credits, // 플랜별 기본 크레딧
       teamNotifications: true,
       shareNotifications: true,
       emailNotifications: true,
@@ -139,15 +144,17 @@ export const getUserProfile = async (userId?: string): Promise<{ profile: UserPr
 
     const profileData = profileSnap.data() as UserProfile;
 
-    // credits 필드가 없는 기존 사용자 처리 (자동 초기화)
+    // credits 필드가 없는 기존 사용자 처리 (플랜별 크레딧으로 초기화)
     if (profileData.credits === undefined) {
-      console.log('⚠️ 기존 사용자 credits 필드 없음 - 200으로 초기화');
+      const userPlan: PlanType = await getUserPlan(targetUserId);
+      const planLimits = getPlanLimits(userPlan);
+      console.log(`⚠️ 기존 사용자 credits 필드 없음 - ${userPlan} 플랜 크레딧 ${planLimits.credits}으로 초기화`);
       const profileRef = doc(db, USER_PROFILES_COLLECTION, targetUserId);
       await updateDoc(profileRef, {
-        credits: 200,
+        credits: planLimits.credits,
         updatedAt: serverTimestamp()
       });
-      profileData.credits = 200;
+      profileData.credits = planLimits.credits;
     }
 
     // 다른 사용자의 프로필을 요청한 경우 공개 설정 확인
@@ -563,6 +570,10 @@ export const getUsageStats = async (): Promise<{
       return { stats: null, error: '로그인이 필요합니다.' };
     }
 
+    // 사용자 플랜 가져오기
+    const userPlan: PlanType = await getUserPlan(user.uid);
+    const planLimits = getPlanLimits(userPlan);
+
     // 프로젝트 수 계산
     const projectsQuery = query(
       collection(db, 'projects'),
@@ -596,14 +607,14 @@ export const getUsageStats = async (): Promise<{
       }
     });
 
-    // 무료 플랜 제한
+    // 플랜별 제한 적용
     const stats: UsageStats = {
       projectCount,
       storageUsed,
       teamMemberCount,
-      maxProjects: 5,
-      maxStorage: 500 * 1024 * 1024, // 500MB
-      maxTeamMembers: 1
+      maxProjects: planLimits.maxProjects,
+      maxStorage: planLimits.maxStorage,
+      maxTeamMembers: planLimits.maxTeamMembers
     };
 
     return { stats, error: null };
