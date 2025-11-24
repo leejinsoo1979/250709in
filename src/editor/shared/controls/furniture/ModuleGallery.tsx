@@ -1049,7 +1049,14 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
     const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거
-    return FURNITURE_ICONS[moduleKey] || FURNITURE_ICONS['single-2drawer-hanging'];
+    const path = FURNITURE_ICONS[moduleKey] || FURNITURE_ICONS['single-2drawer-hanging'];
+
+    // 상부장/하부장 경로 확인
+    if (moduleKey.includes('cabinet')) {
+      console.log('🎨 THUMBNAIL PATH:', moduleKey, '→', path);
+    }
+
+    return path;
   };
 
   // 가구 유효성 검사 (간단 버전)
