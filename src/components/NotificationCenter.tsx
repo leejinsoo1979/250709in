@@ -280,18 +280,23 @@ export const NotificationCenter: React.FC = () => {
             <div className={styles.modalFooter}>
               <button
                 className={styles.confirmButton}
-                onClick={async (e) => {
+                onClick={(e) => {
                   e.stopPropagation();
+                  e.preventDefault();
                   console.log('✅ 확인 버튼 클릭됨');
-                  // 읽지 않은 메시지면 읽음 처리
-                  if (!selectedMessage.isRead) {
-                    console.log('📖 읽지 않은 메시지 → 읽음 처리:', selectedMessage.id);
-                    await markNotificationAsRead(selectedMessage.id);
-                  } else {
-                    console.log('📖 이미 읽은 메시지');
-                  }
-                  console.log('❌ 모달 닫기');
+
+                  // 즉시 모달 닫기
+                  const messageToMark = selectedMessage;
                   setSelectedMessage(null);
+                  console.log('❌ 모달 닫힘');
+
+                  // 백그라운드에서 읽음 처리
+                  if (!messageToMark.isRead) {
+                    console.log('📖 백그라운드에서 읽음 처리:', messageToMark.id);
+                    markNotificationAsRead(messageToMark.id).catch(err => {
+                      console.error('❌ 읽음 처리 실패:', err);
+                    });
+                  }
                 }}
               >
                 <Check size={18} style={{ marginRight: '6px' }} />
