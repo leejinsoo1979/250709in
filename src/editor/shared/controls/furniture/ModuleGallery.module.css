@@ -170,11 +170,12 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
-/* 상부장/하부장만 이미지 더 크게 */
+/* 상부장/하부장만 이미지 더 크게 + 색온도 낮춤 (차가운 톤) */
 .thumbnailItem[data-category="upper"] .thumbnailImage img,
 .thumbnailItem[data-category="lower"] .thumbnailImage img {
   max-width: 160%;
   max-height: 160%;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1)) brightness(0.95) saturate(0.9) hue-rotate(-5deg);
 }
 
 /* 비활성화 오버레이 */
