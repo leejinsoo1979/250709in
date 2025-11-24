@@ -14,9 +14,9 @@ import { useTranslation } from '@/i18n/useTranslation';
 // 가구 아이콘 매핑 - 각 가구 타입에 맞는 이미지 사용
 // import.meta.env.BASE_URL을 사용하여 GitHub Pages base path 자동 적용
 const getImagePath = (filename: string) => {
-  const encodedFilename = encodeURIComponent(filename);
   // public 폴더의 파일은 /로 시작하는 절대 경로로 접근
-  return `/images/furniture-thumbnails/${encodedFilename}`;
+  // 최신 브라우저는 URL에 한글이 있어도 자동으로 인코딩함
+  return `/images/furniture-thumbnails/${filename}`;
 };
 
 const FURNITURE_ICONS: Record<string, string> = {
@@ -45,8 +45,6 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-lower-cabinet-basic': getImagePath('듀얼 하부장.png'),
   'dual-lower-cabinet-2tier': getImagePath('듀얼 하부장 2단형.png'),
 };
-
-console.log('📦 FURNITURE_ICONS 생성됨:', FURNITURE_ICONS);
 
 // 모듈 타입 정의
 type ModuleType = 'all' | 'single' | 'dual';
@@ -1044,19 +1042,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
     const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거
-    const result = FURNITURE_ICONS[moduleKey] || FURNITURE_ICONS['single-2drawer-hanging'];
-
-    // 상부장/하부장만 로그 출력
-    if (moduleKey.includes('upper-cabinet') || moduleKey.includes('lower-cabinet')) {
-      console.log('🔍', {
-        moduleId,
-        moduleKey,
-        found: !!FURNITURE_ICONS[moduleKey],
-        path: result
-      });
-    }
-
-    return result;
+    return FURNITURE_ICONS[moduleKey] || FURNITURE_ICONS['single-2drawer-hanging'];
   };
 
   // 가구 유효성 검사 (간단 버전)
