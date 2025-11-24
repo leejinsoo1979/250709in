@@ -43,10 +43,10 @@ import ConvertModal from './components/ConvertModal';
 import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
 import { ShareLinkModal } from '@/components/ShareLinkModal';
 
-import { 
+import {
   WidthControl,
   HeightControl,
-  InstallTypeControls, 
+  InstallTypeControls,
   SurroundControls,
   BaseControls
 } from '@/editor/shared/controls';
@@ -121,6 +121,9 @@ const Configurator: React.FC = () => {
   // 3D 씬 참조 (GLB 내보내기용)
   const sceneRef = useRef<any>(null);
 
+  // 최초 썸네일 생성 여부 추적
+  const hasGeneratedInitialThumbnailRef = useRef(false);
+
   // GLB 내보내기 훅
   const { exportToGLB, canExportGLB } = useGLBExport();
 
@@ -139,6 +142,40 @@ const Configurator: React.FC = () => {
       console.log('📸 읽기 전용 모드: 3D 정면 뷰로 초기화 (섬네일과 동일)');
     }
   }, [isReadOnly]);
+
+  // 프로젝트 로드 후 자동 썸네일 생성 (최초 1회만)
+  useEffect(() => {
+    const generateInitialThumbnail = async () => {
+      // 이미 생성했거나, 로딩 중이거나, projectId가 없으면 스킵
+      if (hasGeneratedInitialThumbnailRef.current || loading || !currentProjectId || isReadOnlyMode) {
+        return;
+      }
+
+      // 3D 뷰어 렌더링을 기다림 (2초 대기)
+      await new Promise(resolve => setTimeout(resolve, 2000));
+
+      try {
+        hasGeneratedInitialThumbnailRef.current = true;
+        console.log('📸 최초 썸네일 자동 생성 시작');
+
+        const thumbnail = await captureProjectThumbnail();
+        if (thumbnail) {
+          const { dataURLToBlob } = await import('@/editor/shared/utils/thumbnailCapture');
+          const thumbnailBlob = dataURLToBlob(thumbnail);
+
+          await updateProject(currentProjectId, {
+            thumbnail: thumbnailBlob
+          });
+
+          console.log('📸 최초 썸네일 자동 생성 완료');
+        }
+      } catch (error) {
+        console.error('📸 최초 썸네일 생성 실패:', error);
+      }
+    };
+
+    generateInitialThumbnail();
+  }, [loading, currentProjectId, isReadOnlyMode]);
 
   // 뷰어 컨트롤 상태들 - view2DDirection과 showDimensions는 UIStore 사용
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
@@ -189,7 +226,7 @@ const Configurator: React.FC = () => {
       if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA')) {
         return;
       }
-      
+
       // Ctrl+Z / Cmd+Z로 Undo
       if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
         event.preventDefault();
@@ -197,16 +234,16 @@ const Configurator: React.FC = () => {
         headerUndo?.click();
         return;
       }
-      
+
       // Ctrl+Y / Cmd+Y 또는 Ctrl+Shift+Z / Cmd+Shift+Z로 Redo
-      if (((event.ctrlKey || event.metaKey) && event.key === 'y') || 
-          ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'z')) {
+      if (((event.ctrlKey || event.metaKey) && event.key === 'y') ||
+        ((event.ctrlKey || event.metaKey) && event.shiftKey && event.key === 'z')) {
         event.preventDefault();
         const headerRedo = document.querySelector('[title="다시 실행 (Ctrl+Y)"]') as HTMLButtonElement;
         headerRedo?.click();
         return;
       }
-      
+
       // D 키로 도어 열기/닫기 토글
       if (event.key === 'd' || event.key === 'D') {
         event.preventDefault();
@@ -246,38 +283,38 @@ const Configurator: React.FC = () => {
         const targetColumn = spaceInfo.columns?.find(col => col.id === activePopup.id);
         if (targetColumn && (event.key === 'ArrowLeft' || event.key === 'ArrowRight')) {
           event.preventDefault();
-          
+
           const currentX = targetColumn.position[0]; // Three.js 단위 (meters)
           const spaceWidthM = spaceInfo.width * 0.01; // mm to meters
           const columnWidthM = targetColumn.width * 0.01; // mm to meters
-          
+
           // Shift 키가 눌려있으면 빠른 이동 (50mm), 그렇지 않으면 정밀 이동 (5mm)
           const moveStep = event.shiftKey ? 0.05 : 0.005; // Shift: 50mm, 일반: 5mm
-          
+
           let newX = currentX;
           if (event.key === 'ArrowLeft') {
-            newX = Math.max(-(spaceWidthM/2) + (columnWidthM/2), currentX - moveStep);
+            newX = Math.max(-(spaceWidthM / 2) + (columnWidthM / 2), currentX - moveStep);
           } else if (event.key === 'ArrowRight') {
-            newX = Math.min((spaceWidthM/2) - (columnWidthM/2), currentX + moveStep);
+            newX = Math.min((spaceWidthM / 2) - (columnWidthM / 2), currentX + moveStep);
           }
-          
+
           // 컬럼 위치 업데이트
           updateColumn(activePopup.id, { position: [newX, targetColumn.position[1], targetColumn.position[2]] });
-          
-          console.log('⌨️ 컬럼 키보드 이동:', { 
-            columnId: activePopup.id, 
-            direction: event.key, 
+
+          console.log('⌨️ 컬럼 키보드 이동:', {
+            columnId: activePopup.id,
+            direction: event.key,
             moveStep: moveStep,
             stepSize: event.shiftKey ? '50mm (빠름)' : '5mm (정밀)',
-            oldX: currentX, 
-            newX 
+            oldX: currentX,
+            newX
           });
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
-    
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
@@ -288,7 +325,7 @@ const Configurator: React.FC = () => {
     setViewMode('3D');
     setView2DDirection('front');
   }, [setViewMode, setView2DDirection]);
-  
+
   // MaterialConfig 변경 모니터링
   useEffect(() => {
     if (spaceInfo.materialConfig) {
@@ -311,19 +348,19 @@ const Configurator: React.FC = () => {
   const updateFrameSize = (property: 'left' | 'right' | 'top', value: number) => {
     // 엔드패널인 경우 값 변경 불가 (20mm 고정)
     if (property === 'left' && (
-      (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) || 
+      (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
       spaceInfo.installType === 'freestanding'
     )) {
       return; // 좌측 엔드패널은 20mm 고정
     }
-    
+
     if (property === 'right' && (
-      (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) || 
+      (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
       spaceInfo.installType === 'freestanding'
     )) {
       return; // 우측 엔드패널은 20mm 고정
     }
-    
+
     const currentFrameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 50 };
     handleSpaceInfoUpdate({
       frameSize: {
@@ -337,19 +374,19 @@ const Configurator: React.FC = () => {
   const calculateDoorRange = (spaceWidth: number) => {
     const FRAME_MARGIN = 100; // 양쪽 50mm씩
     const usableWidth = spaceWidth - FRAME_MARGIN;
-    
+
     // 슬롯 크기 제약 조건 (400mm ~ 600mm) - 이 범위를 절대 벗어날 수 없음
     const MIN_SLOT_WIDTH = 400;
     const MAX_SLOT_WIDTH = 600;
-    
+
     // 엄격한 제약 조건: 슬롯이 400mm 미만이 되거나 600mm 초과가 되는 것을 방지
     const minPossible = Math.max(1, Math.ceil(usableWidth / MAX_SLOT_WIDTH)); // 슬롯 최대 600mm 엄격히 제한
     const maxPossible = Math.min(20, Math.floor(usableWidth / MIN_SLOT_WIDTH)); // 슬롯 최소 400mm 엄격히 제한
-    
+
     // 실제 슬롯 크기가 400-600mm 범위 내에 있는지 검증
     const finalMin = Math.max(minPossible, 1);
     const finalMax = Math.min(maxPossible, 20);
-    
+
     // 불가능한 경우 (공간이 너무 작아서 400mm 슬롯도 만들 수 없음)
     if (finalMin > finalMax) {
       return {
@@ -358,7 +395,7 @@ const Configurator: React.FC = () => {
         ideal: 1
       };
     }
-    
+
     return {
       min: finalMin,
       max: finalMax,
@@ -369,17 +406,17 @@ const Configurator: React.FC = () => {
   const getCurrentColumnCount = () => {
     // 단내림이 활성화된 경우 메인 구간의 폭을 기준으로 계산
     let effectiveWidth = spaceInfo.width || 4800;
-    
+
     if (spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 활성화된 경우 전체 폭에서 단내림 폭을 뺀 나머지가 메인 구간
       effectiveWidth = effectiveWidth - (spaceInfo.droppedCeiling.width || 900);
     }
-    
+
     const range = calculateDoorRange(effectiveWidth);
-    
+
     // 기본값을 최소값으로 설정 (ideal 대신 min 사용)
     let count = range.min;
-    
+
     // 단내림이 활성화된 경우 메인구간 도어 개수 사용
     if (spaceInfo.droppedCeiling?.enabled) {
       if (spaceInfo.mainDoorCount) {
@@ -392,32 +429,32 @@ const Configurator: React.FC = () => {
       // 단내림이 비활성화된 경우 customColumnCount 우선 사용, 없으면 최소값
       count = spaceInfo.customColumnCount || derivedSpaceStore.columnCount || range.min;
     }
-    
+
     // 반드시 400-600mm 범위 안에서만 동작하도록 강제
     count = Math.max(range.min, Math.min(range.max, count));
-    
+
     // 실제 슬롯 크기 검증
     const usableWidth = effectiveWidth - 100;
     const slotWidth = usableWidth / count;
-    
+
     // 슬롯 크기가 400-600mm 범위를 벗어나면 조정
     if (slotWidth < 400) {
       count = Math.floor(usableWidth / 400);
     } else if (slotWidth > 600) {
       count = Math.ceil(usableWidth / 600);
     }
-    
+
     return Math.max(range.min, Math.min(range.max, count));
   };
 
 
 
   // 특수 듀얼 가구 배치 여부 확인
-  const hasSpecialDualFurniture = placedModules.some(module => 
-    module.moduleId.includes('dual-2drawer-styler') || 
+  const hasSpecialDualFurniture = placedModules.some(module =>
+    module.moduleId.includes('dual-2drawer-styler') ||
     module.moduleId.includes('dual-4drawer-pantshanger')
   );
-  
+
   console.log('🔧 Configurator - hasSpecialDualFurniture:', hasSpecialDualFurniture);
   console.log('🔧 Configurator - placedModules:', placedModules);
 
@@ -463,7 +500,7 @@ const Configurator: React.FC = () => {
         if (spaceConfig.installType === 'built-in') {
           spaceConfig.installType = 'builtin';
         }
-        
+
         // wallConfig가 없으면 installType에 맞게 기본값 설정
         if (!spaceConfig.wallConfig) {
           switch (spaceConfig.installType) {
@@ -478,13 +515,13 @@ const Configurator: React.FC = () => {
               break;
           }
         }
-        
+
         // mainDoorCount와 customColumnCount를 undefined로 초기화하여 자동 계산 활성화
         spaceConfig.mainDoorCount = undefined;
         spaceConfig.droppedCeilingDoorCount = undefined;
         spaceConfig.customColumnCount = undefined;
         console.log('🔄 Firebase 프로젝트 로드 시 컬럼 관련 값 초기화');
-        
+
         setSpaceInfo(spaceConfig);
         setPlacedModules(project.furniture?.placedModules || []);
         setCurrentProjectId(projectId);
@@ -535,7 +572,7 @@ const Configurator: React.FC = () => {
         console.log('✅ 프로젝트 로드 성공:', project.title);
         console.log('🪑 배치된 가구 개수:', project.furniture?.placedModules?.length || 0);
         console.log('🎨 로드된 materialConfig:', project.spaceConfig.materialConfig);
-        
+
         // 프로젝트 로드 후 derivedSpaceStore 명시적 재계산
         console.log('🔄 [프로젝트 로드 후] derivedSpaceStore 강제 재계산');
         derivedSpaceStore.recalculateFromSpaceInfo(project.spaceConfig);
@@ -569,12 +606,12 @@ const Configurator: React.FC = () => {
     if (obj === null || obj === undefined) {
       return null;
     }
-    
+
     if (Array.isArray(obj)) {
       // 배열의 각 요소를 재귀적으로 처리하되, null이 아닌 요소만 유지
       return obj.map(removeUndefinedValues).filter(item => item !== null);
     }
-    
+
     if (typeof obj === 'object') {
       const result: any = {};
       for (const [key, value] of Object.entries(obj)) {
@@ -588,7 +625,7 @@ const Configurator: React.FC = () => {
       }
       return result;
     }
-    
+
     return obj;
   };
 
@@ -661,10 +698,10 @@ const Configurator: React.FC = () => {
     if (effectiveDesignFileId && !currentDesignFileId) {
       setCurrentDesignFileId(effectiveDesignFileId);
     }
-    
+
     setSaving(true);
     setSaveStatus('idle');
-    
+
     try {
       console.log('💾 [DEBUG] 저장할 basicInfo:', basicInfo);
       console.log('💾 [DEBUG] 저장할 spaceInfo 요약:', {
@@ -672,7 +709,7 @@ const Configurator: React.FC = () => {
         height: spaceInfo.height,
         materialConfig: spaceInfo.materialConfig
       });
-      
+
       // furnitureStore의 현재 상태 직접 확인
       const currentFurnitureState = useFurnitureStore.getState().placedModules;
       console.log('💾 [DEBUG] furnitureStore 현재 상태:', {
@@ -686,7 +723,7 @@ const Configurator: React.FC = () => {
           isLowerCabinet: m.moduleId?.includes('lower-cabinet')
         }))
       });
-      
+
       console.log('💾 [DEBUG] 저장할 placedModules 개수:', placedModules.length);
       console.log('💾 [DEBUG] 저장할 placedModules 상세:', placedModules.map(m => {
         const moduleData = m.moduleId ? getModuleById(m.moduleId, calculateInternalSpace(spaceInfo), spaceInfo) : null;
@@ -702,7 +739,7 @@ const Configurator: React.FC = () => {
           customWidth: m.customWidth
         };
       }));
-      
+
       // 썸네일 생성
       let thumbnail;
       try {
@@ -718,7 +755,7 @@ const Configurator: React.FC = () => {
       }
 
       const firebaseConfigured = isFirebaseConfigured();
-      
+
       if (firebaseConfigured && user) {
         console.log('💾 [DEBUG] Firebase 저장 모드 진입');
 
@@ -822,19 +859,21 @@ const Configurator: React.FC = () => {
                 console.log('🔗 저장 후 URL 업데이트:', newUrl);
               }
 
-              // BroadcastChannel로 디자인 파일 업데이트 알림
-              try {
-                const channel = new BroadcastChannel('project-updates');
-                channel.postMessage({
-                  type: 'DESIGN_FILE_UPDATED',
-                  projectId: effectiveProjectId,
-                  designFileId: effectiveDesignFileId,
-                  timestamp: Date.now()
-                });
-                console.log('📡 디자인 파일 업데이트 알림 전송');
-                channel.close();
-              } catch (broadcastError) {
-                console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+              // BroadcastChannel로 디자인 파일 업데이트 알림 (readonly 모드에서는 전송하지 않음)
+              if (!isReadOnly) {
+                try {
+                  const channel = new BroadcastChannel('project-updates');
+                  channel.postMessage({
+                    type: 'DESIGN_FILE_UPDATED',
+                    projectId: effectiveProjectId,
+                    designFileId: effectiveDesignFileId,
+                    timestamp: Date.now()
+                  });
+                  console.log('📡 디자인 파일 업데이트 알림 전송');
+                  channel.close();
+                } catch (broadcastError) {
+                  console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+                }
               }
             }
           } else {
@@ -880,19 +919,21 @@ const Configurator: React.FC = () => {
               setSaveStatus('success');
               console.log('✅ 새 디자인 파일 생성 및 저장 성공');
 
-              // BroadcastChannel로 디자인 파일 생성 알림
-              try {
-                const channel = new BroadcastChannel('project-updates');
-                channel.postMessage({
-                  type: 'DESIGN_FILE_UPDATED',
-                  projectId: effectiveProjectId,
-                  designFileId: designFileId,
-                  timestamp: Date.now()
-                });
-                console.log('📡 새 디자인 파일 생성 알림 전송');
-                channel.close();
-              } catch (broadcastError) {
-                console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+              // BroadcastChannel로 디자인 파일 생성 알림 (readonly 모드에서는 전송하지 않음)
+              if (!isReadOnly) {
+                try {
+                  const channel = new BroadcastChannel('project-updates');
+                  channel.postMessage({
+                    type: 'DESIGN_FILE_UPDATED',
+                    projectId: effectiveProjectId,
+                    designFileId: designFileId,
+                    timestamp: Date.now()
+                  });
+                  console.log('📡 새 디자인 파일 생성 알림 전송');
+                  channel.close();
+                } catch (broadcastError) {
+                  console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+                }
               }
 
               // URL 업데이트 (프로젝트명과 디자인파일명 포함)
@@ -908,25 +949,27 @@ const Configurator: React.FC = () => {
             }
           }
 
-          // 다른 창(대시보드)에 프로젝트 업데이트 알림
-          try {
-            const channel = new BroadcastChannel('project-updates');
-            channel.postMessage({
-              type: 'PROJECT_SAVED',
-              projectId: effectiveProjectId,
-              timestamp: Date.now()
-            });
-            console.log('💾 [DEBUG] BroadcastChannel 알림 전송 완료');
-            channel.close();
-          } catch (broadcastError) {
-            console.warn('💾 [WARN] BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+          // 다른 창(대시보드)에 프로젝트 업데이트 알림 (readonly 모드에서는 전송하지 않음)
+          if (!isReadOnly) {
+            try {
+              const channel = new BroadcastChannel('project-updates');
+              channel.postMessage({
+                type: 'PROJECT_SAVED',
+                projectId: effectiveProjectId,
+                timestamp: Date.now()
+              });
+              console.log('💾 [DEBUG] BroadcastChannel 알림 전송 완료');
+              channel.close();
+            } catch (broadcastError) {
+              console.warn('💾 [WARN] BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+            }
           }
         } catch (firebaseError) {
           console.error('💾 [ERROR] Firebase 저장 중 예외:', firebaseError);
           setSaveStatus('error');
           alert('디자인 파일 저장 중 오류가 발생했습니다: ' + firebaseError.message);
         }
-        
+
         setTimeout(() => setSaveStatus('idle'), 3000);
       } else {
         console.log('💾 [DEBUG] Firebase 인증 필요');
@@ -1051,11 +1094,11 @@ const Configurator: React.FC = () => {
   // 새 프로젝트 생성 함수
   const handleNewProject = async () => {
     console.log('🆕 [DEBUG] handleNewProject 함수 시작');
-    
+
     try {
       const confirmed = confirm('현재 작업 내용이 사라집니다. 새 디자인을 시작하시겠습니까?');
       console.log('🆕 [DEBUG] 사용자 확인 응답:', confirmed);
-      
+
       if (!confirmed) {
         console.log('🆕 [DEBUG] 사용자가 취소함');
         return;
@@ -1063,7 +1106,7 @@ const Configurator: React.FC = () => {
 
       console.log('🆕 [DEBUG] 새 프로젝트 생성 시작');
       setSaving(true);
-      
+
       // 기본 공간 설정 (Firebase 호환을 위해 undefined 값 제거)
       const defaultSpaceConfig = {
         width: 3600,
@@ -1094,10 +1137,10 @@ const Configurator: React.FC = () => {
       console.log('🆕 [DEBUG] Firebase 설정 확인:', firebaseConfigured);
       console.log('🆕 [DEBUG] 사용자 로그인 상태:', !!user);
       console.log('🆕 [DEBUG] 사용자 정보:', user ? { email: user.email, uid: user.uid } : 'null');
-      
+
       if (firebaseConfigured && user) {
         console.log('🆕 [DEBUG] Firebase 모드로 진행');
-        
+
         try {
           const projectData = {
             title: 'Untitled',
@@ -1108,7 +1151,7 @@ const Configurator: React.FC = () => {
             },
             ...(thumbnail && { thumbnail })
           };
-          
+
           console.log('🆕 [DEBUG] createProject 호출 시작, 정리된 데이터:', projectData);
           const result = await createProject(projectData);
           console.log('🆕 [DEBUG] createProject 결과:', result);
@@ -1121,19 +1164,19 @@ const Configurator: React.FC = () => {
 
           if (result.id) {
             console.log('🆕 [DEBUG] Firebase 프로젝트 생성 성공:', result.id);
-            
+
             // 상태 업데이트
             setBasicInfo({ title: 'Untitled', location: '' });
             setSpaceInfo(defaultSpaceConfig);
             setPlacedModules([]);
             setCurrentProjectId(result.id);
-            
+
             // derivedSpaceStore 재계산
             derivedSpaceStore.recalculateFromSpaceInfo(defaultSpaceConfig);
-            
+
             // URL 업데이트
             navigate(`/configurator?projectId=${result.id}`, { replace: true });
-            
+
             console.log('✅ 새 Firebase 프로젝트 "Untitled" 생성 완료:', result.id);
             alert('새 프로젝트가 생성되었습니다!');
           } else {
@@ -1163,10 +1206,10 @@ const Configurator: React.FC = () => {
     if (newTitle && newTitle.trim()) {
       setSaving(true);
       setSaveStatus('idle');
-      
+
       try {
         let thumbnail = await captureProjectThumbnail();
-        
+
         if (!thumbnail) {
           console.log('📸 3D 캔버스 캡처 실패, 기본 썸네일 생성');
           thumbnail = generateDefaultThumbnail(spaceInfo, placedModules.length);
@@ -1175,24 +1218,24 @@ const Configurator: React.FC = () => {
         if (isFirebaseConfigured() && user) {
           // 현재 프로젝트가 없으면 먼저 프로젝트 생성
           let projectIdToUse = currentProjectId;
-          
+
           if (!projectIdToUse) {
             // 프로젝트가 없으면 새 프로젝트 생성
             const { id: newProjectId, error: projectError } = await createProject({
               title: basicInfo.title || '새 프로젝트'
             });
-            
+
             if (projectError || !newProjectId) {
               console.error('프로젝트 생성 실패:', projectError);
               setSaveStatus('error');
               alert('프로젝트 생성에 실패했습니다: ' + projectError);
               return;
             }
-            
+
             projectIdToUse = newProjectId;
             setCurrentProjectId(newProjectId);
           }
-          
+
           // Firebase에 새 디자인 파일로 저장
           const { createDesignFile } = await import('@/firebase/projects');
           const { id: designFileId, error } = await createDesignFile({
@@ -1217,10 +1260,10 @@ const Configurator: React.FC = () => {
             setCurrentDesignFileName(newTitle.trim());
             setBasicInfo({ ...basicInfo, title: newTitle.trim() });
             setSaveStatus('success');
-            
+
             // URL 업데이트 - 프로젝트ID와 디자인파일ID 모두 포함
             navigate(`/configurator?projectId=${projectIdToUse}&designFileId=${designFileId}`, { replace: true });
-            
+
             console.log('✅ 디자인 파일 다른이름으로 저장 성공:', newTitle);
             alert(`"${newTitle}" 디자인 파일로 저장되었습니다!`);
           }
@@ -1229,7 +1272,7 @@ const Configurator: React.FC = () => {
           setSaveStatus('error');
           alert('저장하려면 로그인이 필요합니다.');
         }
-        
+
         setTimeout(() => setSaveStatus('idle'), 3000);
       } catch (error) {
         console.error('다른이름으로 저장 실패:', error);
@@ -1244,10 +1287,10 @@ const Configurator: React.FC = () => {
   // 프로젝트 이름 변경 함수
   const handleProjectNameChange = async (newName: string) => {
     const oldName = basicInfo.title;
-    
+
     // 즉시 UI 업데이트
     setBasicInfo({ ...basicInfo, title: newName });
-    
+
     // 프로젝트가 저장된 상태라면 자동 저장
     if (currentProjectId) {
       setSaving(true);
@@ -1337,27 +1380,29 @@ const Configurator: React.FC = () => {
 
           console.log('✅ 디자인 파일명 변경 성공:', newName);
 
-          // BroadcastChannel로 대시보드에 알림
-          try {
-            // URL에서 projectId 가져오기 (currentProjectId가 없을 수 있음)
-            const urlProjectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
-            const effectiveProjectId = currentProjectId || urlProjectId;
-            const effectiveDesignFileId = currentDesignFileId || searchParams.get('designFileId');
+          // BroadcastChannel로 대시보드에 알림 (readonly 모드에서는 전송하지 않음)
+          if (!isReadOnly) {
+            try {
+              // URL에서 projectId 가져오기 (currentProjectId가 없을 수 있음)
+              const urlProjectId = searchParams.get('projectId') || searchParams.get('id') || searchParams.get('project');
+              const effectiveProjectId = currentProjectId || urlProjectId;
+              const effectiveDesignFileId = currentDesignFileId || searchParams.get('designFileId');
 
-            const channel = new BroadcastChannel('project-updates');
-            channel.postMessage({
-              type: 'DESIGN_FILE_UPDATED',
-              projectId: effectiveProjectId,
-              designFileId: effectiveDesignFileId,
-              timestamp: Date.now()
-            });
-            console.log('📡 디자인 파일명 변경 알림 전송:', {
-              projectId: effectiveProjectId,
-              designFileId: effectiveDesignFileId
-            });
-            channel.close();
-          } catch (broadcastError) {
-            console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+              const channel = new BroadcastChannel('project-updates');
+              channel.postMessage({
+                type: 'DESIGN_FILE_UPDATED',
+                projectId: effectiveProjectId,
+                designFileId: effectiveDesignFileId,
+                timestamp: Date.now()
+              });
+              console.log('📡 디자인 파일명 변경 알림 전송:', {
+                projectId: effectiveProjectId,
+                designFileId: effectiveDesignFileId
+              });
+              channel.close();
+            } catch (broadcastError) {
+              console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
+            }
           }
         } else {
           console.log('💾 [ERROR] Firebase 인증 필요');
@@ -1408,13 +1453,13 @@ const Configurator: React.FC = () => {
     if (!spaceInfo.droppedCeiling?.enabled && spaceInfo.customColumnCount) {
       const internalSpace = calculateInternalSpace(spaceInfo);
       const defaultColumnCount = SpaceCalculator.getDefaultColumnCount(internalSpace.width);
-      
+
       console.log('🔧 [Configurator] Dropped ceiling disabled, checking column count:', {
         currentColumnCount: spaceInfo.customColumnCount,
         defaultColumnCount,
         internalWidth: internalSpace.width
       });
-      
+
       // 현재 컬럼 수가 기본값과 다르면 리셋
       if (spaceInfo.customColumnCount !== defaultColumnCount) {
         console.log('🔧 [Configurator] Resetting column count to default:', defaultColumnCount);
@@ -1490,7 +1535,7 @@ const Configurator: React.FC = () => {
       return;
     }
 
-      // readonly 모드에서는 상태 업데이트를 하지 않음 (리로드 루프 방지)
+    // readonly 모드에서는 상태 업데이트를 하지 않음 (리로드 루프 방지)
     if (mode !== 'readonly') {
       // 프로젝트 ID가 변경된 경우에만 상태 업데이트
       if (projectId && projectId !== currentProjectId) {
@@ -1847,10 +1892,10 @@ const Configurator: React.FC = () => {
       const currentWithoutMaterial = { ...spaceInfo };
       delete prevWithoutMaterial.materialConfig;
       delete currentWithoutMaterial.materialConfig;
-      
+
       // 공간의 실제 구조가 변경된 경우에만 가구 업데이트
       // (너비, 높이, 깊이, 컬럼 수, 단내림 설정 등)
-      const hasStructuralChange = 
+      const hasStructuralChange =
         prevWithoutMaterial.width !== currentWithoutMaterial.width ||
         prevWithoutMaterial.height !== currentWithoutMaterial.height ||
         prevWithoutMaterial.depth !== currentWithoutMaterial.depth ||
@@ -1866,7 +1911,7 @@ const Configurator: React.FC = () => {
         JSON.stringify(prevWithoutMaterial.wallConfig) !== JSON.stringify(currentWithoutMaterial.wallConfig) ||
         prevWithoutMaterial.hasFloorFinish !== currentWithoutMaterial.hasFloorFinish ||
         JSON.stringify(prevWithoutMaterial.floorFinish) !== JSON.stringify(currentWithoutMaterial.floorFinish);
-      
+
       if (hasStructuralChange) {
         console.log('🔄 공간 구조가 변경되었습니다. 가구 재배치 실행 중...', {
           width: prevWithoutMaterial.width !== currentWithoutMaterial.width,
@@ -1881,7 +1926,7 @@ const Configurator: React.FC = () => {
         });
         updateFurnitureForNewSpace(previousSpaceInfo, spaceInfo);
       }
-      
+
       // 이전 상태 업데이트
       setPreviousSpaceInfo(spaceInfo);
     }
@@ -1896,11 +1941,11 @@ const Configurator: React.FC = () => {
     });
     derivedSpaceStore.recalculateFromSpaceInfo(spaceInfo);
   }, [
-    spaceInfo.width, 
-    spaceInfo.height, 
-    spaceInfo.depth, 
-    spaceInfo.customColumnCount, 
-    spaceInfo.mainDoorCount, 
+    spaceInfo.width,
+    spaceInfo.height,
+    spaceInfo.depth,
+    spaceInfo.customColumnCount,
+    spaceInfo.mainDoorCount,
     spaceInfo.droppedCeilingDoorCount,
     spaceInfo.droppedCeiling?.enabled,
     spaceInfo.droppedCeiling?.width,
@@ -1915,7 +1960,7 @@ const Configurator: React.FC = () => {
   // RightPanel에서 사용할 수 있도록 window 객체에 추가
   useEffect(() => {
     (window as any).handleSpaceInfoUpdate = handleSpaceInfoUpdate;
-    
+
     return () => {
       delete (window as any).handleSpaceInfoUpdate;
     };
@@ -1954,13 +1999,13 @@ const Configurator: React.FC = () => {
         단내림활성화: spaceInfo.droppedCeiling?.enabled
       });
     }
-    
+
     // 단내림 설정 변경 감지
     const isDroppedCeilingUpdate = updates.droppedCeiling !== undefined;
     if (isDroppedCeilingUpdate) {
       console.log('🔄 단내림 설정 변경 감지:', updates.droppedCeiling);
     }
-    
+
     // surroundType 업데이트 시 디버깅
     if (updates.surroundType) {
       console.log('🔧 Configurator - surroundType update:', {
@@ -1969,20 +2014,20 @@ const Configurator: React.FC = () => {
         willUpdateStore: true
       });
     }
-    
+
     let finalUpdates = { ...updates };
-    
+
     // installType 하이픈 문제 수정
     if (finalUpdates.installType === 'built-in') {
       finalUpdates.installType = 'builtin';
     }
-    
+
     // 서라운드 타입 변경 시 프레임 설정 초기화
     if (updates.surroundType) {
       const currentInstallType = finalUpdates.installType || spaceInfo.installType;
       const currentWallConfig = finalUpdates.wallConfig || spaceInfo.wallConfig;
       const newFrameSize = { ...spaceInfo.frameSize, top: spaceInfo.frameSize?.top || 10 };
-      
+
       if (updates.surroundType === 'surround') {
         // 서라운드 모드
         switch (currentInstallType) {
@@ -2028,14 +2073,14 @@ const Configurator: React.FC = () => {
             newFrameSize.right = 18;
             break;
         }
-        
+
         // 노서라운드일 때 gapConfig 설정
         finalUpdates.gapConfig = {
           left: currentWallConfig.left ? 2 : 0,
           right: currentWallConfig.right ? 2 : 0
         };
       }
-      
+
       finalUpdates.frameSize = newFrameSize;
       console.log('🔧 서라운드 타입 변경에 따른 프레임 초기화:', {
         surroundType: updates.surroundType,
@@ -2044,11 +2089,11 @@ const Configurator: React.FC = () => {
         gapConfig: finalUpdates.gapConfig
       });
     }
-    
+
     // 세미스탠딩에서 벽 위치 변경 시 프레임 설정 자동 업데이트
     if (updates.wallConfig && spaceInfo.installType === 'semistanding' && (spaceInfo.surroundType === 'surround')) {
       const newFrameSize = { ...spaceInfo.frameSize };
-      
+
       if (updates.wallConfig.left && !updates.wallConfig.right) {
         // 좌측벽만 있음: 좌측 프레임 50mm, 우측 엔드패널 18mm
         newFrameSize.left = 50;
@@ -2058,11 +2103,11 @@ const Configurator: React.FC = () => {
         newFrameSize.left = 18;
         newFrameSize.right = 50;
       }
-      
+
       finalUpdates.frameSize = newFrameSize;
       console.log('🔧 세미스탠딩 프레임 자동 업데이트:', newFrameSize);
     }
-    
+
     // 설치 타입 변경 시 wallConfig와 프레임 설정 자동 업데이트
     if (updates.installType) {
       // wallConfig가 함께 전달되었으면 그대로 사용, 아니면 자동 설정
@@ -2085,11 +2130,11 @@ const Configurator: React.FC = () => {
         }
         console.log('🔧 자동 설정된 wallConfig:', finalUpdates.wallConfig);
       }
-      
+
       // 프레임 설정
       const newFrameSize = { ...spaceInfo.frameSize };
       const wallConfig = finalUpdates.wallConfig || spaceInfo.wallConfig;
-      
+
       if (spaceInfo.surroundType === 'surround') {
         // 서라운드 모드
         switch (updates.installType) {
@@ -2138,46 +2183,46 @@ const Configurator: React.FC = () => {
             newFrameSize.right = 18;
             break;
         }
-        
+
         // 노서라운드일 때 gapConfig도 업데이트
         finalUpdates.gapConfig = {
           left: wallConfig.left ? 2 : 0,
           right: wallConfig.right ? 2 : 0
         };
       }
-      
+
       finalUpdates.frameSize = newFrameSize;
-      
+
       console.log('🔧 설치타입 변경에 따른 wallConfig 및 프레임 자동 업데이트:', {
         installType: updates.installType,
         wallConfig: finalUpdates.wallConfig,
         frameSize: finalUpdates.frameSize
       });
     }
-    
+
     // 폭(width)이 변경되었을 때 도어 개수 자동 조정
     if (updates.width && updates.width !== spaceInfo.width) {
       const range = calculateDoorRange(updates.width);
       const currentCount = spaceInfo.customColumnCount || getCurrentColumnCount();
-      
+
       // 400-600mm 범위 엄격 적용
       const usableWidth = updates.width - 100;
       let adjustedCount = currentCount;
-      
+
       // 현재 카운트로 계산한 슬롯 크기 확인
       const currentSlotWidth = usableWidth / currentCount;
-      
+
       if (currentSlotWidth < 400) {
         adjustedCount = Math.floor(usableWidth / 400);
       } else if (currentSlotWidth > 600) {
         adjustedCount = Math.ceil(usableWidth / 600);
       }
-      
+
       // 최종 범위 검증
       const finalCount = Math.max(range.min, Math.min(range.max, adjustedCount));
       finalUpdates = { ...finalUpdates, customColumnCount: finalCount };
     }
-    
+
     // customColumnCount가 직접 변경되었을 때 - 사용자가 설정한 값 그대로 사용
     if (updates.customColumnCount !== undefined) {
       console.log('🚨🚨🚨 customColumnCount 업데이트:', {
@@ -2189,7 +2234,7 @@ const Configurator: React.FC = () => {
       finalUpdates = { ...finalUpdates, customColumnCount: updates.customColumnCount };
       console.log('🚨🚨🚨 finalUpdates after:', finalUpdates);
     }
-    
+
     // 단내림이 활성화된 경우 메인 구간의 도어 개수 자동 조정
     if (updates.droppedCeiling?.enabled && !spaceInfo.droppedCeiling?.enabled) {
       // 단내림이 새로 활성화된 경우
@@ -2200,30 +2245,30 @@ const Configurator: React.FC = () => {
       const normalAreaInternalWidth = mainZoneWidth - frameThickness;
       const MAX_SLOT_WIDTH = 600;
       const minRequiredSlots = Math.ceil(normalAreaInternalWidth / MAX_SLOT_WIDTH);
-      
+
       // 현재 도어 개수를 유지하되, 최소 필요 개수 이상으로 조정
       const currentDoorCount = getCurrentColumnCount();
       const adjustedMainDoorCount = Math.max(minRequiredSlots, currentDoorCount);
       console.log(`🔧 단내림 활성화 시 메인 구간 도어 개수 설정: ${currentDoorCount} → ${adjustedMainDoorCount}`);
       finalUpdates = { ...finalUpdates, mainDoorCount: adjustedMainDoorCount };
-      
+
       // 단내림 구간 도어개수 기본값 설정
       const droppedFrameThickness = 50;
       const droppedInternalWidth = droppedWidth - droppedFrameThickness;
       const droppedMinSlots = Math.max(1, Math.ceil(droppedInternalWidth / MAX_SLOT_WIDTH));
       const droppedMaxSlots = Math.max(droppedMinSlots, Math.floor(droppedInternalWidth / 400));
       const droppedDefaultCount = droppedMinSlots;
-      
+
       console.log(`🔧 단내림 활성화 시 단내림 구간 도어개수 기본값 설정: ${droppedDefaultCount}`, {
         droppedWidth,
         droppedInternalWidth,
         droppedMinSlots,
         droppedMaxSlots
       });
-      
+
       finalUpdates = { ...finalUpdates, droppedCeilingDoorCount: droppedDefaultCount };
     }
-    
+
     // 단내림 폭 변경 시 단내림 도어개수 자동 조정
     if (updates.droppedCeiling?.width && spaceInfo.droppedCeiling?.enabled) {
       const frameThickness = 50;
@@ -2234,7 +2279,7 @@ const Configurator: React.FC = () => {
         min: Math.max(1, Math.ceil(internalWidth / MAX_SLOT_WIDTH)),
         max: Math.max(1, Math.floor(internalWidth / MIN_SLOT_WIDTH))
       };
-      
+
       const currentDoorCount = spaceInfo.droppedCeilingDoorCount || 2;
       if (currentDoorCount < newDoorRange.min || currentDoorCount > newDoorRange.max) {
         const adjustedDoorCount = Math.max(newDoorRange.min, Math.min(newDoorRange.max, currentDoorCount));
@@ -2242,15 +2287,15 @@ const Configurator: React.FC = () => {
         finalUpdates = { ...finalUpdates, droppedCeilingDoorCount: adjustedDoorCount };
       }
     }
-    
+
     // 노서라운드 빌트인 모드에서 컬럼 수 변경 시 자동 이격거리 계산
-    if (spaceInfo.surroundType === 'no-surround' && 
-        (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') &&
-        (finalUpdates.customColumnCount !== undefined || finalUpdates.mainDoorCount !== undefined)) {
-      
+    if (spaceInfo.surroundType === 'no-surround' &&
+      (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') &&
+      (finalUpdates.customColumnCount !== undefined || finalUpdates.mainDoorCount !== undefined)) {
+
       const tempSpaceInfo = { ...spaceInfo, ...finalUpdates };
       const indexing = calculateSpaceIndexing(tempSpaceInfo);
-      
+
       if (indexing.optimizedGapConfig) {
         console.log('📏 컬럼 수 변경 - 자동 이격거리 적용:', {
           customColumnCount: finalUpdates.customColumnCount,
@@ -2260,7 +2305,7 @@ const Configurator: React.FC = () => {
         finalUpdates.gapConfig = indexing.optimizedGapConfig;
       }
     }
-    
+
     console.log('🔧 최종 업데이트 적용:', {
       updates: finalUpdates,
       hasWallConfig: !!finalUpdates.wallConfig,
@@ -2268,11 +2313,11 @@ const Configurator: React.FC = () => {
       customColumnCount: finalUpdates.customColumnCount,
       gapConfig: finalUpdates.gapConfig
     });
-    
+
     // installType 변경 감지
-    const isInstallTypeChanged = finalUpdates.installType !== undefined && 
-                                  finalUpdates.installType !== spaceInfo.installType;
-    
+    const isInstallTypeChanged = finalUpdates.installType !== undefined &&
+      finalUpdates.installType !== spaceInfo.installType;
+
     console.log('🚨🚨🚨 setSpaceInfo 호출 직전:', finalUpdates);
     console.log('📏 baseConfig.depth 전달 확인:', {
       finalUpdates_baseConfig: finalUpdates.baseConfig,
@@ -2289,7 +2334,7 @@ const Configurator: React.FC = () => {
         depth: currentStore.baseConfig?.depth
       });
     }, 0);
-    
+
     // 단내림 설정 변경 시 강제로 3D 뷰 업데이트
     if (isDroppedCeilingUpdate) {
       console.log('🔄 단내림 설정 변경으로 3D 뷰 강제 업데이트');
@@ -2298,7 +2343,7 @@ const Configurator: React.FC = () => {
         setViewMode(viewMode);
       }, 0);
     }
-    
+
     // installType 변경 시 가구 너비 재계산
     if (isInstallTypeChanged && placedModules.length > 0) {
       console.log('🔧 InstallType 변경 - 가구 너비 재계산');
@@ -2317,7 +2362,7 @@ const Configurator: React.FC = () => {
       placedModulesCount: placedModules.length,
       doorsOpen
     });
-    
+
     if (hasDoorsInstalled) {
       // 도어 제거: 모든 가구에서 도어 제거
       console.log('🚪 도어 제거 시도');
@@ -2326,7 +2371,7 @@ const Configurator: React.FC = () => {
       // 도어 설치: 모든 가구에 도어 설치 (닫힌 상태로 설치)
       console.log('🚪 도어 설치 시도');
       setAllDoors(true);
-      
+
       // 도어 설치 시 닫힌 상태로 유지
       if (doorsOpen) {
         console.log('🚪 도어가 열려있어서 닫기');
@@ -2446,28 +2491,28 @@ const Configurator: React.FC = () => {
             <div className={styles.modulePanelContent}>
               {/* 키큰장/상부장/하부장 토글 탭 */}
               <div className={styles.moduleCategoryTabs}>
-                <button 
+                <button
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'tall' ? styles.active : ''}`}
                   onClick={() => setModuleCategory('tall')}
                 >
                   키큰장
                 </button>
-                <button 
+                <button
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'upper' ? styles.active : ''}`}
                   onClick={() => setModuleCategory('upper')}
                 >
                   상부장
                 </button>
-                <button 
+                <button
                   className={`${styles.moduleCategoryTab} ${moduleCategory === 'lower' ? styles.active : ''}`}
                   onClick={() => setModuleCategory('lower')}
                 >
                   하부장
                 </button>
               </div>
-              
+
               <div className={styles.moduleSection}>
-                <ModuleGallery 
+                <ModuleGallery
                   moduleCategory={moduleCategory}
                 />
               </div>
@@ -2484,7 +2529,7 @@ const Configurator: React.FC = () => {
       case 'structure':
         return (
           <div className={styles.sidebarPanel}>
-            <ColumnControl 
+            <ColumnControl
               columns={spaceInfo.columns || []}
               onColumnsChange={(columns) => setSpaceInfo({ columns })}
             />
@@ -2508,760 +2553,760 @@ const Configurator: React.FC = () => {
   const renderRightPanelContent = () => {
     return (
       <div className={styles.spaceControls}>
-            {/* 공간 설정 - 양쪽 탭에서 모두 표시 */}
-            <div className={styles.configSection}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>공간 설정</h3>
-              </div>
-              
-              <div style={{ display: 'flex', gap: '12px' }}>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
-                  <div style={{ flex: 1 }}>
-                    <WidthControl 
-                      spaceInfo={spaceInfo}
-                      onUpdate={handleSpaceInfoUpdate}
-                      disabled={hasSpecialDualFurniture}
-                    />
-                  </div>
-                </div>
-                
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
-                  <div style={{ flex: 1 }}>
-                    <HeightControl 
-                      spaceInfo={spaceInfo}
-                      onUpdate={handleSpaceInfoUpdate}
-                    />
-                  </div>
-                </div>
+        {/* 공간 설정 - 양쪽 탭에서 모두 표시 */}
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>공간 설정</h3>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
+              <div style={{ flex: 1 }}>
+                <WidthControl
+                  spaceInfo={spaceInfo}
+                  onUpdate={handleSpaceInfoUpdate}
+                  disabled={hasSpecialDualFurniture}
+                />
               </div>
             </div>
 
-            {/* 공간 유형 - 공간 설정과 단내림 사이 */}
-            <div className={styles.configSection}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>공간 유형</h3>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
+              <div style={{ flex: 1 }}>
+                <HeightControl
+                  spaceInfo={spaceInfo}
+                  onUpdate={handleSpaceInfoUpdate}
+                />
               </div>
-              <InstallTypeControls
-                spaceInfo={spaceInfo}
-                onUpdate={handleSpaceInfoUpdate}
-              />
             </div>
+          </div>
+        </div>
 
-            {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 */}
-            <div className={styles.configSection}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>단내림</h3>
-              </div>
-              
+        {/* 공간 유형 - 공간 설정과 단내림 사이 */}
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>공간 유형</h3>
+          </div>
+          <InstallTypeControls
+            spaceInfo={spaceInfo}
+            onUpdate={handleSpaceInfoUpdate}
+          />
+        </div>
+
+        {/* 단내림 설정 - 공간 설정과 레이아웃 사이에 추가 */}
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>단내림</h3>
+          </div>
+
+          <div className={styles.toggleButtonGroup}>
+            <button
+              className={`${styles.toggleButton} ${!spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
+              onClick={() => {
+                // 단내림 비활성화
+                clearAllModules(); // 가구 제거
+                handleSpaceInfoUpdate({
+                  droppedCeiling: {
+                    ...spaceInfo.droppedCeiling,
+                    enabled: false
+                  },
+                  mainDoorCount: undefined,
+                  droppedCeilingDoorCount: undefined
+                });
+                setActiveRightPanelTab('slotA');
+              }}
+            >
+              없음
+            </button>
+            <button
+              className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
+              onClick={() => {
+                if (!spaceInfo.droppedCeiling?.enabled) {
+                  // 단내림 활성화
+                  clearAllModules(); // 가구 제거
+
+                  const totalWidth = spaceInfo.width || 4800;
+                  const droppedWidth = 900; // 단내림 기본 폭
+                  const mainWidth = totalWidth - droppedWidth;
+                  const mainRange = calculateDoorRange(mainWidth);
+                  const currentCount = getCurrentColumnCount();
+                  const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
+
+                  // 단내림 구간의 내경폭으로 적절한 도어 개수 계산
+                  const frameThickness = 50;
+                  const droppedInternalWidth = droppedWidth - frameThickness;
+                  const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
+
+                  handleSpaceInfoUpdate({
+                    droppedCeiling: {
+                      enabled: true,
+                      width: droppedWidth,
+                      dropHeight: 200,
+                      position: 'right'
+                    },
+                    droppedCeilingDoorCount: droppedDoorCount, // 계산된 도어 개수로 설정
+                    mainDoorCount: adjustedMainDoorCount
+                  });
+                  setActiveRightPanelTab('slotA');
+                }
+              }}
+            >
+              있음
+            </button>
+          </div>
+
+          {/* 단내림이 활성화된 경우 위치 선택 */}
+          {spaceInfo.droppedCeiling?.enabled && (
+            <div style={{ marginTop: '16px' }}>
+              <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>위치</div>
               <div className={styles.toggleButtonGroup}>
                 <button
-                  className={`${styles.toggleButton} ${!spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
+                  className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
-                    // 단내림 비활성화
-                    clearAllModules(); // 가구 제거
-                    handleSpaceInfoUpdate({ 
+                    handleSpaceInfoUpdate({
                       droppedCeiling: {
                         ...spaceInfo.droppedCeiling,
-                        enabled: false
-                      },
-                      mainDoorCount: undefined,
-                      droppedCeilingDoorCount: undefined
+                        enabled: true,
+                        position: 'left'
+                      }
                     });
-                    setActiveRightPanelTab('slotA');
                   }}
                 >
-                  없음
+                  좌측
                 </button>
                 <button
-                  className={`${styles.toggleButton} ${spaceInfo.droppedCeiling?.enabled ? styles.toggleButtonActive : ''}`}
+                  className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
                   onClick={() => {
-                    if (!spaceInfo.droppedCeiling?.enabled) {
-                      // 단내림 활성화
-                      clearAllModules(); // 가구 제거
-                      
-                      const totalWidth = spaceInfo.width || 4800;
-                      const droppedWidth = 900; // 단내림 기본 폭
-                      const mainWidth = totalWidth - droppedWidth;
-                      const mainRange = calculateDoorRange(mainWidth);
-                      const currentCount = getCurrentColumnCount();
-                      const adjustedMainDoorCount = Math.max(mainRange.min, Math.min(mainRange.max, currentCount));
-                      
-                      // 단내림 구간의 내경폭으로 적절한 도어 개수 계산
-                      const frameThickness = 50;
-                      const droppedInternalWidth = droppedWidth - frameThickness;
-                      const droppedDoorCount = SpaceCalculator.getDefaultColumnCount(droppedInternalWidth);
-                      
-                      handleSpaceInfoUpdate({ 
-                        droppedCeiling: {
-                          enabled: true,
-                          width: droppedWidth,
-                          dropHeight: 200,
-                          position: 'right'
-                        },
-                        droppedCeilingDoorCount: droppedDoorCount, // 계산된 도어 개수로 설정
-                        mainDoorCount: adjustedMainDoorCount
-                      });
-                      setActiveRightPanelTab('slotA');
-                    }
+                    handleSpaceInfoUpdate({
+                      droppedCeiling: {
+                        ...spaceInfo.droppedCeiling,
+                        enabled: true,
+                        position: 'right'
+                      }
+                    });
                   }}
                 >
-                  있음
+                  우측
                 </button>
               </div>
-              
-              {/* 단내림이 활성화된 경우 위치 선택 */}
-              {spaceInfo.droppedCeiling?.enabled && (
-                <div style={{ marginTop: '16px' }}>
-                  <div className={styles.inputLabel} style={{ marginBottom: '8px' }}>위치</div>
-                  <div className={styles.toggleButtonGroup}>
-                    <button
-                      className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'left' ? styles.toggleButtonActive : ''}`}
-                      onClick={() => {
-                        handleSpaceInfoUpdate({ 
-                          droppedCeiling: {
-                            ...spaceInfo.droppedCeiling,
-                            enabled: true,
-                            position: 'left'
-                          }
-                        });
-                      }}
-                    >
-                      좌측
-                    </button>
-                    <button
-                      className={`${styles.toggleButton} ${(spaceInfo.droppedCeiling?.position || 'right') === 'right' ? styles.toggleButtonActive : ''}`}
-                      onClick={() => {
-                        handleSpaceInfoUpdate({ 
-                          droppedCeiling: {
-                            ...spaceInfo.droppedCeiling,
-                            enabled: true,
-                            position: 'right'
-                          }
-                        });
-                      }}
-                    >
-                      우측
-                    </button>
-                  </div>
-                </div>
-              )}
+            </div>
+          )}
+        </div>
+
+        {/* 단내림이 있을 때 메인구간 사이즈 표시 */}
+        {spaceInfo.droppedCeiling?.enabled && (
+          <div className={styles.configSection}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionDot}></span>
+              <h3 className={styles.sectionTitle}>메인구간 사이즈</h3>
             </div>
 
-            {/* 단내림이 있을 때 메인구간 사이즈 표시 */}
-            {spaceInfo.droppedCeiling?.enabled && (
-              <div className={styles.configSection}>
-                <div className={styles.sectionHeader}>
-                  <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>메인구간 사이즈</h3>
-                </div>
-                
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    {/* 메인구간 폭 */}
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
-                      <div className={styles.inputWithUnit} style={{ flex: 1 }}>
-                        <input
-                          type="text"
-                          min="100"
-                          max={(spaceInfo.width || 4800) - 100}
-                          step="10"
-                          defaultValue={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}
-                          key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}`}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onBlur={(e) => {
-                            const inputValue = e.target.value;
-                            const totalWidth = spaceInfo.width || 4800;
-                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            const currentMainWidth = totalWidth - currentDroppedWidth;
-                            
-                            // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
-                            if (inputValue === '' || isNaN(parseInt(inputValue))) {
-                              e.target.value = currentMainWidth.toString();
-                              return;
-                            }
-                            
-                            const mainWidth = parseInt(inputValue);
-                            const newDroppedWidth = totalWidth - mainWidth;
-                            
-                            // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정
-                            if (newDroppedWidth < 100) {
-                              e.target.value = (totalWidth - 100).toString();
-                              handleSpaceInfoUpdate({ 
-                                droppedCeiling: {
-                                  ...spaceInfo.droppedCeiling,
-                                  enabled: true,
-                                  width: 100
-                                }
-                              });
-                            } else if (newDroppedWidth > totalWidth - 100) {
-                              e.target.value = '100';
-                              handleSpaceInfoUpdate({ 
-                                droppedCeiling: {
-                                  ...spaceInfo.droppedCeiling,
-                                  enabled: true,
-                                  width: totalWidth - 100
-                                }
-                              });
-                            } else {
-                              // 유효한 값이면 그대로 적용
-                              handleSpaceInfoUpdate({ 
-                                droppedCeiling: {
-                                  ...spaceInfo.droppedCeiling,
-                                  enabled: true,
-                                  width: newDroppedWidth
-                                }
-                              });
-                            }
-                          }}
-                          className={`${styles.input} ${styles.inputWithUnitField}`}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-                    </div>
-                    
-                    {/* 메인구간 높이 */}
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
-                      <div className={styles.inputWithUnit} style={{ flex: 1 }}>
-                        <input
-                          type="text"
-                          defaultValue={spaceInfo.height || 2400}
-                          key={`main-height-${spaceInfo.height || 2400}`}
-                          onChange={(e) => {
-                            // 숫자와 빈 문자열만 허용
-                            const value = e.target.value;
-                            if (value === '' || /^\d+$/.test(value)) {
-                              // 로컴 상태만 업데이트 (입력 중에는 스토어 업데이트 안 함)
-                            }
-                          }}
-                          onBlur={(e) => {
-                            const value = e.target.value;
-                            if (value === '') {
-                              // 빈 값인 경우 기존 값으로 되돌림
-                              e.target.value = (spaceInfo.height || 2400).toString();
-                              return;
-                            }
-                            
-                            const numValue = parseInt(value);
-                            const minValue = 1800;
-                            const maxValue = 3000;
-                            
-                            // 범위 검증
-                            if (numValue < minValue) {
-                              e.target.value = minValue.toString();
-                              handleSpaceInfoUpdate({ height: minValue });
-                            } else if (numValue > maxValue) {
-                              e.target.value = maxValue.toString();
-                              handleSpaceInfoUpdate({ height: maxValue });
-                            } else {
-                              handleSpaceInfoUpdate({ height: numValue });
-                            }
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              (e.target as HTMLInputElement).blur();
-                            } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                              e.preventDefault();
-                              
-                              const currentValue = parseInt(e.target.value) || (spaceInfo.height || 2400);
-                              const minValue = 1800;
-                              const maxValue = 3000;
-                              
-                              let newValue;
-                              if (e.key === 'ArrowUp') {
-                                newValue = Math.min(currentValue + 1, maxValue);
-                              } else {
-                                newValue = Math.max(currentValue - 1, minValue);
-                              }
-                              
-                              if (newValue !== currentValue) {
-                                e.target.value = newValue.toString();
-                                handleSpaceInfoUpdate({ height: newValue });
-                              }
-                            }
-                          }}
-                          className={`${styles.input} ${styles.inputWithUnitField}`}
-                          placeholder="1800-3000"
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-                    </div>
-                </div>
-              </div>
-            )}
-
-            {/* 단내림 구간 사이즈 - 메인구간 사이즈 아래에 표시 */}
-            {spaceInfo.droppedCeiling?.enabled && (
-              <div className={styles.configSection}>
-                <div className={styles.sectionHeader}>
-                  <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>단내림 구간 사이즈</h3>
-                </div>
-                
-                <div style={{ display: 'flex', gap: '12px' }}>
-                    {/* 단내림 구간 폭 */}
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
-                      <div className={styles.inputWithUnit} style={{ flex: 1 }}>
-                        <input
-                          type="text"
-                          min="100"
-                          max={(spaceInfo.width || 4800) - 100}
-                          step="10"
-                          defaultValue={spaceInfo.droppedCeiling?.width || 900}
-                          key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}`}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onBlur={(e) => {
-                            const inputValue = e.target.value;
-                            const totalWidth = spaceInfo.width || 4800;
-                            const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
-                            
-                            // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
-                            if (inputValue === '' || isNaN(parseInt(inputValue))) {
-                              e.target.value = currentDroppedWidth.toString();
-                              return;
-                            }
-                            
-                            const droppedWidth = parseInt(inputValue);
-                            const mainWidth = totalWidth - droppedWidth;
-                            
-                            // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정
-                            if (droppedWidth < 100) {
-                              e.target.value = '100';
-                              handleSpaceInfoUpdate({ 
-                                droppedCeiling: {
-                                  ...spaceInfo.droppedCeiling,
-                                  enabled: true,
-                                  width: 100
-                                }
-                              });
-                            } else if (droppedWidth > totalWidth - 100) {
-                              e.target.value = (totalWidth - 100).toString();
-                              handleSpaceInfoUpdate({ 
-                                droppedCeiling: {
-                                  ...spaceInfo.droppedCeiling,
-                                  enabled: true,
-                                  width: totalWidth - 100
-                                }
-                              });
-                            } else {
-                              // 유효한 값이면 그대로 적용
-                              handleSpaceInfoUpdate({ 
-                                droppedCeiling: {
-                                  ...spaceInfo.droppedCeiling,
-                                  enabled: true,
-                                  width: droppedWidth
-                                }
-                              });
-                            }
-                          }}
-                          className={`${styles.input} ${styles.inputWithUnitField}`}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-                    </div>
-                    
-                    {/* 단내림 구간 높이 */}
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
-                      <div className={styles.inputWithUnit} style={{ flex: 1 }}>
-                        <input
-                          type="text"
-                          min="1800"
-                          max="2900"
-                          step="10"
-                          defaultValue={(spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
-                          key={`dropped-height-${(spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              (e.target as HTMLInputElement).blur();
-                            }
-                          }}
-                          onBlur={(e) => {
-                            const inputValue = e.target.value;
-                            const totalHeight = spaceInfo.height || 2400;
-                            const currentDroppedHeight = totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200);
-                            
-                            // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
-                            if (inputValue === '' || isNaN(parseInt(inputValue))) {
-                              e.target.value = currentDroppedHeight.toString();
-                              return;
-                            }
-                            
-                            const droppedHeight = parseInt(inputValue);
-                            const newDropHeight = totalHeight - droppedHeight;
-                            
-                            // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정 (단차 높이는 100~500mm)
-                            if (newDropHeight < 100) {
-                              const validDroppedHeight = totalHeight - 100;
-                              e.target.value = validDroppedHeight.toString();
-                              handleSpaceInfoUpdate({ 
-                                droppedCeiling: {
-                                  ...spaceInfo.droppedCeiling,
-                                  enabled: true,
-                                  dropHeight: 100
-                                }
-                              });
-                            } else if (newDropHeight > 500) {
-                              const validDroppedHeight = totalHeight - 500;
-                              e.target.value = validDroppedHeight.toString();
-                              handleSpaceInfoUpdate({ 
-                                droppedCeiling: {
-                                  ...spaceInfo.droppedCeiling,
-                                  enabled: true,
-                                  dropHeight: 500
-                                }
-                              });
-                            } else {
-                              // 유효한 값이면 그대로 적용
-                              handleSpaceInfoUpdate({ 
-                                droppedCeiling: {
-                                  ...spaceInfo.droppedCeiling,
-                                  enabled: true,
-                                  dropHeight: newDropHeight
-                                }
-                              });
-                            }
-                          }}
-                          className={`${styles.input} ${styles.inputWithUnitField}`}
-                        />
-                        <span className={styles.unit}>mm</span>
-                      </div>
-                    </div>
-                </div>
-              </div>
-            )}
-
-
-            {/* 컬럼수 표시 */}
-            <div className={styles.configSection}>
-                <div className={styles.sectionHeader}>
-                  <span className={styles.sectionDot}></span>
-                  <h3 className={styles.sectionTitle}>컬럼수</h3>
-                </div>
-                {console.log('🔍 레이아웃 섹션 렌더링:', {
-                  activeTab: activeRightPanelTab,
-                  단내림활성화: spaceInfo.droppedCeiling?.enabled,
-                  mainDoorCount: spaceInfo.mainDoorCount,
-                  customColumnCount: spaceInfo.customColumnCount
-                })}
-                
-                {/* 도어 개수 입력 - 제거 */}
-                {!spaceInfo.droppedCeiling?.enabled ? (
-                // 단내림이 없을 때 - 컬럼 개수만 표시
-                <div className={styles.inputGroup}>
-                  <DoorSlider
-                    value={getCurrentColumnCount()}
-                    onChange={(value) => {
-                      handleSpaceInfoUpdate({ customColumnCount: value });
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {/* 메인구간 폭 */}
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
+                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                  <input
+                    type="text"
+                    min="100"
+                    max={(spaceInfo.width || 4800) - 100}
+                    step="10"
+                    defaultValue={(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}
+                    key={`main-width-${(spaceInfo.width || 4800) - (spaceInfo.droppedCeiling?.width || 900)}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        (e.target as HTMLInputElement).blur();
+                      }
                     }}
-                    width={spaceInfo.width || 4800}
+                    onBlur={(e) => {
+                      const inputValue = e.target.value;
+                      const totalWidth = spaceInfo.width || 4800;
+                      const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
+                      const currentMainWidth = totalWidth - currentDroppedWidth;
+
+                      // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
+                      if (inputValue === '' || isNaN(parseInt(inputValue))) {
+                        e.target.value = currentMainWidth.toString();
+                        return;
+                      }
+
+                      const mainWidth = parseInt(inputValue);
+                      const newDroppedWidth = totalWidth - mainWidth;
+
+                      // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정
+                      if (newDroppedWidth < 100) {
+                        e.target.value = (totalWidth - 100).toString();
+                        handleSpaceInfoUpdate({
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            width: 100
+                          }
+                        });
+                      } else if (newDroppedWidth > totalWidth - 100) {
+                        e.target.value = '100';
+                        handleSpaceInfoUpdate({
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            width: totalWidth - 100
+                          }
+                        });
+                      } else {
+                        // 유효한 값이면 그대로 적용
+                        handleSpaceInfoUpdate({
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            width: newDroppedWidth
+                          }
+                        });
+                      }
+                    }}
+                    className={`${styles.input} ${styles.inputWithUnitField}`}
                   />
+                  <span className={styles.unit}>mm</span>
                 </div>
-              ) : (
-                // 단내림이 있을 때 - 도어 개수 입력 숨김
-                <div>
-                  <div className={styles.inputGroup}>
-                    <DoorSlider
-                      value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
-                      onChange={(value) => {
-                        handleSpaceInfoUpdate({ mainDoorCount: value });
-                      }}
-                      width={spaceInfo.width || 4800}
-                    />
-                  </div>
-                  
-                  {/* 단내림구간 도어 개수 */}
-                  <div className={styles.inputGroup} style={{ marginTop: '24px' }}>
-                    <DoorSlider
-                      value={spaceInfo.droppedCeilingDoorCount || 1}
-                      onChange={(value) => {
-                        handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
-                      }}
-                      width={spaceInfo.droppedCeiling?.width || 900}
-                    />
-                  </div>
-                </div>
-              )}
-
               </div>
 
-            {/* 프레임 설정 - 양쪽 탭에서 모두 표시 */}
-            <div className={styles.configSection}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>프레임 설정</h3>
-              </div>
-              
-              {/* 프레임 타입 */}
-              <div className={styles.toggleButtonGroup}>
-                <button
-                  className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'surround' ? styles.active : ''}`}
-                  onClick={() => handleSpaceInfoUpdate({ surroundType: 'surround' })}
-                >
-                  서라운드
-                </button>
-                <button
-                  className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'no-surround' ? styles.active : ''}`}
-                  onClick={() => handleSpaceInfoUpdate({ surroundType: 'no-surround' })}
-                >
-                  노서라운드
-                </button>
-              </div>
+              {/* 메인구간 높이 */}
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
+                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                  <input
+                    type="text"
+                    defaultValue={spaceInfo.height || 2400}
+                    key={`main-height-${spaceInfo.height || 2400}`}
+                    onChange={(e) => {
+                      // 숫자와 빈 문자열만 허용
+                      const value = e.target.value;
+                      if (value === '' || /^\d+$/.test(value)) {
+                        // 로컴 상태만 업데이트 (입력 중에는 스토어 업데이트 안 함)
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const value = e.target.value;
+                      if (value === '') {
+                        // 빈 값인 경우 기존 값으로 되돌림
+                        e.target.value = (spaceInfo.height || 2400).toString();
+                        return;
+                      }
 
-              {/* 프레임 속성 설정 */}
-              {(spaceInfo.surroundType || 'surround') === 'surround' ? (
-                <div className={styles.subSetting}>
-                  <label className={styles.subLabel}>프레임 폭 설정</label>
-                  
-                  <div className={styles.frameGrid}>
-                    {/* 좌측 */}
-                    <div className={styles.frameItem}>
-                      <label className={styles.frameItemLabel}>
-                        {spaceInfo.installType === 'builtin' ? '좌측' : 
-                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left ? '좌측' :
-                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left ? '좌측(엔드패널)' :
-                         spaceInfo.installType === 'freestanding' ? '좌측(엔드패널)' : '좌측'}
-                      </label>
-                      <div className={styles.frameItemInput}>
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentLeft = spaceInfo.frameSize?.left || 50;
-                            const newLeft = Math.max(10, currentLeft - 1);
-                            updateFrameSize('left', newLeft);
-                          }}
-                          disabled={
-                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) || 
-                            spaceInfo.installType === 'freestanding'
-                          }
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          min="10"
-                          max="100"
-                          value={spaceInfo.frameSize?.left || 50}
-                          onChange={(e) => {
-                            const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
-                            updateFrameSize('left', value);
-                          }}
-                          onFocus={() => setHighlightedFrame('left')}
-                          onBlur={() => setHighlightedFrame(null)}
-                          className={styles.frameNumberInput}
-                          disabled={
-                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) || 
-                            spaceInfo.installType === 'freestanding'
-                          }
-                        />
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentLeft = spaceInfo.frameSize?.left || 50;
-                            const newLeft = Math.min(100, currentLeft + 1);
-                            updateFrameSize('left', newLeft);
-                          }}
-                          disabled={
-                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) || 
-                            spaceInfo.installType === 'freestanding'
-                          }
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
+                      const numValue = parseInt(value);
+                      const minValue = 1800;
+                      const maxValue = 3000;
 
-                    {/* 우측 */}
-                    <div className={styles.frameItem}>
-                      <label className={styles.frameItemLabel}>
-                        {spaceInfo.installType === 'builtin' ? '우측' : 
-                         spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right ? '우측' :
-                         spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right ? '우측(엔드패널)' :
-                         spaceInfo.installType === 'freestanding' ? '우측(엔드패널)' : '우측'}
-                      </label>
-                      <div className={styles.frameItemInput}>
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentRight = spaceInfo.frameSize?.right || 50;
-                            const newRight = Math.max(10, currentRight - 1);
-                            updateFrameSize('right', newRight);
-                          }}
-                          disabled={
-                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) || 
-                            spaceInfo.installType === 'freestanding'
-                          }
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          min="10"
-                          max="100"
-                          value={spaceInfo.frameSize?.right || 50}
-                          onChange={(e) => {
-                            const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
-                            updateFrameSize('right', value);
-                          }}
-                          onFocus={() => setHighlightedFrame('right')}
-                          onBlur={() => setHighlightedFrame(null)}
-                          className={styles.frameNumberInput}
-                          disabled={
-                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) || 
-                            spaceInfo.installType === 'freestanding'
-                          }
-                        />
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentRight = spaceInfo.frameSize?.right || 50;
-                            const newRight = Math.min(100, currentRight + 1);
-                            updateFrameSize('right', newRight);
-                          }}
-                          disabled={
-                            (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) || 
-                            spaceInfo.installType === 'freestanding'
-                          }
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
+                      // 범위 검증
+                      if (numValue < minValue) {
+                        e.target.value = minValue.toString();
+                        handleSpaceInfoUpdate({ height: minValue });
+                      } else if (numValue > maxValue) {
+                        e.target.value = maxValue.toString();
+                        handleSpaceInfoUpdate({ height: maxValue });
+                      } else {
+                        handleSpaceInfoUpdate({ height: numValue });
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        (e.target as HTMLInputElement).blur();
+                      } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                        e.preventDefault();
 
-                    {/* 상부 */}
-                    <div className={styles.frameItem}>
-                      <label className={styles.frameItemLabel}>상부</label>
-                      <div className={styles.frameItemInput}>
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentTop = spaceInfo.frameSize?.top || 50;
-                            const newTop = Math.max(10, currentTop - 1);
-                            updateFrameSize('top', newTop);
-                          }}
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          min="10"
-                          max="100"
-                          value={spaceInfo.frameSize?.top || 50}
-                          onChange={(e) => {
-                            const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
-                            updateFrameSize('top', value);
-                          }}
-                          onFocus={() => setHighlightedFrame('top')}
-                          onBlur={() => setHighlightedFrame(null)}
-                          className={styles.frameNumberInput}
-                        />
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentTop = spaceInfo.frameSize?.top || 50;
-                            const newTop = Math.min(100, currentTop + 1);
-                            updateFrameSize('top', newTop);
-                          }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className={styles.frameUnit}>단위: mm</div>
+                        const currentValue = parseInt(e.target.value) || (spaceInfo.height || 2400);
+                        const minValue = 1800;
+                        const maxValue = 3000;
+
+                        let newValue;
+                        if (e.key === 'ArrowUp') {
+                          newValue = Math.min(currentValue + 1, maxValue);
+                        } else {
+                          newValue = Math.max(currentValue - 1, minValue);
+                        }
+
+                        if (newValue !== currentValue) {
+                          e.target.value = newValue.toString();
+                          handleSpaceInfoUpdate({ height: newValue });
+                        }
+                      }
+                    }}
+                    className={`${styles.input} ${styles.inputWithUnitField}`}
+                    placeholder="1800-3000"
+                  />
+                  <span className={styles.unit}>mm</span>
                 </div>
-              ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
-                <div className={styles.subSetting}>
-                  <label className={styles.subLabel}>상부 프레임 설정</label>
-                  
-                  <div className={styles.frameGrid}>
-                    {/* 상부 프레임만 표시 */}
-                    <div className={styles.frameItem}>
-                      <label className={styles.frameItemLabel}>상부</label>
-                      <div className={styles.frameItemInput}>
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentTop = spaceInfo.frameSize?.top || 10;
-                            const newTop = Math.max(10, currentTop - 1);
-                            updateFrameSize('top', newTop);
-                          }}
-                        >
-                          −
-                        </button>
-                        <input
-                          type="number"
-                          min="10"
-                          max="200"
-                          value={spaceInfo.frameSize?.top || 10}
-                          onChange={(e) => {
-                            const value = Math.min(200, Math.max(10, parseInt(e.target.value) || 10));
-                            updateFrameSize('top', value);
-                          }}
-                          onFocus={() => setHighlightedFrame('top')}
-                          onBlur={() => setHighlightedFrame(null)}
-                          className={styles.frameNumberInput}
-                        />
-                        <button 
-                          className={styles.frameButton}
-                          onClick={() => {
-                            const currentTop = spaceInfo.frameSize?.top || 10;
-                            const newTop = Math.min(200, currentTop + 1);
-                            updateFrameSize('top', newTop);
-                          }}
-                        >
-                          +
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className={styles.frameUnit}>단위: mm</div>
-                </div>
-              ) : null}
+              </div>
+            </div>
+          </div>
+        )}
 
+        {/* 단내림 구간 사이즈 - 메인구간 사이즈 아래에 표시 */}
+        {spaceInfo.droppedCeiling?.enabled && (
+          <div className={styles.configSection}>
+            <div className={styles.sectionHeader}>
+              <span className={styles.sectionDot}></span>
+              <h3 className={styles.sectionTitle}>단내림 구간 사이즈</h3>
             </div>
 
-            {/* 이격거리 설정 - 노서라운드 선택시에만 표시 */}
-            <GapControls 
-              spaceInfo={spaceInfo}
-              onUpdate={handleSpaceInfoUpdate}
-            />
+            <div style={{ display: 'flex', gap: '12px' }}>
+              {/* 단내림 구간 폭 */}
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>W</span>
+                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                  <input
+                    type="text"
+                    min="100"
+                    max={(spaceInfo.width || 4800) - 100}
+                    step="10"
+                    defaultValue={spaceInfo.droppedCeiling?.width || 900}
+                    key={`dropped-width-${spaceInfo.droppedCeiling?.width || 900}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const inputValue = e.target.value;
+                      const totalWidth = spaceInfo.width || 4800;
+                      const currentDroppedWidth = spaceInfo.droppedCeiling?.width || 900;
 
+                      // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
+                      if (inputValue === '' || isNaN(parseInt(inputValue))) {
+                        e.target.value = currentDroppedWidth.toString();
+                        return;
+                      }
 
-            {/* 받침대 - 양쪽 탭에서 모두 표시 */}
-            <div className={styles.configSection}>
-              <div className={styles.sectionHeader}>
-                <span className={styles.sectionDot}></span>
-                <h3 className={styles.sectionTitle}>받침대</h3>
+                      const droppedWidth = parseInt(inputValue);
+                      const mainWidth = totalWidth - droppedWidth;
+
+                      // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정
+                      if (droppedWidth < 100) {
+                        e.target.value = '100';
+                        handleSpaceInfoUpdate({
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            width: 100
+                          }
+                        });
+                      } else if (droppedWidth > totalWidth - 100) {
+                        e.target.value = (totalWidth - 100).toString();
+                        handleSpaceInfoUpdate({
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            width: totalWidth - 100
+                          }
+                        });
+                      } else {
+                        // 유효한 값이면 그대로 적용
+                        handleSpaceInfoUpdate({
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            width: droppedWidth
+                          }
+                        });
+                      }
+                    }}
+                    className={`${styles.input} ${styles.inputWithUnitField}`}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
               </div>
-              <BaseControls 
-                spaceInfo={spaceInfo}
-                onUpdate={handleSpaceInfoUpdate}
-                disabled={hasSpecialDualFurniture}
+
+              {/* 단내림 구간 높이 */}
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ minWidth: '20px', color: 'var(--theme-primary)' }}>H</span>
+                <div className={styles.inputWithUnit} style={{ flex: 1 }}>
+                  <input
+                    type="text"
+                    min="1800"
+                    max="2900"
+                    step="10"
+                    defaultValue={(spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}
+                    key={`dropped-height-${(spaceInfo.height || 2400) - (spaceInfo.droppedCeiling?.dropHeight || 200)}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        (e.target as HTMLInputElement).blur();
+                      }
+                    }}
+                    onBlur={(e) => {
+                      const inputValue = e.target.value;
+                      const totalHeight = spaceInfo.height || 2400;
+                      const currentDroppedHeight = totalHeight - (spaceInfo.droppedCeiling?.dropHeight || 200);
+
+                      // 빈 값이거나 유효하지 않은 경우 현재 값으로 복구
+                      if (inputValue === '' || isNaN(parseInt(inputValue))) {
+                        e.target.value = currentDroppedHeight.toString();
+                        return;
+                      }
+
+                      const droppedHeight = parseInt(inputValue);
+                      const newDropHeight = totalHeight - droppedHeight;
+
+                      // 유효한 범위 밖인 경우 가장 가까운 유효값으로 조정 (단차 높이는 100~500mm)
+                      if (newDropHeight < 100) {
+                        const validDroppedHeight = totalHeight - 100;
+                        e.target.value = validDroppedHeight.toString();
+                        handleSpaceInfoUpdate({
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            dropHeight: 100
+                          }
+                        });
+                      } else if (newDropHeight > 500) {
+                        const validDroppedHeight = totalHeight - 500;
+                        e.target.value = validDroppedHeight.toString();
+                        handleSpaceInfoUpdate({
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            dropHeight: 500
+                          }
+                        });
+                      } else {
+                        // 유효한 값이면 그대로 적용
+                        handleSpaceInfoUpdate({
+                          droppedCeiling: {
+                            ...spaceInfo.droppedCeiling,
+                            enabled: true,
+                            dropHeight: newDropHeight
+                          }
+                        });
+                      }
+                    }}
+                    className={`${styles.input} ${styles.inputWithUnitField}`}
+                  />
+                  <span className={styles.unit}>mm</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+
+        {/* 컬럼수 표시 */}
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>컬럼수</h3>
+          </div>
+          {console.log('🔍 레이아웃 섹션 렌더링:', {
+            activeTab: activeRightPanelTab,
+            단내림활성화: spaceInfo.droppedCeiling?.enabled,
+            mainDoorCount: spaceInfo.mainDoorCount,
+            customColumnCount: spaceInfo.customColumnCount
+          })}
+
+          {/* 도어 개수 입력 - 제거 */}
+          {!spaceInfo.droppedCeiling?.enabled ? (
+            // 단내림이 없을 때 - 컬럼 개수만 표시
+            <div className={styles.inputGroup}>
+              <DoorSlider
+                value={getCurrentColumnCount()}
+                onChange={(value) => {
+                  handleSpaceInfoUpdate({ customColumnCount: value });
+                }}
+                width={spaceInfo.width || 4800}
               />
             </div>
+          ) : (
+            // 단내림이 있을 때 - 도어 개수 입력 숨김
+            <div>
+              <div className={styles.inputGroup}>
+                <DoorSlider
+                  value={spaceInfo.mainDoorCount || getCurrentColumnCount()}
+                  onChange={(value) => {
+                    handleSpaceInfoUpdate({ mainDoorCount: value });
+                  }}
+                  width={spaceInfo.width || 4800}
+                />
+              </div>
 
+              {/* 단내림구간 도어 개수 */}
+              <div className={styles.inputGroup} style={{ marginTop: '24px' }}>
+                <DoorSlider
+                  value={spaceInfo.droppedCeilingDoorCount || 1}
+                  onChange={(value) => {
+                    handleSpaceInfoUpdate({ droppedCeilingDoorCount: value });
+                  }}
+                  width={spaceInfo.droppedCeiling?.width || 900}
+                />
+              </div>
+            </div>
+          )}
+
+        </div>
+
+        {/* 프레임 설정 - 양쪽 탭에서 모두 표시 */}
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>프레임 설정</h3>
           </div>
+
+          {/* 프레임 타입 */}
+          <div className={styles.toggleButtonGroup}>
+            <button
+              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'surround' ? styles.active : ''}`}
+              onClick={() => handleSpaceInfoUpdate({ surroundType: 'surround' })}
+            >
+              서라운드
+            </button>
+            <button
+              className={`${styles.toggleButton} ${(spaceInfo.surroundType || 'surround') === 'no-surround' ? styles.active : ''}`}
+              onClick={() => handleSpaceInfoUpdate({ surroundType: 'no-surround' })}
+            >
+              노서라운드
+            </button>
+          </div>
+
+          {/* 프레임 속성 설정 */}
+          {(spaceInfo.surroundType || 'surround') === 'surround' ? (
+            <div className={styles.subSetting}>
+              <label className={styles.subLabel}>프레임 폭 설정</label>
+
+              <div className={styles.frameGrid}>
+                {/* 좌측 */}
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>
+                    {spaceInfo.installType === 'builtin' ? '좌측' :
+                      spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left ? '좌측' :
+                        spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left ? '좌측(엔드패널)' :
+                          spaceInfo.installType === 'freestanding' ? '좌측(엔드패널)' : '좌측'}
+                  </label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentLeft = spaceInfo.frameSize?.left || 50;
+                        const newLeft = Math.max(10, currentLeft - 1);
+                        updateFrameSize('left', newLeft);
+                      }}
+                      disabled={
+                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
+                        spaceInfo.installType === 'freestanding'
+                      }
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="10"
+                      max="100"
+                      value={spaceInfo.frameSize?.left || 50}
+                      onChange={(e) => {
+                        const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
+                        updateFrameSize('left', value);
+                      }}
+                      onFocus={() => setHighlightedFrame('left')}
+                      onBlur={() => setHighlightedFrame(null)}
+                      className={styles.frameNumberInput}
+                      disabled={
+                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
+                        spaceInfo.installType === 'freestanding'
+                      }
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentLeft = spaceInfo.frameSize?.left || 50;
+                        const newLeft = Math.min(100, currentLeft + 1);
+                        updateFrameSize('left', newLeft);
+                      }}
+                      disabled={
+                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
+                        spaceInfo.installType === 'freestanding'
+                      }
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* 우측 */}
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>
+                    {spaceInfo.installType === 'builtin' ? '우측' :
+                      spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right ? '우측' :
+                        spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right ? '우측(엔드패널)' :
+                          spaceInfo.installType === 'freestanding' ? '우측(엔드패널)' : '우측'}
+                  </label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentRight = spaceInfo.frameSize?.right || 50;
+                        const newRight = Math.max(10, currentRight - 1);
+                        updateFrameSize('right', newRight);
+                      }}
+                      disabled={
+                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
+                        spaceInfo.installType === 'freestanding'
+                      }
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="10"
+                      max="100"
+                      value={spaceInfo.frameSize?.right || 50}
+                      onChange={(e) => {
+                        const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
+                        updateFrameSize('right', value);
+                      }}
+                      onFocus={() => setHighlightedFrame('right')}
+                      onBlur={() => setHighlightedFrame(null)}
+                      className={styles.frameNumberInput}
+                      disabled={
+                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
+                        spaceInfo.installType === 'freestanding'
+                      }
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentRight = spaceInfo.frameSize?.right || 50;
+                        const newRight = Math.min(100, currentRight + 1);
+                        updateFrameSize('right', newRight);
+                      }}
+                      disabled={
+                        (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
+                        spaceInfo.installType === 'freestanding'
+                      }
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+
+                {/* 상부 */}
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>상부</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentTop = spaceInfo.frameSize?.top || 50;
+                        const newTop = Math.max(10, currentTop - 1);
+                        updateFrameSize('top', newTop);
+                      }}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="10"
+                      max="100"
+                      value={spaceInfo.frameSize?.top || 50}
+                      onChange={(e) => {
+                        const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
+                        updateFrameSize('top', value);
+                      }}
+                      onFocus={() => setHighlightedFrame('top')}
+                      onBlur={() => setHighlightedFrame(null)}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentTop = spaceInfo.frameSize?.top || 50;
+                        const newTop = Math.min(100, currentTop + 1);
+                        updateFrameSize('top', newTop);
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.frameUnit}>단위: mm</div>
+            </div>
+          ) : (spaceInfo.surroundType || 'surround') === 'no-surround' ? (
+            <div className={styles.subSetting}>
+              <label className={styles.subLabel}>상부 프레임 설정</label>
+
+              <div className={styles.frameGrid}>
+                {/* 상부 프레임만 표시 */}
+                <div className={styles.frameItem}>
+                  <label className={styles.frameItemLabel}>상부</label>
+                  <div className={styles.frameItemInput}>
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentTop = spaceInfo.frameSize?.top || 10;
+                        const newTop = Math.max(10, currentTop - 1);
+                        updateFrameSize('top', newTop);
+                      }}
+                    >
+                      −
+                    </button>
+                    <input
+                      type="number"
+                      min="10"
+                      max="200"
+                      value={spaceInfo.frameSize?.top || 10}
+                      onChange={(e) => {
+                        const value = Math.min(200, Math.max(10, parseInt(e.target.value) || 10));
+                        updateFrameSize('top', value);
+                      }}
+                      onFocus={() => setHighlightedFrame('top')}
+                      onBlur={() => setHighlightedFrame(null)}
+                      className={styles.frameNumberInput}
+                    />
+                    <button
+                      className={styles.frameButton}
+                      onClick={() => {
+                        const currentTop = spaceInfo.frameSize?.top || 10;
+                        const newTop = Math.min(200, currentTop + 1);
+                        updateFrameSize('top', newTop);
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.frameUnit}>단위: mm</div>
+            </div>
+          ) : null}
+
+        </div>
+
+        {/* 이격거리 설정 - 노서라운드 선택시에만 표시 */}
+        <GapControls
+          spaceInfo={spaceInfo}
+          onUpdate={handleSpaceInfoUpdate}
+        />
+
+
+        {/* 받침대 - 양쪽 탭에서 모두 표시 */}
+        <div className={styles.configSection}>
+          <div className={styles.sectionHeader}>
+            <span className={styles.sectionDot}></span>
+            <h3 className={styles.sectionTitle}>받침대</h3>
+          </div>
+          <BaseControls
+            spaceInfo={spaceInfo}
+            onUpdate={handleSpaceInfoUpdate}
+            disabled={hasSpecialDualFurniture}
+          />
+        </div>
+
+      </div>
     );
   };
 
@@ -3421,7 +3466,7 @@ const Configurator: React.FC = () => {
         {isFileTreeOpen && (
           <>
             {/* 배경 오버레이 */}
-            <div 
+            <div
               className={styles.fileTreeOverlay}
               onClick={() => setIsFileTreeOpen(false)}
             />
@@ -3704,32 +3749,32 @@ const Configurator: React.FC = () => {
             }}
           >
 
-          {/* 우측 패널 */}
-          <div 
-            className={styles.rightPanel}
-            style={{
-              transform: isRightPanelOpen ? 'translateX(0)' : 'translateX(100%)',
-              opacity: isRightPanelOpen ? 1 : 0,
-              pointerEvents: isRightPanelOpen ? 'auto' : 'none'
-            }}
-          >
-          {/* 탭 헤더 */}
-          <div className={styles.rightPanelHeader}>
-            <div className={styles.rightPanelTabs}>
-              <div className={styles.tabGroup}>
-                <button
-                  className={`${styles.rightPanelTab} ${styles.active}`}
-                >
-                  배치 속성
-                </button>
+            {/* 우측 패널 */}
+            <div
+              className={styles.rightPanel}
+              style={{
+                transform: isRightPanelOpen ? 'translateX(0)' : 'translateX(100%)',
+                opacity: isRightPanelOpen ? 1 : 0,
+                pointerEvents: isRightPanelOpen ? 'auto' : 'none'
+              }}
+            >
+              {/* 탭 헤더 */}
+              <div className={styles.rightPanelHeader}>
+                <div className={styles.rightPanelTabs}>
+                  <div className={styles.tabGroup}>
+                    <button
+                      className={`${styles.rightPanelTab} ${styles.active}`}
+                    >
+                      배치 속성
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {/* 패널 컨텐츠 */}
+              <div className={styles.rightPanelContent}>
+                {renderRightPanelContent()}
               </div>
             </div>
-          </div>
-          {/* 패널 컨텐츠 */}
-          <div className={styles.rightPanelContent}>
-            {renderRightPanelContent()}
-          </div>
-        </div>
           </div>
         )}
       </div>
@@ -3737,14 +3782,14 @@ const Configurator: React.FC = () => {
       {/* 가구 편집 창들 - 기존 기능 유지 */}
       <ModulePropertiesPanel />
       <PlacedModulePropertiesPanel />
-      
+
       {/* 기둥 편집 모달 */}
       <ColumnEditModal
         columnId={activePopup.type === 'columnEdit' ? activePopup.id : null}
         isOpen={activePopup.type === 'columnEdit'}
         onClose={closeAllPopups}
       />
-      
+
       {/* 컨버팅 모달 */}
       <ConvertModal
         isOpen={isConvertModalOpen}
@@ -3752,7 +3797,7 @@ const Configurator: React.FC = () => {
         showAll={showAll}
         setShowAll={setShowAll}
       />
-      
+
       {/* PDF 템플릿 미리보기 */}
       <PDFTemplatePreview
         isOpen={showPDFPreview}
@@ -3783,39 +3828,39 @@ const Configurator: React.FC = () => {
           <div className={responsiveStyles.bottomNav}>
             <button style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: 'var(--theme-text)', fontSize: '11px' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9 22 9 12 15 12 15 22"/>
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
               </svg>
               <span>홈</span>
             </button>
             <button style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: 'var(--theme-text)', fontSize: '11px' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-                <line x1="9" y1="3" x2="9" y2="21"/>
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <line x1="9" y1="3" x2="9" y2="21" />
               </svg>
               <span>도면</span>
             </button>
             <button style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: 'var(--theme-text)', fontSize: '11px' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                <line x1="16" y1="2" x2="16" y2="6"/>
-                <line x1="8" y1="2" x2="8" y2="6"/>
-                <line x1="3" y1="10" x2="21" y2="10"/>
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
               </svg>
               <span>달력</span>
             </button>
             <button style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: 'var(--theme-primary)', fontSize: '11px' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="12" y1="8" x2="12" y2="16"/>
-                <line x1="8" y1="12" x2="16" y2="12"/>
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="16" />
+                <line x1="8" y1="12" x2="16" y2="12" />
               </svg>
               <span>추가</span>
             </button>
             <button style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', background: 'none', border: 'none', color: 'var(--theme-text)', fontSize: '11px' }}>
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
               </svg>
               <span>계정</span>
             </button>
