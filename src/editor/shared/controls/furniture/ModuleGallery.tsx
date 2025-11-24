@@ -260,37 +260,44 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     e.dataTransfer.setData('text/plain', module.id);
     e.dataTransfer.effectAllowed = 'copy';
 
-    // 드래그 고스트 이미지 설정 - 썸네일 이미지를 고스트로 사용
+    // 드래그 고스트 이미지 설정 - Canvas로 매번 새로 생성
     const thumbnailElement = e.currentTarget as HTMLElement;
-    const imgElement = thumbnailElement.querySelector('img');
-    if (imgElement && imgElement.complete) {
-      // 고스트용 이미지 컨테이너 생성 (매번 새로 생성하여 캐싱 방지)
-      const ghostContainer = document.createElement('div');
-      ghostContainer.style.position = 'absolute';
-      ghostContainer.style.left = '-9999px';
-      ghostContainer.style.width = '120px';
-      ghostContainer.style.height = 'auto';
-      ghostContainer.style.padding = '8px';
-      ghostContainer.style.background = 'white';
-      ghostContainer.style.borderRadius = '8px';
-      ghostContainer.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.2)';
+    const imgElement = thumbnailElement.querySelector('img') as HTMLImageElement;
 
-      // 이미지 복제
-      const ghostImg = imgElement.cloneNode(true) as HTMLImageElement;
-      ghostImg.style.width = '100%';
-      ghostImg.style.height = 'auto';
-      ghostImg.style.display = 'block';
+    if (imgElement && imgElement.complete && imgElement.naturalHeight > 0) {
+      try {
+        // Canvas 생성 (매번 새로 생성하여 캐싱 완전히 방지)
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
 
-      ghostContainer.appendChild(ghostImg);
-      document.body.appendChild(ghostContainer);
+        if (ctx) {
+          // 고스트 크기 설정
+          const ghostSize = 120;
+          const imgAspect = imgElement.naturalWidth / imgElement.naturalHeight;
 
-      // 고스트 이미지로 설정
-      e.dataTransfer.setDragImage(ghostContainer, 60, 60);
+          if (imgAspect > 1) {
+            canvas.width = ghostSize;
+            canvas.height = ghostSize / imgAspect;
+          } else {
+            canvas.width = ghostSize * imgAspect;
+            canvas.height = ghostSize;
+          }
 
-      // 드래그 시작 후 제거
-      setTimeout(() => {
-        document.body.removeChild(ghostContainer);
-      }, 0);
+          // 흰 배경
+          ctx.fillStyle = 'white';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // 이미지 그리기
+          ctx.drawImage(imgElement, 0, 0, canvas.width, canvas.height);
+
+          // 고스트 이미지로 설정
+          e.dataTransfer.setDragImage(canvas, canvas.width / 2, canvas.height / 2);
+
+          console.log('🎨 고스트 생성:', module.name, canvas.width, 'x', canvas.height);
+        }
+      } catch (error) {
+        console.error('고스트 생성 실패:', error);
+      }
     }
 
     // 전역 드래그 상태 설정
