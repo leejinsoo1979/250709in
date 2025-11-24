@@ -81,17 +81,17 @@ export const NotificationCenter: React.FC = () => {
     console.log('  - type:', notification.type);
     console.log('  - title:', notification.title);
 
-    // 읽지 않은 알림이면 읽음 처리
-    if (!notification.isRead) {
-      await markNotificationAsRead(notification.id);
-    }
-
-    // 메시지 타입이면 팝업으로 표시
+    // 메시지 타입이면 팝업으로 표시 (읽음 처리는 확인 버튼에서)
     if (notification.type === 'message') {
-      console.log('✉️ 메시지 알림 → 팝업 열기');
+      console.log('✉️ 메시지 알림 → 팝업 열기 (읽음 처리는 확인 버튼에서)');
       setSelectedMessage(notification);
       setIsOpen(false);
       return;
+    }
+
+    // 메시지가 아닌 알림은 클릭 시 바로 읽음 처리
+    if (!notification.isRead) {
+      await markNotificationAsRead(notification.id);
     }
 
     console.log('📍 다른 타입 알림 → URL 이동');
@@ -286,17 +286,16 @@ export const NotificationCenter: React.FC = () => {
                   console.log('✅ 확인 버튼 클릭됨');
 
                   // 즉시 모달 닫기
-                  const messageToMark = selectedMessage;
+                  const messageId = selectedMessage.id;
+                  const isAlreadyRead = selectedMessage.isRead;
                   setSelectedMessage(null);
                   console.log('❌ 모달 닫힘');
 
-                  // 백그라운드에서 읽음 처리
-                  if (!messageToMark.isRead) {
-                    console.log('📖 백그라운드에서 읽음 처리:', messageToMark.id);
-                    markNotificationAsRead(messageToMark.id).catch(err => {
-                      console.error('❌ 읽음 처리 실패:', err);
-                    });
-                  }
+                  // 백그라운드에서 읽음 처리 (이미 읽은 경우에도 실행하여 안전성 확보)
+                  console.log('📖 백그라운드에서 읽음 처리:', messageId, '(이미 읽음:', isAlreadyRead, ')');
+                  markNotificationAsRead(messageId).catch(err => {
+                    console.error('❌ 읽음 처리 실패:', err);
+                  });
                 }}
               >
                 <Check size={18} style={{ marginRight: '6px' }} />
