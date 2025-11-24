@@ -29,21 +29,21 @@ const FURNITURE_ICONS: Record<string, string> = {
   'dual-2drawer-styler': getImagePath('dual-2drawer-styler.png'),
   'dual-4drawer-pantshanger': getImagePath('dual-4drawer-pantshanger.png'),
   // 싱글 상부장
-  'upper-cabinet-shelf': getImagePath('상부장 선반형.png'),
-  'upper-cabinet-2tier': getImagePath('상부장 2단형.png'),
-  'upper-cabinet-open': getImagePath('상부장 오픈형.png'),
-  'upper-cabinet-mixed': getImagePath('상부장 혼합형.png'),
+  'upper-cabinet-shelf': getImagePath('upper-cabinet-shelf.png'),
+  'upper-cabinet-2tier': getImagePath('upper-cabinet-2tier.png'),
+  'upper-cabinet-open': getImagePath('upper-cabinet-open.png'),
+  'upper-cabinet-mixed': getImagePath('upper-cabinet-mixed.png'),
   // 싱글 하부장
-  'lower-cabinet-basic': getImagePath('하부장.png'),
-  'lower-cabinet-2tier': getImagePath('하부장 2단형.png'),
+  'lower-cabinet-basic': getImagePath('lower-cabinet-basic.png'),
+  'lower-cabinet-2tier': getImagePath('lower-cabinet-2tier.png'),
   // 듀얼 상부장
-  'dual-upper-cabinet-shelf': getImagePath('듀얼 상부장 선반형.png'),
-  'dual-upper-cabinet-2tier': getImagePath('듀얼 상부장2단형.png'),
-  'dual-upper-cabinet-open': getImagePath('듀얼 상부장 오픈형.png'),
-  'dual-upper-cabinet-mixed': getImagePath('듀얼 상부장 혼합형.png'),
+  'dual-upper-cabinet-shelf': getImagePath('dual-upper-cabinet-shelf.png'),
+  'dual-upper-cabinet-2tier': getImagePath('dual-upper-cabinet-2tier.png'),
+  'dual-upper-cabinet-open': getImagePath('dual-upper-cabinet-open.png'),
+  'dual-upper-cabinet-mixed': getImagePath('dual-upper-cabinet-mixed.png'),
   // 듀얼 하부장
-  'dual-lower-cabinet-basic': getImagePath('듀얼 하부장.png'),
-  'dual-lower-cabinet-2tier': getImagePath('듀얼 하부장 2단형.png'),
+  'dual-lower-cabinet-basic': getImagePath('dual-lower-cabinet-basic.png'),
+  'dual-lower-cabinet-2tier': getImagePath('dual-lower-cabinet-2tier.png'),
 };
 
 // 모듈 타입 정의
@@ -916,18 +916,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             alt={module.name}
             onError={(e) => {
               const img = e.target as HTMLImageElement;
-              console.error('❌ 이미지 로드 실패:', {
-                originalSrc: iconPath,
-                currentSrc: img.src,
-                moduleName: module.name
-              });
               if (!img.dataset.fallbackAttempted) {
                 img.dataset.fallbackAttempted = 'true';
                 img.src = '/images/furniture-thumbnails/single-2drawer-hanging.png';
               }
-            }}
-            onLoad={() => {
-              console.log('✅ 이미지 로드 성공:', iconPath, module.name);
             }}
           />
         </div>
@@ -1049,14 +1041,7 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
     const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거
-    const path = FURNITURE_ICONS[moduleKey] || FURNITURE_ICONS['single-2drawer-hanging'];
-
-    // 상부장/하부장 경로 확인
-    if (moduleKey.includes('cabinet')) {
-      console.log('🎨 THUMBNAIL PATH:', moduleKey, '→', path);
-    }
-
-    return path;
+    return FURNITURE_ICONS[moduleKey] || FURNITURE_ICONS['single-2drawer-hanging'];
   };
 
   // 가구 유효성 검사 (간단 버전)
