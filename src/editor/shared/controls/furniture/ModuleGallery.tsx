@@ -915,14 +915,21 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
             src={iconPath}
             alt={module.name}
             onError={(e) => {
-              // 이미지 로드 실패 시 기본 이미지로 대체 (한 번만 실행)
-                const img = e.target as HTMLImageElement;
-                if (!img.dataset.fallbackAttempted) {
-                  img.dataset.fallbackAttempted = 'true';
-                  img.src = getImagePath('single-2drawer-hanging.png');
-                }
-              }}
-            />
+              const img = e.target as HTMLImageElement;
+              console.error('❌ 이미지 로드 실패:', {
+                originalSrc: iconPath,
+                currentSrc: img.src,
+                moduleName: module.name
+              });
+              if (!img.dataset.fallbackAttempted) {
+                img.dataset.fallbackAttempted = 'true';
+                img.src = '/images/furniture-thumbnails/single-2drawer-hanging.png';
+              }
+            }}
+            onLoad={() => {
+              console.log('✅ 이미지 로드 성공:', iconPath, module.name);
+            }}
+          />
         </div>
         {!isValid && <div className={styles.disabledOverlay} />}
       </div>
