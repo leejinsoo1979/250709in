@@ -19,8 +19,8 @@
 .spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid var(--theme-border, #e5e7eb);
-  border-top-color: var(--theme-primary, #10b981);
+  border: 4px solid var(--theme-border);
+  border-top-color: var(--theme-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -61,11 +61,11 @@
   justify-content: center;
   gap: 12px;
   padding: 24px;
-  background: var(--theme-primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+  background: var(--theme-primary);
 }
 
 .logo {
-  color: white !important;
+  color: var(--theme-surface);
   flex-shrink: 0;
 }
 
@@ -73,7 +73,7 @@
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: white !important;
+  color: var(--theme-surface);
 }
 
 .profileSection {
@@ -86,7 +86,7 @@
 
 .crownIcon {
   font-size: 24px;
-  color: var(--theme-primary, #667eea) !important;
+  color: var(--theme-primary);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
   flex-shrink: 0;
   width: 24px;
@@ -94,7 +94,7 @@
 }
 
 .crownIcon path {
-  fill: var(--theme-primary, #667eea);
+  fill: var(--theme-primary);
 }
 
 .profileAvatar {
@@ -103,7 +103,7 @@
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
-  border: 2px solid var(--theme-primary, #667eea);
+  border: 2px solid var(--theme-primary);
 }
 
 .profileAvatar img {
@@ -118,8 +118,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
   font-weight: 700;
   font-size: 16px;
 }
@@ -150,13 +150,13 @@
 .superAdminBadge {
   display: inline-block;
   padding: 4px 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white !important;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
   border-radius: 12px;
   font-size: 10px;
   font-weight: 600;
   white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 2px 8px var(--theme-shadow);
   flex-shrink: 0;
 }
 
@@ -201,12 +201,12 @@
 }
 
 .navItem:hover svg {
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
 }
 
 .navItemActive {
-  background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
-  color: var(--theme-primary, #667eea);
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
   font-weight: 600;
   position: relative;
 }
@@ -218,12 +218,12 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: var(--theme-primary, #667eea);
+  background: var(--theme-primary);
   border-radius: 0 4px 4px 0;
 }
 
 .navItemActive svg {
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
 }
 
 /* 메인 컨텐츠 */
@@ -245,13 +245,13 @@
   width: 56px;
   height: 56px;
   padding: 0;
-  background: var(--theme-primary, #667eea);
+  background: var(--theme-primary);
   border: none;
   border-radius: 50%;
-  color: white;
+  color: var(--theme-surface);
   cursor: pointer;
   transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px var(--theme-shadow);
   z-index: 1000;
 }
 
@@ -260,13 +260,13 @@
 }
 
 .backButton svg {
-  color: white;
+  color: var(--theme-surface);
   transition: all 0.2s ease;
 }
 
 .backButton:hover {
   transform: scale(1.1);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+  box-shadow: 0 6px 20px var(--theme-shadow);
 }
 
 /* 반응형 */

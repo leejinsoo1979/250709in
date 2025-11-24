@@ -138,14 +138,14 @@
 }
 
 .filterButton:hover {
-  border-color: var(--theme-primary, #667eea);
-  background: var(--theme-background, #f9fafb);
+  border-color: var(--theme-primary);
+  background: var(--theme-background);
 }
 
 .filterButton:focus {
   outline: none;
-  border-color: var(--theme-primary, #667eea);
-  box-shadow: 0 0 0 3px var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px var(--theme-primary-light);
 }
 
 .filterButton span {
@@ -210,12 +210,12 @@
 }
 
 .filterDropdownItemActive {
-  background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
-  color: var(--theme-primary, #667eea);
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
 }
 
 .filterDropdownItem svg {
-  color: var(--theme-primary, #667eea);
+  color: var(--theme-primary);
   flex-shrink: 0;
 }
 
@@ -257,7 +257,7 @@
 }
 
 .table tbody tr:hover {
-  background: var(--theme-primary-light, rgba(102, 126, 234, 0.1));
+  background: var(--theme-primary-light);
 }
 
 .table td {
@@ -300,8 +300,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--theme-primary);
+  color: var(--theme-surface);
   font-weight: 600;
   font-size: 16px;
 }
@@ -339,15 +339,15 @@
 }
 
 .superAdminBadge {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  background: var(--theme-primary);
+  color: var(--theme-surface);
+  box-shadow: 0 2px 8px var(--theme-shadow);
 }
 
 .adminBadge {
-  background: var(--theme-primary, #10b981);
-  color: white;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+  background: var(--theme-accent);
+  color: var(--theme-surface);
+  box-shadow: 0 2px 8px var(--theme-shadow);
 }
 
 .userBadge {
@@ -369,13 +369,13 @@
 }
 
 .grantButton {
-  background: var(--theme-primary, #10b981);
-  color: white;
+  background: var(--theme-accent);
+  color: var(--theme-surface);
 }
 
 .grantButton:hover {
-  background: var(--theme-primary-hover, #059669);
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  background: var(--theme-accent-hover);
+  box-shadow: 0 2px 8px var(--theme-shadow);
 }
 
 .revokeButton {
@@ -397,7 +397,7 @@
 
 .crownIcon {
   font-size: 24px;
-  color: var(--theme-primary, #10b981);
+  color: var(--theme-primary);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
   flex-shrink: 0;
   width: 24px;
@@ -406,7 +406,7 @@
 
 .medalIcon {
   font-size: 24px;
-  color: var(--theme-primary, #10b981);
+  color: var(--theme-accent);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
   flex-shrink: 0;
   width: 24px;
@@ -434,8 +434,8 @@
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: var(--theme-primary, #10b981);
-  border: 1px solid var(--theme-primary, #10b981);
+  color: var(--theme-primary);
+  border: 1px solid var(--theme-primary);
   background: transparent;
 }
 
@@ -537,8 +537,8 @@
 }
 
 .permissionItem:hover {
-  background: var(--theme-primary-light, rgba(16, 185, 129, 0.05));
-  border-color: var(--theme-primary, #10b981);
+  background: var(--theme-primary-light);
+  border-color: var(--theme-primary);
 }
 
 .permissionCheckbox {
@@ -547,7 +547,7 @@
   height: 18px;
   cursor: pointer;
   flex-shrink: 0;
-  accent-color: var(--theme-primary, #10b981);
+  accent-color: var(--theme-primary);
 }
 
 .permissionInfo {
@@ -601,15 +601,15 @@
 }
 
 .confirmButton {
-  background: var(--theme-primary, #10b981);
-  color: white;
-  border: 1px solid var(--theme-primary, #10b981);
+  background: var(--theme-accent);
+  color: var(--theme-surface);
+  border: 1px solid var(--theme-accent);
 }
 
 .confirmButton:hover {
-  background: var(--theme-primary-hover, #059669);
-  border-color: var(--theme-primary-hover, #059669);
-  box-shadow: 0 2px 12px rgba(16, 185, 129, 0.4);
+  background: var(--theme-accent-hover);
+  border-color: var(--theme-accent-hover);
+  box-shadow: 0 2px 12px var(--theme-shadow);
 }
 
 .confirmRevokeButton {
@@ -637,8 +637,8 @@
 .spinner {
   width: 40px;
   height: 40px;
-  border: 3px solid var(--theme-border, #e5e7eb);
-  border-top-color: var(--theme-primary, #10b981);
+  border: 3px solid var(--theme-border);
+  border-top-color: var(--theme-primary);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
