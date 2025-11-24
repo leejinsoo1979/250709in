@@ -15,6 +15,12 @@ export const useAdmin = (user: User | null) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // user가 변경되면 즉시 로딩 상태로 만들고 이전 권한 정보 초기화
+    setLoading(true);
+    setIsAdmin(false);
+    setIsSuperAdmin(false);
+    setAdminRole(null);
+
     const checkAdminStatus = async () => {
       console.log('🔐 useAdmin: 권한 체크 시작', {
         hasUser: !!user,
@@ -32,8 +38,7 @@ export const useAdmin = (user: User | null) => {
         return;
       }
 
-      setLoading(true); // 체크 시작 시 로딩 상태로 설정
-      console.log('🔐 useAdmin: 로딩 시작...');
+      console.log('🔐 useAdmin: 권한 체크 중...');
 
       try {
         // 슈퍼 관리자 체크
