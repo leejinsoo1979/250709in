@@ -1041,20 +1041,21 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
   // 가구 ID에서 키 추출하여 아이콘 경로 결정
   const getIconPath = (moduleId: string): string => {
     const moduleKey = moduleId.replace(/-[\d.]+$/, ''); // 폭 정보 제거 (소수점 포함)
-    
-    // 상부장의 경우 특별 처리
-    if (moduleKey.includes('upper-cabinet')) {
-      // 상부장 타입별 fallback 설정
-      if (moduleKey.includes('shelf')) {
-        return FURNITURE_ICONS['upper-cabinet-shelf'] || FURNITURE_ICONS['single-2hanging']; // 선반형은 2단옷장으로 대체
-      } else if (moduleKey.includes('open')) {
-        return FURNITURE_ICONS['upper-cabinet-open'] || FURNITURE_ICONS['single-2hanging']; // 오픈형도 2단옷장으로 대체
-      } else if (moduleKey.includes('mixed')) {
-        return FURNITURE_ICONS['upper-cabinet-mixed'] || FURNITURE_ICONS['single-2drawer-hanging']; // 혼합형은 서랍+옷장으로 대체
-      }
+
+    console.log('🔍 getIconPath 디버깅:', {
+      moduleId,
+      moduleKey,
+      found: !!FURNITURE_ICONS[moduleKey],
+      result: FURNITURE_ICONS[moduleKey] || 'fallback to single-2drawer-hanging'
+    });
+
+    // FURNITURE_ICONS에 정확히 매칭되는 키가 있으면 사용
+    if (FURNITURE_ICONS[moduleKey]) {
+      return FURNITURE_ICONS[moduleKey];
     }
-    
-    return FURNITURE_ICONS[moduleKey] || FURNITURE_ICONS['single-2drawer-hanging'];
+
+    // fallback: 기본 키큰장 이미지
+    return FURNITURE_ICONS['single-2drawer-hanging'];
   };
 
   // 가구 유효성 검사 (간단 버전)
