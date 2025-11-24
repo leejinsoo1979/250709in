@@ -66,7 +66,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
   const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const { showAlert, AlertComponent } = useAlert();
   const { activeDroppedCeilingTab, setIsSlotDragging } = useUIStore();
-  
+
+  // 드래그용 이미지 ref (각 썸네일마다 독립적인 DOM 요소)
+  const dragImageRef = React.useRef<HTMLImageElement>(null);
+
   // 클릭과 더블클릭을 구분하기 위한 타이머
   const clickTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const isDoubleClickRef = React.useRef<boolean>(false);
@@ -260,39 +263,10 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     e.dataTransfer.setData('text/plain', module.id);
     e.dataTransfer.effectAllowed = 'copy';
 
-    // 드래그 고스트 이미지 설정
-    const thumbnailElement = e.currentTarget as HTMLElement;
-    const imgElement = thumbnailElement.querySelector('img') as HTMLImageElement;
-
-    if (imgElement) {
-      // 썸네일 요소를 복제하고 임시로 DOM에 추가
-      const ghostElement = thumbnailElement.cloneNode(true) as HTMLElement;
-      ghostElement.style.position = 'absolute';
-      ghostElement.style.left = '-9999px';
-      ghostElement.style.width = '120px';
-      ghostElement.style.height = 'auto';
-
-      // 캐싱 방지: 이미지 src에 타임스탬프 추가
-      const uniqueId = Date.now() + Math.random();
-      const ghostImg = ghostElement.querySelector('img');
-      if (ghostImg) {
-        const originalSrc = ghostImg.src;
-        ghostImg.src = `${originalSrc}?ghost=${uniqueId}`;
-      }
-
-      document.body.appendChild(ghostElement);
-
-      // 고스트 이미지로 설정
-      e.dataTransfer.setDragImage(ghostElement, 60, 60);
-
-      // 드래그 시작 후 제거
-      setTimeout(() => {
-        if (document.body.contains(ghostElement)) {
-          document.body.removeChild(ghostElement);
-        }
-      }, 100);
-
-      console.log('🎨 고스트 생성:', module.name, iconPath, uniqueId);
+    // 드래그 고스트 이미지 설정 - ref에 있는 독립적인 DOM 이미지 사용
+    if (dragImageRef.current && dragImageRef.current.complete) {
+      e.dataTransfer.setDragImage(dragImageRef.current, 50, 50);
+      console.log('🎨 고스트 설정:', module.name, iconPath);
     }
 
     // 전역 드래그 상태 설정
@@ -961,6 +935,15 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         </div>
         {!isValid && <div className={styles.disabledOverlay} />}
       </div>
+
+      {/* 드래그 전용 이미지 (화면에 표시되지 않음, 각 썸네일마다 독립적) */}
+      <img
+        ref={dragImageRef}
+        src={iconPath}
+        alt=""
+        style={{ position: 'absolute', left: '-9999px', width: '100px', height: '133px' }}
+      />
+
       <AlertComponent />
     </>
   );
