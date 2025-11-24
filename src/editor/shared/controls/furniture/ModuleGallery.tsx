@@ -272,9 +272,13 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
       ghostElement.style.width = '120px';
       ghostElement.style.height = 'auto';
 
-      // 캐싱 방지: 고유한 data 속성 추가
+      // 캐싱 방지: 이미지 src에 타임스탬프 추가
       const uniqueId = Date.now() + Math.random();
-      ghostElement.setAttribute('data-ghost-id', uniqueId.toString());
+      const ghostImg = ghostElement.querySelector('img');
+      if (ghostImg) {
+        const originalSrc = ghostImg.src;
+        ghostImg.src = `${originalSrc}?ghost=${uniqueId}`;
+      }
 
       document.body.appendChild(ghostElement);
 
