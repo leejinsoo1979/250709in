@@ -903,6 +903,7 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
     <>
       <div
         className={`${styles.thumbnailItem} ${!isValid ? styles.disabled : ''} ${selectedFurnitureId === module.id ? styles.selected : ''}`}
+        data-category={module.category}
         draggable={isValid}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}

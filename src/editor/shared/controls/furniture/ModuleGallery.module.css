@@ -170,6 +170,13 @@
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
+/* 상부장/하부장만 이미지 더 크게 */
+.thumbnailItem[data-category="upper"] .thumbnailImage img,
+.thumbnailItem[data-category="lower"] .thumbnailImage img {
+  max-width: 160%;
+  max-height: 160%;
+}
+
 /* 비활성화 오버레이 */
 .disabledOverlay {
   position: absolute;
