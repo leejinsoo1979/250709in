@@ -199,6 +199,7 @@ interface FurnitureItemProps {
   onPointerUp: () => void;
   onDoubleClick: (e: ThreeEvent<MouseEvent>, id: string) => void;
   onFurnitureClick?: (furnitureId: string, slotIndex: number) => void; // 가구 클릭 콜백 (미리보기용)
+  ghostHighlightSlotIndex?: number | null;
 }
 
 const FurnitureItem: React.FC<FurnitureItemProps> = ({
@@ -218,7 +219,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onPointerMove,
   onPointerUp,
   onDoubleClick,
-  onFurnitureClick
+  onFurnitureClick,
+  ghostHighlightSlotIndex
 }) => {
   const FURNITURE_DEBUG = false;
   const debugLog = (...args: any[]) => {
@@ -784,6 +786,26 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }, [placedModule.slotIndex, placedModule.zone, localSlotIndex, convertZoneToGlobalIndex]);
 
   const normalizedSlotIndex = localSlotIndex ?? placedModule.slotIndex;
+
+  const shouldGhostHighlight = React.useMemo(() => {
+    if (ghostHighlightSlotIndex === null || ghostHighlightSlotIndex === undefined) {
+      return false;
+    }
+    if (viewMode !== '3D') {
+      return false;
+    }
+    if (normalizedSlotIndex === undefined) {
+      return false;
+    }
+    const isDual = placedModule.isDualSlot || moduleData?.id?.includes('dual-');
+    if (isDual) {
+      return (
+        normalizedSlotIndex === ghostHighlightSlotIndex ||
+        normalizedSlotIndex + 1 === ghostHighlightSlotIndex
+      );
+    }
+    return normalizedSlotIndex === ghostHighlightSlotIndex;
+  }, [ghostHighlightSlotIndex, viewMode, normalizedSlotIndex, placedModule.isDualSlot, moduleData?.id]);
 
   const slotInfo = globalSlotIndex !== undefined ? columnSlots[globalSlotIndex] : undefined;
 
@@ -2204,6 +2226,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                         (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
                          (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth));
   const depth = mmToThreeUnits(actualDepthMm);
+  const furnitureGroupPosition: [number, number, number] = [
+    adjustedPosition.x + positionAdjustmentForEndPanel,
+    finalYPosition,
+    furnitureZ
+  ];
+
+  const furnitureGroupRotation: [number, number, number] = [
+    0,
+    (placedModule.rotation * Math.PI) / 180,
+    0
+  ];
   
   // Column C 깊이 디버깅
   if (isColumnC && slotInfo) {
@@ -2429,15 +2462,19 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   return (
     <group userData={{ furnitureId: placedModule.id }}>
+      {shouldGhostHighlight && width > 0 && height > 0 && depth > 0 && (
+        <group position={furnitureGroupPosition} rotation={furnitureGroupRotation}>
+          <mesh renderOrder={1000}>
+            <boxGeometry args={[width * 1.04, height * 1.04, depth * 1.05]} />
+            <meshBasicMaterial color="#00ffd1" transparent opacity={0.32} depthWrite={false} depthTest={false} />
+          </mesh>
+        </group>
+      )}
       {/* 가구 본체 (기둥에 의해 밀려날 수 있음) */}
       <group
         userData={{ furnitureId: placedModule.id, type: 'furniture-body' }}
-        position={[
-          adjustedPosition.x + positionAdjustmentForEndPanel,
-          finalYPosition, // 상부장은 강제로 14, 나머지는 adjustedPosition.y
-          furnitureZ // 공간 앞면에서 뒤쪽으로 배치
-        ]}
-        rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
+        position={furnitureGroupPosition}
+        rotation={furnitureGroupRotation}
         onDoubleClick={(e) => {
           // 잠긴 가구는 더블클릭으로 잠금 해제
           if (placedModule.isLocked) {
