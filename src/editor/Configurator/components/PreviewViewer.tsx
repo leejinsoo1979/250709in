@@ -25,11 +25,12 @@ const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
 
   // 미리보기에서 가구 클릭 시 해당 슬롯의 측면뷰로 전환
   const handleFurnitureClick = (furnitureId: string, slotIndex: number) => {
-    console.log('📍 PreviewViewer - 가구 클릭:', { furnitureId, slotIndex });
+    console.log('📍 PreviewViewer - 가구 클릭 전:', { furnitureId, slotIndex, currentViewMode: viewMode });
     // 2D 측면뷰로 전환
     setViewMode('2D');
     setView2DDirection('left'); // 좌측 측면뷰로 전환
     setSelectedSlotIndex(slotIndex); // 해당 슬롯 선택
+    console.log('📍 PreviewViewer - 상태 변경 호출 완료 (2D, left, slot:', slotIndex, ')');
   };
 
   return (
