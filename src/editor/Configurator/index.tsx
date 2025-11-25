@@ -860,6 +860,7 @@ const Configurator: React.FC = () => {
               }
 
               // BroadcastChannel로 디자인 파일 업데이트 알림 (readonly 모드에서는 전송하지 않음)
+              console.log('💾 [DEBUG] BroadcastChannel 전송 체크:', { isReadOnly, mode: searchParams.get('mode') });
               if (!isReadOnly) {
                 try {
                   const channel = new BroadcastChannel('project-updates');
@@ -874,6 +875,8 @@ const Configurator: React.FC = () => {
                 } catch (broadcastError) {
                   console.warn('BroadcastChannel 전송 실패 (무시 가능):', broadcastError);
                 }
+              } else {
+                console.log('🚫 readonly 모드 - BroadcastChannel 전송 건너뜀');
               }
             }
           } else {
@@ -3486,8 +3489,7 @@ const Configurator: React.FC = () => {
                   // 디자인 파일 선택 시 해당 프로젝트 로드
                   navigate(`/configurator?projectId=${projectId}&designFileId=${designFileId}&designFileName=${encodeURIComponent(designFileName)}`);
                   setIsFileTreeOpen(false); // 파일트리 닫기
-                  // 페이지 새로고침하여 새 디자인 파일 로드
-                  window.location.reload();
+                  console.log('✅ 디자인 파일 선택 완료 - 네비게이션 완료');
                 }}
                 onCreateNew={() => {
                   console.log('🆕 파일트리에서 새 파일 생성 요청');

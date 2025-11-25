@@ -7,7 +7,7 @@ import { calculateInternalSpace } from '../../utils/geometry';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { getModuleById, ModuleData, generateDynamicModules } from '@/data/modules';
 import BoxModule from '../modules/BoxModule';
-import { 
+import {
   getSlotIndexFromMousePosition as getSlotIndexFromRaycast,
   isDualFurniture,
   calculateSlotDimensions,
@@ -55,15 +55,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { showAlert } = useAlert();
-  
+
   // Three.js 컨텍스트 접근
   const { camera, scene } = useThree();
   const { viewMode: contextViewMode } = useSpace3DView();
   const { view2DDirection } = useUIStore();
-  
+
   // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
   const viewMode = viewModeProp || contextViewMode;
-  
+
   debugLog('🎯 SlotDropZonesSimple - viewMode:', {
     viewModeProp,
     contextViewMode,
@@ -76,20 +76,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     currentDragData: !!currentDragData,
     placedModulesCount: placedModules.length
   });
-  
+
   // 테마 컨텍스트에서 색상 가져오기
   const { theme } = useTheme();
-  
+
   // 마우스가 hover 중인 슬롯 인덱스와 영역 상태
   const [hoveredSlotIndex, setHoveredSlotIndex] = useState<number | null>(null);
   const [hoveredZone, setHoveredZone] = useState<'normal' | 'dropped' | null>(null);
-  
+
   // spaceInfo가 없으면 null 반환
   if (!spaceInfo) {
     console.error('❌ No spaceInfo provided to SlotDropZonesSimple');
     return null;
   }
-  
+
   debugLog('🔍 SlotDropZonesSimple - spaceInfo:', {
     width: spaceInfo.width,
     height: spaceInfo.height,
@@ -99,7 +99,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     customColumnCount: spaceInfo.customColumnCount,
     columnMode: spaceInfo.columnMode
   });
-  
+
   // 기본값 확인
   if (!spaceInfo.width || !spaceInfo.height || !spaceInfo.depth) {
     console.error('❌ Invalid spaceInfo dimensions:', {
@@ -109,11 +109,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     });
     return <group />;
   }
-  
+
   // 내경 공간 및 인덱싱 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
   const indexing = calculateSpaceIndexing(spaceInfo);
-  
+
   debugLog('🔍 SlotDropZonesSimple - calculated values:', {
     internalSpace,
     indexing: {
@@ -123,7 +123,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       slotWidths: indexing?.slotWidths
     }
   });
-  
+
   // indexing이 제대로 계산되지 않은 경우 빈 컴포넌트 반환
   if (!indexing || !indexing.threeUnitPositions || !Array.isArray(indexing.threeUnitPositions)) {
     console.error('❌ Invalid indexing data:', {
@@ -135,11 +135,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     });
     return <group />;
   }
-  
+
   // 슬롯 크기 및 위치 계산
   const slotDimensions = calculateSlotDimensions(spaceInfo);
   const slotStartY = calculateSlotStartY(spaceInfo);
-  
+
   // 베이스프레임 정보 디버깅
   if (spaceInfo.baseConfig) {
     debugLog('🔧 베이스프레임 및 슬롯 위치 정보:', {
@@ -153,11 +153,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       floorFinishHeight: spaceInfo.hasFloorFinish ? spaceInfo.floorFinish?.height : 0
     });
   }
-  
+
   // mm를 Three.js 단위로 변환하는 함수
   const mmToThreeUnits = (mm: number) => mm * 0.01;
   const threeUnitsToMm = (units: number) => units * 100;
-  
+
   // 드롭 처리 함수
   const handleSlotDrop = useCallback((dragEvent: DragEvent, canvasElement: HTMLCanvasElement): boolean => {
     console.log('🎯🎯🎯 [handleSlotDrop] 호출됨!');
@@ -166,7 +166,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     const rect = canvasElement.getBoundingClientRect();
     const mouseX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
     const mouseY = -((dragEvent.clientY - rect.top) / rect.height) * 2 + 1;
-    
+
     // 단내림이 활성화되어 있는 경우, 마우스 X 좌표로 영역 자동 판단
     let zoneToUse: 'normal' | 'dropped' | undefined;
     if (spaceInfo.droppedCeiling?.enabled && zoneSlotInfo?.dropped) {
@@ -201,19 +201,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         detectedZone: zoneToUse
       });
     }
-    
+
     // 클릭-앤-플레이스 모드와 드래그 모드 모두 지원
     const activeModuleData = currentDragData;
-    
+
     if (!activeModuleData) {
       return false;
     }
-    
+
     // HTML5 드래그 데이터 가져오기
     let dragData;
     try {
       const dragDataString = dragEvent.dataTransfer?.getData('application/json');
-      
+
       if (!dragDataString) {
         // Fallback to activeModuleData (currentDragData)
         dragData = activeModuleData;
@@ -225,22 +225,22 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       // Fallback to activeModuleData
       dragData = activeModuleData;
     }
-    
+
     if (!dragData || dragData.type !== 'furniture') {
       return false;
     }
-    
+
     // needsWarning 확인
     if (dragData.moduleData?.needsWarning) {
       showAlert('배치슬롯의 사이즈를 늘려주세요', { title: '배치 불가' });
       return false;
     }
-    
-    
+
+
     // 단내림이 활성화된 경우 영역별 처리
     if (spaceInfo.droppedCeiling?.enabled && zoneToUse) {
       const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-      
+
       debugLog('🎯 배치 시작 - zone 정보:', {
         zoneToUse,
         droppedCeilingEnabled: spaceInfo.droppedCeiling?.enabled,
@@ -258,11 +258,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           } : null
         }
       });
-      
+
       // 활성 영역에 맞는 인덱싱 생성
       let zoneIndexing;
       let zoneInternalSpace;
-      
+
       if (zoneToUse === 'dropped' && zoneInfo.dropped) {
         // 단내림 영역용 spaceInfo 생성 - 외경 너비 사용
         const droppedOuterWidth = spaceInfo.droppedCeiling?.width || 900;
@@ -276,7 +276,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // calculateInternalSpace를 사용하여 정확한 내경 계산
         // calculateInternalSpace가 이미 zone을 감지하여 dropHeight를 뺀으므로 중복 빼기 방지
         zoneInternalSpace = calculateInternalSpace(droppedSpaceInfo);
-        
+
         debugLog('🔧 [SlotDropZonesSimple] 단내림 영역 내경 계산:', {
           height: zoneInternalSpace.height,
           startY: zoneInternalSpace.startY,
@@ -289,7 +289,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           },
           설명: 'calculateInternalSpace가 이미 dropHeight 처리함'
         });
-        
+
         // zoneInfo에서 직접 columnWidth 사용
         zoneIndexing = {
           columnCount: zoneInfo.dropped.columnCount,
@@ -311,7 +311,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         };
         // calculateInternalSpace를 사용하여 정확한 내경 계산
         zoneInternalSpace = calculateInternalSpace(normalSpaceInfo);
-        
+
         debugLog('🔧 [SlotDropZonesSimple] 일반 영역 내경 계산:', {
           height: zoneInternalSpace.height,
           startY: zoneInternalSpace.startY,
@@ -321,7 +321,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             height: normalSpaceInfo.height
           }
         });
-        
+
         // zoneInfo에서 직접 columnWidth 사용
         zoneIndexing = {
           columnCount: zoneInfo.normal.columnCount,
@@ -332,7 +332,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           slotWidths: zoneInfo.normal.slotWidths || Array(zoneInfo.normal.columnCount).fill(zoneInfo.normal.columnWidth)
         };
       }
-      
+
       // 영역별 인덱싱으로 슬롯 인덱스 계산
       let slotIndex = getSlotIndexFromRaycast(
         dragEvent.clientX,
@@ -343,7 +343,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         spaceInfo,  // 원본 spaceInfo 사용
         zoneToUse   // 활성 탭에 따른 영역 필터링
       );
-      
+
       let colliderGlobalSlotIndex: number | undefined;
 
       // 콜라이더에서 zone 정보 가져오기
@@ -355,7 +355,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             allColliders.push(child);
           }
         });
-        
+
         // 해당 slotIndex를 가진 콜라이더 찾기
         const matchingColliders = allColliders.filter(c => c.userData.slotIndex === slotIndex);
         debugLog('🔍 Colliders with matching slotIndex:', {
@@ -365,7 +365,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             position: c.position.x
           }))
         });
-        
+
         // 마우스 위치와 가장 가까운 콜라이더의 zone 사용
         if (matchingColliders.length > 0) {
           // 마우스 X 위치 계산
@@ -373,17 +373,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const mouseX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
           const raycaster = new THREE.Raycaster();
           raycaster.setFromCamera(new THREE.Vector2(mouseX, 0), camera);
-          
+
           // Y=0 평면과의 교차점
           const planeY = mmToThreeUnits(internalSpace.startY);
           const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
           const intersectPoint = new THREE.Vector3();
-          
+
           if (raycaster.ray.intersectPlane(plane, intersectPoint)) {
             // 가장 가까운 콜라이더 찾기
             let closestCollider = matchingColliders[0];
             let minDistance = Math.abs(intersectPoint.x - closestCollider.position.x);
-            
+
             for (const collider of matchingColliders) {
               const distance = Math.abs(intersectPoint.x - collider.position.x);
               if (distance < minDistance) {
@@ -391,7 +391,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 closestCollider = collider;
               }
             }
-            
+
             colliderZone = closestCollider.userData.zone;
             if (typeof closestCollider.userData.globalSlotIndex === 'number') {
               colliderGlobalSlotIndex = closestCollider.userData.globalSlotIndex;
@@ -406,7 +406,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }
         }
       }
-      
+
       debugLog('🎰 Slot index from raycast (dropped zone):', {
         slotIndex,
         zoneToUse,
@@ -432,7 +432,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           willFail: zoneToUse === 'dropped' && (!zoneInfo.dropped || slotIndex >= zoneInfo.dropped.columnCount)
         }
       });
-      
+
       // zone 불일치 검사 - 콜라이더의 zone을 우선 신뢰
       if (colliderZone && zoneToUse !== colliderZone) {
         debugWarn('⚠️ Zone mismatch detected!', {
@@ -448,40 +448,40 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 콜라이더 zone이 없는 경우 경고
         debugWarn('⚠️ No collider zone found, using mouse-based detection:', zoneToUse);
       }
-      
+
       if (slotIndex === null) {
         debugLog('❌ No slot index found (dropped zone)');
-        
+
         // Fallback: 마우스 위치로 슬롯 인덱스 추정
         if (spaceInfo.droppedCeiling?.enabled && zoneToUse && zoneInfo[zoneToUse]) {
           const targetZone = zoneInfo[zoneToUse];
           const rect = canvasElement.getBoundingClientRect();
           const mouseX = ((dragEvent.clientX - rect.left) / rect.width) * 2 - 1;
-          
+
           // 카메라와 레이캐스트를 사용하여 월드 좌표 계산
           const raycaster = new THREE.Raycaster();
           raycaster.setFromCamera(new THREE.Vector2(mouseX, 0), camera);
-          
+
           // Y=0 평면과의 교차점 계산
           const planeY = mmToThreeUnits(internalSpace.startY);
           const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -planeY);
           const intersectPoint = new THREE.Vector3();
-          
+
           if (raycaster.ray.intersectPlane(plane, intersectPoint)) {
             // 영역 시작점과 끝점
             const zoneStartX = mmToThreeUnits(targetZone.startX);
             const zoneEndX = mmToThreeUnits(targetZone.startX + targetZone.width);
-            
+
             // 마우스 X 위치가 해당 영역 내에 있는지 확인
             if (intersectPoint.x >= zoneStartX && intersectPoint.x <= zoneEndX) {
               // 영역 내에서의 상대 위치 계산
               const relativeX = intersectPoint.x - zoneStartX;
               const columnWidth = mmToThreeUnits(targetZone.columnWidth);
-              
+
               // 슬롯 인덱스 추정
               slotIndex = Math.floor(relativeX / columnWidth);
               slotIndex = Math.max(0, Math.min(slotIndex, targetZone.columnCount - 1));
-              
+
               debugLog('🔧 Fallback slot index calculation:', {
                 zoneToUse,
                 mouseWorldX: intersectPoint.x,
@@ -503,7 +503,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           return false;
         }
       }
-      
+
       const convertToZoneIndex = (
         globalSlot: number,
         targetZone: 'normal' | 'dropped' | undefined = zoneToUse
@@ -596,7 +596,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       if (zoneSlotIndex == null) {
         zoneSlotIndex = 0;
       }
-      
+
       debugLog('🎯 Zone slot index calculation:', {
         originalSlotIndex: slotIndex,
         zoneSlotIndex,
@@ -605,7 +605,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         hasColliderZone: !!colliderZone,
         droppedPosition: spaceInfo.droppedCeiling?.position
       });
-      
+
       // 영역 검증 - 활성 영역에 맞는 슬롯인지 확인
       if (zoneToUse === 'dropped' && !zoneInfo.dropped) {
         console.error('❌ Dropped zone info is null');
@@ -614,7 +614,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         console.error('❌ Normal zone info is null');
         return false;
       }
-      
+
       // 디버깅을 위해 조건을 일시적으로 수정
       const targetZoneInfo = zoneToUse === 'dropped' ? zoneInfo.dropped : zoneInfo.normal;
       if (targetZoneInfo && zoneSlotIndex >= targetZoneInfo.columnCount) {
@@ -629,7 +629,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             dropped: { columnCount: zoneInfo.dropped?.columnCount, startX: zoneInfo.dropped?.startX }
           }
         });
-        
+
         // 콜라이더를 다시 찾아서 확인
         const allColliders = [];
         scene.traverse((child) => {
@@ -637,7 +637,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             allColliders.push(child);
           }
         });
-        
+
         debugLog('🔍 Re-checking colliders for debugging:', {
           totalColliders: allColliders.length,
           droppedZoneColliders: allColliders.filter(c => c.userData.zone === 'dropped').map(c => ({
@@ -649,25 +649,25 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             position: c.position.x
           }))
         });
-        
+
         // 임시로 slotIndex를 보정
         const correctedIndex = Math.min(slotIndex, targetZoneInfo.columnCount - 1);
         debugLog('🔧 Temporarily correcting slot index:', slotIndex, '->', correctedIndex);
         slotIndex = correctedIndex;
       }
-      
+
       // 슬롯 인덱스가 0 이상인지 확인
       if (zoneSlotIndex < 0) {
         console.error('❌ Invalid negative slot index:', { slotIndex, zoneSlotIndex });
         zoneSlotIndex = 0;
       }
-      
+
       // 영역별 spaceInfo 생성 (가구 크기 계산용)
       // 단내림 영역별 외경 너비 계산 (프레임 포함)
       const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
       const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
       let zoneOuterWidth: number;
-      
+
       if (zoneToUse === 'dropped') {
         // 단내림 영역의 외경 너비
         zoneOuterWidth = droppedCeilingWidth;
@@ -675,22 +675,22 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 메인 영역의 외경 너비
         zoneOuterWidth = spaceInfo.width - droppedCeilingWidth;
       }
-      
+
       // targetZone 객체 가져오기
       const targetZone = zoneToUse === 'dropped' ? zoneInfo.dropped : zoneInfo.normal;
-      
+
       if (!targetZone) {
         console.error('❌ Target zone is null:', { zoneToUse, zoneInfo });
         return false;
       }
-      
+
       // generateDynamicModules에 전달할 spaceInfo - 전체 spaceInfo에 zone 정보만 추가
       const zoneSpaceInfo = {
         ...spaceInfo,
         zone: zoneToUse,  // zone 정보 추가
         width: zoneOuterWidth  // 영역별 너비 설정
       };
-      
+
       debugLog('🔧 [SlotDropZonesSimple] zoneSpaceInfo 생성:', {
         zone: zoneToUse,
         droppedCeilingEnabled: zoneSpaceInfo.droppedCeiling?.enabled,
@@ -700,20 +700,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           droppedCeiling: zoneSpaceInfo.droppedCeiling
         }
       });
-      
+
       // 영역별 내경 공간 재계산
       // calculateInternalSpace가 이미 zone을 감지하여 dropHeight를 뺀으므로 중복 빼기 방지
       const recalculatedZoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
-      
+
       debugLog('🔧 [SlotDropZonesSimple] 영역별 내경 공간 재계산:', {
         zone: zoneToUse,
         originalInternalSpace: zoneInternalSpace,
         recalculatedInternalSpace: recalculatedZoneInternalSpace
       });
-      
+
       // 영역별 모듈 목록 생성
       const zoneModules = generateDynamicModules(recalculatedZoneInternalSpace, zoneSpaceInfo);
-      
+
       debugLog('🎯 단내림 구간 모듈 생성 결과:', {
         zoneToUse,
         moduleCount: zoneModules.length,
@@ -725,14 +725,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         },
         firstModule: zoneModules[0]
       });
-      
+
       // 드래그하는 모듈과 동일한 타입의 모듈 찾기
       // 원본 ID에서 타입 부분만 추출 (소수점 포함한 너비 정보 제거)
       const moduleBaseType = dragData.moduleData.id.replace(/-[\d.]+$/, '');
-      
+
       // 듀얼 가구 여부 판단 - 원본 모듈 ID로 판단
       const isDual = dragData.moduleData.id.startsWith('dual-');
-      
+
       // 영역에 맞는 너비의 동일 타입 모듈 찾기 - 실제 슬롯 너비 사용
       let targetWidth: number;
       if (isDual && zoneIndexing.slotWidths && zoneSlotIndex < zoneIndexing.slotWidths.length - 1) {
@@ -744,10 +744,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const zoneColumnWidth = zoneIndexing.columnWidth;
         targetWidth = isDual ? zoneColumnWidth * 2 : zoneColumnWidth;
       }
-      
+
       // 정확한 너비를 포함한 ID 생성
       const targetModuleId = `${moduleBaseType}-${targetWidth}`;
-      
+
       debugLog('🔍 가구 검색:', {
         원본ID: dragData.moduleData.id,
         기본타입: moduleBaseType,
@@ -760,10 +760,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           width: m.dimensions.width
         }))
       });
-      
+
       // getModuleById를 사용하여 정확한 너비의 가구 생성
       const moduleData = getModuleById(targetModuleId, recalculatedZoneInternalSpace, zoneSpaceInfo);
-      
+
       if (!moduleData) {
         console.error('❌ 가구를 찾을 수 없음:', {
           targetModuleId,
@@ -772,10 +772,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         });
         return false;
       }
-      
-      
+
+
       // 듀얼 가구 여부는 이미 위에서 판단했으므로 재사용
-      
+
       // 듀얼 가구가 영역 경계를 넘어가는지 체크
       console.log('🔍🔍🔍 [경계 체크]', {
         isDual,
@@ -798,17 +798,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         showAlert?.('듀얼 가구는 구역 경계를 넘을 수 없습니다', 'error');
         return false;
       }
-      
+
       // 슬롯 가용성 검사 (영역 내 인덱스 사용)
       // 단내림이 없을 때는 모든 가구를 확인해야 함
       const targetZoneForFiltering: 'normal' | 'dropped' | undefined = spaceInfo.droppedCeiling?.enabled
         ? (zoneToUse || 'normal')
         : undefined;
 
-      const zoneExistingModules = spaceInfo.droppedCeiling?.enabled 
+      const zoneExistingModules = spaceInfo.droppedCeiling?.enabled
         ? placedModules.filter(m => (m.zone || 'normal') === targetZoneForFiltering)
         : placedModules;
-      
+
       // 슬롯 점유 상태 디버깅
       debugLog('[SlotDebug] slot-occupancy', {
         zone: zoneToUse,
@@ -860,9 +860,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             // 새 듀얼: [zoneSlotIndex, zoneSlotIndex + 1]
             // 기존 듀얼: [m.slotIndex, m.slotIndex + 1]
             conflict = (existingZoneIndex === zoneSlotIndex) || // 같은 위치에서 시작
-                      (existingZoneIndex === zoneSlotIndex + 1) || // 기존이 새 가구의 두 번째 슬롯에서 시작
-                      (existingZoneIndex === zoneSlotIndex - 1) || // 기존의 두 번째 슬롯이 새 가구의 첫 번째 슬롯과 겹침
-                      (existingZoneIndex + 1 === zoneSlotIndex); // 기존의 두 번째 슬롯이 새 가구의 첫 번째 슬롯
+              (existingZoneIndex === zoneSlotIndex + 1) || // 기존이 새 가구의 두 번째 슬롯에서 시작
+              (existingZoneIndex === zoneSlotIndex - 1) || // 기존의 두 번째 슬롯이 새 가구의 첫 번째 슬롯과 겹침
+              (existingZoneIndex + 1 === zoneSlotIndex); // 기존의 두 번째 슬롯이 새 가구의 첫 번째 슬롯
           } else {
             // 기존 가구가 싱글인 경우: 새 듀얼의 2개 슬롯 중 하나와 겹치면 충돌
             conflict = existingZoneIndex === zoneSlotIndex || existingZoneIndex === zoneSlotIndex + 1;
@@ -870,13 +870,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
           if (conflict) {
             debugLog('🚫 듀얼 가구 슬롯 충돌:', {
-              배치하려는가구: { 
-                slotIndex: zoneSlotIndex, 
+              배치하려는가구: {
+                slotIndex: zoneSlotIndex,
                 isDual: true,
-                occupiedSlots: [zoneSlotIndex, zoneSlotIndex + 1] 
+                occupiedSlots: [zoneSlotIndex, zoneSlotIndex + 1]
               },
-              기존가구: { 
-                id: m.id, 
+              기존가구: {
+                id: m.id,
                 slotIndex: m.slotIndex,
                 localSlotIndex: existingZoneIndex,
                 isDualSlot: m.isDualSlot,
@@ -887,17 +887,17 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           return conflict;
         } else {
           // 싱글 가구는 1개 슬롯 차지하지만, 듀얼 가구가 차지한 슬롯도 확인해야 함
-          const conflict = existingZoneIndex === zoneSlotIndex || 
-                          (m.isDualSlot && (existingZoneIndex === zoneSlotIndex || existingZoneIndex + 1 === zoneSlotIndex));
+          const conflict = existingZoneIndex === zoneSlotIndex ||
+            (m.isDualSlot && (existingZoneIndex === zoneSlotIndex || existingZoneIndex + 1 === zoneSlotIndex));
           if (conflict) {
             debugLog('🚫 싱글 가구 슬롯 충돌:', {
-              배치하려는가구: { 
+              배치하려는가구: {
                 slotIndex: zoneSlotIndex,
                 isDual: false,
                 occupiedSlots: [zoneSlotIndex]
               },
-              기존가구: { 
-                id: m.id, 
+              기존가구: {
+                id: m.id,
                 slotIndex: m.slotIndex,
                 localSlotIndex: existingZoneIndex,
                 isDualSlot: m.isDualSlot,
@@ -908,26 +908,26 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           return conflict;
         }
       });
-      
+
       if (hasSlotConflict) {
         debugLog('❌ 슬롯 충돌로 배치 불가');
         return false;
       }
-      
+
       // 최종 위치 계산 - calculateSpaceIndexing에서 계산된 실제 위치 사용
       let finalX: number;
-      
+
       // 전체 indexing 정보를 가져와서 zone별 실제 위치 사용
       const fullIndexing = calculateSpaceIndexing(spaceInfo);
-      
+
       if (zoneToUse === 'dropped' && fullIndexing.zones?.dropped) {
         // 단내림 영역: 계산된 위치 사용
         const droppedPositions = fullIndexing.zones.dropped.threeUnitPositions;
-        
+
         if (isDual && zoneSlotIndex < droppedPositions.length - 1) {
           // 듀얼 가구: threeUnitDualPositions 사용
-          if (fullIndexing.zones.dropped.threeUnitDualPositions && 
-              fullIndexing.zones.dropped.threeUnitDualPositions[zoneSlotIndex] !== undefined) {
+          if (fullIndexing.zones.dropped.threeUnitDualPositions &&
+            fullIndexing.zones.dropped.threeUnitDualPositions[zoneSlotIndex] !== undefined) {
             finalX = fullIndexing.zones.dropped.threeUnitDualPositions[zoneSlotIndex];
           } else {
             // fallback: 두 슬롯의 중간점 계산
@@ -939,7 +939,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // 싱글 가구: 해당 슬롯 위치
           finalX = droppedPositions[zoneSlotIndex];
         }
-        
+
         debugLog('🎯 단내림 영역 위치 계산:', {
           zoneSlotIndex,
           isDual,
@@ -956,11 +956,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       } else if (fullIndexing.zones?.normal) {
         // 메인 영역: 계산된 위치 사용
         const normalPositions = fullIndexing.zones.normal.threeUnitPositions;
-        
+
         if (isDual && zoneSlotIndex < normalPositions.length - 1) {
           // 듀얼 가구: threeUnitDualPositions 사용
-          if (fullIndexing.zones.normal.threeUnitDualPositions && 
-              fullIndexing.zones.normal.threeUnitDualPositions[zoneSlotIndex] !== undefined) {
+          if (fullIndexing.zones.normal.threeUnitDualPositions &&
+            fullIndexing.zones.normal.threeUnitDualPositions[zoneSlotIndex] !== undefined) {
             finalX = fullIndexing.zones.normal.threeUnitDualPositions[zoneSlotIndex];
           } else {
             // fallback: 두 슬롯의 중간점 계산
@@ -972,7 +972,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // 싱글 가구: 해당 슬롯 위치
           finalX = normalPositions[zoneSlotIndex];
         }
-        
+
         debugLog('🎯 메인 영역 위치 계산:', {
           zoneSlotIndex,
           isDual,
@@ -989,10 +989,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       } else {
         // fallback: zones가 없는 경우 전체 indexing 사용
         const positions = indexing.threeUnitPositions;
-        
+
         if (isDual && zoneSlotIndex < positions.length - 1) {
-          if (indexing.threeUnitDualPositions && 
-              indexing.threeUnitDualPositions[zoneSlotIndex] !== undefined) {
+          if (indexing.threeUnitDualPositions &&
+            indexing.threeUnitDualPositions[zoneSlotIndex] !== undefined) {
             finalX = indexing.threeUnitDualPositions[zoneSlotIndex];
           } else {
             const leftSlotX = positions[zoneSlotIndex];
@@ -1003,16 +1003,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           finalX = positions[zoneSlotIndex];
         }
       }
-      
-      
+
+
       // 고유 ID 생성 - 단내림 구간은 별도 ID 체계
-      const placedId = zoneToUse === 'dropped' 
+      const placedId = zoneToUse === 'dropped'
         ? `dropped-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
         : `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-      
+
       // 기본 깊이 설정
       const defaultDepth = moduleData?.defaultDepth || Math.min(Math.floor(spaceInfo.depth * 0.9), 580);
-      
+
       // 실제 슬롯 너비 가져오기 (slotWidths 사용) - targetZoneInfo는 이미 위에서 선언됨
       const targetZoneWidths = zoneToUse === 'dropped'
         ? zoneIndexing.slotWidths || zoneInfo.dropped?.slotWidths
@@ -1025,7 +1025,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const actualSlotWidth = targetZoneWidths && zoneSlotIndex < targetZoneWidths.length
         ? targetZoneWidths[zoneSlotIndex]
         : fallbackColumnWidth;
-      
+
       // 기둥 분석 - 전체 슬롯 인덱스를 계산해야 함
       const columnSlots = analyzeColumnSlots(spaceInfo);
 
@@ -1040,9 +1040,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         fallbackColumnWidth,
         columnSlotsLength: columnSlots.length
       });
-      
+
       const slotInfo = columnSlots[globalSlotIndex]; // 전체 공간 기준 슬롯 인덱스 사용
-      
+
       debugLog('🏛️ 기둥 분석 인덱스:', {
         zoneToUse,
         zoneSlotIndex,
@@ -1055,23 +1055,23 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           adjustedWidth: slotInfo.adjustedWidth
         } : null
       });
-      
+
       // 듀얼 가구의 경우 두 슬롯의 실제 너비 합계
       let customWidth;
       let adjustedWidth;
       let furnitureX = finalX;
       let effectiveColumnType: string | undefined;
-      
+
       // 듀얼 가구의 경우 두 슬롯 모두 확인
       let hasColumnInAnySlot = false;
       let columnType: string | undefined;
       let totalAvailableWidth = 0;
-      
+
       if (isDual) {
         // 듀얼 가구가 차지하는 두 슬롯 확인
         const slot1Info = columnSlots[globalSlotIndex];
         const slot2Info = columnSlots[globalSlotIndex + 1];
-        
+
         debugLog('🏛️ 듀얼 가구 슬롯 기둥 확인:', {
           slot1: {
             index: globalSlotIndex,
@@ -1086,16 +1086,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             availableWidth: slot2Info?.availableWidth || targetZoneInfo.columnWidth
           }
         });
-        
+
         // 두 슬롯 중 하나라도 기둥이 있으면 처리
         if (slot1Info?.hasColumn || slot2Info?.hasColumn) {
           hasColumnInAnySlot = true;
-          
+
           // 두 슬롯의 사용 가능한 너비 합계 계산
           const slot1Width = slot1Info?.hasColumn ? slot1Info.availableWidth : targetZoneInfo.columnWidth;
           const slot2Width = slot2Info?.hasColumn ? slot2Info.availableWidth : targetZoneInfo.columnWidth;
           totalAvailableWidth = slot1Width + slot2Width;
-          
+
           // 기둥 타입 결정 (둘 중 하나라도 medium이 아니면 즉시 조정)
           if (slot1Info?.hasColumn && slot1Info.columnType !== 'medium') {
             columnType = slot1Info.columnType;
@@ -1104,7 +1104,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           } else {
             columnType = 'medium'; // 둘 다 medium이거나 기둥이 없는 경우
           }
-          
+
           debugLog('🏛️ 듀얼 가구 기둥 처리:', {
             totalAvailableWidth,
             originalWidth: moduleData.dimensions.width,
@@ -1113,7 +1113,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           });
         }
       }
-      
+
       // 기둥이 있는 슬롯인지 확인 (싱글 가구 또는 듀얼 가구 처리)
       if ((slotInfo && slotInfo.hasColumn) || hasColumnInAnySlot) {
         if (!isDual) {
@@ -1127,10 +1127,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             furniturePosition: slotInfo.furniturePosition,
             columnType: slotInfo.columnType
           });
-          
+
           // 기둥 침범 시 배치 가능 여부 확인
           const canPlace = canPlaceFurnitureInColumnSlot(slotInfo, moduleData.dimensions.width, isDual);
-          
+
           if (!canPlace) {
             debugLog('🚫 기둥 침범으로 인해 배치 불가:', {
               이유: '공간 부족'
@@ -1159,16 +1159,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             return false;
           }
         }
-        
+
         // 기둥 타입에 따라 다르게 처리
         effectiveColumnType = isDual ? columnType : slotInfo.columnType;
-        
+
         if (effectiveColumnType === 'medium') {
           // 기둥 C(300mm)가 이미 있는 슬롯에는 가구를 원본 크기로 배치
           // 나중에 FurnitureItem에서 실시간으로 폭이 조정됨
           customWidth = actualSlotWidth; // 슬롯 너비 사용
           adjustedWidth = moduleData.dimensions.width; // 가구는 원본 크기 유지
-          
+
           debugLog('🔧 기둥 C 선배치 슬롯 - 원본 크기 유지:', {
             원래폭: actualSlotWidth,
             가구폭: moduleData.dimensions.width,
@@ -1182,7 +1182,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             // 듀얼 가구의 경우 totalAvailableWidth 사용
             customWidth = totalAvailableWidth;
             adjustedWidth = totalAvailableWidth;
-            
+
             debugLog('🔧 듀얼 가구 - 기둥 A 침범으로 폭 즉시 조정:', {
               원래폭: moduleData.dimensions.width,
               조정된폭: customWidth,
@@ -1196,14 +1196,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               right: finalX + slotWidthM / 2,
               center: finalX
             };
-            
+
             const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
-            
+
             // 기둥 침범에 따른 가구 너비와 위치 조정
             customWidth = furnitureBounds.renderWidth;
             adjustedWidth = furnitureBounds.renderWidth;
             furnitureX = furnitureBounds.center; // 가구 위치를 남은 공간 중심으로 이동
-            
+
             debugLog('🔧 싱글 가구 - 기둥 A 침범으로 폭 즉시 조정:', {
               원래폭: actualSlotWidth,
               조정된폭: customWidth,
@@ -1225,14 +1225,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const hasEndPanel = (
             // 노서라운드 모드
             (spaceInfo.surroundType === 'no-surround' &&
-             (spaceInfo.installType === 'freestanding' ||
-              spaceInfo.installType === 'semistanding' ||
-              spaceInfo.installType === 'semi-standing')) ||
+              (spaceInfo.installType === 'freestanding' ||
+                spaceInfo.installType === 'semistanding' ||
+                spaceInfo.installType === 'semi-standing')) ||
             // 서라운드 모드에서 한쪽벽/벽없음
             (spaceInfo.surroundType === 'surround' &&
-             (spaceInfo.installType === 'freestanding' ||
-              spaceInfo.installType === 'semistanding' ||
-              spaceInfo.installType === 'semi-standing'))
+              (spaceInfo.installType === 'freestanding' ||
+                spaceInfo.installType === 'semistanding' ||
+                spaceInfo.installType === 'semi-standing'))
           );
 
           if (hasEndPanel) {
@@ -1373,7 +1373,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           dropped: zoneInfo.dropped
         }
       });
-      
+
       // 정확한 너비를 포함한 moduleId 생성
       // 원본 모듈의 타입(single/dual)을 유지
       const originalBaseType = dragData.moduleData.id.replace(/-[\d.]+$/, '');
@@ -1391,32 +1391,32 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         slotIndex: zoneSlotIndex,
         occupiedSlots: isDual ? [zoneSlotIndex, zoneSlotIndex + 1] : [zoneSlotIndex]
       });
-      
+
       // 힌지 방향 결정 (기둥 위치 고려)
-      const hingePosition = slotInfo && slotInfo.hasColumn ? 
-        calculateOptimalHingePosition(slotInfo) : 
+      const hingePosition = slotInfo && slotInfo.hasColumn ?
+        calculateOptimalHingePosition(slotInfo) :
         'right';
-      
+
       // 깊이는 기본값 사용 (기둥 C는 이제 폭 조정 방식만 사용)
       let adjustedDepth = defaultDepth;
-      
+
       // 상부장/하부장/키큰장 체크 및 Y 위치 계산
       const isUpperCabinet = moduleData?.category === 'upper';
       const isLowerCabinet = moduleData?.category === 'lower';
       const isFullCabinet = moduleData?.category === 'full';
-      
+
       let furnitureY = 0; // 기본값
-      
+
       if (isFullCabinet) {
         // 키큰장: 바닥부터 시작
         // 내경 공간의 시작 Y 위치 사용
         const floorY = mmToThreeUnits(zoneInternalSpace.startY);
         const furnitureHeightMm = moduleData?.dimensions?.height || 2200;
         const furnitureHeight = mmToThreeUnits(furnitureHeightMm);
-        
+
         // 키큰장은 바닥에서 시작
         furnitureY = floorY + furnitureHeight / 2;
-        
+
         debugLog('🏢 키큰장 초기 배치 Y 위치 계산:', {
           zone: zoneToUse,
           floorY,
@@ -1440,10 +1440,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const ceilingY = floorY + mmToThreeUnits(zoneInternalSpace.height);
         const furnitureHeightMm = moduleData?.dimensions?.height || 600;
         const furnitureHeight = mmToThreeUnits(furnitureHeightMm);
-        
+
         // 상부장은 천장에서 아래로
         furnitureY = ceilingY - furnitureHeight / 2;
-        
+
         debugLog('🔝 상부장 초기 배치 Y 위치 계산:', {
           zone: zoneToUse,
           floorY,
@@ -1463,7 +1463,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const floorY = mmToThreeUnits(zoneInternalSpace.startY);
         const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
         const furnitureHeight = mmToThreeUnits(furnitureHeightMm);
-        
+
         // 하부장은 바닥에서 시작
         furnitureY = floorY + furnitureHeight / 2;
       } else {
@@ -1475,11 +1475,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const floorY = mmToThreeUnits(zoneInternalSpace.startY);
         const furnitureHeightMm = moduleData?.dimensions?.height || 600;
         const furnitureHeight = mmToThreeUnits(furnitureHeightMm);
-        
+
         // 기본 가구도 바닥에서 시작
         furnitureY = floorY + furnitureHeight / 2;
       }
-      
+
       // 영역별 Y 위치 비교
       debugLog(`⚠️ ${zoneToUse === 'dropped' ? '단내림' : '일반'} 구간 최종 Y 위치:`, {
         zone: zoneToUse,
@@ -1491,7 +1491,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         furnitureHeightMm: moduleData?.dimensions?.height,
         expectedBottomY: furnitureY - mmToThreeUnits((moduleData?.dimensions?.height || 600) / 2)
       });
-      
+
       // 새 모듈 배치
       const newModule: any = {
         id: placedId,
@@ -1510,7 +1510,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         customHeight: zoneToUse === 'dropped' && zoneInternalSpace ? zoneInternalSpace.height : undefined, // 단내림 구간의 줄어든 높이 저장
         lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
       };
-      
+
       // 기둥 정보가 있으면 추가
       if (slotInfo && slotInfo.hasColumn) {
         newModule.columnSlotInfo = {
@@ -1522,7 +1522,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           intrusionDirection: slotInfo.intrusionDirection,
           furniturePosition: slotInfo.furniturePosition
         };
-        
+
         // 기둥 침범 시 실제 조정된 너비 재확인
         debugLog('🔧 기둥 침범 가구 최종 설정:', {
           moduleId: newModule.moduleId,
@@ -1531,7 +1531,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           columnSlotInfo: newModule.columnSlotInfo
         });
       }
-      
+
       debugLog('✅ 가구 배치 완료:', {
         zone: zoneToUse,
         moduleId: zoneTargetModuleId,
@@ -1539,7 +1539,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         isDualSlot: isDual,
         isDualFromModuleId: zoneTargetModuleId.startsWith('dual-'),
         occupiedSlots: isDual ? [zoneSlotIndex, zoneSlotIndex + 1] : [zoneSlotIndex],
-        position: { 
+        position: {
           x: furnitureX,
           y: furnitureY,
           y_mm: furnitureY * 100
@@ -1556,48 +1556,62 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           position: newModule.position
         }
       });
-      
+
       addModule(newModule);
       // 드래그 모드인 경우에만 currentDragData 초기화
       if (currentDragData) {
         setCurrentDragData(null);
       }
-      
+
       // 전체 슬롯 점유 상태 디버깅
       setTimeout(() => {
         debugSlotOccupancy(placedModules, spaceInfo);
       }, 100);
-      
+
       // 가구 배치 완료 이벤트 발생 (카메라 리셋용)
       window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
       return true;
     } else {
-      
+
       // 단내림이 활성화되어 있지만 zone이 결정되지 않은 경우 자동으로 적절한 영역 결정
       if (spaceInfo.droppedCeiling?.enabled) {
         // 클릭한 위치의 슬롯 인덱스를 기반으로 영역 결정
         const allColliders = scene.children
           .filter(obj => obj.userData?.isSlotCollider && obj.visible)
           .sort((a, b) => (a.userData?.slotIndex || 0) - (b.userData?.slotIndex || 0));
-        
+
         const colliderUserData = allColliders
           .find(obj => obj.userData?.slotIndex === slotIndex && obj.userData?.isSlotCollider)
           ?.userData;
-        
+
         // 클릭한 슬롯의 영역 정보 사용
         const targetZone = colliderUserData?.zone || 'normal';
-        
+
+        // 변수 정의 추가
+        const moduleData = dragData.moduleData;
+        const placedId = `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+        const isDual = moduleData.id.includes('dual');
+        const defaultDepth = moduleData.defaultDepth || 600;
+        const slotIndex = colliderUserData?.slotIndex;
+        const customWidth = moduleData.customWidth || moduleData.dimensions.width;
+
+        // X 위치 계산
+        let finalX = 0;
+        if (slotIndex !== undefined) {
+          finalX = calculateFurniturePosition(slotIndex, moduleData.id, spaceInfo, targetZone) || 0;
+        }
+
         // 상부장 Y 위치 계산
         let furnitureY = 0;
         if (moduleData?.category === 'upper') {
           // 상부장: 전체 공간 최상단에 배치
           const furnitureHeightMm = moduleData?.dimensions?.height || 600;
-          
+
           // 전체 높이에서 상단 프레임만 빼기
           let totalHeightMm = spaceInfo.height;
           const topFrameHeight = spaceInfo.topFrame?.height || 10;
           totalHeightMm = totalHeightMm - topFrameHeight;
-          
+
           // 상부장 Y 위치 계산
           furnitureY = (totalHeightMm - furnitureHeightMm / 2) / 100;
         } else if (moduleData?.category === 'lower') {
@@ -1612,13 +1626,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
           furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100;
         }
-        
+
         const newModule = {
           id: placedId,
           moduleId: moduleData.id,
           position: { x: finalX, y: furnitureY, z: 0 },
           rotation: 0,
-          slotIndex,
+          slotIndex: slotIndex!,
           depth: defaultDepth,
           isDualSlot: isDual,
           isValidInCurrentSpace: true,
@@ -1628,7 +1642,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           zone: targetZone, // 클릭한 슬롯의 영역 사용
           lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
         };
-        
+
         addModule(newModule);
         // 드래그 모드인 경우에만 currentDragData 초기화
         if (currentDragData) {
@@ -1638,19 +1652,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         return true;
       }
     }
-    
+
     // 단내림이 없는 경우 기존 로직
     const slotIndex = getSlotIndexFromRaycast(
-      dragEvent.clientX, 
-      dragEvent.clientY, 
+      dragEvent.clientX,
+      dragEvent.clientY,
       canvasElement,
       camera,
       scene,
       spaceInfo
     );
-    
+
     debugLog('🎰 Slot index from raycast (non-dropped):', slotIndex);
-    
+
     if (slotIndex === null) {
       debugLog('❌ No slot index found (non-dropped)');
       return false;
@@ -1660,7 +1674,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
     // 듀얼/싱글 가구 판별 - 원본 모듈 ID로 판단
     const isDual = dragData.moduleData.id.startsWith('dual-');
-    
+
     // 메인 구간 슬롯 점유 상태 디버깅
     const mapToGlobalSlotIndex = (index: number): number => index;
 
@@ -1689,7 +1703,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     }
 
     const globalSlotIndex = globalSlotIndexForCheck;
-    
+
     // 분할창인 경우 spaceInfo 조정 - mainDoorCount 정보도 포함
     let adjustedSpaceInfo = spaceInfo;
     if (spaceInfo.mainDoorCount && spaceInfo.mainDoorCount > 0) {
@@ -1707,7 +1721,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         adjustedSpaceInfo
       });
     }
-    
+
     // 타겟 슬롯의 실제 너비 가져오기
     const targetIndexing = calculateSpaceIndexing(adjustedSpaceInfo);
     const zoneIndexDataForTarget = zoneToUse === 'dropped' ? zoneSlotInfo?.dropped : zoneSlotInfo?.normal;
@@ -1716,7 +1730,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       ?? (targetIndexing.slotWidths && targetIndexing.slotWidths[slotIndex] !== undefined
         ? targetIndexing.slotWidths[slotIndex]
         : targetIndexing.columnWidth);
-    
+
     // 베이스 타입 추출 (소수점 포함한 숫자 제거)
     const moduleBaseType = dragData.moduleData.id.replace(/-[\d.]+$/, '');
 
@@ -1725,7 +1739,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
     // 정확한 너비를 포함한 ID 생성
     const targetModuleId = `${moduleBaseType}-${finalWidth}`;
-    
+
     debugLog('🎯 [SlotDropZones] Non-dropped module lookup:', {
       originalId: dragData.moduleData.id,
       baseType: moduleBaseType,
@@ -1735,20 +1749,20 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       slotWidths: targetIndexing.slotWidths,
       zoneSlotIndex
     });
-    
+
     // 가구 데이터 조회 (조정된 spaceInfo 사용)
     let moduleData = getModuleById(targetModuleId, internalSpace, adjustedSpaceInfo);
     if (!moduleData) {
       console.error('❌ [SlotDropZones] Module not found:', targetModuleId);
       return false;
     }
-    
+
     // 최종 위치 계산 (듀얼 가구는 나중에 업데이트)
     let finalX = calculateFurniturePosition(zoneSlotIndex, targetModuleId, spaceInfo, zoneToUse);
     if (finalX === null) {
       return false;
     }
-    
+
     // 듀얼 가구 위치 디버깅
     if (isDual) {
       debugLog('🎯 Dual furniture position debug:', {
@@ -1760,13 +1774,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         expectedPosition: indexing.threeUnitDualPositions?.[slotIndex]
       });
     }
-    
+
     // 고유 ID 생성 - 단내림 구간은 별도 ID 체계
     const placedId = `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    
+
     // 기본 깊이 설정
     const defaultDepth = moduleData?.defaultDepth || Math.min(Math.floor(spaceInfo.depth * 0.9), 580);
-    
+
     // 사용할 인덱싱 정보 결정
     let zoneTargetIndexing = indexing;
     if (spaceInfo.droppedCeiling?.enabled && zoneToUse && indexing.zones) {
@@ -1775,24 +1789,24 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         zoneTargetIndexing = zoneIndexing;
       }
     }
-    
+
     // 실제 슬롯 너비 가져오기
     const actualSlotWidth = zoneTargetIndexing.slotWidths && zoneTargetIndexing.slotWidths[zoneSlotIndex] !== undefined
-      ? zoneTargetIndexing.slotWidths[zoneSlotIndex] 
+      ? zoneTargetIndexing.slotWidths[zoneSlotIndex]
       : zoneTargetIndexing.columnWidth; // Math.floor 대신 columnWidth 사용
-    
+
     // 듀얼 가구의 경우 두 슬롯의 실제 너비 합계
     let customWidth;
     let dualTargetModuleId = targetModuleId; // 듀얼 가구용 모듈 ID
-    
+
     if (isDual && zoneTargetIndexing.slotWidths && zoneTargetIndexing.slotWidths[zoneSlotIndex] !== undefined) {
       const slot1Width = zoneTargetIndexing.slotWidths[zoneSlotIndex];
       const slot2Width = zoneTargetIndexing.slotWidths[zoneSlotIndex + 1] || slot1Width;
       customWidth = slot1Width + slot2Width;
-      
+
       // 듀얼 가구는 두 슬롯 너비의 합으로 ID 생성
       dualTargetModuleId = `${moduleBaseType}-${customWidth}`;
-      
+
       debugLog('🎯 [SlotDropZones] Dual furniture width calculation:', {
         slotIndex,
         zoneSlotIndex,
@@ -1808,7 +1822,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     } else {
       customWidth = actualSlotWidth;
     }
-    
+
     // 듀얼 가구인 경우 정확한 너비로 모듈 다시 조회
     if (isDual && dualTargetModuleId !== targetModuleId) {
       const dualModuleData = getModuleById(dualTargetModuleId, internalSpace, adjustedSpaceInfo);
@@ -1825,7 +1839,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         debugWarn('⚠️ [SlotDropZones] Dual module not found with exact width, using single slot module:', dualTargetModuleId);
       }
     }
-    
+
     debugLog('🎯 가구 배치 시 customWidth 설정:', {
       slotIndex,
       isDual,
@@ -1841,21 +1855,21 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       슬롯수: zoneTargetIndexing.columnCount,
       finalModuleId: isDual ? dualTargetModuleId : targetModuleId
     });
-    
+
     // 기둥 분석
     const columnSlots = analyzeColumnSlots(spaceInfo);
-    
+
     // 기둥이 있는 경우 가구 폭과 위치 조정
     let adjustedCustomWidth = customWidth;
     let adjustedPosition = finalX;
     let adjustedWidthValue = moduleData.dimensions.width;
     let slotInfo = null; // slotInfo를 더 넓은 스코프에서 선언
-    
+
     // 듀얼 가구의 경우 두 슬롯 모두 확인
     if (isDual) {
       const slot1Info = columnSlots[globalSlotIndex];
       const slot2Info = columnSlots[globalSlotIndex + 1];
-      
+
       debugLog('🏛️ 듀얼 가구 기둥 침범 확인:', {
         slot1: {
           index: slotIndex,
@@ -1870,23 +1884,23 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           availableWidth: slot2Info?.availableWidth
         }
       });
-      
+
       // 두 슬롯 중 하나라도 기둥이 있는지 확인
       const hasColumnInAnySlot = (slot1Info?.hasColumn || false) || (slot2Info?.hasColumn || false);
-      
+
       if (hasColumnInAnySlot) {
         // 기둥 A가 있는 경우 즉시 폭 조정
         const hasDeepColumn = (slot1Info?.columnType === 'deep') || (slot2Info?.columnType === 'deep');
-        
+
         if (hasDeepColumn) {
           // 두 슬롯의 사용 가능한 너비 합계 계산
           const slot1Available = slot1Info?.availableWidth || zoneTargetIndexing.columnWidth;
           const slot2Available = slot2Info?.availableWidth || zoneTargetIndexing.columnWidth;
           const totalAvailableWidth = slot1Available + slot2Available;
-          
+
           adjustedCustomWidth = totalAvailableWidth;
           adjustedWidthValue = totalAvailableWidth;
-          
+
           debugLog('🔧 듀얼 가구 기둥 A 침범 - 폭 조정:', {
             원래폭: customWidth,
             조정된폭: adjustedCustomWidth,
@@ -1902,7 +1916,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     } else {
       // 싱글 가구의 경우 기존 로직 유지
       slotInfo = columnSlots[globalSlotIndex];
-      
+
       if (slotInfo && slotInfo.hasColumn) {
         debugLog('🏛️ 싱글 가구 - 기둥 침범 슬롯 감지:', {
           slotIndex,
@@ -1914,7 +1928,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           intrusionDirection: slotInfo.intrusionDirection,
           furniturePosition: slotInfo.furniturePosition
         });
-        
+
         if (slotInfo.columnType === 'medium') {
           // 기둥 C(300mm)가 이미 있는 슬롯에는 가구를 원본 크기로 배치
           // 나중에 FurnitureItem에서 실시간으로 폭이 조정됨
@@ -1927,13 +1941,13 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             right: finalX + slotWidthM / 2,
             center: finalX
           };
-          
+
           const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
-          
+
           adjustedCustomWidth = furnitureBounds.renderWidth;
           adjustedWidthValue = furnitureBounds.renderWidth;
           adjustedPosition = furnitureBounds.center;
-          
+
           debugLog('🔧 기둥 A 침범 - 가구 폭 즉시 조정:', {
             원래폭: customWidth,
             조정된폭: adjustedCustomWidth,
@@ -1944,14 +1958,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
       }
     }
-    
+
     // 상부장/하부장/키큰장 체크 및 Y 위치 계산
     const isUpperCabinet = moduleData?.category === 'upper';
     const isLowerCabinet = moduleData?.category === 'lower';
     const isFullCabinet = moduleData?.category === 'full';
-    
+
     let furnitureY = 0; // 기본값
-    
+
     if (isFullCabinet) {
       // 키큰장: 바닥부터 천장까지 (바닥마감재와 띄워서 배치 고려)
       const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ? spaceInfo.floorFinish.height : 0;
@@ -1963,7 +1977,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
       const furnitureHeightMm = moduleData?.dimensions?.height || 2200;
       furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
-      
+
       debugLog('🏢 키큰장 드래그 Y 위치 계산:', {
         category: moduleData.category,
         startHeightMm,
@@ -1977,15 +1991,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     } else if (isUpperCabinet) {
       // 상부장: 전체 공간 상단에 배치 (mm 단위로 계산)
       const furnitureHeightMm = moduleData?.dimensions?.height || 600;
-      
+
       // 전체 높이에서 상단 프레임만 빼기
       let totalHeightMm = spaceInfo.height;
       const topFrameHeight = spaceInfo.topFrame?.height || 10;
       totalHeightMm = totalHeightMm - topFrameHeight;
-      
+
       // 상부장 Y 위치 계산
       furnitureY = (totalHeightMm - furnitureHeightMm / 2) / 100; // mm를 m로 변환
-      
+
       debugLog('🔴 상부장 Y 위치 계산:', {
         moduleCategory: moduleData?.category,
         moduleId: moduleData?.id,
@@ -2009,7 +2023,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       const furnitureHeightMm = moduleData?.dimensions?.height || 1000;
       furnitureY = (startHeightMm + furnitureHeightMm / 2) / 100; // mm를 m로 변환
     }
-    
+
     // 새 모듈 배치
     const newModule: any = {
       id: placedId,
@@ -2028,7 +2042,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       zone: zoneToUse, // 단내림 영역 정보 저장
       lowerSectionTopOffset: moduleData.id.includes('2drawer') || moduleData.id.includes('4drawer') ? 85 : 0 // 2단/4단 서랍장 85mm, 나머지 0mm
     };
-    
+
     // 기둥 정보가 있으면 추가
     if (slotInfo && slotInfo.hasColumn) {
       newModule.columnSlotInfo = {
@@ -2041,7 +2055,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         furniturePosition: slotInfo.furniturePosition
       };
     }
-    
+
     // 듀얼 가구 배치 시 슬롯 점유 상태 로그
     debugLog('🎯 가구 배치 완료:', {
       id: placedId,
@@ -2056,7 +2070,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       width: moduleData.dimensions.width,
       customWidth
     });
-    
+
     // 최종 모듈 데이터 로그
     debugLog('🎯 최종 가구 데이터:', {
       moduleId: newModule.moduleId,
@@ -2070,7 +2084,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       position: newModule.position,
       '조정된 너비 사용 여부': newModule.adjustedWidth !== undefined
     });
-    
+
     // 배치 전 기존 가구 상태 확인
     debugLog('📋 배치 전 가구 목록:', placedModules.map(m => ({
       id: m.id.slice(-2),
@@ -2079,16 +2093,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       zone: m.zone,
       moduleId: m.moduleId
     })));
-    
+
     addModule(newModule);
-    
+
     // 전체 슬롯 점유 상태 시각화
     const updatedModules = [...placedModules, newModule];
     const targetZone: 'normal' | 'dropped' = spaceInfo.droppedCeiling?.enabled
       ? (zoneToUse || 'normal')
       : 'normal';
     const slotOccupancy: string[] = new Array(zoneTargetIndexing.columnCount).fill('[ ]');
-    
+
     // 현재 영역의 가구만 필터링 (zone이 없는 경우 normal로 간주)
     const zoneModules = updatedModules.filter(m => {
       if (spaceInfo.droppedCeiling?.enabled) {
@@ -2096,7 +2110,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
       return true; // 단내림이 없으면 모든 가구 표시
     });
-    
+
     debugLog(`🔍 ${targetZone} 영역 가구 목록:`, zoneModules.map(m => ({
       id: m.id.slice(-2),
       moduleId: m.moduleId,
@@ -2104,7 +2118,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       isDualSlot: m.isDualSlot,
       zone: m.zone
     })));
-    
+
     zoneModules.forEach(m => {
       if (m.slotIndex === undefined) {
         return;
@@ -2126,22 +2140,22 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         slotOccupancy[localIndex] = `[${m.id.slice(-2)}]`;
       }
     });
-    
+
     debugLog(`📊 ${targetZone} 영역 슬롯 점유 상태 (총 ${zoneTargetIndexing.columnCount}개):`, slotOccupancy.join(''));
-    
+
     // 드래그 모드인 경우에만 currentDragData 초기화
     if (currentDragData) {
       setCurrentDragData(null);
     }
-    
+
     // 전체 슬롯 점유 상태 디버깅
     setTimeout(() => {
       debugSlotOccupancy(placedModules, spaceInfo);
     }, 100);
-    
+
     // 가구 배치 완료 이벤트 발생 (카메라 리셋용)
     window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
-    
+
     return true;
   }, [
     currentDragData,
@@ -2151,22 +2165,22 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     internalSpace,
     indexing,
     placedModules,
-    addModule, 
+    addModule,
     setCurrentDragData,
     showAlert
   ]);
-  
+
   // window 객체에 함수 노출
   useEffect(() => {
     window.handleSlotDrop = (dragEvent: DragEvent, canvasElement: HTMLCanvasElement) => {
       return handleSlotDrop(dragEvent, canvasElement);
     };
-    
+
     return () => {
       delete window.handleSlotDrop;
     };
   }, [handleSlotDrop]);
-  
+
   // 간단한 드래그오버 이벤트 핸들러 (드래그 모드와 클릭-앤-플레이스 모드 모두 지원)
   useEffect(() => {
     // 드래그 데이터나 선택된 모듈이 없으면 반환
@@ -2248,21 +2262,21 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         setHoveredZone(null);
         return;
       }
-      
+
       // 현재 활성 모듈 확인 (드래그 중이거나 선택된 모듈)
       const activeModuleData = currentDragData;
-      
+
       if (activeModuleData) {
         // isDualFurniture 함수는 너비를 기대하지만, 더 정확한 방법은 moduleId 확인
         const isDual = activeModuleData.moduleData.id.startsWith('dual-');
-        
+
         // 단내림 구간일 경우 영역별 가구 확인
         const isAvailable = (() => {
           if (spaceInfo.droppedCeiling?.enabled && detectedZone) {
             // 영역별 컬럼 수 가져오기
             const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
             const targetZone = detectedZone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-            
+
             // 듀얼 가구가 영역 경계를 넘어가는지 체크
             if (isDual && slotIndex + 1 >= targetZone.columnCount) {
               debugLog('🚫 Hover: 듀얼 가구가 영역 경계를 넘어감:', {
@@ -2274,10 +2288,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               });
               return false;
             }
-            
+
             // 단내림 구간: 동일 영역의 가구만 확인
             const zoneModules = placedModules.filter(m => m.zone === detectedZone);
-            
+
             // 단내림 구간 슬롯 점유 상태 로깅
             debugLog('🏗️ 단내림 구간 슬롯 점유 상태 (hover):', {
               zone: detectedZone,
@@ -2292,21 +2306,23 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 zone: m.zone
               }))
             });
-            
+
             const hasConflict = zoneModules.some(m => {
               if (isDual) {
                 // 듀얼 가구는 2개 슬롯 차지
                 if (m.isDualSlot) {
                   // 기존 가구도 듀얼인 경우: 완전한 충돌 검사
-                  const conflict = (m.slotIndex === slotIndex) || 
-                         (m.slotIndex === slotIndex + 1) || 
-                         (m.slotIndex === slotIndex - 1) || 
-                         (m.slotIndex + 1 === slotIndex);
+                  const conflict = (m.slotIndex === slotIndex) ||
+                    (m.slotIndex === slotIndex + 1) ||
+                    (m.slotIndex === slotIndex - 1) ||
+                    (m.slotIndex + 1 === slotIndex);
                   if (conflict) {
                     debugLog('🚫 Hover: 듀얼-듀얼 충돌:', {
                       드래그중: { slotIndex, isDual: true, slots: [slotIndex, slotIndex + 1] },
-                      기존가구: { id: m.id, slotIndex: m.slotIndex, isDualSlot: m.isDualSlot, 
-                                 moduleId: m.moduleId, slots: [m.slotIndex, m.slotIndex + 1] }
+                      기존가구: {
+                        id: m.id, slotIndex: m.slotIndex, isDualSlot: m.isDualSlot,
+                        moduleId: m.moduleId, slots: [m.slotIndex, m.slotIndex + 1]
+                      }
                     });
                   }
                   return conflict;
@@ -2316,22 +2332,26 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                   if (conflict) {
                     debugLog('🚫 Hover: 듀얼-싱글 충돌:', {
                       드래그중: { slotIndex, isDual: true, slots: [slotIndex, slotIndex + 1] },
-                      기존가구: { id: m.id, slotIndex: m.slotIndex, isDualSlot: m.isDualSlot, 
-                                 moduleId: m.moduleId, slots: [m.slotIndex] }
+                      기존가구: {
+                        id: m.id, slotIndex: m.slotIndex, isDualSlot: m.isDualSlot,
+                        moduleId: m.moduleId, slots: [m.slotIndex]
+                      }
                     });
                   }
                   return conflict;
                 }
               } else {
                 // 싱글 가구는 1개 슬롯 차지하지만, 듀얼 가구가 차지한 슬롯도 확인해야 함
-                const conflict = m.slotIndex === slotIndex || 
-                       (m.isDualSlot && (m.slotIndex === slotIndex || m.slotIndex + 1 === slotIndex));
+                const conflict = m.slotIndex === slotIndex ||
+                  (m.isDualSlot && (m.slotIndex === slotIndex || m.slotIndex + 1 === slotIndex));
                 if (conflict) {
                   debugLog('🚫 Hover: 싱글 충돌:', {
                     드래그중: { slotIndex, isDual: false, slots: [slotIndex] },
-                    기존가구: { id: m.id, slotIndex: m.slotIndex, isDualSlot: m.isDualSlot, 
-                               moduleId: m.moduleId,
-                               slots: m.isDualSlot ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex] }
+                    기존가구: {
+                      id: m.id, slotIndex: m.slotIndex, isDualSlot: m.isDualSlot,
+                      moduleId: m.moduleId,
+                      slots: m.isDualSlot ? [m.slotIndex, m.slotIndex + 1] : [m.slotIndex]
+                    }
                   });
                 }
                 return conflict;
@@ -2343,7 +2363,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             return isSlotAvailable(slotIndex, isDual, placedModules, spaceInfo, activeModuleData.moduleData.id);
           }
         })();
-        
+
         if (isAvailable) {
           setHoveredSlotIndex(slotIndex);
           setHoveredZone(detectedZone);
@@ -2361,11 +2381,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       setHoveredSlotIndex(null);
       setHoveredZone(null);
     };
-    
+
 
     const canvas = document.querySelector('canvas');
     const canvasContainer = canvas?.parentElement;
-    
+
     if (canvasContainer && currentDragData) {
       // 드래그 이벤트
       canvasContainer.addEventListener('dragover', handleDragOver);
@@ -2379,12 +2399,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
     };
   }, [currentDragData, camera, scene, spaceInfo, placedModules]);
-  
-  
+
+
   // 단내림 정보 가져오기
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
   const zoneSlotInfo = hasDroppedCeiling ? ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount) : null;
-  
+
   // 영역별 슬롯 위치 계산
   const getZoneSlotPositions = () => {
     debugLog('🚨🚨🚨 getZoneSlotPositions 진입:', {
@@ -2417,46 +2437,46 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
       }
       return [];
     }
-    
+
     // 단내림이 있는 경우 모든 영역의 콜라이더 생성
     debugLog('🎯 getZoneSlotPositions - creating colliders for both zones');
     const fullIndexing = calculateSpaceIndexing(spaceInfo);
-    
+
     const allPositions = [];
-    
+
     // normal 영역 콜라이더
     if (fullIndexing.zones?.normal?.threeUnitPositions) {
       debugLog('🔍 Normal zone positions:', fullIndexing.zones.normal.threeUnitPositions);
       const normalMin = Math.min(...fullIndexing.zones.normal.threeUnitPositions);
       const normalMax = Math.max(...fullIndexing.zones.normal.threeUnitPositions);
       debugLog('📏 Normal zone range:', { min: normalMin, max: normalMax });
-      
+
       allPositions.push(...fullIndexing.zones.normal.threeUnitPositions.map((pos, idx) => ({
         position: pos,
         zone: 'normal' as const,
         index: idx
       })));
     }
-    
+
     // dropped 영역 콜라이더
     if (fullIndexing.zones?.dropped?.threeUnitPositions) {
       debugLog('🔍 Dropped zone positions:', fullIndexing.zones.dropped.threeUnitPositions);
       const droppedMin = Math.min(...fullIndexing.zones.dropped.threeUnitPositions);
       const droppedMax = Math.max(...fullIndexing.zones.dropped.threeUnitPositions);
       debugLog('📏 Dropped zone range:', { min: droppedMin, max: droppedMax });
-      
+
       allPositions.push(...fullIndexing.zones.dropped.threeUnitPositions.map((pos, idx) => ({
         position: pos,
         zone: 'dropped' as const,
         index: idx
       })));
-      
+
       // 영역 겹침 확인
       if (fullIndexing.zones.normal?.threeUnitPositions) {
         const normalMin = Math.min(...fullIndexing.zones.normal.threeUnitPositions);
         const normalMax = Math.max(...fullIndexing.zones.normal.threeUnitPositions);
-        if ((droppedMin >= normalMin && droppedMin <= normalMax) || 
-            (droppedMax >= normalMin && droppedMax <= normalMax)) {
+        if ((droppedMin >= normalMin && droppedMin <= normalMax) ||
+          (droppedMax >= normalMin && droppedMax <= normalMax)) {
           console.error('❌ Zone overlap detected!', {
             normal: { min: normalMin, max: normalMax },
             dropped: { min: droppedMin, max: droppedMax }
@@ -2464,7 +2484,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
       }
     }
-    
+
     const zoneLocalCounters: Record<'normal' | 'dropped', number> = {
       normal: 0,
       dropped: 0
@@ -2497,15 +2517,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
     return sortedPositions;
   };
-  
+
   const zoneSlotPositions = getZoneSlotPositions();
-  
+
   // 배열이 아닌 경우 빈 배열로 처리
   if (!Array.isArray(zoneSlotPositions)) {
     console.error('❌ getZoneSlotPositions returned non-array:', zoneSlotPositions);
     return <group />;
   }
-  
+
   debugLog('🎯 SlotDropZonesSimple - rendering colliders:', {
     zoneSlotPositionsLength: zoneSlotPositions.length,
     hasDroppedCeiling,
@@ -2515,7 +2535,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
     indexing: indexing,
     hasIndexingPositions: !!indexing?.threeUnitPositions
   });
-  
+
   return (
     <group>
       {/* 레이캐스팅용 투명 콜라이더들 - 좌우측뷰에서는 숨김 */}
@@ -2543,7 +2563,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         // 콜라이더는 전체 깊이 사용하되, 가구 배치 영역의 중심에 위치
         const reducedDepth = slotDimensions.depth;
         const zOffset = furnitureZOffset; // 가구 배치 영역의 Z 중심
-        
+
         // 영역별 슬롯 너비 계산 - slotWidths 배열 사용
         let slotWidth = slotDimensions.width;
         if (hasDroppedCeiling && zoneSlotInfo) {
@@ -2552,7 +2572,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const zoneSlotWidths = currentZone === 'dropped' && zoneSlotInfo.dropped
             ? zoneSlotInfo.dropped.slotWidths
             : zoneSlotInfo.normal.slotWidths;
-          
+
           if (zoneSlotWidths && slotLocalIndex < zoneSlotWidths.length) {
             slotWidth = mmToThreeUnits(zoneSlotWidths[slotLocalIndex]);
           } else {
@@ -2566,15 +2586,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // 단내림이 없는 경우 indexing.slotWidths 사용
           slotWidth = mmToThreeUnits(indexing.slotWidths[slotLocalIndex]);
         }
-        
+
         // 띄워서 배치인지 확인
         const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
         const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
-        
+
         // ColumnGuides와 정확히 동일한 Y 위치 계산
         const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
         const ceilingY = mmToThreeUnits(internalSpace.startY) + mmToThreeUnits(internalSpace.height);
-        
+
         // 단내림 구간의 경우 높이 조정
         let slotHeight = ceilingY - floorY;
         const currentZone = slotZone;
@@ -2585,16 +2605,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const droppedCeilingY = mmToThreeUnits(droppedTotalHeight - topFrameHeight);
           slotHeight = droppedCeilingY - floorY;
         }
-        
+
         // 슬롯의 중앙 Y 위치
         const colliderY = floorY + slotHeight / 2;
-        
+
         return (
           <mesh
             key={`slot-collider-${slotZone}-${slotLocalIndex}`}
             name={`SlotCollider-${slotZone}-${slotLocalIndex}`}
             position={[slotX, colliderY, zOffset]}
-            userData={{ 
+            userData={{
               slotIndex: slotLocalIndex,  // 영역 내 로컬 인덱스 (항상 0부터 시작)
               isSlotCollider: true,
               type: 'slot-collider',
@@ -2608,19 +2628,19 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           </mesh>
         );
       })}
-      
+
       {/* 바닥 슬롯 시각화 - 가이드라인과 정확히 일치 (2D 정면/좌측/우측뷰에서는 숨김) */}
       {showAll && showDimensions && indexing.threeUnitBoundaries.length > 1 && !(viewMode === '2D' && (view2DDirection === 'front' || view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
         // 단내림 활성화 여부 확인
         const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
         const zoneSlotInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-        
+
         // ColumnGuides와 동일한 Y 위치 계산
         const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
         const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
         const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
         const ceilingY = mmToThreeUnits(internalSpace.startY) + mmToThreeUnits(internalSpace.height);
-        
+
         // Room.tsx의 바닥 계산과 동일하게 수정
         const doorThicknessMm = 20;
         const doorThickness = mmToThreeUnits(doorThicknessMm);
@@ -2630,12 +2650,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
         const zOffset = -panelDepth / 2;
         const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
-        
+
         const roomBackZ = -mmToThreeUnits(internalSpace.depth / 2);
-        const frameEndZ = furnitureZOffset + furnitureDepth/2; // 좌우 프레임의 앞쪽 끝
+        const frameEndZ = furnitureZOffset + furnitureDepth / 2; // 좌우 프레임의 앞쪽 끝
         const slotFloorDepth = frameEndZ - roomBackZ - mmToThreeUnits(20); // 바닥 슬롯 메쉬 깊이 (앞쪽에서 20mm 줄임)
         const slotFloorZ = (frameEndZ + roomBackZ) / 2 - mmToThreeUnits(10); // 바닥 중심 Z 좌표 (앞쪽으로 10mm 이동)
-        
+
         // CSS 변수에서 실제 테마 색상 가져오기
         const getThemeColorFromCSS = () => {
           if (typeof window !== 'undefined') {
@@ -2645,9 +2665,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }
           return '#10b981';
         };
-        
+
         const primaryColor = getThemeColorFromCSS();
-        
+
         if (hasDroppedCeiling && zoneSlotInfo.dropped) {
           // 단내림 활성화된 경우 양쪽 영역 모두 표시
           debugLog('🎯🎯🎯 SlotDropZonesSimple - 투명 슬롯 메쉬 경계:', {
@@ -2661,16 +2681,36 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               너비_three: mmToThreeUnits(zoneSlotInfo.normal.width)
             }
           });
-          
+
           return (
             <>
               {/* 메인 영역 표시 */}
               <group key="main-zone-group">
                 {/* 바닥 슬롯 메쉬 */}
                 <mesh
+                  position={[
+                    mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
+                    floorY,
+                    slotFloorZ
+                  ]}
+                >
+                  <boxGeometry args={[
+                    mmToThreeUnits(zoneSlotInfo.normal.width),
+                    viewMode === '2D' ? 0.1 : 0.001,
+                    slotFloorDepth
+                  ]} />
+                  <meshBasicMaterial
+                    color={primaryColor}
+                    transparent
+                    opacity={0.35}
+                  />
+                </mesh>
+                {/* 천장 슬롯 메쉬 - 바닥과 동일한 깊이, 2D 모드에서는 숨김 */}
+                {viewMode !== '2D' && (
+                  <mesh
                     position={[
                       mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
-                      floorY,
+                      ceilingY,
                       slotFloorZ
                     ]}
                   >
@@ -2679,56 +2719,56 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                       viewMode === '2D' ? 0.1 : 0.001,
                       slotFloorDepth
                     ]} />
-                    <meshBasicMaterial 
-                      color={primaryColor} 
-                      transparent 
-                      opacity={0.35} 
+                    <meshBasicMaterial
+                      color={primaryColor}
+                      transparent
+                      opacity={0.35}
                     />
                   </mesh>
-                  {/* 천장 슬롯 메쉬 - 바닥과 동일한 깊이, 2D 모드에서는 숨김 */}
-                  {viewMode !== '2D' && (
-                    <mesh
-                      position={[
-                        mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
-                        ceilingY,
-                        slotFloorZ
-                      ]}
-                    >
-                      <boxGeometry args={[
-                        mmToThreeUnits(zoneSlotInfo.normal.width),
-                        viewMode === '2D' ? 0.1 : 0.001,
-                        slotFloorDepth
-                      ]} />
-                      <meshBasicMaterial 
-                        color={primaryColor} 
-                        transparent 
-                        opacity={0.35} 
-                      />
-                    </mesh>
-                  )}
-                  {/* 메인 영역 외곽선 */}
-                  <lineSegments
-                    position={[
-                      mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
-                      floorY,
-                      slotFloorZ
-                    ]}
-                  >
-                    <edgesGeometry args={[new THREE.BoxGeometry(
-                      mmToThreeUnits(zoneSlotInfo.normal.width),
-                      viewMode === '2D' ? 0.1 : 0.001,
-                      slotFloorDepth
-                    )]} />
-                    <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
-                  </lineSegments>
-                </group>
-                {/* 단내림 영역 표시 */}
-                <group key="dropped-zone-group">
-                  {/* 바닥 슬롯 메쉬 */}
+                )}
+                {/* 메인 영역 외곽선 */}
+                <lineSegments
+                  position={[
+                    mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
+                    floorY,
+                    slotFloorZ
+                  ]}
+                >
+                  <edgesGeometry args={[new THREE.BoxGeometry(
+                    mmToThreeUnits(zoneSlotInfo.normal.width),
+                    viewMode === '2D' ? 0.1 : 0.001,
+                    slotFloorDepth
+                  )]} />
+                  <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
+                </lineSegments>
+              </group>
+              {/* 단내림 영역 표시 */}
+              <group key="dropped-zone-group">
+                {/* 바닥 슬롯 메쉬 */}
+                <mesh
+                  position={[
+                    mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width / 2),
+                    floorY,
+                    slotFloorZ
+                  ]}
+                >
+                  <boxGeometry args={[
+                    mmToThreeUnits(zoneSlotInfo.dropped.width),
+                    viewMode === '2D' ? 0.1 : 0.001,
+                    slotFloorDepth
+                  ]} />
+                  <meshBasicMaterial
+                    color={primaryColor}
+                    transparent
+                    opacity={0.35}
+                  />
+                </mesh>
+                {/* 천장 슬롯 메쉬 - 단내림 구간은 높이가 다름, 2D 모드에서는 숨김 */}
+                {viewMode !== '2D' && (
                   <mesh
                     position={[
                       mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width / 2),
-                      floorY,
+                      mmToThreeUnits(spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0) - (spaceInfo.frameSize?.top || 0)),
                       slotFloorZ
                     ]}
                   >
@@ -2737,58 +2777,38 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                       viewMode === '2D' ? 0.1 : 0.001,
                       slotFloorDepth
                     ]} />
-                    <meshBasicMaterial 
-                      color={primaryColor} 
-                      transparent 
-                      opacity={0.35} 
+                    <meshBasicMaterial
+                      color={primaryColor}
+                      transparent
+                      opacity={0.35}
                     />
                   </mesh>
-                  {/* 천장 슬롯 메쉬 - 단내림 구간은 높이가 다름, 2D 모드에서는 숨김 */}
-                  {viewMode !== '2D' && (
-                    <mesh
-                      position={[
-                        mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width / 2),
-                        mmToThreeUnits(spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0) - (spaceInfo.frameSize?.top || 0)),
-                        slotFloorZ
-                      ]}
-                    >
-                      <boxGeometry args={[
-                        mmToThreeUnits(zoneSlotInfo.dropped.width),
-                        viewMode === '2D' ? 0.1 : 0.001,
-                        slotFloorDepth
-                      ]} />
-                      <meshBasicMaterial 
-                        color={primaryColor} 
-                        transparent 
-                        opacity={0.35} 
-                      />
-                    </mesh>
-                  )}
-                  {/* 단내림 영역 외곽선 */}
-                  <lineSegments
-                    position={[
-                      mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width / 2),
-                      floorY,
-                      slotFloorZ
-                    ]}
-                  >
-                    <edgesGeometry args={[new THREE.BoxGeometry(
-                      mmToThreeUnits(zoneSlotInfo.dropped.width),
-                      viewMode === '2D' ? 0.1 : 0.001,
-                      slotFloorDepth
-                    )]} />
-                    <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
-                  </lineSegments>
-                </group>
-              </>
-            );
+                )}
+                {/* 단내림 영역 외곽선 */}
+                <lineSegments
+                  position={[
+                    mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width / 2),
+                    floorY,
+                    slotFloorZ
+                  ]}
+                >
+                  <edgesGeometry args={[new THREE.BoxGeometry(
+                    mmToThreeUnits(zoneSlotInfo.dropped.width),
+                    viewMode === '2D' ? 0.1 : 0.001,
+                    slotFloorDepth
+                  )]} />
+                  <lineBasicMaterial color={primaryColor} opacity={0.8} transparent />
+                </lineSegments>
+              </group>
+            </>
+          );
         } else {
           // 단내림이 없는 경우 전체 영역 표시 - zoneSlotInfo 사용
           const startX = mmToThreeUnits(zoneSlotInfo.normal.startX);
           const endX = mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width);
           const centerX = (startX + endX) / 2;
           const width = endX - startX;
-          
+
           debugLog('🎯🎯🎯 SlotDropZonesSimple - 단내림 없는 경우 투명 슬롯 메쉬 경계:', {
             'zoneSlotInfo.normal.startX': zoneSlotInfo.normal.startX,
             'zoneSlotInfo.normal.width': zoneSlotInfo.normal.width,
@@ -2797,7 +2817,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             'centerX_three': centerX,
             'width_three': width
           });
-          
+
           return (
             <group key="full-zone-group">
               {/* 바닥 슬롯 메쉬 */}
@@ -2805,10 +2825,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                 position={[centerX, floorY, slotFloorZ]}
               >
                 <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
-                <meshBasicMaterial 
-                  color={primaryColor} 
-                  transparent 
-                  opacity={0.35} 
+                <meshBasicMaterial
+                  color={primaryColor}
+                  transparent
+                  opacity={0.35}
                 />
               </mesh>
               {/* 천장 슬롯 메쉬 - 2D 모드에서는 숨김 */}
@@ -2818,10 +2838,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                   position={[centerX, ceilingY, slotFloorZ]}
                 >
                   <boxGeometry args={[width, viewMode === '2D' ? 0.1 : 0.001, slotFloorDepth]} />
-                  <meshBasicMaterial 
-                    color={primaryColor} 
-                    transparent 
-                    opacity={0.35} 
+                  <meshBasicMaterial
+                    color={primaryColor}
+                    transparent
+                    opacity={0.35}
                   />
                 </mesh>
               )}
@@ -2834,10 +2854,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             </group>
           );
         }
-        
+
         return null;
       })()}
-      
+
       {/* 가구 미리보기 */}
       {debugLog('👻 [Ghost] Rendering conditions:', {
         hoveredSlotIndex,
@@ -2885,7 +2905,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             };
           }
         }
-        
+
         // 현재 드래그 중인 가구가 듀얼인지 확인 (너비 기반)
         let isDual = false;
         if (activeModuleData) {
@@ -3003,16 +3023,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         }
 
         if (!shouldRenderGhost || !activeModuleData) return null;
-        
+
         // 활성 가구의 모듈 데이터 가져오기
         let moduleData;
         let targetModuleId = activeModuleData.moduleData.id; // 기본값 설정
-        
+
         // 단내림이 활성화된 경우 영역별 모듈 생성
         let zoneInternalSpace = null; // 미리보기에서 사용할 변수 선언
         // slotZone 정보로 영역 판단
         const effectiveZone = slotZone;
-        
+
         debugLog('🔥 고스트 생성 디버그:', {
           slotIndex,
           slotLocalIndex,
@@ -3024,12 +3044,12 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           hasDroppedCeiling,
           hasZoneSlotInfo: !!zoneSlotInfo
         });
-        
+
         if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
           // 단내림 영역별 외경 너비 계산 (프레임 포함)
           const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
           let zoneSpaceInfo;
-          
+
           if (effectiveZone === 'dropped') {
             // 단내림 영역용 spaceInfo - 높이는 동일 (천장만 낮아짐)
             zoneSpaceInfo = {
@@ -3057,9 +3077,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               droppedCeilingEnabled: zoneSpaceInfo.droppedCeiling?.enabled
             });
           }
-          
+
           zoneInternalSpace = calculateInternalSpace(zoneSpaceInfo);
-          
+
           debugLog('🎯 [Ghost Preview] Zone 내부 공간 계산:', {
             effectiveZone,
             zoneSpaceInfo: {
@@ -3071,7 +3091,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             originalHeight: spaceInfo.height,
             droppedCeilingDropHeight: spaceInfo.droppedCeiling?.dropHeight
           });
-          
+
           // 슬롯 너비에 기반한 모듈 ID 생성 (소수점 포함)
           const baseType = activeModuleData.moduleData.id.replace(/-[\d.]+$/, '');
           const targetZone = effectiveZone === 'dropped' && zoneSlotInfo.dropped
@@ -3124,7 +3144,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
               targetWidth = targetZone.slotWidths?.[localIndex] || targetZone.columnWidth;
             }
           }
-          
+
           targetModuleId = `${baseType}-${targetWidth}`;
           debugLog('🎯 [Ghost Preview] 모듈 ID 생성:', {
             baseType,
@@ -3134,9 +3154,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             effectiveZone,
             localIndex
           });
-          
+
           moduleData = getModuleById(targetModuleId, zoneInternalSpace, zoneSpaceInfo);
-          
+
           debugLog('🔍 [Ghost Preview] 단내림 구간 미리보기 모듈 조회:', {
             effectiveZone,
             baseType,
@@ -3169,7 +3189,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           // 단내림이 없는 경우에도 슬롯별 너비를 고려한 모듈 ID 생성
           const baseType = activeModuleData.moduleData.id.replace(/-[\d.]+$/, '');
           let targetWidth;
-          
+
           // 기둥 정보 확인
           const columnSlots = analyzeColumnSlots(spaceInfo);
           const targetSlotInfo = columnSlots[hoveredSlotIndex];
@@ -3189,7 +3209,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             // 싱글 가구: 해당 슬롯의 너비
             targetWidth = indexing.columnWidth;
           }
-          
+
           const targetModuleId = `${baseType}-${targetWidth}`;
           debugLog('🎯 [Ghost Preview] 일반 구간 모듈 ID 생성:', {
             baseType,
@@ -3199,44 +3219,53 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             hasColumn: targetSlotInfo?.hasColumn,
             columnWidth: targetSlotInfo?.column?.width
           });
-          
+
           moduleData = getModuleById(targetModuleId, internalSpace, spaceInfo);
-          
+
           // 못 찾으면 원래 ID로 다시 시도
           if (!moduleData) {
             moduleData = getModuleById(activeModuleData.moduleData.id, internalSpace, spaceInfo);
           }
+          // 모듈 데이터가 없으면 원래 모듈 데이터 사용
+          if (!moduleData) {
+            // activeModuleData.moduleData를 사용하되, ID는 targetModuleId로 설정된 새 객체 생성
+            moduleData = {
+              ...activeModuleData.moduleData,
+              id: targetModuleId,
+              dimensions: {
+                ...activeModuleData.moduleData.dimensions,
+                width: targetWidth
+              }
+            };
+          }
         }
-        
-        if (!moduleData) {
-          console.error('❌ [Ghost Preview] 미리보기 모듈을 찾을 수 없음:', {
-            targetModuleId,
-            effectiveZone,
-            originalModuleId: activeModuleData.moduleData.id
-          });
-          // 폴백: 원래 모듈 사용
-          moduleData = activeModuleData.moduleData;
-        }
-        
+
         // 미리보기 위치 계산 - 실제 배치와 동일한 로직 사용
         let previewX = slotX;
-        
+
+        console.log('👻 [Ghost Preview] Rendering module:', {
+          slotIndex,
+          moduleId: moduleData.id,
+          originalId: activeModuleData.moduleData.id,
+          dimensions: moduleData.dimensions
+        });
+
         if (hasDroppedCeiling && effectiveZone && zoneSlotInfo) {
           // 단내림 구간
-          const zoneInfo = effectiveZone === 'dropped' && zoneSlotInfo.dropped 
-            ? zoneSlotInfo.dropped 
+          const zoneInfo = effectiveZone === 'dropped' && zoneSlotInfo.dropped
+            ? zoneSlotInfo.dropped
             : zoneSlotInfo.normal;
-          
+
           const startX = mmToThreeUnits(zoneInfo.startX);
           const columnWidth = mmToThreeUnits(zoneInfo.columnWidth);
-          
+
           // 로컬 인덱스 사용
           const localIdx = slotLocalIndex;
-          
+
           if (isDual && localIdx < zoneInfo.columnCount - 1) {
             // 듀얼 가구
             let leftSlotX, rightSlotX;
-            
+
             // 마지막-1 슬롯이 듀얼인 경우 마지막 슬롯의 실제 너비 고려
             if (localIdx === zoneInfo.columnCount - 2) {
               leftSlotX = startX + (localIdx * columnWidth) + (columnWidth / 2);
@@ -3289,14 +3318,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             dualPosition: indexing.threeUnitDualPositions?.[slotIndex]
           });
         }
-        
+
         let customDepth = moduleData?.defaultDepth || Math.min(Math.floor(spaceInfo.depth * 0.9), 580);
-        
+
         // 카테고리 체크
         const isUpperCabinet = moduleData?.category === 'upper';
         const isLowerCabinet = moduleData?.category === 'lower';
         const isFullCabinet = moduleData?.category === 'full';
-        
+
         // 단내림 구간의 경우 높이 조정 - 실제 배치 로직과 동일하게
         let adjustedFurnitureHeightMm = moduleData.dimensions.height;
         if (effectiveZone === 'dropped' && isFullCabinet && spaceInfo.droppedCeiling?.enabled) {
@@ -3322,7 +3351,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
         // 가구 Y 위치 계산 - 실제 배치 로직과 동일하게
         let furnitureY: number;
-        
+
         if (isFullCabinet) {
           // 키큰장: 바닥부터 시작
           const floorY = mmToThreeUnits(zoneInternalSpace?.startY || internalSpace.startY);
@@ -3331,7 +3360,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
           // 키큰장은 바닥에서 시작 (띄움 높이 적용)
           furnitureY = floorY + floatOffset + furnitureHeight / 2;
-          
+
           debugLog('👻 [Ghost Preview] 키큰장 Y 위치:', {
             floorY,
             furnitureHeightMm: adjustedFurnitureHeightMm,
@@ -3395,7 +3424,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
           const furnitureHeightMm = adjustedFurnitureHeightMm;
           furnitureY = mmToThreeUnits(startHeightMm + furnitureHeightMm / 2);
-          
+
           debugLog('👻 [Ghost Preview] 하부장 Y 위치:', {
             floorFinishHeightMm,
             startHeightMm,
@@ -3467,15 +3496,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           droppedCeilingDropHeight: spaceInfo.droppedCeiling?.dropHeight,
           isDroppedZone: effectiveZone === 'dropped'
         });
-        
+
         const doorThickness = mmToThreeUnits(20);
         const panelDepth = mmToThreeUnits(1500);
         const furnitureDepth = mmToThreeUnits(600);
         const zOffset = -panelDepth / 2;
         const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
         const previewDepth = mmToThreeUnits(customDepth);
-        const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - previewDepth/2;
-        
+        const furnitureZ = furnitureZOffset + furnitureDepth / 2 - doorThickness - previewDepth / 2;
+
         // 기둥 정보를 고려한 커스텀 너비와 위치 계산
         let customWidth = undefined;
         let adjustedPreviewX = previewX;
@@ -3589,16 +3618,16 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             moduleWidth: moduleData.dimensions.width
           });
         }
-        
+
         // 최종 위치 업데이트
         previewX = adjustedPreviewX;
-        
+
         // 고스트 높이 조정 (키큰장이 아닌 경우에도 단내림 구간에서 높이 조정)
         let customHeight = undefined;
         if (effectiveZone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
           const dropHeight = spaceInfo.droppedCeiling?.dropHeight || 200;
           const maxHeight = spaceInfo.height - dropHeight;
-          
+
           if (moduleData?.category === 'upper') {
             // 상부장은 높이 조정 불필요 (천장 기준)
             customHeight = undefined;
@@ -3609,7 +3638,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             // 하부장 및 일반 가구: 높이 유지
             customHeight = moduleData.dimensions.height;
           }
-          
+
           debugLog('👻 [Ghost Preview] 커스텀 높이:', {
             effectiveZone,
             category: moduleData?.category,
@@ -3619,9 +3648,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             maxHeight
           });
         }
-        
+
         return (
-          <group key={`furniture-preview-${slotIndex}`} position={[previewX, furnitureY, furnitureZ]}>
+          <group key={`furniture-preview-${slotIndex}-${moduleData.id}`} position={[previewX, furnitureY, furnitureZ]}>
             <BoxModule
               moduleData={moduleData}
               color={theme.color}

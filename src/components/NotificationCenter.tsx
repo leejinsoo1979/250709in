@@ -47,10 +47,17 @@ export const NotificationCenter: React.FC = () => {
     };
   }, [user]);
 
-  // selectedMessage 변경 감지
+  // selectedMessage 변경 감지 및 읽음 처리
   useEffect(() => {
     if (selectedMessage) {
       console.log('💬 메시지 팝업 열림:', selectedMessage);
+      // 메시지 팝업을 여는 순간 읽음 처리
+      if (!selectedMessage.isRead) {
+        console.log('📖 메시지 팝업 열림 → 즉시 읽음 처리:', selectedMessage.id);
+        markNotificationAsRead(selectedMessage.id).catch(err => {
+          console.error('❌ 읽음 처리 실패:', err);
+        });
+      }
     } else {
       console.log('💬 메시지 팝업 닫힘');
     }
@@ -283,19 +290,8 @@ export const NotificationCenter: React.FC = () => {
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  console.log('✅ 확인 버튼 클릭됨');
-
-                  // 즉시 모달 닫기
-                  const messageId = selectedMessage.id;
-                  const isAlreadyRead = selectedMessage.isRead;
+                  console.log('✅ 확인 버튼 클릭됨 → 모달 닫기');
                   setSelectedMessage(null);
-                  console.log('❌ 모달 닫힘');
-
-                  // 백그라운드에서 읽음 처리 (이미 읽은 경우에도 실행하여 안전성 확보)
-                  console.log('📖 백그라운드에서 읽음 처리:', messageId, '(이미 읽음:', isAlreadyRead, ')');
-                  markNotificationAsRead(messageId).catch(err => {
-                    console.error('❌ 읽음 처리 실패:', err);
-                  });
                 }}
               >
                 <Check size={18} style={{ marginRight: '6px' }} />

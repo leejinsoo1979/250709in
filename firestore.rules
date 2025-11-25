@@ -44,7 +44,8 @@ service cloud.firestore {
     match /userProfiles/{uid} {
       allow read: if isSignedIn();
       allow list: if isAdmin(); // 관리자는 전체 프로필 목록 조회 가능
-      allow create, update: if isSignedIn() && uid == request.auth.uid;
+      allow create: if isSignedIn() && uid == request.auth.uid;
+      allow update: if (isSignedIn() && uid == request.auth.uid) || isAdmin(); // 본인 또는 관리자가 수정 가능
       allow delete: if isSignedIn() && uid == request.auth.uid;
     }
 
@@ -271,6 +272,12 @@ service cloud.firestore {
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
       allow update: if false; // API 키는 수정 불가
+    }
+
+    // 구독 정보 - 관리자만 접근 가능
+    match /subscriptions/{subscriptionId} {
+      allow read, list: if isAdmin();
+      allow create, update, delete: if isAdmin();
     }
   }
 }

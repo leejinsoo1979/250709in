@@ -571,7 +571,26 @@ const Dashboard = () => {
                 outerRadius={100}
                 paddingAngle={2}
                 dataKey="value"
-                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                label={({ cx, cy, midAngle, innerRadius, outerRadius, percent, name }: any) => {
+                  const RADIAN = Math.PI / 180;
+                  const radius = outerRadius + 25;
+                  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+                  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+
+                  return (
+                    <text
+                      x={x}
+                      y={y}
+                      fill="var(--theme-text)"
+                      textAnchor={x > cx ? 'start' : 'end'}
+                      dominantBaseline="central"
+                      fontSize="12px"
+                      fontWeight="500"
+                    >
+                      {`${name} ${(percent * 100).toFixed(0)}%`}
+                    </text>
+                  );
+                }}
               >
                 {[
                   { name: '활성 사용자', value: stats.activeUsers, color: themeColor },

@@ -5,6 +5,7 @@ import { useSpaceConfigStore, DEFAULT_DROPPED_CEILING_VALUES } from '@/store/cor
 import ColumnProperties from '@/editor/shared/controls/structure/ColumnProperties';
 import { SpaceCalculator, calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useTranslation } from '@/i18n/useTranslation';
+import PreviewViewer from './PreviewViewer';
 
 // Window 인터페이스 확장
 declare global {
@@ -760,6 +761,9 @@ const RightPanel: React.FC<RightPanelProps> = ({
 
   return (
     <div className={`${styles.rightPanel} ${isOpen ? styles.open : ''}`}>
+      {/* 미리보기 뷰어 */}
+      <PreviewViewer />
+
       {/* 탭 헤더 */}
       <div className={styles.tabHeader}>
         <div className={styles.tabGroup}>

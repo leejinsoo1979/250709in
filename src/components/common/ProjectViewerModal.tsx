@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { XIcon, MaximizeIcon, MinimizeIcon } from './Icons';
 import { getProjectById, getDesignFileById } from '../../firebase/projects';
@@ -6,6 +6,7 @@ import { ProjectSummary } from '../../firebase/types';
 import { createShareLink } from '../../firebase/shareLinks';
 import { useAuth } from '../../auth/AuthProvider';
 import { Md3dRotation } from 'react-icons/md';
+import { AlertTriangle } from 'lucide-react';
 import styles from './ProjectViewerModal.module.css';
 
 interface ProjectViewerModalProps {
@@ -25,6 +26,11 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   const [isViewerLoaded, setIsViewerLoaded] = useState(false);
   const [isIframeLoading, setIsIframeLoading] = useState(false);
 
+  // Loop detection refs
+  const reloadCountRef = useRef(0);
+  const lastLoadTimeRef = useRef(0);
+  const [isLoopDetected, setIsLoopDetected] = useState(false);
+
   // 모달 열림/닫힘 처리 (상태 초기화만, 로드는 하지 않음)
   useEffect(() => {
     if (!isOpen) {
@@ -34,6 +40,9 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
       setError(null);
       setIsViewerLoaded(false);
       setIsIframeLoading(false);
+      setIsLoopDetected(false);
+      reloadCountRef.current = 0;
+      lastLoadTimeRef.current = 0;
     }
   }, [isOpen]);
 
@@ -113,7 +122,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
               width: 3600,
               height: 2400,
               depth: 1500,
-              installType: 'builtin',  // installationType이 아닌 installType
+              installType: 'builtin',
               surroundType: 'surround',
               baseConfig: {
                 type: 'floor',
@@ -129,10 +138,10 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
               },
               materialConfig: {
                 interiorColor: '#FFFFFF',
-                doorColor: '#E0E0E0', // Changed from #FFFFFF to light gray
+                doorColor: '#E0E0E0',
               },
               columns: [],
-              frameSize: { upper: 50, left: 50, right: 50 },
+              frameSize: { top: 50, bottom: 50, left: 50, right: 50 },
               gapConfig: { left: 2, right: 2 },
             },
             placedModules: result.project.furniture?.placedModules || []
@@ -171,6 +180,39 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
   const handle3DViewer = () => {
     setIsIframeLoading(true);
     setIsViewerLoaded(true);
+  };
+
+  const handleIframeLoad = () => {
+    const now = Date.now();
+    const timeSinceLastLoad = now - lastLoadTimeRef.current;
+
+    console.log('🎬 iframe onLoad 이벤트:', {
+      projectId,
+      designFileId,
+      timeSinceLastLoad,
+      currentCount: reloadCountRef.current
+    });
+
+    // 3초 이내에 다시 로드되면 카운트 증가
+    if (timeSinceLastLoad < 3000) {
+      reloadCountRef.current += 1;
+      console.warn(`⚠️ 빠른 리로드 감지됨 (${reloadCountRef.current}/3)`);
+    } else {
+      // 3초가 지났으면 카운트 리셋 (정상적인 탐색으로 간주)
+      reloadCountRef.current = 0;
+    }
+
+    lastLoadTimeRef.current = now;
+
+    // 3회 이상 연속 리로드 시 차단
+    if (reloadCountRef.current >= 3) {
+      console.error('🚨 무한 리로드 루프 감지됨! 뷰어 중단');
+      setIsLoopDetected(true);
+      setIsIframeLoading(false);
+      return;
+    }
+
+    setIsIframeLoading(false);
   };
 
   const handleShare = async () => {
@@ -215,14 +257,14 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
 
   return (
     <AnimatePresence>
-      <motion.div 
+      <motion.div
         className={`${styles.modalOverlay} ${isFullscreen ? styles.fullscreen : ''}`}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={handleClose}
       >
-        <motion.div 
+        <motion.div
           className={`${styles.modalContent} ${isFullscreen ? styles.fullscreenContent : ''}`}
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -277,7 +319,29 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
               </div>
             )}
 
-            {project && !loading && !error && (
+            {isLoopDetected && (
+              <div className={styles.errorState}>
+                <AlertTriangle size={48} color="#ff9800" style={{ marginBottom: '16px' }} />
+                <h3>미리보기 중단됨</h3>
+                <p>시스템 오류로 인해 미리보기가 반복적으로 다시 로드되어 중단되었습니다.</p>
+                <p className={styles.errorDetail}>
+                  (Infinite Reload Loop Detected)
+                </p>
+                <button
+                  onClick={() => {
+                    setIsLoopDetected(false);
+                    reloadCountRef.current = 0;
+                    lastLoadTimeRef.current = 0;
+                    setIsIframeLoading(true);
+                  }}
+                  className={styles.retryButton}
+                >
+                  다시 시도
+                </button>
+              </div>
+            )}
+
+            {project && !loading && !error && !isLoopDetected && (
               <div className={styles.viewerContainer} style={{ position: 'relative' }}>
                 {!isViewerLoaded ? (
                   // 썸네일 이미지와 3D 버튼
@@ -372,10 +436,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                       title="Project Preview"
                       referrerPolicy="same-origin"
                       allow="same-origin"
-                      onLoad={() => {
-                        console.log('🎬 iframe onLoad 이벤트:', { projectId, designFileId });
-                        setIsIframeLoading(false);
-                      }}
+                      onLoad={handleIframeLoad}
                       onError={(e) => {
                         console.error('❌ iframe 로드 에러:', e);
                         setIsIframeLoading(false);
@@ -396,14 +457,19 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                   (() => {
                     if (project.updatedAt) {
                       try {
-                        // Firebase Timestamp 처리
-                        const date = project.updatedAt.seconds ? 
-                          new Date(project.updatedAt.seconds * 1000) : 
-                          new Date(project.updatedAt);
-                        
+                        let date: Date;
+                        const timestamp = project.updatedAt as any;
+                        if (timestamp && typeof timestamp.toDate === 'function') {
+                          date = timestamp.toDate();
+                        } else if (timestamp && typeof timestamp.seconds === 'number') {
+                          date = new Date(timestamp.seconds * 1000);
+                        } else {
+                          date = new Date(timestamp);
+                        }
+
                         const now = new Date();
                         const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
-                        
+
                         if (diffInHours < 1) {
                           return '방금 전';
                         } else if (diffInHours < 24) {
@@ -423,13 +489,20 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                         return '알 수 없음';
                       }
                     }
-                    
+
                     // createdAt이 있다면 그것을 사용
                     if (project.createdAt) {
                       try {
-                        const date = project.createdAt.seconds ? 
-                          new Date(project.createdAt.seconds * 1000) : 
-                          new Date(project.createdAt);
+                        let date: Date;
+                        const timestamp = project.createdAt as any;
+                        if (timestamp && typeof timestamp.toDate === 'function') {
+                          date = timestamp.toDate();
+                        } else if (timestamp && typeof timestamp.seconds === 'number') {
+                          date = new Date(timestamp.seconds * 1000);
+                        } else {
+                          date = new Date(timestamp);
+                        }
+
                         return date.toLocaleDateString('ko-KR', {
                           year: 'numeric',
                           month: 'long',
@@ -439,7 +512,7 @@ const ProjectViewerModal: React.FC<ProjectViewerModalProps> = ({ isOpen, onClose
                         console.error('생성일 변환 오류:', error);
                       }
                     }
-                    
+
                     return '알 수 없음';
                   })()
                 }</span>
