@@ -421,16 +421,16 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
     // 3D 모드에서는 2D front와 완전히 동일한 위치 사용
     if (viewMode === '3D') {
-      // 임베디드 모드에서는 약간 더 멀리서 보기
+      // 임베디드 모드에서는 더 멀리서 보기 (미리보기 영역이 작으므로)
       if (isEmbedded) {
-        return [centerX, centerY, distance * 1.3] as [number, number, number];
+        return [centerX, centerY, distance * 2.5] as [number, number, number];
       }
       return frontPosition;
     }
 
     // 2D 모드에서는 방향별 카메라 위치 - 각 방향에 최적화된 거리 사용
     // 임베디드 모드에서는 더 멀리서 보기 (가구 전체가 보이도록)
-    const distanceMultiplier = isEmbedded ? 4.0 : 2.0;
+    const distanceMultiplier = isEmbedded ? 6.0 : 2.0;
     switch (view2DDirection) {
       case 'front':
         // 정면: Z축에서 깊이를 고려한 최적 거리
