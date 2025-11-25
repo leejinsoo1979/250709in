@@ -31,12 +31,12 @@ const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
             viewMode={previewMode}
             renderMode={previewMode === '3D' ? 'solid' : 'wireframe'}
             showDimensions={false}
-            showAll={true}
+            showAll={false}
             showFurniture={true}
-            showFrame={true}
+            showFrame={false}
             isEmbedded={true}
-            readOnly={false}
-            hideEdges={previewMode === '2D'}
+            readOnly={true}
+            hideEdges={true}
           />
         </div>
       </div>
