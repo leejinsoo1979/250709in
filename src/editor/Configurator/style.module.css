@@ -1327,17 +1327,18 @@
     z-index: 1 !important;
     margin: 0 !important;
     padding: 0 !important;
-    display: flex !important;
-    flex-direction: column !important;
     overflow: hidden !important;
   }
 
   /* 뷰어 내부 - ViewerControls 아래 나머지 공간 차지 */
   .viewer {
-    position: relative !important;
-    flex: 1 1 auto !important;
+    position: absolute !important;
+    top: 48px !important; /* 모바일 ViewerControls 높이 */
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
     width: 100% !important;
-    min-height: 0 !important; /* flex 수축 허용 */
+    height: calc(100% - 48px) !important; /* viewerArea 높이 - ViewerControls 높이 */
     margin: 0 !important;
     padding: 0 !important;
     overflow: hidden !important;
