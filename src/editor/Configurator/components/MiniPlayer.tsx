@@ -211,7 +211,7 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onClose }) => {
               viewMode={previewMode}
               renderMode={previewMode === '3D' ? 'solid' : 'wireframe'}
               showDimensions={false}
-              showAll={false}
+              showAll={true}
               showFurniture={true}
               showFrame={false}
               isEmbedded={true}

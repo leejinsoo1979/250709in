@@ -46,7 +46,7 @@ const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
               viewMode={previewMode}
               renderMode={previewMode === '3D' ? 'solid' : 'wireframe'}
               showDimensions={false}
-              showAll={false}
+              showAll={true}
               showFurniture={true}
               showFrame={false}
               isEmbedded={true}
