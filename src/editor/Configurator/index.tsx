@@ -3785,7 +3785,7 @@ const Configurator: React.FC = () => {
           <div
             className={styles.rightPanelContainer}
             style={{
-              width: isRightPanelOpen ? '320px' : '0',
+              width: isRightPanelOpen ? 'var(--right-panel-width, 320px)' : '0',
               transition: 'width 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
           >
