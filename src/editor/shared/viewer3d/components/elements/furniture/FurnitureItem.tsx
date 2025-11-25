@@ -2445,8 +2445,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           }
         }}
         onClick={(e) => {
-          // 미리보기에서 가구 클릭 시 해당 슬롯의 측면뷰로 전환
-          if (readOnly && onFurnitureClick && placedModule.slotIndex !== undefined) {
+          // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
+          if (onFurnitureClick && placedModule.slotIndex !== undefined) {
             e.stopPropagation();
             onFurnitureClick(placedModule.id, placedModule.slotIndex);
           }

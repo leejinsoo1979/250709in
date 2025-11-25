@@ -918,6 +918,27 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     return undefined;
   }, [isEmbedded, viewMode]);
 
+  const shouldShowGrid = useMemo(() => {
+    if (isEmbedded && viewMode === '2D') {
+      return true;
+    }
+    return showDimensions && showGuides;
+  }, [isEmbedded, viewMode, showDimensions, showGuides]);
+
+  const shouldShowAxis = useMemo(() => {
+    if (isEmbedded && viewMode === '2D') {
+      return true;
+    }
+    return showDimensions && showAxis;
+  }, [isEmbedded, viewMode, showDimensions, showAxis]);
+
+  // 4분할 뷰에서 가구 클릭 시 해당 슬롯을 측면뷰에 표시
+  const { setSelectedSlotIndex } = useUIStore.getState();
+  const handleFurnitureClickInSplitView = useCallback((furnitureId: string, slotIndex: number) => {
+    console.log('📍 4분할 뷰 - 가구 클릭:', { furnitureId, slotIndex });
+    setSelectedSlotIndex(slotIndex);
+  }, []);
+
   // 4분할 뷰 렌더링
   if (viewMode === '2D' && view2DDirection === 'all') {
     return (
@@ -996,6 +1017,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showFurniture={showFurniture}
                 readOnly={readOnly}
                 renderMode={renderMode}
+                onFurnitureClick={handleFurnitureClickInSplitView}
               />
             </ThreeCanvas>
             <div style={{
@@ -1081,6 +1103,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 showFurniture={showFurniture}
                 readOnly={readOnly}
                 renderMode={renderMode}
+                onFurnitureClick={handleFurnitureClickInSplitView}
               />
             </ThreeCanvas>
             <div style={{
@@ -1171,6 +1194,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   showFurniture={showFurniture}
                   readOnly={readOnly}
                   renderMode={renderMode}
+                  onFurnitureClick={handleFurnitureClickInSplitView}
                 />
               </ThreeCanvas>
             </div>
@@ -1284,6 +1308,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   readOnly={readOnly}
                   showFurniture={showFurniture}
                   renderMode={renderMode}
+                  onFurnitureClick={handleFurnitureClickInSplitView}
                 />
               </ThreeCanvas>
             </div>
@@ -1401,7 +1426,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               <meshBasicMaterial transparent opacity={0} />
             </mesh>
             {/* 확실히 작동하는 CAD 그리드 - 2D와 3D 모두에서 작동 */}
-            <CADGrid viewMode={viewMode} view2DDirection={view2DDirection} enabled={showDimensions && showGuides} showAxis={showDimensions && showAxis} />
+            <CADGrid viewMode={viewMode} view2DDirection={view2DDirection} enabled={shouldShowGrid} showAxis={shouldShowAxis} />
             
             {/* 조명 시스템 - 2D 모드에서는 그림자 없음 */}
             
@@ -1856,7 +1881,8 @@ const QuadrantContent: React.FC<{
   showFurniture?: boolean;
   readOnly?: boolean;
   renderMode?: 'solid' | 'wireframe';
-}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showDimensionsText, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone, showFurniture, readOnly = false, renderMode = 'wireframe' }) => {
+  onFurnitureClick?: (furnitureId: string, slotIndex: number) => void;
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showDimensionsText, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone, showFurniture, readOnly = false, renderMode = 'wireframe', onFurnitureClick }) => {
   const { placedModules } = useFurnitureStore();
   const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
   const { activePopup } = useUIStore();
@@ -1935,6 +1961,7 @@ const QuadrantContent: React.FC<{
         activeZone={activeZone}
         showFurniture={showFurniture}
         readOnly={readOnly}
+        onFurnitureClick={onFurnitureClick}
       />
     </React.Suspense>
   );
