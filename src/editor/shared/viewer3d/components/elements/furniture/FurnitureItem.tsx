@@ -2226,6 +2226,27 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                         (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
                          (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth));
   const depth = mmToThreeUnits(actualDepthMm);
+
+  // 도어 두께 (20mm) - furnitureZ 계산에 필요하므로 먼저 선언
+  const doorThicknessMm = 20;
+  const doorThickness = mmToThreeUnits(doorThicknessMm);
+
+  // Room.tsx와 동일한 Z축 위치 계산 - furnitureGroupPosition 전에 계산해야 함
+  const panelDepthMm = 1500; // 전체 공간 깊이
+  const furnitureDepthMm = 600; // 가구 공간 깊이
+  const panelDepth = mmToThreeUnits(panelDepthMm);
+  const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+
+  // Room.tsx와 동일한 계산: 뒷벽에서 600mm만 나오도록
+  const zOffset = -panelDepth / 2; // 공간 메쉬용 깊이 중앙
+  const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2; // 뒷벽에서 600mm
+
+  // Z축 위치 계산 - 기둥 C가 있어도 위치는 변경하지 않음
+  // 띄움배치일 때는 받침대 깊이만큼 앞으로 당김 (조절발이 없으므로)
+  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+  const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
+  const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset;
+
   const furnitureGroupPosition: [number, number, number] = [
     adjustedPosition.x + positionAdjustmentForEndPanel,
     adjustedPosition.y, // finalYPosition 대신 직접 사용 (TDZ 에러 방지)
@@ -2237,30 +2258,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     (placedModule.rotation * Math.PI) / 180,
     0
   ];
-  
+
   // Column C 깊이 디버깅
   if (isColumnC && slotInfo) {
     }
-
-  // 도어 두께 (20mm)
-  const doorThicknessMm = 20;
-  const doorThickness = mmToThreeUnits(doorThicknessMm);
-
-  // Room.tsx와 동일한 Z축 위치 계산
-  const panelDepthMm = 1500; // 전체 공간 깊이
-  const furnitureDepthMm = 600; // 가구 공간 깊이
-  const panelDepth = mmToThreeUnits(panelDepthMm);
-  const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
-  
-  // Room.tsx와 동일한 계산: 뒷벽에서 600mm만 나오도록
-  const zOffset = -panelDepth / 2; // 공간 메쉬용 깊이 중앙
-  const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2; // 뒷벽에서 600mm
-
-  // Z축 위치 계산 - 기둥 C가 있어도 위치는 변경하지 않음
-  // 띄움배치일 때는 받침대 깊이만큼 앞으로 당김 (조절발이 없으므로)
-  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-  const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
-  const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset;
   
   // 기둥 C 디버깅 - 위치는 유지, 깊이만 조정
   if (adjustedDepthMm !== moduleDepth && slotInfo?.hasColumn) {
