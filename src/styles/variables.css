@@ -112,25 +112,26 @@
 
   /* ==============================
      반응형 레이아웃 변수 (Configurator)
+     뷰포트 비율 기반 - 화면 크기에 따라 자동 스케일
      ============================== */
 
-  /* 좌측 사이드바 아이콘 바 너비 */
-  --sidebar-icon-width: 64px;
+  /* 좌측 사이드바 아이콘 바 너비 - clamp(최소, 선호, 최대) */
+  --sidebar-icon-width: clamp(48px, 4vw, 64px);
 
-  /* 좌측 사이드바 컨텐츠 패널 너비 */
-  --sidebar-content-width: 240px;
+  /* 좌측 사이드바 컨텐츠 패널 너비 - 뷰포트 15% 기반 */
+  --sidebar-content-width: clamp(180px, 15vw, 280px);
 
   /* 좌측 사이드바 전체 너비 (아이콘 + 컨텐츠) */
-  --sidebar-total-width: 304px;
+  --sidebar-total-width: clamp(228px, 19vw, 344px);
 
-  /* 우측 패널 너비 */
-  --right-panel-width: 320px;
+  /* 우측 패널 너비 - 뷰포트 18% 기반 */
+  --right-panel-width: clamp(220px, 18vw, 380px);
 
   /* 헤더 높이 (Configurator) */
   --configurator-header-height: 56px;
 
-  /* 뷰어 최소 너비 */
-  --viewer-min-width: 400px;
+  /* 뷰어 최소 너비 - 나머지 공간 확보 */
+  --viewer-min-width: clamp(300px, 40vw, 600px);
   
   /* 그리드 설정 */
   --grid-gap: 24px;
@@ -158,60 +159,14 @@
 
 /* ==============================
    반응형 브레이크포인트 시스템
+   clamp()로 부드러운 스케일링 + 극단적 케이스만 미디어 쿼리
    ============================== */
 
-/* 큰 데스크톱 (1920px+) - 더 넓은 사이드바 */
-@media (min-width: 1920px) {
-  :root {
-    --sidebar-content-width: 280px;
-    --sidebar-total-width: 344px;
-    --right-panel-width: 360px;
-  }
-}
-
-/* 일반 데스크톱 (1400-1919px) */
-@media (max-width: 1919px) and (min-width: 1400px) {
-  :root {
-    --sidebar-content-width: 260px;
-    --sidebar-total-width: 324px;
-    --right-panel-width: 340px;
-  }
-}
-
-/* 중간 데스크톱 - 맥북 프로 16인치 (1200-1399px) */
-@media (max-width: 1399px) and (min-width: 1200px) {
-  :root {
-    --sidebar-content-width: 240px;
-    --sidebar-total-width: 304px;
-    --right-panel-width: 300px;
-  }
-}
-
-/* 맥북 에어/프로 13-14인치 (1024-1199px) */
-@media (max-width: 1199px) and (min-width: 1024px) {
-  :root {
-    --sidebar-content-width: 220px;
-    --sidebar-total-width: 284px;
-    --right-panel-width: 280px;
-    --viewer-min-width: 350px;
-  }
-}
-
-/* 태블릿 가로 (768-1023px) */
-@media (max-width: 1023px) and (min-width: 768px) {
-  :root {
-    --sidebar-content-width: 200px;
-    --sidebar-total-width: 264px;
-    --right-panel-width: 260px;
-    --viewer-min-width: 320px;
-  }
-}
-
-/* 태블릿 세로 및 작은 화면 (768px 미만) - 오버레이 모드 */
+/* 태블릿 세로 및 작은 화면 (768px 미만) - 오버레이 모드로 전환 */
 @media (max-width: 767px) {
   :root {
     --sidebar-icon-width: 0px;
-    --sidebar-content-width: 280px;
+    --sidebar-content-width: 85vw;
     --sidebar-total-width: 0px;
     --right-panel-width: 0px;
     --viewer-min-width: 100%;
