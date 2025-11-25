@@ -1604,11 +1604,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </React.Suspense>
         </ThreeCanvas>
 
-        {/* 간접조명 툴바 - 3D 모드에서만 표시 */}
-        <ViewerToolbar viewMode={viewMode} />
+        {/* 간접조명 툴바 - 3D 모드에서만 표시 (임베디드 모드에서는 숨김) */}
+        {!isEmbedded && <ViewerToolbar viewMode={viewMode} />}
 
-        {/* 분할 모드 버튼 - 2D 모드에서만 표시 */}
-        {viewMode === '2D' && view2DDirection !== 'all' && (
+        {/* 분할 모드 버튼 - 2D 모드에서만 표시 (임베디드 모드에서는 숨김) */}
+        {!isEmbedded && viewMode === '2D' && view2DDirection !== 'all' && (
           <button
             onClick={() => {
               setView2DDirection('all');
@@ -1653,8 +1653,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           </button>
         )}
 
-        {/* 측정 도구 버튼 - 2D 모드에서만 표시 (분할 버튼 바로 아래) */}
-        {viewMode === '2D' && view2DDirection !== 'all' && (
+        {/* 측정 도구 버튼 - 2D 모드에서만 표시 (임베디드 모드에서는 숨김) */}
+        {!isEmbedded && viewMode === '2D' && view2DDirection !== 'all' && (
           <>
             <button
               onClick={() => {
