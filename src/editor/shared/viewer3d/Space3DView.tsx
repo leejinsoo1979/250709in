@@ -57,7 +57,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode } = useUIStore();
+  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex } = useUIStore();
 
   // props로 전달된 showFurniture가 있으면 사용, 없으면 store 값 사용
   const showFurniture = showFurnitureProp !== undefined ? showFurnitureProp : storeShowFurniture;
@@ -932,12 +932,25 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     return showDimensions && showAxis;
   }, [isEmbedded, viewMode, showDimensions, showAxis]);
 
+  const previewGhostSlotIndex = useMemo(() => {
+    if (isEmbedded && viewMode === '3D') {
+      return selectedSlotIndex;
+    }
+    return null;
+  }, [isEmbedded, viewMode, selectedSlotIndex]);
+
   // 4분할 뷰에서 가구 클릭 시 해당 슬롯을 측면뷰에 표시
-  const { setSelectedSlotIndex } = useUIStore.getState();
   const handleFurnitureClickInSplitView = useCallback((furnitureId: string, slotIndex: number) => {
     console.log('📍 4분할 뷰 - 가구 클릭:', { furnitureId, slotIndex });
     setSelectedSlotIndex(slotIndex);
-  }, []);
+  }, [setSelectedSlotIndex]);
+
+  const handleEmbeddedFurnitureClick = useCallback((furnitureId: string, slotIndex: number) => {
+    if (!isEmbedded || viewMode !== '3D') {
+      return;
+    }
+    setSelectedSlotIndex(slotIndex);
+  }, [isEmbedded, viewMode, setSelectedSlotIndex]);
 
   // 4분할 뷰 렌더링
   if (viewMode === '2D' && view2DDirection === 'all') {
@@ -1483,7 +1496,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               showFurniture={showFurniture}
               hideEdges={hideEdges}
               readOnly={readOnly}
-              onFurnitureClick={onFurnitureClick}
+              onFurnitureClick={onFurnitureClick || (isEmbedded ? handleEmbeddedFurnitureClick : undefined)}
+              ghostHighlightSlotIndex={previewGhostSlotIndex}
             />
             
             {/* 단내림 공간 렌더링 */}
@@ -1926,12 +1940,12 @@ const QuadrantContent: React.FC<{
         />
       )}
 
-      {/* 측면뷰 전용 치수 표시 (CNCOptimizer/Step2 전용) */}
-      {showDimensions && showDimensionsText && isStep2 && (viewDirection === 'left' || viewDirection === 'right') && (
+      {/* 측면뷰 전용 치수 표시 - 4분할 뷰에서도 표시 (isStep2 조건 제거) */}
+      {showDimensions && showDimensionsText && (viewDirection === 'left' || viewDirection === 'right') && (
         <CADDimensions2D
           viewDirection={viewDirection}
           showDimensions={dimensionDisplayEnabled}
-          isSplitView={false}
+          isSplitView={true}
         />
       )}
       
