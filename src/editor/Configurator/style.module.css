@@ -1287,7 +1287,7 @@
   }
 }
 
-/* 태블릿 세로 및 모바일 가로 (768px 이하) - 오버레이 모드 */
+/* 태블릿 세로 및 모바일 (768px 이하) - 전체 화면 뷰어 + 하단 탭바 */
 @media (max-width: 767px) {
   .configurator {
     height: 100vh;
@@ -1296,83 +1296,50 @@
 
   .mainContent {
     flex-direction: column;
-    height: calc(100vh - var(--configurator-header-height, 56px)); /* 헤더 높이 제외 */
+    height: calc(100vh - var(--configurator-header-height, 56px));
   }
 
-  /* 사이드바 컨텐츠 - 오버레이 모드 */
+  /* 좌측 사이드바 숨김 - 모바일에서는 하단 탭바 사용 */
   .sidebarContent {
-    position: fixed;
-    left: 0;
-    width: 280px;
-    height: auto;
-    max-height: calc(100vh - var(--configurator-header-height, 56px));
-    border-right: 1px solid var(--theme-border);
-    border-bottom: none;
-    overflow-y: auto;
-    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
-    z-index: 100;
+    display: none !important;
   }
-  
+
+  /* 좌측 패널 토글 숨김 */
+  .leftPanelToggle {
+    display: none !important;
+  }
+
+  /* 뷰어 전체 화면 - 하단 탭바 공간 확보 */
   .viewerArea {
-    flex: 1;
-    min-height: 300px;
+    position: fixed !important;
+    top: var(--configurator-header-height, 56px);
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 70px !important; /* 하단 탭바 높이 */
+    min-height: unset;
   }
-  
+
+  /* 우측 패널 컨테이너 숨김 */
+  .rightPanelContainer {
+    display: none !important;
+  }
+
+  /* 우측 패널 숨김 */
   .rightPanel {
-    width: 100%;
-    height: 180px;
-    min-height: 180px;
-    border-left: none;
-    border-top: 1px solid var(--theme-border);
-    overflow-y: auto;
+    display: none !important;
   }
-  
+
+  /* 우측 패널 토글 숨김 */
   .rightPanelToggle {
-    display: none; /* 모바일에서는 숨김 */
+    display: none !important;
   }
-  
-  
-  .rightPanelContent {
-    padding: 12px;
-  }
-  
-  .modulePanelContent {
-    padding: 12px;
-  }
-  
-  .doorManagementSection {
-    padding: 12px;
-    margin-bottom: 16px;
-  }
-  
-  .configSection {
-    padding: 12px 0;
-  }
-  
-  .inputRow {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 6px;
-  }
-  
-  .numberInputGroup {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .doorSliderContainer {
-    margin-top: 12px;
-  }
-  
-  .sliderLabels {
-    display: none; /* 모바일에서는 숨김 */
-  }
-  
+
+  /* 뷰어 도어 토글 위치 조정 */
   .viewerDoorToggle {
     top: 10px;
     gap: 4px;
   }
-  
+
   .viewerDoorButton {
     padding: 6px 12px;
     font-size: 12px;
@@ -1380,38 +1347,9 @@
   }
 }
 
-/* 작은 모바일 (480px 이하) */
+/* 작은 모바일 (480px 이하) - 하단 탭바만 사용하므로 추가 조정 없음 */
 @media (max-width: 480px) {
-  .sidebarContent {
-    height: 160px;
-  }
-  
-  .rightPanel {
-    height: 140px;
-  }
-  
-  .rightPanelContent {
-    padding: 8px;
-  }
-  
-  .modulePanelContent {
-    padding: 8px;
-  }
-  
-  .configSection {
-    padding: 8px 0;
-  }
-  
-  .numberInput {
-    width: 60px;
-  }
-  
-  .decrementButton,
-  .incrementButton {
-    width: 12px;
-    height: 18px;
-    font-size: 12px;
-  }
+  /* 뷰어 영역만 남음 - 기본 모바일 스타일 유지 */
 }
 
 /* 고해상도 디스플레이 (Retina) 최적화 */

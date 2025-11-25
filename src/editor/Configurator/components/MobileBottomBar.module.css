@@ -1,0 +1,67 @@
+.bottomBar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background: var(--theme-surface);
+  border-top: 1px solid var(--theme-border);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 8px 0;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  z-index: 1000;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.tabButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+  min-width: 64px;
+}
+
+.tabButton:active {
+  transform: scale(0.95);
+}
+
+.tabIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-text-muted);
+  transition: color 0.2s ease;
+}
+
+.tabLabel {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--theme-text-muted);
+  transition: color 0.2s ease;
+  white-space: nowrap;
+}
+
+.tabButton.active .tabIcon,
+.tabButton.active .tabLabel {
+  color: var(--theme-primary);
+}
+
+.tabButton.active {
+  background: var(--theme-primary-light);
+}
+
+/* iOS 홈 인디케이터 대응 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottomBar {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+  }
+}

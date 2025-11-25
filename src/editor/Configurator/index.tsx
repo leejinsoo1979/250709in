@@ -43,6 +43,8 @@ import ConvertModal from './components/ConvertModal';
 import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
 import { ShareLinkModal } from '@/components/ShareLinkModal';
 import PreviewViewer from './components/PreviewViewer';
+import MobileBottomBar, { MobileTab } from './components/MobileBottomBar';
+import MobileBottomSheet from './components/MobileBottomSheet';
 
 import {
   WidthControl,
@@ -115,6 +117,37 @@ const Configurator: React.FC = () => {
   });
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
+
+  // 모바일/태블릿 반응형 상태
+  const [isMobile, setIsMobile] = useState(false);
+  const [isTablet, setIsTablet] = useState(false);
+  const [activeMobileTab, setActiveMobileTab] = useState<MobileTab | null>(null);
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+
+  // 화면 크기 감지
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth;
+      setIsMobile(width < 768);
+      setIsTablet(width >= 768 && width < 1024);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  // 모바일 탭 변경 핸들러
+  const handleMobileTabChange = (tab: MobileTab) => {
+    if (activeMobileTab === tab) {
+      // 같은 탭 클릭 시 닫기
+      setActiveMobileTab(null);
+      setMobileSheetOpen(false);
+    } else {
+      setActiveMobileTab(tab);
+      setMobileSheetOpen(true);
+    }
+  };
 
   // readonly 모드에서 로드 완료 추적 (무한 루프 방지)
   const hasLoadedInReadonlyRef = useRef(false);
@@ -3898,6 +3931,111 @@ const Configurator: React.FC = () => {
               <span>계정</span>
             </button>
           </div>
+        </>
+      )}
+
+      {/* 모바일 전용 UI (편집 모드) */}
+      {isMobile && !isReadOnly && (
+        <>
+          {/* 하단 탭바 */}
+          <MobileBottomBar
+            activeTab={activeMobileTab}
+            onTabChange={handleMobileTabChange}
+          />
+
+          {/* 바텀시트 - 모듈 */}
+          <MobileBottomSheet
+            isOpen={mobileSheetOpen && activeMobileTab === 'modules'}
+            onClose={() => { setMobileSheetOpen(false); setActiveMobileTab(null); }}
+            title="모듈 추가"
+          >
+            <ModuleGallery />
+          </MobileBottomSheet>
+
+          {/* 바텀시트 - 재질 */}
+          <MobileBottomSheet
+            isOpen={mobileSheetOpen && activeMobileTab === 'material'}
+            onClose={() => { setMobileSheetOpen(false); setActiveMobileTab(null); }}
+            title="재질 선택"
+          >
+            <MaterialPanel />
+          </MobileBottomSheet>
+
+          {/* 바텀시트 - 설정 */}
+          <MobileBottomSheet
+            isOpen={mobileSheetOpen && activeMobileTab === 'settings'}
+            onClose={() => { setMobileSheetOpen(false); setActiveMobileTab(null); }}
+            title="공간 설정"
+          >
+            {renderRightPanelContent()}
+          </MobileBottomSheet>
+
+          {/* 바텀시트 - 보기 */}
+          <MobileBottomSheet
+            isOpen={mobileSheetOpen && activeMobileTab === 'view'}
+            onClose={() => { setMobileSheetOpen(false); setActiveMobileTab(null); }}
+            title="보기 설정"
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* 2D/3D 토글 */}
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px', display: 'block' }}>뷰 모드</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => setViewMode('2D')}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      border: `2px solid ${viewMode === '2D' ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
+                      borderRadius: '8px',
+                      background: viewMode === '2D' ? 'var(--theme-primary-light)' : 'var(--theme-surface)',
+                      color: viewMode === '2D' ? 'var(--theme-primary)' : 'var(--theme-text)',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    2D
+                  </button>
+                  <button
+                    onClick={() => setViewMode('3D')}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      border: `2px solid ${viewMode === '3D' ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
+                      borderRadius: '8px',
+                      background: viewMode === '3D' ? 'var(--theme-primary-light)' : 'var(--theme-surface)',
+                      color: viewMode === '3D' ? 'var(--theme-primary)' : 'var(--theme-text)',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    3D
+                  </button>
+                </div>
+              </div>
+              {/* 도어 토글 */}
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px', display: 'block' }}>도어</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => toggleDoors()}
+                    style={{
+                      flex: 1,
+                      padding: '12px',
+                      border: `2px solid ${doorsOpen ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
+                      borderRadius: '8px',
+                      background: doorsOpen ? 'var(--theme-primary-light)' : 'var(--theme-surface)',
+                      color: doorsOpen ? 'var(--theme-primary)' : 'var(--theme-text)',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {doorsOpen ? '도어 열림' : '도어 닫힘'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </MobileBottomSheet>
         </>
       )}
 
