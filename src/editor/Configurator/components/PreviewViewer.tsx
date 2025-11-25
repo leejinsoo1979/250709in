@@ -62,25 +62,30 @@ const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
             </svg>
           </button>
         </div>
-        {!isCollapsed && (
-          <div className={styles.previewContent}>
-            <div className={styles.viewerWrapper}>
-              <Space3DView
-                spaceInfo={spaceInfo}
-                viewMode={previewMode}
-                renderMode={previewMode === '3D' ? 'solid' : 'wireframe'}
-                showDimensions={false}
-                showAll={true}
-                showFurniture={true}
-                showFrame={false}
-                isEmbedded={true}
-                readOnly={true}
-                hideEdges={true}
-                onFurnitureClick={handleFurnitureClick}
-              />
-            </div>
+        {/* CSS로 숨김 처리 - 조건부 렌더링 대신 (WebGL 컨텍스트 충돌 방지) */}
+        <div
+          className={styles.previewContent}
+          style={{
+            display: isCollapsed ? 'none' : 'block',
+            height: isCollapsed ? 0 : 200
+          }}
+        >
+          <div className={styles.viewerWrapper}>
+            <Space3DView
+              spaceInfo={spaceInfo}
+              viewMode={previewMode}
+              renderMode={previewMode === '3D' ? 'solid' : 'wireframe'}
+              showDimensions={false}
+              showAll={true}
+              showFurniture={true}
+              showFrame={false}
+              isEmbedded={true}
+              readOnly={true}
+              hideEdges={true}
+              onFurnitureClick={handleFurnitureClick}
+            />
           </div>
-        )}
+        </div>
       </div>
 
       {/* 미니 플레이어 */}
