@@ -54,7 +54,8 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--theme-text);
-  line-height: 40px; /* 햄버거 버튼 높이와 맞춤 */
+  line-height: 40px;
+  /* 햄버거 버튼 높이와 맞춤 */
   display: flex;
   align-items: center;
   margin: 0;
@@ -449,6 +450,7 @@
     opacity: 0;
     transform: translate(-50%, -10px);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, 0);
@@ -534,6 +536,201 @@
     opacity: 0;
     transform: translateY(-10px);
   }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 다크 모드 지원 */
+[data-theme="dark"] .fileDropdown {
+  background: var(--theme-surface, #2a2a2a);
+  border-color: var(--theme-border, #404040);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+}
+
+[data-theme="dark"] .dropdownItem {
+  color: var(--theme-text, #ffffff);
+}
+
+[data-theme="dark"] .dropdownItem:hover {
+  background: var(--theme-background-secondary, rgba(255, 255, 255, 0.1));
+  color: var(--theme-text, #ffffff);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1440px) {
+  .centerActions {
+    gap: 5px;
+    transform: translateX(-52%);
+  }
+}
+
+@media (max-width: 1200px) {
+  .centerActions {
+    gap: 4px;
+    transform: translateX(-50%);
+  }
+}
+
+/* 컨버팅 드롭다운 스타일 */
+.convertButtonContainer {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdownContainer {
+  position: relative;
+}
+
+.dropdownMenu {}
+
+.cameraOption label {
+  display: block;
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  margin-bottom: 6px;
+}
+
+.cameraToggle {
+  display: flex;
+  gap: 4px;
+  background: var(--theme-background-secondary);
+  border-radius: 6px;
+  padding: 2px;
+}
+
+.cameraToggle button {
+  flex: 1;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cameraToggle button.active {
+  background: var(--theme-primary);
+  color: white;
+}
+
+.fovSlider {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.saveError {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--theme-danger);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* 파일 메뉴 드롭다운 스타일 */
+.fileMenuContainer {
+  position: relative;
+}
+
+/* 드롭다운과 버튼 사이의 연결 영역 */
+.fileMenuContainer::before {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background: transparent;
+  pointer-events: none;
+}
+
+.fileMenuContainer:hover::before {
+  pointer-events: auto;
+}
+
+.fileDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  background: var(--theme-surface, #ffffff);
+  border: 1px solid var(--theme-border, #e0e0e0);
+  border-radius: 8px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  min-width: 180px;
+  overflow: hidden;
+  animation: dropdownFadeIn 0.15s ease-out;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  font-family: 'Apple SD Gothic Neo', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--theme-text, #333333);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+  opacity: 1;
+}
+
+.dropdownItem:hover {
+  background: var(--theme-background-secondary, rgba(0, 0, 0, 0.05));
+  color: var(--theme-text, #333333);
+  opacity: 1;
+}
+
+.dropdownItem:first-child {
+  border-top: none;
+}
+
+.dropdownItem:not(:last-child) {
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.dropdownItem svg {
+  color: currentColor;
+  flex-shrink: 0;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -635,35 +832,35 @@
   .container {
     padding: 0 12px;
   }
-  
+
   .centerActions {
     gap: 12px;
     position: static;
     transform: none;
     margin: 0 auto;
   }
-  
+
   .logoSection {
     flex: 0 0 auto;
   }
-  
+
   .rightActions {
     flex: 0 0 auto;
   }
-  
+
   .actionButton {
     padding: 10px 12px;
     font-size: 15px;
     min-height: 40px;
   }
-  
+
   .convertButton,
   .logoutButton {
     padding: 6px 16px;
     font-size: 13px;
     height: 32px;
   }
-  
+
   .profileButton {
     width: 36px;
     height: 36px;
@@ -677,4 +874,29 @@
     padding: 10px 14px;
     font-size: 13px;
   }
-} 
+
+  .mobileMenuButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .desktopProfile {
+    display: none;
+  }
+}
+
+.mobileMenuButton {
+  display: none;
+  background: none;
+  border: none;
+  padding: 8px;
+  color: var(--theme-text);
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.mobileMenuButton:hover {
+  background-color: var(--theme-surface-hover);
+}

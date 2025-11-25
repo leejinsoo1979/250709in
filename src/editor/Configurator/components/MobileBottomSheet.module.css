@@ -19,7 +19,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  max-height: 85vh;
+  max-height: 50vh; /* 더 컴팩트하게 */
   background: var(--theme-surface);
   border-radius: 16px 16px 0 0;
   box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);

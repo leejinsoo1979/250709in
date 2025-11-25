@@ -154,22 +154,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       <div className={styles.mobileViewerControls}>
         {/* 메인 컨트롤 바 */}
         <div className={styles.mobileMainBar}>
-          {/* 렌더 모드 (솔리드/와이어프레임) */}
-          <div className={styles.mobileButtonGroup}>
-            <button
-              className={`${styles.mobileButton} ${renderMode === 'solid' ? styles.active : ''}`}
-              onClick={() => onRenderModeChange('solid')}
-            >
-              <Box size={18} />
-            </button>
-            <button
-              className={`${styles.mobileButton} ${renderMode === 'wireframe' ? styles.active : ''}`}
-              onClick={() => onRenderModeChange('wireframe')}
-            >
-              <Grid3X3 size={18} />
-            </button>
-          </div>
-
           {/* 3D/2D 토글 */}
           <div className={styles.mobileButtonGroup}>
             <button

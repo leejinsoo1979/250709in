@@ -45,6 +45,8 @@ import { ShareLinkModal } from '@/components/ShareLinkModal';
 import PreviewViewer from './components/PreviewViewer';
 import MobileBottomBar, { MobileTab } from './components/MobileBottomBar';
 import MobileBottomSheet from './components/MobileBottomSheet';
+import MobilePanel from './components/MobilePanel';
+import MobileToolbar from './components/MobileToolbar';
 
 import {
   WidthControl,
@@ -123,6 +125,11 @@ const Configurator: React.FC = () => {
   const [isTablet, setIsTablet] = useState(false);
   const [activeMobileTab, setActiveMobileTab] = useState<MobileTab | null>(null);
   const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleMobileMenuToggle = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
 
   // 화면 크기 감지
   useEffect(() => {
@@ -3534,6 +3541,7 @@ const Configurator: React.FC = () => {
         onExportPDF={() => setIsConvertModalOpen(true)}
         onExportGLB={handleExportGLB}
         readOnly={isReadOnly}
+        onMobileMenuToggle={handleMobileMenuToggle}
       />
 
       <div className={styles.mainContent}>
@@ -3656,7 +3664,15 @@ const Configurator: React.FC = () => {
         <div
           className={styles.viewerArea}
           data-main-viewer="true"
-          style={isMobile ? undefined : {
+          style={isMobile ? {
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: (activeMobileTab === 'modules' || activeMobileTab === 'settings') ? '50%' : '70px', /* 패널 열림: 화면 50% 사용 */
+            transition: 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            padding: '0 8px', /* 좌우 치수 표시를 위한 패딩 */
+          } : {
             position: 'absolute',
             left: activeSidebarTab ? 'var(--sidebar-total-width, 304px)' : 'var(--sidebar-icon-width, 64px)', /* CSS 변수 사용 - 반응형 */
             right: isReadOnly ? '0' : (isRightPanelOpen ? 'var(--right-panel-width, 320px)' : '0'), /* CSS 변수 사용 - 반응형 */
@@ -3666,43 +3682,65 @@ const Configurator: React.FC = () => {
           }}
         >
 
-          {/* 뷰어 컨트롤 */}
-          <ViewerControls
-            viewMode={viewMode as ViewMode}
-            onViewModeChange={(mode) => {
-              setViewMode(mode);
-              // 2D 모드 선택 시 와이어프레임으로 자동 설정
-              if (mode === '2D') {
-                setRenderMode('wireframe');
-              } else if (mode === '3D') {
-                // 3D 모드 선택 시 솔리드로 자동 설정
-                setRenderMode('solid');
-              }
-            }}
-            viewDirection={view2DDirection}
-            onViewDirectionChange={setView2DDirection}
-            renderMode={renderMode}
-            onRenderModeChange={setRenderMode}
-            showAll={showAll}
-            onShowAllToggle={() => setShowAll(!showAll)}
-            showDimensions={showDimensions}
-            onShowDimensionsToggle={toggleDimensions}
-            showDimensionsText={showDimensionsText}
-            onShowDimensionsTextToggle={toggleDimensionsText}
-            showGuides={showGuides}
-            onShowGuidesToggle={toggleGuides}
-            showAxis={showAxis}
-            onShowAxisToggle={toggleAxis}
-            showFurniture={showFurniture}
-            onShowFurnitureToggle={() => {
-              console.log('🎯 Configurator toggle - current:', showFurniture, '-> new:', !showFurniture);
-              setShowFurniture(!showFurniture);
-            }}
-            doorsOpen={doorsOpen}
-            onDoorsToggle={toggleDoors}
-            hasDoorsInstalled={hasDoorsInstalled}
-            onDoorInstallationToggle={handleDoorInstallation}
-          />
+          {/* 모바일 툴바 */}
+          {isMobile && !isReadOnly && (
+            <MobileToolbar
+              viewMode={viewMode as ViewMode}
+              onViewModeChange={(mode) => {
+                setViewMode(mode);
+                if (mode === '2D') {
+                  setRenderMode('wireframe');
+                } else if (mode === '3D') {
+                  setRenderMode('solid');
+                }
+              }}
+              showDimensions={showDimensions}
+              onToggleDimensions={toggleDimensions}
+              showGuides={showGuides}
+              onToggleGuides={toggleGuides}
+              onMoreOptions={handleMobileMenuToggle}
+            />
+          )}
+
+          {/* 뷰어 컨트롤 - 데스크탑용 */}
+          {!isMobile && (
+            <ViewerControls
+              viewMode={viewMode as ViewMode}
+              onViewModeChange={(mode) => {
+                setViewMode(mode);
+                // 2D 모드 선택 시 와이어프레임으로 자동 설정
+                if (mode === '2D') {
+                  setRenderMode('wireframe');
+                } else if (mode === '3D') {
+                  // 3D 모드 선택 시 솔리드로 자동 설정
+                  setRenderMode('solid');
+                }
+              }}
+              viewDirection={view2DDirection}
+              onViewDirectionChange={setView2DDirection}
+              renderMode={renderMode}
+              onRenderModeChange={setRenderMode}
+              showAll={showAll}
+              onShowAllToggle={() => setShowAll(!showAll)}
+              showDimensions={showDimensions}
+              onShowDimensionsToggle={toggleDimensions}
+              showDimensionsText={showDimensionsText}
+              onShowDimensionsTextToggle={toggleDimensionsText}
+              showGuides={showGuides}
+              onShowGuidesToggle={toggleGuides}
+              showAxis={showAxis}
+              onShowAxisToggle={toggleAxis}
+              showFurniture={showFurniture}
+              onShowFurnitureToggle={() => {
+                console.log('🎯 Configurator toggle - current:', showFurniture, '-> new:', !showFurniture);
+                setShowFurniture(!showFurniture);
+              }}
+              doorsOpen={doorsOpen}
+              onDoorsToggle={toggleDoors}
+              hasDoorsInstalled={hasDoorsInstalled}
+              onDoorInstallationToggle={handleDoorInstallation}
+            />
+          )}
 
           {/* 3D 뷰어 */}
           <div className={styles.viewer}>
@@ -3943,16 +3981,13 @@ const Configurator: React.FC = () => {
             onTabChange={handleMobileTabChange}
           />
 
-          {/* 바텀시트 - 모듈 */}
-          <MobileBottomSheet
-            isOpen={mobileSheetOpen && activeMobileTab === 'modules'}
-            onClose={() => { setMobileSheetOpen(false); setActiveMobileTab(null); }}
-            title="모듈 추가"
-          >
-            <ModuleGallery />
-          </MobileBottomSheet>
+          {/* 모듈 패널 (카러셀 + 공간 설정) 또는 설정 패널 */}
+          <MobilePanel
+            activeTab={activeMobileTab}
+            isOpen={activeMobileTab === 'modules' || activeMobileTab === 'settings'}
+          />
 
-          {/* 바텀시트 - 재질 */}
+          {/* 바텀시트 - 재질 (기존 유지) */}
           <MobileBottomSheet
             isOpen={mobileSheetOpen && activeMobileTab === 'material'}
             onClose={() => { setMobileSheetOpen(false); setActiveMobileTab(null); }}
@@ -3961,58 +3996,13 @@ const Configurator: React.FC = () => {
             <MaterialPanel />
           </MobileBottomSheet>
 
-          {/* 바텀시트 - 설정 */}
+          {/* 바텀시트 - 뷰어 (기존 보기 설정 + 추가 기능) */}
           <MobileBottomSheet
-            isOpen={mobileSheetOpen && activeMobileTab === 'settings'}
+            isOpen={mobileSheetOpen && activeMobileTab === 'viewer'}
             onClose={() => { setMobileSheetOpen(false); setActiveMobileTab(null); }}
-            title="공간 설정"
-          >
-            {renderRightPanelContent()}
-          </MobileBottomSheet>
-
-          {/* 바텀시트 - 보기 */}
-          <MobileBottomSheet
-            isOpen={mobileSheetOpen && activeMobileTab === 'view'}
-            onClose={() => { setMobileSheetOpen(false); setActiveMobileTab(null); }}
-            title="보기 설정"
+            title="뷰어 설정"
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* 2D/3D 토글 */}
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px', display: 'block' }}>뷰 모드</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    onClick={() => setViewMode('2D')}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      border: `2px solid ${viewMode === '2D' ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
-                      borderRadius: '8px',
-                      background: viewMode === '2D' ? 'var(--theme-primary-light)' : 'var(--theme-surface)',
-                      color: viewMode === '2D' ? 'var(--theme-primary)' : 'var(--theme-text)',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    2D
-                  </button>
-                  <button
-                    onClick={() => setViewMode('3D')}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      border: `2px solid ${viewMode === '3D' ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
-                      borderRadius: '8px',
-                      background: viewMode === '3D' ? 'var(--theme-primary-light)' : 'var(--theme-surface)',
-                      color: viewMode === '3D' ? 'var(--theme-primary)' : 'var(--theme-text)',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    3D
-                  </button>
-                </div>
-              </div>
               {/* 도어 토글 */}
               <div>
                 <label style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px', display: 'block' }}>도어</label>
@@ -4037,6 +4027,67 @@ const Configurator: React.FC = () => {
             </div>
           </MobileBottomSheet>
         </>
+      )}
+
+      {/* 모바일 우측 메뉴 (Drawer) */}
+      {isMobile && isMobileMenuOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          right: 0,
+          bottom: 0,
+          width: '85%',
+          maxWidth: '360px',
+          background: 'var(--theme-surface)',
+          zIndex: 2000,
+          boxShadow: '-4px 0 16px rgba(0,0,0,0.1)',
+          display: 'flex',
+          flexDirection: 'column',
+          animation: 'slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        }}>
+          <div style={{
+            padding: '16px',
+            borderBottom: '1px solid var(--theme-border)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>설정</h2>
+            <button
+              onClick={() => setIsMobileMenuOpen(false)}
+              style={{
+                background: 'none',
+                border: 'none',
+                padding: '8px',
+                cursor: 'pointer',
+                color: 'var(--theme-text)'
+              }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div style={{ flex: 1, overflowY: 'auto' }}>
+            {renderRightPanelContent()}
+          </div>
+        </div>
+      )}
+      {/* 모바일 메뉴 배경 (Backdrop) */}
+      {isMobile && isMobileMenuOpen && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0,0,0,0.5)',
+            zIndex: 1999,
+            animation: 'fadeIn 0.3s ease-out'
+          }}
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
       )}
 
     </div>
