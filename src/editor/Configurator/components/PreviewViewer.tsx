@@ -18,6 +18,7 @@ const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const { viewMode, setViewMode, setView2DDirection, setSelectedSlotIndex } = useUIStore();
   const [showMiniPlayer, setShowMiniPlayer] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // 미리보기는 현재 모드의 반대
   const previewMode = viewMode === '2D' ? '3D' : '2D';
@@ -33,12 +34,24 @@ const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
 
   return (
     <>
-      <div className={`${styles.previewContainer} ${className || ''}`}>
-        <div className={styles.previewHeader}>
-          <span className={styles.previewLabel}>{previewMode} 미리보기</span>
+      <div className={`${styles.previewContainer} ${isCollapsed ? styles.collapsed : ''} ${className || ''}`}>
+        <div
+          className={styles.previewHeader}
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          style={{ cursor: 'pointer' }}
+        >
+          <div className={styles.headerLeft}>
+            <span className={`${styles.collapseIcon} ${isCollapsed ? styles.collapsed : ''}`}>
+              ▼
+            </span>
+            <span className={styles.previewLabel}>{previewMode} 미리보기</span>
+          </div>
           <button
             className={styles.popoutButton}
-            onClick={() => setShowMiniPlayer(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowMiniPlayer(true);
+            }}
             title="미니 플레이어로 열기"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -48,23 +61,25 @@ const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
             </svg>
           </button>
         </div>
-        <div className={styles.previewContent}>
-          <div className={styles.viewerWrapper}>
-            <Space3DView
-              spaceInfo={spaceInfo}
-              viewMode={previewMode}
-              renderMode={previewMode === '3D' ? 'solid' : 'wireframe'}
-              showDimensions={false}
-              showAll={true}
-              showFurniture={true}
-              showFrame={false}
-              isEmbedded={true}
-              readOnly={true}
-              hideEdges={true}
-              onFurnitureClick={handleFurnitureClick}
-            />
+        {!isCollapsed && (
+          <div className={styles.previewContent}>
+            <div className={styles.viewerWrapper}>
+              <Space3DView
+                spaceInfo={spaceInfo}
+                viewMode={previewMode}
+                renderMode={previewMode === '3D' ? 'solid' : 'wireframe'}
+                showDimensions={false}
+                showAll={true}
+                showFurniture={true}
+                showFrame={false}
+                isEmbedded={true}
+                readOnly={true}
+                hideEdges={true}
+                onFurnitureClick={handleFurnitureClick}
+              />
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* 미니 플레이어 */}

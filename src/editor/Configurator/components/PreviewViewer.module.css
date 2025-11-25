@@ -10,12 +10,42 @@
   padding: 8px 12px;
   background: var(--theme-background-secondary);
   border-bottom: 1px solid var(--theme-border);
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.previewHeader:hover {
+  background: var(--theme-border);
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.collapseIcon {
+  font-size: 10px;
+  color: var(--theme-text-muted);
+  transition: transform 0.2s ease;
+}
+
+.collapseIcon.collapsed {
+  transform: rotate(-90deg);
 }
 
 .previewLabel {
   font-size: 12px;
   font-weight: 600;
   color: var(--theme-text);
+}
+
+.previewContainer.collapsed {
+  border-bottom: none;
+}
+
+.previewContainer.collapsed .previewHeader {
+  border-bottom: 1px solid var(--theme-border);
 }
 
 .popoutButton {
