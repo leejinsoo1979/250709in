@@ -162,7 +162,12 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
   } : containerStyle;
 
   return (
-    <div className={compact ? undefined : styles.slotSelector} style={compactContainerStyle}>
+    <div
+      className={compact ? undefined : styles.slotSelector}
+      style={compactContainerStyle}
+      onClick={(e) => e.stopPropagation()}
+      onPointerDown={(e) => e.stopPropagation()}
+    >
       <div className={compact ? undefined : styles.slotButtons} style={compact ? { display: 'flex', gap: '3px', alignItems: 'center' } : undefined}>
         {finalSlotButtons.map((slot) => {
           const isActive = selectedSlotIndex === slot.actualIndex;
@@ -212,8 +217,11 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
               className={compact ? undefined : `${styles.slotButton} ${isActive ? styles.active : ''}`}
               onClick={(e) => {
                 e.stopPropagation(); // 4분할 뷰에서 클릭 이벤트 버블링 방지
+                e.preventDefault();
                 setSelectedSlotIndex(slot.actualIndex);
               }}
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
               style={buttonStyle}
               title={isDroppedZone ? '단내림 영역' : `슬롯 ${slot.displayIndex}`}
             >
