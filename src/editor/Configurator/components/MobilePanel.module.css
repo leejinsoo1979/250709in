@@ -20,6 +20,38 @@
     border-top: 1px solid var(--theme-border);
 }
 
+.categoryTabs {
+    display: flex;
+    gap: 8px;
+    padding: 0 16px 12px;
+}
+
+.categoryTab {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--theme-border);
+    border-radius: 10px;
+    background: var(--theme-surface);
+    color: var(--theme-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+    line-height: 1.2;
+}
+
+.categoryTab.active {
+    background: var(--theme-primary);
+    color: #fff !important;
+    border-color: var(--theme-primary);
+}
+
+.categoryTab.active:focus,
+.categoryTab.active:hover {
+    color: #fff;
+}
+
 .panelContent {
     padding: 0 16px;
 }

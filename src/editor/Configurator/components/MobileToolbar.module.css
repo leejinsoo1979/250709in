@@ -29,6 +29,65 @@
   gap: 2px;
 }
 
+.directionDropdown {
+  position: relative;
+  min-width: 100px;
+}
+
+.directionSelect {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  background: var(--theme-surface);
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 10px;
+  min-width: 110px;
+  cursor: pointer;
+}
+
+.directionSelect.open {
+  border-color: var(--theme-primary);
+  color: var(--theme-text);
+}
+
+.directionMenu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+}
+
+.directionOption {
+  padding: 8px 10px;
+  text-align: left;
+  border: none;
+  background: transparent;
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.directionOption.active {
+  color: var(--theme-primary);
+}
+
+.directionOption + .directionOption {
+  border-top: 1px solid var(--theme-border);
+}
+
 /* 아이콘 버튼 */
 .iconButton {
   display: flex;

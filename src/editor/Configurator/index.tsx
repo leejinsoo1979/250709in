@@ -3670,7 +3670,7 @@ const Configurator: React.FC = () => {
             left: 0,
             right: 0,
             top: 0,
-            bottom: (activeMobileTab === 'modules' || activeMobileTab === 'column' || activeMobileTab === 'others') ? '35%' : '70px', /* 패널 열림: 화면 65% 뷰어, 35% 패널 */
+            bottom: (activeMobileTab === 'modules' || activeMobileTab === 'column') ? '35%' : '70px', /* 패널 열림: 화면 65% 뷰어, 35% 패널 */
             transition: 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             padding: '0 40px', /* 좌우 치수 및 가이드가 잘리지 않도록 여백 확보 */
           } : {
@@ -3699,7 +3699,6 @@ const Configurator: React.FC = () => {
               onToggleDimensions={toggleDimensions}
               showGuides={showGuides}
               onToggleGuides={toggleGuides}
-              onMoreOptions={handleMobileMenuToggle}
             />
           )}
 
@@ -3981,12 +3980,13 @@ const Configurator: React.FC = () => {
           <MobileBottomBar
             activeTab={activeMobileTab}
             onTabChange={handleMobileTabChange}
+            onSettingsClick={handleMobileMenuToggle}
           />
 
           {/* 모듈/기둥/기타 패널 */}
           <MobilePanel
             activeTab={activeMobileTab}
-            isOpen={activeMobileTab === 'modules' || activeMobileTab === 'column' || activeMobileTab === 'others'}
+            isOpen={activeMobileTab === 'modules' || activeMobileTab === 'column'}
           />
 
           {/* 바텀시트 - 재질 */}
@@ -3998,36 +3998,6 @@ const Configurator: React.FC = () => {
             <MaterialPanel />
           </MobileBottomSheet>
 
-          {/* 바텀시트 - 기타 설정 (추후 확장용) */}
-          <MobileBottomSheet
-            isOpen={mobileSheetOpen && activeMobileTab === 'others'}
-            onClose={() => { setMobileSheetOpen(false); setActiveMobileTab(null); }}
-            title="기타 설정"
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* 도어 토글 */}
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px', display: 'block' }}>도어</label>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button
-                    onClick={() => toggleDoors()}
-                    style={{
-                      flex: 1,
-                      padding: '12px',
-                      border: `2px solid ${doorsOpen ? 'var(--theme-primary)' : 'var(--theme-border)'}`,
-                      borderRadius: '8px',
-                      background: doorsOpen ? 'var(--theme-primary-light)' : 'var(--theme-surface)',
-                      color: doorsOpen ? 'var(--theme-primary)' : 'var(--theme-text)',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                  >
-                    {doorsOpen ? '도어 열림' : '도어 닫힘'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          </MobileBottomSheet>
         </>
       )}
 

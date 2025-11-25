@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './MobileToolbar.module.css';
 import { ViewMode } from './ViewerControls';
+import { useUIStore } from '@/store/uiStore';
 
 interface MobileToolbarProps {
   viewMode: ViewMode;
@@ -25,6 +26,23 @@ const MobileToolbar: React.FC<MobileToolbarProps> = ({
   onToggleGuides,
   onMoreOptions,
 }) => {
+  const uiStore = useUIStore();
+  const [directionMenuOpen, setDirectionMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (viewMode !== '2D') {
+      setDirectionMenuOpen(false);
+    }
+  }, [viewMode]);
+
+  const directionOptions: { id: 'front' | 'top' | 'left' | 'right'; label: string }[] = [
+    { id: 'front', label: '정면' },
+    { id: 'top', label: '상부' },
+    { id: 'left', label: '좌측' },
+    { id: 'right', label: '우측' }
+  ];
+
+  const currentDirectionLabel = directionOptions.find(opt => opt.id === uiStore.view2DDirection)?.label || '정면';
   return (
     <div className={styles.toolbar}>
 
@@ -45,17 +63,39 @@ const MobileToolbar: React.FC<MobileToolbarProps> = ({
         </button>
       </div>
 
-      {/* 뷰 옵션 그룹: 분할뷰, 치수, 더보기 */}
+      {/* 2D 뷰 방향 드롭다운 */}
+      {viewMode === '2D' && (
+        <div className={styles.directionDropdown}>
+          <button
+            className={`${styles.directionSelect} ${directionMenuOpen ? styles.open : ''}`}
+            onClick={() => setDirectionMenuOpen(!directionMenuOpen)}
+          >
+            {currentDirectionLabel}
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </button>
+          {directionMenuOpen && (
+            <div className={styles.directionMenu}>
+              {directionOptions.map(option => (
+                <button
+                  key={option.id}
+                  className={`${styles.directionOption} ${uiStore.view2DDirection === option.id ? styles.active : ''}`}
+                  onClick={() => {
+                    uiStore.setView2DDirection(option.id);
+                    setDirectionMenuOpen(false);
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 뷰 옵션 그룹: 치수, 더보기 */}
       <div className={styles.buttonGroup}>
-        <button
-          className={styles.iconButton}
-          title="분할 뷰"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <rect x="3" y="3" width="18" height="18" rx="2" />
-            <line x1="12" y1="3" x2="12" y2="21" />
-          </svg>
-        </button>
         <button
           className={`${styles.iconButton} ${showDimensions ? styles.active : ''}`}
           onClick={onToggleDimensions}
@@ -69,17 +109,19 @@ const MobileToolbar: React.FC<MobileToolbarProps> = ({
             <circle cx="12" cy="12" r="2" fill="currentColor" />
           </svg>
         </button>
-        <button
-          className={styles.iconButton}
-          onClick={onMoreOptions}
-          title="더보기"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <circle cx="12" cy="5" r="1.5" fill="currentColor" />
-            <circle cx="12" cy="12" r="1.5" fill="currentColor" />
-            <circle cx="12" cy="19" r="1.5" fill="currentColor" />
-          </svg>
-        </button>
+        {onMoreOptions && (
+          <button
+            className={styles.iconButton}
+            onClick={onMoreOptions}
+            title="더보기"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <circle cx="12" cy="5" r="1.5" fill="currentColor" />
+              <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+              <circle cx="12" cy="19" r="1.5" fill="currentColor" />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   );
