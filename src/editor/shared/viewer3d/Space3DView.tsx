@@ -407,9 +407,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
   const baseDistanceMultiplier = useMemo(() => {
     if (isEmbedded) return 5.0;
-    // 모바일에서는 2D/3D 모두 동일한 배율 사용 (3배)
+    // 모바일에서는 3D 원근과 동일한 크기로 (1배)
     if (isMobile) {
-      return 3.0;
+      return 1.0;
     }
     return 2.0;
   }, [isEmbedded, isMobile]);
@@ -438,12 +438,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     // 2D front 위치 계산 - 3D와 동일한 거리 사용
     const frontPosition = [centerX, centerY, distance] as [number, number, number];
 
-    // 3D 모드에서는 2D front와 완전히 동일한 위치 사용
+    // 3D 모드에서는 frontPosition 사용 (원근 모드 기존 유지)
     if (viewMode === '3D') {
-      // 모바일(세로 모드)에서는 높이 치수까지 다 보이도록 거리를 3배로 증가
-      if (isMobile) {
-        return [centerX, centerY, distance * 3.0] as [number, number, number];
-      }
       return frontPosition;
     }
 
