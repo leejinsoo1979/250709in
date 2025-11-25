@@ -47,6 +47,7 @@ interface RoomProps {
   cameraModeOverride?: 'perspective' | 'orthographic'; // 카메라 모드 오버라이드
   readOnly?: boolean; // 읽기 전용 모드 (viewer 권한)
   onFurnitureClick?: (furnitureId: string, slotIndex: number) => void; // 가구 클릭 콜백 (미리보기용)
+  ghostHighlightSlotIndex?: number | null; // 미리보기용 슬롯 강조
 }
 
 // mm를 Three.js 단위로 변환 (1mm = 0.01 Three.js units)
@@ -225,7 +226,8 @@ const Room: React.FC<RoomProps> = ({
   hideEdges = false,
   cameraModeOverride,
   readOnly = false,
-  onFurnitureClick
+  onFurnitureClick,
+  ghostHighlightSlotIndex
 }) => {
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
@@ -3322,7 +3324,11 @@ const Room: React.FC<RoomProps> = ({
               : placedModules;
 
             // 2. 측면뷰이고 selectedSlotIndex가 있는 경우 slotIndex 기준 필터링
-            if ((view2DDirection === 'left' || view2DDirection === 'right') && selectedSlotIndex !== null) {
+            if (
+              viewMode === '2D' &&
+              (view2DDirection === 'left' || view2DDirection === 'right') &&
+              selectedSlotIndex !== null
+            ) {
               filteredModules = filteredModules.filter(module => {
                 if (module.slotIndex === undefined) return false;
 
@@ -3348,7 +3354,18 @@ const Room: React.FC<RoomProps> = ({
               placedModules: filteredModules
             });
 
-            return <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} placedModules={filteredModules} showFurniture={showFurniture} readOnly={readOnly} onFurnitureClick={onFurnitureClick} />;
+            return (
+              <PlacedFurnitureContainer
+                viewMode={viewMode}
+                view2DDirection={view2DDirection}
+                renderMode={renderMode}
+                placedModules={filteredModules}
+                showFurniture={showFurniture}
+                readOnly={readOnly}
+                onFurnitureClick={onFurnitureClick}
+                ghostHighlightSlotIndex={ghostHighlightSlotIndex}
+              />
+            );
           })()}
         </>
       ) : (
@@ -3363,7 +3380,16 @@ const Room: React.FC<RoomProps> = ({
             selectedSlotIndex,
             timestamp: Date.now()
           })}
-          <PlacedFurnitureContainer viewMode={viewMode} view2DDirection={view2DDirection} renderMode={renderMode} activeZone={activeZone} showFurniture={showFurniture} readOnly={readOnly} onFurnitureClick={onFurnitureClick} />
+          <PlacedFurnitureContainer
+            viewMode={viewMode}
+            view2DDirection={view2DDirection}
+            renderMode={renderMode}
+            activeZone={activeZone}
+            showFurniture={showFurniture}
+            readOnly={readOnly}
+            onFurnitureClick={onFurnitureClick}
+            ghostHighlightSlotIndex={ghostHighlightSlotIndex}
+          />
         </>
       )}
     </group>

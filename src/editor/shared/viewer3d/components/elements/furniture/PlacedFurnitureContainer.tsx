@@ -17,6 +17,7 @@ interface PlacedFurnitureContainerProps {
   showFurniture?: boolean;
   readOnly?: boolean; // 읽기 전용 모드 (viewer 권한)
   onFurnitureClick?: (furnitureId: string, slotIndex: number) => void; // 가구 클릭 콜백 (미리보기용)
+  ghostHighlightSlotIndex?: number | null;
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
@@ -27,7 +28,8 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   activeZone,
   showFurniture,
   readOnly = false,
-  onFurnitureClick
+  onFurnitureClick,
+  ghostHighlightSlotIndex
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
@@ -51,7 +53,11 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
   // 측면뷰이고 selectedSlotIndex가 있는 경우 필터링
   const finalView2DDirection = view2DDirection || contextView2DDirection;
-  if ((finalView2DDirection === 'left' || finalView2DDirection === 'right') && selectedSlotIndex !== null) {
+  if (
+    viewMode === '2D' &&
+    (finalView2DDirection === 'left' || finalView2DDirection === 'right') &&
+    selectedSlotIndex !== null
+  ) {
     basePlacedModules = basePlacedModules.filter(module => {
       if (module.slotIndex === undefined) return false;
 
@@ -277,6 +283,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
             showFurniture={showFurniture}
             readOnly={readOnly}
             onFurnitureClick={onFurnitureClick}
+            ghostHighlightSlotIndex={ghostHighlightSlotIndex}
           />
         );
       })}

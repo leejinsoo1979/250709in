@@ -787,6 +787,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   const normalizedSlotIndex = localSlotIndex ?? placedModule.slotIndex;
 
+  const highlightSlotIndex = React.useMemo(() => {
+    if (globalSlotIndex !== undefined) {
+      return globalSlotIndex;
+    }
+    if (placedModule.slotIndex !== undefined) {
+      return placedModule.slotIndex;
+    }
+    return normalizedSlotIndex;
+  }, [globalSlotIndex, placedModule.slotIndex, normalizedSlotIndex]);
+
   const shouldGhostHighlight = React.useMemo(() => {
     if (ghostHighlightSlotIndex === null || ghostHighlightSlotIndex === undefined) {
       return false;
@@ -794,18 +804,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (viewMode !== '3D') {
       return false;
     }
-    if (normalizedSlotIndex === undefined) {
+    if (highlightSlotIndex === undefined) {
       return false;
     }
     const isDual = placedModule.isDualSlot || moduleData?.id?.includes('dual-');
     if (isDual) {
       return (
-        normalizedSlotIndex === ghostHighlightSlotIndex ||
-        normalizedSlotIndex + 1 === ghostHighlightSlotIndex
+        highlightSlotIndex === ghostHighlightSlotIndex ||
+        highlightSlotIndex + 1 === ghostHighlightSlotIndex
       );
     }
-    return normalizedSlotIndex === ghostHighlightSlotIndex;
-  }, [ghostHighlightSlotIndex, viewMode, normalizedSlotIndex, placedModule.isDualSlot, moduleData?.id]);
+    return highlightSlotIndex === ghostHighlightSlotIndex;
+  }, [ghostHighlightSlotIndex, viewMode, highlightSlotIndex, placedModule.isDualSlot, moduleData?.id]);
 
   const slotInfo = globalSlotIndex !== undefined ? columnSlots[globalSlotIndex] : undefined;
 
