@@ -909,6 +909,15 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     setUIViewMode('2D');
   };
 
+  // 임베디드(미리보기) 모드에서의 줌 조절 - early return 전에 선언 (Rules of Hooks 준수)
+  const embeddedZoomMultiplier = useMemo(() => {
+    if (isEmbedded && viewMode === '2D') {
+      // 우측 미리보기처럼 좁은 뷰포트에서는 더 멀리서 바라보도록 줌을 줄인다
+      return 0.26;
+    }
+    return undefined;
+  }, [isEmbedded, viewMode]);
+
   // 4분할 뷰 렌더링
   if (viewMode === '2D' && view2DDirection === 'all') {
     return (
@@ -1351,14 +1360,6 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       </ViewerThemeProvider>
     );
   }
-
-  const embeddedZoomMultiplier = useMemo(() => {
-    if (isEmbedded && viewMode === '2D') {
-      // 우측 미리보기처럼 좁은 뷰포트에서는 더 멀리서 바라보도록 줌을 줄인다
-      return 0.26;
-    }
-    return undefined;
-  }, [isEmbedded, viewMode]);
 
   return (
     <ViewerThemeProvider viewMode={viewMode}>
