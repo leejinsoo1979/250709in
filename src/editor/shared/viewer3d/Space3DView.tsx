@@ -408,7 +408,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       return [0, 10, 20] as [number, number, number]; // 기본 카메라 위치
     }
     const { width, height, depth = 600 } = spaceInfo; // 기본 깊이 600mm
-    
+
     // threeUtils의 calculateOptimalDistance 사용 (3D와 동일한 계산)
     const distance = calculateOptimalDistance(width, height, depth, placedModules.length);
     const centerX = 0;
@@ -420,11 +420,16 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
     // 3D 모드에서는 2D front와 완전히 동일한 위치 사용
     if (viewMode === '3D') {
+      // 임베디드 모드에서는 더 멀리서 보기 (전체가 보이도록)
+      if (isEmbedded) {
+        return [centerX, centerY, distance * 1.8] as [number, number, number];
+      }
       return frontPosition;
     }
 
-    // 2D 모드에서는 방향별 카메라 위치 - 각 방향에 최적화된 거리 사용 (2배 더 멀리)
-    const distanceMultiplier = 2.0;
+    // 2D 모드에서는 방향별 카메라 위치 - 각 방향에 최적화된 거리 사용
+    // 임베디드 모드에서는 더 멀리서 보기 (전체가 보이도록)
+    const distanceMultiplier = isEmbedded ? 3.0 : 2.0;
     switch (view2DDirection) {
       case 'front':
         // 정면: Z축에서 깊이를 고려한 최적 거리
@@ -448,7 +453,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       default:
         return frontPosition;
     }
-  }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length]);
+  }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length, isEmbedded]);
   
   // Canvas key를 완전히 제거하여 재생성 방지
   // viewMode나 view2DDirection 변경 시에도 Canvas를 재생성하지 않음
