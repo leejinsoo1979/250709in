@@ -3532,6 +3532,7 @@ const Configurator: React.FC = () => {
         saving={saving}
         saveStatus={saveStatus}
         hasDoorsInstalled={hasDoorsInstalled}
+        onDoorInstallationToggle={handleDoorInstallation}
         onNewProject={handleNewDesign}
         onSaveAs={handleSaveAs}
         onProjectNameChange={handleProjectNameChange}
