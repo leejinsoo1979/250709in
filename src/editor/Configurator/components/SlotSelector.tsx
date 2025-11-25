@@ -166,8 +166,10 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     <div
       className={compact ? undefined : styles.slotSelector}
       style={compactContainerStyle}
+      data-slot-selector="true"
       onClick={(e) => e.stopPropagation()}
       onPointerDown={(e) => e.stopPropagation()}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       <div className={compact ? undefined : styles.slotButtons} style={compact ? { display: 'flex', gap: '3px', alignItems: 'center' } : undefined}>
         {finalSlotButtons.map((slot) => {

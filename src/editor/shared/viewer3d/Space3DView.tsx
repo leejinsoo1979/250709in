@@ -1125,7 +1125,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
           {/* 좌측 하단: 좌측면 뷰 */}
           <div
-            onClick={() => setActiveQuadrant(activeQuadrant === 'left' ? null : 'left')}
+            onClick={(e) => {
+              // SlotSelector 영역 클릭 시 무시
+              if ((e.target as HTMLElement).closest('[data-slot-selector]')) return;
+              setActiveQuadrant(activeQuadrant === 'left' ? null : 'left');
+            }}
             style={{
               position: 'relative',
               overflow: 'hidden',
@@ -1135,31 +1139,33 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               boxSizing: 'border-box',
               cursor: 'pointer'
             }}>
-            <ThreeCanvas 
-              cameraPosition={getOptimizedCameraForView('left').position}
-              cameraTarget={getOptimizedCameraForView('left').target}
-              cameraUp={getOptimizedCameraForView('left').up}
-              viewMode="2D"
-              view2DDirection="left"
-              renderMode={renderMode}
-              isSplitView={true}
-            >
-              <QuadrantContent
-                viewDirection="left"
-                spaceInfo={spaceInfo}
-                materialConfig={materialConfig}
-                showAll={showAll}
-                showFrame={showFrame}
-                activeZone={activeZone}
-                showDimensions={showDimensions}
-                showDimensionsText={showDimensionsText}
-                showGuides={showGuides}
-                showAxis={showAxis}
-                isStep2={isStep2}
-                showFurniture={showFurniture}
-                readOnly={readOnly}
-              />
-            </ThreeCanvas>
+            <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+              <ThreeCanvas
+                cameraPosition={getOptimizedCameraForView('left').position}
+                cameraTarget={getOptimizedCameraForView('left').target}
+                cameraUp={getOptimizedCameraForView('left').up}
+                viewMode="2D"
+                view2DDirection="left"
+                renderMode={renderMode}
+                isSplitView={true}
+              >
+                <QuadrantContent
+                  viewDirection="left"
+                  spaceInfo={spaceInfo}
+                  materialConfig={materialConfig}
+                  showAll={showAll}
+                  showFrame={showFrame}
+                  activeZone={activeZone}
+                  showDimensions={showDimensions}
+                  showDimensionsText={showDimensionsText}
+                  showGuides={showGuides}
+                  showAxis={showAxis}
+                  isStep2={isStep2}
+                  showFurniture={showFurniture}
+                  readOnly={readOnly}
+                />
+              </ThreeCanvas>
+            </div>
             <div style={{
               position: 'absolute',
               top: '8px',
@@ -1171,10 +1177,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               fontSize: '12px',
               fontWeight: 'bold',
               backdropFilter: 'blur(4px)',
-              border: '1px solid rgba(255,255,255,0.1)'
+              border: '1px solid rgba(255,255,255,0.1)',
+              zIndex: 10
             }}>left</div>
             <button
-              onClick={() => handleQuadrantExpand('left')}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleQuadrantExpand('left');
+              }}
               style={{
                 position: 'absolute',
                 top: '8px',
@@ -1189,7 +1199,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 backdropFilter: 'blur(4px)',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                zIndex: 10
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
@@ -1211,7 +1222,11 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
           {/* 우측 하단: 우측면 뷰 */}
           <div
-            onClick={() => setActiveQuadrant(activeQuadrant === 'right' ? null : 'right')}
+            onClick={(e) => {
+              // SlotSelector 영역 클릭 시 무시
+              if ((e.target as HTMLElement).closest('[data-slot-selector]')) return;
+              setActiveQuadrant(activeQuadrant === 'right' ? null : 'right');
+            }}
             style={{
               position: 'relative',
               overflow: 'hidden',
@@ -1221,31 +1236,33 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               boxSizing: 'border-box',
               cursor: 'pointer'
             }}>
-            <ThreeCanvas 
-              cameraPosition={getOptimizedCameraForView('right').position}
-              cameraTarget={getOptimizedCameraForView('right').target}
-              cameraUp={getOptimizedCameraForView('right').up}
-              viewMode="2D"
-              view2DDirection="right"
-              renderMode={renderMode}
-              isSplitView={true}
-            >
-              <QuadrantContent
-                viewDirection="right"
-                spaceInfo={spaceInfo}
-                materialConfig={materialConfig}
-                showAll={showAll}
-                showFrame={showFrame}
-                activeZone={activeZone}
-                showDimensions={showDimensions}
-                showDimensionsText={showDimensionsText}
-                showGuides={showGuides}
-                showAxis={showAxis}
-                isStep2={isStep2}
-                readOnly={readOnly}
-                showFurniture={showFurniture}
-              />
-            </ThreeCanvas>
+            <div style={{ position: 'absolute', inset: 0, zIndex: 1 }}>
+              <ThreeCanvas
+                cameraPosition={getOptimizedCameraForView('right').position}
+                cameraTarget={getOptimizedCameraForView('right').target}
+                cameraUp={getOptimizedCameraForView('right').up}
+                viewMode="2D"
+                view2DDirection="right"
+                renderMode={renderMode}
+                isSplitView={true}
+              >
+                <QuadrantContent
+                  viewDirection="right"
+                  spaceInfo={spaceInfo}
+                  materialConfig={materialConfig}
+                  showAll={showAll}
+                  showFrame={showFrame}
+                  activeZone={activeZone}
+                  showDimensions={showDimensions}
+                  showDimensionsText={showDimensionsText}
+                  showGuides={showGuides}
+                  showAxis={showAxis}
+                  isStep2={isStep2}
+                  readOnly={readOnly}
+                  showFurniture={showFurniture}
+                />
+              </ThreeCanvas>
+            </div>
             <div style={{
               position: 'absolute',
               top: '8px',
@@ -1257,10 +1274,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               fontSize: '12px',
               fontWeight: 'bold',
               backdropFilter: 'blur(4px)',
-              border: '1px solid rgba(255,255,255,0.1)'
+              border: '1px solid rgba(255,255,255,0.1)',
+              zIndex: 10
             }}>right</div>
             <button
-              onClick={() => handleQuadrantExpand('right')}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleQuadrantExpand('right');
+              }}
               style={{
                 position: 'absolute',
                 top: '8px',
@@ -1275,7 +1296,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 backdropFilter: 'blur(4px)',
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                zIndex: 10
               }}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)';
