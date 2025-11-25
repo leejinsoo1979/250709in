@@ -58,7 +58,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const location = useLocation();
   const { spaceInfo: storeSpaceInfo, updateColumn, removeColumn, updateWall, removeWall, addWall, removePanelB, updatePanelB } = useSpaceConfigStore();
   const { placedModules, updateFurnitureForColumns } = useFurnitureStore();
-  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex } = useUIStore();
+  const { view2DDirection, showDimensions: storeShowDimensions, showDimensionsText, showGuides, showAxis, activePopup, setView2DDirection, setViewMode: setUIViewMode, isColumnCreationMode, isWallCreationMode, isPanelBCreationMode, view2DTheme, showFurniture: storeShowFurniture, isMeasureMode, toggleMeasureMode, isEraserMode, selectedSlotIndex, setSelectedSlotIndex, cameraMode } = useUIStore();
 
   // props로 전달된 showFurniture가 있으면 사용, 없으면 store 값 사용
   const showFurniture = showFurnitureProp !== undefined ? showFurnitureProp : storeShowFurniture;
@@ -942,11 +942,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   }, [isEmbedded, viewMode]);
 
   const mobileViewerZoomMultiplier = useMemo(() => {
-    if (!isEmbedded && isMobile && viewMode === '2D') {
-      return 0.19; // 0.58 / 3 = 약 0.19 (3배 줌아웃)
+    if (!isEmbedded && isMobile) {
+      // 2D 모드 또는 3D 직교 모드일 때 동일한 줌 적용
+      if (viewMode === '2D' || (viewMode === '3D' && cameraMode === 'orthographic')) {
+        return 0.25; // 2D와 3D 직교 동일 크기
+      }
     }
     return undefined;
-  }, [isEmbedded, isMobile, viewMode]);
+  }, [isEmbedded, isMobile, viewMode, cameraMode]);
 
   const shouldShowGrid = useMemo(() => {
     if (isEmbedded && viewMode === '2D') {
