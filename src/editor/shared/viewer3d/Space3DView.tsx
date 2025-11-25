@@ -986,6 +986,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 isStep2={isStep2}
                 showFurniture={showFurniture}
                 readOnly={readOnly}
+                renderMode={renderMode}
               />
             </ThreeCanvas>
             <div style={{
@@ -1070,6 +1071,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 isStep2={isStep2}
                 showFurniture={showFurniture}
                 readOnly={readOnly}
+                renderMode={renderMode}
               />
             </ThreeCanvas>
             <div style={{
@@ -1159,6 +1161,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   isStep2={isStep2}
                   showFurniture={showFurniture}
                   readOnly={readOnly}
+                  renderMode={renderMode}
                 />
               </ThreeCanvas>
             </div>
@@ -1212,6 +1215,23 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
               </svg>
             </button>
+            {/* 좌측 패널용 SlotSelector */}
+            <div
+              data-slot-selector="true"
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              style={{
+                position: 'absolute',
+                left: '50%',
+                bottom: '8px',
+                transform: 'translateX(-50%)',
+                zIndex: 100,
+                pointerEvents: 'auto'
+              }}
+            >
+              <SlotSelector forSplitView={true} splitViewDirection="left" compact={true} />
+            </div>
           </div>
 
           {/* 우측 하단: 우측면 뷰 */}
@@ -1254,6 +1274,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                   isStep2={isStep2}
                   readOnly={readOnly}
                   showFurniture={showFurniture}
+                  renderMode={renderMode}
                 />
               </ThreeCanvas>
             </div>
@@ -1307,42 +1328,23 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
               </svg>
             </button>
-          </div>
-
-          {/* 4분할 뷰용 슬롯 선택 버튼 - Canvas 위에 오버레이 */}
-          {/* 좌측하단 (left) 패널용 */}
-          <div
-            data-slot-selector="true"
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
-            style={{
-              position: 'absolute',
-              left: '25%',
-              bottom: '8px',
-              transform: 'translateX(-50%)',
-              zIndex: 9999,
-              pointerEvents: 'auto'
-            }}
-          >
-            <SlotSelector forSplitView={true} splitViewDirection="left" compact={true} />
-          </div>
-          {/* 우측하단 (right) 패널용 */}
-          <div
-            data-slot-selector="true"
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
-            style={{
-              position: 'absolute',
-              left: '75%',
-              bottom: '8px',
-              transform: 'translateX(-50%)',
-              zIndex: 9999,
-              pointerEvents: 'auto'
-            }}
-          >
-            <SlotSelector forSplitView={true} splitViewDirection="right" compact={true} />
+            {/* 우측 패널용 SlotSelector */}
+            <div
+              data-slot-selector="true"
+              onClick={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              style={{
+                position: 'absolute',
+                left: '50%',
+                bottom: '8px',
+                transform: 'translateX(-50%)',
+                zIndex: 100,
+                pointerEvents: 'auto'
+              }}
+            >
+              <SlotSelector forSplitView={true} splitViewDirection="right" compact={true} />
+            </div>
           </div>
           </div>
         </Space3DViewProvider>
@@ -1842,7 +1844,8 @@ const QuadrantContent: React.FC<{
   throttledUpdateColumn?: (id: string, updates: any) => void;
   showFurniture?: boolean;
   readOnly?: boolean;
-}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showDimensionsText, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone, showFurniture, readOnly = false }) => {
+  renderMode?: 'solid' | 'wireframe';
+}> = ({ viewDirection, spaceInfo, materialConfig, showAll, showFrame, showDimensions, showDimensionsText, showGuides, showAxis, isStep2, throttledUpdateColumn, activeZone, showFurniture, readOnly = false, renderMode = 'wireframe' }) => {
   const { placedModules } = useFurnitureStore();
   const { updateColumn, removeColumn, updateWall, removeWall } = useSpaceConfigStore();
   const { activePopup } = useUIStore();
@@ -1912,7 +1915,7 @@ const QuadrantContent: React.FC<{
         spaceInfo={spaceInfo}
         viewMode="2D"
         view2DDirection={viewDirection}
-        renderMode="solid"
+        renderMode={renderMode}
         showDimensions={showDimensions}
         showAll={showAll}
         isStep2={isStep2}
