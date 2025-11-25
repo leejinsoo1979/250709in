@@ -149,7 +149,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
   // UIStore에서 카메라 및 그림자 설정 가져오기
-  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled } = useUIStore();
+  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode } = useUIStore();
   const { colors } = useThemeColors();
   const { theme } = useTheme();
   const profileButtonRef = useRef<HTMLDivElement>(null);
@@ -1066,26 +1066,44 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* 모바일 서브헤더 - 뷰모드 & 그림자 토글 */}
+      {/* 모바일 서브헤더 - 2D/3D, 뷰모드 & 그림자 토글 */}
       {isMobile && (
         <div className={styles.mobileSubHeader}>
-          {/* 뷰모드 토글 */}
+          {/* 2D/3D 토글 */}
           <div className={styles.mobileViewModeToggle}>
             <button
-              className={`${styles.viewModeButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
-              onClick={() => setCameraMode('perspective')}
+              className={`${styles.viewModeButton} ${viewMode === '2D' ? styles.active : ''}`}
+              onClick={() => setViewMode('2D')}
             >
-              <PerspectiveCubeIcon size={18} />
-              <span>원근</span>
+              2D
             </button>
             <button
-              className={`${styles.viewModeButton} ${cameraMode === 'orthographic' ? styles.active : ''}`}
-              onClick={() => setCameraMode('orthographic')}
+              className={`${styles.viewModeButton} ${viewMode === '3D' ? styles.active : ''}`}
+              onClick={() => setViewMode('3D')}
             >
-              <OrthographicCubeIcon size={18} />
-              <span>직교</span>
+              3D
             </button>
           </div>
+
+          {/* 카메라 모드 토글 (3D에서만 표시) */}
+          {viewMode === '3D' && (
+            <div className={styles.mobileViewModeToggle}>
+              <button
+                className={`${styles.viewModeButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
+                onClick={() => setCameraMode('perspective')}
+              >
+                <PerspectiveCubeIcon size={16} />
+                <span>원근</span>
+              </button>
+              <button
+                className={`${styles.viewModeButton} ${cameraMode === 'orthographic' ? styles.active : ''}`}
+                onClick={() => setCameraMode('orthographic')}
+              >
+                <OrthographicCubeIcon size={16} />
+                <span>직교</span>
+              </button>
+            </div>
+          )}
 
           {/* 그림자 토글 */}
           <div className={styles.mobileShadowToggle}>
