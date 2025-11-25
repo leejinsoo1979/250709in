@@ -110,7 +110,21 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onClose }) => {
     };
   }, [isDragging, isResizing, size.width, size.height, position.x, position.y]);
 
-  // 전체화면 토글
+  // 새 창에서 열기
+  const openInNewWindow = useCallback(() => {
+    const width = 1200;
+    const height = 800;
+    const left = (window.screen.width - width) / 2;
+    const top = (window.screen.height - height) / 2;
+
+    window.open(
+      '/preview-popout',
+      'preview-window',
+      `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=no`
+    );
+  }, []);
+
+  // 전체화면 토글 (현재 창 내에서)
   const toggleFullscreen = useCallback(() => {
     setIsFullscreen(prev => !prev);
   }, []);
@@ -145,6 +159,18 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onClose }) => {
       >
         <span className={styles.title}>{previewMode} 미리보기</span>
         <div className={styles.controls}>
+          {/* 새 창에서 열기 버튼 */}
+          <button
+            className={styles.controlButton}
+            onClick={openInNewWindow}
+            title="새 창에서 열기"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+              <polyline points="15 3 21 3 21 9" />
+              <line x1="10" y1="14" x2="21" y2="3" />
+            </svg>
+          </button>
           {/* 전체화면 버튼 */}
           <button
             className={styles.controlButton}

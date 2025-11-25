@@ -327,6 +327,43 @@ const Configurator: React.FC = () => {
     setView2DDirection('front');
   }, [setViewMode, setView2DDirection]);
 
+  // 미리보기 창과 BroadcastChannel 동기화
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+
+    const channel = new BroadcastChannel('preview-sync');
+
+    // 미리보기 창에서 상태 요청이 오면 응답
+    channel.onmessage = (event) => {
+      if (event.data?.type === 'REQUEST_STATE') {
+        channel.postMessage({
+          type: 'STATE_RESPONSE',
+          payload: {
+            spaceInfo,
+            placedModules
+          }
+        });
+      }
+    };
+
+    return () => channel.close();
+  }, [spaceInfo, placedModules]);
+
+  // spaceInfo 또는 placedModules 변경 시 미리보기 창에 업데이트 전송
+  useEffect(() => {
+    if (typeof BroadcastChannel === 'undefined') return;
+
+    const channel = new BroadcastChannel('preview-sync');
+    channel.postMessage({
+      type: 'STATE_UPDATE',
+      payload: {
+        spaceInfo,
+        placedModules
+      }
+    });
+    channel.close();
+  }, [spaceInfo, placedModules]);
+
   // MaterialConfig 변경 모니터링
   useEffect(() => {
     if (spaceInfo.materialConfig) {
