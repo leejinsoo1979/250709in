@@ -3669,9 +3669,9 @@ const Configurator: React.FC = () => {
             left: 0,
             right: 0,
             top: 0,
-            bottom: (activeMobileTab === 'modules' || activeMobileTab === 'settings') ? '50%' : '70px', /* 패널 열림: 화면 50% 사용 */
+            bottom: (activeMobileTab === 'modules' || activeMobileTab === 'settings') ? '35%' : '70px', /* 패널 열림: 화면 65% 뷰어, 35% 패널 */
             transition: 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            padding: '0 8px', /* 좌우 치수 표시를 위한 패딩 */
+            padding: '0 40px', /* 좌우 치수 및 가이드가 잘리지 않도록 여백 확보 */
           } : {
             position: 'absolute',
             left: activeSidebarTab ? 'var(--sidebar-total-width, 304px)' : 'var(--sidebar-icon-width, 64px)', /* CSS 변수 사용 - 반응형 */
@@ -3743,7 +3743,7 @@ const Configurator: React.FC = () => {
           )}
 
           {/* 3D 뷰어 */}
-          <div className={styles.viewer}>
+          <div className={`${styles.viewer} ${isMobile ? responsiveStyles.mobileViewer : ''}`}>
             {/* 도어가 설치된 경우에만 뷰어 상단에 Close/Open 토글 버튼 표시 */}
             {hasDoorsInstalled && (
               <div className={styles.viewerDoorToggle}>
@@ -3838,6 +3838,7 @@ const Configurator: React.FC = () => {
             {/* 측면뷰용 슬롯 선택 버튼 */}
             <SlotSelector />
           </div>
+          {isMobile && <div className={responsiveStyles.mobileViewerDivider} aria-hidden="true" />}
 
         </div>
 
@@ -4030,64 +4031,30 @@ const Configurator: React.FC = () => {
       )}
 
       {/* 모바일 우측 메뉴 (Drawer) */}
-      {isMobile && isMobileMenuOpen && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: '85%',
-          maxWidth: '360px',
-          background: 'var(--theme-surface)',
-          zIndex: 2000,
-          boxShadow: '-4px 0 16px rgba(0,0,0,0.1)',
-          display: 'flex',
-          flexDirection: 'column',
-          animation: 'slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-        }}>
-          <div style={{
-            padding: '16px',
-            borderBottom: '1px solid var(--theme-border)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}>
-            <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>설정</h2>
-            <button
-              onClick={() => setIsMobileMenuOpen(false)}
-              style={{
-                background: 'none',
-                border: 'none',
-                padding: '8px',
-                cursor: 'pointer',
-                color: 'var(--theme-text)'
-              }}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
+      {isMobile && (
+        <>
+          <div className={`${responsiveStyles.mobileRightPanel} ${isMobileMenuOpen ? responsiveStyles.mobileRightPanelOpen : ''}`}>
+            <div className={responsiveStyles.mobileRightPanelHeader}>
+              <h2>설정</h2>
+              <button
+                className={responsiveStyles.mobileRightPanelClose}
+                onClick={() => setIsMobileMenuOpen(false)}
+                aria-label="설정 닫기"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className={responsiveStyles.mobileRightPanelContent}>
+              {renderRightPanelContent()}
+            </div>
           </div>
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            {renderRightPanelContent()}
-          </div>
-        </div>
-      )}
-      {/* 모바일 메뉴 배경 (Backdrop) */}
-      {isMobile && isMobileMenuOpen && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0,0,0,0.5)',
-            zIndex: 1999,
-            animation: 'fadeIn 0.3s ease-out'
-          }}
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
+          <div
+            className={`${responsiveStyles.mobileBackdrop} ${isMobileMenuOpen ? responsiveStyles.mobileBackdropOpen : ''}`}
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+        </>
       )}
 
     </div>
