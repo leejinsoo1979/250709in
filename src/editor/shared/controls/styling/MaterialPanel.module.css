@@ -484,17 +484,14 @@
     padding: 8px 12px;
     display: flex;
     flex-direction: row;
-    gap: 20px;
-    align-items: center;
-    justify-content: center;
+    gap: 12px;
+    align-items: flex-start;
   }
 
   /* 재질 휠 - 왼쪽 */
   .materialWheelContainer {
     flex: 0 0 auto;
     margin-bottom: 0;
-    display: flex;
-    justify-content: center;
   }
 
   .materialWheel {
@@ -505,21 +502,18 @@
   /* 색상 섹션 - 오른쪽 */
   .colorSection {
     flex: 1;
-    gap: 8px;
+    gap: 6px;
     min-width: 0;
-    max-width: 200px;
   }
 
   .colorSectionTitle {
-    font-size: 12px;
-    margin-bottom: 4px;
-    text-align: center;
+    font-size: 11px;
+    margin-bottom: 2px;
   }
 
   .colorWheel {
     width: 110px;
     height: 110px;
-    margin: 0 auto;
   }
 
   /* 밝기 슬라이더 */
