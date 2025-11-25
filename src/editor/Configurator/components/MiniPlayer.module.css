@@ -1,13 +1,15 @@
 .miniPlayer {
   position: fixed;
-  z-index: 9999;
-  background: var(--theme-background);
-  border-radius: 8px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  z-index: 99999;
+  background: var(--theme-background, #1a1a2e);
+  border-radius: 12px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--theme-border);
+  border: 2px solid var(--theme-primary, #3b82f6);
+  min-width: 320px;
+  min-height: 240px;
 }
 
 .miniPlayer.fullscreen {
@@ -71,6 +73,18 @@
   position: relative;
   overflow: hidden;
   background: #1a1a2e;
+  min-height: 200px;
+  height: 100%;
+}
+
+.viewerWrapper {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
 }
 
 /* 다크 테마 */
@@ -97,6 +111,41 @@
 
 .resizeHandle:hover {
   opacity: 1;
+}
+
+.loadingPlaceholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  width: 100%;
+  height: 100%;
+  color: var(--theme-text-muted);
+  font-size: 14px;
+  background: var(--theme-surface);
+}
+
+.snapshotImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #1a1a2e;
+}
+
+.retryButton {
+  padding: 8px 16px;
+  background: var(--theme-primary, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.retryButton:hover {
+  background: var(--theme-primary-hover, #2563eb);
 }
 
 /* 드래그/리사이즈 중 커서 유지 */
