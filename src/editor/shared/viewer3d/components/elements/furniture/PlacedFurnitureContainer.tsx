@@ -189,7 +189,13 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   }, [placedModules]);
 
   // 좌/우측 뷰에서는 해당 측면에 가장 가까운 슬롯의 모든 가구 필터링
+  // 단, selectedSlotIndex가 이미 설정되어 있으면 그 필터링을 우선함
   const filteredModules = React.useMemo(() => {
+    // selectedSlotIndex로 이미 필터링된 경우, X좌표 필터링 건너뜀
+    if (selectedSlotIndex !== null) {
+      return placedModules;
+    }
+
     if (viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) {
       if (placedModules.length === 0) return [];
 
@@ -214,7 +220,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
       }
     }
     return placedModules;
-  }, [placedModules, viewMode, view2DDirection]);
+  }, [placedModules, viewMode, view2DDirection, selectedSlotIndex]);
   
   console.log('🔥🔥 PlacedFurnitureContainer 렌더링 시작:', {
     가구개수: filteredModules.length,
