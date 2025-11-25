@@ -2228,7 +2228,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const depth = mmToThreeUnits(actualDepthMm);
   const furnitureGroupPosition: [number, number, number] = [
     adjustedPosition.x + positionAdjustmentForEndPanel,
-    finalYPosition,
+    adjustedPosition.y, // finalYPosition 대신 직접 사용 (TDZ 에러 방지)
     furnitureZ
   ];
 
