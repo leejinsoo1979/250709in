@@ -413,6 +413,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     return 2.0;
   }, [isEmbedded, isMobile, viewMode]);
 
+  // 카메라 타겟 Y 좌표 계산 (모바일에서는 화면을 위로 올리기 위해 타겟을 낮춤)
+  const targetY = useMemo(() => {
+    const height = spaceInfo?.height || 2400;
+    // 모바일에서는 0.42 (약간 아래), 데스크탑은 0.5 (중앙)
+    const ratio = isMobile ? 0.42 : 0.5;
+    return mmToThreeUnits(height * ratio);
+  }, [spaceInfo?.height, isMobile]);
+
   // 2D 뷰 방향별 카메라 위치 계산 - threeUtils의 최적화된 거리 사용
   const cameraPosition = useMemo(() => {
     if (!spaceInfo) {
@@ -423,7 +431,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     // threeUtils의 calculateOptimalDistance 사용 (3D와 동일한 계산)
     const distance = calculateOptimalDistance(width, height, depth, placedModules.length);
     const centerX = 0;
-    const centerY = mmToThreeUnits(height * 0.5);
+    const centerY = targetY;
     const centerZ = 0;
 
     // 2D front 위치 계산 - 3D와 동일한 거리 사용
@@ -431,9 +439,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
     // 3D 모드에서는 2D front와 완전히 동일한 위치 사용
     if (viewMode === '3D') {
-      // 모바일(세로 모드)에서는 높이 치수까지 다 보이도록 거리를 4.5배로 증가
+      // 모바일(세로 모드)에서는 높이 치수까지 다 보이도록 거리를 1.5배로 증가
       if (isMobile) {
-        return [centerX, centerY, distance * 4.5] as [number, number, number];
+        return [centerX, centerY, distance * 1.5] as [number, number, number];
       }
       return frontPosition;
     }
@@ -464,7 +472,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
       default:
         return frontPosition;
     }
-  }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length, baseDistanceMultiplier]);
+  }, [spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, viewMode, view2DDirection, placedModules.length, baseDistanceMultiplier, targetY, isMobile]);
 
   // Canvas key를 완전히 제거하여 재생성 방지
   // viewMode나 view2DDirection 변경 시에도 Canvas를 재생성하지 않음
@@ -1436,7 +1444,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
         >
           <ThreeCanvas
             cameraPosition={cameraPosition}
-            cameraTarget={calculateCameraTarget(spaceInfo?.height || 2400)}
+            cameraTarget={[0, targetY, 0]}
             viewMode={viewMode}
             view2DDirection={view2DDirection}
             renderMode={renderMode}
