@@ -43,6 +43,15 @@ body {
   color: var(--theme-text);
 }
 
+/* 모바일에서 수평 스크롤 방지 */
+@media (max-width: 767px) {
+  html, body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
 h1, h2, h3, h4, h5, h6 {
   color: var(--theme-text);
 }
