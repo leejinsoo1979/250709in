@@ -42,6 +42,7 @@ import ColumnEditModal from '@/editor/shared/controls/structure/ColumnEditModal'
 import ConvertModal from './components/ConvertModal';
 import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
 import { ShareLinkModal } from '@/components/ShareLinkModal';
+import PreviewViewer from './components/PreviewViewer';
 
 import {
   WidthControl,
@@ -3760,6 +3761,9 @@ const Configurator: React.FC = () => {
                 pointerEvents: isRightPanelOpen ? 'auto' : 'none'
               }}
             >
+              {/* 미리보기 뷰어 - 2D/3D 모드 전환 */}
+              <PreviewViewer />
+
               {/* 탭 헤더 */}
               <div className={styles.rightPanelHeader}>
                 <div className={styles.rightPanelTabs}>
