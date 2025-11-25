@@ -1116,16 +1116,18 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* 그림자 토글 */}
-          <div className={styles.mobileShadowToggle}>
-            <span className={styles.shadowLabel}>그림자</span>
-            <div
-              onClick={() => setShadowEnabled(!shadowEnabled)}
-              className={`${styles.toggleSwitch} ${shadowEnabled ? styles.active : ''}`}
-            >
-              <div className={styles.toggleKnob} />
+          {/* 그림자 토글 (3D에서만 표시) */}
+          {viewMode === '3D' && (
+            <div className={styles.mobileShadowToggle}>
+              <span className={styles.shadowLabel}>그림자</span>
+              <div
+                onClick={() => setShadowEnabled(!shadowEnabled)}
+                className={`${styles.toggleSwitch} ${shadowEnabled ? styles.active : ''}`}
+              >
+                <div className={styles.toggleKnob} />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
