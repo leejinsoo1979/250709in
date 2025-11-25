@@ -431,9 +431,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
     // 3D 모드에서는 2D front와 완전히 동일한 위치 사용
     if (viewMode === '3D') {
-      // 모바일(세로 모드)에서는 가로 폭이 잘리지 않도록 거리를 3배로 증가
+      // 모바일(세로 모드)에서는 높이 치수까지 다 보이도록 거리를 4.5배로 증가
       if (isMobile) {
-        return [centerX, centerY, distance * 3.0] as [number, number, number];
+        return [centerX, centerY, distance * 4.5] as [number, number, number];
       }
       return frontPosition;
     }
