@@ -18,6 +18,27 @@
   color: var(--theme-text);
 }
 
+.popoutButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.popoutButton:hover {
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  border-color: var(--theme-text-muted);
+}
+
 .previewContent {
   position: relative;
   width: 100%;

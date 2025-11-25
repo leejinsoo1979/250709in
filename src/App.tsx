@@ -49,6 +49,7 @@ import CNCOptimizerPro from '@/editor/CNCOptimizer/CNCOptimizerPro';
 import CNCOptimizerTest from '@/editor/CNCOptimizer/CNCOptimizerTest';
 import Test2DViewer from '@/pages/Test2DViewer';
 import CanvasDuplicateTest from '@/test/CanvasDuplicateTest';
+import PreviewPopout from '@/editor/Configurator/components/PreviewPopout';
 import { initializeTheme } from '@/theme';
 import { logPageView } from '@/firebase/analytics';
 
@@ -156,6 +157,7 @@ function AppContent() {
         {/* 에디터 라우트 */}
         <Route path="/step1" element={<Step1 />} />
         <Route path="/configurator" element={<Configurator />} />
+        <Route path="/preview-popout" element={<PreviewPopout />} />
         <Route path="/cnc-optimizer" element={<CNCOptimizerPro />} />
         <Route path="/cnc-test" element={<CNCOptimizerTest />} />
         <Route path="/step0" element={<Navigate to="/step1" replace />} />
