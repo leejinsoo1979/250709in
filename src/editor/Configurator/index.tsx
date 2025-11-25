@@ -321,11 +321,12 @@ const Configurator: React.FC = () => {
     };
   }, [selectedColumnId, openColumnEditModal, activePopup, spaceInfo.columns, spaceInfo.width, updateColumn]);
 
-  // 파일 시작 시 3D 정면뷰로 초기화
+  // 파일 시작 시 3D 정면뷰로 초기화 (컴포넌트 마운트 시 1회만)
   useEffect(() => {
     setViewMode('3D');
     setView2DDirection('front');
-  }, [setViewMode, setView2DDirection]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // 미리보기 창과 BroadcastChannel 동기화
   useEffect(() => {

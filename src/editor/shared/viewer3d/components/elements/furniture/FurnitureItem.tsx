@@ -2395,7 +2395,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 측면뷰에서 선택된 슬롯의 가구만 표시 (4분할 뷰 포함)
   // view2DDirection은 prop으로 전달받음 (4분할 뷰에서는 각 패널별로 'left'/'right' 전달)
-  if ((view2DDirection === 'left' || view2DDirection === 'right') && selectedSlotIndex !== null) {
+  if (
+    viewMode === '2D' &&
+    (view2DDirection === 'left' || view2DDirection === 'right') &&
+    selectedSlotIndex !== null
+  ) {
     const furnitureSlotIndex = normalizedSlotIndex;
     if (furnitureSlotIndex !== undefined) {
       // 듀얼 슬롯 가구인지 확인
@@ -2445,6 +2449,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           }
         }}
         onClick={(e) => {
+          console.log('🖱️ FurnitureItem onClick:', {
+            furnitureId: placedModule.id,
+            slotIndex: placedModule.slotIndex,
+            hasOnFurnitureClick: !!onFurnitureClick
+          });
           // 가구 클릭 시 해당 슬롯 선택 (4분할 뷰 또는 미리보기에서 사용)
           if (onFurnitureClick && placedModule.slotIndex !== undefined) {
             e.stopPropagation();
@@ -2669,6 +2678,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               // 듀얼 가구이고 측면뷰인 경우, 표시할 섹션 계산
               let visibleSectionIndex: number | null = null;
               if (
+                viewMode === '2D' &&
                 placedModule.isDualSlot &&
                 (view2DDirection === 'left' || view2DDirection === 'right') &&
                 normalizedSlotIndex !== undefined
