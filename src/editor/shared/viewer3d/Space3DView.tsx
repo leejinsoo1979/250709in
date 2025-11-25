@@ -1355,7 +1355,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
   const embeddedZoomMultiplier = useMemo(() => {
     if (isEmbedded && viewMode === '2D') {
       // 우측 미리보기처럼 좁은 뷰포트에서는 더 멀리서 바라보도록 줌을 줄인다
-      return 0.4;
+      return 0.26;
     }
     return undefined;
   }, [isEmbedded, viewMode]);

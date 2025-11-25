@@ -230,22 +230,7 @@ const Room: React.FC<RoomProps> = ({
   // 고유 ID로 어떤 Room 인스턴스인지 구분
   const roomId = React.useRef(`room-${Date.now()}-${Math.random()}`).current;
 
-  // Room 컴포넌트 렌더링 추적
-  React.useEffect(() => {
-    console.log('🏠🏠🏠 Room 컴포넌트 렌더링:', {
-      roomId: roomId.substring(0, 20),
-      viewMode,
-      placedModulesProp: !!placedModules,
-      placedModulesCount: placedModules?.length,
-      activeZone,
-      droppedCeiling: spaceInfo.droppedCeiling,
-      timestamp: Date.now()
-    });
-  });
-  
-  if (!spaceInfo || typeof spaceInfo.width !== 'number' || typeof spaceInfo.height !== 'number') {
-    return null;
-  }
+  // 모든 훅들을 early return 전에 호출 (Rules of Hooks 준수)
   const { theme } = useViewerTheme();
   const { colors } = useThemeColors();
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
@@ -259,13 +244,13 @@ const Room: React.FC<RoomProps> = ({
 
   // Three.js hooks for camera tracking
   const { camera } = useThree();
-  
+
   // 벽 재질 refs - ShaderMaterial로 타입 변경
   const leftWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const rightWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const topWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
   const droppedWallMaterialRef = useRef<THREE.ShaderMaterial>(null);
-  
+
   // 카메라 각도에 따라 벽 투명도 업데이트 - orthographic 모드에서만
   useFrame(() => {
     // perspective 모드에서는 항상 불투명하게
@@ -298,10 +283,27 @@ const Room: React.FC<RoomProps> = ({
       }
     }
   });
+
+  // spaceInfo 유효성 체크 (early return 대신 플래그 사용 - Rules of Hooks 준수)
+  const isSpaceInfoValid = spaceInfo && typeof spaceInfo.width === 'number' && typeof spaceInfo.height === 'number';
+
+  // Room 컴포넌트 렌더링 추적
+  React.useEffect(() => {
+    if (!isSpaceInfoValid) return;
+    console.log('🏠🏠🏠 Room 컴포넌트 렌더링:', {
+      roomId: roomId.substring(0, 20),
+      viewMode,
+      placedModulesProp: !!placedModules,
+      placedModulesCount: placedModules?.length,
+      activeZone,
+      droppedCeiling: spaceInfo?.droppedCeiling,
+      timestamp: Date.now()
+    });
+  });
   
   // 노서라운드 모드에서 엔드패널이 생성되는 위치 확인
   const getEndPanelPositions = () => {
-    if (spaceInfo.surroundType !== 'no-surround') return { left: false, right: false, slots: [] };
+    if (!isSpaceInfoValid || spaceInfo.surroundType !== 'no-surround') return { left: false, right: false, slots: [] };
     
     const modules = placedModules || placedModulesFromStore;
     if (!modules || modules.length === 0) return { left: false, right: false, slots: [] };
@@ -487,6 +489,14 @@ const Room: React.FC<RoomProps> = ({
   
   // spaceInfo 변경 시 재계산되도록 메모이제이션
   const dimensions = useMemo(() => {
+    // spaceInfo가 유효하지 않으면 기본값 반환
+    if (!isSpaceInfoValid) {
+      return {
+        width: 0, height: 0, panelDepth: 0, furnitureDepth: 0,
+        floorFinishHeight: 0, frameThickness: { left: 0, right: 0 },
+        baseFrame: 0, topBottomFrameHeight: 0, baseFrameHeight: 0
+      };
+    }
     console.log('🔍 Room Component - spaceInfo:', {
       roomId,
       surroundType: spaceInfo.surroundType,
@@ -572,7 +582,7 @@ const Room: React.FC<RoomProps> = ({
       topBottomFrameHeightMm,
       baseFrameHeightMm
     };
-  }, [spaceInfo.width, spaceInfo.height, spaceInfo.depth, spaceInfo.installType, spaceInfo.surroundType, spaceInfo.baseConfig, spaceInfo.floorFinish, spaceInfo.frameSize, spaceInfo.wallConfig, placedModules, placedModulesFromStore]);
+  }, [isSpaceInfoValid, spaceInfo?.width, spaceInfo?.height, spaceInfo?.depth, spaceInfo?.installType, spaceInfo?.surroundType, spaceInfo?.baseConfig, spaceInfo?.floorFinish, spaceInfo?.frameSize, spaceInfo?.wallConfig, placedModules, placedModulesFromStore]);
   
   const { 
     width, height, panelDepth, furnitureDepth, floorFinishHeight, frameThickness, baseFrame, topBottomFrameHeight, baseFrameHeight,
@@ -597,6 +607,7 @@ const Room: React.FC<RoomProps> = ({
   
   // 기둥 분절 계산을 메모이제이션 (dimensions 정의 이후로 이동)
   const frameSegments = useMemo(() => {
+    if (!isSpaceInfoValid) return null;
     const columns = spaceInfo.columns || [];
     const hasDeepColumns = columns.some(column => column.depth >= 730);
     
@@ -678,7 +689,7 @@ const Room: React.FC<RoomProps> = ({
     }
     
     return segments.length > 0 ? segments : null;
-  }, [spaceInfo.columns, spaceInfo.surroundType, spaceInfo.width, spaceInfo.gapConfig?.left, spaceInfo.gapConfig?.right, baseFrame.width, frameThickness.left, width]);
+  }, [isSpaceInfoValid, spaceInfo?.columns, spaceInfo?.surroundType, spaceInfo?.width, spaceInfo?.gapConfig?.left, spaceInfo?.gapConfig?.right, baseFrame.width, frameThickness.left, width]);
 
   
   // 공통 프레임 재질 생성 함수 (도어와 동일한 재질로 통일)
@@ -1080,7 +1091,12 @@ const Room: React.FC<RoomProps> = ({
         }
       }, 100);
     }
-  }, [spaceInfo.installType, endPanelCount.left, endPanelCount.right, endPanelCount.leftFrame, endPanelCount.rightFrame]);
+  }, [spaceInfo?.installType, endPanelCount.left, endPanelCount.right, endPanelCount.leftFrame, endPanelCount.rightFrame]);
+
+  // spaceInfo가 유효하지 않으면 null 반환 (모든 훅 호출 후)
+  if (!isSpaceInfoValid) {
+    return null;
+  }
 
   return (
     <group position={[0, 0, groupZOffset]}>
