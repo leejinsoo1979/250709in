@@ -51,7 +51,7 @@ import { useThrottle } from '@/editor/shared/hooks/useThrottle';
  * 2D 모드에서는 orthographic 카메라로 정면 뷰 제공
  */
 const Space3DView: React.FC<Space3DViewProps> = (props) => {
-  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false, readOnly = false, sceneRef, showFurniture: showFurnitureProp } = props;
+  const { spaceInfo, svgSize, viewMode = '3D', setViewMode, renderMode = 'solid', showAll = true, showFrame = true, showDimensions: showDimensionsProp, isEmbedded, isStep2, activeZone, hideEdges = false, readOnly = false, sceneRef, showFurniture: showFurnitureProp, onFurnitureClick } = props;
   console.log('🌐 Space3DView - viewMode:', viewMode);
   console.log('🌐 Space3DView - props:', props);
   const location = useLocation();
@@ -1352,6 +1352,14 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     );
   }
 
+  const embeddedZoomMultiplier = useMemo(() => {
+    if (isEmbedded && viewMode === '2D') {
+      // 우측 미리보기처럼 좁은 뷰포트에서는 더 멀리서 바라보도록 줌을 줄인다
+      return 0.4;
+    }
+    return undefined;
+  }, [isEmbedded, viewMode]);
+
   return (
     <ViewerThemeProvider viewMode={viewMode}>
       <Space3DViewProvider spaceInfo={spaceInfo} svgSize={svgSize} renderMode={renderMode} viewMode={viewMode} activeZone={activeZone}>
@@ -1373,6 +1381,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
           view2DDirection={view2DDirection}
           renderMode={renderMode}
           sceneRef={sceneRef}
+          zoomMultiplier={embeddedZoomMultiplier}
         >
           <React.Suspense fallback={null}>
             {/* 배경 클릭 감지용 평면 - selectedFurnitureId 해제 */}
@@ -1448,6 +1457,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
               showFurniture={showFurniture}
               hideEdges={hideEdges}
               readOnly={readOnly}
+              onFurnitureClick={onFurnitureClick}
             />
             
             {/* 단내림 공간 렌더링 */}

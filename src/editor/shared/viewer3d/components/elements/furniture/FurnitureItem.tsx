@@ -198,6 +198,7 @@ interface FurnitureItemProps {
   onPointerMove: (e: ThreeEvent<PointerEvent>) => void;
   onPointerUp: () => void;
   onDoubleClick: (e: ThreeEvent<MouseEvent>, id: string) => void;
+  onFurnitureClick?: (furnitureId: string, slotIndex: number) => void; // 가구 클릭 콜백 (미리보기용)
 }
 
 const FurnitureItem: React.FC<FurnitureItemProps> = ({
@@ -216,7 +217,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   onPointerDown,
   onPointerMove,
   onPointerUp,
-  onDoubleClick
+  onDoubleClick,
+  onFurnitureClick
 }) => {
   const FURNITURE_DEBUG = false;
   const debugLog = (...args: any[]) => {
@@ -2440,6 +2442,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             updateModule(placedModule.id, { isLocked: false });
           } else {
             onDoubleClick(e, placedModule.id);
+          }
+        }}
+        onClick={(e) => {
+          // 미리보기에서 가구 클릭 시 해당 슬롯의 측면뷰로 전환
+          if (readOnly && onFurnitureClick && placedModule.slotIndex !== undefined) {
+            e.stopPropagation();
+            onFurnitureClick(placedModule.id, placedModule.slotIndex);
           }
         }}
         onPointerDown={handlePointerDown}

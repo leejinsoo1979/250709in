@@ -45,6 +45,8 @@ export interface Space3DViewProps extends ViewerBaseProps {
   readOnly?: boolean;
   /** 3D 씬 참조 (GLB 내보내기용) */
   sceneRef?: React.MutableRefObject<any>;
+  /** 가구 클릭 시 콜백 (미리보기에서 측면뷰로 전환용) */
+  onFurnitureClick?: (furnitureId: string, slotIndex: number) => void;
 }
 
 /**

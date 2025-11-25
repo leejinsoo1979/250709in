@@ -16,11 +16,20 @@ interface PreviewViewerProps {
  */
 const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
   const { spaceInfo } = useSpaceConfigStore();
-  const { viewMode } = useUIStore();
+  const { viewMode, setViewMode, setView2DDirection, setSelectedSlotIndex } = useUIStore();
   const [showMiniPlayer, setShowMiniPlayer] = useState(false);
 
   // 미리보기는 현재 모드의 반대
   const previewMode = viewMode === '2D' ? '3D' : '2D';
+
+  // 미리보기에서 가구 클릭 시 해당 슬롯의 측면뷰로 전환
+  const handleFurnitureClick = (furnitureId: string, slotIndex: number) => {
+    console.log('📍 PreviewViewer - 가구 클릭:', { furnitureId, slotIndex });
+    // 2D 측면뷰로 전환
+    setViewMode('2D');
+    setView2DDirection('left'); // 좌측 측면뷰로 전환
+    setSelectedSlotIndex(slotIndex); // 해당 슬롯 선택
+  };
 
   return (
     <>
@@ -52,6 +61,7 @@ const PreviewViewer: React.FC<PreviewViewerProps> = ({ className }) => {
               isEmbedded={true}
               readOnly={true}
               hideEdges={true}
+              onFurnitureClick={handleFurnitureClick}
             />
           </div>
         </div>

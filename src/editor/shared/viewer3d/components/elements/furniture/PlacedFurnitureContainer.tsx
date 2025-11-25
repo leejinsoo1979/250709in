@@ -16,6 +16,7 @@ interface PlacedFurnitureContainerProps {
   activeZone?: 'normal' | 'dropped';
   showFurniture?: boolean;
   readOnly?: boolean; // 읽기 전용 모드 (viewer 권한)
+  onFurnitureClick?: (furnitureId: string, slotIndex: number) => void; // 가구 클릭 콜백 (미리보기용)
 }
 
 const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
@@ -25,7 +26,8 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   placedModules: propPlacedModules,
   activeZone,
   showFurniture,
-  readOnly = false
+  readOnly = false,
+  onFurnitureClick
 }) => {
   const { spaceInfo } = useSpaceConfigStore();
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
@@ -274,6 +276,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
             onDoubleClick={selectionState.handleFurnitureClick}
             showFurniture={showFurniture}
             readOnly={readOnly}
+            onFurnitureClick={onFurnitureClick}
           />
         );
       })}
