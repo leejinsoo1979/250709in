@@ -73,7 +73,7 @@
 /* 좌측 패널 토글 버튼 - 항상 같은 위치에 고정 */
 .leftPanelToggle {
   position: fixed;
-  left: 64px; /* 사이드바 너비 */
+  left: var(--sidebar-icon-width, 64px); /* CSS 변수 사용 */
   top: 50%;
   transform: translateY(-50%);
   width: 32px;
@@ -94,7 +94,7 @@
 }
 
 .leftPanelToggle.open {
-  left: 304px; /* 사이드바(64px) + 컨텐츠패널(240px) */
+  left: var(--sidebar-total-width, 304px); /* CSS 변수 사용 */
 }
 
 .leftPanelToggle:hover {
@@ -106,8 +106,9 @@
 .rightPanelContainer {
   position: fixed;
   right: 0;
-  top: 56px;
+  top: var(--configurator-header-height, 56px);
   bottom: 0;
+  width: var(--right-panel-width, 320px);
   z-index: 10;
   overflow: hidden;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -116,7 +117,7 @@
 /* 우측 패널 토글 버튼 */
 .rightPanelToggle {
   position: fixed;
-  right: 320px;
+  right: var(--right-panel-width, 320px); /* CSS 변수 사용 */
   top: 50%;
   transform: translateY(-50%);
   width: 32px;
@@ -209,12 +210,12 @@
 /* 사이드바 컨텐츠 패널 */
 .sidebarContent {
   position: fixed;
-  left: 64px; /* 사이드바 너비 */
-  top: 56px; /* 헤더 높이 */
+  left: var(--sidebar-icon-width, 64px); /* 사이드바 너비 - CSS 변수 사용 */
+  top: var(--configurator-header-height, 56px); /* 헤더 높이 */
   bottom: 0;
-  width: 240px; /* 더 좁게 */
-  min-width: 220px;
-  max-width: 260px;
+  width: var(--sidebar-content-width, 240px); /* CSS 변수 사용 */
+  min-width: 200px;
+  max-width: 320px;
   background: var(--theme-surface, white);
   border-right: 1px solid var(--theme-border);
   box-shadow: 2px 0 8px var(--theme-shadow, rgba(0, 0, 0, 0.08));
@@ -222,9 +223,10 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), 
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
               opacity 0.3s ease,
-              box-shadow 0.3s ease;
+              box-shadow 0.3s ease,
+              width 0.3s ease;
   transform-origin: left center;
 }
 
@@ -444,7 +446,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-width: 400px;
+  min-width: var(--viewer-min-width, 400px);
   background: var(--theme-surface);
   overflow: hidden;
   position: relative;
@@ -994,37 +996,30 @@
   font-size: 16px;
 }
 
-/* 반응형 디자인 - 맥북 및 다양한 화면 크기 지원 */
+/* ==============================
+   반응형 디자인 - CSS 변수 기반 시스템
+   너비는 variables.css에서 미디어 쿼리로 자동 조정됨
+   ============================== */
 
-/* 큰 데스크톱 (1920px 이상) */
+/* 큰 데스크톱 (1920px 이상) - 패딩/간격만 조정 */
 @media (min-width: 1920px) {
-  .sidebarContent {
-    width: 400px;
+  .rightPanelContent {
+    padding: 28px;
   }
-  
+
+  .modulePanelContent {
+    padding: 16px;
+  }
 }
 
-/* 일반 데스크톱 (1400-1919px) */
-@media (max-width: 1919px) and (min-width: 1400px) {
-  .sidebarContent {
-    width: 360px;
-  }
-  
-}
-
-/* 중간 데스크톱 - 맥북 프로 16인치 (1400px 이하) */
+/* 중간 데스크톱 - 맥북 프로 16인치 (1200-1399px) */
 @media (max-width: 1399px) and (min-width: 1200px) {
-  .sidebarContent {
-    width: 320px;
-  }
-  
-  
   .rightPanelContent {
     padding: 20px;
   }
-  
+
   .modulePanelContent {
-    padding: 20px;
+    padding: 14px;
   }
 }
 
@@ -1075,41 +1070,29 @@
   }
 }
 
-/* 맥북 에어/프로 13인치 (1200px 이하) */
+/* 맥북 에어/프로 13-14인치 (1024-1199px) - 패딩/간격 조정 */
 @media (max-width: 1199px) and (min-width: 1024px) {
-  .sidebarContent {
-    width: 280px;
-    min-width: 250px;
-  }
-  
-  
-  /* 기본값과 동일하므로 설정 불필요 */
-  
-  .viewerArea {
-    min-width: 350px; /* 뷰어 최소 너비 보장 */
-  }
-  
   .viewer {
     min-height: 250px; /* 뷰어 최소 높이 보장 */
   }
-  
+
   .rightPanelContent {
     padding: 16px;
     padding-right: 12px;
   }
-  
+
   .modulePanelContent {
-    padding: 16px;
+    padding: 14px;
   }
-  
+
   .numberInputGroup {
     border-radius: 4px;
   }
-  
+
   .doorSlider {
     height: 6px;
   }
-  
+
   .doorSlider::-webkit-slider-thumb {
     width: 18px;
     height: 18px;
@@ -1260,41 +1243,31 @@
   }
 }
 
-/* 태블릿 가로 (1024px 이하) */
+/* 태블릿 가로 (768-1023px) - 패딩/간격 조정, 너비는 CSS 변수로 자동 조정 */
 @media (max-width: 1023px) and (min-width: 768px) {
   .mainContent {
     flex-direction: row;
     gap: 0;
   }
-  
-  .sidebarContent {
-    width: 250px;
-    min-width: 250px;
-  }
-  
-  
-  .viewerArea {
-    min-width: 400px;
-  }
-  
+
   .rightPanelContent {
     padding: 14px;
   }
-  
+
   .modulePanelContent {
-    padding: 14px;
+    padding: 12px;
   }
-  
+
   .configSection {
     padding: 16px 0;
   }
-  
+
   .inputRow {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .numberInputGroup {
     align-self: flex-end;
   }
@@ -1314,25 +1287,30 @@
   }
 }
 
-/* 태블릿 세로 및 모바일 가로 (768px 이하) */
+/* 태블릿 세로 및 모바일 가로 (768px 이하) - 오버레이 모드 */
 @media (max-width: 767px) {
   .configurator {
     height: 100vh;
     overflow: hidden;
   }
-  
+
   .mainContent {
     flex-direction: column;
-    height: calc(100vh - 60px); /* 헤더 높이 제외 */
+    height: calc(100vh - var(--configurator-header-height, 56px)); /* 헤더 높이 제외 */
   }
-  
+
+  /* 사이드바 컨텐츠 - 오버레이 모드 */
   .sidebarContent {
-    width: 100%;
-    height: 200px;
-    min-height: 200px;
-    border-right: none;
-    border-bottom: 1px solid var(--theme-border);
+    position: fixed;
+    left: 0;
+    width: 280px;
+    height: auto;
+    max-height: calc(100vh - var(--configurator-header-height, 56px));
+    border-right: 1px solid var(--theme-border);
+    border-bottom: none;
     overflow-y: auto;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+    z-index: 100;
   }
   
   .viewerArea {

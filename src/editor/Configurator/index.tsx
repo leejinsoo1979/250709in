@@ -3624,8 +3624,8 @@ const Configurator: React.FC = () => {
           data-main-viewer="true"
           style={{
             position: 'absolute',
-            left: activeSidebarTab ? '304px' : '64px', /* 사이드바 상태에 맞춰 항상 조정 (모바일은 CSS로 override) */
-            right: isReadOnly ? '0' : (isRightPanelOpen ? '320px' : '0'), /* 읽기 전용 모드에서는 우측 패널 없음 */
+            left: activeSidebarTab ? 'var(--sidebar-total-width, 304px)' : 'var(--sidebar-icon-width, 64px)', /* CSS 변수 사용 - 반응형 */
+            right: isReadOnly ? '0' : (isRightPanelOpen ? 'var(--right-panel-width, 320px)' : '0'), /* CSS 변수 사용 - 반응형 */
             top: 0,
             bottom: 0,
             transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), right 0.3s cubic-bezier(0.4, 0, 0.2, 1)'

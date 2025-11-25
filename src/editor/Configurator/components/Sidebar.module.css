@@ -1,11 +1,11 @@
 .sidebar {
   position: fixed;
   left: 0;
-  top: 56px; /* 헤더 높이 */
+  top: var(--configurator-header-height, 56px); /* CSS 변수 사용 */
   bottom: 0;
   background: var(--theme-surface);
   border-right: 1px solid var(--theme-border);
-  width: 64px;
+  width: var(--sidebar-icon-width, 64px); /* CSS 변수 사용 */
   display: flex;
   flex-direction: column;
   z-index: 90;
