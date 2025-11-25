@@ -407,9 +407,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
   const baseDistanceMultiplier = useMemo(() => {
     if (isEmbedded) return 5.0;
-    // 모바일에서는 3D 원근과 동일한 크기 (1.5배)
+    // 모바일 2D: 2배 거리
     if (isMobile) {
-      return 1.5;
+      return 2.0;
     }
     return 2.0;
   }, [isEmbedded, isMobile]);
