@@ -1319,13 +1319,16 @@
     bottom: 70px !important; /* 하단 탭바 높이 */
     min-height: unset !important;
     min-width: unset !important;
-    width: 100% !important;
-    height: auto !important;
+    width: 100vw !important;
+    height: calc(100vh - var(--configurator-header-height, 56px) - 70px) !important;
     z-index: 1 !important;
   }
 
   /* 뷰어 내부 */
   .viewer {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
     width: 100% !important;
     height: 100% !important;
   }
@@ -1404,17 +1407,17 @@
   color: var(--theme-text);
 }
 
-/* 세로 방향 최적화 */
-@media (orientation: portrait) and (max-width: 768px) {
+/* 세로 방향 최적화 - 태블릿만 (모바일 제외) */
+@media (orientation: portrait) and (min-width: 768px) and (max-width: 1023px) {
   .mainContent {
     flex-direction: column;
   }
-  
+
   .sidebarContent {
     height: 25vh;
     max-height: 250px;
   }
-  
+
   .viewerArea {
     flex: 1;
     min-height: 40vh;
