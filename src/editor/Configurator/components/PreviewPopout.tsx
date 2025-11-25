@@ -15,11 +15,16 @@ const CHANNEL_NAME = 'preview-sync';
 const PreviewPopout: React.FC = () => {
   const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
   const { placedModules, setPlacedModules } = useFurnitureStore();
-  const { viewMode } = useUIStore();
+  const { viewMode: mainViewMode } = useUIStore();
   const [isReady, setIsReady] = useState(false);
 
-  // 미리보기는 현재 모드의 반대
-  const previewMode = viewMode === '2D' ? '3D' : '2D';
+  // 로컬 뷰어 설정 상태
+  const [localViewMode, setLocalViewMode] = useState<'2D' | '3D'>(mainViewMode === '2D' ? '3D' : '2D');
+  const [renderMode, setRenderMode] = useState<'solid' | 'wireframe'>('solid');
+  const [showDimensions, setShowDimensions] = useState(false);
+  const [showFurniture, setShowFurniture] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+  const [showFrame, setShowFrame] = useState(true);
 
   // BroadcastChannel을 통한 상태 동기화
   useEffect(() => {
@@ -49,39 +54,145 @@ const PreviewPopout: React.FC = () => {
     channel.postMessage({ type: 'REQUEST_STATE' });
 
     // 창 제목 업데이트
-    document.title = `${previewMode} 미리보기`;
+    document.title = `${localViewMode} 미리보기`;
 
     return () => {
       channel.close();
     };
-  }, [setSpaceInfo, setPlacedModules, previewMode]);
+  }, [setSpaceInfo, setPlacedModules]);
 
   // 창 제목 업데이트
   useEffect(() => {
-    document.title = `${previewMode} 미리보기`;
-  }, [previewMode]);
+    document.title = `${localViewMode} 미리보기`;
+  }, [localViewMode]);
+
+  // 뷰 모드 변경 시 렌더 모드 자동 조정
+  useEffect(() => {
+    if (localViewMode === '2D') {
+      setRenderMode('wireframe');
+    } else {
+      setRenderMode('solid');
+    }
+  }, [localViewMode]);
 
   return (
     <div className={styles.popoutContainer}>
+      {/* 헤더 */}
       <div className={styles.popoutHeader}>
-        <span className={styles.popoutLabel}>{previewMode} 미리보기</span>
+        <span className={styles.popoutLabel}>{localViewMode} 미리보기</span>
         <span className={styles.popoutHint}>
           {isReady ? '메인 창과 실시간 동기화' : '연결 중...'}
         </span>
       </div>
+
+      {/* 서브헤더 - 컨트롤 버튼들 */}
+      <div className={styles.toolbar}>
+        {/* 뷰 모드 토글 */}
+        <div className={styles.toolGroup}>
+          <span className={styles.toolLabel}>뷰 모드</span>
+          <div className={styles.buttonGroup}>
+            <button
+              className={`${styles.toolButton} ${localViewMode === '3D' ? styles.active : ''}`}
+              onClick={() => setLocalViewMode('3D')}
+            >
+              3D
+            </button>
+            <button
+              className={`${styles.toolButton} ${localViewMode === '2D' ? styles.active : ''}`}
+              onClick={() => setLocalViewMode('2D')}
+            >
+              2D
+            </button>
+          </div>
+        </div>
+
+        {/* 렌더 모드 */}
+        <div className={styles.toolGroup}>
+          <span className={styles.toolLabel}>렌더</span>
+          <div className={styles.buttonGroup}>
+            <button
+              className={`${styles.toolButton} ${renderMode === 'solid' ? styles.active : ''}`}
+              onClick={() => setRenderMode('solid')}
+            >
+              솔리드
+            </button>
+            <button
+              className={`${styles.toolButton} ${renderMode === 'wireframe' ? styles.active : ''}`}
+              onClick={() => setRenderMode('wireframe')}
+            >
+              와이어
+            </button>
+          </div>
+        </div>
+
+        {/* 구분선 */}
+        <div className={styles.divider} />
+
+        {/* 토글 버튼들 */}
+        <button
+          className={`${styles.toggleButton} ${showDimensions ? styles.active : ''}`}
+          onClick={() => setShowDimensions(!showDimensions)}
+          title="치수 표시"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M21 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v3" />
+            <path d="M21 16v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3" />
+            <path d="M4 12h16" />
+          </svg>
+          <span>치수</span>
+        </button>
+
+        <button
+          className={`${styles.toggleButton} ${showFurniture ? styles.active : ''}`}
+          onClick={() => setShowFurniture(!showFurniture)}
+          title="가구 표시"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <path d="M3 9h18" />
+            <path d="M9 21V9" />
+          </svg>
+          <span>가구</span>
+        </button>
+
+        <button
+          className={`${styles.toggleButton} ${showFrame ? styles.active : ''}`}
+          onClick={() => setShowFrame(!showFrame)}
+          title="프레임 표시"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+          </svg>
+          <span>프레임</span>
+        </button>
+
+        <button
+          className={`${styles.toggleButton} ${showAll ? styles.active : ''}`}
+          onClick={() => setShowAll(!showAll)}
+          title="전체 보기"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 2v20M2 12h20" />
+          </svg>
+          <span>전체</span>
+        </button>
+      </div>
+
+      {/* 뷰어 컨텐츠 */}
       <div className={styles.popoutContent}>
         {isReady ? (
           <Space3DView
             spaceInfo={spaceInfo}
-            viewMode={previewMode}
-            renderMode={previewMode === '3D' ? 'solid' : 'wireframe'}
-            showDimensions={false}
-            showAll={false}
-            showFurniture={true}
-            showFrame={false}
+            viewMode={localViewMode}
+            renderMode={renderMode}
+            showDimensions={showDimensions}
+            showAll={showAll}
+            showFurniture={showFurniture}
+            showFrame={showFrame}
             isEmbedded={false}
             readOnly={true}
-            hideEdges={true}
+            hideEdges={localViewMode === '3D'}
           />
         ) : (
           <div className={styles.loading}>
