@@ -3803,18 +3803,6 @@ const Configurator: React.FC = () => {
               {/* 미리보기 뷰어 - 2D/3D 모드 전환 */}
               <PreviewViewer />
 
-              {/* 탭 헤더 */}
-              <div className={styles.rightPanelHeader}>
-                <div className={styles.rightPanelTabs}>
-                  <div className={styles.tabGroup}>
-                    <button
-                      className={`${styles.rightPanelTab} ${styles.active}`}
-                    >
-                      배치 속성
-                    </button>
-                  </div>
-                </div>
-              </div>
               {/* 패널 컨텐츠 */}
               <div className={styles.rightPanelContent}>
                 {renderRightPanelContent()}
