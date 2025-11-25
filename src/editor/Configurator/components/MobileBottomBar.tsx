@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './MobileBottomBar.module.css';
 
-export type MobileTab = 'modules' | 'material' | 'settings' | 'viewer';
+export type MobileTab = 'modules' | 'material' | 'column' | 'others';
 
 interface MobileBottomBarProps {
   activeTab: MobileTab | null;
@@ -10,13 +10,13 @@ interface MobileBottomBarProps {
 
 /**
  * 모바일용 하단 탭바 컴포넌트
- * 모듈 추가, 재질, 설정, 보기 탭 제공
+ * 모듈, 재질, 기둥, 기타 탭 제공
  */
 const MobileBottomBar: React.FC<MobileBottomBarProps> = ({ activeTab, onTabChange }) => {
   const tabs: { id: MobileTab; label: string; icon: React.ReactNode }[] = [
     {
       id: 'modules',
-      label: '모듈 추가',
+      label: '모듈',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
           <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -37,29 +37,23 @@ const MobileBottomBar: React.FC<MobileBottomBarProps> = ({ activeTab, onTabChang
       ),
     },
     {
-      id: 'settings',
-      label: '설정',
+      id: 'column',
+      label: '기둥',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2" />
-          <path d="M12 20v2" />
-          <path d="M4.93 4.93l1.41 1.41" />
-          <path d="M17.66 17.66l1.41 1.41" />
-          <path d="M2 12h2" />
-          <path d="M20 12h2" />
-          <path d="M6.34 17.66l-1.41 1.41" />
-          <path d="M19.07 4.93l-1.41 1.41" />
+          <rect x="4" y="2" width="6" height="20" rx="1" />
+          <rect x="14" y="2" width="6" height="20" rx="1" />
         </svg>
       ),
     },
     {
-      id: 'viewer',
-      label: '보기',
+      id: 'others',
+      label: '기타',
       icon: (
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <circle cx="12" cy="12" r="3" />
-          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z" />
+          <circle cx="5" cy="12" r="2" />
+          <circle cx="12" cy="12" r="2" />
+          <circle cx="19" cy="12" r="2" />
         </svg>
       ),
     },

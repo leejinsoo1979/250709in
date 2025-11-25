@@ -58,8 +58,22 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ activeTab, isOpen }) => {
         );
     }
 
-    // 'settings' 탭일 때 공간 설정만 표시
-    if (activeTab === 'settings') {
+    // 'column' 탭일 때 기둥 추가/관리 표시
+    if (activeTab === 'column') {
+        return (
+            <div className={styles.panelContainer}>
+                <div className={styles.panelContent}>
+                    <div className={styles.sectionTitle}>기둥 추가</div>
+                    <div style={{ padding: '16px', textAlign: 'center', color: 'var(--theme-text-secondary)' }}>
+                        기둥을 추가하려면 뷰어에서 원하는 위치를 탭하세요
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    // 'others' 탭일 때 공간 설정 등 기타 옵션 표시
+    if (activeTab === 'others') {
         return (
             <div className={styles.panelContainer}>
                 <div className={styles.panelContent}>

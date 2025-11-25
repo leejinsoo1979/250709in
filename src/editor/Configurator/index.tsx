@@ -3669,7 +3669,7 @@ const Configurator: React.FC = () => {
             left: 0,
             right: 0,
             top: 0,
-            bottom: (activeMobileTab === 'modules' || activeMobileTab === 'settings') ? '35%' : '70px', /* 패널 열림: 화면 65% 뷰어, 35% 패널 */
+            bottom: (activeMobileTab === 'modules' || activeMobileTab === 'column' || activeMobileTab === 'others') ? '35%' : '70px', /* 패널 열림: 화면 65% 뷰어, 35% 패널 */
             transition: 'bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
             padding: '0 40px', /* 좌우 치수 및 가이드가 잘리지 않도록 여백 확보 */
           } : {
@@ -3982,13 +3982,13 @@ const Configurator: React.FC = () => {
             onTabChange={handleMobileTabChange}
           />
 
-          {/* 모듈 패널 (카러셀 + 공간 설정) 또는 설정 패널 */}
+          {/* 모듈/기둥/기타 패널 */}
           <MobilePanel
             activeTab={activeMobileTab}
-            isOpen={activeMobileTab === 'modules' || activeMobileTab === 'settings'}
+            isOpen={activeMobileTab === 'modules' || activeMobileTab === 'column' || activeMobileTab === 'others'}
           />
 
-          {/* 바텀시트 - 재질 (기존 유지) */}
+          {/* 바텀시트 - 재질 */}
           <MobileBottomSheet
             isOpen={mobileSheetOpen && activeMobileTab === 'material'}
             onClose={() => { setMobileSheetOpen(false); setActiveMobileTab(null); }}
@@ -3997,11 +3997,11 @@ const Configurator: React.FC = () => {
             <MaterialPanel />
           </MobileBottomSheet>
 
-          {/* 바텀시트 - 뷰어 (기존 보기 설정 + 추가 기능) */}
+          {/* 바텀시트 - 기타 설정 (추후 확장용) */}
           <MobileBottomSheet
-            isOpen={mobileSheetOpen && activeMobileTab === 'viewer'}
+            isOpen={mobileSheetOpen && activeMobileTab === 'others'}
             onClose={() => { setMobileSheetOpen(false); setActiveMobileTab(null); }}
-            title="뷰어 설정"
+            title="기타 설정"
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* 도어 토글 */}
