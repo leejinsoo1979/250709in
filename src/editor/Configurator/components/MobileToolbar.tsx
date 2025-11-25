@@ -27,32 +27,7 @@ const MobileToolbar: React.FC<MobileToolbarProps> = ({
 }) => {
   return (
     <div className={styles.toolbar}>
-      {/* 뷰 타입 그룹: 3D 큐브, 그리드 */}
-      <div className={styles.buttonGroup}>
-        <button
-          className={`${styles.iconButton} ${viewMode === '3D' ? styles.active : ''}`}
-          onClick={() => onViewModeChange('3D')}
-          title="3D 뷰"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path d="M12 2L2 7l10 5 10-5-10-5z" />
-            <path d="M2 17l10 5 10-5" />
-            <path d="M2 12l10 5 10-5" />
-          </svg>
-        </button>
-        <button
-          className={`${styles.iconButton} ${viewMode === '2D' ? styles.active : ''}`}
-          onClick={() => onViewModeChange('2D')}
-          title="평면도 뷰"
-        >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-          </svg>
-        </button>
-      </div>
+
 
       {/* 2D/3D 텍스트 토글 */}
       <div className={styles.viewToggle}>

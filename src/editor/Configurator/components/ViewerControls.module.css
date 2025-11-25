@@ -127,12 +127,12 @@
   background: var(--theme-surface);
 }
 
-.checkbox:checked + .checkmark {
+.checkbox:checked+.checkmark {
   background: var(--theme-primary);
   border-color: var(--theme-primary);
 }
 
-.checkbox:checked + .checkmark::after {
+.checkbox:checked+.checkmark::after {
   content: '';
   position: absolute;
   width: 4px;
@@ -449,23 +449,23 @@
     height: 64px;
     min-height: 64px;
   }
-  
+
   .leftControls {
     gap: 28px;
   }
-  
+
   .centerControls {
     gap: 24px;
   }
-  
+
   .rightControls {
     gap: 20px;
   }
-  
+
   .checkboxGroup {
     gap: 24px;
   }
-  
+
   .toggleGroup {
     gap: 12px;
   }
@@ -477,15 +477,15 @@
     padding: 10px 20px;
     height: 56px;
   }
-  
+
   .leftControls {
     gap: 28px;
   }
-  
+
   .centerControls {
     gap: 14px;
   }
-  
+
   .rightControls {
     gap: 20px;
   }
@@ -498,23 +498,23 @@
     height: 56px;
     min-height: 56px;
   }
-  
+
   .leftControls {
     gap: 20px;
   }
-  
+
   .centerControls {
     gap: 20px;
   }
-  
+
   .rightControls {
     gap: 16px;
   }
-  
+
   .checkboxGroup {
     gap: 18px;
   }
-  
+
   .toggleGroup {
     gap: 10px;
   }
@@ -527,25 +527,29 @@
     height: 50px;
     justify-content: space-between;
   }
-  
+
   .leftControls {
     gap: 16px;
-    flex: 0 1 auto; /* 자동 크기 조정 */
-    max-width: 30%; /* 최대 너비 제한 */
+    flex: 0 1 auto;
+    /* 자동 크기 조정 */
+    max-width: 30%;
+    /* 최대 너비 제한 */
   }
-  
+
   .centerControls {
     gap: 10px;
     flex: 0 1 auto;
     max-width: 40%;
   }
-  
+
   .rightControls {
     gap: 12px;
-    flex: 0 1 auto; /* 자동 크기 조정 */
-    max-width: 30%; /* 최대 너비 제한 */
+    flex: 0 1 auto;
+    /* 자동 크기 조정 */
+    max-width: 30%;
+    /* 최대 너비 제한 */
   }
-  
+
   .viewModeButton,
   .viewDirectionButton {
     padding: 6px 12px;
@@ -553,19 +557,19 @@
     min-width: 55px;
     white-space: nowrap;
   }
-  
+
   .viewDirectionButton {
     min-width: 62px;
   }
-  
+
   .checkboxGroup {
     gap: 12px;
   }
-  
+
   .toggleGroup {
     gap: 8px;
   }
-  
+
   .checkboxLabel {
     font-size: 11px;
   }
@@ -579,22 +583,22 @@
     overflow-x: auto;
     flex-wrap: nowrap;
   }
-  
+
   .leftControls {
     gap: 16px;
     min-width: fit-content;
   }
-  
+
   .centerControls {
     gap: 8px;
     min-width: fit-content;
   }
-  
+
   .rightControls {
     gap: 12px;
     min-width: fit-content;
   }
-  
+
   .viewModeButton,
   .viewDirectionButton {
     padding: 5px 12px;
@@ -602,19 +606,19 @@
     height: 32px;
     min-width: 50px;
   }
-  
+
   .viewDirectionButton {
     min-width: 60px;
   }
-  
+
   .checkboxGroup {
     gap: 12px;
   }
-  
+
   .checkboxLabel {
     font-size: 11px;
   }
-  
+
   .toggleLabel {
     font-size: 11px;
   }
@@ -628,22 +632,22 @@
     overflow-x: auto;
     flex-wrap: nowrap;
   }
-  
+
   .leftControls {
     gap: 12px;
     min-width: fit-content;
   }
-  
+
   .centerControls {
     gap: 6px;
     min-width: fit-content;
   }
-  
+
   .rightControls {
     gap: 10px;
     min-width: fit-content;
   }
-  
+
   .viewModeButton,
   .viewDirectionButton {
     padding: 4px 10px;
@@ -651,33 +655,33 @@
     height: 30px;
     min-width: 45px;
   }
-  
+
   .viewDirectionButton {
     min-width: 54px;
   }
-  
+
   .checkboxGroup {
     gap: 10px;
   }
-  
+
   .checkboxLabel {
     font-size: 10px;
   }
-  
+
   .toggleGroup {
     gap: 8px;
   }
-  
+
   .switch {
     width: 36px;
     height: 20px;
   }
-  
+
   .switchHandle {
     width: 16px;
     height: 16px;
   }
-  
+
   .switch.on .switchHandle {
     left: 18px;
   }
@@ -692,7 +696,7 @@
     padding: 8px 12px;
     gap: 8px;
   }
-  
+
   .leftControls,
   .centerControls,
   .rightControls {
@@ -701,19 +705,19 @@
     flex-wrap: wrap;
     gap: 8px;
   }
-  
+
   .leftControls {
     order: 2;
   }
-  
+
   .centerControls {
     order: 1;
   }
-  
+
   .rightControls {
     order: 3;
   }
-  
+
   .viewModeButton,
   .viewDirectionButton {
     padding: 6px 8px;
@@ -722,7 +726,7 @@
     min-width: 40px;
     flex: 1;
   }
-  
+
   .renderModeGroup,
   .viewModeGroup,
   .viewDirectionGroup {
@@ -737,7 +741,7 @@
     height: auto;
     padding: 6px 8px;
   }
-  
+
   .leftControls,
   .centerControls,
   .rightControls {
@@ -793,9 +797,9 @@
 .mobileMainBar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 8px 16px;
   min-height: 48px;
 }
 
@@ -911,6 +915,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

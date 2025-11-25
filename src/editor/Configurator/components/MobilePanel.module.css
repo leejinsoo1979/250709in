@@ -4,15 +4,20 @@
     /* Height of bottom bar */
     left: 0;
     right: 0;
+    top: 60%;
+    /* 뷰어 영역(60%) 아래부터 시작 */
     background: var(--theme-surface);
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
-    padding: 12px 0;
+    border-top-left-radius: 20px;
+    border-top-right-radius: 20px;
+    box-shadow: 0 -8px 30px rgba(15, 23, 42, 0.08);
+    padding: 20px 0 16px;
     z-index: 999;
-    height: 140px;
     overflow-y: auto;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--theme-border);
 }
 
 .panelContent {
@@ -100,4 +105,30 @@
     background: var(--theme-primary);
     color: white;
     border-color: var(--theme-primary);
+}
+
+.categoryTabs {
+    display: flex;
+    padding: 0 16px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid var(--theme-border);
+    gap: 16px;
+}
+
+.categoryTab {
+    padding: 8px 4px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--theme-text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.categoryTab.active {
+    color: var(--theme-primary);
+    border-bottom-color: var(--theme-primary);
+    font-weight: 600;
 }

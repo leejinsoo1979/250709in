@@ -11,6 +11,7 @@ interface MobilePanelProps {
 
 const MobilePanel: React.FC<MobilePanelProps> = ({ activeTab, isOpen }) => {
     const { spaceInfo, setSpaceInfo } = useSpaceConfigStore();
+    const [selectedCategory, setSelectedCategory] = React.useState<'tall' | 'upper' | 'lower'>('tall');
 
     if (!isOpen || !activeTab) return null;
 
@@ -24,11 +25,35 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ activeTab, isOpen }) => {
         setSpaceInfo({ ...spaceInfo, height });
     };
 
-    // 'modules' 탭일 때 모듈 카러셀만 표시
+
+
+    // 'modules' 탭일 때 모듈 카러셀과 카테고리 탭 표시
     if (activeTab === 'modules') {
         return (
             <div className={styles.panelContainer}>
-                <MobileModuleCarousel category="tall" />
+                {/* 모듈 카테고리 탭 */}
+                <div className={styles.categoryTabs}>
+                    <button
+                        className={`${styles.categoryTab} ${selectedCategory === 'tall' ? styles.active : ''}`}
+                        onClick={() => setSelectedCategory('tall')}
+                    >
+                        키큰장
+                    </button>
+                    <button
+                        className={`${styles.categoryTab} ${selectedCategory === 'upper' ? styles.active : ''}`}
+                        onClick={() => setSelectedCategory('upper')}
+                    >
+                        상부장
+                    </button>
+                    <button
+                        className={`${styles.categoryTab} ${selectedCategory === 'lower' ? styles.active : ''}`}
+                        onClick={() => setSelectedCategory('lower')}
+                    >
+                        하부장
+                    </button>
+                </div>
+
+                <MobileModuleCarousel category={selectedCategory} />
             </div>
         );
     }
