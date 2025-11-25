@@ -1,7 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { createPortal } from 'react-dom';
 import { useUIStore } from '@/store/uiStore';
-import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import styles from './MiniPlayer.module.css';
 
 interface MiniPlayerProps {
@@ -10,11 +9,10 @@ interface MiniPlayerProps {
 
 /**
  * 유튜브 스타일 미니 플레이어
+ * 메인 뷰어의 스냅샷을 표시 (WebGL 컨텍스트 충돌 방지)
  * 우측 하단에 플로팅되며 드래그로 이동, 리사이즈 가능
- * 전체화면 지원
  */
 const MiniPlayer: React.FC<MiniPlayerProps> = ({ onClose }) => {
-  const { spaceInfo } = useSpaceConfigStore();
   const { viewMode } = useUIStore();
 
   // 미리보기는 현재 모드의 반대
@@ -22,14 +20,50 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onClose }) => {
 
   // 플레이어 상태
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [position, setPosition] = useState({ x: window.innerWidth - 420, y: window.innerHeight - 320 });
-  const [size, setSize] = useState({ width: 400, height: 300 });
+  const [snapshotUrl, setSnapshotUrl] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(true);
+
+  // 우측 하단에서 여백을 두고 시작
+  const [position, setPosition] = useState({
+    x: Math.max(20, window.innerWidth - 520),
+    y: Math.max(20, window.innerHeight - 400)
+  });
+  const [size, setSize] = useState({ width: 480, height: 360 });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
 
   const playerRef = useRef<HTMLDivElement>(null);
   const dragStartRef = useRef({ x: 0, y: 0, posX: 0, posY: 0 });
   const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
+
+  // 메인 뷰어에서 스냅샷 캡처
+  const captureSnapshot = useCallback(() => {
+    setIsCapturing(true);
+
+    // 메인 뷰어의 캔버스 찾기
+    const mainCanvas = document.querySelector('[data-main-viewer] canvas') as HTMLCanvasElement;
+
+    if (mainCanvas) {
+      try {
+        const dataUrl = mainCanvas.toDataURL('image/png');
+        setSnapshotUrl(dataUrl);
+      } catch (error) {
+        console.error('스냅샷 캡처 실패:', error);
+      }
+    }
+
+    setIsCapturing(false);
+  }, []);
+
+  // 컴포넌트 마운트 시 스냅샷 캡처
+  useEffect(() => {
+    // 약간의 지연 후 캡처 (렌더링 완료 대기)
+    const timer = setTimeout(() => {
+      captureSnapshot();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [captureSnapshot]);
 
   // 드래그 시작
   const handleDragStart = useCallback((e: React.MouseEvent) => {
@@ -111,7 +145,8 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onClose }) => {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isFullscreen]);
 
-  return (
+  // Portal을 사용해서 document.body에 직접 렌더링
+  const miniPlayerContent = (
     <div
       ref={playerRef}
       className={`${styles.miniPlayer} ${isFullscreen ? styles.fullscreen : ''}`}
@@ -127,8 +162,19 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onClose }) => {
         className={styles.header}
         onMouseDown={handleDragStart}
       >
-        <span className={styles.title}>{previewMode} 미리보기</span>
+        <span className={styles.title}>{previewMode} 미리보기 (스냅샷)</span>
         <div className={styles.controls}>
+          {/* 새로고침 버튼 */}
+          <button
+            className={styles.controlButton}
+            onClick={captureSnapshot}
+            title="스냅샷 새로고침"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M23 4v6h-6M1 20v-6h6" />
+              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+            </svg>
+          </button>
           {/* 전체화면 버튼 */}
           <button
             className={styles.controlButton}
@@ -159,20 +205,29 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onClose }) => {
         </div>
       </div>
 
-      {/* 뷰어 컨텐츠 */}
+      {/* 스냅샷 컨텐츠 */}
       <div className={styles.content}>
-        <Space3DView
-          spaceInfo={spaceInfo}
-          viewMode={previewMode}
-          renderMode={previewMode === '3D' ? 'solid' : 'wireframe'}
-          showDimensions={false}
-          showAll={false}
-          showFurniture={true}
-          showFrame={false}
-          isEmbedded={!isFullscreen}
-          readOnly={true}
-          hideEdges={true}
-        />
+        {isCapturing ? (
+          <div className={styles.loadingPlaceholder}>
+            <span>캡처 중...</span>
+          </div>
+        ) : snapshotUrl ? (
+          <img
+            src={snapshotUrl}
+            alt="뷰어 스냅샷"
+            className={styles.snapshotImage}
+          />
+        ) : (
+          <div className={styles.loadingPlaceholder}>
+            <span>스냅샷을 캡처할 수 없습니다</span>
+            <button
+              onClick={captureSnapshot}
+              className={styles.retryButton}
+            >
+              다시 시도
+            </button>
+          </div>
+        )}
       </div>
 
       {/* 리사이즈 핸들 */}
@@ -184,6 +239,9 @@ const MiniPlayer: React.FC<MiniPlayerProps> = ({ onClose }) => {
       )}
     </div>
   );
+
+  // document.body에 Portal로 렌더링
+  return createPortal(miniPlayerContent, document.body);
 };
 
 export default MiniPlayer;

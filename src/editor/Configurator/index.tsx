@@ -3584,6 +3584,7 @@ const Configurator: React.FC = () => {
         {/* 중앙 뷰어 영역 */}
         <div
           className={styles.viewerArea}
+          data-main-viewer="true"
           style={{
             position: 'absolute',
             left: activeSidebarTab ? '304px' : '64px', /* 사이드바 상태에 맞춰 항상 조정 (모바일은 CSS로 override) */
