@@ -1066,6 +1066,40 @@ const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
+      {/* 모바일 서브헤더 - 뷰모드 & 그림자 토글 */}
+      {isMobile && (
+        <div className={styles.mobileSubHeader}>
+          {/* 뷰모드 토글 */}
+          <div className={styles.mobileViewModeToggle}>
+            <button
+              className={`${styles.viewModeButton} ${cameraMode === 'perspective' ? styles.active : ''}`}
+              onClick={() => setCameraMode('perspective')}
+            >
+              <PerspectiveCubeIcon size={18} />
+              <span>원근</span>
+            </button>
+            <button
+              className={`${styles.viewModeButton} ${cameraMode === 'orthographic' ? styles.active : ''}`}
+              onClick={() => setCameraMode('orthographic')}
+            >
+              <OrthographicCubeIcon size={18} />
+              <span>직교</span>
+            </button>
+          </div>
+
+          {/* 그림자 토글 */}
+          <div className={styles.mobileShadowToggle}>
+            <span className={styles.shadowLabel}>그림자</span>
+            <div
+              onClick={() => setShadowEnabled(!shadowEnabled)}
+              className={`${styles.toggleSwitch} ${shadowEnabled ? styles.active : ''}`}
+            >
+              <div className={styles.toggleKnob} />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 저장 상태 표시 */}
       {saveStatus === 'success' && (
         <div className={styles.saveSuccess}>

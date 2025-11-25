@@ -900,3 +900,95 @@
 .mobileMenuButton:hover {
   background-color: var(--theme-surface-hover);
 }
+
+/* 모바일 서브헤더 스타일 */
+.mobileSubHeader {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileSubHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    background: var(--theme-surface);
+    border-top: 1px solid var(--theme-border);
+    gap: 16px;
+  }
+
+  .mobileViewModeToggle {
+    display: flex;
+    gap: 4px;
+    background: var(--theme-background-secondary);
+    border-radius: 8px;
+    padding: 2px;
+  }
+
+  .viewModeButton {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--theme-text-secondary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .viewModeButton.active {
+    background: var(--theme-primary);
+    color: white;
+  }
+
+  .viewModeButton svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .mobileShadowToggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .shadowLabel {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--theme-text-secondary);
+  }
+
+  .toggleSwitch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    background-color: var(--theme-background-secondary);
+    border-radius: 11px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+  }
+
+  .toggleSwitch.active {
+    background-color: var(--theme-primary);
+  }
+
+  .toggleKnob {
+    width: 18px;
+    height: 18px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .toggleSwitch.active .toggleKnob {
+    transform: translateX(18px);
+  }
+}
