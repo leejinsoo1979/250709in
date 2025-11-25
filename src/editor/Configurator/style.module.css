@@ -1297,6 +1297,7 @@
   .mainContent {
     flex-direction: column;
     height: calc(100vh - var(--configurator-header-height, 56px));
+    position: relative;
   }
 
   /* 좌측 사이드바 숨김 - 모바일에서는 하단 탭바 사용 */
@@ -1312,11 +1313,21 @@
   /* 뷰어 전체 화면 - 하단 탭바 공간 확보 */
   .viewerArea {
     position: fixed !important;
-    top: var(--configurator-header-height, 56px);
+    top: var(--configurator-header-height, 56px) !important;
     left: 0 !important;
     right: 0 !important;
     bottom: 70px !important; /* 하단 탭바 높이 */
-    min-height: unset;
+    min-height: unset !important;
+    min-width: unset !important;
+    width: 100% !important;
+    height: auto !important;
+    z-index: 1 !important;
+  }
+
+  /* 뷰어 내부 */
+  .viewer {
+    width: 100% !important;
+    height: 100% !important;
   }
 
   /* 우측 패널 컨테이너 숨김 */

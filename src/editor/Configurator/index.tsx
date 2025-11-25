@@ -3656,7 +3656,7 @@ const Configurator: React.FC = () => {
         <div
           className={styles.viewerArea}
           data-main-viewer="true"
-          style={{
+          style={isMobile ? undefined : {
             position: 'absolute',
             left: activeSidebarTab ? 'var(--sidebar-total-width, 304px)' : 'var(--sidebar-icon-width, 64px)', /* CSS 변수 사용 - 반응형 */
             right: isReadOnly ? '0' : (isRightPanelOpen ? 'var(--right-panel-width, 320px)' : '0'), /* CSS 변수 사용 - 반응형 */
