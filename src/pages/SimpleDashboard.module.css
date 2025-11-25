@@ -3008,3 +3008,445 @@
   width: 14px;
   height: 14px;
 }
+
+/* ===================================
+   모바일 대시보드 UI
+   =================================== */
+
+/* 모바일 대시보드 컨테이너 */
+.mobileDashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100%;
+  background: var(--theme-background);
+  overflow: hidden;
+}
+
+/* 모바일 헤더 */
+.mobileHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--theme-surface);
+  border-bottom: 1px solid var(--theme-border);
+  flex-shrink: 0;
+}
+
+.mobileHeaderLogo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobileHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobileHeaderBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.mobileHeaderBtn:active {
+  background: var(--theme-background-secondary);
+}
+
+.mobileHeaderAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--theme-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.mobileHeaderAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 모바일 메인 컨텐츠 */
+.mobileContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  padding-bottom: 70px;
+}
+
+/* 모바일 타이틀 섹션 */
+.mobileTitleSection {
+  padding: 20px 16px 16px;
+}
+
+.mobileTitle {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--theme-text);
+  margin: 0 0 16px 0;
+}
+
+/* 모바일 프로젝트 생성 버튼 */
+.mobileCreateBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 200px;
+  padding: 12px 24px;
+  background: var(--theme-primary);
+  color: white;
+  border: none;
+  border-radius: 24px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 0 auto;
+}
+
+.mobileCreateBtn:active {
+  transform: scale(0.98);
+  background: var(--theme-primary-hover);
+}
+
+/* 모바일 필터 탭 */
+.mobileFilterTabs {
+  display: flex;
+  gap: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.mobileFilterTabs::-webkit-scrollbar {
+  display: none;
+}
+
+.mobileFilterTab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 16px;
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.mobileFilterTab:active {
+  transform: scale(0.98);
+}
+
+.mobileFilterTab.active {
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+  color: white;
+}
+
+.mobileFilterCount {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+/* 모바일 프로젝트 그리드 */
+.mobileProjectGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 0 16px 20px;
+}
+
+/* 모바일 프로젝트 카드 */
+.mobileProjectCard {
+  background: var(--theme-surface);
+  border: 1px solid var(--theme-border);
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mobileProjectCard:active {
+  transform: scale(0.98);
+}
+
+/* 새 디자인 카드 */
+.mobileNewDesignCard {
+  background: var(--theme-background-secondary);
+  border: 2px dashed var(--theme-border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 180px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mobileNewDesignCard:active {
+  background: var(--theme-border);
+}
+
+.mobileNewDesignIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  margin-bottom: 12px;
+}
+
+.mobileNewDesignText {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+}
+
+/* 프로젝트 카드 썸네일 */
+.mobileCardThumbnail {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: var(--theme-background-secondary);
+  position: relative;
+  overflow: hidden;
+}
+
+.mobileCardThumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mobileCardBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  font-size: 11px;
+  color: white;
+  font-weight: 500;
+}
+
+/* 프로젝트 카드 정보 */
+.mobileCardInfo {
+  padding: 12px;
+}
+
+.mobileCardTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0 0 4px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobileCardDescription {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  margin: 0 0 8px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobileCardMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.mobileCardOwner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mobileCardOwnerAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--theme-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.mobileCardOwnerAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mobileCardDate {
+  font-size: 11px;
+  color: var(--theme-text-muted);
+}
+
+.mobileCardCollaborators {
+  display: flex;
+  align-items: center;
+}
+
+.mobileCollaboratorAvatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--theme-primary);
+  border: 2px solid var(--theme-surface);
+  margin-left: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: white;
+  font-weight: 600;
+}
+
+.mobileCollaboratorAvatar:first-child {
+  margin-left: 0;
+}
+
+.mobileCollaboratorAvatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* 모바일 하단 네비게이션 */
+.mobileBottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: var(--theme-surface);
+  border-top: 1px solid var(--theme-border);
+  padding: 8px 0;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+  z-index: 100;
+}
+
+.mobileNavItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--theme-text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 64px;
+}
+
+.mobileNavItem.active {
+  color: var(--theme-primary);
+}
+
+.mobileNavItem:active {
+  transform: scale(0.95);
+}
+
+.mobileNavIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.mobileNavLabel {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* 모바일 빈 상태 */
+.mobileEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.mobileEmptyIcon {
+  width: 64px;
+  height: 64px;
+  background: var(--theme-background-secondary);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--theme-text-muted);
+  margin-bottom: 16px;
+}
+
+.mobileEmptyTitle {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0 0 8px 0;
+}
+
+.mobileEmptyDescription {
+  font-size: 14px;
+  color: var(--theme-text-secondary);
+  margin: 0;
+}
+
+/* 모바일에서 데스크톱 UI 숨김 */
+@media (max-width: 767px) {
+  .sidebar,
+  .mainContent {
+    display: none !important;
+  }
+}
+
+/* 데스크톱에서 모바일 UI 숨김 */
+@media (min-width: 768px) {
+  .mobileDashboard {
+    display: none !important;
+  }
+}

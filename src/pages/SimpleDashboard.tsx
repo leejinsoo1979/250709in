@@ -39,6 +39,7 @@ import RenameModal from '../components/common/RenameModal';
 import CreditErrorModal from '@/components/common/CreditErrorModal';
 import { PopupManager } from '@/components/PopupManager';
 import { Chatbot } from '@/components/Chatbot';
+import { useResponsive } from '@/hooks/useResponsive';
 // import { generateProjectThumbnail } from '../utils/thumbnailGenerator';
 import styles from './SimpleDashboard.module.css';
 
@@ -67,6 +68,10 @@ const SimpleDashboard: React.FC = () => {
   const location = useLocation();
   const { user, loading } = useAuth();
   const { isAdmin } = useAdmin(user);
+  const { isMobile } = useResponsive();
+
+  // 모바일 필터 상태
+  const [mobileFilter, setMobileFilter] = useState<'owned' | 'shared' | 'bookmarked'>('owned');
 
   console.log('🔐 SimpleDashboard:', { user: user?.email, isAdmin });
 
@@ -125,6 +130,9 @@ const SimpleDashboard: React.FC = () => {
   // 프로필 팝업 상태
   const [isProfilePopupOpen, setIsProfilePopupOpen] = useState(false);
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
+
+  // 알림 센터 상태
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   // 크레딧 에러 모달 상태
   const [creditError, setCreditError] = useState({
@@ -2866,6 +2874,11 @@ const SimpleDashboard: React.FC = () => {
     setNewProjectName('');
   };
 
+  // 프로젝트 클릭 처리 (모바일용)
+  const handleProjectClick = (projectId: string) => {
+    navigate(`/configurator?projectId=${projectId}`);
+  };
+
   // 프로젝트 생성 처리
   const handleCreateProjectSubmit = async () => {
     if (!newProjectName.trim()) return;
@@ -3081,6 +3094,273 @@ const SimpleDashboard: React.FC = () => {
   // 로딩이 완료되었지만 사용자가 없는 경우
   if (!user) {
     return null;
+  }
+
+  // 모바일에서 필터링된 프로젝트 목록
+  const getMobileFilteredProjects = () => {
+    switch (mobileFilter) {
+      case 'owned':
+        return firebaseProjects;
+      case 'shared':
+        return sharedWithMeProjects;
+      case 'bookmarked':
+        return firebaseProjects.filter(p => bookmarkedProjects.has(p.id));
+      default:
+        return firebaseProjects;
+    }
+  };
+
+  // 모바일 날짜 포맷팅
+  const formatMobileDate = (date: Date | Timestamp | string | undefined) => {
+    if (!date) return '';
+    const d = date instanceof Timestamp ? date.toDate() : new Date(date);
+    const now = new Date();
+    const diff = now.getTime() - d.getTime();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days === 0) return '오늘';
+    if (days === 1) return '어제';
+    if (days < 7) return `${days}일 전`;
+    return d.toLocaleDateString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit' });
+  };
+
+  // 모바일 대시보드 렌더링
+  const renderMobileDashboard = () => {
+    const filteredProjects = getMobileFilteredProjects();
+
+    return (
+      <div className={styles.mobileDashboard}>
+        {/* 모바일 헤더 */}
+        <header className={styles.mobileHeader}>
+          <div className={styles.mobileHeaderLogo}>
+            <Logo size="small" />
+          </div>
+          <div className={styles.mobileHeaderActions}>
+            <button className={styles.mobileHeaderBtn}>
+              <SearchIcon size={20} />
+            </button>
+            <button
+              className={styles.mobileHeaderBtn}
+              onClick={() => setIsNotificationOpen(true)}
+            >
+              <BellIcon size={20} />
+              <NotificationBadge />
+            </button>
+            <div
+              className={styles.mobileHeaderAvatar}
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setProfilePopupPosition({ top: rect.bottom + 8, right: window.innerWidth - rect.right });
+                setIsProfilePopupOpen(true);
+              }}
+            >
+              {user?.photoURL ? (
+                <img src={user.photoURL} alt="프로필" referrerPolicy="no-referrer" />
+              ) : (
+                <UserIcon size={16} />
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* 모바일 메인 컨텐츠 */}
+        <main className={styles.mobileContent}>
+          {/* 타이틀 섹션 */}
+          <div className={styles.mobileTitleSection}>
+            <h1 className={styles.mobileTitle}>전체 프로젝트</h1>
+            <button className={styles.mobileCreateBtn} onClick={handleCreateProject}>
+              <PlusIcon size={18} />
+              Create Project
+            </button>
+          </div>
+
+          {/* 필터 탭 */}
+          <div className={styles.mobileFilterTabs}>
+            <button
+              className={`${styles.mobileFilterTab} ${mobileFilter === 'owned' ? styles.active : ''}`}
+              onClick={() => setMobileFilter('owned')}
+            >
+              참여한 프로젝트
+              <span className={styles.mobileFilterCount}>({firebaseProjects.length})</span>
+            </button>
+            <button
+              className={`${styles.mobileFilterTab} ${mobileFilter === 'shared' ? styles.active : ''}`}
+              onClick={() => setMobileFilter('shared')}
+            >
+              공유된 프로젝트
+              <span className={styles.mobileFilterCount}>({sharedWithMeProjects.length})</span>
+            </button>
+            <button
+              className={`${styles.mobileFilterTab} ${mobileFilter === 'bookmarked' ? styles.active : ''}`}
+              onClick={() => setMobileFilter('bookmarked')}
+            >
+              저장된 프로젝트
+            </button>
+          </div>
+
+          {/* 프로젝트 그리드 */}
+          <div className={styles.mobileProjectGrid}>
+            {/* 새 디자인 카드 */}
+            <div className={styles.mobileNewDesignCard} onClick={handleCreateProject}>
+              <div className={styles.mobileNewDesignIcon}>
+                <PlusIcon size={24} />
+              </div>
+              <span className={styles.mobileNewDesignText}>디자인 방법</span>
+            </div>
+
+            {/* 프로젝트 카드들 */}
+            {filteredProjects.map((project) => (
+              <div
+                key={project.id}
+                className={styles.mobileProjectCard}
+                onClick={() => handleProjectClick(project.id)}
+              >
+                <div className={styles.mobileCardThumbnail}>
+                  {project.thumbnailUrl ? (
+                    <ThumbnailImage
+                      src={project.thumbnailUrl}
+                      alt={project.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      background: 'linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <FolderIcon size={32} />
+                    </div>
+                  )}
+                  {project.spaceInfo && (
+                    <div className={styles.mobileCardBadge}>
+                      {project.spaceInfo.width} × {project.spaceInfo.height} × {project.spaceInfo.depth}mm
+                    </div>
+                  )}
+                </div>
+                <div className={styles.mobileCardInfo}>
+                  <h3 className={styles.mobileCardTitle}>{project.name}</h3>
+                  <p className={styles.mobileCardDescription}>
+                    {project.spaceInfo?.description || '가구 배치'}
+                  </p>
+                  <div className={styles.mobileCardMeta}>
+                    <div className={styles.mobileCardOwner}>
+                      <div className={styles.mobileCardOwnerAvatar}>
+                        {user?.photoURL ? (
+                          <img src={user.photoURL} alt="" referrerPolicy="no-referrer" />
+                        ) : (
+                          <UserIcon size={12} />
+                        )}
+                      </div>
+                      <span className={styles.mobileCardDate}>
+                        {formatMobileDate(project.updatedAt)}
+                      </span>
+                    </div>
+                    {projectCollaborators[project.id]?.length > 0 && (
+                      <div className={styles.mobileCardCollaborators}>
+                        {projectCollaborators[project.id].slice(0, 3).map((collab, idx) => (
+                          <div key={idx} className={styles.mobileCollaboratorAvatar}>
+                            {collab.photoURL ? (
+                              <img src={collab.photoURL} alt="" referrerPolicy="no-referrer" />
+                            ) : (
+                              collab.displayName?.charAt(0) || collab.email?.charAt(0) || '?'
+                            )}
+                          </div>
+                        ))}
+                        {projectCollaborators[project.id].length > 3 && (
+                          <div className={styles.mobileCollaboratorAvatar}>
+                            +{projectCollaborators[project.id].length - 3}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* 빈 상태 */}
+          {filteredProjects.length === 0 && (
+            <div className={styles.mobileEmptyState}>
+              <div className={styles.mobileEmptyIcon}>
+                <FolderIcon size={32} />
+              </div>
+              <h3 className={styles.mobileEmptyTitle}>프로젝트가 없습니다</h3>
+              <p className={styles.mobileEmptyDescription}>
+                새 프로젝트를 만들어 시작하세요
+              </p>
+            </div>
+          )}
+        </main>
+
+        {/* 모바일 하단 네비게이션 */}
+        <nav className={styles.mobileBottomNav}>
+          <button
+            className={`${styles.mobileNavItem} ${activeMenu === 'all' ? styles.active : ''}`}
+            onClick={() => {
+              setActiveMenu('all');
+              setMobileFilter('owned');
+            }}
+          >
+            <div className={styles.mobileNavIcon}>
+              <HomeIcon size={22} />
+            </div>
+            <span className={styles.mobileNavLabel}>홈스토</span>
+          </button>
+          <button
+            className={`${styles.mobileNavItem} ${activeMenu === 'shared-with-me' ? styles.active : ''}`}
+            onClick={() => {
+              setActiveMenu('shared-with-me');
+              setMobileFilter('shared');
+            }}
+          >
+            <div className={styles.mobileNavIcon}>
+              <UsersIcon size={22} />
+            </div>
+            <span className={styles.mobileNavLabel}>공유정보</span>
+          </button>
+          <button
+            className={`${styles.mobileNavItem} ${activeMenu === 'bookmarks' ? styles.active : ''}`}
+            onClick={() => {
+              setActiveMenu('bookmarks');
+              setMobileFilter('bookmarked');
+            }}
+          >
+            <div className={styles.mobileNavIcon}>
+              <StarIcon size={22} />
+            </div>
+            <span className={styles.mobileNavLabel}>북마크</span>
+          </button>
+          <button
+            className={`${styles.mobileNavItem} ${activeMenu === 'profile' ? styles.active : ''}`}
+            onClick={() => setActiveMenu('profile')}
+          >
+            <div className={styles.mobileNavIcon}>
+              <UserIcon size={22} />
+            </div>
+            <span className={styles.mobileNavLabel}>소통력</span>
+          </button>
+        </nav>
+
+        {/* 모달들 */}
+        <NotificationCenter
+          isOpen={isNotificationOpen}
+          onClose={() => setIsNotificationOpen(false)}
+        />
+        <ProfilePopup
+          isOpen={isProfilePopupOpen}
+          onClose={() => setIsProfilePopupOpen(false)}
+          position={profilePopupPosition}
+        />
+      </div>
+    );
+  };
+
+  // 모바일일 경우 모바일 대시보드 렌더링
+  if (isMobile) {
+    return renderMobileDashboard();
   }
 
   return (
