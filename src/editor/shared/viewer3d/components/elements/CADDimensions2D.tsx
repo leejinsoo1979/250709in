@@ -5,6 +5,7 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
 import { calculateSpaceIndexing, calculateInternalSpace } from '@/editor/shared/utils/indexing';
+import { calculateBaseFrameHeight } from '@/editor/shared/viewer3d/utils/geometry';
 import { getModuleById } from '@/data/modules';
 import type { PlacedModule } from '@/editor/shared/furniture/types';
 import type { SectionConfig } from '@/data/modules/shelving';
@@ -146,7 +147,8 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   // 프레임 높이
   const topFrameHeightMm = spaceInfo.frameSize?.top || 0;
   const topFrameHeight = mmToThreeUnits(topFrameHeightMm);
-  const baseFrameHeightMm = spaceInfo.baseConfig?.height || 0;
+  // 받침대 높이: floor 타입일 때만 높이 반환, stand 타입은 0
+  const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
   const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
   const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
 
