@@ -149,7 +149,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
   // UIStore에서 카메라 및 그림자 설정 가져오기
-  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode } = useUIStore();
+  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, doorsOpen, toggleDoors } = useUIStore();
   const { colors } = useThemeColors();
   const { theme } = useTheme();
   const profileButtonRef = useRef<HTMLDivElement>(null);
@@ -1104,6 +1104,17 @@ const Header: React.FC<HeaderProps> = ({
               </button>
             </div>
           )}
+
+          {/* 도어 토글 */}
+          <div className={styles.mobileShadowToggle}>
+            <span className={styles.shadowLabel}>도어</span>
+            <div
+              onClick={toggleDoors}
+              className={`${styles.toggleSwitch} ${doorsOpen ? styles.active : ''}`}
+            >
+              <div className={styles.toggleKnob} />
+            </div>
+          </div>
 
           {/* 그림자 토글 */}
           <div className={styles.mobileShadowToggle}>
