@@ -149,7 +149,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
   // UIStore에서 카메라 및 그림자 설정 가져오기
-  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode } = useUIStore();
+  const { cameraMode, setCameraMode, shadowEnabled, setShadowEnabled, viewMode, setViewMode, view2DDirection, setView2DDirection } = useUIStore();
   const { colors } = useThemeColors();
   const { theme } = useTheme();
   const profileButtonRef = useRef<HTMLDivElement>(null);
@@ -1084,6 +1084,36 @@ const Header: React.FC<HeaderProps> = ({
               3D
             </button>
           </div>
+
+          {/* 2D 시점 선택 (2D에서만 표시) */}
+          {viewMode === '2D' && (
+            <div className={styles.mobileViewModeToggle}>
+              <button
+                className={`${styles.viewModeButton} ${view2DDirection === 'front' ? styles.active : ''}`}
+                onClick={() => setView2DDirection('front')}
+              >
+                정면
+              </button>
+              <button
+                className={`${styles.viewModeButton} ${view2DDirection === 'top' ? styles.active : ''}`}
+                onClick={() => setView2DDirection('top')}
+              >
+                상부
+              </button>
+              <button
+                className={`${styles.viewModeButton} ${view2DDirection === 'left' ? styles.active : ''}`}
+                onClick={() => setView2DDirection('left')}
+              >
+                좌측
+              </button>
+              <button
+                className={`${styles.viewModeButton} ${view2DDirection === 'right' ? styles.active : ''}`}
+                onClick={() => setView2DDirection('right')}
+              >
+                우측
+              </button>
+            </div>
+          )}
 
           {/* 카메라 모드 토글 (3D에서만 표시) */}
           {viewMode === '3D' && (
