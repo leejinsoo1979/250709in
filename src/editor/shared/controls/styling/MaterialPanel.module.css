@@ -484,11 +484,10 @@
     padding: 8px 12px;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-    gap: 8px;
+    gap: 8px 16px;
   }
 
-  /* 재질 휠 - 왼쪽 상단 */
+  /* 재질 휠 - 왼쪽 */
   .materialWheelContainer {
     grid-column: 1;
     grid-row: 1;
@@ -503,31 +502,35 @@
     height: 120px;
   }
 
-  /* 색상 섹션 - 오른쪽 상단 + 하단 전체 */
+  /* 색상 섹션 - display:contents로 평탄화 */
   .colorSection {
-    grid-column: 2;
-    grid-row: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
+    display: contents;
   }
 
+  /* 색상 타이틀 + 휠을 오른쪽에 배치 */
   .colorSectionTitle {
+    grid-column: 2;
+    grid-row: 1;
     font-size: 11px;
-    margin-bottom: 2px;
+    margin-bottom: 0;
     text-align: center;
+    align-self: start;
+    display: none; /* 타이틀 숨김 */
   }
 
   .colorWheel {
+    grid-column: 2;
+    grid-row: 1;
     width: 120px;
     height: 120px;
+    justify-self: center;
   }
 
-  /* 밝기 슬라이더 - colorSection 내부에서 전체폭 */
+  /* 밝기 슬라이더 - 전체 너비 */
   .opacitySection {
-    width: 100%;
-    margin-top: 8px;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 4px;
     margin-bottom: 6px;
   }
 
@@ -544,9 +547,10 @@
     height: 16px;
   }
 
-  /* HEX 입력 */
+  /* HEX 입력 - 전체 너비 */
   .hexSection {
-    width: 100%;
+    grid-column: 1 / -1;
+    grid-row: 3;
     margin-bottom: 6px;
     gap: 6px;
   }
@@ -566,9 +570,10 @@
     font-size: 11px;
   }
 
-  /* 저장된 색상 */
+  /* 저장된 색상 - 전체 너비 */
   .savedColorsSection {
-    width: 100%;
+    grid-column: 1 / -1;
+    grid-row: 4;
     margin-bottom: 0;
   }
 
@@ -585,14 +590,14 @@
   }
 
   .savedColorsGrid {
-    grid-template-columns: repeat(6, 1fr);
-    gap: 3px;
-    padding: 4px;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 4px;
+    padding: 6px;
   }
 
   .savedColorButton,
   .addColorButton {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
   }
 }
