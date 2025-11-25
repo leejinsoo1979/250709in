@@ -2477,7 +2477,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         <group position={furnitureGroupPosition} rotation={furnitureGroupRotation}>
           <mesh renderOrder={1000}>
             <boxGeometry args={[width * 1.04, height * 1.04, depth * 1.05]} />
-            <meshBasicMaterial color="#00ffd1" transparent opacity={0.32} depthWrite={false} depthTest={false} />
+            <meshBasicMaterial
+              color={selectionHighlightColor}
+              transparent
+              opacity={0.32}
+              depthWrite={false}
+              depthTest={false}
+            />
           </mesh>
         </group>
       )}

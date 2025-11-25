@@ -785,8 +785,11 @@
   border-bottom: 1px solid var(--theme-border);
   display: flex;
   flex-direction: column;
-  position: relative;
-  z-index: 10;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 100 !important; /* 뷰어 위에 표시 */
 }
 
 .mobileMainBar {

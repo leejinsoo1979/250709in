@@ -3409,6 +3409,7 @@ export default React.memo(Room, (prevProps, nextProps) => {
   if (prevProps.showFurniture !== nextProps.showFurniture) return false;
   if (prevProps.isStep2 !== nextProps.isStep2) return false;
   if (prevProps.activeZone !== nextProps.activeZone) return false;
+  if (prevProps.ghostHighlightSlotIndex !== nextProps.ghostHighlightSlotIndex) return false;
 
   // spaceInfo 비교 (크기와 재질만 비교, 기둥 제외)
   const prevSpace = prevProps.spaceInfo;
