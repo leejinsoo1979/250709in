@@ -945,7 +945,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     if (!isEmbedded && isMobile) {
       // 2D 모드 또는 3D 직교 모드일 때 동일한 줌 적용
       if (viewMode === '2D' || (viewMode === '3D' && cameraMode === 'orthographic')) {
-        return 0.3; // 2D와 3D 직교 동일 크기
+        return 0.35; // 2D와 3D 직교 동일 크기
       }
     }
     return undefined;
