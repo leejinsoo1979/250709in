@@ -465,7 +465,7 @@
   color: var(--theme-primary);
 }
 
-/* 반응형 디자인 - 모바일 가로 레이아웃 */
+/* 반응형 디자인 - 모바일 레이아웃 */
 @media (max-width: 768px) {
   .container {
     height: auto;
@@ -482,43 +482,53 @@
 
   .tabContent {
     padding: 8px 12px;
-    display: flex;
-    flex-direction: row;
-    gap: 12px;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 8px;
   }
 
-  /* 재질 휠 - 왼쪽 */
+  /* 재질 휠 - 왼쪽 상단 */
   .materialWheelContainer {
-    flex: 0 0 auto;
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
     margin-bottom: 0;
   }
 
   .materialWheel {
-    width: 110px;
-    height: 110px;
+    width: 120px;
+    height: 120px;
   }
 
-  /* 색상 섹션 - 오른쪽 */
+  /* 색상 섹션 - 오른쪽 상단 + 하단 전체 */
   .colorSection {
-    flex: 1;
-    gap: 6px;
-    min-width: 0;
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
   }
 
   .colorSectionTitle {
     font-size: 11px;
     margin-bottom: 2px;
+    text-align: center;
   }
 
   .colorWheel {
-    width: 110px;
-    height: 110px;
+    width: 120px;
+    height: 120px;
   }
 
-  /* 밝기 슬라이더 */
+  /* 밝기 슬라이더 - colorSection 내부에서 전체폭 */
   .opacitySection {
-    margin-bottom: 8px;
+    width: 100%;
+    margin-top: 8px;
+    margin-bottom: 6px;
   }
 
   .opacityHeader {
@@ -536,26 +546,29 @@
 
   /* HEX 입력 */
   .hexSection {
-    margin-bottom: 8px;
+    width: 100%;
+    margin-bottom: 6px;
     gap: 6px;
   }
 
   .hexPreview {
-    width: 32px;
-    height: 28px;
+    width: 28px;
+    height: 24px;
   }
 
   .hexInput {
-    padding: 8px 8px 8px 22px;
-    font-size: 12px;
+    padding: 6px 6px 6px 20px;
+    font-size: 11px;
   }
 
   .hexPrefix {
-    left: 8px;
+    left: 6px;
+    font-size: 11px;
   }
 
-  /* 저장된 색상 - 더 컴팩트하게 */
+  /* 저장된 색상 */
   .savedColorsSection {
+    width: 100%;
     margin-bottom: 0;
   }
 
@@ -564,22 +577,22 @@
   }
 
   .savedColorsLabel {
-    font-size: 11px;
+    font-size: 10px;
   }
 
   .savedColorsHint {
-    display: none; /* 모바일에서 힌트 숨김 */
+    display: none;
   }
 
   .savedColorsGrid {
     grid-template-columns: repeat(6, 1fr);
-    gap: 4px;
-    padding: 6px;
+    gap: 3px;
+    padding: 4px;
   }
 
   .savedColorButton,
   .addColorButton {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
   }
 }
