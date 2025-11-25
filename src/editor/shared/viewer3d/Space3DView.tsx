@@ -943,7 +943,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
   const mobileViewerZoomMultiplier = useMemo(() => {
     if (!isEmbedded && isMobile && viewMode === '2D') {
-      return 0.58;
+      return 0.19; // 0.58 / 3 = 약 0.19 (3배 줌아웃)
     }
     return undefined;
   }, [isEmbedded, isMobile, viewMode]);
