@@ -752,7 +752,7 @@
     height: 40px;
     padding: 4px 8px;
   }
-  
+
   .viewModeButton,
   .viewDirectionButton {
     padding: 3px 8px;
@@ -760,18 +760,195 @@
     height: 26px;
     min-width: 40px;
   }
-  
+
   .switch {
     width: 32px;
     height: 16px;
   }
-  
+
   .switchHandle {
     width: 12px;
     height: 12px;
   }
-  
+
   .switch.on .switchHandle {
     left: 18px;
   }
-} 
+}
+
+/* ================================
+   모바일 전용 ViewerControls UI
+   ================================ */
+
+.mobileViewerControls {
+  background: var(--theme-surface);
+  border-bottom: 1px solid var(--theme-border);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 10;
+}
+
+.mobileMainBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  min-height: 48px;
+}
+
+.mobileButtonGroup {
+  display: flex;
+  border: 1px solid var(--theme-primary);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.mobileButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 36px;
+  padding: 0 12px;
+  border: none;
+  background: var(--theme-surface);
+  color: var(--theme-primary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobileButton:not(:last-child) {
+  border-right: 1px solid var(--theme-primary);
+}
+
+.mobileButton.active {
+  background: var(--theme-primary);
+  color: white;
+}
+
+.mobileButton:active {
+  transform: scale(0.95);
+}
+
+.mobileIconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  background: var(--theme-surface);
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobileIconButton.active {
+  background: var(--theme-primary);
+  color: white;
+  border-color: var(--theme-primary);
+}
+
+.mobileIconButton:active {
+  transform: scale(0.95);
+}
+
+/* 2D 뷰 방향 선택 바 */
+.mobileViewDirections {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 12px 10px;
+  background: var(--theme-background-secondary);
+  border-top: 1px solid var(--theme-border);
+}
+
+.mobileDirectionButton {
+  flex: 1;
+  max-width: 60px;
+  height: 28px;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  background: var(--theme-surface);
+  color: var(--theme-text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobileDirectionButton.active {
+  background: var(--theme-primary);
+  color: white;
+  border-color: var(--theme-primary);
+}
+
+.mobileDirectionButton:active {
+  transform: scale(0.95);
+}
+
+/* 더보기 옵션 패널 */
+.mobileOptionsPanel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--theme-surface);
+  border-bottom: 1px solid var(--theme-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.mobileOptionsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  padding: 12px;
+}
+
+.mobileOptionItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  background: var(--theme-surface);
+  color: var(--theme-text-secondary);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mobileOptionItem.active {
+  background: var(--theme-primary-light);
+  color: var(--theme-primary);
+  border-color: var(--theme-primary);
+}
+
+.mobileOptionItem:active {
+  transform: scale(0.95);
+}
+
+.mobileOptionItem span {
+  white-space: nowrap;
+}

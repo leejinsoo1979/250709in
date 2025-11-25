@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BiDoorOpen } from 'react-icons/bi';
-import { Edit3 } from 'lucide-react';
+import { Edit3, Eye, EyeOff, Grid3X3, Ruler, Box, Layers, Sun, Moon, MoreHorizontal } from 'lucide-react';
 import { useUIStore } from '@/store/uiStore';
 import styles from './ViewerControls.module.css';
 import QRCodeGenerator from '@/editor/shared/ar/components/QRCodeGenerator';
@@ -83,6 +83,17 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   
   // QR 코드 생성기 표시 상태
   const [showQRGenerator, setShowQRGenerator] = useState(false);
+
+  // 모바일 상태 감지
+  const [isMobile, setIsMobile] = useState(false);
+  const [showMobileOptions, setShowMobileOptions] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   
   // 컴포넌트 마운트 시 localStorage 캐시 정리 및 초기 동기화
   useEffect(() => {
@@ -137,6 +148,179 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
     onViewDirectionChange(direction); // 기존 콜백도 호출 (호환성)
   };
 
+  // 모바일 UI 렌더링
+  if (isMobile) {
+    return (
+      <div className={styles.mobileViewerControls}>
+        {/* 메인 컨트롤 바 */}
+        <div className={styles.mobileMainBar}>
+          {/* 렌더 모드 (솔리드/와이어프레임) */}
+          <div className={styles.mobileButtonGroup}>
+            <button
+              className={`${styles.mobileButton} ${renderMode === 'solid' ? styles.active : ''}`}
+              onClick={() => onRenderModeChange('solid')}
+            >
+              <Box size={18} />
+            </button>
+            <button
+              className={`${styles.mobileButton} ${renderMode === 'wireframe' ? styles.active : ''}`}
+              onClick={() => onRenderModeChange('wireframe')}
+            >
+              <Grid3X3 size={18} />
+            </button>
+          </div>
+
+          {/* 3D/2D 토글 */}
+          <div className={styles.mobileButtonGroup}>
+            <button
+              className={`${styles.mobileButton} ${viewMode === '3D' ? styles.active : ''}`}
+              onClick={() => onViewModeChange('3D')}
+            >
+              3D
+            </button>
+            <button
+              className={`${styles.mobileButton} ${viewMode === '2D' ? styles.active : ''}`}
+              onClick={() => {
+                onViewModeChange('2D');
+                if (renderMode !== 'wireframe') onRenderModeChange('wireframe');
+              }}
+            >
+              2D
+            </button>
+          </div>
+
+          {/* 도어 설치 */}
+          {onDoorInstallationToggle && (
+            <button
+              className={`${styles.mobileIconButton} ${hasDoorsInstalled ? styles.active : ''}`}
+              onClick={onDoorInstallationToggle}
+            >
+              <BiDoorOpen size={20} />
+            </button>
+          )}
+
+          {/* 치수 표시 토글 */}
+          <button
+            className={`${styles.mobileIconButton} ${showDimensions ? styles.active : ''}`}
+            onClick={onShowDimensionsToggle}
+          >
+            <Ruler size={18} />
+          </button>
+
+          {/* 더보기 메뉴 */}
+          <button
+            className={`${styles.mobileIconButton} ${showMobileOptions ? styles.active : ''}`}
+            onClick={() => setShowMobileOptions(!showMobileOptions)}
+          >
+            <MoreHorizontal size={20} />
+          </button>
+        </div>
+
+        {/* 2D 모드 뷰 방향 선택 */}
+        {viewMode === '2D' && (
+          <div className={styles.mobileViewDirections}>
+            {[
+              { id: 'all' as ViewDirection, label: '전체' },
+              { id: 'front' as ViewDirection, label: '정면' },
+              { id: 'top' as ViewDirection, label: '평면' },
+              { id: 'left' as ViewDirection, label: '좌측' },
+              { id: 'right' as ViewDirection, label: '우측' }
+            ].map((dir) => (
+              <button
+                key={dir.id}
+                className={`${styles.mobileDirectionButton} ${view2DDirection === dir.id ? styles.active : ''}`}
+                onClick={() => handleViewDirectionChange(dir.id)}
+              >
+                {dir.label}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* 더보기 옵션 패널 */}
+        {showMobileOptions && (
+          <div className={styles.mobileOptionsPanel}>
+            <div className={styles.mobileOptionsGrid}>
+              {/* 컬럼 표시 */}
+              <button
+                className={`${styles.mobileOptionItem} ${showAll ? styles.active : ''}`}
+                onClick={onShowAllToggle}
+              >
+                <Layers size={18} />
+                <span>컬럼</span>
+              </button>
+
+              {/* 치수 텍스트 */}
+              <button
+                className={`${styles.mobileOptionItem} ${showDimensionsText ? styles.active : ''}`}
+                onClick={onShowDimensionsTextToggle}
+              >
+                <Ruler size={18} />
+                <span>치수</span>
+              </button>
+
+              {/* 가구 표시 (2D만) */}
+              {viewMode === '2D' && (
+                <button
+                  className={`${styles.mobileOptionItem} ${showFurniture ? styles.active : ''}`}
+                  onClick={onShowFurnitureToggle}
+                >
+                  {showFurniture ? <Eye size={18} /> : <EyeOff size={18} />}
+                  <span>가구</span>
+                </button>
+              )}
+
+              {/* 그리드 (2D만) */}
+              {viewMode === '2D' && (
+                <button
+                  className={`${styles.mobileOptionItem} ${showGuides ? styles.active : ''}`}
+                  onClick={onShowGuidesToggle}
+                >
+                  <Grid3X3 size={18} />
+                  <span>그리드</span>
+                </button>
+              )}
+
+              {/* 축 (2D만) */}
+              {viewMode === '2D' && (
+                <button
+                  className={`${styles.mobileOptionItem} ${showAxis ? styles.active : ''}`}
+                  onClick={onShowAxisToggle}
+                >
+                  <span style={{ fontSize: 16, fontWeight: 'bold' }}>+</span>
+                  <span>축</span>
+                </button>
+              )}
+
+              {/* 다크/라이트 모드 (2D만) */}
+              {viewMode === '2D' && (
+                <button
+                  className={`${styles.mobileOptionItem}`}
+                  onClick={toggleView2DTheme}
+                >
+                  {view2DTheme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
+                  <span>{view2DTheme === 'dark' ? '다크' : '라이트'}</span>
+                </button>
+              )}
+
+              {/* 아이콘 (3D만) */}
+              {viewMode === '3D' && (
+                <button
+                  className={`${styles.mobileOptionItem} ${showFurnitureEditHandles ? styles.active : ''}`}
+                  onClick={() => setShowFurnitureEditHandles(!showFurnitureEditHandles)}
+                >
+                  <Edit3 size={18} />
+                  <span>아이콘</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // 데스크탑 UI
   return (
     <div className={styles.viewerControls}>
       {/* 좌측 옵션 토글들 */}
