@@ -1,0 +1,103 @@
+.panelContainer {
+    position: fixed;
+    bottom: 70px;
+    /* Height of bottom bar */
+    left: 0;
+    right: 0;
+    background: var(--theme-surface);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    padding: 12px 0;
+    z-index: 999;
+    height: 140px;
+    overflow-y: auto;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.panelContent {
+    padding: 0 16px;
+}
+
+.sectionTitle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--theme-text);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sectionTitle::before {
+    content: '';
+    display: block;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background-color: var(--theme-primary);
+}
+
+.inputGroup {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.inputWrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--theme-surface);
+    border: 1px solid var(--theme-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.inputLabel {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--theme-text-secondary);
+}
+
+.input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--theme-text);
+    text-align: right;
+    width: 100%;
+}
+
+.inputUnit {
+    font-size: 12px;
+    color: var(--theme-text-secondary);
+}
+
+.typeButtons {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.typeButton {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid var(--theme-border);
+    border-radius: 8px;
+    background: var(--theme-surface);
+    color: var(--theme-text);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.typeButton.active {
+    background: var(--theme-primary);
+    color: white;
+    border-color: var(--theme-primary);
+}
