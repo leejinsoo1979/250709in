@@ -134,23 +134,38 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
   // 내부 공간 계산
   const internalSpace = calculateInternalSpace(spaceInfo);
-  const internalHeight = mmToThreeUnits(internalSpace.height);
+
+  // 띄워서 배치
+  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+  const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
+  const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+
+  // 프레임 높이
+  const topFrameHeightMm = spaceInfo.frameSize?.top || 0;
+  const topFrameHeight = mmToThreeUnits(topFrameHeightMm);
+
+  // 바닥레일/받침대 높이 계산
+  // - floor 타입: 받침대 높이 (calculateBaseFrameHeight 사용)
+  // - stand 타입: 바닥레일 높이 (baseConfig.height 직접 사용)
+  const isStandType = spaceInfo.baseConfig?.type === 'stand';
+  const railOrBaseHeightMm = isStandType
+    ? (spaceInfo.baseConfig?.height || 0)
+    : calculateBaseFrameHeight(spaceInfo);
+  const railOrBaseHeight = mmToThreeUnits(railOrBaseHeightMm);
+
+  // stand 타입에서 internalSpace.height는 바닥레일 높이를 빼지 않았으므로 조정
+  const adjustedInternalHeightMm = isStandType
+    ? internalSpace.height - railOrBaseHeightMm
+    : internalSpace.height;
+  const internalHeight = mmToThreeUnits(adjustedInternalHeightMm);
 
   // 내부 공간을 상부/하부 섹션으로 분할 (50%씩)
   const upperSectionHeight = internalHeight / 2;
   const lowerSectionHeight = internalHeight / 2;
 
-  // 띄워서 배치
-  const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
-  const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
-
-  // 프레임 높이
-  const topFrameHeightMm = spaceInfo.frameSize?.top || 0;
-  const topFrameHeight = mmToThreeUnits(topFrameHeightMm);
-  // 받침대 높이: floor 타입일 때만 높이 반환, stand 타입은 0
-  const baseFrameHeightMm = calculateBaseFrameHeight(spaceInfo);
-  const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
-  const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
+  // 하위 호환성을 위한 변수 (기존 코드에서 사용)
+  const baseFrameHeightMm = railOrBaseHeightMm;
+  const baseFrameHeight = railOrBaseHeight;
 
   // 단내림 설정
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
