@@ -407,11 +407,12 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
   const baseDistanceMultiplier = useMemo(() => {
     if (isEmbedded) return 5.0;
-    if (isMobile && viewMode === '2D') {
-      return 3.0;
+    // 모바일에서는 2D/3D 모두 동일한 배율 사용 (1.5배)
+    if (isMobile) {
+      return 1.5;
     }
     return 2.0;
-  }, [isEmbedded, isMobile, viewMode]);
+  }, [isEmbedded, isMobile]);
 
   // 카메라 타겟 Y 좌표 계산 (모바일에서는 화면을 위로 올리기 위해 타겟을 낮춤)
   const targetY = useMemo(() => {
