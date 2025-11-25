@@ -29,6 +29,7 @@ import BackPanelBetweenCabinets from './components/elements/furniture/BackPanelB
 import UpperCabinetIndirectLight from './components/elements/furniture/UpperCabinetIndirectLight';
 import InternalDimensionDisplay from './components/elements/InternalDimensionDisplay';
 import ViewerToolbar from './components/ViewerToolbar';
+import SlotSelector from '@/editor/Configurator/components/SlotSelector';
 import { useFurniturePlacement } from './components/elements/furniture/hooks/useFurniturePlacement';
 
 
@@ -1204,6 +1205,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
               </svg>
             </button>
+            {/* 좌측면 뷰용 슬롯 선택 버튼 */}
+            <SlotSelector forSplitView={true} splitViewDirection="left" compact={true} />
           </div>
 
           {/* 우측 하단: 우측면 뷰 */}
@@ -1288,6 +1291,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                 <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
               </svg>
             </button>
+            {/* 우측면 뷰용 슬롯 선택 버튼 */}
+            <SlotSelector forSplitView={true} splitViewDirection="right" compact={true} />
           </div>
           </div>
         </Space3DViewProvider>

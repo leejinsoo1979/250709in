@@ -5,29 +5,50 @@ import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useTheme } from '@/contexts/ThemeContext';
 import styles from './SlotSelector.module.css';
 
+interface SlotSelectorProps {
+  /** 4분할 뷰에서 사용할 때 true */
+  forSplitView?: boolean;
+  /** 4분할 뷰에서의 방향 (left 또는 right) */
+  splitViewDirection?: 'left' | 'right';
+  /** 컴팩트 모드 (4분할 뷰용) */
+  compact?: boolean;
+}
+
 /**
  * 측면뷰용 슬롯 선택 컴포넌트
  * 2D 좌측/우측 측면뷰에서만 표시
  * 슬롯 개수만큼 버튼 생성하여 특정 슬롯만 보기 가능
  */
-const SlotSelector: React.FC = () => {
+const SlotSelector: React.FC<SlotSelectorProps> = ({
+  forSplitView = false,
+  splitViewDirection,
+  compact = false
+}) => {
   const { viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex, view2DTheme } = useUIStore();
   const { columnCount, zones } = useDerivedSpaceStore();
   const { theme } = useTheme();
   const { spaceInfo } = useSpaceConfigStore();
 
-  // 측면뷰가 아닐 때 selectedSlotIndex를 null로 리셋
+  // 실제 방향 결정 (4분할 뷰에서는 splitViewDirection 사용)
+  const effectiveDirection = forSplitView ? splitViewDirection : view2DDirection;
+
+  // 측면뷰가 아닐 때 selectedSlotIndex를 null로 리셋 (4분할 뷰가 아닌 경우에만)
   React.useEffect(() => {
-    if (viewMode !== '2D' || (view2DDirection !== 'left' && view2DDirection !== 'right')) {
+    if (!forSplitView && (viewMode !== '2D' || (view2DDirection !== 'left' && view2DDirection !== 'right'))) {
       // 측면뷰가 아닐 때 슬롯 선택 해제
       if (selectedSlotIndex !== null) {
         setSelectedSlotIndex(null);
       }
     }
-  }, [viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex]);
+  }, [viewMode, view2DDirection, selectedSlotIndex, setSelectedSlotIndex, forSplitView]);
 
-  // 2D 모드이고 좌측/우측 측면뷰일 때만 표시
-  if (viewMode !== '2D' || (view2DDirection !== 'left' && view2DDirection !== 'right')) {
+  // 4분할 뷰가 아닌 경우: 2D 모드이고 좌측/우측 측면뷰일 때만 표시
+  if (!forSplitView && (viewMode !== '2D' || (view2DDirection !== 'left' && view2DDirection !== 'right'))) {
+    return null;
+  }
+
+  // 4분할 뷰인 경우: splitViewDirection이 left 또는 right인지 확인
+  if (forSplitView && splitViewDirection !== 'left' && splitViewDirection !== 'right') {
     return null;
   }
 
@@ -126,15 +147,29 @@ const SlotSelector: React.FC = () => {
 
   const finalSlotButtons = slotButtons;
 
+  // 컴팩트 모드용 컨테이너 스타일
+  const compactContainerStyle: React.CSSProperties = compact ? {
+    backgroundColor: 'rgba(18, 18, 18, 0.85)',
+    padding: '4px 8px',
+    borderRadius: '6px',
+    boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3)',
+    backdropFilter: 'blur(8px)',
+    position: 'absolute',
+    bottom: '8px',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 100
+  } : containerStyle;
+
   return (
-    <div className={styles.slotSelector} style={containerStyle}>
-      <div className={styles.slotButtons}>
+    <div className={compact ? undefined : styles.slotSelector} style={compactContainerStyle}>
+      <div className={compact ? undefined : styles.slotButtons} style={compact ? { display: 'flex', gap: '3px', alignItems: 'center' } : undefined}>
         {finalSlotButtons.map((slot) => {
           const isActive = selectedSlotIndex === slot.actualIndex;
           const isDroppedZone = slot.zone === 'dropped';
 
           // 버튼 스타일 (다크/라이트 테마에 따른 색상)
-          const buttonStyle: React.CSSProperties = isActive
+          const baseButtonStyle: React.CSSProperties = isActive
             ? {
                 backgroundColor: themeColor,
                 borderColor: themeColor,
@@ -152,13 +187,35 @@ const SlotSelector: React.FC = () => {
                 color: isDark ? '#e0e0e0' : '#333',
               };
 
+          // 컴팩트 모드용 버튼 스타일
+          const buttonStyle: React.CSSProperties = compact
+            ? {
+                ...baseButtonStyle,
+                minWidth: '24px',
+                height: '22px',
+                padding: '0 6px',
+                border: '1px solid',
+                borderRadius: '4px',
+                fontSize: '11px',
+                fontWeight: isActive ? 600 : 500,
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.15s ease'
+              }
+            : baseButtonStyle;
+
           return (
             <button
               key={slot.actualIndex}
-              className={`${styles.slotButton} ${isActive ? styles.active : ''}`}
-              onClick={() => setSelectedSlotIndex(slot.actualIndex)}
+              className={compact ? undefined : `${styles.slotButton} ${isActive ? styles.active : ''}`}
+              onClick={(e) => {
+                e.stopPropagation(); // 4분할 뷰에서 클릭 이벤트 버블링 방지
+                setSelectedSlotIndex(slot.actualIndex);
+              }}
               style={buttonStyle}
-              title={isDroppedZone ? '단내림 영역' : undefined}
+              title={isDroppedZone ? '단내림 영역' : `슬롯 ${slot.displayIndex}`}
             >
               {slot.displayIndex}
             </button>
