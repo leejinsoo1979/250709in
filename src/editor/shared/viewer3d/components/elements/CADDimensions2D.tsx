@@ -146,16 +146,20 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
   // 바닥레일/받침대 높이 계산
   // - floor 타입: 받침대 높이 (calculateBaseFrameHeight 사용)
-  // - stand 타입: 바닥레일 높이 (baseConfig.height 직접 사용)
+  // - stand 타입 + 띄움 배치: 바닥 프레임 없음 (0)
+  // - stand 타입 + 일반 배치: 바닥레일 높이 (baseConfig.height)
   const isStandType = spaceInfo.baseConfig?.type === 'stand';
   const railOrBaseHeightMm = isStandType
-    ? (spaceInfo.baseConfig?.height || 0)
+    ? (isFloating ? 0 : (spaceInfo.baseConfig?.height || 0))  // 띄움 배치면 바닥 프레임 없음
     : calculateBaseFrameHeight(spaceInfo);
   const railOrBaseHeight = mmToThreeUnits(railOrBaseHeightMm);
 
-  // stand 타입에서 internalSpace.height는 바닥레일 높이를 빼지 않았으므로 조정
+  // 내경 높이 조정
+  // - stand 타입: 바닥레일 높이 빼기
+  // - 띄움 배치: 띄움 높이도 빼기 (가구가 공간에 맞춰 높이 조정됨)
+  const floatHeightMmForCalc = isFloating ? floatHeightMm : 0;
   const adjustedInternalHeightMm = isStandType
-    ? internalSpace.height - railOrBaseHeightMm
+    ? internalSpace.height - railOrBaseHeightMm - floatHeightMmForCalc
     : internalSpace.height;
   const internalHeight = mmToThreeUnits(adjustedInternalHeightMm);
 
@@ -164,8 +168,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
   const lowerSectionHeight = internalHeight / 2;
 
   // 하위 호환성을 위한 변수 (기존 코드에서 사용)
-  const baseFrameHeightMm = railOrBaseHeightMm;
-  const baseFrameHeight = railOrBaseHeight;
+  // 띄움 배치에서는 띄움 높이를 받침대 높이 변수에 설정 (치수 표시용)
+  const baseFrameHeightMm = isFloating ? floatHeightMm : railOrBaseHeightMm;
+  const baseFrameHeight = mmToThreeUnits(baseFrameHeightMm);
 
   // 단내림 설정
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
