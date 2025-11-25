@@ -425,7 +425,8 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
     }
 
     // 2D 모드에서는 방향별 카메라 위치 - 각 방향에 최적화된 거리 사용
-    const distanceMultiplier = 2.0;
+    // 임베디드(미리보기)에서는 더 줌아웃해서 전체가 보이도록
+    const distanceMultiplier = isEmbedded ? 5.0 : 2.0;
     switch (view2DDirection) {
       case 'front':
         // 정면: Z축에서 깊이를 고려한 최적 거리
