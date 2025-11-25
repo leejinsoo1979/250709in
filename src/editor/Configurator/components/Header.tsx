@@ -614,440 +614,257 @@ const Header: React.FC<HeaderProps> = ({
           })()}
         </div>
 
-        {/* 중앙 액션 버튼들 */}
-        <div className={styles.centerActions}>
-          {/* 읽기 전용 모드 표시 */}
-          {readOnly && (
-            <div style={{
-              padding: '6px 12px',
-              backgroundColor: `${colors.primary}15`,
-              border: `1px solid ${colors.primary}40`,
-              borderRadius: '6px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              fontSize: '13px',
-              fontWeight: '500',
-              color: colors.primary
-            }}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" stroke="currentColor" strokeWidth="2" />
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" strokeWidth="2" />
-              </svg>
-              읽기 전용
-            </div>
-          )}
 
-          {/* 파일 드롭다운 메뉴 - 읽기 전용 모드에서는 숨김 */}
-          {!readOnly && (
-            <div
-              className={styles.fileMenuContainer}
-              onMouseEnter={handleFileMenuMouseEnter}
-              onMouseLeave={handleFileMenuMouseLeave}
-            >
-              <button
-                className={styles.actionButton}
-                onClick={handleFileMenuToggle}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" />
-                  <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2" />
-                  <line x1="16" y1="13" x2="8" y2="13" stroke="currentColor" strokeWidth="2" />
-                  <line x1="16" y1="17" x2="8" y2="17" stroke="currentColor" strokeWidth="2" />
-                  <polyline points="10,9 9,9 8,9" stroke="currentColor" strokeWidth="2" />
-                </svg>
-                {t('common.file')}
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: '4px' }}>
-                  <polyline points="6,9 12,15 18,9" stroke="currentColor" strokeWidth="2" />
-                </svg>
-              </button>
-
-              {isFileMenuOpen && (
-                <div className={styles.fileDropdown}>
-                  <button
-                    className={styles.dropdownItem}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('🆕 Header - 새디자인 버튼 직접 클릭됨');
-                      handleNewProject();
-                    }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" stroke="currentColor" strokeWidth="2" />
-                      <polyline points="14,2 14,8 20,8" stroke="currentColor" strokeWidth="2" />
-                      <line x1="12" y1="18" x2="12" y2="12" stroke="currentColor" strokeWidth="2" />
-                      <line x1="9" y1="15" x2="15" y2="15" stroke="currentColor" strokeWidth="2" />
-                    </svg>
-                    {currentLanguage === 'ko' ? '새 디자인' : t('project.newProject')}
-                  </button>
-                  <button
-                    className={styles.dropdownItem}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('📦 Header - GLB로 다운로드 버튼 클릭됨');
-                      setIsFileMenuOpen(false);
-                      onExportGLB?.();
-                    }}
-                    disabled={!onExportGLB}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    GLB로 다운로드
-                  </button>
-                  <button
-                    className={styles.dropdownItem}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      console.log('💾 Header - 다른이름으로 저장 버튼 클릭됨');
-                      handleSaveAs();
-                    }}
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke="currentColor" strokeWidth="2" />
-                      <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" strokeWidth="2" />
-                      <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2" />
-                      <path d="M7 16h2v2H7z" stroke="currentColor" strokeWidth="1" />
-                    </svg>
-                    {t('project.saveAs')}
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 저장 버튼 - 파일 메뉴 바로 옆으로 이동, 읽기 전용 모드에서는 숨김 */}
-          {!readOnly && (
-            <button
-              className={styles.actionButton}
-              onClick={() => {
-                console.log('💾💾💾 [Header] 저장 버튼 클릭됨!');
-                console.log('💾💾💾 [Header] onSave 함수 존재 여부:', !!onSave);
-                console.log('💾💾💾 [Header] saving 상태:', saving);
-                if (onSave) {
-                  console.log('💾💾💾 [Header] onSave 함수 호출 중...');
-                  onSave();
-                } else {
-                  console.error('💾💾💾 [Header] onSave 함수가 없습니다!');
-                }
-              }}
-              disabled={saving}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke="currentColor" strokeWidth="2" />
-                <polyline points="17,21 17,13 7,13 7,21" stroke="currentColor" strokeWidth="2" />
-                <polyline points="7,3 7,8 15,8" stroke="currentColor" strokeWidth="2" />
-              </svg>
-              {saving ? t('common.saving') : t('common.save')}
-            </button>
-          )}
-
-          {/* Undo 버튼 - 읽기 전용 모드에서는 숨김 */}
-          {!readOnly && (
-            <button
-              className={styles.actionButton}
-              onClick={handleUndo}
-              disabled={!canUndo()}
-              title="실행 취소 (Ctrl+Z)"
-            >
-              <Undo size={20} />
-            </button>
-          )}
-
-          {/* Redo 버튼 - 읽기 전용 모드에서는 숨김 */}
-          {!readOnly && (
-            <button
-              className={styles.actionButton}
-              onClick={handleRedo}
-              disabled={!canRedo()}
-              title="다시 실행 (Ctrl+Y)"
-            >
-              <Redo size={20} />
-            </button>
-          )}
-
-          {onNext && (
-            <button className={styles.actionButton} onClick={onNext}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M9 11l3 3L22 4" stroke="currentColor" strokeWidth="2" fill="none" />
-                <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="currentColor" strokeWidth="2" fill="none" />
-              </svg>
-              {t('common.finish')}
-            </button>
-          )}
-
-          {onHelp && (
-            <button className={styles.actionButton} onClick={onHelp}>
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
-                <path d="m9,9a3,3 0 1 1 5.83,1c0,2-3,3-3,3" stroke="currentColor" strokeWidth="2" />
-                <circle cx="12" cy="17" r="1" fill="currentColor" />
-              </svg>
-              {t('common.help')}
-            </button>
-          )}
-
-          {/* 조작법 버튼 */}
-          <button className={styles.actionButton} onClick={handleHelpClick}>
-            <FaRegKeyboard size={20} />
-            {t('help.title')}
+        {/* 카메라 설정 드롭다운 */}
+        <div className={styles.dropdownContainer} ref={cameraMenuRef}>
+          <button
+            className={styles.actionButton}
+            onClick={() => setIsCameraMenuOpen(!isCameraMenuOpen)}
+          >
+            <HiViewfinderCircle size={20} />
+            뷰모드
+            <ChevronDown size={16} style={{ marginLeft: '4px' }} />
           </button>
 
-          {/* 카메라 설정 드롭다운 */}
-          <div className={styles.dropdownContainer} ref={cameraMenuRef}>
+          {isCameraMenuOpen && (
+            <div className={styles.dropdownMenu}>
+              <button
+                className={`${styles.dropdownItem} ${cameraMode === 'perspective' ? styles.active : ''}`}
+                onClick={() => {
+                  setCameraMode('perspective');
+                  setIsCameraMenuOpen(false);
+                }}
+              >
+                <div style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+                  <PerspectiveCubeIcon size={20} />
+                </div>
+                <span className={styles.checkmark}>
+                  {cameraMode === 'perspective' && '✓'}
+                </span>
+                Perspective
+              </button>
+              <button
+                className={`${styles.dropdownItem} ${cameraMode === 'orthographic' ? styles.active : ''}`}
+                onClick={() => {
+                  setCameraMode('orthographic');
+                  setIsCameraMenuOpen(false);
+                }}
+              >
+                <div style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
+                  <OrthographicCubeIcon size={20} />
+                </div>
+                <span className={styles.checkmark}>
+                  {cameraMode === 'orthographic' && '✓'}
+                </span>
+                Orthographic
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 그림자 토글 스위치 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--theme-text-secondary)' }}>그림자</span>
+          <div
+            onClick={() => setShadowEnabled(!shadowEnabled)}
+            style={{
+              position: 'relative',
+              width: '36px',
+              height: '20px',
+              backgroundColor: shadowEnabled ? 'var(--theme-primary)' : (theme.mode === 'dark' ? 'rgba(128,128,128,0.3)' : 'rgba(200,200,200,0.5)'),
+              borderRadius: '10px',
+              cursor: 'pointer',
+              transition: 'background-color 0.3s ease',
+              display: 'flex',
+              alignItems: 'center',
+              padding: '2px'
+            }}
+            title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
+          >
+            <div
+              style={{
+                width: '16px',
+                height: '16px',
+                backgroundColor: theme.mode === 'dark' ? '#1a1a1a' : '#ffffff',
+                borderRadius: '50%',
+                transition: 'transform 0.3s ease, background-color 0.3s ease',
+                transform: shadowEnabled ? 'translateX(16px)' : 'translateX(0)',
+                boxShadow: theme.mode === 'dark' ? '0 2px 4px rgba(0,0,0,0.5)' : '0 2px 4px rgba(0,0,0,0.2)'
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* 우측 액션 버튼들 */}
+      <div className={styles.rightActions}>
+        {/* 내보내기 버튼 - 읽기 전용 모드에서는 숨김 */}
+        {!readOnly && onExportPDF && (
+          <button
+            className={styles.convertButton}
+            onClick={() => {
+              console.log('내보내기 버튼 클릭됨');
+              onExportPDF(); // PDF 핸들러가 실제로는 ConvertModal을 열어줌
+            }}
+          >
+            <TbTableExport size={20} style={{ marginRight: '4px' }} />
+            {t('export.title')}
+          </button>
+        )}
+
+        {/* CNC 옵티마이저 버튼 - 읽기 전용 모드에서는 숨김 */}
+        {!readOnly && (
+          <div className={styles.convertButtonContainer} ref={convertMenuRef}>
             <button
-              className={styles.actionButton}
-              onClick={() => setIsCameraMenuOpen(!isCameraMenuOpen)}
+              className={styles.convertButton}
+              onClick={() => setIsConvertMenuOpen(!isConvertMenuOpen)}
             >
-              <HiViewfinderCircle size={20} />
-              뷰모드
+              <SiConvertio size={20} />
+              {t('common.converting')}
               <ChevronDown size={16} style={{ marginLeft: '4px' }} />
             </button>
 
-            {isCameraMenuOpen && (
+            {isConvertMenuOpen && (
               <div className={styles.dropdownMenu}>
                 <button
-                  className={`${styles.dropdownItem} ${cameraMode === 'perspective' ? styles.active : ''}`}
+                  className={styles.dropdownItem}
                   onClick={() => {
-                    setCameraMode('perspective');
-                    setIsCameraMenuOpen(false);
+                    console.log('CNC 옵티마이저 버튼 클릭됨');
+
+                    // 현재 전체 상태를 sessionStorage에 저장
+                    const currentState = {
+                      projectId,
+                      designFileId,
+                      basicInfo: useProjectStore.getState().basicInfo,
+                      spaceInfo: useSpaceConfigStore.getState().spaceInfo,
+                      placedModules: useFurnitureStore.getState().placedModules,
+                      timestamp: Date.now()
+                    };
+                    sessionStorage.setItem('configurator_state_backup', JSON.stringify(currentState));
+                    console.log('💾 Configurator 상태 백업 완료');
+
+                    // 프로젝트 ID, 디자인 파일 ID, 프로젝트명, 디자인 파일명을 URL 파라미터로 전달
+                    const params = new URLSearchParams();
+                    if (projectId) params.set('projectId', projectId);
+                    if (designFileId) params.set('designFileId', designFileId);
+                    if (projectName) params.set('projectName', encodeURIComponent(projectName));
+                    if (designFileName) params.set('designFileName', encodeURIComponent(designFileName));
+                    const queryString = params.toString();
+
+                    console.log('🔗 CNC Optimizer로 전달하는 파라미터:', {
+                      projectId,
+                      designFileId,
+                      projectName,
+                      designFileName,
+                      queryString
+                    });
+
+                    // state로 현재 페이지 정보 전달
+                    navigate(`/cnc-optimizer${queryString ? `?${queryString}` : ''}`, {
+                      state: { fromConfigurator: true }
+                    });
+                    setIsConvertMenuOpen(false);
                   }}
                 >
-                  <div style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
-                    <PerspectiveCubeIcon size={20} />
-                  </div>
-                  <span className={styles.checkmark}>
-                    {cameraMode === 'perspective' && '✓'}
-                  </span>
-                  Perspective
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
+                    <rect x="3" y="3" width="18" height="18" stroke="currentColor" strokeWidth="2" />
+                    <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="2" />
+                    <line x1="9" y1="3" x2="9" y2="21" stroke="currentColor" strokeWidth="2" />
+                  </svg>
+                  {t('export.cuttingOptimizer')}
                 </button>
-                <button
-                  className={`${styles.dropdownItem} ${cameraMode === 'orthographic' ? styles.active : ''}`}
-                  onClick={() => {
-                    setCameraMode('orthographic');
-                    setIsCameraMenuOpen(false);
-                  }}
-                >
-                  <div style={{ marginRight: '8px', display: 'flex', alignItems: 'center' }}>
-                    <OrthographicCubeIcon size={20} />
-                  </div>
-                  <span className={styles.checkmark}>
-                    {cameraMode === 'orthographic' && '✓'}
-                  </span>
-                  Orthographic
-                </button>
-              </div>
-            )}
-          </div>
 
-          {/* 그림자 토글 스위치 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--theme-text-secondary)' }}>그림자</span>
-            <div
-              onClick={() => setShadowEnabled(!shadowEnabled)}
-              style={{
-                position: 'relative',
-                width: '36px',
-                height: '20px',
-                backgroundColor: shadowEnabled ? 'var(--theme-primary)' : (theme.mode === 'dark' ? 'rgba(128,128,128,0.3)' : 'rgba(200,200,200,0.5)'),
-                borderRadius: '10px',
-                cursor: 'pointer',
-                transition: 'background-color 0.3s ease',
-                display: 'flex',
-                alignItems: 'center',
-                padding: '2px'
-              }}
-              title={shadowEnabled ? '그림자 끄기' : '그림자 켜기'}
-            >
-              <div
-                style={{
-                  width: '16px',
-                  height: '16px',
-                  backgroundColor: theme.mode === 'dark' ? '#1a1a1a' : '#ffffff',
-                  borderRadius: '50%',
-                  transition: 'transform 0.3s ease, background-color 0.3s ease',
-                  transform: shadowEnabled ? 'translateX(16px)' : 'translateX(0)',
-                  boxShadow: theme.mode === 'dark' ? '0 2px 4px rgba(0,0,0,0.5)' : '0 2px 4px rgba(0,0,0,0.2)'
-                }}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* 우측 액션 버튼들 */}
-        <div className={styles.rightActions}>
-          {/* 내보내기 버튼 - 읽기 전용 모드에서는 숨김 */}
-          {!readOnly && onExportPDF && (
-            <button
-              className={styles.convertButton}
-              onClick={() => {
-                console.log('내보내기 버튼 클릭됨');
-                onExportPDF(); // PDF 핸들러가 실제로는 ConvertModal을 열어줌
-              }}
-            >
-              <TbTableExport size={20} style={{ marginRight: '4px' }} />
-              {t('export.title')}
-            </button>
-          )}
-
-          {/* CNC 옵티마이저 버튼 - 읽기 전용 모드에서는 숨김 */}
-          {!readOnly && (
-            <div className={styles.convertButtonContainer} ref={convertMenuRef}>
-              <button
-                className={styles.convertButton}
-                onClick={() => setIsConvertMenuOpen(!isConvertMenuOpen)}
-              >
-                <SiConvertio size={20} />
-                {t('common.converting')}
-                <ChevronDown size={16} style={{ marginLeft: '4px' }} />
-              </button>
-
-              {isConvertMenuOpen && (
-                <div className={styles.dropdownMenu}>
+                {onConvert && (
                   <button
                     className={styles.dropdownItem}
                     onClick={() => {
-                      console.log('CNC 옵티마이저 버튼 클릭됨');
-
-                      // 현재 전체 상태를 sessionStorage에 저장
-                      const currentState = {
-                        projectId,
-                        designFileId,
-                        basicInfo: useProjectStore.getState().basicInfo,
-                        spaceInfo: useSpaceConfigStore.getState().spaceInfo,
-                        placedModules: useFurnitureStore.getState().placedModules,
-                        timestamp: Date.now()
-                      };
-                      sessionStorage.setItem('configurator_state_backup', JSON.stringify(currentState));
-                      console.log('💾 Configurator 상태 백업 완료');
-
-                      // 프로젝트 ID, 디자인 파일 ID, 프로젝트명, 디자인 파일명을 URL 파라미터로 전달
-                      const params = new URLSearchParams();
-                      if (projectId) params.set('projectId', projectId);
-                      if (designFileId) params.set('designFileId', designFileId);
-                      if (projectName) params.set('projectName', encodeURIComponent(projectName));
-                      if (designFileName) params.set('designFileName', encodeURIComponent(designFileName));
-                      const queryString = params.toString();
-
-                      console.log('🔗 CNC Optimizer로 전달하는 파라미터:', {
-                        projectId,
-                        designFileId,
-                        projectName,
-                        designFileName,
-                        queryString
-                      });
-
-                      // state로 현재 페이지 정보 전달
-                      navigate(`/cnc-optimizer${queryString ? `?${queryString}` : ''}`, {
-                        state: { fromConfigurator: true }
-                      });
+                      onConvert();
                       setIsConvertMenuOpen(false);
                     }}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
-                      <rect x="3" y="3" width="18" height="18" stroke="currentColor" strokeWidth="2" />
-                      <line x1="3" y1="9" x2="21" y2="9" stroke="currentColor" strokeWidth="2" />
-                      <line x1="9" y1="3" x2="9" y2="21" stroke="currentColor" strokeWidth="2" />
+                      <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" />
+                      <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" />
+                      <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" />
+                      <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" />
                     </svg>
-                    {t('export.cuttingOptimizer')}
+                    {t('export.drawingEditor')}
                   </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
-                  {onConvert && (
-                    <button
-                      className={styles.dropdownItem}
-                      onClick={() => {
-                        onConvert();
-                        setIsConvertMenuOpen(false);
-                      }}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
-                        <rect x="3" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" />
-                        <rect x="14" y="3" width="7" height="7" stroke="currentColor" strokeWidth="2" />
-                        <rect x="3" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" />
-                        <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" />
-                      </svg>
-                      {t('export.drawingEditor')}
-                    </button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+        {/* 모바일 메뉴 토글 버튼 (모바일 전용) */}
+        {!readOnly && (
+          <button
+            className={styles.mobileMenuButton}
+            onClick={onMobileMenuToggle}
+            title="메뉴"
+          >
+            <Settings size={20} />
+          </button>
+        )}
 
-          {/* 모바일 메뉴 토글 버튼 (모바일 전용) */}
-          {!readOnly && (
-            <button
-              className={styles.mobileMenuButton}
-              onClick={onMobileMenuToggle}
-              title="메뉴"
-            >
-              <Settings size={20} />
-            </button>
-          )}
+        {/* onProfile이 있을 때만 프로필 영역 표시 (readonly 모드에서는 숨김) */}
+        {onProfile && (
+          <>
+            {user ? (
+              <div className={styles.desktopProfile}>
+                {onLogout && (
+                  <button className={styles.logoutButton} onClick={onLogout}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2" />
+                      <polyline points="16,17 21,12 16,7" stroke="currentColor" strokeWidth="2" />
+                      <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" />
+                    </svg>
+                    {currentLanguage === 'ko' ? '로그아웃' : t('common.logout')}
+                  </button>
+                )}
 
-          {/* onProfile이 있을 때만 프로필 영역 표시 (readonly 모드에서는 숨김) */}
-          {onProfile && (
-            <>
-              {user ? (
-                <div className={styles.desktopProfile}>
-                  {onLogout && (
-                    <button className={styles.logoutButton} onClick={onLogout}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2" />
-                        <polyline points="16,17 21,12 16,7" stroke="currentColor" strokeWidth="2" />
-                        <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" />
-                      </svg>
-                      {currentLanguage === 'ko' ? '로그아웃' : t('common.logout')}
-                    </button>
-                  )}
-
-                  {/* 프로필 */}
-                  <div
-                    ref={profileButtonRef}
-                    className={styles.userProfile}
-                    onClick={handleProfileClick}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <div className={styles.userProfileAvatar}>
-                      {user?.photoURL && !imageError ? (
-                        <img
-                          src={user.photoURL}
-                          alt={user.displayName || user.email || '사용자'}
-                          className={styles.profileImage}
-                          onError={() => setImageError(true)}
-                          onLoad={() => setImageError(false)}
-                        />
-                      ) : (
-                        <User size={16} />
-                      )}
-                    </div>
-                    <span className={styles.userProfileName}>
-                      {user?.displayName || user?.email?.split('@')[0] || '사용자'}
-                    </span>
-                  </div>
-                </div>
-              ) : (
-                <button
-                  className={styles.loginButton}
-                  onClick={() => navigate('/login')}
+                {/* 프로필 */}
+                <div
+                  ref={profileButtonRef}
+                  className={styles.userProfile}
+                  onClick={handleProfileClick}
+                  style={{ cursor: 'pointer' }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="currentColor" strokeWidth="2" />
-                    <polyline points="10 17 15 12 10 7" stroke="currentColor" strokeWidth="2" />
-                    <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2" />
-                  </svg>
-                  {currentLanguage === 'ko' ? '로그인' : t('common.login')}
-                </button>
-              )}
-            </>
-          )}
-        </div>
+                  <div className={styles.userProfileAvatar}>
+                    {user?.photoURL && !imageError ? (
+                      <img
+                        src={user.photoURL}
+                        alt={user.displayName || user.email || '사용자'}
+                        className={styles.profileImage}
+                        onError={() => setImageError(true)}
+                        onLoad={() => setImageError(false)}
+                      />
+                    ) : (
+                      <User size={16} />
+                    )}
+                  </div>
+                  <span className={styles.userProfileName}>
+                    {user?.displayName || user?.email?.split('@')[0] || '사용자'}
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <button
+                className={styles.loginButton}
+                onClick={() => navigate('/login')}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" stroke="currentColor" strokeWidth="2" />
+                  <polyline points="10 17 15 12 10 7" stroke="currentColor" strokeWidth="2" />
+                  <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2" />
+                </svg>
+                {currentLanguage === 'ko' ? '로그인' : t('common.login')}
+              </button>
+            )}
+          </>
+        )}
       </div>
+    </div>
 
       {/* 저장 상태 표시 */}
       {saveStatus === 'success' && (
