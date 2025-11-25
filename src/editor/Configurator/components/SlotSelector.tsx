@@ -154,11 +154,6 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
     borderRadius: '6px',
     boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3)',
     backdropFilter: 'blur(8px)',
-    position: 'absolute',
-    bottom: '8px',
-    left: '50%',
-    transform: 'translateX(-50%)',
-    zIndex: 9999,
     pointerEvents: 'auto'
   } : containerStyle;
 
@@ -210,10 +205,7 @@ const SlotSelector: React.FC<SlotSelectorProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'all 0.15s ease',
-                pointerEvents: 'auto',
-                position: 'relative' as const,
-                zIndex: 10000
+                transition: 'all 0.15s ease'
               }
             : baseButtonStyle;
 
