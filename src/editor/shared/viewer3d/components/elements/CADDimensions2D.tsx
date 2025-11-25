@@ -801,7 +801,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   const textZ = furnitureZ;
 
                   // X 위치: 가구 박스 왼쪽 바깥으로 (가구 폭의 절반 + 100mm)
-                  const textX = 0 - indexing.columnWidth / 2 - mmToThreeUnits(100);
+                  const textX = 0; // 측면뷰에서는 단면 중앙에 깊이 표기
 
                   return (
                     <Text
@@ -1512,7 +1512,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   drawerY += mmToThreeUnits(drawerHeight / 2);
 
                   const textZ = furnitureZ;
-                  const textX = 0 - indexing.columnWidth / 2 - mmToThreeUnits(100);
+                  const textX = 0; // 측면뷰에서도 서랍 내부 중앙에 깊이 표기
 
                   return (
                     <Text
