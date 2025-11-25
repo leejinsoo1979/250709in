@@ -1105,16 +1105,29 @@ const Header: React.FC<HeaderProps> = ({
             </div>
           )}
 
-          {/* 도어 토글 */}
+          {/* 도어 설치 토글 */}
           <div className={styles.mobileShadowToggle}>
-            <span className={styles.shadowLabel}>도어</span>
+            <span className={styles.shadowLabel}>도어설치</span>
             <div
-              onClick={toggleDoors}
-              className={`${styles.toggleSwitch} ${doorsOpen ? styles.active : ''}`}
+              onClick={onDoorInstallationToggle}
+              className={`${styles.toggleSwitch} ${hasDoorsInstalled ? styles.active : ''}`}
             >
               <div className={styles.toggleKnob} />
             </div>
           </div>
+
+          {/* 도어 열림/닫힘 토글 (도어 설치된 경우만) */}
+          {hasDoorsInstalled && (
+            <div className={styles.mobileShadowToggle}>
+              <span className={styles.shadowLabel}>문열림</span>
+              <div
+                onClick={toggleDoors}
+                className={`${styles.toggleSwitch} ${doorsOpen ? styles.active : ''}`}
+              >
+                <div className={styles.toggleKnob} />
+              </div>
+            </div>
+          )}
 
           {/* 그림자 토글 */}
           <div className={styles.mobileShadowToggle}>
