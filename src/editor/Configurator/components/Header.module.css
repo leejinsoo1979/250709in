@@ -886,6 +886,13 @@
   }
 }
 
+/* 데스크톱 프로필 영역 */
+.desktopProfile {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .mobileMenuButton {
   display: none;
   background: none;
