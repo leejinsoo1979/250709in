@@ -55,4 +55,27 @@
 /* Shadow Utilities */
 .shadow-sm { box-shadow: var(--shadow-sm); }
 .shadow-md { box-shadow: var(--shadow-md); }
-.shadow-lg { box-shadow: var(--shadow-lg); } 
+.shadow-lg { box-shadow: var(--shadow-lg); }
+
+/* Prevent text selection on UI elements */
+button,
+header,
+nav,
+aside,
+[class*="sidebar"],
+[class*="Sidebar"],
+[class*="header"],
+[class*="Header"],
+[class*="fileTree"],
+[class*="FileTree"],
+[class*="menu"],
+[class*="Menu"],
+[class*="tab"],
+[class*="Tab"],
+[class*="toolbar"],
+[class*="Toolbar"] {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+} 
