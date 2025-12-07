@@ -729,14 +729,30 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     if (isLine2 || hasLineGeometry) {
       // 엣지 타입 감지 (Line2 - drei Line 컴포넌트용)
       const lowerName = name.toLowerCase();
+      const isBackPanelLine = lowerName.includes('back-panel') || lowerName.includes('백패널');
       const isClothingRodLine = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
       const isAdjustableFootLine = lowerName.includes('adjustable-foot') || lowerName.includes('조절발');
+      const isFurniturePanelLine = lowerName.includes('furniture-edge');
+      const isSpaceFrameLine = lowerName.includes('space-frame');
 
-      // 색상 설정 - 옷봉/조절발은 흰색
+      // 색상 설정 (Line2 요소도 LineSegments/Line과 동일하게)
+      // - 공간 프레임: ACI 3 (연두색)
+      // - 가구 패널: ACI 30 (주황색)
+      // - 백패널: ACI 252
+      // - 옷봉/조절발: ACI 7
       let line2Color = color;
-      if (isClothingRodLine || isAdjustableFootLine) {
+      if (isBackPanelLine) {
+        line2Color = 252;
+        console.log(`⚪ 백패널 라인(Line2) 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
+      } else if (isClothingRodLine || isAdjustableFootLine) {
         line2Color = 7; // ACI 7 = 흰색
         console.log(`⚪ 옷봉/조절발 라인(Line2) 발견: ${name}, ACI 7 (흰색)으로 설정`);
+      } else if (isSpaceFrameLine) {
+        line2Color = 3; // ACI 3 = 연두색
+        console.log(`🟢 공간 프레임 라인(Line2) 발견: ${name}, ACI 3 (연두색)으로 설정`);
+      } else if (isFurniturePanelLine) {
+        line2Color = 30; // ACI 30 = 주황색
+        console.log(`🟠 가구 패널 라인(Line2) 발견: ${name}, ACI 30 (주황색)으로 설정`);
       }
 
       const extractedLines = extractFromLine2(object, matrix, scale, layer, line2Color);
