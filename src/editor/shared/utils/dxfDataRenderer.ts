@@ -1441,6 +1441,183 @@ const generateExternalDimensions = (
       layer: 'DIMENSIONS'
     });
 
+    // ========================================
+    // 서라운드 프레임 (SPACE_FRAME 레이어)
+    // ========================================
+    const frameColor = 3; // ACI 3 = 연두색
+    const sideFrameThickness = spaceInfo.frameSize?.side || 42;
+    const topFrameThick = spaceInfo.frameSize?.top || 10;
+    const baseH = spaceInfo.baseConfig?.height || 65;
+
+    // 좌측 프레임 (세로선)
+    lines.push({
+      x1: -halfWidth, y1: baseH, x2: -halfWidth, y2: height,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+    lines.push({
+      x1: -halfWidth + sideFrameThickness, y1: baseH, x2: -halfWidth + sideFrameThickness, y2: height - topFrameThick,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+
+    // 우측 프레임 (세로선)
+    lines.push({
+      x1: halfWidth, y1: baseH, x2: halfWidth, y2: height,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+    lines.push({
+      x1: halfWidth - sideFrameThickness, y1: baseH, x2: halfWidth - sideFrameThickness, y2: height - topFrameThick,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+
+    // 상부 프레임 (가로선)
+    lines.push({
+      x1: -halfWidth, y1: height, x2: halfWidth, y2: height,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+    lines.push({
+      x1: -halfWidth, y1: height - topFrameThick, x2: halfWidth, y2: height - topFrameThick,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+
+    // 하부 프레임/받침대 (가로선)
+    lines.push({
+      x1: -halfWidth, y1: baseH, x2: halfWidth, y2: baseH,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+    lines.push({
+      x1: -halfWidth, y1: 0, x2: halfWidth, y2: 0,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+
+    // 좌측 프레임 상하 연결선
+    lines.push({
+      x1: -halfWidth, y1: baseH, x2: -halfWidth + sideFrameThickness, y2: baseH,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+    lines.push({
+      x1: -halfWidth, y1: height - topFrameThick, x2: -halfWidth + sideFrameThickness, y2: height - topFrameThick,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+
+    // 우측 프레임 상하 연결선
+    lines.push({
+      x1: halfWidth - sideFrameThickness, y1: baseH, x2: halfWidth, y2: baseH,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+    lines.push({
+      x1: halfWidth - sideFrameThickness, y1: height - topFrameThick, x2: halfWidth, y2: height - topFrameThick,
+      layer: 'SPACE_FRAME', color: frameColor
+    });
+
+    // ========================================
+    // 추가 치수선들 (2D 화면과 동일하게)
+    // ========================================
+
+    // 상단 2번째 줄: 좌측프레임 | 슬롯들 | 우측프레임
+    const dim2Y = height + dimensionOffset + 40;
+
+    // 좌측 프레임 너비
+    lines.push({
+      x1: -halfWidth, y1: dim2Y, x2: -halfWidth + sideFrameThickness, y2: dim2Y,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: -halfWidth + sideFrameThickness / 2, y: dim2Y + 10,
+      text: `${sideFrameThickness}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+    // 우측 프레임 너비
+    lines.push({
+      x1: halfWidth - sideFrameThickness, y1: dim2Y, x2: halfWidth, y2: dim2Y,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: halfWidth - sideFrameThickness / 2, y: dim2Y + 10,
+      text: `${sideFrameThickness}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+    // 내부 너비 (슬롯 영역)
+    const innerWidth = width - sideFrameThickness * 2;
+    lines.push({
+      x1: -halfWidth + sideFrameThickness, y1: dim2Y, x2: halfWidth - sideFrameThickness, y2: dim2Y,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: 0, y: dim2Y + 10,
+      text: `${innerWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+    // 상단 3번째 줄: 개별 슬롯 너비
+    if (spaceInfo.columns && spaceInfo.columns.length > 0) {
+      const dim3Y = height + dimensionOffset + 80;
+      spaceInfo.columns.forEach((column) => {
+        const colWidth = column.width;
+        const colX = column.position[0];
+        const colLeftX = colX - colWidth / 2;
+        const colRightX = colX + colWidth / 2;
+
+        lines.push({
+          x1: colLeftX, y1: dim3Y, x2: colRightX, y2: dim3Y,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
+        texts.push({
+          x: colX, y: dim3Y + 10,
+          text: `${colWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+        });
+      });
+    }
+
+    // 우측 치수선: 상부프레임 | 가구영역 | 받침대
+    const rightDimX = halfWidth + dimensionOffset;
+    const rightDimX2 = rightDimX + 40;
+
+    // 상부 프레임 높이
+    lines.push({
+      x1: rightDimX, y1: height - topFrameThick, x2: rightDimX, y2: height,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: halfWidth, y1: height, x2: rightDimX + extensionLength, y2: height,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: halfWidth, y1: height - topFrameThick, x2: rightDimX + extensionLength, y2: height - topFrameThick,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: rightDimX + 15, y: height - topFrameThick / 2,
+      text: `${topFrameThick}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+    // 가구 영역 높이 (전체 - 상부프레임 - 받침대)
+    const furnitureAreaHeight = height - topFrameThick - baseH;
+    lines.push({
+      x1: rightDimX2, y1: baseH, x2: rightDimX2, y2: height - topFrameThick,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: halfWidth, y1: baseH, x2: rightDimX2 + extensionLength, y2: baseH,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: rightDimX2 + 15, y: baseH + furnitureAreaHeight / 2,
+      text: `${furnitureAreaHeight}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+    // 받침대 높이
+    lines.push({
+      x1: rightDimX, y1: 0, x2: rightDimX, y2: baseH,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: halfWidth, y1: 0, x2: rightDimX + extensionLength, y2: 0,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: rightDimX + 15, y: baseH / 2,
+      text: `${baseH}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
   } else if (viewDirection === 'top') {
     // 평면도: 가로(width) + 세로(depth)
     // 씬 좌표계 사용: x는 -width/2 ~ width/2
