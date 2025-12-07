@@ -77,14 +77,51 @@ const rgbToAci = (r: number, g: number, b: number): number => {
 
 /**
  * Three.js 색상에서 DXF ACI 코드 추출
+ * LineMaterial (drei Line), LineBasicMaterial, MeshBasicMaterial, MeshStandardMaterial 등 모든 타입 지원
  */
 const getColorFromMaterial = (material: THREE.Material | THREE.Material[] | undefined): number => {
   if (!material) return 7;
 
   const mat = Array.isArray(material) ? material[0] : material;
+  if (!mat) return 7;
 
-  if (mat && 'color' in mat) {
-    const color = (mat as THREE.LineBasicMaterial).color;
+  // 1. LineMaterial (drei의 Line 컴포넌트에서 사용) - ShaderMaterial 기반
+  if ((mat as any).isLineMaterial) {
+    const lineMat = mat as any;
+    if (lineMat.color) {
+      const color = lineMat.color as THREE.Color;
+      return rgbToAci(
+        Math.round(color.r * 255),
+        Math.round(color.g * 255),
+        Math.round(color.b * 255)
+      );
+    }
+  }
+
+  // 2. ShaderMaterial - uniforms에서 색상 추출
+  if ((mat as THREE.ShaderMaterial).uniforms) {
+    const uniforms = (mat as THREE.ShaderMaterial).uniforms;
+    if (uniforms.diffuse?.value) {
+      const color = uniforms.diffuse.value as THREE.Color;
+      return rgbToAci(
+        Math.round(color.r * 255),
+        Math.round(color.g * 255),
+        Math.round(color.b * 255)
+      );
+    }
+    if (uniforms.color?.value) {
+      const color = uniforms.color.value as THREE.Color;
+      return rgbToAci(
+        Math.round(color.r * 255),
+        Math.round(color.g * 255),
+        Math.round(color.b * 255)
+      );
+    }
+  }
+
+  // 3. LineBasicMaterial, MeshBasicMaterial, MeshStandardMaterial 등 - color 속성
+  if ('color' in mat) {
+    const color = (mat as THREE.LineBasicMaterial | THREE.MeshBasicMaterial | THREE.MeshStandardMaterial).color;
     if (color) {
       return rgbToAci(
         Math.round(color.r * 255),
@@ -95,6 +132,29 @@ const getColorFromMaterial = (material: THREE.Material | THREE.Material[] | unde
   }
 
   return 7;
+};
+
+/**
+ * 뷰 방향에 따라 3D 좌표를 2D DXF 좌표로 변환
+ * - front: (x, y) 사용 (정면에서 볼 때)
+ * - top: (x, z) 사용 (위에서 볼 때, z를 y로)
+ * - left/right: (z, y) 사용 (측면에서 볼 때, z를 x로)
+ */
+let currentViewDirection: ViewDirection = 'front';
+
+const projectTo2D = (p: THREE.Vector3, scale: number): { x: number; y: number } => {
+  switch (currentViewDirection) {
+    case 'front':
+      return { x: p.x * scale, y: p.y * scale };
+    case 'top':
+      return { x: p.x * scale, y: -p.z * scale }; // z축을 y로, 뒤집어서
+    case 'left':
+      return { x: -p.z * scale, y: p.y * scale }; // z축을 x로 (왼쪽에서 보면 z가 오른쪽)
+    case 'right':
+      return { x: p.z * scale, y: p.y * scale }; // z축을 x로
+    default:
+      return { x: p.x * scale, y: p.y * scale };
+  }
 };
 
 /**
@@ -134,11 +194,14 @@ const extractFromLine2 = (
         instanceEnd.getZ(i)
       ).applyMatrix4(matrix);
 
+      const proj1 = projectTo2D(p1, scale);
+      const proj2 = projectTo2D(p2, scale);
+
       lines.push({
-        x1: p1.x * scale,
-        y1: p1.y * scale,
-        x2: p2.x * scale,
-        y2: p2.y * scale,
+        x1: proj1.x,
+        y1: proj1.y,
+        x2: proj2.x,
+        y2: proj2.y,
         layer,
         color
       });
@@ -180,11 +243,14 @@ const extractFromLineSegments = (
       positionAttr.getZ(i + 1)
     ).applyMatrix4(matrix);
 
+    const proj1 = projectTo2D(p1, scale);
+    const proj2 = projectTo2D(p2, scale);
+
     lines.push({
-      x1: p1.x * scale,
-      y1: p1.y * scale,
-      x2: p2.x * scale,
-      y2: p2.y * scale,
+      x1: proj1.x,
+      y1: proj1.y,
+      x2: proj2.x,
+      y2: proj2.y,
       layer,
       color
     });
@@ -225,11 +291,14 @@ const extractFromLine = (
       positionAttr.getZ(i + 1)
     ).applyMatrix4(matrix);
 
+    const proj1 = projectTo2D(p1, scale);
+    const proj2 = projectTo2D(p2, scale);
+
     lines.push({
-      x1: p1.x * scale,
-      y1: p1.y * scale,
-      x2: p2.x * scale,
-      y2: p2.y * scale,
+      x1: proj1.x,
+      y1: proj1.y,
+      x2: proj2.x,
+      y2: proj2.y,
       layer,
       color
     });
@@ -275,26 +344,62 @@ interface ExtractedData {
   texts: DxfText[];
 }
 
+/**
+ * 객체 또는 부모로부터 색상 추출 (userData에서 색상 정보 확인)
+ */
+const getColorFromObjectHierarchy = (object: THREE.Object3D): number | null => {
+  let current: THREE.Object3D | null = object;
+  while (current) {
+    // userData에서 색상 확인 (drei 등 일부 라이브러리에서 사용)
+    if ((current as any).userData?.color) {
+      const colorVal = (current as any).userData.color;
+      if (typeof colorVal === 'string') {
+        const parsed = new THREE.Color(colorVal);
+        return rgbToAci(
+          Math.round(parsed.r * 255),
+          Math.round(parsed.g * 255),
+          Math.round(parsed.b * 255)
+        );
+      }
+    }
+    current = current.parent;
+  }
+  return null;
+};
+
 const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): ExtractedData => {
   const lines: DxfLine[] = [];
   const texts: DxfText[] = [];
   const scale = 100; // 1 Three.js unit = 100mm
 
-  console.log('🔍 씬에서 Line/Text 객체 추출 시작...');
+  // 뷰 방향 설정 (projectTo2D에서 사용)
+  currentViewDirection = viewDirection;
+
+  console.log(`🔍 씬에서 Line/Text 객체 추출 시작 (뷰 방향: ${viewDirection})...`);
 
   let lineObjects = 0;
+  let line2Objects = 0;
+  let lineSegmentsObjects = 0;
   let textObjects = 0;
   let meshObjects = 0;
+  let skippedByVisibility = 0;
+  let skippedByFilter = 0;
 
   // Store meshes for potential edge extraction if no lines are found
   const meshesForEdges: { mesh: THREE.Mesh; matrix: THREE.Matrix4; layer: string; color: number }[] = [];
 
   scene.traverse((object) => {
     // Skip invisible objects
-    if (!object.visible) return;
+    if (!object.visible) {
+      skippedByVisibility++;
+      return;
+    }
 
     const name = object.name || '';
-    if (shouldExclude(name)) return;
+    if (shouldExclude(name)) {
+      skippedByFilter++;
+      return;
+    }
 
     // Update world matrix
     object.updateMatrixWorld(true);
@@ -306,9 +411,17 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       return;
     }
 
-    // Extract color from material
+    // Extract color from material (improved to handle LineMaterial)
     const material = (object as THREE.Line | THREE.LineSegments | THREE.Mesh).material;
-    const color = getColorFromMaterial(material);
+    let color = getColorFromMaterial(material);
+
+    // 색상이 기본값(7)이면 부모 계층에서 색상 찾기 시도
+    if (color === 7) {
+      const hierarchyColor = getColorFromObjectHierarchy(object);
+      if (hierarchyColor !== null) {
+        color = hierarchyColor;
+      }
+    }
 
     // Check for Line2 (from drei)
     const mesh = object as THREE.Mesh;
@@ -321,8 +434,11 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
 
     if (isLine2 || hasLineGeometry) {
       const extractedLines = extractFromLine2(object, matrix, scale, layer, color);
-      lines.push(...extractedLines);
-      lineObjects++;
+      if (extractedLines.length > 0) {
+        lines.push(...extractedLines);
+        line2Objects++;
+        console.log(`📐 Line2 발견: ${name || '(이름없음)'}, 라인 ${extractedLines.length}개, 색상 ACI=${color}`);
+      }
       return;
     }
 
@@ -332,8 +448,9 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       if (posCount > 0) {
         const extractedLines = extractFromLineSegments(object, matrix, scale, layer, color);
         lines.push(...extractedLines);
+        lineSegmentsObjects++;
+        console.log(`📐 LineSegments 발견: ${name || '(이름없음)'}, 라인 ${extractedLines.length}개, 색상 ACI=${color}`);
       }
-      lineObjects++;
       return;
     }
 
@@ -343,8 +460,8 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       if (posCount > 0) {
         const extractedLines = extractFromLine(object, matrix, scale, layer, color);
         lines.push(...extractedLines);
+        lineObjects++;
       }
-      lineObjects++;
       return;
     }
 
@@ -354,10 +471,11 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       if (textContent && typeof textContent === 'string') {
         const worldPos = new THREE.Vector3();
         mesh.getWorldPosition(worldPos);
+        const projPos = projectTo2D(worldPos, scale);
 
         texts.push({
-          x: worldPos.x * scale,
-          y: worldPos.y * scale,
+          x: projPos.x,
+          y: projPos.y,
           text: textContent,
           height: 25, // 2.5mm text height
           color: color,
@@ -373,6 +491,17 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       meshObjects++;
       meshesForEdges.push({ mesh: object, matrix, layer, color });
     }
+  });
+
+  // 상세 로그
+  console.log('📊 객체 통계:', {
+    line2Objects,
+    lineSegmentsObjects,
+    lineObjects,
+    textObjects,
+    meshObjects,
+    skippedByVisibility,
+    skippedByFilter
   });
 
   // If no lines were found, try extracting edges from meshes
@@ -395,13 +524,15 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       return false;
     });
 
+    console.log(`📦 Mesh에서 엣지 추출 대상: ${furnitureMeshes.length}개`);
+
     furnitureMeshes.forEach(({ mesh, matrix, layer, color }) => {
       const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, layer, color);
       lines.push(...extractedEdges);
     });
   }
 
-  console.log(`📊 추출 완료: 라인 ${lines.length}개, 텍스트 ${texts.length}개`);
+  console.log(`✅ 추출 완료: 라인 ${lines.length}개, 텍스트 ${texts.length}개`);
 
   return { lines, texts };
 };
@@ -438,11 +569,14 @@ const extractEdgesFromMesh = (
       positionAttr.getZ(i + 1)
     ).applyMatrix4(matrix);
 
+    const proj1 = projectTo2D(p1, scale);
+    const proj2 = projectTo2D(p2, scale);
+
     lines.push({
-      x1: p1.x * scale,
-      y1: p1.y * scale,
-      x2: p2.x * scale,
-      y2: p2.y * scale,
+      x1: proj1.x,
+      y1: proj1.y,
+      x2: proj2.x,
+      y2: proj2.y,
       layer,
       color
     });
@@ -450,6 +584,25 @@ const extractEdgesFromMesh = (
 
   edges.dispose();
   return lines;
+};
+
+/**
+ * ACI 색상 코드를 레이어 이름으로 변환
+ */
+const aciToLayerName = (aciColor: number): string => {
+  switch (aciColor) {
+    case 1: return 'COLOR_RED';
+    case 2: return 'COLOR_YELLOW';
+    case 3: return 'COLOR_GREEN';
+    case 4: return 'COLOR_CYAN';
+    case 5: return 'COLOR_BLUE';
+    case 6: return 'COLOR_MAGENTA';
+    case 7: return 'COLOR_WHITE';
+    case 8: return 'COLOR_GRAY';
+    case 9: return 'COLOR_LIGHTGRAY';
+    case 250: return 'COLOR_DARKGRAY';
+    default: return `COLOR_${aciColor}`;
+  }
 };
 
 /**
@@ -485,33 +638,57 @@ export const generateDxfFromData = (
   // DXF 생성
   const dxf = new DxfWriter();
 
-  // 색상별 레이어 생성 (ACI 색상 코드 사용)
-  // 7=흰색/검정, 8=회색, 250=어두운회색
-  dxf.addLayer('0', 7, 'CONTINUOUS'); // 기본 레이어
+  // 기본 레이어 생성
+  dxf.addLayer('0', 7, 'CONTINUOUS');
   dxf.addLayer('SPACE', 7, 'CONTINUOUS');
   dxf.addLayer('FURNITURE', 7, 'CONTINUOUS');
   dxf.addLayer('DIMENSIONS', 7, 'CONTINUOUS');
 
-  // 라인 추가 - 각 라인의 실제 색상 사용
+  // 사용된 색상 수집하여 색상별 레이어 생성
+  const usedColors = new Set<number>();
+  lines.forEach(line => usedColors.add(line.color));
+  texts.forEach(text => usedColors.add(text.color));
+
+  // 색상별 레이어 생성 (색상을 레이어 색상으로 적용)
+  usedColors.forEach(aciColor => {
+    const layerName = aciToLayerName(aciColor);
+    try {
+      dxf.addLayer(layerName, aciColor, 'CONTINUOUS');
+      console.log(`📦 레이어 생성: ${layerName} (ACI ${aciColor})`);
+    } catch (e) {
+      // 이미 존재하는 레이어는 무시
+    }
+  });
+
+  // 색상 통계
+  const colorStats: Record<number, number> = {};
+  lines.forEach(line => {
+    colorStats[line.color] = (colorStats[line.color] || 0) + 1;
+  });
+  console.log('📊 색상별 라인 통계:', colorStats);
+
+  // 라인 추가 - 색상별 레이어에 배치
   lines.forEach(line => {
     try {
-      dxf.setCurrentLayerName(line.layer);
+      // 색상에 해당하는 레이어 사용
+      const colorLayerName = aciToLayerName(line.color);
+      dxf.setCurrentLayerName(colorLayerName);
     } catch {
       dxf.setCurrentLayerName('0');
     }
 
-    // DXF LINE 엔티티 직접 생성 (색상 포함)
-    // @tarikjabiri/dxf의 addLine은 색상을 지원하지 않으므로 레이어 색상 사용
     dxf.addLine(
       point3d(line.x1 + offsetX, line.y1 + offsetY),
       point3d(line.x2 + offsetX, line.y2 + offsetY)
     );
   });
 
-  // 텍스트 추가
+  // 텍스트 추가 - 색상별 레이어에 배치
   texts.forEach(text => {
     try {
-      dxf.setCurrentLayerName(text.layer);
+      // 색상에 해당하는 레이어 사용
+      const colorLayerName = aciToLayerName(text.color);
+      dxf.setCurrentLayerName(colorLayerName);
     } catch {
       dxf.setCurrentLayerName('DIMENSIONS');
     }
