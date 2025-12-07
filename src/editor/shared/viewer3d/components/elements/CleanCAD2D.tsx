@@ -2393,7 +2393,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const moduleWidth = mmToThreeUnits(actualWidth);
         const leftX = actualPositionX - moduleWidth / 2;
         const rightX = actualPositionX + moduleWidth / 2;
-        const dimY = topDimensionY - mmToThreeUnits(120); // 상단 전체 치수 아래 위치 (간격 증가)
+        const dimY = slotDimensionY; // 개별 가구 치수선은 가장 아래 (slotDimensionY)
         
         // 듀얼 가구인지 확인 (이름에 'dual' 포함)
         const isDualModule = moduleData.id.includes('dual');
