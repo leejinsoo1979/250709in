@@ -1,6 +1,7 @@
 /**
  * 씬에서 렌더링된 모든 Line 객체를 추출하여 DXF 생성
  * Line, LineSegments, Line2 (drei), Mesh 엣지 등 모두 지원
+ * 실제 색상과 텍스트도 추출
  */
 
 import { DxfWriter, point3d } from '@tarikjabiri/dxf';
@@ -17,7 +18,84 @@ interface DxfLine {
   x2: number;
   y2: number;
   layer: string;
+  color: number; // DXF ACI color code
 }
+
+interface DxfText {
+  x: number;
+  y: number;
+  text: string;
+  height: number;
+  color: number;
+  layer: string;
+}
+
+/**
+ * RGB 색상을 DXF ACI 색상 코드로 변환
+ * DXF ACI: 1=빨강, 2=노랑, 3=초록, 4=시안, 5=파랑, 6=마젠타, 7=흰색/검정, 8=회색 등
+ */
+const rgbToAci = (r: number, g: number, b: number): number => {
+  // 검정에 가까운 색 (2D 라이트 모드 치수선)
+  if (r < 30 && g < 30 && b < 30) {
+    return 7; // 흰색/검정 (배경에 따라 자동 조절)
+  }
+
+  // 흰색에 가까운 색 (2D 다크 모드 치수선)
+  if (r > 225 && g > 225 && b > 225) {
+    return 7; // 흰색/검정
+  }
+
+  // 회색 계열
+  if (Math.abs(r - g) < 20 && Math.abs(g - b) < 20 && Math.abs(r - b) < 20) {
+    if (r < 80) return 250; // 어두운 회색
+    if (r < 130) return 8; // 중간 회색
+    if (r < 180) return 9; // 밝은 회색
+    return 7;
+  }
+
+  // 빨강 계열
+  if (r > 150 && g < 100 && b < 100) return 1;
+
+  // 노랑 계열
+  if (r > 200 && g > 200 && b < 100) return 2;
+
+  // 초록 계열
+  if (g > 150 && r < 100 && b < 100) return 3;
+
+  // 시안 계열
+  if (g > 150 && b > 150 && r < 100) return 4;
+
+  // 파랑 계열
+  if (b > 150 && r < 100 && g < 100) return 5;
+
+  // 마젠타 계열
+  if (r > 150 && b > 150 && g < 100) return 6;
+
+  // 기본값
+  return 7;
+};
+
+/**
+ * Three.js 색상에서 DXF ACI 코드 추출
+ */
+const getColorFromMaterial = (material: THREE.Material | THREE.Material[] | undefined): number => {
+  if (!material) return 7;
+
+  const mat = Array.isArray(material) ? material[0] : material;
+
+  if (mat && 'color' in mat) {
+    const color = (mat as THREE.LineBasicMaterial).color;
+    if (color) {
+      return rgbToAci(
+        Math.round(color.r * 255),
+        Math.round(color.g * 255),
+        Math.round(color.b * 255)
+      );
+    }
+  }
+
+  return 7;
+};
 
 /**
  * Line2/LineSegments2 (drei의 Line 컴포넌트)에서 좌표 추출
@@ -27,13 +105,13 @@ const extractFromLine2 = (
   object: THREE.Object3D,
   matrix: THREE.Matrix4,
   scale: number,
-  layer: string
+  layer: string,
+  color: number
 ): DxfLine[] => {
   const lines: DxfLine[] = [];
   const geometry = (object as THREE.Mesh).geometry;
 
   if (!geometry) {
-    console.log('  ⚠️ Line2에 geometry가 없음');
     return lines;
   }
 
@@ -42,8 +120,6 @@ const extractFromLine2 = (
   const instanceEnd = geometry.getAttribute('instanceEnd');
 
   if (instanceStart && instanceEnd) {
-    console.log(`  📊 Line2 instanceStart/End 발견, count: ${instanceStart.count}`);
-
     // Line2 with instance attributes (InterleavedBufferAttribute)
     for (let i = 0; i < instanceStart.count; i++) {
       const p1 = new THREE.Vector3(
@@ -63,15 +139,10 @@ const extractFromLine2 = (
         y1: p1.y * scale,
         x2: p2.x * scale,
         y2: p2.y * scale,
-        layer
+        layer,
+        color
       });
     }
-  } else {
-    console.log('  ⚠️ Line2에 instanceStart/instanceEnd가 없음, 다른 방식 시도');
-
-    // Some Line2 might store positions differently - check all attributes
-    const attributes = Object.keys((geometry.attributes || {}));
-    console.log('  📊 Line2 geometry attributes:', attributes);
   }
 
   return lines;
@@ -84,7 +155,8 @@ const extractFromLineSegments = (
   object: THREE.LineSegments,
   matrix: THREE.Matrix4,
   scale: number,
-  layer: string
+  layer: string,
+  color: number
 ): DxfLine[] => {
   const lines: DxfLine[] = [];
   const geometry = object.geometry;
@@ -113,7 +185,8 @@ const extractFromLineSegments = (
       y1: p1.y * scale,
       x2: p2.x * scale,
       y2: p2.y * scale,
-      layer
+      layer,
+      color
     });
   }
 
@@ -127,7 +200,8 @@ const extractFromLine = (
   object: THREE.Line,
   matrix: THREE.Matrix4,
   scale: number,
-  layer: string
+  layer: string,
+  color: number
 ): DxfLine[] => {
   const lines: DxfLine[] = [];
   const geometry = object.geometry;
@@ -156,7 +230,8 @@ const extractFromLine = (
       y1: p1.y * scale,
       x2: p2.x * scale,
       y2: p2.y * scale,
-      layer
+      layer,
+      color
     });
   }
 
@@ -193,40 +268,30 @@ const determineLayer = (name: string): string => {
 };
 
 /**
- * 씬에서 모든 Line 객체 추출
- * Line, LineSegments, Line2 등 실제 라인 객체만 추출
+ * 씬에서 모든 Line 객체와 텍스트 추출
  */
-const extractLinesFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): DxfLine[] => {
+interface ExtractedData {
+  lines: DxfLine[];
+  texts: DxfText[];
+}
+
+const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): ExtractedData => {
   const lines: DxfLine[] = [];
+  const texts: DxfText[] = [];
   const scale = 100; // 1 Three.js unit = 100mm
 
-  console.log('🔍 씬에서 Line 객체 추출 시작...');
-  console.log('📊 씬 구조 분석 중...');
+  console.log('🔍 씬에서 Line/Text 객체 추출 시작...');
 
-  let totalObjects = 0;
   let lineObjects = 0;
+  let textObjects = 0;
   let meshObjects = 0;
-  let groupObjects = 0;
-  let invisibleObjects = 0;
 
   // Store meshes for potential edge extraction if no lines are found
-  const meshesForEdges: { mesh: THREE.Mesh; matrix: THREE.Matrix4; layer: string }[] = [];
-
-  // Detailed object type tracking
-  const objectTypes: Record<string, number> = {};
+  const meshesForEdges: { mesh: THREE.Mesh; matrix: THREE.Matrix4; layer: string; color: number }[] = [];
 
   scene.traverse((object) => {
-    totalObjects++;
-
-    // Track object types
-    const typeName = object.type || object.constructor.name;
-    objectTypes[typeName] = (objectTypes[typeName] || 0) + 1;
-
-    // Skip invisible objects but count them
-    if (!object.visible) {
-      invisibleObjects++;
-      return;
-    }
+    // Skip invisible objects
+    if (!object.visible) return;
 
     const name = object.name || '';
     if (shouldExclude(name)) return;
@@ -236,13 +301,16 @@ const extractLinesFromScene = (scene: THREE.Scene, viewDirection: ViewDirection)
     const matrix = object.matrixWorld;
     const layer = determineLayer(name);
 
-    // Check for Group
+    // Check for Group - skip but continue traversing children
     if (object instanceof THREE.Group) {
-      groupObjects++;
       return;
     }
 
-    // Check for Line2 (from drei) - has isLine2/isLineSegments2 property OR LineGeometry/LineSegmentsGeometry
+    // Extract color from material
+    const material = (object as THREE.Line | THREE.LineSegments | THREE.Mesh).material;
+    const color = getColorFromMaterial(material);
+
+    // Check for Line2 (from drei)
     const mesh = object as THREE.Mesh;
     const isLine2 = (object as any).isLine2 || (object as any).isLineSegments2;
     const hasLineGeometry = mesh.geometry && (
@@ -252,9 +320,7 @@ const extractLinesFromScene = (scene: THREE.Scene, viewDirection: ViewDirection)
     );
 
     if (isLine2 || hasLineGeometry) {
-      console.log(`📍 Line2/LineSegments2 발견: ${name || '(이름없음)'}, type: ${(object as any).type}, isLine2: ${isLine2}, hasLineGeometry: ${hasLineGeometry}`);
-      const extractedLines = extractFromLine2(object, matrix, scale, layer);
-      console.log(`   → 추출된 라인 수: ${extractedLines.length}`);
+      const extractedLines = extractFromLine2(object, matrix, scale, layer, color);
       lines.push(...extractedLines);
       lineObjects++;
       return;
@@ -263,10 +329,8 @@ const extractLinesFromScene = (scene: THREE.Scene, viewDirection: ViewDirection)
     // Check for LineSegments (EdgesGeometry)
     if (object instanceof THREE.LineSegments) {
       const posCount = object.geometry?.getAttribute('position')?.count || 0;
-      console.log(`📍 LineSegments 발견: ${name || '(이름없음)'}, 버텍스: ${posCount}, 가시성: ${object.visible}`);
       if (posCount > 0) {
-        const extractedLines = extractFromLineSegments(object, matrix, scale, layer);
-        console.log(`   → 추출된 라인 수: ${extractedLines.length}`);
+        const extractedLines = extractFromLineSegments(object, matrix, scale, layer, color);
         lines.push(...extractedLines);
       }
       lineObjects++;
@@ -276,40 +340,53 @@ const extractLinesFromScene = (scene: THREE.Scene, viewDirection: ViewDirection)
     // Check for Line (NativeLine)
     if (object instanceof THREE.Line) {
       const posCount = object.geometry?.getAttribute('position')?.count || 0;
-      console.log(`📍 Line 발견: ${name || '(이름없음)'}, 버텍스: ${posCount}, 가시성: ${object.visible}`);
       if (posCount > 0) {
-        const extractedLines = extractFromLine(object, matrix, scale, layer);
-        console.log(`   → 추출된 라인 수: ${extractedLines.length}`);
+        const extractedLines = extractFromLine(object, matrix, scale, layer, color);
         lines.push(...extractedLines);
       }
       lineObjects++;
       return;
     }
 
+    // Check for Text (drei Text component) - it's a Mesh with troika text data
+    if (mesh.geometry && (mesh as any).text !== undefined) {
+      const textContent = (mesh as any).text;
+      if (textContent && typeof textContent === 'string') {
+        const worldPos = new THREE.Vector3();
+        mesh.getWorldPosition(worldPos);
+
+        texts.push({
+          x: worldPos.x * scale,
+          y: worldPos.y * scale,
+          text: textContent,
+          height: 25, // 2.5mm text height
+          color: color,
+          layer
+        });
+        textObjects++;
+      }
+      return;
+    }
+
     // Check for Mesh (potential for edge extraction)
     if (object instanceof THREE.Mesh) {
       meshObjects++;
-      // Store mesh for potential edge extraction if no lines are found
-      meshesForEdges.push({ mesh: object, matrix, layer });
+      meshesForEdges.push({ mesh: object, matrix, layer, color });
     }
   });
 
   // If no lines were found, try extracting edges from meshes
   if (lines.length === 0 && meshesForEdges.length > 0) {
-    console.log(`⚠️ 라인이 없어서 Mesh에서 엣지 추출 시도 (${meshesForEdges.length}개 메쉬)...`);
+    console.log(`⚠️ 라인이 없어서 Mesh에서 엣지 추출 시도...`);
 
-    // Only extract from visible panel/furniture meshes
     const furnitureMeshes = meshesForEdges.filter(({ mesh }) => {
       const name = (mesh.name || '').toLowerCase();
-      // Skip floor, walls, background meshes
       if (name.includes('floor') || name.includes('wall') || name.includes('background') || name.includes('slot')) {
         return false;
       }
-      // Only include visible geometry with reasonable size
       if (mesh.geometry) {
         const box = new THREE.Box3().setFromObject(mesh);
         const size = box.getSize(new THREE.Vector3());
-        // Skip very small objects (likely UI elements)
         if (size.x < 0.01 && size.y < 0.01 && size.z < 0.01) {
           return false;
         }
@@ -318,27 +395,15 @@ const extractLinesFromScene = (scene: THREE.Scene, viewDirection: ViewDirection)
       return false;
     });
 
-    console.log(`📦 엣지 추출 대상 메쉬: ${furnitureMeshes.length}개`);
-
-    furnitureMeshes.forEach(({ mesh, matrix, layer }) => {
-      const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, layer);
-      console.log(`   → ${mesh.name || '(이름없음)'}: ${extractedEdges.length}개 엣지`);
+    furnitureMeshes.forEach(({ mesh, matrix, layer, color }) => {
+      const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, layer, color);
       lines.push(...extractedEdges);
     });
   }
 
-  console.log(`📊 씬 분석 완료:
-    - 총 객체 수: ${totalObjects}
-    - 비가시 객체 수: ${invisibleObjects}
-    - Group 객체 수: ${groupObjects}
-    - Line 객체 수: ${lineObjects}
-    - Mesh 객체 수: ${meshObjects}
-    - 추출된 라인 수: ${lines.length}
-  `);
+  console.log(`📊 추출 완료: 라인 ${lines.length}개, 텍스트 ${texts.length}개`);
 
-  console.log('📊 객체 타입별 카운트:', objectTypes);
-
-  return lines;
+  return { lines, texts };
 };
 
 /**
@@ -348,7 +413,8 @@ const extractEdgesFromMesh = (
   mesh: THREE.Mesh,
   matrix: THREE.Matrix4,
   scale: number,
-  layer: string
+  layer: string,
+  color: number
 ): DxfLine[] => {
   const lines: DxfLine[] = [];
 
@@ -377,7 +443,8 @@ const extractEdgesFromMesh = (
       y1: p1.y * scale,
       x2: p2.x * scale,
       y2: p2.y * scale,
-      layer
+      layer,
+      color
     });
   }
 
@@ -386,7 +453,7 @@ const extractEdgesFromMesh = (
 };
 
 /**
- * DXF 생성
+ * DXF 생성 - 색상과 텍스트 포함
  */
 export const generateDxfFromData = (
   spaceInfo: SpaceInfo,
@@ -404,11 +471,11 @@ export const generateDxfFromData = (
   console.log(`📊 공간 정보: ${spaceInfo.width}mm x ${spaceInfo.height}mm x ${spaceInfo.depth}mm`);
   console.log(`📊 배치된 가구 수: ${placedModules.length}`);
 
-  // 씬에서 Line 객체 추출
-  const lines = extractLinesFromScene(scene, viewDirection);
+  // 씬에서 Line과 Text 객체 추출
+  const { lines, texts } = extractFromScene(scene, viewDirection);
 
   if (lines.length === 0) {
-    console.warn('⚠️ 추출된 라인이 없습니다. 씬에 렌더링된 Line 객체가 없거나 가시성이 꺼져 있을 수 있습니다.');
+    console.warn('⚠️ 추출된 라인이 없습니다.');
   }
 
   // DXF 원점 이동 (왼쪽 하단을 원점으로)
@@ -418,24 +485,46 @@ export const generateDxfFromData = (
   // DXF 생성
   const dxf = new DxfWriter();
 
-  dxf.addLayer('SPACE', 8, 'CONTINUOUS');
+  // 색상별 레이어 생성 (ACI 색상 코드 사용)
+  // 7=흰색/검정, 8=회색, 250=어두운회색
+  dxf.addLayer('0', 7, 'CONTINUOUS'); // 기본 레이어
+  dxf.addLayer('SPACE', 7, 'CONTINUOUS');
   dxf.addLayer('FURNITURE', 7, 'CONTINUOUS');
-  dxf.addLayer('DIMENSIONS', 1, 'CONTINUOUS');
+  dxf.addLayer('DIMENSIONS', 7, 'CONTINUOUS');
 
+  // 라인 추가 - 각 라인의 실제 색상 사용
   lines.forEach(line => {
     try {
       dxf.setCurrentLayerName(line.layer);
     } catch {
-      dxf.setCurrentLayerName('FURNITURE');
+      dxf.setCurrentLayerName('0');
     }
 
+    // DXF LINE 엔티티 직접 생성 (색상 포함)
+    // @tarikjabiri/dxf의 addLine은 색상을 지원하지 않으므로 레이어 색상 사용
     dxf.addLine(
       point3d(line.x1 + offsetX, line.y1 + offsetY),
       point3d(line.x2 + offsetX, line.y2 + offsetY)
     );
   });
 
-  console.log(`✅ DXF 생성 완료 - 라인 ${lines.length}개`);
+  // 텍스트 추가
+  texts.forEach(text => {
+    try {
+      dxf.setCurrentLayerName(text.layer);
+    } catch {
+      dxf.setCurrentLayerName('DIMENSIONS');
+    }
+
+    // DXF TEXT 엔티티 추가
+    dxf.addText(
+      point3d(text.x + offsetX, text.y + offsetY),
+      text.height,
+      text.text
+    );
+  });
+
+  console.log(`✅ DXF 생성 완료 - 라인 ${lines.length}개, 텍스트 ${texts.length}개`);
   return dxf.stringify();
 };
 
