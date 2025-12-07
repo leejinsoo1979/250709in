@@ -603,6 +603,85 @@ const shouldExclude = (name: string): boolean => {
  * - ACCESSORIES: 조절발, 환기탭 등
  * - END_PANEL: 엔드패널
  */
+/**
+ * 부모 계층에서 이름을 모두 수집하는 헬퍼 함수
+ */
+const getParentNamesChain = (obj: THREE.Object3D): string => {
+  let names = '';
+  let current: THREE.Object3D | null = obj.parent;
+  while (current) {
+    if (current.name) {
+      names += ' ' + current.name.toLowerCase();
+    }
+    current = current.parent;
+  }
+  return names;
+};
+
+/**
+ * 레이어 결정 함수 - 자신의 이름과 부모 계층 이름을 모두 확인
+ */
+const determineLayerWithParent = (obj: THREE.Object3D): string => {
+  const name = obj.name || '';
+  const lowerName = name.toLowerCase();
+  const parentNames = getParentNamesChain(obj);
+  const combinedNames = lowerName + parentNames;
+
+  // 치수선
+  if (combinedNames.includes('dimension')) {
+    return 'DIMENSIONS';
+  }
+
+  // 공간 프레임 (Room.tsx의 space-frame)
+  if (combinedNames.includes('space-frame') || combinedNames.includes('space_frame')) {
+    return 'SPACE_FRAME';
+  }
+
+  // 백패널
+  if (combinedNames.includes('back-panel') || combinedNames.includes('backpanel') || combinedNames.includes('백패널')) {
+    return 'BACK_PANEL';
+  }
+
+  // 옷봉 (브라켓 포함) - 부모가 clothing-rod면 옷봉 레이어
+  if (combinedNames.includes('clothing-rod') || combinedNames.includes('clothingrod') || combinedNames.includes('옷봉')) {
+    return 'CLOTHING_ROD';
+  }
+
+  // 환기캡 - 마젠타 (ACI 6) - 조절발보다 먼저 체크
+  if (combinedNames.includes('ventilation') || combinedNames.includes('환기')) {
+    return 'VENTILATION';
+  }
+
+  // 조절발 (상단 플레이트 포함) - 부모가 adjustable-foot면 악세서리 레이어
+  if (combinedNames.includes('adjustable-foot') || combinedNames.includes('조절발')) {
+    return 'ACCESSORIES';
+  }
+
+  // 엔드패널
+  if (combinedNames.includes('end-panel') || combinedNames.includes('endpanel') || combinedNames.includes('엔드패널')) {
+    return 'END_PANEL';
+  }
+
+  // 가구 패널 (furniture-edge 이름을 가진 것들)
+  if (lowerName.includes('furniture-edge') || lowerName.includes('furniture_edge')) {
+    return 'FURNITURE_PANEL';
+  }
+
+  // 기타 가구 관련
+  if (lowerName.includes('furniture') || lowerName.includes('shelf') || lowerName.includes('선반') ||
+      lowerName.includes('panel') || lowerName.includes('패널')) {
+    return 'FURNITURE_PANEL';
+  }
+
+  // 공간/방 관련 (space-frame 이외)
+  if (lowerName.includes('space') || lowerName.includes('room') || lowerName.includes('wall')) {
+    return 'SPACE_FRAME';
+  }
+
+  // 기본값
+  return 'FURNITURE_PANEL';
+};
+
 const determineLayer = (name: string): string => {
   const lowerName = name.toLowerCase();
 
@@ -821,7 +900,8 @@ const extractFromScene = (
     // Update world matrix
     object.updateMatrixWorld(true);
     const matrix = object.matrixWorld;
-    const layer = determineLayer(name);
+    // 부모 계층까지 확인하여 레이어 결정 (옷봉 브라켓, 조절발 플레이트 등)
+    const layer = determineLayerWithParent(object);
 
     // 측면뷰에서 가구 X 위치 필터링 (allowedXRange가 있으면 해당 범위의 가구만 포함)
     // 공간 프레임, 치수선은 필터링 제외 (항상 포함)
