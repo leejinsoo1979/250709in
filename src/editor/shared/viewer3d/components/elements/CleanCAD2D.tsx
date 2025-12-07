@@ -699,18 +699,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 인덱싱은 이미 상단에서 계산됨
   const { threeUnitBoundaries, columnCount } = indexing;
   
-  // 치수선 위치 설정 - 3D 모드에서는 더 위쪽에 배치
+  // 치수선 위치 설정 - 일관된 간격으로 배치
   const hasPlacedModules = placedModules.length > 0;
   const is3DMode = currentViewDirection === '3D'; // 3D 모드인지 판단
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
-  // 단내림이 있으면 전체 치수선을 더 위로 올림
+
+  // 치수선 간격 상수 (일관성 있는 레이아웃)
+  const DIMENSION_GAP = 60; // 치수선 간 간격 (mm)
+  const EXTENSION_LENGTH = 40; // 보조선 연장 길이 (mm)
+
+  // 1단계: 전체 너비 (3600) - 맨 위
   const topDimensionY = spaceHeight + mmToThreeUnits(
-    hasDroppedCeiling 
-      ? (hasPlacedModules ? (is3DMode ? 430 : 360) : (is3DMode ? 350 : 280))
-      : (hasPlacedModules ? (is3DMode ? 350 : 280) : (is3DMode ? 270 : 200))
-  ); // 상단 전체 치수선
-  // columnDimensionY: topDimensionY 바로 아래 (전체너비 아래에 내부너비가 표시되도록)
-  const columnDimensionY = topDimensionY - mmToThreeUnits(80); // 전체 너비 치수선 바로 아래
+    hasDroppedCeiling
+      ? (is3DMode ? 280 : 220)
+      : (is3DMode ? 220 : 160)
+  );
+  // 2단계: 내부 너비 (3540) + 좌우 프레임 - 전체 너비 아래
+  const columnDimensionY = topDimensionY - mmToThreeUnits(DIMENSION_GAP);
+  // 3단계: 개별 슬롯 너비 - 내부 너비 아래
+  const slotDimensionY = columnDimensionY - mmToThreeUnits(DIMENSION_GAP);
   const leftDimensionX = -mmToThreeUnits(200); // 좌측 치수선 (균형감을 위해 200으로 고정)
   
   // 좌측 오프셋 (가로 공간치수의 절반)
@@ -1719,6 +1726,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const internalRightX = threeUnitBoundaries[threeUnitBoundaries.length - 1];
         const internalWidthMm = indexing.internalWidth;
         const centerX = (internalLeftX + internalRightX) / 2;
+        const extLen = mmToThreeUnits(EXTENSION_LENGTH); // 일관된 보조선 길이
 
         return (
           <group key="total-internal-width">
@@ -1750,25 +1758,25 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             <Text
               renderOrder={1000}
               depthTest={false}
-              position={[centerX, columnDimensionY + mmToThreeUnits(30), 0.01]}
-              fontSize={smallFontSize}
+              position={[centerX, columnDimensionY + mmToThreeUnits(20), 0.01]}
+              fontSize={baseFontSize}
               color={textColor}
               anchorX="center"
               anchorY="middle"
             >
               {Math.round(internalWidthMm)}
             </Text>
-            {/* 좌측 연장선 */}
+            {/* 좌측 연장선 - 공간 상단에서 치수선 위까지 */}
             <NativeLine name="dimension_line"
-              points={[[internalLeftX, spaceHeight, 0.001], [internalLeftX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[internalLeftX, spaceHeight, 0.001], [internalLeftX, topDimensionY + extLen, 0.001]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={100000}
               depthTest={false}
             />
-            {/* 우측 연장선 */}
+            {/* 우측 연장선 - 공간 상단에서 치수선 위까지 */}
             <NativeLine name="dimension_line"
-              points={[[internalRightX, spaceHeight, 0.001], [internalRightX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[internalRightX, spaceHeight, 0.001], [internalRightX, topDimensionY + extLen, 0.001]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={100000}
