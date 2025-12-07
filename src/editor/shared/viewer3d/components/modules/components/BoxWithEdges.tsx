@@ -416,10 +416,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             lines.push([[halfW, -halfH, halfD], [halfW, -halfH, -halfD]]); // 우하
           }
 
+          // DXF 내보내기를 위해 name 속성 추가
+          const partialEdgeName = isBackPanel
+            ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
+            : `furniture-edge${panelName ? `-${panelName}` : ''}`;
           return (
             <>
               {lines.map((line, i) => (
-                <line key={i}>
+                <line key={i} name={`${partialEdgeName}-${i}`}>
                   <bufferGeometry>
                     <bufferAttribute
                       attach="attributes-position"
@@ -452,9 +456,13 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           );
         } else {
           // 전체 엣지 표시
+          // DXF 내보내기를 위해 name 속성 추가
+          const edgeName = isBackPanel
+            ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
+            : `furniture-edge${panelName ? `-${panelName}` : ''}`;
           return (
             <>
-              <lineSegments>
+              <lineSegments name={edgeName}>
                 <edgesGeometry args={[new THREE.BoxGeometry(...args)]} />
                 <lineBasicMaterial
                   color={edgeColor}

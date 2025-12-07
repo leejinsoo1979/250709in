@@ -370,13 +370,16 @@ const extractFromLine2 = (
  * LineSegments에서 좌표 추출 (EdgesGeometry 포함)
  * 뷰 방향에 따라 보이지 않는 엣지는 필터링
  * 뒤쪽 엣지도 필터링하여 2D CAD 스타일 유지
+ *
+ * @param skipBackFiltering - true면 뒤쪽 엣지 필터링 건너뜀 (프레임 엣지용)
  */
 const extractFromLineSegments = (
   object: THREE.LineSegments,
   matrix: THREE.Matrix4,
   scale: number,
   layer: string,
-  color: number
+  color: number,
+  skipBackFiltering: boolean = false
 ): DxfLine[] => {
   const lines: DxfLine[] = [];
   const geometry = object.geometry;
@@ -435,20 +438,23 @@ const extractFromLineSegments = (
 
     // 뒤쪽 엣지 필터링 (앞쪽 면의 엣지만 포함)
     // 주의: 범위가 너무 작은 경우 (평면 객체 등) 필터링 안함
-    const range = maxZ - minZ;
-    if (range > 0.01) { // 1mm 이상 깊이가 있는 경우에만 필터링
-      let edgeZ: number;
-      if (currentViewDirection === 'front') {
-        edgeZ = Math.max(p1.z, p2.z);
-      } else if (currentViewDirection === 'top') {
-        edgeZ = Math.max(p1.y, p2.y);
-      } else {
-        edgeZ = currentViewDirection === 'right' ? Math.max(p1.x, p2.x) : Math.min(p1.x, p2.x);
-      }
+    // skipBackFiltering이 true면 이 필터링을 건너뜀 (프레임 엣지용)
+    if (!skipBackFiltering) {
+      const range = maxZ - minZ;
+      if (range > 0.01) { // 1mm 이상 깊이가 있는 경우에만 필터링
+        let edgeZ: number;
+        if (currentViewDirection === 'front') {
+          edgeZ = Math.max(p1.z, p2.z);
+        } else if (currentViewDirection === 'top') {
+          edgeZ = Math.max(p1.y, p2.y);
+        } else {
+          edgeZ = currentViewDirection === 'right' ? Math.max(p1.x, p2.x) : Math.min(p1.x, p2.x);
+        }
 
-      if (edgeZ < frontThreshold) {
-        filteredCount++;
-        continue;
+        if (edgeZ < frontThreshold) {
+          filteredCount++;
+          continue;
+        }
       }
     }
 
@@ -744,10 +750,30 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           }
         }
 
-        const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, layer, lsColor);
+        // 백패널 엣지 감지 - 더 투명한 주황색 사용 (ACI 40 = 연한 주황색)
+        const lowerName = name.toLowerCase();
+        const isBackPanelEdge = lowerName.includes('back-panel') || lowerName.includes('백패널');
+        const isFurnitureEdge = lowerName.includes('furniture-edge') ||
+                                lowerName.includes('좌측') || lowerName.includes('우측') ||
+                                lowerName.includes('상판') || lowerName.includes('하판') ||
+                                lowerName.includes('선반');
+
+        // 백패널은 더 투명한 주황색 (ACI 40), 일반 가구는 주황색 (ACI 30)
+        if (isBackPanelEdge) {
+          lsColor = 40; // ACI 40 = 연한 주황색 (투명감 있는)
+          console.log(`🟠 백패널 엣지 발견: ${name}, ACI 40 (투명 주황)으로 설정`);
+        } else if (isFurnitureEdge && lsColor === 30) {
+          // 일반 가구 엣지는 기존 주황색 유지
+          console.log(`📦 가구 프레임 엣지 발견: ${name}, ACI 30 (주황)으로 유지`);
+        }
+
+        // 가구 프레임 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판 등 모두 보임)
+        const skipBackFilter = isFurnitureEdge || isBackPanelEdge;
+
+        const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, layer, lsColor, skipBackFilter);
         lines.push(...extractedLines);
         lineSegmentsObjects++;
-        console.log(`📐 LineSegments 발견: ${name || '(이름없음)'}, 버텍스 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${lsColor}`);
+        console.log(`📐 LineSegments 발견: ${name || '(이름없음)'}, 버텍스 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${lsColor}${skipBackFilter ? ' (뒤쪽 필터링 스킵)' : ''}`);
       } else {
         console.log(`⚠️ LineSegments position 없음: ${name || '(이름없음)'}, geometry type: ${geometry.type}`);
       }
@@ -772,12 +798,28 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           }
         }
 
+        // 백패널/가구 프레임 엣지 감지 (개별 Line 요소용)
+        const lowerName = name.toLowerCase();
+        const isBackPanelEdge = lowerName.includes('back-panel') || lowerName.includes('백패널');
+        const isFurnitureEdge = lowerName.includes('furniture-edge') ||
+                                lowerName.includes('좌측') || lowerName.includes('우측') ||
+                                lowerName.includes('상판') || lowerName.includes('하판') ||
+                                lowerName.includes('선반');
+
+        // 백패널은 더 투명한 주황색 (ACI 40)
+        if (isBackPanelEdge) {
+          lineColor = 40;
+          console.log(`🟠 백패널 엣지(Line) 발견: ${name}, ACI 40 (투명 주황)으로 설정`);
+        } else if (isFurnitureEdge) {
+          console.log(`📦 가구 프레임 엣지(Line) 발견: ${name}, ACI ${lineColor}`);
+        }
+
         const extractedLines = extractFromLine(object, matrix, scale, layer, lineColor);
         lines.push(...extractedLines);
         lineObjects++;
 
         // 치수선 전용 로깅
-        const isDimensionLine = name.toLowerCase().includes('dimension');
+        const isDimensionLine = lowerName.includes('dimension');
         if (isDimensionLine) {
           console.log(`📏 치수선(Line) 발견: ${name}, 포인트 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${lineColor}`);
         }
@@ -1006,6 +1048,7 @@ const aciToLayerName = (aciColor: number): string => {
     case 8: return 'COLOR_GRAY';
     case 9: return 'COLOR_LIGHTGRAY';
     case 30: return 'COLOR_ORANGE';
+    case 40: return 'COLOR_LIGHT_ORANGE'; // 백패널용 투명 주황
     case 250: return 'COLOR_DARKGRAY';
     default: return `COLOR_${aciColor}`;
   }
