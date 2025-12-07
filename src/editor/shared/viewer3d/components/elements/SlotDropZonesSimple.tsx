@@ -2810,7 +2810,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                       <meshBasicMaterial
                         color={primaryColor}
                         transparent
-                        opacity={0.15}
+                        opacity={0.35}
                         side={THREE.DoubleSide}
                       />
                     </mesh>
@@ -2895,7 +2895,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                   <meshBasicMaterial
                     color={primaryColor}
                     transparent
-                    opacity={0.15}
+                    opacity={0.35}
                     side={THREE.DoubleSide}
                   />
                 </mesh>
