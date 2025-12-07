@@ -71,7 +71,8 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
             <label className={styles.inputLabel}>좌측 (40~100)</label>
             <input
               type="text"
-              value={!hasLeftWall ? END_PANEL_WIDTH : frameSize.left}
+              inputMode="numeric"
+              value={!hasLeftWall ? String(END_PANEL_WIDTH) : String(frameSize.left)}
               onChange={(e) => handleRealTimeChange('left', e.target.value)}
               onFocus={(e) => handleInputFocus(e, 'left')}
               onBlur={() => handleInputBlur('left')}
@@ -86,7 +87,8 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
             <label className={styles.inputLabel}>우측 (40~100)</label>
             <input
               type="text"
-              value={!hasRightWall ? END_PANEL_WIDTH : frameSize.right}
+              inputMode="numeric"
+              value={!hasRightWall ? String(END_PANEL_WIDTH) : String(frameSize.right)}
               onChange={(e) => handleRealTimeChange('right', e.target.value)}
               onFocus={(e) => handleInputFocus(e, 'right')}
               onBlur={() => handleInputBlur('right')}
@@ -101,7 +103,8 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
             <label className={styles.inputLabel}>상단 (10~200)</label>
             <input
               type="text"
-              value={frameSize.top}
+              inputMode="numeric"
+              value={String(frameSize.top)}
               onChange={(e) => handleRealTimeChange('top', e.target.value)}
               onFocus={(e) => handleInputFocus(e, 'top')}
               onBlur={() => handleInputBlur('top')}
@@ -127,7 +130,8 @@ const FrameSizeControls: React.FC<FrameSizeControlsProps> = ({
           <label className={styles.inputLabel}>상단 (10~200)</label>
           <input
             type="text"
-            value={frameSize.top}
+            inputMode="numeric"
+            value={String(frameSize.top)}
             onChange={(e) => handleRealTimeChange('top', e.target.value)}
             onFocus={(e) => handleInputFocus(e, 'top')}
             onBlur={() => handleInputBlur('top')}

@@ -23,10 +23,13 @@ type LocalFrameSize = {
 const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate, disabled = false }) => {
   // 파생 상태 스토어 사용
   const derivedStore = useDerivedSpaceStore();
-  
+
   // 이전 spaceInfo 값을 추적하여 불필요한 재계산 방지
   const prevSpaceInfoRef = useRef(spaceInfo);
-  
+
+  // 입력 중인지 추적 (입력 중에는 외부 상태 동기화 방지)
+  const isEditingRef = useRef(false);
+
   // 기존 로컬 상태들
   const isSurround = spaceInfo.surroundType === 'surround';
   const isNoSurround = spaceInfo.surroundType === 'no-surround';
@@ -51,9 +54,9 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     hasRightWall
   );
 
-  // spaceInfo.frameSize가 변경될 때 frameSize 상태 업데이트
+  // spaceInfo.frameSize가 변경될 때 frameSize 상태 업데이트 (입력 중이 아닐 때만)
   useEffect(() => {
-    if (spaceInfo.frameSize) {
+    if (spaceInfo.frameSize && !isEditingRef.current) {
       setFrameSize({
         left: !hasLeftWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.left,
         right: !hasRightWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.right,
@@ -174,6 +177,9 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
       return;
     }
 
+    // 입력 시작 표시
+    isEditingRef.current = true;
+
     // 빈 문자열이거나 숫자인 경우에만 로컬 상태 업데이트
     // 입력 중에는 범위 검증하지 않음 (blur 시에 검증)
     if (value === '' || /^\d*$/.test(value)) {
@@ -184,20 +190,23 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
 
   // 프레임 크기 업데이트 (blur 또는 Enter 시)
   const handleFrameSizeBlur = (dimension: 'left' | 'right' | 'top') => {
+    // 입력 완료 표시
+    isEditingRef.current = false;
+
     if (!spaceInfo.frameSize) return;
-    
+
     // 벽이 없는 쪽은 수정 불가능
     if ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall)) {
       return;
     }
-    
+
     let value = frameSize[dimension];
-    
+
     // 숫자로 변환
     if (typeof value === 'string') {
       value = value === '' ? 10 : parseInt(value);
     }
-    
+
     // 유효하지 않은 숫자라면 기본값 사용
     if (isNaN(value)) {
       value = dimension === 'top' ? 10 : 50;
