@@ -849,7 +849,7 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     dxf.addText(
       point3d(centerX, y1 - 80),
       15,
-      `Slot${slotIndex + 1} | ${furnitureType}`
+      `Module${index + 1} | ${furnitureType}`
     );
     
     // 가구 치수 디버깅 로그
