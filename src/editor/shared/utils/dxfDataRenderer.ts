@@ -1646,6 +1646,43 @@ const generateExternalDimensions = (
       });
     }
 
+    // === 정면뷰 프레임 박스 (연두색 ACI 3) ===
+    const frameColor = 3; // 연두색
+    const leftFrameWidth = frameSize.left || 18;
+    const rightFrameWidth = frameSize.right || 18;
+
+    // 좌측 프레임 박스 (바닥 0 ~ 전체높이 height)
+    const leftFrameX1 = -halfWidth;
+    const leftFrameX2 = -halfWidth + leftFrameWidth;
+    lines.push({ x1: leftFrameX1, y1: 0, x2: leftFrameX2, y2: 0, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: leftFrameX2, y1: 0, x2: leftFrameX2, y2: height, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: leftFrameX2, y1: height, x2: leftFrameX1, y2: height, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: leftFrameX1, y1: height, x2: leftFrameX1, y2: 0, layer: 'SPACE_FRAME', color: frameColor });
+
+    // 우측 프레임 박스 (바닥 0 ~ 전체높이 height)
+    const rightFrameX1 = halfWidth - rightFrameWidth;
+    const rightFrameX2 = halfWidth;
+    lines.push({ x1: rightFrameX1, y1: 0, x2: rightFrameX2, y2: 0, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: rightFrameX2, y1: 0, x2: rightFrameX2, y2: height, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: rightFrameX2, y1: height, x2: rightFrameX1, y2: height, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: rightFrameX1, y1: height, x2: rightFrameX1, y2: 0, layer: 'SPACE_FRAME', color: frameColor });
+
+    // 상부 프레임 박스 (좌우 프레임 사이, 상단)
+    const topFrameY1 = height - topFrameThick;
+    const topFrameY2 = height;
+    lines.push({ x1: leftFrameX2, y1: topFrameY1, x2: rightFrameX1, y2: topFrameY1, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: rightFrameX1, y1: topFrameY1, x2: rightFrameX1, y2: topFrameY2, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: rightFrameX1, y1: topFrameY2, x2: leftFrameX2, y2: topFrameY2, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: leftFrameX2, y1: topFrameY2, x2: leftFrameX2, y2: topFrameY1, layer: 'SPACE_FRAME', color: frameColor });
+
+    // 받침대 박스 (좌우 프레임 사이, 하단) - 받침대가 있는 경우만
+    if (baseH > 0) {
+      lines.push({ x1: leftFrameX2, y1: 0, x2: rightFrameX1, y2: 0, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: rightFrameX1, y1: 0, x2: rightFrameX1, y2: baseH, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: rightFrameX1, y1: baseH, x2: leftFrameX2, y2: baseH, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: leftFrameX2, y1: baseH, x2: leftFrameX2, y2: 0, layer: 'SPACE_FRAME', color: frameColor });
+    }
+
   } else if (viewDirection === 'top') {
     // 상부뷰: 씬에서 추출한 치수선만 사용 (자체 생성 안함)
     // 2D 도면과 동일하게 표시하기 위해 generateExternalDimensions에서 생성하지 않음
