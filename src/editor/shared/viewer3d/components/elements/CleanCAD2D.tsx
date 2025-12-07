@@ -705,8 +705,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
 
   // 치수선 간격 상수 (일관성 있는 레이아웃)
-  const DIMENSION_GAP = 60; // 치수선 간 간격 (mm)
-  const EXTENSION_LENGTH = 40; // 보조선 연장 길이 (mm)
+  const DIMENSION_GAP = 120; // 치수선 간 간격 (mm)
+  const EXTENSION_LENGTH = 60; // 보조선 연장 길이 (mm)
 
   // 1단계: 전체 너비 (3600) - 맨 위
   const topDimensionY = spaceHeight + mmToThreeUnits(
