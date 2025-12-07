@@ -135,10 +135,10 @@ export default function LandingPage() {
               </svg>
             </button>
             <button
-              onClick={() => navigate('/viewer/demo')}
+              onClick={() => navigate('/configurator')}
               className={styles.secondaryButton}
             >
-              View Demo
+              Demo
             </button>
           </div>
         </div>
