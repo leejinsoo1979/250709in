@@ -1113,7 +1113,14 @@ const extractFromScene = (
     // Check for Text (drei Text component) - it's a Mesh with troika text data
     // 모든 텍스트는 DIMENSIONS 레이어로 강제 (치수 텍스트이므로)
     // DIMENSIONS 레이어를 끄면 모든 숫자가 함께 사라짐
+    // 탑뷰/측면뷰에서는 치수 텍스트 제외
     if (mesh.geometry && (mesh as any).text !== undefined) {
+      // 정면뷰가 아니면 치수 텍스트 제외
+      if (viewDirection !== 'front') {
+        console.log(`📝 ${viewDirection}뷰: 치수 텍스트 제외`);
+        return;
+      }
+
       const textContent = (mesh as any).text;
       if (textContent && typeof textContent === 'string') {
         const worldPos = new THREE.Vector3();
