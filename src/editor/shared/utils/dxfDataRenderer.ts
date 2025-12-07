@@ -33,6 +33,7 @@ interface DxfText {
 /**
  * RGB 색상을 DXF ACI 색상 코드로 변환
  * DXF ACI: 1=빨강, 2=노랑, 3=초록, 4=시안, 5=파랑, 6=마젠타, 7=흰색/검정, 8=회색 등
+ * 30=주황색 (2D 다크모드 가구 엣지)
  */
 const rgbToAci = (r: number, g: number, b: number): number => {
   // 검정에 가까운 색 (2D 라이트 모드 치수선)
@@ -43,6 +44,21 @@ const rgbToAci = (r: number, g: number, b: number): number => {
   // 흰색에 가까운 색 (2D 다크 모드 치수선)
   if (r > 225 && g > 225 && b > 225) {
     return 7; // 흰색/검정
+  }
+
+  // #FF4500 주황색 (2D 다크모드 가구 프레임) - RGB(255, 69, 0)
+  if (r > 240 && g > 50 && g < 90 && b < 20) {
+    return 30; // ACI 30 = 주황색
+  }
+
+  // #444444 어두운 회색 (2D 라이트모드 가구 프레임) - RGB(68, 68, 68)
+  if (r > 60 && r < 80 && g > 60 && g < 80 && b > 60 && b < 80) {
+    return 8; // ACI 8 = 회색
+  }
+
+  // #808080 회색 (조절발 2D 라이트모드) - RGB(128, 128, 128)
+  if (r > 120 && r < 140 && g > 120 && g < 140 && b > 120 && b < 140) {
+    return 9; // ACI 9 = 밝은 회색
   }
 
   // 회색 계열
@@ -59,8 +75,9 @@ const rgbToAci = (r: number, g: number, b: number): number => {
   // 노랑 계열
   if (r > 200 && g > 200 && b < 100) return 2;
 
-  // 초록 계열
+  // 초록 계열 (형광 녹색 #18CF23 포함)
   if (g > 150 && r < 100 && b < 100) return 3;
+  if (r < 50 && g > 180 && b < 80) return 3; // #18CF23
 
   // 시안 계열
   if (g > 150 && b > 150 && r < 100) return 4;
@@ -68,7 +85,8 @@ const rgbToAci = (r: number, g: number, b: number): number => {
   // 파랑 계열
   if (b > 150 && r < 100 && g < 100) return 5;
 
-  // 마젠타 계열
+  // 마젠타 계열 (#FF00FF)
+  if (r > 200 && b > 200 && g < 50) return 6;
   if (r > 150 && b > 150 && g < 100) return 6;
 
   // 기본값
@@ -301,6 +319,7 @@ const extractFromLine2 = (
 /**
  * LineSegments에서 좌표 추출 (EdgesGeometry 포함)
  * 뷰 방향에 따라 보이지 않는 엣지는 필터링
+ * 뒤쪽 엣지도 필터링하여 2D CAD 스타일 유지
  */
 const extractFromLineSegments = (
   object: THREE.LineSegments,
@@ -319,6 +338,30 @@ const extractFromLineSegments = (
 
   let filteredCount = 0;
 
+  // 먼저 모든 엣지의 z값 범위를 계산해서 앞쪽/뒤쪽 판단 기준 설정
+  let minZ = Infinity, maxZ = -Infinity;
+  for (let i = 0; i < positionAttr.count; i++) {
+    const p = new THREE.Vector3(
+      positionAttr.getX(i),
+      positionAttr.getY(i),
+      positionAttr.getZ(i)
+    ).applyMatrix4(matrix);
+
+    if (currentViewDirection === 'front') {
+      minZ = Math.min(minZ, p.z);
+      maxZ = Math.max(maxZ, p.z);
+    } else if (currentViewDirection === 'top') {
+      minZ = Math.min(minZ, p.y);
+      maxZ = Math.max(maxZ, p.y);
+    } else if (currentViewDirection === 'left' || currentViewDirection === 'right') {
+      minZ = Math.min(minZ, p.x);
+      maxZ = Math.max(maxZ, p.x);
+    }
+  }
+
+  // 앞쪽 판단 기준 (뷰 방향에서 가장 앞쪽 근처)
+  const frontThreshold = maxZ - (maxZ - minZ) * 0.1;
+
   // LineSegments: pairs of vertices
   for (let i = 0; i < positionAttr.count; i += 2) {
     const p1 = new THREE.Vector3(
@@ -335,6 +378,21 @@ const extractFromLineSegments = (
 
     // 뷰 방향에 수직인 엣지 필터링 (점으로 투영됨)
     if (!isLineVisibleInView(p1, p2)) {
+      filteredCount++;
+      continue;
+    }
+
+    // 뒤쪽 엣지 필터링 (앞쪽 면의 엣지만 포함)
+    let edgeZ: number;
+    if (currentViewDirection === 'front') {
+      edgeZ = Math.max(p1.z, p2.z);
+    } else if (currentViewDirection === 'top') {
+      edgeZ = Math.max(p1.y, p2.y);
+    } else {
+      edgeZ = currentViewDirection === 'right' ? Math.max(p1.x, p2.x) : Math.min(p1.x, p2.x);
+    }
+
+    if (edgeZ < frontThreshold) {
       filteredCount++;
       continue;
     }
@@ -362,7 +420,7 @@ const extractFromLineSegments = (
   }
 
   if (filteredCount > 0) {
-    console.log(`  ↳ ${filteredCount}개 엣지 필터링됨 (뷰 방향 또는 길이)`);
+    console.log(`  ↳ ${filteredCount}개 엣지 필터링됨 (뷰 방향/뒤쪽/길이)`);
   }
 
   return lines;
@@ -753,6 +811,7 @@ const aciToLayerName = (aciColor: number): string => {
     case 7: return 'COLOR_WHITE';
     case 8: return 'COLOR_GRAY';
     case 9: return 'COLOR_LIGHTGRAY';
+    case 30: return 'COLOR_ORANGE';
     case 250: return 'COLOR_DARKGRAY';
     default: return `COLOR_${aciColor}`;
   }
