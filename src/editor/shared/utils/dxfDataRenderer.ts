@@ -503,17 +503,32 @@ const extractFromLine = (
 
 /**
  * 객체 이름으로 제외 여부 판단
+ * 그리드, 슬롯 드롭존, 캔버스 외곽선 등 DXF에 포함되지 않아야 할 요소 필터링
  */
 const shouldExclude = (name: string): boolean => {
   const lowerName = name.toLowerCase();
   return (
+    // 기본 헬퍼/디버그 요소
     lowerName.includes('grid') ||
     lowerName.includes('helper') ||
     lowerName.includes('axes') ||
     lowerName.includes('gizmo') ||
     lowerName.includes('debug') ||
     lowerName.includes('camera') ||
-    lowerName.includes('light')
+    lowerName.includes('light') ||
+    // 슬롯 드롭존 및 마커
+    lowerName.includes('slot') ||
+    lowerName.includes('drop') ||
+    lowerName.includes('marker') ||
+    lowerName.includes('zone') ||
+    // 캔버스/외곽선 관련
+    lowerName.includes('canvas') ||
+    lowerName.includes('outline') ||
+    lowerName.includes('boundary') ||
+    lowerName.includes('border') ||
+    // 배경/바닥 관련 (프레임과 혼동 방지)
+    lowerName.includes('floor') ||
+    lowerName.includes('background')
   );
 };
 
@@ -524,7 +539,7 @@ const determineLayer = (name: string): string => {
   const lowerName = name.toLowerCase();
   if (lowerName.includes('dimension')) {
     return 'DIMENSIONS';
-  } else if (lowerName.includes('space') || lowerName.includes('room') || lowerName.includes('wall') || lowerName.includes('boundary')) {
+  } else if (lowerName.includes('space') || lowerName.includes('room') || lowerName.includes('wall')) {
     return 'SPACE';
   }
   return 'FURNITURE';
@@ -739,7 +754,7 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
 
   // 가구 프레임 엣지 추출 - LineSegments가 감지되지 않은 경우에도 Mesh에서 추출
   // 가구 패널(좌측판, 우측판, 상판, 바닥판 등)의 엣지를 확실히 추출하기 위해
-  // fallback이 아닌 추가 소스로 처리
+  // BoxGeometry만 대상으로 함 (CylinderGeometry 등은 이미 LineSegments로 처리됨)
   const furniturePanelMeshes = meshesForEdges.filter(({ mesh }) => {
     const name = (mesh.name || '').toLowerCase();
 
@@ -748,20 +763,53 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       return false;
     }
 
-    // 가구 관련 메쉬만 포함 (BoxGeometry인지 확인)
+    // 치수/텍스트 관련 제외 (박스가 텍스트 주위에 생기는 문제 방지)
+    if (name.includes('dimension') || name.includes('text') || name.includes('label') ||
+        name.includes('숫자') || name.includes('치수')) {
+      return false;
+    }
+
+    // troika text mesh 제외
+    if ((mesh as any).text !== undefined || (mesh as any).isTroikaText) {
+      return false;
+    }
+
+    // BoxGeometry만 포함 (가구 프레임 패널)
+    // CylinderGeometry (조절발 등)는 제외 - 이미 LineSegments로 처리됨
+    // SphereGeometry (치수선 끝점 등)도 제외
     if (mesh.geometry) {
-      const isBoxGeometry = mesh.geometry.type === 'BoxGeometry' ||
-                            mesh.geometry.type === 'BoxBufferGeometry';
-      if (isBoxGeometry) {
-        return true;
+      const geometryType = mesh.geometry.type;
+      const isBoxGeometry = geometryType === 'BoxGeometry' || geometryType === 'BoxBufferGeometry';
+
+      // SphereGeometry, CylinderGeometry 등 제외
+      if (geometryType.includes('Sphere') || geometryType.includes('Cylinder') ||
+          geometryType.includes('Circle') || geometryType.includes('Plane')) {
+        return false;
       }
 
-      // BoxGeometry가 아니더라도 충분한 크기의 메쉬 포함
-      const box = new THREE.Box3().setFromObject(mesh);
-      const size = box.getSize(new THREE.Vector3());
-      // 최소 크기 체크 (10mm 이상)
-      if (size.x > 0.1 || size.y > 0.1 || size.z > 0.1) {
-        return true;
+      if (isBoxGeometry) {
+        // 크기로 가구 패널 판단
+        const box = new THREE.Box3().setFromObject(mesh);
+        const size = box.getSize(new THREE.Vector3());
+
+        // 옷봉 브라켓 제외 (12x75x12mm 또는 유사 크기)
+        // 브라켓은 width와 depth가 모두 15mm 미만
+        const minDimension = Math.min(size.x, size.z); // width와 depth 중 작은 값
+        if (minDimension < 0.15) { // 15mm 미만이면 브라켓으로 간주
+          return false;
+        }
+
+        // 가구 패널은 최소 하나의 방향이 18mm (기본 두께) 이상
+        // 그리고 다른 방향이 50mm 이상 (패널 너비/높이)
+        const dims = [size.x, size.y, size.z].sort((a, b) => a - b);
+        const smallestDim = dims[0]; // 두께
+        const middleDim = dims[1];
+        const largestDim = dims[2];
+
+        // 두께가 5mm 이상, 다른 차원이 50mm 이상인 패널만 포함
+        if (smallestDim >= 0.05 && largestDim >= 0.5) {
+          return true;
+        }
       }
     }
     return false;
@@ -770,19 +818,18 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
   if (furniturePanelMeshes.length > 0) {
     console.log(`📦 가구 패널 Mesh에서 엣지 추출: ${furniturePanelMeshes.length}개`);
 
-    // 2D 뷰에서 가구 프레임 엣지 색상 결정
-    // 2D 다크 모드: ACI 30 (주황색 #FF4500)
-    // 2D 라이트 모드: ACI 8 (회색 #444444)
-    // 기본값으로 다크 모드 색상 사용 (가장 일반적)
-    const furnitureEdgeColor = 30; // ACI 30 = 주황색
+    // 2D 뷰에서 가구 프레임 엣지 색상
+    // ACI 30 = 주황색 (#FF4500, 다크모드)
+    const furnitureEdgeColor = 30;
 
     let meshEdgeCount = 0;
-    furniturePanelMeshes.forEach(({ mesh, matrix, layer }) => {
-      // 가구 패널은 FURNITURE 레이어에 주황색으로 추출
+    furniturePanelMeshes.forEach(({ mesh, matrix, layer, color }) => {
+      // BoxGeometry 패널은 주황색으로 추출
       const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', furnitureEdgeColor);
       if (extractedEdges.length > 0) {
         lines.push(...extractedEdges);
         meshEdgeCount += extractedEdges.length;
+        console.log(`  📐 Mesh 엣지: ${mesh.name || '(무명)'}, ${extractedEdges.length}개`);
       }
     });
     console.log(`✅ Mesh에서 ${meshEdgeCount}개 엣지 추출 완료 (색상 ACI=${furnitureEdgeColor})`);
