@@ -623,9 +623,13 @@ const determineLayer = (name: string): string => {
     return 'CLOTHING_ROD';
   }
 
-  // 조절발, 환기탭 등 액세서리
-  if (lowerName.includes('adjustable-foot') || lowerName.includes('조절발') ||
-      lowerName.includes('ventilation') || lowerName.includes('환기')) {
+  // 환기캡 - 마젠타 (ACI 6) - 조절발보다 먼저 체크
+  if (lowerName.includes('ventilation') || lowerName.includes('환기')) {
+    return 'VENTILATION';
+  }
+
+  // 조절발 - 회색 (ACI 8)
+  if (lowerName.includes('adjustable-foot') || lowerName.includes('조절발')) {
     return 'ACCESSORIES';
   }
 
@@ -1336,8 +1340,8 @@ const generateExternalDimensions = (
 
   const { width, height, depth } = spaceInfo;
   const dimensionColor = 7; // 흰색/검정 (치수선)
-  const extensionLength = 30; // 연장선 길이 (mm)
-  const dimensionOffset = 50; // 치수선 오프셋 (mm)
+  const extensionLength = 50; // 연장선 길이 (mm)
+  const dimensionOffset = 150; // 치수선 오프셋 (mm) - 가구와 충분히 떨어지게
 
   // 프레임 두께
   const frameThickness = spaceInfo.frameThickness || 50;
@@ -1445,114 +1449,160 @@ const generateExternalDimensions = (
     // 서라운드 프레임 (SPACE_FRAME 레이어)
     // ========================================
     const frameColor = 3; // ACI 3 = 연두색
-    const sideFrameThickness = spaceInfo.frameSize?.side || 42;
-    const topFrameThick = spaceInfo.frameSize?.top || 10;
-    const baseH = spaceInfo.baseConfig?.height || 65;
+    const frameSize = spaceInfo.frameSize || { left: 42, right: 42, top: 10 };
+    const leftFrameWidth = frameSize.left || 42;
+    const rightFrameWidth = frameSize.right || 42;
+    const topFrameThick = frameSize.top || 10;
+    const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
 
-    // 좌측 프레임 (세로선)
+    // 좌측 프레임 (세로선) - 외곽선
     lines.push({
       x1: -halfWidth, y1: baseH, x2: -halfWidth, y2: height,
       layer: 'SPACE_FRAME', color: frameColor
     });
+    // 좌측 프레임 (세로선) - 내부선
     lines.push({
-      x1: -halfWidth + sideFrameThickness, y1: baseH, x2: -halfWidth + sideFrameThickness, y2: height - topFrameThick,
+      x1: -halfWidth + leftFrameWidth, y1: baseH, x2: -halfWidth + leftFrameWidth, y2: height - topFrameThick,
       layer: 'SPACE_FRAME', color: frameColor
     });
 
-    // 우측 프레임 (세로선)
+    // 우측 프레임 (세로선) - 외곽선
     lines.push({
       x1: halfWidth, y1: baseH, x2: halfWidth, y2: height,
       layer: 'SPACE_FRAME', color: frameColor
     });
+    // 우측 프레임 (세로선) - 내부선
     lines.push({
-      x1: halfWidth - sideFrameThickness, y1: baseH, x2: halfWidth - sideFrameThickness, y2: height - topFrameThick,
+      x1: halfWidth - rightFrameWidth, y1: baseH, x2: halfWidth - rightFrameWidth, y2: height - topFrameThick,
       layer: 'SPACE_FRAME', color: frameColor
     });
 
-    // 상부 프레임 (가로선)
+    // 상부 프레임 (가로선) - 상단
     lines.push({
       x1: -halfWidth, y1: height, x2: halfWidth, y2: height,
       layer: 'SPACE_FRAME', color: frameColor
     });
+    // 상부 프레임 (가로선) - 하단
     lines.push({
-      x1: -halfWidth, y1: height - topFrameThick, x2: halfWidth, y2: height - topFrameThick,
+      x1: -halfWidth + leftFrameWidth, y1: height - topFrameThick, x2: halfWidth - rightFrameWidth, y2: height - topFrameThick,
       layer: 'SPACE_FRAME', color: frameColor
     });
 
-    // 하부 프레임/받침대 (가로선)
-    lines.push({
-      x1: -halfWidth, y1: baseH, x2: halfWidth, y2: baseH,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
+    // 하부 프레임/받침대 상단선
+    if (baseH > 0) {
+      lines.push({
+        x1: -halfWidth, y1: baseH, x2: halfWidth, y2: baseH,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+    }
+    // 바닥선
     lines.push({
       x1: -halfWidth, y1: 0, x2: halfWidth, y2: 0,
       layer: 'SPACE_FRAME', color: frameColor
     });
 
-    // 좌측 프레임 상하 연결선
+    // 좌측 프레임 - 상부 연결선 (상부프레임 하단에서)
     lines.push({
-      x1: -halfWidth, y1: baseH, x2: -halfWidth + sideFrameThickness, y2: baseH,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
-    lines.push({
-      x1: -halfWidth, y1: height - topFrameThick, x2: -halfWidth + sideFrameThickness, y2: height - topFrameThick,
+      x1: -halfWidth, y1: height - topFrameThick, x2: -halfWidth + leftFrameWidth, y2: height - topFrameThick,
       layer: 'SPACE_FRAME', color: frameColor
     });
 
-    // 우측 프레임 상하 연결선
+    // 우측 프레임 - 상부 연결선 (상부프레임 하단에서)
     lines.push({
-      x1: halfWidth - sideFrameThickness, y1: baseH, x2: halfWidth, y2: baseH,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
-    lines.push({
-      x1: halfWidth - sideFrameThickness, y1: height - topFrameThick, x2: halfWidth, y2: height - topFrameThick,
+      x1: halfWidth - rightFrameWidth, y1: height - topFrameThick, x2: halfWidth, y2: height - topFrameThick,
       layer: 'SPACE_FRAME', color: frameColor
     });
 
     // ========================================
-    // 추가 치수선들 (2D 화면과 동일하게)
+    // 추가 치수선들 (2D 화면과 동일하게) - 하단에 배치
     // ========================================
 
-    // 상단 2번째 줄: 좌측프레임 | 슬롯들 | 우측프레임
-    const dim2Y = height + dimensionOffset + 40;
+    // 하단 1번째 줄: 좌측프레임 | 내부너비 | 우측프레임
+    const dim2Y = -dimensionOffset - 40;
 
-    // 좌측 프레임 너비
+    // 좌측 프레임 너비 치수선
     lines.push({
-      x1: -halfWidth, y1: dim2Y, x2: -halfWidth + sideFrameThickness, y2: dim2Y,
+      x1: -halfWidth, y1: dim2Y, x2: -halfWidth + leftFrameWidth, y2: dim2Y,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    // 좌측 프레임 연장선
+    lines.push({
+      x1: -halfWidth, y1: 0, x2: -halfWidth, y2: dim2Y - extensionLength,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: -halfWidth + leftFrameWidth, y1: baseH, x2: -halfWidth + leftFrameWidth, y2: dim2Y - extensionLength,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     texts.push({
-      x: -halfWidth + sideFrameThickness / 2, y: dim2Y + 10,
-      text: `${sideFrameThickness}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+      x: -halfWidth + leftFrameWidth / 2, y: dim2Y - 15,
+      text: `${leftFrameWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
     });
 
-    // 우측 프레임 너비
+    // 우측 프레임 너비 치수선
     lines.push({
-      x1: halfWidth - sideFrameThickness, y1: dim2Y, x2: halfWidth, y2: dim2Y,
+      x1: halfWidth - rightFrameWidth, y1: dim2Y, x2: halfWidth, y2: dim2Y,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    // 우측 프레임 연장선
+    lines.push({
+      x1: halfWidth, y1: 0, x2: halfWidth, y2: dim2Y - extensionLength,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: halfWidth - rightFrameWidth, y1: baseH, x2: halfWidth - rightFrameWidth, y2: dim2Y - extensionLength,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     texts.push({
-      x: halfWidth - sideFrameThickness / 2, y: dim2Y + 10,
-      text: `${sideFrameThickness}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+      x: halfWidth - rightFrameWidth / 2, y: dim2Y - 15,
+      text: `${rightFrameWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
     });
 
-    // 내부 너비 (슬롯 영역)
-    const innerWidth = width - sideFrameThickness * 2;
+    // 내부 너비 (슬롯 영역) 치수선
+    const innerWidth = width - leftFrameWidth - rightFrameWidth;
     lines.push({
-      x1: -halfWidth + sideFrameThickness, y1: dim2Y, x2: halfWidth - sideFrameThickness, y2: dim2Y,
+      x1: -halfWidth + leftFrameWidth, y1: dim2Y, x2: halfWidth - rightFrameWidth, y2: dim2Y,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     texts.push({
-      x: 0, y: dim2Y + 10,
+      x: 0, y: dim2Y - 15,
       text: `${innerWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
     });
 
-    // 상단 3번째 줄: 개별 슬롯 너비
-    if (spaceInfo.columns && spaceInfo.columns.length > 0) {
-      const dim3Y = height + dimensionOffset + 80;
+    // 하단 2번째 줄: 개별 슬롯/가구 너비
+    const dim3Y = -dimensionOffset - 80;
+
+    // placedModules가 있으면 개별 가구 폭 치수선
+    if (placedModules && placedModules.length > 0) {
+      placedModules.forEach((module) => {
+        const moduleWidth = module.customWidth || 600; // 기본 600mm
+        const moduleX = module.position?.x || 0;
+        const moduleLeftX = (moduleX * 100) - moduleWidth / 2; // position.x는 meter 단위이므로 mm로 변환
+        const moduleRightX = (moduleX * 100) + moduleWidth / 2;
+
+        lines.push({
+          x1: moduleLeftX, y1: dim3Y, x2: moduleRightX, y2: dim3Y,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
+        // 연장선
+        lines.push({
+          x1: moduleLeftX, y1: baseH, x2: moduleLeftX, y2: dim3Y - extensionLength,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
+        lines.push({
+          x1: moduleRightX, y1: baseH, x2: moduleRightX, y2: dim3Y - extensionLength,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
+        texts.push({
+          x: (moduleLeftX + moduleRightX) / 2, y: dim3Y - 15,
+          text: `${moduleWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+        });
+      });
+    } else if (spaceInfo.columns && spaceInfo.columns.length > 0) {
+      // 가구가 없으면 슬롯 너비 표시
       spaceInfo.columns.forEach((column) => {
         const colWidth = column.width;
-        const colX = column.position[0];
+        const colX = column.position[0] * 100; // meter -> mm
         const colLeftX = colX - colWidth / 2;
         const colRightX = colX + colWidth / 2;
 
@@ -1560,8 +1610,17 @@ const generateExternalDimensions = (
           x1: colLeftX, y1: dim3Y, x2: colRightX, y2: dim3Y,
           layer: 'DIMENSIONS', color: dimensionColor
         });
+        // 연장선
+        lines.push({
+          x1: colLeftX, y1: baseH, x2: colLeftX, y2: dim3Y - extensionLength,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
+        lines.push({
+          x1: colRightX, y1: baseH, x2: colRightX, y2: dim3Y - extensionLength,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
         texts.push({
-          x: colX, y: dim3Y + 10,
+          x: colX, y: dim3Y - 15,
           text: `${colWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
         });
       });
@@ -1571,7 +1630,7 @@ const generateExternalDimensions = (
     const rightDimX = halfWidth + dimensionOffset;
     const rightDimX2 = rightDimX + 40;
 
-    // 상부 프레임 높이
+    // 상부 프레임 높이 치수선
     lines.push({
       x1: rightDimX, y1: height - topFrameThick, x2: rightDimX, y2: height,
       layer: 'DIMENSIONS', color: dimensionColor
@@ -1604,19 +1663,21 @@ const generateExternalDimensions = (
       text: `${furnitureAreaHeight}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
     });
 
-    // 받침대 높이
-    lines.push({
-      x1: rightDimX, y1: 0, x2: rightDimX, y2: baseH,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: halfWidth, y1: 0, x2: rightDimX + extensionLength, y2: 0,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: rightDimX + 15, y: baseH / 2,
-      text: `${baseH}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
-    });
+    // 받침대 높이 치수선 (받침대가 있는 경우만)
+    if (baseH > 0) {
+      lines.push({
+        x1: rightDimX, y1: 0, x2: rightDimX, y2: baseH,
+        layer: 'DIMENSIONS', color: dimensionColor
+      });
+      lines.push({
+        x1: halfWidth, y1: 0, x2: rightDimX + extensionLength, y2: 0,
+        layer: 'DIMENSIONS', color: dimensionColor
+      });
+      texts.push({
+        x: rightDimX + 15, y: baseH / 2,
+        text: `${baseH}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+      });
+    }
 
   } else if (viewDirection === 'top') {
     // 평면도: 가로(width) + 세로(depth)
@@ -1755,6 +1816,7 @@ export const generateDxfFromData = (
   dxf.addLayer('BACK_PANEL', 252, 'CONTINUOUS');     // 백패널 - 연한 회색
   dxf.addLayer('CLOTHING_ROD', 7, 'CONTINUOUS');     // 옷봉 - 흰색
   dxf.addLayer('ACCESSORIES', 8, 'CONTINUOUS');      // 조절발 - 회색 (2D와 동일)
+  dxf.addLayer('VENTILATION', 6, 'CONTINUOUS');      // 환기캡 - 마젠타 (2D와 동일)
   dxf.addLayer('END_PANEL', 3, 'CONTINUOUS');        // 엔드패널 - 연두색
   dxf.addLayer('DIMENSIONS', 7, 'CONTINUOUS');       // 치수선 - 흰색
 
@@ -1778,6 +1840,7 @@ export const generateDxfFromData = (
     'BACK_PANEL': 252,     // 백패널 - 연한 회색
     'CLOTHING_ROD': 7,     // 옷봉 - 흰색
     'ACCESSORIES': 8,      // 조절발 - 회색 (2D와 동일)
+    'VENTILATION': 6,      // 환기캡 - 마젠타 (2D와 동일)
     'END_PANEL': 3,        // 엔드패널 - 연두색
     'DIMENSIONS': 7,       // 치수선 - 흰색
     '0': 7                 // 기본 흰색
