@@ -1648,8 +1648,7 @@ const generateExternalDimensions = (
 
     // === 정면뷰 프레임 박스 (연두색 ACI 3) ===
     const frameColor = 3; // 연두색
-    const leftFrameWidth = frameSize.left || 18;
-    const rightFrameWidth = frameSize.right || 18;
+    // leftFrameWidth, rightFrameWidth는 위에서 이미 선언됨
 
     // 좌측 프레임 박스 (바닥 0 ~ 전체높이 height)
     const leftFrameX1 = -halfWidth;
