@@ -1712,8 +1712,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
       
-      {/* 각 컬럼 너비 치수선 - 히든 처리 */}
-      {false && placedModules.length > 0 && columnCount > 1 && threeUnitBoundaries.slice(0, -1).map((leftX, index) => {
+      {/* 각 컬럼 너비 치수선 */}
+      {placedModules.length > 0 && columnCount > 1 && threeUnitBoundaries.slice(0, -1).map((leftX, index) => {
         const rightX = threeUnitBoundaries[index + 1];
         const columnWidth = (rightX - leftX) / 0.01; // Three.js 단위를 mm로 변환
         const centerX = (leftX + rightX) / 2;
@@ -1721,63 +1721,59 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         return (
           <group key={`column-dimension-${index}`}>
             {/* 컬럼 치수선 */}
-            <Line
+            <NativeLine name="dimension_line"
               points={[[leftX, columnDimensionY, 0.002], [rightX, columnDimensionY, 0.002]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
             />
-            
+
             {/* 좌측 화살표 */}
-            <Line
+            <NativeLine name="dimension_line"
               points={createArrowHead([leftX, columnDimensionY, 0.002], [leftX + 0.03, columnDimensionY, 0.002], 0.01)}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
             />
-            
+
             {/* 우측 화살표 */}
-            <Line
+            <NativeLine name="dimension_line"
               points={createArrowHead([rightX, columnDimensionY, 0.002], [rightX - 0.03, columnDimensionY, 0.002], 0.01)}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
             />
-            
-            {/* 컬럼 너비 텍스트 */}
-            <Html
-              position={[centerX, columnDimensionY + mmToThreeUnits(25), 0.01]}
-              center
-              style={{ pointerEvents: 'none' }}
-          occlude={false}
+
+            {/* 컬럼 너비 텍스트 - Text 사용 (DXF 호환) */}
+            <Text
+              renderOrder={1000}
+              depthTest={false}
+              position={[centerX, columnDimensionY + mmToThreeUnits(30), 0.01]}
+              fontSize={smallFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
             >
-              <div
-                style={{
-                  background: 'white',
-                  color: 'black',
-                  padding: '1px 4px',
-                  fontSize: '15px',
-                  fontWeight: 'normal',
-                  fontFamily: 'Arial, sans-serif',
-                  border: '1px solid #999',
-              borderRadius: '2px',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                  whiteSpace: 'nowrap',
-                  userSelect: 'none',
-                  pointerEvents: 'none'
-                }}
-              >
-                {columnWidth}
-              </div>
-            </Html>
-            
+              {Math.round(columnWidth)}
+            </Text>
+
             {/* 연장선 (컬럼 구분선) */}
-            <Line
-              points={[[leftX, spaceHeight, 0.001], [leftX, columnDimensionY + mmToThreeUnits(15), 0.001]]}
+            <NativeLine name="dimension_line"
+              points={[[leftX, spaceHeight, 0.001], [leftX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
             />
-            <Line
-              points={[[rightX, spaceHeight, 0.001], [rightX, columnDimensionY + mmToThreeUnits(15), 0.001]]}
+            <NativeLine name="dimension_line"
+              points={[[rightX, spaceHeight, 0.001], [rightX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
               color={dimensionColor}
-              lineWidth={0.5}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
             />
           </group>
         );
