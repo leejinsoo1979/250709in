@@ -1489,9 +1489,11 @@ export const generateDxfFromData = (
       dxf.setCurrentLayerName('0');
     }
 
+    // colorNumber 옵션으로 개별 라인에 색상 적용
     dxf.addLine(
       point3d(line.x1 + offsetX, line.y1 + offsetY),
-      point3d(line.x2 + offsetX, line.y2 + offsetY)
+      point3d(line.x2 + offsetX, line.y2 + offsetY),
+      { colorNumber: line.color }
     );
   });
 
@@ -1505,11 +1507,12 @@ export const generateDxfFromData = (
       dxf.setCurrentLayerName('DIMENSIONS');
     }
 
-    // DXF TEXT 엔티티 추가
+    // DXF TEXT 엔티티 추가 - colorNumber 옵션으로 개별 텍스트에 색상 적용
     dxf.addText(
       point3d(text.x + offsetX, text.y + offsetY),
       text.height,
-      text.text
+      text.text,
+      { colorNumber: text.color }
     );
   });
 
