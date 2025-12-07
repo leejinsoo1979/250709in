@@ -184,9 +184,10 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
       {/* 옷봉 렌더링: 2D는 가로선 3줄 + 중간선, 3D는 박스 */}
       {viewMode === '2D' ? (
         // 2D 모드: CAD 표준 방식 - 가로선 3줄과 중간 추가선
-        <>
+        <group name="clothing-rod-lines">
           {/* 옷봉 상단선 */}
           <Line
+            name="clothing-rod-line-top"
             points={[
               [rodStartX, rodYOffset + rodHeight / 2, rodZOffset],
               [rodEndX, rodYOffset + rodHeight / 2, rodZOffset]
@@ -196,6 +197,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
           />
           {/* 옷봉 중간선 */}
           <Line
+            name="clothing-rod-line-mid"
             points={[
               [rodStartX, rodYOffset, rodZOffset],
               [rodEndX, rodYOffset, rodZOffset]
@@ -205,6 +207,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
           />
           {/* 옷봉 하단선 */}
           <Line
+            name="clothing-rod-line-bottom"
             points={[
               [rodStartX, rodYOffset - rodHeight / 2, rodZOffset],
               [rodEndX, rodYOffset - rodHeight / 2, rodZOffset]
@@ -214,6 +217,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
           />
           {/* 중간선 위 5mm */}
           <Line
+            name="clothing-rod-line-mid-upper"
             points={[
               [rodStartX, rodYOffset + mmToThreeUnits(5), rodZOffset],
               [rodEndX, rodYOffset + mmToThreeUnits(5), rodZOffset]
@@ -223,6 +227,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
           />
           {/* 중간선 아래 5mm */}
           <Line
+            name="clothing-rod-line-mid-lower"
             points={[
               [rodStartX, rodYOffset - mmToThreeUnits(5), rodZOffset],
               [rodEndX, rodYOffset - mmToThreeUnits(5), rodZOffset]
@@ -230,7 +235,7 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
             color={lineColor}
             lineWidth={0.5}
           />
-        </>
+        </group>
       ) : (
         // 3D 모드: 박스로 렌더링 - 브라켓 안쪽에서 안쪽까지
         <BoxWithEdges

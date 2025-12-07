@@ -698,19 +698,31 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     );
 
     if (isLine2 || hasLineGeometry) {
-      const extractedLines = extractFromLine2(object, matrix, scale, layer, color);
+      // 엣지 타입 감지 (Line2 - drei Line 컴포넌트용)
+      const lowerName = name.toLowerCase();
+      const isClothingRodLine = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
+      const isAdjustableFootLine = lowerName.includes('adjustable-foot') || lowerName.includes('조절발');
+
+      // 색상 설정 - 옷봉/조절발은 흰색
+      let line2Color = color;
+      if (isClothingRodLine || isAdjustableFootLine) {
+        line2Color = 7; // ACI 7 = 흰색
+        console.log(`⚪ 옷봉/조절발 라인(Line2) 발견: ${name}, ACI 7 (흰색)으로 설정`);
+      }
+
+      const extractedLines = extractFromLine2(object, matrix, scale, layer, line2Color);
       if (extractedLines.length > 0) {
         lines.push(...extractedLines);
         line2Objects++;
 
         // 치수선 전용 로깅
-        const isDimensionLine = name.toLowerCase().includes('dimension');
+        const isDimensionLine = lowerName.includes('dimension');
         if (isDimensionLine) {
-          console.log(`📏 치수선(Line2) 발견: ${name}, 라인 ${extractedLines.length}개, 색상 ACI=${color}`);
-        } else {
-          console.log(`📐 Line2 발견: ${name || '(이름없음)'}, 라인 ${extractedLines.length}개, 색상 ACI=${color}`);
+          console.log(`📏 치수선(Line2) 발견: ${name}, 라인 ${extractedLines.length}개, 색상 ACI=${line2Color}`);
+        } else if (!isClothingRodLine && !isAdjustableFootLine) {
+          console.log(`📐 Line2 발견: ${name || '(이름없음)'}, 라인 ${extractedLines.length}개, 색상 ACI=${line2Color}`);
         }
-      } else if (name.toLowerCase().includes('dimension')) {
+      } else if (lowerName.includes('dimension')) {
         // 치수선인데 추출 실패한 경우 경고
         console.log(`⚠️ 치수선(Line2) 추출 실패: ${name}, isLine2=${isLine2}, hasLineGeometry=${hasLineGeometry}`);
       }
@@ -750,25 +762,33 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           }
         }
 
-        // 백패널 엣지 감지 - 더 투명한 주황색 사용 (ACI 40 = 연한 주황색)
+        // 엣지 타입 감지
         const lowerName = name.toLowerCase();
         const isBackPanelEdge = lowerName.includes('back-panel') || lowerName.includes('백패널');
+        const isClothingRodEdge = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
+        const isAdjustableFootEdge = lowerName.includes('adjustable-foot') || lowerName.includes('조절발');
         const isFurnitureEdge = lowerName.includes('furniture-edge') ||
                                 lowerName.includes('좌측') || lowerName.includes('우측') ||
                                 lowerName.includes('상판') || lowerName.includes('하판') ||
                                 lowerName.includes('선반');
 
-        // 백패널은 더 투명한 주황색 (ACI 40), 일반 가구는 주황색 (ACI 30)
+        // 색상 설정:
+        // - 백패널: ACI 252 (매우 연한 회색, 투명감)
+        // - 옷봉/조절발: ACI 7 (흰색)
+        // - 가구 프레임: ACI 3 (연두색/초록색)
         if (isBackPanelEdge) {
-          lsColor = 40; // ACI 40 = 연한 주황색 (투명감 있는)
-          console.log(`🟠 백패널 엣지 발견: ${name}, ACI 40 (투명 주황)으로 설정`);
-        } else if (isFurnitureEdge && lsColor === 30) {
-          // 일반 가구 엣지는 기존 주황색 유지
-          console.log(`📦 가구 프레임 엣지 발견: ${name}, ACI 30 (주황)으로 유지`);
+          lsColor = 252; // ACI 252 = 매우 연한 회색 (투명감)
+          console.log(`🟠 백패널 엣지 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
+        } else if (isClothingRodEdge || isAdjustableFootEdge) {
+          lsColor = 7; // ACI 7 = 흰색
+          console.log(`⚪ 옷봉/조절발 엣지 발견: ${name}, ACI 7 (흰색)으로 설정`);
+        } else if (isFurnitureEdge) {
+          lsColor = 3; // ACI 3 = 연두색 (초록)
+          console.log(`🟢 가구 프레임 엣지 발견: ${name}, ACI 3 (연두색)으로 설정`);
         }
 
         // 가구 프레임 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판 등 모두 보임)
-        const skipBackFilter = isFurnitureEdge || isBackPanelEdge;
+        const skipBackFilter = isFurnitureEdge || isBackPanelEdge || isClothingRodEdge || isAdjustableFootEdge;
 
         const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, layer, lsColor, skipBackFilter);
         lines.push(...extractedLines);
@@ -798,20 +818,26 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           }
         }
 
-        // 백패널/가구 프레임 엣지 감지 (개별 Line 요소용)
+        // 엣지 타입 감지 (개별 Line 요소용)
         const lowerName = name.toLowerCase();
         const isBackPanelEdge = lowerName.includes('back-panel') || lowerName.includes('백패널');
+        const isClothingRodEdge = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
+        const isAdjustableFootEdge = lowerName.includes('adjustable-foot') || lowerName.includes('조절발');
         const isFurnitureEdge = lowerName.includes('furniture-edge') ||
                                 lowerName.includes('좌측') || lowerName.includes('우측') ||
                                 lowerName.includes('상판') || lowerName.includes('하판') ||
                                 lowerName.includes('선반');
 
-        // 백패널은 더 투명한 주황색 (ACI 40)
+        // 색상 설정 (Line 요소도 동일하게)
         if (isBackPanelEdge) {
-          lineColor = 40;
-          console.log(`🟠 백패널 엣지(Line) 발견: ${name}, ACI 40 (투명 주황)으로 설정`);
+          lineColor = 252; // 매우 연한 회색
+          console.log(`🟠 백패널 엣지(Line) 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
+        } else if (isClothingRodEdge || isAdjustableFootEdge) {
+          lineColor = 7; // 흰색
+          console.log(`⚪ 옷봉/조절발 엣지(Line) 발견: ${name}, ACI 7 (흰색)으로 설정`);
         } else if (isFurnitureEdge) {
-          console.log(`📦 가구 프레임 엣지(Line) 발견: ${name}, ACI ${lineColor}`);
+          lineColor = 3; // 연두색
+          console.log(`🟢 가구 프레임 엣지(Line) 발견: ${name}, ACI 3 (연두색)으로 설정`);
         }
 
         const extractedLines = extractFromLine(object, matrix, scale, layer, lineColor);
@@ -1040,16 +1066,19 @@ const aciToLayerName = (aciColor: number): string => {
   switch (aciColor) {
     case 1: return 'COLOR_RED';
     case 2: return 'COLOR_YELLOW';
-    case 3: return 'COLOR_GREEN';
+    case 3: return 'COLOR_GREEN'; // 연두색 (가구 프레임)
     case 4: return 'COLOR_CYAN';
     case 5: return 'COLOR_BLUE';
     case 6: return 'COLOR_MAGENTA';
-    case 7: return 'COLOR_WHITE';
+    case 7: return 'COLOR_WHITE'; // 흰색 (옷봉/조절발)
     case 8: return 'COLOR_GRAY';
     case 9: return 'COLOR_LIGHTGRAY';
     case 30: return 'COLOR_ORANGE';
-    case 40: return 'COLOR_LIGHT_ORANGE'; // 백패널용 투명 주황
+    case 40: return 'COLOR_LIGHT_ORANGE';
     case 250: return 'COLOR_DARKGRAY';
+    case 252: return 'COLOR_VERY_LIGHT_GRAY'; // 백패널용 매우 연한 회색
+    case 253: return 'COLOR_ULTRA_LIGHT_GRAY';
+    case 254: return 'COLOR_NEAR_WHITE';
     default: return `COLOR_${aciColor}`;
   }
 };

@@ -96,7 +96,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
         // 2D 모드: 원통 간소화 (상/하 원 + 세로선 4개)
         <>
           {/* 플레이트 상단면 외곽선 */}
-          <lineSegments position={[0, -plateHeight / 2, 0]}>
+          <lineSegments name="adjustable-foot-plate" position={[0, -plateHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(plateWidth, plateHeight, plateWidth)]} />
             <lineBasicMaterial attach="material" color={edgeColor} opacity={0.4} transparent />
           </lineSegments>
@@ -158,11 +158,11 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
       ) : renderMode === 'wireframe' ? (
         // 3D wireframe 모드: 원통 형태 유지
         <>
-          <lineSegments position={[0, -plateHeight / 2, 0]}>
+          <lineSegments name="adjustable-foot-plate-wireframe" position={[0, -plateHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.BoxGeometry(plateWidth, plateHeight, plateWidth)]} />
             <lineBasicMaterial attach="material" color={edgeColor} opacity={0.4} transparent />
           </lineSegments>
-          <lineSegments position={[0, -plateHeight - cylinderHeight / 2, 0]}>
+          <lineSegments name="adjustable-foot-cylinder-wireframe" position={[0, -plateHeight - cylinderHeight / 2, 0]}>
             <edgesGeometry attach="geometry" args={[new THREE.CylinderGeometry(cylinderRadius, cylinderRadius, cylinderHeight, 32)]} />
             <lineBasicMaterial attach="material" color={edgeColor} opacity={0.4} transparent />
           </lineSegments>

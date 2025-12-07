@@ -417,9 +417,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
           }
 
           // DXF 내보내기를 위해 name 속성 추가
-          const partialEdgeName = isBackPanel
-            ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
-            : `furniture-edge${panelName ? `-${panelName}` : ''}`;
+          const partialEdgeName = isClothingRod
+            ? 'clothing-rod-edge'
+            : isBackPanel
+              ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
+              : `furniture-edge${panelName ? `-${panelName}` : ''}`;
           return (
             <>
               {lines.map((line, i) => (
@@ -457,9 +459,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         } else {
           // 전체 엣지 표시
           // DXF 내보내기를 위해 name 속성 추가
-          const edgeName = isBackPanel
-            ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
-            : `furniture-edge${panelName ? `-${panelName}` : ''}`;
+          const edgeName = isClothingRod
+            ? 'clothing-rod-edge'
+            : isBackPanel
+              ? `back-panel-edge${panelName ? `-${panelName}` : ''}`
+              : `furniture-edge${panelName ? `-${panelName}` : ''}`;
           return (
             <>
               <lineSegments name={edgeName}>
