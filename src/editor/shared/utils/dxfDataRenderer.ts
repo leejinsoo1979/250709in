@@ -775,21 +775,44 @@ const extractFromScene = (
       return;
     }
 
-    // 탑뷰/측면뷰에서 치수선 제외
-    if (viewDirection !== 'front' && name.toLowerCase().includes('dimension')) {
+    // 탑뷰에서만 치수선 제외 (정면뷰, 측면뷰는 치수선 표시)
+    if (viewDirection === 'top' && name.toLowerCase().includes('dimension')) {
       skippedByFilter++;
       return;
     }
 
     const lowerNameForFilter = name.toLowerCase();
 
-    // 탑뷰에서 조절발 제외 (조절발은 바닥 아래에 있어서 탑뷰에서 보이면 안됨)
+    // 부모 계층에서 이름 확인하는 헬퍼 함수
+    const getParentNamesForFilter = (obj: THREE.Object3D): string => {
+      let names = '';
+      let current: THREE.Object3D | null = obj.parent;
+      while (current) {
+        if (current.name) {
+          names += ' ' + current.name.toLowerCase();
+        }
+        current = current.parent;
+      }
+      return names;
+    };
+
+    // 탑뷰에서 조절발, 옷봉 제외 (조절발은 바닥 아래, 옷봉은 내부에 있어서 탑뷰에서 보이면 안됨)
     if (viewDirection === 'top') {
-      if (lowerNameForFilter.includes('adjustable-foot') ||
-          lowerNameForFilter.includes('조절발') ||
-          lowerNameForFilter.includes('leveler') ||
-          lowerNameForFilter.includes('foot')) {
+      const parentNames = getParentNamesForFilter(object);
+      const combinedNames = lowerNameForFilter + parentNames;
+
+      // 조절발 제외 (자신 또는 부모 계층에서 체크)
+      if (combinedNames.includes('adjustable-foot') ||
+          combinedNames.includes('조절발') ||
+          combinedNames.includes('leveler')) {
         console.log(`📐 탑뷰: 조절발 제외 - ${name}`);
+        skippedByFilter++;
+        return;
+      }
+      // 옷봉 제외 (자신 또는 부모 계층에서 체크)
+      if (combinedNames.includes('clothing-rod') ||
+          combinedNames.includes('옷봉')) {
+        console.log(`📐 탑뷰: 옷봉 제외 - ${name}`);
         skippedByFilter++;
         return;
       }
@@ -949,10 +972,26 @@ const extractFromScene = (
       if (posCount > 0) {
         // 엣지 타입 감지 (색상 추출 전에 먼저 감지)
         const lowerName = name.toLowerCase();
-        const isBackPanelEdge = lowerName.includes('back-panel') || lowerName.includes('백패널');
-        const isClothingRodEdge = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
-        const isAdjustableFootEdge = lowerName.includes('adjustable-foot') || lowerName.includes('조절발');
-        const isVentilationEdge = lowerName.includes('ventilation') || lowerName.includes('환기');
+
+        // 부모 계층에서도 이름 확인 (BoxWithEdges 내부 lineSegments가 부모의 컨텍스트를 상속받지 못할 수 있음)
+        const getParentNames = (obj: THREE.Object3D): string => {
+          let names = '';
+          let current: THREE.Object3D | null = obj.parent;
+          while (current) {
+            if (current.name) {
+              names += ' ' + current.name.toLowerCase();
+            }
+            current = current.parent;
+          }
+          return names;
+        };
+        const parentNames = getParentNames(lineSegObj);
+        const combinedNames = lowerName + parentNames;
+
+        const isBackPanelEdge = combinedNames.includes('back-panel') || combinedNames.includes('백패널');
+        const isClothingRodEdge = combinedNames.includes('clothing-rod') || combinedNames.includes('옷봉');
+        const isAdjustableFootEdge = combinedNames.includes('adjustable-foot') || combinedNames.includes('조절발');
+        const isVentilationEdge = combinedNames.includes('ventilation') || combinedNames.includes('환기');
 
         // 가구 패널 엣지 감지 (furniture-edge-* 형태 이름)
         const isFurniturePanelEdge = lowerName.includes('furniture-edge');
@@ -1113,10 +1152,10 @@ const extractFromScene = (
     // Check for Text (drei Text component) - it's a Mesh with troika text data
     // 모든 텍스트는 DIMENSIONS 레이어로 강제 (치수 텍스트이므로)
     // DIMENSIONS 레이어를 끄면 모든 숫자가 함께 사라짐
-    // 탑뷰/측면뷰에서는 치수 텍스트 제외
+    // 탑뷰에서만 치수 텍스트 제외 (정면뷰, 측면뷰는 치수 표시)
     if (mesh.geometry && (mesh as any).text !== undefined) {
-      // 정면뷰가 아니면 치수 텍스트 제외
-      if (viewDirection !== 'front') {
+      // 탑뷰에서만 치수 텍스트 제외
+      if (viewDirection === 'top') {
         console.log(`📝 ${viewDirection}뷰: 치수 텍스트 제외`);
         return;
       }
@@ -1719,9 +1758,117 @@ const generateExternalDimensions = (
     console.log('📏 상부뷰: 씬에서 추출한 치수선만 사용');
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
-    // 측면뷰: 씬에서 추출한 치수선만 사용 (자체 생성 안함)
-    // 2D 도면과 동일하게 표시하기 위해 generateExternalDimensions에서 생성하지 않음
-    console.log(`📏 ${viewDirection}뷰: 씬에서 추출한 치수선만 사용`);
+    // 측면뷰: 상하 프레임 치수선 생성 (정면뷰와 유사)
+    console.log(`📏 ${viewDirection}뷰: 상하 프레임 치수선 생성`);
+
+    const frameSize = spaceInfo.frameSize || { left: 18, right: 18, top: 10 };
+    const topFrameThick = frameSize.top || 10;
+    const baseH = spaceInfo.baseHeight || 65;
+    const halfDepth = depth / 2;
+
+    // 치수선 설정
+    const dimensionOffset = 60;  // 도면 외부로 60mm 오프셋
+    const extensionLength = 10;  // 연장선 길이
+    const dimensionColor = 7;    // 흰색 (ACI 7)
+
+    // ========================================
+    // 1단계: 전체 높이 치수선 (우측 외곽)
+    // ========================================
+    const dim1X = halfDepth + dimensionOffset + 40;
+
+    // 전체 높이 치수선
+    lines.push({
+      x1: dim1X, y1: 0, x2: dim1X, y2: height,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    // 상단 연장선
+    lines.push({
+      x1: halfDepth, y1: height, x2: dim1X + extensionLength, y2: height,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    // 하단 연장선
+    lines.push({
+      x1: halfDepth, y1: 0, x2: dim1X + extensionLength, y2: 0,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: dim1X + 15, y: height / 2,
+      text: `${height}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+    // ========================================
+    // 2단계: 상부 프레임 / 가구 영역 / 받침대 높이 치수선 (우측)
+    // ========================================
+    const rightDimX = halfDepth + dimensionOffset;
+
+    // 상부 프레임 높이 치수선
+    lines.push({
+      x1: rightDimX, y1: height - topFrameThick, x2: rightDimX, y2: height,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: halfDepth, y1: height - topFrameThick, x2: rightDimX + extensionLength, y2: height - topFrameThick,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: rightDimX + 15, y: height - topFrameThick / 2,
+      text: `${topFrameThick}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+    // 가구 영역 높이 (전체 - 상부프레임 - 받침대)
+    const furnitureAreaHeight = height - topFrameThick - baseH;
+    const rightDimX2 = rightDimX + 40;
+    lines.push({
+      x1: rightDimX2, y1: baseH, x2: rightDimX2, y2: height - topFrameThick,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: halfDepth, y1: baseH, x2: rightDimX2 + extensionLength, y2: baseH,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: rightDimX2 + 15, y: baseH + furnitureAreaHeight / 2,
+      text: `${furnitureAreaHeight}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+    // 받침대 높이 치수선 (받침대가 있는 경우만)
+    if (baseH > 0) {
+      lines.push({
+        x1: rightDimX, y1: 0, x2: rightDimX, y2: baseH,
+        layer: 'DIMENSIONS', color: dimensionColor
+      });
+      texts.push({
+        x: rightDimX + 15, y: baseH / 2,
+        text: `${baseH}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+      });
+    }
+
+    // ========================================
+    // 3단계: 전체 깊이 치수선 (하단)
+    // ========================================
+    const dim2Y = -dimensionOffset;
+
+    lines.push({
+      x1: -halfDepth, y1: dim2Y, x2: halfDepth, y2: dim2Y,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    // 좌측 연장선
+    lines.push({
+      x1: -halfDepth, y1: 0, x2: -halfDepth, y2: dim2Y - extensionLength,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    // 우측 연장선
+    lines.push({
+      x1: halfDepth, y1: 0, x2: halfDepth, y2: dim2Y - extensionLength,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: 0, y: dim2Y - 15,
+      text: `${depth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+    // 측면뷰 프레임 박스는 씬에서 추출 (별도 생성 안함)
+    // 2D 화면에 렌더링된 것과 동일하게 유지
   }
 
   console.log(`📏 외부 치수선 생성: ${lines.length}개 라인, ${texts.length}개 텍스트`);
