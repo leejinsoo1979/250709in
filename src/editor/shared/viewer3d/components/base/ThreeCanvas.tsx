@@ -7,6 +7,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useUIStore } from '@/store/uiStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { sceneHolder } from '../../sceneHolder';
 
 // 클린 아키텍처: 의존성 방향 관리
 import { useCameraManager } from './hooks/useCameraManager'; // 하위 레벨
@@ -306,6 +307,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     // Canvas 참조만 제거 (DOM 조작 최소화)
     canvasRef.current = null;
+
+    // DXF 내보내기용 전역 scene 참조 정리
+    sceneHolder.clear();
   }, []);
 
   // Canvas 재생성 함수 제거 - 더 이상 필요하지 않음
@@ -904,6 +908,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
                 sceneRef.current = scene;
                 canvasLog('✅ Scene ref 저장 완료 (GLB 내보내기용)');
               }
+
+              // DXF 내보내기를 위한 전역 scene 참조 저장
+              sceneHolder.setScene(scene);
 
               // Canvas 요소에 드래그 이벤트 리스너 추가
               const canvas = gl.domElement;
