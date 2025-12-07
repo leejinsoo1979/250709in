@@ -2493,20 +2493,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
             
             
-            {/* 연장선 - 하부 프레임에서 전체 가로 치수 보조선까지 확장 */}
+            {/* 연장선 - 치수선에서 위로 15mm만 확장 */}
             <NativeLine name="dimension_line"
-              points={[[leftX, spaceHeight, 0.001], [leftX, topDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[leftX, dimY, 0.001], [leftX, dimY + mmToThreeUnits(15), 0.001]]}
               color={dimensionColor}
-              lineWidth={1.5}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[rightX, dimY, 0.001], [rightX, dimY + mmToThreeUnits(15), 0.001]]}
               color={dimensionColor}
-              lineWidth={1.5}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
