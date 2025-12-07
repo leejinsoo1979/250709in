@@ -812,9 +812,9 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         line2Layer = 'VENTILATION';
         console.log(`📐 환기캡(Line2): ${name}, 색상 ACI=6로 강제 설정`);
       } else if (lowerName.includes('back-panel') || lowerName.includes('백패널')) {
-        line2Color = 252; // ACI 252 = 연한 회색
+        line2Color = 254; // ACI 254 = 매우 연한 회색 (투명도 효과)
         line2Layer = 'BACK_PANEL';
-        console.log(`📐 백패널(Line2): ${name}, 색상 ACI=252로 강제 설정`);
+        console.log(`📐 백패널(Line2): ${name}, 색상 ACI=254로 강제 설정`);
       } else if (lowerName.includes('dimension')) {
         console.log(`📏 치수선(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
       }
@@ -930,7 +930,7 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
 
         if (isBackPanelEdge) {
           lsLayer = 'BACK_PANEL';
-          lsColor = 252; // ACI 252 = 연한 회색
+          lsColor = 254; // ACI 254 = 매우 연한 회색 (투명도 효과)
           colorReason = '백패널';
         } else if (isClothingRodEdge) {
           lsLayer = 'CLOTHING_ROD';
@@ -1014,9 +1014,9 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           lineLayer = 'VENTILATION';
           console.log(`📐 환기캡(Line): ${name}, 색상 ACI=6로 강제 설정`);
         } else if (lineLowerName.includes('back-panel') || lineLowerName.includes('백패널')) {
-          lineColor = 252; // ACI 252 = 연한 회색
+          lineColor = 254; // ACI 254 = 매우 연한 회색 (투명도 효과)
           lineLayer = 'BACK_PANEL';
-          console.log(`📐 백패널(Line): ${name}, 색상 ACI=252로 강제 설정`);
+          console.log(`📐 백패널(Line): ${name}, 색상 ACI=254로 강제 설정`);
         } else if (lineLowerName.includes('dimension')) {
           console.log(`📏 치수선(Line): ${name}, 추출된 색상 ACI=${lineColor}`);
         }
@@ -1589,88 +1589,14 @@ const generateExternalDimensions = (
     }
 
   } else if (viewDirection === 'top') {
-    // 평면도: 가로(width) + 세로(depth)
-    // 씬 좌표계 사용: x는 -width/2 ~ width/2
-    const halfWidth = width / 2;
-
-    // 상단 가로 치수선
-    const topY = depth + dimensionOffset;
-    lines.push({
-      x1: -halfWidth, y1: topY, x2: halfWidth, y2: topY,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: -halfWidth, y1: depth, x2: -halfWidth, y2: topY + extensionLength,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: halfWidth, y1: depth, x2: halfWidth, y2: topY + extensionLength,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: 0, y: topY + 15,
-      text: `${width}`, height: 25, color: dimensionColor, layer: 'DIMENSIONS'
-    });
-
-    // 좌측 세로 치수선
-    const leftX = -halfWidth - dimensionOffset;
-    lines.push({
-      x1: leftX, y1: 0, x2: leftX, y2: depth,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: -halfWidth, y1: 0, x2: leftX - extensionLength, y2: 0,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: -halfWidth, y1: depth, x2: leftX - extensionLength, y2: depth,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: leftX - 15, y: depth / 2,
-      text: `${depth}`, height: 25, color: dimensionColor, layer: 'DIMENSIONS'
-    });
+    // 상부뷰: 씬에서 추출한 치수선만 사용 (자체 생성 안함)
+    // 2D 도면과 동일하게 표시하기 위해 generateExternalDimensions에서 생성하지 않음
+    console.log('📏 상부뷰: 씬에서 추출한 치수선만 사용');
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
-    // 측면도: 세로(height) + 가로(depth)
-    // 씬 좌표계 사용: x는 -depth/2 ~ depth/2
-    const halfDepth = depth / 2;
-
-    const topY = height + dimensionOffset;
-    lines.push({
-      x1: -halfDepth, y1: topY, x2: halfDepth, y2: topY,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: -halfDepth, y1: height, x2: -halfDepth, y2: topY + extensionLength,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: halfDepth, y1: height, x2: halfDepth, y2: topY + extensionLength,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: 0, y: topY + 15,
-      text: `${depth}`, height: 25, color: dimensionColor, layer: 'DIMENSIONS'
-    });
-
-    const leftX = -halfDepth - dimensionOffset;
-    lines.push({
-      x1: leftX, y1: 0, x2: leftX, y2: height,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: -halfDepth, y1: 0, x2: leftX - extensionLength, y2: 0,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: -halfDepth, y1: height, x2: leftX - extensionLength, y2: height,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: leftX - 15, y: height / 2,
-      text: `${height}`, height: 25, color: dimensionColor, layer: 'DIMENSIONS'
-    });
+    // 측면뷰: 씬에서 추출한 치수선만 사용 (자체 생성 안함)
+    // 2D 도면과 동일하게 표시하기 위해 generateExternalDimensions에서 생성하지 않음
+    console.log(`📏 ${viewDirection}뷰: 씬에서 추출한 치수선만 사용`);
   }
 
   console.log(`📏 외부 치수선 생성: ${lines.length}개 라인, ${texts.length}개 텍스트`);
@@ -1722,7 +1648,7 @@ export const generateDxfFromData = (
   dxf.addLayer('0', 7, 'CONTINUOUS');
   dxf.addLayer('SPACE_FRAME', 3, 'CONTINUOUS');      // 공간 프레임 - 연두색
   dxf.addLayer('FURNITURE_PANEL', 30, 'CONTINUOUS'); // 가구 패널 - 주황색
-  dxf.addLayer('BACK_PANEL', 252, 'CONTINUOUS');     // 백패널 - 연한 회색
+  dxf.addLayer('BACK_PANEL', 254, 'CONTINUOUS');     // 백패널 - 매우 연한 회색 (투명도 효과)
   dxf.addLayer('CLOTHING_ROD', 7, 'CONTINUOUS');     // 옷봉 - 흰색
   dxf.addLayer('ACCESSORIES', 8, 'CONTINUOUS');      // 조절발 - 회색 (2D와 동일)
   dxf.addLayer('VENTILATION', 6, 'CONTINUOUS');      // 환기캡 - 마젠타 (2D와 동일)
