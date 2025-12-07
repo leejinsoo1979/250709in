@@ -584,9 +584,8 @@ const shouldExclude = (name: string): boolean => {
     lowerName.includes('border') ||
     // 배경/바닥 관련 (프레임과 혼동 방지)
     lowerName.includes('floor') ||
-    lowerName.includes('background') ||
-    // 치수선 - 씬에서 추출하지 않고 generateExternalDimensions에서 별도 생성
-    lowerName.includes('dimension')
+    lowerName.includes('background')
+    // 치수선은 씬에서 추출함 (dimension_line)
   );
 };
 
