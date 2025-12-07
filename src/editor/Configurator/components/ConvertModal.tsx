@@ -39,7 +39,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     '2d-left': false,
     '2d-right': false
   });
-  const [selectedDXFTypes, setSelectedDXFTypes] = useState<DrawingType[]>(['front', 'plan']);
+  const [selectedDXFTypes, setSelectedDXFTypes] = useState<DrawingType[]>(['front', 'plan', 'sideLeft', 'sideRight']);
   
   // 내보내기 훅 사용
   const { exportToPDF, isExporting: isPDFExporting } = usePDFExport();
@@ -405,14 +405,23 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
                       <span>평면도</span>
                       <span className={styles.viewDescription}>위에서 본 도면</span>
                     </label>
-                    <label className={`${styles.viewOption} ${selectedDXFTypes.includes('side') ? styles.selected : ''}`}>
-                      <input 
+                    <label className={`${styles.viewOption} ${selectedDXFTypes.includes('sideLeft') ? styles.selected : ''}`}>
+                      <input
                         type="checkbox"
-                        checked={selectedDXFTypes.includes('side')}
-                        onChange={() => handleDXFTypeToggle('side')}
+                        checked={selectedDXFTypes.includes('sideLeft')}
+                        onChange={() => handleDXFTypeToggle('sideLeft')}
                       />
-                      <span>측면도</span>
-                      <span className={styles.viewDescription}>측면에서 본 도면</span>
+                      <span>좌측면도</span>
+                      <span className={styles.viewDescription}>좌측에서 본 도면</span>
+                    </label>
+                    <label className={`${styles.viewOption} ${selectedDXFTypes.includes('sideRight') ? styles.selected : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedDXFTypes.includes('sideRight')}
+                        onChange={() => handleDXFTypeToggle('sideRight')}
+                      />
+                      <span>우측면도</span>
+                      <span className={styles.viewDescription}>우측에서 본 도면</span>
                     </label>
                   </div>
                 </div>
