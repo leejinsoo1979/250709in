@@ -1,18 +1,16 @@
 /**
- * 데이터 기반 DXF 렌더러
- * placedModules.position을 그대로 사용하여 DXF 생성
+ * 씬에서 렌더링된 Line 객체를 직접 추출하여 DXF 생성
+ * 3D 메쉬 Edge 추출 아님 - 실제 그려진 Line만 추출
  */
 
 import { DxfWriter, point3d } from '@tarikjabiri/dxf';
+import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
-import { getModuleById } from '@/data/modules';
-import { calculateInternalSpace } from './indexing';
+import { sceneHolder } from '../viewer3d/sceneHolder';
 
-// 뷰 방향 타입
 export type ViewDirection = 'front' | 'left' | 'right' | 'top';
 
-// DXF 라인 타입
 interface DxfLine {
   x1: number;
   y1: number;
@@ -22,104 +20,138 @@ interface DxfLine {
 }
 
 /**
- * 정면뷰 DXF 라인 생성
- * placedModule.position을 그대로 사용
+ * 씬에서 모든 Line 객체 추출
+ * Line, LineSegments, Line2 등 실제 라인 객체만 추출
  */
-const generateFrontViewLines = (
-  spaceInfo: SpaceInfo,
-  placedModules: PlacedModule[]
-): DxfLine[] => {
+const extractLinesFromScene = (scene: THREE.Scene): DxfLine[] => {
   const lines: DxfLine[] = [];
+  const scale = 100; // 1 Three.js unit = 100mm
 
-  // 공간 크기 (mm)
-  const spaceWidth = spaceInfo.width;
-  const spaceHeight = spaceInfo.height;
+  console.log('🔍 씬에서 Line 객체 추출 시작...');
 
-  console.log('📐 DXF 정면뷰 생성:', { spaceWidth, spaceHeight, moduleCount: placedModules.length });
-
-  // === 공간 외곽선 (DXF 좌표: 왼쪽 하단이 원점) ===
-  lines.push({ x1: 0, y1: 0, x2: spaceWidth, y2: 0, layer: 'SPACE' });
-  lines.push({ x1: 0, y1: spaceHeight, x2: spaceWidth, y2: spaceHeight, layer: 'SPACE' });
-  lines.push({ x1: 0, y1: 0, x2: 0, y2: spaceHeight, layer: 'SPACE' });
-  lines.push({ x1: spaceWidth, y1: 0, x2: spaceWidth, y2: spaceHeight, layer: 'SPACE' });
-
-  // 내부 공간 계산
-  const internalSpace = calculateInternalSpace(spaceInfo);
-
-  // === 가구 렌더링 ===
-  placedModules.forEach((module, idx) => {
-    const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
-    if (!moduleData) {
-      console.warn(`⚠️ 모듈 데이터 없음: ${module.moduleId}`);
+  scene.traverse((object) => {
+    // Line 또는 LineSegments 객체만 처리
+    if (!(object instanceof THREE.Line) && !(object instanceof THREE.LineSegments)) {
       return;
     }
 
-    // placedModule.position은 Three.js 단위 (1 unit = 100mm)
-    // Three.js 좌표계: 중심이 원점, X는 좌우, Y는 상하
-    const posX = module.position.x; // Three.js 단위
-    const posY = module.position.y; // Three.js 단위
+    const name = (object.name || '').toLowerCase();
 
-    // 가구 크기 (mm)
-    const moduleWidth = module.adjustedWidth || module.customWidth || moduleData.dimensions.width;
-    const moduleHeight = module.customHeight || moduleData.dimensions.height;
+    // 제외할 객체
+    if (name.includes('grid') ||
+        name.includes('helper') ||
+        name.includes('axes') ||
+        name.includes('gizmo') ||
+        name.includes('debug')) {
+      return;
+    }
 
-    // Three.js → DXF 좌표 변환
-    // Three.js: 중심 원점, 단위 = 100mm
-    // DXF: 왼쪽 하단 원점, 단위 = mm
-    // 변환: dxfX = (threeX * 100) + (spaceWidth / 2)
-    //       dxfY = threeY * 100
+    const geometry = object.geometry;
+    if (!geometry) return;
 
-    const centerX = posX * 100 + spaceWidth / 2;
-    const centerY = posY * 100;
+    // position attribute 가져오기
+    const positionAttr = geometry.getAttribute('position');
+    if (!positionAttr) return;
 
-    const left = centerX - moduleWidth / 2;
-    const right = centerX + moduleWidth / 2;
-    const bottom = centerY - moduleHeight / 2;
-    const top = centerY + moduleHeight / 2;
+    // 월드 매트릭스 업데이트
+    object.updateMatrixWorld(true);
+    const matrix = object.matrixWorld;
 
-    console.log(`📦 가구 ${idx}:`, {
-      moduleId: module.moduleId,
-      threePos: { x: posX.toFixed(3), y: posY.toFixed(3) },
-      dxfCenter: { x: centerX.toFixed(1), y: centerY.toFixed(1) },
-      size: { w: moduleWidth, h: moduleHeight },
-      bounds: { left: left.toFixed(1), right: right.toFixed(1), bottom: bottom.toFixed(1), top: top.toFixed(1) }
-    });
+    const positions = positionAttr.array;
+    const itemSize = positionAttr.itemSize;
 
-    // 가구 외곽선
-    lines.push({ x1: left, y1: bottom, x2: right, y2: bottom, layer: 'FURNITURE' });
-    lines.push({ x1: left, y1: top, x2: right, y2: top, layer: 'FURNITURE' });
-    lines.push({ x1: left, y1: bottom, x2: left, y2: top, layer: 'FURNITURE' });
-    lines.push({ x1: right, y1: bottom, x2: right, y2: top, layer: 'FURNITURE' });
+    // 레이어 결정
+    let layer = 'FURNITURE';
+    if (name.includes('dimension')) {
+      layer = 'DIMENSIONS';
+    } else if (name.includes('space') || name.includes('room') || name.includes('wall')) {
+      layer = 'SPACE';
+    }
+
+    console.log(`📍 Line 발견: ${object.name || '(이름없음)'}, 포인트 수: ${positions.length / itemSize}`);
+
+    // LineSegments: 2개씩 쌍으로 선분
+    if (object instanceof THREE.LineSegments) {
+      for (let i = 0; i < positions.length; i += itemSize * 2) {
+        const p1 = new THREE.Vector3(
+          positions[i],
+          positions[i + 1],
+          positions[i + 2] || 0
+        ).applyMatrix4(matrix);
+
+        const p2 = new THREE.Vector3(
+          positions[i + itemSize],
+          positions[i + itemSize + 1],
+          positions[i + itemSize + 2] || 0
+        ).applyMatrix4(matrix);
+
+        // 정면뷰: X, Y 사용 (Z 무시)
+        lines.push({
+          x1: p1.x * scale,
+          y1: p1.y * scale,
+          x2: p2.x * scale,
+          y2: p2.y * scale,
+          layer
+        });
+      }
+    }
+    // Line: 연속된 점들
+    else if (object instanceof THREE.Line) {
+      for (let i = 0; i < positions.length - itemSize; i += itemSize) {
+        const p1 = new THREE.Vector3(
+          positions[i],
+          positions[i + 1],
+          positions[i + 2] || 0
+        ).applyMatrix4(matrix);
+
+        const p2 = new THREE.Vector3(
+          positions[i + itemSize],
+          positions[i + itemSize + 1],
+          positions[i + itemSize + 2] || 0
+        ).applyMatrix4(matrix);
+
+        lines.push({
+          x1: p1.x * scale,
+          y1: p1.y * scale,
+          x2: p2.x * scale,
+          y2: p2.y * scale,
+          layer
+        });
+      }
+    }
   });
 
-  console.log(`📐 총 라인 수: ${lines.length}`);
+  console.log(`✅ 추출된 Line 수: ${lines.length}`);
   return lines;
 };
 
 /**
- * DXF 생성 메인 함수
+ * DXF 생성
  */
 export const generateDxfFromData = (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
   viewDirection: ViewDirection
 ): string => {
-  console.log(`📐 DXF 생성 시작 (${viewDirection})`);
-  console.log('📐 placedModules:', placedModules.map(m => ({
-    id: m.id,
-    moduleId: m.moduleId,
-    position: m.position,
-    slotIndex: m.slotIndex
-  })));
+  const scene = sceneHolder.getScene();
 
-  let lines: DxfLine[] = [];
-
-  if (viewDirection === 'front') {
-    lines = generateFrontViewLines(spaceInfo, placedModules);
-  } else {
-    // 다른 뷰는 일단 front와 동일하게
-    lines = generateFrontViewLines(spaceInfo, placedModules);
+  if (!scene) {
+    console.error('❌ 씬을 찾을 수 없습니다');
+    throw new Error('씬을 찾을 수 없습니다');
   }
+
+  console.log(`📐 DXF 생성 시작 (${viewDirection})`);
+
+  // 씬에서 Line 객체 추출
+  const lines = extractLinesFromScene(scene);
+
+  if (lines.length === 0) {
+    console.warn('⚠️ 추출된 라인이 없습니다');
+  }
+
+  // DXF 원점 이동 (왼쪽 하단을 원점으로)
+  const offsetX = spaceInfo.width / 2;
+  const offsetY = 0;
 
   // DXF 생성
   const dxf = new DxfWriter();
@@ -134,16 +166,17 @@ export const generateDxfFromData = (
     } catch {
       dxf.setCurrentLayerName('FURNITURE');
     }
-    dxf.addLine(point3d(line.x1, line.y1), point3d(line.x2, line.y2));
+
+    dxf.addLine(
+      point3d(line.x1 + offsetX, line.y1 + offsetY),
+      point3d(line.x2 + offsetX, line.y2 + offsetY)
+    );
   });
 
-  console.log(`✅ DXF 생성 완료`);
+  console.log(`✅ DXF 생성 완료 - 라인 ${lines.length}개`);
   return dxf.stringify();
 };
 
-/**
- * DXF 파일 다운로드
- */
 export const downloadDxf = (dxfContent: string, filename: string): void => {
   const blob = new Blob([dxfContent], { type: 'application/dxf' });
   const url = URL.createObjectURL(blob);
