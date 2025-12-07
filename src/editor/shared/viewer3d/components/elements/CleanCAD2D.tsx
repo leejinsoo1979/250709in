@@ -2517,47 +2517,48 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })}
       
-      {/* 기둥별 치수선 (가구와 동일한 스타일, 탑뷰가 아닐 때만) */}
+      {/* 기둥별 치수선 (개별 슬롯 너비, 탑뷰가 아닐 때만) */}
       {showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && currentViewDirection !== 'top' && spaceInfo.columns.map((column, index) => {
         const columnWidthM = column.width * 0.01;
         const leftX = column.position[0] - columnWidthM / 2;
         const rightX = column.position[0] + columnWidthM / 2;
-        const dimY = topDimensionY - mmToThreeUnits(120); // 가구 치수와 동일한 레벨
-        
+        // 개별 슬롯 치수선은 내부너비(columnDimensionY) 아래에 배치
+        const dimY = slotDimensionY;
+
         return (
           <group key={`column-dim-${column.id}`}>
             {/* 기둥 치수선 */}
             <NativeLine name="dimension_line"
               points={[[leftX, dimY, 0.002], [rightX, dimY, 0.002]]}
-              color="#FF0000"
-              lineWidth={1.5}
+              color={dimensionColor}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
             />
-            
+
             {/* 좌측 화살표 */}
             <NativeLine name="dimension_line"
               points={createArrowHead([leftX, dimY, 0.002], [leftX + 0.02, dimY, 0.002], 0.01)}
-              color="#FF0000"
-              lineWidth={1.5}
+              color={dimensionColor}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
             />
-            
+
             {/* 우측 화살표 */}
             <NativeLine name="dimension_line"
               points={createArrowHead([rightX, dimY, 0.002], [rightX - 0.02, dimY, 0.002], 0.01)}
-              color="#FF0000"
-              lineWidth={1.5}
+              color={dimensionColor}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
             />
-            
+
             {/* 기둥 치수 텍스트 */}
             <Text
-              position={[column.position[0], dimY - mmToThreeUnits(30), 0.01]}
+              position={[column.position[0], dimY + mmToThreeUnits(20), 0.01]}
               fontSize={baseFontSize}
-              color="#FF0000"
+              color={textColor}
               anchorX="center"
               anchorY="middle"
               renderOrder={1000000}
@@ -2565,21 +2566,21 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             >
               {column.width}
             </Text>
-            
-            {/* 연장선 - 가구와 동일하게 전체 가로 치수선까지 확장 */}
+
+            {/* 연장선 - 내부너비 치수선(columnDimensionY)까지만 */}
             <NativeLine name="dimension_line"
-              points={[[leftX, spaceHeight, 0.001], [leftX, topDimensionY + mmToThreeUnits(20), 0.001]]}
-              color="#FF0000"
-              lineWidth={1.5}
+              points={[[leftX, spaceHeight, 0.001], [leftX, columnDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
+              color={dimensionColor}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
-              color="#FF0000"
-              lineWidth={1.5}
+              points={[[rightX, spaceHeight, 0.001], [rightX, columnDimensionY + mmToThreeUnits(EXTENSION_LENGTH), 0.001]]}
+              color={dimensionColor}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
