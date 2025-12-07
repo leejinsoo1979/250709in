@@ -2554,9 +2554,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthTest={false}
             />
 
-            {/* 기둥 치수 텍스트 */}
+            {/* 기둥 치수 텍스트 - 치수선 아래에 표시 */}
             <Text
-              position={[column.position[0], dimY + mmToThreeUnits(20), 0.01]}
+              position={[column.position[0], dimY - mmToThreeUnits(25), 0.01]}
               fontSize={baseFontSize}
               color={textColor}
               anchorX="center"
@@ -2567,9 +2567,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {column.width}
             </Text>
 
-            {/* 연장선 - 슬롯 치수선에서 내부너비 치수선까지만 */}
+            {/* 연장선 - 슬롯 치수선 위로만 짧게 */}
             <NativeLine name="dimension_line"
-              points={[[leftX, slotDimensionY - mmToThreeUnits(10), 0.001], [leftX, columnDimensionY + mmToThreeUnits(10), 0.001]]}
+              points={[[leftX, dimY, 0.001], [leftX, dimY + mmToThreeUnits(30), 0.001]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={1000000}
@@ -2578,7 +2578,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[rightX, slotDimensionY - mmToThreeUnits(10), 0.001], [rightX, columnDimensionY + mmToThreeUnits(10), 0.001]]}
+              points={[[rightX, dimY, 0.001], [rightX, dimY + mmToThreeUnits(30), 0.001]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={1000000}
