@@ -457,97 +457,36 @@ const drawBaseFrame = (dxf: DxfWriter, spaceInfo: SpaceInfo, viewType: 'front' |
 };
 
 /**
- * 가구 모듈들을 슬롯 위치 기반으로 그리기 (정면도 기준)
+ * 가구 모듈들을 그리기 (정면도 기준) - 2D 화면과 동일한 좌표 사용
  */
 const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule[], spaceInfo: SpaceInfo): void => {
-  // derivedSpaceStore에서 계산된 데이터 사용 (독립적인 계산 제거)
-  const derivedSpaceState = useDerivedSpaceStore.getState();
   const internalSpace = calculateInternalSpace(spaceInfo);
-  
-  // derivedSpaceStore의 데이터를 indexing 형태로 재구성
-  const indexing = {
-    columnCount: derivedSpaceState.columnCount,
-    columnWidth: derivedSpaceState.columnWidth,
-    columnPositions: derivedSpaceState.columnPositions,
-    threeUnitPositions: derivedSpaceState.threeUnitPositions,
-    dualColumnPositions: derivedSpaceState.dualColumnPositions,
-    internalStartX: (spaceInfo.width - derivedSpaceState.internalWidth) / 2,
-    internalWidth: derivedSpaceState.internalWidth,
-    threeUnitDualPositions: derivedSpaceState.dualColumnPositions.map((pos: number) => pos / 10) // mm to Three.js units
-  };
-  
-  // DXF 생성용 슬롯 인덱싱 정보 준비 완료
-  
+
+  // 내부 공간 시작 위치 계산 (2D 렌더링과 동일한 방식)
+  const derivedSpaceState = useDerivedSpaceStore.getState();
+  const internalStartX = (spaceInfo.width - derivedSpaceState.internalWidth) / 2;
+
   placedModules.forEach((module, index) => {
     const { position, moduleData, moduleId } = module;
-    
+
     // 실제 모듈 데이터 가져오기 (정확한 치수 정보를 위해)
     const actualModuleData = getModuleById(moduleId, internalSpace, spaceInfo);
     // customDepth가 이미 반영된 moduleData.dimensions를 우선 사용
     const dimensions = moduleData.dimensions;
-    
-    // 가구가 듀얼 슬롯인지 확인
-    const isDualFurniture = Math.abs(dimensions.width - (indexing.columnWidth * 2)) < 50;
-    
-    // 슬롯 인덱스 찾기 (기존 position.x 기준)
-    let slotIndex = -1;
-    let slotPositionMm = 0; // mm 단위 슬롯 위치
-    
-    if (isDualFurniture && indexing.threeUnitDualPositions) {
-      // 듀얼 가구: threeUnitDualPositions에서 가장 가까운 위치 찾기
-      slotIndex = indexing.threeUnitDualPositions.findIndex(pos => 
-        Math.abs(pos - position.x) < 0.1
-      );
-      if (slotIndex >= 0) {
-        // 듀얼 슬롯의 실제 mm 위치 사용
-        slotPositionMm = indexing.dualColumnPositions[slotIndex];
-      }
-    } else {
-      // 싱글 가구: threeUnitPositions에서 가장 가까운 위치 찾기
-      slotIndex = indexing.threeUnitPositions.findIndex(pos => 
-        Math.abs(pos - position.x) < 0.1
-      );
-      if (slotIndex >= 0) {
-        // 싱글 슬롯의 실제 mm 위치 사용
-        slotPositionMm = indexing.columnPositions[slotIndex];
-      }
-    }
-    
-    // 슬롯을 찾지 못한 경우 기존 방식으로 폴백
-    if (slotIndex < 0) {
-      slotPositionMm = position.x * 10; // 기존 변환 방식
-    }
-    
-    // DXF 좌표계로 변환: slotPositionMm은 내부 공간 시작점(internalStartX) 기준의 절대 좌표
-    // DXF에서는 공간의 왼쪽 끝(0,0)을 기준으로 하므로 그대로 사용
-    // 공간 중앙이 아닌 왼쪽 끝 기준으로 변환
-    const dxfXPosition = slotPositionMm; // internalStartX 기준 절대 좌표
-    
-    // 좌표 변환 완료: Three.js → DXF
-    console.log(`🎯 [DXF-SPECIALIST] Front View Coordinate Transform - ${moduleData.name}:`, {
-      '1_ThreeJS_Original': {
-        x: position.x,
-        y: position.y,
-        slotIndex,
-        isDualFurniture
-      },
-      '2_Internal_Space': {
-        internalStartX: indexing.internalStartX,
-        internalWidth: indexing.internalWidth,
-        totalSpaceWidth: spaceInfo.width
-      },
-      '3_Slot_Position': {
-        slotPositionMm_Absolute: slotPositionMm,
-        columnWidth: indexing.columnWidth,
-        columnIndex: slotIndex
-      },
-      '4_DXF_Transform': {
-        dxfXPosition,
-        furnitureLeft: dxfXPosition - (dimensions.width / 2),
-        furnitureRight: dxfXPosition + (dimensions.width / 2),
-        leftEdgeToSpaceLeft: dxfXPosition - (dimensions.width / 2),
-        rightEdgeToSpaceRight: spaceInfo.width - (dxfXPosition + dimensions.width / 2)
-      }
+
+    // 2D 화면과 동일하게: position.x (Three.js 단위)를 mm로 직접 변환
+    // Three.js에서 1 단위 = 10mm
+    const dxfXPosition = internalStartX + (position.x * 10);
+
+    // 듀얼 가구 여부 확인 (module 데이터에서 직접 가져옴)
+    const isDualFurniture = module.isDualSlot === true;
+
+    // 좌표 변환 완료: Three.js → DXF (2D 화면과 동일)
+    console.log(`🎯 [DXF] Front View - ${moduleData.name}:`, {
+      'ThreeJS_X': position.x,
+      'internalStartX': internalStartX,
+      'DXF_X': dxfXPosition,
+      'width': dimensions.width
     });
     
     // 가구 사각형 (정면도 기준: dxfXPosition 사용)
@@ -787,126 +726,48 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
 };
 
 /**
- * 가구 모듈들을 슬롯 위치 기반으로 그리기 (평면도 기준)
+ * 가구 모듈들을 그리기 (평면도 기준) - 2D 화면과 동일한 좌표 사용
  */
 const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule[], spaceInfo: SpaceInfo): void => {
-  // derivedSpaceStore에서 계산된 데이터 사용 (독립적인 계산 제거)
-  const derivedSpaceState = useDerivedSpaceStore.getState();
   const internalSpace = calculateInternalSpace(spaceInfo);
-  
-  // derivedSpaceStore의 데이터를 indexing 형태로 재구성
-  const indexing = {
-    columnCount: derivedSpaceState.columnCount,
-    columnWidth: derivedSpaceState.columnWidth,
-    columnPositions: derivedSpaceState.columnPositions,
-    threeUnitPositions: derivedSpaceState.threeUnitPositions,
-    dualColumnPositions: derivedSpaceState.dualColumnPositions,
-    internalStartX: (spaceInfo.width - derivedSpaceState.internalWidth) / 2,
-    internalWidth: derivedSpaceState.internalWidth,
-    threeUnitDualPositions: derivedSpaceState.dualColumnPositions.map((pos: number) => pos / 10) // mm to Three.js units
-  };
-  
-  console.log('🔍 DXF 평면도 생성 - 슬롯 인덱싱 정보:', {
-    columnCount: indexing.columnCount,
-    columnPositions: indexing.columnPositions,
-    threeUnitPositions: indexing.threeUnitPositions,
-    dualPositions: indexing.dualColumnPositions,
-    threeUnitDualPositions: indexing.threeUnitDualPositions,
-    internalStartX: indexing.internalStartX,
-    internalWidth: indexing.internalWidth
-  });
-  
+
+  // 내부 공간 시작 위치 계산 (2D 렌더링과 동일한 방식)
+  const derivedSpaceState = useDerivedSpaceStore.getState();
+  const internalStartX = (spaceInfo.width - derivedSpaceState.internalWidth) / 2;
+
   placedModules.forEach((module, index) => {
     const { position, moduleData, moduleId } = module;
-    
+
     // 실제 모듈 데이터 가져오기 (정확한 치수 정보를 위해)
     const actualModuleData = getModuleById(moduleId, internalSpace, spaceInfo);
     // customDepth가 이미 반영된 moduleData.dimensions를 우선 사용
     const dimensions = moduleData.dimensions;
-    
-    // 가구가 듀얼 슬롯인지 확인
-    const isDualFurniture = Math.abs(dimensions.width - (indexing.columnWidth * 2)) < 50;
-    
-    // 슬롯 인덱스 찾기 (기존 position.x 기준)
-    let slotIndex = -1;
-    let slotPositionMm = 0; // mm 단위 슬롯 위치
-    
-    if (isDualFurniture && indexing.threeUnitDualPositions) {
-      // 듀얼 가구: threeUnitDualPositions에서 가장 가까운 위치 찾기
-      slotIndex = indexing.threeUnitDualPositions.findIndex(pos => 
-        Math.abs(pos - position.x) < 0.1
-      );
-      if (slotIndex >= 0) {
-        // 듀얼 슬롯의 실제 mm 위치 사용
-        slotPositionMm = indexing.dualColumnPositions[slotIndex];
-      }
-    } else {
-      // 싱글 가구: threeUnitPositions에서 가장 가까운 위치 찾기
-      slotIndex = indexing.threeUnitPositions.findIndex(pos => 
-        Math.abs(pos - position.x) < 0.1
-      );
-      if (slotIndex >= 0) {
-        // 싱글 슬롯의 실제 mm 위치 사용
-        slotPositionMm = indexing.columnPositions[slotIndex];
-      }
-    }
-    
-    // 슬롯을 찾지 못한 경우 기존 방식으로 폴백
-    if (slotIndex < 0) {
-      slotPositionMm = position.x * 10; // 기존 변환 방식
-    }
-    
-    // DXF 좌표계로 변환: slotPositionMm은 내부 공간 시작점(internalStartX) 기준의 절대 좌표
-    // DXF에서는 공간의 왼쪽 끝(0,0)을 기준으로 하므로 그대로 사용
-    // 평면도에서도 X축은 internalStartX 기준, Y축은 가구 앞면 기준으로 배치
-    const dxfXPosition = slotPositionMm; // internalStartX 기준 절대 좌표
-    
-    // 가구 앞면 위치: 공간 앞면에서 20mm 뒤 (측면도와 동일한 로직)
-    const frontPositionMm = 20;
-    const dxfYPosition = frontPositionMm; // 가구 앞면을 공간 앞면에서 20mm 뒤에 배치
-    
-    console.log(`🎯 [DXF-SPECIALIST] Plan View Coordinate Transform - ${moduleData.name}:`, {
-      '1_ThreeJS_Original': {
-        x: position.x,
-        z: position.z,
-        slotIndex,
-        isDualFurniture
-      },
-      '2_Internal_Space': {
-        internalStartX: indexing.internalStartX,
-        internalWidth: indexing.internalWidth,
-        totalSpaceWidth: spaceInfo.width
-      },
-      '3_DXF_Transform': {
-        slotPositionMm_Absolute: slotPositionMm,
-        dxfXPosition,
-        furnitureLeft: dxfXPosition - (dimensions.width / 2),
-        furnitureRight: dxfXPosition + (dimensions.width / 2),
-        leftEdgeToSpaceLeft: dxfXPosition - (dimensions.width / 2),
-        rightEdgeToSpaceRight: spaceInfo.width - (dxfXPosition + dimensions.width / 2)
-      },
-      '4_Depth_Position': {
-        frontPositionMm,
-        dxfYPosition,
-        spaceDepth: spaceInfo.depth
-      }
+
+    // 듀얼 가구 여부 확인 (module 데이터에서 직접 가져옴)
+    const isDualFurniture = module.isDualSlot === true;
+
+    // 2D 화면과 동일하게: position.x (Three.js 단위)를 mm로 직접 변환
+    const dxfXPosition = internalStartX + (position.x * 10);
+
+    // 가구 앞면 위치: position.z를 mm로 변환
+    const dxfYPosition = position.z * 10;
+
+    // 좌표 변환 완료: Three.js → DXF (2D 화면과 동일)
+    console.log(`🎯 [DXF] Plan View - ${moduleData.name}:`, {
+      'ThreeJS_X': position.x,
+      'ThreeJS_Z': position.z,
+      'internalStartX': internalStartX,
+      'DXF_X': dxfXPosition,
+      'DXF_Y': dxfYPosition,
+      'width': dimensions.width,
+      'depth': dimensions.depth
     });
-    
+
     // 가구 사각형 (평면도 기준: width x depth)
     const x1 = dxfXPosition - (dimensions.width / 2); // 중심점에서 좌측 끝
-    const y1 = dxfYPosition; // 가구 앞면 (공간 앞면에서 20mm 뒤)
+    const y1 = dxfYPosition - (dimensions.depth / 2); // 중심점에서 앞쪽 끝
     const x2 = x1 + dimensions.width; // 우측 끝
-    const y2 = y1 + dimensions.depth; // 가구 뒤면 (앞면에서 깊이만큼 뒤)
-    
-    console.log(`📐 평면도 DXF 좌표 최종 계산:`, {
-      slotIndex,
-      slotPositionMm,
-      dxfXPosition,
-      dxfYPosition,
-      x1, y1, x2, y2,
-      width: dimensions.width,
-      depth: dimensions.depth
-    });
+    const y2 = y1 + dimensions.depth; // 뒤쪽 끝
     
     // FURNITURE 레이어로 전환 (가구 외곽선용)
     dxf.setCurrentLayerName('FURNITURE');
@@ -988,83 +849,52 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
 };
 
 /**
- * 가구 모듈들을 그리기 (측면도 기준)
+ * 가구 모듈들을 그리기 (측면도 기준) - 2D 화면과 동일한 좌표 사용
  */
 const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule[], spaceInfo: SpaceInfo): void => {
   // FURNITURE 레이어로 전환
   dxf.setCurrentLayerName('FURNITURE');
-  
+
   const internalSpace = calculateInternalSpace(spaceInfo);
-  
-  console.log('🔍 DXF 측면도 생성 - 가구 배치 정보:', {
-    totalModules: placedModules.length,
-    spaceDepth: spaceInfo.depth,
-    spaceHeight: spaceInfo.height
-  });
-  
+
   placedModules.forEach((module, index) => {
-    const { moduleData, moduleId } = module;
-    
+    const { position, moduleData, moduleId } = module;
+
     // 실제 모듈 데이터 가져오기
     const actualModuleData = getModuleById(moduleId, internalSpace, spaceInfo);
     // customDepth가 이미 반영된 moduleData.dimensions를 우선 사용
     const dimensions = moduleData.dimensions;
-    
+
     // 가구 깊이 계산 (이미 customDepth가 반영된 상태)
     const actualDepthMm = dimensions.depth;
-    
-    console.log(`🔍 측면도 가구 ${index + 1} (${moduleData.name}) 치수:`, {
-      moduleId,
-      moduleDataDepth: moduleData.dimensions.depth,
-      actualModuleDataDepth: actualModuleData?.dimensions.depth,
-      finalDepth: actualDepthMm,
-      height: dimensions.height
-    });
-    
-    // 측면도 좌표 계산
-    // X축: 깊이 방향 (0 = 공간 앞면, depth = 공간 뒤면)
-    // Y축: 높이 방향 (0 = 바닥, height = 천장)
-    
-    // 가구 앞면 위치: 공간 앞면에서 20mm 뒤 (모든 가구 동일)
-    const frontPositionMm = 20;
-    
-    // 가구 뒤면 위치: 앞면 + 가구 깊이
-    const backPositionMm = frontPositionMm + actualDepthMm;
-    
-    // 가구 중심 위치 (측면도 X축)
-    const furnitureCenterX = frontPositionMm + (actualDepthMm / 2);
-    
+
+    // 측면도 좌표 계산 - 2D 화면과 동일하게 position.z 사용
+    // X축: 깊이 방향 (position.z를 mm로 변환)
+    // Y축: 높이 방향 (position.y를 mm로 변환)
+    const dxfXPosition = position.z * 10; // 가구 중심의 깊이 위치
+
     // 가구 높이 위치 계산 (baseFrameHeight 포함)
-    // Y 좌표: 내경 바닥 위치 계산
     const baseFrameHeight = spaceInfo.baseConfig?.type === 'base_frame' ? (spaceInfo.baseConfig?.height || 100) : 0;
-    const furnitureBottomY = baseFrameHeight; // 하부 프레임 위의 가구 바닥
-    const furnitureTopY = furnitureBottomY + dimensions.height; // 가구 상단
+    const furnitureBottomY = baseFrameHeight + (position.y * 10); // 하부 프레임 + position.y
+    const furnitureTopY = furnitureBottomY + dimensions.height;
     const furnitureCenterY = furnitureBottomY + (dimensions.height / 2);
-    
-    console.log(`🎯 [DXF-SPECIALIST] Side View Coordinate Transform with BaseFrame:`, {
-      '1_BaseFrame': {
-        type: spaceInfo.baseConfig?.type,
-        height: baseFrameHeight,
-        furnitureBottomWithBase: furnitureBottomY
-      },
-      '2_Depth_Position': {
-        frontPositionMm,
-        backPositionMm,
-        actualDepthMm
-      },
-      '3_Height_Position': {
-        furnitureBottomY,
-        furnitureTopY,
-        furnitureCenterY,
-        totalHeight: dimensions.height,
-        floorToFurnitureBottom: furnitureBottomY
-      }
+    const furnitureCenterX = dxfXPosition;
+
+    // 좌표 변환 완료: Three.js → DXF (2D 화면과 동일)
+    console.log(`🎯 [DXF] Side View - ${moduleData.name}:`, {
+      'ThreeJS_Z': position.z,
+      'ThreeJS_Y': position.y,
+      'DXF_X': dxfXPosition,
+      'baseFrameHeight': baseFrameHeight,
+      'furnitureBottomY': furnitureBottomY,
+      'depth': actualDepthMm,
+      'height': dimensions.height
     });
-    
+
     // 가구 사각형 그리기 (측면도: depth x height)
-    const x1 = frontPositionMm; // 앞면
+    const x1 = dxfXPosition - (actualDepthMm / 2); // 중심에서 앞면
     const y1 = furnitureBottomY; // 바닥
-    const x2 = backPositionMm; // 뒤면
+    const x2 = dxfXPosition + (actualDepthMm / 2); // 중심에서 뒷면
     const y2 = furnitureTopY; // 상단
     
     // 가구 외곽선 그리기 (측면도 - 옆에서 본 모습)
