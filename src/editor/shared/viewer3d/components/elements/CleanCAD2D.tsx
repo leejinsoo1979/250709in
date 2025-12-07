@@ -1712,220 +1712,225 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
       
-      {/* 슬롯/가구 너비 치수선 */}
+      {/* 전체 내부 너비 치수선 (항상 표시) */}
       {(() => {
-        // 내부 영역 좌우 경계 (프레임 안쪽)
         const internalLeftX = threeUnitBoundaries[0];
         const internalRightX = threeUnitBoundaries[threeUnitBoundaries.length - 1];
         const internalWidthMm = indexing.internalWidth;
+        const centerX = (internalLeftX + internalRightX) / 2;
 
-        if (placedModules.length === 0) {
-          // 가구 미배치: 전체 내부 너비 표시
-          const centerX = (internalLeftX + internalRightX) / 2;
-          return (
-            <group key="total-internal-width">
-              {/* 전체 내부 너비 치수선 */}
-              <NativeLine name="dimension_line"
-                points={[[internalLeftX, columnDimensionY, 0.002], [internalRightX, columnDimensionY, 0.002]]}
-                color={dimensionColor}
-                lineWidth={1}
-                renderOrder={100000}
-                depthTest={false}
-              />
-              {/* 좌측 화살표 */}
-              <NativeLine name="dimension_line"
-                points={createArrowHead([internalLeftX, columnDimensionY, 0.002], [internalLeftX + 0.03, columnDimensionY, 0.002], 0.01)}
-                color={dimensionColor}
-                lineWidth={1}
-                renderOrder={100000}
-                depthTest={false}
-              />
-              {/* 우측 화살표 */}
-              <NativeLine name="dimension_line"
-                points={createArrowHead([internalRightX, columnDimensionY, 0.002], [internalRightX - 0.03, columnDimensionY, 0.002], 0.01)}
-                color={dimensionColor}
-                lineWidth={1}
-                renderOrder={100000}
-                depthTest={false}
-              />
-              {/* 내부 너비 텍스트 */}
-              <Text
-                renderOrder={1000}
-                depthTest={false}
-                position={[centerX, columnDimensionY + mmToThreeUnits(30), 0.01]}
-                fontSize={smallFontSize}
-                color={textColor}
-                anchorX="center"
-                anchorY="middle"
-              >
-                {Math.round(internalWidthMm)}
-              </Text>
-              {/* 좌측 연장선 */}
-              <NativeLine name="dimension_line"
-                points={[[internalLeftX, spaceHeight, 0.001], [internalLeftX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
-                color={dimensionColor}
-                lineWidth={1}
-                renderOrder={100000}
-                depthTest={false}
-              />
-              {/* 우측 연장선 */}
-              <NativeLine name="dimension_line"
-                points={[[internalRightX, spaceHeight, 0.001], [internalRightX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
-                color={dimensionColor}
-                lineWidth={1}
-                renderOrder={100000}
-                depthTest={false}
-              />
-            </group>
-          );
-        } else {
-          // 가구 배치됨: 각 슬롯별로 가구 너비 또는 빈 슬롯 너비 표시
-          // 슬롯별 가구 배치 상태 확인
-          const slotOccupancy: { [slotIndex: number]: typeof placedModules[0] | null } = {};
-          placedModules.forEach(module => {
-            if (module.slotIndex !== undefined) {
-              slotOccupancy[module.slotIndex] = module;
-              // 듀얼 모듈은 다음 슬롯도 차지
-              if (module.isDualSlot || module.moduleId.includes('dual-')) {
-                slotOccupancy[module.slotIndex + 1] = module;
-              }
-            }
-          });
+        return (
+          <group key="total-internal-width">
+            {/* 전체 내부 너비 치수선 */}
+            <NativeLine name="dimension_line"
+              points={[[internalLeftX, columnDimensionY, 0.002], [internalRightX, columnDimensionY, 0.002]]}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
+            />
+            {/* 좌측 화살표 */}
+            <NativeLine name="dimension_line"
+              points={createArrowHead([internalLeftX, columnDimensionY, 0.002], [internalLeftX + 0.03, columnDimensionY, 0.002], 0.01)}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
+            />
+            {/* 우측 화살표 */}
+            <NativeLine name="dimension_line"
+              points={createArrowHead([internalRightX, columnDimensionY, 0.002], [internalRightX - 0.03, columnDimensionY, 0.002], 0.01)}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
+            />
+            {/* 내부 너비 텍스트 */}
+            <Text
+              renderOrder={1000}
+              depthTest={false}
+              position={[centerX, columnDimensionY + mmToThreeUnits(30), 0.01]}
+              fontSize={smallFontSize}
+              color={textColor}
+              anchorX="center"
+              anchorY="middle"
+            >
+              {Math.round(internalWidthMm)}
+            </Text>
+            {/* 좌측 연장선 */}
+            <NativeLine name="dimension_line"
+              points={[[internalLeftX, spaceHeight, 0.001], [internalLeftX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
+            />
+            {/* 우측 연장선 */}
+            <NativeLine name="dimension_line"
+              points={[[internalRightX, spaceHeight, 0.001], [internalRightX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
+              color={dimensionColor}
+              lineWidth={1}
+              renderOrder={100000}
+              depthTest={false}
+            />
+          </group>
+        );
+      })()}
 
-          const elements: React.ReactNode[] = [];
-          let i = 0;
+      {/* 가구 배치 시: 가구 너비 + 빈 슬롯 너비 (전체 너비 아래에 추가 표시) */}
+      {placedModules.length > 0 && (() => {
+        const furnitureDimensionY = columnDimensionY + mmToThreeUnits(80); // 전체 너비 치수선 아래
 
-          while (i < columnCount) {
-            const slotLeftX = threeUnitBoundaries[i];
-            const module = slotOccupancy[i];
-
-            if (module) {
-              // 가구가 있는 슬롯: 가구 너비 표시
-              const isDual = module.isDualSlot || module.moduleId.includes('dual-');
-              const moduleData = getModuleById(module.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
-              const furnitureWidth = module.customWidth || module.adjustedWidth || moduleData?.dimensions?.width || 0;
-
-              // 가구의 실제 위치와 너비 사용
-              const furnitureLeftX = module.position.x - mmToThreeUnits(furnitureWidth) / 2;
-              const furnitureRightX = module.position.x + mmToThreeUnits(furnitureWidth) / 2;
-              const centerX = module.position.x;
-
-              elements.push(
-                <group key={`furniture-width-${i}`}>
-                  <NativeLine name="dimension_line"
-                    points={[[furnitureLeftX, columnDimensionY, 0.002], [furnitureRightX, columnDimensionY, 0.002]]}
-                    color={dimensionColor}
-                    lineWidth={1}
-                    renderOrder={100000}
-                    depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={createArrowHead([furnitureLeftX, columnDimensionY, 0.002], [furnitureLeftX + 0.03, columnDimensionY, 0.002], 0.01)}
-                    color={dimensionColor}
-                    lineWidth={1}
-                    renderOrder={100000}
-                    depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={createArrowHead([furnitureRightX, columnDimensionY, 0.002], [furnitureRightX - 0.03, columnDimensionY, 0.002], 0.01)}
-                    color={dimensionColor}
-                    lineWidth={1}
-                    renderOrder={100000}
-                    depthTest={false}
-                  />
-                  <Text
-                    renderOrder={1000}
-                    depthTest={false}
-                    position={[centerX, columnDimensionY + mmToThreeUnits(30), 0.01]}
-                    fontSize={smallFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                  >
-                    {Math.round(furnitureWidth)}
-                  </Text>
-                  <NativeLine name="dimension_line"
-                    points={[[furnitureLeftX, spaceHeight, 0.001], [furnitureLeftX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
-                    color={dimensionColor}
-                    lineWidth={1}
-                    renderOrder={100000}
-                    depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[furnitureRightX, spaceHeight, 0.001], [furnitureRightX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
-                    color={dimensionColor}
-                    lineWidth={1}
-                    renderOrder={100000}
-                    depthTest={false}
-                  />
-                </group>
-              );
-
-              // 듀얼이면 다음 슬롯 건너뜀
-              i += isDual ? 2 : 1;
-            } else {
-              // 빈 슬롯: 빈 공간 너비 표시
-              const slotRightX = threeUnitBoundaries[i + 1];
-              const slotWidthMm = (slotRightX - slotLeftX) / 0.01;
-              const centerX = (slotLeftX + slotRightX) / 2;
-
-              elements.push(
-                <group key={`empty-slot-${i}`}>
-                  <NativeLine name="dimension_line"
-                    points={[[slotLeftX, columnDimensionY, 0.002], [slotRightX, columnDimensionY, 0.002]]}
-                    color={dimensionColor}
-                    lineWidth={1}
-                    renderOrder={100000}
-                    depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={createArrowHead([slotLeftX, columnDimensionY, 0.002], [slotLeftX + 0.03, columnDimensionY, 0.002], 0.01)}
-                    color={dimensionColor}
-                    lineWidth={1}
-                    renderOrder={100000}
-                    depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={createArrowHead([slotRightX, columnDimensionY, 0.002], [slotRightX - 0.03, columnDimensionY, 0.002], 0.01)}
-                    color={dimensionColor}
-                    lineWidth={1}
-                    renderOrder={100000}
-                    depthTest={false}
-                  />
-                  <Text
-                    renderOrder={1000}
-                    depthTest={false}
-                    position={[centerX, columnDimensionY + mmToThreeUnits(30), 0.01]}
-                    fontSize={smallFontSize}
-                    color={textColor}
-                    anchorX="center"
-                    anchorY="middle"
-                  >
-                    {Math.round(slotWidthMm)}
-                  </Text>
-                  <NativeLine name="dimension_line"
-                    points={[[slotLeftX, spaceHeight, 0.001], [slotLeftX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
-                    color={dimensionColor}
-                    lineWidth={1}
-                    renderOrder={100000}
-                    depthTest={false}
-                  />
-                  <NativeLine name="dimension_line"
-                    points={[[slotRightX, spaceHeight, 0.001], [slotRightX, columnDimensionY + mmToThreeUnits(20), 0.001]]}
-                    color={dimensionColor}
-                    lineWidth={1}
-                    renderOrder={100000}
-                    depthTest={false}
-                  />
-                </group>
-              );
-
-              i += 1;
+        // 슬롯별 가구 배치 상태 확인
+        const slotOccupancy: { [slotIndex: number]: typeof placedModules[0] | null } = {};
+        placedModules.forEach(module => {
+          if (module.slotIndex !== undefined) {
+            slotOccupancy[module.slotIndex] = module;
+            if (module.isDualSlot || module.moduleId.includes('dual-')) {
+              slotOccupancy[module.slotIndex + 1] = module;
             }
           }
+        });
 
-          return <>{elements}</>;
+        const elements: React.ReactNode[] = [];
+        let i = 0;
+        const processedModules = new Set<string>(); // 듀얼 모듈 중복 방지
+
+        while (i < columnCount) {
+          const slotLeftX = threeUnitBoundaries[i];
+          const module = slotOccupancy[i];
+
+          if (module) {
+            // 이미 처리한 모듈이면 건너뜀 (듀얼 모듈의 두 번째 슬롯)
+            const moduleKey = `${module.moduleId}-${module.slotIndex}`;
+            if (processedModules.has(moduleKey)) {
+              i += 1;
+              continue;
+            }
+            processedModules.add(moduleKey);
+
+            const isDual = module.isDualSlot || module.moduleId.includes('dual-');
+            const moduleData = getModuleById(module.moduleId, { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth }, spaceInfo);
+            const furnitureWidth = module.customWidth || module.adjustedWidth || moduleData?.dimensions?.width || 0;
+
+            const furnitureLeftX = module.position.x - mmToThreeUnits(furnitureWidth) / 2;
+            const furnitureRightX = module.position.x + mmToThreeUnits(furnitureWidth) / 2;
+            const centerX = module.position.x;
+
+            elements.push(
+              <group key={`furniture-width-${i}`}>
+                <NativeLine name="dimension_line"
+                  points={[[furnitureLeftX, furnitureDimensionY, 0.002], [furnitureRightX, furnitureDimensionY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([furnitureLeftX, furnitureDimensionY, 0.002], [furnitureLeftX + 0.03, furnitureDimensionY, 0.002], 0.01)}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([furnitureRightX, furnitureDimensionY, 0.002], [furnitureRightX - 0.03, furnitureDimensionY, 0.002], 0.01)}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                  position={[centerX, furnitureDimensionY + mmToThreeUnits(30), 0.01]}
+                  fontSize={smallFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                >
+                  {Math.round(furnitureWidth)}
+                </Text>
+                <NativeLine name="dimension_line"
+                  points={[[furnitureLeftX, columnDimensionY + mmToThreeUnits(50), 0.001], [furnitureLeftX, furnitureDimensionY + mmToThreeUnits(20), 0.001]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={[[furnitureRightX, columnDimensionY + mmToThreeUnits(50), 0.001], [furnitureRightX, furnitureDimensionY + mmToThreeUnits(20), 0.001]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+              </group>
+            );
+
+            i += isDual ? 2 : 1;
+          } else {
+            // 빈 슬롯
+            const slotRightX = threeUnitBoundaries[i + 1];
+            const slotWidthMm = (slotRightX - slotLeftX) / 0.01;
+            const centerX = (slotLeftX + slotRightX) / 2;
+
+            elements.push(
+              <group key={`empty-slot-${i}`}>
+                <NativeLine name="dimension_line"
+                  points={[[slotLeftX, furnitureDimensionY, 0.002], [slotRightX, furnitureDimensionY, 0.002]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([slotLeftX, furnitureDimensionY, 0.002], [slotLeftX + 0.03, furnitureDimensionY, 0.002], 0.01)}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={createArrowHead([slotRightX, furnitureDimensionY, 0.002], [slotRightX - 0.03, furnitureDimensionY, 0.002], 0.01)}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <Text
+                  renderOrder={1000}
+                  depthTest={false}
+                  position={[centerX, furnitureDimensionY + mmToThreeUnits(30), 0.01]}
+                  fontSize={smallFontSize}
+                  color={textColor}
+                  anchorX="center"
+                  anchorY="middle"
+                >
+                  {Math.round(slotWidthMm)}
+                </Text>
+                <NativeLine name="dimension_line"
+                  points={[[slotLeftX, columnDimensionY + mmToThreeUnits(50), 0.001], [slotLeftX, furnitureDimensionY + mmToThreeUnits(20), 0.001]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+                <NativeLine name="dimension_line"
+                  points={[[slotRightX, columnDimensionY + mmToThreeUnits(50), 0.001], [slotRightX, furnitureDimensionY + mmToThreeUnits(20), 0.001]]}
+                  color={dimensionColor}
+                  lineWidth={1}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+              </group>
+            );
+
+            i += 1;
+          }
         }
+
+        return <>{elements}</>;
       })()}
       
       {/* 좌측 전체 높이 치수선 */}
