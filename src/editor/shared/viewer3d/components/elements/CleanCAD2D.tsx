@@ -2481,7 +2481,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             {/* 가구 치수 텍스트 - Text 사용 */}
             <Text
-              position={[actualPositionX, dimY - mmToThreeUnits(30), 0.01]}
+              position={[actualPositionX, dimY - mmToThreeUnits(60), 0.01]}
               fontSize={baseFontSize}
               color={dimensionColor}
               anchorX="center"
