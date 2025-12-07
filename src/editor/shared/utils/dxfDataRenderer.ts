@@ -665,7 +665,7 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
 
     const name = object.name || '';
     const lowerName = name.toLowerCase();
-    if (lowerName.includes('edge') || lowerName.includes('furniture')) {
+    if (lowerName.includes('edge') || lowerName.includes('furniture') || lowerName.includes('frame')) {
       edgeObjectNames.push(`${typeName}: ${name}`);
     }
     if (lowerName.includes('dimension')) {

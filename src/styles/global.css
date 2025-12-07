@@ -78,17 +78,4 @@ aside,
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
-}
-
-/* 14인치 맥북 등 소형 노트북 화면 스케일링 (1920px 이하) */
-@media screen and (max-width: 1920px) and (min-width: 1024px) {
-  html {
-    zoom: 0.9;
-  }
-}
-
-@media screen and (max-width: 1023px) and (min-width: 768px) {
-  html {
-    zoom: 0.85;
-  }
 } 
