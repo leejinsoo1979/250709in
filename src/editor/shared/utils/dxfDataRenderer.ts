@@ -794,6 +794,7 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       const isBackPanelLine = lowerName.includes('back-panel') || lowerName.includes('백패널');
       const isClothingRodLine = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
       const isAdjustableFootLine = lowerName.includes('adjustable-foot') || lowerName.includes('조절발');
+      const isVentilationLine = lowerName.includes('ventilation') || lowerName.includes('환기');
       const isFurniturePanelLine = lowerName.includes('furniture-edge');
       const isSpaceFrameLine = lowerName.includes('space-frame');
 
@@ -801,14 +802,22 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       // - 공간 프레임: ACI 3 (연두색)
       // - 가구 패널: ACI 30 (주황색)
       // - 백패널: ACI 252
-      // - 옷봉/조절발: ACI 7
+      // - 옷봉: ACI 7 (흰색)
+      // - 조절발: ACI 8 (회색) - 2D에서 회색으로 표시
+      // - 환기캡: ACI 6 (마젠타) - 2D에서 #FF00FF로 표시
       let line2Color = color;
       if (isBackPanelLine) {
         line2Color = 252;
         console.log(`⚪ 백패널 라인(Line2) 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
-      } else if (isClothingRodLine || isAdjustableFootLine) {
+      } else if (isVentilationLine) {
+        line2Color = 6; // ACI 6 = 마젠타 (2D에서 #FF00FF)
+        console.log(`🟣 환기캡 라인(Line2) 발견: ${name}, ACI 6 (마젠타)으로 설정`);
+      } else if (isAdjustableFootLine) {
+        line2Color = 8; // ACI 8 = 회색 (2D에서 #808080)
+        console.log(`⚫ 조절발 라인(Line2) 발견: ${name}, ACI 8 (회색)으로 설정`);
+      } else if (isClothingRodLine) {
         line2Color = 7; // ACI 7 = 흰색
-        console.log(`⚪ 옷봉/조절발 라인(Line2) 발견: ${name}, ACI 7 (흰색)으로 설정`);
+        console.log(`⚪ 옷봉 라인(Line2) 발견: ${name}, ACI 7 (흰색)으로 설정`);
       } else if (isSpaceFrameLine) {
         line2Color = 3; // ACI 3 = 연두색
         console.log(`🟢 공간 프레임 라인(Line2) 발견: ${name}, ACI 3 (연두색)으로 설정`);
@@ -874,6 +883,7 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         const isBackPanelEdge = lowerName.includes('back-panel') || lowerName.includes('백패널');
         const isClothingRodEdge = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
         const isAdjustableFootEdge = lowerName.includes('adjustable-foot') || lowerName.includes('조절발');
+        const isVentilationEdge = lowerName.includes('ventilation') || lowerName.includes('환기');
 
         // 가구 패널 엣지 감지 (furniture-edge-* 형태 이름)
         const isFurniturePanelEdge = lowerName.includes('furniture-edge');
@@ -885,15 +895,23 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         // - 공간 프레임 (Room.tsx 좌우상하): ACI 3 (연두색)
         // - 가구 패널 (furniture-edge-*): ACI 30 (주황색)
         // - 백패널: ACI 252 (매우 연한 회색, 투명감)
-        // - 옷봉/조절발: ACI 7 (흰색)
+        // - 옷봉: ACI 7 (흰색)
+        // - 조절발: ACI 8 (회색) - 2D에서 #808080
+        // - 환기캡: ACI 6 (마젠타) - 2D에서 #FF00FF
         let lsColor: number;
 
         if (isBackPanelEdge) {
           lsColor = 252; // ACI 252 = 매우 연한 회색 (투명감)
           console.log(`⚪ 백패널 엣지 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
-        } else if (isClothingRodEdge || isAdjustableFootEdge) {
+        } else if (isVentilationEdge) {
+          lsColor = 6; // ACI 6 = 마젠타 (2D에서 #FF00FF)
+          console.log(`🟣 환기캡 엣지 발견: ${name}, ACI 6 (마젠타)으로 설정`);
+        } else if (isAdjustableFootEdge) {
+          lsColor = 8; // ACI 8 = 회색 (2D에서 #808080)
+          console.log(`⚫ 조절발 엣지 발견: ${name}, ACI 8 (회색)으로 설정`);
+        } else if (isClothingRodEdge) {
           lsColor = 7; // ACI 7 = 흰색
-          console.log(`⚪ 옷봉/조절발 엣지 발견: ${name}, ACI 7 (흰색)으로 설정`);
+          console.log(`⚪ 옷봉 엣지 발견: ${name}, ACI 7 (흰색)으로 설정`);
         } else if (isSpaceFrame) {
           lsColor = 3; // ACI 3 = 연두색 (공간 프레임)
           console.log(`🟢 공간 프레임 엣지 발견: ${name}, ACI 3 (연두색)으로 설정`);
@@ -992,6 +1010,7 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         const isBackPanelEdge = lineLowerName.includes('back-panel') || lineLowerName.includes('백패널');
         const isClothingRodEdge = lineLowerName.includes('clothing-rod') || lineLowerName.includes('옷봉');
         const isAdjustableFootEdge = lineLowerName.includes('adjustable-foot') || lineLowerName.includes('조절발');
+        const isVentilationEdge = lineLowerName.includes('ventilation') || lineLowerName.includes('환기');
 
         // 가구 패널 엣지 감지 (furniture-edge-* 형태 이름)
         const isFurniturePanelEdge = lineLowerName.includes('furniture-edge');
@@ -1003,13 +1022,21 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         // - 공간 프레임 (좌우상하 프레임): ACI 3 (연두색)
         // - 가구 패널: ACI 30 (주황색)
         // - 백패널: ACI 252
-        // - 옷봉/조절발: ACI 7
+        // - 옷봉: ACI 7 (흰색)
+        // - 조절발: ACI 8 (회색) - 2D에서 #808080
+        // - 환기캡: ACI 6 (마젠타) - 2D에서 #FF00FF
         if (isBackPanelEdge) {
           lineColor = 252; // 매우 연한 회색
           console.log(`⚪ 백패널 엣지(Line) 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
-        } else if (isClothingRodEdge || isAdjustableFootEdge) {
+        } else if (isVentilationEdge) {
+          lineColor = 6; // ACI 6 = 마젠타 (2D에서 #FF00FF)
+          console.log(`🟣 환기캡 엣지(Line) 발견: ${name}, ACI 6 (마젠타)으로 설정`);
+        } else if (isAdjustableFootEdge) {
+          lineColor = 8; // ACI 8 = 회색 (2D에서 #808080)
+          console.log(`⚫ 조절발 엣지(Line) 발견: ${name}, ACI 8 (회색)으로 설정`);
+        } else if (isClothingRodEdge) {
           lineColor = 7; // 흰색
-          console.log(`⚪ 옷봉/조절발 엣지(Line) 발견: ${name}, ACI 7 (흰색)으로 설정`);
+          console.log(`⚪ 옷봉 엣지(Line) 발견: ${name}, ACI 7 (흰색)으로 설정`);
         } else if (isSpaceFrame) {
           lineColor = 3; // 연두색 (공간 프레임)
           console.log(`🟢 공간 프레임 엣지(Line) 발견: ${name}, ACI 3 (연두색)으로 설정`);
@@ -1539,7 +1566,7 @@ export const generateDxfFromData = (
   dxf.addLayer('FURNITURE_PANEL', 30, 'CONTINUOUS'); // 가구 패널 - 주황색
   dxf.addLayer('BACK_PANEL', 252, 'CONTINUOUS');     // 백패널 - 연한 회색
   dxf.addLayer('CLOTHING_ROD', 7, 'CONTINUOUS');     // 옷봉 - 흰색
-  dxf.addLayer('ACCESSORIES', 7, 'CONTINUOUS');      // 조절발/환기탭 - 흰색
+  dxf.addLayer('ACCESSORIES', 8, 'CONTINUOUS');      // 조절발 - 회색 (2D와 동일)
   dxf.addLayer('END_PANEL', 3, 'CONTINUOUS');        // 엔드패널 - 연두색
   dxf.addLayer('DIMENSIONS', 7, 'CONTINUOUS');       // 치수선 - 흰색
 
@@ -1562,7 +1589,7 @@ export const generateDxfFromData = (
     'SPACE_FRAME': 3,      // 공간 프레임 - 연두색
     'BACK_PANEL': 252,     // 백패널 - 연한 회색
     'CLOTHING_ROD': 7,     // 옷봉 - 흰색
-    'ACCESSORIES': 7,      // 조절발/환기탭 - 흰색
+    'ACCESSORIES': 8,      // 조절발 - 회색 (2D와 동일)
     'END_PANEL': 3,        // 엔드패널 - 연두색
     'DIMENSIONS': 7,       // 치수선 - 흰색
     '0': 7                 // 기본 흰색
