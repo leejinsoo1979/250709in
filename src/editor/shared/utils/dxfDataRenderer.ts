@@ -359,9 +359,9 @@ const extractFromLineSegments = (
     }
   }
 
-  // 앞쪽 판단 기준 (뷰 방향에서 앞쪽 절반)
-  // 0.5로 설정하여 앞쪽 절반의 엣지만 포함 (뒤쪽 절반 제외)
-  const frontThreshold = minZ + (maxZ - minZ) * 0.4;
+  // 앞쪽 판단 기준 - 앞쪽 30%만 필터링 (뒤쪽 70% 제외)
+  // 프레임 엣지가 누락되지 않도록 threshold를 낮춤
+  const frontThreshold = minZ + (maxZ - minZ) * 0.3;
 
   // LineSegments: pairs of vertices
   for (let i = 0; i < positionAttr.count; i += 2) {
@@ -638,19 +638,43 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
 
     // Check for LineSegments (EdgesGeometry)
     // THREE.LineSegments 또는 type이 'LineSegments'인 객체 모두 체크
+    // 주의: LineSegments는 Line을 상속하므로 Line 체크 전에 먼저 확인해야 함
     const isLineSegments = object instanceof THREE.LineSegments ||
                            object.type === 'LineSegments' ||
                            (object as any).isLineSegments;
     if (isLineSegments) {
       const lineSegObj = object as THREE.LineSegments;
-      const posCount = lineSegObj.geometry?.getAttribute('position')?.count || 0;
+      const geometry = lineSegObj.geometry;
+
+      if (!geometry) {
+        console.log(`⚠️ LineSegments geometry 없음: ${name || '(이름없음)'}`);
+        return;
+      }
+
+      const positionAttr = geometry.getAttribute('position');
+      const posCount = positionAttr?.count || 0;
+
       if (posCount > 0) {
-        const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, layer, color);
+        // LineSegments의 material에서 색상 추출
+        const lsMaterial = lineSegObj.material;
+        let lsColor = color;
+        if (lsMaterial && !Array.isArray(lsMaterial) && 'color' in lsMaterial) {
+          const matColor = (lsMaterial as THREE.LineBasicMaterial).color;
+          if (matColor) {
+            lsColor = rgbToAci(
+              Math.round(matColor.r * 255),
+              Math.round(matColor.g * 255),
+              Math.round(matColor.b * 255)
+            );
+          }
+        }
+
+        const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, layer, lsColor);
         lines.push(...extractedLines);
         lineSegmentsObjects++;
-        console.log(`📐 LineSegments 발견: ${name || '(이름없음)'}, 위치 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${color}`);
+        console.log(`📐 LineSegments 발견: ${name || '(이름없음)'}, 버텍스 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${lsColor}`);
       } else {
-        console.log(`⚠️ LineSegments 발견했으나 position 없음: ${name || '(이름없음)'}`);
+        console.log(`⚠️ LineSegments position 없음: ${name || '(이름없음)'}, geometry type: ${geometry.type}`);
       }
       return;
     }
@@ -713,32 +737,55 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
   });
   console.log('🎨 색상별 라인 수:', colorCounts);
 
-  // If no lines were found, try extracting edges from meshes
-  if (lines.length === 0 && meshesForEdges.length > 0) {
-    console.log(`⚠️ 라인이 없어서 Mesh에서 엣지 추출 시도...`);
+  // 가구 프레임 엣지 추출 - LineSegments가 감지되지 않은 경우에도 Mesh에서 추출
+  // 가구 패널(좌측판, 우측판, 상판, 바닥판 등)의 엣지를 확실히 추출하기 위해
+  // fallback이 아닌 추가 소스로 처리
+  const furniturePanelMeshes = meshesForEdges.filter(({ mesh }) => {
+    const name = (mesh.name || '').toLowerCase();
 
-    const furnitureMeshes = meshesForEdges.filter(({ mesh }) => {
-      const name = (mesh.name || '').toLowerCase();
-      if (name.includes('floor') || name.includes('wall') || name.includes('background') || name.includes('slot')) {
-        return false;
-      }
-      if (mesh.geometry) {
-        const box = new THREE.Box3().setFromObject(mesh);
-        const size = box.getSize(new THREE.Vector3());
-        if (size.x < 0.01 && size.y < 0.01 && size.z < 0.01) {
-          return false;
-        }
+    // 제외할 항목들
+    if (name.includes('floor') || name.includes('wall') || name.includes('background') || name.includes('slot')) {
+      return false;
+    }
+
+    // 가구 관련 메쉬만 포함 (BoxGeometry인지 확인)
+    if (mesh.geometry) {
+      const isBoxGeometry = mesh.geometry.type === 'BoxGeometry' ||
+                            mesh.geometry.type === 'BoxBufferGeometry';
+      if (isBoxGeometry) {
         return true;
       }
-      return false;
-    });
 
-    console.log(`📦 Mesh에서 엣지 추출 대상: ${furnitureMeshes.length}개`);
+      // BoxGeometry가 아니더라도 충분한 크기의 메쉬 포함
+      const box = new THREE.Box3().setFromObject(mesh);
+      const size = box.getSize(new THREE.Vector3());
+      // 최소 크기 체크 (10mm 이상)
+      if (size.x > 0.1 || size.y > 0.1 || size.z > 0.1) {
+        return true;
+      }
+    }
+    return false;
+  });
 
-    furnitureMeshes.forEach(({ mesh, matrix, layer, color }) => {
-      const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, layer, color);
-      lines.push(...extractedEdges);
+  if (furniturePanelMeshes.length > 0) {
+    console.log(`📦 가구 패널 Mesh에서 엣지 추출: ${furniturePanelMeshes.length}개`);
+
+    // 2D 뷰에서 가구 프레임 엣지 색상 결정
+    // 2D 다크 모드: ACI 30 (주황색 #FF4500)
+    // 2D 라이트 모드: ACI 8 (회색 #444444)
+    // 기본값으로 다크 모드 색상 사용 (가장 일반적)
+    const furnitureEdgeColor = 30; // ACI 30 = 주황색
+
+    let meshEdgeCount = 0;
+    furniturePanelMeshes.forEach(({ mesh, matrix, layer }) => {
+      // 가구 패널은 FURNITURE 레이어에 주황색으로 추출
+      const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', furnitureEdgeColor);
+      if (extractedEdges.length > 0) {
+        lines.push(...extractedEdges);
+        meshEdgeCount += extractedEdges.length;
+      }
     });
+    console.log(`✅ Mesh에서 ${meshEdgeCount}개 엣지 추출 완료 (색상 ACI=${furnitureEdgeColor})`);
   }
 
   console.log(`✅ 추출 완료: 라인 ${lines.length}개, 텍스트 ${texts.length}개`);
