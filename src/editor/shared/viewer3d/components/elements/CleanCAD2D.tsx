@@ -960,18 +960,18 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 </Text>
               )}
               
-              {/* 연장선 (좌측 프레임) - 간격 조정 */}
+              {/* 연장선 (좌측 프레임) - 공간 상단에서 치수선까지만 */}
               <NativeLine name="dimension_line"
-                points={[[actualLeftEdge, 0, 0.001], [actualLeftEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                points={[[actualLeftEdge, spaceHeight, 0.001], [actualLeftEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
                 color={dimensionColor}
                 lineWidth={1}
                 renderOrder={100000}
                 depthTest={false}
               />
-              
-              {/* 연장선 (우측 프레임) - 간격 조정 */}
+
+              {/* 연장선 (우측 프레임) - 공간 상단에서 치수선까지만 */}
               <NativeLine name="dimension_line"
-                points={[[actualRightEdge, 0, 0.001], [actualRightEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
+                points={[[actualRightEdge, spaceHeight, 0.001], [actualRightEdge, topDimensionY + mmToThreeUnits(40), 0.001]]}
                 color={dimensionColor}
                 lineWidth={1}
                 renderOrder={100000}
@@ -2395,7 +2395,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         const moduleWidth = mmToThreeUnits(actualWidth);
         const leftX = actualPositionX - moduleWidth / 2;
         const rightX = actualPositionX + moduleWidth / 2;
-        const dimY = topDimensionY - mmToThreeUnits(120); // 상단 전체 치수 아래 위치 (간격 증가)
+        const dimY = columnDimensionY - mmToThreeUnits(DIMENSION_GAP); // 슬롯너비합 아래 위치
         
         // 듀얼 가구인지 확인 (이름에 'dual' 포함)
         const isDualModule = moduleData.id.includes('dual');
@@ -2479,9 +2479,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               depthTest={false}
             />
             
-            {/* 가구 치수 텍스트 - Text 사용 */}
+            {/* 가구 치수 텍스트 - 보조선 위로 */}
             <Text
-              position={[actualPositionX, dimY - mmToThreeUnits(30), 0.01]}
+              position={[actualPositionX, dimY + mmToThreeUnits(20), 0.01]}
               fontSize={baseFontSize}
               color={dimensionColor}
               anchorX="center"
@@ -2493,26 +2493,101 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
             
             
-            {/* 연장선 - 하부 프레임에서 전체 가로 치수 보조선까지 확장 */}
+            {/* 연장선 - 가구 상단에서 슬롯너비합 치수선(columnDimensionY)까지만 */}
             <NativeLine name="dimension_line"
-              points={[[leftX, spaceHeight, 0.001], [leftX, topDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[leftX, furnitureHeight, 0.001], [leftX, columnDimensionY, 0.001]]}
               color={dimensionColor}
-              lineWidth={1.5}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[rightX, spaceHeight, 0.001], [rightX, topDimensionY + mmToThreeUnits(20), 0.001]]}
+              points={[[rightX, furnitureHeight, 0.001], [rightX, columnDimensionY, 0.001]]}
               color={dimensionColor}
-              lineWidth={1.5}
+              lineWidth={1}
               renderOrder={1000000}
               depthTest={false}
               depthWrite={false}
               transparent={true}
             />
-            
+
+            {/* 가구 섹션별 높이 내경 치수 가이드라인 */}
+            {leftSections && leftSections.length > 0 && (() => {
+              // 가구 내부 우측에 섹션 높이 치수 표시
+              const sectionDimX = rightX - mmToThreeUnits(30); // 가구 우측 내부 30mm 안쪽
+              const panelThickness = moduleData.modelConfig?.basicThickness || 18;
+              let currentY = 0; // 바닥부터 시작
+
+              return leftSections.map((section: { type: string; height: number }, sectionIndex: number) => {
+                const sectionHeight = section.height;
+                const sectionStartY = mmToThreeUnits(currentY);
+                const sectionEndY = mmToThreeUnits(currentY + sectionHeight);
+                const sectionMidY = (sectionStartY + sectionEndY) / 2;
+
+                // 다음 섹션을 위해 현재 위치 업데이트
+                currentY += sectionHeight;
+
+                return (
+                  <group key={`section-dim-${index}-${sectionIndex}`}>
+                    {/* 섹션 높이 치수선 (세로) */}
+                    <NativeLine name="dimension_line"
+                      points={[[sectionDimX, sectionStartY, 0.002], [sectionDimX, sectionEndY, 0.002]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={1000000}
+                      depthTest={false}
+                    />
+                    {/* 상단 화살표 */}
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([sectionDimX, sectionEndY, 0.002], [sectionDimX, sectionEndY - 0.03, 0.002], 0.01)}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={1000000}
+                      depthTest={false}
+                    />
+                    {/* 하단 화살표 */}
+                    <NativeLine name="dimension_line"
+                      points={createArrowHead([sectionDimX, sectionStartY, 0.002], [sectionDimX, sectionStartY + 0.03, 0.002], 0.01)}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={1000000}
+                      depthTest={false}
+                    />
+                    {/* 섹션 높이 텍스트 */}
+                    <Text
+                      position={[sectionDimX - mmToThreeUnits(25), sectionMidY, 0.01]}
+                      fontSize={smallFontSize}
+                      color={textColor}
+                      anchorX="center"
+                      anchorY="middle"
+                      rotation={[0, 0, -Math.PI / 2]}
+                      renderOrder={1000000}
+                      depthTest={false}
+                    >
+                      {sectionHeight}
+                    </Text>
+                    {/* 좌측 보조선 (가구 엣지에서 치수선까지) */}
+                    <NativeLine name="dimension_line"
+                      points={[[rightX, sectionStartY, 0.001], [sectionDimX + mmToThreeUnits(10), sectionStartY, 0.001]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={1000000}
+                      depthTest={false}
+                    />
+                    <NativeLine name="dimension_line"
+                      points={[[rightX, sectionEndY, 0.001], [sectionDimX + mmToThreeUnits(10), sectionEndY, 0.001]]}
+                      color={dimensionColor}
+                      lineWidth={1}
+                      renderOrder={1000000}
+                      depthTest={false}
+                    />
+                  </group>
+                );
+              });
+            })()}
+
           </group>
         );
       })}
@@ -5552,14 +5627,14 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 {column.width}
               </Text>
               
-              {/* 연장선 - 가구와 동일한 길이로 수정 */}
+              {/* 연장선 - 치수선에서 15mm만 */}
               <Line
-                points={[[leftX, spaceHeight, spaceZOffset], [leftX, spaceHeight, dimZ - mmToThreeUnits(50)]]}
+                points={[[leftX, spaceHeight, dimZ], [leftX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
                 color={dimensionColor}
                 lineWidth={0.5}
               />
               <Line
-                points={[[rightX, spaceHeight, spaceZOffset], [rightX, spaceHeight, dimZ - mmToThreeUnits(50)]]}
+                points={[[rightX, spaceHeight, dimZ], [rightX, spaceHeight, dimZ - mmToThreeUnits(15)]]}
                 color={dimensionColor}
                 lineWidth={0.5}
               />
