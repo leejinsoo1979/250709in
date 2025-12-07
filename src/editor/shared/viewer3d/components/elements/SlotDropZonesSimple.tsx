@@ -2688,25 +2688,49 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             <>
               {/* 메인 영역 표시 */}
               <group key="main-zone-group">
-                {/* 바닥 슬롯 메쉬 */}
-                <mesh
-                  position={[
-                    mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
-                    floorY,
-                    slotFloorZ
-                  ]}
-                >
-                  <boxGeometry args={[
-                    mmToThreeUnits(zoneSlotInfo.normal.width),
-                    viewMode === '2D' ? 0.1 : 0.001,
-                    slotFloorDepth
-                  ]} />
-                  <meshBasicMaterial
-                    color={primaryColor}
-                    transparent
-                    opacity={0.35}
-                  />
-                </mesh>
+                {/* 바닥 슬롯 메쉬 - 탑뷰용 */}
+                {view2DDirection !== 'front' && (
+                  <mesh
+                    position={[
+                      mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
+                      floorY,
+                      slotFloorZ
+                    ]}
+                  >
+                    <boxGeometry args={[
+                      mmToThreeUnits(zoneSlotInfo.normal.width),
+                      viewMode === '2D' ? 0.1 : 0.001,
+                      slotFloorDepth
+                    ]} />
+                    <meshBasicMaterial
+                      color={primaryColor}
+                      transparent
+                      opacity={0.35}
+                    />
+                  </mesh>
+                )}
+                {/* 정면뷰용 뒷벽 슬롯 메쉬 */}
+                {view2DDirection === 'front' && (
+                  <mesh
+                    position={[
+                      mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
+                      (floorY + ceilingY) / 2,
+                      roomBackZ + 0.01
+                    ]}
+                  >
+                    <boxGeometry args={[
+                      mmToThreeUnits(zoneSlotInfo.normal.width),
+                      ceilingY - floorY,
+                      0.01
+                    ]} />
+                    <meshBasicMaterial
+                      color={primaryColor}
+                      transparent
+                      opacity={0.35}
+                      side={THREE.DoubleSide}
+                    />
+                  </mesh>
+                )}
                 {/* 천장 슬롯 메쉬 - 바닥과 동일한 깊이, 2D 모드에서는 숨김 */}
                 {viewMode !== '2D' && (
                   <mesh
