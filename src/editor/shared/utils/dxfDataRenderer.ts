@@ -794,21 +794,32 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     if (isLine2 || hasLineGeometry) {
       // 씬에서 추출한 색상을 그대로 사용 (임의로 정하지 않음)
       // 2D 화면에 렌더링된 색상을 그대로 DXF에 적용
-      const line2Color = color;
+      let line2Color = color;
+      let line2Layer = layer;
       const lowerName = name.toLowerCase();
 
-      // 디버그 로깅만
-      if (lowerName.includes('dimension')) {
+      // 특수 객체에 대한 색상 및 레이어 강제 할당
+      if (lowerName.includes('clothing-rod') || lowerName.includes('옷봉')) {
+        line2Color = 7; // ACI 7 = 흰색/검정
+        line2Layer = 'CLOTHING_ROD';
+        console.log(`📐 옷봉(Line2): ${name}, 색상 ACI=7로 강제 설정`);
+      } else if (lowerName.includes('adjustable-foot') || lowerName.includes('조절발')) {
+        line2Color = 8; // ACI 8 = 회색
+        line2Layer = 'ACCESSORIES';
+        console.log(`📐 조절발(Line2): ${name}, 색상 ACI=8로 강제 설정`);
+      } else if (lowerName.includes('ventilation') || lowerName.includes('환기')) {
+        line2Color = 6; // ACI 6 = 마젠타
+        line2Layer = 'VENTILATION';
+        console.log(`📐 환기캡(Line2): ${name}, 색상 ACI=6로 강제 설정`);
+      } else if (lowerName.includes('back-panel') || lowerName.includes('백패널')) {
+        line2Color = 252; // ACI 252 = 연한 회색
+        line2Layer = 'BACK_PANEL';
+        console.log(`📐 백패널(Line2): ${name}, 색상 ACI=252로 강제 설정`);
+      } else if (lowerName.includes('dimension')) {
         console.log(`📏 치수선(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
-      } else if (lowerName.includes('back-panel')) {
-        console.log(`📐 백패널(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
-      } else if (lowerName.includes('adjustable-foot')) {
-        console.log(`📐 조절발(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
-      } else if (lowerName.includes('ventilation')) {
-        console.log(`📐 환기캡(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
       }
 
-      const extractedLines = extractFromLine2(object, matrix, scale, layer, line2Color);
+      const extractedLines = extractFromLine2(object, matrix, scale, line2Layer, line2Color);
       if (extractedLines.length > 0) {
         lines.push(...extractedLines);
         line2Objects++;
@@ -919,13 +930,20 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
 
         if (isBackPanelEdge) {
           lsLayer = 'BACK_PANEL';
+          lsColor = 252; // ACI 252 = 연한 회색
           colorReason = '백패널';
         } else if (isClothingRodEdge) {
           lsLayer = 'CLOTHING_ROD';
+          lsColor = 7; // ACI 7 = 흰색/검정 (레이어 색상과 동일)
           colorReason = '옷봉';
         } else if (isAdjustableFootEdge) {
           lsLayer = 'ACCESSORIES';
+          lsColor = 8; // ACI 8 = 회색 (레이어 색상과 동일)
           colorReason = '조절발';
+        } else if (isVentilationEdge) {
+          lsLayer = 'VENTILATION';
+          lsColor = 6; // ACI 6 = 마젠타 (레이어 색상과 동일)
+          colorReason = '환기캡';
         } else if (isSpaceFrame) {
           lsLayer = 'SPACE_FRAME';
           colorReason = '공간프레임';
@@ -979,19 +997,31 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         }
 
         // 엣지 타입 감지 (개별 Line 요소용)
-        // 씬에서 추출한 색상을 그대로 사용 (임의로 정하지 않음)
+        // 특수 객체에 대한 색상 및 레이어 강제 할당
         const lineLowerName = name.toLowerCase();
+        let lineLayer = layer;
 
-        // 디버그 로깅만
-        if (lineLowerName.includes('dimension')) {
+        if (lineLowerName.includes('clothing-rod') || lineLowerName.includes('옷봉')) {
+          lineColor = 7; // ACI 7 = 흰색/검정
+          lineLayer = 'CLOTHING_ROD';
+          console.log(`📐 옷봉(Line): ${name}, 색상 ACI=7로 강제 설정`);
+        } else if (lineLowerName.includes('adjustable-foot') || lineLowerName.includes('조절발')) {
+          lineColor = 8; // ACI 8 = 회색
+          lineLayer = 'ACCESSORIES';
+          console.log(`📐 조절발(Line): ${name}, 색상 ACI=8로 강제 설정`);
+        } else if (lineLowerName.includes('ventilation') || lineLowerName.includes('환기')) {
+          lineColor = 6; // ACI 6 = 마젠타
+          lineLayer = 'VENTILATION';
+          console.log(`📐 환기캡(Line): ${name}, 색상 ACI=6로 강제 설정`);
+        } else if (lineLowerName.includes('back-panel') || lineLowerName.includes('백패널')) {
+          lineColor = 252; // ACI 252 = 연한 회색
+          lineLayer = 'BACK_PANEL';
+          console.log(`📐 백패널(Line): ${name}, 색상 ACI=252로 강제 설정`);
+        } else if (lineLowerName.includes('dimension')) {
           console.log(`📏 치수선(Line): ${name}, 추출된 색상 ACI=${lineColor}`);
-        } else if (lineLowerName.includes('back-panel')) {
-          console.log(`📐 백패널(Line): ${name}, 추출된 색상 ACI=${lineColor}`);
-        } else if (lineLowerName.includes('adjustable-foot')) {
-          console.log(`📐 조절발(Line): ${name}, 추출된 색상 ACI=${lineColor}`);
         }
 
-        const extractedLines = extractFromLine(lineObj, matrix, scale, layer, lineColor);
+        const extractedLines = extractFromLine(lineObj, matrix, scale, lineLayer, lineColor);
         lines.push(...extractedLines);
         lineObjects++;
       }
