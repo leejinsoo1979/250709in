@@ -359,8 +359,9 @@ const extractFromLineSegments = (
     }
   }
 
-  // 앞쪽 판단 기준 (뷰 방향에서 가장 앞쪽 근처)
-  const frontThreshold = maxZ - (maxZ - minZ) * 0.1;
+  // 앞쪽 판단 기준 (뷰 방향에서 앞쪽 절반)
+  // 0.5로 설정하여 앞쪽 절반의 엣지만 포함 (뒤쪽 절반 제외)
+  const frontThreshold = minZ + (maxZ - minZ) * 0.4;
 
   // LineSegments: pairs of vertices
   for (let i = 0; i < positionAttr.count; i += 2) {
@@ -383,18 +384,22 @@ const extractFromLineSegments = (
     }
 
     // 뒤쪽 엣지 필터링 (앞쪽 면의 엣지만 포함)
-    let edgeZ: number;
-    if (currentViewDirection === 'front') {
-      edgeZ = Math.max(p1.z, p2.z);
-    } else if (currentViewDirection === 'top') {
-      edgeZ = Math.max(p1.y, p2.y);
-    } else {
-      edgeZ = currentViewDirection === 'right' ? Math.max(p1.x, p2.x) : Math.min(p1.x, p2.x);
-    }
+    // 주의: 범위가 너무 작은 경우 (평면 객체 등) 필터링 안함
+    const range = maxZ - minZ;
+    if (range > 0.01) { // 1mm 이상 깊이가 있는 경우에만 필터링
+      let edgeZ: number;
+      if (currentViewDirection === 'front') {
+        edgeZ = Math.max(p1.z, p2.z);
+      } else if (currentViewDirection === 'top') {
+        edgeZ = Math.max(p1.y, p2.y);
+      } else {
+        edgeZ = currentViewDirection === 'right' ? Math.max(p1.x, p2.x) : Math.min(p1.x, p2.x);
+      }
 
-    if (edgeZ < frontThreshold) {
-      filteredCount++;
-      continue;
+      if (edgeZ < frontThreshold) {
+        filteredCount++;
+        continue;
+      }
     }
 
     const proj1 = projectTo2D(p1, scale);
