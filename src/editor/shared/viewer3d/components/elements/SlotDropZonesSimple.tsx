@@ -26,6 +26,7 @@ interface SlotDropZonesSimpleProps {
   showAll?: boolean;
   showDimensions?: boolean;
   viewMode?: '2D' | '3D';
+  view2DDirection?: 'front' | 'left' | 'right' | 'top' | 'all';
 }
 
 // 전역 window 타입 확장
@@ -35,7 +36,7 @@ declare global {
   }
 }
 
-const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, showAll = true, showDimensions = true, viewMode: viewModeProp }) => {
+const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, showAll = true, showDimensions = true, viewMode: viewModeProp, view2DDirection: view2DDirectionProp }) => {
   const SLOT_DEBUG = true; // 디버깅 활성화
   const debugLog = (...args: any[]) => {
     if (SLOT_DEBUG) {
@@ -59,10 +60,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   // Three.js 컨텍스트 접근
   const { camera, scene } = useThree();
   const { viewMode: contextViewMode } = useSpace3DView();
-  const { view2DDirection } = useUIStore();
+  const { view2DDirection: view2DDirectionStore } = useUIStore();
 
-  // prop으로 받은 viewMode를 우선 사용, 없으면 context의 viewMode 사용
+  // prop으로 받은 값을 우선 사용, 없으면 store/context 값 사용
   const viewMode = viewModeProp || contextViewMode;
+  const view2DDirection = view2DDirectionProp || view2DDirectionStore;
 
   debugLog('🎯 SlotDropZonesSimple - viewMode:', {
     viewModeProp,

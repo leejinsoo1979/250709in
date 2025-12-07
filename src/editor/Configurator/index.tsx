@@ -222,6 +222,26 @@ const Configurator: React.FC = () => {
   const [renderMode, setRenderMode] = useState<RenderMode>('solid');
   const [showAll, setShowAll] = useState(true);
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
+
+  // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
+  const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
+  const [frameInputRight, setFrameInputRight] = useState<string>(String(spaceInfo.frameSize?.right || 50));
+  const [frameInputTop, setFrameInputTop] = useState<string>(String(spaceInfo.frameSize?.top || 10));
+  const isEditingFrameRef = useRef<{ left: boolean; right: boolean; top: boolean }>({ left: false, right: false, top: false });
+
+  // 외부 spaceInfo.frameSize가 변경되면 로컬 상태 동기화 (편집 중이 아닐 때만)
+  useEffect(() => {
+    if (!isEditingFrameRef.current.left) {
+      setFrameInputLeft(String(spaceInfo.frameSize?.left || 50));
+    }
+    if (!isEditingFrameRef.current.right) {
+      setFrameInputRight(String(spaceInfo.frameSize?.right || 50));
+    }
+    if (!isEditingFrameRef.current.top) {
+      setFrameInputTop(String(spaceInfo.frameSize?.top || 10));
+    }
+  }, [spaceInfo.frameSize?.left, spaceInfo.frameSize?.right, spaceInfo.frameSize?.top]);
+
   const [showPDFPreview, setShowPDFPreview] = useState(false); // PDF 미리보기 상태
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false); // 내보내기 모달 상태
   const [isShareModalOpen, setIsShareModalOpen] = useState(false); // 공유 모달 상태
@@ -447,6 +467,45 @@ const Configurator: React.FC = () => {
         [property]: value
       }
     });
+  };
+
+  // 프레임 입력 핸들러 함수들
+  const handleFrameInputChange = (dimension: 'left' | 'right' | 'top', value: string) => {
+    // 숫자만 허용 (빈 문자열도 허용)
+    if (value === '' || /^\d+$/.test(value)) {
+      if (dimension === 'left') setFrameInputLeft(value);
+      else if (dimension === 'right') setFrameInputRight(value);
+      else setFrameInputTop(value);
+    }
+  };
+
+  const handleFrameInputFocus = (dimension: 'left' | 'right' | 'top') => {
+    isEditingFrameRef.current[dimension] = true;
+    setHighlightedFrame(dimension);
+  };
+
+  const handleFrameInputBlur = (dimension: 'left' | 'right' | 'top', min: number, max: number, defaultValue: number) => {
+    isEditingFrameRef.current[dimension] = false;
+    setHighlightedFrame(null);
+
+    const inputValue = dimension === 'left' ? frameInputLeft : dimension === 'right' ? frameInputRight : frameInputTop;
+    let numValue = parseInt(inputValue, 10);
+
+    // 유효하지 않은 숫자라면 기본값 사용
+    if (isNaN(numValue)) {
+      numValue = defaultValue;
+    }
+
+    // 범위 검증
+    numValue = Math.min(max, Math.max(min, numValue));
+
+    // 로컬 상태 업데이트
+    if (dimension === 'left') setFrameInputLeft(String(numValue));
+    else if (dimension === 'right') setFrameInputRight(String(numValue));
+    else setFrameInputTop(String(numValue));
+
+    // Store 업데이트
+    updateFrameSize(dimension, numValue);
   };
 
   // 공간 넓이 기반 최소/최대 도어 개수 계산
@@ -3183,16 +3242,13 @@ const Configurator: React.FC = () => {
                       −
                     </button>
                     <input
-                      type="number"
-                      min="10"
-                      max="100"
-                      value={spaceInfo.frameSize?.left || 50}
-                      onChange={(e) => {
-                        const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
-                        updateFrameSize('left', value);
-                      }}
-                      onFocus={() => setHighlightedFrame('left')}
-                      onBlur={() => setHighlightedFrame(null)}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={frameInputLeft}
+                      onChange={(e) => handleFrameInputChange('left', e.target.value)}
+                      onFocus={() => handleFrameInputFocus('left')}
+                      onBlur={() => handleFrameInputBlur('left', 10, 100, 50)}
                       className={styles.frameNumberInput}
                       disabled={
                         (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
@@ -3240,16 +3296,13 @@ const Configurator: React.FC = () => {
                       −
                     </button>
                     <input
-                      type="number"
-                      min="10"
-                      max="100"
-                      value={spaceInfo.frameSize?.right || 50}
-                      onChange={(e) => {
-                        const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
-                        updateFrameSize('right', value);
-                      }}
-                      onFocus={() => setHighlightedFrame('right')}
-                      onBlur={() => setHighlightedFrame(null)}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={frameInputRight}
+                      onChange={(e) => handleFrameInputChange('right', e.target.value)}
+                      onFocus={() => handleFrameInputFocus('right')}
+                      onBlur={() => handleFrameInputBlur('right', 10, 100, 50)}
                       className={styles.frameNumberInput}
                       disabled={
                         (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
@@ -3288,16 +3341,13 @@ const Configurator: React.FC = () => {
                       −
                     </button>
                     <input
-                      type="number"
-                      min="10"
-                      max="100"
-                      value={spaceInfo.frameSize?.top || 50}
-                      onChange={(e) => {
-                        const value = Math.min(100, Math.max(10, parseInt(e.target.value) || 50));
-                        updateFrameSize('top', value);
-                      }}
-                      onFocus={() => setHighlightedFrame('top')}
-                      onBlur={() => setHighlightedFrame(null)}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={frameInputTop}
+                      onChange={(e) => handleFrameInputChange('top', e.target.value)}
+                      onFocus={() => handleFrameInputFocus('top')}
+                      onBlur={() => handleFrameInputBlur('top', 10, 100, 50)}
                       className={styles.frameNumberInput}
                     />
                     <button
@@ -3336,16 +3386,13 @@ const Configurator: React.FC = () => {
                       −
                     </button>
                     <input
-                      type="number"
-                      min="10"
-                      max="200"
-                      value={spaceInfo.frameSize?.top || 10}
-                      onChange={(e) => {
-                        const value = Math.min(200, Math.max(10, parseInt(e.target.value) || 10));
-                        updateFrameSize('top', value);
-                      }}
-                      onFocus={() => setHighlightedFrame('top')}
-                      onBlur={() => setHighlightedFrame(null)}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={frameInputTop}
+                      onChange={(e) => handleFrameInputChange('top', e.target.value)}
+                      onFocus={() => handleFrameInputFocus('top')}
+                      onBlur={() => handleFrameInputBlur('top', 10, 200, 10)}
                       className={styles.frameNumberInput}
                     />
                     <button

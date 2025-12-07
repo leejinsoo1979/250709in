@@ -1986,7 +1986,7 @@ const QuadrantContent: React.FC<{
       {viewDirection !== 'top' && <FurniturePlacementPlane spaceInfo={spaceInfo} />}
 
       {/* 슬롯 드롭존 */}
-      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode="2D" />
+      <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode="2D" view2DDirection={viewDirection} />
 
       {/* Room 컴포넌트 - 프레임, 도어, 가구를 포함 */}
       {console.log('🔵 QuadrantContent - Room 렌더링:', {
