@@ -204,6 +204,10 @@ export const useDXFExport = () => {
         console.log(`✅ ${drawingType} 도면 추가 완료: ${filename}`);
       }
 
+      // ZIP 파일 내 파일 수 확인
+      const filesInZip = Object.keys(zip.files);
+      console.log(`📦 ZIP 내 파일 수: ${filesInZip.length}개`, filesInZip);
+
       // ZIP 파일 생성 및 다운로드 (DXF 파일만 포함, README 제외)
       const zipBlob = await zip.generateAsync({ type: 'blob' });
 
