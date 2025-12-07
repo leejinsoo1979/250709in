@@ -708,16 +708,16 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const DIMENSION_GAP = 120; // 치수선 간 간격 (mm)
   const EXTENSION_LENGTH = 60; // 보조선 연장 길이 (mm)
 
-  // 1단계: 전체 너비 (3600) - 맨 위 (공간 위쪽 충분히 바깥으로)
+  // 1단계: 전체 너비 (3600) - 맨 위 (공간 위쪽으로)
   const topDimensionY = spaceHeight + mmToThreeUnits(
     hasDroppedCeiling
-      ? (is3DMode ? 450 : 400)
-      : (is3DMode ? 400 : 350)
+      ? (is3DMode ? 350 : 300)
+      : (is3DMode ? 300 : 250)
   );
-  // 2단계: 내부 너비 (3540) + 좌우 프레임 - 전체 너비 아래
-  const columnDimensionY = topDimensionY - mmToThreeUnits(DIMENSION_GAP);
-  // 3단계: 개별 슬롯 너비 - 내부 너비 아래
-  const slotDimensionY = columnDimensionY - mmToThreeUnits(DIMENSION_GAP);
+  // 2단계: 내부 너비 (3516) - 전체 너비 아래 (간격 80mm)
+  const columnDimensionY = topDimensionY - mmToThreeUnits(80);
+  // 3단계: 개별 슬롯 너비 - 내부 너비 아래 (간격 80mm)
+  const slotDimensionY = columnDimensionY - mmToThreeUnits(80);
   const leftDimensionX = -mmToThreeUnits(200); // 좌측 치수선 (균형감을 위해 200으로 고정)
   
   // 좌측 오프셋 (가로 공간치수의 절반)
