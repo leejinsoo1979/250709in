@@ -2707,28 +2707,6 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                     opacity={0.35}
                   />
                 </mesh>
-                {/* 정면뷰용 뒷벽 슬롯 메쉬 */}
-                {view2DDirection === 'front' && (
-                  <mesh
-                    position={[
-                      mmToThreeUnits(zoneSlotInfo.normal.startX + zoneSlotInfo.normal.width / 2),
-                      (floorY + ceilingY) / 2,
-                      roomBackZ + 0.01
-                    ]}
-                  >
-                    <boxGeometry args={[
-                      mmToThreeUnits(zoneSlotInfo.normal.width),
-                      ceilingY - floorY,
-                      0.01
-                    ]} />
-                    <meshBasicMaterial
-                      color={primaryColor}
-                      transparent
-                      opacity={0.35}
-                      side={THREE.DoubleSide}
-                    />
-                  </mesh>
-                )}
                 {/* 천장 슬롯 메쉬 - 바닥과 동일한 깊이, 2D 모드에서는 숨김 */}
                 {viewMode !== '2D' && (
                   <mesh
@@ -2787,31 +2765,6 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                     opacity={0.35}
                   />
                 </mesh>
-                {/* 정면뷰용 뒷벽 슬롯 메쉬 - 단내림 영역 */}
-                {view2DDirection === 'front' && (() => {
-                  const droppedCeilingY = mmToThreeUnits(spaceInfo.height - (spaceInfo.droppedCeiling?.dropHeight || 0) - (spaceInfo.frameSize?.top || 0));
-                  return (
-                    <mesh
-                      position={[
-                        mmToThreeUnits(zoneSlotInfo.dropped.startX + zoneSlotInfo.dropped.width / 2),
-                        (floorY + droppedCeilingY) / 2,
-                        roomBackZ + 0.01
-                      ]}
-                    >
-                      <boxGeometry args={[
-                        mmToThreeUnits(zoneSlotInfo.dropped.width),
-                        droppedCeilingY - floorY,
-                        0.01
-                      ]} />
-                      <meshBasicMaterial
-                        color={primaryColor}
-                        transparent
-                        opacity={0.35}
-                        side={THREE.DoubleSide}
-                      />
-                    </mesh>
-                  );
-                })()}
                 {/* 천장 슬롯 메쉬 - 단내림 구간은 높이가 다름, 2D 모드에서는 숨김 */}
                 {viewMode !== '2D' && (
                   <mesh
@@ -2880,20 +2833,6 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
                   opacity={0.35}
                 />
               </mesh>
-              {/* 정면뷰용 뒷벽 슬롯 메쉬 */}
-              {view2DDirection === 'front' && (
-                <mesh
-                  position={[centerX, (floorY + ceilingY) / 2, roomBackZ + 0.01]}
-                >
-                  <boxGeometry args={[width, ceilingY - floorY, 0.01]} />
-                  <meshBasicMaterial
-                    color={primaryColor}
-                    transparent
-                    opacity={0.35}
-                    side={THREE.DoubleSide}
-                  />
-                </mesh>
-              )}
               {/* 천장 슬롯 메쉬 - 2D 모드에서는 숨김 */}
               {debugLog('🎯 천장 메시 렌더링 조건:', { viewMode, shouldRender: viewMode !== '2D' })}
               {viewMode !== '2D' && (
