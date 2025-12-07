@@ -950,88 +950,126 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
   });
   console.log('🎨 색상별 라인 수:', colorCounts);
 
-  // 가구 프레임 엣지 추출 - LineSegments가 감지되지 않은 경우에도 Mesh에서 추출
-  // 가구 패널(좌측판, 우측판, 상판, 바닥판 등)의 엣지를 확실히 추출하기 위해
-  // BoxGeometry만 대상으로 함 (CylinderGeometry 등은 이미 LineSegments로 처리됨)
-  const furniturePanelMeshes = meshesForEdges.filter(({ mesh }) => {
+  // ============================================================
+  // 가구 프레임 엣지 추출 - 모든 BoxGeometry Mesh에서 직접 추출
+  // LineSegments가 감지되지 않는 문제를 우회하기 위해 Mesh 기반 추출
+  // ============================================================
+
+  console.log(`📦 Mesh 기반 엣지 추출 시작... (총 ${meshesForEdges.length}개 Mesh)`);
+
+  // 가구 패널 Mesh 분류
+  const framePanelMeshes: typeof meshesForEdges = []; // 좌측판, 우측판, 상판, 하판
+  const shelfMeshes: typeof meshesForEdges = []; // 선반
+  const backPanelMeshes: typeof meshesForEdges = []; // 백패널
+  const clothingRodMeshes: typeof meshesForEdges = []; // 옷봉
+  const otherFurnitureMeshes: typeof meshesForEdges = []; // 기타 가구
+
+  meshesForEdges.forEach((item) => {
+    const { mesh } = item;
     const name = (mesh.name || '').toLowerCase();
 
     // 제외할 항목들
-    if (name.includes('floor') || name.includes('wall') || name.includes('background') || name.includes('slot')) {
-      return false;
-    }
-
-    // 치수/텍스트 관련 제외 (박스가 텍스트 주위에 생기는 문제 방지)
-    if (name.includes('dimension') || name.includes('text') || name.includes('label') ||
-        name.includes('숫자') || name.includes('치수')) {
-      return false;
+    if (name.includes('floor') || name.includes('wall') || name.includes('background') ||
+        name.includes('slot') || name.includes('drop')) {
+      return;
     }
 
     // troika text mesh 제외
     if ((mesh as any).text !== undefined || (mesh as any).isTroikaText) {
-      return false;
+      return;
     }
 
-    // BoxGeometry만 포함 (가구 프레임 패널)
-    // CylinderGeometry (조절발 등)는 제외 - 이미 LineSegments로 처리됨
-    // SphereGeometry (치수선 끝점 등)도 제외
-    if (mesh.geometry) {
-      const geometryType = mesh.geometry.type;
-      const isBoxGeometry = geometryType === 'BoxGeometry' || geometryType === 'BoxBufferGeometry';
+    // geometry 타입 확인
+    if (!mesh.geometry) return;
+    const geometryType = mesh.geometry.type;
 
-      // SphereGeometry, CylinderGeometry 등 제외
-      if (geometryType.includes('Sphere') || geometryType.includes('Cylinder') ||
-          geometryType.includes('Circle') || geometryType.includes('Plane')) {
-        return false;
-      }
-
-      if (isBoxGeometry) {
-        // 크기로 가구 패널 판단
-        const box = new THREE.Box3().setFromObject(mesh);
-        const size = box.getSize(new THREE.Vector3());
-
-        // 옷봉 브라켓 제외 (12x75x12mm 또는 유사 크기)
-        // 브라켓은 width와 depth가 모두 15mm 미만
-        const minDimension = Math.min(size.x, size.z); // width와 depth 중 작은 값
-        if (minDimension < 0.15) { // 15mm 미만이면 브라켓으로 간주
-          return false;
-        }
-
-        // 가구 패널은 최소 하나의 방향이 18mm (기본 두께) 이상
-        // 그리고 다른 방향이 50mm 이상 (패널 너비/높이)
-        const dims = [size.x, size.y, size.z].sort((a, b) => a - b);
-        const smallestDim = dims[0]; // 두께
-        const middleDim = dims[1];
-        const largestDim = dims[2];
-
-        // 두께가 5mm 이상, 다른 차원이 50mm 이상인 패널만 포함
-        if (smallestDim >= 0.05 && largestDim >= 0.5) {
-          return true;
-        }
-      }
+    // Sphere, Circle, Plane 제외
+    if (geometryType.includes('Sphere') || geometryType.includes('Circle') || geometryType.includes('Plane')) {
+      return;
     }
-    return false;
+
+    // 이름 기반 분류
+    if (name.includes('백패널') || name.includes('back-panel') || name.includes('backpanel')) {
+      backPanelMeshes.push(item);
+    } else if (name.includes('옷봉') || name.includes('clothing') || name.includes('rod')) {
+      clothingRodMeshes.push(item);
+    } else if (name.includes('좌측') || name.includes('우측') || name.includes('상판') ||
+               name.includes('하판') || name.includes('바닥') || name.includes('천장') ||
+               name.includes('left') || name.includes('right') || name.includes('top') || name.includes('bottom')) {
+      framePanelMeshes.push(item);
+    } else if (name.includes('선반') || name.includes('shelf')) {
+      shelfMeshes.push(item);
+    } else if (geometryType === 'BoxGeometry' || geometryType === 'BoxBufferGeometry') {
+      // 이름이 없는 BoxGeometry도 가구로 간주
+      otherFurnitureMeshes.push(item);
+    }
   });
 
-  if (furniturePanelMeshes.length > 0) {
-    console.log(`📦 가구 패널 Mesh에서 엣지 추출: ${furniturePanelMeshes.length}개`);
+  console.log(`  프레임 패널: ${framePanelMeshes.length}개, 선반: ${shelfMeshes.length}개, 백패널: ${backPanelMeshes.length}개, 옷봉: ${clothingRodMeshes.length}개, 기타: ${otherFurnitureMeshes.length}개`);
 
-    // 2D 뷰에서 가구 프레임 엣지 색상
-    // ACI 3 = 연두색 (초록색, 사용자 요청)
-    const furnitureEdgeColor = 3;
+  let meshEdgeCount = 0;
 
-    let meshEdgeCount = 0;
-    furniturePanelMeshes.forEach(({ mesh, matrix, layer, color }) => {
-      // BoxGeometry 패널은 연두색으로 추출
-      const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', furnitureEdgeColor);
-      if (extractedEdges.length > 0) {
-        lines.push(...extractedEdges);
-        meshEdgeCount += extractedEdges.length;
-        console.log(`  📐 Mesh 엣지: ${mesh.name || '(무명)'}, ${extractedEdges.length}개`);
-      }
-    });
-    console.log(`✅ Mesh에서 ${meshEdgeCount}개 엣지 추출 완료 (색상 ACI=${furnitureEdgeColor}, 연두색)`);
-  }
+  // 프레임 패널 (좌측, 우측, 상판, 하판) - 연두색 (ACI 3)
+  framePanelMeshes.forEach(({ mesh, matrix }) => {
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', 3);
+    if (extractedEdges.length > 0) {
+      lines.push(...extractedEdges);
+      meshEdgeCount += extractedEdges.length;
+      console.log(`  🟢 프레임: ${mesh.name || '(무명)'}, ${extractedEdges.length}개 (연두색)`);
+    }
+  });
+
+  // 선반 - 연두색 (ACI 3)
+  shelfMeshes.forEach(({ mesh, matrix }) => {
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', 3);
+    if (extractedEdges.length > 0) {
+      lines.push(...extractedEdges);
+      meshEdgeCount += extractedEdges.length;
+      console.log(`  🟢 선반: ${mesh.name || '(무명)'}, ${extractedEdges.length}개 (연두색)`);
+    }
+  });
+
+  // 백패널 - 매우 연한 회색 (ACI 252)
+  backPanelMeshes.forEach(({ mesh, matrix }) => {
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', 252);
+    if (extractedEdges.length > 0) {
+      lines.push(...extractedEdges);
+      meshEdgeCount += extractedEdges.length;
+      console.log(`  ⚪ 백패널: ${mesh.name || '(무명)'}, ${extractedEdges.length}개 (연한회색)`);
+    }
+  });
+
+  // 옷봉 - 흰색 (ACI 7)
+  clothingRodMeshes.forEach(({ mesh, matrix }) => {
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', 7);
+    if (extractedEdges.length > 0) {
+      lines.push(...extractedEdges);
+      meshEdgeCount += extractedEdges.length;
+      console.log(`  ⚪ 옷봉: ${mesh.name || '(무명)'}, ${extractedEdges.length}개 (흰색)`);
+    }
+  });
+
+  // 기타 가구 - 연두색 (ACI 3)
+  otherFurnitureMeshes.forEach(({ mesh, matrix }) => {
+    // 크기 체크: 너무 작은 것은 제외
+    const box = new THREE.Box3().setFromObject(mesh);
+    const size = box.getSize(new THREE.Vector3());
+    const dims = [size.x, size.y, size.z].sort((a, b) => a - b);
+
+    // 최소 5mm 두께, 50mm 이상 크기
+    if (dims[0] < 0.05 || dims[2] < 0.5) {
+      return;
+    }
+
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', 3);
+    if (extractedEdges.length > 0) {
+      lines.push(...extractedEdges);
+      meshEdgeCount += extractedEdges.length;
+      console.log(`  🟢 기타: ${mesh.name || '(무명)'}, ${extractedEdges.length}개 (연두색)`);
+    }
+  });
+
+  console.log(`✅ Mesh에서 총 ${meshEdgeCount}개 엣지 추출 완료`);
 
   console.log(`✅ 추출 완료: 라인 ${lines.length}개, 텍스트 ${texts.length}개`);
 
@@ -1134,6 +1172,196 @@ const aciToLayerName = (aciColor: number): string => {
 };
 
 /**
+ * 외부 치수선 생성 (spaceInfo 기반)
+ * scene에서 치수선이 감지되지 않을 경우 직접 생성
+ */
+const generateExternalDimensions = (
+  spaceInfo: SpaceInfo,
+  viewDirection: ViewDirection
+): { lines: DxfLine[]; texts: DxfText[] } => {
+  const lines: DxfLine[] = [];
+  const texts: DxfText[] = [];
+
+  const { width, height, depth } = spaceInfo;
+  const dimensionColor = 7; // 흰색/검정 (치수선)
+  const extensionLength = 30; // 연장선 길이 (mm)
+  const dimensionOffset = 50; // 치수선 오프셋 (mm)
+
+  if (viewDirection === 'front') {
+    // 정면도: 가로 치수 (상단) + 세로 치수 (좌측)
+
+    // 상단 가로 치수선 (전체 너비)
+    const topY = height + dimensionOffset;
+
+    // 치수선 본체
+    lines.push({
+      x1: 0,
+      y1: topY,
+      x2: width,
+      y2: topY,
+      layer: 'DIMENSIONS',
+      color: dimensionColor
+    });
+
+    // 좌측 연장선
+    lines.push({
+      x1: 0,
+      y1: height,
+      x2: 0,
+      y2: topY + extensionLength,
+      layer: 'DIMENSIONS',
+      color: dimensionColor
+    });
+
+    // 우측 연장선
+    lines.push({
+      x1: width,
+      y1: height,
+      x2: width,
+      y2: topY + extensionLength,
+      layer: 'DIMENSIONS',
+      color: dimensionColor
+    });
+
+    // 치수 텍스트
+    texts.push({
+      x: width / 2,
+      y: topY + 15,
+      text: `${width}`,
+      height: 25,
+      color: dimensionColor,
+      layer: 'DIMENSIONS'
+    });
+
+    // 좌측 세로 치수선 (전체 높이)
+    const leftX = -dimensionOffset;
+
+    // 치수선 본체
+    lines.push({
+      x1: leftX,
+      y1: 0,
+      x2: leftX,
+      y2: height,
+      layer: 'DIMENSIONS',
+      color: dimensionColor
+    });
+
+    // 하단 연장선
+    lines.push({
+      x1: 0,
+      y1: 0,
+      x2: leftX - extensionLength,
+      y2: 0,
+      layer: 'DIMENSIONS',
+      color: dimensionColor
+    });
+
+    // 상단 연장선
+    lines.push({
+      x1: 0,
+      y1: height,
+      x2: leftX - extensionLength,
+      y2: height,
+      layer: 'DIMENSIONS',
+      color: dimensionColor
+    });
+
+    // 치수 텍스트
+    texts.push({
+      x: leftX - 15,
+      y: height / 2,
+      text: `${height}`,
+      height: 25,
+      color: dimensionColor,
+      layer: 'DIMENSIONS'
+    });
+
+  } else if (viewDirection === 'top') {
+    // 평면도: 가로(width) + 세로(depth)
+
+    // 상단 가로 치수선
+    const topY = depth + dimensionOffset;
+    lines.push({
+      x1: 0, y1: topY, x2: width, y2: topY,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: 0, y1: depth, x2: 0, y2: topY + extensionLength,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: width, y1: depth, x2: width, y2: topY + extensionLength,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: width / 2, y: topY + 15,
+      text: `${width}`, height: 25, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+    // 좌측 세로 치수선
+    const leftX = -dimensionOffset;
+    lines.push({
+      x1: leftX, y1: 0, x2: leftX, y2: depth,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: 0, y1: 0, x2: leftX - extensionLength, y2: 0,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: 0, y1: depth, x2: leftX - extensionLength, y2: depth,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: leftX - 15, y: depth / 2,
+      text: `${depth}`, height: 25, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+  } else if (viewDirection === 'left' || viewDirection === 'right') {
+    // 측면도: 세로(height) + 가로(depth)
+
+    const topY = height + dimensionOffset;
+    lines.push({
+      x1: 0, y1: topY, x2: depth, y2: topY,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: 0, y1: height, x2: 0, y2: topY + extensionLength,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: depth, y1: height, x2: depth, y2: topY + extensionLength,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: depth / 2, y: topY + 15,
+      text: `${depth}`, height: 25, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+
+    const leftX = -dimensionOffset;
+    lines.push({
+      x1: leftX, y1: 0, x2: leftX, y2: height,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: 0, y1: 0, x2: leftX - extensionLength, y2: 0,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    lines.push({
+      x1: 0, y1: height, x2: leftX - extensionLength, y2: height,
+      layer: 'DIMENSIONS', color: dimensionColor
+    });
+    texts.push({
+      x: leftX - 15, y: height / 2,
+      text: `${height}`, height: 25, color: dimensionColor, layer: 'DIMENSIONS'
+    });
+  }
+
+  console.log(`📏 외부 치수선 생성: ${lines.length}개 라인, ${texts.length}개 텍스트`);
+  return { lines, texts };
+};
+
+/**
  * DXF 생성 - 색상과 텍스트 포함
  */
 export const generateDxfFromData = (
@@ -1153,7 +1381,14 @@ export const generateDxfFromData = (
   console.log(`📊 배치된 가구 수: ${placedModules.length}`);
 
   // 씬에서 Line과 Text 객체 추출
-  const { lines, texts } = extractFromScene(scene, viewDirection);
+  const extracted = extractFromScene(scene, viewDirection);
+
+  // 외부 치수선 직접 생성 (scene에서 감지되지 않으므로)
+  const dimensions = generateExternalDimensions(spaceInfo, viewDirection);
+
+  // 합치기
+  const lines = [...extracted.lines, ...dimensions.lines];
+  const texts = [...extracted.texts, ...dimensions.texts];
 
   if (lines.length === 0) {
     console.warn('⚠️ 추출된 라인이 없습니다.');
