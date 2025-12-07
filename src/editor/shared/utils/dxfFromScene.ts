@@ -3,11 +3,12 @@ import { PlacedModule } from '@/editor/shared/furniture/types';
 import { formatDxfDate } from './dxfKoreanText';
 import { generateDxfFromData, downloadDxf, type ViewDirection } from './dxfDataRenderer';
 
-// 도면 타입 정의
-export type DrawingType = 'front' | 'plan' | 'side';
+// 도면 타입 정의 - 좌측뷰/우측뷰 분리
+export type DrawingType = 'front' | 'plan' | 'side' | 'sideLeft' | 'sideRight';
 
 /**
  * 도면 타입을 뷰 방향으로 변환
+ * @param drawingType 도면 타입
  */
 const drawingTypeToViewDirection = (drawingType: DrawingType): ViewDirection => {
   switch (drawingType) {
@@ -16,7 +17,10 @@ const drawingTypeToViewDirection = (drawingType: DrawingType): ViewDirection => 
     case 'plan':
       return 'top';
     case 'side':
+    case 'sideLeft':
       return 'left';
+    case 'sideRight':
+      return 'right';
     default:
       return 'front';
   }
@@ -89,7 +93,9 @@ export const generateDXFFilenameFromScene = (
   const typeNames: Record<DrawingType, string> = {
     front: 'front',
     plan: 'plan',
-    side: 'side'
+    side: 'side-left', // 기존 side는 좌측으로 취급
+    sideLeft: 'side-left',
+    sideRight: 'side-right'
   };
 
   return `furniture-${typeNames[drawingType]}-${dimensions}-${timestamp}.dxf`;

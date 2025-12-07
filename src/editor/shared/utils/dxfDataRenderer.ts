@@ -812,9 +812,9 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         line2Layer = 'VENTILATION';
         console.log(`📐 환기캡(Line2): ${name}, 색상 ACI=6로 강제 설정`);
       } else if (lowerName.includes('back-panel') || lowerName.includes('백패널')) {
-        line2Color = 254; // ACI 254 = 매우 연한 회색 (투명도 효과)
+        line2Color = 30; // ACI 30 = 오렌지 (가구패널과 동일, 투명도 10%는 CAD에서 별도 설정)
         line2Layer = 'BACK_PANEL';
-        console.log(`📐 백패널(Line2): ${name}, 색상 ACI=254로 강제 설정`);
+        console.log(`📐 백패널(Line2): ${name}, 색상 ACI=30으로 강제 설정`);
       } else if (lowerName.includes('dimension')) {
         console.log(`📏 치수선(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
       }
@@ -930,7 +930,7 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
 
         if (isBackPanelEdge) {
           lsLayer = 'BACK_PANEL';
-          lsColor = 254; // ACI 254 = 매우 연한 회색 (투명도 효과)
+          lsColor = 30; // ACI 30 = 오렌지 (2D에서 가구패널과 동일한 색상, 투명도 10%는 CAD에서 별도 설정)
           colorReason = '백패널';
         } else if (isClothingRodEdge) {
           lsLayer = 'CLOTHING_ROD';
@@ -1014,9 +1014,9 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           lineLayer = 'VENTILATION';
           console.log(`📐 환기캡(Line): ${name}, 색상 ACI=6로 강제 설정`);
         } else if (lineLowerName.includes('back-panel') || lineLowerName.includes('백패널')) {
-          lineColor = 254; // ACI 254 = 매우 연한 회색 (투명도 효과)
+          lineColor = 30; // ACI 30 = 오렌지 (가구패널과 동일, 투명도 10%는 CAD에서 별도 설정)
           lineLayer = 'BACK_PANEL';
-          console.log(`📐 백패널(Line): ${name}, 색상 ACI=254로 강제 설정`);
+          console.log(`📐 백패널(Line): ${name}, 색상 ACI=30으로 강제 설정`);
         } else if (lineLowerName.includes('dimension')) {
           console.log(`📏 치수선(Line): ${name}, 추출된 색상 ACI=${lineColor}`);
         }
