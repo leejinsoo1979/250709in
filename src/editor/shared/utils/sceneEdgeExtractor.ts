@@ -47,6 +47,7 @@ const shouldIncludeObject = (object: THREE.Object3D): boolean => {
   const type = object.type?.toLowerCase() || '';
 
   // 제외할 객체 패턴 (이름 또는 부모 이름에 포함)
+  // 주의: 가구와 치수선은 제외하지 않음
   const excludePatterns = [
     'grid',
     'helper',
@@ -56,12 +57,10 @@ const shouldIncludeObject = (object: THREE.Object3D): boolean => {
     'axes',
     'background',
     'sky',
-    'floor_plane',
     'ambient',
     'directional',
     'point_light',
     'spot_light',
-    'guide',
     'gizmo',
     'overlay',
     'debug',
@@ -69,16 +68,15 @@ const shouldIncludeObject = (object: THREE.Object3D): boolean => {
     'drop_zone',
     'ghost', // 고스트 미리보기
     'preview',
-    'highlight',
-    'measure', // 측정 관련
-    'dimension_line',
-    'column_guide', // 기둥 가이드
-    'placement_plane', // 배치 평면
     'cadgrid', // CAD 그리드
     'infinitegrid', // 무한 그리드
-    'nativeline', // 네이티브 라인 (가이드 선)
-    'boundary', // 경계선
-    'room' // 방 (공간 외곽선) - 가구만 추출
+    'column_guide', // 기둥 가이드
+    'placement_plane', // 배치 평면
+    'boundary' // 경계선
+    // 'room', 'floor_plane', 'nativeline', 'guide', 'highlight', 'measure', 'dimension_line' 제거
+    // - room: 가구가 room 그룹 안에 있을 수 있음
+    // - dimension_line: 치수선은 별도 처리
+    // - nativeline: 치수선이 NativeLine 사용
   ];
 
   // 부모 계층에서 제외 패턴 확인
@@ -101,13 +99,17 @@ const shouldIncludeObject = (object: THREE.Object3D): boolean => {
     return false;
   }
 
-  // Line, LineSegments: 치수선(dimension)은 포함, 나머지는 제외
+  // Line, LineSegments: 치수선(dimension)만 포함
   if (type === 'line' || type === 'linesegments') {
     // 치수선은 포함 (name에 'dimension' 포함)
-    const name = object.name?.toLowerCase() || '';
     if (name.includes('dimension')) {
       return true;
     }
+    // 그리드 관련 라인은 제외
+    if (name.includes('grid')) {
+      return false;
+    }
+    // 기타 라인은 제외 (가이드선 등)
     return false;
   }
 
@@ -116,19 +118,26 @@ const shouldIncludeObject = (object: THREE.Object3D): boolean => {
     const mesh = object as THREE.Mesh;
     const geometry = mesh.geometry;
 
-    // PlaneGeometry이고 매우 큰 경우 (그리드 또는 바닥) 제외
+    // PlaneGeometry는 모두 제외 (바닥, 벽, 그리드 등)
     if (geometry instanceof THREE.PlaneGeometry) {
-      const params = geometry.parameters;
-      if (params.width > 50 || params.height > 50) {
-        return false; // 큰 평면은 그리드로 간주
-      }
+      return false;
     }
 
     // ShaderMaterial 사용 시 (Grid 컴포넌트) 제외
     if (mesh.material) {
       const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const mat of materials) {
-        if (mat.type === 'ShaderMaterial' && !mat.name?.includes('furniture')) {
+        if (mat.type === 'ShaderMaterial') {
+          return false;
+        }
+      }
+    }
+
+    // 투명 머티리얼 제외 (슬롯 영역 등)
+    if (mesh.material) {
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const mat of materials) {
+        if (mat instanceof THREE.MeshBasicMaterial && mat.opacity < 0.5) {
           return false;
         }
       }
@@ -463,17 +472,26 @@ export const extractSceneEdges = (
   const { viewDirection, scale = 100 } = options;
   const allLines: ExtractedLine[] = [];
 
+  console.log('🔍 DXF 추출 시작 - viewDirection:', viewDirection, 'scale:', scale);
+  let meshCount = 0;
+  let lineCount = 0;
+  let skippedCount = 0;
+
   // 씬 트래버스
   scene.traverse((object) => {
     // visible이 아닌 객체는 스킵
     if (!object.visible) return;
 
     // 그리드, 조명, 헬퍼 등 제외
-    if (!shouldIncludeObject(object)) return;
+    if (!shouldIncludeObject(object)) {
+      skippedCount++;
+      return;
+    }
 
     // Mesh인 경우 처리
     if (object instanceof THREE.Mesh) {
       const mesh = object as THREE.Mesh;
+      meshCount++;
 
       // 머티리얼 visibility 체크
       if (mesh.material) {
@@ -510,6 +528,7 @@ export const extractSceneEdges = (
 
       // 치수선만 처리
       if (name.includes('dimension')) {
+        lineCount++;
         const edges = extractEdgesFromLine(line, viewDirection, scale);
         edges.forEach(edge => {
           edge.layer = 'DIMENSIONS';
@@ -517,6 +536,13 @@ export const extractSceneEdges = (
         allLines.push(...edges);
       }
     }
+  });
+
+  console.log('🔍 DXF 추출 완료:', {
+    meshCount,
+    lineCount,
+    skippedCount,
+    totalLines: allLines.length
   });
 
   // 중복 라인 제거
