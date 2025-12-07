@@ -1324,11 +1324,12 @@ const aciToLayerName = (aciColor: number): string => {
 };
 
 /**
- * 외부 치수선 생성 (spaceInfo 기반)
- * scene에서 치수선이 감지되지 않을 경우 직접 생성
+ * 외부 치수선 생성 (spaceInfo + placedModules 기반)
+ * 2D 화면에 표시되는 모든 치수선을 DXF에 직접 생성
  */
 const generateExternalDimensions = (
   spaceInfo: SpaceInfo,
+  placedModules: PlacedModule[],
   viewDirection: ViewDirection
 ): { lines: DxfLine[]; texts: DxfText[] } => {
   const lines: DxfLine[] = [];
@@ -1339,13 +1340,24 @@ const generateExternalDimensions = (
   const extensionLength = 30; // 연장선 길이 (mm)
   const dimensionOffset = 50; // 치수선 오프셋 (mm)
 
+  // 프레임 두께
+  const frameThickness = spaceInfo.frameThickness || 50;
+  // 받침대 높이
+  const baseHeight = spaceInfo.baseHeight || 65;
+  // 상부 프레임 높이
+  const topFrameHeight = spaceInfo.topFrameHeight || frameThickness;
+  // 가구 높이 (전체 높이 - 받침대 - 상부프레임)
+  const furnitureHeight = height - baseHeight - topFrameHeight;
+
+  const halfWidth = width / 2;
+
   if (viewDirection === 'front') {
-    // 정면도: 가로 치수 (상단) + 세로 치수 (좌측)
-    // 씬 좌표계 사용: x는 -width/2 ~ width/2, y는 0 ~ height
+    // ========================================
+    // 정면도 치수선
+    // ========================================
 
     // 상단 가로 치수선 (전체 너비)
     const topY = height + dimensionOffset;
-    const halfWidth = width / 2;
 
     // 치수선 본체
     lines.push({
@@ -1542,7 +1554,7 @@ export const generateDxfFromData = (
   const extracted = extractFromScene(scene, viewDirection);
 
   // 외부 치수선 직접 생성 (scene에서 감지되지 않으므로)
-  const dimensions = generateExternalDimensions(spaceInfo, viewDirection);
+  const dimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection);
 
   // 합치기
   const lines = [...extracted.lines, ...dimensions.lines];
