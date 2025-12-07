@@ -101,8 +101,13 @@ const shouldIncludeObject = (object: THREE.Object3D): boolean => {
     return false;
   }
 
-  // Line, LineSegments 제외 (보통 가이드 선)
+  // Line, LineSegments: 치수선(dimension)은 포함, 나머지는 제외
   if (type === 'line' || type === 'linesegments') {
+    // 치수선은 포함 (name에 'dimension' 포함)
+    const name = object.name?.toLowerCase() || '';
+    if (name.includes('dimension')) {
+      return true;
+    }
     return false;
   }
 
@@ -333,6 +338,62 @@ const extractEdgesFromCylinder = (
 };
 
 /**
+ * Line 객체에서 edge 추출 (치수선용)
+ */
+const extractEdgesFromLine = (
+  line: THREE.Line,
+  viewDirection: ViewDirection,
+  scale: number
+): ExtractedLine[] => {
+  const lines: ExtractedLine[] = [];
+  const geometry = line.geometry;
+
+  if (!geometry || !geometry.isBufferGeometry) return lines;
+
+  const positionAttr = geometry.getAttribute('position');
+  if (!positionAttr) return lines;
+
+  line.updateMatrixWorld(true);
+  const worldMatrix = line.matrixWorld;
+
+  // Line은 연속된 점들로 구성 (p1-p2, p2-p3, ...)
+  for (let i = 0; i < positionAttr.count - 1; i++) {
+    const p1 = new THREE.Vector3(
+      positionAttr.getX(i),
+      positionAttr.getY(i),
+      positionAttr.getZ(i)
+    );
+    const p2 = new THREE.Vector3(
+      positionAttr.getX(i + 1),
+      positionAttr.getY(i + 1),
+      positionAttr.getZ(i + 1)
+    );
+
+    p1.applyMatrix4(worldMatrix);
+    p2.applyMatrix4(worldMatrix);
+
+    const proj1 = projectTo2D(p1, viewDirection, scale);
+    const proj2 = projectTo2D(p2, viewDirection, scale);
+
+    // 투영된 선의 길이 확인
+    const length = Math.sqrt(
+      Math.pow(proj2.x - proj1.x, 2) + Math.pow(proj2.y - proj1.y, 2)
+    );
+
+    if (length > 0.1) { // 최소 길이 필터
+      lines.push({
+        x1: proj1.x,
+        y1: proj1.y,
+        x2: proj2.x,
+        y2: proj2.y
+      });
+    }
+  }
+
+  return lines;
+};
+
+/**
  * 일반 BufferGeometry에서 edge 추출
  */
 const extractEdgesFromGeometry = (
@@ -410,7 +471,7 @@ export const extractSceneEdges = (
     // 그리드, 조명, 헬퍼 등 제외
     if (!shouldIncludeObject(object)) return;
 
-    // Mesh인 경우만 처리
+    // Mesh인 경우 처리
     if (object instanceof THREE.Mesh) {
       const mesh = object as THREE.Mesh;
 
@@ -442,8 +503,20 @@ export const extractSceneEdges = (
       allLines.push(...edges);
     }
 
-    // LineSegments, Line 등은 제외 (가이드, 그리드 등이므로)
-    // Mesh만 처리하여 가구 geometry만 추출
+    // Line 객체 처리 (치수선)
+    if (object instanceof THREE.Line && !(object instanceof THREE.LineSegments)) {
+      const line = object as THREE.Line;
+      const name = line.name?.toLowerCase() || '';
+
+      // 치수선만 처리
+      if (name.includes('dimension')) {
+        const edges = extractEdgesFromLine(line, viewDirection, scale);
+        edges.forEach(edge => {
+          edge.layer = 'DIMENSIONS';
+        });
+        allLines.push(...edges);
+      }
+    }
   });
 
   // 중복 라인 제거

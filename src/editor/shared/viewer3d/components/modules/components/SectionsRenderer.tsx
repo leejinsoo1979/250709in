@@ -762,7 +762,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                       {/* 수직 연결선 - 왼쪽으로 이동 (hover 시 테마 색상) */}
                       <group>
-                        <NativeLine
+                        <NativeLine name="dimension_line"
                           points={[
                             [-innerWidth/2 * 0.3, topY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
                             [-innerWidth/2 * 0.3, bottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
@@ -836,7 +836,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
                               {/* 안전선반 위 칸 수직 연결선 */}
                               <group>
-                                <NativeLine
+                                <NativeLine name="dimension_line"
                                   points={[
                                     [-innerWidth/2 * 0.3, topCompartmentTopY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
                                     [-innerWidth/2 * 0.3, topCompartmentBottomY + dimensionYOffset, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
@@ -910,7 +910,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               </Text>
               
               {/* 하단 프레임 두께 수직선 - 왼쪽으로 이동 */}
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [-innerWidth/2 * 0.3, -height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
                   [-innerWidth/2 * 0.3, -height/2 + basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]
@@ -963,7 +963,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
               </Text>
               
               {/* 상단 프레임 두께 수직선 - 왼쪽으로 이동 */}
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [-innerWidth/2 * 0.3, height/2, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0],
                   [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? depth/2 + 0.1 : depth/2 + 1.0]

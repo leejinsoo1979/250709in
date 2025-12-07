@@ -13,6 +13,7 @@ interface NativeLineProps {
   renderOrder?: number;
   depthTest?: boolean;
   depthWrite?: boolean;
+  name?: string; // DXF 내보내기에서 치수선 식별용
 }
 
 /**
@@ -30,7 +31,8 @@ export const NativeLine: React.FC<NativeLineProps> = ({
   transparent = false,
   renderOrder = 0,
   depthTest = true,
-  depthWrite = true
+  depthWrite = true,
+  name
 }) => {
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
@@ -119,7 +121,7 @@ export const NativeLine: React.FC<NativeLineProps> = ({
   }, [color, dashed, dashSize, gapSize, opacity, transparent, depthTest, depthWrite]);
   
   return (
-    <line geometry={geometry} renderOrder={renderOrder}>
+    <line geometry={geometry} renderOrder={renderOrder} name={name}>
       {material}
     </line>
   );

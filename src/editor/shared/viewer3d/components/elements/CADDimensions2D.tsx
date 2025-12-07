@@ -239,7 +239,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* ===== 왼쪽: 전체 높이 치수 (공간 높이 - 바닥부터 시작) ===== */}
         {<group>
           {/* 보조 가이드 연장선 - 하단 */}
-          <NativeLine
+          <NativeLine name="dimension_line"
             points={[
               [0, 0, -spaceDepth/2 + mmToThreeUnits(110)],
               [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
@@ -251,7 +251,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 보조 가이드 연장선 - 상단 */}
-          <NativeLine
+          <NativeLine name="dimension_line"
             points={[
               [0, spaceHeight, -spaceDepth/2 + mmToThreeUnits(110)],
               [0, spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
@@ -263,7 +263,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 수직 치수선 */}
-          <NativeLine
+          <NativeLine name="dimension_line"
             points={[
               [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
               [0, spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
@@ -275,7 +275,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 상단 티크 */}
-          <NativeLine
+          <NativeLine name="dimension_line"
             points={[
               [-0.03, spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
               [0.03, spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
@@ -287,7 +287,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 하단 티크 */}
-          <NativeLine
+          <NativeLine name="dimension_line"
             points={[
               [-0.03, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
               [0.03, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
@@ -331,7 +331,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {topFrameHeightMm > 0 && (
           <group>
             {/* 보조 가이드 연장선 - 하단 (상부 프레임 하단) */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                 [0, spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -342,7 +342,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 보조 가이드 연장선 - 상단 (공간 최상단) */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                 [0, spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -353,7 +353,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 수직 치수선 */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0, spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -364,7 +364,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 티크 마크 - 하단 */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [-0.03, spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0.03, spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -375,7 +375,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 티크 마크 - 상단 */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [-0.03, spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0.03, spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -479,7 +479,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
                 {/* 보조 가이드 연장선 - 시작 */}
                 {shouldRenderStartGuide && (
-                <NativeLine
+                <NativeLine name="dimension_line"
                   points={[
                     [0,
                       sectionStartY,
@@ -495,7 +495,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 />
                 )}
                 {/* 보조 가이드 연장선 - 끝 (상부섹션은 가구 최상단에서) */}
-                <NativeLine
+                <NativeLine name="dimension_line"
                   points={[
                     [0,
                       sectionEndY,
@@ -510,7 +510,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   depthTest={false}
                 />
                 {/* 치수선 */}
-                <NativeLine
+                <NativeLine name="dimension_line"
                   points={[
                     [0,
                       sectionStartY,
@@ -526,7 +526,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 />
                 {/* 티크 마크 */}
                 {shouldRenderStartGuide && (
-                <NativeLine
+                <NativeLine name="dimension_line"
                   points={[
                     [0 - 0.03,
                       sectionStartY,
@@ -541,7 +541,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   depthTest={false}
                 />
                 )}
-                <NativeLine
+                <NativeLine name="dimension_line"
                   points={[
                     [0 - 0.03,
                       sectionEndY,
@@ -703,7 +703,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     return (
                       <group key={`shelf-compartment-${sectionIndex}-${compartmentIndex}`}>
                         {/* 보조 가이드 연장선 - 하단 */}
-                        <NativeLine
+                        <NativeLine name="dimension_line"
                           points={[
                             [lineX - mmToThreeUnits(200), compartmentBottom, furnitureZ],
                             [lineX, compartmentBottom, furnitureZ]
@@ -715,7 +715,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                         />
 
                         {/* 보조 가이드 연장선 - 상단 */}
-                        <NativeLine
+                        <NativeLine name="dimension_line"
                           points={[
                             [lineX - mmToThreeUnits(200), compartmentTop, furnitureZ],
                             [lineX, compartmentTop, furnitureZ]
@@ -727,7 +727,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                         />
 
                         {/* 치수선 */}
-                        <NativeLine
+                        <NativeLine name="dimension_line"
                           points={[
                             [lineX, compartmentBottom, furnitureZ],
                             [lineX, compartmentTop, furnitureZ]
@@ -739,7 +739,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                         />
 
                         {/* 티크 마크 - 하단 */}
-                        <NativeLine
+                        <NativeLine name="dimension_line"
                           points={[
                             [lineX, compartmentBottom, furnitureZ - 0.03],
                             [lineX, compartmentBottom, furnitureZ + 0.03]
@@ -751,7 +751,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                         />
 
                         {/* 티크 마크 - 상단 */}
-                        <NativeLine
+                        <NativeLine name="dimension_line"
                           points={[
                             [lineX, compartmentTop, furnitureZ - 0.03],
                             [lineX, compartmentTop, furnitureZ + 0.03]
@@ -828,7 +828,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {baseFrameHeightMm > 0 && (
         <group>
             {/* 보조 가이드 연장선 - 시작 (바닥) */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -839,7 +839,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 보조 가이드 연장선 - 끝 (받침대 상단) */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                 [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -850,7 +850,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 치수선 */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -861,7 +861,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 티크 마크 - 하단 */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [-0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -872,7 +872,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 티크 마크 - 상단 */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [-0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -954,7 +954,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           return (
             <group key={`furniture-depth-${index}`}>
               {/* 보조 가이드 연장선 - 앞쪽 */}
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [0, furnitureBaseY + internalHeight, furnitureZ + moduleDepth/2],
                   [0, furnitureTopY, furnitureZ + moduleDepth/2]
@@ -966,7 +966,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               />
 
               {/* 보조 가이드 연장선 - 뒤쪽 */}
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [0, furnitureBaseY + internalHeight, furnitureZ - moduleDepth/2],
                   [0, furnitureTopY, furnitureZ - moduleDepth/2]
@@ -978,7 +978,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               />
 
               {/* 가구 깊이 치수선 */}
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [0, furnitureTopY, furnitureZ - moduleDepth/2],
                   [0, furnitureTopY, furnitureZ + moduleDepth/2]
@@ -990,7 +990,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               />
 
               {/* 앞쪽 티크 */}
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [0 - 0.02, furnitureTopY, furnitureZ + moduleDepth/2],
                   [0 + 0.02, furnitureTopY, furnitureZ + moduleDepth/2]
@@ -1002,7 +1002,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               />
 
               {/* 뒤쪽 티크 */}
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [0 - 0.02, furnitureTopY, furnitureZ - moduleDepth/2],
                   [0 + 0.02, furnitureTopY, furnitureZ - moduleDepth/2]
@@ -1049,7 +1049,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 return (
                   <group>
                     {/* 보조 가이드 연장선 - 앞쪽 */}
-                    <NativeLine
+                    <NativeLine name="dimension_line"
                       points={[
                         [0, floatHeight, lowerFurnitureZ + lowerModuleDepth/2],
                         [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
@@ -1061,7 +1061,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
 
                     {/* 보조 가이드 연장선 - 뒤쪽 */}
-                    <NativeLine
+                    <NativeLine name="dimension_line"
                       points={[
                         [0, floatHeight, lowerFurnitureZ - lowerModuleDepth/2],
                         [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]
@@ -1073,7 +1073,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
 
                     {/* 하부 깊이 치수선 */}
-                    <NativeLine
+                    <NativeLine name="dimension_line"
                       points={[
                         [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2],
                         [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
@@ -1085,7 +1085,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
 
                     {/* 앞쪽 티크 */}
-                    <NativeLine
+                    <NativeLine name="dimension_line"
                       points={[
                         [0 - 0.02, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2],
                         [0 + 0.02, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
@@ -1097,7 +1097,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                     />
 
                     {/* 뒤쪽 티크 */}
-                    <NativeLine
+                    <NativeLine name="dimension_line"
                       points={[
                         [0 - 0.02, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2],
                         [0 + 0.02, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]
@@ -1150,7 +1150,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* ===== 왼쪽: 전체 높이 치수 (공간 높이 - 바닥부터 시작) ===== */}
         {<group>
           {/* 보조 가이드 연장선 - 하단 */}
-          <NativeLine
+          <NativeLine name="dimension_line"
             points={[
               [0, 0, -spaceDepth/2 + mmToThreeUnits(110)],
               [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
@@ -1162,7 +1162,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 보조 가이드 연장선 - 상단 */}
-          <NativeLine
+          <NativeLine name="dimension_line"
             points={[
               [0, spaceHeight, -spaceDepth/2 + mmToThreeUnits(110)],
               [0, spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
@@ -1174,7 +1174,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 수직 치수선 */}
-          <NativeLine
+          <NativeLine name="dimension_line"
             points={[
               [0, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
               [0, spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
@@ -1186,7 +1186,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 상단 티크 */}
-          <NativeLine
+          <NativeLine name="dimension_line"
             points={[
               [-0.03, spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
               [0.03, spaceHeight, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
@@ -1198,7 +1198,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           />
 
           {/* 하단 티크 */}
-          <NativeLine
+          <NativeLine name="dimension_line"
             points={[
               [-0.03, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)],
               [0.03, 0, -spaceDepth/2 - leftDimOffset + mmToThreeUnits(150)]
@@ -1242,7 +1242,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {topFrameHeightMm > 0 && (
           <group>
             {/* 보조 가이드 연장선 - 하단 (상부 프레임 하단) */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                 [0, spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -1253,7 +1253,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 보조 가이드 연장선 - 상단 (공간 최상단) */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                 [0, spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -1264,7 +1264,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 수직 치수선 */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0, spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -1275,7 +1275,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 티크 마크 - 하단 */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [-0.03, spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0.03, spaceHeight - topFrameHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -1286,7 +1286,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               depthTest={false}
             />
             {/* 티크 마크 - 상단 */}
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [-0.03, spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0.03, spaceHeight, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -1377,7 +1377,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
                 {/* 보조 가이드 연장선 - 시작 */}
                 {shouldRenderStartGuide && (
-                <NativeLine
+                <NativeLine name="dimension_line"
                   points={[
                     [0,
                       sectionStartY,
@@ -1393,7 +1393,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 />
                 )}
                 {/* 보조 가이드 연장선 - 끝 (상부섹션은 가구 최상단에서) */}
-                <NativeLine
+                <NativeLine name="dimension_line"
                   points={[
                     [0,
                       sectionEndY,
@@ -1408,7 +1408,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   depthTest={false}
                 />
                 {/* 치수선 */}
-                <NativeLine
+                <NativeLine name="dimension_line"
                   points={[
                     [0,
                       sectionStartY,
@@ -1424,7 +1424,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 />
                 {/* 티크 마크 */}
                 {shouldRenderStartGuide && (
-                <NativeLine
+                <NativeLine name="dimension_line"
                   points={[
                     [0 - 0.03,
                       sectionStartY,
@@ -1439,7 +1439,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   depthTest={false}
                 />
                 )}
-                <NativeLine
+                <NativeLine name="dimension_line"
                   points={[
                     [0 - 0.03,
                       sectionEndY,
@@ -1538,7 +1538,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {/* 받침대 높이 */}
         {baseFrameHeightMm > 0 && (
         <group>
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -1548,7 +1548,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               renderOrder={100000}
               depthTest={false}
             />
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750) - mmToThreeUnits(360)],
                 [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -1558,7 +1558,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               renderOrder={100000}
               depthTest={false}
             />
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [0, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -1568,7 +1568,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               renderOrder={100000}
               depthTest={false}
             />
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [-0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0.03, 0, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -1578,7 +1578,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
               renderOrder={100000}
               depthTest={false}
             />
-            <NativeLine
+            <NativeLine name="dimension_line"
               points={[
                 [-0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)],
                 [0.03, furnitureBaseY, spaceDepth/2 + rightDimOffset - mmToThreeUnits(750)]
@@ -1655,7 +1655,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           return (
             <group key={`furniture-depth-${index}`}>
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [0, furnitureBaseY + internalHeight, furnitureZ + moduleDepth/2],
                   [0, furnitureTopY, furnitureZ + moduleDepth/2]
@@ -1666,7 +1666,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 depthTest={false}
               />
 
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [0, furnitureBaseY + internalHeight, furnitureZ - moduleDepth/2],
                   [0, furnitureTopY, furnitureZ - moduleDepth/2]
@@ -1677,7 +1677,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 depthTest={false}
               />
 
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [0, furnitureTopY, furnitureZ - moduleDepth/2],
                   [0, furnitureTopY, furnitureZ + moduleDepth/2]
@@ -1688,7 +1688,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 depthTest={false}
               />
 
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [0 - 0.02, furnitureTopY, furnitureZ + moduleDepth/2],
                   [0 + 0.02, furnitureTopY, furnitureZ + moduleDepth/2]
@@ -1699,7 +1699,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 depthTest={false}
               />
 
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [0 - 0.02, furnitureTopY, furnitureZ - moduleDepth/2],
                   [0 + 0.02, furnitureTopY, furnitureZ - moduleDepth/2]
@@ -1742,7 +1742,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
                 return (
                   <group>
-                    <NativeLine
+                    <NativeLine name="dimension_line"
                       points={[
                         [0, floatHeight, lowerFurnitureZ + lowerModuleDepth/2],
                         [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
@@ -1753,7 +1753,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       depthTest={false}
                     />
 
-                    <NativeLine
+                    <NativeLine name="dimension_line"
                       points={[
                         [0, floatHeight, lowerFurnitureZ - lowerModuleDepth/2],
                         [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]
@@ -1764,7 +1764,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       depthTest={false}
                     />
 
-                    <NativeLine
+                    <NativeLine name="dimension_line"
                       points={[
                         [0, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2],
                         [0, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
@@ -1775,7 +1775,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       depthTest={false}
                     />
 
-                    <NativeLine
+                    <NativeLine name="dimension_line"
                       points={[
                         [0 - 0.02, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2],
                         [0 + 0.02, lowerDimY, lowerFurnitureZ + lowerModuleDepth/2]
@@ -1786,7 +1786,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                       depthTest={false}
                     />
 
-                    <NativeLine
+                    <NativeLine name="dimension_line"
                       points={[
                         [0 - 0.02, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2],
                         [0 + 0.02, lowerDimY, lowerFurnitureZ - lowerModuleDepth/2]

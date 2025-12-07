@@ -287,7 +287,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           <group>
             {/* 삼각형 CAD 기호 - 최상단 서랍에만 표시, 2D 모드에서만 */}
             {isTopDrawer && viewMode === '2D' && (
-              <NativeLine
+              <NativeLine name="dimension_line"
                 points={[
                   [centerX - mmToThreeUnits(30), centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6) - mmToThreeUnits(30), centerZ + actualDrawerDepth/2 + 0.1],
                   [centerX, centerY + drawerHeight/2 + mmToThreeUnits(gapHeight || 23.6), centerZ + actualDrawerDepth/2 + 0.1],
