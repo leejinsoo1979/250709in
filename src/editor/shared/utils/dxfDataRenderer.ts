@@ -767,9 +767,9 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
                            (object as any).isLineSegments ||
                            object.constructor.name === 'LineSegments';
 
-    // 추가 디버그: furniture-edge 또는 back-panel-edge 이름 확인
+    // 추가 디버그: furniture-edge, back-panel-edge, space-frame 이름 확인
     const lowerName = name.toLowerCase();
-    if (lowerName.includes('furniture-edge') || lowerName.includes('back-panel-edge') || lowerName.includes('clothing-rod-edge')) {
+    if (lowerName.includes('furniture-edge') || lowerName.includes('back-panel-edge') || lowerName.includes('clothing-rod-edge') || lowerName.includes('space-frame')) {
       console.log(`🔎 엣지 객체 발견: ${name}, type=${object.type}, isLineSegments=${isLineSegments}, constructor=${object.constructor.name}`);
     }
 
@@ -832,8 +832,8 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           console.log(`🟠 가구 패널 엣지 발견: ${name}, ACI 30 (주황색)으로 설정`);
         }
 
-        // 가구 패널 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판 등 모두 보임)
-        const skipBackFilter = isFurniturePanelEdge || isBackPanelEdge || isClothingRodEdge || isAdjustableFootEdge;
+        // 가구 패널/공간 프레임 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판, 좌우상하 프레임 등 모두 보임)
+        const skipBackFilter = isFurniturePanelEdge || isBackPanelEdge || isClothingRodEdge || isAdjustableFootEdge || isSpaceFrame;
 
         const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, layer, lsColor, skipBackFilter);
         lines.push(...extractedLines);
