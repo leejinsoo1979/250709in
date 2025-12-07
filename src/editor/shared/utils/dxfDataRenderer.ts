@@ -1551,6 +1551,18 @@ export const generateDxfFromData = (
   console.log('📊 색상별 라인 통계:', colorStats);
 
   // 라인 추가 - 요소 타입별 레이어에 배치 (layer 속성 사용)
+  // 레이어별 색상 매핑: 레이어에 따라 색상 강제 설정
+  const layerColorMap: Record<string, number> = {
+    'SPACE_FRAME': 3,      // 연두색
+    'FURNITURE_PANEL': 30, // 주황색
+    'BACK_PANEL': 252,     // 연한 회색
+    'CLOTHING_ROD': 7,     // 흰색
+    'ACCESSORIES': 8,      // 회색
+    'END_PANEL': 3,        // 연두색
+    'DIMENSIONS': 7,       // 흰색
+    '0': 7                 // 기본 흰색
+  };
+
   lines.forEach(line => {
     try {
       // line.layer 속성을 사용하여 레이어 설정
@@ -1559,11 +1571,14 @@ export const generateDxfFromData = (
       dxf.setCurrentLayerName('0');
     }
 
+    // 레이어에 따라 색상 강제 설정 (material 색상 대신 레이어 색상 사용)
+    const finalColor = layerColorMap[line.layer] ?? line.color;
+
     // colorNumber 옵션으로 개별 라인에 색상 적용
     dxf.addLine(
       point3d(line.x1 + offsetX, line.y1 + offsetY),
       point3d(line.x2 + offsetX, line.y2 + offsetY),
-      { colorNumber: line.color }
+      { colorNumber: finalColor }
     );
   });
 
