@@ -204,41 +204,7 @@ export const useDXFExport = () => {
         console.log(`✅ ${drawingType} 도면 추가 완료: ${filename}`);
       }
 
-      // README 파일 추가
-      const readmeContent = `가구 배치 도면 (DXF)
-========================
-
-생성일: ${new Date().toLocaleDateString('ko-KR')}
-공간 크기: ${spaceInfo.width}mm × ${spaceInfo.height}mm × ${spaceInfo.depth}mm
-
-포함된 도면:
-${drawingTypes.map(type => {
-  const typeNames: Record<DrawingType, string> = {
-    front: '- 정면도 (Front Elevation)',
-    plan: '- 평면도 (Plan View)',
-    side: '- 좌측면도 (Left Side Section)',
-    sideLeft: '- 좌측면도 (Left Side Section)',
-    sideRight: '- 우측면도 (Right Side Section)'
-  };
-  return typeNames[type] || `- ${type}`;
-}).join('\n')}
-
-가구 개수: ${placedModules.length}개
-
-도면 정보:
-- 단위: mm (밀리미터)
-- CAD 호환: AutoCAD DXF 형식
-- 생성 방식: Three.js 씬에서 직접 추출
-
-참고사항:
-- 모든 치수는 밀리미터(mm) 단위입니다.
-- 2D 에디터 화면과 동일한 결과가 출력됩니다.
-- DXF 파일은 대부분의 CAD 프로그램에서 열 수 있습니다.
-`;
-
-      zip.file('README.txt', readmeContent);
-
-      // ZIP 파일 생성 및 다운로드
+      // ZIP 파일 생성 및 다운로드 (DXF 파일만 포함, README 제외)
       const zipBlob = await zip.generateAsync({ type: 'blob' });
 
       const timestamp = new Date().toISOString().slice(0, 19).replace(/[:-]/g, '');
