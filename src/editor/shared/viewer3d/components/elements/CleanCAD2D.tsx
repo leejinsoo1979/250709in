@@ -1777,8 +1777,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         );
       })()}
 
-      {/* 가구 배치 시: 가구 너비 + 빈 슬롯 너비 (전체 너비 아래에 추가 표시) */}
-      {placedModules.length > 0 && (() => {
+      {/* 가구 배치 시에만: 가구 너비 + 빈 슬롯 너비 (전체 너비 아래에 추가 표시) */}
+      {/* 가구가 하나라도 실제로 슬롯에 배치된 경우에만 표시 */}
+      {placedModules.length > 0 && placedModules.some(m => m.slotIndex !== undefined) && (() => {
         const furnitureDimensionY = columnDimensionY + mmToThreeUnits(80); // 전체 너비 치수선 아래
 
         // 슬롯별 가구 배치 상태 확인
@@ -1791,6 +1792,12 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             }
           }
         });
+
+        // 실제로 슬롯에 배치된 가구가 하나도 없으면 표시하지 않음
+        const hasAnyPlacedFurniture = Object.values(slotOccupancy).some(m => m !== null);
+        if (!hasAnyPlacedFurniture) {
+          return null;
+        }
 
         const elements: React.ReactNode[] = [];
         let i = 0;
