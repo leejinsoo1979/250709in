@@ -1,10 +1,16 @@
 import React from 'react';
-import { FrameSize } from '@/store/core/spaceConfigStore';
 import { useUIStore, HighlightedFrame } from '@/store/uiStore';
 import styles from '../../styles/common.module.css';
 
+// 입력 중 빈 문자열을 허용하기 위한 타입
+type LocalFrameSize = {
+  left: number | string;
+  right: number | string;
+  top: number | string;
+};
+
 interface FrameSizeControlsProps {
-  frameSize: FrameSize;
+  frameSize: LocalFrameSize;
   hasLeftWall: boolean;
   hasRightWall: boolean;
   isSurround: boolean;

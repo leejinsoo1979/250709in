@@ -13,6 +13,13 @@ interface SurroundControlsProps {
   disabled?: boolean;
 }
 
+// 입력 중 빈 문자열을 허용하기 위한 로컬 상태 타입
+type LocalFrameSize = {
+  left: number | string;
+  right: number | string;
+  top: number | string;
+};
+
 const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate, disabled = false }) => {
   // 파생 상태 스토어 사용
   const derivedStore = useDerivedSpaceStore();
@@ -27,7 +34,7 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
   const hasRightWall = spaceInfo.wallConfig.right;
   const END_PANEL_WIDTH = 18; // 고정 18mm
 
-  const [frameSize, setFrameSize] = useState<FrameSize>(() => {
+  const [frameSize, setFrameSize] = useState<LocalFrameSize>(() => {
     if (!spaceInfo.frameSize) return { left: 50, right: 50, top: 10 };
     return {
       left: !hasLeftWall && isSurround ? END_PANEL_WIDTH : spaceInfo.frameSize.left,
@@ -166,34 +173,12 @@ const SurroundControls: React.FC<SurroundControlsProps> = ({ spaceInfo, onUpdate
     if ((dimension === 'left' && !hasLeftWall) || (dimension === 'right' && !hasRightWall)) {
       return;
     }
-    
-    // 빈 문자열이거나 숫자인 경우에만 업데이트
-    if (value === '' || (!isNaN(Number(value)) && Number(value) >= 0)) {
-      const numValue = value === '' ? 0 : parseInt(value);
-      const newFrameSize = { ...frameSize, [dimension]: numValue };
+
+    // 빈 문자열이거나 숫자인 경우에만 로컬 상태 업데이트
+    // 입력 중에는 범위 검증하지 않음 (blur 시에 검증)
+    if (value === '' || /^\d*$/.test(value)) {
+      const newFrameSize = { ...frameSize, [dimension]: value };
       setFrameSize(newFrameSize);
-      
-      // 실시간 업데이트: 유효한 숫자인 경우 즉시 store 업데이트
-      if (value && !isNaN(Number(value)) && spaceInfo.frameSize) {
-        let validatedValue = numValue;
-        
-        // 범위 검증
-        if (dimension === 'left' || dimension === 'right') {
-          if (validatedValue < 40) validatedValue = 40;
-          if (validatedValue > 100) validatedValue = 100;
-        } else {
-          if (validatedValue < 10) validatedValue = 10;
-          if (validatedValue > 200) validatedValue = 200;
-        }
-        
-        // 즉시 store 업데이트
-        onUpdate({
-          frameSize: {
-            ...spaceInfo.frameSize,
-            [dimension]: validatedValue,
-          },
-        });
-      }
     }
   };
 
