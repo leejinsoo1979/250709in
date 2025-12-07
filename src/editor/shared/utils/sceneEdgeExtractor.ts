@@ -22,15 +22,31 @@ export interface ExtractionOptions {
 }
 
 /**
+ * 객체의 전체 부모 계층에서 패턴 검색
+ */
+const hasAncestorWithPattern = (object: THREE.Object3D, patterns: string[]): boolean => {
+  let current: THREE.Object3D | null = object;
+  while (current) {
+    const name = current.name?.toLowerCase() || '';
+    for (const pattern of patterns) {
+      if (name.includes(pattern)) {
+        return true;
+      }
+    }
+    current = current.parent;
+  }
+  return false;
+};
+
+/**
  * 객체가 DXF에 포함되어야 하는지 확인
  * 그리드, 조명, 헬퍼 등은 제외
  */
 const shouldIncludeObject = (object: THREE.Object3D): boolean => {
   const name = object.name?.toLowerCase() || '';
-  const parentName = object.parent?.name?.toLowerCase() || '';
   const type = object.type?.toLowerCase() || '';
 
-  // 제외할 객체 패턴
+  // 제외할 객체 패턴 (이름 또는 부모 이름에 포함)
   const excludePatterns = [
     'grid',
     'helper',
@@ -56,14 +72,18 @@ const shouldIncludeObject = (object: THREE.Object3D): boolean => {
     'highlight',
     'measure', // 측정 관련
     'dimension_line',
-    'column_guide' // 기둥 가이드
+    'column_guide', // 기둥 가이드
+    'placement_plane', // 배치 평면
+    'cadgrid', // CAD 그리드
+    'infinitegrid', // 무한 그리드
+    'nativeline', // 네이티브 라인 (가이드 선)
+    'boundary', // 경계선
+    'room' // 방 (공간 외곽선) - 가구만 추출
   ];
 
-  // 제외 패턴 체크
-  for (const pattern of excludePatterns) {
-    if (name.includes(pattern) || parentName.includes(pattern)) {
-      return false;
-    }
+  // 부모 계층에서 제외 패턴 확인
+  if (hasAncestorWithPattern(object, excludePatterns)) {
+    return false;
   }
 
   // 타입 체크 - 메쉬만 포함
@@ -79,6 +99,35 @@ const shouldIncludeObject = (object: THREE.Object3D): boolean => {
   // 헬퍼 제외
   if (type.includes('helper')) {
     return false;
+  }
+
+  // Line, LineSegments 제외 (보통 가이드 선)
+  if (type === 'line' || type === 'linesegments') {
+    return false;
+  }
+
+  // Mesh인 경우 추가 검사
+  if (object instanceof THREE.Mesh) {
+    const mesh = object as THREE.Mesh;
+    const geometry = mesh.geometry;
+
+    // PlaneGeometry이고 매우 큰 경우 (그리드 또는 바닥) 제외
+    if (geometry instanceof THREE.PlaneGeometry) {
+      const params = geometry.parameters;
+      if (params.width > 50 || params.height > 50) {
+        return false; // 큰 평면은 그리드로 간주
+      }
+    }
+
+    // ShaderMaterial 사용 시 (Grid 컴포넌트) 제외
+    if (mesh.material) {
+      const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const mat of materials) {
+        if (mat.type === 'ShaderMaterial' && !mat.name?.includes('furniture')) {
+          return false;
+        }
+      }
+    }
   }
 
   return true;
@@ -393,44 +442,8 @@ export const extractSceneEdges = (
       allLines.push(...edges);
     }
 
-    // LineSegments인 경우 (이미 edge geometry인 경우)
-    if (object instanceof THREE.LineSegments) {
-      const lineSegments = object as THREE.LineSegments;
-      const geometry = lineSegments.geometry;
-      const positionAttr = geometry.getAttribute('position');
-
-      if (positionAttr) {
-        lineSegments.updateMatrixWorld(true);
-        const worldMatrix = lineSegments.matrixWorld;
-
-        for (let i = 0; i < positionAttr.count; i += 2) {
-          const p1 = new THREE.Vector3(
-            positionAttr.getX(i),
-            positionAttr.getY(i),
-            positionAttr.getZ(i)
-          );
-          const p2 = new THREE.Vector3(
-            positionAttr.getX(i + 1),
-            positionAttr.getY(i + 1),
-            positionAttr.getZ(i + 1)
-          );
-
-          p1.applyMatrix4(worldMatrix);
-          p2.applyMatrix4(worldMatrix);
-
-          const proj1 = projectTo2D(p1, viewDirection, scale);
-          const proj2 = projectTo2D(p2, viewDirection, scale);
-
-          allLines.push({
-            x1: proj1.x,
-            y1: proj1.y,
-            x2: proj2.x,
-            y2: proj2.y,
-            layer: getLayerFromObject(object)
-          });
-        }
-      }
-    }
+    // LineSegments, Line 등은 제외 (가이드, 그리드 등이므로)
+    // Mesh만 처리하여 가구 geometry만 추출
   });
 
   // 중복 라인 제거
