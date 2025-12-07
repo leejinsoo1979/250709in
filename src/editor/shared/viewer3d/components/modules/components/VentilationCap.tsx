@@ -132,9 +132,10 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
     const perforatedEdges = useMemo(() => new EdgesGeometry(perforatedGeometry, 15), [perforatedGeometry]);
 
     return (
-      <group position={position}>
+      <group name="ventilation-cap" position={position}>
         <group position={[0, 0, liftOffset]}>
           <mesh
+            name="ventilation-cap-rim"
             geometry={rimGeometry}
             castShadow
             receiveShadow
@@ -158,6 +159,7 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
           }))} />
 
           <mesh
+            name="ventilation-cap-perforated"
             geometry={perforatedGeometry}
             position={[0, 0, rimDepth - faceDepth]}
             castShadow
@@ -190,10 +192,11 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
 
   // 2D 정면 도면 표현: 기존 도면 심볼 (동심원 + 십자선)
   return (
-    <group position={position}>
-      <Line points={outerCirclePoints} color={lineColor} lineWidth={1} />
-      <Line points={innerCirclePoints} color={lineColor} lineWidth={1} />
+    <group name="ventilation-cap-2d" position={position}>
+      <Line name="ventilation-cap-outer" points={outerCirclePoints} color={lineColor} lineWidth={1} />
+      <Line name="ventilation-cap-inner" points={innerCirclePoints} color={lineColor} lineWidth={1} />
       <Line
+        name="ventilation-cap-cross-h"
         points={[
           [-crossLineLength, 0, 0],
           [crossLineLength, 0, 0]
@@ -202,6 +205,7 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
         lineWidth={0.5}
       />
       <Line
+        name="ventilation-cap-cross-v"
         points={[
           [0, -crossLineLength, 0],
           [0, crossLineLength, 0]

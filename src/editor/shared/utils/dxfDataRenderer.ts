@@ -1144,38 +1144,38 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
 
   let meshEdgeCount = 0;
 
-  // 선반 - material 원래 색상 사용
-  shelfMeshes.forEach(({ mesh, matrix, color }) => {
-    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', color);
+  // 선반 - FURNITURE_PANEL 레이어, 주황색 (ACI 30)
+  shelfMeshes.forEach(({ mesh, matrix }) => {
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE_PANEL', 30);
     if (extractedEdges.length > 0) {
       lines.push(...extractedEdges);
       meshEdgeCount += extractedEdges.length;
-      console.log(`  📦 선반: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, ACI ${color}`);
+      console.log(`  📦 선반: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, FURNITURE_PANEL`);
     }
   });
 
-  // 백패널 - 매우 연한 회색 (ACI 252)
+  // 백패널 - BACK_PANEL 레이어, 연한 회색 (ACI 252)
   backPanelMeshes.forEach(({ mesh, matrix }) => {
-    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', 252);
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'BACK_PANEL', 252);
     if (extractedEdges.length > 0) {
       lines.push(...extractedEdges);
       meshEdgeCount += extractedEdges.length;
-      console.log(`  ⚪ 백패널: ${mesh.name || '(무명)'}, ${extractedEdges.length}개 (연한회색)`);
+      console.log(`  ⚪ 백패널: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, BACK_PANEL`);
     }
   });
 
-  // 옷봉 - 흰색 (ACI 7)
+  // 옷봉 - CLOTHING_ROD 레이어, 흰색 (ACI 7)
   clothingRodMeshes.forEach(({ mesh, matrix }) => {
-    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', 7);
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'CLOTHING_ROD', 7);
     if (extractedEdges.length > 0) {
       lines.push(...extractedEdges);
       meshEdgeCount += extractedEdges.length;
-      console.log(`  ⚪ 옷봉: ${mesh.name || '(무명)'}, ${extractedEdges.length}개 (흰색)`);
+      console.log(`  ⚪ 옷봉: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, CLOTHING_ROD`);
     }
   });
 
-  // 기타 가구 - material 원래 색상 사용
-  otherFurnitureMeshes.forEach(({ mesh, matrix, color }) => {
+  // 기타 가구 - FURNITURE_PANEL 레이어, 주황색 (ACI 30)
+  otherFurnitureMeshes.forEach(({ mesh, matrix }) => {
     // 크기 체크: 너무 작은 것은 제외
     const box = new THREE.Box3().setFromObject(mesh);
     const size = box.getSize(new THREE.Vector3());
@@ -1186,11 +1186,11 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       return;
     }
 
-    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', color);
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE_PANEL', 30);
     if (extractedEdges.length > 0) {
       lines.push(...extractedEdges);
       meshEdgeCount += extractedEdges.length;
-      console.log(`  📦 기타: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, ACI ${color}`);
+      console.log(`  📦 기타: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, FURNITURE_PANEL`);
     }
   });
 
@@ -1539,7 +1539,7 @@ export const generateDxfFromData = (
   dxf.addLayer('FURNITURE_PANEL', 30, 'CONTINUOUS'); // 가구 패널 - 주황색
   dxf.addLayer('BACK_PANEL', 252, 'CONTINUOUS');     // 백패널 - 연한 회색
   dxf.addLayer('CLOTHING_ROD', 7, 'CONTINUOUS');     // 옷봉 - 흰색
-  dxf.addLayer('ACCESSORIES', 8, 'CONTINUOUS');      // 조절발/환기탭 - 회색
+  dxf.addLayer('ACCESSORIES', 7, 'CONTINUOUS');      // 조절발/환기탭 - 흰색
   dxf.addLayer('END_PANEL', 3, 'CONTINUOUS');        // 엔드패널 - 연두색
   dxf.addLayer('DIMENSIONS', 7, 'CONTINUOUS');       // 치수선 - 흰색
 
