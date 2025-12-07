@@ -785,8 +785,12 @@ const extractFromScene = (
 
     // 탑뷰에서 조절발 제외 (조절발은 바닥 아래에 있어서 탑뷰에서 보이면 안됨)
     if (viewDirection === 'top') {
-      if (lowerNameForFilter.includes('adjustable-foot') || lowerNameForFilter.includes('조절발')) {
+      if (lowerNameForFilter.includes('adjustable-foot') ||
+          lowerNameForFilter.includes('조절발') ||
+          lowerNameForFilter.includes('leveler') ||
+          lowerNameForFilter.includes('foot')) {
         console.log(`📐 탑뷰: 조절발 제외 - ${name}`);
+        skippedByFilter++;
         return;
       }
     }
