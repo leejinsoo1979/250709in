@@ -86,7 +86,7 @@ const BoxWithEdges: React.FC<{
         </lineSegments>
       ) : (
         ((viewMode === '2D' && renderMode === 'solid') || renderMode === 'wireframe') && (
-          <lineSegments geometry={edgesGeometry} renderOrder={1001}>
+          <lineSegments name="door-edge" geometry={edgesGeometry} renderOrder={1001}>
             <lineBasicMaterial
               color={viewMode === '2D' ? "#18CF23" : (renderMode === 'wireframe' ? (theme?.mode === 'dark' ? "#ffffff" : "#333333") : (view2DTheme === 'dark' ? "#999999" : "#444444"))}
               linewidth={viewMode === '2D' ? 3 : 0.5}

@@ -941,6 +941,9 @@ const extractFromScene = (
         // 가구 패널 엣지 감지 (furniture-edge-* 형태 이름)
         const isFurniturePanelEdge = lowerName.includes('furniture-edge');
 
+        // 도어 엣지 감지: DoorModule.tsx에서 name="door-edge"로 설정됨
+        const isDoorEdge = lowerName.includes('door-edge') || lowerName.includes('door');
+
         // 공간 프레임 감지: Room.tsx에서 name="space-frame"으로 설정됨
         const isSpaceFrame = lowerName.includes('space-frame');
 
@@ -979,8 +982,8 @@ const extractFromScene = (
           console.log(`📐 가구 패널 엣지: ${name}, 추출된 색상 ACI=${lsColor}`);
         }
 
-        // 가구 패널/공간 프레임 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판, 좌우상하 프레임 등 모두 보임)
-        const skipBackFilter = isFurniturePanelEdge || isBackPanelEdge || isClothingRodEdge || isAdjustableFootEdge || isSpaceFrame;
+        // 가구 패널/공간 프레임/도어 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판, 좌우상하 프레임 등 모두 보임)
+        const skipBackFilter = isFurniturePanelEdge || isBackPanelEdge || isClothingRodEdge || isAdjustableFootEdge || isSpaceFrame || isDoorEdge;
 
         // 레이어 및 색상 결정 이유 로깅
         let lsLayer = layer; // 기본값은 determineLayer에서 결정된 값
@@ -1002,6 +1005,11 @@ const extractFromScene = (
           lsLayer = 'VENTILATION';
           lsColor = 6; // ACI 6 = 마젠타 (레이어 색상과 동일)
           colorReason = '환기캡';
+        } else if (isDoorEdge) {
+          lsLayer = 'DOOR';
+          lsColor = 3; // ACI 3 = 연두색 (2D와 동일)
+          colorReason = '도어';
+          console.log(`📐 도어 엣지: ${name}, 색상 ACI=3 (연두색)`);
         } else if (isSpaceFrame) {
           lsLayer = 'SPACE_FRAME';
           colorReason = '공간프레임';
@@ -1767,6 +1775,7 @@ export const generateDxfFromData = (
   dxf.addLayer('0', 7, 'CONTINUOUS');
   dxf.addLayer('SPACE_FRAME', 3, 'CONTINUOUS');      // 공간 프레임 - 연두색
   dxf.addLayer('FURNITURE_PANEL', 30, 'CONTINUOUS'); // 가구 패널 - 주황색
+  dxf.addLayer('DOOR', 3, 'CONTINUOUS');             // 도어 - 연두색 (2D와 동일)
   dxf.addLayer('BACK_PANEL', 254, 'CONTINUOUS');     // 백패널 - 매우 연한 회색 (투명도 효과)
   dxf.addLayer('CLOTHING_ROD', 7, 'CONTINUOUS');     // 옷봉 - 흰색
   dxf.addLayer('ACCESSORIES', 8, 'CONTINUOUS');      // 조절발 - 회색 (2D와 동일)
@@ -1774,7 +1783,7 @@ export const generateDxfFromData = (
   dxf.addLayer('END_PANEL', 3, 'CONTINUOUS');        // 엔드패널 - 연두색
   dxf.addLayer('DIMENSIONS', 7, 'CONTINUOUS');       // 치수선 - 흰색
 
-  console.log('📦 레이어 생성 완료: SPACE_FRAME, FURNITURE_PANEL, BACK_PANEL, CLOTHING_ROD, ACCESSORIES, END_PANEL, DIMENSIONS');
+  console.log('📦 레이어 생성 완료: SPACE_FRAME, FURNITURE_PANEL, DOOR, BACK_PANEL, CLOTHING_ROD, ACCESSORIES, END_PANEL, DIMENSIONS');
 
   // 레이어별 라인 통계
   const layerStats: Record<string, number> = {};
