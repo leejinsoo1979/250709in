@@ -478,7 +478,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
       <div className={styles.rightControls}>
         {/* 뷰 방향 선택 - 2D/3D 모드 모두 표시 (2D 미리보기에 반영) */}
         <div className={styles.viewDirectionGroup}>
-          {viewDirectionsWithAll.map((direction) => (
+          {viewDirections.map((direction) => (
             <button
               key={direction.id}
               data-view-direction={direction.id}
