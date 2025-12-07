@@ -490,15 +490,14 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
           ))}
         </div>
 
-        {/* 다크모드/라이트모드 토글 - 2D 모드에서만 표시 */}
-        {viewMode === '2D' && (
-          <button
-            className={styles.themeToggle}
-            onClick={() => {
-              toggleView2DTheme();
-            }}
-            title={view2DTheme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')}
-          >
+        {/* 다크모드/라이트모드 토글 */}
+        <button
+          className={styles.themeToggle}
+          onClick={() => {
+            toggleView2DTheme();
+          }}
+          title={view2DTheme === 'dark' ? t('settings.lightMode') : t('settings.darkMode')}
+        >
             {view2DTheme === 'dark' ? (
               // 달 아이콘 (다크 모드 상태)
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -518,9 +517,8 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
                 <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
               </svg>
             )}
-          </button>
-        )}
-        
+        </button>
+
         {/* AR 버튼 - 3D 모드에서만 표시 */}
         {/* {viewMode === '3D' && (
           <button
