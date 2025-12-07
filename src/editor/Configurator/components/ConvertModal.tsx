@@ -52,6 +52,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
   // 로딩 화면 컴포넌트 - DXF/PDF에 따라 다른 메시지 표시
   const LoadingScreen = () => {
     const isDXF = isDXFExporting;
+    console.log('🔍 LoadingScreen 렌더링:', { isDXF, isDXFExporting, isPDFExporting, isCapturing });
     return (
     <div className={styles.loadingOverlay}>
       <div className={styles.loadingContent}>

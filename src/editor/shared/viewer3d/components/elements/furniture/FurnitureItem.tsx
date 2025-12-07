@@ -2241,9 +2241,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const doorThicknessMm = 20;
   const doorThickness = mmToThreeUnits(doorThicknessMm);
 
-  // Room.tsx와 동일한 Z축 위치 계산 - furnitureGroupPosition 전에 계산해야 함
-  const panelDepthMm = 1500; // 전체 공간 깊이
-  const furnitureDepthMm = 600; // 가구 공간 깊이
+  // Room.tsx와 동일한 Z축 위치 계산 - furnitureGroupPosition 전에 계산해야 함 (실제 공간 깊이 사용)
+  const panelDepthMm = spaceInfo.depth || 600; // 실제 공간 깊이
+  const furnitureDepthMm = Math.min(panelDepthMm, 600); // 가구 공간 깊이
   const panelDepth = mmToThreeUnits(panelDepthMm);
   const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
 

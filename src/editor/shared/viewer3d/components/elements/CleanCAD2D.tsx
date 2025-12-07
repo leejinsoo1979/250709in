@@ -4406,9 +4406,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 
                 {/* 연장선 - 좌우 프레임 앞쪽으로 더 연장 */}
                 {(() => {
-                  // 프레임 앞선 위치 계산 - 더 앞쪽으로 연장
-                  const panelDepthMm = 1500;
-                  const furnitureDepthMm = 600;
+                  // 프레임 앞선 위치 계산 - 더 앞쪽으로 연장 (실제 공간 깊이 사용)
+                  const panelDepthMm = spaceInfo.depth || 600;
+                  const furnitureDepthMm = Math.min(panelDepthMm, 600);
                   const panelDepth = mmToThreeUnits(panelDepthMm);
                   const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
                   const furnitureZOffset = spaceZOffset + (panelDepth - furnitureDepth) / 2;
@@ -4912,9 +4912,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           const moduleWidth = mmToThreeUnits(moduleWidthMm);
           const rightX = module.position.x + moduleWidth / 2;
           
-          // FurnitureItem.tsx와 완전히 동일한 Z 위치 계산
-          const panelDepthMm = 1500;
-          const furnitureDepthMm = 600;
+          // FurnitureItem.tsx와 완전히 동일한 Z 위치 계산 (실제 공간 깊이 사용)
+          const panelDepthMm = spaceInfo.depth || 600;
+          const furnitureDepthMm = Math.min(panelDepthMm, 600);
           const doorThicknessMm = 20;
           
           const panelDepth = mmToThreeUnits(panelDepthMm);
@@ -5060,9 +5060,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             const moduleWidth = mmToThreeUnits(moduleWidthMm);
             const leftX = module.position.x - moduleWidth / 2;
             
-            // FurnitureItem.tsx와 완전히 동일한 Z 위치 계산
-        const panelDepthMm = 1500;
-        const furnitureDepthMm = 600;
+            // FurnitureItem.tsx와 완전히 동일한 Z 위치 계산 (실제 공간 깊이 사용)
+        const panelDepthMm = spaceInfo.depth || 600;
+        const furnitureDepthMm = Math.min(panelDepthMm, 600);
         const doorThicknessMm = 20;
             
         const panelDepth = mmToThreeUnits(panelDepthMm);
@@ -5205,9 +5205,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 console.log(`  - moduleData.defaultDepth: ${moduleData.defaultDepth}`);
                 console.log(`  - 최종 사용 깊이: ${actualDepthMm}mm`);
                 
-                // 실제 가구 위치 계산 (FurnitureItem.tsx와 완전히 동일한 방식)
-                const panelDepthMm = 1500; // 전체 공간 깊이
-                const furnitureDepthMm = 600; // 가구 공간 깊이  
+                // 실제 가구 위치 계산 (FurnitureItem.tsx와 완전히 동일한 방식, 실제 공간 깊이 사용)
+                const panelDepthMm = spaceInfo.depth || 600; // 실제 공간 깊이
+                const furnitureDepthMm = Math.min(panelDepthMm, 600); // 가구 공간 깊이
                 const doorThicknessMm = 20;
                 
                 const panelDepth = mmToThreeUnits(panelDepthMm);
@@ -5256,9 +5256,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               // @ts-ignore
               console.log(`🏆 [상단뷰 치수] 가장 깊은 가구: ${deepestModule?.module?.id}, 깊이: ${deepestModuleDepthMm}mm`);
               
-              // 좌측 프레임 앞면 위치 계산
-              const panelDepthMm = 1500;
-              const furnitureDepthMm = 600;
+              // 좌측 프레임 앞면 위치 계산 (실제 공간 깊이 사용)
+              const panelDepthMm = spaceInfo.depth || 600;
+              const furnitureDepthMm = Math.min(panelDepthMm, 600);
               const doorThicknessMm = 20;
               const frameThicknessMm = 20; // 프레임 두께
               
@@ -5292,8 +5292,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                   const actualDepthMm = deepestModule.module.customDepth || moduleData?.dimensions.depth || 0;
                   const depth = mmToThreeUnits(actualDepthMm);
                   
-                  const panelDepth = mmToThreeUnits(1500);
-                  const furnitureDepth = mmToThreeUnits(600);
+                  const panelDepth = mmToThreeUnits(spaceInfo.depth || 600);
+                  const furnitureDepth = mmToThreeUnits(Math.min(spaceInfo.depth || 600, 600));
                   const doorThickness = mmToThreeUnits(20);
                   const zOffset = -panelDepth / 2;
                   const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
@@ -5434,8 +5434,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 const rightAbsoluteDepth = moduleData?.modelConfig?.rightAbsoluteDepth;
                 const hasAsymmetricDepth = isDualModule && rightAbsoluteDepth;
                 
-                const panelDepthMm = 1500;
-                const furnitureDepthMm = 600;
+                const panelDepthMm = spaceInfo.depth || 600;
+                const furnitureDepthMm = Math.min(panelDepthMm, 600);
                 const doorThicknessMm = 20;
                 const actualDepthMm = module.customDepth || moduleData?.dimensions?.depth || 580;
                 
@@ -5591,9 +5591,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               const rightAbsoluteDepth = moduleData.modelConfig?.rightAbsoluteDepth;
               const hasAsymmetricDepth = isDualModule && rightAbsoluteDepth;
               
-              // FurnitureItem.tsx와 완전히 동일한 Z 위치 계산
-              const panelDepthMm = 1500;
-              const furnitureDepthMm = 600;
+              // FurnitureItem.tsx와 완전히 동일한 Z 위치 계산 (실제 공간 깊이 사용)
+              const panelDepthMm = spaceInfo.depth || 600;
+              const furnitureDepthMm = Math.min(panelDepthMm, 600);
               const doorThicknessMm = 20;
               
               const panelDepth = mmToThreeUnits(panelDepthMm);
@@ -5645,9 +5645,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           
           if (rightmostBackZ === Infinity) return null;
           
-          // 우측 프레임 앞면 위치 계산 (Room.tsx와 동일)
-          const panelDepthMm = 1500;
-          const furnitureDepthMm = 600; // 실제 가구 공간 깊이 (FurnitureItem.tsx와 동일)
+          // 우측 프레임 앞면 위치 계산 (Room.tsx와 동일, 실제 공간 깊이 사용)
+          const panelDepthMm = spaceInfo.depth || 600;
+          const furnitureDepthMm = Math.min(panelDepthMm, 600); // 실제 가구 공간 깊이 (FurnitureItem.tsx와 동일)
           
           const panelDepth = mmToThreeUnits(panelDepthMm);
           const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
@@ -5744,9 +5744,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           // 스타일러장인지 확인 (듀얼 서랍+스타일러 타입)
           const isStylerType = moduleData.id.includes('dual-2drawer-styler');
           
-          // 도어 위치 계산 (FurnitureItem.tsx와 동일)
-          const panelDepthMm = 1500;
-          const furnitureDepthMm = 600;
+          // 도어 위치 계산 (FurnitureItem.tsx와 동일, 실제 공간 깊이 사용)
+          const panelDepthMm = spaceInfo.depth || 600;
+          const furnitureDepthMm = Math.min(panelDepthMm, 600);
           const stylerDepthMm = 660; // 스타일러장 깊이
           const doorThicknessMm = 18;
           

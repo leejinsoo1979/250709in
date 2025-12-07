@@ -1579,11 +1579,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           // ColumnGuides와 동일한 Y 좌표 계산
           const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
           
-          // Room.tsx의 바닥 계산과 동일하게 수정
+          // Room.tsx의 바닥 계산과 동일하게 수정 - 실제 공간 깊이 사용
           const doorThicknessMm = 20;
           const doorThickness = mmToThreeUnits(doorThicknessMm);
-          const panelDepthMm = 1500;
-          const furnitureDepthMm = 600;
+          const panelDepthMm = spaceInfo.depth || 600; // 실제 공간 깊이 사용
+          const furnitureDepthMm = Math.min(panelDepthMm, 600); // 가구 깊이는 공간 깊이와 600mm 중 작은 값
           const panelDepth = mmToThreeUnits(panelDepthMm);
           const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
           const zOffset = -panelDepth / 2;
@@ -1804,12 +1804,12 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           return Math.min(spaceBasedDepth, 580);
         };
 
-        // Z축 위치 계산 상수
+        // Z축 위치 계산 상수 - 실제 공간 깊이 사용
         const mmToThreeUnits = (mm: number) => mm * 0.01;
         const doorThicknessMm = 20;
         const doorThickness = mmToThreeUnits(doorThicknessMm);
-        const panelDepthMm = 1500;
-        const furnitureDepthMm = 600;
+        const panelDepthMm = spaceInfo.depth || 600; // 실제 공간 깊이 사용
+        const furnitureDepthMm = Math.min(panelDepthMm, 600); // 가구 깊이는 공간 깊이와 600mm 중 작은 값
         const panelDepth = mmToThreeUnits(panelDepthMm);
         const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
         const zOffset = -panelDepth / 2;

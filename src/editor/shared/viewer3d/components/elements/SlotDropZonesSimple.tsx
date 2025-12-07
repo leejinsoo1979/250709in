@@ -2554,9 +2554,9 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           ? slotData.globalIndex
           : slotIndex;
 
-        // Z축 위치 계산 - Room.tsx와 동일한 로직 사용
-        const panelDepthMm = 1500;
-        const furnitureDepthMm = 600;
+        // Z축 위치 계산 - Room.tsx와 동일한 로직 사용 (실제 공간 깊이)
+        const panelDepthMm = spaceInfo.depth || 600;
+        const furnitureDepthMm = Math.min(panelDepthMm, 600);
         const panelDepth = mmToThreeUnits(panelDepthMm);
         const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
         const panelZOffset = -panelDepth / 2;
@@ -2643,11 +2643,11 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
         const ceilingY = mmToThreeUnits(internalSpace.startY) + mmToThreeUnits(internalSpace.height);
 
-        // Room.tsx의 바닥 계산과 동일하게 수정
+        // Room.tsx의 바닥 계산과 동일하게 수정 - 실제 공간 깊이 사용
         const doorThicknessMm = 20;
         const doorThickness = mmToThreeUnits(doorThicknessMm);
-        const panelDepthMm = 1500;
-        const furnitureDepthMm = 600;
+        const panelDepthMm = spaceInfo.depth || 600; // 실제 공간 깊이 사용
+        const furnitureDepthMm = Math.min(panelDepthMm, 600); // 가구 깊이는 공간 깊이와 600mm 중 작은 값
         const panelDepth = mmToThreeUnits(panelDepthMm);
         const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
         const zOffset = -panelDepth / 2;
@@ -3500,8 +3500,10 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         });
 
         const doorThickness = mmToThreeUnits(20);
-        const panelDepth = mmToThreeUnits(1500);
-        const furnitureDepth = mmToThreeUnits(600);
+        const panelDepthMm = spaceInfo.depth || 600; // 실제 공간 깊이 사용
+        const panelDepth = mmToThreeUnits(panelDepthMm);
+        const furnitureDepthMm = Math.min(panelDepthMm, 600);
+        const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
         const zOffset = -panelDepth / 2;
         const furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2;
         const previewDepth = mmToThreeUnits(customDepth);
