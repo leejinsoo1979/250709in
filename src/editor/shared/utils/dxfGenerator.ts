@@ -59,57 +59,66 @@ const logLayerEntityCounts = (viewType: string): void => {
  * @returns DXF 파일 내용 (문자열)
  */
 export const generateDXF = (data: DXFExportData): string => {
-  const { spaceInfo, placedModules, drawingType = 'front' } = data;
-  
-  // derivedSpaceStore에서 계산된 데이터 가져오기
-  const derivedSpaceState = useDerivedSpaceStore.getState();
-  
-  // 스토어가 현재 spaceInfo로 계산되었는지 확인
-  if (!derivedSpaceState.isCalculated || 
-      !derivedSpaceState.lastCalculatedSpaceInfo ||
-      JSON.stringify(derivedSpaceState.lastCalculatedSpaceInfo) !== JSON.stringify(spaceInfo)) {
-    // 계산되지 않았거나 다른 spaceInfo로 계산된 경우 재계산
-    derivedSpaceState.recalculateFromSpaceInfo(spaceInfo);
+  try {
+    const { spaceInfo, placedModules, drawingType = 'front' } = data;
+
+    console.log('🔧 [DXF] generateDXF 시작:', { drawingType, modulesCount: placedModules.length });
+
+    // derivedSpaceStore에서 계산된 데이터 가져오기
+    const derivedSpaceState = useDerivedSpaceStore.getState();
+
+    // 스토어가 현재 spaceInfo로 계산되었는지 확인
+    if (!derivedSpaceState.isCalculated ||
+        !derivedSpaceState.lastCalculatedSpaceInfo ||
+        JSON.stringify(derivedSpaceState.lastCalculatedSpaceInfo) !== JSON.stringify(spaceInfo)) {
+      // 계산되지 않았거나 다른 spaceInfo로 계산된 경우 재계산
+      console.log('🔄 [DXF] derivedSpaceStore 재계산 필요');
+      derivedSpaceState.recalculateFromSpaceInfo(spaceInfo);
+    }
+
+    // DXF Writer 초기화
+    const dxf = new DxfWriter();
+
+    // 레이어 추가
+    dxf.addLayer('0', 7, 'CONTINUOUS'); // 기본 레이어 (흰색)
+    dxf.addLayer('FURNITURE', 3, 'CONTINUOUS'); // 가구 레이어 (녹색)
+    dxf.addLayer('DIMENSIONS', 1, 'CONTINUOUS'); // 치수 레이어 (빨간색)
+    dxf.addLayer('TEXT', 5, 'CONTINUOUS'); // 텍스트 레이어 (파란색)
+
+    // 현재 레이어 설정
+    dxf.setCurrentLayerName('0');
+
+    // 도면 타입별로 다른 그리기 함수 호출
+    switch (drawingType) {
+      case 'front':
+        // 정면도: 기존 로직 사용
+        drawFrontElevation(dxf, spaceInfo, placedModules);
+        break;
+      case 'plan':
+        // 평면도: 새로운 로직
+        drawPlanView(dxf, spaceInfo, placedModules);
+        break;
+      case 'side':
+        // 측면도: 향후 구현 예정
+        drawSideSection(dxf, spaceInfo, placedModules);
+        break;
+      default:
+        // 기본값: 정면도
+        drawFrontElevation(dxf, spaceInfo, placedModules);
+        break;
+    }
+
+    // 제목과 정보 추가 - 도면 타입이 front가 아닌 경우에만
+    if (drawingType !== 'front') {
+      drawTitleAndInfo(dxf, spaceInfo, drawingType);
+    }
+
+    console.log('✅ [DXF] generateDXF 완료');
+    return dxf.stringify();
+  } catch (error) {
+    console.error('❌ [DXF] generateDXF 오류:', error);
+    throw error;
   }
-  
-  // DXF Writer 초기화
-  const dxf = new DxfWriter();
-  
-  // 레이어 추가
-  dxf.addLayer('0', 7, 'CONTINUOUS'); // 기본 레이어 (흰색)
-  dxf.addLayer('FURNITURE', 3, 'CONTINUOUS'); // 가구 레이어 (녹색)
-  dxf.addLayer('DIMENSIONS', 1, 'CONTINUOUS'); // 치수 레이어 (빨간색)
-  dxf.addLayer('TEXT', 5, 'CONTINUOUS'); // 텍스트 레이어 (파란색)
-  
-  // 현재 레이어 설정
-  dxf.setCurrentLayerName('0');
-  
-  // 도면 타입별로 다른 그리기 함수 호출
-  switch (drawingType) {
-    case 'front':
-      // 정면도: 기존 로직 사용
-      drawFrontElevation(dxf, spaceInfo, placedModules);
-      break;
-    case 'plan':
-      // 평면도: 새로운 로직
-      drawPlanView(dxf, spaceInfo, placedModules);
-      break;
-    case 'side':
-      // 측면도: 향후 구현 예정
-      drawSideSection(dxf, spaceInfo, placedModules);
-      break;
-    default:
-      // 기본값: 정면도
-      drawFrontElevation(dxf, spaceInfo, placedModules);
-      break;
-  }
-  
-  // 제목과 정보 추가 - 도면 타입이 front가 아닌 경우에만
-  if (drawingType !== 'front') {
-    drawTitleAndInfo(dxf, spaceInfo, drawingType);
-  }
-  
-  return dxf.stringify();
 };
 
 /**
@@ -464,7 +473,14 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
 
   // 내부 공간 시작 위치 계산 (2D 렌더링과 동일한 방식)
   const derivedSpaceState = useDerivedSpaceStore.getState();
-  const internalStartX = (spaceInfo.width - derivedSpaceState.internalWidth) / 2;
+
+  // derivedSpaceStore가 계산되지 않은 경우 재계산
+  if (!derivedSpaceState.isCalculated || derivedSpaceState.internalWidth === 0) {
+    derivedSpaceState.recalculateFromSpaceInfo(spaceInfo);
+  }
+
+  const internalWidth = derivedSpaceState.internalWidth || internalSpace.width;
+  const internalStartX = (spaceInfo.width - internalWidth) / 2;
 
   placedModules.forEach((module, index) => {
     const { position, moduleData, moduleId } = module;
@@ -733,7 +749,14 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
 
   // 내부 공간 시작 위치 계산 (2D 렌더링과 동일한 방식)
   const derivedSpaceState = useDerivedSpaceStore.getState();
-  const internalStartX = (spaceInfo.width - derivedSpaceState.internalWidth) / 2;
+
+  // derivedSpaceStore가 계산되지 않은 경우 재계산
+  if (!derivedSpaceState.isCalculated || derivedSpaceState.internalWidth === 0) {
+    derivedSpaceState.recalculateFromSpaceInfo(spaceInfo);
+  }
+
+  const internalWidth = derivedSpaceState.internalWidth || internalSpace.width;
+  const internalStartX = (spaceInfo.width - internalWidth) / 2;
 
   placedModules.forEach((module, index) => {
     const { position, moduleData, moduleId } = module;
