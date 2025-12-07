@@ -1198,15 +1198,17 @@ const generateExternalDimensions = (
 
   if (viewDirection === 'front') {
     // 정면도: 가로 치수 (상단) + 세로 치수 (좌측)
+    // 씬 좌표계 사용: x는 -width/2 ~ width/2, y는 0 ~ height
 
     // 상단 가로 치수선 (전체 너비)
     const topY = height + dimensionOffset;
+    const halfWidth = width / 2;
 
     // 치수선 본체
     lines.push({
-      x1: 0,
+      x1: -halfWidth,
       y1: topY,
-      x2: width,
+      x2: halfWidth,
       y2: topY,
       layer: 'DIMENSIONS',
       color: dimensionColor
@@ -1214,9 +1216,9 @@ const generateExternalDimensions = (
 
     // 좌측 연장선
     lines.push({
-      x1: 0,
+      x1: -halfWidth,
       y1: height,
-      x2: 0,
+      x2: -halfWidth,
       y2: topY + extensionLength,
       layer: 'DIMENSIONS',
       color: dimensionColor
@@ -1224,9 +1226,9 @@ const generateExternalDimensions = (
 
     // 우측 연장선
     lines.push({
-      x1: width,
+      x1: halfWidth,
       y1: height,
-      x2: width,
+      x2: halfWidth,
       y2: topY + extensionLength,
       layer: 'DIMENSIONS',
       color: dimensionColor
@@ -1234,7 +1236,7 @@ const generateExternalDimensions = (
 
     // 치수 텍스트
     texts.push({
-      x: width / 2,
+      x: 0,
       y: topY + 15,
       text: `${width}`,
       height: 25,
@@ -1243,7 +1245,7 @@ const generateExternalDimensions = (
     });
 
     // 좌측 세로 치수선 (전체 높이)
-    const leftX = -dimensionOffset;
+    const leftX = -halfWidth - dimensionOffset;
 
     // 치수선 본체
     lines.push({
@@ -1257,7 +1259,7 @@ const generateExternalDimensions = (
 
     // 하단 연장선
     lines.push({
-      x1: 0,
+      x1: -halfWidth,
       y1: 0,
       x2: leftX - extensionLength,
       y2: 0,
@@ -1267,7 +1269,7 @@ const generateExternalDimensions = (
 
     // 상단 연장선
     lines.push({
-      x1: 0,
+      x1: -halfWidth,
       y1: height,
       x2: leftX - extensionLength,
       y2: height,
@@ -1287,38 +1289,40 @@ const generateExternalDimensions = (
 
   } else if (viewDirection === 'top') {
     // 평면도: 가로(width) + 세로(depth)
+    // 씬 좌표계 사용: x는 -width/2 ~ width/2
+    const halfWidth = width / 2;
 
     // 상단 가로 치수선
     const topY = depth + dimensionOffset;
     lines.push({
-      x1: 0, y1: topY, x2: width, y2: topY,
+      x1: -halfWidth, y1: topY, x2: halfWidth, y2: topY,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     lines.push({
-      x1: 0, y1: depth, x2: 0, y2: topY + extensionLength,
+      x1: -halfWidth, y1: depth, x2: -halfWidth, y2: topY + extensionLength,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     lines.push({
-      x1: width, y1: depth, x2: width, y2: topY + extensionLength,
+      x1: halfWidth, y1: depth, x2: halfWidth, y2: topY + extensionLength,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     texts.push({
-      x: width / 2, y: topY + 15,
+      x: 0, y: topY + 15,
       text: `${width}`, height: 25, color: dimensionColor, layer: 'DIMENSIONS'
     });
 
     // 좌측 세로 치수선
-    const leftX = -dimensionOffset;
+    const leftX = -halfWidth - dimensionOffset;
     lines.push({
       x1: leftX, y1: 0, x2: leftX, y2: depth,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     lines.push({
-      x1: 0, y1: 0, x2: leftX - extensionLength, y2: 0,
+      x1: -halfWidth, y1: 0, x2: leftX - extensionLength, y2: 0,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     lines.push({
-      x1: 0, y1: depth, x2: leftX - extensionLength, y2: depth,
+      x1: -halfWidth, y1: depth, x2: leftX - extensionLength, y2: depth,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     texts.push({
@@ -1328,36 +1332,38 @@ const generateExternalDimensions = (
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // 측면도: 세로(height) + 가로(depth)
+    // 씬 좌표계 사용: x는 -depth/2 ~ depth/2
+    const halfDepth = depth / 2;
 
     const topY = height + dimensionOffset;
     lines.push({
-      x1: 0, y1: topY, x2: depth, y2: topY,
+      x1: -halfDepth, y1: topY, x2: halfDepth, y2: topY,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     lines.push({
-      x1: 0, y1: height, x2: 0, y2: topY + extensionLength,
+      x1: -halfDepth, y1: height, x2: -halfDepth, y2: topY + extensionLength,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     lines.push({
-      x1: depth, y1: height, x2: depth, y2: topY + extensionLength,
+      x1: halfDepth, y1: height, x2: halfDepth, y2: topY + extensionLength,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     texts.push({
-      x: depth / 2, y: topY + 15,
+      x: 0, y: topY + 15,
       text: `${depth}`, height: 25, color: dimensionColor, layer: 'DIMENSIONS'
     });
 
-    const leftX = -dimensionOffset;
+    const leftX = -halfDepth - dimensionOffset;
     lines.push({
       x1: leftX, y1: 0, x2: leftX, y2: height,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     lines.push({
-      x1: 0, y1: 0, x2: leftX - extensionLength, y2: 0,
+      x1: -halfDepth, y1: 0, x2: leftX - extensionLength, y2: 0,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     lines.push({
-      x1: 0, y1: height, x2: leftX - extensionLength, y2: height,
+      x1: -halfDepth, y1: height, x2: leftX - extensionLength, y2: height,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     texts.push({
