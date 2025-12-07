@@ -805,28 +805,37 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         const isBackPanelEdge = lowerName.includes('back-panel') || lowerName.includes('백패널');
         const isClothingRodEdge = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
         const isAdjustableFootEdge = lowerName.includes('adjustable-foot') || lowerName.includes('조절발');
-        const isFurnitureEdge = lowerName.includes('furniture-edge') ||
-                                lowerName.includes('좌측') || lowerName.includes('우측') ||
-                                lowerName.includes('상판') || lowerName.includes('하판') ||
-                                lowerName.includes('선반');
+
+        // 가구 패널 엣지 감지 (furniture-edge-* 형태 이름)
+        const isFurniturePanelEdge = lowerName.includes('furniture-edge');
+
+        // 공간 프레임 감지: 이름이 없거나 위의 패턴에 해당하지 않는 LineSegments
+        // Room.tsx의 BoxWithEdges는 lineSegments에 name을 설정하지 않음
+        const isSpaceFrame = !lowerName ||
+          (!isFurniturePanelEdge && !isBackPanelEdge && !isClothingRodEdge && !isAdjustableFootEdge &&
+           !lowerName.includes('dimension') && !lowerName.includes('grid'));
 
         // 색상 설정:
+        // - 공간 프레임 (Room.tsx 좌우상하): ACI 3 (연두색)
+        // - 가구 패널 (furniture-edge-*): 원래 색상 유지 (주황색 등)
         // - 백패널: ACI 252 (매우 연한 회색, 투명감)
         // - 옷봉/조절발: ACI 7 (흰색)
-        // - 가구 프레임: ACI 3 (연두색/초록색)
         if (isBackPanelEdge) {
           lsColor = 252; // ACI 252 = 매우 연한 회색 (투명감)
-          console.log(`🟠 백패널 엣지 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
+          console.log(`⚪ 백패널 엣지 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
         } else if (isClothingRodEdge || isAdjustableFootEdge) {
           lsColor = 7; // ACI 7 = 흰색
           console.log(`⚪ 옷봉/조절발 엣지 발견: ${name}, ACI 7 (흰색)으로 설정`);
-        } else if (isFurnitureEdge) {
-          lsColor = 3; // ACI 3 = 연두색 (초록)
-          console.log(`🟢 가구 프레임 엣지 발견: ${name}, ACI 3 (연두색)으로 설정`);
+        } else if (isSpaceFrame) {
+          lsColor = 3; // ACI 3 = 연두색 (공간 프레임)
+          console.log(`🟢 공간 프레임 엣지 발견: ${name || '(무명)'}, ACI 3 (연두색)으로 설정`);
+        } else if (isFurniturePanelEdge) {
+          // 가구 패널: material에서 추출한 원래 색상 유지
+          console.log(`🟠 가구 패널 엣지 발견: ${name}, ACI ${lsColor} (원래 색상 유지)`);
         }
 
-        // 가구 프레임 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판 등 모두 보임)
-        const skipBackFilter = isFurnitureEdge || isBackPanelEdge || isClothingRodEdge || isAdjustableFootEdge;
+        // 가구 패널 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판 등 모두 보임)
+        const skipBackFilter = isFurniturePanelEdge || isBackPanelEdge || isClothingRodEdge || isAdjustableFootEdge;
 
         const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, layer, lsColor, skipBackFilter);
         lines.push(...extractedLines);
@@ -873,21 +882,33 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         const isBackPanelEdge = lineLowerName.includes('back-panel') || lineLowerName.includes('백패널');
         const isClothingRodEdge = lineLowerName.includes('clothing-rod') || lineLowerName.includes('옷봉');
         const isAdjustableFootEdge = lineLowerName.includes('adjustable-foot') || lineLowerName.includes('조절발');
-        const isFurnitureEdge = lineLowerName.includes('furniture-edge') ||
-                                lineLowerName.includes('좌측') || lineLowerName.includes('우측') ||
-                                lineLowerName.includes('상판') || lineLowerName.includes('하판') ||
-                                lineLowerName.includes('선반');
+
+        // 가구 패널 엣지 감지 (furniture-edge-* 형태 이름)
+        const isFurniturePanelEdge = lineLowerName.includes('furniture-edge');
+
+        // 공간 프레임 감지: 이름이 없거나 위의 패턴에 해당하지 않는 Line
+        // Room.tsx의 BoxWithEdges는 name을 설정하지 않음
+        const isSpaceFrame = !lineLowerName ||
+          (!isFurniturePanelEdge && !isBackPanelEdge && !isClothingRodEdge && !isAdjustableFootEdge &&
+           !lineLowerName.includes('dimension') && !lineLowerName.includes('grid'));
 
         // 색상 설정 (Line 요소도 동일하게)
+        // - 공간 프레임 (좌우상하 프레임): ACI 3 (연두색)
+        // - 가구 패널: 원래 색상 유지
+        // - 백패널: ACI 252
+        // - 옷봉/조절발: ACI 7
         if (isBackPanelEdge) {
           lineColor = 252; // 매우 연한 회색
-          console.log(`🟠 백패널 엣지(Line) 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
+          console.log(`⚪ 백패널 엣지(Line) 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
         } else if (isClothingRodEdge || isAdjustableFootEdge) {
           lineColor = 7; // 흰색
           console.log(`⚪ 옷봉/조절발 엣지(Line) 발견: ${name}, ACI 7 (흰색)으로 설정`);
-        } else if (isFurnitureEdge) {
-          lineColor = 3; // 연두색
-          console.log(`🟢 가구 프레임 엣지(Line) 발견: ${name}, ACI 3 (연두색)으로 설정`);
+        } else if (isSpaceFrame) {
+          lineColor = 3; // 연두색 (공간 프레임)
+          console.log(`🟢 공간 프레임 엣지(Line) 발견: ${name || '(무명)'}, ACI 3 (연두색)으로 설정`);
+        } else if (isFurniturePanelEdge) {
+          // 가구 패널: material에서 추출한 원래 색상 유지
+          console.log(`🟠 가구 패널 엣지(Line) 발견: ${name}, ACI ${lineColor} (원래 색상 유지)`);
         }
 
         const extractedLines = extractFromLine(lineObj, matrix, scale, layer, lineColor);
@@ -951,18 +972,21 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
   console.log('🎨 색상별 라인 수:', colorCounts);
 
   // ============================================================
-  // 가구 프레임 엣지 추출 - 모든 BoxGeometry Mesh에서 직접 추출
-  // LineSegments가 감지되지 않는 문제를 우회하기 위해 Mesh 기반 추출
+  // Mesh 기반 엣지 추출 (LineSegments fallback)
+  // 주의: 공간 프레임(좌우상하)과 가구 패널은 LineSegments에서 이름으로 구분됨
+  // - 공간 프레임 (Room.tsx): lineSegments 이름 없음 → 연두색 (ACI 3)
+  // - 가구 패널: lineSegments 이름 "furniture-edge-*" → 원래 색상 유지
+  // Mesh는 fallback으로만 사용, material 색상 유지
   // ============================================================
 
   console.log(`📦 Mesh 기반 엣지 추출 시작... (총 ${meshesForEdges.length}개 Mesh)`);
 
-  // 가구 패널 Mesh 분류
-  const framePanelMeshes: typeof meshesForEdges = []; // 좌측판, 우측판, 상판, 하판
+  // Mesh 분류 (LineSegments에서 구분되지 않는 경우 fallback으로 사용)
+  // 공간 프레임과 가구 패널은 LineSegments 이름으로 구분됨 (공간 프레임: 이름없음 → 연두색, 가구 패널: furniture-edge-* → 원래 색상)
   const shelfMeshes: typeof meshesForEdges = []; // 선반
   const backPanelMeshes: typeof meshesForEdges = []; // 백패널
   const clothingRodMeshes: typeof meshesForEdges = []; // 옷봉
-  const otherFurnitureMeshes: typeof meshesForEdges = []; // 기타 가구
+  const otherFurnitureMeshes: typeof meshesForEdges = []; // 기타 (material 색상 사용)
 
   meshesForEdges.forEach((item) => {
     const { mesh } = item;
@@ -989,43 +1013,32 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     }
 
     // 이름 기반 분류
+    // 주의: 가구 패널(좌측판, 우측판, 상판, 하판)과 공간 프레임은 LineSegments에서 구분됨
+    // Mesh는 이름이 없거나 부정확할 수 있으므로, material 색상을 기반으로 처리
     if (name.includes('백패널') || name.includes('back-panel') || name.includes('backpanel')) {
       backPanelMeshes.push(item);
     } else if (name.includes('옷봉') || name.includes('clothing') || name.includes('rod')) {
       clothingRodMeshes.push(item);
-    } else if (name.includes('좌측') || name.includes('우측') || name.includes('상판') ||
-               name.includes('하판') || name.includes('바닥') || name.includes('천장') ||
-               name.includes('left') || name.includes('right') || name.includes('top') || name.includes('bottom')) {
-      framePanelMeshes.push(item);
     } else if (name.includes('선반') || name.includes('shelf')) {
       shelfMeshes.push(item);
     } else if (geometryType === 'BoxGeometry' || geometryType === 'BoxBufferGeometry') {
-      // 이름이 없는 BoxGeometry도 가구로 간주
+      // BoxGeometry는 가구 패널 또는 공간 프레임일 수 있음
+      // material에서 추출한 원래 색상 사용
       otherFurnitureMeshes.push(item);
     }
   });
 
-  console.log(`  프레임 패널: ${framePanelMeshes.length}개, 선반: ${shelfMeshes.length}개, 백패널: ${backPanelMeshes.length}개, 옷봉: ${clothingRodMeshes.length}개, 기타: ${otherFurnitureMeshes.length}개`);
+  console.log(`  선반: ${shelfMeshes.length}개, 백패널: ${backPanelMeshes.length}개, 옷봉: ${clothingRodMeshes.length}개, 기타: ${otherFurnitureMeshes.length}개`);
 
   let meshEdgeCount = 0;
 
-  // 프레임 패널 (좌측, 우측, 상판, 하판) - 연두색 (ACI 3)
-  framePanelMeshes.forEach(({ mesh, matrix }) => {
-    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', 3);
+  // 선반 - material 원래 색상 사용
+  shelfMeshes.forEach(({ mesh, matrix, color }) => {
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', color);
     if (extractedEdges.length > 0) {
       lines.push(...extractedEdges);
       meshEdgeCount += extractedEdges.length;
-      console.log(`  🟢 프레임: ${mesh.name || '(무명)'}, ${extractedEdges.length}개 (연두색)`);
-    }
-  });
-
-  // 선반 - 연두색 (ACI 3)
-  shelfMeshes.forEach(({ mesh, matrix }) => {
-    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', 3);
-    if (extractedEdges.length > 0) {
-      lines.push(...extractedEdges);
-      meshEdgeCount += extractedEdges.length;
-      console.log(`  🟢 선반: ${mesh.name || '(무명)'}, ${extractedEdges.length}개 (연두색)`);
+      console.log(`  📦 선반: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, ACI ${color}`);
     }
   });
 
@@ -1049,8 +1062,8 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     }
   });
 
-  // 기타 가구 - 연두색 (ACI 3)
-  otherFurnitureMeshes.forEach(({ mesh, matrix }) => {
+  // 기타 가구 - material 원래 색상 사용
+  otherFurnitureMeshes.forEach(({ mesh, matrix, color }) => {
     // 크기 체크: 너무 작은 것은 제외
     const box = new THREE.Box3().setFromObject(mesh);
     const size = box.getSize(new THREE.Vector3());
@@ -1061,11 +1074,11 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       return;
     }
 
-    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', 3);
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', color);
     if (extractedEdges.length > 0) {
       lines.push(...extractedEdges);
       meshEdgeCount += extractedEdges.length;
-      console.log(`  🟢 기타: ${mesh.name || '(무명)'}, ${extractedEdges.length}개 (연두색)`);
+      console.log(`  📦 기타: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, ACI ${color}`);
     }
   });
 
