@@ -162,6 +162,90 @@
    clamp()로 부드러운 스케일링 + 극단적 케이스만 미디어 쿼리
    ============================== */
 
+/* 14인치 맥북 등 소형 노트북 (1200px ~ 1512px) - 90% 스케일 */
+@media (max-width: 1512px) and (min-width: 1200px) {
+  :root {
+    /* 폰트 크기 90% */
+    --font-size-xs: 11px;
+    --font-size-sm: 13px;
+    --font-size-md: 14px;
+    --font-size-lg: 16px;
+    --font-size-xl: 18px;
+    --font-size-2xl: 22px;
+    --font-size-3xl: 25px;
+
+    /* 간격 90% */
+    --spacing-xs: 4px;
+    --spacing-sm: 7px;
+    --spacing-md: 11px;
+    --spacing-lg: 14px;
+    --spacing-xl: 22px;
+    --spacing-2xl: 29px;
+    --spacing-3xl: 43px;
+
+    /* 반지름 90% */
+    --radius-sm: 3px;
+    --radius-md: 5px;
+    --radius-lg: 7px;
+    --radius-xl: 11px;
+
+    /* 레이아웃 요소 90% */
+    --header-height: 58px;
+    --sidebar-width: 252px;
+    --input-height: 36px;
+    --input-height-sm: 32px;
+    --input-height-lg: 40px;
+    --button-height: 36px;
+    --button-height-sm: 32px;
+    --button-height-lg: 40px;
+
+    /* 컨피규레이터 헤더 90% */
+    --configurator-header-height: 50px;
+  }
+}
+
+/* 13인치 맥북 등 더 작은 노트북 (1024px ~ 1199px) - 85% 스케일 */
+@media (max-width: 1199px) and (min-width: 768px) {
+  :root {
+    /* 폰트 크기 85% */
+    --font-size-xs: 10px;
+    --font-size-sm: 12px;
+    --font-size-md: 14px;
+    --font-size-lg: 15px;
+    --font-size-xl: 17px;
+    --font-size-2xl: 20px;
+    --font-size-3xl: 24px;
+
+    /* 간격 85% */
+    --spacing-xs: 3px;
+    --spacing-sm: 7px;
+    --spacing-md: 10px;
+    --spacing-lg: 14px;
+    --spacing-xl: 20px;
+    --spacing-2xl: 27px;
+    --spacing-3xl: 41px;
+
+    /* 반지름 85% */
+    --radius-sm: 3px;
+    --radius-md: 5px;
+    --radius-lg: 7px;
+    --radius-xl: 10px;
+
+    /* 레이아웃 요소 85% */
+    --header-height: 54px;
+    --sidebar-width: 238px;
+    --input-height: 34px;
+    --input-height-sm: 31px;
+    --input-height-lg: 37px;
+    --button-height: 34px;
+    --button-height-sm: 31px;
+    --button-height-lg: 37px;
+
+    /* 컨피규레이터 헤더 85% */
+    --configurator-header-height: 48px;
+  }
+}
+
 /* 태블릿 세로 및 작은 화면 (768px 미만) - 오버레이 모드로 전환 */
 @media (max-width: 767px) {
   :root {
