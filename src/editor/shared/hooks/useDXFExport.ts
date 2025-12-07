@@ -50,8 +50,8 @@ export const useDXFExport = () => {
         throw new Error('Three.js 씬을 찾을 수 없습니다. 에디터가 로드될 때까지 기다려주세요.');
       }
 
-      // 씬에서 DXF 생성
-      const dxfContent = generateDXFFromScene(spaceInfo, drawingType);
+      // 데이터 기반 DXF 생성 (placedModules 전달)
+      const dxfContent = generateDXFFromScene(spaceInfo, drawingType, placedModules);
 
       if (!dxfContent) {
         throw new Error('DXF 생성에 실패했습니다.');
@@ -188,7 +188,7 @@ export const useDXFExport = () => {
       for (const drawingType of drawingTypes) {
         console.log(`📄 ${drawingType} 도면 생성 중...`);
 
-        const dxfContent = generateDXFFromScene(spaceInfo, drawingType);
+        const dxfContent = generateDXFFromScene(spaceInfo, drawingType, placedModules);
 
         if (!dxfContent) {
           console.warn(`⚠️ ${drawingType} 도면 생성 실패, 건너뜀`);

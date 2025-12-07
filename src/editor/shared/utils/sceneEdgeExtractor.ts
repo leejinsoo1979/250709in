@@ -493,6 +493,18 @@ export const extractSceneEdges = (
       const mesh = object as THREE.Mesh;
       meshCount++;
 
+      // 디버깅: 각 메쉬의 정보 출력
+      mesh.updateMatrixWorld(true);
+      const worldPos = new THREE.Vector3();
+      worldPos.setFromMatrixPosition(mesh.matrixWorld);
+      console.log('📦 메쉬 추출:', {
+        name: mesh.name || '(이름없음)',
+        type: mesh.geometry?.type || '(geometry없음)',
+        position: { x: mesh.position.x.toFixed(2), y: mesh.position.y.toFixed(2), z: mesh.position.z.toFixed(2) },
+        worldPosition: { x: worldPos.x.toFixed(2), y: worldPos.y.toFixed(2), z: worldPos.z.toFixed(2) },
+        parent: mesh.parent?.name || mesh.parent?.type || '(부모없음)'
+      });
+
       // 머티리얼 visibility 체크
       if (mesh.material) {
         const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
