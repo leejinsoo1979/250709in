@@ -365,8 +365,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   return (
     <group position={position}>
       {/* 면 렌더링 - 와이어프레임에서는 투명하게 */}
-      <mesh 
-        receiveShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled} 
+      {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
+      <mesh
+        name={isClothingRod ? 'clothing-rod-mesh' : isBackPanel ? `back-panel-mesh${panelName ? `-${panelName}` : ''}` : `furniture-mesh${panelName ? `-${panelName}` : ''}`}
+        receiveShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled}
         castShadow={viewMode === '3D' && renderMode === 'solid' && shadowEnabled}
         onClick={onClick}
         onPointerOver={onPointerOver}

@@ -80,13 +80,14 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
   return (
     <group position={position} rotation={[0, rotation, 0]}>
       {/* 상단 플레이트 (64×64mm, 두께 7mm) - 윗면이 가구 바닥판 아래에 부착 */}
-      <mesh position={[0, -plateHeight / 2, 0]}>
+      {/* DXF 내보내기를 위해 mesh에도 이름 추가 */}
+      <mesh name="adjustable-foot-plate-mesh" position={[0, -plateHeight / 2, 0]}>
         <boxGeometry args={[plateWidth, plateHeight, plateWidth]} />
         <primitive object={meshMaterial} />
       </mesh>
 
       {/* 원통형 발통 (지름 56mm) - 플레이트 아래에 위치 */}
-      <mesh position={[0, -plateHeight - cylinderHeight / 2, 0]} rotation={[0, 0, 0]}>
+      <mesh name="adjustable-foot-cylinder-mesh" position={[0, -plateHeight - cylinderHeight / 2, 0]} rotation={[0, 0, 0]}>
         <cylinderGeometry args={[cylinderRadius, cylinderRadius, cylinderHeight, 32]} />
         <primitive object={meshMaterial} />
       </mesh>

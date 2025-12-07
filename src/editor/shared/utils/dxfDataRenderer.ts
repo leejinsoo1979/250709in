@@ -1305,6 +1305,7 @@ const extractFromScene = (
   const shelfMeshes: typeof meshesForEdges = []; // 선반
   const backPanelMeshes: typeof meshesForEdges = []; // 백패널
   const clothingRodMeshes: typeof meshesForEdges = []; // 옷봉
+  const adjustableFootMeshes: typeof meshesForEdges = []; // 조절발
   const otherFurnitureMeshes: typeof meshesForEdges = []; // 기타 (material 색상 사용)
 
   meshesForEdges.forEach((item) => {
@@ -1334,10 +1335,13 @@ const extractFromScene = (
     // 이름 기반 분류
     // 주의: 가구 패널(좌측판, 우측판, 상판, 하판)과 공간 프레임은 LineSegments에서 구분됨
     // Mesh는 이름이 없거나 부정확할 수 있으므로, material 색상을 기반으로 처리
-    if (name.includes('백패널') || name.includes('back-panel') || name.includes('backpanel')) {
-      backPanelMeshes.push(item);
-    } else if (name.includes('옷봉') || name.includes('clothing') || name.includes('rod')) {
+    // 옷봉 체크 먼저 (clothing-rod-mesh 패턴)
+    if (name.includes('clothing-rod') || name.includes('옷봉')) {
       clothingRodMeshes.push(item);
+    } else if (name.includes('adjustable-foot') || name.includes('조절발')) {
+      adjustableFootMeshes.push(item);
+    } else if (name.includes('백패널') || name.includes('back-panel') || name.includes('backpanel')) {
+      backPanelMeshes.push(item);
     } else if (name.includes('선반') || name.includes('shelf')) {
       shelfMeshes.push(item);
     } else if (geometryType === 'BoxGeometry' || geometryType === 'BoxBufferGeometry') {
@@ -1347,7 +1351,7 @@ const extractFromScene = (
     }
   });
 
-  console.log(`  선반: ${shelfMeshes.length}개, 백패널: ${backPanelMeshes.length}개, 옷봉: ${clothingRodMeshes.length}개, 기타: ${otherFurnitureMeshes.length}개`);
+  console.log(`  선반: ${shelfMeshes.length}개, 백패널: ${backPanelMeshes.length}개, 옷봉: ${clothingRodMeshes.length}개, 조절발: ${adjustableFootMeshes.length}개, 기타: ${otherFurnitureMeshes.length}개`);
 
   let meshEdgeCount = 0;
 
@@ -1378,6 +1382,16 @@ const extractFromScene = (
       lines.push(...extractedEdges);
       meshEdgeCount += extractedEdges.length;
       console.log(`  ⚪ 옷봉: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, CLOTHING_ROD`);
+    }
+  });
+
+  // 조절발 - ACCESSORIES 레이어, 회색 (ACI 8)
+  adjustableFootMeshes.forEach(({ mesh, matrix }) => {
+    const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'ACCESSORIES', 8);
+    if (extractedEdges.length > 0) {
+      lines.push(...extractedEdges);
+      meshEdgeCount += extractedEdges.length;
+      console.log(`  ⚪ 조절발: ${mesh.name || '(무명)'}, ${extractedEdges.length}개, ACCESSORIES`);
     }
   });
 
