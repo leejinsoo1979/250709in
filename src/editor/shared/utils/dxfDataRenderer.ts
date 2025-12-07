@@ -650,9 +650,38 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
   let skippedByVisibility = 0;
   let skippedByFilter = 0;
 
+  // 디버그: scene의 모든 객체 타입 수집
+  const objectTypeCount: Record<string, number> = {};
+  const edgeObjectNames: string[] = [];
+  const dimensionObjectNames: string[] = [];
+
   // Store meshes for potential edge extraction if no lines are found
   const meshesForEdges: { mesh: THREE.Mesh; matrix: THREE.Matrix4; layer: string; color: number }[] = [];
 
+  // 첫 번째 pass: 디버그 정보 수집
+  scene.traverse((object) => {
+    const typeName = object.type || object.constructor.name;
+    objectTypeCount[typeName] = (objectTypeCount[typeName] || 0) + 1;
+
+    const name = object.name || '';
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('edge') || lowerName.includes('furniture')) {
+      edgeObjectNames.push(`${typeName}: ${name}`);
+    }
+    if (lowerName.includes('dimension')) {
+      dimensionObjectNames.push(`${typeName}: ${name}`);
+    }
+  });
+
+  console.log('📊 씬 객체 타입 통계:', objectTypeCount);
+  if (edgeObjectNames.length > 0) {
+    console.log('🔍 엣지 관련 객체:', edgeObjectNames.slice(0, 20));
+  }
+  if (dimensionObjectNames.length > 0) {
+    console.log('📏 치수선 관련 객체:', dimensionObjectNames);
+  }
+
+  // 두 번째 pass: 실제 추출
   scene.traverse((object) => {
     // Skip invisible objects
     if (!object.visible) {
@@ -732,9 +761,18 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     // Check for LineSegments (EdgesGeometry)
     // THREE.LineSegments 또는 type이 'LineSegments'인 객체 모두 체크
     // 주의: LineSegments는 Line을 상속하므로 Line 체크 전에 먼저 확인해야 함
+    // R3F의 <lineSegments>도 감지
     const isLineSegments = object instanceof THREE.LineSegments ||
                            object.type === 'LineSegments' ||
-                           (object as any).isLineSegments;
+                           (object as any).isLineSegments ||
+                           object.constructor.name === 'LineSegments';
+
+    // 추가 디버그: furniture-edge 또는 back-panel-edge 이름 확인
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('furniture-edge') || lowerName.includes('back-panel-edge') || lowerName.includes('clothing-rod-edge')) {
+      console.log(`🔎 엣지 객체 발견: ${name}, type=${object.type}, isLineSegments=${isLineSegments}, constructor=${object.constructor.name}`);
+    }
+
     if (isLineSegments) {
       const lineSegObj = object as THREE.LineSegments;
       const geometry = lineSegObj.geometry;
@@ -800,12 +838,24 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       return;
     }
 
-    // Check for Line (NativeLine)
-    if (object instanceof THREE.Line) {
-      const posCount = object.geometry?.getAttribute('position')?.count || 0;
+    // Check for Line (NativeLine, drei Line 등)
+    // R3F의 <line>은 THREE.Line을 생성함
+    // 주의: LineSegments는 Line을 상속하므로 위에서 이미 처리됨
+    const isLineType = (object instanceof THREE.Line && !(object instanceof THREE.LineSegments)) ||
+                       object.type === 'Line' ||
+                       object.constructor.name === 'Line';
+
+    // 추가 디버그: dimension_line 이름 확인
+    if (name.toLowerCase().includes('dimension')) {
+      console.log(`🔎 치수선 객체 발견: ${name}, type=${object.type}, isLine=${isLineType}, constructor=${object.constructor.name}`);
+    }
+
+    if (isLineType) {
+      const lineObj = object as THREE.Line;
+      const posCount = lineObj.geometry?.getAttribute('position')?.count || 0;
       if (posCount > 0) {
         // Line material에서 색상 추출
-        const lineMaterial = object.material;
+        const lineMaterial = lineObj.material;
         let lineColor = color;
         if (lineMaterial && !Array.isArray(lineMaterial) && 'color' in lineMaterial) {
           const matColor = (lineMaterial as THREE.LineBasicMaterial).color;
@@ -819,14 +869,14 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         }
 
         // 엣지 타입 감지 (개별 Line 요소용)
-        const lowerName = name.toLowerCase();
-        const isBackPanelEdge = lowerName.includes('back-panel') || lowerName.includes('백패널');
-        const isClothingRodEdge = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
-        const isAdjustableFootEdge = lowerName.includes('adjustable-foot') || lowerName.includes('조절발');
-        const isFurnitureEdge = lowerName.includes('furniture-edge') ||
-                                lowerName.includes('좌측') || lowerName.includes('우측') ||
-                                lowerName.includes('상판') || lowerName.includes('하판') ||
-                                lowerName.includes('선반');
+        const lineLowerName = name.toLowerCase();
+        const isBackPanelEdge = lineLowerName.includes('back-panel') || lineLowerName.includes('백패널');
+        const isClothingRodEdge = lineLowerName.includes('clothing-rod') || lineLowerName.includes('옷봉');
+        const isAdjustableFootEdge = lineLowerName.includes('adjustable-foot') || lineLowerName.includes('조절발');
+        const isFurnitureEdge = lineLowerName.includes('furniture-edge') ||
+                                lineLowerName.includes('좌측') || lineLowerName.includes('우측') ||
+                                lineLowerName.includes('상판') || lineLowerName.includes('하판') ||
+                                lineLowerName.includes('선반');
 
         // 색상 설정 (Line 요소도 동일하게)
         if (isBackPanelEdge) {
@@ -840,12 +890,12 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           console.log(`🟢 가구 프레임 엣지(Line) 발견: ${name}, ACI 3 (연두색)으로 설정`);
         }
 
-        const extractedLines = extractFromLine(object, matrix, scale, layer, lineColor);
+        const extractedLines = extractFromLine(lineObj, matrix, scale, layer, lineColor);
         lines.push(...extractedLines);
         lineObjects++;
 
         // 치수선 전용 로깅
-        const isDimensionLine = lowerName.includes('dimension');
+        const isDimensionLine = lineLowerName.includes('dimension');
         if (isDimensionLine) {
           console.log(`📏 치수선(Line) 발견: ${name}, 포인트 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${lineColor}`);
         }
@@ -967,12 +1017,12 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     console.log(`📦 가구 패널 Mesh에서 엣지 추출: ${furniturePanelMeshes.length}개`);
 
     // 2D 뷰에서 가구 프레임 엣지 색상
-    // ACI 30 = 주황색 (#FF4500, 다크모드)
-    const furnitureEdgeColor = 30;
+    // ACI 3 = 연두색 (초록색, 사용자 요청)
+    const furnitureEdgeColor = 3;
 
     let meshEdgeCount = 0;
     furniturePanelMeshes.forEach(({ mesh, matrix, layer, color }) => {
-      // BoxGeometry 패널은 주황색으로 추출
+      // BoxGeometry 패널은 연두색으로 추출
       const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, 'FURNITURE', furnitureEdgeColor);
       if (extractedEdges.length > 0) {
         lines.push(...extractedEdges);
@@ -980,7 +1030,7 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         console.log(`  📐 Mesh 엣지: ${mesh.name || '(무명)'}, ${extractedEdges.length}개`);
       }
     });
-    console.log(`✅ Mesh에서 ${meshEdgeCount}개 엣지 추출 완료 (색상 ACI=${furnitureEdgeColor})`);
+    console.log(`✅ Mesh에서 ${meshEdgeCount}개 엣지 추출 완료 (색상 ACI=${furnitureEdgeColor}, 연두색)`);
   }
 
   console.log(`✅ 추출 완료: 라인 ${lines.length}개, 텍스트 ${texts.length}개`);
