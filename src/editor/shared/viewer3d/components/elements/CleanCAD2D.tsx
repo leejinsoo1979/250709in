@@ -708,11 +708,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   const DIMENSION_GAP = 120; // 치수선 간 간격 (mm)
   const EXTENSION_LENGTH = 60; // 보조선 연장 길이 (mm)
 
-  // 1단계: 전체 너비 (3600) - 맨 위
+  // 1단계: 전체 너비 (3600) - 맨 위 (공간 위쪽 충분히 바깥으로)
   const topDimensionY = spaceHeight + mmToThreeUnits(
     hasDroppedCeiling
-      ? (is3DMode ? 280 : 220)
-      : (is3DMode ? 220 : 160)
+      ? (is3DMode ? 450 : 400)
+      : (is3DMode ? 400 : 350)
   );
   // 2단계: 내부 너비 (3540) + 좌우 프레임 - 전체 너비 아래
   const columnDimensionY = topDimensionY - mmToThreeUnits(DIMENSION_GAP);
