@@ -78,4 +78,18 @@ aside,
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+/* 14인치 맥북 등 소형 노트북 화면에서 UI 90% 스케일 */
+@media screen and (max-width: 1512px) and (min-width: 1200px) {
+  html {
+    zoom: 0.9;
+  }
+}
+
+/* 13인치 맥북 등 더 작은 화면에서 UI 85% 스케일 */
+@media screen and (max-width: 1199px) and (min-width: 1024px) {
+  html {
+    zoom: 0.85;
+  }
 } 
