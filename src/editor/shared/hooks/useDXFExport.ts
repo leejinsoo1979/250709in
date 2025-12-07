@@ -7,6 +7,7 @@ import { exportWithPersistence } from '@/services/exportService';
 import { getCurrentVersionId } from '@/services/designs.repo';
 import { auth } from '@/firebase/config';
 import { sceneHolder } from '../viewer3d/sceneHolder';
+import { useUIStore } from '@/store/uiStore';
 
 // 도면 타입 정의
 export type DrawingType = 'front' | 'plan' | 'side';
@@ -17,6 +18,7 @@ export type DrawingType = 'front' | 'plan' | 'side';
  */
 export const useDXFExport = () => {
   const [isExporting, setIsExporting] = useState(false);
+  const { showGuides, setShowGuides } = useUIStore();
 
   /**
    * 현재 가구 배치를 DXF 파일로 내보내기
@@ -30,6 +32,9 @@ export const useDXFExport = () => {
     placedModules: PlacedModule[],
     drawingType: DrawingType = 'front'
   ) => {
+    // 그리드 상태 저장
+    const originalShowGuides = showGuides;
+
     try {
       setIsExporting(true);
       console.log(`🔧 DXF ${drawingType} 도면 내보내기 시작 (씬 기반)...`);
@@ -43,6 +48,13 @@ export const useDXFExport = () => {
         placedModulesCount: placedModules.length,
         drawingType
       });
+
+      // 그리드 끄기
+      setShowGuides(false);
+      console.log('🔲 그리드 비활성화');
+
+      // 씬 업데이트 대기
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // 씬 확인
       const scene = sceneHolder.getScene();
@@ -102,9 +114,12 @@ export const useDXFExport = () => {
         message: `DXF ${drawingType} 도면 파일 생성에 실패했습니다.`
       };
     } finally {
+      // 그리드 상태 복원
+      setShowGuides(originalShowGuides);
+      console.log('🔲 그리드 상태 복원');
       setIsExporting(false);
     }
-  }, []);
+  }, [showGuides, setShowGuides]);
 
   /**
    * DXF 내보내기 가능 여부 확인
@@ -170,10 +185,20 @@ export const useDXFExport = () => {
     placedModules: PlacedModule[],
     drawingTypes: DrawingType[]
   ) => {
+    // 그리드 상태 저장
+    const originalShowGuides = showGuides;
+
     try {
       setIsExporting(true);
       console.log(`🔧 DXF ZIP 내보내기 시작 (씬 기반)...`);
       console.log('📊 선택된 도면:', drawingTypes);
+
+      // 그리드 끄기
+      setShowGuides(false);
+      console.log('🔲 그리드 비활성화');
+
+      // 씬 업데이트 대기
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // 씬 확인
       const scene = sceneHolder.getScene();
@@ -276,9 +301,12 @@ ${drawingTypes.map(type => {
         message: `DXF ZIP 파일 생성에 실패했습니다.`
       };
     } finally {
+      // 그리드 상태 복원
+      setShowGuides(originalShowGuides);
+      console.log('🔲 그리드 상태 복원');
       setIsExporting(false);
     }
-  }, []);
+  }, [showGuides, setShowGuides]);
 
   return {
     exportToDXF,
