@@ -1712,8 +1712,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       </group>
       )}
       
-      {/* 각 컬럼 너비 치수선 */}
-      {placedModules.length > 0 && columnCount > 1 && threeUnitBoundaries.slice(0, -1).map((leftX, index) => {
+      {/* 각 컬럼 너비 치수선 - 가구가 배치되지 않았을 때만 표시 */}
+      {placedModules.length === 0 && columnCount > 1 && threeUnitBoundaries.slice(0, -1).map((leftX, index) => {
         const rightX = threeUnitBoundaries[index + 1];
         const columnWidth = (rightX - leftX) / 0.01; // Three.js 단위를 mm로 변환
         const centerX = (leftX + rightX) / 2;
