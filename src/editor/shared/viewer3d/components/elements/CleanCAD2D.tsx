@@ -1531,9 +1531,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {frameSize.left}
             </Text>
 
-            {/* 연장선 */}
+            {/* 연장선 - topDimensionY(3600선)까지 연장 */}
             <NativeLine name="dimension_line"
-              points={[[leftOffset, spaceHeight, 0.001], [leftOffset, columnDimensionY, 0.001]]}
+              points={[[leftOffset, spaceHeight, 0.001], [leftOffset, topDimensionY + mmToThreeUnits(40), 0.001]]}
               color={dimensionColor}
               lineWidth={1.5}
               renderOrder={1000000}
@@ -1542,7 +1542,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[leftOffset + mmToThreeUnits(frameSize.left), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(frameSize.left), columnDimensionY, 0.001]]}
+              points={[[leftOffset + mmToThreeUnits(frameSize.left), spaceHeight, 0.001], [leftOffset + mmToThreeUnits(frameSize.left), topDimensionY + mmToThreeUnits(40), 0.001]]}
               color={dimensionColor}
               lineWidth={1.5}
               renderOrder={1000000}
@@ -1696,9 +1696,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {frameSize.right}
             </Text>
 
-            {/* 연장선 */}
+            {/* 연장선 - topDimensionY(3600선)까지 연장 */}
             <NativeLine name="dimension_line"
-              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), columnDimensionY, 0.001]]}
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset - mmToThreeUnits(frameSize.right), topDimensionY + mmToThreeUnits(40), 0.001]]}
               color={dimensionColor}
               lineWidth={1.5}
               renderOrder={1000000}
@@ -1707,7 +1707,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, columnDimensionY, 0.001]]}
+              points={[[mmToThreeUnits(spaceInfo.width) + leftOffset, spaceHeight, 0.001], [mmToThreeUnits(spaceInfo.width) + leftOffset, topDimensionY + mmToThreeUnits(40), 0.001]]}
               color={dimensionColor}
               lineWidth={1.5}
               renderOrder={1000000}

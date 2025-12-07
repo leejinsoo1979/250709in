@@ -815,6 +815,8 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
 
         // 치수선 전용 로깅
         const isDimensionLine = lowerName.includes('dimension');
+        const isClothingRodLine = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
+        const isAdjustableFootLine = lowerName.includes('adjustable-foot') || lowerName.includes('조절발');
         if (isDimensionLine) {
           console.log(`📏 치수선(Line2) 발견: ${name}, 라인 ${extractedLines.length}개, 색상 ACI=${line2Color}`);
         } else if (!isClothingRodLine && !isAdjustableFootLine) {
