@@ -789,7 +789,12 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     // 추가 디버그: furniture-edge, back-panel-edge, space-frame 이름 확인
     const lowerName = name.toLowerCase();
     if (lowerName.includes('furniture-edge') || lowerName.includes('back-panel-edge') || lowerName.includes('clothing-rod-edge') || lowerName.includes('space-frame')) {
-      console.log(`🔎 엣지 객체 발견: ${name}, type=${object.type}, isLineSegments=${isLineSegments}, constructor=${object.constructor.name}`);
+      console.log(`🔎 엣지 객체 발견: ${name}, type=${object.type}, isLineSegments=${isLineSegments}, isLine=${object instanceof THREE.Line}, constructor=${object.constructor.name}`);
+    }
+
+    // 모든 객체 이름 디버깅 (furniture 포함된 것만)
+    if (lowerName.includes('furniture') || lowerName.includes('frame')) {
+      console.log(`🏷️ 객체 이름: ${name}, type=${object.type}`);
     }
 
     if (isLineSegments) {
