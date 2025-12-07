@@ -674,8 +674,11 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
   });
 
   console.log('📊 씬 객체 타입 통계:', objectTypeCount);
+  console.log('📊 씬 총 객체 수:', Object.values(objectTypeCount).reduce((a, b) => a + b, 0));
   if (edgeObjectNames.length > 0) {
-    console.log('🔍 엣지 관련 객체:', edgeObjectNames.slice(0, 20));
+    console.log('🔍 엣지/프레임/가구 관련 객체 총', edgeObjectNames.length, '개:', edgeObjectNames.slice(0, 30));
+  } else {
+    console.warn('⚠️ 엣지/프레임/가구 관련 객체가 없습니다! 씬에 LineSegments가 렌더링되지 않았을 수 있습니다.');
   }
   if (dimensionObjectNames.length > 0) {
     console.log('📏 치수선 관련 객체:', dimensionObjectNames);
@@ -851,10 +854,21 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         // 가구 패널/공간 프레임 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판, 좌우상하 프레임 등 모두 보임)
         const skipBackFilter = isFurniturePanelEdge || isBackPanelEdge || isClothingRodEdge || isAdjustableFootEdge || isSpaceFrame;
 
+        // 색상 결정 이유 로깅
+        let colorReason = '기본';
+        if (isBackPanelEdge) colorReason = '백패널';
+        else if (isClothingRodEdge || isAdjustableFootEdge) colorReason = '옷봉/조절발';
+        else if (isSpaceFrame) colorReason = '공간프레임';
+        else if (isFurniturePanelEdge) colorReason = '가구패널';
+
         const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, layer, lsColor, skipBackFilter);
         lines.push(...extractedLines);
         lineSegmentsObjects++;
-        console.log(`📐 LineSegments 발견: ${name || '(이름없음)'}, 버텍스 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${lsColor}${skipBackFilter ? ' (뒤쪽 필터링 스킵)' : ''}`);
+
+        // 가구/프레임 관련 객체는 항상 로깅
+        if (isFurniturePanelEdge || isSpaceFrame || isBackPanelEdge) {
+          console.log(`📐 [${colorReason}] LineSegments: ${name || '(이름없음)'}, 버텍스 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${lsColor}${skipBackFilter ? ' (뒤쪽 필터링 스킵)' : ''}`);
+        }
       } else {
         console.log(`⚠️ LineSegments position 없음: ${name || '(이름없음)'}, geometry type: ${geometry.type}`);
       }
@@ -982,6 +996,10 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     colorCounts[line.color] = (colorCounts[line.color] || 0) + 1;
   });
   console.log('🎨 색상별 라인 수:', colorCounts);
+  console.log('🎨 색상 해석: ACI 3=공간프레임(연두), ACI 7=옷봉/조절발(흰색), ACI 30=가구패널(주황), ACI 252=백패널(회색)');
+  if (!colorCounts[30] && !colorCounts[3]) {
+    console.error('❌ 가구 패널(ACI 30)과 공간 프레임(ACI 3) 라인이 없습니다! LineSegments가 씬에 없거나 이름이 다릅니다.');
+  }
 
   // ============================================================
   // Mesh 기반 엣지 추출 (LineSegments fallback)

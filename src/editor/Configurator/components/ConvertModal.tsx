@@ -49,8 +49,10 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
 
   if (!isOpen) return null;
 
-  // 로딩 화면 컴포넌트
-  const LoadingScreen = () => (
+  // 로딩 화면 컴포넌트 - DXF/PDF에 따라 다른 메시지 표시
+  const LoadingScreen = () => {
+    const isDXF = isDXFExporting;
+    return (
     <div className={styles.loadingOverlay}>
       <div className={styles.loadingContent}>
         <div className={styles.loadingIcon}>
@@ -58,11 +60,11 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
           <div className={styles.loadingCircleActive}></div>
           <div className={styles.loadingCircleInner}></div>
           <div className={styles.loadingCircleInnerActive}></div>
-          <div className={styles.pdfIcon}>PDF</div>
+          <div className={styles.pdfIcon}>{isDXF ? 'DXF' : 'PDF'}</div>
         </div>
-        
-        <h2 className={styles.loadingTitle}>도면 변환 중</h2>
-        <p className={styles.loadingSubtitle}>고품질 PDF 문서를 생성하고 있습니다</p>
+
+        <h2 className={styles.loadingTitle}>{isDXF ? 'CAD 도면 생성 중' : '도면 변환 중'}</h2>
+        <p className={styles.loadingSubtitle}>{isDXF ? 'DXF 도면 파일을 생성하고 있습니다' : '고품질 PDF 문서를 생성하고 있습니다'}</p>
         
         <div className={styles.loadingProgress}>
           <div className={styles.loadingSteps}>
@@ -91,6 +93,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       </div>
     </div>
   );
+  };
 
   // 뷰 캡처 함수
   const captureViews = async () => {
