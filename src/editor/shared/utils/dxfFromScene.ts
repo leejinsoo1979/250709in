@@ -1,7 +1,7 @@
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { formatDxfDate } from './dxfKoreanText';
-import { generateDxfFromData, downloadDxf, type ViewDirection } from './dxfDataRenderer';
+import { generateDxfFromData, downloadDxf, type ViewDirection, type SideViewFilter } from './dxfDataRenderer';
 
 // 도면 타입 정의 - 좌측뷰/우측뷰 분리
 export type DrawingType = 'front' | 'plan' | 'side' | 'sideLeft' | 'sideRight';
@@ -27,11 +27,30 @@ const drawingTypeToViewDirection = (drawingType: DrawingType): ViewDirection => 
 };
 
 /**
+ * 도면 타입을 측면뷰 필터로 변환
+ * @param drawingType 도면 타입
+ */
+const drawingTypeToSideViewFilter = (drawingType: DrawingType): SideViewFilter => {
+  switch (drawingType) {
+    case 'sideLeft':
+      return 'leftmost';  // 좌측면도: leftmost X 위치 가구만
+    case 'sideRight':
+      return 'rightmost'; // 우측면도: rightmost X 위치 가구만
+    default:
+      return 'all';       // 기타: 모든 가구
+  }
+};
+
+/**
  * 데이터 기반 DXF 생성
  *
  * 중요: 3D 메쉬에서 추출하는 방식이 아닌,
  * spaceInfo와 placedModules 데이터에서 직접 좌표를 계산합니다.
  * CleanCAD2D, CADDimensions2D와 완전히 동일한 로직을 사용합니다.
+ *
+ * 측면뷰 필터링:
+ * - sideLeft: leftmost X 위치의 가구만 포함
+ * - sideRight: rightmost X 위치의 가구만 포함
  */
 export const generateDXFFromScene = (
   spaceInfo: SpaceInfo,
@@ -43,14 +62,17 @@ export const generateDXFFromScene = (
   // 뷰 방향 결정
   const viewDirection = drawingTypeToViewDirection(drawingType);
 
+  // 측면뷰 필터 결정 (sideLeft: leftmost만, sideRight: rightmost만)
+  const sideViewFilter = drawingTypeToSideViewFilter(drawingType);
+
   // placedModules가 없으면 빈 배열 사용
   const modules = placedModules || [];
 
   try {
-    // 데이터 기반 DXF 생성
-    const dxfString = generateDxfFromData(spaceInfo, modules, viewDirection);
+    // 데이터 기반 DXF 생성 (측면뷰 필터 전달)
+    const dxfString = generateDxfFromData(spaceInfo, modules, viewDirection, sideViewFilter);
 
-    console.log(`✅ DXF 생성 완료 (${drawingType})`);
+    console.log(`✅ DXF 생성 완료 (${drawingType}, 필터: ${sideViewFilter})`);
 
     return dxfString;
   } catch (error) {

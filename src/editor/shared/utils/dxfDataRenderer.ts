@@ -12,6 +12,9 @@ import { sceneHolder } from '../viewer3d/sceneHolder';
 
 export type ViewDirection = 'front' | 'left' | 'right' | 'top';
 
+// 측면뷰 필터링 타입: 좌측뷰는 leftmost 가구만, 우측뷰는 rightmost 가구만
+export type SideViewFilter = 'all' | 'leftmost' | 'rightmost';
+
 interface DxfLine {
   x1: number;
   y1: number;
@@ -689,7 +692,15 @@ const getColorFromObjectHierarchy = (object: THREE.Object3D): number | null => {
   return null;
 };
 
-const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): ExtractedData => {
+/**
+ * 씬에서 모든 Line 객체와 텍스트 추출
+ * @param allowedXRange 측면뷰에서 허용되는 X 위치 범위 (null이면 필터링 안함)
+ */
+const extractFromScene = (
+  scene: THREE.Scene,
+  viewDirection: ViewDirection,
+  allowedXRange: { min: number; max: number } | null = null
+): ExtractedData => {
   const lines: DxfLine[] = [];
   const texts: DxfText[] = [];
   const scale = 100; // 1 Three.js unit = 100mm
@@ -698,6 +709,9 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
   currentViewDirection = viewDirection;
 
   console.log(`🔍 씬에서 Line/Text 객체 추출 시작 (뷰 방향: ${viewDirection})...`);
+  if (allowedXRange) {
+    console.log(`📐 X 위치 필터링 활성화: ${allowedXRange.min.toFixed(3)} ~ ${allowedXRange.max.toFixed(3)}`);
+  }
 
   let lineObjects = 0;
   let line2Objects = 0;
@@ -755,10 +769,54 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       return;
     }
 
+    const lowerNameForFilter = name.toLowerCase();
+
+    // 탑뷰에서 조절발 제외 (조절발은 바닥 아래에 있어서 탑뷰에서 보이면 안됨)
+    if (viewDirection === 'top') {
+      if (lowerNameForFilter.includes('adjustable-foot') || lowerNameForFilter.includes('조절발')) {
+        console.log(`📐 탑뷰: 조절발 제외 - ${name}`);
+        return;
+      }
+    }
+
     // Update world matrix
     object.updateMatrixWorld(true);
     const matrix = object.matrixWorld;
     const layer = determineLayer(name);
+
+    // 측면뷰에서 가구 X 위치 필터링 (allowedXRange가 있으면 해당 범위의 가구만 포함)
+    // 공간 프레임, 치수선은 필터링 제외 (항상 포함)
+    if (allowedXRange &&
+        (viewDirection === 'left' || viewDirection === 'right') &&
+        layer !== 'SPACE_FRAME' &&
+        layer !== 'DIMENSIONS') {
+
+      // 가구 관련 객체인 경우에만 X 위치 필터링 적용
+      const isFurnitureObject = lowerNameForFilter.includes('furniture') ||
+                                lowerNameForFilter.includes('shelf') ||
+                                lowerNameForFilter.includes('panel') ||
+                                lowerNameForFilter.includes('back-panel') ||
+                                lowerNameForFilter.includes('clothing-rod') ||
+                                lowerNameForFilter.includes('adjustable-foot') ||
+                                lowerNameForFilter.includes('ventilation') ||
+                                lowerNameForFilter.includes('선반') ||
+                                lowerNameForFilter.includes('패널') ||
+                                lowerNameForFilter.includes('옷봉') ||
+                                lowerNameForFilter.includes('조절발') ||
+                                lowerNameForFilter.includes('환기');
+
+      if (isFurnitureObject) {
+        // 객체의 월드 X 위치 확인
+        const worldPos = new THREE.Vector3();
+        object.getWorldPosition(worldPos);
+
+        // 허용된 X 범위 밖이면 제외
+        if (worldPos.x < allowedXRange.min || worldPos.x > allowedXRange.max) {
+          // console.log(`📐 측면뷰 X 필터: ${name} 제외 (X=${worldPos.x.toFixed(3)}, 허용범위: ${allowedXRange.min.toFixed(3)}~${allowedXRange.max.toFixed(3)})`);
+          return;
+        }
+      }
+    }
 
     // 디버그: 레이어 분류 로깅
     if (name && (name.includes('furniture') || name.includes('adjustable') || name.includes('ventilation'))) {
@@ -1605,11 +1663,13 @@ const generateExternalDimensions = (
 
 /**
  * DXF 생성 - 색상과 텍스트 포함
+ * @param sideViewFilter 측면뷰 필터링 타입 (leftmost: 좌측 가구만, rightmost: 우측 가구만, all: 모두)
  */
 export const generateDxfFromData = (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
-  viewDirection: ViewDirection
+  viewDirection: ViewDirection,
+  sideViewFilter: SideViewFilter = 'all'
 ): string => {
   const scene = sceneHolder.getScene();
 
@@ -1618,12 +1678,35 @@ export const generateDxfFromData = (
     throw new Error('씬을 찾을 수 없습니다');
   }
 
-  console.log(`📐 DXF 생성 시작 (${viewDirection})`);
+  console.log(`📐 DXF 생성 시작 (${viewDirection}, 필터: ${sideViewFilter})`);
   console.log(`📊 공간 정보: ${spaceInfo.width}mm x ${spaceInfo.height}mm x ${spaceInfo.depth}mm`);
   console.log(`📊 배치된 가구 수: ${placedModules.length}`);
 
-  // 씬에서 Line과 Text 객체 추출
-  const extracted = extractFromScene(scene, viewDirection);
+  // 측면뷰 필터링: X 위치 범위 계산
+  let allowedXRange: { min: number; max: number } | null = null;
+
+  if ((viewDirection === 'left' || viewDirection === 'right') &&
+      sideViewFilter !== 'all' &&
+      placedModules.length > 0) {
+
+    // placedModules에서 X 위치 추출 (Three.js 단위: meter)
+    const xPositions = placedModules.map(m => m.position?.x || 0);
+
+    if (sideViewFilter === 'leftmost') {
+      // 좌측뷰: leftmost X 위치의 가구만
+      const leftmostX = Math.min(...xPositions);
+      allowedXRange = { min: leftmostX - 0.01, max: leftmostX + 0.01 };
+      console.log(`📐 좌측뷰 필터: X=${leftmostX.toFixed(3)} 위치 가구만 포함`);
+    } else if (sideViewFilter === 'rightmost') {
+      // 우측뷰: rightmost X 위치의 가구만
+      const rightmostX = Math.max(...xPositions);
+      allowedXRange = { min: rightmostX - 0.01, max: rightmostX + 0.01 };
+      console.log(`📐 우측뷰 필터: X=${rightmostX.toFixed(3)} 위치 가구만 포함`);
+    }
+  }
+
+  // 씬에서 Line과 Text 객체 추출 (X 필터링 범위 전달)
+  const extracted = extractFromScene(scene, viewDirection, allowedXRange);
 
   // 외부 치수선 생성 (spaceInfo + placedModules 기반)
   const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection);
