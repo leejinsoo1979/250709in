@@ -103,6 +103,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
 
           {/* 원통 상단 원 */}
           <Line
+            name="adjustable-foot-cylinder-top"
             points={(() => {
               const segments = 32;
               const points: [number, number, number][] = [];
@@ -121,6 +122,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
 
           {/* 원통 하단 원 */}
           <Line
+            name="adjustable-foot-cylinder-bottom"
             points={(() => {
               const segments = 32;
               const points: [number, number, number][] = [];
@@ -145,6 +147,7 @@ export const AdjustableFoot: React.FC<AdjustableFootProps> = ({
             return (
               <Line
                 key={angle}
+                name={`adjustable-foot-vertical-${angle}`}
                 points={[
                   [x, -plateHeight, z],
                   [x, -plateHeight - cylinderHeight, z]

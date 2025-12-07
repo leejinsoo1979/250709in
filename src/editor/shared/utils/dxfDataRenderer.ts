@@ -1446,96 +1446,33 @@ const generateExternalDimensions = (
     });
 
     // ========================================
-    // 서라운드 프레임 (SPACE_FRAME 레이어)
+    // 2단계: 좌우 프레임 + 내부너비 치수선 (전체 너비 아래)
+    // 2D 뷰와 동일하게 상단에 배치
     // ========================================
-    const frameColor = 3; // ACI 3 = 연두색
     const frameSize = spaceInfo.frameSize || { left: 42, right: 42, top: 10 };
     const leftFrameWidth = frameSize.left || 42;
     const rightFrameWidth = frameSize.right || 42;
-    const topFrameThick = frameSize.top || 10;
     const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
 
-    // 좌측 프레임 (세로선) - 외곽선
-    lines.push({
-      x1: -halfWidth, y1: baseH, x2: -halfWidth, y2: height,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
-    // 좌측 프레임 (세로선) - 내부선
-    lines.push({
-      x1: -halfWidth + leftFrameWidth, y1: baseH, x2: -halfWidth + leftFrameWidth, y2: height - topFrameThick,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
-
-    // 우측 프레임 (세로선) - 외곽선
-    lines.push({
-      x1: halfWidth, y1: baseH, x2: halfWidth, y2: height,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
-    // 우측 프레임 (세로선) - 내부선
-    lines.push({
-      x1: halfWidth - rightFrameWidth, y1: baseH, x2: halfWidth - rightFrameWidth, y2: height - topFrameThick,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
-
-    // 상부 프레임 (가로선) - 상단
-    lines.push({
-      x1: -halfWidth, y1: height, x2: halfWidth, y2: height,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
-    // 상부 프레임 (가로선) - 하단
-    lines.push({
-      x1: -halfWidth + leftFrameWidth, y1: height - topFrameThick, x2: halfWidth - rightFrameWidth, y2: height - topFrameThick,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
-
-    // 하부 프레임/받침대 상단선
-    if (baseH > 0) {
-      lines.push({
-        x1: -halfWidth, y1: baseH, x2: halfWidth, y2: baseH,
-        layer: 'SPACE_FRAME', color: frameColor
-      });
-    }
-    // 바닥선
-    lines.push({
-      x1: -halfWidth, y1: 0, x2: halfWidth, y2: 0,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
-
-    // 좌측 프레임 - 상부 연결선 (상부프레임 하단에서)
-    lines.push({
-      x1: -halfWidth, y1: height - topFrameThick, x2: -halfWidth + leftFrameWidth, y2: height - topFrameThick,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
-
-    // 우측 프레임 - 상부 연결선 (상부프레임 하단에서)
-    lines.push({
-      x1: halfWidth - rightFrameWidth, y1: height - topFrameThick, x2: halfWidth, y2: height - topFrameThick,
-      layer: 'SPACE_FRAME', color: frameColor
-    });
-
-    // ========================================
-    // 추가 치수선들 (2D 화면과 동일하게) - 하단에 배치
-    // ========================================
-
-    // 하단 1번째 줄: 좌측프레임 | 내부너비 | 우측프레임
-    const dim2Y = -dimensionOffset - 40;
+    // 2단계 치수선 Y 위치 (전체 너비 치수선 아래, 120mm 간격)
+    const dim2Y = topY - 120;
 
     // 좌측 프레임 너비 치수선
     lines.push({
       x1: -halfWidth, y1: dim2Y, x2: -halfWidth + leftFrameWidth, y2: dim2Y,
       layer: 'DIMENSIONS', color: dimensionColor
     });
-    // 좌측 프레임 연장선
+    // 좌측 프레임 연장선 (위로)
     lines.push({
-      x1: -halfWidth, y1: 0, x2: -halfWidth, y2: dim2Y - extensionLength,
+      x1: -halfWidth, y1: height, x2: -halfWidth, y2: dim2Y + extensionLength,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     lines.push({
-      x1: -halfWidth + leftFrameWidth, y1: baseH, x2: -halfWidth + leftFrameWidth, y2: dim2Y - extensionLength,
+      x1: -halfWidth + leftFrameWidth, y1: height, x2: -halfWidth + leftFrameWidth, y2: dim2Y + extensionLength,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     texts.push({
-      x: -halfWidth + leftFrameWidth / 2, y: dim2Y - 15,
+      x: -halfWidth + leftFrameWidth / 2, y: dim2Y + 15,
       text: `${leftFrameWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
     });
 
@@ -1544,17 +1481,17 @@ const generateExternalDimensions = (
       x1: halfWidth - rightFrameWidth, y1: dim2Y, x2: halfWidth, y2: dim2Y,
       layer: 'DIMENSIONS', color: dimensionColor
     });
-    // 우측 프레임 연장선
+    // 우측 프레임 연장선 (위로)
     lines.push({
-      x1: halfWidth, y1: 0, x2: halfWidth, y2: dim2Y - extensionLength,
+      x1: halfWidth, y1: height, x2: halfWidth, y2: dim2Y + extensionLength,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     lines.push({
-      x1: halfWidth - rightFrameWidth, y1: baseH, x2: halfWidth - rightFrameWidth, y2: dim2Y - extensionLength,
+      x1: halfWidth - rightFrameWidth, y1: height, x2: halfWidth - rightFrameWidth, y2: dim2Y + extensionLength,
       layer: 'DIMENSIONS', color: dimensionColor
     });
     texts.push({
-      x: halfWidth - rightFrameWidth / 2, y: dim2Y - 15,
+      x: halfWidth - rightFrameWidth / 2, y: dim2Y + 15,
       text: `${rightFrameWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
     });
 
@@ -1565,12 +1502,14 @@ const generateExternalDimensions = (
       layer: 'DIMENSIONS', color: dimensionColor
     });
     texts.push({
-      x: 0, y: dim2Y - 15,
+      x: 0, y: dim2Y + 15,
       text: `${innerWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
     });
 
-    // 하단 2번째 줄: 개별 슬롯/가구 너비
-    const dim3Y = -dimensionOffset - 80;
+    // ========================================
+    // 3단계: 개별 슬롯/가구 너비 치수선 (2단계 아래)
+    // ========================================
+    const dim3Y = dim2Y - 120;
 
     // placedModules가 있으면 개별 가구 폭 치수선
     if (placedModules && placedModules.length > 0) {
@@ -1584,17 +1523,17 @@ const generateExternalDimensions = (
           x1: moduleLeftX, y1: dim3Y, x2: moduleRightX, y2: dim3Y,
           layer: 'DIMENSIONS', color: dimensionColor
         });
-        // 연장선
+        // 연장선 (위로)
         lines.push({
-          x1: moduleLeftX, y1: baseH, x2: moduleLeftX, y2: dim3Y - extensionLength,
+          x1: moduleLeftX, y1: height, x2: moduleLeftX, y2: dim3Y + extensionLength,
           layer: 'DIMENSIONS', color: dimensionColor
         });
         lines.push({
-          x1: moduleRightX, y1: baseH, x2: moduleRightX, y2: dim3Y - extensionLength,
+          x1: moduleRightX, y1: height, x2: moduleRightX, y2: dim3Y + extensionLength,
           layer: 'DIMENSIONS', color: dimensionColor
         });
         texts.push({
-          x: (moduleLeftX + moduleRightX) / 2, y: dim3Y - 15,
+          x: (moduleLeftX + moduleRightX) / 2, y: dim3Y + 15,
           text: `${moduleWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
         });
       });
@@ -1610,23 +1549,24 @@ const generateExternalDimensions = (
           x1: colLeftX, y1: dim3Y, x2: colRightX, y2: dim3Y,
           layer: 'DIMENSIONS', color: dimensionColor
         });
-        // 연장선
+        // 연장선 (위로)
         lines.push({
-          x1: colLeftX, y1: baseH, x2: colLeftX, y2: dim3Y - extensionLength,
+          x1: colLeftX, y1: height, x2: colLeftX, y2: dim3Y + extensionLength,
           layer: 'DIMENSIONS', color: dimensionColor
         });
         lines.push({
-          x1: colRightX, y1: baseH, x2: colRightX, y2: dim3Y - extensionLength,
+          x1: colRightX, y1: height, x2: colRightX, y2: dim3Y + extensionLength,
           layer: 'DIMENSIONS', color: dimensionColor
         });
         texts.push({
-          x: colX, y: dim3Y - 15,
+          x: colX, y: dim3Y + 15,
           text: `${colWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
         });
       });
     }
 
     // 우측 치수선: 상부프레임 | 가구영역 | 받침대
+    const topFrameThick = frameSize.top || 10;
     const rightDimX = halfWidth + dimensionOffset;
     const rightDimX2 = rightDimX + 40;
 
