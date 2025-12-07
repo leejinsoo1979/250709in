@@ -1012,17 +1012,6 @@ const Header: React.FC<HeaderProps> = ({
             <>
               {user ? (
                 <div className={styles.desktopProfile}>
-                  {onLogout && (
-                    <button className={styles.logoutButton} onClick={onLogout}>
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2" />
-                        <polyline points="16,17 21,12 16,7" stroke="currentColor" strokeWidth="2" />
-                        <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" />
-                      </svg>
-                      {currentLanguage === 'ko' ? '로그아웃' : t('common.logout')}
-                    </button>
-                  )}
-
                   {/* 프로필 */}
                   <div
                     ref={profileButtonRef}
@@ -1047,6 +1036,17 @@ const Header: React.FC<HeaderProps> = ({
                       {user?.displayName || user?.email?.split('@')[0] || '사용자'}
                     </span>
                   </div>
+
+                  {onLogout && (
+                    <button className={styles.logoutButton} onClick={onLogout}>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke="currentColor" strokeWidth="2" />
+                        <polyline points="16,17 21,12 16,7" stroke="currentColor" strokeWidth="2" />
+                        <line x1="21" y1="12" x2="9" y2="12" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                      {currentLanguage === 'ko' ? '로그아웃' : t('common.logout')}
+                    </button>
+                  )}
                 </div>
               ) : (
                 <button
