@@ -71,6 +71,16 @@ export const useDXFExport = () => {
             finalWidth: module.customWidth || module.adjustedWidth || moduleData?.dimensions.width
           });
           
+          // 실제 모듈의 modelConfig 추출 (섹션 정보 포함)
+          const modelConfig = moduleData?.modelConfig;
+
+          console.log(`📦 [DXF Export] 모듈 ${module.moduleId} 구조 정보:`, {
+            sections: modelConfig?.sections,
+            shelfCount: modelConfig?.shelfCount,
+            drawerCount: modelConfig?.drawerCount,
+            basicThickness: modelConfig?.basicThickness
+          });
+
           return {
             id: module.id,
             moduleId: module.moduleId, // 실제 모듈 ID 추가
@@ -86,7 +96,15 @@ export const useDXFExport = () => {
                 width: module.customWidth || module.adjustedWidth || moduleData?.dimensions.width || 400,
                 height: moduleData?.dimensions.height || 400,
                 depth: module.customDepth || moduleData?.dimensions.depth || 300
-              }
+              },
+              // 실제 가구 구조 정보 전달 (섹션, 선반, 서랍 등)
+              modelConfig: modelConfig ? {
+                basicThickness: modelConfig.basicThickness,
+                hasOpenFront: modelConfig.hasOpenFront,
+                sections: modelConfig.sections,
+                shelfCount: modelConfig.shelfCount,
+                drawerCount: modelConfig.drawerCount
+              } : undefined
             },
             rotation: module.rotation,
             slotIndex: module.slotIndex, // 슬롯 인덱스 정보 추가
@@ -231,7 +249,8 @@ export const useDXFExport = () => {
           drawingType,
           placedModules: placedModules.map(module => {
             const moduleData = getModuleById(module.moduleId, internalSpace, spaceInfo);
-            
+            const modelConfig = moduleData?.modelConfig;
+
             return {
               id: module.id,
               moduleId: module.moduleId,
@@ -243,10 +262,18 @@ export const useDXFExport = () => {
               moduleData: {
                 name: moduleData?.name || `모듈-${module.moduleId}`,
                 dimensions: {
-                  width: moduleData?.dimensions.width || 400,
+                  width: module.customWidth || module.adjustedWidth || moduleData?.dimensions.width || 400,
                   height: moduleData?.dimensions.height || 400,
                   depth: module.customDepth || moduleData?.dimensions.depth || 300
-                }
+                },
+                // 실제 가구 구조 정보 전달
+                modelConfig: modelConfig ? {
+                  basicThickness: modelConfig.basicThickness,
+                  hasOpenFront: modelConfig.hasOpenFront,
+                  sections: modelConfig.sections,
+                  shelfCount: modelConfig.shelfCount,
+                  drawerCount: modelConfig.drawerCount
+                } : undefined
               },
               rotation: module.rotation,
               slotIndex: module.slotIndex,

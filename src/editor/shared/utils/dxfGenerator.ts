@@ -1,5 +1,4 @@
 import { DxfWriter, point3d } from '@tarikjabiri/dxf';
-import { getModuleById } from '@/data/modules';
 import { calculateInternalSpace } from '../viewer3d/utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
@@ -11,6 +10,26 @@ import {
   formatDxfDate 
 } from './dxfKoreanText';
 
+// 섹션 설정 타입 (실제 가구 구조 정의)
+interface DXFSectionConfig {
+  type: 'drawer' | 'hanging' | 'shelf' | 'open';
+  heightType?: 'absolute' | 'ratio';
+  height: number;
+  count?: number; // 서랍 개수
+  drawerHeights?: number[]; // 서랍별 높이
+  shelfPositions?: number[]; // 선반 위치
+  gapHeight?: number; // 서랍 간 갭
+  isTopFinishPanel?: boolean; // 상단 마감판 여부
+}
+
+interface DXFModelConfig {
+  basicThickness?: number;
+  hasOpenFront?: boolean;
+  sections?: DXFSectionConfig[];
+  shelfCount?: number;
+  drawerCount?: number;
+}
+
 interface DXFModuleData {
   name: string;
   dimensions: {
@@ -18,6 +37,7 @@ interface DXFModuleData {
     height: number;
     depth: number;
   };
+  modelConfig?: DXFModelConfig; // 실제 가구 구조 정보 추가
 }
 
 interface DXFPlacedModule {
@@ -621,9 +641,7 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
   placedModules.forEach((module, index) => {
     const { position, moduleData, moduleId } = module;
 
-    // 실제 모듈 데이터 가져오기 (정확한 치수 정보를 위해)
-    const actualModuleData = getModuleById(moduleId, internalSpace, spaceInfo);
-    // customDepth가 이미 반영된 moduleData.dimensions를 우선 사용
+    // useDXFExport에서 전달받은 치수 사용 (customDepth, adjustedWidth 등이 이미 반영됨)
     const dimensions = moduleData.dimensions;
 
     // 2D 화면과 동일하게: position.x (Three.js 단위)를 mm로 직접 변환
@@ -633,12 +651,21 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     // 듀얼 가구 여부 확인 (module 데이터에서 직접 가져옴)
     const isDualFurniture = module.isDualSlot === true;
 
+    // 전달받은 modelConfig 사용 (getModuleById 호출 불필요 - 이미 useDXFExport에서 전달함)
+    const modelConfig = moduleData.modelConfig;
+
     // 좌표 변환 완료: Three.js → DXF (2D 화면과 동일)
     console.log(`🎯 [DXF] Front View - ${moduleData.name}:`, {
       'ThreeJS_X': position.x,
       'internalStartX': internalStartX,
       'DXF_X': dxfXPosition,
-      'width': dimensions.width
+      'width': dimensions.width,
+      'isDualFurniture': isDualFurniture,
+      'modelConfig': modelConfig ? {
+        sections: modelConfig.sections?.length,
+        shelfCount: modelConfig.shelfCount,
+        drawerCount: modelConfig.drawerCount
+      } : 'none'
     });
 
     // 가구 외곽 좌표 계산
@@ -648,10 +675,9 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     const x2 = x1 + dimensions.width; // 우측 끝
     const y2 = y1 + dimensions.height; // 상단
 
-    // 가구 종류별 내부 구조 표현 (실제 모듈 데이터 기반)
+    // 가구 종류별 내부 구조 표현 (전달받은 modelConfig 기반)
     const furnitureHeight = dimensions.height;
     const furnitureWidth = dimensions.width;
-    const modelConfig = actualModuleData?.modelConfig;
     const shelfCount = modelConfig?.shelfCount || 0;
     const drawerCount = modelConfig?.drawerCount || 0;
     const sections = modelConfig?.sections || [];
@@ -844,13 +870,14 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
   placedModules.forEach((module, index) => {
     const { position, moduleData, moduleId } = module;
 
-    // 실제 모듈 데이터 가져오기 (정확한 치수 정보를 위해)
-    const actualModuleData = getModuleById(moduleId, internalSpace, spaceInfo);
-    // customDepth가 이미 반영된 moduleData.dimensions를 우선 사용
+    // useDXFExport에서 전달받은 치수 사용 (customDepth, adjustedWidth 등이 이미 반영됨)
     const dimensions = moduleData.dimensions;
 
     // 듀얼 가구 여부 확인 (module 데이터에서 직접 가져옴)
     const isDualFurniture = module.isDualSlot === true;
+
+    // 전달받은 modelConfig 사용 (getModuleById 호출 불필요)
+    const modelConfig = moduleData.modelConfig;
 
     // 2D 화면과 동일하게: position.x (Three.js 단위)를 mm로 직접 변환
     // Three.js에서 1 단위 = 100mm (MM_TO_THREE_UNITS = 0.01)
@@ -867,7 +894,8 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
       'DXF_X': dxfXPosition,
       'DXF_Y': dxfYPosition,
       'width': dimensions.width,
-      'depth': dimensions.depth
+      'depth': dimensions.depth,
+      'isDualFurniture': isDualFurniture
     });
 
     // 가구 사각형 (평면도 기준: width x depth)
@@ -875,26 +903,25 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     const y1 = dxfYPosition - (dimensions.depth / 2); // 중심점에서 앞쪽 끝
     const x2 = x1 + dimensions.width; // 우측 끝
     const y2 = y1 + dimensions.depth; // 뒤쪽 끝
-    
+
     // FURNITURE 레이어로 전환 (가구 외곽선용)
     dxf.setCurrentLayerName('FURNITURE');
-    
+
     // 가구 외곽선 그리기 (평면도 - 위에서 본 모습)
     dxf.addLine(point3d(x1, y1), point3d(x2, y1)); // 앞쪽
     dxf.addLine(point3d(x2, y1), point3d(x2, y2)); // 우측
     dxf.addLine(point3d(x2, y2), point3d(x1, y2)); // 뒤쪽
     dxf.addLine(point3d(x1, y2), point3d(x1, y1)); // 좌측
-    
+
     // 가구 종류별 내부 구조 표현 (평면도용 - 간소화)
     const furnitureWidth = dimensions.width;
     const furnitureDepth = dimensions.depth;
-    const modelConfig = actualModuleData?.modelConfig;
     const shelfCount = modelConfig?.shelfCount || 0;
-    
+
     console.log(`🏗️ 평면도 가구 ${index + 1} 내부 구조:`, {
       moduleId,
       shelfCount,
-      modelConfig,
+      sections: modelConfig?.sections?.length,
       furnitureWidth,
       furnitureDepth
     });
@@ -939,11 +966,10 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     // 가구 치수 디버깅 로그
     console.log(`🔍 평면도 가구 ${index + 1} (${moduleData.name}) 치수:`, {
       moduleId,
-      moduleDataDepth: moduleData.dimensions.depth,
-      actualModuleDataDepth: actualModuleData?.dimensions.depth,
-      finalDepth: dimensions.depth,
+      depth: dimensions.depth,
       width: dimensions.width,
-      height: dimensions.height
+      height: dimensions.height,
+      modelConfig: modelConfig ? 'present' : 'none'
     });
     
     // 가구 치수 표기 (하단에 표시)
@@ -962,15 +988,14 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
   // FURNITURE 레이어로 전환
   dxf.setCurrentLayerName('FURNITURE');
 
-  const internalSpace = calculateInternalSpace(spaceInfo);
-
   placedModules.forEach((module, index) => {
     const { position, moduleData, moduleId } = module;
 
-    // 실제 모듈 데이터 가져오기
-    const actualModuleData = getModuleById(moduleId, internalSpace, spaceInfo);
-    // customDepth가 이미 반영된 moduleData.dimensions를 우선 사용
+    // useDXFExport에서 전달받은 치수 사용 (customDepth, adjustedWidth 등이 이미 반영됨)
     const dimensions = moduleData.dimensions;
+
+    // 전달받은 modelConfig 사용 (getModuleById 호출 불필요)
+    const modelConfig = moduleData.modelConfig;
 
     // 가구 깊이 계산 (이미 customDepth가 반영된 상태)
     const actualDepthMm = dimensions.depth;
@@ -1004,21 +1029,21 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     const y1 = furnitureBottomY; // 바닥
     const x2 = dxfXPosition + (actualDepthMm / 2); // 중심에서 뒷면
     const y2 = furnitureTopY; // 상단
-    
+
     // 가구 외곽선 그리기 (측면도 - 옆에서 본 모습)
     dxf.addLine(point3d(x1, y1), point3d(x2, y1)); // 하단
     dxf.addLine(point3d(x2, y1), point3d(x2, y2)); // 뒤쪽
     dxf.addLine(point3d(x2, y2), point3d(x1, y2)); // 상단
     dxf.addLine(point3d(x1, y2), point3d(x1, y1)); // 앞쪽
-    
+
     // 가구 종류별 내부 구조 표현 (측면도용)
-    const modelConfig = actualModuleData?.modelConfig;
     const shelfCount = modelConfig?.shelfCount || 0;
-    
+    const sections = modelConfig?.sections || [];
+
     console.log(`🏗️ 측면도 가구 ${index + 1} 내부 구조:`, {
       moduleId,
       shelfCount,
-      modelConfig,
+      sections: sections.length,
       actualDepthMm,
       height: dimensions.height
     });
