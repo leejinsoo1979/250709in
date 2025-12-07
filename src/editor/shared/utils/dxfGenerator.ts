@@ -491,8 +491,8 @@ const drawFrontFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModul
     const dimensions = moduleData.dimensions;
 
     // 2D 화면과 동일하게: position.x (Three.js 단위)를 mm로 직접 변환
-    // Three.js에서 1 단위 = 10mm
-    const dxfXPosition = internalStartX + (position.x * 10);
+    // Three.js에서 1 단위 = 100mm (MM_TO_THREE_UNITS = 0.01)
+    const dxfXPosition = internalStartX + (position.x * 100);
 
     // 듀얼 가구 여부 확인 (module 데이터에서 직접 가져옴)
     const isDualFurniture = module.isDualSlot === true;
@@ -770,10 +770,11 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     const isDualFurniture = module.isDualSlot === true;
 
     // 2D 화면과 동일하게: position.x (Three.js 단위)를 mm로 직접 변환
-    const dxfXPosition = internalStartX + (position.x * 10);
+    // Three.js에서 1 단위 = 100mm (MM_TO_THREE_UNITS = 0.01)
+    const dxfXPosition = internalStartX + (position.x * 100);
 
     // 가구 앞면 위치: position.z를 mm로 변환
-    const dxfYPosition = position.z * 10;
+    const dxfYPosition = position.z * 100;
 
     // 좌표 변환 완료: Three.js → DXF (2D 화면과 동일)
     console.log(`🎯 [DXF] Plan View - ${moduleData.name}:`, {
@@ -894,11 +895,12 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     // 측면도 좌표 계산 - 2D 화면과 동일하게 position.z 사용
     // X축: 깊이 방향 (position.z를 mm로 변환)
     // Y축: 높이 방향 (position.y를 mm로 변환)
-    const dxfXPosition = position.z * 10; // 가구 중심의 깊이 위치
+    // Three.js에서 1 단위 = 100mm (MM_TO_THREE_UNITS = 0.01)
+    const dxfXPosition = position.z * 100; // 가구 중심의 깊이 위치
 
     // 가구 높이 위치 계산 (baseFrameHeight 포함)
     const baseFrameHeight = spaceInfo.baseConfig?.type === 'base_frame' ? (spaceInfo.baseConfig?.height || 100) : 0;
-    const furnitureBottomY = baseFrameHeight + (position.y * 10); // 하부 프레임 + position.y
+    const furnitureBottomY = baseFrameHeight + (position.y * 100); // 하부 프레임 + position.y
     const furnitureTopY = furnitureBottomY + dimensions.height;
     const furnitureCenterY = furnitureBottomY + (dimensions.height / 2);
     const furnitureCenterX = dxfXPosition;
