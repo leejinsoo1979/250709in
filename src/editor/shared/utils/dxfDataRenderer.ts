@@ -637,13 +637,20 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     }
 
     // Check for LineSegments (EdgesGeometry)
-    if (object instanceof THREE.LineSegments) {
-      const posCount = object.geometry?.getAttribute('position')?.count || 0;
+    // THREE.LineSegments 또는 type이 'LineSegments'인 객체 모두 체크
+    const isLineSegments = object instanceof THREE.LineSegments ||
+                           object.type === 'LineSegments' ||
+                           (object as any).isLineSegments;
+    if (isLineSegments) {
+      const lineSegObj = object as THREE.LineSegments;
+      const posCount = lineSegObj.geometry?.getAttribute('position')?.count || 0;
       if (posCount > 0) {
-        const extractedLines = extractFromLineSegments(object, matrix, scale, layer, color);
+        const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, layer, color);
         lines.push(...extractedLines);
         lineSegmentsObjects++;
-        console.log(`📐 LineSegments 발견: ${name || '(이름없음)'}, 라인 ${extractedLines.length}개, 색상 ACI=${color}`);
+        console.log(`📐 LineSegments 발견: ${name || '(이름없음)'}, 위치 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${color}`);
+      } else {
+        console.log(`⚠️ LineSegments 발견했으나 position 없음: ${name || '(이름없음)'}`);
       }
       return;
     }
@@ -695,8 +702,16 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     textObjects,
     meshObjects,
     skippedByVisibility,
-    skippedByFilter
+    skippedByFilter,
+    totalLinesExtracted: lines.length
   });
+
+  // 색상별 라인 수 계산
+  const colorCounts: Record<number, number> = {};
+  lines.forEach(line => {
+    colorCounts[line.color] = (colorCounts[line.color] || 0) + 1;
+  });
+  console.log('🎨 색상별 라인 수:', colorCounts);
 
   // If no lines were found, try extracting edges from meshes
   if (lines.length === 0 && meshesForEdges.length > 0) {
