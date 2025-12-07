@@ -204,7 +204,6 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         {viewMode === '2D' && (
           <div className={styles.mobileViewDirections}>
             {[
-              { id: 'all' as ViewDirection, label: '전체' },
               { id: 'front' as ViewDirection, label: '정면' },
               { id: 'top' as ViewDirection, label: '평면' },
               { id: 'left' as ViewDirection, label: '좌측' },
