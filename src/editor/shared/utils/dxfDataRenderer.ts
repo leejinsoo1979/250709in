@@ -769,6 +769,18 @@ const extractFromScene = (
       return;
     }
 
+    // 정면뷰가 아닌 경우: 도어 대각선 제외
+    if (viewDirection !== 'front' && name.toLowerCase().includes('door-diagonal')) {
+      skippedByFilter++;
+      return;
+    }
+
+    // 탑뷰/측면뷰에서 치수선 제외
+    if (viewDirection !== 'front' && name.toLowerCase().includes('dimension')) {
+      skippedByFilter++;
+      return;
+    }
+
     const lowerNameForFilter = name.toLowerCase();
 
     // 탑뷰에서 조절발 제외 (조절발은 바닥 아래에 있어서 탑뷰에서 보이면 안됨)
