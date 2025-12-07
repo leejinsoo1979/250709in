@@ -158,8 +158,74 @@ const projectTo2D = (p: THREE.Vector3, scale: number): { x: number; y: number } 
 };
 
 /**
+ * 뷰 방향에 따라 라인이 보이는지 확인
+ * 뷰 평면에 수직인 엣지는 점으로 투영되므로 제외
+ * 또한 뷰 방향 축을 따라 멀리 있는 엣지는 가려지므로 일부 제외
+ */
+const isLineVisibleInView = (p1: THREE.Vector3, p2: THREE.Vector3): boolean => {
+  const threshold = 0.001; // 1mm / 1000 = 0.001 Three.js units
+
+  switch (currentViewDirection) {
+    case 'front':
+      // 정면뷰: z축 방향 엣지 제외 (점으로 투영됨)
+      // x, y 좌표가 거의 같으면 z방향 엣지
+      if (Math.abs(p1.x - p2.x) < threshold && Math.abs(p1.y - p2.y) < threshold) {
+        return false;
+      }
+      return true;
+
+    case 'top':
+      // 탑뷰: y축 방향 엣지 제외
+      if (Math.abs(p1.x - p2.x) < threshold && Math.abs(p1.z - p2.z) < threshold) {
+        return false;
+      }
+      return true;
+
+    case 'left':
+    case 'right':
+      // 측면뷰: x축 방향 엣지 제외
+      if (Math.abs(p1.z - p2.z) < threshold && Math.abs(p1.y - p2.y) < threshold) {
+        return false;
+      }
+      return true;
+
+    default:
+      return true;
+  }
+};
+
+/**
+ * 뷰 방향에 따라 엣지가 "앞쪽"에 있는지 확인
+ * 가려진 뒷면 엣지를 제외하기 위해 사용
+ */
+const isEdgeInFrontHalf = (p1: THREE.Vector3, p2: THREE.Vector3, threshold: number): boolean => {
+  switch (currentViewDirection) {
+    case 'front':
+      // 정면뷰: z값이 양수(앞쪽)인 엣지만 포함
+      // threshold 이내면 포함 (평면에 있는 엣지도 포함)
+      return p1.z >= -threshold || p2.z >= -threshold;
+
+    case 'top':
+      // 탑뷰: y값이 양수(위쪽)인 엣지
+      return p1.y >= -threshold || p2.y >= -threshold;
+
+    case 'left':
+      // 왼쪽뷰: x값이 음수(왼쪽)인 엣지
+      return p1.x <= threshold || p2.x <= threshold;
+
+    case 'right':
+      // 오른쪽뷰: x값이 양수(오른쪽)인 엣지
+      return p1.x >= -threshold || p2.x >= -threshold;
+
+    default:
+      return true;
+  }
+};
+
+/**
  * Line2/LineSegments2 (drei의 Line 컴포넌트)에서 좌표 추출
  * Line2는 instanceStart, instanceEnd 속성을 사용 (InterleavedBufferAttribute)
+ * 뷰 방향에 따라 보이지 않는 엣지는 필터링
  */
 const extractFromLine2 = (
   object: THREE.Object3D,
@@ -180,6 +246,8 @@ const extractFromLine2 = (
   const instanceEnd = geometry.getAttribute('instanceEnd');
 
   if (instanceStart && instanceEnd) {
+    let filteredCount = 0;
+
     // Line2 with instance attributes (InterleavedBufferAttribute)
     for (let i = 0; i < instanceStart.count; i++) {
       const p1 = new THREE.Vector3(
@@ -194,8 +262,23 @@ const extractFromLine2 = (
         instanceEnd.getZ(i)
       ).applyMatrix4(matrix);
 
+      // 뷰 방향에 수직인 엣지 필터링 (점으로 투영됨)
+      if (!isLineVisibleInView(p1, p2)) {
+        filteredCount++;
+        continue;
+      }
+
       const proj1 = projectTo2D(p1, scale);
       const proj2 = projectTo2D(p2, scale);
+
+      // 투영 후 너무 짧은 라인 필터링 (1mm 미만)
+      const length = Math.sqrt(
+        Math.pow(proj2.x - proj1.x, 2) + Math.pow(proj2.y - proj1.y, 2)
+      );
+      if (length < 1) {
+        filteredCount++;
+        continue;
+      }
 
       lines.push({
         x1: proj1.x,
@@ -206,6 +289,10 @@ const extractFromLine2 = (
         color
       });
     }
+
+    if (filteredCount > 0) {
+      console.log(`  ↳ Line2 ${filteredCount}개 엣지 필터링됨 (뷰 방향 또는 길이)`);
+    }
   }
 
   return lines;
@@ -213,6 +300,7 @@ const extractFromLine2 = (
 
 /**
  * LineSegments에서 좌표 추출 (EdgesGeometry 포함)
+ * 뷰 방향에 따라 보이지 않는 엣지는 필터링
  */
 const extractFromLineSegments = (
   object: THREE.LineSegments,
@@ -229,6 +317,8 @@ const extractFromLineSegments = (
   const positionAttr = geometry.getAttribute('position');
   if (!positionAttr) return lines;
 
+  let filteredCount = 0;
+
   // LineSegments: pairs of vertices
   for (let i = 0; i < positionAttr.count; i += 2) {
     const p1 = new THREE.Vector3(
@@ -243,8 +333,23 @@ const extractFromLineSegments = (
       positionAttr.getZ(i + 1)
     ).applyMatrix4(matrix);
 
+    // 뷰 방향에 수직인 엣지 필터링 (점으로 투영됨)
+    if (!isLineVisibleInView(p1, p2)) {
+      filteredCount++;
+      continue;
+    }
+
     const proj1 = projectTo2D(p1, scale);
     const proj2 = projectTo2D(p2, scale);
+
+    // 투영 후 너무 짧은 라인 필터링 (1mm 미만)
+    const length = Math.sqrt(
+      Math.pow(proj2.x - proj1.x, 2) + Math.pow(proj2.y - proj1.y, 2)
+    );
+    if (length < 1) {
+      filteredCount++;
+      continue;
+    }
 
     lines.push({
       x1: proj1.x,
@@ -256,11 +361,16 @@ const extractFromLineSegments = (
     });
   }
 
+  if (filteredCount > 0) {
+    console.log(`  ↳ ${filteredCount}개 엣지 필터링됨 (뷰 방향 또는 길이)`);
+  }
+
   return lines;
 };
 
 /**
  * 일반 Line에서 좌표 추출
+ * 뷰 방향에 따라 보이지 않는 엣지는 필터링
  */
 const extractFromLine = (
   object: THREE.Line,
@@ -277,6 +387,8 @@ const extractFromLine = (
   const positionAttr = geometry.getAttribute('position');
   if (!positionAttr) return lines;
 
+  let filteredCount = 0;
+
   // Line: connected vertices
   for (let i = 0; i < positionAttr.count - 1; i++) {
     const p1 = new THREE.Vector3(
@@ -291,8 +403,23 @@ const extractFromLine = (
       positionAttr.getZ(i + 1)
     ).applyMatrix4(matrix);
 
+    // 뷰 방향에 수직인 엣지 필터링 (점으로 투영됨)
+    if (!isLineVisibleInView(p1, p2)) {
+      filteredCount++;
+      continue;
+    }
+
     const proj1 = projectTo2D(p1, scale);
     const proj2 = projectTo2D(p2, scale);
+
+    // 투영 후 너무 짧은 라인 필터링 (1mm 미만)
+    const length = Math.sqrt(
+      Math.pow(proj2.x - proj1.x, 2) + Math.pow(proj2.y - proj1.y, 2)
+    );
+    if (length < 1) {
+      filteredCount++;
+      continue;
+    }
 
     lines.push({
       x1: proj1.x,
@@ -302,6 +429,10 @@ const extractFromLine = (
       layer,
       color
     });
+  }
+
+  if (filteredCount > 0) {
+    console.log(`  ↳ Line ${filteredCount}개 엣지 필터링됨 (뷰 방향 또는 길이)`);
   }
 
   return lines;
@@ -539,6 +670,7 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
 
 /**
  * Mesh에서 엣지 추출 (필요시 사용)
+ * 뷰 방향에 따라 보이지 않는 엣지는 필터링
  */
 const extractEdgesFromMesh = (
   mesh: THREE.Mesh,
@@ -556,6 +688,8 @@ const extractEdgesFromMesh = (
 
   if (!positionAttr) return lines;
 
+  let filteredCount = 0;
+
   for (let i = 0; i < positionAttr.count; i += 2) {
     const p1 = new THREE.Vector3(
       positionAttr.getX(i),
@@ -569,8 +703,23 @@ const extractEdgesFromMesh = (
       positionAttr.getZ(i + 1)
     ).applyMatrix4(matrix);
 
+    // 뷰 방향에 수직인 엣지 필터링 (점으로 투영됨)
+    if (!isLineVisibleInView(p1, p2)) {
+      filteredCount++;
+      continue;
+    }
+
     const proj1 = projectTo2D(p1, scale);
     const proj2 = projectTo2D(p2, scale);
+
+    // 투영 후 너무 짧은 라인 필터링 (1mm 미만)
+    const length = Math.sqrt(
+      Math.pow(proj2.x - proj1.x, 2) + Math.pow(proj2.y - proj1.y, 2)
+    );
+    if (length < 1) {
+      filteredCount++;
+      continue;
+    }
 
     lines.push({
       x1: proj1.x,
@@ -580,6 +729,10 @@ const extractEdgesFromMesh = (
       layer,
       color
     });
+  }
+
+  if (filteredCount > 0) {
+    console.log(`  ↳ Mesh 엣지 ${filteredCount}개 필터링됨 (뷰 방향 또는 길이)`);
   }
 
   edges.dispose();
