@@ -311,6 +311,56 @@ const extractFromLine2 = (
     if (filteredCount > 0) {
       console.log(`  ↳ Line2 ${filteredCount}개 엣지 필터링됨 (뷰 방향 또는 길이)`);
     }
+  } else {
+    // Fallback: drei Line이 instanceStart 없이 position 속성만 가진 경우
+    const positionAttr = geometry.getAttribute('position');
+    if (positionAttr && positionAttr.count >= 2) {
+      let filteredCount = 0;
+
+      // 연결된 라인으로 처리 (Line)
+      for (let i = 0; i < positionAttr.count - 1; i++) {
+        const p1 = new THREE.Vector3(
+          positionAttr.getX(i),
+          positionAttr.getY(i),
+          positionAttr.getZ(i)
+        ).applyMatrix4(matrix);
+
+        const p2 = new THREE.Vector3(
+          positionAttr.getX(i + 1),
+          positionAttr.getY(i + 1),
+          positionAttr.getZ(i + 1)
+        ).applyMatrix4(matrix);
+
+        if (!isLineVisibleInView(p1, p2)) {
+          filteredCount++;
+          continue;
+        }
+
+        const proj1 = projectTo2D(p1, scale);
+        const proj2 = projectTo2D(p2, scale);
+
+        const length = Math.sqrt(
+          Math.pow(proj2.x - proj1.x, 2) + Math.pow(proj2.y - proj1.y, 2)
+        );
+        if (length < 1) {
+          filteredCount++;
+          continue;
+        }
+
+        lines.push({
+          x1: proj1.x,
+          y1: proj1.y,
+          x2: proj2.x,
+          y2: proj2.y,
+          layer,
+          color
+        });
+      }
+
+      if (filteredCount > 0) {
+        console.log(`  ↳ Line2 (position fallback) ${filteredCount}개 엣지 필터링됨`);
+      }
+    }
   }
 
   return lines;
@@ -359,9 +409,9 @@ const extractFromLineSegments = (
     }
   }
 
-  // 앞쪽 판단 기준 - 앞쪽 30%만 필터링 (뒤쪽 70% 제외)
-  // 프레임 엣지가 누락되지 않도록 threshold를 낮춤
-  const frontThreshold = minZ + (maxZ - minZ) * 0.3;
+  // 앞쪽 판단 기준 - 앞쪽 10%만 필터링 (뒤쪽 90% 제외)
+  // 프레임 엣지가 누락되지 않도록 threshold를 더 낮춤
+  const frontThreshold = minZ + (maxZ - minZ) * 0.1;
 
   // LineSegments: pairs of vertices
   for (let i = 0; i < positionAttr.count; i += 2) {
@@ -646,7 +696,17 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       if (extractedLines.length > 0) {
         lines.push(...extractedLines);
         line2Objects++;
-        console.log(`📐 Line2 발견: ${name || '(이름없음)'}, 라인 ${extractedLines.length}개, 색상 ACI=${color}`);
+
+        // 치수선 전용 로깅
+        const isDimensionLine = name.toLowerCase().includes('dimension');
+        if (isDimensionLine) {
+          console.log(`📏 치수선(Line2) 발견: ${name}, 라인 ${extractedLines.length}개, 색상 ACI=${color}`);
+        } else {
+          console.log(`📐 Line2 발견: ${name || '(이름없음)'}, 라인 ${extractedLines.length}개, 색상 ACI=${color}`);
+        }
+      } else if (name.toLowerCase().includes('dimension')) {
+        // 치수선인데 추출 실패한 경우 경고
+        console.log(`⚠️ 치수선(Line2) 추출 실패: ${name}, isLine2=${isLine2}, hasLineGeometry=${hasLineGeometry}`);
       }
       return;
     }
@@ -698,9 +758,29 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     if (object instanceof THREE.Line) {
       const posCount = object.geometry?.getAttribute('position')?.count || 0;
       if (posCount > 0) {
-        const extractedLines = extractFromLine(object, matrix, scale, layer, color);
+        // Line material에서 색상 추출
+        const lineMaterial = object.material;
+        let lineColor = color;
+        if (lineMaterial && !Array.isArray(lineMaterial) && 'color' in lineMaterial) {
+          const matColor = (lineMaterial as THREE.LineBasicMaterial).color;
+          if (matColor) {
+            lineColor = rgbToAci(
+              Math.round(matColor.r * 255),
+              Math.round(matColor.g * 255),
+              Math.round(matColor.b * 255)
+            );
+          }
+        }
+
+        const extractedLines = extractFromLine(object, matrix, scale, layer, lineColor);
         lines.push(...extractedLines);
         lineObjects++;
+
+        // 치수선 전용 로깅
+        const isDimensionLine = name.toLowerCase().includes('dimension');
+        if (isDimensionLine) {
+          console.log(`📏 치수선(Line) 발견: ${name}, 포인트 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${lineColor}`);
+        }
       }
       return;
     }
