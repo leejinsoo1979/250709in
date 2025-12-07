@@ -1736,7 +1736,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
 
               {/* PlacedFurniture는 Room 내부에서 렌더링되므로 중복 제거 */}
 
-              <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} />
+              <SlotDropZonesSimple spaceInfo={spaceInfo} showAll={showAll} showDimensions={showDimensions} viewMode={viewMode} view2DDirection={view2DDirection} />
 
               {/* 슬롯 배치 인디케이터 - 가구 선택 시 + 아이콘 표시 */}
               <SlotPlacementIndicators onSlotClick={placeFurniture} />
