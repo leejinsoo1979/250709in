@@ -5,6 +5,7 @@ import { useAuth } from '@/auth/AuthProvider';
 import { useTheme } from '@/contexts/ThemeContext';
 import { PaletteIcon, StructureIcon } from '@/components/common/Icons';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
+import { HiPencilSquare } from 'react-icons/hi2';
 import { TbBoxAlignRight, TbBrandAsana } from 'react-icons/tb';
 import { PiShareNetworkLight } from "react-icons/pi";
 import { useNavigate } from 'react-router-dom';
@@ -14,7 +15,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '@/i18n/useTranslation';
 
-export type SidebarTab = 'module' | 'material' | 'structure' | 'etc';
+export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'custom';
 
 interface SidebarProps {
   activeTab: SidebarTab | null;
@@ -193,6 +194,11 @@ const Sidebar: React.FC<SidebarProps> = ({
       id: 'etc' as SidebarTab,
       icon: <TbBrandAsana size={20} />,
       label: t('sidebar.etc')
+    },
+    {
+      id: 'custom' as SidebarTab,
+      icon: <HiPencilSquare size={20} />,
+      label: '커스텀'
     }
   ];
 
