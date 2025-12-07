@@ -186,7 +186,7 @@ const BoxWithEdges: React.FC<{
       )}
       {/* 모서리 라인 렌더링 - hideEdges가 false일 때만 표시 */}
       {!hideEdges && (
-        <lineSegments geometry={edgesGeometry}>
+        <lineSegments name="space-frame" geometry={edgesGeometry}>
           <lineBasicMaterial
             color={
               // MeshBasicMaterial인 경우 (프레임 형광색) material의 색상 사용

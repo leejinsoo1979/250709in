@@ -809,15 +809,12 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         // 가구 패널 엣지 감지 (furniture-edge-* 형태 이름)
         const isFurniturePanelEdge = lowerName.includes('furniture-edge');
 
-        // 공간 프레임 감지: 이름이 없거나 위의 패턴에 해당하지 않는 LineSegments
-        // Room.tsx의 BoxWithEdges는 lineSegments에 name을 설정하지 않음
-        const isSpaceFrame = !lowerName ||
-          (!isFurniturePanelEdge && !isBackPanelEdge && !isClothingRodEdge && !isAdjustableFootEdge &&
-           !lowerName.includes('dimension') && !lowerName.includes('grid'));
+        // 공간 프레임 감지: Room.tsx에서 name="space-frame"으로 설정됨
+        const isSpaceFrame = lowerName.includes('space-frame');
 
         // 색상 설정:
         // - 공간 프레임 (Room.tsx 좌우상하): ACI 3 (연두색)
-        // - 가구 패널 (furniture-edge-*): 원래 색상 유지 (주황색 등)
+        // - 가구 패널 (furniture-edge-*): ACI 30 (주황색)
         // - 백패널: ACI 252 (매우 연한 회색, 투명감)
         // - 옷봉/조절발: ACI 7 (흰색)
         if (isBackPanelEdge) {
@@ -828,10 +825,11 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           console.log(`⚪ 옷봉/조절발 엣지 발견: ${name}, ACI 7 (흰색)으로 설정`);
         } else if (isSpaceFrame) {
           lsColor = 3; // ACI 3 = 연두색 (공간 프레임)
-          console.log(`🟢 공간 프레임 엣지 발견: ${name || '(무명)'}, ACI 3 (연두색)으로 설정`);
+          console.log(`🟢 공간 프레임 엣지 발견: ${name}, ACI 3 (연두색)으로 설정`);
         } else if (isFurniturePanelEdge) {
-          // 가구 패널: material에서 추출한 원래 색상 유지
-          console.log(`🟠 가구 패널 엣지 발견: ${name}, ACI ${lsColor} (원래 색상 유지)`);
+          // 가구 패널: 주황색 (ACI 30) 강제 설정 - 2D 다크모드 #FF4500
+          lsColor = 30;
+          console.log(`🟠 가구 패널 엣지 발견: ${name}, ACI 30 (주황색)으로 설정`);
         }
 
         // 가구 패널 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판 등 모두 보임)
@@ -886,15 +884,12 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         // 가구 패널 엣지 감지 (furniture-edge-* 형태 이름)
         const isFurniturePanelEdge = lineLowerName.includes('furniture-edge');
 
-        // 공간 프레임 감지: 이름이 없거나 위의 패턴에 해당하지 않는 Line
-        // Room.tsx의 BoxWithEdges는 name을 설정하지 않음
-        const isSpaceFrame = !lineLowerName ||
-          (!isFurniturePanelEdge && !isBackPanelEdge && !isClothingRodEdge && !isAdjustableFootEdge &&
-           !lineLowerName.includes('dimension') && !lineLowerName.includes('grid'));
+        // 공간 프레임 감지: Room.tsx에서 name="space-frame"으로 설정됨
+        const isSpaceFrame = lineLowerName.includes('space-frame');
 
         // 색상 설정 (Line 요소도 동일하게)
         // - 공간 프레임 (좌우상하 프레임): ACI 3 (연두색)
-        // - 가구 패널: 원래 색상 유지
+        // - 가구 패널: ACI 30 (주황색)
         // - 백패널: ACI 252
         // - 옷봉/조절발: ACI 7
         if (isBackPanelEdge) {
@@ -905,10 +900,11 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           console.log(`⚪ 옷봉/조절발 엣지(Line) 발견: ${name}, ACI 7 (흰색)으로 설정`);
         } else if (isSpaceFrame) {
           lineColor = 3; // 연두색 (공간 프레임)
-          console.log(`🟢 공간 프레임 엣지(Line) 발견: ${name || '(무명)'}, ACI 3 (연두색)으로 설정`);
+          console.log(`🟢 공간 프레임 엣지(Line) 발견: ${name}, ACI 3 (연두색)으로 설정`);
         } else if (isFurniturePanelEdge) {
-          // 가구 패널: material에서 추출한 원래 색상 유지
-          console.log(`🟠 가구 패널 엣지(Line) 발견: ${name}, ACI ${lineColor} (원래 색상 유지)`);
+          // 가구 패널: 주황색 (ACI 30) 강제 설정
+          lineColor = 30;
+          console.log(`🟠 가구 패널 엣지(Line) 발견: ${name}, ACI 30 (주황색)으로 설정`);
         }
 
         const extractedLines = extractFromLine(lineObj, matrix, scale, layer, lineColor);
