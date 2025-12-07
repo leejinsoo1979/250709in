@@ -16,10 +16,10 @@ interface DrawingTypeInfo {
 }
 
 const DRAWING_TYPES: DrawingTypeInfo[] = [
-  { 
-    id: 'front', 
-    name: '정면도', 
-    description: '정면에서 본 도면', 
+  {
+    id: 'front',
+    name: '정면도',
+    description: '정면에서 본 도면',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <rect x="4" y="6" width="16" height="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -28,10 +28,10 @@ const DRAWING_TYPES: DrawingTypeInfo[] = [
       </svg>
     )
   },
-  { 
-    id: 'plan', 
-    name: '평면도', 
-    description: '위에서 본 도면', 
+  {
+    id: 'plan',
+    name: '평면도',
+    description: '위에서 본 도면',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <rect x="4" y="4" width="16" height="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -41,15 +41,27 @@ const DRAWING_TYPES: DrawingTypeInfo[] = [
       </svg>
     )
   },
-  { 
-    id: 'side', 
-    name: '측면도', 
-    description: '측면에서 본 도면', 
+  {
+    id: 'sideLeft',
+    name: '좌측면도',
+    description: '좌측에서 본 도면',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path d="M4 6L8 8V18L4 20V6Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
         <rect x="8" y="8" width="12" height="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
         <line x1="8" y1="13" x2="20" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2"/>
+      </svg>
+    )
+  },
+  {
+    id: 'sideRight',
+    name: '우측면도',
+    description: '우측에서 본 도면',
+    icon: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <rect x="4" y="8" width="12" height="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <path d="M16 8L20 6V20L16 18V8Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <line x1="4" y1="13" x2="16" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2"/>
       </svg>
     )
   }
