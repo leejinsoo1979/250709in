@@ -592,15 +592,67 @@ const shouldExclude = (name: string): boolean => {
 
 /**
  * 객체 이름으로 레이어 결정
+ * DXF 레이어 분리:
+ * - DIMENSIONS: 치수선
+ * - SPACE_FRAME: 공간 프레임 (좌우상하 프레임)
+ * - FURNITURE_PANEL: 가구 패널 (좌측판, 우측판, 상판, 하판, 선반 등)
+ * - BACK_PANEL: 백패널
+ * - CLOTHING_ROD: 옷봉
+ * - ACCESSORIES: 조절발, 환기탭 등
+ * - END_PANEL: 엔드패널
  */
 const determineLayer = (name: string): string => {
   const lowerName = name.toLowerCase();
+
+  // 치수선
   if (lowerName.includes('dimension')) {
     return 'DIMENSIONS';
-  } else if (lowerName.includes('space') || lowerName.includes('room') || lowerName.includes('wall')) {
-    return 'SPACE';
   }
-  return 'FURNITURE';
+
+  // 공간 프레임 (Room.tsx의 space-frame)
+  if (lowerName.includes('space-frame') || lowerName.includes('space_frame')) {
+    return 'SPACE_FRAME';
+  }
+
+  // 백패널
+  if (lowerName.includes('back-panel') || lowerName.includes('backpanel') || lowerName.includes('백패널')) {
+    return 'BACK_PANEL';
+  }
+
+  // 옷봉
+  if (lowerName.includes('clothing-rod') || lowerName.includes('clothingrod') || lowerName.includes('옷봉')) {
+    return 'CLOTHING_ROD';
+  }
+
+  // 조절발, 환기탭 등 액세서리
+  if (lowerName.includes('adjustable-foot') || lowerName.includes('조절발') ||
+      lowerName.includes('ventilation') || lowerName.includes('환기')) {
+    return 'ACCESSORIES';
+  }
+
+  // 엔드패널
+  if (lowerName.includes('end-panel') || lowerName.includes('endpanel') || lowerName.includes('엔드패널')) {
+    return 'END_PANEL';
+  }
+
+  // 가구 패널 (furniture-edge 이름을 가진 것들)
+  if (lowerName.includes('furniture-edge') || lowerName.includes('furniture_edge')) {
+    return 'FURNITURE_PANEL';
+  }
+
+  // 기타 가구 관련
+  if (lowerName.includes('furniture') || lowerName.includes('shelf') || lowerName.includes('선반') ||
+      lowerName.includes('panel') || lowerName.includes('패널')) {
+    return 'FURNITURE_PANEL';
+  }
+
+  // 공간/방 관련 (space-frame 이외)
+  if (lowerName.includes('space') || lowerName.includes('room') || lowerName.includes('wall')) {
+    return 'SPACE_FRAME';
+  }
+
+  // 기본값
+  return 'FURNITURE_PANEL';
 };
 
 /**
@@ -812,21 +864,7 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
       const posCount = positionAttr?.count || 0;
 
       if (posCount > 0) {
-        // LineSegments의 material에서 색상 추출
-        const lsMaterial = lineSegObj.material;
-        let lsColor = color;
-        if (lsMaterial && !Array.isArray(lsMaterial) && 'color' in lsMaterial) {
-          const matColor = (lsMaterial as THREE.LineBasicMaterial).color;
-          if (matColor) {
-            lsColor = rgbToAci(
-              Math.round(matColor.r * 255),
-              Math.round(matColor.g * 255),
-              Math.round(matColor.b * 255)
-            );
-          }
-        }
-
-        // 엣지 타입 감지
+        // 엣지 타입 감지 (색상 추출 전에 먼저 감지)
         const lowerName = name.toLowerCase();
         const isBackPanelEdge = lowerName.includes('back-panel') || lowerName.includes('백패널');
         const isClothingRodEdge = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
@@ -838,11 +876,13 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         // 공간 프레임 감지: Room.tsx에서 name="space-frame"으로 설정됨
         const isSpaceFrame = lowerName.includes('space-frame');
 
-        // 색상 설정:
+        // 색상 설정 (이름 기반으로 먼저 결정, 그 다음 material에서 추출)
         // - 공간 프레임 (Room.tsx 좌우상하): ACI 3 (연두색)
         // - 가구 패널 (furniture-edge-*): ACI 30 (주황색)
         // - 백패널: ACI 252 (매우 연한 회색, 투명감)
         // - 옷봉/조절발: ACI 7 (흰색)
+        let lsColor: number;
+
         if (isBackPanelEdge) {
           lsColor = 252; // ACI 252 = 매우 연한 회색 (투명감)
           console.log(`⚪ 백패널 엣지 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
@@ -856,19 +896,49 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           // 가구 패널: 주황색 (ACI 30) 강제 설정 - 2D 다크모드 #FF4500
           lsColor = 30;
           console.log(`🟠 가구 패널 엣지 발견: ${name}, ACI 30 (주황색)으로 설정`);
+        } else {
+          // 이름으로 감지 안 된 경우에만 material에서 색상 추출
+          lsColor = color;
+          const lsMaterial = lineSegObj.material;
+          if (lsMaterial && !Array.isArray(lsMaterial) && 'color' in lsMaterial) {
+            const matColor = (lsMaterial as THREE.LineBasicMaterial).color;
+            if (matColor) {
+              const extractedColor = rgbToAci(
+                Math.round(matColor.r * 255),
+                Math.round(matColor.g * 255),
+                Math.round(matColor.b * 255)
+              );
+              lsColor = extractedColor;
+              console.log(`🎨 LineSegments 색상 추출: ${name || '(이름없음)'}, RGB(${Math.round(matColor.r * 255)}, ${Math.round(matColor.g * 255)}, ${Math.round(matColor.b * 255)}) → ACI ${extractedColor}`);
+            }
+          }
         }
 
         // 가구 패널/공간 프레임 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판, 좌우상하 프레임 등 모두 보임)
         const skipBackFilter = isFurniturePanelEdge || isBackPanelEdge || isClothingRodEdge || isAdjustableFootEdge || isSpaceFrame;
 
-        // 색상 결정 이유 로깅
+        // 레이어 및 색상 결정 이유 로깅
+        let lsLayer = layer; // 기본값은 determineLayer에서 결정된 값
         let colorReason = '기본';
-        if (isBackPanelEdge) colorReason = '백패널';
-        else if (isClothingRodEdge || isAdjustableFootEdge) colorReason = '옷봉/조절발';
-        else if (isSpaceFrame) colorReason = '공간프레임';
-        else if (isFurniturePanelEdge) colorReason = '가구패널';
 
-        const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, layer, lsColor, skipBackFilter);
+        if (isBackPanelEdge) {
+          lsLayer = 'BACK_PANEL';
+          colorReason = '백패널';
+        } else if (isClothingRodEdge) {
+          lsLayer = 'CLOTHING_ROD';
+          colorReason = '옷봉';
+        } else if (isAdjustableFootEdge) {
+          lsLayer = 'ACCESSORIES';
+          colorReason = '조절발';
+        } else if (isSpaceFrame) {
+          lsLayer = 'SPACE_FRAME';
+          colorReason = '공간프레임';
+        } else if (isFurniturePanelEdge) {
+          lsLayer = 'FURNITURE_PANEL';
+          colorReason = '가구패널';
+        }
+
+        const extractedLines = extractFromLineSegments(lineSegObj, matrix, scale, lsLayer, lsColor, skipBackFilter);
         lines.push(...extractedLines);
         lineSegmentsObjects++;
 
@@ -1457,41 +1527,34 @@ export const generateDxfFromData = (
   // DXF 생성
   const dxf = new DxfWriter();
 
-  // 기본 레이어 생성
+  // 요소 타입별 레이어 생성 (각 타입에 적절한 기본 색상 지정)
+  // 레이어 색상: ACI 3=연두(공간), ACI 30=주황(가구), ACI 7=흰색(치수/기타)
   dxf.addLayer('0', 7, 'CONTINUOUS');
-  dxf.addLayer('SPACE', 7, 'CONTINUOUS');
-  dxf.addLayer('FURNITURE', 7, 'CONTINUOUS');
-  dxf.addLayer('DIMENSIONS', 7, 'CONTINUOUS');
+  dxf.addLayer('SPACE_FRAME', 3, 'CONTINUOUS');      // 공간 프레임 - 연두색
+  dxf.addLayer('FURNITURE_PANEL', 30, 'CONTINUOUS'); // 가구 패널 - 주황색
+  dxf.addLayer('BACK_PANEL', 252, 'CONTINUOUS');     // 백패널 - 연한 회색
+  dxf.addLayer('CLOTHING_ROD', 7, 'CONTINUOUS');     // 옷봉 - 흰색
+  dxf.addLayer('ACCESSORIES', 8, 'CONTINUOUS');      // 조절발/환기탭 - 회색
+  dxf.addLayer('END_PANEL', 3, 'CONTINUOUS');        // 엔드패널 - 연두색
+  dxf.addLayer('DIMENSIONS', 7, 'CONTINUOUS');       // 치수선 - 흰색
 
-  // 사용된 색상 수집하여 색상별 레이어 생성
-  const usedColors = new Set<number>();
-  lines.forEach(line => usedColors.add(line.color));
-  texts.forEach(text => usedColors.add(text.color));
+  console.log('📦 레이어 생성 완료: SPACE_FRAME, FURNITURE_PANEL, BACK_PANEL, CLOTHING_ROD, ACCESSORIES, END_PANEL, DIMENSIONS');
 
-  // 색상별 레이어 생성 (색상을 레이어 색상으로 적용)
-  usedColors.forEach(aciColor => {
-    const layerName = aciToLayerName(aciColor);
-    try {
-      dxf.addLayer(layerName, aciColor, 'CONTINUOUS');
-      console.log(`📦 레이어 생성: ${layerName} (ACI ${aciColor})`);
-    } catch (e) {
-      // 이미 존재하는 레이어는 무시
-    }
-  });
-
-  // 색상 통계
+  // 레이어별 라인 통계
+  const layerStats: Record<string, number> = {};
   const colorStats: Record<number, number> = {};
   lines.forEach(line => {
+    layerStats[line.layer] = (layerStats[line.layer] || 0) + 1;
     colorStats[line.color] = (colorStats[line.color] || 0) + 1;
   });
+  console.log('📊 레이어별 라인 통계:', layerStats);
   console.log('📊 색상별 라인 통계:', colorStats);
 
-  // 라인 추가 - 색상별 레이어에 배치
+  // 라인 추가 - 요소 타입별 레이어에 배치 (layer 속성 사용)
   lines.forEach(line => {
     try {
-      // 색상에 해당하는 레이어 사용
-      const colorLayerName = aciToLayerName(line.color);
-      dxf.setCurrentLayerName(colorLayerName);
+      // line.layer 속성을 사용하여 레이어 설정
+      dxf.setCurrentLayerName(line.layer);
     } catch {
       dxf.setCurrentLayerName('0');
     }
@@ -1504,12 +1567,11 @@ export const generateDxfFromData = (
     );
   });
 
-  // 텍스트 추가 - 색상별 레이어에 배치
+  // 텍스트 추가 - DIMENSIONS 레이어에 배치
   texts.forEach(text => {
     try {
-      // 색상에 해당하는 레이어 사용
-      const colorLayerName = aciToLayerName(text.color);
-      dxf.setCurrentLayerName(colorLayerName);
+      // 텍스트는 주로 치수선이므로 text.layer 사용 (없으면 DIMENSIONS)
+      dxf.setCurrentLayerName(text.layer || 'DIMENSIONS');
     } catch {
       dxf.setCurrentLayerName('DIMENSIONS');
     }

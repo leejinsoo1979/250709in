@@ -2567,9 +2567,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               {column.width}
             </Text>
 
-            {/* 연장선 - 슬롯 치수선 위로만 짧게 */}
+            {/* 연장선 - 치수선에서 아래로 15mm만 */}
             <NativeLine name="dimension_line"
-              points={[[leftX, dimY, 0.001], [leftX, dimY + mmToThreeUnits(30), 0.001]]}
+              points={[[leftX, dimY, 0.001], [leftX, dimY - mmToThreeUnits(15), 0.001]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={1000000}
@@ -2578,7 +2578,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[rightX, dimY, 0.001], [rightX, dimY + mmToThreeUnits(30), 0.001]]}
+              points={[[rightX, dimY, 0.001], [rightX, dimY - mmToThreeUnits(15), 0.001]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={1000000}
