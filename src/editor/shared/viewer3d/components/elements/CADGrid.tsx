@@ -325,9 +325,9 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
       <>
         {/* 그리드 평면 (회전 적용) - enabled가 true일 때만 표시 */}
         {enabled && majorLines && minorLines && (
-          <group ref={groupRef} position={viewConfig.position as [number, number, number]} rotation={viewConfig.rotation as [number, number, number]}>
+          <group ref={groupRef} name="grid-group" position={viewConfig.position as [number, number, number]} rotation={viewConfig.rotation as [number, number, number]}>
             {/* 보조 그리드 (가는 선) - 더 흐리게 */}
-            <lineSegments renderOrder={-999}>
+            <lineSegments name="grid-minor" renderOrder={-999}>
             <bufferGeometry>
               <bufferAttribute
                 args={[minorLines, 3]}
@@ -347,7 +347,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
             />
           </lineSegments>
           {/* 주요 그리드 (굵은 선) - 더 흐리게 */}
-          <lineSegments renderOrder={-998}>
+          <lineSegments name="grid-major" renderOrder={-998}>
             <bufferGeometry>
               <bufferAttribute
                 args={[majorLines, 3]}
@@ -357,9 +357,9 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
                 itemSize={3}
               />
             </bufferGeometry>
-            <lineBasicMaterial 
+            <lineBasicMaterial
               ref={majorMaterialRef}
-              color={gridColors.major} 
+              color={gridColors.major}
               opacity={0.5}
               transparent
               depthTest={false}
@@ -370,9 +370,9 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
         )}
         {/* 좌표축(축선) - rotation 없이 고정, showAxis가 true일 때만 표시 */}
         {showAxis && (
-          <group position={[0,0,0] as [number, number, number]} rotation={[0,0,0] as [number, number, number]}>
+          <group name="grid-axis-group" position={[0,0,0] as [number, number, number]} rotation={[0,0,0] as [number, number, number]}>
             {/* 첫 번째 축선 (X/Z축) */}
-            <lineSegments renderOrder={-997}>
+            <lineSegments name="grid-axis1" renderOrder={-997}>
               <bufferGeometry>
                 <bufferAttribute
                   args={[axis1Lines, 3]}
@@ -391,7 +391,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
               />
             </lineSegments>
             {/* 두 번째 축선 (Y/Z축) */}
-            <lineSegments renderOrder={-996}>
+            <lineSegments name="grid-axis2" renderOrder={-996}>
               <bufferGeometry>
                 <bufferAttribute
                   args={[axis2Lines, 3]}
@@ -401,8 +401,8 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
                   itemSize={3}
                 />
               </bufferGeometry>
-              <lineBasicMaterial 
-                color={axis2Color} 
+              <lineBasicMaterial
+                color={axis2Color}
                 opacity={0.6}
                 transparent
                 depthTest={false}
@@ -410,7 +410,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
               />
             </lineSegments>
             {/* 원점 표시 */}
-            <mesh position={[0, 0, 0.01]} renderOrder={-995}>
+            <mesh name="grid-origin" position={[0, 0, 0.01]} renderOrder={-995}>
               <sphereGeometry args={[0.05]} />
               <meshBasicMaterial color={gridColors.origin} opacity={0.8} transparent />
             </mesh>
@@ -422,9 +422,9 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
 
   // 3D 등 기존 로직 (회전 적용)
   return (
-    <group ref={groupRef} position={viewConfig.position as [number, number, number]} rotation={viewConfig.rotation as [number, number, number]}>
+    <group ref={groupRef} name="grid-group" position={viewConfig.position as [number, number, number]} rotation={viewConfig.rotation as [number, number, number]}>
       {/* 보조 그리드 (가는 선) - 더 흐리게 */}
-      <lineSegments renderOrder={-999}>
+      <lineSegments name="grid-minor" renderOrder={-999}>
         <bufferGeometry>
           <bufferAttribute
             args={[minorLines, 3]}
@@ -434,8 +434,8 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial 
-          color={viewMode === '2D' && view2DTheme === 'dark' ? '#444444' : '#dddddd'} 
+        <lineBasicMaterial
+          color={viewMode === '2D' && view2DTheme === 'dark' ? '#444444' : '#dddddd'}
           opacity={0.3}
           transparent
           depthTest={false}
@@ -443,7 +443,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
         />
       </lineSegments>
       {/* 주요 그리드 (굵은 선) - 더 흐리게 */}
-      <lineSegments renderOrder={-998}>
+      <lineSegments name="grid-major" renderOrder={-998}>
         <bufferGeometry>
           <bufferAttribute
             args={[majorLines, 3]}
@@ -453,8 +453,8 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial 
-          color={viewMode === '2D' && view2DTheme === 'dark' ? '#555555' : '#bbbbbb'} 
+        <lineBasicMaterial
+          color={viewMode === '2D' && view2DTheme === 'dark' ? '#555555' : '#bbbbbb'}
           opacity={0.4}
           transparent
           depthTest={false}
@@ -462,7 +462,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
         />
       </lineSegments>
       {/* 첫 번째 축선 (X/Z축) */}
-      <lineSegments renderOrder={-997}>
+      <lineSegments name="grid-axis1" renderOrder={-997}>
         <bufferGeometry>
           <bufferAttribute
             args={[axis1Lines, 3]}
@@ -472,8 +472,8 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial 
-          color={axis1Color} 
+        <lineBasicMaterial
+          color={axis1Color}
           opacity={0.6}
           transparent
           depthTest={false}
@@ -481,7 +481,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
         />
       </lineSegments>
       {/* 두 번째 축선 (Y/Z축) */}
-      <lineSegments renderOrder={-996}>
+      <lineSegments name="grid-axis2" renderOrder={-996}>
         <bufferGeometry>
           <bufferAttribute
             args={[axis2Lines, 3]}
@@ -491,8 +491,8 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial 
-          color={axis2Color} 
+        <lineBasicMaterial
+          color={axis2Color}
           opacity={0.6}
           transparent
           depthTest={false}
@@ -500,7 +500,7 @@ const CADGrid: React.FC<CADGridProps> = ({ viewMode, view2DDirection = 'front', 
         />
       </lineSegments>
       {/* 원점 표시 */}
-      <mesh position={[0, 0, 0.01]} renderOrder={-995}>
+      <mesh name="grid-origin" position={[0, 0, 0.01]} renderOrder={-995}>
         <sphereGeometry args={[0.05]} />
         <meshBasicMaterial color={gridColors.origin} />
       </mesh>
