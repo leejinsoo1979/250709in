@@ -209,6 +209,9 @@ const extractLinesFromScene = (scene: THREE.Scene, viewDirection: ViewDirection)
   let groupObjects = 0;
   let invisibleObjects = 0;
 
+  // Store meshes for potential edge extraction if no lines are found
+  const meshesForEdges: { mesh: THREE.Mesh; matrix: THREE.Matrix4; layer: string }[] = [];
+
   // Detailed object type tracking
   const objectTypes: Record<string, number> = {};
 
@@ -286,9 +289,43 @@ const extractLinesFromScene = (scene: THREE.Scene, viewDirection: ViewDirection)
     // Check for Mesh (potential for edge extraction)
     if (object instanceof THREE.Mesh) {
       meshObjects++;
-      // Don't extract mesh edges by default - only if explicitly needed
+      // Store mesh for potential edge extraction if no lines are found
+      meshesForEdges.push({ mesh: object, matrix, layer });
     }
   });
+
+  // If no lines were found, try extracting edges from meshes
+  if (lines.length === 0 && meshesForEdges.length > 0) {
+    console.log(`⚠️ 라인이 없어서 Mesh에서 엣지 추출 시도 (${meshesForEdges.length}개 메쉬)...`);
+
+    // Only extract from visible panel/furniture meshes
+    const furnitureMeshes = meshesForEdges.filter(({ mesh }) => {
+      const name = (mesh.name || '').toLowerCase();
+      // Skip floor, walls, background meshes
+      if (name.includes('floor') || name.includes('wall') || name.includes('background') || name.includes('slot')) {
+        return false;
+      }
+      // Only include visible geometry with reasonable size
+      if (mesh.geometry) {
+        const box = new THREE.Box3().setFromObject(mesh);
+        const size = box.getSize(new THREE.Vector3());
+        // Skip very small objects (likely UI elements)
+        if (size.x < 0.01 && size.y < 0.01 && size.z < 0.01) {
+          return false;
+        }
+        return true;
+      }
+      return false;
+    });
+
+    console.log(`📦 엣지 추출 대상 메쉬: ${furnitureMeshes.length}개`);
+
+    furnitureMeshes.forEach(({ mesh, matrix, layer }) => {
+      const extractedEdges = extractEdgesFromMesh(mesh, matrix, scale, layer);
+      console.log(`   → ${mesh.name || '(이름없음)'}: ${extractedEdges.length}개 엣지`);
+      lines.push(...extractedEdges);
+    });
+  }
 
   console.log(`📊 씬 분석 완료:
     - 총 객체 수: ${totalObjects}
