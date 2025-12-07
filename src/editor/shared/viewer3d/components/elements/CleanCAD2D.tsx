@@ -2493,9 +2493,9 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             </Text>
             
             
-            {/* 연장선 - 치수선에서 위로 15mm만 확장 */}
+            {/* 연장선 - 가구 상단에서 치수선까지 (짧게) */}
             <NativeLine name="dimension_line"
-              points={[[leftX, dimY, 0.001], [leftX, dimY + mmToThreeUnits(15), 0.001]]}
+              points={[[leftX, spaceHeight, 0.001], [leftX, dimY - mmToThreeUnits(50), 0.001]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={1000000}
@@ -2504,7 +2504,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               transparent={true}
             />
             <NativeLine name="dimension_line"
-              points={[[rightX, dimY, 0.001], [rightX, dimY + mmToThreeUnits(15), 0.001]]}
+              points={[[rightX, spaceHeight, 0.001], [rightX, dimY - mmToThreeUnits(50), 0.001]]}
               color={dimensionColor}
               lineWidth={1}
               renderOrder={1000000}
