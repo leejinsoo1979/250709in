@@ -386,6 +386,37 @@ const extractEdgesFromMesh = (
 };
 
 /**
+ * 그리드 라인 필터링 (공간 범위를 벗어나는 라인 제거)
+ */
+const filterGridLines = (lines: DxfLine[], spaceInfo: SpaceInfo): DxfLine[] => {
+  // 공간 범위에 여유를 두고 필터링 (공간 크기의 2배까지 허용)
+  const maxX = spaceInfo.width * 1.5;
+  const maxY = spaceInfo.height * 1.5;
+  const minX = -spaceInfo.width * 0.5;
+  const minY = -spaceInfo.height * 0.5;
+
+  return lines.filter(line => {
+    // 라인의 양 끝점이 모두 허용 범위 내에 있는지 확인
+    const x1InRange = line.x1 >= minX && line.x1 <= maxX;
+    const x2InRange = line.x2 >= minX && line.x2 <= maxX;
+    const y1InRange = line.y1 >= minY && line.y1 <= maxY;
+    const y2InRange = line.y2 >= minY && line.y2 <= maxY;
+
+    // 양 끝점 중 하나라도 범위를 크게 벗어나면 그리드로 간주
+    const isInRange = (x1InRange || x2InRange) && (y1InRange || y2InRange);
+
+    // 라인 길이가 공간 크기보다 훨씬 크면 그리드로 간주
+    const lineLength = Math.sqrt(
+      Math.pow(line.x2 - line.x1, 2) + Math.pow(line.y2 - line.y1, 2)
+    );
+    const maxAllowedLength = Math.max(spaceInfo.width, spaceInfo.height) * 2;
+    const isReasonableLength = lineLength <= maxAllowedLength;
+
+    return isInRange && isReasonableLength;
+  });
+};
+
+/**
  * DXF 생성
  */
 export const generateDxfFromData = (
@@ -405,11 +436,16 @@ export const generateDxfFromData = (
   console.log(`📊 배치된 가구 수: ${placedModules.length}`);
 
   // 씬에서 Line 객체 추출
-  const lines = extractLinesFromScene(scene, viewDirection);
+  let lines = extractLinesFromScene(scene, viewDirection);
 
   if (lines.length === 0) {
     console.warn('⚠️ 추출된 라인이 없습니다. 씬에 렌더링된 Line 객체가 없거나 가시성이 꺼져 있을 수 있습니다.');
   }
+
+  // 그리드 라인 필터링
+  const beforeFilterCount = lines.length;
+  lines = filterGridLines(lines, spaceInfo);
+  console.log(`🔍 그리드 필터링: ${beforeFilterCount} → ${lines.length} (${beforeFilterCount - lines.length}개 제거)`);
 
   // DXF 원점 이동 (왼쪽 하단을 원점으로)
   const offsetX = spaceInfo.width / 2;
