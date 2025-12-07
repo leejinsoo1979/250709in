@@ -757,6 +757,11 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     const matrix = object.matrixWorld;
     const layer = determineLayer(name);
 
+    // 디버그: 레이어 분류 로깅
+    if (name && (name.includes('furniture') || name.includes('adjustable') || name.includes('ventilation'))) {
+      console.log(`🏷️ 레이어 분류: "${name}" → ${layer}`);
+    }
+
     // Check for Group - skip but continue traversing children
     if (object instanceof THREE.Group) {
       return;
@@ -1553,13 +1558,13 @@ export const generateDxfFromData = (
   // 라인 추가 - 요소 타입별 레이어에 배치 (layer 속성 사용)
   // 레이어별 색상 매핑: 레이어에 따라 색상 강제 설정
   const layerColorMap: Record<string, number> = {
-    'SPACE_FRAME': 3,      // 연두색
-    'FURNITURE_PANEL': 30, // 주황색
-    'BACK_PANEL': 252,     // 연한 회색
-    'CLOTHING_ROD': 7,     // 흰색
-    'ACCESSORIES': 8,      // 회색
-    'END_PANEL': 3,        // 연두색
-    'DIMENSIONS': 7,       // 흰색
+    'FURNITURE_PANEL': 30, // 가구 패널 - 주황색
+    'SPACE_FRAME': 3,      // 공간 프레임 - 연두색
+    'BACK_PANEL': 252,     // 백패널 - 연한 회색
+    'CLOTHING_ROD': 7,     // 옷봉 - 흰색
+    'ACCESSORIES': 7,      // 조절발/환기탭 - 흰색
+    'END_PANEL': 3,        // 엔드패널 - 연두색
+    'DIMENSIONS': 7,       // 치수선 - 흰색
     '0': 7                 // 기본 흰색
   };
 
