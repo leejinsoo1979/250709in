@@ -792,41 +792,20 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
     );
 
     if (isLine2 || hasLineGeometry) {
-      // 엣지 타입 감지 (Line2 - drei Line 컴포넌트용)
+      // 씬에서 추출한 색상을 그대로 사용 (임의로 정하지 않음)
+      // 2D 화면에 렌더링된 색상을 그대로 DXF에 적용
+      const line2Color = color;
       const lowerName = name.toLowerCase();
-      const isBackPanelLine = lowerName.includes('back-panel') || lowerName.includes('백패널');
-      const isClothingRodLine = lowerName.includes('clothing-rod') || lowerName.includes('옷봉');
-      const isAdjustableFootLine = lowerName.includes('adjustable-foot') || lowerName.includes('조절발');
-      const isVentilationLine = lowerName.includes('ventilation') || lowerName.includes('환기');
-      const isFurniturePanelLine = lowerName.includes('furniture-edge');
-      const isSpaceFrameLine = lowerName.includes('space-frame');
 
-      // 색상 설정 (Line2 요소도 LineSegments/Line과 동일하게)
-      // - 공간 프레임: ACI 3 (연두색)
-      // - 가구 패널: ACI 30 (주황색)
-      // - 백패널: ACI 252
-      // - 옷봉: ACI 7 (흰색)
-      // - 조절발: ACI 8 (회색) - 2D에서 회색으로 표시
-      // - 환기캡: ACI 6 (마젠타) - 2D에서 #FF00FF로 표시
-      let line2Color = color;
-      if (isBackPanelLine) {
-        line2Color = 252;
-        console.log(`⚪ 백패널 라인(Line2) 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
-      } else if (isVentilationLine) {
-        line2Color = 6; // ACI 6 = 마젠타 (2D에서 #FF00FF)
-        console.log(`🟣 환기캡 라인(Line2) 발견: ${name}, ACI 6 (마젠타)으로 설정`);
-      } else if (isAdjustableFootLine) {
-        line2Color = 8; // ACI 8 = 회색 (2D에서 #808080)
-        console.log(`⚫ 조절발 라인(Line2) 발견: ${name}, ACI 8 (회색)으로 설정`);
-      } else if (isClothingRodLine) {
-        line2Color = 7; // ACI 7 = 흰색
-        console.log(`⚪ 옷봉 라인(Line2) 발견: ${name}, ACI 7 (흰색)으로 설정`);
-      } else if (isSpaceFrameLine) {
-        line2Color = 3; // ACI 3 = 연두색
-        console.log(`🟢 공간 프레임 라인(Line2) 발견: ${name}, ACI 3 (연두색)으로 설정`);
-      } else if (isFurniturePanelLine) {
-        line2Color = 30; // ACI 30 = 주황색
-        console.log(`🟠 가구 패널 라인(Line2) 발견: ${name}, ACI 30 (주황색)으로 설정`);
+      // 디버그 로깅만
+      if (lowerName.includes('dimension')) {
+        console.log(`📏 치수선(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
+      } else if (lowerName.includes('back-panel')) {
+        console.log(`📐 백패널(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
+      } else if (lowerName.includes('adjustable-foot')) {
+        console.log(`📐 조절발(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
+      } else if (lowerName.includes('ventilation')) {
+        console.log(`📐 환기캡(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
       }
 
       const extractedLines = extractFromLine2(object, matrix, scale, layer, line2Color);
@@ -897,47 +876,36 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         // 색상 설정 (이름 기반으로 먼저 결정, 그 다음 material에서 추출)
         // - 공간 프레임 (Room.tsx 좌우상하): ACI 3 (연두색)
         // - 가구 패널 (furniture-edge-*): ACI 30 (주황색)
-        // - 백패널: ACI 252 (매우 연한 회색, 투명감)
-        // - 옷봉: ACI 7 (흰색)
-        // - 조절발: ACI 8 (회색) - 2D에서 #808080
-        // - 환기캡: ACI 6 (마젠타) - 2D에서 #FF00FF
-        let lsColor: number;
+        // 씬에서 추출한 색상을 그대로 사용 (임의로 정하지 않음)
+        // 2D 화면에 렌더링된 색상을 material에서 추출하여 DXF에 동일하게 적용
+        let lsColor = color; // 기본값은 위에서 추출한 색상
 
-        if (isBackPanelEdge) {
-          lsColor = 252; // ACI 252 = 매우 연한 회색 (투명감)
-          console.log(`⚪ 백패널 엣지 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
-        } else if (isVentilationEdge) {
-          lsColor = 6; // ACI 6 = 마젠타 (2D에서 #FF00FF)
-          console.log(`🟣 환기캡 엣지 발견: ${name}, ACI 6 (마젠타)으로 설정`);
-        } else if (isAdjustableFootEdge) {
-          lsColor = 8; // ACI 8 = 회색 (2D에서 #808080)
-          console.log(`⚫ 조절발 엣지 발견: ${name}, ACI 8 (회색)으로 설정`);
-        } else if (isClothingRodEdge) {
-          lsColor = 7; // ACI 7 = 흰색
-          console.log(`⚪ 옷봉 엣지 발견: ${name}, ACI 7 (흰색)으로 설정`);
-        } else if (isSpaceFrame) {
-          lsColor = 3; // ACI 3 = 연두색 (공간 프레임)
-          console.log(`🟢 공간 프레임 엣지 발견: ${name}, ACI 3 (연두색)으로 설정`);
-        } else if (isFurniturePanelEdge) {
-          // 가구 패널: 주황색 (ACI 30) 강제 설정 - 2D 다크모드 #FF4500
-          lsColor = 30;
-          console.log(`🟠 가구 패널 엣지 발견: ${name}, ACI 30 (주황색)으로 설정`);
-        } else {
-          // 이름으로 감지 안 된 경우에만 material에서 색상 추출
-          lsColor = color;
-          const lsMaterial = lineSegObj.material;
-          if (lsMaterial && !Array.isArray(lsMaterial) && 'color' in lsMaterial) {
-            const matColor = (lsMaterial as THREE.LineBasicMaterial).color;
-            if (matColor) {
-              const extractedColor = rgbToAci(
-                Math.round(matColor.r * 255),
-                Math.round(matColor.g * 255),
-                Math.round(matColor.b * 255)
-              );
-              lsColor = extractedColor;
-              console.log(`🎨 LineSegments 색상 추출: ${name || '(이름없음)'}, RGB(${Math.round(matColor.r * 255)}, ${Math.round(matColor.g * 255)}, ${Math.round(matColor.b * 255)}) → ACI ${extractedColor}`);
-            }
+        // material에서 정확한 색상 추출
+        const lsMaterial = lineSegObj.material;
+        if (lsMaterial && !Array.isArray(lsMaterial) && 'color' in lsMaterial) {
+          const matColor = (lsMaterial as THREE.LineBasicMaterial).color;
+          if (matColor) {
+            lsColor = rgbToAci(
+              Math.round(matColor.r * 255),
+              Math.round(matColor.g * 255),
+              Math.round(matColor.b * 255)
+            );
           }
+        }
+
+        // 디버그 로깅
+        if (isBackPanelEdge) {
+          console.log(`📐 백패널 엣지: ${name}, 추출된 색상 ACI=${lsColor}`);
+        } else if (isVentilationEdge) {
+          console.log(`📐 환기캡 엣지: ${name}, 추출된 색상 ACI=${lsColor}`);
+        } else if (isAdjustableFootEdge) {
+          console.log(`📐 조절발 엣지: ${name}, 추출된 색상 ACI=${lsColor}`);
+        } else if (isClothingRodEdge) {
+          console.log(`📐 옷봉 엣지: ${name}, 추출된 색상 ACI=${lsColor}`);
+        } else if (isSpaceFrame) {
+          console.log(`📐 공간 프레임 엣지: ${name}, 추출된 색상 ACI=${lsColor}`);
+        } else if (isFurniturePanelEdge) {
+          console.log(`📐 가구 패널 엣지: ${name}, 추출된 색상 ACI=${lsColor}`);
         }
 
         // 가구 패널/공간 프레임 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판, 좌우상하 프레임 등 모두 보임)
@@ -1009,60 +977,28 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
         }
 
         // 엣지 타입 감지 (개별 Line 요소용)
+        // 씬에서 추출한 색상을 그대로 사용 (임의로 정하지 않음)
         const lineLowerName = name.toLowerCase();
-        const isBackPanelEdge = lineLowerName.includes('back-panel') || lineLowerName.includes('백패널');
-        const isClothingRodEdge = lineLowerName.includes('clothing-rod') || lineLowerName.includes('옷봉');
-        const isAdjustableFootEdge = lineLowerName.includes('adjustable-foot') || lineLowerName.includes('조절발');
-        const isVentilationEdge = lineLowerName.includes('ventilation') || lineLowerName.includes('환기');
 
-        // 가구 패널 엣지 감지 (furniture-edge-* 형태 이름)
-        const isFurniturePanelEdge = lineLowerName.includes('furniture-edge');
-
-        // 공간 프레임 감지: Room.tsx에서 name="space-frame"으로 설정됨
-        const isSpaceFrame = lineLowerName.includes('space-frame');
-
-        // 색상 설정 (Line 요소도 동일하게)
-        // - 공간 프레임 (좌우상하 프레임): ACI 3 (연두색)
-        // - 가구 패널: ACI 30 (주황색)
-        // - 백패널: ACI 252
-        // - 옷봉: ACI 7 (흰색)
-        // - 조절발: ACI 8 (회색) - 2D에서 #808080
-        // - 환기캡: ACI 6 (마젠타) - 2D에서 #FF00FF
-        if (isBackPanelEdge) {
-          lineColor = 252; // 매우 연한 회색
-          console.log(`⚪ 백패널 엣지(Line) 발견: ${name}, ACI 252 (투명 회색)으로 설정`);
-        } else if (isVentilationEdge) {
-          lineColor = 6; // ACI 6 = 마젠타 (2D에서 #FF00FF)
-          console.log(`🟣 환기캡 엣지(Line) 발견: ${name}, ACI 6 (마젠타)으로 설정`);
-        } else if (isAdjustableFootEdge) {
-          lineColor = 8; // ACI 8 = 회색 (2D에서 #808080)
-          console.log(`⚫ 조절발 엣지(Line) 발견: ${name}, ACI 8 (회색)으로 설정`);
-        } else if (isClothingRodEdge) {
-          lineColor = 7; // 흰색
-          console.log(`⚪ 옷봉 엣지(Line) 발견: ${name}, ACI 7 (흰색)으로 설정`);
-        } else if (isSpaceFrame) {
-          lineColor = 3; // 연두색 (공간 프레임)
-          console.log(`🟢 공간 프레임 엣지(Line) 발견: ${name}, ACI 3 (연두색)으로 설정`);
-        } else if (isFurniturePanelEdge) {
-          // 가구 패널: 주황색 (ACI 30) 강제 설정
-          lineColor = 30;
-          console.log(`🟠 가구 패널 엣지(Line) 발견: ${name}, ACI 30 (주황색)으로 설정`);
+        // 디버그 로깅만
+        if (lineLowerName.includes('dimension')) {
+          console.log(`📏 치수선(Line): ${name}, 추출된 색상 ACI=${lineColor}`);
+        } else if (lineLowerName.includes('back-panel')) {
+          console.log(`📐 백패널(Line): ${name}, 추출된 색상 ACI=${lineColor}`);
+        } else if (lineLowerName.includes('adjustable-foot')) {
+          console.log(`📐 조절발(Line): ${name}, 추출된 색상 ACI=${lineColor}`);
         }
 
         const extractedLines = extractFromLine(lineObj, matrix, scale, layer, lineColor);
         lines.push(...extractedLines);
         lineObjects++;
-
-        // 치수선 전용 로깅
-        const isDimensionLine = lineLowerName.includes('dimension');
-        if (isDimensionLine) {
-          console.log(`📏 치수선(Line) 발견: ${name}, 포인트 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${lineColor}`);
-        }
       }
       return;
     }
 
     // Check for Text (drei Text component) - it's a Mesh with troika text data
+    // 모든 텍스트는 DIMENSIONS 레이어로 강제 (치수 텍스트이므로)
+    // DIMENSIONS 레이어를 끄면 모든 숫자가 함께 사라짐
     if (mesh.geometry && (mesh as any).text !== undefined) {
       const textContent = (mesh as any).text;
       if (textContent && typeof textContent === 'string') {
@@ -1075,10 +1011,11 @@ const extractFromScene = (scene: THREE.Scene, viewDirection: ViewDirection): Ext
           y: projPos.y,
           text: textContent,
           height: 25, // 2.5mm text height
-          color: color,
-          layer
+          color: 7, // 치수 텍스트는 흰색/검정 (ACI 7)
+          layer: 'DIMENSIONS' // 모든 텍스트는 DIMENSIONS 레이어로 강제
         });
         textObjects++;
+        console.log(`📝 텍스트 추출: "${textContent}" → DIMENSIONS 레이어`);
       }
       return;
     }
@@ -1341,7 +1278,7 @@ const generateExternalDimensions = (
   const { width, height, depth } = spaceInfo;
   const dimensionColor = 7; // 흰색/검정 (치수선)
   const extensionLength = 50; // 연장선 길이 (mm)
-  const dimensionOffset = 150; // 치수선 오프셋 (mm) - 가구와 충분히 떨어지게
+  const dimensionOffset = 400; // 치수선 오프셋 (mm) - 가구와 충분히 떨어지게 (2D 뷰와 동일)
 
   // 프레임 두께
   const frameThickness = spaceInfo.frameThickness || 50;
@@ -1727,15 +1664,13 @@ export const generateDxfFromData = (
   console.log(`📊 공간 정보: ${spaceInfo.width}mm x ${spaceInfo.height}mm x ${spaceInfo.depth}mm`);
   console.log(`📊 배치된 가구 수: ${placedModules.length}`);
 
-  // 씬에서 Line과 Text 객체 추출
+  // 씬에서 Line과 Text 객체 추출 (모든 것을 씬에서 추출 - 직접 그리지 않음)
   const extracted = extractFromScene(scene, viewDirection);
 
-  // 외부 치수선 직접 생성 (scene에서 감지되지 않으므로)
-  const dimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection);
-
-  // 합치기
-  const lines = [...extracted.lines, ...dimensions.lines];
-  const texts = [...extracted.texts, ...dimensions.texts];
+  // 씬에서 추출한 데이터만 사용 (generateExternalDimensions 제거)
+  // 씬에 렌더링되는 CleanCAD2D, CADDimensions2D의 치수선을 그대로 추출
+  const lines = extracted.lines;
+  const texts = extracted.texts;
 
   if (lines.length === 0) {
     console.warn('⚠️ 추출된 라인이 없습니다.');
@@ -1773,19 +1708,8 @@ export const generateDxfFromData = (
   console.log('📊 색상별 라인 통계:', colorStats);
 
   // 라인 추가 - 요소 타입별 레이어에 배치 (layer 속성 사용)
-  // 레이어별 색상 매핑: 레이어에 따라 색상 강제 설정
-  const layerColorMap: Record<string, number> = {
-    'FURNITURE_PANEL': 30, // 가구 패널 - 주황색
-    'SPACE_FRAME': 3,      // 공간 프레임 - 연두색
-    'BACK_PANEL': 252,     // 백패널 - 연한 회색
-    'CLOTHING_ROD': 7,     // 옷봉 - 흰색
-    'ACCESSORIES': 8,      // 조절발 - 회색 (2D와 동일)
-    'VENTILATION': 6,      // 환기캡 - 마젠타 (2D와 동일)
-    'END_PANEL': 3,        // 엔드패널 - 연두색
-    'DIMENSIONS': 7,       // 치수선 - 흰색
-    '0': 7                 // 기본 흰색
-  };
-
+  // 색상은 씬에서 추출한 원래 색상을 그대로 사용 (임의로 정하지 않음)
+  // 레이어는 분리하되 색상은 2D 화면과 동일하게 유지
   lines.forEach(line => {
     try {
       // line.layer 속성을 사용하여 레이어 설정
@@ -1794,8 +1718,9 @@ export const generateDxfFromData = (
       dxf.setCurrentLayerName('0');
     }
 
-    // 레이어에 따라 색상 강제 설정 (material 색상 대신 레이어 색상 사용)
-    const finalColor = layerColorMap[line.layer] ?? line.color;
+    // 씬에서 추출한 색상을 그대로 사용 (임의로 강제하지 않음)
+    // 백패널, 가구 패널, 조절발 등 모두 2D 화면에서 보이는 색상 그대로
+    const finalColor = line.color;
 
     // colorNumber 옵션으로 개별 라인에 색상 적용
     dxf.addLine(
