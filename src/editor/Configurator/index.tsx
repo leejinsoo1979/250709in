@@ -508,6 +508,28 @@ const Configurator: React.FC = () => {
     updateFrameSize(dimension, numValue);
   };
 
+  const handleFrameInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, dimension: 'left' | 'right' | 'top', min: number, max: number, defaultValue: number) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      (e.target as HTMLInputElement).blur();
+    } else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      e.preventDefault();
+      const inputValue = dimension === 'left' ? frameInputLeft : dimension === 'right' ? frameInputRight : frameInputTop;
+      let currentValue = parseInt(inputValue, 10);
+      if (isNaN(currentValue)) currentValue = defaultValue;
+
+      const newValue = e.key === 'ArrowUp'
+        ? Math.min(max, currentValue + 1)
+        : Math.max(min, currentValue - 1);
+
+      if (dimension === 'left') setFrameInputLeft(String(newValue));
+      else if (dimension === 'right') setFrameInputRight(String(newValue));
+      else setFrameInputTop(String(newValue));
+
+      updateFrameSize(dimension, newValue);
+    }
+  };
+
   // 공간 넓이 기반 최소/최대 도어 개수 계산
   const calculateDoorRange = (spaceWidth: number) => {
     const FRAME_MARGIN = 100; // 양쪽 50mm씩
@@ -3249,6 +3271,7 @@ const Configurator: React.FC = () => {
                       onChange={(e) => handleFrameInputChange('left', e.target.value)}
                       onFocus={() => handleFrameInputFocus('left')}
                       onBlur={() => handleFrameInputBlur('left', 10, 100, 50)}
+                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'left', 10, 100, 50)}
                       className={styles.frameNumberInput}
                       disabled={
                         (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left) ||
@@ -3303,6 +3326,7 @@ const Configurator: React.FC = () => {
                       onChange={(e) => handleFrameInputChange('right', e.target.value)}
                       onFocus={() => handleFrameInputFocus('right')}
                       onBlur={() => handleFrameInputBlur('right', 10, 100, 50)}
+                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'right', 10, 100, 50)}
                       className={styles.frameNumberInput}
                       disabled={
                         (spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right) ||
@@ -3348,6 +3372,7 @@ const Configurator: React.FC = () => {
                       onChange={(e) => handleFrameInputChange('top', e.target.value)}
                       onFocus={() => handleFrameInputFocus('top')}
                       onBlur={() => handleFrameInputBlur('top', 10, 100, 50)}
+                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 100, 50)}
                       className={styles.frameNumberInput}
                     />
                     <button
@@ -3393,6 +3418,7 @@ const Configurator: React.FC = () => {
                       onChange={(e) => handleFrameInputChange('top', e.target.value)}
                       onFocus={() => handleFrameInputFocus('top')}
                       onBlur={() => handleFrameInputBlur('top', 10, 200, 10)}
+                      onKeyDown={(e) => handleFrameInputKeyDown(e, 'top', 10, 200, 10)}
                       className={styles.frameNumberInput}
                     />
                     <button
