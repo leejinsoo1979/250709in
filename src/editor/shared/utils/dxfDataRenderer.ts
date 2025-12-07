@@ -1666,13 +1666,15 @@ export const generateDxfFromData = (
   console.log(`📊 공간 정보: ${spaceInfo.width}mm x ${spaceInfo.height}mm x ${spaceInfo.depth}mm`);
   console.log(`📊 배치된 가구 수: ${placedModules.length}`);
 
-  // 씬에서 Line과 Text 객체 추출 (모든 것을 씬에서 추출 - 직접 그리지 않음)
+  // 씬에서 Line과 Text 객체 추출
   const extracted = extractFromScene(scene, viewDirection);
 
-  // 씬에서 추출한 데이터만 사용 (generateExternalDimensions 제거)
-  // 씬에 렌더링되는 CleanCAD2D, CADDimensions2D의 치수선을 그대로 추출
-  const lines = extracted.lines;
-  const texts = extracted.texts;
+  // 외부 치수선 생성 (spaceInfo + placedModules 기반)
+  const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection);
+
+  // 씬에서 추출한 데이터 + 외부 치수선 합치기
+  const lines = [...extracted.lines, ...externalDimensions.lines];
+  const texts = [...extracted.texts, ...externalDimensions.texts];
 
   if (lines.length === 0) {
     console.warn('⚠️ 추출된 라인이 없습니다.');
