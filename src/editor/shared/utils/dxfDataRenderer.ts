@@ -2039,50 +2039,81 @@ const generateExternalDimensions = (
     console.log(`   left=${calcLeftFrameWidth}mm, right=${calcRightFrameWidth}mm`);
     console.log(`   furnitureBackY: ${furnitureBackY.toFixed(1)}mm, furnitureFrontY: ${furnitureFrontY.toFixed(1)}mm`);
 
-    // 서라운드 프레임: 가구 앞면에 위치한 18mm 두께 판
-    // Room.tsx에서:
-    // - 프레임 깊이: 18mm (END_PANEL_THICKNESS)
-    // - 프레임 Z 위치: furnitureZOffset + furnitureDepth/2 - 9mm + 3mm (가구 앞면에서 약간 앞)
+    // 서라운드 프레임: 메인 프레임 + 서브프레임 = ㄱ자 형태 (탑뷰)
     //
-    // 탑뷰에서 프레임은 가구 앞면 근처의 얇은 18mm 사각형
+    // Room.tsx 구조:
+    // 1. 메인 프레임 (정면 프레임):
+    //    - X: xOffset + frameThickness.left / 2
+    //    - Z: furnitureZOffset + furnitureDepth/2 - 9mm + 3mm (가구 앞면에서 6mm 앞쪽)
+    //    - 크기: frameThickness.left × 18mm (깊이)
+    //
+    // 2. 서브 프레임 (세로 서브프레임, 90도 회전):
+    //    - X: xOffset + frameThickness.left - 9mm (프레임 안쪽에서 9mm 안쪽)
+    //    - Z: furnitureZOffset + furnitureDepth/2 - 9mm - 28mm (가구 앞면에서 37mm 뒤)
+    //    - 크기: 44mm (깊이 방향) × 18mm (너비)
+    //
+    // 탑뷰에서 ㄱ자 형태:
+    // - 메인 프레임: 가로 (가구 앞면에서 약간 앞, 18mm 두께)
+    // - 서브 프레임: 세로 (메인 안쪽 경계에서 뒤로 44mm 들어감)
+
     const frameDepthMm = 18; // END_PANEL_THICKNESS
 
-    // 프레임 Y 범위 (가구 앞면 기준):
-    // - Room.tsx: Z = furnitureZOffset + furnitureDepth/2 - 9mm + 3mm = 가구앞면 - 6mm
-    // - 프레임 뒷면: 가구앞면 - 6mm - 9mm = 가구앞면 - 15mm
-    // - 프레임 앞면: 가구앞면 - 6mm + 9mm = 가구앞면 + 3mm
-    // DXF Y = -Z * 100 이므로:
-    // - 프레임 앞면 Y (도면 아래쪽) = furnitureFrontY - 3mm
-    // - 프레임 뒷면 Y (도면 위쪽) = furnitureFrontY + 15mm
-    const surroundFrameFrontY = furnitureFrontY - 3;  // 가구 앞면에서 3mm 앞 (도면 아래)
-    const surroundFrameBackY = furnitureFrontY + 15;  // 가구 앞면에서 15mm 뒤 (도면 위)
+    // 메인 프레임 Y 범위 (가구 앞면 기준):
+    // Z 중심 = 가구앞면 - 6mm, 깊이 = 18mm
+    // 앞면 = 가구앞면 - 6mm + 9mm = 가구앞면 + 3mm
+    // 뒷면 = 가구앞면 - 6mm - 9mm = 가구앞면 - 15mm
+    const mainFrameFrontY = furnitureFrontY - 3;   // 도면 아래쪽 (가구 앞면 + 3mm)
+    const mainFrameBackY = furnitureFrontY + 15;   // 도면 위쪽 (가구 앞면 - 15mm)
+
+    // 서브 프레임 Y 범위:
+    // Z 중심 = 가구앞면 - 37mm, 깊이 = 44mm
+    // 앞면 = 가구앞면 - 37mm + 22mm = 가구앞면 - 15mm
+    // 뒷면 = 가구앞면 - 37mm - 22mm = 가구앞면 - 59mm
+    const subFrameFrontY = furnitureFrontY + 15;   // 메인 프레임 뒷면과 연결
+    const subFrameBackY = furnitureFrontY + 59;    // 도면 위쪽 (가구 앞면 - 59mm)
 
     if (calcLeftFrameWidth > 0) {
-      // 좌측 프레임 (18mm 두께 사각형)
+      // 좌측 ㄱ자 프레임
       const outerX = -halfWidth;                      // 바깥쪽 X (좌측 벽)
-      const innerX = -halfWidth + calcLeftFrameWidth; // 안쪽 X (프레임 너비만큼 안쪽)
+      const innerX = -halfWidth + calcLeftFrameWidth; // 메인 프레임 안쪽 X
+      const subFrameX = innerX - 9;                   // 서브 프레임 X (메인 안쪽에서 9mm 안쪽)
+      const subFrameInnerX = subFrameX - frameDepthMm; // 서브 프레임 안쪽 X (18mm 너비)
 
-      // 사각형 4변 (가구 앞면 근처)
-      lines.push({ x1: outerX, y1: surroundFrameBackY, x2: innerX, y2: surroundFrameBackY, layer: 'SPACE_FRAME', color: frameColor }); // 상단 (뒷면)
-      lines.push({ x1: innerX, y1: surroundFrameBackY, x2: innerX, y2: surroundFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 우측 (안쪽)
-      lines.push({ x1: innerX, y1: surroundFrameFrontY, x2: outerX, y2: surroundFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 하단 (앞면)
-      lines.push({ x1: outerX, y1: surroundFrameFrontY, x2: outerX, y2: surroundFrameBackY, layer: 'SPACE_FRAME', color: frameColor }); // 좌측 (바깥)
+      // 1. 메인 프레임 (가로 부분)
+      lines.push({ x1: outerX, y1: mainFrameBackY, x2: innerX, y2: mainFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 상단 (뒷면)
+      lines.push({ x1: innerX, y1: mainFrameBackY, x2: innerX, y2: mainFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 우측 (안쪽)
+      lines.push({ x1: innerX, y1: mainFrameFrontY, x2: outerX, y2: mainFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 하단 (앞면)
+      lines.push({ x1: outerX, y1: mainFrameFrontY, x2: outerX, y2: mainFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 좌측 (바깥)
+
+      // 2. 서브 프레임 (세로 부분, 메인 프레임 안쪽에서 뒤로 들어감)
+      lines.push({ x1: subFrameInnerX, y1: subFrameFrontY, x2: subFrameX, y2: subFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 하단 (메인과 연결)
+      lines.push({ x1: subFrameX, y1: subFrameFrontY, x2: subFrameX, y2: subFrameBackY, layer: 'SPACE_FRAME', color: frameColor });       // 우측 (바깥)
+      lines.push({ x1: subFrameX, y1: subFrameBackY, x2: subFrameInnerX, y2: subFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 상단 (뒷면)
+      lines.push({ x1: subFrameInnerX, y1: subFrameBackY, x2: subFrameInnerX, y2: subFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 좌측 (안쪽)
     }
 
     if (calcRightFrameWidth > 0) {
-      // 우측 프레임 (18mm 두께 사각형)
+      // 우측 ㄱ자 프레임 (좌우 반전)
       const outerX = halfWidth;                       // 바깥쪽 X (우측 벽)
-      const innerX = halfWidth - calcRightFrameWidth; // 안쪽 X (프레임 너비만큼 안쪽)
+      const innerX = halfWidth - calcRightFrameWidth; // 메인 프레임 안쪽 X
+      const subFrameX = innerX + 9;                   // 서브 프레임 X (메인 안쪽에서 9mm 안쪽)
+      const subFrameInnerX = subFrameX + frameDepthMm; // 서브 프레임 안쪽 X (18mm 너비)
 
-      // 사각형 4변 (가구 앞면 근처)
-      lines.push({ x1: innerX, y1: surroundFrameBackY, x2: outerX, y2: surroundFrameBackY, layer: 'SPACE_FRAME', color: frameColor }); // 상단 (뒷면)
-      lines.push({ x1: outerX, y1: surroundFrameBackY, x2: outerX, y2: surroundFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 우측 (바깥)
-      lines.push({ x1: outerX, y1: surroundFrameFrontY, x2: innerX, y2: surroundFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 하단 (앞면)
-      lines.push({ x1: innerX, y1: surroundFrameFrontY, x2: innerX, y2: surroundFrameBackY, layer: 'SPACE_FRAME', color: frameColor }); // 좌측 (안쪽)
+      // 1. 메인 프레임 (가로 부분)
+      lines.push({ x1: innerX, y1: mainFrameBackY, x2: outerX, y2: mainFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 상단 (뒷면)
+      lines.push({ x1: outerX, y1: mainFrameBackY, x2: outerX, y2: mainFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 우측 (바깥)
+      lines.push({ x1: outerX, y1: mainFrameFrontY, x2: innerX, y2: mainFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 하단 (앞면)
+      lines.push({ x1: innerX, y1: mainFrameFrontY, x2: innerX, y2: mainFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 좌측 (안쪽)
+
+      // 2. 서브 프레임 (세로 부분, 메인 프레임 안쪽에서 뒤로 들어감)
+      lines.push({ x1: subFrameX, y1: subFrameFrontY, x2: subFrameInnerX, y2: subFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 하단 (메인과 연결)
+      lines.push({ x1: subFrameInnerX, y1: subFrameFrontY, x2: subFrameInnerX, y2: subFrameBackY, layer: 'SPACE_FRAME', color: frameColor }); // 우측 (안쪽)
+      lines.push({ x1: subFrameInnerX, y1: subFrameBackY, x2: subFrameX, y2: subFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 상단 (뒷면)
+      lines.push({ x1: subFrameX, y1: subFrameBackY, x2: subFrameX, y2: subFrameFrontY, layer: 'SPACE_FRAME', color: frameColor });       // 좌측 (바깥)
     }
 
-    console.log(`✅ 탑뷰 프레임 추가 (18mm): leftFrame(${calcLeftFrameWidth}mm), rightFrame(${calcRightFrameWidth}mm)`);
-    console.log(`   surroundFrameBackY: ${surroundFrameBackY.toFixed(1)}mm, surroundFrameFrontY: ${surroundFrameFrontY.toFixed(1)}mm`);
+    console.log(`✅ 탑뷰 프레임 추가 (ㄱ자): leftFrame(${calcLeftFrameWidth}mm), rightFrame(${calcRightFrameWidth}mm)`);
+    console.log(`   mainFrame: ${mainFrameFrontY.toFixed(1)}~${mainFrameBackY.toFixed(1)}mm, subFrame: ${subFrameFrontY.toFixed(1)}~${subFrameBackY.toFixed(1)}mm`);
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // 측면뷰: 상하 프레임 치수선 생성 (정면뷰와 유사)
