@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { sceneHolder } from '../viewer3d/sceneHolder';
-import { calculateFrameThickness } from '../viewer3d/utils/geometry';
+// calculateFrameThickness 제거됨 - 탑뷰 프레임은 씬에서 직접 추출
 
 export type ViewDirection = 'front' | 'left' | 'right' | 'top';
 
@@ -2015,105 +2015,12 @@ const generateExternalDimensions = (
     }
 
     // ========================================
-    // 4. 탑뷰 프레임 박스 (연두색 ACI 3)
+    // 4. 탑뷰 프레임 - 씬에서 추출한 space-frame LineSegments 사용
     // ========================================
-    // 프레임은 가구 영역 내에서만 (furnitureFront ~ furnitureBack)
-    const frameColor = 3; // 연두색
-
-    // 좌우에 가구가 있는지 확인 (calculateFrameThickness에 전달)
-    const hasLeftFurniture = placedModules?.some(m => {
-      const posX = (m.position?.x || 0) * 100; // meter → mm
-      return posX < 0; // 공간 중앙 기준 왼쪽
-    }) || false;
-    const hasRightFurniture = placedModules?.some(m => {
-      const posX = (m.position?.x || 0) * 100;
-      return posX > 0; // 공간 중앙 기준 오른쪽
-    }) || false;
-
-    // calculateFrameThickness로 프레임 두께 계산 (서라운드/노서라운드 모두 지원)
-    const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-    const calcLeftFrameWidth = frameThickness.left;
-    const calcRightFrameWidth = frameThickness.right;
-
-    console.log(`📐 탑뷰 프레임 계산: surroundType=${spaceInfo.surroundType}, installType=${spaceInfo.installType}`);
-    console.log(`   left=${calcLeftFrameWidth}mm, right=${calcRightFrameWidth}mm`);
-    console.log(`   furnitureBackY: ${furnitureBackY.toFixed(1)}mm, furnitureFrontY: ${furnitureFrontY.toFixed(1)}mm`);
-
-    // 서라운드 프레임: 메인 프레임 + 서브프레임 = ㄱ자 형태 (탑뷰)
-    //
-    // Room.tsx 구조:
-    // 1. 메인 프레임 (정면 프레임):
-    //    - X: xOffset + frameThickness.left / 2
-    //    - Z: furnitureZOffset + furnitureDepth/2 - 9mm + 3mm (가구 앞면에서 6mm 앞쪽)
-    //    - 크기: frameThickness.left × 18mm (깊이)
-    //
-    // 2. 서브 프레임 (세로 서브프레임, 90도 회전):
-    //    - X: xOffset + frameThickness.left - 9mm (프레임 안쪽에서 9mm 안쪽)
-    //    - Z: furnitureZOffset + furnitureDepth/2 - 9mm - 28mm (가구 앞면에서 37mm 뒤)
-    //    - 크기: 44mm (깊이 방향) × 18mm (너비)
-    //
-    // 탑뷰에서 ㄱ자 형태:
-    // - 메인 프레임: 가로 (가구 앞면에서 약간 앞, 18mm 두께)
-    // - 서브 프레임: 세로 (메인 안쪽 경계에서 뒤로 44mm 들어감)
-
-    const frameDepthMm = 18; // END_PANEL_THICKNESS
-
-    // 메인 프레임 Y 범위 (가구 앞면 기준):
-    // Z 중심 = 가구앞면 - 6mm, 깊이 = 18mm
-    // 앞면 = 가구앞면 - 6mm + 9mm = 가구앞면 + 3mm
-    // 뒷면 = 가구앞면 - 6mm - 9mm = 가구앞면 - 15mm
-    const mainFrameFrontY = furnitureFrontY - 3;   // 도면 아래쪽 (가구 앞면 + 3mm)
-    const mainFrameBackY = furnitureFrontY + 15;   // 도면 위쪽 (가구 앞면 - 15mm)
-
-    // 서브 프레임 Y 범위:
-    // Z 중심 = 가구앞면 - 37mm, 깊이 = 44mm
-    // 앞면 = 가구앞면 - 37mm + 22mm = 가구앞면 - 15mm
-    // 뒷면 = 가구앞면 - 37mm - 22mm = 가구앞면 - 59mm
-    const subFrameFrontY = furnitureFrontY + 15;   // 메인 프레임 뒷면과 연결
-    const subFrameBackY = furnitureFrontY + 59;    // 도면 위쪽 (가구 앞면 - 59mm)
-
-    if (calcLeftFrameWidth > 0) {
-      // 좌측 ㄱ자 프레임
-      const outerX = -halfWidth;                      // 바깥쪽 X (좌측 벽)
-      const innerX = -halfWidth + calcLeftFrameWidth; // 메인 프레임 안쪽 X
-      const subFrameX = innerX - 9;                   // 서브 프레임 X (메인 안쪽에서 9mm 안쪽)
-      const subFrameInnerX = subFrameX - frameDepthMm; // 서브 프레임 안쪽 X (18mm 너비)
-
-      // 1. 메인 프레임 (가로 부분)
-      lines.push({ x1: outerX, y1: mainFrameBackY, x2: innerX, y2: mainFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 상단 (뒷면)
-      lines.push({ x1: innerX, y1: mainFrameBackY, x2: innerX, y2: mainFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 우측 (안쪽)
-      lines.push({ x1: innerX, y1: mainFrameFrontY, x2: outerX, y2: mainFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 하단 (앞면)
-      lines.push({ x1: outerX, y1: mainFrameFrontY, x2: outerX, y2: mainFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 좌측 (바깥)
-
-      // 2. 서브 프레임 (세로 부분, 메인 프레임 안쪽에서 뒤로 들어감)
-      lines.push({ x1: subFrameInnerX, y1: subFrameFrontY, x2: subFrameX, y2: subFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 하단 (메인과 연결)
-      lines.push({ x1: subFrameX, y1: subFrameFrontY, x2: subFrameX, y2: subFrameBackY, layer: 'SPACE_FRAME', color: frameColor });       // 우측 (바깥)
-      lines.push({ x1: subFrameX, y1: subFrameBackY, x2: subFrameInnerX, y2: subFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 상단 (뒷면)
-      lines.push({ x1: subFrameInnerX, y1: subFrameBackY, x2: subFrameInnerX, y2: subFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 좌측 (안쪽)
-    }
-
-    if (calcRightFrameWidth > 0) {
-      // 우측 ㄱ자 프레임 (좌우 반전)
-      const outerX = halfWidth;                       // 바깥쪽 X (우측 벽)
-      const innerX = halfWidth - calcRightFrameWidth; // 메인 프레임 안쪽 X
-      const subFrameX = innerX + 9;                   // 서브 프레임 X (메인 안쪽에서 9mm 안쪽)
-      const subFrameInnerX = subFrameX + frameDepthMm; // 서브 프레임 안쪽 X (18mm 너비)
-
-      // 1. 메인 프레임 (가로 부분)
-      lines.push({ x1: innerX, y1: mainFrameBackY, x2: outerX, y2: mainFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 상단 (뒷면)
-      lines.push({ x1: outerX, y1: mainFrameBackY, x2: outerX, y2: mainFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 우측 (바깥)
-      lines.push({ x1: outerX, y1: mainFrameFrontY, x2: innerX, y2: mainFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 하단 (앞면)
-      lines.push({ x1: innerX, y1: mainFrameFrontY, x2: innerX, y2: mainFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 좌측 (안쪽)
-
-      // 2. 서브 프레임 (세로 부분, 메인 프레임 안쪽에서 뒤로 들어감)
-      lines.push({ x1: subFrameX, y1: subFrameFrontY, x2: subFrameInnerX, y2: subFrameFrontY, layer: 'SPACE_FRAME', color: frameColor }); // 하단 (메인과 연결)
-      lines.push({ x1: subFrameInnerX, y1: subFrameFrontY, x2: subFrameInnerX, y2: subFrameBackY, layer: 'SPACE_FRAME', color: frameColor }); // 우측 (안쪽)
-      lines.push({ x1: subFrameInnerX, y1: subFrameBackY, x2: subFrameX, y2: subFrameBackY, layer: 'SPACE_FRAME', color: frameColor });   // 상단 (뒷면)
-      lines.push({ x1: subFrameX, y1: subFrameBackY, x2: subFrameX, y2: subFrameFrontY, layer: 'SPACE_FRAME', color: frameColor });       // 좌측 (바깥)
-    }
-
-    console.log(`✅ 탑뷰 프레임 추가 (ㄱ자): leftFrame(${calcLeftFrameWidth}mm), rightFrame(${calcRightFrameWidth}mm)`);
-    console.log(`   mainFrame: ${mainFrameFrontY.toFixed(1)}~${mainFrameBackY.toFixed(1)}mm, subFrame: ${subFrameFrontY.toFixed(1)}~${subFrameBackY.toFixed(1)}mm`);
+    // 프레임은 씬에서 name="space-frame"으로 이미 추출됨 (extractFromLineSegments)
+    // 수동 계산하지 않고 실제 렌더링된 geometry를 그대로 사용
+    // 이렇게 해야 도어가 프레임을 덮는 구조 등 설정 변경 시에도 정확히 반영됨
+    console.log(`✅ 탑뷰 프레임: 씬에서 추출된 space-frame LineSegments 사용 (수동 계산 제거됨)`);
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // 측면뷰: 상하 프레임 치수선 생성 (정면뷰와 유사)
