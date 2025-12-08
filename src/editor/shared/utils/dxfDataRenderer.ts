@@ -903,15 +903,6 @@ const extractFromScene = (
       }
     }
 
-    // 측면뷰에서 환기캡 제외
-    if (viewDirection === 'left' || viewDirection === 'right') {
-      const lowerNameCheck = name.toLowerCase();
-      if (lowerNameCheck.includes('ventilation') || lowerNameCheck.includes('환기')) {
-        skippedByFilter++;
-        return;
-      }
-    }
-
     const lowerNameForFilter = name.toLowerCase();
 
     // 부모 계층에서 이름 확인하는 헬퍼 함수
