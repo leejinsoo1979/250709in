@@ -2126,11 +2126,19 @@ const generateExternalDimensions = (
     console.log(`  - 중심Y: ${subFrameCenterY.toFixed(1)}, Y범위: ${subFrameStartY.toFixed(1)} ~ ${subFrameEndY.toFixed(1)} (44mm)`);
     console.log(`  - 가구 Y범위: ${furnitureFrontY.toFixed(1)} ~ ${furnitureBackY.toFixed(1)}`);
 
-    // 좌측 서브프레임 (메인 프레임 안쪽 가장자리에서 18mm 두께)
+    // 좌측 서브프레임 (가구 측면에 겹쳐서 위치, 메인 프레임과는 떨어져 있음)
     if (leftFrameWidth > 0) {
-      // X 위치: 메인 프레임 안쪽 가장자리에서 시작 (-9mm 보정 적용)
-      const subFrameLeftX = -halfWidth + leftFrameWidth - 9; // 시작점
-      const subFrameRightX = subFrameLeftX + subFrameThickX;  // 18mm 두께
+      // Room.tsx 기준:
+      // - position.x = xOffset + frameThickness.left - 9mm (중심 위치)
+      // - rotation 후 X 두께 = 18mm
+      // - 따라서 왼쪽 끝 = 중심 - 9mm, 오른쪽 끝 = 중심 + 9mm
+      // DXF에서 xOffset = 0 이므로:
+      // - 중심X = -halfWidth + leftFrameWidth - 9
+      // - 왼쪽X = 중심X - 9 = -halfWidth + leftFrameWidth - 18
+      // - 오른쪽X = 중심X + 9 = -halfWidth + leftFrameWidth
+      const subFrameCenterX = -halfWidth + leftFrameWidth - 9;
+      const subFrameLeftX = subFrameCenterX - 9;  // 중심에서 -9mm
+      const subFrameRightX = subFrameCenterX + 9; // 중심에서 +9mm (가구 측면과 겹침)
 
       // 4개 변 (X방향 18mm, Y방향 44mm 직사각형)
       // 앞쪽 변 (X방향) - 가구 앞면
@@ -2160,11 +2168,18 @@ const generateExternalDimensions = (
       console.log(`  ✅ 좌측 서브프레임: X ${subFrameLeftX.toFixed(1)}~${subFrameRightX.toFixed(1)} (18mm), Y ${subFrameStartY.toFixed(1)}~${subFrameEndY.toFixed(1)} (44mm)`);
     }
 
-    // 우측 서브프레임 (메인 프레임 안쪽 가장자리에서 18mm 두께)
+    // 우측 서브프레임 (가구 측면에 겹쳐서 위치, 메인 프레임과는 떨어져 있음)
     if (rightFrameWidth > 0) {
-      // X 위치: 메인 프레임 안쪽 가장자리에서 왼쪽으로 (+9mm 보정 적용)
-      const subFrameRightX = halfWidth - rightFrameWidth + 9;  // 시작점
-      const subFrameLeftX = subFrameRightX - subFrameThickX;   // 18mm 두께 (왼쪽으로)
+      // Room.tsx 기준:
+      // - position.x = xOffset + width - frameThickness.right + 9mm (중심 위치)
+      // - rotation 후 X 두께 = 18mm
+      // DXF에서 xOffset = 0 이므로:
+      // - 중심X = halfWidth - rightFrameWidth + 9
+      // - 왼쪽X = 중심X - 9 = halfWidth - rightFrameWidth (가구 측면과 겹침)
+      // - 오른쪽X = 중심X + 9 = halfWidth - rightFrameWidth + 18
+      const subFrameCenterX = halfWidth - rightFrameWidth + 9;
+      const subFrameLeftX = subFrameCenterX - 9;  // 중심에서 -9mm (가구 측면과 겹침)
+      const subFrameRightX = subFrameCenterX + 9; // 중심에서 +9mm
 
       // 4개 변 (X방향 18mm, Y방향 44mm 직사각형)
       // 앞쪽 변 (X방향) - 가구 앞면
