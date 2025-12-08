@@ -465,11 +465,13 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
                   if (section.type === 'drawer' && index === 0) {
                     // 하부섹션(drawer, index=0): 바닥판 아랫면(-height/2)부터 중간분리판 아랫면까지
+                    // currentYPosition이 -height/2 + basicThickness로 시작하므로 basicThickness를 빼줌
                     lineBottomY = -height/2;
-                    lineTopY = sectionCenterY + sectionHeight/2;
+                    lineTopY = sectionCenterY + sectionHeight/2 - basicThickness;
                   } else if (section.type === 'hanging' && index === allSections.length - 1) {
                     // 상부섹션(hanging, 마지막): 중간분리판 윗면부터 상판 윗면(height/2)까지
-                    lineBottomY = sectionCenterY - sectionHeight/2 + basicThickness;
+                    // currentYPosition이 이미 basicThickness 포함하므로 추가로 basicThickness를 더함
+                    lineBottomY = sectionCenterY - sectionHeight/2 + basicThickness * 2;
                     lineTopY = height/2;
                   } else {
                     return null;
