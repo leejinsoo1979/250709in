@@ -2268,13 +2268,14 @@ const generateExternalDimensions = (
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // ========================================
-    // 측면뷰 DXF - spaceInfo 값을 사용하여 치수선 생성
-    // CADDimensions2D.tsx와 동일한 로직 적용
+    // 측면뷰 DXF - 가구 형상을 데이터 기반으로 직접 생성
+    // 2D 뷰어(CleanCAD2D)와 동일한 형상 생성
+    // 치수선은 생성하지 않음 (2D 뷰어와 동일)
     // ========================================
-    console.log(`📏 ${viewDirection}뷰: 측면도 치수선 생성 (spaceInfo 값 사용)`);
+    console.log(`📏 ${viewDirection}뷰: 측면도 가구 형상 생성 (데이터 기반)`);
 
     // ========================================
-    // 1. spaceInfo에서 실제 값 가져오기 (CADDimensions2D.tsx와 동일)
+    // 1. spaceInfo에서 실제 값 가져오기
     // ========================================
     const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 10 };
     const topFrameHeightMm = frameSize.top || 0;
@@ -2283,10 +2284,7 @@ const generateExternalDimensions = (
     const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
     const floatHeightMm = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
 
-    // 바닥레일/받침대 높이 계산 (CADDimensions2D.tsx와 동일)
-    // - floor 타입: 받침대 높이
-    // - stand 타입 + 띄움 배치: 바닥 프레임 없음 (0)
-    // - stand 타입 + 일반 배치: 바닥레일 높이
+    // 바닥레일/받침대 높이 계산
     const isStandType = spaceInfo.baseConfig?.type === 'stand';
     const railOrBaseHeightMm = isStandType
       ? (isFloating ? 0 : (spaceInfo.baseConfig?.height || 0))
@@ -2295,93 +2293,157 @@ const generateExternalDimensions = (
     // 받침대 깊이
     const baseDepthMm = spaceInfo.baseConfig?.depth || 0;
 
-    // 하위 호환성을 위한 변수 (기존 코드에서 사용)
-    // 띄움 배치에서는 띄움 높이를 받침대 높이 변수에 설정 (치수 표시용)
-    const baseFrameHeightMm = isFloating ? floatHeightMm : railOrBaseHeightMm;
+    // 하부 프레임 높이 (받침대 또는 바닥레일)
+    const baseFrameHeightMm = isFloating ? 0 : railOrBaseHeightMm;
 
-    // 가구 및 치수선 시작 Y 위치
+    // 가구 시작 Y 위치
     const furnitureBaseY = isFloating ? floatHeightMm : baseFrameHeightMm;
 
     // 가구 깊이 계산 (placedModules에서 가져오기)
     let furnitureDepthMm = 600; // 기본값
+    let furnitureHeightMm = height - topFrameHeightMm - baseFrameHeightMm;
+
     if (placedModules.length > 0) {
       const module = placedModules[0];
       const moduleDepth = module.upperSectionDepth || module.customDepth;
       if (moduleDepth) {
         furnitureDepthMm = moduleDepth;
       }
-    }
-
-    const dimensionColor = 7; // ACI 7 = 흰색/검정
-    const dimensionOffset = 60;
-    const extensionLength = 10;
-
-    // 측면뷰 좌표 범위
-    const furnitureFrontX = 0;
-    const furnitureBackX = furnitureDepthMm;
-
-    console.log(`📐 측면뷰 치수선 좌표 (spaceInfo 값 사용):`);
-    console.log(`  - 전체 높이: ${height}mm`);
-    console.log(`  - 가구 깊이: ${furnitureDepthMm}mm`);
-    console.log(`  - 상부 프레임 높이: ${topFrameHeightMm}mm`);
-    console.log(`  - 받침대 높이: ${baseFrameHeightMm}mm`);
-    console.log(`  - 받침대 깊이: ${baseDepthMm}mm`);
-    console.log(`  - 띄움 배치: ${isFloating}, 띄움 높이: ${floatHeightMm}mm`);
-
-    // 가구 영역 높이 계산
-    const topFrameY = height - topFrameHeightMm;
-    const furnitureY1 = furnitureBaseY;
-    const furnitureY2 = height - topFrameHeightMm;
-    const furnitureAreaHeight = furnitureY2 - furnitureY1;
-
-    // ========================================
-    // 2. 전체 높이 치수선 (우측 외곽)
-    // ========================================
-    const dim1X = furnitureBackX + dimensionOffset + 40;
-    lines.push({ x1: dim1X, y1: 0, x2: dim1X, y2: height, layer: 'DIMENSIONS', color: dimensionColor });
-    lines.push({ x1: furnitureBackX, y1: height, x2: dim1X + extensionLength, y2: height, layer: 'DIMENSIONS', color: dimensionColor });
-    lines.push({ x1: furnitureBackX, y1: 0, x2: dim1X + extensionLength, y2: 0, layer: 'DIMENSIONS', color: dimensionColor });
-    texts.push({ x: dim1X + 15, y: height / 2, text: `${height}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
-
-    // ========================================
-    // 3. 상부 프레임 / 가구 영역 / 받침대 높이 치수선 (우측)
-    // ========================================
-    const rightDimX = furnitureBackX + dimensionOffset;
-
-    // 상부 프레임 높이 (있는 경우)
-    if (topFrameHeightMm > 0) {
-      lines.push({ x1: rightDimX, y1: topFrameY, x2: rightDimX, y2: height, layer: 'DIMENSIONS', color: dimensionColor });
-      lines.push({ x1: furnitureBackX, y1: topFrameY, x2: rightDimX + extensionLength, y2: topFrameY, layer: 'DIMENSIONS', color: dimensionColor });
-      texts.push({ x: rightDimX + 15, y: (topFrameY + height) / 2, text: `${topFrameHeightMm}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
-    }
-
-    // 가구 영역 높이
-    const rightDimX2 = rightDimX + 40;
-    lines.push({ x1: rightDimX2, y1: furnitureY1, x2: rightDimX2, y2: furnitureY2, layer: 'DIMENSIONS', color: dimensionColor });
-    lines.push({ x1: furnitureBackX, y1: furnitureY1, x2: rightDimX2 + extensionLength, y2: furnitureY1, layer: 'DIMENSIONS', color: dimensionColor });
-    texts.push({ x: rightDimX2 + 15, y: (furnitureY1 + furnitureY2) / 2, text: `${furnitureAreaHeight}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
-
-    // 받침대 높이 (있는 경우)
-    if (baseFrameHeightMm > 0) {
-      lines.push({ x1: rightDimX, y1: 0, x2: rightDimX, y2: baseFrameHeightMm, layer: 'DIMENSIONS', color: dimensionColor });
-      texts.push({ x: rightDimX + 15, y: baseFrameHeightMm / 2, text: `${baseFrameHeightMm}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
-
-      // 받침대 깊이 표시 (있는 경우)
-      if (baseDepthMm > 0) {
-        texts.push({ x: rightDimX + 15, y: baseFrameHeightMm - 15, text: `(D${baseDepthMm})`, height: 15, color: dimensionColor, layer: 'DIMENSIONS' });
+      if (module.customHeight) {
+        furnitureHeightMm = module.customHeight;
       }
     }
 
-    // ========================================
-    // 4. 가구 깊이 치수선 (하단)
-    // ========================================
-    const dim2Y = -dimensionOffset;
-    lines.push({ x1: furnitureFrontX, y1: dim2Y, x2: furnitureBackX, y2: dim2Y, layer: 'DIMENSIONS', color: dimensionColor });
-    lines.push({ x1: furnitureFrontX, y1: 0, x2: furnitureFrontX, y2: dim2Y - extensionLength, layer: 'DIMENSIONS', color: dimensionColor });
-    lines.push({ x1: furnitureBackX, y1: 0, x2: furnitureBackX, y2: dim2Y - extensionLength, layer: 'DIMENSIONS', color: dimensionColor });
-    texts.push({ x: (furnitureFrontX + furnitureBackX) / 2, y: dim2Y - 15, text: `${furnitureDepthMm}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
+    // 색상 정의 (2D 뷰어와 동일)
+    const furnitureColor = 30;  // ACI 30 = 주황색 (가구 패널)
+    const frameColor = 3;       // ACI 3 = 연두색 (프레임)
+    const accessoryColor = 8;   // ACI 8 = 회색 (조절발)
+    const rodColor = 7;         // ACI 7 = 흰색 (옷봉)
 
-    // 측면뷰의 프레임/가구 외곽선은 씬에서 추출됨 - 별도 생성하지 않음
+    console.log(`📐 측면뷰 가구 형상 (데이터 기반):`);
+    console.log(`  - 전체 높이: ${height}mm`);
+    console.log(`  - 가구 깊이: ${furnitureDepthMm}mm`);
+    console.log(`  - 가구 높이: ${furnitureHeightMm}mm`);
+    console.log(`  - 상부 프레임 높이: ${topFrameHeightMm}mm`);
+    console.log(`  - 하부 프레임/받침대 높이: ${baseFrameHeightMm}mm`);
+    console.log(`  - 받침대 깊이: ${baseDepthMm}mm`);
+    console.log(`  - 띄움 배치: ${isFloating}, 띄움 높이: ${floatHeightMm}mm`);
+
+    // 측면뷰 좌표계: X = 깊이 방향 (0 = 앞면, furnitureDepthMm = 뒷면)
+    //               Y = 높이 방향 (0 = 바닥, height = 천장)
+    const panelThickness = 18; // 측판 두께
+
+    // ========================================
+    // 2. 가구 측판 외곽선 (사각형)
+    // ========================================
+    const panelLeft = 0;
+    const panelRight = furnitureDepthMm;
+    const panelBottom = furnitureBaseY;
+    const panelTop = furnitureBaseY + furnitureHeightMm;
+
+    // 측판 외곽선 (사각형)
+    lines.push({ x1: panelLeft, y1: panelBottom, x2: panelRight, y2: panelBottom, layer: 'FURNITURE_PANEL', color: furnitureColor });
+    lines.push({ x1: panelRight, y1: panelBottom, x2: panelRight, y2: panelTop, layer: 'FURNITURE_PANEL', color: furnitureColor });
+    lines.push({ x1: panelRight, y1: panelTop, x2: panelLeft, y2: panelTop, layer: 'FURNITURE_PANEL', color: furnitureColor });
+    lines.push({ x1: panelLeft, y1: panelTop, x2: panelLeft, y2: panelBottom, layer: 'FURNITURE_PANEL', color: furnitureColor });
+
+    // ========================================
+    // 3. 상부 프레임 (있는 경우)
+    // ========================================
+    if (topFrameHeightMm > 0) {
+      const topFrameBottom = height - topFrameHeightMm;
+      const topFrameTop = height;
+
+      // 상부 프레임 사각형
+      lines.push({ x1: panelLeft, y1: topFrameBottom, x2: panelRight, y2: topFrameBottom, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: panelRight, y1: topFrameBottom, x2: panelRight, y2: topFrameTop, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: panelRight, y1: topFrameTop, x2: panelLeft, y2: topFrameTop, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: panelLeft, y1: topFrameTop, x2: panelLeft, y2: topFrameBottom, layer: 'SPACE_FRAME', color: frameColor });
+    }
+
+    // ========================================
+    // 4. 하부 프레임/받침대 (있는 경우)
+    // ========================================
+    if (baseFrameHeightMm > 0) {
+      const baseBottom = 0;
+      const baseTop = baseFrameHeightMm;
+      // 받침대 깊이가 있으면 사용, 없으면 가구 깊이 사용
+      const baseLeft = 0;
+      const baseRight = baseDepthMm > 0 ? baseDepthMm : furnitureDepthMm;
+
+      // 하부 프레임/받침대 사각형
+      lines.push({ x1: baseLeft, y1: baseBottom, x2: baseRight, y2: baseBottom, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: baseRight, y1: baseBottom, x2: baseRight, y2: baseTop, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: baseRight, y1: baseTop, x2: baseLeft, y2: baseTop, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: baseLeft, y1: baseTop, x2: baseLeft, y2: baseBottom, layer: 'SPACE_FRAME', color: frameColor });
+    }
+
+    // ========================================
+    // 5. 조절발 (floor 타입이고 받침대가 있는 경우)
+    // ========================================
+    if (!isStandType && baseFrameHeightMm > 0) {
+      const footHeight = 65; // 조절발 높이 (mm)
+      const footDiameter = 56; // 조절발 지름 (mm)
+      const footPlateSize = 64; // 조절발 플레이트 크기 (mm)
+      const footPlateThickness = 7; // 조절발 플레이트 두께 (mm)
+
+      // 조절발 위치 (받침대 아래 중앙)
+      const footCenterX = furnitureDepthMm / 2;
+      const footTop = 0;
+      const footBottom = -footHeight + footPlateThickness;
+
+      // 조절발 플레이트 (상단 사각형)
+      const plateLeft = footCenterX - footPlateSize / 2;
+      const plateRight = footCenterX + footPlateSize / 2;
+      const plateBottom = footTop - footPlateThickness;
+      const plateTop = footTop;
+
+      lines.push({ x1: plateLeft, y1: plateBottom, x2: plateRight, y2: plateBottom, layer: 'ACCESSORIES', color: accessoryColor });
+      lines.push({ x1: plateRight, y1: plateBottom, x2: plateRight, y2: plateTop, layer: 'ACCESSORIES', color: accessoryColor });
+      lines.push({ x1: plateRight, y1: plateTop, x2: plateLeft, y2: plateTop, layer: 'ACCESSORIES', color: accessoryColor });
+      lines.push({ x1: plateLeft, y1: plateTop, x2: plateLeft, y2: plateBottom, layer: 'ACCESSORIES', color: accessoryColor });
+
+      // 조절발 원통 (간략화된 사다리꼴 형태)
+      const cylLeft = footCenterX - footDiameter / 2;
+      const cylRight = footCenterX + footDiameter / 2;
+      const cylTop = plateBottom;
+      const cylBottom = footBottom;
+
+      lines.push({ x1: cylLeft, y1: cylTop, x2: cylLeft, y2: cylBottom, layer: 'ACCESSORIES', color: accessoryColor });
+      lines.push({ x1: cylRight, y1: cylTop, x2: cylRight, y2: cylBottom, layer: 'ACCESSORIES', color: accessoryColor });
+      lines.push({ x1: cylLeft, y1: cylBottom, x2: cylRight, y2: cylBottom, layer: 'ACCESSORIES', color: accessoryColor });
+    }
+
+    // ========================================
+    // 6. 옷봉 (가구에 옷봉이 있는 경우)
+    // ========================================
+    // placedModules에서 옷봉 정보 확인
+    if (placedModules.length > 0) {
+      const module = placedModules[0];
+      // 옷봉이 있는 모듈인지 확인 (모듈 타입이나 슬롯 정보로 판단)
+      const hasClothingRod = module.moduleId?.includes('wardrobe') ||
+                             module.moduleId?.includes('hanger') ||
+                             module.moduleId?.includes('closet');
+
+      if (hasClothingRod) {
+        const rodDiameter = 25; // 옷봉 지름 (mm)
+        const rodHeight = panelTop - 100; // 상단에서 100mm 아래
+        const rodCenterX = furnitureDepthMm / 2;
+
+        // 옷봉 (원형을 간략화한 사각형으로 표현)
+        const rodLeft = rodCenterX - rodDiameter / 2;
+        const rodRight = rodCenterX + rodDiameter / 2;
+        const rodBottom = rodHeight - rodDiameter / 2;
+        const rodTop = rodHeight + rodDiameter / 2;
+
+        lines.push({ x1: rodLeft, y1: rodBottom, x2: rodRight, y2: rodBottom, layer: 'CLOTHING_ROD', color: rodColor });
+        lines.push({ x1: rodRight, y1: rodBottom, x2: rodRight, y2: rodTop, layer: 'CLOTHING_ROD', color: rodColor });
+        lines.push({ x1: rodRight, y1: rodTop, x2: rodLeft, y2: rodTop, layer: 'CLOTHING_ROD', color: rodColor });
+        lines.push({ x1: rodLeft, y1: rodTop, x2: rodLeft, y2: rodBottom, layer: 'CLOTHING_ROD', color: rodColor });
+      }
+    }
+
+    console.log(`✅ 측면뷰 가구 형상 생성 완료: ${lines.length}개 라인`);
   }
 
   console.log(`📏 외부 치수선 생성: ${lines.length}개 라인, ${texts.length}개 텍스트`);
