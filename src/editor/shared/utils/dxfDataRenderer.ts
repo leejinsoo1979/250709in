@@ -924,14 +924,13 @@ const extractFromScene = (
     // 부모 계층까지 확인하여 레이어 결정 (옷봉 브라켓, 조절발 플레이트 등)
     const layer = determineLayerWithParent(object);
 
-    // 측면뷰에서 가구 X 위치 필터링 (allowedXRange가 있으면 해당 범위의 가구만 포함)
-    // 공간 프레임, 치수선은 필터링 제외 (항상 포함)
+    // 측면뷰에서 가구 및 치수선 X 위치 필터링 (allowedXRange가 있으면 해당 범위만 포함)
+    // 공간 프레임만 필터링 제외 (항상 포함)
     if (allowedXRange &&
         (viewDirection === 'left' || viewDirection === 'right') &&
-        layer !== 'SPACE_FRAME' &&
-        layer !== 'DIMENSIONS') {
+        layer !== 'SPACE_FRAME') {
 
-      // 가구 관련 객체인 경우에만 X 위치 필터링 적용
+      // 가구 관련 객체인 경우 X 위치 필터링 적용
       const isFurnitureObject = lowerNameForFilter.includes('furniture') ||
                                 lowerNameForFilter.includes('shelf') ||
                                 lowerNameForFilter.includes('panel') ||
@@ -945,7 +944,11 @@ const extractFromScene = (
                                 lowerNameForFilter.includes('조절발') ||
                                 lowerNameForFilter.includes('환기');
 
-      if (isFurnitureObject) {
+      // 치수선 객체인 경우에도 X 위치 필터링 적용 (보이는 가구의 치수선만 표시)
+      const isDimensionObject = lowerNameForFilter.includes('dimension') ||
+                                 layer === 'DIMENSIONS';
+
+      if (isFurnitureObject || isDimensionObject) {
         // 객체의 월드 X 위치 확인
         const worldPos = new THREE.Vector3();
         object.getWorldPosition(worldPos);
