@@ -18,11 +18,15 @@ const drawingTypeToViewDirection = (drawingType: DrawingType): ViewDirection => 
       return 'top';
     case 'side':
     case 'sideLeft':
-      // 좌측면도: 카메라가 오른쪽(+X)에서 봄 → 물체의 왼쪽 면이 보임
-      return 'right';
-    case 'sideRight':
-      // 우측면도: 카메라가 왼쪽(-X)에서 봄 → 물체의 오른쪽 면이 보임
+      // 좌측면도(sideLeft): 관찰자가 왼쪽(-X)에서 봄 → 가구의 오른쪽 면이 보임
+      // UI의 view2DDirection='left'와 동일
+      // projectTo2D의 'left' 케이스 사용: 화면 왼쪽 = +Z(뒷면), 화면 오른쪽 = -Z(앞면)
       return 'left';
+    case 'sideRight':
+      // 우측면도(sideRight): 관찰자가 오른쪽(+X)에서 봄 → 가구의 왼쪽 면이 보임
+      // UI의 view2DDirection='right'와 동일
+      // projectTo2D의 'right' 케이스 사용: 화면 왼쪽 = -Z(앞면), 화면 오른쪽 = +Z(뒷면)
+      return 'right';
     default:
       return 'front';
   }
