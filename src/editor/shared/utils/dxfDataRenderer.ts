@@ -2004,6 +2004,36 @@ const generateExternalDimensions = (
       });
     }
 
+    // ========================================
+    // 4. 탑뷰 프레임 박스 (연두색 ACI 3)
+    // ========================================
+    // 정면뷰와 동일하게 연두색 프레임 아웃라인 추가
+    // 탑뷰에서는 X가 가로(좌우), Y가 깊이(앞뒤)
+    const frameColor = 3; // 연두색
+    const rightFrameWidth = frameSize.right || 42;
+
+    // 좌측 프레임 박스 (가구 뒷면 ~ 앞면)
+    const leftFrameX1 = -halfWidth;
+    const leftFrameX2 = -halfWidth + leftFrameWidth;
+    lines.push({ x1: leftFrameX1, y1: furnitureFrontY, x2: leftFrameX2, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: leftFrameX2, y1: furnitureFrontY, x2: leftFrameX2, y2: furnitureBackY, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: leftFrameX2, y1: furnitureBackY, x2: leftFrameX1, y2: furnitureBackY, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: leftFrameX1, y1: furnitureBackY, x2: leftFrameX1, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
+
+    // 우측 프레임 박스 (가구 뒷면 ~ 앞면)
+    const rightFrameX1 = halfWidth - rightFrameWidth;
+    const rightFrameX2 = halfWidth;
+    lines.push({ x1: rightFrameX1, y1: furnitureFrontY, x2: rightFrameX2, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: rightFrameX2, y1: furnitureFrontY, x2: rightFrameX2, y2: furnitureBackY, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: rightFrameX2, y1: furnitureBackY, x2: rightFrameX1, y2: furnitureBackY, layer: 'SPACE_FRAME', color: frameColor });
+    lines.push({ x1: rightFrameX1, y1: furnitureBackY, x2: rightFrameX1, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
+
+    // 가구 앞면 프레임 (좌우 프레임 사이 연결선) - ㄴ자 아래쪽
+    lines.push({ x1: leftFrameX2, y1: furnitureFrontY, x2: rightFrameX1, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
+
+    console.log(`✅ 탑뷰 프레임 박스 추가: leftFrame(${leftFrameWidth}mm), rightFrame(${rightFrameWidth}mm)`);
+    console.log(`   furnitureFrontY: ${furnitureFrontY.toFixed(1)}mm, furnitureBackY: ${furnitureBackY.toFixed(1)}mm`);
+
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // 측면뷰: 상하 프레임 치수선 생성 (정면뷰와 유사)
     console.log(`📏 ${viewDirection}뷰: 상하 프레임 치수선 생성`);
