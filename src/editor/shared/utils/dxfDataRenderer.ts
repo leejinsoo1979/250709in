@@ -10,6 +10,8 @@ import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { sceneHolder } from '../viewer3d/sceneHolder';
 import { calculateFrameThickness } from '../viewer3d/utils/geometry';
+import { getModuleById } from '@/data/modules';
+import type { SectionConfig } from '@/data/modules/shelving';
 // calculateFrameThickness 제거됨 - 탑뷰 프레임은 씬에서 직접 추출
 
 export type ViewDirection = 'front' | 'left' | 'right' | 'top';
@@ -2268,24 +2270,17 @@ const generateExternalDimensions = (
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // ========================================
-    // 측면뷰 DXF - 치수선만 생성
+    // 측면뷰 DXF - 프레임/가구 외곽선 + 치수선 생성
     // ========================================
-    // 측면뷰의 가구/프레임 라인은 씬에서 추출됨
-    // 여기서는 외부 치수선만 추가
-    //
-    // projectTo2D 좌표 변환:
-    // - left 뷰: DXF X = -z * 100 (Three.js Z가 DXF X로)
-    // - Three.js 좌표계: Z = -panelDepth/2 ~ +panelDepth/2 (중심 = 0)
-    // - 가구 Z 범위: 약 -furnitureDepth 근처 (뒷벽 쪽)
-    //
-    // 씬에서 추출된 측면뷰 좌표 범위:
-    // - X: 가구 깊이 방향 (약 0 ~ furnitureDepth mm)
-    // - Y: 높이 방향 (0 ~ height mm)
-    console.log(`📏 ${viewDirection}뷰: 측면도 치수선 생성 (프레임/가구는 씬에서 추출)`);
+    // 측면뷰 좌표계: DXF X = 가구 깊이 방향 (0 = 앞면, furnitureDepth = 뒷면)
+    //               DXF Y = 높이 방향 (0 = 바닥, height = 천장)
+    console.log(`📏 ${viewDirection}뷰: 측면도 프레임/가구 외곽선 + 치수선 생성`);
 
     const frameSize = spaceInfo.frameSize || { left: 18, right: 18, top: 10 };
     const topFrameThick = frameSize.top || 10;
     const baseH = spaceInfo.baseHeight || 65;
+    const frameColor = 3; // ACI 3 = 연두색 (프레임 색상)
+    const furnitureColor = 30; // ACI 30 = 주황색 (가구 색상)
     const dimensionColor = 7; // ACI 7 = 흰색/검정
     const dimensionOffset = 60;
     const extensionLength = 10;
@@ -2293,45 +2288,66 @@ const generateExternalDimensions = (
     // 측면뷰 가구 깊이 (CADDimensions2D.tsx와 동일한 고정값)
     const furnitureDepthMm = 600;
 
-    // 측면뷰에서 씬 추출 좌표 범위 계산
-    // projectTo2D에서 left 뷰: x = -p.z * 100
-    // Three.js에서 가구 Z 위치: furnitureZOffset ~ furnitureZOffset + furnitureDepth
-    // panelDepth = depth (1500) / 100 = 15 three units
-    // furnitureDepth = 600 / 100 = 6 three units
-    // zOffset = -panelDepth / 2 = -7.5
-    // furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2 = -7.5 + 4.5 = -3
-    // 가구 Z 범위: -3 ~ -9 three units
-    // DXF X (left view): -(-3)*100 ~ -(-9)*100 = 300 ~ 900 mm
-    //
-    // 그러나 씬 추출 시 실제로는 가구 중심이 0에 가깝게 배치됨
-    // Room.tsx와 FurnitureItem.tsx에서 가구 위치 확인 필요
-    // 일단 가구 깊이 기준으로 0 ~ furnitureDepthMm 범위 사용
+    // 가구 위치 (측면뷰에서 X축 = 깊이 방향)
     const furnitureFrontX = 0;
     const furnitureBackX = furnitureDepthMm;
 
-    console.log(`📐 측면뷰 치수선 좌표:`);
+    console.log(`📐 측면뷰 좌표:`);
     console.log(`  - 전체 높이: ${height}mm`);
-    console.log(`  - 가구 깊이(측면뷰 X축): ${furnitureDepthMm}mm (0 ~ ${furnitureBackX})`);
+    console.log(`  - 가구 깊이: ${furnitureDepthMm}mm (X: 0 ~ ${furnitureBackX})`);
     console.log(`  - 상부 프레임 두께: ${topFrameThick}mm, 받침대 높이: ${baseH}mm`);
 
     // 가구 영역 높이 계산
     const topFrameY1 = height - topFrameThick;
+    const topFrameY2 = height;
     const furnitureY1 = baseH;
     const furnitureY2 = height - topFrameThick;
     const furnitureAreaHeight = furnitureY2 - furnitureY1;
 
     // ========================================
-    // 1. 전체 높이 치수선 (우측 외곽)
+    // 1. 상부 프레임 박스 (측면뷰)
     // ========================================
+    // 상부 프레임: 전체 가구 깊이, 높이 topFrameThick
+    lines.push({ x1: furnitureFrontX, y1: topFrameY1, x2: furnitureBackX, y2: topFrameY1, layer: 'SPACE_FRAME', color: frameColor }); // 하단
+    lines.push({ x1: furnitureFrontX, y1: topFrameY2, x2: furnitureBackX, y2: topFrameY2, layer: 'SPACE_FRAME', color: frameColor }); // 상단
+    lines.push({ x1: furnitureFrontX, y1: topFrameY1, x2: furnitureFrontX, y2: topFrameY2, layer: 'SPACE_FRAME', color: frameColor }); // 앞면
+    lines.push({ x1: furnitureBackX, y1: topFrameY1, x2: furnitureBackX, y2: topFrameY2, layer: 'SPACE_FRAME', color: frameColor }); // 뒷면
+    console.log(`  ✅ 상부 프레임: Y ${topFrameY1}~${topFrameY2}, X ${furnitureFrontX}~${furnitureBackX}`);
+
+    // ========================================
+    // 2. 하부 받침대 박스 (측면뷰) - 받침대가 있는 경우
+    // ========================================
+    if (baseH > 0) {
+      const baseY1 = 0;
+      const baseY2 = baseH;
+
+      lines.push({ x1: furnitureFrontX, y1: baseY1, x2: furnitureBackX, y2: baseY1, layer: 'SPACE_FRAME', color: frameColor }); // 하단
+      lines.push({ x1: furnitureFrontX, y1: baseY2, x2: furnitureBackX, y2: baseY2, layer: 'SPACE_FRAME', color: frameColor }); // 상단
+      lines.push({ x1: furnitureFrontX, y1: baseY1, x2: furnitureFrontX, y2: baseY2, layer: 'SPACE_FRAME', color: frameColor }); // 앞면
+      lines.push({ x1: furnitureBackX, y1: baseY1, x2: furnitureBackX, y2: baseY2, layer: 'SPACE_FRAME', color: frameColor }); // 뒷면
+      console.log(`  ✅ 받침대: Y ${baseY1}~${baseY2}, X ${furnitureFrontX}~${furnitureBackX}`);
+    }
+
+    // ========================================
+    // 3. 가구 영역 외곽선 (측면뷰) - 좌우 측판
+    // ========================================
+    lines.push({ x1: furnitureFrontX, y1: furnitureY1, x2: furnitureBackX, y2: furnitureY1, layer: 'FURNITURE_PANEL', color: furnitureColor }); // 하단
+    lines.push({ x1: furnitureFrontX, y1: furnitureY2, x2: furnitureBackX, y2: furnitureY2, layer: 'FURNITURE_PANEL', color: furnitureColor }); // 상단
+    lines.push({ x1: furnitureFrontX, y1: furnitureY1, x2: furnitureFrontX, y2: furnitureY2, layer: 'FURNITURE_PANEL', color: furnitureColor }); // 앞면
+    lines.push({ x1: furnitureBackX, y1: furnitureY1, x2: furnitureBackX, y2: furnitureY2, layer: 'FURNITURE_PANEL', color: furnitureColor }); // 뒷면
+    console.log(`  ✅ 가구 영역: Y ${furnitureY1}~${furnitureY2}, X ${furnitureFrontX}~${furnitureBackX}`);
+
+    // ========================================
+    // 4. 치수선 생성
+    // ========================================
+    // 4-1. 전체 높이 치수선 (우측 외곽)
     const dim1X = furnitureBackX + dimensionOffset + 40;
     lines.push({ x1: dim1X, y1: 0, x2: dim1X, y2: height, layer: 'DIMENSIONS', color: dimensionColor });
     lines.push({ x1: furnitureBackX, y1: height, x2: dim1X + extensionLength, y2: height, layer: 'DIMENSIONS', color: dimensionColor });
     lines.push({ x1: furnitureBackX, y1: 0, x2: dim1X + extensionLength, y2: 0, layer: 'DIMENSIONS', color: dimensionColor });
     texts.push({ x: dim1X + 15, y: height / 2, text: `${height}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
 
-    // ========================================
-    // 2. 상부 프레임 / 가구 영역 / 받침대 높이 치수선 (우측)
-    // ========================================
+    // 4-2. 상부 프레임 / 가구 영역 / 받침대 높이 치수선 (우측)
     const rightDimX = furnitureBackX + dimensionOffset;
 
     // 상부 프레임 높이
@@ -2351,16 +2367,268 @@ const generateExternalDimensions = (
       texts.push({ x: rightDimX + 15, y: baseH / 2, text: `${baseH}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
     }
 
-    // ========================================
-    // 3. 가구 깊이 치수선 (하단)
-    // ========================================
+    // 4-3. 가구 깊이 치수선 (하단)
     const dim2Y = -dimensionOffset;
     lines.push({ x1: furnitureFrontX, y1: dim2Y, x2: furnitureBackX, y2: dim2Y, layer: 'DIMENSIONS', color: dimensionColor });
     lines.push({ x1: furnitureFrontX, y1: 0, x2: furnitureFrontX, y2: dim2Y - extensionLength, layer: 'DIMENSIONS', color: dimensionColor });
     lines.push({ x1: furnitureBackX, y1: 0, x2: furnitureBackX, y2: dim2Y - extensionLength, layer: 'DIMENSIONS', color: dimensionColor });
     texts.push({ x: (furnitureFrontX + furnitureBackX) / 2, y: dim2Y - 15, text: `${furnitureDepthMm}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
 
-    // 측면뷰의 프레임/가구 외곽선은 씬에서 추출됨 - 별도 생성하지 않음
+    // ========================================
+    // 5. 내부 가구 요소 생성 (측면뷰) - placedModules 기반
+    // ========================================
+    console.log(`📐 측면뷰 내부 요소 생성 시작 - 가구 수: ${placedModules.length}`);
+
+    // 측면뷰에 표시할 가구 필터링 (좌측뷰: leftmost, 우측뷰: rightmost)
+    const getVisibleFurnitureForSideView = (): PlacedModule[] => {
+      if (placedModules.length === 0) return [];
+
+      if (viewDirection === 'left') {
+        // 좌측뷰: X 좌표가 가장 작은 가구
+        const leftmostModule = placedModules.reduce((leftmost, current) =>
+          (current.position?.x || 0) < (leftmost.position?.x || 0) ? current : leftmost
+        );
+        return [leftmostModule];
+      } else if (viewDirection === 'right') {
+        // 우측뷰: X 좌표가 가장 큰 가구
+        const rightmostModule = placedModules.reduce((rightmost, current) =>
+          (current.position?.x || 0) > (rightmost.position?.x || 0) ? current : rightmost
+        );
+        return [rightmostModule];
+      }
+      return [];
+    };
+
+    const visibleFurniture = getVisibleFurnitureForSideView();
+    console.log(`📐 측면뷰 표시 가구 수: ${visibleFurniture.length}`);
+
+    // 패널 두께 상수
+    const basicThicknessMm = 18; // 기본 패널 두께
+    const accessoryColor = 8; // ACI 8 = 회색 (조절발, 옷봉)
+    const drawerColor = furnitureColor; // 서랍은 가구 색상 사용
+
+    // 각 가구에 대해 내부 요소 생성
+    visibleFurniture.forEach((module, moduleIndex) => {
+      const moduleData = getModuleById(
+        module.moduleId,
+        { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+        spaceInfo
+      );
+
+      if (!moduleData) {
+        console.log(`⚠️ 모듈 데이터 없음: ${module.moduleId}`);
+        return;
+      }
+
+      console.log(`📐 모듈 ${moduleIndex}: ${module.moduleId}, 타입: ${moduleData.modelConfig?.type || 'unknown'}`);
+
+      // 가구 내부 영역 (측판 두께를 제외한 영역)
+      const innerFrontX = furnitureFrontX + basicThicknessMm; // 앞쪽 측판 뒤
+      const innerBackX = furnitureBackX - basicThicknessMm;   // 뒤쪽 측판 앞
+
+      // ========================================
+      // 5-1. 측판 두께선 (좌우 측판 내벽)
+      // ========================================
+      // 앞쪽 측판 내벽선 (세로선)
+      lines.push({
+        x1: innerFrontX, y1: furnitureY1,
+        x2: innerFrontX, y2: furnitureY2,
+        layer: 'FURNITURE_PANEL', color: furnitureColor
+      });
+      // 뒤쪽 측판 내벽선 (세로선)
+      lines.push({
+        x1: innerBackX, y1: furnitureY1,
+        x2: innerBackX, y2: furnitureY2,
+        layer: 'FURNITURE_PANEL', color: furnitureColor
+      });
+      console.log(`  ✅ 측판 두께선: X ${innerFrontX}(앞), ${innerBackX}(뒤)`);
+
+      // ========================================
+      // 5-2. 상하판 두께선
+      // ========================================
+      // 하판 상단면 (받침대 위)
+      const bottomPanelTop = furnitureY1 + basicThicknessMm;
+      lines.push({
+        x1: innerFrontX, y1: bottomPanelTop,
+        x2: innerBackX, y2: bottomPanelTop,
+        layer: 'FURNITURE_PANEL', color: furnitureColor
+      });
+      // 상판 하단면 (상부 프레임 아래)
+      const topPanelBottom = furnitureY2 - basicThicknessMm;
+      lines.push({
+        x1: innerFrontX, y1: topPanelBottom,
+        x2: innerBackX, y2: topPanelBottom,
+        layer: 'FURNITURE_PANEL', color: furnitureColor
+      });
+      console.log(`  ✅ 상하판 두께선: Y ${bottomPanelTop}(하판상단), ${topPanelBottom}(상판하단)`);
+
+      // ========================================
+      // 5-3. 섹션 구분선 및 서랍 (sections 기반)
+      // ========================================
+      const sections = (module.customSections as SectionConfig[]) ||
+                       moduleData.modelConfig?.sections as SectionConfig[] || [];
+
+      if (sections.length > 0) {
+        // 가구 내부 가용 높이 (상하판 두께 제외)
+        const internalHeightMm = furnitureAreaHeight - (basicThicknessMm * 2);
+
+        // 섹션 높이 계산
+        const absoluteSections = sections.filter(s => s.heightType === 'absolute');
+        const percentageSections = sections.filter(s => s.heightType !== 'absolute');
+        const totalFixedMm = absoluteSections.reduce((sum, s) => sum + (s.height || 0), 0);
+        const remainingMm = Math.max(internalHeightMm - totalFixedMm, 0);
+        const totalPercentage = percentageSections.reduce((sum, s) => sum + (s.height || 0), 0);
+
+        let currentY = bottomPanelTop; // 하판 상단부터 시작
+
+        sections.forEach((section, sectionIndex) => {
+          // 섹션 높이 계산
+          let sectionHeightMm: number;
+          if (section.heightType === 'absolute') {
+            sectionHeightMm = section.height || 0;
+          } else if (totalPercentage > 0) {
+            sectionHeightMm = remainingMm * ((section.height || 0) / totalPercentage);
+          } else {
+            sectionHeightMm = percentageSections.length > 0 ? remainingMm / percentageSections.length : remainingMm;
+          }
+
+          const sectionEndY = currentY + sectionHeightMm;
+
+          // 섹션 구분선 (마지막 섹션 제외 - 상판과 겹침 방지)
+          if (sectionIndex < sections.length - 1) {
+            lines.push({
+              x1: innerFrontX, y1: sectionEndY,
+              x2: innerBackX, y2: sectionEndY,
+              layer: 'FURNITURE_PANEL', color: furnitureColor
+            });
+            console.log(`  ✅ 섹션 ${sectionIndex} 구분선: Y ${sectionEndY.toFixed(1)}`);
+          }
+
+          // 서랍 섹션인 경우: 각 서랍 박스 그리기
+          if (section.type === 'drawer') {
+            const drawerCount = section.count || 1;
+            const drawerHeights = section.drawerHeights || [];
+            const gapHeight = section.gapHeight || 24;
+
+            // 서랍 전체 높이에서 갭을 제외한 높이를 서랍 개수로 나눔
+            const totalGapMm = gapHeight * (drawerCount - 1);
+            const defaultDrawerHeight = (sectionHeightMm - totalGapMm) / drawerCount;
+
+            let drawerY = currentY;
+            for (let d = 0; d < drawerCount; d++) {
+              const drawerHeight = drawerHeights[d] || defaultDrawerHeight;
+              const drawerEndY = drawerY + drawerHeight;
+
+              // 서랍 박스 (4변) - 측판 안쪽에 위치
+              // 서랍 앞면 갭 고려 (도어 두께 20mm)
+              const drawerFrontX = innerFrontX + 20;
+              const drawerBackX = innerBackX;
+
+              // 서랍 하단선
+              lines.push({
+                x1: drawerFrontX, y1: drawerY,
+                x2: drawerBackX, y2: drawerY,
+                layer: 'FURNITURE_PANEL', color: drawerColor
+              });
+              // 서랍 상단선
+              lines.push({
+                x1: drawerFrontX, y1: drawerEndY,
+                x2: drawerBackX, y2: drawerEndY,
+                layer: 'FURNITURE_PANEL', color: drawerColor
+              });
+              // 서랍 앞면선 (세로)
+              lines.push({
+                x1: drawerFrontX, y1: drawerY,
+                x2: drawerFrontX, y2: drawerEndY,
+                layer: 'FURNITURE_PANEL', color: drawerColor
+              });
+              // 서랍 뒷면선 (세로)
+              lines.push({
+                x1: drawerBackX, y1: drawerY,
+                x2: drawerBackX, y2: drawerEndY,
+                layer: 'FURNITURE_PANEL', color: drawerColor
+              });
+
+              console.log(`  ✅ 서랍 ${d}: Y ${drawerY.toFixed(1)}~${drawerEndY.toFixed(1)}`);
+
+              drawerY = drawerEndY + gapHeight;
+            }
+          }
+
+          // 행잉 섹션인 경우: 옷봉 표시
+          if (section.type === 'hanging') {
+            // 옷봉 위치: 섹션 상단에서 약간 아래
+            const rodY = sectionEndY - 50; // 상단에서 50mm 아래
+            const rodX = (innerFrontX + innerBackX) / 2; // 가운데
+            const rodRadius = 16; // 옷봉 반지름 16mm
+
+            // 옷봉 원 (단면) - 여러 세그먼트로 근사
+            const segments = 16;
+            for (let i = 0; i < segments; i++) {
+              const angle1 = (i / segments) * Math.PI * 2;
+              const angle2 = ((i + 1) / segments) * Math.PI * 2;
+              const x1 = rodX + Math.cos(angle1) * rodRadius;
+              const y1 = rodY + Math.sin(angle1) * rodRadius;
+              const x2 = rodX + Math.cos(angle2) * rodRadius;
+              const y2 = rodY + Math.sin(angle2) * rodRadius;
+              lines.push({
+                x1, y1, x2, y2,
+                layer: 'CLOTHING_ROD', color: accessoryColor
+              });
+            }
+            console.log(`  ✅ 옷봉: 중심 (${rodX.toFixed(1)}, ${rodY.toFixed(1)}), 반지름 ${rodRadius}`);
+          }
+
+          currentY = sectionEndY;
+        });
+      }
+
+      // ========================================
+      // 5-4. 조절발 (받침대 영역 내)
+      // ========================================
+      if (baseH > 0) {
+        // 조절발 규격: 상단 플레이트 64×64mm, 두께 7mm, 실린더 지름 56mm
+        const footPlateSize = 64;
+        const footPlateThick = 7;
+        const footCylinderDia = 56;
+
+        // 조절발 위치: 앞쪽과 뒤쪽에 각각 1개씩 배치
+        const footPositions = [
+          innerFrontX + 50, // 앞쪽 조절발 (측판에서 50mm 안쪽)
+          innerBackX - 50   // 뒤쪽 조절발 (측판에서 50mm 안쪽)
+        ];
+
+        footPositions.forEach((footX, footIndex) => {
+          // 상단 플레이트 (사각형)
+          const plateLeft = footX - footPlateSize / 2;
+          const plateRight = footX + footPlateSize / 2;
+          const plateBottom = baseH - footPlateThick;
+          const plateTop = baseH;
+
+          // 플레이트 박스
+          lines.push({ x1: plateLeft, y1: plateBottom, x2: plateRight, y2: plateBottom, layer: 'ACCESSORIES', color: accessoryColor });
+          lines.push({ x1: plateLeft, y1: plateTop, x2: plateRight, y2: plateTop, layer: 'ACCESSORIES', color: accessoryColor });
+          lines.push({ x1: plateLeft, y1: plateBottom, x2: plateLeft, y2: plateTop, layer: 'ACCESSORIES', color: accessoryColor });
+          lines.push({ x1: plateRight, y1: plateBottom, x2: plateRight, y2: plateTop, layer: 'ACCESSORIES', color: accessoryColor });
+
+          // 실린더 (사각형으로 단순화 - 측면뷰에서는 원통이 사각형으로 보임)
+          const cylLeft = footX - footCylinderDia / 2;
+          const cylRight = footX + footCylinderDia / 2;
+          const cylBottom = 0;
+          const cylTop = plateBottom;
+
+          // 실린더 박스
+          lines.push({ x1: cylLeft, y1: cylBottom, x2: cylRight, y2: cylBottom, layer: 'ACCESSORIES', color: accessoryColor });
+          lines.push({ x1: cylLeft, y1: cylTop, x2: cylRight, y2: cylTop, layer: 'ACCESSORIES', color: accessoryColor });
+          lines.push({ x1: cylLeft, y1: cylBottom, x2: cylLeft, y2: cylTop, layer: 'ACCESSORIES', color: accessoryColor });
+          lines.push({ x1: cylRight, y1: cylBottom, x2: cylRight, y2: cylTop, layer: 'ACCESSORIES', color: accessoryColor });
+
+          console.log(`  ✅ 조절발 ${footIndex}: X ${footX}, 플레이트 Y ${plateBottom}~${plateTop}, 실린더 Y ${cylBottom}~${cylTop}`);
+        });
+      }
+    });
+
+    console.log(`📐 측면뷰 내부 요소 생성 완료`);
   }
 
   console.log(`📏 외부 치수선 생성: ${lines.length}개 라인, ${texts.length}개 텍스트`);
