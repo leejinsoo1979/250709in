@@ -877,27 +877,6 @@ const extractFromScene = (
       return;
     }
 
-    // 측면뷰에서 가구 내부 치수선(내경) 제외 - LINE 객체만 대상
-    // 가구 내부 치수선은 X 좌표가 가구 슬롯 위치에 있음
-    // CADDimensions2D 치수선은 X=0에 있음
-    const isLineObject = object instanceof THREE.Line ||
-                         object instanceof THREE.LineSegments ||
-                         object.type === 'Line' ||
-                         object.type === 'LineSegments';
-
-    if ((viewDirection === 'left' || viewDirection === 'right') &&
-        name.toLowerCase().includes('dimension') &&
-        isLineObject) {
-      // X 좌표로 판단: CADDimensions2D는 X=0, 가구 내부 치수는 X≠0
-      const lineWorldPos = new THREE.Vector3();
-      object.getWorldPosition(lineWorldPos);
-
-      if (Math.abs(lineWorldPos.x) > 0.1) {
-        // 가구 내부 치수선(내경)은 측면뷰에서 제외
-        skippedByFilter++;
-        return;
-      }
-    }
 
     const lowerNameForFilter = name.toLowerCase();
 
@@ -1283,21 +1262,6 @@ const extractFromScene = (
       if (viewDirection === 'top') {
         console.log(`📝 ${viewDirection}뷰: 치수 텍스트 제외`);
         return;
-      }
-
-      // 측면뷰에서 가구 내부 치수 텍스트 제외 (D517, 18, 230 등)
-      // 가구 내부 치수는 X 좌표가 가구 위치 근처에 있음 (가구 슬롯 X 위치)
-      // CADDimensions2D 치수는 X=0에 있음 (공간 중앙)
-      if (viewDirection === 'left' || viewDirection === 'right') {
-        const textWorldPos = new THREE.Vector3();
-        mesh.getWorldPosition(textWorldPos);
-
-        // X 좌표가 0이 아니면 가구 내부 치수 (가구 슬롯 위치에 있음)
-        // CADDimensions2D는 X=0에 치수선 배치
-        if (Math.abs(textWorldPos.x) > 0.1) {
-          console.log(`📝 ${viewDirection}뷰: 가구 내부 치수 텍스트 제외 - "${(mesh as any).text}" (X=${textWorldPos.x.toFixed(2)})`);
-          return;
-        }
       }
 
       const textContent = (mesh as any).text;
