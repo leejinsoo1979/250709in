@@ -1019,9 +1019,15 @@ const extractFromScene = (
 
     // 측면뷰에서 가구 및 치수선 X 위치 필터링 (allowedXRange가 있으면 해당 범위만 포함)
     // 공간 프레임만 필터링 제외 (항상 포함)
+    // 조절발은 X 위치 필터링에서 제외 (가구와 함께 항상 표시)
+    const isAdjustableFoot = lowerNameForFilter.includes('adjustable-foot') ||
+                             lowerNameForFilter.includes('조절발') ||
+                             lowerNameForFilter.includes('leveler');
+
     if (allowedXRange &&
         (viewDirection === 'left' || viewDirection === 'right') &&
-        layer !== 'SPACE_FRAME') {
+        layer !== 'SPACE_FRAME' &&
+        !isAdjustableFoot) {
 
       // 가구 관련 객체인 경우 X 위치 필터링 적용
       const isFurnitureObject = lowerNameForFilter.includes('furniture') ||
@@ -1029,12 +1035,10 @@ const extractFromScene = (
                                 lowerNameForFilter.includes('panel') ||
                                 lowerNameForFilter.includes('back-panel') ||
                                 lowerNameForFilter.includes('clothing-rod') ||
-                                lowerNameForFilter.includes('adjustable-foot') ||
                                 lowerNameForFilter.includes('ventilation') ||
                                 lowerNameForFilter.includes('선반') ||
                                 lowerNameForFilter.includes('패널') ||
                                 lowerNameForFilter.includes('옷봉') ||
-                                lowerNameForFilter.includes('조절발') ||
                                 lowerNameForFilter.includes('환기');
 
       // 가구 내부 치수선만 X 위치 필터링 적용
@@ -1642,7 +1646,8 @@ const generateExternalDimensions = (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
   viewDirection: ViewDirection,
-  sideViewFilter: SideViewFilter = 'all'
+  sideViewFilter: SideViewFilter = 'all',
+  dimensionsOnly: boolean = false // true: 치수선만 생성, false: 가구형상 + 치수선
 ): { lines: DxfLine[]; texts: DxfText[] } => {
   const lines: DxfLine[] = [];
   const texts: DxfText[] = [];
@@ -2479,97 +2484,129 @@ const generateExternalDimensions = (
     };
 
     // ========================================
-    // 2. 가구 측판 외곽선 (사각형)
+    // 2~5. 가구 형상 (dimensionsOnly가 false일 때만)
+    // 씬에서 추출한 데이터를 사용할 때는 치수선만 생성
     // ========================================
-    const panelLeft = transformX(0);
-    const panelRight = transformX(furnitureDepthMm);
-    const panelBottom = furnitureBaseY;
-    const panelTop = furnitureBaseY + furnitureHeightMm;
+    if (!dimensionsOnly) {
+      // ========================================
+      // 2. 가구 측판 외곽선 (사각형)
+      // ========================================
+      const panelLeft = transformX(0);
+      const panelRight = transformX(furnitureDepthMm);
+      const panelBottom = furnitureBaseY;
+      const panelTop = furnitureBaseY + furnitureHeightMm;
 
-    // 측판 외곽선 (사각형) - 좌우가 뒤바뀔 수 있으므로 min/max 사용
-    const minX = Math.min(panelLeft, panelRight);
-    const maxX = Math.max(panelLeft, panelRight);
+      // 측판 외곽선 (사각형) - 좌우가 뒤바뀔 수 있으므로 min/max 사용
+      const minX = Math.min(panelLeft, panelRight);
+      const maxX = Math.max(panelLeft, panelRight);
 
-    lines.push({ x1: minX, y1: panelBottom, x2: maxX, y2: panelBottom, layer: 'FURNITURE_PANEL', color: lineColor });
-    lines.push({ x1: maxX, y1: panelBottom, x2: maxX, y2: panelTop, layer: 'FURNITURE_PANEL', color: lineColor });
-    lines.push({ x1: maxX, y1: panelTop, x2: minX, y2: panelTop, layer: 'FURNITURE_PANEL', color: lineColor });
-    lines.push({ x1: minX, y1: panelTop, x2: minX, y2: panelBottom, layer: 'FURNITURE_PANEL', color: lineColor });
+      lines.push({ x1: minX, y1: panelBottom, x2: maxX, y2: panelBottom, layer: 'FURNITURE_PANEL', color: lineColor });
+      lines.push({ x1: maxX, y1: panelBottom, x2: maxX, y2: panelTop, layer: 'FURNITURE_PANEL', color: lineColor });
+      lines.push({ x1: maxX, y1: panelTop, x2: minX, y2: panelTop, layer: 'FURNITURE_PANEL', color: lineColor });
+      lines.push({ x1: minX, y1: panelTop, x2: minX, y2: panelBottom, layer: 'FURNITURE_PANEL', color: lineColor });
 
-    // ========================================
-    // 3. 상부 프레임 (있는 경우)
-    // ========================================
-    if (topFrameHeightMm > 0) {
-      const topFrameBottom = height - topFrameHeightMm;
-      const topFrameTop = height;
+      // ========================================
+      // 3. 상부 프레임 (있는 경우)
+      // ========================================
+      if (topFrameHeightMm > 0) {
+        const topFrameBottom = height - topFrameHeightMm;
+        const topFrameTop = height;
 
-      // 상부 프레임 사각형
-      lines.push({ x1: minX, y1: topFrameBottom, x2: maxX, y2: topFrameBottom, layer: 'SPACE_FRAME', color: lineColor });
-      lines.push({ x1: maxX, y1: topFrameBottom, x2: maxX, y2: topFrameTop, layer: 'SPACE_FRAME', color: lineColor });
-      lines.push({ x1: maxX, y1: topFrameTop, x2: minX, y2: topFrameTop, layer: 'SPACE_FRAME', color: lineColor });
-      lines.push({ x1: minX, y1: topFrameTop, x2: minX, y2: topFrameBottom, layer: 'SPACE_FRAME', color: lineColor });
+        // 상부 프레임 사각형
+        lines.push({ x1: minX, y1: topFrameBottom, x2: maxX, y2: topFrameBottom, layer: 'SPACE_FRAME', color: lineColor });
+        lines.push({ x1: maxX, y1: topFrameBottom, x2: maxX, y2: topFrameTop, layer: 'SPACE_FRAME', color: lineColor });
+        lines.push({ x1: maxX, y1: topFrameTop, x2: minX, y2: topFrameTop, layer: 'SPACE_FRAME', color: lineColor });
+        lines.push({ x1: minX, y1: topFrameTop, x2: minX, y2: topFrameBottom, layer: 'SPACE_FRAME', color: lineColor });
+      }
+
+      // ========================================
+      // 4. 하부 프레임/받침대 (있는 경우)
+      // ========================================
+      if (baseFrameHeightMm > 0) {
+        const baseBottom = 0;
+        const baseTop = baseFrameHeightMm;
+        // 받침대 깊이가 있으면 사용, 없으면 가구 깊이 사용
+        const actualBaseDepth = baseDepthMm > 0 ? baseDepthMm : furnitureDepthMm;
+        const baseLeft = transformX(0);
+        const baseRight = transformX(actualBaseDepth);
+        const baseMinX = Math.min(baseLeft, baseRight);
+        const baseMaxX = Math.max(baseLeft, baseRight);
+
+        // 하부 프레임/받침대 사각형
+        lines.push({ x1: baseMinX, y1: baseBottom, x2: baseMaxX, y2: baseBottom, layer: 'SPACE_FRAME', color: lineColor });
+        lines.push({ x1: baseMaxX, y1: baseBottom, x2: baseMaxX, y2: baseTop, layer: 'SPACE_FRAME', color: lineColor });
+        lines.push({ x1: baseMaxX, y1: baseTop, x2: baseMinX, y2: baseTop, layer: 'SPACE_FRAME', color: lineColor });
+        lines.push({ x1: baseMinX, y1: baseTop, x2: baseMinX, y2: baseBottom, layer: 'SPACE_FRAME', color: lineColor });
+      }
+
+      // ========================================
+      // 5. 조절발 (floor 타입이고 받침대가 있는 경우)
+      // AdjustableFootsRenderer와 동일한 위치에 2개 (앞쪽, 뒤쪽)
+      // 조절발: 플레이트 64x7mm, 원통 지름 56mm
+      // ========================================
+      if (!isStandType && baseFrameHeightMm > 0) {
+        const footPlateSize = 64; // 조절발 플레이트 크기 (mm)
+        const footPlateThickness = 7; // 조절발 플레이트 두께 (mm)
+        const footDiameter = 56; // 조절발 지름 (mm)
+        const footCylinderHeight = Math.max(baseFrameHeightMm - footPlateThickness, 0); // 원통 높이
+
+        // AdjustableFootsRenderer와 동일한 Z축 위치 계산
+        // 앞쪽: 앞면에서 20mm 안쪽 + 받침대 깊이
+        // 뒤쪽: 뒷면에서 plateHalf(32mm) 안쪽
+        const plateHalfMm = footPlateSize / 2; // 32mm
+        const actualBaseDepthForFoot = baseDepthMm > 0 ? baseDepthMm : 0;
+
+        // 측면뷰에서 Z 위치를 DXF X 좌표로 변환
+        // furnitureDepthMm = 600mm 기준
+        // Z+ = 앞면, Z- = 뒷면
+        // DXF에서: 좌측뷰 X=0이 앞면, X=깊이가 뒷면
+
+        // 앞쪽 조절발: Z = furnitureDepth/2 - plateHalf - 20 - baseDepthOffset
+        // DXF X = (가구깊이/2 - Z) = plateHalf + 20 + baseDepthOffset (좌측뷰)
+        const frontFootDepth = plateHalfMm + 20 + actualBaseDepthForFoot;
+
+        // 뒤쪽 조절발: Z = -furnitureDepth/2 + plateHalf
+        // DXF X = (가구깊이/2 - Z) = furnitureDepthMm - plateHalf (좌측뷰)
+        const backFootDepth = furnitureDepthMm - plateHalfMm;
+
+        // 조절발 그리기 함수
+        const drawFoot = (footCenterDepth: number) => {
+          // 조절발 플레이트 (상단 사각형) - 받침대 바로 아래
+          const plateLeft = transformX(footCenterDepth - footPlateSize / 2);
+          const plateRight = transformX(footCenterDepth + footPlateSize / 2);
+          const plateMinX = Math.min(plateLeft, plateRight);
+          const plateMaxX = Math.max(plateLeft, plateRight);
+          const plateTop = 0; // 받침대 바닥
+          const plateBottom = -footPlateThickness;
+
+          lines.push({ x1: plateMinX, y1: plateBottom, x2: plateMaxX, y2: plateBottom, layer: 'ACCESSORIES', color: lineColor });
+          lines.push({ x1: plateMaxX, y1: plateBottom, x2: plateMaxX, y2: plateTop, layer: 'ACCESSORIES', color: lineColor });
+          lines.push({ x1: plateMaxX, y1: plateTop, x2: plateMinX, y2: plateTop, layer: 'ACCESSORIES', color: lineColor });
+          lines.push({ x1: plateMinX, y1: plateTop, x2: plateMinX, y2: plateBottom, layer: 'ACCESSORIES', color: lineColor });
+
+          // 조절발 원통 (플레이트 아래)
+          const cylLeft = transformX(footCenterDepth - footDiameter / 2);
+          const cylRight = transformX(footCenterDepth + footDiameter / 2);
+          const cylMinX = Math.min(cylLeft, cylRight);
+          const cylMaxX = Math.max(cylLeft, cylRight);
+          const cylTop = plateBottom;
+          const cylBottom = plateBottom - footCylinderHeight;
+
+          lines.push({ x1: cylMinX, y1: cylTop, x2: cylMinX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
+          lines.push({ x1: cylMaxX, y1: cylTop, x2: cylMaxX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
+          lines.push({ x1: cylMinX, y1: cylBottom, x2: cylMaxX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
+        };
+
+        // 앞쪽 조절발 그리기
+        drawFoot(frontFootDepth);
+        // 뒤쪽 조절발 그리기
+        drawFoot(backFootDepth);
+
+        console.log(`🦶 조절발 위치 (${viewDirection}뷰): 앞쪽=${frontFootDepth}mm, 뒤쪽=${backFootDepth}mm`);
+      }
+
+      console.log(`✅ ${viewDirection}뷰 가구 형상 생성 완료: ${lines.length}개 라인`);
     }
-
-    // ========================================
-    // 4. 하부 프레임/받침대 (있는 경우)
-    // ========================================
-    if (baseFrameHeightMm > 0) {
-      const baseBottom = 0;
-      const baseTop = baseFrameHeightMm;
-      // 받침대 깊이가 있으면 사용, 없으면 가구 깊이 사용
-      const actualBaseDepth = baseDepthMm > 0 ? baseDepthMm : furnitureDepthMm;
-      const baseLeft = transformX(0);
-      const baseRight = transformX(actualBaseDepth);
-      const baseMinX = Math.min(baseLeft, baseRight);
-      const baseMaxX = Math.max(baseLeft, baseRight);
-
-      // 하부 프레임/받침대 사각형
-      lines.push({ x1: baseMinX, y1: baseBottom, x2: baseMaxX, y2: baseBottom, layer: 'SPACE_FRAME', color: lineColor });
-      lines.push({ x1: baseMaxX, y1: baseBottom, x2: baseMaxX, y2: baseTop, layer: 'SPACE_FRAME', color: lineColor });
-      lines.push({ x1: baseMaxX, y1: baseTop, x2: baseMinX, y2: baseTop, layer: 'SPACE_FRAME', color: lineColor });
-      lines.push({ x1: baseMinX, y1: baseTop, x2: baseMinX, y2: baseBottom, layer: 'SPACE_FRAME', color: lineColor });
-    }
-
-    // ========================================
-    // 5. 조절발 (floor 타입이고 받침대가 있는 경우)
-    // 조절발: 플레이트 64x7mm, 원통 지름 56mm
-    // ========================================
-    if (!isStandType && baseFrameHeightMm > 0) {
-      const footPlateSize = 64; // 조절발 플레이트 크기 (mm)
-      const footPlateThickness = 7; // 조절발 플레이트 두께 (mm)
-      const footDiameter = 56; // 조절발 지름 (mm)
-      const footCylinderHeight = baseFrameHeightMm - footPlateThickness; // 원통 높이
-
-      // 조절발 위치 (받침대 깊이 중앙)
-      const actualBaseDepth = baseDepthMm > 0 ? baseDepthMm : furnitureDepthMm;
-      const footCenterDepth = actualBaseDepth / 2;
-
-      // 조절발 플레이트 (상단 사각형) - 받침대 바로 아래
-      const plateLeft = transformX(footCenterDepth - footPlateSize / 2);
-      const plateRight = transformX(footCenterDepth + footPlateSize / 2);
-      const plateMinX = Math.min(plateLeft, plateRight);
-      const plateMaxX = Math.max(plateLeft, plateRight);
-      const plateTop = 0; // 받침대 바닥
-      const plateBottom = -footPlateThickness;
-
-      lines.push({ x1: plateMinX, y1: plateBottom, x2: plateMaxX, y2: plateBottom, layer: 'ACCESSORIES', color: lineColor });
-      lines.push({ x1: plateMaxX, y1: plateBottom, x2: plateMaxX, y2: plateTop, layer: 'ACCESSORIES', color: lineColor });
-      lines.push({ x1: plateMaxX, y1: plateTop, x2: plateMinX, y2: plateTop, layer: 'ACCESSORIES', color: lineColor });
-      lines.push({ x1: plateMinX, y1: plateTop, x2: plateMinX, y2: plateBottom, layer: 'ACCESSORIES', color: lineColor });
-
-      // 조절발 원통 (플레이트 아래)
-      const cylLeft = transformX(footCenterDepth - footDiameter / 2);
-      const cylRight = transformX(footCenterDepth + footDiameter / 2);
-      const cylMinX = Math.min(cylLeft, cylRight);
-      const cylMaxX = Math.max(cylLeft, cylRight);
-      const cylTop = plateBottom;
-      const cylBottom = plateBottom - footCylinderHeight;
-
-      lines.push({ x1: cylMinX, y1: cylTop, x2: cylMinX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
-      lines.push({ x1: cylMaxX, y1: cylTop, x2: cylMaxX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
-      lines.push({ x1: cylMinX, y1: cylBottom, x2: cylMaxX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
-    }
-
-    console.log(`✅ ${viewDirection}뷰 가구 형상 생성 완료: ${lines.length}개 라인`);
 
     // ========================================
     // 측면뷰 치수선 생성 (CADDimensions2D와 동일)
@@ -2629,9 +2666,16 @@ const generateExternalDimensions = (
       }
 
       const module = targetModuleForSection;
-      const moduleData = getModuleById(module.id);
-      // CADDimensions2D와 동일하게 adjustedInternalHeightMm 사용
-      const sectionInfo = computeSectionHeightsInfo(module, moduleData, adjustedInternalHeightMm, viewDirection);
+      // CADDimensions2D와 동일하게 moduleId 사용하여 모듈 데이터 가져오기
+      const moduleData = getModuleById(
+        module.moduleId,
+        { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+        spaceInfo
+      );
+
+      // CADDimensions2D와 동일하게 internalSpace.height 사용
+      const sectionInfo = computeSectionHeightsInfo(module, moduleData, internalSpace.height, viewDirection);
+      console.log(`  - sectionInfo.heightsMm: ${JSON.stringify(sectionInfo.heightsMm)}`);
 
       if (sectionInfo.heightsMm.length > 0) {
         // CADDimensions2D와 동일하게: 첫 번째는 하부섹션, 나머지는 상부섹션으로 합산
@@ -2867,19 +2911,16 @@ export const generateDxfFromData = (
     // 씬에서 추출한 내부 치수선(DIMENSIONS 레이어)과 텍스트는 모두 제외
     // 조절발(ACCESSORIES)도 측면뷰에서는 제외 (2D UI와 동일하게)
 
-    // 씬에서 추출한 라인 중 내부 치수선과 조절발 제외 (가구 형상만 유지)
+    // 씬에서 추출한 라인 중 내부 치수선만 제외 (가구 형상 + 조절발 유지)
     let filteredLines = extracted.lines.filter(line => {
       // DIMENSIONS 레이어 라인은 제외 (내부 치수선)
       if (line.layer === 'DIMENSIONS') {
         return false;
       }
-      // ACCESSORIES 레이어 라인은 제외 (조절발)
-      if (line.layer === 'ACCESSORIES') {
-        return false;
-      }
+      // ACCESSORIES 레이어(조절발)는 포함 - 측면뷰에서도 조절발 표시
       return true;
     });
-    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS/ACCESSORIES 제외)`);
+    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS만 제외, ACCESSORIES 포함)`);
 
     // ========================================
     // 핵심 수정: 씬에서 추출한 라인의 X 좌표를 0 기준으로 정규화
@@ -2909,12 +2950,12 @@ export const generateDxfFromData = (
     // 외부 치수선의 텍스트만 사용
     console.log(`📏 측면뷰: 씬 텍스트 ${extracted.texts.length}개 모두 제외 (내부 치수)`);
 
-    // 외부 치수선 생성 (CADDimensions2D와 동일한 치수) - sideViewFilter 전달
-    const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection, sideViewFilter);
+    // 외부 치수선만 생성 (dimensionsOnly: true) - 가구형상은 씬에서 추출한 것 사용
+    const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection, sideViewFilter, true);
 
     lines = [...filteredLines, ...externalDimensions.lines];
     texts = [...externalDimensions.texts]; // 외부 치수선 텍스트만 사용
-    console.log(`📐 측면뷰 (${viewDirection}): 가구형상 ${filteredLines.length}개 + 외부치수선 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
+    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 가구형상 ${filteredLines.length}개 + 치수선 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
   } else {
     // 정면뷰/탑뷰: 기존 방식대로 외부 치수선 생성 후 합치기
     const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection, sideViewFilter);
