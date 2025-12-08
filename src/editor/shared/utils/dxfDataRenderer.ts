@@ -2612,7 +2612,11 @@ const generateExternalDimensions = (
     const cabinetTopY = height - topFrameHeightMm; // 가구 내부 끝점 (상부프레임 아래)
 
     if (viewDirection === 'left') {
-      // ===== 왼쪽: 전체 높이 치수 =====
+      // ===== 좌측뷰: UI view2DDirection='left'와 동일한 배치 =====
+      // UI에서 좌측뷰: 왼쪽=전체높이, 오른쪽=섹션별높이
+      // DXF에서: X=0이 앞면(UI 왼쪽), X=깊이가 뒷면(UI 오른쪽)
+
+      // ===== 왼쪽 (X=0 근처): 전체 높이 치수 =====
       const leftX = -dimOffset;
 
       // 치수선 본체 (수직)
@@ -2627,7 +2631,7 @@ const generateExternalDimensions = (
       // 전체 높이 텍스트
       texts.push({ x: leftX - 60, y: height / 2, text: `${height}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
-      // ===== 오른쪽: 상부프레임 + 상부섹션 + 하부섹션 + 하부프레임 치수 =====
+      // ===== 오른쪽 (X=깊이 근처): 상부프레임 + 상부섹션 + 하부섹션 + 하부프레임 치수 =====
       const rightX = furnitureDepthMm + dimOffset;
 
       // 상부 프레임 치수 (있는 경우)
@@ -2661,7 +2665,7 @@ const generateExternalDimensions = (
         texts.push({ x: rightX + 60, y: baseFrameHeightMmDim / 2, text: `${baseFrameHeightMmDim}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
       }
 
-      // ===== 상단/하단: 깊이 치수 =====
+      // ===== 상단: 깊이 치수 =====
       const topDimY = height + dimOffset;
       lines.push({ x1: 0, y1: topDimY, x2: furnitureDepthMm, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
       lines.push({ x1: 0, y1: height, x2: 0, y2: topDimY + extLength, layer: 'DIMENSIONS', color: dimColor });
@@ -2669,10 +2673,13 @@ const generateExternalDimensions = (
       texts.push({ x: furnitureDepthMm / 2, y: topDimY + 15, text: `${furnitureDepthMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
     } else if (viewDirection === 'right') {
-      // ===== 우측뷰: 좌측뷰와 좌우 반전 =====
+      // ===== 우측뷰: UI view2DDirection='right'와 동일한 배치 =====
+      // UI에서 우측뷰: 오른쪽=전체높이, 왼쪽=섹션별높이
+      // DXF에서: X=0이 뒷면(UI 왼쪽), X=깊이가 앞면(UI 오른쪽)
+
+      // ===== 오른쪽 (X=깊이 근처): 전체 높이 치수 =====
       const rightX = furnitureDepthMm + dimOffset;
 
-      // 오른쪽: 전체 높이 치수
       lines.push({ x1: rightX, y1: 0, x2: rightX, y2: height, layer: 'DIMENSIONS', color: dimColor });
       lines.push({ x1: furnitureDepthMm, y1: 0, x2: rightX + extLength, y2: 0, layer: 'DIMENSIONS', color: dimColor });
       lines.push({ x1: furnitureDepthMm, y1: height, x2: rightX + extLength, y2: height, layer: 'DIMENSIONS', color: dimColor });
