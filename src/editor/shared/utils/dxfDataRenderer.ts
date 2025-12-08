@@ -1853,50 +1853,86 @@ const generateExternalDimensions = (
   } else if (viewDirection === 'top') {
     // ========================================
     // 탑뷰 치수선 (위에서 내려다본 뷰)
-    // projectTo2D: y = -p.z * scale
-    // 이미지 확인: 가구가 도면 상단(Y 양수)에 위치
-    // 가구는 뒤벽(Y=depth)에서 앞(Y=0 방향)으로 뻗어나옴
     // ========================================
-    console.log('📏 상부뷰: 치수선 생성');
+    // CleanCAD2D.tsx의 좌표계를 정확히 따름:
+    // - Three.js: spaceZOffset = -spaceDepth / 2 (음수)
+    // - projectTo2D 변환: y = -p.z * scale
+    // - Three.js Z가 음수 → DXF Y가 양수 (도면 상단)
+    // ========================================
+    console.log('📏 상부뷰: 치수선 생성 (CleanCAD2D 좌표계 적용)');
 
     const frameSize = spaceInfo.frameSize || { left: 42, right: 42, top: 10 };
     const leftFrameWidth = frameSize.left || 42;
     const halfWidth = width / 2;
 
     // 가구 깊이 계산 (placedModules에서 최대 깊이 추출)
-    let furnitureDepth = 600; // 기본값 600mm
+    let furnitureDepthMm = 600; // 기본값 600mm
     if (placedModules && placedModules.length > 0) {
       const moduleDepths = placedModules.map(m => m.customDepth || 600);
-      furnitureDepth = Math.max(...moduleDepths);
+      furnitureDepthMm = Math.max(...moduleDepths);
     }
 
+    // ========================================
+    // CleanCAD2D.tsx와 동일한 좌표 계산
+    // ========================================
+    // CleanCAD2D.tsx (line 4921-4965):
+    // const panelDepthMm = spaceInfo.depth || 600;
+    // const furnitureDepthMm = Math.min(panelDepthMm, 600);
+    // const panelDepth = mmToThreeUnits(panelDepthMm);
+    // const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
+    // const furnitureZOffset = spaceZOffset + (panelDepth - furnitureDepth) / 2;
+    // const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2;
+    // furnitureBackZ = furnitureZ - depth/2;
+    // furnitureFrontZ = furnitureZ + depth/2;
+
+    const panelDepthMm = depth; // spaceInfo.depth
+    const maxFurnitureDepthMm = Math.min(panelDepthMm, 600);
+    const doorThicknessMm = 20;
+
+    // Three.js 좌표 (meter 단위, 1 Three.js unit = 0.01m = 10mm)
+    // spaceZOffset = -spaceDepth / 2 (Three.js)
+    const spaceZOffsetThree = -panelDepthMm / 2 * 0.01; // Three.js meter 단위
+    const furnitureDepthThree = maxFurnitureDepthMm * 0.01;
+    const panelDepthThree = panelDepthMm * 0.01;
+    const doorThicknessThree = doorThicknessMm * 0.01;
+    const moduleDepthThree = furnitureDepthMm * 0.01;
+
+    // CleanCAD2D와 동일한 계산
+    const furnitureZOffset = spaceZOffsetThree + (panelDepthThree - furnitureDepthThree) / 2;
+    const furnitureZ = furnitureZOffset + furnitureDepthThree/2 - doorThicknessThree - moduleDepthThree/2;
+    const furnitureBackZ = furnitureZ - moduleDepthThree/2;   // 가구 뒷면 (Three.js Z, 음수)
+    const furnitureFrontZ = furnitureZ + moduleDepthThree/2;  // 가구 앞면 (Three.js Z, 음수~0 근처)
+
+    // projectTo2D 변환 적용: DXF Y = -Z * 100 (scale)
+    const furnitureBackY = -furnitureBackZ * 100;   // 가구 뒷면 → DXF Y (양수, 도면 상단)
+    const furnitureFrontY = -furnitureFrontZ * 100; // 가구 앞면 → DXF Y (양수 또는 0)
+
+    console.log(`📐 탑뷰 좌표 계산:`);
+    console.log(`  - spaceZOffset(Three.js): ${spaceZOffsetThree.toFixed(4)}m`);
+    console.log(`  - furnitureBackZ(Three.js): ${furnitureBackZ.toFixed(4)}m → DXF Y: ${furnitureBackY.toFixed(1)}mm`);
+    console.log(`  - furnitureFrontZ(Three.js): ${furnitureFrontZ.toFixed(4)}m → DXF Y: ${furnitureFrontY.toFixed(1)}mm`);
+
     // 치수선 설정
-    const dimOffset = 300;  // 치수선 오프셋 (가구 위 300mm)
+    const dimOffset = 200;  // 치수선 오프셋 (가구 뒤쪽 위 200mm)
     const extLength = 50;   // 연장선 길이
     const dimColor = 7;     // 흰색 (ACI 7)
-
-    // 탑뷰에서 가구 위치 (도면에서 Y 좌표)
-    // 이미지 확인: 가구가 도면 상단에 위치 (Y가 양수)
-    // 가구는 뒤벽(Y=depth)에서 앞(Y=0)으로 뻗어나옴
-    const furnitureBackY = furnitureDepth;   // 가구 뒤쪽 (뒤벽, 도면 상단)
-    const furnitureFrontY = 0;               // 가구 앞면 (도면 하단 방향)
 
     // ========================================
     // 1. 좌측에 가구 깊이 치수선
     // ========================================
     const leftDimX = -halfWidth - dimOffset;
 
-    // 가구 깊이 치수선 (세로선)
+    // 가구 깊이 치수선 (세로선) - 가구 앞면에서 뒷면까지
     lines.push({
       x1: leftDimX, y1: furnitureFrontY, x2: leftDimX, y2: furnitureBackY,
       layer: 'DIMENSIONS', color: dimColor
     });
-    // 상단(뒤벽 방향) 연장선
+    // 상단(뒷면 방향) 연장선 - 가구 뒷면에서 치수선까지
     lines.push({
       x1: -halfWidth + leftFrameWidth, y1: furnitureBackY, x2: leftDimX - extLength, y2: furnitureBackY,
       layer: 'DIMENSIONS', color: dimColor
     });
-    // 하단(앞면 방향) 연장선
+    // 하단(앞면 방향) 연장선 - 가구 앞면에서 치수선까지
     lines.push({
       x1: -halfWidth + leftFrameWidth, y1: furnitureFrontY, x2: leftDimX - extLength, y2: furnitureFrontY,
       layer: 'DIMENSIONS', color: dimColor
@@ -1904,7 +1940,7 @@ const generateExternalDimensions = (
     // 가구 깊이 텍스트
     texts.push({
       x: leftDimX - 30, y: (furnitureFrontY + furnitureBackY) / 2,
-      text: `${furnitureDepth}`, height: 20, color: dimColor, layer: 'DIMENSIONS'
+      text: `${furnitureDepthMm}`, height: 20, color: dimColor, layer: 'DIMENSIONS'
     });
 
     // ========================================
@@ -1917,12 +1953,12 @@ const generateExternalDimensions = (
       x1: -halfWidth, y1: topDimY, x2: halfWidth, y2: topDimY,
       layer: 'DIMENSIONS', color: dimColor
     });
-    // 좌측 연장선
+    // 좌측 연장선 - 가구 뒤쪽에서 치수선까지
     lines.push({
       x1: -halfWidth, y1: furnitureBackY, x2: -halfWidth, y2: topDimY + extLength,
       layer: 'DIMENSIONS', color: dimColor
     });
-    // 우측 연장선
+    // 우측 연장선 - 가구 뒤쪽에서 치수선까지
     lines.push({
       x1: halfWidth, y1: furnitureBackY, x2: halfWidth, y2: topDimY + extLength,
       layer: 'DIMENSIONS', color: dimColor
@@ -1950,12 +1986,12 @@ const generateExternalDimensions = (
           x1: moduleLeftX, y1: dim2Y, x2: moduleRightX, y2: dim2Y,
           layer: 'DIMENSIONS', color: dimColor
         });
-        // 좌측 연장선
+        // 좌측 연장선 - 가구 뒤쪽에서 치수선까지
         lines.push({
           x1: moduleLeftX, y1: furnitureBackY, x2: moduleLeftX, y2: dim2Y + extLength,
           layer: 'DIMENSIONS', color: dimColor
         });
-        // 우측 연장선
+        // 우측 연장선 - 가구 뒤쪽에서 치수선까지
         lines.push({
           x1: moduleRightX, y1: furnitureBackY, x2: moduleRightX, y2: dim2Y + extLength,
           layer: 'DIMENSIONS', color: dimColor
