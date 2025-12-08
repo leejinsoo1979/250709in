@@ -2718,6 +2718,10 @@ const generateExternalDimensions = (
     const cabinetBottomY = baseFrameHeightMmDim; // 가구 내부 시작점 (받침대 위)
     const cabinetTopY = height - topFrameHeightMm; // 가구 내부 끝점 (상부프레임 아래)
 
+    // 실제 가구 형상 X 범위 (상/하단 깊이 치수선 위치에 사용)
+    const furnitureXMin = actualFurnitureMinX !== undefined ? actualFurnitureMinX : 0;
+    const furnitureXMax = actualFurnitureMaxX !== undefined ? actualFurnitureMaxX : furnitureDepthMm;
+
     if (viewDirection === 'left') {
       // ===== 좌측뷰: UI 기준 =====
       // UI에서 좌측뷰: 왼쪽=전체높이, 오른쪽=섹션치수
