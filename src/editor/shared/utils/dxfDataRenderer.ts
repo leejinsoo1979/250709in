@@ -2100,6 +2100,76 @@ const generateExternalDimensions = (
       console.log(`  ✅ 우측 프레임 추가: X ${rightFrameLeftX}~${rightFrameRightX}, Y ${frameFrontEdgeY}~${frameBackEdgeY}`);
     }
 
+    // ========================================
+    // 5. 탑뷰 좌/우 서브프레임 - ㄱ자의 가로 부분
+    // ========================================
+    // Room.tsx 기준: 서브프레임은 메인 프레임에서 안쪽으로 40mm 들어감, 두께 18mm
+    // 가구 앞면에 위치 (메인 프레임과 동일한 Y 위치)
+    const subFrameDepthMm = 40; // 안쪽으로 40mm
+    const subFrameThickMm = 18; // 두께 18mm
+
+    // 좌측 서브프레임 (메인 프레임에서 오른쪽으로 들어감)
+    if (leftFrameWidth > 0) {
+      const subFrameLeftX = -halfWidth + leftFrameWidth; // 메인 프레임 안쪽 경계
+      const subFrameRightX = -halfWidth + leftFrameWidth + subFrameDepthMm; // 40mm 더 안쪽
+      const subFrameFrontY = frameFrontEdgeY; // 메인 프레임과 동일
+      const subFrameBackY = frameFrontEdgeY + subFrameThickMm; // 18mm 두께
+
+      // 4개 변
+      lines.push({
+        x1: subFrameLeftX, y1: subFrameFrontY,
+        x2: subFrameRightX, y2: subFrameFrontY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      lines.push({
+        x1: subFrameLeftX, y1: subFrameBackY,
+        x2: subFrameRightX, y2: subFrameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      lines.push({
+        x1: subFrameLeftX, y1: subFrameFrontY,
+        x2: subFrameLeftX, y2: subFrameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      lines.push({
+        x1: subFrameRightX, y1: subFrameFrontY,
+        x2: subFrameRightX, y2: subFrameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      console.log(`  ✅ 좌측 서브프레임 추가: X ${subFrameLeftX}~${subFrameRightX}, Y ${subFrameFrontY}~${subFrameBackY}`);
+    }
+
+    // 우측 서브프레임 (메인 프레임에서 왼쪽으로 들어감)
+    if (rightFrameWidth > 0) {
+      const subFrameRightX = halfWidth - rightFrameWidth; // 메인 프레임 안쪽 경계
+      const subFrameLeftX = halfWidth - rightFrameWidth - subFrameDepthMm; // 40mm 더 안쪽
+      const subFrameFrontY = frameFrontEdgeY; // 메인 프레임과 동일
+      const subFrameBackY = frameFrontEdgeY + subFrameThickMm; // 18mm 두께
+
+      // 4개 변
+      lines.push({
+        x1: subFrameLeftX, y1: subFrameFrontY,
+        x2: subFrameRightX, y2: subFrameFrontY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      lines.push({
+        x1: subFrameLeftX, y1: subFrameBackY,
+        x2: subFrameRightX, y2: subFrameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      lines.push({
+        x1: subFrameLeftX, y1: subFrameFrontY,
+        x2: subFrameLeftX, y2: subFrameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      lines.push({
+        x1: subFrameRightX, y1: subFrameFrontY,
+        x2: subFrameRightX, y2: subFrameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      console.log(`  ✅ 우측 서브프레임 추가: X ${subFrameLeftX}~${subFrameRightX}, Y ${subFrameFrontY}~${subFrameBackY}`);
+    }
+
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // 측면뷰: 상하 프레임 치수선 생성 (정면뷰와 유사)
     console.log(`📏 ${viewDirection}뷰: 상하 프레임 치수선 생성`);
