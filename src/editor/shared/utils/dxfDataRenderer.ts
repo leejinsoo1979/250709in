@@ -1864,6 +1864,7 @@ const generateExternalDimensions = (
 
     const frameSize = spaceInfo.frameSize || { left: 42, right: 42, top: 10 };
     const leftFrameWidth = frameSize.left || 42;
+    const rightFrameWidth = frameSize.right || 42;
     const halfWidth = width / 2;
 
     // 가구 깊이 계산 (placedModules에서 최대 깊이 추출)
