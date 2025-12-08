@@ -2049,8 +2049,7 @@ const generateExternalDimensions = (
     // - furnitureFrontY: 가구 앞면 Y (아래쪽)
     // - spaceBackWallY: 공간 뒷벽 Y (위쪽)
 
-    // 공간 뒷벽 Y 좌표 (패널 뒷면)
-    const panelDepthMm = calculatePanelDepth(spaceInfo);
+    // 공간 뒷벽 Y 좌표 (패널 뒷면) - panelDepthMm은 이미 위에서 선언됨
     const spaceBackWallY = -panelDepthMm / 2;  // 공간 중심 기준 뒷벽
 
     // 프레임 두께 = 18mm (메인/서브 프레임 공통)
