@@ -2480,25 +2480,49 @@ export const generateDxfFromData = (
   currentSpaceDepthMm = spaceInfo.depth || 600;
 
   // 측면뷰 필터링: X 위치 범위 계산
+  // 가구 측판(side panel)은 가구 중심에서 너비/2 위치에 있으므로,
+  // allowedXRange는 가구 전체 너비를 포함해야 함
   let allowedXRange: { min: number; max: number } | null = null;
 
   if ((viewDirection === 'left' || viewDirection === 'right') &&
       sideViewFilter !== 'all' &&
       placedModules.length > 0) {
 
-    // placedModules에서 X 위치 추출 (Three.js 단위: meter)
-    const xPositions = placedModules.map(m => m.position?.x || 0);
+    // placedModules에서 X 위치와 너비 추출 (Three.js 단위: meter)
+    const modulesWithBounds = placedModules.map(m => {
+      const x = m.position?.x || 0;
+      // moduleWidth는 mm 단위, Three.js는 1unit = 100mm이므로 /100 변환
+      // 기본값 600mm (일반적인 가구 너비)
+      const widthInUnits = ((m.moduleWidth || m.customWidth || 600) / 100) / 2;
+      return {
+        x,
+        minX: x - widthInUnits,
+        maxX: x + widthInUnits
+      };
+    });
 
     if (sideViewFilter === 'leftmost') {
       // 좌측뷰: leftmost X 위치의 가구만
-      const leftmostX = Math.min(...xPositions);
-      allowedXRange = { min: leftmostX - 0.01, max: leftmostX + 0.01 };
-      console.log(`📐 좌측뷰 필터: X=${leftmostX.toFixed(3)} 위치 가구만 포함`);
+      const leftmostModule = modulesWithBounds.reduce((prev, curr) =>
+        curr.x < prev.x ? curr : prev
+      );
+      // 가구 전체 범위를 포함 (측판 포함)
+      allowedXRange = {
+        min: leftmostModule.minX - 0.01,
+        max: leftmostModule.maxX + 0.01
+      };
+      console.log(`📐 좌측뷰 필터: X=${leftmostModule.x.toFixed(3)} 가구 (범위: ${allowedXRange.min.toFixed(3)}~${allowedXRange.max.toFixed(3)})`);
     } else if (sideViewFilter === 'rightmost') {
       // 우측뷰: rightmost X 위치의 가구만
-      const rightmostX = Math.max(...xPositions);
-      allowedXRange = { min: rightmostX - 0.01, max: rightmostX + 0.01 };
-      console.log(`📐 우측뷰 필터: X=${rightmostX.toFixed(3)} 위치 가구만 포함`);
+      const rightmostModule = modulesWithBounds.reduce((prev, curr) =>
+        curr.x > prev.x ? curr : prev
+      );
+      // 가구 전체 범위를 포함 (측판 포함)
+      allowedXRange = {
+        min: rightmostModule.minX - 0.01,
+        max: rightmostModule.maxX + 0.01
+      };
+      console.log(`📐 우측뷰 필터: X=${rightmostModule.x.toFixed(3)} 가구 (범위: ${allowedXRange.min.toFixed(3)}~${allowedXRange.max.toFixed(3)})`);
     }
   }
 
