@@ -2019,11 +2019,13 @@ const generateExternalDimensions = (
     // 4. 탑뷰 좌/우 프레임 - 데이터 기반 계산
     // ========================================
     // 씬에서 추출 시 탑뷰에서는 수직 엣지가 필터링되어 좌/우 프레임이 안 나옴
-    // Room.tsx 기준: 좌우 프레임은 깊이(Z) = 18mm (END_PANEL_THICKNESS)의 얇은 패널
-    // 뒷벽에 붙어있으므로 Y좌표는 frameBackY ~ (frameBackY - 18mm)
+    // Room.tsx 기준: 좌우 프레임 Z 위치 = furnitureZOffset + furnitureDepth/2 - END_PANEL_THICKNESS/2 + 3mm
+    // 즉, 가구 앞면 쪽에 위치한 18mm 두께의 패널
     const frameDepthMm = 18; // END_PANEL_THICKNESS
-    const frameBackEdgeY = frameBackY; // 프레임 뒷면 (공간 뒷벽)
-    const frameFrontEdgeY = frameBackY - frameDepthMm; // 프레임 앞면 (뒷벽에서 18mm 앞)
+    // 프레임 Z 위치 계산 (Room.tsx와 동일)
+    const frameZThree = furnitureZOffset + furnitureDepthThree / 2 - 0.18 / 2 + 0.03; // Three.js 좌표
+    const frameFrontEdgeY = -frameZThree * 100 - frameDepthMm / 2; // 프레임 앞면 (DXF Y)
+    const frameBackEdgeY = -frameZThree * 100 + frameDepthMm / 2;  // 프레임 뒷면 (DXF Y)
 
     console.log(`📐 탑뷰 좌/우 프레임 데이터 기반 생성:`);
     console.log(`  - leftFrameWidth: ${leftFrameWidth}mm`);
