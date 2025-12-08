@@ -2835,21 +2835,23 @@ const generateExternalDimensions = (
 
       // ===== 상단: 상부섹션 깊이 치수 =====
       const topDimY = height + dimOffset;
-      // 0 ~ furnitureDepthMm 범위 사용 (좌측뷰와 동일)
-      lines.push({ x1: 0, y1: topDimY, x2: furnitureDepthMm, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
+      // 실제 가구 형상 X 범위 사용 (furnitureXMin ~ furnitureXMax)
+      lines.push({ x1: furnitureXMin, y1: topDimY, x2: furnitureXMax, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
       // 연장선 - Y축 길이 최소화
-      lines.push({ x1: 0, y1: height, x2: 0, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
-      lines.push({ x1: furnitureDepthMm, y1: height, x2: furnitureDepthMm, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
-      texts.push({ x: furnitureDepthMm / 2, y: topDimY + 15, text: `${Math.round(furnitureDepthMm)}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+      lines.push({ x1: furnitureXMin, y1: height, x2: furnitureXMin, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
+      lines.push({ x1: furnitureXMax, y1: height, x2: furnitureXMax, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
+      texts.push({ x: (furnitureXMin + furnitureXMax) / 2, y: topDimY + 15, text: `${Math.round(furnitureDepthMm)}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
       // ===== 하단: 하부섹션 깊이 치수 (2섹션 가구인 경우) =====
       if (lowerSectionDepthMm !== undefined && lowerSectionDepthMm > 0) {
         const bottomDimY = -dimOffset;
-        lines.push({ x1: 0, y1: bottomDimY, x2: lowerSectionDepthMm, y2: bottomDimY, layer: 'DIMENSIONS', color: dimColor });
+        // 하부섹션은 가구 형상 시작점(furnitureXMin)부터 lowerSectionDepthMm 길이만큼
+        const lowerEndX = furnitureXMin + lowerSectionDepthMm;
+        lines.push({ x1: furnitureXMin, y1: bottomDimY, x2: lowerEndX, y2: bottomDimY, layer: 'DIMENSIONS', color: dimColor });
         // 연장선 - Y축 길이 최소화
-        lines.push({ x1: 0, y1: 0, x2: 0, y2: bottomDimY, layer: 'DIMENSIONS', color: dimColor });
-        lines.push({ x1: lowerSectionDepthMm, y1: 0, x2: lowerSectionDepthMm, y2: bottomDimY, layer: 'DIMENSIONS', color: dimColor });
-        texts.push({ x: lowerSectionDepthMm / 2, y: bottomDimY - 40, text: `${lowerSectionDepthMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+        lines.push({ x1: furnitureXMin, y1: 0, x2: furnitureXMin, y2: bottomDimY, layer: 'DIMENSIONS', color: dimColor });
+        lines.push({ x1: lowerEndX, y1: 0, x2: lowerEndX, y2: bottomDimY, layer: 'DIMENSIONS', color: dimColor });
+        texts.push({ x: (furnitureXMin + lowerEndX) / 2, y: bottomDimY - 40, text: `${lowerSectionDepthMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
         console.log(`📐 우측뷰 하단 하부섹션 깊이 치수 추가: ${lowerSectionDepthMm}mm`);
       }
     }
