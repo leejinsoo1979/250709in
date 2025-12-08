@@ -18,9 +18,11 @@ const drawingTypeToViewDirection = (drawingType: DrawingType): ViewDirection => 
       return 'top';
     case 'side':
     case 'sideLeft':
-      return 'left';
-    case 'sideRight':
+      // 좌측면도: 카메라가 오른쪽(+X)에서 봄 → 물체의 왼쪽 면이 보임
       return 'right';
+    case 'sideRight':
+      // 우측면도: 카메라가 왼쪽(-X)에서 봄 → 물체의 오른쪽 면이 보임
+      return 'left';
     default:
       return 'front';
   }
@@ -33,11 +35,13 @@ const drawingTypeToViewDirection = (drawingType: DrawingType): ViewDirection => 
 const drawingTypeToSideViewFilter = (drawingType: DrawingType): SideViewFilter => {
   switch (drawingType) {
     case 'sideLeft':
-      return 'leftmost';  // 좌측면도: leftmost X 위치 가구만
+      // 좌측면도: 가장 왼쪽에 있는 가구의 왼쪽 면을 봄
+      return 'leftmost';
     case 'sideRight':
-      return 'rightmost'; // 우측면도: rightmost X 위치 가구만
+      // 우측면도: 가장 오른쪽에 있는 가구의 오른쪽 면을 봄
+      return 'rightmost';
     default:
-      return 'all';       // 기타: 모든 가구
+      return 'all';
   }
 };
 
