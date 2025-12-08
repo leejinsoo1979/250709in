@@ -1653,14 +1653,14 @@ const generateExternalDimensions = (
     const hasLeftFurnitureFront = placedModules && placedModules.length > 0 &&
       placedModules.some(m => {
         const moduleX = m.position?.x || 0;
-        const moduleWidth = (m.size?.width || 600) / 1000;
+        const moduleWidth = (m.customWidth || 600) / 1000; // customWidth 사용 (PlacedModule 타입)
         const moduleLeftEdge = moduleX - moduleWidth / 2;
         return moduleLeftEdge < -halfWidth / 100 / 3;
       });
     const hasRightFurnitureFront = placedModules && placedModules.length > 0 &&
       placedModules.some(m => {
         const moduleX = m.position?.x || 0;
-        const moduleWidth = (m.size?.width || 600) / 1000;
+        const moduleWidth = (m.customWidth || 600) / 1000; // customWidth 사용 (PlacedModule 타입)
         const moduleRightEdge = moduleX + moduleWidth / 2;
         return moduleRightEdge > halfWidth / 100 / 3;
       });
@@ -1895,7 +1895,7 @@ const generateExternalDimensions = (
     const hasLeftFurniture = placedModules && placedModules.length > 0 &&
       placedModules.some(m => {
         const moduleX = m.position?.x || 0;
-        const moduleWidth = (m.size?.width || 600) / 1000; // mm to Three.js units
+        const moduleWidth = (m.customWidth || 600) / 1000; // customWidth 사용 (PlacedModule 타입)
         const moduleLeftEdge = moduleX - moduleWidth / 2;
         // 가구 왼쪽 끝이 공간 왼쪽 1/3 안에 있으면 왼쪽에 가구 있음
         return moduleLeftEdge < -halfWidth / 100 / 3;
@@ -1903,7 +1903,7 @@ const generateExternalDimensions = (
     const hasRightFurniture = placedModules && placedModules.length > 0 &&
       placedModules.some(m => {
         const moduleX = m.position?.x || 0;
-        const moduleWidth = (m.size?.width || 600) / 1000; // mm to Three.js units
+        const moduleWidth = (m.customWidth || 600) / 1000; // customWidth 사용 (PlacedModule 타입)
         const moduleRightEdge = moduleX + moduleWidth / 2;
         // 가구 오른쪽 끝이 공간 오른쪽 1/3 안에 있으면 오른쪽에 가구 있음
         return moduleRightEdge > halfWidth / 100 / 3;
