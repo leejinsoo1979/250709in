@@ -2191,88 +2191,114 @@ const generateExternalDimensions = (
     }
 
     // ========================================
-    // 4. 탑뷰 좌/우 프레임 - 데이터 기반 계산
+    // 4. 탑뷰 좌/우 프레임/엔드패널 - 데이터 기반 계산
     // ========================================
-    // 씬에서 추출 시 탑뷰에서는 수직 엣지가 필터링되어 좌/우 프레임이 안 나옴
-    // Room.tsx 기준: 좌우 프레임 Z 위치 = furnitureZOffset + furnitureDepth/2 - END_PANEL_THICKNESS/2 + 3mm
-    // 즉, 가구 앞면 쪽에 위치한 18mm 두께의 패널
-    const frameDepthMm = 18; // END_PANEL_THICKNESS
+    // Room.tsx 로직:
+    // - 벽 있음 (프레임): 18mm 깊이, 가구 앞면 근처에 위치
+    // - 벽 없음 (엔드패널): 뒷벽부터 가구 앞면-20mm까지 (전체 깊이)
+    const wallConfig = spaceInfo.wallConfig || { left: true, right: true };
+    const hasLeftWall = wallConfig.left !== false;
+    const hasRightWall = wallConfig.right !== false;
+
+    const frameDepthMm = 18; // END_PANEL_THICKNESS (프레임일 때)
     // 프레임 Z 위치 계산 (Room.tsx와 동일)
     const frameZThree = furnitureZOffset + furnitureDepthThree / 2 - 0.18 / 2 + 0.03; // Three.js 좌표
     const frameFrontEdgeY = -frameZThree * 100 - frameDepthMm / 2; // 프레임 앞면 (DXF Y)
     const frameBackEdgeY = -frameZThree * 100 + frameDepthMm / 2;  // 프레임 뒷면 (DXF Y)
 
-    console.log(`📐 탑뷰 좌/우 프레임 데이터 기반 생성:`);
-    console.log(`  - leftFrameWidth: ${leftFrameWidth}mm`);
-    console.log(`  - rightFrameWidth: ${rightFrameWidth}mm`);
-    console.log(`  - 프레임 깊이: ${frameDepthMm}mm (frameBackEdgeY: ${frameBackEdgeY}, frameFrontEdgeY: ${frameFrontEdgeY})`);
+    // 엔드패널 깊이 계산 (Room.tsx의 noSurroundEndPanelDepth 로직)
+    // Room.tsx: const slotFloorDepth = frameEndZ - roomBackZ - mmToThreeUnits(20);
+    // Room.tsx: const noSurroundEndPanelDepth = slotFloorDepth;
+    // Room.tsx: const noSurroundEndPanelZ = roomBackZ + noSurroundEndPanelDepth / 2;
+    const slotFloorDepthThree = frameEndZ - roomBackZ - 0.20; // 0.20 = 20mm in Three.js units
+    const endPanelFrontY = frameFrontY; // 가구 영역 앞면 (frameEndZ와 동일)
+    const endPanelBackY = frameBackY;   // 뒷벽
+
+    console.log(`📐 탑뷰 좌/우 프레임/엔드패널 데이터 기반 생성:`);
+    console.log(`  - leftFrameWidth: ${leftFrameWidth}mm, hasLeftWall: ${hasLeftWall}`);
+    console.log(`  - rightFrameWidth: ${rightFrameWidth}mm, hasRightWall: ${hasRightWall}`);
+    console.log(`  - 프레임(벽있음) 깊이: ${frameDepthMm}mm, Y: ${frameFrontEdgeY.toFixed(1)}~${frameBackEdgeY.toFixed(1)}`);
+    console.log(`  - 엔드패널(벽없음) 깊이: ${(endPanelBackY - endPanelFrontY).toFixed(1)}mm, Y: ${endPanelFrontY.toFixed(1)}~${endPanelBackY.toFixed(1)}`);
 
     const frameColor = 3; // ACI 3 = 연두색 (2D 프레임 색상과 동일)
+    const endPanelColor = 3; // 엔드패널도 같은 색상
 
-    // 좌측 프레임 외곽선 (상단에서 본 얇은 직사각형, 뒷벽에 붙어있음)
+    // 좌측 프레임/엔드패널 외곽선
     if (leftFrameWidth > 0) {
       const leftFrameLeftX = -halfWidth;
       const leftFrameRightX = -halfWidth + leftFrameWidth;
 
+      // 벽 유무에 따라 깊이 결정
+      const leftFrontY = hasLeftWall ? frameFrontEdgeY : endPanelFrontY;
+      const leftBackY = hasLeftWall ? frameBackEdgeY : endPanelBackY;
+      const leftLayer = hasLeftWall ? 'SPACE_FRAME' : 'END_PANEL';
+      const leftColor = hasLeftWall ? frameColor : endPanelColor;
+
       // 4개 변: 앞쪽, 뒤쪽, 좌측, 우측
       // 앞쪽 (X 방향)
       lines.push({
-        x1: leftFrameLeftX, y1: frameFrontEdgeY,
-        x2: leftFrameRightX, y2: frameFrontEdgeY,
-        layer: 'SPACE_FRAME', color: frameColor
+        x1: leftFrameLeftX, y1: leftFrontY,
+        x2: leftFrameRightX, y2: leftFrontY,
+        layer: leftLayer, color: leftColor
       });
       // 뒤쪽 (X 방향)
       lines.push({
-        x1: leftFrameLeftX, y1: frameBackEdgeY,
-        x2: leftFrameRightX, y2: frameBackEdgeY,
-        layer: 'SPACE_FRAME', color: frameColor
+        x1: leftFrameLeftX, y1: leftBackY,
+        x2: leftFrameRightX, y2: leftBackY,
+        layer: leftLayer, color: leftColor
       });
       // 좌측 (Y 방향)
       lines.push({
-        x1: leftFrameLeftX, y1: frameFrontEdgeY,
-        x2: leftFrameLeftX, y2: frameBackEdgeY,
-        layer: 'SPACE_FRAME', color: frameColor
+        x1: leftFrameLeftX, y1: leftFrontY,
+        x2: leftFrameLeftX, y2: leftBackY,
+        layer: leftLayer, color: leftColor
       });
       // 우측 (Y 방향)
       lines.push({
-        x1: leftFrameRightX, y1: frameFrontEdgeY,
-        x2: leftFrameRightX, y2: frameBackEdgeY,
-        layer: 'SPACE_FRAME', color: frameColor
+        x1: leftFrameRightX, y1: leftFrontY,
+        x2: leftFrameRightX, y2: leftBackY,
+        layer: leftLayer, color: leftColor
       });
-      console.log(`  ✅ 좌측 프레임 추가: X ${leftFrameLeftX}~${leftFrameRightX}, Y ${frameFrontEdgeY}~${frameBackEdgeY}`);
+      console.log(`  ✅ 좌측 ${hasLeftWall ? '프레임' : '엔드패널'} 추가: X ${leftFrameLeftX}~${leftFrameRightX}, Y ${leftFrontY.toFixed(1)}~${leftBackY.toFixed(1)}`);
     }
 
-    // 우측 프레임 외곽선 (상단에서 본 얇은 직사각형, 뒷벽에 붙어있음)
+    // 우측 프레임/엔드패널 외곽선
     if (rightFrameWidth > 0) {
       const rightFrameLeftX = halfWidth - rightFrameWidth;
       const rightFrameRightX = halfWidth;
 
+      // 벽 유무에 따라 깊이 결정
+      const rightFrontY = hasRightWall ? frameFrontEdgeY : endPanelFrontY;
+      const rightBackY = hasRightWall ? frameBackEdgeY : endPanelBackY;
+      const rightLayer = hasRightWall ? 'SPACE_FRAME' : 'END_PANEL';
+      const rightColor = hasRightWall ? frameColor : endPanelColor;
+
       // 4개 변: 앞쪽, 뒤쪽, 좌측, 우측
       // 앞쪽 (X 방향)
       lines.push({
-        x1: rightFrameLeftX, y1: frameFrontEdgeY,
-        x2: rightFrameRightX, y2: frameFrontEdgeY,
-        layer: 'SPACE_FRAME', color: frameColor
+        x1: rightFrameLeftX, y1: rightFrontY,
+        x2: rightFrameRightX, y2: rightFrontY,
+        layer: rightLayer, color: rightColor
       });
       // 뒤쪽 (X 방향)
       lines.push({
-        x1: rightFrameLeftX, y1: frameBackEdgeY,
-        x2: rightFrameRightX, y2: frameBackEdgeY,
-        layer: 'SPACE_FRAME', color: frameColor
+        x1: rightFrameLeftX, y1: rightBackY,
+        x2: rightFrameRightX, y2: rightBackY,
+        layer: rightLayer, color: rightColor
       });
       // 좌측 (Y 방향)
       lines.push({
-        x1: rightFrameLeftX, y1: frameFrontEdgeY,
-        x2: rightFrameLeftX, y2: frameBackEdgeY,
-        layer: 'SPACE_FRAME', color: frameColor
+        x1: rightFrameLeftX, y1: rightFrontY,
+        x2: rightFrameLeftX, y2: rightBackY,
+        layer: rightLayer, color: rightColor
       });
       // 우측 (Y 방향)
       lines.push({
-        x1: rightFrameRightX, y1: frameFrontEdgeY,
-        x2: rightFrameRightX, y2: frameBackEdgeY,
-        layer: 'SPACE_FRAME', color: frameColor
+        x1: rightFrameRightX, y1: rightFrontY,
+        x2: rightFrameRightX, y2: rightBackY,
+        layer: rightLayer, color: rightColor
       });
-      console.log(`  ✅ 우측 프레임 추가: X ${rightFrameLeftX}~${rightFrameRightX}, Y ${frameFrontEdgeY}~${frameBackEdgeY}`);
+      console.log(`  ✅ 우측 ${hasRightWall ? '프레임' : '엔드패널'} 추가: X ${rightFrameLeftX}~${rightFrameRightX}, Y ${rightFrontY.toFixed(1)}~${rightBackY.toFixed(1)}`);
     }
 
     // ========================================
