@@ -2868,7 +2868,7 @@ export const generateDxfFromData = (
     // 조절발(ACCESSORIES)도 측면뷰에서는 제외 (2D UI와 동일하게)
 
     // 씬에서 추출한 라인 중 내부 치수선과 조절발 제외 (가구 형상만 유지)
-    const filteredLines = extracted.lines.filter(line => {
+    let filteredLines = extracted.lines.filter(line => {
       // DIMENSIONS 레이어 라인은 제외 (내부 치수선)
       if (line.layer === 'DIMENSIONS') {
         return false;
@@ -2880,6 +2880,30 @@ export const generateDxfFromData = (
       return true;
     });
     console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS/ACCESSORIES 제외)`);
+
+    // ========================================
+    // 핵심 수정: 씬에서 추출한 라인의 X 좌표를 0 기준으로 정규화
+    // 가구의 월드 X 위치와 관계없이 DXF에서는 0~깊이 범위에 그려져야 함
+    // ========================================
+    if (filteredLines.length > 0) {
+      // 추출된 라인들의 X 좌표 범위 계산
+      let minX = Infinity;
+      let maxX = -Infinity;
+      filteredLines.forEach(line => {
+        minX = Math.min(minX, line.x1, line.x2);
+        maxX = Math.max(maxX, line.x1, line.x2);
+      });
+
+      // X 좌표를 0 기준으로 이동 (minX를 0으로)
+      const xOffset = -minX;
+      console.log(`📐 측면뷰 X좌표 정규화: 원본 범위 ${minX.toFixed(1)}~${maxX.toFixed(1)} → 0~${(maxX - minX).toFixed(1)} (오프셋: ${xOffset.toFixed(1)})`);
+
+      filteredLines = filteredLines.map(line => ({
+        ...line,
+        x1: line.x1 + xOffset,
+        x2: line.x2 + xOffset
+      }));
+    }
 
     // 씬에서 추출한 텍스트는 모두 제외 (내부 치수 텍스트)
     // 외부 치수선의 텍스트만 사용
