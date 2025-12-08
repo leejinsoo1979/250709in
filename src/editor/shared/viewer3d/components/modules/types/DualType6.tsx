@@ -198,8 +198,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           <group key={`left-section-${index}`}>
             {sectionContent}
             
-            {/* 좌측 섹션 치수 표시 */}
-            {showDimensions && showDimensionsText && (section.type === 'drawer' || section.type === 'hanging') && (
+            {/* 좌측 섹션 치수 표시 - 탑뷰에서는 숨김 */}
+            {showDimensions && showDimensionsText &&
+             !(viewMode === '2D' && view2DDirection === 'top') &&
+             (section.type === 'drawer' || section.type === 'hanging') && (
               <group>
                 {section.type === 'drawer' ? (
                   <>
@@ -358,8 +360,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           <group key={`right-section-${index}`}>
             {sectionContent}
             
-            {/* 우측 섹션 치수 표시 */}
-            {showDimensions && showDimensionsText && section.type === 'hanging' && (
+            {/* 우측 섹션 치수 표시 - 탑뷰에서는 숨김 */}
+            {showDimensions && showDimensionsText &&
+             !(viewMode === '2D' && view2DDirection === 'top') &&
+             section.type === 'hanging' && (
               <group>
                 {index === 0 && (
                   <>
@@ -511,8 +515,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               isEditMode={isEditMode}
             />
             
-            {/* 중단선반 두께 치수 표시 */}
-            {showDimensions && showDimensionsText && (
+            {/* 중단선반 두께 치수 표시 - 탑뷰에서는 숨김 */}
+            {showDimensions && showDimensionsText &&
+             !(viewMode === '2D' && view2DDirection === 'top') && (
               <group>
                 {/* 중단선반 두께 텍스트 */}
                 <Text
@@ -571,13 +576,14 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               isEditMode={isEditMode}
             />
             
-            {/* 안전선반 두께 치수 표시 */}
-            {showDimensions && showDimensionsText && (
+            {/* 안전선반 두께 치수 표시 - 탑뷰에서는 숨김 */}
+            {showDimensions && showDimensionsText &&
+             !(viewMode === '2D' && view2DDirection === 'top') && (
               <group>
                 {/* 안전선반 두께 텍스트 */}
                 <Text
                   position={[
-                    -rightWidth/2 * 0.3 - 0.5, 
+                    -rightWidth/2 * 0.3 - 0.5,
                     -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight),
                     viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
                   ]}
@@ -619,13 +625,14 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           </>
         )}
         
-        {/* 상단 프레임 두께 치수 표시 */}
-        {showDimensions && showDimensionsText && (
+        {/* 상단 프레임 두께 치수 표시 - 탑뷰에서는 숨김 */}
+        {showDimensions && showDimensionsText &&
+         !(viewMode === '2D' && view2DDirection === 'top') && (
           <group>
             {/* 상단 프레임 두께 텍스트 */}
             <Text
               position={[
-                -rightWidth/2 * 0.3 - 0.5, 
+                -rightWidth/2 * 0.3 - 0.5,
                 height/2 - basicThickness/2,
                 viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
               ]}
@@ -723,8 +730,10 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           isDragging={isDragging}
         />
         
-        {/* 우측 하단 가로 치수 표시 - 하부장(서랍영역) 내부에 표시 */}
-        {showDimensions && showDimensionsText && hasSharedMiddlePanel && middlePanelHeight > 0 && (
+        {/* 우측 하단 가로 치수 표시 - 하부장(서랍영역) 내부에 표시, 탑뷰에서는 숨김 */}
+        {showDimensions && showDimensionsText &&
+         !(viewMode === '2D' && view2DDirection === 'top') &&
+         hasSharedMiddlePanel && middlePanelHeight > 0 && (
           <group>
             {/* 가로 내경 수평선 - 중간 칸막이 우측면부터 우측 측판 내측면까지 */}
             <Line
@@ -797,8 +806,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
           {/* 드래그 중이 아닐 때만 비대칭 섹션 렌더링 */}
           {!isDragging && renderAsymmetricSections()}
 
-          {/* 상부 옷장 치수 표시 - 전체 너비 기준 */}
-          {!isDragging && showDimensions && showDimensionsText && (
+          {/* 상부 옷장 치수 표시 - 전체 너비 기준, 탑뷰에서는 숨김 */}
+          {!isDragging && showDimensions && showDimensionsText &&
+           !(viewMode === '2D' && view2DDirection === 'top') && (
             <group>
               {hasSharedSafetyShelf ? (
                 <>
