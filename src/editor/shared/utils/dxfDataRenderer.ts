@@ -2329,7 +2329,7 @@ const generateExternalDimensions = (
 
     // 좌측 서브프레임 (가구 측면에 겹쳐서 위치, 메인 프레임과는 떨어져 있음)
     // Room.tsx 조건과 동일: surroundType !== 'no-surround' && (builtin || (semistanding && wallConfig.left))
-    const wallConfig = spaceInfo.wallConfig;
+    // wallConfig는 이미 위에서 선언됨
     const showLeftSubFrame = spaceInfo.surroundType !== 'no-surround' && leftFrameWidth > 0 &&
       (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
         (spaceInfo.installType === 'semistanding' && wallConfig?.left));
