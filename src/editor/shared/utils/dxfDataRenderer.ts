@@ -2039,56 +2039,60 @@ const generateExternalDimensions = (
     console.log(`   left=${calcLeftFrameWidth}mm, right=${calcRightFrameWidth}mm`);
     console.log(`   furnitureBackY: ${furnitureBackY.toFixed(1)}mm, furnitureFrontY: ${furnitureFrontY.toFixed(1)}mm`);
 
-    // 서라운드 프레임: 사각형 (Room.tsx와 동일)
+    // 서라운드 프레임: ㄴ자 형태 (메인 + 서브 프레임 합침)
     // Room.tsx에서:
-    // - roomBackZ = -panelDepth / 2 (공간 뒷벽)
-    // - frameEndZ = furnitureZOffset + furnitureDepth / 2 (가구 앞면)
-    // - surroundEndPanelDepth = slotFloorDepth + 20mm
-    // 즉, 프레임은 공간 뒷벽(roomBackZ)부터 가구 앞면(frameEndZ)까지 사각형
+    // - 메인 프레임: 가구 앞면에 세로로 세워진 18mm 두께 판
+    // - 서브 프레임: 뒷벽에 가로로 눕혀진 18mm 두께 판
+    // - 합쳐서 ㄴ자 형태
 
     // DXF 탑뷰 좌표:
-    // - furnitureBackY: 가구 뒷면 Y (패널 뒷벽 아님!)
-    // - furnitureFrontY: 가구 앞면 Y
-    // Room.tsx의 surroundEndPanelDepth는 공간 뒷벽~가구 앞면 거리
-    // 따라서 DXF에서도 공간 뒷벽 ~ 가구 앞면 사이를 그려야 함
+    // - furnitureFrontY: 가구 앞면 Y (아래쪽)
+    // - spaceBackWallY: 공간 뒷벽 Y (위쪽)
 
     // 공간 뒷벽 Y 좌표 (패널 뒷면)
     const panelDepthMm = calculatePanelDepth(spaceInfo);
     const spaceBackWallY = -panelDepthMm / 2;  // 공간 중심 기준 뒷벽
 
+    // 프레임 두께 = 18mm (메인/서브 프레임 공통)
+    const frameDepthMm = 18;
+
     if (calcLeftFrameWidth > 0) {
-      // 좌측 프레임 (사각형)
+      // 좌측 ㄴ자 프레임
       const outerX = -halfWidth;                      // 바깥쪽 X (좌측 벽)
       const innerX = -halfWidth + calcLeftFrameWidth; // 안쪽 X (프레임 두께만큼 안쪽)
 
-      // 사각형 4변: 공간 뒷벽 ~ 가구 앞면
-      // 1. 안쪽 세로선 (뒷벽 ~ 가구 앞면)
+      // ㄴ자 형태 (탑뷰에서 위가 뒷벽, 아래가 앞면):
+      // 메인 프레임: 앞면에서 18mm 깊이 (세로)
+      // 서브 프레임: 뒷벽에서 앞면-18mm까지 (가로)
+
+      // 1. 안쪽 세로선 (메인 앞면에서 뒷벽까지) - ㄴ의 세로 부분
       lines.push({ x1: innerX, y1: furnitureFrontY, x2: innerX, y2: spaceBackWallY, layer: 'SPACE_FRAME', color: frameColor });
-      // 2. 뒷면 가로선 (안쪽 → 바깥)
+      // 2. 뒷면 가로선 (안쪽 → 바깥) - ㄴ의 윗부분
       lines.push({ x1: innerX, y1: spaceBackWallY, x2: outerX, y2: spaceBackWallY, layer: 'SPACE_FRAME', color: frameColor });
-      // 3. 바깥쪽 세로선 (뒷벽 ~ 가구 앞면)
-      lines.push({ x1: outerX, y1: spaceBackWallY, x2: outerX, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
-      // 4. 앞면 가로선 (바깥 → 안쪽)
-      lines.push({ x1: outerX, y1: furnitureFrontY, x2: innerX, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
+      // 3. 바깥쪽 세로선 (뒷벽에서 앞면-18mm까지만) - ㄴ의 왼쪽 부분 (앞면까지 안 감)
+      lines.push({ x1: outerX, y1: spaceBackWallY, x2: outerX, y2: furnitureFrontY - frameDepthMm, layer: 'SPACE_FRAME', color: frameColor });
+      // 4. 서브프레임 끝 가로선 (바깥 → 안쪽) - 서브프레임 앞쪽 끝
+      lines.push({ x1: outerX, y1: furnitureFrontY - frameDepthMm, x2: innerX, y2: furnitureFrontY - frameDepthMm, layer: 'SPACE_FRAME', color: frameColor });
+      // (안쪽 세로선은 이미 1번에서 앞면까지 그렸으므로 연결됨)
     }
 
     if (calcRightFrameWidth > 0) {
-      // 우측 프레임 (사각형)
+      // 우측 ㄴ자 프레임 (좌우 반전)
       const outerX = halfWidth;                       // 바깥쪽 X (우측 벽)
       const innerX = halfWidth - calcRightFrameWidth; // 안쪽 X (프레임 두께만큼 안쪽)
 
-      // 사각형 4변: 공간 뒷벽 ~ 가구 앞면
-      // 1. 안쪽 세로선 (뒷벽 ~ 가구 앞면)
+      // ㄴ자 형태 (좌우 반전):
+      // 1. 안쪽 세로선 (앞면에서 뒷벽까지)
       lines.push({ x1: innerX, y1: furnitureFrontY, x2: innerX, y2: spaceBackWallY, layer: 'SPACE_FRAME', color: frameColor });
       // 2. 뒷면 가로선 (안쪽 → 바깥)
       lines.push({ x1: innerX, y1: spaceBackWallY, x2: outerX, y2: spaceBackWallY, layer: 'SPACE_FRAME', color: frameColor });
-      // 3. 바깥쪽 세로선 (뒷벽 ~ 가구 앞면)
-      lines.push({ x1: outerX, y1: spaceBackWallY, x2: outerX, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
-      // 4. 앞면 가로선 (바깥 → 안쪽)
-      lines.push({ x1: outerX, y1: furnitureFrontY, x2: innerX, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
+      // 3. 바깥쪽 세로선 (뒷벽에서 앞면-18mm까지만)
+      lines.push({ x1: outerX, y1: spaceBackWallY, x2: outerX, y2: furnitureFrontY - frameDepthMm, layer: 'SPACE_FRAME', color: frameColor });
+      // 4. 서브프레임 끝 가로선 (바깥 → 안쪽)
+      lines.push({ x1: outerX, y1: furnitureFrontY - frameDepthMm, x2: innerX, y2: furnitureFrontY - frameDepthMm, layer: 'SPACE_FRAME', color: frameColor });
     }
 
-    console.log(`✅ 탑뷰 프레임 추가 (사각형): leftFrame(${calcLeftFrameWidth}mm), rightFrame(${calcRightFrameWidth}mm)`);
+    console.log(`✅ 탑뷰 프레임 추가 (ㄴ자): leftFrame(${calcLeftFrameWidth}mm), rightFrame(${calcRightFrameWidth}mm)`);
     console.log(`   furnitureFrontY: ${furnitureFrontY.toFixed(1)}mm, furnitureBackY: ${furnitureBackY.toFixed(1)}mm`);
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
