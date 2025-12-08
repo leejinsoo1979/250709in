@@ -877,11 +877,18 @@ const extractFromScene = (
       return;
     }
 
-    // 측면뷰에서 가구 내부 치수선(내경) 제외
+    // 측면뷰에서 가구 내부 치수선(내경) 제외 - LINE 객체만 대상
+    // 텍스트는 이 필터를 통과해야 함 (아래에서 별도 처리)
     // 가구 내부 치수선은 SectionsRenderer에서 생성되며, 부모 계층에 furniture가 포함됨
     // CADDimensions2D에서 생성되는 측면뷰 치수선(깊이, 높이, 섹션높이)은 부모에 furniture가 없음
+    const isLineObject = object instanceof THREE.Line ||
+                         object instanceof THREE.LineSegments ||
+                         object.type === 'Line' ||
+                         object.type === 'LineSegments';
+
     if ((viewDirection === 'left' || viewDirection === 'right') &&
-        name.toLowerCase().includes('dimension')) {
+        name.toLowerCase().includes('dimension') &&
+        isLineObject) {
       // 부모 계층에서 furniture 확인
       let parent: THREE.Object3D | null = object.parent;
       let hasFurnitureParent = false;
