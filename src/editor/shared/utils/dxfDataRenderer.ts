@@ -9,6 +9,7 @@ import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { sceneHolder } from '../viewer3d/sceneHolder';
+import { calculateFrameThickness } from '../viewer3d/utils/geometry';
 // calculateFrameThickness 제거됨 - 탑뷰 프레임은 씬에서 직접 추출
 
 export type ViewDirection = 'front' | 'left' | 'right' | 'top';
@@ -1862,10 +1863,31 @@ const generateExternalDimensions = (
     // ========================================
     console.log('📏 상부뷰: 치수선 생성 (CleanCAD2D 좌표계 적용)');
 
-    const frameSize = spaceInfo.frameSize || { left: 42, right: 42, top: 10 };
-    const leftFrameWidth = frameSize.left || 42;
-    const rightFrameWidth = frameSize.right || 42;
     const halfWidth = width / 2;
+
+    // Room.tsx와 동일하게 calculateFrameThickness 사용
+    // hasLeftFurniture, hasRightFurniture 계산
+    const hasLeftFurniture = placedModules && placedModules.length > 0 &&
+      placedModules.some(m => {
+        const moduleX = m.position?.x || 0;
+        const moduleWidth = (m.size?.width || 600) / 1000; // mm to Three.js units
+        const moduleLeftEdge = moduleX - moduleWidth / 2;
+        // 가구 왼쪽 끝이 공간 왼쪽 1/3 안에 있으면 왼쪽에 가구 있음
+        return moduleLeftEdge < -halfWidth / 100 / 3;
+      });
+    const hasRightFurniture = placedModules && placedModules.length > 0 &&
+      placedModules.some(m => {
+        const moduleX = m.position?.x || 0;
+        const moduleWidth = (m.size?.width || 600) / 1000; // mm to Three.js units
+        const moduleRightEdge = moduleX + moduleWidth / 2;
+        // 가구 오른쪽 끝이 공간 오른쪽 1/3 안에 있으면 오른쪽에 가구 있음
+        return moduleRightEdge > halfWidth / 100 / 3;
+      });
+
+    // calculateFrameThickness로 정확한 프레임 두께 계산
+    const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
+    const leftFrameWidth = frameThickness.leftMm;
+    const rightFrameWidth = frameThickness.rightMm;
 
     // 가구 깊이 계산 (placedModules에서 최대 깊이 추출)
     let furnitureDepthMm = 600; // 기본값 600mm
@@ -2127,7 +2149,16 @@ const generateExternalDimensions = (
     console.log(`  - 가구 Y범위: ${furnitureFrontY.toFixed(1)} ~ ${furnitureBackY.toFixed(1)}`);
 
     // 좌측 서브프레임 (가구 측면에 겹쳐서 위치, 메인 프레임과는 떨어져 있음)
-    if (leftFrameWidth > 0) {
+    // Room.tsx 조건과 동일: surroundType !== 'no-surround' && (builtin || (semistanding && wallConfig.left))
+    const wallConfig = spaceInfo.wallConfig;
+    const showLeftSubFrame = spaceInfo.surroundType !== 'no-surround' && leftFrameWidth > 0 &&
+      (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
+        (spaceInfo.installType === 'semistanding' && wallConfig?.left));
+    const showRightSubFrame = spaceInfo.surroundType !== 'no-surround' && rightFrameWidth > 0 &&
+      (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in' ||
+        (spaceInfo.installType === 'semistanding' && wallConfig?.right));
+
+    if (showLeftSubFrame) {
       // Room.tsx 기준:
       // - position.x = xOffset + frameThickness.left - 9mm (중심 위치)
       // - rotation 후 X 두께 = 18mm
@@ -2169,7 +2200,7 @@ const generateExternalDimensions = (
     }
 
     // 우측 서브프레임 (가구 측면에 겹쳐서 위치, 메인 프레임과는 떨어져 있음)
-    if (rightFrameWidth > 0) {
+    if (showRightSubFrame) {
       // Room.tsx 기준:
       // - position.x = xOffset + width - frameThickness.right + 9mm (중심 위치)
       // - rotation 후 X 두께 = 18mm
