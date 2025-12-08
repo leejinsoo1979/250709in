@@ -463,6 +463,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   let lineBottomY: number;
                   let lineTopY: number;
 
+                  console.log('DualType5 좌측 allSections.length:', allSections.length, 'index:', index, 'sectionHeight:', Math.round(sectionHeight * 100));
+
                   if (allSections.length === 2) {
                     if (index === 0) {
                       // 하부섹션 (drawer): 618
@@ -473,11 +475,14 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                       lineBottomY = sectionCenterY - sectionHeight/2 - basicThickness;
                       lineTopY = height/2;
                     }
+                    console.log('DualType5 조건 통과! lineBottomY:', lineBottomY, 'lineTopY:', lineTopY);
                   } else {
+                    console.log('DualType5 조건 불통과 - return null');
                     return null;
                   }
 
                   let internalHeight = lineTopY - lineBottomY;
+                  console.log('DualType5 internalHeight:', Math.round(internalHeight * 100));
 
                   // 띄워서 배치 시 치수 가이드에서 띄움 높이 제외
                   if (isFloating && section.type === 'drawer') {
