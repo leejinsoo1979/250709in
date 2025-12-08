@@ -2015,12 +2015,82 @@ const generateExternalDimensions = (
     }
 
     // ========================================
-    // 4. 탑뷰 프레임 - 씬에서 추출한 space-frame LineSegments 사용
+    // 4. 탑뷰 좌/우 프레임 - 데이터 기반 계산
     // ========================================
-    // 프레임은 씬에서 name="space-frame"으로 이미 추출됨 (extractFromLineSegments)
-    // 수동 계산하지 않고 실제 렌더링된 geometry를 그대로 사용
-    // 이렇게 해야 도어가 프레임을 덮는 구조 등 설정 변경 시에도 정확히 반영됨
-    console.log(`✅ 탑뷰 프레임: 씬에서 추출된 space-frame LineSegments 사용 (수동 계산 제거됨)`);
+    // 씬에서 추출 시 탑뷰에서는 수직 엣지가 필터링되어 좌/우 프레임이 안 나옴
+    // 데이터 기반으로 탑뷰에서 보이는 프레임 상단면 외곽선을 직접 계산
+    console.log(`📐 탑뷰 좌/우 프레임 데이터 기반 생성:`);
+    console.log(`  - leftFrameWidth: ${leftFrameWidth}mm`);
+    console.log(`  - rightFrameWidth: ${rightFrameWidth}mm`);
+    console.log(`  - frameBackY: ${frameBackY}mm, frameFrontY: ${frameFrontY}mm`);
+
+    const frameColor = 3; // ACI 3 = 연두색 (2D 프레임 색상과 동일)
+
+    // 좌측 프레임 외곽선 (상단에서 본 직사각형)
+    if (leftFrameWidth > 0) {
+      const leftFrameLeftX = -halfWidth;
+      const leftFrameRightX = -halfWidth + leftFrameWidth;
+
+      // 4개 변: 앞쪽, 뒤쪽, 좌측, 우측
+      // 앞쪽 (X 방향)
+      lines.push({
+        x1: leftFrameLeftX, y1: frameFrontY,
+        x2: leftFrameRightX, y2: frameFrontY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      // 뒤쪽 (X 방향)
+      lines.push({
+        x1: leftFrameLeftX, y1: frameBackY,
+        x2: leftFrameRightX, y2: frameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      // 좌측 (Y 방향)
+      lines.push({
+        x1: leftFrameLeftX, y1: frameFrontY,
+        x2: leftFrameLeftX, y2: frameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      // 우측 (Y 방향)
+      lines.push({
+        x1: leftFrameRightX, y1: frameFrontY,
+        x2: leftFrameRightX, y2: frameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      console.log(`  ✅ 좌측 프레임 추가: X ${leftFrameLeftX}~${leftFrameRightX}, Y ${frameFrontY}~${frameBackY}`);
+    }
+
+    // 우측 프레임 외곽선 (상단에서 본 직사각형)
+    if (rightFrameWidth > 0) {
+      const rightFrameLeftX = halfWidth - rightFrameWidth;
+      const rightFrameRightX = halfWidth;
+
+      // 4개 변: 앞쪽, 뒤쪽, 좌측, 우측
+      // 앞쪽 (X 방향)
+      lines.push({
+        x1: rightFrameLeftX, y1: frameFrontY,
+        x2: rightFrameRightX, y2: frameFrontY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      // 뒤쪽 (X 방향)
+      lines.push({
+        x1: rightFrameLeftX, y1: frameBackY,
+        x2: rightFrameRightX, y2: frameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      // 좌측 (Y 방향)
+      lines.push({
+        x1: rightFrameLeftX, y1: frameFrontY,
+        x2: rightFrameLeftX, y2: frameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      // 우측 (Y 방향)
+      lines.push({
+        x1: rightFrameRightX, y1: frameFrontY,
+        x2: rightFrameRightX, y2: frameBackY,
+        layer: 'SPACE_FRAME', color: frameColor
+      });
+      console.log(`  ✅ 우측 프레임 추가: X ${rightFrameLeftX}~${rightFrameRightX}, Y ${frameFrontY}~${frameBackY}`);
+    }
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // 측면뷰: 상하 프레임 치수선 생성 (정면뷰와 유사)
