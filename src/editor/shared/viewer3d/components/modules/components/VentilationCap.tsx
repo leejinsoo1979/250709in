@@ -117,6 +117,10 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   const renderAs3D = requestedRenderMode ? requestedRenderMode === '3d' : is3DMode;
   const renderAs2D = requestedRenderMode ? requestedRenderMode === '2d' : (!is3DMode && isFrontView);
 
+  // Hook 규칙: 조건부 렌더링 전에 모든 Hook 호출
+  const rimEdges = useMemo(() => new EdgesGeometry(rimGeometry, 30), [rimGeometry]);
+  const perforatedEdges = useMemo(() => new EdgesGeometry(perforatedGeometry, 15), [perforatedGeometry]);
+
   if (!renderAs3D && !renderAs2D) {
     return null;
   }
@@ -128,8 +132,6 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   const liftOffset = mmToThreeUnits(0.05); // 백패널 접촉을 유지하면서 미세한 z-fighting 방지
 
   if (renderAs3D) {
-    const rimEdges = useMemo(() => new EdgesGeometry(rimGeometry, 30), [rimGeometry]);
-    const perforatedEdges = useMemo(() => new EdgesGeometry(perforatedGeometry, 15), [perforatedGeometry]);
 
     return (
       <group name="ventilation-cap" position={position}>
