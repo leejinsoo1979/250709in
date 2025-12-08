@@ -262,6 +262,9 @@ const SimpleDashboard: React.FC = () => {
   // 팀 모달 상태
   const [showTeamModal, setShowTeamModal] = useState(false);
 
+  // 준비중 모달 상태
+  const [isComingSoonModalOpen, setIsComingSoonModalOpen] = useState(false);
+
   // URL 경로에서 현재 메뉴 결정
   const getMenuFromPath = () => {
     const path = location.pathname.replace('/dashboard', '');
@@ -4620,12 +4623,35 @@ const SimpleDashboard: React.FC = () => {
                             }}
                           >
                             {item.type === 'new-design' ? (
-                              <div className={styles.cardThumbnailContent}>
-                                <div className={styles.cardThumbnailIcon}>
-                                  <PlusIcon size={32} />
+                              <>
+                                <div className={styles.cardThumbnailContent}>
+                                  <div className={styles.cardThumbnailIcon}>
+                                    <PlusIcon size={32} />
+                                  </div>
+                                  <div className={styles.cardThumbnailText}>{item.name}</div>
                                 </div>
-                                <div className={styles.cardThumbnailText}>{item.name}</div>
-                              </div>
+                                {/* 디자인 생성 호버 오버레이 */}
+                                <div className={styles.newDesignOverlay}>
+                                  <button
+                                    className={`${styles.newDesignOptionBtn} ${styles.primary}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCreateDesign(item.project.id, item.project.title);
+                                    }}
+                                  >
+                                    옷장 디자인
+                                  </button>
+                                  <button
+                                    className={styles.newDesignOptionBtn}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setIsComingSoonModalOpen(true);
+                                    }}
+                                  >
+                                    키친 디자인
+                                  </button>
+                                </div>
+                              </>
                             ) : item.type === 'loading' ? (
                               <div className={styles.cardThumbnailContent}>
                                 <div className={styles.cardThumbnailIcon}>
@@ -5824,6 +5850,28 @@ const SimpleDashboard: React.FC = () => {
           setIsProfilePopupOpen(true);
         }}
       />
+
+      {/* 준비중 모달 */}
+      {isComingSoonModalOpen && (
+        <div className={styles.modalOverlay} onClick={() => setIsComingSoonModalOpen(false)}>
+          <div className={styles.comingSoonModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.comingSoonIcon}>
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12,6 12,12 16,14" />
+              </svg>
+            </div>
+            <h3 className={styles.comingSoonTitle}>서비스 준비중</h3>
+            <p className={styles.comingSoonDesc}>키친 디자인 기능은 현재 개발 중입니다.<br />빠른 시일 내에 만나보실 수 있습니다.</p>
+            <button
+              className={styles.comingSoonBtn}
+              onClick={() => setIsComingSoonModalOpen(false)}
+            >
+              확인
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 팝업 매니저 */}
       <PopupManager />

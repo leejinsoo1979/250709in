@@ -3450,3 +3450,135 @@
     display: none !important;
   }
 }
+
+/* ===== 디자인 생성 카드 호버 오버레이 ===== */
+.newDesignOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.25s ease;
+  border-radius: 12px;
+  padding: 20px;
+}
+
+.cardThumbnail.newDesign:hover .newDesignOverlay {
+  opacity: 1;
+  visibility: visible;
+}
+
+.newDesignOptionBtn {
+  width: 100%;
+  max-width: 160px;
+  padding: 12px 20px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.newDesignOptionBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+}
+
+.newDesignOptionBtn.primary {
+  background: var(--theme-primary);
+  border-color: var(--theme-primary);
+  color: #fff;
+}
+
+.newDesignOptionBtn.primary:hover {
+  background: var(--theme-primary-hover);
+  border-color: var(--theme-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* ===== 준비중 모달 ===== */
+.comingSoonModal {
+  background: var(--theme-surface);
+  border-radius: 16px;
+  padding: 40px;
+  max-width: 360px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.comingSoonIcon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--theme-primary-light) 0%, var(--theme-primary) 100%);
+  border-radius: 50%;
+  color: #fff;
+}
+
+.comingSoonIcon svg {
+  width: 40px;
+  height: 40px;
+}
+
+.comingSoonTitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0 0 12px 0;
+}
+
+.comingSoonDesc {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--theme-text-secondary);
+  margin: 0 0 24px 0;
+}
+
+.comingSoonBtn {
+  width: 100%;
+  padding: 14px 24px;
+  background: var(--theme-primary);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.comingSoonBtn:hover {
+  background: var(--theme-primary-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
