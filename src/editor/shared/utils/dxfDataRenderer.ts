@@ -2268,60 +2268,74 @@ const generateExternalDimensions = (
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // ========================================
-    // 측면뷰 DXF - 치수선만 생성
+    // 측면뷰 DXF - spaceInfo 값을 사용하여 치수선 생성
+    // CADDimensions2D.tsx와 동일한 로직 적용
     // ========================================
-    // 측면뷰의 가구/프레임 라인은 씬에서 추출됨
-    // 여기서는 외부 치수선만 추가
-    //
-    // projectTo2D 좌표 변환:
-    // - left 뷰: DXF X = -z * 100 (Three.js Z가 DXF X로)
-    // - Three.js 좌표계: Z = -panelDepth/2 ~ +panelDepth/2 (중심 = 0)
-    // - 가구 Z 범위: 약 -furnitureDepth 근처 (뒷벽 쪽)
-    //
-    // 씬에서 추출된 측면뷰 좌표 범위:
-    // - X: 가구 깊이 방향 (약 0 ~ furnitureDepth mm)
-    // - Y: 높이 방향 (0 ~ height mm)
-    console.log(`📏 ${viewDirection}뷰: 측면도 치수선 생성 (프레임/가구는 씬에서 추출)`);
+    console.log(`📏 ${viewDirection}뷰: 측면도 치수선 생성 (spaceInfo 값 사용)`);
 
-    const frameSize = spaceInfo.frameSize || { left: 18, right: 18, top: 10 };
-    const topFrameThick = frameSize.top || 10;
-    const baseH = spaceInfo.baseHeight || 65;
+    // ========================================
+    // 1. spaceInfo에서 실제 값 가져오기 (CADDimensions2D.tsx와 동일)
+    // ========================================
+    const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 10 };
+    const topFrameHeightMm = frameSize.top || 0;
+
+    // 띄워서 배치 확인
+    const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+    const floatHeightMm = isFloating ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+
+    // 바닥레일/받침대 높이 계산 (CADDimensions2D.tsx와 동일)
+    // - floor 타입: 받침대 높이
+    // - stand 타입 + 띄움 배치: 바닥 프레임 없음 (0)
+    // - stand 타입 + 일반 배치: 바닥레일 높이
+    const isStandType = spaceInfo.baseConfig?.type === 'stand';
+    const railOrBaseHeightMm = isStandType
+      ? (isFloating ? 0 : (spaceInfo.baseConfig?.height || 0))
+      : (spaceInfo.baseConfig?.height || 65);
+
+    // 받침대 깊이
+    const baseDepthMm = spaceInfo.baseConfig?.depth || 0;
+
+    // 하위 호환성을 위한 변수 (기존 코드에서 사용)
+    // 띄움 배치에서는 띄움 높이를 받침대 높이 변수에 설정 (치수 표시용)
+    const baseFrameHeightMm = isFloating ? floatHeightMm : railOrBaseHeightMm;
+
+    // 가구 및 치수선 시작 Y 위치
+    const furnitureBaseY = isFloating ? floatHeightMm : baseFrameHeightMm;
+
+    // 가구 깊이 계산 (placedModules에서 가져오기)
+    let furnitureDepthMm = 600; // 기본값
+    if (placedModules.length > 0) {
+      const module = placedModules[0];
+      const moduleDepth = module.upperSectionDepth || module.customDepth;
+      if (moduleDepth) {
+        furnitureDepthMm = moduleDepth;
+      }
+    }
+
     const dimensionColor = 7; // ACI 7 = 흰색/검정
     const dimensionOffset = 60;
     const extensionLength = 10;
 
-    // 측면뷰 가구 깊이 (CADDimensions2D.tsx와 동일한 고정값)
-    const furnitureDepthMm = 600;
-
-    // 측면뷰에서 씬 추출 좌표 범위 계산
-    // projectTo2D에서 left 뷰: x = -p.z * 100
-    // Three.js에서 가구 Z 위치: furnitureZOffset ~ furnitureZOffset + furnitureDepth
-    // panelDepth = depth (1500) / 100 = 15 three units
-    // furnitureDepth = 600 / 100 = 6 three units
-    // zOffset = -panelDepth / 2 = -7.5
-    // furnitureZOffset = zOffset + (panelDepth - furnitureDepth) / 2 = -7.5 + 4.5 = -3
-    // 가구 Z 범위: -3 ~ -9 three units
-    // DXF X (left view): -(-3)*100 ~ -(-9)*100 = 300 ~ 900 mm
-    //
-    // 그러나 씬 추출 시 실제로는 가구 중심이 0에 가깝게 배치됨
-    // Room.tsx와 FurnitureItem.tsx에서 가구 위치 확인 필요
-    // 일단 가구 깊이 기준으로 0 ~ furnitureDepthMm 범위 사용
+    // 측면뷰 좌표 범위
     const furnitureFrontX = 0;
     const furnitureBackX = furnitureDepthMm;
 
-    console.log(`📐 측면뷰 치수선 좌표:`);
+    console.log(`📐 측면뷰 치수선 좌표 (spaceInfo 값 사용):`);
     console.log(`  - 전체 높이: ${height}mm`);
-    console.log(`  - 가구 깊이(측면뷰 X축): ${furnitureDepthMm}mm (0 ~ ${furnitureBackX})`);
-    console.log(`  - 상부 프레임 두께: ${topFrameThick}mm, 받침대 높이: ${baseH}mm`);
+    console.log(`  - 가구 깊이: ${furnitureDepthMm}mm`);
+    console.log(`  - 상부 프레임 높이: ${topFrameHeightMm}mm`);
+    console.log(`  - 받침대 높이: ${baseFrameHeightMm}mm`);
+    console.log(`  - 받침대 깊이: ${baseDepthMm}mm`);
+    console.log(`  - 띄움 배치: ${isFloating}, 띄움 높이: ${floatHeightMm}mm`);
 
     // 가구 영역 높이 계산
-    const topFrameY1 = height - topFrameThick;
-    const furnitureY1 = baseH;
-    const furnitureY2 = height - topFrameThick;
+    const topFrameY = height - topFrameHeightMm;
+    const furnitureY1 = furnitureBaseY;
+    const furnitureY2 = height - topFrameHeightMm;
     const furnitureAreaHeight = furnitureY2 - furnitureY1;
 
     // ========================================
-    // 1. 전체 높이 치수선 (우측 외곽)
+    // 2. 전체 높이 치수선 (우측 외곽)
     // ========================================
     const dim1X = furnitureBackX + dimensionOffset + 40;
     lines.push({ x1: dim1X, y1: 0, x2: dim1X, y2: height, layer: 'DIMENSIONS', color: dimensionColor });
@@ -2330,14 +2344,16 @@ const generateExternalDimensions = (
     texts.push({ x: dim1X + 15, y: height / 2, text: `${height}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
 
     // ========================================
-    // 2. 상부 프레임 / 가구 영역 / 받침대 높이 치수선 (우측)
+    // 3. 상부 프레임 / 가구 영역 / 받침대 높이 치수선 (우측)
     // ========================================
     const rightDimX = furnitureBackX + dimensionOffset;
 
-    // 상부 프레임 높이
-    lines.push({ x1: rightDimX, y1: topFrameY1, x2: rightDimX, y2: height, layer: 'DIMENSIONS', color: dimensionColor });
-    lines.push({ x1: furnitureBackX, y1: topFrameY1, x2: rightDimX + extensionLength, y2: topFrameY1, layer: 'DIMENSIONS', color: dimensionColor });
-    texts.push({ x: rightDimX + 15, y: (topFrameY1 + height) / 2, text: `${topFrameThick}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
+    // 상부 프레임 높이 (있는 경우)
+    if (topFrameHeightMm > 0) {
+      lines.push({ x1: rightDimX, y1: topFrameY, x2: rightDimX, y2: height, layer: 'DIMENSIONS', color: dimensionColor });
+      lines.push({ x1: furnitureBackX, y1: topFrameY, x2: rightDimX + extensionLength, y2: topFrameY, layer: 'DIMENSIONS', color: dimensionColor });
+      texts.push({ x: rightDimX + 15, y: (topFrameY + height) / 2, text: `${topFrameHeightMm}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
+    }
 
     // 가구 영역 높이
     const rightDimX2 = rightDimX + 40;
@@ -2346,13 +2362,18 @@ const generateExternalDimensions = (
     texts.push({ x: rightDimX2 + 15, y: (furnitureY1 + furnitureY2) / 2, text: `${furnitureAreaHeight}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
 
     // 받침대 높이 (있는 경우)
-    if (baseH > 0) {
-      lines.push({ x1: rightDimX, y1: 0, x2: rightDimX, y2: baseH, layer: 'DIMENSIONS', color: dimensionColor });
-      texts.push({ x: rightDimX + 15, y: baseH / 2, text: `${baseH}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
+    if (baseFrameHeightMm > 0) {
+      lines.push({ x1: rightDimX, y1: 0, x2: rightDimX, y2: baseFrameHeightMm, layer: 'DIMENSIONS', color: dimensionColor });
+      texts.push({ x: rightDimX + 15, y: baseFrameHeightMm / 2, text: `${baseFrameHeightMm}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
+
+      // 받침대 깊이 표시 (있는 경우)
+      if (baseDepthMm > 0) {
+        texts.push({ x: rightDimX + 15, y: baseFrameHeightMm - 15, text: `(D${baseDepthMm})`, height: 15, color: dimensionColor, layer: 'DIMENSIONS' });
+      }
     }
 
     // ========================================
-    // 3. 가구 깊이 치수선 (하단)
+    // 4. 가구 깊이 치수선 (하단)
     // ========================================
     const dim2Y = -dimensionOffset;
     lines.push({ x1: furnitureFrontX, y1: dim2Y, x2: furnitureBackX, y2: dim2Y, layer: 'DIMENSIONS', color: dimensionColor });
