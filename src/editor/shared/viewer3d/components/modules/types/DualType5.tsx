@@ -459,7 +459,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 )}
                 
                 {/* 세로 내경 높이 표시 */}
-                {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
+                {(() => {
                   let lineBottomY: number;
                   let lineTopY: number;
 
@@ -515,15 +515,19 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         lineWidth={1}
                       />
 
-                      {/* 수직선 양끝 점 */}
-                      <mesh position={[-leftWidth/2 * 0.3, lineBottomY, getDimensionZPosition(leftDepth)]}>
-                        <sphereGeometry args={[0.05, 8, 8]} />
-                        <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                      </mesh>
-                      <mesh position={[-leftWidth/2 * 0.3, lineTopY, getDimensionZPosition(leftDepth)]}>
-                        <sphereGeometry args={[0.05, 8, 8]} />
-                        <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                      </mesh>
+                      {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                      {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                        <>
+                          <mesh position={[-leftWidth/2 * 0.3, lineBottomY, getDimensionZPosition(leftDepth)]}>
+                            <sphereGeometry args={[0.05, 8, 8]} />
+                            <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
+                          </mesh>
+                          <mesh position={[-leftWidth/2 * 0.3, lineTopY, getDimensionZPosition(leftDepth)]}>
+                            <sphereGeometry args={[0.05, 8, 8]} />
+                            <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
+                          </mesh>
+                        </>
+                      )}
                     </group>
                   );
                 })()}
@@ -783,7 +787,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 )}
                 
                 {/* 세로 내경 높이 표시 */}
-                {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (() => {
+                {(() => {
                   // 내경 높이 계산: 섹션 높이 - 상하 기본두께
                   const lineBottomY = sectionCenterY - sectionHeight/2 + basicThickness;
                   const lineTopY = index === allSections.length - 1
@@ -829,15 +833,19 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                         lineWidth={1}
                       />
 
-                      {/* 수직선 양끝 점 */}
-                      <mesh position={[-rightWidth/2 * 0.3, lineBottomY, getDimensionZPosition(rightDepth)]}>
-                        <sphereGeometry args={[0.05, 8, 8]} />
-                        <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                      </mesh>
-                      <mesh position={[-rightWidth/2 * 0.3, lineTopY, getDimensionZPosition(rightDepth)]}>
-                        <sphereGeometry args={[0.05, 8, 8]} />
-                        <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
-                      </mesh>
+                      {/* 수직선 양끝 점 - 측면뷰에서 숨김 */}
+                      {!(viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right')) && (
+                        <>
+                          <mesh position={[-rightWidth/2 * 0.3, lineBottomY, getDimensionZPosition(rightDepth)]}>
+                            <sphereGeometry args={[0.05, 8, 8]} />
+                            <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
+                          </mesh>
+                          <mesh position={[-rightWidth/2 * 0.3, lineTopY, getDimensionZPosition(rightDepth)]}>
+                            <sphereGeometry args={[0.05, 8, 8]} />
+                            <meshBasicMaterial color={viewMode === '3D' ? '#000000' : dimensionColor} />
+                          </mesh>
+                        </>
+                      )}
                     </group>
                   );
                 })()}

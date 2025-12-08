@@ -545,9 +545,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 {/* 중단선반 두께 텍스트 */}
                 <Text
                   position={[
-                    -rightWidth/2 * 0.3 - 0.5, 
+                    getDimensionXPosition(rightWidth, true),
                     -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9),
-                    viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+                    getDimensionZPosition()
                   ]}
                   fontSize={baseFontSize}
                   color={viewMode === '3D' ? '#000000' : dimensionColor}
@@ -559,12 +559,12 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 >
                   {Math.round(basicThickness / 0.01)}
                 </Text>
-                
+
                 {/* 중단선반 두께 수직선 */}
                 <Line
                   points={[
-                    [-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                    [-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                    [getDimensionXPosition(rightWidth, false), -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) - basicThickness/2, getDimensionZPosition()],
+                    [getDimensionXPosition(rightWidth, false), -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, getDimensionZPosition()]
                   ]}
                   color={viewMode === '3D' ? '#000000' : dimensionColor}
                   lineWidth={1}
@@ -606,9 +606,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 {/* 안전선반 두께 텍스트 */}
                 <Text
                   position={[
-                    -rightWidth/2 * 0.3 - 0.5,
+                    getDimensionXPosition(rightWidth, true),
                     -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight),
-                    viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+                    getDimensionZPosition()
                   ]}
                   fontSize={baseFontSize}
                   color={viewMode === '3D' ? '#000000' : dimensionColor}
@@ -620,12 +620,12 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 >
                   {Math.round(basicThickness / 0.01)}
                 </Text>
-                
+
                 {/* 안전선반 두께 수직선 */}
                 <Line
                   points={[
-                    [-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                    [-rightWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                    [getDimensionXPosition(rightWidth, false), -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, getDimensionZPosition()],
+                    [getDimensionXPosition(rightWidth, false), -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, getDimensionZPosition()]
                   ]}
                   color={viewMode === '3D' ? '#000000' : dimensionColor}
                   lineWidth={1}
@@ -655,9 +655,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             {/* 상단 프레임 두께 텍스트 */}
             <Text
               position={[
-                -rightWidth/2 * 0.3 - 0.5,
+                getDimensionXPosition(rightWidth, true),
                 height/2 - basicThickness/2,
-                viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+                getDimensionZPosition()
               ]}
               fontSize={baseFontSize}
               color={viewMode === '3D' ? '#000000' : dimensionColor}
@@ -669,12 +669,12 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
             >
               {Math.round(basicThickness / 0.01)}
             </Text>
-            
+
             {/* 상단 프레임 두께 수직선 */}
             <Line
               points={[
-                [-rightWidth/2 * 0.3, height/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                [-rightWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                [getDimensionXPosition(rightWidth, false), height/2, getDimensionZPosition()],
+                [getDimensionXPosition(rightWidth, false), height/2 - basicThickness, getDimensionZPosition()]
               ]}
               color={viewMode === '3D' ? '#000000' : dimensionColor}
               lineWidth={1}
@@ -838,9 +838,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   {/* 중간 가로선반 상단부터 안전선반 하단까지 */}
                   <Text
                     position={[
-                      -innerWidth/2 * 0.3 - 0.5,
+                      getDimensionXPosition(innerWidth, true),
                       ((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2) + (-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2)) / 2,
-                      viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+                      getDimensionZPosition()
                     ]}
                     fontSize={baseFontSize}
                     color={viewMode === '3D' ? '#000000' : dimensionColor}
@@ -855,8 +855,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
 
                   <Line
                     points={[
-                      [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                      [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                      [getDimensionXPosition(innerWidth, false), -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, getDimensionZPosition()],
+                      [getDimensionXPosition(innerWidth, false), -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) - basicThickness/2, getDimensionZPosition()]
                     ]}
                     color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={1}
@@ -877,9 +877,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   {/* 안전선반 상단부터 상단 프레임 하단까지 */}
                   <Text
                     position={[
-                      -innerWidth/2 * 0.3 - 0.5,
+                      getDimensionXPosition(innerWidth, true),
                       ((-height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2) + (height/2 - basicThickness)) / 2,
-                      viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+                      getDimensionZPosition()
                     ]}
                     fontSize={baseFontSize}
                     color={viewMode === '3D' ? '#000000' : dimensionColor}
@@ -894,8 +894,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
 
                   <Line
                     points={[
-                      [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                      [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                      [getDimensionXPosition(innerWidth, false), -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight) + basicThickness/2, getDimensionZPosition()],
+                      [getDimensionXPosition(innerWidth, false), height/2 - basicThickness, getDimensionZPosition()]
                     ]}
                     color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={1}
@@ -918,9 +918,9 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                   {/* 안전선반이 없는 경우 - 중간 가로선반 상단부터 상단 프레임 하단까지 */}
                   <Text
                     position={[
-                      -innerWidth/2 * 0.3 - 0.5,
+                      getDimensionXPosition(innerWidth, true),
                       ((-height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2) + (height/2 - basicThickness)) / 2,
-                      viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0
+                      getDimensionZPosition()
                     ]}
                     fontSize={baseFontSize}
                     color={viewMode === '3D' ? '#000000' : dimensionColor}
@@ -935,8 +935,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
 
                   <Line
                     points={[
-                      [-innerWidth/2 * 0.3, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0],
-                      [-innerWidth/2 * 0.3, height/2 - basicThickness, viewMode === '3D' ? adjustedDepthForShelves/2 + 0.1 : depth/2 + 1.0]
+                      [getDimensionXPosition(innerWidth, false), -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9) + basicThickness/2, getDimensionZPosition()],
+                      [getDimensionXPosition(innerWidth, false), height/2 - basicThickness, getDimensionZPosition()]
                     ]}
                     color={viewMode === '3D' ? '#000000' : dimensionColor}
                     lineWidth={1}
