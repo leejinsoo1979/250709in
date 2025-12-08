@@ -875,7 +875,7 @@ const extractFromScene = (
       return names;
     };
 
-    // 탑뷰에서 조절발, 옷봉 제외 (조절발은 바닥 아래, 옷봉은 내부에 있어서 탑뷰에서 보이면 안됨)
+    // 탑뷰에서 조절발, 옷봉, 환기캡 제외 (탑뷰에서 보이면 안되는 요소들)
     if (viewDirection === 'top') {
       const parentNames = getParentNamesForFilter(object);
       const combinedNames = lowerNameForFilter + parentNames;
@@ -884,14 +884,18 @@ const extractFromScene = (
       if (combinedNames.includes('adjustable-foot') ||
           combinedNames.includes('조절발') ||
           combinedNames.includes('leveler')) {
-        console.log(`📐 탑뷰: 조절발 제외 - ${name}`);
         skippedByFilter++;
         return;
       }
       // 옷봉 제외 (자신 또는 부모 계층에서 체크)
       if (combinedNames.includes('clothing-rod') ||
           combinedNames.includes('옷봉')) {
-        console.log(`📐 탑뷰: 옷봉 제외 - ${name}`);
+        skippedByFilter++;
+        return;
+      }
+      // 환기캡 제외 (탑뷰에서는 보이지 않음)
+      if (combinedNames.includes('ventilation') ||
+          combinedNames.includes('환기')) {
         skippedByFilter++;
         return;
       }
@@ -1847,9 +1851,119 @@ const generateExternalDimensions = (
     }
 
   } else if (viewDirection === 'top') {
-    // 상부뷰: 씬에서 추출한 치수선만 사용 (자체 생성 안함)
-    // 2D 도면과 동일하게 표시하기 위해 generateExternalDimensions에서 생성하지 않음
-    console.log('📏 상부뷰: 씬에서 추출한 치수선만 사용');
+    // ========================================
+    // 탑뷰 치수선 (위에서 내려다본 뷰)
+    // X축 = 너비 방향, Y축 = 깊이 방향 (Z를 -Y로 변환)
+    // ========================================
+    console.log('📏 상부뷰: 치수선 생성');
+
+    const frameSize = spaceInfo.frameSize || { left: 42, right: 42, top: 10 };
+    const leftFrameWidth = frameSize.left || 42;
+    const halfWidth = width / 2;
+
+    // 탑뷰에서 Y축은 깊이 방향 (앞=양수, 뒤=음수 -> 뒤벽이 위쪽에 있음)
+    // 공간의 깊이는 0 ~ -depth (뒤벽이 위쪽)
+
+    // 가구 깊이 계산 (placedModules에서 최대 깊이 추출)
+    let furnitureDepth = 600; // 기본값 600mm
+    if (placedModules && placedModules.length > 0) {
+      const moduleDepths = placedModules.map(m => m.customDepth || 600);
+      furnitureDepth = Math.max(...moduleDepths);
+    }
+
+    // 치수선 설정
+    const dimOffset = 200;  // 치수선 오프셋
+    const extLength = 30;   // 연장선 길이
+    const dimColor = 7;     // 흰색 (ACI 7)
+
+    // ========================================
+    // 1. 좌측에 가구 깊이 치수선
+    // ========================================
+    const leftDimX = -halfWidth - dimOffset;
+    const furnitureFrontY = -furnitureDepth;  // 가구 앞면
+    const furnitureBackY = 0;                  // 가구 뒷면 (뒤벽에 붙어있음)
+
+    // 가구 깊이 치수선 (세로선)
+    lines.push({
+      x1: leftDimX, y1: furnitureBackY, x2: leftDimX, y2: furnitureFrontY,
+      layer: 'DIMENSIONS', color: dimColor
+    });
+    // 상단(뒤벽 방향) 연장선
+    lines.push({
+      x1: -halfWidth + leftFrameWidth, y1: furnitureBackY, x2: leftDimX - extLength, y2: furnitureBackY,
+      layer: 'DIMENSIONS', color: dimColor
+    });
+    // 하단(앞면 방향) 연장선
+    lines.push({
+      x1: -halfWidth + leftFrameWidth, y1: furnitureFrontY, x2: leftDimX - extLength, y2: furnitureFrontY,
+      layer: 'DIMENSIONS', color: dimColor
+    });
+    // 가구 깊이 텍스트
+    texts.push({
+      x: leftDimX - 20, y: (furnitureBackY + furnitureFrontY) / 2,
+      text: `${furnitureDepth}`, height: 20, color: dimColor, layer: 'DIMENSIONS'
+    });
+
+    // ========================================
+    // 2. 상단에 공간 전체 너비 치수선
+    // ========================================
+    const topDimY = dimOffset;  // 공간 뒤쪽 위에 배치
+
+    // 전체 너비 치수선 (가로선)
+    lines.push({
+      x1: -halfWidth, y1: topDimY, x2: halfWidth, y2: topDimY,
+      layer: 'DIMENSIONS', color: dimColor
+    });
+    // 좌측 연장선
+    lines.push({
+      x1: -halfWidth, y1: 0, x2: -halfWidth, y2: topDimY + extLength,
+      layer: 'DIMENSIONS', color: dimColor
+    });
+    // 우측 연장선
+    lines.push({
+      x1: halfWidth, y1: 0, x2: halfWidth, y2: topDimY + extLength,
+      layer: 'DIMENSIONS', color: dimColor
+    });
+    // 전체 너비 텍스트
+    texts.push({
+      x: 0, y: topDimY + 15,
+      text: `${width}`, height: 25, color: dimColor, layer: 'DIMENSIONS'
+    });
+
+    // ========================================
+    // 3. 공간 너비 아래에 개별 가구 너비 치수선
+    // ========================================
+    const dim2Y = topDimY - 100;  // 전체 너비 치수선 아래 100mm
+
+    if (placedModules && placedModules.length > 0) {
+      placedModules.forEach((module) => {
+        const moduleWidth = module.customWidth || 600;
+        const moduleX = module.position?.x || 0;
+        const moduleLeftX = (moduleX * 100) - moduleWidth / 2;  // position.x는 meter 단위
+        const moduleRightX = (moduleX * 100) + moduleWidth / 2;
+
+        // 개별 가구 너비 치수선
+        lines.push({
+          x1: moduleLeftX, y1: dim2Y, x2: moduleRightX, y2: dim2Y,
+          layer: 'DIMENSIONS', color: dimColor
+        });
+        // 좌측 연장선
+        lines.push({
+          x1: moduleLeftX, y1: 0, x2: moduleLeftX, y2: dim2Y + extLength,
+          layer: 'DIMENSIONS', color: dimColor
+        });
+        // 우측 연장선
+        lines.push({
+          x1: moduleRightX, y1: 0, x2: moduleRightX, y2: dim2Y + extLength,
+          layer: 'DIMENSIONS', color: dimColor
+        });
+        // 가구 너비 텍스트
+        texts.push({
+          x: (moduleLeftX + moduleRightX) / 2, y: dim2Y + 15,
+          text: `${moduleWidth}`, height: 20, color: dimColor, layer: 'DIMENSIONS'
+        });
+      });
+    }
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // 측면뷰: 상하 프레임 치수선 생성 (정면뷰와 유사)
