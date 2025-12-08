@@ -18,13 +18,13 @@ const drawingTypeToViewDirection = (drawingType: DrawingType): ViewDirection => 
       return 'top';
     case 'side':
     case 'sideLeft':
-      // 좌측면도: 가구의 왼쪽 면을 보여주는 도면
-      // 가구의 왼쪽 면을 보려면 카메라가 +X(오른쪽)에 있어야 함
-      return 'right';
-    case 'sideRight':
-      // 우측면도: 가구의 오른쪽 면을 보여주는 도면
-      // 가구의 오른쪽 면을 보려면 카메라가 -X(왼쪽)에 있어야 함
+      // 좌측면도: "좌측에서 본 도면" (ExportPanel 설명과 일치)
+      // 관찰자가 왼쪽(-X)에서 봄 = UI view2DDirection='left'와 동일
       return 'left';
+    case 'sideRight':
+      // 우측면도: "우측에서 본 도면" (ExportPanel 설명과 일치)
+      // 관찰자가 오른쪽(+X)에서 봄 = UI view2DDirection='right'와 동일
+      return 'right';
     default:
       return 'front';
   }
