@@ -2267,117 +2267,125 @@ const generateExternalDimensions = (
     }
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
-    // 측면뷰: 상하 프레임 치수선 생성 (정면뷰와 유사)
-    console.log(`📏 ${viewDirection}뷰: 상하 프레임 치수선 생성`);
+    // ========================================
+    // 측면뷰 DXF 생성
+    // ========================================
+    // 측면뷰 좌표계: DXF X = 깊이(depth) 방향, DXF Y = 높이(height) 방향
+    // 깊이 0~depth 범위를 사용 (왼쪽 0 = 가구 앞면, 오른쪽 depth = 뒷벽)
+    console.log(`📏 ${viewDirection}뷰: 측면도 프레임 및 치수선 생성`);
 
     const frameSize = spaceInfo.frameSize || { left: 18, right: 18, top: 10 };
     const topFrameThick = frameSize.top || 10;
     const baseH = spaceInfo.baseHeight || 65;
-    const halfDepth = depth / 2;
+    const frameColor = 3; // ACI 3 = 연두색 (프레임 색상)
+    const dimensionColor = 7; // ACI 7 = 흰색/검정
+    const dimensionOffset = 60;
+    const extensionLength = 10;
 
-    // 치수선 설정
-    const dimensionOffset = 60;  // 도면 외부로 60mm 오프셋
-    const extensionLength = 10;  // 연장선 길이
-    const dimensionColor = 7;    // 흰색 (ACI 7)
+    // 측면뷰 가구 깊이 계산 (가구가 뒷벽에서 얼마나 떨어져 있는지)
+    // Room.tsx 기준: furnitureZOffset = 가구 Z 시작점
+    // furnitureDepth = 520mm (기본 가구 깊이)
+    const furnitureDepthMm = 520; // 기본 가구 깊이
+    const wallGap = 30; // 뒷벽과 가구 사이 간격
 
-    // ========================================
-    // 1단계: 전체 높이 치수선 (우측 외곽)
-    // ========================================
-    const dim1X = halfDepth + dimensionOffset + 40;
+    // 가구 위치 (측면뷰에서 X축 = 깊이 방향)
+    // 뒷벽 = depth, 가구 뒷면 = depth - wallGap, 가구 앞면 = depth - wallGap - furnitureDepth
+    const furnitureBackX = depth - wallGap; // 가구 뒷면
+    const furnitureFrontX = depth - wallGap - furnitureDepthMm; // 가구 앞면
 
-    // 전체 높이 치수선
-    lines.push({
-      x1: dim1X, y1: 0, x2: dim1X, y2: height,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    // 상단 연장선
-    lines.push({
-      x1: halfDepth, y1: height, x2: dim1X + extensionLength, y2: height,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    // 하단 연장선
-    lines.push({
-      x1: halfDepth, y1: 0, x2: dim1X + extensionLength, y2: 0,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: dim1X + 15, y: height / 2,
-      text: `${height}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
-    });
+    console.log(`📐 측면뷰 좌표:`);
+    console.log(`  - 전체 깊이: ${depth}mm`);
+    console.log(`  - 가구 앞면 X: ${furnitureFrontX}mm, 가구 뒷면 X: ${furnitureBackX}mm`);
+    console.log(`  - 상부 프레임 두께: ${topFrameThick}mm, 받침대 높이: ${baseH}mm`);
 
     // ========================================
-    // 2단계: 상부 프레임 / 가구 영역 / 받침대 높이 치수선 (우측)
+    // 1. 상부 프레임 박스 (측면뷰)
     // ========================================
-    const rightDimX = halfDepth + dimensionOffset;
+    // 상부 프레임: 전체 깊이, 높이 topFrameThick
+    const topFrameY1 = height - topFrameThick; // 상부 프레임 하단
+    const topFrameY2 = height; // 상부 프레임 상단
 
-    // 상부 프레임 높이 치수선
-    lines.push({
-      x1: rightDimX, y1: height - topFrameThick, x2: rightDimX, y2: height,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: halfDepth, y1: height - topFrameThick, x2: rightDimX + extensionLength, y2: height - topFrameThick,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: rightDimX + 15, y: height - topFrameThick / 2,
-      text: `${topFrameThick}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
-    });
+    // 상부 프레임 외곽선 (4개 변)
+    lines.push({ x1: 0, y1: topFrameY1, x2: depth, y2: topFrameY1, layer: 'SPACE_FRAME', color: frameColor }); // 하단
+    lines.push({ x1: 0, y1: topFrameY2, x2: depth, y2: topFrameY2, layer: 'SPACE_FRAME', color: frameColor }); // 상단
+    lines.push({ x1: 0, y1: topFrameY1, x2: 0, y2: topFrameY2, layer: 'SPACE_FRAME', color: frameColor }); // 좌측
+    lines.push({ x1: depth, y1: topFrameY1, x2: depth, y2: topFrameY2, layer: 'SPACE_FRAME', color: frameColor }); // 우측
+    console.log(`  ✅ 상부 프레임: Y ${topFrameY1}~${topFrameY2}, X 0~${depth}`);
 
-    // 가구 영역 높이 (전체 - 상부프레임 - 받침대)
-    const furnitureAreaHeight = height - topFrameThick - baseH;
-    const rightDimX2 = rightDimX + 40;
-    lines.push({
-      x1: rightDimX2, y1: baseH, x2: rightDimX2, y2: height - topFrameThick,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: halfDepth, y1: baseH, x2: rightDimX2 + extensionLength, y2: baseH,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: rightDimX2 + 15, y: baseH + furnitureAreaHeight / 2,
-      text: `${furnitureAreaHeight}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
-    });
-
-    // 받침대 높이 치수선 (받침대가 있는 경우만)
+    // ========================================
+    // 2. 하부 받침대 박스 (측면뷰) - 받침대가 있는 경우
+    // ========================================
     if (baseH > 0) {
-      lines.push({
-        x1: rightDimX, y1: 0, x2: rightDimX, y2: baseH,
-        layer: 'DIMENSIONS', color: dimensionColor
-      });
-      texts.push({
-        x: rightDimX + 15, y: baseH / 2,
-        text: `${baseH}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
-      });
+      // 받침대: 가구 영역 아래, 높이 baseH
+      const baseY1 = 0; // 받침대 하단
+      const baseY2 = baseH; // 받침대 상단
+
+      // 받침대 외곽선 (4개 변) - 가구 영역과 동일한 깊이 범위
+      lines.push({ x1: furnitureFrontX, y1: baseY1, x2: furnitureBackX, y2: baseY1, layer: 'SPACE_FRAME', color: frameColor }); // 하단
+      lines.push({ x1: furnitureFrontX, y1: baseY2, x2: furnitureBackX, y2: baseY2, layer: 'SPACE_FRAME', color: frameColor }); // 상단
+      lines.push({ x1: furnitureFrontX, y1: baseY1, x2: furnitureFrontX, y2: baseY2, layer: 'SPACE_FRAME', color: frameColor }); // 앞면
+      lines.push({ x1: furnitureBackX, y1: baseY1, x2: furnitureBackX, y2: baseY2, layer: 'SPACE_FRAME', color: frameColor }); // 뒷면
+      console.log(`  ✅ 받침대: Y ${baseY1}~${baseY2}, X ${furnitureFrontX}~${furnitureBackX}`);
     }
 
     // ========================================
-    // 3단계: 전체 깊이 치수선 (하단)
+    // 3. 가구 영역 외곽선 (측면뷰)
     // ========================================
+    // 가구 영역: 받침대 위 ~ 상부 프레임 아래
+    const furnitureY1 = baseH; // 가구 영역 하단
+    const furnitureY2 = height - topFrameThick; // 가구 영역 상단
+
+    // 가구 영역 외곽선 (4개 변)
+    lines.push({ x1: furnitureFrontX, y1: furnitureY1, x2: furnitureBackX, y2: furnitureY1, layer: 'FURNITURE_PANEL', color: 30 }); // 하단
+    lines.push({ x1: furnitureFrontX, y1: furnitureY2, x2: furnitureBackX, y2: furnitureY2, layer: 'FURNITURE_PANEL', color: 30 }); // 상단
+    lines.push({ x1: furnitureFrontX, y1: furnitureY1, x2: furnitureFrontX, y2: furnitureY2, layer: 'FURNITURE_PANEL', color: 30 }); // 앞면
+    lines.push({ x1: furnitureBackX, y1: furnitureY1, x2: furnitureBackX, y2: furnitureY2, layer: 'FURNITURE_PANEL', color: 30 }); // 뒷면
+    console.log(`  ✅ 가구 영역: Y ${furnitureY1}~${furnitureY2}, X ${furnitureFrontX}~${furnitureBackX}`);
+
+    // ========================================
+    // 4. 치수선 생성
+    // ========================================
+    // 4-1. 전체 높이 치수선 (우측 외곽)
+    const dim1X = depth + dimensionOffset + 40;
+    lines.push({ x1: dim1X, y1: 0, x2: dim1X, y2: height, layer: 'DIMENSIONS', color: dimensionColor });
+    lines.push({ x1: depth, y1: height, x2: dim1X + extensionLength, y2: height, layer: 'DIMENSIONS', color: dimensionColor });
+    lines.push({ x1: depth, y1: 0, x2: dim1X + extensionLength, y2: 0, layer: 'DIMENSIONS', color: dimensionColor });
+    texts.push({ x: dim1X + 15, y: height / 2, text: `${height}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
+
+    // 4-2. 상부 프레임 / 가구 영역 / 받침대 높이 치수선 (우측)
+    const rightDimX = depth + dimensionOffset;
+
+    // 상부 프레임 높이
+    lines.push({ x1: rightDimX, y1: topFrameY1, x2: rightDimX, y2: topFrameY2, layer: 'DIMENSIONS', color: dimensionColor });
+    lines.push({ x1: depth, y1: topFrameY1, x2: rightDimX + extensionLength, y2: topFrameY1, layer: 'DIMENSIONS', color: dimensionColor });
+    texts.push({ x: rightDimX + 15, y: (topFrameY1 + topFrameY2) / 2, text: `${topFrameThick}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
+
+    // 가구 영역 높이
+    const furnitureAreaHeight = furnitureY2 - furnitureY1;
+    const rightDimX2 = rightDimX + 40;
+    lines.push({ x1: rightDimX2, y1: furnitureY1, x2: rightDimX2, y2: furnitureY2, layer: 'DIMENSIONS', color: dimensionColor });
+    lines.push({ x1: depth, y1: furnitureY1, x2: rightDimX2 + extensionLength, y2: furnitureY1, layer: 'DIMENSIONS', color: dimensionColor });
+    texts.push({ x: rightDimX2 + 15, y: (furnitureY1 + furnitureY2) / 2, text: `${furnitureAreaHeight}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
+
+    // 받침대 높이 (있는 경우)
+    if (baseH > 0) {
+      lines.push({ x1: rightDimX, y1: 0, x2: rightDimX, y2: baseH, layer: 'DIMENSIONS', color: dimensionColor });
+      texts.push({ x: rightDimX + 15, y: baseH / 2, text: `${baseH}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
+    }
+
+    // 4-3. 전체 깊이 치수선 (하단)
     const dim2Y = -dimensionOffset;
+    lines.push({ x1: 0, y1: dim2Y, x2: depth, y2: dim2Y, layer: 'DIMENSIONS', color: dimensionColor });
+    lines.push({ x1: 0, y1: 0, x2: 0, y2: dim2Y - extensionLength, layer: 'DIMENSIONS', color: dimensionColor });
+    lines.push({ x1: depth, y1: 0, x2: depth, y2: dim2Y - extensionLength, layer: 'DIMENSIONS', color: dimensionColor });
+    texts.push({ x: depth / 2, y: dim2Y - 15, text: `${depth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
 
-    lines.push({
-      x1: -halfDepth, y1: dim2Y, x2: halfDepth, y2: dim2Y,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    // 좌측 연장선
-    lines.push({
-      x1: -halfDepth, y1: 0, x2: -halfDepth, y2: dim2Y - extensionLength,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    // 우측 연장선
-    lines.push({
-      x1: halfDepth, y1: 0, x2: halfDepth, y2: dim2Y - extensionLength,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: 0, y: dim2Y - 15,
-      text: `${depth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
-    });
-
-    // 측면뷰 프레임 박스는 씬에서 추출 (별도 생성 안함)
-    // 2D 화면에 렌더링된 것과 동일하게 유지
+    // 4-4. 가구 깊이 치수선 (하단 2열)
+    const dim3Y = dim2Y - 40;
+    lines.push({ x1: furnitureFrontX, y1: dim3Y, x2: furnitureBackX, y2: dim3Y, layer: 'DIMENSIONS', color: dimensionColor });
+    lines.push({ x1: furnitureFrontX, y1: dim2Y - extensionLength, x2: furnitureFrontX, y2: dim3Y - extensionLength, layer: 'DIMENSIONS', color: dimensionColor });
+    lines.push({ x1: furnitureBackX, y1: dim2Y - extensionLength, x2: furnitureBackX, y2: dim3Y - extensionLength, layer: 'DIMENSIONS', color: dimensionColor });
+    texts.push({ x: (furnitureFrontX + furnitureBackX) / 2, y: dim3Y - 15, text: `${furnitureDepthMm}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS' });
   }
 
   console.log(`📏 외부 치수선 생성: ${lines.length}개 라인, ${texts.length}개 텍스트`);
@@ -2443,7 +2451,9 @@ export const generateDxfFromData = (
   }
 
   // DXF 원점 이동 (왼쪽 하단을 원점으로)
-  const offsetX = spaceInfo.width / 2;
+  // 정면뷰/탑뷰: X = -width/2 ~ +width/2 범위를 0 ~ width로 이동
+  // 측면뷰: 이미 0 ~ depth 범위로 좌표 생성됨, 오프셋 불필요
+  const offsetX = (viewDirection === 'left' || viewDirection === 'right') ? 0 : spaceInfo.width / 2;
   const offsetY = 0;
 
   // DXF 생성
