@@ -1641,7 +1641,8 @@ const aciToLayerName = (aciColor: number): string => {
 const generateExternalDimensions = (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
-  viewDirection: ViewDirection
+  viewDirection: ViewDirection,
+  sideViewFilter: SideViewFilter = 'all'
 ): { lines: DxfLine[]; texts: DxfText[] } => {
   const lines: DxfLine[] = [];
   const texts: DxfText[] = [];
@@ -2413,18 +2414,41 @@ const generateExternalDimensions = (
     // 가구 시작 Y 위치
     const furnitureBaseY = isFloating ? floatHeightMm : baseFrameHeightMm;
 
-    // 가구 깊이 계산 (placedModules에서 가져오기)
+    // 가구 깊이 계산 (sideViewFilter에 따라 올바른 가구 선택)
     let furnitureDepthMm = 600; // 기본값
     let furnitureHeightMm = height - topFrameHeightMm - baseFrameHeightMm;
 
     if (placedModules.length > 0) {
-      const module = placedModules[0];
-      const moduleDepth = module.upperSectionDepth || module.customDepth;
+      // sideViewFilter에 따라 올바른 가구 선택
+      let targetModule: PlacedModule;
+
+      if (sideViewFilter === 'leftmost') {
+        // 좌측뷰: 맨 왼쪽 가구 (X 좌표가 가장 작은 가구)
+        targetModule = placedModules.reduce((prev, curr) => {
+          const prevX = prev.position?.x || 0;
+          const currX = curr.position?.x || 0;
+          return currX < prevX ? curr : prev;
+        });
+        console.log(`📐 좌측뷰: 맨 왼쪽 가구 선택 (X=${targetModule.position?.x || 0})`);
+      } else if (sideViewFilter === 'rightmost') {
+        // 우측뷰: 맨 오른쪽 가구 (X 좌표가 가장 큰 가구)
+        targetModule = placedModules.reduce((prev, curr) => {
+          const prevX = prev.position?.x || 0;
+          const currX = curr.position?.x || 0;
+          return currX > prevX ? curr : prev;
+        });
+        console.log(`📐 우측뷰: 맨 오른쪽 가구 선택 (X=${targetModule.position?.x || 0})`);
+      } else {
+        // 기본: 첫 번째 가구
+        targetModule = placedModules[0];
+      }
+
+      const moduleDepth = targetModule.upperSectionDepth || targetModule.customDepth;
       if (moduleDepth) {
         furnitureDepthMm = moduleDepth;
       }
-      if (module.customHeight) {
-        furnitureHeightMm = module.customHeight;
+      if (targetModule.customHeight) {
+        furnitureHeightMm = targetModule.customHeight;
       }
     }
 
@@ -2582,10 +2606,29 @@ const generateExternalDimensions = (
     console.log(`  - baseFrameHeightMmDim: ${baseFrameHeightMmDim}mm`);
     console.log(`  - topFrameHeightMm: ${topFrameHeightMm}mm`);
 
-    // placedModules에서 섹션 높이 정보 가져오기
+    // placedModules에서 섹션 높이 정보 가져오기 (sideViewFilter에 따라 올바른 가구 선택)
     let sectionHeights: number[] = [];
     if (placedModules.length > 0) {
-      const module = placedModules[0];
+      // sideViewFilter에 따라 올바른 가구 선택
+      let targetModuleForSection: PlacedModule;
+
+      if (sideViewFilter === 'leftmost') {
+        targetModuleForSection = placedModules.reduce((prev, curr) => {
+          const prevX = prev.position?.x || 0;
+          const currX = curr.position?.x || 0;
+          return currX < prevX ? curr : prev;
+        });
+      } else if (sideViewFilter === 'rightmost') {
+        targetModuleForSection = placedModules.reduce((prev, curr) => {
+          const prevX = prev.position?.x || 0;
+          const currX = curr.position?.x || 0;
+          return currX > prevX ? curr : prev;
+        });
+      } else {
+        targetModuleForSection = placedModules[0];
+      }
+
+      const module = targetModuleForSection;
       const moduleData = getModuleById(module.id);
       // CADDimensions2D와 동일하게 adjustedInternalHeightMm 사용
       const sectionInfo = computeSectionHeightsInfo(module, moduleData, adjustedInternalHeightMm, viewDirection);
@@ -2842,15 +2885,15 @@ export const generateDxfFromData = (
     // 외부 치수선의 텍스트만 사용
     console.log(`📏 측면뷰: 씬 텍스트 ${extracted.texts.length}개 모두 제외 (내부 치수)`);
 
-    // 외부 치수선 생성 (CADDimensions2D와 동일한 치수)
-    const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection);
+    // 외부 치수선 생성 (CADDimensions2D와 동일한 치수) - sideViewFilter 전달
+    const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection, sideViewFilter);
 
     lines = [...filteredLines, ...externalDimensions.lines];
     texts = [...externalDimensions.texts]; // 외부 치수선 텍스트만 사용
     console.log(`📐 측면뷰 (${viewDirection}): 가구형상 ${filteredLines.length}개 + 외부치수선 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
   } else {
     // 정면뷰/탑뷰: 기존 방식대로 외부 치수선 생성 후 합치기
-    const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection);
+    const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection, sideViewFilter);
     lines = [...extracted.lines, ...externalDimensions.lines];
     texts = [...extracted.texts, ...externalDimensions.texts];
     console.log(`📐 ${viewDirection}뷰: 씬 추출 + 외부 치수선 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
