@@ -268,17 +268,15 @@ const projectTo2D = (p: THREE.Vector3, scale: number): { x: number; y: number } 
     case 'top':
       return { x: p.x * scale, y: -p.z * scale }; // z축을 y로, 뒤집어서
     case 'left':
-      // 좌측뷰: 카메라가 -X 방향에서 봄
-      // 화면 왼쪽 = +Z (뒷면), 화면 오른쪽 = -Z (앞면)
-      // DXF X 좌표: Z를 뒤집어서 0부터 시작하도록
-      // Three.js Z는 보통 -depth/2 ~ +depth/2 범위
-      // DXF X = (depth/2 - Z) * scale → 앞면(Z-)이 오른쪽, 뒷면(Z+)이 왼쪽
-      return { x: (currentSpaceDepthMm / 200 - p.z) * scale, y: p.y * scale };
-    case 'right':
-      // 우측뷰: 카메라가 +X 방향에서 봄
-      // 화면 왼쪽 = -Z (앞면), 화면 오른쪽 = +Z (뒷면)
-      // DXF X = (Z + depth/2) * scale → 앞면(Z-)이 왼쪽, 뒷면(Z+)이 오른쪽
+      // 좌측뷰: 카메라가 -X 방향에서 봄 (UI view2DDirection='left'와 동일)
+      // 화면 왼쪽 = -Z (앞면), 화면 오른쪽 = +Z (뒷면, 백패널)
+      // DXF X = (Z + depth/2) * scale → 앞면(Z-)이 왼쪽, 뒷면(Z+, 백패널)이 오른쪽
       return { x: (p.z + currentSpaceDepthMm / 200) * scale, y: p.y * scale };
+    case 'right':
+      // 우측뷰: 카메라가 +X 방향에서 봄 (UI view2DDirection='right'와 동일)
+      // 화면 왼쪽 = +Z (뒷면, 백패널), 화면 오른쪽 = -Z (앞면)
+      // DXF X = (depth/2 - Z) * scale → 뒷면(Z+, 백패널)이 왼쪽, 앞면(Z-)이 오른쪽
+      return { x: (currentSpaceDepthMm / 200 - p.z) * scale, y: p.y * scale };
     default:
       return { x: p.x * scale, y: p.y * scale };
   }
