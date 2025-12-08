@@ -877,6 +877,32 @@ const extractFromScene = (
       return;
     }
 
+    // 측면뷰에서 가구 내부 치수선(내경) 제외
+    // 가구 내부 치수선은 SectionsRenderer에서 생성되며, 부모 계층에 furniture가 포함됨
+    // CADDimensions2D에서 생성되는 측면뷰 치수선(깊이, 높이, 섹션높이)은 부모에 furniture가 없음
+    if ((viewDirection === 'left' || viewDirection === 'right') &&
+        name.toLowerCase().includes('dimension')) {
+      // 부모 계층에서 furniture 확인
+      let parent: THREE.Object3D | null = object.parent;
+      let hasFurnitureParent = false;
+      while (parent) {
+        const parentName = (parent.name || '').toLowerCase();
+        if (parentName.includes('furniture') ||
+            parentName.includes('section') ||
+            parentName.includes('shelf') ||
+            parentName.includes('drawer')) {
+          hasFurnitureParent = true;
+          break;
+        }
+        parent = parent.parent;
+      }
+      if (hasFurnitureParent) {
+        // 가구 내부 치수선(내경)은 측면뷰에서 제외
+        skippedByFilter++;
+        return;
+      }
+    }
+
     const lowerNameForFilter = name.toLowerCase();
 
     // 부모 계층에서 이름 확인하는 헬퍼 함수
