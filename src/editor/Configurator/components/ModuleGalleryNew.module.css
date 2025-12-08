@@ -18,7 +18,8 @@
 }
 
 .filterButton {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 0;
   background: var(--theme-surface);
   border: none;
   padding: 8px 16px;
