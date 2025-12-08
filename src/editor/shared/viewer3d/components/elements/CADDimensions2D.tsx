@@ -25,11 +25,23 @@ interface SectionHeightsInfo {
 const computeSectionHeightsInfo = (
   module: PlacedModule,
   moduleData: ReturnType<typeof getModuleById> | null,
-  internalHeightMm: number
+  internalHeightMm: number,
+  viewDirection?: 'left' | 'right'
 ): SectionHeightsInfo => {
-  const rawSections = ((module.customSections && module.customSections.length > 0)
-    ? module.customSections
-    : moduleData?.modelConfig?.sections) as SectionWithCalc[] | undefined;
+  // 듀얼 가구의 경우 leftSections/rightSections 확인
+  let rawSections: SectionWithCalc[] | undefined;
+
+  if (module.customSections && module.customSections.length > 0) {
+    rawSections = module.customSections as SectionWithCalc[];
+  } else if (moduleData?.modelConfig?.leftSections || moduleData?.modelConfig?.rightSections) {
+    // 듀얼 가구 (스타일러장 등): 좌측뷰는 leftSections, 우측뷰는 rightSections 사용
+    // 기본적으로 leftSections 사용 (주요 섹션)
+    rawSections = (viewDirection === 'right' && moduleData?.modelConfig?.rightSections)
+      ? moduleData.modelConfig.rightSections as SectionWithCalc[]
+      : (moduleData?.modelConfig?.leftSections as SectionWithCalc[] || moduleData?.modelConfig?.rightSections as SectionWithCalc[]);
+  } else {
+    rawSections = moduleData?.modelConfig?.sections as SectionWithCalc[] | undefined;
+  }
 
   const basicThicknessMm = moduleData?.modelConfig?.basicThickness ?? DEFAULT_BASIC_THICKNESS_MM;
 
@@ -424,56 +436,32 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const moduleDepth = mmToThreeUnits(moduleData.dimensions.depth);
           const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
 
-          const actualDepthMm = moduleData.dimensions.depth;
-          // 서랍 실제 깊이 (전체 깊이 - 뒤판 및 여유)
-          const drawerDepthMm = 517;
-
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm, basicThicknessMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, internalSpace.height);
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, internalSpace.height, 'left');
           if (sectionConfigs.length === 0) {
             return null;
           }
 
-          const basicThickness = mmToThreeUnits(basicThicknessMm);
-          const sectionHeights = sectionHeightsMm.map(mmToThreeUnits);
-          const totalSections = sectionConfigs.length;
-          const sectionStartMm: number[] = [];
-          let accumMm = 0;
-          sectionHeightsMm.forEach(heightMm => {
-            sectionStartMm.push(accumMm);
-            accumMm += heightMm;
-          });
+          // 하부섹션과 상부섹션 높이만 계산 (개별 섹션이 아닌 2개 섹션으로 합산)
+          // 첫 번째 섹션 = 하부섹션, 나머지 = 상부섹션
+          const lowerSectionHeightMm = sectionHeightsMm[0] || 0;
+          const upperSectionHeightMm = sectionHeightsMm.slice(1).reduce((sum, h) => sum + h, 0);
 
           // 각 섹션의 실제 높이 계산 (받침대 + 하판(basicThickness) 위부터 시작)
           const cabinetBottomY = furnitureBaseY;
           const cabinetTopY = cabinetBottomY + internalHeight;
+          const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
 
-          return sectionConfigs.map((section, sectionIndex) => {
-            const interiorStartMm = sectionStartMm[sectionIndex] ?? 0;
-            const computedHeightMm = sectionHeightsMm[sectionIndex] ?? Math.max(sectionHeights[sectionIndex] / 0.01, 0);
-            const interiorStartY = cabinetBottomY + mmToThreeUnits(interiorStartMm);
-            const interiorEndY = interiorStartY + mmToThreeUnits(computedHeightMm);
+          // 2개 섹션만 표시 (하부/상부)
+          const displaySections = [
+            { startY: cabinetBottomY, endY: lowerSectionEndY, heightMm: lowerSectionHeightMm, isFirst: true },
+            { startY: lowerSectionEndY, endY: cabinetTopY, heightMm: upperSectionHeightMm, isFirst: false }
+          ].filter(s => s.heightMm > 0);
 
-            const isLastSection = sectionIndex === totalSections - 1;
+          return displaySections.map((sectionDisplay, sectionIndex) => {
+            const { startY: sectionStartY, endY: sectionEndY, heightMm: sectionHeightMm, isFirst } = sectionDisplay;
 
-            let sectionStartY = sectionIndex === 0 ? cabinetBottomY : interiorStartY;
-            let sectionEndY = isLastSection ? cabinetTopY : interiorEndY;
-
-            // 우측뷰에서 상부섹션의 치수가이드를 36mm 아래로 확장
-            if (currentViewDirection === 'right' && sectionIndex > 0) {
-              console.log('🔴 CADDimensions2D: 우측뷰 상부섹션 36mm 확장', {
-                currentViewDirection,
-                sectionIndex,
-                originalStartY: sectionStartY,
-                adjustedStartY: sectionStartY - mmToThreeUnits(36)
-              });
-              sectionStartY -= mmToThreeUnits(36);
-            }
-
-            const sectionHeight = sectionEndY - sectionStartY;
-            const sectionHeightMm = Math.max(sectionHeight / 0.01, 0);
-
-            // 첫 번째 섹션은 하단 가이드선 표시 안 함 (받침대와 겹침)
-            const shouldRenderStartGuide = sectionIndex !== 0;
+            // 첫 번째 섹션(하부)은 하단 가이드선 표시 안 함 (받침대와 겹침)
+            const shouldRenderStartGuide = !isFirst;
 
             return (
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
@@ -602,223 +590,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 >
                   {Math.round(sectionHeightMm)}
                 </Text>
-
-                {/* 선반 섹션 내경 높이 표시 제거 - 호버 반응 없는 중복 치수 */}
-                {(() => {
-                  return null; // 완전히 비활성화
-
-                  // shelf 또는 hanging 타입이면서 shelfPositions가 있는 경우만 처리
-                  if ((section.type !== 'shelf' && section.type !== 'hanging') || !section.shelfPositions || section.shelfPositions.length === 0) {
-                    return null;
-                  }
-
-                  const compartmentHeights: Array<{ height: number; centerY: number; heightMm: number }> = [];
-                  const shelfPositions = section.shelfPositions;
-
-                  // 첫 번째 칸 (맨 아래) - 바닥부터 첫 번째 선반 하단까지
-                  // 정면뷰(ShelfRenderer.tsx line 171-202)와 동일한 로직
-                  if (shelfPositions.length > 0) {
-                    // positionMm === 0인 경우 (바닥판) - 칸 높이 치수는 표시하지 않음 (선반 두께만 표시)
-                    if (shelfPositions[0] === 0) {
-                      console.log('🔵 측면뷰 첫 번째 칸: 바닥판(0)이므로 표시 안 함');
-                    } else {
-                      const firstShelfBottomMm = shelfPositions[0] - basicThickness / 0.01 / 2; // 첫 번째 선반의 하단
-                      const height = mmToThreeUnits(firstShelfBottomMm);
-                      const centerY = sectionStartY + height / 2;
-
-                      console.log('🔵 측면뷰 첫 번째 칸:', {
-                        shelfPos_0: shelfPositions[0],
-                        basicThickness_mm: basicThickness / 0.01,
-                        firstShelfBottomMm,
-                        표시될값: Math.round(firstShelfBottomMm)
-                      });
-
-                      compartmentHeights.push({ height, centerY, heightMm: firstShelfBottomMm });
-                    }
-                  }
-
-                  // 중간 칸들 - 현재 선반 상단부터 다음 선반 하단까지
-                  // 정면뷰(ShelfRenderer.tsx line 206-213)와 완전히 동일한 로직
-                  for (let i = 0; i < shelfPositions.length - 1; i++) {
-                    const currentShelfTopMm = shelfPositions[i] + basicThickness / 0.01 / 2; // 현재 선반의 상단
-                    const nextShelfBottomMm = shelfPositions[i + 1] - basicThickness / 0.01 / 2; // 다음 선반의 하단
-                    const heightMm = nextShelfBottomMm - currentShelfTopMm;
-                    const height = mmToThreeUnits(heightMm); // Three.js 단위로 변환
-                    const centerY = sectionStartY + mmToThreeUnits(currentShelfTopMm + heightMm / 2);
-
-                    console.log(`🔵 측면뷰 중간 칸 ${i}:`, {
-                      shelfPos_i: shelfPositions[i],
-                      shelfPos_next: shelfPositions[i + 1],
-                      basicThickness_mm: basicThickness / 0.01,
-                      currentShelfTopMm,
-                      nextShelfBottomMm,
-                      heightMm,
-                      표시될값: Math.round(heightMm)
-                    });
-
-                    compartmentHeights.push({ height, centerY, heightMm });
-                  }
-
-                  // 마지막 칸 - 마지막 선반 상단부터 섹션 상단까지
-                  // 정면뷰(ShelfRenderer.tsx line 222-232)와 동일한 로직
-                  if (shelfPositions.length > 0) {
-                    const lastShelfPos = shelfPositions[shelfPositions.length - 1];
-                    const lastShelfTopMm = lastShelfPos + basicThickness / 0.01 / 2; // 선반 상단 위치
-
-                    // 섹션 상단 Y 위치 계산
-                    // isLastSection이면 가구 최상단(furnitureBaseY + internalHeight)
-                    // 아니면 sectionEndY
-                    const sectionTopY = isLastSection ? (furnitureBaseY + internalHeight) : sectionEndY;
-
-                    // 섹션 상단에서 상단판(basicThickness) 2개 두께를 뺀 위치가 내부 상단
-                    // 띄움배치 시 상부섹션은 18mm 확장
-                    const floatingAdjustment = (isFloating && isLastSection) ? mmToThreeUnits(18) : 0;
-                    const topFrameBottomY = sectionTopY - basicThickness + floatingAdjustment;
-                    const topFrameBottomMm = (topFrameBottomY - sectionStartY) / 0.01;
-
-                    const heightMm = topFrameBottomMm - lastShelfTopMm; // 선반 상단부터 상단 프레임 하단까지
-                    const height = mmToThreeUnits(heightMm); // Three.js 단위로 변환
-                    const centerY = sectionStartY + mmToThreeUnits(lastShelfTopMm + heightMm / 2);
-
-                    console.log('🔵 측면뷰 마지막 칸:', {
-                      lastShelfPos,
-                      basicThickness_mm: basicThickness / 0.01,
-                      lastShelfTopMm,
-                      topFrameBottomMm,
-                      sectionHeight_mm: sectionHeight / 0.01,
-                      heightMm,
-                      표시될값: Math.round(heightMm)
-                    });
-
-                    compartmentHeights.push({ height, centerY, heightMm });
-                  }
-
-                  return compartmentHeights.map((compartment, compartmentIndex) => {
-                    const compartmentBottom = compartment.centerY - compartment.height / 2;
-                    const compartmentTop = compartment.centerY + compartment.height / 2;
-
-                    // X 위치: 가구 박스 왼쪽 안쪽 (가구 폭의 절반 - 100mm)
-                    const lineX = 0 - indexing.columnWidth / 2 + mmToThreeUnits(100);
-
-                    return (
-                      <group key={`shelf-compartment-${sectionIndex}-${compartmentIndex}`}>
-                        {/* 보조 가이드 연장선 - 하단 */}
-                        <NativeLine name="dimension_line"
-                          points={[
-                            [lineX - mmToThreeUnits(200), compartmentBottom, furnitureZ],
-                            [lineX, compartmentBottom, furnitureZ]
-                          ]}
-                          color={dimensionColor}
-                          lineWidth={1}
-                          renderOrder={10000}
-                          depthTest={false}
-                        />
-
-                        {/* 보조 가이드 연장선 - 상단 */}
-                        <NativeLine name="dimension_line"
-                          points={[
-                            [lineX - mmToThreeUnits(200), compartmentTop, furnitureZ],
-                            [lineX, compartmentTop, furnitureZ]
-                          ]}
-                          color={dimensionColor}
-                          lineWidth={1}
-                          renderOrder={10000}
-                          depthTest={false}
-                        />
-
-                        {/* 치수선 */}
-                        <NativeLine name="dimension_line"
-                          points={[
-                            [lineX, compartmentBottom, furnitureZ],
-                            [lineX, compartmentTop, furnitureZ]
-                          ]}
-                          color={dimensionColor}
-                          lineWidth={2}
-                          renderOrder={10000}
-                          depthTest={false}
-                        />
-
-                        {/* 티크 마크 - 하단 */}
-                        <NativeLine name="dimension_line"
-                          points={[
-                            [lineX, compartmentBottom, furnitureZ - 0.03],
-                            [lineX, compartmentBottom, furnitureZ + 0.03]
-                          ]}
-                          color={dimensionColor}
-                          lineWidth={2}
-                          renderOrder={10000}
-                          depthTest={false}
-                        />
-
-                        {/* 티크 마크 - 상단 */}
-                        <NativeLine name="dimension_line"
-                          points={[
-                            [lineX, compartmentTop, furnitureZ - 0.03],
-                            [lineX, compartmentTop, furnitureZ + 0.03]
-                          ]}
-                          color={dimensionColor}
-                          lineWidth={2}
-                          renderOrder={10000}
-                          depthTest={false}
-                        />
-
-                        {/* 치수 텍스트 */}
-                        <Text
-                          position={[
-                            lineX - mmToThreeUnits(60),
-                            compartment.centerY,
-                            furnitureZ
-                          ]}
-                          fontSize={largeFontSize}
-                          color={textColor}
-                          anchorX="center"
-                          anchorY="middle"
-                          renderOrder={10000}
-                          depthTest={false}
-                          rotation={[0, -Math.PI / 2, Math.PI / 2]}
-                        >
-                          {Math.round(compartment.heightMm)}
-                        </Text>
-                      </group>
-                    );
-                  });
-                })()}
-
-                {/* 서랍 섹션인 경우 각 서랍별 깊이 표시 */}
-                {section.type === 'drawer' && section.drawerHeights && section.drawerHeights.map((drawerHeight, drawerIndex) => {
-                  const drawerGap = section.gapHeight || 0;
-                  const totalDrawerHeight = drawerHeight + drawerGap;
-
-                  // 각 서랍의 Y 위치 계산 (DrawerRenderer와 동일한 방식)
-                  // sectionStartY는 받침대 + 하판 위치, 여기에 첫 공백(gapHeight)을 더함
-                  let drawerY = sectionStartY + mmToThreeUnits(drawerGap);
-                  for (let i = 0; i < drawerIndex; i++) {
-                    drawerY += mmToThreeUnits(section.drawerHeights![i] + drawerGap);
-                  }
-                  drawerY += mmToThreeUnits(drawerHeight / 2); // 서랍 중앙
-
-                  // 서랍 깊이 텍스트 Z 위치: 서랍 중심 (가구 중심과 동일)
-                  const textZ = furnitureZ;
-
-                  // X 위치: 가구 박스 왼쪽 바깥으로 (가구 폭의 절반 + 100mm)
-                  const textX = 0; // 측면뷰에서는 단면 중앙에 깊이 표기
-
-                  return (
-                    <Text
-                      key={`drawer-depth-${sectionIndex}-${drawerIndex}`}
-                      position={[textX, drawerY, textZ]}
-                      fontSize={largeFontSize}
-                      color="#008B8B"
-                      anchorX="center"
-                      anchorY="middle"
-                      renderOrder={10000}
-                      depthTest={false}
-                      rotation={[0, -Math.PI / 2, 0]}
-                    >
-                      D{drawerDepthMm}
-                    </Text>
-                  );
-                })}
               </group>
             );
           });
@@ -1334,44 +1105,32 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const moduleDepth = mmToThreeUnits(moduleData.dimensions.depth);
           const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
 
-          const actualDepthMm = moduleData.dimensions.depth;
-          const drawerDepthMm = 517;
-
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm, basicThicknessMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, internalSpace.height);
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, internalSpace.height, 'right');
           if (sectionConfigs.length === 0) {
             return null;
           }
 
-          const basicThickness = mmToThreeUnits(basicThicknessMm);
-          const sectionHeights = sectionHeightsMm.map(mmToThreeUnits);
-          const totalSections = sectionConfigs.length;
-          const sectionStartMm: number[] = [];
-          let accumMm = 0;
-          sectionHeightsMm.forEach(heightMm => {
-            sectionStartMm.push(accumMm);
-            accumMm += heightMm;
-          });
+          // 하부섹션과 상부섹션 높이만 계산 (개별 섹션이 아닌 2개 섹션으로 합산)
+          // 첫 번째 섹션 = 하부섹션, 나머지 = 상부섹션
+          const lowerSectionHeightMm = sectionHeightsMm[0] || 0;
+          const upperSectionHeightMm = sectionHeightsMm.slice(1).reduce((sum, h) => sum + h, 0);
 
+          // 각 섹션의 실제 높이 계산 (받침대 + 하판(basicThickness) 위부터 시작)
           const cabinetBottomY = furnitureBaseY;
           const cabinetTopY = cabinetBottomY + internalHeight;
+          const lowerSectionEndY = cabinetBottomY + mmToThreeUnits(lowerSectionHeightMm);
 
-          return sectionConfigs.map((section, sectionIndex) => {
-            const interiorStartMm = sectionStartMm[sectionIndex] ?? 0;
-            const computedHeightMm = sectionHeightsMm[sectionIndex] ?? Math.max(sectionHeights[sectionIndex] / 0.01, 0);
-            const interiorStartY = cabinetBottomY + mmToThreeUnits(interiorStartMm);
-            const interiorHeightUnits = mmToThreeUnits(computedHeightMm);
-            const interiorEndY = interiorStartY + mmToThreeUnits(computedHeightMm);
+          // 2개 섹션만 표시 (하부/상부)
+          const displaySections = [
+            { startY: cabinetBottomY, endY: lowerSectionEndY, heightMm: lowerSectionHeightMm, isFirst: true },
+            { startY: lowerSectionEndY, endY: cabinetTopY, heightMm: upperSectionHeightMm, isFirst: false }
+          ].filter(s => s.heightMm > 0);
 
-            const isLastSection = sectionIndex === totalSections - 1;
+          return displaySections.map((sectionDisplay, sectionIndex) => {
+            const { startY: sectionStartY, endY: sectionEndY, heightMm: sectionHeightMm, isFirst } = sectionDisplay;
 
-            // 좌측뷰와 동일한 계산 방식
-            let sectionStartY = sectionIndex === 0 ? cabinetBottomY : interiorStartY;
-            let sectionEndY = isLastSection ? cabinetTopY : interiorEndY;
-
-            const sectionHeightMm = Math.max((sectionEndY - sectionStartY) / 0.01, 0);
-
-            // 첫 번째 섹션은 하단 가이드선 표시 안 함 (받침대와 겹침)
-            const shouldRenderStartGuide = sectionIndex !== 0;
+            // 첫 번째 섹션(하부)은 하단 가이드선 표시 안 함 (받침대와 겹침)
+            const shouldRenderStartGuide = !isFirst;
 
             return (
               <group key={`section-${moduleIndex}-${sectionIndex}`}>
@@ -1500,36 +1259,6 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 >
                   {Math.round(sectionHeightMm)}
                 </Text>
-
-                {/* 서랍 섹션인 경우 각 서랍별 깊이 표시 */}
-                {section.type === 'drawer' && section.drawerHeights && section.drawerHeights.map((drawerHeight, drawerIndex) => {
-                  const drawerGap = section.gapHeight || 0;
-
-                  let drawerY = sectionStartY + mmToThreeUnits(drawerGap);
-                  for (let i = 0; i < drawerIndex; i++) {
-                    drawerY += mmToThreeUnits(section.drawerHeights![i] + drawerGap);
-                  }
-                  drawerY += mmToThreeUnits(drawerHeight / 2);
-
-                  const textZ = furnitureZ;
-                  const textX = 0; // 측면뷰에서도 서랍 내부 중앙에 깊이 표기
-
-                  return (
-                    <Text
-                      key={`drawer-depth-${sectionIndex}-${drawerIndex}`}
-                      position={[textX, drawerY, textZ]}
-                      fontSize={largeFontSize}
-                      color="#008B8B"
-                      anchorX="center"
-                      anchorY="middle"
-                      renderOrder={10000}
-                      depthTest={false}
-                      rotation={[0, Math.PI / 2, 0]}
-                    >
-                      D{drawerDepthMm}
-                    </Text>
-                  );
-                })}
               </group>
             );
           });
