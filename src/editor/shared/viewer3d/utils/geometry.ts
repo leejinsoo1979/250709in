@@ -320,10 +320,10 @@ export const calculateFrameThickness = (spaceInfo: SpaceInfo, hasLeftFurniture: 
     case 'semistanding':
     case 'semi-standing':
       // 세미스탠딩: 벽이 있는 쪽은 frameSize, 벽이 없는 쪽은 20mm 엔드패널
-      if (wallConfig.left && !wallConfig.right) {
+      if (wallConfig?.left && !wallConfig?.right) {
         leftThickness = leftFrameSize;
         rightThickness = END_PANEL_THICKNESS;
-      } else if (!wallConfig.left && wallConfig.right) {
+      } else if (!wallConfig?.left && wallConfig?.right) {
         leftThickness = END_PANEL_THICKNESS;
         rightThickness = rightFrameSize;
       } else {
