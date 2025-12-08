@@ -970,11 +970,10 @@ const extractFromScene = (
                                 lowerNameForFilter.includes('조절발') ||
                                 lowerNameForFilter.includes('환기');
 
-      // 치수선 객체인 경우에도 X 위치 필터링 적용 (보이는 가구의 치수선만 표시)
-      const isDimensionObject = lowerNameForFilter.includes('dimension') ||
-                                 layer === 'DIMENSIONS';
-
-      if (isFurnitureObject || isDimensionObject) {
+      // 가구 내부 치수선만 X 위치 필터링 적용
+      // CADDimensions2D 치수선(dimension_line)은 X=0에 있으므로 필터링 제외
+      // 가구 내부 치수(DrawerRenderer, DoorModule 등)만 필터링
+      if (isFurnitureObject) {
         // 객체의 월드 X 위치 확인
         const worldPos = new THREE.Vector3();
         object.getWorldPosition(worldPos);
@@ -1291,37 +1290,6 @@ const extractFromScene = (
       }
 
       const textContent = (mesh as any).text;
-
-      // 측면뷰에서 가구 내부 치수 텍스트 전부 제외
-      // CADDimensions2D에서 생성하는 치수만 허용
-      // CADDimensions2D 치수는 공간 외곽(Z < -spaceDepth/2 또는 Z > spaceDepth/2)에 위치
-      // 가구 내부 치수(DrawerRenderer, DoorModule 등)는 가구 내부에 위치
-      if ((viewDirection === 'left' || viewDirection === 'right') &&
-          textContent && typeof textContent === 'string') {
-
-        // 텍스트 월드 위치 확인
-        const textWorldPos = new THREE.Vector3();
-        mesh.getWorldPosition(textWorldPos);
-
-        // 공간 깊이 계산 (Three.js 단위: mm / 100)
-        // currentSpaceDepthMm = 1500mm → spaceDepthHalf = 7.5 Three.js units
-        const spaceDepthHalf = currentSpaceDepthMm / 100 / 2;
-
-        // CADDimensions2D 치수는 Z 좌표가 공간 외곽에 있음:
-        // - 좌측뷰 치수: Z < -spaceDepth/2 - offset (약 -10 이하)
-        // - 우측뷰 치수: Z > spaceDepth/2 + offset (약 10 이상)
-        // 가구 내부 치수는 Z 좌표가 가구 영역 내(|Z| < 가구깊이/2 ≈ 3)에 있음
-        const isCADDimension = Math.abs(textWorldPos.z) > spaceDepthHalf;
-
-        console.log(`📝 ${viewDirection}뷰 텍스트: "${textContent}" Z=${textWorldPos.z.toFixed(2)}, spaceDepthHalf=${spaceDepthHalf.toFixed(2)}, isCADDimension=${isCADDimension}`);
-
-        if (!isCADDimension) {
-          // 공간 내부(가구 영역)에 있는 치수 텍스트는 정면뷰용 → 측면뷰 DXF에서 제외
-          console.log(`  ❌ 가구 내부 치수 제외`);
-          return;
-        }
-        console.log(`  ✅ CADDimensions2D 치수 포함`);
-      }
       if (textContent && typeof textContent === 'string') {
         const worldPos = new THREE.Vector3();
         mesh.getWorldPosition(worldPos);
