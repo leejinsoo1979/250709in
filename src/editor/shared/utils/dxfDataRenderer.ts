@@ -2101,27 +2101,29 @@ const generateExternalDimensions = (
     }
 
     // ========================================
-    // 5. 탑뷰 좌/우 서브프레임 - 가구 옆면에 붙어 Y방향(깊이방향)으로 뻗어있음
+    // 5. 탑뷰 좌/우 서브프레임 - 가구 옆면에 붙어 Y방향(깊이방향)으로 44mm 뻗어있음
     // ========================================
     // Room.tsx 기준:
-    // - position.x = xOffset + frameThickness.left - 9mm (메인 프레임 안쪽 끝에 위치)
-    // - rotation = [0, Math.PI / 2, 0] → Y축 기준 90도 회전
-    // - args = [44mm(회전 후 Z방향→깊이), height, 18mm(회전 후 X방향→두께)]
+    // - position.z = furnitureZOffset + furnitureDepth/2 - 9mm - 28mm (가구 앞면에서 37mm 안쪽이 중심)
+    // - args = [44mm, height, 18mm], rotation = [0, π/2, 0]
+    // - 회전 후: Z방향(깊이)으로 44mm, X방향으로 18mm
     //
-    // 핵심: 서브프레임은 가구의 측면(좌/우 경계)에 붙어 있어야 함
-    // - X방향: 18mm 두께 (END_PANEL_THICKNESS)
-    // - Y방향: 44mm 길이, **가구 앞면(furnitureFrontY)에서 안쪽으로** 뻗어있음
+    // 탑뷰에서:
+    // - 서브프레임은 가구 앞면 근처에서 시작하여 안쪽으로 44mm 뻗어있음
+    // - 중심이 가구 앞면에서 37mm 안쪽이므로, 시작=앞면+15mm, 끝=앞면+15mm+44mm
     const subFrameThickX = 18; // X방향 두께 18mm (END_PANEL_THICKNESS)
-    const subFrameLengthY = 44; // Y방향 길이 44mm (가구 깊이 방향으로)
+    const subFrameLengthY = 44; // Y방향 길이 44mm
 
-    // 서브프레임 Y 위치: 가구 앞면(furnitureFrontY)에서 시작해서 안쪽으로 44mm
-    // DXF에서 Y 증가 = 뒤쪽(안쪽), Y 감소 = 앞쪽
-    // 가구 앞면 = furnitureFrontY, 가구 뒷면 = furnitureBackY (furnitureFrontY < furnitureBackY)
-    const subFrameStartY = furnitureFrontY;  // 가구 앞면에서 시작
-    const subFrameEndY = furnitureFrontY + subFrameLengthY;  // 안쪽으로 44mm
+    // 서브프레임 Z 위치 계산 (Room.tsx와 동일)
+    // 중심 Z = furnitureZOffset + furnitureDepth/2 - 9mm - 28mm = 가구 앞면에서 37mm 안쪽
+    // 서브프레임은 이 중심을 기준으로 ±22mm (총 44mm)
+    const subFrameCenterZ = furnitureZOffset + furnitureDepthThree / 2 - 0.09 - 0.28;
+    const subFrameCenterY = -subFrameCenterZ * 100; // DXF Y 좌표
+    const subFrameStartY = subFrameCenterY - subFrameLengthY / 2;  // 앞쪽
+    const subFrameEndY = subFrameCenterY + subFrameLengthY / 2;    // 뒤쪽
 
     console.log(`📐 서브프레임 위치 (가구 옆면에 붙음):`);
-    console.log(`  - Y범위: ${subFrameStartY.toFixed(1)} ~ ${subFrameEndY.toFixed(1)} (44mm, 가구 앞면에서 안쪽으로)`);
+    console.log(`  - 중심Y: ${subFrameCenterY.toFixed(1)}, Y범위: ${subFrameStartY.toFixed(1)} ~ ${subFrameEndY.toFixed(1)} (44mm)`);
     console.log(`  - 가구 Y범위: ${furnitureFrontY.toFixed(1)} ~ ${furnitureBackY.toFixed(1)}`);
 
     // 좌측 서브프레임 (메인 프레임 안쪽 가장자리에서 18mm 두께)
