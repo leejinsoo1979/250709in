@@ -2809,31 +2809,34 @@ export const generateDxfFromData = (
   let texts: DxfText[];
 
   if (viewDirection === 'left' || viewDirection === 'right') {
-    // 측면뷰: 씬에서 추출한 데이터 + 외부 치수선 (CADDimensions2D와 동일)
-    // 씬에서 추출한 가구 내부 치수(D517 등)는 제외하고, 외부 치수선만 포함
+    // 측면뷰: 씬에서 추출한 가구 형상만 사용 + 외부 치수선 (CADDimensions2D와 동일)
+    // 씬에서 추출한 내부 치수선(DIMENSIONS 레이어)과 텍스트는 모두 제외
+    // 조절발(ACCESSORIES)도 측면뷰에서는 제외 (2D UI와 동일하게)
 
-    // 가구 내부 치수 텍스트 필터링 (D로 시작하는 깊이 치수, 서랍 높이 등)
-    const filteredTexts = extracted.texts.filter(text => {
-      // D로 시작하는 치수는 가구 내부 깊이 치수 (제외)
-      if (text.text.startsWith('D')) {
-        console.log(`📏 측면뷰: 가구 내부 치수 제외 - "${text.text}"`);
+    // 씬에서 추출한 라인 중 내부 치수선과 조절발 제외 (가구 형상만 유지)
+    const filteredLines = extracted.lines.filter(line => {
+      // DIMENSIONS 레이어 라인은 제외 (내부 치수선)
+      if (line.layer === 'DIMENSIONS') {
         return false;
       }
-      // 숫자만 있는 작은 치수는 가구 내부 치수일 수 있음 (패널 두께 18, 선반 높이 등)
-      const numVal = parseFloat(text.text);
-      if (!isNaN(numVal) && numVal < 100) {
-        console.log(`📏 측면뷰: 작은 치수 제외 (가구 내부) - "${text.text}"`);
+      // ACCESSORIES 레이어 라인은 제외 (조절발)
+      if (line.layer === 'ACCESSORIES') {
         return false;
       }
       return true;
     });
+    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS/ACCESSORIES 제외)`);
+
+    // 씬에서 추출한 텍스트는 모두 제외 (내부 치수 텍스트)
+    // 외부 치수선의 텍스트만 사용
+    console.log(`📏 측면뷰: 씬 텍스트 ${extracted.texts.length}개 모두 제외 (내부 치수)`);
 
     // 외부 치수선 생성 (CADDimensions2D와 동일한 치수)
     const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection);
 
-    lines = [...extracted.lines, ...externalDimensions.lines];
-    texts = [...filteredTexts, ...externalDimensions.texts];
-    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 (필터링됨) + 외부 치수선 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
+    lines = [...filteredLines, ...externalDimensions.lines];
+    texts = [...externalDimensions.texts]; // 외부 치수선 텍스트만 사용
+    console.log(`📐 측면뷰 (${viewDirection}): 가구형상 ${filteredLines.length}개 + 외부치수선 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
   } else {
     // 정면뷰/탑뷰: 기존 방식대로 외부 치수선 생성 후 합치기
     const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection);
