@@ -165,6 +165,9 @@ const getColorFromMaterial = (material: THREE.Material | THREE.Material[] | unde
  */
 let currentViewDirection: ViewDirection = 'front';
 
+// 측면뷰에서 사용할 공간 깊이 (DXF 원점 보정용)
+let currentSpaceDepthMm = 600;
+
 const projectTo2D = (p: THREE.Vector3, scale: number): { x: number; y: number } => {
   switch (currentViewDirection) {
     case 'front':
@@ -172,9 +175,17 @@ const projectTo2D = (p: THREE.Vector3, scale: number): { x: number; y: number } 
     case 'top':
       return { x: p.x * scale, y: -p.z * scale }; // z축을 y로, 뒤집어서
     case 'left':
-      return { x: -p.z * scale, y: p.y * scale }; // z축을 x로 (왼쪽에서 보면 z가 오른쪽)
+      // 좌측뷰: 카메라가 -X 방향에서 봄
+      // 화면 왼쪽 = +Z (뒷면), 화면 오른쪽 = -Z (앞면)
+      // DXF X 좌표: Z를 뒤집어서 0부터 시작하도록
+      // Three.js Z는 보통 -depth/2 ~ +depth/2 범위
+      // DXF X = (depth/2 - Z) * scale → 앞면(Z-)이 오른쪽, 뒷면(Z+)이 왼쪽
+      return { x: (currentSpaceDepthMm / 200 - p.z) * scale, y: p.y * scale };
     case 'right':
-      return { x: p.z * scale, y: p.y * scale }; // z축을 x로
+      // 우측뷰: 카메라가 +X 방향에서 봄
+      // 화면 왼쪽 = -Z (앞면), 화면 오른쪽 = +Z (뒷면)
+      // DXF X = (Z + depth/2) * scale → 앞면(Z-)이 왼쪽, 뒷면(Z+)이 오른쪽
+      return { x: (p.z + currentSpaceDepthMm / 200) * scale, y: p.y * scale };
     default:
       return { x: p.x * scale, y: p.y * scale };
   }
@@ -2460,6 +2471,9 @@ export const generateDxfFromData = (
   console.log(`📐 DXF 생성 시작 (${viewDirection}, 필터: ${sideViewFilter})`);
   console.log(`📊 공간 정보: ${spaceInfo.width}mm x ${spaceInfo.height}mm x ${spaceInfo.depth}mm`);
   console.log(`📊 배치된 가구 수: ${placedModules.length}`);
+
+  // 측면뷰용 공간 깊이 설정 (projectTo2D에서 사용)
+  currentSpaceDepthMm = spaceInfo.depth || 600;
 
   // 측면뷰 필터링: X 위치 범위 계산
   let allowedXRange: { min: number; max: number } | null = null;
