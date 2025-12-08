@@ -1908,10 +1908,19 @@ const generateExternalDimensions = (
     const furnitureBackY = -furnitureBackZ * 100;   // 가구 뒷면 → DXF Y (양수, 도면 상단)
     const furnitureFrontY = -furnitureFrontZ * 100; // 가구 앞면 → DXF Y (양수 또는 0)
 
+    // 프레임 영역 좌표 계산 (Room.tsx의 frameEndZ 로직과 동일)
+    // Room.tsx: const frameEndZ = furnitureZOffset + furnitureDepth / 2; // 좌우 프레임의 앞쪽 끝
+    // 프레임은 공간 뒷벽(roomBackZ)부터 가구 영역 앞면(frameEndZ)까지
+    const roomBackZ = -panelDepthThree / 2;  // 공간 뒷벽 Z
+    const frameEndZ = furnitureZOffset + furnitureDepthThree / 2;  // 프레임 앞쪽 끝 (가구 영역 앞면)
+    const frameBackY = -roomBackZ * 100;    // 프레임 뒷면 → DXF Y (도면 상단)
+    const frameFrontY = -frameEndZ * 100;   // 프레임 앞면 → DXF Y (도면 하단)
+
     console.log(`📐 탑뷰 좌표 계산:`);
     console.log(`  - spaceZOffset(Three.js): ${spaceZOffsetThree.toFixed(4)}m`);
     console.log(`  - furnitureBackZ(Three.js): ${furnitureBackZ.toFixed(4)}m → DXF Y: ${furnitureBackY.toFixed(1)}mm`);
     console.log(`  - furnitureFrontZ(Three.js): ${furnitureFrontZ.toFixed(4)}m → DXF Y: ${furnitureFrontY.toFixed(1)}mm`);
+    console.log(`  - 프레임 영역: frameBackY=${frameBackY.toFixed(1)}mm, frameFrontY=${frameFrontY.toFixed(1)}mm`);
 
     // 치수선 설정
     const dimOffset = 200;  // 치수선 오프셋 (가구 뒤쪽 위 200mm)
@@ -2006,11 +2015,9 @@ const generateExternalDimensions = (
     }
 
     // ========================================
-    // 4. 탑뷰 프레임 ㄴ자 형태 (연두색 ACI 3)
+    // 4. 탑뷰 프레임 박스 (연두색 ACI 3)
     // ========================================
-    // 벽이 있는 구조에서 서라운드 프레임은 ㄴ자 형태
-    // - 바깥쪽: 공간 전체 깊이 (panelBack ~ panelFront)
-    // - 안쪽: 가구 깊이 영역만 (furnitureFront ~ furnitureBack)
+    // 프레임은 가구 영역 내에서만 (furnitureFront ~ furnitureBack)
     const frameColor = 3; // 연두색
 
     // 좌우에 가구가 있는지 확인 (calculateFrameThickness에 전달)
@@ -2028,69 +2035,45 @@ const generateExternalDimensions = (
     const calcLeftFrameWidth = frameThickness.left;
     const calcRightFrameWidth = frameThickness.right;
 
-    // 공간 전체 깊이 좌표 계산 (ㄴ자 프레임의 바깥쪽)
-    // Three.js: spaceZOffset = -panelDepth/2 (공간 중심)
-    // 공간 뒷면: spaceZOffset - panelDepth/2, 공간 앞면: spaceZOffset + panelDepth/2
-    const panelBackZ = spaceZOffsetThree - panelDepthThree / 2;  // 공간 뒷벽 (가장 뒤, 음수)
-    const panelFrontZ = spaceZOffsetThree + panelDepthThree / 2; // 공간 앞면 (앞쪽, 0 근처)
-    const panelBackY = -panelBackZ * 100;   // DXF Y (도면 상단, 양수 큼)
-    const panelFrontY = -panelFrontZ * 100; // DXF Y (도면 하단, 0 근처)
-
     console.log(`📐 탑뷰 프레임 계산: surroundType=${spaceInfo.surroundType}, installType=${spaceInfo.installType}`);
     console.log(`   left=${calcLeftFrameWidth}mm, right=${calcRightFrameWidth}mm`);
-    console.log(`   panelBackY: ${panelBackY.toFixed(1)}mm, panelFrontY: ${panelFrontY.toFixed(1)}mm`);
     console.log(`   furnitureBackY: ${furnitureBackY.toFixed(1)}mm, furnitureFrontY: ${furnitureFrontY.toFixed(1)}mm`);
 
     // 프레임이 0보다 큰 경우에만 그리기
-    // ㄴ자 형태 (좌측 프레임 기준으로 설명):
-    //   바깥쪽 세로선: panelBack → panelFront (전체 깊이)
-    //   안쪽 세로선: furnitureFront → furnitureBack (가구 영역만)
-    //   상단 가로선 (뒷면): 바깥 → 안쪽 연결
-    //   하단 가로선 (앞면): 바깥 → 안쪽 연결 (가구 앞면 위치)
-    //   추가 하단 연결선: 안쪽 세로선 끝에서 공간 앞면까지
-
+    // 프레임은 공간 뒷벽(frameBackY)부터 가구 영역 앞면(frameFrontY)까지
     if (calcLeftFrameWidth > 0) {
-      // 좌측 ㄴ자 프레임
+      // 좌측 프레임 박스
       const outerX = -halfWidth;                      // 바깥쪽 X (좌측 벽)
       const innerX = -halfWidth + calcLeftFrameWidth; // 안쪽 X (프레임 두께만큼 안쪽)
 
-      // ㄴ자 형태 그리기:
-      // 1. 바깥쪽 세로선 (공간 뒷면 → 앞면 전체)
-      lines.push({ x1: outerX, y1: panelFrontY, x2: outerX, y2: panelBackY, layer: 'SPACE_FRAME', color: frameColor });
-      // 2. 상단 가로선 (뒷면: 바깥 → 안쪽)
-      lines.push({ x1: outerX, y1: panelBackY, x2: innerX, y2: panelBackY, layer: 'SPACE_FRAME', color: frameColor });
-      // 3. 안쪽 세로선 (뒷면 → 가구 앞면까지만)
-      lines.push({ x1: innerX, y1: panelBackY, x2: innerX, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
-      // 4. 하단 가로선 (가구 앞면: 안쪽 → 바깥)
-      lines.push({ x1: innerX, y1: furnitureFrontY, x2: outerX, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
-      // 5. 바깥쪽 하단 연결 (가구 앞면 → 공간 앞면) - 이미 1번에서 그려짐
+      // 직사각형 프레임 (공간 뒷벽 ~ 가구 영역 앞면)
+      lines.push({ x1: outerX, y1: frameFrontY, x2: outerX, y2: frameBackY, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: outerX, y1: frameBackY, x2: innerX, y2: frameBackY, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: innerX, y1: frameBackY, x2: innerX, y2: frameFrontY, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: innerX, y1: frameFrontY, x2: outerX, y2: frameFrontY, layer: 'SPACE_FRAME', color: frameColor });
     }
 
     if (calcRightFrameWidth > 0) {
-      // 우측 ㄴ자 프레임 (좌우 대칭)
+      // 우측 프레임 박스
       const outerX = halfWidth;                       // 바깥쪽 X (우측 벽)
       const innerX = halfWidth - calcRightFrameWidth; // 안쪽 X (프레임 두께만큼 안쪽)
 
-      // ㄴ자 형태 그리기:
-      // 1. 바깥쪽 세로선 (공간 뒷면 → 앞면 전체)
-      lines.push({ x1: outerX, y1: panelFrontY, x2: outerX, y2: panelBackY, layer: 'SPACE_FRAME', color: frameColor });
-      // 2. 상단 가로선 (뒷면: 바깥 → 안쪽)
-      lines.push({ x1: outerX, y1: panelBackY, x2: innerX, y2: panelBackY, layer: 'SPACE_FRAME', color: frameColor });
-      // 3. 안쪽 세로선 (뒷면 → 가구 앞면까지만)
-      lines.push({ x1: innerX, y1: panelBackY, x2: innerX, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
-      // 4. 하단 가로선 (가구 앞면: 안쪽 → 바깥)
-      lines.push({ x1: innerX, y1: furnitureFrontY, x2: outerX, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
+      // 직사각형 프레임 (공간 뒷벽 ~ 가구 영역 앞면)
+      lines.push({ x1: outerX, y1: frameFrontY, x2: outerX, y2: frameBackY, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: outerX, y1: frameBackY, x2: innerX, y2: frameBackY, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: innerX, y1: frameBackY, x2: innerX, y2: frameFrontY, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: innerX, y1: frameFrontY, x2: outerX, y2: frameFrontY, layer: 'SPACE_FRAME', color: frameColor });
     }
 
-    // 가구 앞면 프레임 연결선 (좌우 프레임이 있을 때만)
+    // 가구 영역 앞면 프레임 연결선 (좌우 프레임이 있을 때만)
     if (calcLeftFrameWidth > 0 && calcRightFrameWidth > 0) {
       const leftInnerX = -halfWidth + calcLeftFrameWidth;
       const rightInnerX = halfWidth - calcRightFrameWidth;
-      lines.push({ x1: leftInnerX, y1: furnitureFrontY, x2: rightInnerX, y2: furnitureFrontY, layer: 'SPACE_FRAME', color: frameColor });
+      lines.push({ x1: leftInnerX, y1: frameFrontY, x2: rightInnerX, y2: frameFrontY, layer: 'SPACE_FRAME', color: frameColor });
     }
 
-    console.log(`✅ 탑뷰 ㄴ자 프레임 추가: leftFrame(${calcLeftFrameWidth}mm), rightFrame(${calcRightFrameWidth}mm)`);
-    console.log(`   furnitureFrontY: ${furnitureFrontY.toFixed(1)}mm, furnitureBackY: ${furnitureBackY.toFixed(1)}mm`);
+    console.log(`✅ 탑뷰 프레임 박스 추가: leftFrame(${calcLeftFrameWidth}mm), rightFrame(${calcRightFrameWidth}mm)`);
+    console.log(`   frameFrontY: ${frameFrontY.toFixed(1)}mm, frameBackY: ${frameBackY.toFixed(1)}mm`);
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // 측면뷰: 상하 프레임 치수선 생성 (정면뷰와 유사)
