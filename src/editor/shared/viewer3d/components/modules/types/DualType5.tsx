@@ -458,19 +458,19 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   </group>
                 )}
                 
-                {/* 세로 내경 높이 표시 */}
+                {/* 세로 섹션 높이 표시 */}
                 {(() => {
                   let lineBottomY: number;
                   let lineTopY: number;
 
                   if (section.type === 'drawer' && index === 0) {
-                    // 하부섹션(drawer, index=0): 하부 프레임 윗면부터 중간 분리판 아랫면까지
-                    lineBottomY = -height/2 + basicThickness;
-                    lineTopY = sectionCenterY + sectionHeight/2 - basicThickness;
+                    // 하부섹션(drawer, index=0): 바닥판 아랫면부터 상판(중간분리판) 윗면까지
+                    lineBottomY = -height/2;
+                    lineTopY = sectionCenterY + sectionHeight/2;
                   } else if (section.type === 'hanging' && index === allSections.length - 1) {
-                    // 상부섹션(hanging, 마지막): 중간 분리판 윗면부터 상판 아랫면까지
-                    lineBottomY = sectionCenterY - sectionHeight/2;
-                    lineTopY = sectionCenterY + sectionHeight/2 - basicThickness;
+                    // 상부섹션(hanging, 마지막): 바닥판(중간분리판) 아랫면부터 상판 윗면까지
+                    lineBottomY = sectionCenterY - sectionHeight/2 - basicThickness;
+                    lineTopY = height/2;
                   } else {
                     return null;
                   }
