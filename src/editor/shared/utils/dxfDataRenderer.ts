@@ -9,7 +9,7 @@ import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import { sceneHolder } from '../viewer3d/sceneHolder';
-import { calculateFrameThickness } from '../viewer3d/utils/geometry';
+import { calculateFrameThickness, calculateInternalSpace, calculateBaseFrameHeight } from '../viewer3d/utils/geometry';
 import { getModuleById } from '@/data/modules';
 import type { SectionConfig } from '@/data/modules/shelving';
 // calculateFrameThickness 제거됨 - 탑뷰 프레임은 씬에서 직접 추출
@@ -1361,6 +1361,7 @@ const extractFromScene = (
       if (textContent && typeof textContent === 'string') {
         const worldPos = new THREE.Vector3();
         mesh.getWorldPosition(worldPos);
+
         const projPos = projectTo2D(worldPos, scale);
 
         texts.push({
@@ -1372,7 +1373,7 @@ const extractFromScene = (
           layer: 'DIMENSIONS' // 모든 텍스트는 DIMENSIONS 레이어로 강제
         });
         textObjects++;
-        console.log(`📝 텍스트 추출: "${textContent}" → DIMENSIONS 레이어`);
+        console.log(`📝 텍스트 추출: "${textContent}" → DIMENSIONS 레이어 (Z=${worldPos.z.toFixed(3)})`);
       }
       return;
     }
@@ -2553,36 +2554,64 @@ const generateExternalDimensions = (
     const dimOffset = 400; // 치수선 오프셋 (mm)
     const extLength = 50; // 연장선 길이 (mm)
 
-    // 가구 섹션 높이 계산 (CADDimensions2D와 동일 로직)
-    const internalTop = height - topFrameHeightMm;
-    const internalBottom = baseFrameHeightMm;
-    const internalHeightMm = internalTop - internalBottom;
+    // CADDimensions2D와 동일하게 calculateInternalSpace 사용
+    const internalSpace = calculateInternalSpace(spaceInfo);
+
+    // 띄워서 배치
+    const isFloatingDim = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+    const floatHeightMmDim = isFloatingDim ? (spaceInfo.baseConfig?.floatHeight || 0) : 0;
+
+    // 바닥레일/받침대 높이 계산 (CADDimensions2D와 동일)
+    const isStandTypeDim = spaceInfo.baseConfig?.type === 'stand';
+    const railOrBaseHeightMmDim = isStandTypeDim
+      ? (isFloatingDim ? 0 : (spaceInfo.baseConfig?.height || 0))
+      : calculateBaseFrameHeight(spaceInfo);
+
+    // 내경 높이 조정 (CADDimensions2D와 동일)
+    const floatHeightMmForCalcDim = isFloatingDim ? floatHeightMmDim : 0;
+    const adjustedInternalHeightMm = isStandTypeDim
+      ? internalSpace.height - railOrBaseHeightMmDim - floatHeightMmForCalcDim
+      : internalSpace.height;
+
+    // 하위 호환성을 위한 변수 (CADDimensions2D와 동일)
+    const baseFrameHeightMmDim = isFloatingDim ? floatHeightMmDim : railOrBaseHeightMmDim;
+
+    console.log(`📐 ${viewDirection}뷰 치수 계산 (CADDimensions2D 동일 로직):`);
+    console.log(`  - internalSpace.height: ${internalSpace.height}mm`);
+    console.log(`  - adjustedInternalHeightMm: ${adjustedInternalHeightMm}mm`);
+    console.log(`  - baseFrameHeightMmDim: ${baseFrameHeightMmDim}mm`);
+    console.log(`  - topFrameHeightMm: ${topFrameHeightMm}mm`);
 
     // placedModules에서 섹션 높이 정보 가져오기
     let sectionHeights: number[] = [];
     if (placedModules.length > 0) {
       const module = placedModules[0];
       const moduleData = getModuleById(module.id);
-      const sectionInfo = computeSectionHeightsInfo(module, moduleData, internalHeightMm, viewDirection);
+      // CADDimensions2D와 동일하게 adjustedInternalHeightMm 사용
+      const sectionInfo = computeSectionHeightsInfo(module, moduleData, adjustedInternalHeightMm, viewDirection);
 
       if (sectionInfo.heightsMm.length > 0) {
         // CADDimensions2D와 동일하게: 첫 번째는 하부섹션, 나머지는 상부섹션으로 합산
-        const lowerSectionHeightMm = Math.round(sectionInfo.heightsMm[0] || 0);
-        const upperSectionHeightMm = Math.round(sectionInfo.heightsMm.slice(1).reduce((sum, h) => sum + h, 0));
-        sectionHeights = [lowerSectionHeightMm, upperSectionHeightMm];
-        console.log(`📐 ${viewDirection}뷰 섹션 높이 (computeSectionHeightsInfo): 하부=${lowerSectionHeightMm}mm, 상부=${upperSectionHeightMm}mm`);
+        const lowerSectionHeightMmCalc = Math.round(sectionInfo.heightsMm[0] || 0);
+        const upperSectionHeightMmCalc = Math.round(sectionInfo.heightsMm.slice(1).reduce((sum, h) => sum + h, 0));
+        sectionHeights = [lowerSectionHeightMmCalc, upperSectionHeightMmCalc];
+        console.log(`📐 ${viewDirection}뷰 섹션 높이 (computeSectionHeightsInfo): 하부=${lowerSectionHeightMmCalc}mm, 상부=${upperSectionHeightMmCalc}mm`);
       }
     }
 
     // 섹션 높이가 없으면 50:50으로 기본값
     if (sectionHeights.length === 0) {
-      const halfHeight = Math.round(internalHeightMm / 2);
-      sectionHeights = [halfHeight, internalHeightMm - halfHeight];
+      const halfHeight = Math.round(adjustedInternalHeightMm / 2);
+      sectionHeights = [halfHeight, adjustedInternalHeightMm - halfHeight];
       console.log(`📐 ${viewDirection}뷰 섹션 높이 (기본값 50:50): 하부=${sectionHeights[0]}mm, 상부=${sectionHeights[1]}mm`);
     }
 
-    const lowerSectionHeightMm = sectionHeights[0];
-    const upperSectionHeightMm = sectionHeights[1];
+    const lowerSectionHeightMmVal = sectionHeights[0];
+    const upperSectionHeightMmVal = sectionHeights[1];
+
+    // CADDimensions2D와 동일한 Y 좌표 계산
+    const cabinetBottomY = baseFrameHeightMmDim; // 가구 내부 시작점 (받침대 위)
+    const cabinetTopY = height - topFrameHeightMm; // 가구 내부 끝점 (상부프레임 아래)
 
     if (viewDirection === 'left') {
       // ===== 왼쪽: 전체 높이 치수 =====
@@ -2612,25 +2641,26 @@ const generateExternalDimensions = (
         texts.push({ x: rightX + 60, y: height - topFrameHeightMm / 2, text: `${topFrameHeightMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
       }
 
-      // 상부섹션 치수
-      const upperSectionTopY = internalTop;
-      const upperSectionBottomY = internalTop - upperSectionHeightMm;
-      lines.push({ x1: rightX, y1: upperSectionBottomY, x2: rightX, y2: upperSectionTopY, layer: 'DIMENSIONS', color: dimColor });
-      lines.push({ x1: furnitureDepthMm, y1: upperSectionBottomY, x2: rightX + extLength, y2: upperSectionBottomY, layer: 'DIMENSIONS', color: dimColor });
-      texts.push({ x: rightX + 60, y: (upperSectionTopY + upperSectionBottomY) / 2, text: `${upperSectionHeightMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+      // 상부섹션 치수 (CADDimensions2D와 동일: 하부섹션 끝점부터 cabinetTopY까지)
+      const lowerSectionEndY = cabinetBottomY + lowerSectionHeightMmVal;
+      const upperSectionTopY_L = cabinetTopY;
+      const upperSectionBottomY_L = lowerSectionEndY;
+      lines.push({ x1: rightX, y1: upperSectionBottomY_L, x2: rightX, y2: upperSectionTopY_L, layer: 'DIMENSIONS', color: dimColor });
+      lines.push({ x1: furnitureDepthMm, y1: upperSectionBottomY_L, x2: rightX + extLength, y2: upperSectionBottomY_L, layer: 'DIMENSIONS', color: dimColor });
+      texts.push({ x: rightX + 60, y: (upperSectionTopY_L + upperSectionBottomY_L) / 2, text: `${upperSectionHeightMmVal}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
       // 하부섹션 치수
-      const lowerSectionTopY = upperSectionBottomY;
-      const lowerSectionBottomY = internalBottom;
-      lines.push({ x1: rightX, y1: lowerSectionBottomY, x2: rightX, y2: lowerSectionTopY, layer: 'DIMENSIONS', color: dimColor });
-      lines.push({ x1: furnitureDepthMm, y1: lowerSectionBottomY, x2: rightX + extLength, y2: lowerSectionBottomY, layer: 'DIMENSIONS', color: dimColor });
-      texts.push({ x: rightX + 60, y: (lowerSectionTopY + lowerSectionBottomY) / 2, text: `${lowerSectionHeightMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+      const lowerSectionTopY_L = lowerSectionEndY;
+      const lowerSectionBottomY_L = cabinetBottomY;
+      lines.push({ x1: rightX, y1: lowerSectionBottomY_L, x2: rightX, y2: lowerSectionTopY_L, layer: 'DIMENSIONS', color: dimColor });
+      lines.push({ x1: furnitureDepthMm, y1: lowerSectionBottomY_L, x2: rightX + extLength, y2: lowerSectionBottomY_L, layer: 'DIMENSIONS', color: dimColor });
+      texts.push({ x: rightX + 60, y: (lowerSectionTopY_L + lowerSectionBottomY_L) / 2, text: `${lowerSectionHeightMmVal}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
       // 하부 프레임/받침대 치수 (있는 경우)
-      if (baseFrameHeightMm > 0) {
-        lines.push({ x1: rightX, y1: 0, x2: rightX, y2: baseFrameHeightMm, layer: 'DIMENSIONS', color: dimColor });
+      if (baseFrameHeightMmDim > 0) {
+        lines.push({ x1: rightX, y1: 0, x2: rightX, y2: baseFrameHeightMmDim, layer: 'DIMENSIONS', color: dimColor });
         lines.push({ x1: furnitureDepthMm, y1: 0, x2: rightX + extLength, y2: 0, layer: 'DIMENSIONS', color: dimColor });
-        texts.push({ x: rightX + 60, y: baseFrameHeightMm / 2, text: `${baseFrameHeightMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+        texts.push({ x: rightX + 60, y: baseFrameHeightMmDim / 2, text: `${baseFrameHeightMmDim}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
       }
 
       // ===== 상단/하단: 깊이 치수 =====
@@ -2662,25 +2692,26 @@ const generateExternalDimensions = (
         texts.push({ x: leftX - 60, y: height - topFrameHeightMm / 2, text: `${topFrameHeightMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
       }
 
-      // 상부섹션 치수
-      const upperSectionTopY_R = internalTop;
-      const upperSectionBottomY_R = internalTop - upperSectionHeightMm;
+      // 상부섹션 치수 (CADDimensions2D와 동일: 하부섹션 끝점부터 cabinetTopY까지)
+      const lowerSectionEndY_R = cabinetBottomY + lowerSectionHeightMmVal;
+      const upperSectionTopY_R = cabinetTopY;
+      const upperSectionBottomY_R = lowerSectionEndY_R;
       lines.push({ x1: leftX, y1: upperSectionBottomY_R, x2: leftX, y2: upperSectionTopY_R, layer: 'DIMENSIONS', color: dimColor });
       lines.push({ x1: 0, y1: upperSectionBottomY_R, x2: leftX - extLength, y2: upperSectionBottomY_R, layer: 'DIMENSIONS', color: dimColor });
-      texts.push({ x: leftX - 60, y: (upperSectionTopY_R + upperSectionBottomY_R) / 2, text: `${upperSectionHeightMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+      texts.push({ x: leftX - 60, y: (upperSectionTopY_R + upperSectionBottomY_R) / 2, text: `${upperSectionHeightMmVal}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
       // 하부섹션 치수
-      const lowerSectionTopY_R = upperSectionBottomY_R;
-      const lowerSectionBottomY_R = internalBottom;
+      const lowerSectionTopY_R = lowerSectionEndY_R;
+      const lowerSectionBottomY_R = cabinetBottomY;
       lines.push({ x1: leftX, y1: lowerSectionBottomY_R, x2: leftX, y2: lowerSectionTopY_R, layer: 'DIMENSIONS', color: dimColor });
       lines.push({ x1: 0, y1: lowerSectionBottomY_R, x2: leftX - extLength, y2: lowerSectionBottomY_R, layer: 'DIMENSIONS', color: dimColor });
-      texts.push({ x: leftX - 60, y: (lowerSectionTopY_R + lowerSectionBottomY_R) / 2, text: `${lowerSectionHeightMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+      texts.push({ x: leftX - 60, y: (lowerSectionTopY_R + lowerSectionBottomY_R) / 2, text: `${lowerSectionHeightMmVal}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
       // 하부 프레임/받침대 치수 (있는 경우)
-      if (baseFrameHeightMm > 0) {
-        lines.push({ x1: leftX, y1: 0, x2: leftX, y2: baseFrameHeightMm, layer: 'DIMENSIONS', color: dimColor });
+      if (baseFrameHeightMmDim > 0) {
+        lines.push({ x1: leftX, y1: 0, x2: leftX, y2: baseFrameHeightMmDim, layer: 'DIMENSIONS', color: dimColor });
         lines.push({ x1: 0, y1: 0, x2: leftX - extLength, y2: 0, layer: 'DIMENSIONS', color: dimColor });
-        texts.push({ x: leftX - 60, y: baseFrameHeightMm / 2, text: `${baseFrameHeightMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+        texts.push({ x: leftX - 60, y: baseFrameHeightMmDim / 2, text: `${baseFrameHeightMmDim}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
       }
 
       // 상단: 깊이 치수
@@ -2778,10 +2809,31 @@ export const generateDxfFromData = (
   let texts: DxfText[];
 
   if (viewDirection === 'left' || viewDirection === 'right') {
-    // 측면뷰: 씬에서 추출한 데이터만 사용 (치수선/형상 수동 생성 안함)
-    lines = [...extracted.lines];
-    texts = [...extracted.texts];
-    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 데이터만 사용 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
+    // 측면뷰: 씬에서 추출한 데이터 + 외부 치수선 (CADDimensions2D와 동일)
+    // 씬에서 추출한 가구 내부 치수(D517 등)는 제외하고, 외부 치수선만 포함
+
+    // 가구 내부 치수 텍스트 필터링 (D로 시작하는 깊이 치수, 서랍 높이 등)
+    const filteredTexts = extracted.texts.filter(text => {
+      // D로 시작하는 치수는 가구 내부 깊이 치수 (제외)
+      if (text.text.startsWith('D')) {
+        console.log(`📏 측면뷰: 가구 내부 치수 제외 - "${text.text}"`);
+        return false;
+      }
+      // 숫자만 있는 작은 치수는 가구 내부 치수일 수 있음 (패널 두께 18, 선반 높이 등)
+      const numVal = parseFloat(text.text);
+      if (!isNaN(numVal) && numVal < 100) {
+        console.log(`📏 측면뷰: 작은 치수 제외 (가구 내부) - "${text.text}"`);
+        return false;
+      }
+      return true;
+    });
+
+    // 외부 치수선 생성 (CADDimensions2D와 동일한 치수)
+    const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection);
+
+    lines = [...extracted.lines, ...externalDimensions.lines];
+    texts = [...filteredTexts, ...externalDimensions.texts];
+    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 (필터링됨) + 외부 치수선 (라인 ${lines.length}개, 텍스트 ${texts.length}개)`);
   } else {
     // 정면뷰/탑뷰: 기존 방식대로 외부 치수선 생성 후 합치기
     const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection);
