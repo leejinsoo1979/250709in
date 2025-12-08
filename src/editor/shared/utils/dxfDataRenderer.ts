@@ -2649,10 +2649,12 @@ const generateExternalDimensions = (
 
     // placedModules에서 섹션 높이 정보 가져오기 (sideViewFilter에 따라 올바른 가구 선택)
     let sectionHeights: number[] = [];
-    if (placedModules.length > 0) {
-      // sideViewFilter에 따라 올바른 가구 선택
-      let targetModuleForSection: PlacedModule;
+    let lowerSectionDepthMm: number | undefined = undefined; // 하부섹션 깊이 (2섹션 가구인 경우)
 
+    // sideViewFilter에 따라 올바른 가구 선택
+    let targetModuleForSection: PlacedModule | undefined = undefined;
+
+    if (placedModules.length > 0) {
       if (sideViewFilter === 'leftmost') {
         targetModuleForSection = placedModules.reduce((prev, curr) => {
           const prevX = prev.position?.x || 0;
@@ -2687,6 +2689,12 @@ const generateExternalDimensions = (
         const upperSectionHeightMmCalc = Math.round(sectionInfo.heightsMm.slice(1).reduce((sum, h) => sum + h, 0));
         sectionHeights = [lowerSectionHeightMmCalc, upperSectionHeightMmCalc];
         console.log(`📐 ${viewDirection}뷰 섹션 높이 (computeSectionHeightsInfo): 하부=${lowerSectionHeightMmCalc}mm, 상부=${upperSectionHeightMmCalc}mm`);
+      }
+
+      // 하부섹션 깊이 가져오기 (CADDimensions2D.tsx와 동일)
+      if (module.lowerSectionDepth !== undefined) {
+        lowerSectionDepthMm = module.lowerSectionDepth;
+        console.log(`📐 ${viewDirection}뷰 하부섹션 깊이: ${lowerSectionDepthMm}mm`);
       }
     }
 
@@ -2751,12 +2759,24 @@ const generateExternalDimensions = (
       lines.push({ x1: furnitureDepthMm, y1: height, x2: rightX + extLength, y2: height, layer: 'DIMENSIONS', color: dimColor });
       texts.push({ x: rightX + 60, y: height / 2, text: `${height}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
-      // ===== 상단: 깊이 치수 =====
+      // ===== 상단: 상부섹션 깊이 치수 =====
       const topDimY = height + dimOffset;
       lines.push({ x1: 0, y1: topDimY, x2: furnitureDepthMm, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
-      lines.push({ x1: 0, y1: height, x2: 0, y2: topDimY + extLength, layer: 'DIMENSIONS', color: dimColor });
-      lines.push({ x1: furnitureDepthMm, y1: height, x2: furnitureDepthMm, y2: topDimY + extLength, layer: 'DIMENSIONS', color: dimColor });
+      // 연장선 - 가구 상단에서 치수선까지만 (짧게)
+      lines.push({ x1: 0, y1: height, x2: 0, y2: topDimY + 20, layer: 'DIMENSIONS', color: dimColor });
+      lines.push({ x1: furnitureDepthMm, y1: height, x2: furnitureDepthMm, y2: topDimY + 20, layer: 'DIMENSIONS', color: dimColor });
       texts.push({ x: furnitureDepthMm / 2, y: topDimY + 15, text: `${furnitureDepthMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+
+      // ===== 하단: 하부섹션 깊이 치수 (2섹션 가구인 경우) =====
+      if (lowerSectionDepthMm !== undefined && lowerSectionDepthMm > 0) {
+        const bottomDimY = -dimOffset;
+        lines.push({ x1: 0, y1: bottomDimY, x2: lowerSectionDepthMm, y2: bottomDimY, layer: 'DIMENSIONS', color: dimColor });
+        // 연장선 - 가구 하단에서 치수선까지만 (짧게)
+        lines.push({ x1: 0, y1: 0, x2: 0, y2: bottomDimY - 20, layer: 'DIMENSIONS', color: dimColor });
+        lines.push({ x1: lowerSectionDepthMm, y1: 0, x2: lowerSectionDepthMm, y2: bottomDimY - 20, layer: 'DIMENSIONS', color: dimColor });
+        texts.push({ x: lowerSectionDepthMm / 2, y: bottomDimY - 40, text: `${lowerSectionDepthMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+        console.log(`📐 좌측뷰 하단 하부섹션 깊이 치수 추가: ${lowerSectionDepthMm}mm`);
+      }
 
     } else if (viewDirection === 'right') {
       // ===== 우측뷰: UI 기준 =====
@@ -2805,12 +2825,24 @@ const generateExternalDimensions = (
         texts.push({ x: rightX + 60, y: baseFrameHeightMmDim / 2, text: `${baseFrameHeightMmDim}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
       }
 
-      // 상단: 깊이 치수
+      // ===== 상단: 상부섹션 깊이 치수 =====
       const topDimY = height + dimOffset;
       lines.push({ x1: 0, y1: topDimY, x2: furnitureDepthMm, y2: topDimY, layer: 'DIMENSIONS', color: dimColor });
-      lines.push({ x1: 0, y1: height, x2: 0, y2: topDimY + extLength, layer: 'DIMENSIONS', color: dimColor });
-      lines.push({ x1: furnitureDepthMm, y1: height, x2: furnitureDepthMm, y2: topDimY + extLength, layer: 'DIMENSIONS', color: dimColor });
+      // 연장선 - 가구 상단에서 치수선까지만 (짧게)
+      lines.push({ x1: 0, y1: height, x2: 0, y2: topDimY + 20, layer: 'DIMENSIONS', color: dimColor });
+      lines.push({ x1: furnitureDepthMm, y1: height, x2: furnitureDepthMm, y2: topDimY + 20, layer: 'DIMENSIONS', color: dimColor });
       texts.push({ x: furnitureDepthMm / 2, y: topDimY + 15, text: `${furnitureDepthMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+
+      // ===== 하단: 하부섹션 깊이 치수 (2섹션 가구인 경우) =====
+      if (lowerSectionDepthMm !== undefined && lowerSectionDepthMm > 0) {
+        const bottomDimY = -dimOffset;
+        lines.push({ x1: 0, y1: bottomDimY, x2: lowerSectionDepthMm, y2: bottomDimY, layer: 'DIMENSIONS', color: dimColor });
+        // 연장선 - 가구 하단에서 치수선까지만 (짧게)
+        lines.push({ x1: 0, y1: 0, x2: 0, y2: bottomDimY - 20, layer: 'DIMENSIONS', color: dimColor });
+        lines.push({ x1: lowerSectionDepthMm, y1: 0, x2: lowerSectionDepthMm, y2: bottomDimY - 20, layer: 'DIMENSIONS', color: dimColor });
+        texts.push({ x: lowerSectionDepthMm / 2, y: bottomDimY - 40, text: `${lowerSectionDepthMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
+        console.log(`📐 우측뷰 하단 하부섹션 깊이 치수 추가: ${lowerSectionDepthMm}mm`);
+      }
     }
 
     console.log(`✅ ${viewDirection}뷰 치수선 생성 완료`);
