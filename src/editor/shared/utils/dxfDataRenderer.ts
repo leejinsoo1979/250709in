@@ -878,9 +878,8 @@ const extractFromScene = (
     }
 
     // 측면뷰에서 가구 내부 치수선(내경) 제외 - LINE 객체만 대상
-    // 텍스트는 이 필터를 통과해야 함 (아래에서 별도 처리)
-    // 가구 내부 치수선은 SectionsRenderer에서 생성되며, 부모 계층에 furniture가 포함됨
-    // CADDimensions2D에서 생성되는 측면뷰 치수선(깊이, 높이, 섹션높이)은 부모에 furniture가 없음
+    // 가구 내부 치수선은 X 좌표가 가구 슬롯 위치에 있음
+    // CADDimensions2D 치수선은 X=0에 있음
     const isLineObject = object instanceof THREE.Line ||
                          object instanceof THREE.LineSegments ||
                          object.type === 'Line' ||
@@ -889,21 +888,11 @@ const extractFromScene = (
     if ((viewDirection === 'left' || viewDirection === 'right') &&
         name.toLowerCase().includes('dimension') &&
         isLineObject) {
-      // 부모 계층에서 furniture 확인
-      let parent: THREE.Object3D | null = object.parent;
-      let hasFurnitureParent = false;
-      while (parent) {
-        const parentName = (parent.name || '').toLowerCase();
-        if (parentName.includes('furniture') ||
-            parentName.includes('section') ||
-            parentName.includes('shelf') ||
-            parentName.includes('drawer')) {
-          hasFurnitureParent = true;
-          break;
-        }
-        parent = parent.parent;
-      }
-      if (hasFurnitureParent) {
+      // X 좌표로 판단: CADDimensions2D는 X=0, 가구 내부 치수는 X≠0
+      const lineWorldPos = new THREE.Vector3();
+      object.getWorldPosition(lineWorldPos);
+
+      if (Math.abs(lineWorldPos.x) > 0.1) {
         // 가구 내부 치수선(내경)은 측면뷰에서 제외
         skippedByFilter++;
         return;
@@ -1297,23 +1286,16 @@ const extractFromScene = (
       }
 
       // 측면뷰에서 가구 내부 치수 텍스트 제외 (D517, 18, 230 등)
-      // 부모 계층에 furniture, section, shelf, drawer가 있으면 가구 내부 치수
+      // 가구 내부 치수는 X 좌표가 가구 위치 근처에 있음 (가구 슬롯 X 위치)
+      // CADDimensions2D 치수는 X=0에 있음 (공간 중앙)
       if (viewDirection === 'left' || viewDirection === 'right') {
-        let parent: THREE.Object3D | null = object.parent;
-        let hasFurnitureParent = false;
-        while (parent) {
-          const parentName = (parent.name || '').toLowerCase();
-          if (parentName.includes('furniture') ||
-              parentName.includes('section') ||
-              parentName.includes('shelf') ||
-              parentName.includes('drawer')) {
-            hasFurnitureParent = true;
-            break;
-          }
-          parent = parent.parent;
-        }
-        if (hasFurnitureParent) {
-          console.log(`📝 ${viewDirection}뷰: 가구 내부 치수 텍스트 제외 - "${(mesh as any).text}"`);
+        const textWorldPos = new THREE.Vector3();
+        mesh.getWorldPosition(textWorldPos);
+
+        // X 좌표가 0이 아니면 가구 내부 치수 (가구 슬롯 위치에 있음)
+        // CADDimensions2D는 X=0에 치수선 배치
+        if (Math.abs(textWorldPos.x) > 0.1) {
+          console.log(`📝 ${viewDirection}뷰: 가구 내부 치수 텍스트 제외 - "${(mesh as any).text}" (X=${textWorldPos.x.toFixed(2)})`);
           return;
         }
       }
