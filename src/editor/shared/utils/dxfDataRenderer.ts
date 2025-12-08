@@ -1645,63 +1645,88 @@ const generateExternalDimensions = (
     // ========================================
     // 2단계: 좌우 프레임 + 내부너비 치수선 (전체 너비 아래)
     // 2D 뷰와 동일하게 상단에 배치
+    // 노서라운드일 경우 프레임이 없으므로 치수선 생략
     // ========================================
-    const frameSize = spaceInfo.frameSize || { left: 42, right: 42, top: 10 };
-    const leftFrameWidth = frameSize.left || 42;
-    const rightFrameWidth = frameSize.right || 42;
     const baseH = spaceInfo.baseConfig?.type === 'floor' ? (spaceInfo.baseConfig.height || 65) : 0;
+
+    // Room.tsx와 동일하게 calculateFrameThickness 사용
+    const hasLeftFurnitureFront = placedModules && placedModules.length > 0 &&
+      placedModules.some(m => {
+        const moduleX = m.position?.x || 0;
+        const moduleWidth = (m.size?.width || 600) / 1000;
+        const moduleLeftEdge = moduleX - moduleWidth / 2;
+        return moduleLeftEdge < -halfWidth / 100 / 3;
+      });
+    const hasRightFurnitureFront = placedModules && placedModules.length > 0 &&
+      placedModules.some(m => {
+        const moduleX = m.position?.x || 0;
+        const moduleWidth = (m.size?.width || 600) / 1000;
+        const moduleRightEdge = moduleX + moduleWidth / 2;
+        return moduleRightEdge > halfWidth / 100 / 3;
+      });
+
+    const frameThicknessFront = calculateFrameThickness(spaceInfo, hasLeftFurnitureFront, hasRightFurnitureFront);
+    const leftFrameWidth = frameThicknessFront.leftMm;
+    const rightFrameWidth = frameThicknessFront.rightMm;
 
     // 2단계 치수선 Y 위치 (전체 너비 치수선 아래, 120mm 간격)
     const dim2Y = topY - 120;
 
-    // 좌측 프레임 너비 치수선
-    lines.push({
-      x1: -halfWidth, y1: dim2Y, x2: -halfWidth + leftFrameWidth, y2: dim2Y,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    // 좌측 프레임 연장선 (위로)
-    lines.push({
-      x1: -halfWidth, y1: height, x2: -halfWidth, y2: dim2Y + extensionLength,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: -halfWidth + leftFrameWidth, y1: height, x2: -halfWidth + leftFrameWidth, y2: dim2Y + extensionLength,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: -halfWidth + leftFrameWidth / 2, y: dim2Y + 15,
-      text: `${leftFrameWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
-    });
+    // 노서라운드가 아닐 때만 프레임 치수선 표시
+    if (spaceInfo.surroundType !== 'no-surround') {
+      // 좌측 프레임 너비 치수선 (프레임이 있을 때만)
+      if (leftFrameWidth > 0) {
+        lines.push({
+          x1: -halfWidth, y1: dim2Y, x2: -halfWidth + leftFrameWidth, y2: dim2Y,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
+        // 좌측 프레임 연장선 (위로)
+        lines.push({
+          x1: -halfWidth, y1: height, x2: -halfWidth, y2: dim2Y + extensionLength,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
+        lines.push({
+          x1: -halfWidth + leftFrameWidth, y1: height, x2: -halfWidth + leftFrameWidth, y2: dim2Y + extensionLength,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
+        texts.push({
+          x: -halfWidth + leftFrameWidth / 2, y: dim2Y + 15,
+          text: `${leftFrameWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+        });
+      }
 
-    // 우측 프레임 너비 치수선
-    lines.push({
-      x1: halfWidth - rightFrameWidth, y1: dim2Y, x2: halfWidth, y2: dim2Y,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    // 우측 프레임 연장선 (위로)
-    lines.push({
-      x1: halfWidth, y1: height, x2: halfWidth, y2: dim2Y + extensionLength,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    lines.push({
-      x1: halfWidth - rightFrameWidth, y1: height, x2: halfWidth - rightFrameWidth, y2: dim2Y + extensionLength,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: halfWidth - rightFrameWidth / 2, y: dim2Y + 15,
-      text: `${rightFrameWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
-    });
+      // 우측 프레임 너비 치수선 (프레임이 있을 때만)
+      if (rightFrameWidth > 0) {
+        lines.push({
+          x1: halfWidth - rightFrameWidth, y1: dim2Y, x2: halfWidth, y2: dim2Y,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
+        // 우측 프레임 연장선 (위로)
+        lines.push({
+          x1: halfWidth, y1: height, x2: halfWidth, y2: dim2Y + extensionLength,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
+        lines.push({
+          x1: halfWidth - rightFrameWidth, y1: height, x2: halfWidth - rightFrameWidth, y2: dim2Y + extensionLength,
+          layer: 'DIMENSIONS', color: dimensionColor
+        });
+        texts.push({
+          x: halfWidth - rightFrameWidth / 2, y: dim2Y + 15,
+          text: `${rightFrameWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+        });
+      }
 
-    // 내부 너비 (슬롯 영역) 치수선
-    const innerWidth = width - leftFrameWidth - rightFrameWidth;
-    lines.push({
-      x1: -halfWidth + leftFrameWidth, y1: dim2Y, x2: halfWidth - rightFrameWidth, y2: dim2Y,
-      layer: 'DIMENSIONS', color: dimensionColor
-    });
-    texts.push({
-      x: 0, y: dim2Y + 15,
-      text: `${innerWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
-    });
+      // 내부 너비 (슬롯 영역) 치수선
+      const innerWidth = width - leftFrameWidth - rightFrameWidth;
+      lines.push({
+        x1: -halfWidth + leftFrameWidth, y1: dim2Y, x2: halfWidth - rightFrameWidth, y2: dim2Y,
+        layer: 'DIMENSIONS', color: dimensionColor
+      });
+      texts.push({
+        x: 0, y: dim2Y + 15,
+        text: `${innerWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+      });
+    }
 
     // ========================================
     // 3단계: 개별 슬롯/가구 너비 치수선 (2단계 아래)
