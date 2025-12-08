@@ -2019,15 +2019,20 @@ const generateExternalDimensions = (
     // 4. 탑뷰 좌/우 프레임 - 데이터 기반 계산
     // ========================================
     // 씬에서 추출 시 탑뷰에서는 수직 엣지가 필터링되어 좌/우 프레임이 안 나옴
-    // 데이터 기반으로 탑뷰에서 보이는 프레임 상단면 외곽선을 직접 계산
+    // Room.tsx 기준: 좌우 프레임은 깊이(Z) = 18mm (END_PANEL_THICKNESS)의 얇은 패널
+    // 뒷벽에 붙어있으므로 Y좌표는 frameBackY ~ (frameBackY - 18mm)
+    const frameDepthMm = 18; // END_PANEL_THICKNESS
+    const frameBackEdgeY = frameBackY; // 프레임 뒷면 (공간 뒷벽)
+    const frameFrontEdgeY = frameBackY - frameDepthMm; // 프레임 앞면 (뒷벽에서 18mm 앞)
+
     console.log(`📐 탑뷰 좌/우 프레임 데이터 기반 생성:`);
     console.log(`  - leftFrameWidth: ${leftFrameWidth}mm`);
     console.log(`  - rightFrameWidth: ${rightFrameWidth}mm`);
-    console.log(`  - frameBackY: ${frameBackY}mm, frameFrontY: ${frameFrontY}mm`);
+    console.log(`  - 프레임 깊이: ${frameDepthMm}mm (frameBackEdgeY: ${frameBackEdgeY}, frameFrontEdgeY: ${frameFrontEdgeY})`);
 
     const frameColor = 3; // ACI 3 = 연두색 (2D 프레임 색상과 동일)
 
-    // 좌측 프레임 외곽선 (상단에서 본 직사각형)
+    // 좌측 프레임 외곽선 (상단에서 본 얇은 직사각형, 뒷벽에 붙어있음)
     if (leftFrameWidth > 0) {
       const leftFrameLeftX = -halfWidth;
       const leftFrameRightX = -halfWidth + leftFrameWidth;
@@ -2035,32 +2040,32 @@ const generateExternalDimensions = (
       // 4개 변: 앞쪽, 뒤쪽, 좌측, 우측
       // 앞쪽 (X 방향)
       lines.push({
-        x1: leftFrameLeftX, y1: frameFrontY,
-        x2: leftFrameRightX, y2: frameFrontY,
+        x1: leftFrameLeftX, y1: frameFrontEdgeY,
+        x2: leftFrameRightX, y2: frameFrontEdgeY,
         layer: 'SPACE_FRAME', color: frameColor
       });
       // 뒤쪽 (X 방향)
       lines.push({
-        x1: leftFrameLeftX, y1: frameBackY,
-        x2: leftFrameRightX, y2: frameBackY,
+        x1: leftFrameLeftX, y1: frameBackEdgeY,
+        x2: leftFrameRightX, y2: frameBackEdgeY,
         layer: 'SPACE_FRAME', color: frameColor
       });
       // 좌측 (Y 방향)
       lines.push({
-        x1: leftFrameLeftX, y1: frameFrontY,
-        x2: leftFrameLeftX, y2: frameBackY,
+        x1: leftFrameLeftX, y1: frameFrontEdgeY,
+        x2: leftFrameLeftX, y2: frameBackEdgeY,
         layer: 'SPACE_FRAME', color: frameColor
       });
       // 우측 (Y 방향)
       lines.push({
-        x1: leftFrameRightX, y1: frameFrontY,
-        x2: leftFrameRightX, y2: frameBackY,
+        x1: leftFrameRightX, y1: frameFrontEdgeY,
+        x2: leftFrameRightX, y2: frameBackEdgeY,
         layer: 'SPACE_FRAME', color: frameColor
       });
-      console.log(`  ✅ 좌측 프레임 추가: X ${leftFrameLeftX}~${leftFrameRightX}, Y ${frameFrontY}~${frameBackY}`);
+      console.log(`  ✅ 좌측 프레임 추가: X ${leftFrameLeftX}~${leftFrameRightX}, Y ${frameFrontEdgeY}~${frameBackEdgeY}`);
     }
 
-    // 우측 프레임 외곽선 (상단에서 본 직사각형)
+    // 우측 프레임 외곽선 (상단에서 본 얇은 직사각형, 뒷벽에 붙어있음)
     if (rightFrameWidth > 0) {
       const rightFrameLeftX = halfWidth - rightFrameWidth;
       const rightFrameRightX = halfWidth;
@@ -2068,29 +2073,29 @@ const generateExternalDimensions = (
       // 4개 변: 앞쪽, 뒤쪽, 좌측, 우측
       // 앞쪽 (X 방향)
       lines.push({
-        x1: rightFrameLeftX, y1: frameFrontY,
-        x2: rightFrameRightX, y2: frameFrontY,
+        x1: rightFrameLeftX, y1: frameFrontEdgeY,
+        x2: rightFrameRightX, y2: frameFrontEdgeY,
         layer: 'SPACE_FRAME', color: frameColor
       });
       // 뒤쪽 (X 방향)
       lines.push({
-        x1: rightFrameLeftX, y1: frameBackY,
-        x2: rightFrameRightX, y2: frameBackY,
+        x1: rightFrameLeftX, y1: frameBackEdgeY,
+        x2: rightFrameRightX, y2: frameBackEdgeY,
         layer: 'SPACE_FRAME', color: frameColor
       });
       // 좌측 (Y 방향)
       lines.push({
-        x1: rightFrameLeftX, y1: frameFrontY,
-        x2: rightFrameLeftX, y2: frameBackY,
+        x1: rightFrameLeftX, y1: frameFrontEdgeY,
+        x2: rightFrameLeftX, y2: frameBackEdgeY,
         layer: 'SPACE_FRAME', color: frameColor
       });
       // 우측 (Y 방향)
       lines.push({
-        x1: rightFrameRightX, y1: frameFrontY,
-        x2: rightFrameRightX, y2: frameBackY,
+        x1: rightFrameRightX, y1: frameFrontEdgeY,
+        x2: rightFrameRightX, y2: frameBackEdgeY,
         layer: 'SPACE_FRAME', color: frameColor
       });
-      console.log(`  ✅ 우측 프레임 추가: X ${rightFrameLeftX}~${rightFrameRightX}, Y ${frameFrontY}~${frameBackY}`);
+      console.log(`  ✅ 우측 프레임 추가: X ${rightFrameLeftX}~${rightFrameRightX}, Y ${frameFrontEdgeY}~${frameBackEdgeY}`);
     }
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
