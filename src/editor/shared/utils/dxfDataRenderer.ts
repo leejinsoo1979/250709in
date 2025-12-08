@@ -268,15 +268,16 @@ const projectTo2D = (p: THREE.Vector3, scale: number): { x: number; y: number } 
     case 'top':
       return { x: p.x * scale, y: -p.z * scale }; // z축을 y로, 뒤집어서
     case 'left':
-      // 좌측뷰: 카메라가 -X 방향에서 봄 (UI view2DDirection='left'와 동일)
-      // 화면 왼쪽 = -Z (앞면), 화면 오른쪽 = +Z (뒷면, 백패널)
-      // DXF X = (Z + depth/2) * scale → 앞면(Z-)이 왼쪽, 뒷면(Z+, 백패널)이 오른쪽
-      return { x: (p.z + currentSpaceDepthMm / 200) * scale, y: p.y * scale };
-    case 'right':
-      // 우측뷰: 카메라가 +X 방향에서 봄 (UI view2DDirection='right'와 동일)
-      // 화면 왼쪽 = +Z (뒷면, 백패널), 화면 오른쪽 = -Z (앞면)
-      // DXF X = (depth/2 - Z) * scale → 뒷면(Z+, 백패널)이 왼쪽, 앞면(Z-)이 오른쪽
+      // 좌측뷰: 카메라가 -X 방향에서 +X 방향을 봄
+      // 3D에서: 백패널(Z-)은 뒤쪽, 앞판/서랍(Z+)은 앞쪽
+      // 왼쪽에서 볼 때: 백패널(Z-)이 오른쪽에 보임, 앞판(Z+)이 왼쪽에 보임
+      // DXF X = (depth/2 - Z) * scale → Z-가 큰 X (오른쪽), Z+가 작은 X (왼쪽)
       return { x: (currentSpaceDepthMm / 200 - p.z) * scale, y: p.y * scale };
+    case 'right':
+      // 우측뷰: 카메라가 +X 방향에서 -X 방향을 봄
+      // 오른쪽에서 볼 때: 백패널(Z-)이 왼쪽에 보임, 앞판(Z+)이 오른쪽에 보임
+      // DXF X = (Z + depth/2) * scale → Z-가 작은 X (왼쪽), Z+가 큰 X (오른쪽)
+      return { x: (p.z + currentSpaceDepthMm / 200) * scale, y: p.y * scale };
     default:
       return { x: p.x * scale, y: p.y * scale };
   }
@@ -2382,8 +2383,8 @@ const generateExternalDimensions = (
     // 2D 뷰어(CleanCAD2D)와 동일한 형상 생성
     // 치수선은 생성하지 않음 (2D 뷰어와 동일)
     //
-    // 좌측뷰(left): 정면에서 가구 왼쪽을 봄 → DXF X=0이 앞면, X=깊이가 뒷면
-    // 우측뷰(right): 정면에서 가구 오른쪽을 봄 → DXF X=0이 뒷면, X=깊이가 앞면 (좌우반전)
+    // 좌측뷰(left): 카메라가 -X에서 봄 → DXF X=0이 앞면(Z+), X=깊이가 뒷면/백패널(Z-)
+    // 우측뷰(right): 카메라가 +X에서 봄 → DXF X=0이 뒷면/백패널(Z-), X=깊이가 앞면(Z+)
     // ========================================
     console.log(`📏 ${viewDirection}뷰: 측면도 가구 형상 생성 (데이터 기반)`);
 
@@ -2441,8 +2442,9 @@ const generateExternalDimensions = (
 
     // ========================================
     // 좌표 변환 함수 - 좌측뷰/우측뷰에 따라 X축 방향 결정
-    // 좌측뷰: X=0이 앞면, X=깊이가 뒷면
-    // 우측뷰: X=0이 뒷면, X=깊이가 앞면 (좌우반전)
+    // projectTo2D와 일치하도록:
+    // 좌측뷰: X=0이 앞면(Z+), X=깊이가 뒷면(Z-)
+    // 우측뷰: X=0이 뒷면(Z-), X=깊이가 앞면(Z+)
     // ========================================
     const transformX = (x: number): number => {
       if (viewDirection === 'right') {
@@ -2612,11 +2614,13 @@ const generateExternalDimensions = (
     const cabinetTopY = height - topFrameHeightMm; // 가구 내부 끝점 (상부프레임 아래)
 
     if (viewDirection === 'left') {
-      // ===== 좌측뷰: UI view2DDirection='left'와 동일한 배치 =====
-      // UI에서 좌측뷰: 왼쪽=전체높이, 오른쪽=섹션별높이
-      // DXF에서: X=0이 앞면(UI 왼쪽), X=깊이가 뒷면(UI 오른쪽)
+      // ===== 좌측뷰: 카메라가 -X에서 +X방향을 봄 =====
+      // 3D 좌표: Z- = 백패널(뒤), Z+ = 앞판(앞)
+      // projectTo2D 변환: x = (depth/2 - Z) → Z-가 큰X(오른쪽), Z+가 작은X(왼쪽)
+      // 따라서 DXF에서: X=0 근처 = 앞면, X=깊이 근처 = 뒷면(백패널)
+      // UI에서 좌측뷰: 왼쪽=전체높이(앞면 방향), 오른쪽=섹션별높이(뒷면/백패널 방향)
 
-      // ===== 왼쪽 (X=0 근처): 전체 높이 치수 =====
+      // ===== 왼쪽 (X=0 근처, 앞면 방향): 전체 높이 치수 =====
       const leftX = -dimOffset;
 
       // 치수선 본체 (수직)
@@ -2631,7 +2635,7 @@ const generateExternalDimensions = (
       // 전체 높이 텍스트
       texts.push({ x: leftX - 60, y: height / 2, text: `${height}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
-      // ===== 오른쪽 (X=깊이 근처): 상부프레임 + 상부섹션 + 하부섹션 + 하부프레임 치수 =====
+      // ===== 오른쪽 (X=깊이 근처, 뒷면/백패널 방향): 상부프레임 + 상부섹션 + 하부섹션 + 하부프레임 치수 =====
       const rightX = furnitureDepthMm + dimOffset;
 
       // 상부 프레임 치수 (있는 경우)
@@ -2673,11 +2677,13 @@ const generateExternalDimensions = (
       texts.push({ x: furnitureDepthMm / 2, y: topDimY + 15, text: `${furnitureDepthMm}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
     } else if (viewDirection === 'right') {
-      // ===== 우측뷰: UI view2DDirection='right'와 동일한 배치 =====
-      // UI에서 우측뷰: 오른쪽=전체높이, 왼쪽=섹션별높이
-      // DXF에서: X=0이 뒷면(UI 왼쪽), X=깊이가 앞면(UI 오른쪽)
+      // ===== 우측뷰: 카메라가 +X에서 -X방향을 봄 =====
+      // 3D 좌표: Z- = 백패널(뒤), Z+ = 앞판(앞)
+      // projectTo2D 변환: x = (Z + depth/2) → Z-가 작은X(왼쪽), Z+가 큰X(오른쪽)
+      // 따라서 DXF에서: X=0 근처 = 뒷면(백패널), X=깊이 근처 = 앞면
+      // UI에서 우측뷰: 오른쪽=전체높이(앞면 방향), 왼쪽=섹션별높이(뒷면/백패널 방향)
 
-      // ===== 오른쪽 (X=깊이 근처): 전체 높이 치수 =====
+      // ===== 오른쪽 (X=깊이 근처, 앞면 방향): 전체 높이 치수 =====
       const rightX = furnitureDepthMm + dimOffset;
 
       lines.push({ x1: rightX, y1: 0, x2: rightX, y2: height, layer: 'DIMENSIONS', color: dimColor });
@@ -2685,7 +2691,7 @@ const generateExternalDimensions = (
       lines.push({ x1: furnitureDepthMm, y1: height, x2: rightX + extLength, y2: height, layer: 'DIMENSIONS', color: dimColor });
       texts.push({ x: rightX + 60, y: height / 2, text: `${height}`, height: 25, color: dimColor, layer: 'DIMENSIONS' });
 
-      // 왼쪽: 섹션별 치수
+      // ===== 왼쪽 (X=0 근처, 뒷면/백패널 방향): 섹션별 치수 =====
       const leftX = -dimOffset;
 
       // 상부 프레임 치수 (있는 경우)
