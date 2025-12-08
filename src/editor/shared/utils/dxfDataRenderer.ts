@@ -244,12 +244,16 @@ const isEdgeInFrontHalf = (p1: THREE.Vector3, p2: THREE.Vector3, threshold: numb
       return p1.y >= -threshold || p2.y >= -threshold;
 
     case 'left':
-      // 왼쪽뷰: x값이 음수(왼쪽)인 엣지
-      return p1.x <= threshold || p2.x <= threshold;
+      // 좌측뷰: 카메라가 -X에서 봄 → X값이 작은(음수/좌측) 엣지가 앞쪽
+      // 좌측면뷰이므로 가구의 좌측 측판이 보임
+      // 모든 엣지 포함 (측면뷰에서는 깊이 필터링 불필요)
+      return true;
 
     case 'right':
-      // 오른쪽뷰: x값이 양수(오른쪽)인 엣지
-      return p1.x >= -threshold || p2.x >= -threshold;
+      // 우측뷰: 카메라가 +X에서 봄 → X값이 큰(양수/우측) 엣지가 앞쪽
+      // 우측면뷰이므로 가구의 우측 측판이 보임
+      // 모든 엣지 포함 (측면뷰에서는 깊이 필터링 불필요)
+      return true;
 
     default:
       return true;
