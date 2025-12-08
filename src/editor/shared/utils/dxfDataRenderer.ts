@@ -1296,6 +1296,28 @@ const extractFromScene = (
         return;
       }
 
+      // 측면뷰에서 가구 내부 치수 텍스트 제외 (D517, 18, 230 등)
+      // 부모 계층에 furniture, section, shelf, drawer가 있으면 가구 내부 치수
+      if (viewDirection === 'left' || viewDirection === 'right') {
+        let parent: THREE.Object3D | null = object.parent;
+        let hasFurnitureParent = false;
+        while (parent) {
+          const parentName = (parent.name || '').toLowerCase();
+          if (parentName.includes('furniture') ||
+              parentName.includes('section') ||
+              parentName.includes('shelf') ||
+              parentName.includes('drawer')) {
+            hasFurnitureParent = true;
+            break;
+          }
+          parent = parent.parent;
+        }
+        if (hasFurnitureParent) {
+          console.log(`📝 ${viewDirection}뷰: 가구 내부 치수 텍스트 제외 - "${(mesh as any).text}"`);
+          return;
+        }
+      }
+
       const textContent = (mesh as any).text;
       if (textContent && typeof textContent === 'string') {
         const worldPos = new THREE.Vector3();
