@@ -4196,8 +4196,10 @@ const SimpleDashboard: React.FC = () => {
               <div className={styles.treeContent}>
                 {firebaseProjects.length > 0 ? (
                   <div>
-                    {/* 내가 만든 프로젝트만 표시 */}
-                    {firebaseProjects.map(project => {
+                    {/* 선택된 프로젝트만 표시 (선택되지 않았으면 모든 프로젝트 표시) */}
+                    {firebaseProjects
+                      .filter(project => !selectedProjectId || project.id === selectedProjectId)
+                      .map(project => {
                       const isExpanded = expandedProjects.has(project.id);
                       const isSelected = selectedProjectId === project.id;
                       const projectFolders = folders[project.id] || [];
