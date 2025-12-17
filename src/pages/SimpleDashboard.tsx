@@ -3462,7 +3462,16 @@ const SimpleDashboard: React.FC = () => {
       <aside className={styles.sidebar}>
         {/* 로고 영역 */}
         <div className={styles.logoSection}>
-          <div className={styles.logo}>
+          <div
+            className={styles.logo}
+            onClick={() => {
+              setActiveMenu('all');
+              setSelectedProjectId(null);
+              setCurrentFolderId(null);
+              setBreadcrumbPath(['전체 프로젝트']);
+            }}
+            style={{ cursor: 'pointer' }}
+          >
             <Logo size="medium" />
           </div>
         </div>
