@@ -1040,6 +1040,59 @@ const SimpleDashboard: React.FC = () => {
     };
   }, [selectedProjectId, loadDesignFilesForProject]); // 의존성 배열 비움 - 한 번만 설정
 
+  // 백스페이스 키로 이전 단계로 이동
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 입력 필드에 포커스가 있을 때는 무시
+      const activeElement = document.activeElement;
+      if (activeElement?.tagName === 'INPUT' ||
+          activeElement?.tagName === 'TEXTAREA' ||
+          activeElement?.getAttribute('contenteditable') === 'true') {
+        return;
+      }
+
+      // 모달이 열려있을 때는 무시
+      if (shareModalOpen || isCreateModalOpen || isCreateFolderModalOpen ||
+          isNotificationOpen || isProfilePopupOpen || isRenameModalOpen) {
+        return;
+      }
+
+      if (e.key === 'Backspace') {
+        e.preventDefault();
+
+        // 현재 폴더 안에 있으면 → 프로젝트 레벨로
+        if (currentFolderId && selectedProjectId && selectedProject) {
+          setCurrentFolderId(null);
+          const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+            activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+              '전체 프로젝트';
+          setBreadcrumbPath([rootPath, selectedProject.title]);
+          navigate(`/dashboard?projectId=${selectedProjectId}`);
+        }
+        // 프로젝트 안에 있으면 → 전체 목록으로
+        else if (selectedProjectId) {
+          setSelectedProjectId(null);
+          setCurrentFolderId(null);
+          const rootPath = activeMenu === 'shared-by-me' ? '공유한 프로젝트' :
+            activeMenu === 'shared-with-me' ? '공유받은 프로젝트' :
+              '전체 프로젝트';
+          setBreadcrumbPath([rootPath]);
+          if (activeMenu === 'shared-by-me') {
+            navigate('/dashboard/shared-by-me');
+          } else if (activeMenu === 'shared-with-me') {
+            navigate('/dashboard/shared-with-me');
+          } else {
+            navigate('/dashboard');
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentFolderId, selectedProjectId, selectedProject, activeMenu, navigate,
+      shareModalOpen, isCreateModalOpen, isCreateFolderModalOpen,
+      isNotificationOpen, isProfilePopupOpen, isRenameModalOpen]);
 
   // 북마크 및 휴지통 데이터 로드
   useEffect(() => {
@@ -4210,7 +4263,7 @@ const SimpleDashboard: React.FC = () => {
                               {isSelected && (
                                 <button className={styles.createFolderBtn} onClick={handleCreateFolder}>
                                   <PiFolderPlus size={16} style={{ marginRight: '8px' }} />
-                                  <span>새로운 폴더</span>
+                                  <span>폴더만들기</span>
                                 </button>
                               )}
 
