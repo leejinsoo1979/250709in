@@ -1040,6 +1040,40 @@ const SimpleDashboard: React.FC = () => {
     };
   }, [selectedProjectId, loadDesignFilesForProject]); // 의존성 배열 비움 - 한 번만 설정
 
+  // 사용자별 프로젝트 목록 결정 (내 프로젝트 + 공유한 + 공유받은)
+  const allProjects = user ? [...firebaseProjects, ...sharedByMeProjects, ...sharedWithMeProjects] : [];
+
+  // 선택된 프로젝트 정보를 메모이제이션
+  const selectedProject = useMemo(() => {
+    if (!selectedProjectId) return null;
+
+    // activeMenu가 'shared-by-me' 또는 'shared-with-me'일 때는 공유 프로젝트에서 먼저 검색
+    let project = null;
+    if (activeMenu === 'shared-by-me') {
+      project = sharedByMeProjects.find(p => p.id === selectedProjectId) ||
+        allProjects.find(p => p.id === selectedProjectId) ||
+        sharedWithMeProjects.find(p => p.id === selectedProjectId);
+    } else if (activeMenu === 'shared-with-me') {
+      project = sharedWithMeProjects.find(p => p.id === selectedProjectId) ||
+        allProjects.find(p => p.id === selectedProjectId) ||
+        sharedByMeProjects.find(p => p.id === selectedProjectId);
+    } else {
+      project = allProjects.find(p => p.id === selectedProjectId) ||
+        sharedByMeProjects.find(p => p.id === selectedProjectId) ||
+        sharedWithMeProjects.find(p => p.id === selectedProjectId);
+    }
+
+    console.log('🔍 selectedProject 업데이트:', {
+      selectedProjectId,
+      activeMenu,
+      found: !!project,
+      projectUserId: project?.userId,
+      currentUserId: user?.uid,
+      allProjectsCount: allProjects.length
+    });
+    return project || null;
+  }, [selectedProjectId, allProjects, sharedWithMeProjects, sharedByMeProjects, activeMenu, user?.uid]);
+
   // 백스페이스 키로 이전 단계로 이동
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -1144,40 +1178,6 @@ const SimpleDashboard: React.FC = () => {
       }
     }
   }, [user]);
-
-  // 사용자별 프로젝트 목록 결정 (내 프로젝트 + 공유한 + 공유받은)
-  const allProjects = user ? [...firebaseProjects, ...sharedByMeProjects, ...sharedWithMeProjects] : [];
-
-  // 선택된 프로젝트 정보를 메모이제이션
-  const selectedProject = useMemo(() => {
-    if (!selectedProjectId) return null;
-
-    // activeMenu가 'shared-by-me' 또는 'shared-with-me'일 때는 공유 프로젝트에서 먼저 검색
-    let project = null;
-    if (activeMenu === 'shared-by-me') {
-      project = sharedByMeProjects.find(p => p.id === selectedProjectId) ||
-        allProjects.find(p => p.id === selectedProjectId) ||
-        sharedWithMeProjects.find(p => p.id === selectedProjectId);
-    } else if (activeMenu === 'shared-with-me') {
-      project = sharedWithMeProjects.find(p => p.id === selectedProjectId) ||
-        allProjects.find(p => p.id === selectedProjectId) ||
-        sharedByMeProjects.find(p => p.id === selectedProjectId);
-    } else {
-      project = allProjects.find(p => p.id === selectedProjectId) ||
-        sharedByMeProjects.find(p => p.id === selectedProjectId) ||
-        sharedWithMeProjects.find(p => p.id === selectedProjectId);
-    }
-
-    console.log('🔍 selectedProject 업데이트:', {
-      selectedProjectId,
-      activeMenu,
-      found: !!project,
-      projectUserId: project?.userId,
-      currentUserId: user?.uid,
-      allProjectsCount: allProjects.length
-    });
-    return project || null;
-  }, [selectedProjectId, allProjects, sharedWithMeProjects, sharedByMeProjects, activeMenu, user?.uid]);
 
   console.log('🔍 현재 상태 확인:', {
     user: !!user,
