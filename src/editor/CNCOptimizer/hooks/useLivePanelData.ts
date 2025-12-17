@@ -62,10 +62,23 @@ export function useLivePanelData() {
         
         
         // Find module data with dynamic sizing
-        const moduleData = getModuleById(moduleId, internalSpace, spaceInfo);
+        // 배치된 가구의 moduleData가 있으면 그것을 사용 (높이 변경 등 반영), 없으면 원본 가져오기
+        let moduleData = placedModule.moduleData || getModuleById(moduleId, internalSpace, spaceInfo);
         if (!moduleData) {
           console.warn(`Module ${moduleIndex}: No module data found for ${moduleId}`);
           return;
+        }
+
+        // customSections가 있으면 modelConfig.sections를 대체 (섹션 높이 변경, 안전선반 제거 등 반영)
+        if (placedModule.customSections && moduleData.modelConfig) {
+          moduleData = {
+            ...moduleData,
+            modelConfig: {
+              ...moduleData.modelConfig,
+              sections: placedModule.customSections
+            }
+          };
+          console.log(`Module ${moduleIndex}: Using customSections from placed module`, placedModule.customSections);
         }
         console.log(`Module ${moduleIndex}: Found module data`, moduleData);
 
@@ -219,8 +232,20 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const moduleId = placedModule.moduleId || placedModule.moduleType;
       if (!moduleId) return;
 
-      const moduleData = getModuleById(moduleId, internalSpace, spaceInfo);
+      // 배치된 가구의 moduleData가 있으면 그것을 사용 (높이 변경 등 반영), 없으면 원본 가져오기
+      let moduleData = placedModule.moduleData || getModuleById(moduleId, internalSpace, spaceInfo);
       if (!moduleData) return;
+
+      // customSections가 있으면 modelConfig.sections를 대체 (섹션 높이 변경, 안전선반 제거 등 반영)
+      if (placedModule.customSections && moduleData.modelConfig) {
+        moduleData = {
+          ...moduleData,
+          modelConfig: {
+            ...moduleData.modelConfig,
+            sections: placedModule.customSections
+          }
+        };
+      }
 
       const width = placedModule.width || moduleData.dimensions.width;
       const depth = placedModule.depth || moduleData.dimensions.depth;
