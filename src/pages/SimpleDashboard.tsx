@@ -4205,18 +4205,25 @@ const SimpleDashboard: React.FC = () => {
                       const projectFolders = folders[project.id] || [];
                       const rawDesignFiles = projectDesignFiles[project.id] || [];
 
-                      // sortBy 상태에 따라 디자인 파일 정렬
-                      const designFiles = [...rawDesignFiles].sort((a, b) => {
-                        if (sortBy === 'date') {
-                          // 최신순 정렬
-                          const dateA = a.updatedAt || a.createdAt || { seconds: 0 };
-                          const dateB = b.updatedAt || b.createdAt || { seconds: 0 };
-                          return dateB.seconds - dateA.seconds;
-                        } else {
-                          // 이름순 정렬
-                          return a.name.localeCompare(b.name, 'ko');
-                        }
-                      });
+                      // 폴더에 포함된 파일 ID들 수집
+                      const filesInFolders = new Set(
+                        projectFolders.flatMap(folder => folder.children.map(child => child.id))
+                      );
+
+                      // 폴더에 없는 파일만 필터링 후 sortBy 상태에 따라 정렬
+                      const designFiles = [...rawDesignFiles]
+                        .filter(file => !filesInFolders.has(file.id))
+                        .sort((a, b) => {
+                          if (sortBy === 'date') {
+                            // 최신순 정렬
+                            const dateA = a.updatedAt || a.createdAt || { seconds: 0 };
+                            const dateB = b.updatedAt || b.createdAt || { seconds: 0 };
+                            return dateB.seconds - dateA.seconds;
+                          } else {
+                            // 이름순 정렬
+                            return a.name.localeCompare(b.name, 'ko');
+                          }
+                        });
 
                       const hasContent = projectFolders.length > 0 || designFiles.length > 0 || project.furnitureCount > 0;
 
