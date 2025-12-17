@@ -3469,6 +3469,7 @@ const SimpleDashboard: React.FC = () => {
               setSelectedProjectId(null);
               setCurrentFolderId(null);
               setBreadcrumbPath(['전체 프로젝트']);
+              navigate('/dashboard');
             }}
             style={{ cursor: 'pointer' }}
           >
