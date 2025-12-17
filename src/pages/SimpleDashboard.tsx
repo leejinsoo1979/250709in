@@ -2446,7 +2446,20 @@ const SimpleDashboard: React.FC = () => {
           }
 
           if (isInFolder) {
-            // 폴더 내부 디자인 파일인 경우 - 폴더 데이터에서 이름 변경
+            // 폴더 내부 디자인 파일인 경우
+            // 1. Firebase designFiles 컬렉션 업데이트
+            const { updateDesignFile } = await import('@/firebase/projects');
+            const result = await updateDesignFile(renameTarget.id, {
+              name: newName.trim()
+            });
+
+            if (result.error) {
+              console.error('폴더 내 디자인파일 이름 변경 실패:', result.error);
+              alert('디자인파일 이름 변경에 실패했습니다: ' + result.error);
+              return;
+            }
+
+            // 2. 폴더 데이터에서 이름 변경
             setFolders(prev => ({
               ...prev,
               [selectedProjectId!]: prev[selectedProjectId!]?.map(folder => ({
@@ -2459,7 +2472,17 @@ const SimpleDashboard: React.FC = () => {
               })) || []
             }));
 
-            // Firebase에 폴더 데이터 저장
+            // 3. projectDesignFiles 상태 업데이트
+            setProjectDesignFiles(prev => ({
+              ...prev,
+              [selectedProjectId!]: prev[selectedProjectId!]?.map(df =>
+                df.id === renameTarget.id
+                  ? { ...df, name: newName.trim() }
+                  : df
+              ) || []
+            }));
+
+            // 4. Firebase에 폴더 데이터 저장
             const updatedFolders = folders[selectedProjectId!]?.map(folder => ({
               ...folder,
               children: folder.children.map(child =>
@@ -2469,6 +2492,8 @@ const SimpleDashboard: React.FC = () => {
               )
             })) || [];
             await saveFolderDataToFirebase(selectedProjectId!, updatedFolders);
+
+            console.log('폴더 내 디자인파일 이름 변경 성공:', renameTarget.id, '→', newName.trim());
           } else {
             // 루트 레벨 디자인 파일인 경우 - Firebase 디자인파일 업데이트
             const { updateDesignFile } = await import('@/firebase/projects');
@@ -2483,6 +2508,18 @@ const SimpleDashboard: React.FC = () => {
             }
 
             console.log('루트 레벨 디자인파일 이름 변경 성공:', renameTarget.id, '→', newName.trim());
+
+            // projectDesignFiles 상태 즉시 업데이트
+            if (selectedProjectId) {
+              setProjectDesignFiles(prev => ({
+                ...prev,
+                [selectedProjectId]: prev[selectedProjectId]?.map(df =>
+                  df.id === renameTarget.id
+                    ? { ...df, name: newName.trim() }
+                    : df
+                ) || []
+              }));
+            }
 
             // 프로젝트 목록을 새로고침하여 변경사항 반영
             await loadFirebaseProjects();
