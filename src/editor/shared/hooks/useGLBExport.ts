@@ -48,6 +48,19 @@ export const useGLBExport = () => {
       'EndPanel',          // 엔드패널
       'BackPanel',         // 백패널
       'Hinge',             // 힌지
+      // 한글 패턴
+      '프레임',            // 프레임 (한글)
+      '상부프레임',        // 상부프레임
+      '하부프레임',        // 하부프레임
+      '가구',              // 가구
+      '도어',              // 도어
+      '캐비넷',            // 캐비넷
+      '선반',              // 선반
+      '서랍',              // 서랍
+      '패널',              // 패널
+      '엔드패널',          // 엔드패널
+      '백패널',            // 백패널
+      '힌지',              // 힌지
     ];
 
     // 명시적으로 제외해야 할 패턴
@@ -194,8 +207,8 @@ export const useGLBExport = () => {
         return; // 하위 요소는 이미 포함됨
       }
 
-      // 포함해야 할 요소인지 확인
-      if (shouldInclude(obj) && (obj as any).isGroup) {
+      // 포함해야 할 요소인지 확인 (Group 또는 Mesh 모두 포함)
+      if (shouldInclude(obj)) {
         console.log(`${indent}✅ 포함: ${name} (${type})`);
         result.push(obj);
         return; // 하위 요소는 이미 포함됨

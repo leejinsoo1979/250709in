@@ -43,6 +43,9 @@ export const use3DExport = () => {
     const includePatterns = [
       'FurnitureContainer', 'Furniture', 'Frame', 'Door', 'Cabinet',
       'Shelf', 'Drawer', 'Panel', 'EndPanel', 'BackPanel', 'Hinge',
+      // 한글 패턴
+      '프레임', '상부프레임', '하부프레임', '가구', '도어', '캐비넷',
+      '선반', '서랍', '패널', '엔드패널', '백패널', '힌지',
     ];
 
     const excludePatterns = [
@@ -138,18 +141,32 @@ export const use3DExport = () => {
    */
   const findFurniture = (scene: Scene | Group): THREE.Object3D[] => {
     const result: THREE.Object3D[] = [];
+    const addedNames = new Set<string>();
 
     const traverse = (obj: THREE.Object3D) => {
+      const objKey = `${obj.name}_${obj.uuid}`;
+
+      // FurnitureContainer는 전체 포함
       if (obj.name === 'FurnitureContainer') {
-        result.push(obj);
+        if (!addedNames.has(objKey)) {
+          result.push(obj);
+          addedNames.add(objKey);
+          console.log(`✅ FurnitureContainer 포함`);
+        }
         return;
       }
 
-      if (shouldInclude(obj) && (obj as any).isGroup) {
-        result.push(obj);
+      // 포함 패턴에 매칭되면 포함 (Group 또는 Mesh)
+      if (shouldInclude(obj)) {
+        if (!addedNames.has(objKey)) {
+          result.push(obj);
+          addedNames.add(objKey);
+          console.log(`✅ 포함: ${obj.name} (${obj.type})`);
+        }
         return;
       }
 
+      // 자식 탐색
       if (obj.children && obj.children.length > 0) {
         obj.children.forEach(child => traverse(child));
       }
