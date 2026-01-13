@@ -181,6 +181,7 @@ export const use3DExport = () => {
   /**
    * Y-up을 Z-up 좌표계로 변환 (STL, OBJ, DAE용)
    * 모든 월드 변환을 지오메트리에 베이크한 후 좌표계 변환
+   * 중요: 원본 지오메트리를 수정하지 않도록 복제 후 수정
    */
   const convertToZUp = (group: THREE.Group): void => {
     const rotationMatrix = new THREE.Matrix4().makeRotationX(-Math.PI / 2);
@@ -196,12 +197,22 @@ export const use3DExport = () => {
       }
     });
 
-    // 각 메쉬의 월드 변환을 지오메트리에 베이크
+    // 각 메쉬의 지오메트리를 복제하고 월드 변환 적용
     meshes.forEach((mesh) => {
       if (mesh.geometry) {
-        // 월드 매트릭스를 지오메트리에 적용 (위치, 회전, 스케일 모두 포함)
-        mesh.geometry.applyMatrix4(mesh.matrixWorld);
-        // 메쉬의 로컬 변환을 리셋
+        // 중요: 지오메트리를 복제하여 원본을 보존
+        const clonedGeometry = mesh.geometry.clone();
+
+        // 월드 매트릭스를 복제된 지오메트리에 적용 (위치, 회전, 스케일 모두 포함)
+        clonedGeometry.applyMatrix4(mesh.matrixWorld);
+
+        // Z-up 변환 적용
+        clonedGeometry.applyMatrix4(rotationMatrix);
+
+        // 복제된 지오메트리로 교체
+        mesh.geometry = clonedGeometry;
+
+        // 메쉬의 로컬 변환을 리셋 (이미 지오메트리에 베이크됨)
         mesh.position.set(0, 0, 0);
         mesh.rotation.set(0, 0, 0);
         mesh.scale.set(1, 1, 1);
@@ -214,13 +225,6 @@ export const use3DExport = () => {
     group.rotation.set(0, 0, 0);
     group.scale.set(1, 1, 1);
     group.updateMatrix();
-
-    // 이제 Z-up 변환 적용 (모든 지오메트리에)
-    meshes.forEach((mesh) => {
-      if (mesh.geometry) {
-        mesh.geometry.applyMatrix4(rotationMatrix);
-      }
-    });
   };
 
   /**
