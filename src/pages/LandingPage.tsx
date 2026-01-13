@@ -2,7 +2,7 @@ import * as React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, ChevronRight } from 'lucide-react';
 
 const menuItems = [
   { name: 'Features', href: '#features' },
@@ -16,60 +16,58 @@ export default function LandingPage() {
   const [billingCycle, setBillingCycle] = React.useState<'monthly' | 'yearly'>('monthly');
 
   return (
-    <div>
-      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-zinc-200">
+    <div className="bg-zinc-950">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
         <nav className="max-w-6xl mx-auto px-6">
           <div className="flex items-center justify-between h-16">
-            {/* 로고 */}
             <Link to="/" className="flex items-center">
               <Logo />
             </Link>
 
-            {/* 데스크톱 메뉴 */}
             <ul className="hidden md:flex items-center gap-8">
               {menuItems.map((item, index) => (
                 <li key={index}>
                   <a
                     href={item.href}
-                    className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors">
+                    className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">
                     {item.name}
                   </a>
                 </li>
               ))}
             </ul>
 
-            {/* 버튼 */}
             <div className="hidden md:flex items-center gap-3">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
+                className="text-zinc-400 hover:text-white hover:bg-zinc-800"
                 onClick={() => navigate('/login')}>
                 Login
               </Button>
               <Button
                 size="sm"
+                className="bg-white text-zinc-900 hover:bg-zinc-200"
                 onClick={() => navigate('/signup')}>
                 Sign Up
               </Button>
             </div>
 
-            {/* 모바일 메뉴 버튼 */}
             <button
               onClick={() => setMenuState(!menuState)}
-              className="md:hidden p-2 -mr-2">
+              className="md:hidden p-2 -mr-2 text-zinc-400">
               {menuState ? <X size={24} /> : <Menu size={24} />}
             </button>
           </div>
 
-          {/* 모바일 메뉴 */}
           {menuState && (
-            <div className="md:hidden py-4 border-t border-zinc-200">
+            <div className="md:hidden py-4 border-t border-zinc-800">
               <ul className="space-y-4 mb-4">
                 {menuItems.map((item, index) => (
                   <li key={index}>
                     <a
                       href={item.href}
-                      className="block text-zinc-600 hover:text-zinc-900"
+                      className="block text-zinc-400 hover:text-white"
                       onClick={() => setMenuState(false)}>
                       {item.name}
                     </a>
@@ -79,10 +77,13 @@ export default function LandingPage() {
               <div className="flex flex-col gap-2">
                 <Button
                   variant="outline"
+                  className="border-zinc-700 text-zinc-300"
                   onClick={() => navigate('/login')}>
                   Login
                 </Button>
-                <Button onClick={() => navigate('/signup')}>
+                <Button
+                  className="bg-white text-zinc-900"
+                  onClick={() => navigate('/signup')}>
                   Sign Up
                 </Button>
               </div>
@@ -93,56 +94,92 @@ export default function LandingPage() {
 
       <main>
         {/* Hero Section */}
-        <section className="bg-white pt-16">
-          <div className="relative mx-auto max-w-5xl px-6 py-20 lg:py-24">
-            <div className="relative z-10 mx-auto max-w-2xl text-center">
-              <h1 className="text-balance text-4xl font-semibold md:text-5xl lg:text-6xl">
-                Design Your Perfect Furniture Space
-              </h1>
-              <p className="mx-auto my-8 max-w-2xl text-xl text-muted-foreground">
-                Professional 3D furniture design tool. Create, customize, and visualize your dream interior in real-time.
-              </p>
+        <section className="relative pt-32 pb-20 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <span className="text-zinc-400 text-sm">Professional Furniture Design Tool</span>
+              <ChevronRight className="w-4 h-4 text-zinc-500" />
+            </div>
 
-              <div className="flex justify-center gap-4">
-                <Button
-                  size="lg"
-                  onClick={() => navigate('/dashboard')}>
-                  <span>Start Designing</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={() => navigate('/configurator')}>
-                  <span>Demo</span>
-                </Button>
-              </div>
+            <h1
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium text-white mb-8 max-w-4xl"
+              style={{
+                letterSpacing: "-0.0325em",
+                lineHeight: 1.1,
+              }}>
+              Design Your Perfect Furniture Space
+            </h1>
+
+            <p className="text-zinc-400 text-lg max-w-xl mb-12">
+              <span className="text-white font-medium">Create stunning 3D furniture layouts.</span>{' '}
+              Professional design tools for visualizing, customizing, and exporting production-ready furniture designs.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <Button
+                size="lg"
+                className="bg-white text-zinc-900 hover:bg-zinc-200"
+                onClick={() => navigate('/dashboard')}>
+                Start Designing
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                onClick={() => navigate('/configurator')}>
+                View Demo
+              </Button>
             </div>
           </div>
 
-          {/* Hero Video */}
-          <div className="mx-auto max-w-5xl px-6 mt-8 pb-16">
-            <div className="-skew-x-6 hover:skew-x-0 transition-transform duration-500">
-              <video
-                className="w-full block rounded-xl shadow-2xl"
-                autoPlay
-                loop
-                muted
-                playsInline>
-                <source src="/video/intro.mp4" type="video/mp4" />
-              </video>
+          {/* Hero Video with 3D Effect */}
+          <div className="max-w-6xl mx-auto mt-20">
+            <div
+              className="relative w-full"
+              style={{ perspective: "1200px" }}>
+              <div
+                style={{
+                  transform: "rotateX(35deg) rotateZ(-2deg)",
+                  transformStyle: "preserve-3d",
+                  transformOrigin: "center center",
+                }}>
+                <div className="rounded-xl overflow-hidden border border-zinc-800 shadow-2xl shadow-black/50">
+                  <video
+                    className="w-full block"
+                    autoPlay
+                    loop
+                    muted
+                    playsInline>
+                    <source src="/video/intro.mp4" type="video/mp4" />
+                  </video>
+                </div>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Features Section */}
-        <section id="features" className="bg-zinc-50 py-16">
-          <div className="m-auto max-w-5xl px-6">
-            <h2 className="text-center text-3xl font-semibold mb-4">Everything you need to design</h2>
-            <p className="text-center text-muted-foreground mb-16 max-w-2xl mx-auto">
-              Professional-grade tools for creating stunning furniture designs
+        <section id="features" className="relative py-32 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <span className="text-zinc-400 text-sm">Powerful Features</span>
+              <ChevronRight className="w-4 h-4 text-zinc-500" />
+            </div>
+
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl font-medium text-white mb-8 max-w-3xl"
+              style={{ letterSpacing: "-0.0325em", lineHeight: 1.1 }}>
+              Everything you need to design
+            </h2>
+
+            <p className="text-zinc-400 text-lg max-w-md mb-16">
+              <span className="text-white font-medium">Professional-grade tools.</span>{' '}
+              Create stunning furniture designs with our comprehensive feature set.
             </p>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               <FeatureCard
                 icon={<BoxIcon />}
                 title="3D Real-time Editor"
@@ -177,74 +214,282 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Demo Section */}
-        <section id="demo" className="py-16 bg-white">
-          <div className="m-auto max-w-5xl px-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-3xl font-semibold mb-4">See it in action</h2>
-                <p className="text-muted-foreground mb-8">
-                  Watch how easy it is to create beautiful furniture designs
-                </p>
-                <ul className="space-y-4 mb-8">
-                  <li className="flex items-center gap-3">
-                    <CheckIcon />
-                    <span>Drag and drop furniture modules</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckIcon />
-                    <span>Customize colors and materials</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckIcon />
-                    <span>View in 2D and 3D modes</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <CheckIcon />
-                    <span>Export production-ready files</span>
-                  </li>
-                </ul>
-                <Button onClick={() => navigate('/dashboard')}>
-                  Try it now
-                </Button>
-              </div>
-              <div className="bg-zinc-100 rounded-xl overflow-hidden shadow-lg">
-                <div className="bg-zinc-200 p-3 flex gap-2">
-                  <span className="w-3 h-3 rounded-full bg-red-400" />
-                  <span className="w-3 h-3 rounded-full bg-yellow-400" />
-                  <span className="w-3 h-3 rounded-full bg-green-400" />
+        {/* Demo Section - Project Timeline Style */}
+        <section id="demo" className="relative py-32 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <span className="text-zinc-400 text-sm">Design Workflow</span>
+              <ChevronRight className="w-4 h-4 text-zinc-500" />
+            </div>
+
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl font-medium text-white mb-8 max-w-3xl"
+              style={{ letterSpacing: "-0.0325em", lineHeight: 1.1 }}>
+              Streamline your design process
+            </h2>
+
+            <p className="text-zinc-400 text-lg max-w-md mb-16">
+              <span className="text-white font-medium">From concept to production.</span>{' '}
+              Manage your furniture design projects with our visual planning tools.
+            </p>
+
+            {/* 3D Timeline Visualization */}
+            <div
+              className="relative w-full mb-16"
+              style={{ perspective: "1200px" }}>
+              <div
+                className="relative"
+                style={{
+                  transform: "rotateX(50deg) rotateZ(-35deg)",
+                  transformStyle: "preserve-3d",
+                  transformOrigin: "center center",
+                }}>
+                <div className="relative h-[350px]">
+                  {/* Diagonal dashed line */}
+                  <div
+                    className="absolute w-[1px] bg-zinc-600/50"
+                    style={{
+                      height: "500px",
+                      left: "55%",
+                      top: "-50px",
+                      backgroundImage:
+                        "repeating-linear-gradient(to bottom, transparent, transparent 4px, rgba(113, 113, 122, 0.5) 4px, rgba(113, 113, 122, 0.5) 8px)",
+                    }}
+                  />
+
+                  {/* Phase labels */}
+                  <div className="absolute text-zinc-500 text-sm" style={{ left: "8%", top: "60px" }}>
+                    Week 1
+                  </div>
+                  <div className="absolute text-zinc-500 text-sm" style={{ left: "25%", top: "40px" }}>
+                    Week 2
+                  </div>
+                  <div className="absolute text-zinc-500 text-sm" style={{ left: "45%", top: "20px" }}>
+                    Week 3
+                  </div>
+                  <div
+                    className="absolute px-3 py-1 rounded-md bg-zinc-700/80 text-zinc-300 text-sm font-medium"
+                    style={{ left: "60%", top: "0px" }}>
+                    Delivery
+                  </div>
+
+                  {/* Project bars */}
+                  <div
+                    className="absolute rounded-lg bg-zinc-800/90 border border-zinc-700/50 px-4 py-3 flex items-center gap-3"
+                    style={{ left: "5%", top: "90px", width: "50%", height: "48px" }}>
+                    <div className="w-4 h-4 rotate-45 bg-purple-500/60" />
+                    <span className="text-zinc-300 text-sm font-medium">Space Configuration</span>
+                    <div
+                      className="absolute w-5 h-5 rotate-45 border-2 border-green-500 bg-transparent"
+                      style={{ right: "15%", top: "50%", transform: "translateY(-50%) rotate(45deg)" }}
+                    />
+                  </div>
+
+                  <div
+                    className="absolute rounded-lg bg-zinc-800/70 border border-zinc-700/40 px-4 py-3 flex items-center gap-3"
+                    style={{ left: "15%", top: "145px", width: "30%", height: "44px" }}>
+                    <div className="w-3 h-3 rotate-45 bg-zinc-600/60" />
+                    <span className="text-zinc-500 text-sm">Material Selection</span>
+                  </div>
+
+                  <div
+                    className="absolute rounded-lg bg-zinc-800/90 border border-zinc-700/50 px-4 py-3 flex items-center justify-between"
+                    style={{ left: "40%", top: "145px", width: "50%", height: "48px" }}>
+                    <span className="text-zinc-400 text-sm">Module Placement</span>
+                    <div className="flex gap-0.5">
+                      <div className="w-2.5 h-2.5 rotate-45 bg-green-500/60" />
+                      <div className="w-2.5 h-2.5 rotate-45 bg-green-500/60" />
+                      <div className="w-2.5 h-2.5 rotate-45 bg-green-500/60" />
+                    </div>
+                  </div>
+
+                  <div
+                    className="absolute rounded-lg bg-zinc-800/70 border border-zinc-700/40 px-4 py-3 flex items-center justify-between"
+                    style={{ left: "55%", top: "200px", width: "35%", height: "48px" }}>
+                    <span className="text-zinc-400 text-sm">DXF Export</span>
+                    <div className="flex gap-0.5">
+                      <div className="w-2.5 h-2.5 rotate-45 bg-zinc-500/60" />
+                    </div>
+                  </div>
                 </div>
-                <video
-                  className="w-full"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline>
-                  <source src="/video/intro.mp4" type="video/mp4" />
-                </video>
+              </div>
+            </div>
+
+            {/* Bottom two-column section */}
+            <div className="grid grid-cols-1 md:grid-cols-2">
+              <div className="border-t border-r border-b border-zinc-800 pt-10 pr-10 pb-16">
+                <h3 className="text-xl font-medium text-zinc-200 mb-3">Manage projects end-to-end</h3>
+                <p className="text-zinc-500 text-base leading-relaxed mb-8">
+                  Configure dimensions, materials, and modules in one centralized workspace.
+                </p>
+
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
+                  <h4 className="text-lg font-medium text-zinc-200 mb-5">Project Overview</h4>
+
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="text-zinc-500 text-sm w-20">Status</span>
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-800 text-zinc-300 text-xs">
+                        <span className="w-2 h-2 rounded-full bg-green-500" />
+                        In Progress
+                      </span>
+                      <span className="flex items-center gap-1.5 px-2 py-1 rounded bg-zinc-800 text-zinc-300 text-xs">
+                        3D Mode
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4 mb-4">
+                    <span className="text-zinc-500 text-sm w-20">Dimensions</span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-1 rounded bg-zinc-800 text-zinc-300 text-xs">
+                        2400 x 600 x 2100mm
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <span className="text-zinc-500 text-sm w-20 pt-1">Modules</span>
+                    <div className="flex flex-col gap-2">
+                      <span className="flex items-center gap-2 text-zinc-300 text-sm">
+                        <span className="w-2.5 h-2.5 rotate-45 bg-purple-500" />
+                        Cabinet Units <span className="text-zinc-500">4</span>
+                      </span>
+                      <span className="flex items-center gap-2 text-zinc-300 text-sm">
+                        <span className="w-2.5 h-2.5 rotate-45 bg-purple-500" />
+                        Drawer Units <span className="text-zinc-500">2</span>
+                      </span>
+                      <span className="flex items-center gap-2 text-zinc-400 text-sm">
+                        <span className="w-2.5 h-2.5 rotate-45 border border-zinc-500 bg-transparent" />
+                        Shelves <span className="text-zinc-500">6</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-b border-zinc-800 pt-10 pl-10 pb-16">
+                <h3 className="text-xl font-medium text-zinc-200 mb-3">Export & Production</h3>
+                <p className="text-zinc-500 text-base leading-relaxed mb-8">
+                  Generate production-ready DXF files for manufacturing.
+                </p>
+
+                <div className="relative h-48">
+                  <div
+                    className="absolute rounded-lg bg-zinc-800/40 border border-zinc-700/30 px-4 py-2"
+                    style={{ top: 0, left: "10%", width: "80%" }}>
+                    <span className="flex items-center gap-2 text-zinc-500 text-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-500" />
+                      PDF Export
+                    </span>
+                  </div>
+
+                  <div
+                    className="absolute rounded-lg bg-zinc-800/60 border border-zinc-700/40 px-4 py-2"
+                    style={{ top: "30px", left: "5%", width: "85%" }}>
+                    <span className="flex items-center gap-2 text-zinc-400 text-sm">
+                      <span className="w-1.5 h-1.5 rounded-full bg-zinc-400" />
+                      Image Export
+                    </span>
+                  </div>
+
+                  <div
+                    className="absolute rounded-xl bg-zinc-800/90 border border-zinc-700/50 px-5 py-4"
+                    style={{ top: "60px", left: 0, width: "95%" }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-5 h-5 rounded-full bg-green-500/20 flex items-center justify-center">
+                        <svg className="w-3 h-3 text-green-500" viewBox="0 0 16 16" fill="currentColor">
+                          <path d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" />
+                        </svg>
+                      </span>
+                      <span className="text-green-500 font-medium text-sm">DXF Ready</span>
+                    </div>
+                    <p className="text-zinc-300 text-sm mb-3">Production-ready files for CNC machines</p>
+                    <span className="text-zinc-500 text-xs">All panels • Cut lists • Assembly guides</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom feature grid */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 pt-16">
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <svg className="w-5 h-5 text-zinc-400" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="10" cy="10" r="8" />
+                    <circle cx="10" cy="10" r="4" />
+                    <circle cx="10" cy="10" r="1" fill="currentColor" />
+                  </svg>
+                  <span className="text-zinc-200 font-medium">Precision</span>
+                </div>
+                <p className="text-zinc-500 text-sm leading-relaxed">Millimeter-accurate measurements for perfect fits.</p>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <svg className="w-5 h-5 text-zinc-400" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="10" cy="10" r="8" />
+                    <path d="M2 10h16M10 2a15 15 0 010 16M10 2a15 15 0 000 16" />
+                  </svg>
+                  <span className="text-zinc-200 font-medium">Collaboration</span>
+                </div>
+                <p className="text-zinc-500 text-sm leading-relaxed">Work together with your team in real-time.</p>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-4 h-4 rotate-45 bg-zinc-400" />
+                  <span className="text-zinc-200 font-medium">Materials</span>
+                </div>
+                <p className="text-zinc-500 text-sm leading-relaxed">Extensive library of textures and finishes.</p>
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-3">
+                  <svg className="w-5 h-5 text-zinc-400" viewBox="0 0 20 20" fill="currentColor">
+                    <rect x="2" y="10" width="3" height="8" rx="1" />
+                    <rect x="7" y="6" width="3" height="12" rx="1" />
+                    <rect x="12" y="8" width="3" height="10" rx="1" />
+                  </svg>
+                  <span className="text-zinc-200 font-medium">Analytics</span>
+                </div>
+                <p className="text-zinc-500 text-sm leading-relaxed">Track materials and costs automatically.</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="py-16 bg-background">
-          <div className="m-auto max-w-5xl px-6">
-            <h2 className="text-center text-3xl font-semibold mb-4">Simple, transparent pricing</h2>
-            <p className="text-center text-muted-foreground mb-8">
-              Choose the plan that's right for you
+        <section id="pricing" className="py-32 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="flex items-center gap-2 mb-6">
+              <div className="w-3 h-3 rounded-full bg-blue-500" />
+              <span className="text-zinc-400 text-sm">Pricing</span>
+              <ChevronRight className="w-4 h-4 text-zinc-500" />
+            </div>
+
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl font-medium text-white mb-8 max-w-3xl"
+              style={{ letterSpacing: "-0.0325em", lineHeight: 1.1 }}>
+              Simple, transparent pricing
+            </h2>
+
+            <p className="text-zinc-400 text-lg max-w-md mb-12">
+              <span className="text-white font-medium">Choose the plan that fits your needs.</span>{' '}
+              All plans include core features with no hidden fees.
             </p>
 
             {/* Billing Toggle */}
-            <div className="flex items-center justify-center gap-4 mb-12">
-              <span className={billingCycle === 'monthly' ? 'font-semibold' : 'text-muted-foreground'}>
+            <div className="flex items-center gap-4 mb-12">
+              <span className={billingCycle === 'monthly' ? 'text-white font-medium' : 'text-zinc-500'}>
                 Monthly
               </span>
               <button
                 onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
                 className={cn(
                   "relative w-14 h-7 rounded-full transition-colors",
-                  billingCycle === 'yearly' ? 'bg-primary' : 'bg-zinc-200'
+                  billingCycle === 'yearly' ? 'bg-green-500' : 'bg-zinc-700'
                 )}>
                 <span
                   className={cn(
@@ -253,7 +498,7 @@ export default function LandingPage() {
                   )}
                 />
               </button>
-              <span className={billingCycle === 'yearly' ? 'font-semibold' : 'text-muted-foreground'}>
+              <span className={billingCycle === 'yearly' ? 'text-white font-medium' : 'text-zinc-500'}>
                 Yearly
                 <span className="ml-2 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
                   Save 20%
@@ -262,7 +507,7 @@ export default function LandingPage() {
             </div>
 
             {/* Pricing Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <PricingCard
                 name="Free"
                 price="0"
@@ -312,15 +557,19 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-20 bg-primary text-primary-foreground">
-          <div className="m-auto max-w-5xl px-6 text-center">
-            <h2 className="text-3xl font-semibold mb-4">Ready to start designing?</h2>
-            <p className="mb-8 opacity-90">
-              Join thousands of designers creating amazing furniture layouts
+        <section className="py-32 px-6 border-t border-zinc-800">
+          <div className="max-w-6xl mx-auto text-center">
+            <h2
+              className="text-3xl sm:text-4xl md:text-5xl font-medium text-white mb-6"
+              style={{ letterSpacing: "-0.0325em", lineHeight: 1.1 }}>
+              Ready to start designing?
+            </h2>
+            <p className="text-zinc-400 text-lg mb-10 max-w-lg mx-auto">
+              Join thousands of designers creating amazing furniture layouts with our professional tools.
             </p>
             <Button
               size="lg"
-              variant="secondary"
+              className="bg-white text-zinc-900 hover:bg-zinc-200"
               onClick={() => navigate('/dashboard')}>
               Get Started for Free
             </Button>
@@ -328,32 +577,39 @@ export default function LandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="bg-zinc-950 text-white py-12">
-          <div className="m-auto max-w-5xl px-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+        <footer className="border-t border-zinc-800 py-12 px-6">
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
               <div>
-                <h4 className="font-semibold mb-4">FurnitureDesigner</h4>
-                <p className="text-zinc-400 text-sm">
+                <Logo className="mb-4" />
+                <p className="text-zinc-500 text-sm">
                   Professional 3D furniture design tool
                 </p>
               </div>
               <div>
-                <h4 className="font-semibold mb-4">Product</h4>
-                <ul className="space-y-2 text-sm text-zinc-400">
+                <h4 className="text-zinc-200 font-medium mb-4">Product</h4>
+                <ul className="space-y-2 text-sm text-zinc-500">
                   <li><a href="#features" className="hover:text-white transition">Features</a></li>
                   <li><a href="#demo" className="hover:text-white transition">Demo</a></li>
                   <li><a href="#pricing" className="hover:text-white transition">Pricing</a></li>
                 </ul>
               </div>
               <div>
-                <h4 className="font-semibold mb-4">Company</h4>
-                <ul className="space-y-2 text-sm text-zinc-400">
+                <h4 className="text-zinc-200 font-medium mb-4">Company</h4>
+                <ul className="space-y-2 text-sm text-zinc-500">
                   <li><a href="#" className="hover:text-white transition">About</a></li>
                   <li><a href="#" className="hover:text-white transition">Contact</a></li>
                 </ul>
               </div>
+              <div>
+                <h4 className="text-zinc-200 font-medium mb-4">Legal</h4>
+                <ul className="space-y-2 text-sm text-zinc-500">
+                  <li><a href="#" className="hover:text-white transition">Privacy</a></li>
+                  <li><a href="#" className="hover:text-white transition">Terms</a></li>
+                </ul>
+              </div>
             </div>
-            <div className="border-t border-zinc-800 pt-8 text-center text-zinc-400 text-sm">
+            <div className="border-t border-zinc-800 pt-8 text-center text-zinc-500 text-sm">
               <p>&copy; 2025 Uable Corporation. All rights reserved.</p>
             </div>
           </div>
@@ -367,28 +623,28 @@ export default function LandingPage() {
 const Logo = ({ className }: { className?: string }) => {
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      <div className="w-8 h-8 bg-brand-purple rounded-md flex items-center justify-center text-white font-bold">
-        m
+      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold">
+        F
       </div>
-      <span className="font-semibold text-lg">logo</span>
+      <span className="font-semibold text-lg text-white">FurnitureDesigner</span>
     </div>
   );
 };
 
-// Feature Card Component
+// Feature Card Component (Dark Theme)
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) => {
   return (
-    <div className="p-6 rounded-xl border bg-white hover:shadow-lg transition-shadow">
-      <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 text-primary">
+    <div className="p-6 rounded-xl border border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors">
+      <div className="w-12 h-12 rounded-lg bg-zinc-800 flex items-center justify-center mb-4 text-zinc-400">
         {icon}
       </div>
-      <h3 className="font-semibold mb-2">{title}</h3>
-      <p className="text-muted-foreground text-sm">{description}</p>
+      <h3 className="font-medium text-zinc-200 mb-2">{title}</h3>
+      <p className="text-zinc-500 text-sm">{description}</p>
     </div>
   );
 };
 
-// Pricing Card Component
+// Pricing Card Component (Dark Theme)
 const PricingCard = ({
   name,
   price,
@@ -411,32 +667,36 @@ const PricingCard = ({
       className={cn(
         'p-6 rounded-xl border transition-all',
         featured
-          ? 'border-primary shadow-lg scale-105 bg-white relative'
-          : 'bg-white hover:border-primary/50'
+          ? 'border-green-500/50 bg-zinc-900 relative'
+          : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700'
       )}>
       {featured && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-xs font-semibold px-4 py-1 rounded-full">
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white text-xs font-semibold px-4 py-1 rounded-full">
           Most Popular
         </div>
       )}
-      <h3 className="font-semibold text-xl mb-1">{name}</h3>
+      <h3 className="font-semibold text-xl text-zinc-200 mb-1">{name}</h3>
       <div className="flex items-baseline gap-1 mb-2">
-        <span className="text-muted-foreground">$</span>
-        <span className="text-4xl font-bold">{price}</span>
-        <span className="text-muted-foreground">/month</span>
+        <span className="text-zinc-500">$</span>
+        <span className="text-4xl font-bold text-white">{price}</span>
+        <span className="text-zinc-500">/month</span>
       </div>
-      <p className="text-muted-foreground text-sm mb-6">{description}</p>
+      <p className="text-zinc-500 text-sm mb-6">{description}</p>
       <ul className="space-y-3 mb-6">
         {features.map((feature, index) => (
-          <li key={index} className="flex items-center gap-2 text-sm">
+          <li key={index} className="flex items-center gap-2 text-sm text-zinc-400">
             <CheckIcon />
             <span>{feature}</span>
           </li>
         ))}
       </ul>
       <Button
-        className="w-full"
-        variant={featured ? 'default' : 'outline'}
+        className={cn(
+          "w-full",
+          featured
+            ? "bg-white text-zinc-900 hover:bg-zinc-200"
+            : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+        )}
         onClick={onSelect}>
         {buttonText}
       </Button>
@@ -487,7 +747,7 @@ const CloudIcon = () => (
 );
 
 const CheckIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor" className="text-green-500 shrink-0">
-    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="text-green-500 shrink-0">
+    <path fillRule="evenodd" d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" clipRule="evenodd" />
   </svg>
 );
