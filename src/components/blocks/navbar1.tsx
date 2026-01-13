@@ -1,6 +1,7 @@
 import * as React from "react";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown, Palette } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTheme, ThemeColor } from "@/contexts/ThemeContext";
 
 import {
   Accordion,
@@ -136,6 +137,19 @@ const Navbar1 = ({
   },
 }: Navbar1Props) => {
   const navigate = useNavigate();
+  const { theme, setThemeColor } = useTheme();
+  const [isThemeOpen, setIsThemeOpen] = React.useState(false);
+
+  const themeColors: { id: ThemeColor; color: string }[] = [
+    { id: 'blue', color: '#3b82f6' },
+    { id: 'purple', color: '#8b5cf6' },
+    { id: 'green', color: '#10b981' },
+    { id: 'pink', color: '#ec4899' },
+    { id: 'red', color: '#D2042D' },
+    { id: 'teal', color: '#14b8a6' },
+    { id: 'indigo', color: '#6366f1' },
+    { id: 'yellow', color: '#eab308' },
+  ];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
@@ -154,6 +168,43 @@ const Navbar1 = ({
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <div className="relative">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full w-9 h-9"
+                onClick={() => setIsThemeOpen(!isThemeOpen)}
+              >
+                <Palette className="size-4" />
+              </Button>
+              {isThemeOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsThemeOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 z-50 p-3 rounded-xl bg-zinc-900 border border-zinc-700 shadow-xl">
+                    <div className="grid grid-cols-4 gap-2">
+                      {themeColors.map((c) => (
+                        <button
+                          key={c.id}
+                          className="w-7 h-7 rounded-full transition-transform hover:scale-110 flex items-center justify-center"
+                          style={{ backgroundColor: c.color }}
+                          onClick={() => {
+                            setThemeColor(c.id);
+                            setIsThemeOpen(false);
+                          }}
+                        >
+                          {theme.color === c.id && (
+                            <span className="text-white text-xs font-bold">✓</span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             <Button
               variant="ghost"
               size="sm"
@@ -257,13 +308,15 @@ const DropdownMenuItem = ({ item }: { item: MenuItem }) => {
             className="absolute left-0 top-full z-50 pt-2"
           >
             <ul
-              className="w-48 rounded-xl p-2 shadow-2xl list-none m-0 bg-zinc-950 border border-zinc-800"
+              className="w-48 rounded-xl p-2 shadow-2xl list-none m-0 !bg-zinc-950 border border-zinc-800"
+              style={{ backgroundColor: '#09090b', border: '1px solid #27272a' }}
             >
               {item.items.map((subItem) => (
                 <li key={subItem.title} className="m-0 p-0">
                   <span
                     onClick={() => window.location.href = subItem.url}
-                    className="block rounded-lg px-3 py-2.5 text-sm font-medium cursor-pointer hover:bg-zinc-800 text-zinc-200 transition-colors"
+                    className="block rounded-lg px-3 py-2.5 text-sm font-medium cursor-pointer hover:bg-zinc-800 !text-zinc-200 transition-colors"
+                    style={{ color: '#e4e4e7' }}
                   >
                     {subItem.title}
                   </span>
