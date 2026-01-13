@@ -139,7 +139,7 @@ export default function LandingPage() {
               <div
                 className="rounded-2xl overflow-hidden border border-zinc-700/50 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)]"
                 style={{
-                  transform: "rotateX(40deg) rotateZ(-25deg)",
+                  transform: "rotateX(30deg) rotateZ(-20deg)",
                   transformOrigin: "center center",
                 }}>
                 <video
