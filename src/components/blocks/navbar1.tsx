@@ -158,7 +158,7 @@ const Navbar1 = ({
       <div className="max-w-[1400px] mx-auto px-8">
         <nav className="hidden lg:flex h-16 items-center">
           <div className="flex items-center">
-            <Link to={logo.url} className="flex items-center gap-2">
+            <Link to={logo.url} className="flex items-center gap-3">
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-xl"
                 style={{ backgroundColor: primaryColor }}
@@ -256,7 +256,7 @@ const Navbar1 = ({
         </nav>
         <div className="block lg:hidden">
           <div className="flex items-center justify-between h-16">
-            <Link to={logo.url} className="flex items-center gap-2">
+            <Link to={logo.url} className="flex items-center gap-3">
               <div
                 className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-xl"
                 style={{ backgroundColor: primaryColor }}
@@ -276,7 +276,7 @@ const Navbar1 = ({
               <SheetContent className="overflow-y-auto bg-zinc-950 border-zinc-800">
                 <SheetHeader>
                   <SheetTitle>
-                    <Link to={logo.url} className="flex items-center gap-2">
+                    <Link to={logo.url} className="flex items-center gap-3">
                       <div
                         className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-xl"
                         style={{ backgroundColor: primaryColor }}
