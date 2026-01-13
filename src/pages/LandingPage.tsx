@@ -141,7 +141,7 @@ export default function LandingPage() {
           </div>
 
           {/* Hero Video with 3D Effect */}
-          <div className="max-w-[1300px] mt-20 px-4 ml-auto mr-auto translate-x-[10%]">
+          <div className="relative max-w-[1300px] mt-20 px-4 ml-auto mr-auto translate-x-[10%]">
             <div style={{ perspective: "1200px" }}>
               <div
                 className="overflow-hidden"
@@ -161,11 +161,25 @@ export default function LandingPage() {
                 </video>
               </div>
             </div>
+            {/* Video bottom fade - transition to Features section */}
+            <div
+              className="absolute -bottom-20 left-0 right-0 h-32 pointer-events-none"
+              style={{
+                background: "linear-gradient(to bottom, transparent, rgb(9, 9, 11))"
+              }}
+            />
           </div>
         </section>
 
         {/* Features Section */}
         <section id="features" className="relative py-32 px-8">
+          {/* Top fade - transition from video */}
+          <div
+            className="absolute top-0 left-0 right-0 h-24 pointer-events-none"
+            style={{
+              background: "linear-gradient(to top, transparent, rgb(9, 9, 11))"
+            }}
+          />
           <div className="max-w-[1400px] mx-auto">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-3 h-3 rounded-full bg-purple-500" />
