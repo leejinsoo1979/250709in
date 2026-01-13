@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
@@ -6,10 +6,12 @@ import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { ColumnIndexer } from '@/editor/shared/utils/indexing/ColumnIndexer';
 import { calculateInternalSpace } from '../../utils/geometry';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useCustomFurnitureStore } from '@/store/core/customFurnitureStore';
 import { getModuleById, ModuleData } from '@/data/modules';
 import BoxModule from '../modules/BoxModule';
 import { useUIStore } from '@/store/uiStore';
-import { 
+import { CurrentDragData } from '@/editor/shared/furniture/types';
+import {
   getSlotIndexFromMousePosition as getSlotIndexFromRaycast,
   isDualFurniture,
   calculateSlotDimensions,
@@ -22,6 +24,21 @@ import { useSpace3DView } from '../../context/useSpace3DView';
 import CabinetPlacementPopup from '@/editor/shared/controls/CabinetPlacementPopup';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAlert } from '@/contexts/AlertContext';
+
+// currentDragData에서 모듈 ID 추출 헬퍼 함수
+const getDragModuleId = (dragData: CurrentDragData | null): string | null => {
+  if (!dragData) return null;
+  // 커스텀 가구인 경우 moduleId 사용
+  if (dragData.moduleId) return dragData.moduleId;
+  // 일반 가구인 경우 moduleData.id 사용
+  if (dragData.moduleData?.id) return dragData.moduleData.id;
+  return null;
+};
+
+// 커스텀 가구인지 확인하는 헬퍼 함수
+const isCustomFurniture = (moduleId: string | null): boolean => {
+  return moduleId?.startsWith('custom-') || false;
+};
 
 interface SlotDropZonesProps {
   spaceInfo: SpaceInfo;
@@ -47,6 +64,46 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
   const currentDragData = useFurnitureStore(state => state.currentDragData);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   const { showAlert } = useAlert();
+  const { getCustomFurnitureById } = useCustomFurnitureStore();
+
+  // 현재 드래그 중인 모듈 ID 추출
+  const dragModuleId = getDragModuleId(currentDragData);
+  const isDraggingCustomFurniture = isCustomFurniture(dragModuleId);
+
+  // 드래그 중인 가구의 ModuleData 가져오기 (일반 또는 커스텀 가구)
+  const getModuleDataForDrag = useMemo(() => {
+    return (moduleId: string | null, internalSpace: any, spaceInfoWithZone: any): ModuleData | null => {
+      if (!moduleId) return null;
+
+      if (isCustomFurniture(moduleId)) {
+        // 커스텀 가구인 경우 customFurnitureStore에서 데이터 변환
+        const actualId = moduleId.replace(/^custom-/, '');
+        const customFurniture = getCustomFurnitureById(actualId);
+
+        if (!customFurniture) return null;
+
+        return {
+          id: moduleId,
+          name: customFurniture.name,
+          category: customFurniture.category as 'full' | 'upper' | 'lower',
+          dimensions: {
+            width: customFurniture.originalDimensions.width,
+            height: customFurniture.originalDimensions.height,
+            depth: customFurniture.originalDimensions.depth,
+          },
+          color: '#8B7355',
+          description: `커스텀 가구: ${customFurniture.name}`,
+          hasDoor: false,
+          isDynamic: false,
+          type: 'box',
+          defaultDepth: customFurniture.originalDimensions.depth,
+        };
+      }
+
+      // 일반 가구인 경우 getModuleById 사용
+      return getModuleById(moduleId, internalSpace, spaceInfoWithZone);
+    };
+  }, [getCustomFurnitureById]);
   
   // Three.js 컨텍스트 접근
   const { camera, scene, gl, invalidate } = useThree();
@@ -1361,10 +1418,11 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
           }
         }
         
-        const isDual = isDualFurniture(currentDragData.moduleData.id, spaceInfo);
-        
+        // 커스텀 가구는 싱글로 취급
+        const isDual = isDraggingCustomFurniture ? false : (dragModuleId ? isDualFurniture(dragModuleId, spaceInfo) : false);
+
         // 슬롯 가용성 검사 - zone별 슬롯 인덱스 사용
-        if (isSlotAvailable(zoneSlotIndex, isDual, placedModules.filter(m => m.zone === zone), spaceInfo, currentDragData.moduleData.id)) {
+        if (dragModuleId && isSlotAvailable(zoneSlotIndex, isDual, placedModules.filter(m => m.zone === zone), spaceInfo, dragModuleId)) {
           setHoveredSlotIndex(zoneSlotIndex);
         } else {
           setHoveredSlotIndex(null); // 충돌하는 슬롯은 하이라이트 안함
@@ -1748,11 +1806,12 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
             const slotX = slot.x;
           
           // 현재 드래그 중인 가구가 듀얼인지 확인
+          // 커스텀 가구는 싱글로 취급
           let isDual = false;
-          if (currentDragData) {
-            isDual = isDualFurniture(currentDragData.moduleData.id, spaceInfo);
+          if (currentDragData && dragModuleId && !isDraggingCustomFurniture) {
+            isDual = isDualFurniture(dragModuleId, spaceInfo);
           }
-          
+
           // 듀얼 가구의 경우 첫 번째 슬롯에서만 렌더링
           if (isDual && hoveredSlotIndex !== null) {
             // 듀얼 가구는 hoveredSlotIndex에서만 렌더링, 다른 슬롯에서는 렌더링 안함
@@ -1768,9 +1827,9 @@ const SlotDropZones: React.FC<SlotDropZonesProps> = ({ spaceInfo, showAll = true
             // 기타 경우 렌더링 안함
             return null;
           }
-          
+
           // 드래그 중인 가구의 모듈 데이터 가져오기
-          let moduleData = getModuleById(currentDragData.moduleData.id, internalSpace, spaceInfo);
+          let moduleData = getModuleDataForDrag(dragModuleId, internalSpace, spaceInfo);
           if (!moduleData) return null;
         
         // 듀얼 가구인 경우 기둥 체크

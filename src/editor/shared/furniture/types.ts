@@ -75,14 +75,33 @@ export interface PlacedModule {
 
 // 네이티브 드래그앤드롭용 현재 드래그 데이터 타입
 export interface CurrentDragData {
-  type: string;
-  moduleData: {
+  type?: string;
+  moduleData?: {
     id: string;
     name: string;
     dimensions: { width: number; height: number; depth: number };
     type: string;
     color?: string;
     hasDoor?: boolean;
+  };
+  // 커스텀 가구용 필드
+  moduleId?: string;
+  isDualSlot?: boolean;
+  zone?: 'normal' | 'dropped';
+  indexing?: any;
+  isCustomFurniture?: boolean;
+  customFurnitureData?: {
+    id: string;
+    name: string;
+    category: 'full' | 'upper' | 'lower';
+    originalDimensions: {
+      width: number;
+      height: number;
+      depth: number;
+    };
+    panels?: any[];
+    scaleMode?: 'uniform' | 'non-uniform' | 'fixed';
+    thumbnail?: string;
   };
 }
 

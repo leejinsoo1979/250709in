@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Box, Edges, Html } from '@react-three/drei';
 import { ThreeEvent, useThree } from '@react-three/fiber';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, ModuleData } from '@/data/modules';
 import { calculateInternalSpace } from '../../../utils/geometry';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
@@ -15,11 +15,64 @@ import { EditIcon } from '@/components/common/Icons';
 import { getEdgeColor } from '../../../utils/edgeColorUtils';
 import { useColumnCResize } from '@/editor/shared/furniture/hooks/useColumnCResize';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { useCustomFurnitureStore } from '@/store/core/customFurnitureStore';
 import EndPanelWithTexture from '../../modules/components/EndPanelWithTexture';
 import { useTheme } from '@/contexts/ThemeContext';
 
 // 엔드패널 두께 상수
 const END_PANEL_THICKNESS = 18; // mm
+
+// 커스텀 가구 ID인지 확인하는 함수
+const isCustomFurnitureId = (moduleId: string): boolean => {
+  return moduleId.startsWith('custom-');
+};
+
+// 커스텀 가구 데이터를 ModuleData 형식으로 변환하는 함수
+const createModuleDataFromCustomFurniture = (
+  customFurnitureId: string,
+  getCustomFurnitureById: (id: string) => any,
+  slotWidth?: number,
+  slotHeight?: number,
+  slotDepth?: number
+): ModuleData | null => {
+  // 'custom-' 접두사 제거
+  const actualId = customFurnitureId.replace(/^custom-/, '');
+  const customFurniture = getCustomFurnitureById(actualId);
+
+  if (!customFurniture) {
+    console.warn('커스텀 가구를 찾을 수 없음:', actualId);
+    return null;
+  }
+
+  // 슬롯 크기가 제공되면 해당 크기 사용, 아니면 원본 크기 사용
+  const width = slotWidth || customFurniture.originalDimensions.width;
+  const height = slotHeight || customFurniture.originalDimensions.height;
+  const depth = slotDepth || customFurniture.originalDimensions.depth;
+
+  return {
+    id: customFurnitureId,
+    name: customFurniture.name,
+    category: customFurniture.category as 'full' | 'upper' | 'lower',
+    dimensions: {
+      width,
+      height,
+      depth,
+    },
+    color: '#8B7355', // 기본 목재 색상
+    description: `커스텀 가구: ${customFurniture.name}`,
+    hasDoor: false,
+    isDynamic: false,
+    type: 'box',
+    defaultDepth: customFurniture.originalDimensions.depth,
+    // 커스텀 가구용 modelConfig
+    modelConfig: {
+      basicThickness: 18,
+      hasOpenFront: true,
+      hasShelf: false,
+      sections: [],
+    },
+  };
+};
 
 // 상부장/하부장과 키큰장(듀얼 포함)의 인접 판단 함수
 const checkAdjacentUpperLowerToFull = (
@@ -242,6 +295,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const { isFurnitureDragging, showDimensions, view2DTheme, selectedFurnitureId, selectedSlotIndex, showFurnitureEditHandles } = useUIStore();
   const isPanelListTabActive = useUIStore(state => state.isPanelListTabActive);
   const { updatePlacedModule } = useFurnitureStore();
+  const { getCustomFurnitureById } = useCustomFurnitureStore();
   const [isHovered, setIsHovered] = React.useState(false);
   const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id;
   const { theme: appTheme } = useTheme();
@@ -540,10 +594,36 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
   }
 
-  // getModuleById 호출
-  let moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
-  
-  if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
+  // === 커스텀 가구 처리 ===
+  // 커스텀 가구인 경우 customFurnitureStore에서 데이터를 가져와 ModuleData 생성
+  const isCustomFurniture = isCustomFurnitureId(placedModule.moduleId);
+
+  let moduleData: ModuleData | null = null;
+
+  if (isCustomFurniture) {
+    // 커스텀 가구: customFurnitureStore에서 데이터 변환
+    moduleData = createModuleDataFromCustomFurniture(
+      placedModule.moduleId,
+      getCustomFurnitureById,
+      placedModule.customWidth || internalSpace?.width,
+      internalSpace?.height || zoneSpaceInfo?.height,
+      placedModule.customDepth || internalSpace?.depth || zoneSpaceInfo?.depth
+    );
+
+    if (moduleData) {
+      debugLog('📦 커스텀 가구 ModuleData 생성:', {
+        moduleId: placedModule.moduleId,
+        moduleData: { id: moduleData.id, dimensions: moduleData.dimensions }
+      });
+    } else {
+      console.warn('커스텀 가구 ModuleData 생성 실패:', placedModule.moduleId);
+    }
+  } else {
+    // 일반 가구: getModuleById 호출
+    moduleData = getModuleById(targetModuleId, internalSpace, zoneSpaceInfo);
+  }
+
+  if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet && !isCustomFurniture) {
     debugLog('📌 싱글 상하부장 getModuleById 결과:', {
       targetModuleId,
       moduleDataFound: !!moduleData,
@@ -551,25 +631,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
   
-  // moduleData가 없으면 기본 모듈 ID로 재시도
-  if (!moduleData && targetModuleId !== placedModule.moduleId) {
+  // moduleData가 없으면 기본 모듈 ID로 재시도 (커스텀 가구는 제외)
+  if (!moduleData && !isCustomFurniture && targetModuleId !== placedModule.moduleId) {
     if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
       debugLog('⚠️ 싱글 상하부장 첫 시도 실패, 원본 ID로 재시도:', placedModule.moduleId);
     }
     // targetModuleId로 모듈을 찾을 수 없음, 원본 ID로 재시도
     moduleData = getModuleById(placedModule.moduleId, internalSpace, zoneSpaceInfo);
-    
+
     if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
       debugLog('📌 싱글 상하부장 원본 ID 재시도 결과:', {
         moduleDataFound: !!moduleData
       });
     }
   }
-  
-  // 그래도 못 찾으면 다양한 패턴으로 재시도
-  if (!moduleData) {
+
+  // 그래도 못 찾으면 다양한 패턴으로 재시도 (커스텀 가구는 제외)
+  if (!moduleData && !isCustomFurniture) {
     const parts = placedModule.moduleId.split('-');
-    
+
     // 상하부장 특별 처리
     const isUpperCabinetFallback = placedModule.moduleId.includes('upper-cabinet');
     const isLowerCabinetFallback = placedModule.moduleId.includes('lower-cabinet');

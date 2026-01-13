@@ -1,11 +1,17 @@
 import { useCallback } from 'react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, ModuleData } from '@/data/modules';
+import { useCustomFurnitureStore } from '@/store/core/customFurnitureStore';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { calculateInternalSpace } from '../../../../utils/geometry';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
 import { v4 as uuidv4 } from 'uuid';
+
+// 커스텀 가구 ID인지 확인하는 함수
+const isCustomFurnitureId = (moduleId: string): boolean => {
+  return moduleId.startsWith('custom-');
+};
 
 /**
  * 클릭 배치 방식으로 가구를 배치하는 훅
@@ -13,6 +19,7 @@ import { v4 as uuidv4 } from 'uuid';
 export const useFurniturePlacement = () => {
   const { spaceInfo } = useSpaceConfigStore();
   const { selectedFurnitureId, addModule, setSelectedFurnitureId, setFurniturePlacementMode } = useFurnitureStore();
+  const { getCustomFurnitureById } = useCustomFurnitureStore();
 
   const placeFurniture = useCallback((slotIndex: number, zone?: 'normal' | 'dropped') => {
     console.log('🎯🎯🎯 [useFurniturePlacement] placeFurniture 호출됨!!!!', { slotIndex, zone, selectedFurnitureId });
@@ -88,7 +95,42 @@ export const useFurniturePlacement = () => {
       });
     }
 
-    const moduleData = getModuleById(furnitureId, zoneInternalSpace, zoneSpaceInfo);
+    // 커스텀 가구 처리
+    let moduleData: ModuleData | null = null;
+
+    if (isCustomFurnitureId(selectedFurnitureId)) {
+      // 커스텀 가구: customFurnitureStore에서 데이터 변환
+      const actualId = selectedFurnitureId.replace(/^custom-/, '');
+      const customFurniture = getCustomFurnitureById(actualId);
+
+      if (customFurniture) {
+        moduleData = {
+          id: selectedFurnitureId,
+          name: customFurniture.name,
+          category: customFurniture.category as 'full' | 'upper' | 'lower',
+          dimensions: {
+            width: customFurniture.originalDimensions.width,
+            height: customFurniture.originalDimensions.height,
+            depth: customFurniture.originalDimensions.depth,
+          },
+          color: '#8B7355',
+          description: `커스텀 가구: ${customFurniture.name}`,
+          hasDoor: false,
+          isDynamic: false,
+          type: 'box',
+          defaultDepth: customFurniture.originalDimensions.depth,
+        };
+
+        console.log('📦 [useFurniturePlacement] 커스텀 가구 ModuleData 생성:', {
+          moduleId: selectedFurnitureId,
+          dimensions: moduleData.dimensions,
+          category: moduleData.category
+        });
+      }
+    } else {
+      // 일반 가구: getModuleById 사용
+      moduleData = getModuleById(furnitureId, zoneInternalSpace, zoneSpaceInfo);
+    }
 
     if (!moduleData) {
       console.error('❌ 가구 데이터를 찾을 수 없습니다:', selectedFurnitureId);
@@ -404,7 +446,7 @@ export const useFurniturePlacement = () => {
     setFurniturePlacementMode(false);
 
     console.log('✅ 가구 배치 완료 - placement mode 종료');
-  }, [selectedFurnitureId, spaceInfo, addModule, setSelectedFurnitureId, setFurniturePlacementMode]);
+  }, [selectedFurnitureId, spaceInfo, addModule, setSelectedFurnitureId, setFurniturePlacementMode, getCustomFurnitureById]);
 
   return {
     placeFurniture,

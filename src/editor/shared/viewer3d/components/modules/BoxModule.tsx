@@ -18,6 +18,7 @@ import DualType5 from './types/DualType5';
 import DualType6 from './types/DualType6';
 import UpperCabinet from './types/UpperCabinet';
 import LowerCabinet from './types/LowerCabinet';
+import CustomFurnitureModule from './types/CustomFurnitureModule';
 
 interface BoxModuleProps {
   moduleData: ModuleData;
@@ -170,9 +171,36 @@ const BoxModule: React.FC<BoxModuleProps> = ({
   
   // 모든 간접조명은 UpperCabinetIndirectLight에서 통합 처리하므로 BoxModule에서는 렌더링하지 않음
   const showIndirectLight = false;
-  
-  
-  
+
+
+
+  // === 0단계: 커스텀 가구 라우팅 ===
+  if (moduleData.id.startsWith('custom-')) {
+    // 커스텀 가구 ID에서 실제 가구 ID 추출
+    const customFurnitureId = moduleData.id;
+
+    return (
+      <CustomFurnitureModule
+        customFurnitureId={customFurnitureId}
+        slotWidth={adjustedWidth || moduleData.dimensions.width}
+        slotHeight={moduleData.dimensions.height}
+        slotDepth={customDepth || moduleData.dimensions.depth}
+        scaleMode="non-uniform"
+        color={color}
+        isDragging={isDragging}
+        isEditMode={isEditMode}
+        showFurniture={showFurniture}
+        isHighlighted={isHighlighted}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerOver={onPointerOver}
+        onPointerOut={onPointerOut}
+        onDoubleClick={onDoubleClick}
+      />
+    );
+  }
+
   // === 1단계: 타입별 라우팅 (주요 타입들) ===
   if (moduleData.id.includes('dual-4drawer-hanging')) {
     return (
