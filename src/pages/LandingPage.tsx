@@ -127,22 +127,17 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Hero Image with Perspective Effect */}
-          <div className="mx-auto -mt-16 max-w-7xl [mask-image:linear-gradient(to_bottom,black_50%,transparent_100%)]">
-            <div className="[perspective:1200px] [mask-image:linear-gradient(to_right,black_50%,transparent_100%)] -mr-16 pl-16 lg:-mr-56 lg:pl-56">
-              <div className="[transform:rotateX(20deg);]">
-                <div className="lg:h-[44rem] relative skew-x-[.36rad]">
-                  <video
-                    className="rounded-xl z-[2] relative border"
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    style={{ width: '100%', height: 'auto' }}>
-                    <source src="/video/intro.mp4" type="video/mp4" />
-                  </video>
-                </div>
-              </div>
+          {/* Hero Video */}
+          <div className="mx-auto max-w-5xl px-6 mt-8">
+            <div className="rounded-2xl overflow-hidden shadow-2xl shadow-zinc-900/20">
+              <video
+                className="w-full"
+                autoPlay
+                loop
+                muted
+                playsInline>
+                <source src="/video/intro.mp4" type="video/mp4" />
+              </video>
             </div>
           </div>
         </section>
