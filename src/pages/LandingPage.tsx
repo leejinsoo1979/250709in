@@ -17,60 +17,77 @@ export default function LandingPage() {
 
   return (
     <div>
-      <header>
-        <nav
-          data-state={menuState && 'active'}
-          className="group fixed z-20 w-full border-b border-dashed bg-white backdrop-blur md:relative">
-          <div className="m-auto max-w-5xl px-6">
-            <div className="flex flex-wrap items-center justify-between gap-6 py-3 lg:gap-0 lg:py-4">
-              <div className="flex w-full justify-between lg:w-auto">
-                <Link
-                  to="/"
-                  aria-label="home"
-                  className="flex items-center space-x-2">
-                  <Logo />
-                </Link>
+      <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-zinc-200">
+        <nav className="max-w-6xl mx-auto px-6">
+          <div className="flex items-center justify-between h-16">
+            {/* 로고 */}
+            <Link to="/" className="flex items-center">
+              <Logo />
+            </Link>
 
-                <button
-                  onClick={() => setMenuState(!menuState)}
-                  aria-label={menuState === true ? 'Close Menu' : 'Open Menu'}
-                  className="relative z-20 -m-2.5 -mr-4 block cursor-pointer p-2.5 lg:hidden">
-                  <Menu className="group-data-[state=active]:rotate-180 group-data-[state=active]:scale-0 group-data-[state=active]:opacity-0 m-auto size-6 duration-200" />
-                  <X className="group-data-[state=active]:rotate-0 group-data-[state=active]:scale-100 group-data-[state=active]:opacity-100 absolute inset-0 m-auto size-6 -rotate-180 scale-0 opacity-0 duration-200" />
-                </button>
-              </div>
+            {/* 데스크톱 메뉴 */}
+            <ul className="hidden md:flex items-center gap-8">
+              {menuItems.map((item, index) => (
+                <li key={index}>
+                  <a
+                    href={item.href}
+                    className="text-sm font-medium text-zinc-600 hover:text-zinc-900 transition-colors">
+                    {item.name}
+                  </a>
+                </li>
+              ))}
+            </ul>
 
-              <div className="bg-background group-data-[state=active]:block lg:group-data-[state=active]:flex mb-6 hidden w-full flex-wrap items-center justify-end space-y-8 rounded-3xl border p-6 shadow-2xl shadow-zinc-300/20 md:flex-nowrap lg:m-0 lg:flex lg:w-fit lg:gap-6 lg:space-y-0 lg:border-transparent lg:bg-transparent lg:p-0 lg:shadow-none">
-                <div className="lg:pr-4">
-                  <ul className="space-y-6 text-base lg:flex lg:gap-8 lg:space-y-0 lg:text-sm">
-                    {menuItems.map((item, index) => (
-                      <li key={index}>
-                        <a
-                          href={item.href}
-                          className="text-muted-foreground hover:text-accent-foreground block duration-150">
-                          <span>{item.name}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+            {/* 버튼 */}
+            <div className="hidden md:flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/login')}>
+                Login
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => navigate('/signup')}>
+                Sign Up
+              </Button>
+            </div>
 
-                <div className="flex w-full flex-col space-y-3 sm:flex-row sm:gap-3 sm:space-y-0 md:w-fit lg:border-l lg:pl-6">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate('/login')}>
-                    <span>Login</span>
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => navigate('/signup')}>
-                    <span>Sign Up</span>
-                  </Button>
-                </div>
+            {/* 모바일 메뉴 버튼 */}
+            <button
+              onClick={() => setMenuState(!menuState)}
+              className="md:hidden p-2 -mr-2">
+              {menuState ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+
+          {/* 모바일 메뉴 */}
+          {menuState && (
+            <div className="md:hidden py-4 border-t border-zinc-200">
+              <ul className="space-y-4 mb-4">
+                {menuItems.map((item, index) => (
+                  <li key={index}>
+                    <a
+                      href={item.href}
+                      className="block text-zinc-600 hover:text-zinc-900"
+                      onClick={() => setMenuState(false)}>
+                      {item.name}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-col gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => navigate('/login')}>
+                  Login
+                </Button>
+                <Button onClick={() => navigate('/signup')}>
+                  Sign Up
+                </Button>
               </div>
             </div>
-          </div>
+          )}
         </nav>
       </header>
 
@@ -84,8 +101,8 @@ export default function LandingPage() {
         </div>
 
         {/* Hero Section */}
-        <section className="overflow-hidden bg-white">
-          <div className="relative mx-auto max-w-5xl px-6 py-28 lg:py-24">
+        <section className="overflow-hidden bg-white pt-16">
+          <div className="relative mx-auto max-w-5xl px-6 py-20 lg:py-24">
             <div className="relative z-10 mx-auto max-w-2xl text-center">
               <h1 className="text-balance text-4xl font-semibold md:text-5xl lg:text-6xl">
                 Design Your Perfect Furniture Space
