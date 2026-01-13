@@ -265,11 +265,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         furnitureId={furnitureId}
         doorTopGap={doorTopGap} // 천장에서 도어 상단까지의 갭
         doorBottomGap={doorBottomGap} // 바닥에서 도어 하단까지의 갭
+        zone={zone} // 단내림 영역 정보
       />
       </>
     );
   }
-  
+
   if (moduleData.id.includes('dual-2hanging')) {
     return (
       <>
@@ -314,11 +315,12 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
         furnitureId={furnitureId}
+        zone={zone} // 단내림 영역 정보
       />
       </>
     );
   }
-  
+
   if (moduleData.id.includes('single-4drawer-hanging')) {
     return (
       <>
@@ -481,6 +483,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
         furnitureId={furnitureId}
+        zone={zone} // 단내림 영역 정보
       />
       </>
     );
@@ -528,6 +531,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         onPointerOut={onPointerOut}
         onDoubleClick={onDoubleClick}
         furnitureId={furnitureId}
+        zone={zone} // 단내림 영역 정보
       />
       </>
     );
@@ -562,6 +566,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         placedFurnitureId={placedFurnitureId}
         panelGrainDirections={panelGrainDirections}
         renderMode={renderMode} // 렌더 모드 전달
+        zone={zone} // 단내림 영역 정보
       />
       </>
     );
@@ -596,6 +601,7 @@ const BoxModule: React.FC<BoxModuleProps> = ({
         placedFurnitureId={placedFurnitureId}
         panelGrainDirections={panelGrainDirections}
         renderMode={renderMode} // 렌더 모드 전달
+        zone={zone} // 단내림 영역 정보
       />
       </>
     );
