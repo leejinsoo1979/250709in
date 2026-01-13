@@ -224,10 +224,14 @@ const Navbar1 = ({
               )}
             </div>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
-              className="hover:bg-zinc-800/50 rounded-full px-4"
-              style={{ color: primaryColor }}
+              className="rounded-full px-4 hover:bg-zinc-800/50"
+              style={{
+                backgroundColor: 'transparent',
+                borderColor: 'rgb(113, 113, 122)',
+                color: 'rgb(161, 161, 170)'
+              }}
               onClick={() => navigate(auth.login.url)}
             >
               {auth.login.text}
