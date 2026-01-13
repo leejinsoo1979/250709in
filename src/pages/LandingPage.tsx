@@ -140,9 +140,9 @@ export default function LandingPage() {
               style={{ perspective: "1500px" }}>
               <div
                 style={{
-                  transform: "rotateX(20deg)",
+                  transform: "rotateX(15deg) rotateY(-10deg)",
                   transformStyle: "preserve-3d",
-                  transformOrigin: "center bottom",
+                  transformOrigin: "center center",
                 }}>
                 <div className="rounded-2xl overflow-hidden border border-zinc-700/50 shadow-[0_60px_120px_-30px_rgba(0,0,0,0.9)]">
                   <video
