@@ -189,13 +189,25 @@
   position: absolute;
   top: 100%;
   left: 0;
-  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  z-index: 1000;
+}
+
+.dropdownMenu::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -1rem;
+  right: -1rem;
+  height: 0.5rem;
+}
+
+.dropdownMenuInner {
   background: white;
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   min-width: 200px;
   padding: 0.5rem;
-  z-index: 1000;
   animation: dropdownFade 0.2s ease-out;
 }
 

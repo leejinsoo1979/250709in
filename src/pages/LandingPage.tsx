@@ -37,8 +37,10 @@ export default function LandingPage() {
               </button>
               {openDropdown === 'product' && (
                 <div className={styles.dropdownMenu}>
-                  <a href="#features" className={styles.dropdownItem}>3D Editor</a>
-                  <a href="#features" className={styles.dropdownItem}>Design Tools</a>
+                  <div className={styles.dropdownMenuInner}>
+                    <a href="#features" className={styles.dropdownItem}>3D Editor</a>
+                    <a href="#features" className={styles.dropdownItem}>Design Tools</a>
+                  </div>
                 </div>
               )}
             </div>
@@ -57,9 +59,11 @@ export default function LandingPage() {
               </button>
               {openDropdown === 'solutions' && (
                 <div className={styles.dropdownMenu}>
-                  <a href="#features" className={styles.dropdownItem}>Configurators</a>
-                  <a href="#features" className={styles.dropdownItem}>DXF Export</a>
-                  <a href="#features" className={styles.dropdownItem}>Real-time Collaboration</a>
+                  <div className={styles.dropdownMenuInner}>
+                    <a href="#features" className={styles.dropdownItem}>Configurators</a>
+                    <a href="#features" className={styles.dropdownItem}>DXF Export</a>
+                    <a href="#features" className={styles.dropdownItem}>Real-time Collaboration</a>
+                  </div>
                 </div>
               )}
             </div>
@@ -78,9 +82,11 @@ export default function LandingPage() {
               </button>
               {openDropdown === 'resources' && (
                 <div className={styles.dropdownMenu}>
-                  <a href="#demo" className={styles.dropdownItem}>Demo</a>
-                  <a href="#" className={styles.dropdownItem}>Help Center</a>
-                  <a href="#" className={styles.dropdownItem}>Examples</a>
+                  <div className={styles.dropdownMenuInner}>
+                    <a href="#demo" className={styles.dropdownItem}>Demo</a>
+                    <a href="#" className={styles.dropdownItem}>Help Center</a>
+                    <a href="#" className={styles.dropdownItem}>Examples</a>
+                  </div>
                 </div>
               )}
             </div>
