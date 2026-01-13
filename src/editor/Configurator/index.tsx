@@ -17,7 +17,7 @@ import { getModuleById } from '@/data/modules';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { useHistoryStore } from '@/store/historyStore';
 import { useHistoryTracking } from './hooks/useHistoryTracking';
-import { useGLBExport } from '@/editor/shared/hooks/useGLBExport';
+import { use3DExport, type ExportFormat } from '@/editor/shared/hooks/use3DExport';
 
 // 새로운 컴포넌트들 import
 import Header from './components/Header';
@@ -165,8 +165,8 @@ const Configurator: React.FC = () => {
   // 최초 썸네일 생성 여부 추적
   const hasGeneratedInitialThumbnailRef = useRef(false);
 
-  // GLB 내보내기 훅
-  const { exportToGLB, canExportGLB } = useGLBExport();
+  // 3D 모델 내보내기 훅
+  const { exportTo3D, canExport } = use3DExport();
 
   // 권한에 따라 읽기 전용 모드 설정
   // isReadOnly는 이제 useMemo로 계산되므로 이 useEffect 제거
@@ -2600,9 +2600,9 @@ const Configurator: React.FC = () => {
     setIsFileTreeOpen(!isFileTreeOpen);
   };
 
-  // GLB 내보내기 핸들러
-  const handleExportGLB = async () => {
-    console.log('🔧 GLB 내보내기 시작...');
+  // 3D 모델 내보내기 핸들러
+  const handleExport3D = async (format: ExportFormat) => {
+    console.log(`🔧 ${format.toUpperCase()} 내보내기 시작...`);
 
     if (!sceneRef.current) {
       alert('3D 씬이 준비되지 않았습니다. 잠시 후 다시 시도해주세요.');
@@ -2616,7 +2616,7 @@ const Configurator: React.FC = () => {
       children: sceneRef.current?.children
     });
 
-    if (!canExportGLB(sceneRef.current)) {
+    if (!canExport(sceneRef.current)) {
       alert('내보낼 3D 모델이 없습니다.');
       console.error('❌ 내보낼 모델이 없습니다, children:', sceneRef.current.children);
       return;
@@ -2625,18 +2625,18 @@ const Configurator: React.FC = () => {
     // 파일명 생성
     const projectName = basicInfo.title || 'furniture-design';
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `${projectName}-${timestamp}.glb`;
+    const filename = `${projectName}-${timestamp}.${format}`;
 
-    console.log('📦 GLB 파일 생성:', filename);
+    console.log(`📦 ${format.toUpperCase()} 파일 생성:`, filename);
 
-    const result = await exportToGLB(sceneRef.current, filename);
+    const result = await exportTo3D(sceneRef.current, format, filename);
 
     if (result.success) {
-      alert(`GLB 파일이 다운로드되었습니다: ${filename}`);
-      console.log('✅ GLB 내보내기 성공');
+      alert(`${format.toUpperCase()} 파일이 다운로드되었습니다: ${filename}`);
+      console.log(`✅ ${format.toUpperCase()} 내보내기 성공`);
     } else {
-      alert(`GLB 내보내기 실패: ${result.error}`);
-      console.error('❌ GLB 내보내기 실패:', result.error);
+      alert(`${format.toUpperCase()} 내보내기 실패: ${result.error}`);
+      console.error(`❌ ${format.toUpperCase()} 내보내기 실패:`, result.error);
     }
   };
 
@@ -3613,7 +3613,7 @@ const Configurator: React.FC = () => {
         onFileTreeToggle={handleFileTreeToggle}
         isFileTreeOpen={isFileTreeOpen}
         onExportPDF={() => setIsConvertModalOpen(true)}
-        onExportGLB={handleExportGLB}
+        onExport3D={handleExport3D}
         readOnly={isReadOnly}
         onMobileMenuToggle={handleMobileMenuToggle}
       />

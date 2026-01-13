@@ -84,7 +84,7 @@ interface HeaderProps {
   isFileTreeOpen?: boolean;
   // 내보내기 관련 props
   onExportPDF?: () => void; // 실제로는 ConvertModal을 열어줌
-  onExportGLB?: () => void; // GLB 파일 내보내기
+  onExport3D?: (format: 'glb' | 'obj' | 'stl') => void; // 3D 모델 내보내기
   // 읽기 전용 모드
   readOnly?: boolean; // viewer 권한용 읽기 전용 모드 (디자인명 수정 불가)
   // 모바일 메뉴 토글
@@ -118,7 +118,7 @@ const Header: React.FC<HeaderProps> = ({
   onFileTreeToggle,
   isFileTreeOpen,
   onExportPDF,
-  onExportGLB,
+  onExport3D,
   readOnly = false,
   onMobileMenuToggle
 }) => {
@@ -146,6 +146,7 @@ const Header: React.FC<HeaderProps> = ({
   const [profilePopupPosition, setProfilePopupPosition] = useState({ top: 60, right: 20 });
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
   const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
+  const [is3DExportSubmenuOpen, setIs3DExportSubmenuOpen] = useState(false);
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
   // UIStore에서 카메라 및 그림자 설정 가져오기
@@ -685,24 +686,69 @@ const Header: React.FC<HeaderProps> = ({
                       </svg>
                       {currentLanguage === 'ko' ? '새 디자인' : t('project.newProject')}
                     </button>
-                    <button
-                      className={styles.dropdownItem}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        console.log('📦 Header - GLB로 다운로드 버튼 클릭됨');
-                        setIsFileMenuOpen(false);
-                        onExportGLB?.();
-                      }}
-                      disabled={!onExportGLB}
+                    <div
+                      className={styles.dropdownItemWithSubmenu}
+                      onMouseEnter={() => setIs3DExportSubmenuOpen(true)}
+                      onMouseLeave={() => setIs3DExportSubmenuOpen(false)}
                     >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                      GLB로 다운로드
-                    </button>
+                      <button
+                        className={styles.dropdownItem}
+                        disabled={!onExport3D}
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <polyline points="7 10 12 15 17 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                          <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        3D 모델 다운로드
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" style={{ marginLeft: 'auto' }}>
+                          <polyline points="9 6 15 12 9 18" stroke="currentColor" strokeWidth="2" />
+                        </svg>
+                      </button>
+                      {is3DExportSubmenuOpen && (
+                        <div className={styles.submenu}>
+                          <button
+                            className={styles.submenuItem}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('📦 Header - GLB로 다운로드 버튼 클릭됨');
+                              setIsFileMenuOpen(false);
+                              setIs3DExportSubmenuOpen(false);
+                              onExport3D?.('glb');
+                            }}
+                          >
+                            GLB 파일 (.glb)
+                          </button>
+                          <button
+                            className={styles.submenuItem}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('📦 Header - OBJ로 다운로드 버튼 클릭됨');
+                              setIsFileMenuOpen(false);
+                              setIs3DExportSubmenuOpen(false);
+                              onExport3D?.('obj');
+                            }}
+                          >
+                            OBJ 파일 (.obj)
+                          </button>
+                          <button
+                            className={styles.submenuItem}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('📦 Header - STL로 다운로드 버튼 클릭됨');
+                              setIsFileMenuOpen(false);
+                              setIs3DExportSubmenuOpen(false);
+                              onExport3D?.('stl');
+                            }}
+                          >
+                            STL 파일 (.stl)
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     <button
                       className={styles.dropdownItem}
                       onClick={(e) => {
