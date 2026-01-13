@@ -342,7 +342,10 @@ export const use3DExport = () => {
         throw new Error('내보낼 씬이 없습니다.');
       }
 
+      console.log('📦 Scene 확인:', scene.name, scene.type);
+
       const exportGroup = prepareExportGroup(scene);
+      console.log('📦 Export Group children:', exportGroup.children.length);
 
       if (exportGroup.children.length === 0) {
         throw new Error('내보낼 가구가 없습니다.');
@@ -350,9 +353,17 @@ export const use3DExport = () => {
 
       // Y-up (Three.js) → Z-up (SketchUp, CAD) 좌표계 변환
       const wrappedGroup = wrapForZUp(exportGroup);
+      console.log('📦 Wrapped Group:', wrappedGroup.name);
 
       const exporter = new ColladaExporter();
+      console.log('🔧 ColladaExporter 생성됨');
+
       const result = exporter.parse(wrappedGroup);
+      console.log('📄 DAE 결과 길이:', result.length);
+
+      if (!result || result.length === 0) {
+        throw new Error('DAE 변환 결과가 비어있습니다.');
+      }
 
       const blob = new Blob([result], { type: 'model/vnd.collada+xml' });
       downloadBlob(blob, filename);
@@ -360,6 +371,7 @@ export const use3DExport = () => {
       console.log('✅ DAE 파일 다운로드 완료:', filename);
       return { success: true };
     } catch (error) {
+      console.error('❌ DAE 내보내기 오류:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'DAE 내보내기 중 오류가 발생했습니다.'

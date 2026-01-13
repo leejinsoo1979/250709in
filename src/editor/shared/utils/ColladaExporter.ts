@@ -23,16 +23,25 @@ export class ColladaExporter {
     const nodes: string[] = [];
     const materialMap = new Map<string, string>();
 
+    console.log('🔧 ColladaExporter.parse 시작');
+    console.log('📦 입력 객체:', object.name, object.type);
+
+    // 먼저 전체 월드 매트릭스 업데이트
+    object.updateMatrixWorld(true);
+
+    let meshCount = 0;
+
     // 메쉬 수집
     object.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
+        meshCount++;
         const mesh = child as THREE.Mesh;
         const geometry = mesh.geometry;
 
+        console.log(`  🔍 메쉬 발견: ${mesh.name || '(unnamed)'}, geometry:`, geometry ? 'exists' : 'null');
+
         if (!geometry) return;
 
-        // 월드 매트릭스 적용
-        mesh.updateMatrixWorld(true);
         const worldMatrix = mesh.matrixWorld.clone();
 
         // 지오메트리 처리
@@ -65,11 +74,17 @@ export class ColladaExporter {
       }
     });
 
+    console.log(`📊 메쉬 총 개수: ${meshCount}, 처리된 지오메트리: ${geometries.length}`);
+
     // 기본 재질 추가
     if (!materialMap.has('default')) {
       const { material, effect } = this.processMaterial(null, 'default_material');
       materials.push(material);
       materialEffects.push(effect);
+    }
+
+    if (geometries.length === 0) {
+      console.warn('⚠️ 내보낼 지오메트리가 없습니다!');
     }
 
     return this.buildDocument(geometries, materials, materialEffects, nodes);
