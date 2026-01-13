@@ -8,21 +8,32 @@ interface CustomFurnitureUploadProps {
   onSuccess?: () => void;
 }
 
+// 썸네일 사이즈 상수
+const THUMBNAIL_SIZE = {
+  width: 200,
+  height: 200,
+  maxFileSize: 2 * 1024 * 1024, // 2MB
+};
+
 const CustomFurnitureUpload: React.FC<CustomFurnitureUploadProps> = ({
   onClose,
   onSuccess,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const { loadCustomFurniture } = useCustomFurnitureLoader();
   const { isLoading, loadingProgress, error } = useCustomFurnitureStore();
 
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isThumbnailDragOver, setIsThumbnailDragOver] = useState(false);
   const [customName, setCustomName] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
   const [category, setCategory] = useState<'full' | 'upper' | 'lower'>('full');
   const [scaleMode, setScaleMode] = useState<'uniform' | 'non-uniform' | 'fixed'>('non-uniform');
 
-  // 파일 선택 핸들러
+  // 3D 파일 선택 핸들러
   const handleFileSelect = useCallback((files: FileList | null) => {
     if (files && files.length > 0) {
       const file = files[0];
@@ -39,7 +50,61 @@ const CustomFurnitureUpload: React.FC<CustomFurnitureUploadProps> = ({
     }
   }, []);
 
-  // 드래그 앤 드롭 핸들러
+  // 썸네일 파일 선택 핸들러
+  const handleThumbnailSelect = useCallback((files: FileList | null) => {
+    if (files && files.length > 0) {
+      const file = files[0];
+      const validExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+      const extension = '.' + file.name.split('.').pop()?.toLowerCase();
+
+      if (!validExtensions.includes(extension)) {
+        alert('지원하지 않는 이미지 형식입니다.\n지원 형식: JPG, PNG, WEBP');
+        return;
+      }
+
+      if (file.size > THUMBNAIL_SIZE.maxFileSize) {
+        alert(`파일 크기가 너무 큽니다.\n최대 ${THUMBNAIL_SIZE.maxFileSize / 1024 / 1024}MB까지 지원합니다.`);
+        return;
+      }
+
+      setThumbnailFile(file);
+
+      // 미리보기 생성
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          // 캔버스로 리사이즈
+          const canvas = document.createElement('canvas');
+          canvas.width = THUMBNAIL_SIZE.width;
+          canvas.height = THUMBNAIL_SIZE.height;
+          const ctx = canvas.getContext('2d');
+
+          if (ctx) {
+            // 비율 유지하며 중앙 정렬
+            const scale = Math.max(
+              THUMBNAIL_SIZE.width / img.width,
+              THUMBNAIL_SIZE.height / img.height
+            );
+            const scaledWidth = img.width * scale;
+            const scaledHeight = img.height * scale;
+            const x = (THUMBNAIL_SIZE.width - scaledWidth) / 2;
+            const y = (THUMBNAIL_SIZE.height - scaledHeight) / 2;
+
+            ctx.fillStyle = '#f5f5f5';
+            ctx.fillRect(0, 0, THUMBNAIL_SIZE.width, THUMBNAIL_SIZE.height);
+            ctx.drawImage(img, x, y, scaledWidth, scaledHeight);
+
+            setThumbnailPreview(canvas.toDataURL('image/png'));
+          }
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    }
+  }, []);
+
+  // 3D 파일 드래그 앤 드롭 핸들러
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -56,9 +121,31 @@ const CustomFurnitureUpload: React.FC<CustomFurnitureUploadProps> = ({
     handleFileSelect(e.dataTransfer.files);
   }, [handleFileSelect]);
 
-  // 파일 업로드 버튼 클릭
+  // 썸네일 드래그 앤 드롭 핸들러
+  const handleThumbnailDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsThumbnailDragOver(true);
+  }, []);
+
+  const handleThumbnailDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsThumbnailDragOver(false);
+  }, []);
+
+  const handleThumbnailDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsThumbnailDragOver(false);
+    handleThumbnailSelect(e.dataTransfer.files);
+  }, [handleThumbnailSelect]);
+
+  // 3D 파일 업로드 버튼 클릭
   const handleBrowseClick = useCallback(() => {
     fileInputRef.current?.click();
+  }, []);
+
+  // 썸네일 업로드 버튼 클릭
+  const handleThumbnailBrowseClick = useCallback(() => {
+    thumbnailInputRef.current?.click();
   }, []);
 
   // 파일 입력 변경
@@ -66,10 +153,25 @@ const CustomFurnitureUpload: React.FC<CustomFurnitureUploadProps> = ({
     handleFileSelect(e.target.files);
   }, [handleFileSelect]);
 
+  // 썸네일 입력 변경
+  const handleThumbnailInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    handleThumbnailSelect(e.target.files);
+  }, [handleThumbnailSelect]);
+
+  // 썸네일 삭제
+  const handleRemoveThumbnail = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
+    if (thumbnailInputRef.current) {
+      thumbnailInputRef.current.value = '';
+    }
+  }, []);
+
   // 가구 추가 실행
   const handleSubmit = useCallback(async () => {
     if (!selectedFile) {
-      alert('파일을 선택해주세요.');
+      alert('3D 파일을 선택해주세요.');
       return;
     }
 
@@ -77,17 +179,20 @@ const CustomFurnitureUpload: React.FC<CustomFurnitureUploadProps> = ({
       name: customName || selectedFile.name.replace(/\.[^/.]+$/, ''),
       category,
       scaleMode,
+      customThumbnail: thumbnailPreview || undefined,
     });
 
     if (result.success) {
       onSuccess?.();
       onClose?.();
     }
-  }, [selectedFile, customName, category, scaleMode, loadCustomFurniture, onSuccess, onClose]);
+  }, [selectedFile, customName, category, scaleMode, thumbnailPreview, loadCustomFurniture, onSuccess, onClose]);
 
   // 취소
   const handleCancel = useCallback(() => {
     setSelectedFile(null);
+    setThumbnailFile(null);
+    setThumbnailPreview(null);
     setCustomName('');
     onClose?.();
   }, [onClose]);
@@ -102,55 +207,108 @@ const CustomFurnitureUpload: React.FC<CustomFurnitureUploadProps> = ({
       </div>
 
       <div className={styles.content}>
-        {/* 파일 드롭존 */}
-        <div
-          className={`${styles.dropzone} ${isDragOver ? styles.dragOver : ''} ${selectedFile ? styles.hasFile : ''}`}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={handleBrowseClick}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".dae,.glb,.gltf,.obj"
-            onChange={handleInputChange}
-            style={{ display: 'none' }}
-          />
+        {/* 업로드 영역 컨테이너 */}
+        <div className={styles.uploadAreas}>
+          {/* 3D 파일 드롭존 */}
+          <div className={styles.uploadAreaWrapper}>
+            <label className={styles.uploadLabel}>3D 모델 파일 *</label>
+            <div
+              className={`${styles.dropzone} ${isDragOver ? styles.dragOver : ''} ${selectedFile ? styles.hasFile : ''}`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={handleBrowseClick}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".dae,.glb,.gltf,.obj"
+                onChange={handleInputChange}
+                style={{ display: 'none' }}
+              />
 
-          {selectedFile ? (
-            <div className={styles.selectedFile}>
-              <span className={styles.fileIcon}>📦</span>
-              <span className={styles.fileName}>{selectedFile.name}</span>
-              <span className={styles.fileSize}>
-                ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
-              </span>
+              {selectedFile ? (
+                <div className={styles.selectedFile}>
+                  <span className={styles.fileIcon}>📦</span>
+                  <span className={styles.fileName}>{selectedFile.name}</span>
+                  <span className={styles.fileSize}>
+                    ({(selectedFile.size / 1024 / 1024).toFixed(2)} MB)
+                  </span>
+                </div>
+              ) : (
+                <div className={styles.dropzoneContent}>
+                  <span className={styles.uploadIcon}>📦</span>
+                  <p>3D 파일 선택</p>
+                  <span className={styles.supportedFormats}>
+                    DAE, GLB, GLTF, OBJ
+                  </span>
+                </div>
+              )}
             </div>
-          ) : (
-            <div className={styles.dropzoneContent}>
-              <span className={styles.uploadIcon}>📁</span>
-              <p>3D 파일을 드래그하거나 클릭하여 선택</p>
-              <span className={styles.supportedFormats}>
-                지원 형식: DAE, GLB, GLTF, OBJ
-              </span>
+          </div>
+
+          {/* 썸네일 드롭존 */}
+          <div className={styles.uploadAreaWrapper}>
+            <label className={styles.uploadLabel}>
+              썸네일 이미지
+              <span className={styles.optionalBadge}>선택</span>
+            </label>
+            <div
+              className={`${styles.dropzone} ${styles.thumbnailDropzone} ${isThumbnailDragOver ? styles.dragOver : ''} ${thumbnailPreview ? styles.hasFile : ''}`}
+              onDragOver={handleThumbnailDragOver}
+              onDragLeave={handleThumbnailDragLeave}
+              onDrop={handleThumbnailDrop}
+              onClick={handleThumbnailBrowseClick}
+            >
+              <input
+                ref={thumbnailInputRef}
+                type="file"
+                accept=".jpg,.jpeg,.png,.webp"
+                onChange={handleThumbnailInputChange}
+                style={{ display: 'none' }}
+              />
+
+              {thumbnailPreview ? (
+                <div className={styles.thumbnailPreview}>
+                  <img src={thumbnailPreview} alt="썸네일 미리보기" />
+                  <button
+                    className={styles.removeThumbnailButton}
+                    onClick={handleRemoveThumbnail}
+                    title="썸네일 삭제"
+                  >
+                    ×
+                  </button>
+                </div>
+              ) : (
+                <div className={styles.dropzoneContent}>
+                  <span className={styles.uploadIcon}>🖼️</span>
+                  <p>이미지 선택</p>
+                  <span className={styles.supportedFormats}>
+                    {THUMBNAIL_SIZE.width}×{THUMBNAIL_SIZE.height}px
+                  </span>
+                  <span className={styles.supportedFormats}>
+                    JPG, PNG, WEBP
+                  </span>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* 설정 옵션 */}
-        {selectedFile && (
-          <div className={styles.options}>
-            {/* 이름 입력 */}
-            <div className={styles.optionGroup}>
-              <label>가구 이름</label>
-              <input
-                type="text"
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                placeholder="커스텀 가구 이름"
-              />
-            </div>
+        <div className={styles.options}>
+          {/* 이름 입력 */}
+          <div className={styles.optionGroup}>
+            <label>가구 이름</label>
+            <input
+              type="text"
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+              placeholder="커스텀 가구 이름"
+            />
+          </div>
 
+          <div className={styles.optionRow}>
             {/* 카테고리 선택 */}
             <div className={styles.optionGroup}>
               <label>카테고리</label>
@@ -158,31 +316,26 @@ const CustomFurnitureUpload: React.FC<CustomFurnitureUploadProps> = ({
                 value={category}
                 onChange={(e) => setCategory(e.target.value as 'full' | 'upper' | 'lower')}
               >
-                <option value="full">전체장 (Full)</option>
-                <option value="upper">상부장 (Upper)</option>
-                <option value="lower">하부장 (Lower)</option>
+                <option value="full">전체장</option>
+                <option value="upper">상부장</option>
+                <option value="lower">하부장</option>
               </select>
             </div>
 
             {/* 스케일 모드 */}
             <div className={styles.optionGroup}>
-              <label>크기 조정 방식</label>
+              <label>크기 조정</label>
               <select
                 value={scaleMode}
                 onChange={(e) => setScaleMode(e.target.value as 'uniform' | 'non-uniform' | 'fixed')}
               >
-                <option value="non-uniform">비균등 (슬롯에 맞춤)</option>
-                <option value="uniform">균등 (비율 유지)</option>
-                <option value="fixed">고정 (원본 크기)</option>
+                <option value="non-uniform">슬롯 맞춤</option>
+                <option value="uniform">비율 유지</option>
+                <option value="fixed">원본 크기</option>
               </select>
-              <span className={styles.optionHint}>
-                {scaleMode === 'non-uniform' && '슬롯 크기에 맞게 각 축 독립 조정'}
-                {scaleMode === 'uniform' && '비율을 유지하며 크기 조정'}
-                {scaleMode === 'fixed' && '원본 크기 그대로 배치'}
-              </span>
             </div>
           </div>
-        )}
+        </div>
 
         {/* 로딩 상태 */}
         {isLoading && (
@@ -207,24 +360,6 @@ const CustomFurnitureUpload: React.FC<CustomFurnitureUploadProps> = ({
             {error}
           </div>
         )}
-
-        {/* 안내 메시지 */}
-        <div className={styles.infoBox}>
-          <h4>📋 패널 명명 규칙</h4>
-          <p>
-            SketchUp에서 각 패널 그룹에 다음 이름을 지정하면 자동 인식됩니다:
-          </p>
-          <ul>
-            <li><code>LeftPanel</code>, <code>RightPanel</code> - 측면판</li>
-            <li><code>TopPanel</code>, <code>BottomPanel</code> - 상/하판</li>
-            <li><code>BackPanel</code> - 백패널</li>
-            <li><code>Shelf_1</code>, <code>Shelf_2</code> - 선반</li>
-            <li><code>Drawer_1</code>, <code>Drawer_2</code> - 서랍</li>
-          </ul>
-          <a href="#" className={styles.guideLink}>
-            전체 가이드 보기 →
-          </a>
-        </div>
       </div>
 
       {/* 버튼 */}

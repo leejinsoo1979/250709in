@@ -2,9 +2,9 @@
   display: flex;
   flex-direction: column;
   background: #fff;
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  max-width: 480px;
+  max-width: 520px;
   width: 100%;
   max-height: 90vh;
   overflow: hidden;
@@ -45,15 +45,52 @@
   overflow-y: auto;
 }
 
+/* 업로드 영역 컨테이너 */
+.uploadAreas {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.uploadAreaWrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.uploadLabel {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.optionalBadge {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: #f0f0f0;
+  color: #888;
+  border-radius: 3px;
+  font-weight: 400;
+}
+
 /* 드롭존 */
 .dropzone {
+  flex: 1;
   border: 2px dashed #ddd;
   border-radius: 8px;
-  padding: 40px 20px;
+  padding: 20px 12px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s ease;
   background: #fafafa;
+  min-height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .dropzone:hover {
@@ -72,26 +109,33 @@
   background: #f0f7ff;
 }
 
+/* 썸네일 드롭존 특별 스타일 */
+.thumbnailDropzone {
+  aspect-ratio: 1;
+  min-height: auto;
+  padding: 12px;
+}
+
 .dropzoneContent {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .uploadIcon {
-  font-size: 48px;
+  font-size: 36px;
   opacity: 0.6;
 }
 
 .dropzoneContent p {
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   color: #666;
 }
 
 .supportedFormats {
-  font-size: 12px;
+  font-size: 11px;
   color: #999;
 }
 
@@ -103,26 +147,78 @@
 }
 
 .fileIcon {
-  font-size: 48px;
+  font-size: 36px;
 }
 
 .fileName {
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 500;
   color: #333;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .fileSize {
-  font-size: 12px;
+  font-size: 11px;
   color: #999;
+}
+
+/* 썸네일 미리보기 */
+.thumbnailPreview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.thumbnailPreview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.removeThumbnailButton {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: #ff4d4f;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s;
+}
+
+.removeThumbnailButton:hover {
+  transform: scale(1.1);
 }
 
 /* 옵션 */
 .options {
-  margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.optionRow {
+  display: flex;
+  gap: 12px;
+}
+
+.optionRow .optionGroup {
+  flex: 1;
 }
 
 .optionGroup {
@@ -225,57 +321,6 @@
   gap: 8px;
 }
 
-/* 안내 박스 */
-.infoBox {
-  margin-top: 20px;
-  padding: 16px;
-  background: #f6f8fa;
-  border-radius: 8px;
-  font-size: 12px;
-}
-
-.infoBox h4 {
-  margin: 0 0 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #333;
-}
-
-.infoBox p {
-  margin: 0 0 8px;
-  color: #666;
-}
-
-.infoBox ul {
-  margin: 0;
-  padding-left: 20px;
-  color: #666;
-}
-
-.infoBox li {
-  margin-bottom: 4px;
-}
-
-.infoBox code {
-  background: #e8e8e8;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-size: 11px;
-  font-family: 'Monaco', 'Consolas', monospace;
-}
-
-.guideLink {
-  display: inline-block;
-  margin-top: 8px;
-  color: #4a90d9;
-  text-decoration: none;
-  font-size: 12px;
-}
-
-.guideLink:hover {
-  text-decoration: underline;
-}
-
 /* 푸터 */
 .footer {
   display: flex;
@@ -321,4 +366,20 @@
 .cancelButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+  .uploadAreas {
+    flex-direction: column;
+  }
+
+  .thumbnailDropzone {
+    aspect-ratio: auto;
+    min-height: 120px;
+  }
+
+  .optionRow {
+    flex-direction: column;
+  }
 }

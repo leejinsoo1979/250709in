@@ -376,6 +376,7 @@ export const useCustomFurnitureLoader = () => {
       name?: string;
       category?: 'full' | 'upper' | 'lower';
       scaleMode?: 'uniform' | 'non-uniform' | 'fixed';
+      customThumbnail?: string; // 사용자가 업로드한 썸네일 (base64)
     }
   ): Promise<LoadResult> => {
     try {
@@ -435,8 +436,8 @@ export const useCustomFurnitureLoader = () => {
 
       setLoading(true, 85);
 
-      // 썸네일 생성
-      const thumbnail = await generateThumbnail(scene);
+      // 썸네일 생성 (사용자가 업로드한 썸네일이 있으면 사용, 없으면 자동 생성)
+      const thumbnail = options?.customThumbnail || await generateThumbnail(scene);
 
       setLoading(true, 95);
 
