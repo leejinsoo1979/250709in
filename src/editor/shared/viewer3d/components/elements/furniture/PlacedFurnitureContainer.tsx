@@ -244,7 +244,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   });
 
   return (
-    <group>
+    <group name="FurnitureContainer">
       {filteredModules.map((placedModule, index) => {
         const isDragMode = selectionState.dragMode;
         const isEditMode = activePopup.type === 'furnitureEdit' && activePopup.id === placedModule.id;
