@@ -115,6 +115,47 @@ export const useGLBExport = () => {
   };
 
   /**
+   * 복제된 객체에서 치수/텍스트 요소 제거
+   */
+  const removeDimensionsFromClone = (obj: THREE.Object3D): void => {
+    const childrenToRemove: THREE.Object3D[] = [];
+
+    obj.traverse((child: any) => {
+      const name = (child.name || '').toLowerCase();
+      const type = child.type || '';
+
+      // 치수 관련 요소 식별
+      const isDimension =
+        name.includes('dimension') ||
+        name.includes('text') ||
+        name.includes('label') ||
+        name.includes('치수') ||
+        type === 'Sprite' ||
+        type === 'Line' ||
+        type === 'LineSegments' ||
+        type === 'Line2' ||
+        // Text mesh는 특정 geometry 타입을 가짐
+        (child.isMesh && child.geometry && child.geometry.type === 'ShapeGeometry') ||
+        // drei의 Text는 특정 패턴을 가짐
+        (child.isMesh && child.material && child.material.type === 'MeshBasicMaterial' &&
+         child.geometry && child.geometry.boundingSphere &&
+         child.geometry.boundingSphere.radius < 1);
+
+      if (isDimension) {
+        childrenToRemove.push(child);
+      }
+    });
+
+    // 식별된 요소들 제거
+    childrenToRemove.forEach(child => {
+      if (child.parent) {
+        console.log(`  🗑️ 치수/텍스트 제거: ${child.name || '(unnamed)'} [${child.type}]`);
+        child.parent.remove(child);
+      }
+    });
+  };
+
+  /**
    * 씬을 재귀적으로 탐색하여 가구와 프레임 찾기
    */
   const findFurnitureAndFrames = (scene: Scene | Group): THREE.Object3D[] => {
@@ -190,10 +231,15 @@ export const useGLBExport = () => {
 
       console.log(`📦 내보낼 객체 수: ${objectsToExport.length}`);
 
-      // 찾은 객체들을 복제하여 추가
+      // 찾은 객체들을 복제하여 추가 (치수 제거)
       objectsToExport.forEach((obj, index) => {
         console.log(`  ${index + 1}. ${obj.name || '(unnamed)'} [${obj.type}]`);
         const cloned = obj.clone(true);
+
+        // 복제본에서 치수/텍스트 요소 제거
+        console.log(`  🔍 ${obj.name || '(unnamed)'}에서 치수/텍스트 제거 중...`);
+        removeDimensionsFromClone(cloned);
+
         exportGroup.add(cloned);
       });
 
