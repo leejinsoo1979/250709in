@@ -92,16 +92,8 @@ export default function LandingPage() {
       </header>
 
       <main>
-        {/* Background Decorations */}
-        <div
-          aria-hidden
-          className="z-[2] absolute inset-0 pointer-events-none isolate opacity-50 contain-strict hidden lg:block">
-          <div className="w-[35rem] h-[80rem] -translate-y-[350px] absolute left-0 top-0 -rotate-45 rounded-full bg-[radial-gradient(68.54%_68.72%_at_55.02%_31.46%,hsla(0,0%,85%,.08)_0,hsla(0,0%,55%,.02)_50%,hsla(0,0%,45%,0)_80%)]" />
-          <div className="h-[80rem] absolute left-0 top-0 w-56 -rotate-45 rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,hsla(0,0%,85%,.06)_0,hsla(0,0%,45%,.02)_80%,transparent_100%)] [translate:5%_-50%]" />
-        </div>
-
         {/* Hero Section */}
-        <section className="overflow-hidden bg-white pt-16">
+        <section className="bg-white pt-16">
           <div className="relative mx-auto max-w-5xl px-6 py-20 lg:py-24">
             <div className="relative z-10 mx-auto max-w-2xl text-center">
               <h1 className="text-balance text-4xl font-semibold md:text-5xl lg:text-6xl">
@@ -129,16 +121,14 @@ export default function LandingPage() {
 
           {/* Hero Video */}
           <div className="mx-auto max-w-5xl px-6 mt-8 pb-16">
-            <div className="rounded-2xl overflow-hidden">
-              <video
-                className="w-full block"
-                autoPlay
-                loop
-                muted
-                playsInline>
-                <source src="/video/intro.mp4" type="video/mp4" />
-              </video>
-            </div>
+            <video
+              className="w-full block rounded-xl"
+              autoPlay
+              loop
+              muted
+              playsInline>
+              <source src="/video/intro.mp4" type="video/mp4" />
+            </video>
           </div>
         </section>
 
