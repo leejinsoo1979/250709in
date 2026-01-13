@@ -165,7 +165,7 @@ const Navbar1 = ({
               >
                 m
               </div>
-              <span style={{ color: primaryColor }} className="font-medium text-lg tracking-wide">
+              <span style={{ color: primaryColor }} className="font-semibold text-xl tracking-wide">
                 LOGO
               </span>
             </Link>
@@ -263,7 +263,7 @@ const Navbar1 = ({
               >
                 m
               </div>
-              <span style={{ color: primaryColor }} className="font-medium text-lg tracking-wide">
+              <span style={{ color: primaryColor }} className="font-semibold text-xl tracking-wide">
                 LOGO
               </span>
             </Link>
@@ -283,7 +283,7 @@ const Navbar1 = ({
                       >
                         m
                       </div>
-                      <span style={{ color: primaryColor }} className="font-medium text-lg tracking-wide">
+                      <span style={{ color: primaryColor }} className="font-semibold text-xl tracking-wide">
                         LOGO
                       </span>
                     </Link>
