@@ -163,13 +163,18 @@ export const use3DExport = () => {
    * 내보내기용 그룹 준비
    */
   const prepareExportGroup = (scene: Scene | Group, scale: number = 0.1): THREE.Group => {
+    // 씬의 월드 매트릭스 업데이트 (클론 전 필수)
+    scene.updateMatrixWorld(true);
+
     const exportGroup = new THREE.Group();
     exportGroup.name = 'FurnitureExport';
     exportGroup.scale.set(scale, scale, scale);
 
     const objectsToExport = findFurniture(scene);
+    console.log(`📦 내보낼 가구 수: ${objectsToExport.length}`);
 
-    objectsToExport.forEach((obj) => {
+    objectsToExport.forEach((obj, index) => {
+      console.log(`  ${index + 1}. ${obj.name || '(unnamed)'} - position: (${obj.position.x.toFixed(2)}, ${obj.position.y.toFixed(2)}, ${obj.position.z.toFixed(2)})`);
       const cloned = obj.clone(true);
       removeUnwantedFromClone(cloned);
       exportGroup.add(cloned);
@@ -310,6 +315,10 @@ export const use3DExport = () => {
 
       // STL은 변환 없이 그대로 내보내기 (Y-up)
       // SketchUp에서 불러온 후 X축 90도 회전 필요
+
+      // 월드 매트릭스 업데이트 (STL 내보내기 전 필수)
+      exportGroup.updateMatrixWorld(true);
+
       const exporter = new STLExporter();
       const result = exporter.parse(exportGroup, { binary: true });
 
