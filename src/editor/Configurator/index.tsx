@@ -35,6 +35,7 @@ import Space3DView from '@/editor/shared/viewer3d/Space3DView';
 import ModuleGallery from '@/editor/shared/controls/furniture/ModuleGallery';
 import ModulePropertiesPanel from '@/editor/shared/controls/furniture/ModulePropertiesPanel';
 import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/PlacedModulePropertiesPanel';
+import CustomFurnitureLibrary from '@/editor/shared/controls/furniture/CustomFurnitureLibrary';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
@@ -2705,6 +2706,12 @@ const Configurator: React.FC = () => {
               <h3>악세서리</h3>
               <p>준비중입니다.</p>
             </div>
+          </div>
+        );
+      case 'custom':
+        return (
+          <div className={styles.sidebarPanel}>
+            <CustomFurnitureLibrary />
           </div>
         );
       default:
