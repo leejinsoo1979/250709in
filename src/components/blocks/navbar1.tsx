@@ -183,22 +183,30 @@ const Navbar1 = ({
                     className="fixed inset-0 z-40"
                     onClick={() => setIsThemeOpen(false)}
                   />
-                  <div className="absolute right-0 top-full mt-2 z-50 p-3 rounded-xl bg-zinc-900 border border-zinc-700 shadow-xl">
-                    <div className="grid grid-cols-4 gap-2">
+                  <div
+                    className="absolute right-0 top-full z-50 rounded-xl border border-zinc-700 shadow-2xl"
+                    style={{ marginTop: '12px', padding: '16px', backgroundColor: 'rgb(24, 24, 27)', minWidth: '180px' }}
+                  >
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
                       {themeColors.map((c) => (
                         <button
                           key={c.id}
-                          className="w-7 h-7 rounded-full transition-transform hover:scale-110 flex items-center justify-center"
-                          style={{ backgroundColor: c.color }}
+                          style={{
+                            width: '36px',
+                            height: '36px',
+                            borderRadius: '50%',
+                            backgroundColor: c.color,
+                            border: theme.color === c.id ? '3px solid white' : '2px solid transparent',
+                            cursor: 'pointer',
+                            transition: 'transform 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.15)'}
+                          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                           onClick={() => {
                             setThemeColor(c.id);
                             setIsThemeOpen(false);
                           }}
-                        >
-                          {theme.color === c.id && (
-                            <span className="text-white text-xs font-bold">✓</span>
-                          )}
-                        </button>
+                        />
                       ))}
                     </div>
                   </div>
@@ -308,15 +316,13 @@ const DropdownMenuItem = ({ item }: { item: MenuItem }) => {
             className="absolute left-0 top-full z-50 pt-2"
           >
             <ul
-              className="w-48 rounded-xl p-2 shadow-2xl list-none m-0 !bg-zinc-950 border border-zinc-800"
-              style={{ backgroundColor: '#09090b', border: '1px solid #27272a' }}
+              className="w-48 rounded-xl p-2 shadow-2xl list-none m-0 bg-popover border border-border text-popover-foreground"
             >
               {item.items.map((subItem) => (
                 <li key={subItem.title} className="m-0 p-0">
                   <span
                     onClick={() => window.location.href = subItem.url}
-                    className="block rounded-lg px-3 py-2.5 text-sm font-medium cursor-pointer hover:bg-zinc-800 !text-zinc-200 transition-colors"
-                    style={{ color: '#e4e4e7' }}
+                    className="block rounded-lg px-3 py-2.5 text-sm font-medium cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
                   >
                     {subItem.title}
                   </span>
