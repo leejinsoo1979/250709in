@@ -108,7 +108,7 @@ export default function LandingPage() {
               Professional design tools for visualizing, customizing, and exporting production-ready furniture designs.
             </p>
 
-            <div className="flex flex-wrap gap-4 justify-center">
+            <div className="flex flex-wrap gap-6 justify-center">
               <Button
                 size="lg"
                 className="bg-white text-zinc-900 hover:bg-zinc-200 rounded-full px-8"
