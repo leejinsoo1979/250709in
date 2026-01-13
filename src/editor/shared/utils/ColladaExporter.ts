@@ -9,8 +9,9 @@ export class ColladaExporter {
   private materialId = 0;
   private nodeId = 0;
 
-  // Y-up → Z-up 변환 매트릭스 (X축 기준 -90도 회전)
-  private yUpToZUpMatrix = new THREE.Matrix4().makeRotationX(-Math.PI / 2);
+  // Y-up → Z-up 변환 매트릭스 (X축 기준 +90도 회전)
+  // Three.js Y-up: (0,1,0)이 위 → SketchUp Z-up: (0,0,1)이 위
+  private yUpToZUpMatrix = new THREE.Matrix4().makeRotationX(Math.PI / 2);
 
   /**
    * Three.js 객체를 Collada XML 문자열로 변환
