@@ -21,9 +21,12 @@
   border-bottom: 1px solid transparent;
 }
 
-.navTransparent .navLink,
-.navTransparent .navButtonSecondary {
-  color: #ffffff;
+.navTransparent .navLink {
+  color: #4b5563;
+}
+
+.navTransparent .navLink:hover {
+  color: #111827;
 }
 
 .navTransparent .logoImage {
@@ -31,27 +34,27 @@
 }
 
 .navTransparent .navButton {
-  background: rgba(102, 126, 234, 0.3);
+  background: #667eea;
   color: #ffffff;
-  border: 1px solid rgba(102, 126, 234, 0.5);
+  border: none;
 }
 
 .navTransparent .navButton:hover {
-  background: rgba(102, 126, 234, 0.5);
+  background: #5568d3;
 }
 
 .navTransparent .navButtonSecondary {
-  background: transparent;
+  background: #111827;
   color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: none;
 }
 
 .navTransparent .navButtonSecondary:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: #1f2937;
 }
 
 .navTransparent .chevron {
-  color: #ffffff;
+  color: #4b5563;
 }
 
 .navScrolled {
