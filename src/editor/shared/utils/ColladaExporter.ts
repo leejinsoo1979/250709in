@@ -9,6 +9,9 @@ export class ColladaExporter {
   private materialId = 0;
   private nodeId = 0;
 
+  // Y-up → Z-up 변환 매트릭스 (X축 기준 -90도 회전)
+  private yUpToZUpMatrix = new THREE.Matrix4().makeRotationX(-Math.PI / 2);
+
   /**
    * Three.js 객체를 Collada XML 문자열로 변환
    */
@@ -42,7 +45,9 @@ export class ColladaExporter {
 
         if (!geometry) return;
 
-        const worldMatrix = mesh.matrixWorld.clone();
+        // Y-up → Z-up 변환을 적용한 월드 매트릭스
+        const worldMatrix = new THREE.Matrix4();
+        worldMatrix.multiplyMatrices(this.yUpToZUpMatrix, mesh.matrixWorld);
 
         // 지오메트리 처리
         const geoId = `geometry_${this.geometryId++}`;

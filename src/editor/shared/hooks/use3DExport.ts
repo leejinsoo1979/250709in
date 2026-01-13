@@ -350,14 +350,11 @@ export const use3DExport = () => {
         throw new Error('내보낼 가구가 없습니다.');
       }
 
-      // Y-up (Three.js) → Z-up (SketchUp, CAD) 좌표계 변환
-      const wrappedGroup = wrapForZUp(exportGroup);
-      console.log('📦 Wrapped Group:', wrappedGroup.name);
-
+      // ColladaExporter 내부에서 Y-up → Z-up 좌표계 변환 처리
       const exporter = new ColladaExporter();
       console.log('🔧 ColladaExporter 생성됨');
 
-      const result = exporter.parse(wrappedGroup);
+      const result = exporter.parse(exportGroup);
       console.log('📄 DAE 결과 길이:', result.length);
 
       if (!result || result.length === 0) {
