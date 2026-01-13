@@ -139,7 +139,7 @@ export default function LandingPage() {
               <div
                 className="overflow-hidden"
                 style={{
-                  transform: "rotateX(8deg) rotateY(14deg) rotateZ(-16deg)",
+                  transform: "rotateX(14deg) rotateY(14deg) rotateZ(-16deg)",
                   transformOrigin: "center center",
                   maskImage: "radial-gradient(ellipse 80% 75% at center, black 40%, transparent 90%)",
                   WebkitMaskImage: "radial-gradient(ellipse 80% 75% at center, black 40%, transparent 90%)",
