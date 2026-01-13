@@ -396,7 +396,7 @@ const Header: React.FC<HeaderProps> = ({
           )}
 
           <div className={styles.logo}>
-            <Logo size="medium" />
+            <Logo size="medium" onClick={() => navigate('/')} />
           </div>
           <div className={styles.projectInfo}>
             <div className={styles.designFileName}>

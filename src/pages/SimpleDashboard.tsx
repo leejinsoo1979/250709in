@@ -3225,7 +3225,7 @@ const SimpleDashboard: React.FC = () => {
         {/* 모바일 헤더 */}
         <header className={styles.mobileHeader}>
           <div className={styles.mobileHeaderLogo}>
-            <Logo size="small" />
+            <Logo size="small" onClick={() => navigate('/')} />
           </div>
           <div className={styles.mobileHeaderActions}>
             <button className={styles.mobileHeaderBtn}>
