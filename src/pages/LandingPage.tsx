@@ -628,7 +628,7 @@ export default function LandingPage() {
           <div className="max-w-[1400px] mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
               <div>
-                <Logo className="mb-4" />
+                <Logo className="mb-4" primaryColor={primaryColor} />
                 <p className="text-zinc-500 text-sm">
                   Professional 3D furniture design tool
                 </p>
@@ -667,10 +667,18 @@ export default function LandingPage() {
 }
 
 // Logo Component
-const Logo = ({ className }: { className?: string }) => {
+const Logo = ({ className, primaryColor = '#3b82f6' }: { className?: string; primaryColor?: string }) => {
   return (
-    <div className={cn('flex items-center gap-2', className)}>
-      <img src="/logo.png" alt="FurnitureDesigner" className="h-8" />
+    <div className={cn('flex items-center gap-3', className)}>
+      <div
+        className="w-9 h-9 flex items-center justify-center text-white font-bold text-3xl leading-none"
+        style={{ backgroundColor: primaryColor, fontFamily: '"Nunito", "Quicksand", "Varela Round", system-ui, sans-serif', borderRadius: '10px' }}
+      >
+        m
+      </div>
+      <span style={{ color: primaryColor }} className="font-semibold text-2xl tracking-wide">
+        LOGO
+      </span>
     </div>
   );
 };
