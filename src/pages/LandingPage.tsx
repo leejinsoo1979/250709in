@@ -137,15 +137,14 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto mt-16 px-6">
             <div
               className="relative w-full"
-              style={{ perspective: "2000px" }}>
+              style={{ perspective: "1500px" }}>
               <div
-                className="transition-transform duration-500 hover:scale-[1.02]"
                 style={{
-                  transform: "rotateX(8deg) rotateY(-3deg)",
+                  transform: "rotateX(20deg)",
                   transformStyle: "preserve-3d",
                   transformOrigin: "center bottom",
                 }}>
-                <div className="rounded-2xl overflow-hidden border border-zinc-700/50 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)]">
+                <div className="rounded-2xl overflow-hidden border border-zinc-700/50 shadow-[0_60px_120px_-30px_rgba(0,0,0,0.9)]">
                   <video
                     className="w-full block"
                     autoPlay
