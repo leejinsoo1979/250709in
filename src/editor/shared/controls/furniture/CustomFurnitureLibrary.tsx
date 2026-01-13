@@ -9,10 +9,16 @@ import styles from './CustomFurnitureLibrary.module.css';
 
 interface CustomFurnitureLibraryProps {
   onFurnitureSelect?: (furniture: CustomFurnitureData) => void;
+  filter?: 'all' | 'full' | 'upper' | 'lower';
+  showHeader?: boolean;
+  onOpenUploadModal?: () => void;
 }
 
 const CustomFurnitureLibrary: React.FC<CustomFurnitureLibraryProps> = ({
   onFurnitureSelect,
+  filter: externalFilter,
+  showHeader = true,
+  onOpenUploadModal,
 }) => {
   const { customFurnitures, removeCustomFurniture, selectedCustomFurnitureId, setSelectedCustomFurniture } = useCustomFurnitureStore();
   const { spaceInfo } = useSpaceConfigStore();
@@ -20,7 +26,11 @@ const CustomFurnitureLibrary: React.FC<CustomFurnitureLibraryProps> = ({
   const { setIsSlotDragging, activeDroppedCeilingTab } = useUIStore();
 
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'full' | 'upper' | 'lower'>('all');
+  const [internalFilter, setInternalFilter] = useState<'all' | 'full' | 'upper' | 'lower'>('all');
+
+  // 외부 필터가 있으면 외부 필터 사용, 없으면 내부 필터 사용
+  const filter = externalFilter ?? internalFilter;
+  const setFilter = setInternalFilter;
 
   // 필터링된 가구 목록
   const filteredFurnitures = customFurnitures.filter(
@@ -86,46 +96,59 @@ const CustomFurnitureLibrary: React.FC<CustomFurnitureLibraryProps> = ({
     }
   };
 
+  // 업로드 모달 열기 핸들러
+  const handleOpenUploadModal = useCallback(() => {
+    if (onOpenUploadModal) {
+      onOpenUploadModal();
+    } else {
+      setShowUploadModal(true);
+    }
+  }, [onOpenUploadModal]);
+
   return (
     <div className={styles.libraryContainer}>
-      {/* 헤더 */}
-      <div className={styles.header}>
-        <h4>커스텀 가구</h4>
-        <button
-          className={styles.addButton}
-          onClick={() => setShowUploadModal(true)}
-        >
-          + 추가
-        </button>
-      </div>
+      {/* 헤더 - showHeader가 true일 때만 표시 */}
+      {showHeader && (
+        <>
+          <div className={styles.header}>
+            <h4>커스텀 가구</h4>
+            <button
+              className={styles.addButton}
+              onClick={handleOpenUploadModal}
+            >
+              + 추가
+            </button>
+          </div>
 
-      {/* 필터 */}
-      <div className={styles.filterBar}>
-        <button
-          className={`${styles.filterButton} ${filter === 'all' ? styles.active : ''}`}
-          onClick={() => setFilter('all')}
-        >
-          전체 ({customFurnitures.length})
-        </button>
-        <button
-          className={`${styles.filterButton} ${filter === 'full' ? styles.active : ''}`}
-          onClick={() => setFilter('full')}
-        >
-          전체장
-        </button>
-        <button
-          className={`${styles.filterButton} ${filter === 'upper' ? styles.active : ''}`}
-          onClick={() => setFilter('upper')}
-        >
-          상부장
-        </button>
-        <button
-          className={`${styles.filterButton} ${filter === 'lower' ? styles.active : ''}`}
-          onClick={() => setFilter('lower')}
-        >
-          하부장
-        </button>
-      </div>
+          {/* 필터 */}
+          <div className={styles.filterBar}>
+            <button
+              className={`${styles.filterButton} ${filter === 'all' ? styles.active : ''}`}
+              onClick={() => setFilter('all')}
+            >
+              전체 ({customFurnitures.length})
+            </button>
+            <button
+              className={`${styles.filterButton} ${filter === 'full' ? styles.active : ''}`}
+              onClick={() => setFilter('full')}
+            >
+              전체장
+            </button>
+            <button
+              className={`${styles.filterButton} ${filter === 'upper' ? styles.active : ''}`}
+              onClick={() => setFilter('upper')}
+            >
+              상부장
+            </button>
+            <button
+              className={`${styles.filterButton} ${filter === 'lower' ? styles.active : ''}`}
+              onClick={() => setFilter('lower')}
+            >
+              하부장
+            </button>
+          </div>
+        </>
+      )}
 
       {/* 가구 그리드 */}
       {filteredFurnitures.length > 0 ? (

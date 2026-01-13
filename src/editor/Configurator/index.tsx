@@ -36,6 +36,7 @@ import ModuleGallery from '@/editor/shared/controls/furniture/ModuleGallery';
 import ModulePropertiesPanel from '@/editor/shared/controls/furniture/ModulePropertiesPanel';
 import PlacedModulePropertiesPanel from '@/editor/shared/controls/furniture/PlacedModulePropertiesPanel';
 import CustomFurnitureLibrary from '@/editor/shared/controls/furniture/CustomFurnitureLibrary';
+import CustomFurnitureUpload from '@/editor/shared/controls/furniture/CustomFurnitureUpload';
 import MaterialPanel from '@/editor/shared/controls/styling/MaterialPanel';
 import ExportPanel from './components/controls/ExportPanel';
 import ColumnControl from '@/editor/shared/controls/structure/ColumnControl';
@@ -120,6 +121,8 @@ const Configurator: React.FC = () => {
   });
   const [isFileTreeOpen, setIsFileTreeOpen] = useState(false);
   const [moduleCategory, setModuleCategory] = useState<'tall' | 'upper' | 'lower'>('tall'); // 키큰장/상부장/하부장 토글
+  const [customCategory, setCustomCategory] = useState<'full' | 'upper' | 'lower'>('full'); // 커스텀 전체장/상부장/하부장 토글
+  const [showCustomUploadModal, setShowCustomUploadModal] = useState(false); // 커스텀 가구 업로드 모달
 
   // 모바일/태블릿 반응형 상태
   const [isMobile, setIsMobile] = useState(false);
@@ -2711,7 +2714,53 @@ const Configurator: React.FC = () => {
       case 'custom':
         return (
           <div className={styles.sidebarPanel}>
-            <CustomFurnitureLibrary />
+            <div className={styles.modulePanelContent}>
+              {/* 전체장/상부장/하부장 토글 탭 + 추가 버튼 */}
+              <div className={styles.moduleCategoryTabs}>
+                <button
+                  className={`${styles.moduleCategoryTab} ${customCategory === 'full' ? styles.active : ''}`}
+                  onClick={() => setCustomCategory('full')}
+                >
+                  전체장
+                </button>
+                <button
+                  className={`${styles.moduleCategoryTab} ${customCategory === 'upper' ? styles.active : ''}`}
+                  onClick={() => setCustomCategory('upper')}
+                >
+                  상부장
+                </button>
+                <button
+                  className={`${styles.moduleCategoryTab} ${customCategory === 'lower' ? styles.active : ''}`}
+                  onClick={() => setCustomCategory('lower')}
+                >
+                  하부장
+                </button>
+                <button
+                  className={styles.customAddButton}
+                  onClick={() => setShowCustomUploadModal(true)}
+                  title="커스텀 가구 추가"
+                >
+                  +
+                </button>
+              </div>
+
+              <div className={styles.moduleSection}>
+                <CustomFurnitureLibrary
+                  filter={customCategory}
+                  showHeader={false}
+                />
+              </div>
+            </div>
+
+            {/* 업로드 모달 */}
+            {showCustomUploadModal && (
+              <div className={styles.customModalOverlay}>
+                <CustomFurnitureUpload
+                  onClose={() => setShowCustomUploadModal(false)}
+                  onSuccess={() => setShowCustomUploadModal(false)}
+                />
+              </div>
+            )}
           </div>
         );
       default:

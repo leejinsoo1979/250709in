@@ -443,6 +443,45 @@
   padding-right: 4px; /* 스크롤바 공간 */
 }
 
+/* 커스텀 가구 추가 버튼 */
+.customAddButton {
+  flex: 0 0 auto;
+  width: 32px;
+  min-width: 32px;
+  padding: 8px;
+  background: var(--theme-surface, #ffffff);
+  border: none;
+  border-left: 1px solid var(--theme-primary);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-primary) !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.customAddButton:hover {
+  background: var(--theme-primary);
+  color: #ffffff !important;
+}
+
+/* 커스텀 가구 업로드 모달 오버레이 */
+.customModalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
 /* 뷰어 영역 */
 .viewerArea {
   flex: 1;

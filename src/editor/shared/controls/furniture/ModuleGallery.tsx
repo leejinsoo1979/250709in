@@ -6,8 +6,6 @@ import { calculateSpaceIndexing, ColumnIndexer, SpaceCalculator } from '@/editor
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
 import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
-import { useCustomFurnitureStore } from '@/store/core/customFurnitureStore';
-import CustomFurnitureLibrary from './CustomFurnitureLibrary';
 import styles from './ModuleGallery.module.css';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
@@ -49,7 +47,7 @@ const FURNITURE_ICONS: Record<string, string> = {
 };
 
 // 모듈 타입 정의
-type ModuleType = 'all' | 'single' | 'dual' | 'custom';
+type ModuleType = 'all' | 'single' | 'dual';
 
 // 썸네일 아이템 컴포넌트
 interface ThumbnailItemProps {
@@ -966,9 +964,6 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
 
   // 에디터 스토어에서 공간 정보 가져오기
   const { spaceInfo } = useSpaceConfigStore();
-
-  // 커스텀 가구 스토어
-  const { customFurnitures } = useCustomFurnitureStore();
   const { activeDroppedCeilingTab } = useUIStore();
 
   // 단내림이 활성화되어 있고 단내림 탭이 선택된 경우 영역별 공간 정보 사용
@@ -1122,20 +1117,10 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
         >
           {t('furniture.dual')} ({dualModules.length})
         </button>
-        <button
-          className={cn(styles.tab, selectedType === 'custom' && styles.activeTab)}
-          onClick={() => setSelectedType('custom')}
-        >
-          커스텀 ({customFurnitures.length})
-        </button>
       </div>
 
-      {/* 커스텀 가구 탭 선택 시 */}
-      {selectedType === 'custom' ? (
-        <CustomFurnitureLibrary />
-      ) : (
-        /* 썸네일 그리드 (2열) */
-        <div className={styles.thumbnailGrid}>
+      {/* 썸네일 그리드 (2열) */}
+      <div className={styles.thumbnailGrid}>
           {currentModules.length > 0 ? (
             currentModules.map(module => {
               const iconPath = getIconPath(module.id);
@@ -1160,7 +1145,6 @@ const ModuleGallery: React.FC<ModuleGalleryProps> = ({ moduleCategory = 'tall' }
             </div>
           )}
         </div>
-      )}
     </div>
   );
 };
