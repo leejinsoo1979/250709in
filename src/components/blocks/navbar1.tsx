@@ -229,7 +229,7 @@ const Navbar1 = ({
               className="rounded-full px-5 hover:opacity-80"
               style={{
                 backgroundColor: 'transparent',
-                borderColor: primaryColor,
+                border: `1px solid ${primaryColor}`,
                 color: primaryColor
               }}
               onClick={() => navigate(auth.login.url)}
