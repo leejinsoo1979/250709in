@@ -262,18 +262,28 @@ const DropdownMenuItem = ({ item }: { item: MenuItem }) => {
           <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
         </button>
         {isOpen && (
-          <div className="absolute left-0 top-full z-50 pt-2">
-            <div className="w-48 rounded-xl p-2 shadow-2xl bg-[#18181b] border border-[#3f3f46]">
+          <div
+            className="absolute left-0 top-full z-50 pt-2"
+          >
+            <ul
+              className="w-48 rounded-xl p-2 shadow-2xl list-none m-0"
+              style={{
+                backgroundColor: 'rgb(24, 24, 27)',
+                border: '1px solid rgb(63, 63, 70)'
+              }}
+            >
               {item.items.map((subItem) => (
-                <a
-                  key={subItem.title}
-                  className="block rounded-lg px-3 py-2.5 text-sm font-medium text-[#e4e4e7] hover:bg-zinc-700 hover:text-white"
-                  href={subItem.url}
-                >
-                  {subItem.title}
-                </a>
+                <li key={subItem.title} className="m-0 p-0">
+                  <span
+                    onClick={() => window.location.href = subItem.url}
+                    className="block rounded-lg px-3 py-2.5 text-sm font-medium cursor-pointer hover:bg-zinc-700"
+                    style={{ color: 'rgb(228, 228, 231)' }}
+                  >
+                    {subItem.title}
+                  </span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
         )}
       </div>
