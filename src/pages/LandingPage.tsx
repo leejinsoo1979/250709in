@@ -2,95 +2,87 @@ import * as React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { Menu, X, ChevronRight } from 'lucide-react';
+import { ChevronRight, Box, Palette, Ruler, Download, Cloud, Zap } from 'lucide-react';
+import { Navbar1 } from '@/components/blocks/navbar1';
 
-const menuItems = [
-  { name: 'Features', href: '#features' },
-  { name: 'Demo', href: '#demo' },
-  { name: 'Pricing', href: '#pricing' },
-];
+const navbarData = {
+  logo: {
+    url: "/",
+    title: "FurnitureDesigner",
+  },
+  menu: [
+    { title: "Features", url: "#features" },
+    {
+      title: "Products",
+      url: "#",
+      items: [
+        {
+          title: "3D Editor",
+          description: "Design and visualize furniture in stunning 3D",
+          icon: <Box className="size-5 shrink-0" />,
+          url: "/configurator",
+        },
+        {
+          title: "Material Library",
+          description: "Hundreds of materials, colors, and textures",
+          icon: <Palette className="size-5 shrink-0" />,
+          url: "#features",
+        },
+        {
+          title: "Precision Tools",
+          description: "Accurate measurements for professional results",
+          icon: <Ruler className="size-5 shrink-0" />,
+          url: "#features",
+        },
+        {
+          title: "DXF Export",
+          description: "Export designs in DXF format for manufacturing",
+          icon: <Download className="size-5 shrink-0" />,
+          url: "#features",
+        },
+      ],
+    },
+    {
+      title: "Resources",
+      url: "#",
+      items: [
+        {
+          title: "Help Center",
+          description: "Get all the answers you need right here",
+          icon: <Zap className="size-5 shrink-0" />,
+          url: "#",
+        },
+        {
+          title: "Cloud Storage",
+          description: "Save and access your projects from anywhere",
+          icon: <Cloud className="size-5 shrink-0" />,
+          url: "#",
+        },
+      ],
+    },
+    { title: "Demo", url: "#demo" },
+    { title: "Pricing", url: "#pricing" },
+  ],
+  mobileExtraLinks: [
+    { name: "About", url: "#" },
+    { name: "Contact", url: "#" },
+    { name: "Privacy", url: "#" },
+    { name: "Terms", url: "#" },
+  ],
+  auth: {
+    login: { text: "Login", url: "/login" },
+    signup: { text: "Sign Up", url: "/signup" },
+  },
+};
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const [menuState, setMenuState] = React.useState(false);
   const [billingCycle, setBillingCycle] = React.useState<'monthly' | 'yearly'>('monthly');
 
   return (
     <div className="bg-zinc-950">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
-        <nav className="max-w-[1400px] mx-auto px-8">
-          <div className="flex items-center justify-between h-16">
-            <Link to="/" className="flex items-center">
-              <Logo />
-            </Link>
-
-            <ul className="hidden md:flex items-center gap-8">
-              {menuItems.map((item, index) => (
-                <li key={index}>
-                  <a
-                    href={item.href}
-                    className="text-sm font-medium text-zinc-400 hover:text-white transition-colors">
-                    {item.name}
-                  </a>
-                </li>
-              ))}
-            </ul>
-
-            <div className="hidden md:flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-zinc-400 hover:text-white hover:bg-zinc-800"
-                onClick={() => navigate('/login')}>
-                Login
-              </Button>
-              <Button
-                size="sm"
-                className="bg-white text-zinc-900 hover:bg-zinc-200"
-                onClick={() => navigate('/signup')}>
-                Sign Up
-              </Button>
-            </div>
-
-            <button
-              onClick={() => setMenuState(!menuState)}
-              className="md:hidden p-2 -mr-2 text-zinc-400">
-              {menuState ? <X size={24} /> : <Menu size={24} />}
-            </button>
-          </div>
-
-          {menuState && (
-            <div className="md:hidden py-4 border-t border-zinc-800">
-              <ul className="space-y-4 mb-4">
-                {menuItems.map((item, index) => (
-                  <li key={index}>
-                    <a
-                      href={item.href}
-                      className="block text-zinc-400 hover:text-white"
-                      onClick={() => setMenuState(false)}>
-                      {item.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-              <div className="flex flex-col gap-2">
-                <Button
-                  variant="outline"
-                  className="border-zinc-700 text-zinc-300"
-                  onClick={() => navigate('/login')}>
-                  Login
-                </Button>
-                <Button
-                  className="bg-white text-zinc-900"
-                  onClick={() => navigate('/signup')}>
-                  Sign Up
-                </Button>
-              </div>
-            </div>
-          )}
-        </nav>
-      </header>
+      <Navbar1 {...navbarData} />
 
       <main>
         {/* Hero Section */}
