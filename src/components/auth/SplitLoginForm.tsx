@@ -20,6 +20,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
   const [displayName, setDisplayName] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -108,6 +109,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
   // 구글 로그인 처리
   const handleGoogleLogin = async () => {
     setLoading(true);
+    setGoogleLoading(true);
     setError(null);
 
     console.log('🔍 구글 로그인 시도...');
@@ -116,13 +118,14 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
     if (!isFirebaseConfigured()) {
       setError('Firebase 설정이 완료되지 않았습니다. 관리자에게 문의해주세요.');
       setLoading(false);
+      setGoogleLoading(false);
       return;
     }
 
     try {
       console.log('🔍 signInWithGoogle 호출...');
       const result = await signInWithGoogle();
-      
+
       if (result.error) {
         console.error('❌ 구글 로그인 실패:', result.error);
         setError(result.error);
@@ -136,6 +139,7 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
       setError('구글 로그인 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
     } finally {
       setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -147,6 +151,16 @@ export const SplitLoginForm: React.FC<SplitLoginFormProps> = ({ onSuccess }) => 
 
   return (
     <div className={styles.container}>
+      {/* Google Login Loading Overlay */}
+      {googleLoading && (
+        <div className={styles.loadingOverlay}>
+          <div className={styles.loadingModal}>
+            <div className={styles.loadingSpinner} />
+            <p className={styles.loadingText}>Google 로그인 중...</p>
+            <p className={styles.loadingSubtext}>팝업 창에서 계정을 선택해주세요</p>
+          </div>
+        </div>
+      )}
       <Interactive3DBackground />
       <div className={styles.leftPanel}>
         <div className={styles.leftContent}>
