@@ -160,12 +160,12 @@ const Navbar1 = ({
           <div className="flex items-center">
             <Link to={logo.url} className="flex items-center gap-3">
               <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-xl"
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-2xl leading-none"
                 style={{ backgroundColor: primaryColor }}
               >
                 m
               </div>
-              <span style={{ color: primaryColor }} className="font-semibold text-xl tracking-wide">
+              <span style={{ color: primaryColor }} className="font-semibold text-2xl tracking-wide">
                 LOGO
               </span>
             </Link>
@@ -258,12 +258,12 @@ const Navbar1 = ({
           <div className="flex items-center justify-between h-16">
             <Link to={logo.url} className="flex items-center gap-3">
               <div
-                className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-xl"
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-2xl leading-none"
                 style={{ backgroundColor: primaryColor }}
               >
                 m
               </div>
-              <span style={{ color: primaryColor }} className="font-semibold text-xl tracking-wide">
+              <span style={{ color: primaryColor }} className="font-semibold text-2xl tracking-wide">
                 LOGO
               </span>
             </Link>
@@ -278,12 +278,12 @@ const Navbar1 = ({
                   <SheetTitle>
                     <Link to={logo.url} className="flex items-center gap-3">
                       <div
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-white font-bold text-xl"
+                        className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-2xl leading-none"
                         style={{ backgroundColor: primaryColor }}
                       >
                         m
                       </div>
-                      <span style={{ color: primaryColor }} className="font-semibold text-xl tracking-wide">
+                      <span style={{ color: primaryColor }} className="font-semibold text-2xl tracking-wide">
                         LOGO
                       </span>
                     </Link>
