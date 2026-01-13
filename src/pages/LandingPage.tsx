@@ -128,10 +128,10 @@ export default function LandingPage() {
           </div>
 
           {/* Hero Video */}
-          <div className="mx-auto max-w-5xl px-6 mt-8">
-            <div className="rounded-2xl overflow-hidden shadow-2xl shadow-zinc-900/20">
+          <div className="mx-auto max-w-5xl px-6 mt-8 pb-16">
+            <div className="rounded-2xl overflow-hidden">
               <video
-                className="w-full"
+                className="w-full block"
                 autoPlay
                 loop
                 muted
@@ -143,7 +143,7 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="bg-background relative z-10 py-16">
+        <section id="features" className="bg-zinc-50 py-16">
           <div className="m-auto max-w-5xl px-6">
             <h2 className="text-center text-3xl font-semibold mb-4">Everything you need to design</h2>
             <p className="text-center text-muted-foreground mb-16 max-w-2xl mx-auto">
