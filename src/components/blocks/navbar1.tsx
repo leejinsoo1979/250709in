@@ -226,11 +226,11 @@ const Navbar1 = ({
             <Button
               variant="outline"
               size="sm"
-              className="rounded-full px-4 hover:bg-zinc-800/50"
+              className="rounded-full px-5 hover:opacity-80"
               style={{
                 backgroundColor: 'transparent',
-                borderColor: 'rgb(113, 113, 122)',
-                color: 'rgb(161, 161, 170)'
+                borderColor: primaryColor,
+                color: primaryColor
               }}
               onClick={() => navigate(auth.login.url)}
             >
