@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ChevronRight, Box, Palette, Ruler, Download, Cloud, Zap } from 'lucide-react';
 import { Navbar1 } from '@/components/blocks/navbar1';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const navbarData = {
   logo: {
@@ -78,6 +79,44 @@ const navbarData = {
 export default function LandingPage() {
   const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = React.useState<'monthly' | 'yearly'>('monthly');
+  const { theme } = useTheme();
+
+  // 테마 색상 맵
+  const themeColorMap: Record<string, string> = {
+    green: '#10b981',
+    blue: '#3b82f6',
+    purple: '#8b5cf6',
+    vivid: '#a25378',
+    red: '#D2042D',
+    pink: '#ec4899',
+    indigo: '#6366f1',
+    teal: '#14b8a6',
+    yellow: '#eab308',
+    gray: '#6b7280',
+    cyan: '#06b6d4',
+    lime: '#84cc16',
+    black: '#1a1a1a',
+    wine: '#845EC2',
+    gold: '#d97706',
+    navy: '#1e3a8a',
+    emerald: '#059669',
+    violet: '#C128D7',
+    mint: '#0CBA80',
+    neon: '#18CF23',
+    rust: '#FF7438',
+    white: '#D65DB1',
+    plum: '#790963',
+    brown: '#5A2B1D',
+    darkgray: '#2C3844',
+    maroon: '#3F0D0D',
+    turquoise: '#003A7A',
+    slate: '#2E3A47',
+    copper: '#AD4F34',
+    forest: '#1B3924',
+    olive: '#4C462C'
+  };
+
+  const primaryColor = themeColorMap[theme.color] || '#3b82f6';
 
   return (
     <div className="bg-zinc-950">
@@ -89,7 +128,7 @@ export default function LandingPage() {
         <section className="relative pt-32 pb-20 px-8">
           <div className="max-w-[1400px] mx-auto text-center">
             <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }} />
               <span className="text-zinc-400 text-sm">Professional Furniture Design Tool</span>
               <ChevronRight className="w-4 h-4 text-zinc-500" />
             </div>
@@ -168,7 +207,7 @@ export default function LandingPage() {
           />
           <div className="max-w-[1400px] mx-auto">
             <div className="flex items-center gap-2 mb-6">
-              <div className="w-3 h-3 rounded-full bg-purple-500" />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }} />
               <span className="text-zinc-400 text-sm">Powerful Features</span>
               <ChevronRight className="w-4 h-4 text-zinc-500" />
             </div>
@@ -223,7 +262,7 @@ export default function LandingPage() {
         <section id="demo" className="relative py-32 px-8">
           <div className="max-w-[1400px] mx-auto">
             <div className="flex items-center gap-2 mb-6">
-              <div className="w-3 h-3 rounded-full bg-green-500" />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }} />
               <span className="text-zinc-400 text-sm">Design Workflow</span>
               <ChevronRight className="w-4 h-4 text-zinc-500" />
             </div>
@@ -469,7 +508,7 @@ export default function LandingPage() {
         <section id="pricing" className="py-32 px-8">
           <div className="max-w-[1400px] mx-auto">
             <div className="flex items-center gap-2 mb-6">
-              <div className="w-3 h-3 rounded-full bg-blue-500" />
+              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }} />
               <span className="text-zinc-400 text-sm">Pricing</span>
               <ChevronRight className="w-4 h-4 text-zinc-500" />
             </div>
@@ -492,10 +531,9 @@ export default function LandingPage() {
               </span>
               <button
                 onClick={() => setBillingCycle(billingCycle === 'monthly' ? 'yearly' : 'monthly')}
-                className={cn(
-                  "relative w-14 h-7 rounded-full transition-colors",
-                  billingCycle === 'yearly' ? 'bg-green-500' : 'bg-zinc-700'
-                )}>
+                className="relative w-14 h-7 rounded-full transition-colors"
+                style={{ backgroundColor: billingCycle === 'yearly' ? primaryColor : 'rgb(63, 63, 70)' }}
+              >
                 <span
                   className={cn(
                     "absolute top-1 w-5 h-5 rounded-full bg-white shadow transition-transform",
@@ -505,7 +543,7 @@ export default function LandingPage() {
               </button>
               <span className={billingCycle === 'yearly' ? 'text-white font-medium' : 'text-zinc-500'}>
                 Yearly
-                <span className="ml-2 text-xs bg-green-500 text-white px-2 py-0.5 rounded-full">
+                <span className="ml-2 text-xs text-white px-2 py-0.5 rounded-full" style={{ backgroundColor: primaryColor }}>
                   Save 20%
                 </span>
               </span>
@@ -525,6 +563,7 @@ export default function LandingPage() {
                 ]}
                 onSelect={() => navigate('/dashboard')}
                 buttonText="Get Started"
+                primaryColor={primaryColor}
               />
               <PricingCard
                 name="Pro"
@@ -541,6 +580,7 @@ export default function LandingPage() {
                 featured
                 onSelect={() => navigate('/dashboard')}
                 buttonText="Start Free Trial"
+                primaryColor={primaryColor}
               />
               <PricingCard
                 name="Enterprise"
@@ -556,6 +596,7 @@ export default function LandingPage() {
                 ]}
                 onSelect={() => navigate('/dashboard')}
                 buttonText="Contact Sales"
+                primaryColor={primaryColor}
               />
             </div>
           </div>
@@ -658,6 +699,7 @@ const PricingCard = ({
   featured,
   onSelect,
   buttonText,
+  primaryColor = '#10b981',
 }: {
   name: string;
   price: string;
@@ -666,17 +708,23 @@ const PricingCard = ({
   featured?: boolean;
   onSelect: () => void;
   buttonText: string;
+  primaryColor?: string;
 }) => {
   return (
     <div
       className={cn(
         'p-6 rounded-xl border transition-all',
         featured
-          ? 'border-green-500/50 bg-zinc-900 relative'
+          ? 'bg-zinc-900 relative'
           : 'border-zinc-800 bg-zinc-900/50 hover:border-zinc-700'
-      )}>
+      )}
+      style={featured ? { borderColor: `${primaryColor}80` } : undefined}
+    >
       {featured && (
-        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-500 text-white text-xs font-semibold px-4 py-1 rounded-full">
+        <div
+          className="absolute -top-3 left-1/2 -translate-x-1/2 text-white text-xs font-semibold px-4 py-1 rounded-full"
+          style={{ backgroundColor: primaryColor }}
+        >
           Most Popular
         </div>
       )}
@@ -690,7 +738,7 @@ const PricingCard = ({
       <ul className="space-y-3 mb-6">
         {features.map((feature, index) => (
           <li key={index} className="flex items-center gap-2 text-sm text-zinc-400">
-            <CheckIcon />
+            <CheckIcon color={primaryColor} />
             <span>{feature}</span>
           </li>
         ))}
@@ -751,8 +799,8 @@ const CloudIcon = () => (
   </svg>
 );
 
-const CheckIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" className="text-green-500 shrink-0">
+const CheckIcon = ({ color = 'var(--theme-primary)' }: { color?: string }) => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill={color} className="shrink-0">
     <path fillRule="evenodd" d="M13.78 4.22a.75.75 0 010 1.06l-7.25 7.25a.75.75 0 01-1.06 0L2.22 9.28a.75.75 0 011.06-1.06L6 10.94l6.72-6.72a.75.75 0 011.06 0z" clipRule="evenodd" />
   </svg>
 );
