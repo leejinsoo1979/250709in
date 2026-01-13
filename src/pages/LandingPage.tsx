@@ -111,14 +111,14 @@ export default function LandingPage() {
             <div className="flex flex-wrap gap-4 justify-center">
               <Button
                 size="lg"
-                className="bg-white text-zinc-900 hover:bg-zinc-200"
+                className="bg-white text-zinc-900 hover:bg-zinc-200 rounded-full px-8"
                 onClick={() => navigate('/dashboard')}>
                 Start Designing
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 rounded-full px-8"
                 onClick={() => navigate('/configurator')}>
                 View Demo
               </Button>
