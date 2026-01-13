@@ -141,6 +141,10 @@ export default function LandingPage() {
                 style={{
                   transform: "rotateX(8deg) rotateY(14deg) rotateZ(-16deg)",
                   transformOrigin: "center center",
+                  maskImage: "linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%), linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
+                  maskComposite: "intersect",
+                  WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%), linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
+                  WebkitMaskComposite: "source-in",
                 }}>
                 <video
                   className="w-full block"
