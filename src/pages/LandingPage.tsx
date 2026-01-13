@@ -134,17 +134,19 @@ export default function LandingPage() {
           </div>
 
           {/* Hero Video with 3D Effect */}
-          <div className="max-w-6xl mx-auto mt-20 px-6">
+          <div className="max-w-6xl mx-auto mt-20 px-6 flex justify-center">
             <div
-              className="relative w-full"
-              style={{ perspective: "1000px" }}>
+              className="w-[90%]"
+              style={{
+                perspective: "2000px",
+                perspectiveOrigin: "center center"
+              }}>
               <div
                 style={{
-                  transform: "rotateX(25deg) rotateY(-20deg) rotateZ(5deg)",
-                  transformStyle: "preserve-3d",
-                  transformOrigin: "left center",
+                  transform: "rotateY(-12deg) rotateX(5deg)",
+                  transformStyle: "flat",
                 }}>
-                <div className="rounded-2xl overflow-hidden border border-zinc-700/50 shadow-[0_80px_150px_-40px_rgba(0,0,0,0.9)]">
+                <div className="rounded-2xl overflow-hidden border border-zinc-700/50 shadow-2xl">
                   <video
                     className="w-full block"
                     autoPlay
