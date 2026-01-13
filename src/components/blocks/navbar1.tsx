@@ -1,4 +1,5 @@
-import { Book, Menu, Sunset, Trees, Zap } from "lucide-react";
+import * as React from "react";
+import { Menu, ChevronDown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import {
@@ -8,14 +9,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
 import {
   Sheet,
   SheetContent,
@@ -155,12 +148,10 @@ const Navbar1 = ({
               </div>
               <span className="text-lg font-semibold text-white">{logo.title}</span>
             </Link>
-            <div className="flex items-center">
-              <NavigationMenu>
-                <NavigationMenuList>
-                  {menu.map((item) => renderMenuItem(item))}
-                </NavigationMenuList>
-              </NavigationMenu>
+            <div className="flex items-center gap-1">
+              {menu.map((item) => (
+                <DropdownMenuItem key={item.title} item={item} />
+              ))}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -254,36 +245,50 @@ const Navbar1 = ({
   );
 };
 
-const renderMenuItem = (item: MenuItem) => {
+const DropdownMenuItem = ({ item }: { item: MenuItem }) => {
+  const [isOpen, setIsOpen] = React.useState(false);
+
   if (item.items) {
     return (
-      <NavigationMenuItem key={item.title}>
-        <NavigationMenuTrigger className="bg-transparent text-zinc-400 hover:bg-transparent hover:text-white data-[state=open]:bg-transparent data-[state=open]:text-white focus:bg-transparent">
+      <div
+        className="relative"
+        onMouseEnter={() => setIsOpen(true)}
+        onMouseLeave={() => setIsOpen(false)}
+      >
+        <button
+          className="inline-flex h-10 items-center gap-1 px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:text-white"
+        >
           {item.title}
-        </NavigationMenuTrigger>
-        <NavigationMenuContent>
-          <ul className="w-48 p-2">
-            {item.items.map((subItem) => (
-              <li key={subItem.title}>
+          <ChevronDown className={`h-3 w-3 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {isOpen && (
+          <div
+            className="absolute left-0 top-full pt-2"
+          >
+            <div
+              className="w-48 rounded-xl p-2 shadow-2xl"
+              style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}
+            >
+              {item.items.map((subItem) => (
                 <a
-                  className="block select-none rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-zinc-700"
+                  key={subItem.title}
+                  className="block rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-zinc-800"
                   style={{ color: '#e4e4e7' }}
                   href={subItem.url}
                 >
                   {subItem.title}
                 </a>
-              </li>
-            ))}
-          </ul>
-        </NavigationMenuContent>
-      </NavigationMenuItem>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
   return (
     <a
-      key={item.title}
-      className="inline-flex h-10 w-max items-center justify-center px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:text-white"
+      className="inline-flex h-10 items-center px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:text-white"
       href={item.url}
     >
       {item.title}
