@@ -212,6 +212,7 @@ export const use3DExport = () => {
 
   /**
    * OBJ 포맷으로 내보내기
+   * SketchUp 등 Z-up 좌표계 소프트웨어와 호환되도록 Y-up을 Z-up으로 변환
    */
   const exportToOBJ = useCallback(async (
     scene: Scene | Group,
@@ -229,6 +230,11 @@ export const use3DExport = () => {
       if (exportGroup.children.length === 0) {
         throw new Error('내보낼 가구가 없습니다.');
       }
+
+      // Y-up (Three.js) → Z-up (SketchUp, CAD) 좌표계 변환
+      // X축 기준 -90도 회전
+      exportGroup.rotation.x = -Math.PI / 2;
+      exportGroup.updateMatrixWorld(true);
 
       const exporter = new OBJExporter();
       const result = exporter.parse(exportGroup);
@@ -248,6 +254,7 @@ export const use3DExport = () => {
 
   /**
    * STL 포맷으로 내보내기
+   * SketchUp 등 Z-up 좌표계 소프트웨어와 호환되도록 Y-up을 Z-up으로 변환
    */
   const exportToSTL = useCallback(async (
     scene: Scene | Group,
@@ -265,6 +272,11 @@ export const use3DExport = () => {
       if (exportGroup.children.length === 0) {
         throw new Error('내보낼 가구가 없습니다.');
       }
+
+      // Y-up (Three.js) → Z-up (SketchUp, CAD) 좌표계 변환
+      // X축 기준 -90도 회전
+      exportGroup.rotation.x = -Math.PI / 2;
+      exportGroup.updateMatrixWorld(true);
 
       const exporter = new STLExporter();
       const result = exporter.parse(exportGroup, { binary: true });
