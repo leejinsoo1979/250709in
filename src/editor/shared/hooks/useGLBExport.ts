@@ -115,14 +115,26 @@ export const useGLBExport = () => {
   };
 
   /**
-   * 복제된 객체에서 치수/텍스트 요소 제거
+   * 복제된 객체에서 치수/텍스트/조명 요소 제거
    */
-  const removeDimensionsFromClone = (obj: THREE.Object3D): void => {
+  const removeUnwantedFromClone = (obj: THREE.Object3D): void => {
     const childrenToRemove: THREE.Object3D[] = [];
 
     obj.traverse((child: any) => {
       const name = (child.name || '').toLowerCase();
       const type = child.type || '';
+
+      // 조명 관련 요소 식별
+      const isLight =
+        child.isLight ||
+        type.includes('Light') ||
+        name.includes('light') ||
+        type === 'SpotLight' ||
+        type === 'PointLight' ||
+        type === 'DirectionalLight' ||
+        type === 'AmbientLight' ||
+        type === 'HemisphereLight' ||
+        type === 'RectAreaLight';
 
       // 치수 관련 요소 식별
       const isDimension =
@@ -141,7 +153,16 @@ export const useGLBExport = () => {
          child.geometry && child.geometry.boundingSphere &&
          child.geometry.boundingSphere.radius < 1);
 
-      if (isDimension) {
+      // 헬퍼/카메라 요소 식별
+      const isHelper =
+        name.includes('helper') ||
+        name.includes('camera') ||
+        type.includes('Helper') ||
+        type === 'Camera' ||
+        type === 'PerspectiveCamera' ||
+        type === 'OrthographicCamera';
+
+      if (isLight || isDimension || isHelper) {
         childrenToRemove.push(child);
       }
     });
@@ -149,7 +170,7 @@ export const useGLBExport = () => {
     // 식별된 요소들 제거
     childrenToRemove.forEach(child => {
       if (child.parent) {
-        console.log(`  🗑️ 치수/텍스트 제거: ${child.name || '(unnamed)'} [${child.type}]`);
+        console.log(`  🗑️ 제거: ${child.name || '(unnamed)'} [${child.type}]`);
         child.parent.remove(child);
       }
     });
@@ -236,9 +257,9 @@ export const useGLBExport = () => {
         console.log(`  ${index + 1}. ${obj.name || '(unnamed)'} [${obj.type}]`);
         const cloned = obj.clone(true);
 
-        // 복제본에서 치수/텍스트 요소 제거
-        console.log(`  🔍 ${obj.name || '(unnamed)'}에서 치수/텍스트 제거 중...`);
-        removeDimensionsFromClone(cloned);
+        // 복제본에서 조명/치수/텍스트/헬퍼 요소 제거
+        console.log(`  🔍 ${obj.name || '(unnamed)'}에서 불필요한 요소 제거 중...`);
+        removeUnwantedFromClone(cloned);
 
         exportGroup.add(cloned);
       });
