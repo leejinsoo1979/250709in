@@ -106,46 +106,48 @@ export default function LandingPage() {
 
       {/* Hero Section */}
       <section className={styles.hero}>
-        {/* 풀스크린 배경 동영상 */}
-        <div className={styles.heroVideoBackground}>
-          <video
-            className={styles.heroBackgroundVideo}
-            autoPlay
-            loop
-            muted
-            playsInline
-          >
-            <source src="/video/intro.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-          {/* 어두운 오버레이 */}
-          <div className={styles.heroVideoOverlay}></div>
-        </div>
+        <div className={styles.heroContent}>
+          {/* 좌측 문구 */}
+          <div className={styles.heroText}>
+            <h1 className={styles.heroTitle}>
+              Design Your Perfect Furniture Space
+            </h1>
+            <p className={styles.heroSubtitle}>
+              Professional 3D furniture design tool. Create, customize, and visualize your dream interior in real-time.
+            </p>
+            <div className={styles.heroButtons}>
+              <button
+                onClick={() => navigate('/dashboard')}
+                className={styles.primaryButton}
+              >
+                Start Designing
+                <svg className={styles.buttonIcon} viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+              <button
+                onClick={() => navigate('/configurator')}
+                className={styles.secondaryButton}
+              >
+                Demo
+              </button>
+            </div>
+          </div>
 
-        {/* 중앙 배치된 콘텐츠 */}
-        <div className={styles.heroContentCenter}>
-          <h1 className={styles.heroTitle}>
-            Design Your Perfect Furniture Space
-          </h1>
-          <p className={styles.heroSubtitle}>
-            Professional 3D furniture design tool. Create, customize, and visualize your dream interior in real-time.
-          </p>
-          <div className={styles.heroButtons}>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className={styles.primaryButton}
-            >
-              Start Designing
-              <svg className={styles.buttonIcon} viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-            <button
-              onClick={() => navigate('/configurator')}
-              className={styles.secondaryButton}
-            >
-              Demo
-            </button>
+          {/* 우측 영상 */}
+          <div className={styles.heroVideo}>
+            <div className={styles.heroVideoWrapper}>
+              <video
+                className={styles.heroVideoPlayer}
+                autoPlay
+                loop
+                muted
+                playsInline
+              >
+                <source src="/video/intro.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            </div>
           </div>
         </div>
       </section>
