@@ -160,7 +160,7 @@ const Navbar1 = ({
           <div className="flex items-center">
             <Link to={logo.url} className="flex items-center gap-3">
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-3xl leading-none"
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-3xl leading-none"
                 style={{ backgroundColor: primaryColor, fontFamily: '"Nunito", "Quicksand", "Varela Round", system-ui, sans-serif' }}
               >
                 m
@@ -258,7 +258,7 @@ const Navbar1 = ({
           <div className="flex items-center justify-between h-16">
             <Link to={logo.url} className="flex items-center gap-3">
               <div
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-3xl leading-none"
+                className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-3xl leading-none"
                 style={{ backgroundColor: primaryColor, fontFamily: '"Nunito", "Quicksand", "Varela Round", system-ui, sans-serif' }}
               >
                 m
@@ -278,7 +278,7 @@ const Navbar1 = ({
                   <SheetTitle>
                     <Link to={logo.url} className="flex items-center gap-3">
                       <div
-                        className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-3xl leading-none"
+                        className="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-3xl leading-none"
                         style={{ backgroundColor: primaryColor }}
                       >
                         m
