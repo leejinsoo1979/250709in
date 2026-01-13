@@ -95,13 +95,6 @@ export default function LandingPage() {
       <main>
         {/* Hero Section */}
         <section className="relative pt-32 pb-20 px-8">
-          {/* Bottom fade overlay */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-40 pointer-events-none"
-            style={{
-              background: "linear-gradient(to bottom, transparent, rgb(9, 9, 11))"
-            }}
-          />
           <div className="max-w-[1400px] mx-auto text-center">
             <div className="flex items-center justify-center gap-2 mb-6">
               <div className="w-3 h-3 rounded-full bg-green-500" />
@@ -161,14 +154,14 @@ export default function LandingPage() {
                 </video>
               </div>
             </div>
-            {/* Video bottom fade - transition to Features section */}
-            <div
-              className="absolute -bottom-40 left-0 right-0 h-64 pointer-events-none"
-              style={{
-                background: "linear-gradient(to bottom, transparent, rgb(9, 9, 11))"
-              }}
-            />
           </div>
+          {/* Video bottom fade - full width transition to Features section */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-72 pointer-events-none"
+            style={{
+              background: "linear-gradient(to bottom, transparent, rgb(9, 9, 11))"
+            }}
+          />
         </section>
 
         {/* Features Section */}
