@@ -289,7 +289,7 @@ export const use3DExport = () => {
 
   /**
    * STL 포맷으로 내보내기
-   * SketchUp 등 Z-up 좌표계 소프트웨어와 호환되도록 Y-up을 Z-up으로 변환
+   * 참고: STL은 Y-up으로 내보내짐 (SketchUp에서 수동 회전 필요)
    */
   const exportToSTL = useCallback(async (
     scene: Scene | Group,
@@ -308,11 +308,10 @@ export const use3DExport = () => {
         throw new Error('내보낼 가구가 없습니다.');
       }
 
-      // Y-up (Three.js) → Z-up (SketchUp, CAD) 좌표계 변환
-      const wrappedGroup = wrapForZUp(exportGroup);
-
+      // STL은 변환 없이 그대로 내보내기 (Y-up)
+      // SketchUp에서 불러온 후 X축 90도 회전 필요
       const exporter = new STLExporter();
-      const result = exporter.parse(wrappedGroup, { binary: true });
+      const result = exporter.parse(exportGroup, { binary: true });
 
       const blob = new Blob([result], { type: 'application/octet-stream' });
       downloadBlob(blob, filename);
