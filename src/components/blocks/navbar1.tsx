@@ -262,11 +262,11 @@ const renderMenuItem = (item: MenuItem) => {
           {item.title}
         </NavigationMenuTrigger>
         <NavigationMenuContent>
-          <ul className="w-48 p-2 bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-xl shadow-2xl">
+          <ul className="w-48 p-2">
             {item.items.map((subItem) => (
               <li key={subItem.title}>
                 <a
-                  className="block select-none rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+                  className="block select-none rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-700 hover:text-white"
                   href={subItem.url}
                 >
                   {subItem.title}
