@@ -257,24 +257,22 @@ const Navbar1 = ({
 const renderMenuItem = (item: MenuItem) => {
   if (item.items) {
     return (
-      <NavigationMenuItem key={item.title} className="text-zinc-400">
-        <NavigationMenuTrigger className="bg-transparent text-zinc-400 hover:bg-zinc-800/50 hover:text-white data-[state=open]:bg-zinc-800/50 data-[state=open]:text-white">
+      <NavigationMenuItem key={item.title}>
+        <NavigationMenuTrigger className="bg-transparent text-zinc-400 hover:bg-transparent hover:text-white data-[state=open]:bg-transparent data-[state=open]:text-white focus:bg-transparent">
           {item.title}
         </NavigationMenuTrigger>
-        <NavigationMenuContent className="bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-xl shadow-xl">
-          <ul className="w-48 p-2">
-            <NavigationMenuLink>
-              {item.items.map((subItem) => (
-                <li key={subItem.title}>
-                  <a
-                    className="block select-none rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
-                    href={subItem.url}
-                  >
-                    {subItem.title}
-                  </a>
-                </li>
-              ))}
-            </NavigationMenuLink>
+        <NavigationMenuContent>
+          <ul className="w-48 p-2 bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-xl shadow-2xl">
+            {item.items.map((subItem) => (
+              <li key={subItem.title}>
+                <a
+                  className="block select-none rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
+                  href={subItem.url}
+                >
+                  {subItem.title}
+                </a>
+              </li>
+            ))}
           </ul>
         </NavigationMenuContent>
       </NavigationMenuItem>
@@ -284,7 +282,7 @@ const renderMenuItem = (item: MenuItem) => {
   return (
     <a
       key={item.title}
-      className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:text-white"
+      className="inline-flex h-10 w-max items-center justify-center px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:text-white"
       href={item.url}
     >
       {item.title}
