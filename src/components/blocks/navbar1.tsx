@@ -192,8 +192,8 @@ const Navbar1 = ({
                     style={{
                       marginTop: '12px',
                       padding: '16px',
-                      backgroundColor: theme.mode === 'dark' ? 'rgb(24, 24, 27)' : 'rgb(255, 255, 255)',
-                      border: theme.mode === 'dark' ? '1px solid rgb(63, 63, 70)' : '1px solid rgb(228, 228, 231)',
+                      backgroundColor: 'rgb(24, 24, 27)',
+                      border: '1px solid rgb(63, 63, 70)',
                       minWidth: '180px'
                     }}
                   >
@@ -206,9 +206,7 @@ const Navbar1 = ({
                             height: '36px',
                             borderRadius: '50%',
                             backgroundColor: c.color,
-                            border: theme.color === c.id
-                              ? (theme.mode === 'dark' ? '3px solid white' : '3px solid #1a1a1a')
-                              : '2px solid transparent',
+                            border: theme.color === c.id ? '3px solid white' : '2px solid transparent',
                             cursor: 'pointer',
                             transition: 'transform 0.15s ease',
                           }}
