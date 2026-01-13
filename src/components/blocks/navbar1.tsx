@@ -140,14 +140,16 @@ const Navbar1 = ({
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
       <div className="max-w-[1400px] mx-auto px-8">
-        <nav className="hidden justify-between lg:flex h-16">
-          <div className="flex items-center gap-6">
+        <nav className="hidden lg:flex h-16 items-center">
+          <div className="flex items-center gap-2">
             <Link to={logo.url} className="flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold">
                 F
               </div>
               <span className="text-lg font-semibold text-white">{logo.title}</span>
             </Link>
+          </div>
+          <div className="flex-1 flex justify-center">
             <div className="flex items-center gap-1">
               {menu.map((item) => (
                 <DropdownMenuItem key={item.title} item={item} />

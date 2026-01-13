@@ -118,7 +118,7 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 rounded-full px-8"
+                className="border border-zinc-500 text-zinc-300 hover:bg-zinc-800 rounded-full px-8"
                 onClick={() => navigate('/configurator')}>
                 View Demo
               </Button>
