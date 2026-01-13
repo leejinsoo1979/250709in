@@ -141,8 +141,8 @@ export default function LandingPage() {
                 style={{
                   transform: "rotateX(8deg) rotateY(14deg) rotateZ(-16deg)",
                   transformOrigin: "center center",
-                  maskImage: "radial-gradient(ellipse 90% 85% at center, black 60%, transparent 100%)",
-                  WebkitMaskImage: "radial-gradient(ellipse 90% 85% at center, black 60%, transparent 100%)",
+                  maskImage: "radial-gradient(ellipse 80% 75% at center, black 40%, transparent 90%)",
+                  WebkitMaskImage: "radial-gradient(ellipse 80% 75% at center, black 40%, transparent 90%)",
                 }}>
                 <video
                   className="w-full block"
