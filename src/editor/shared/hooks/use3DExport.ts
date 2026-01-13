@@ -156,6 +156,26 @@ export const use3DExport = () => {
   };
 
   /**
+   * Y-up을 Z-up 좌표계로 변환 (STL, OBJ용)
+   * 그룹 변환 대신 각 메쉬의 지오메트리에 직접 회전 적용
+   */
+  const convertToZUp = (group: THREE.Group): void => {
+    const rotationMatrix = new THREE.Matrix4().makeRotationX(-Math.PI / 2);
+
+    group.traverse((child) => {
+      if ((child as THREE.Mesh).isMesh) {
+        const mesh = child as THREE.Mesh;
+        if (mesh.geometry) {
+          // 월드 매트릭스 업데이트
+          mesh.updateMatrixWorld(true);
+          // 지오메트리에 회전 적용
+          mesh.geometry.applyMatrix4(rotationMatrix);
+        }
+      }
+    });
+  };
+
+  /**
    * GLB 포맷으로 내보내기
    */
   const exportToGLB = useCallback(async (
@@ -232,9 +252,7 @@ export const use3DExport = () => {
       }
 
       // Y-up (Three.js) → Z-up (SketchUp, CAD) 좌표계 변환
-      // X축 기준 -90도 회전
-      exportGroup.rotation.x = -Math.PI / 2;
-      exportGroup.updateMatrixWorld(true);
+      convertToZUp(exportGroup);
 
       const exporter = new OBJExporter();
       const result = exporter.parse(exportGroup);
@@ -274,9 +292,7 @@ export const use3DExport = () => {
       }
 
       // Y-up (Three.js) → Z-up (SketchUp, CAD) 좌표계 변환
-      // X축 기준 -90도 회전
-      exportGroup.rotation.x = -Math.PI / 2;
-      exportGroup.updateMatrixWorld(true);
+      convertToZUp(exportGroup);
 
       const exporter = new STLExporter();
       const result = exporter.parse(exportGroup, { binary: true });
