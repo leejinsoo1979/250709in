@@ -121,14 +121,18 @@ export default function LandingPage() {
 
           {/* Hero Video */}
           <div className="mx-auto max-w-5xl px-6 mt-8 pb-16">
-            <video
-              className="w-full block rounded-xl"
-              autoPlay
-              loop
-              muted
-              playsInline>
-              <source src="/video/intro.mp4" type="video/mp4" />
-            </video>
+            <div className="[perspective:1200px]">
+              <div className="[transform:rotateX(15deg)] origin-bottom">
+                <video
+                  className="w-full block rounded-xl shadow-2xl"
+                  autoPlay
+                  loop
+                  muted
+                  playsInline>
+                  <source src="/video/intro.mp4" type="video/mp4" />
+                </video>
+              </div>
+            </div>
           </div>
         </section>
 
