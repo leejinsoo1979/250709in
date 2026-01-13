@@ -147,6 +147,7 @@ const Header: React.FC<HeaderProps> = ({
   const [isConvertMenuOpen, setIsConvertMenuOpen] = useState(false);
   const [isCameraMenuOpen, setIsCameraMenuOpen] = useState(false);
   const [is3DExportSubmenuOpen, setIs3DExportSubmenuOpen] = useState(false);
+  const submenuTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [isEditingDesignName, setIsEditingDesignName] = useState(false);
   const [editingDesignName, setEditingDesignName] = useState('');
   // UIStore에서 카메라 및 그림자 설정 가져오기
@@ -688,8 +689,18 @@ const Header: React.FC<HeaderProps> = ({
                     </button>
                     <div
                       className={styles.dropdownItemWithSubmenu}
-                      onMouseEnter={() => setIs3DExportSubmenuOpen(true)}
-                      onMouseLeave={() => setIs3DExportSubmenuOpen(false)}
+                      onMouseEnter={() => {
+                        if (submenuTimeoutRef.current) {
+                          clearTimeout(submenuTimeoutRef.current);
+                          submenuTimeoutRef.current = null;
+                        }
+                        setIs3DExportSubmenuOpen(true);
+                      }}
+                      onMouseLeave={() => {
+                        submenuTimeoutRef.current = setTimeout(() => {
+                          setIs3DExportSubmenuOpen(false);
+                        }, 150);
+                      }}
                     >
                       <button
                         className={styles.dropdownItem}
