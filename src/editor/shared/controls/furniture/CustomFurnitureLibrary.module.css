@@ -68,6 +68,52 @@
   color: #fff;
 }
 
+/* 하위 탭 (ModuleGallery와 동일한 스타일) */
+.subTabs {
+  display: flex;
+  margin-bottom: 12px;
+  border: 1px solid var(--theme-primary, #4a90d9);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--theme-surface, #ffffff);
+}
+
+.subTab {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 0;
+  background: var(--theme-primary, #4a90d9);
+  border: none;
+  cursor: default;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 600;
+  min-height: 32px;
+}
+
+.addSubTab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  background: var(--theme-surface, #ffffff);
+  border: none;
+  border-left: 1px solid var(--theme-primary, #4a90d9);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--theme-primary, #4a90d9);
+  font-size: 12px;
+  font-weight: 500;
+  min-height: 32px;
+}
+
+.addSubTab:hover {
+  background: var(--theme-background-secondary, #f9fafb);
+}
+
 /* 가구 그리드 */
 .furnitureGrid {
   display: grid;
@@ -131,8 +177,10 @@
 }
 
 .noThumbnail {
-  font-size: 48px;
-  opacity: 0.3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ccc;
 }
 
 /* 정보 */
@@ -217,8 +265,9 @@
 }
 
 .emptyIcon {
-  font-size: 48px;
-  opacity: 0.3;
+  width: 48px;
+  height: 48px;
+  color: #ccc;
   margin-bottom: 12px;
 }
 

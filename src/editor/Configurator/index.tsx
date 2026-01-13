@@ -2715,7 +2715,7 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <div className={styles.modulePanelContent}>
-              {/* 전체장/상부장/하부장 토글 탭 + 추가 버튼 */}
+              {/* 전체장/상부장/하부장 토글 탭 */}
               <div className={styles.moduleCategoryTabs}>
                 <button
                   className={`${styles.moduleCategoryTab} ${customCategory === 'full' ? styles.active : ''}`}
@@ -2734,13 +2734,6 @@ const Configurator: React.FC = () => {
                   onClick={() => setCustomCategory('lower')}
                 >
                   하부장
-                </button>
-                <button
-                  className={styles.customAddButton}
-                  onClick={() => setShowCustomUploadModal(true)}
-                  title="커스텀 가구 추가"
-                >
-                  +
                 </button>
               </div>
 

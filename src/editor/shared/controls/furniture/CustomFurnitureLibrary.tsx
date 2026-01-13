@@ -150,6 +150,24 @@ const CustomFurnitureLibrary: React.FC<CustomFurnitureLibraryProps> = ({
         </>
       )}
 
+      {/* 하위 탭 (showHeader가 false일 때 표시) */}
+      {!showHeader && (
+        <div className={styles.subTabs}>
+          <button
+            className={styles.subTab}
+            style={{ flex: 1 }}
+          >
+            전체 ({filteredFurnitures.length})
+          </button>
+          <button
+            className={styles.addSubTab}
+            onClick={handleOpenUploadModal}
+          >
+            + 추가
+          </button>
+        </div>
+      )}
+
       {/* 가구 그리드 */}
       {filteredFurnitures.length > 0 ? (
         <div className={styles.furnitureGrid}>
@@ -169,7 +187,13 @@ const CustomFurnitureLibrary: React.FC<CustomFurnitureLibraryProps> = ({
                 {furniture.thumbnail ? (
                   <img src={furniture.thumbnail} alt={furniture.name} />
                 ) : (
-                  <div className={styles.noThumbnail}>📦</div>
+                  <div className={styles.noThumbnail}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="48" height="48">
+                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                      <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                      <line x1="12" y1="22.08" x2="12" y2="12" />
+                    </svg>
+                  </div>
                 )}
               </div>
 
@@ -206,7 +230,9 @@ const CustomFurnitureLibrary: React.FC<CustomFurnitureLibraryProps> = ({
         </div>
       ) : (
         <div className={styles.emptyState}>
-          <span className={styles.emptyIcon}>📁</span>
+          <svg className={styles.emptyIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" width="48" height="48">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+          </svg>
           <p>커스텀 가구가 없습니다</p>
           <button
             className={styles.emptyAddButton}
