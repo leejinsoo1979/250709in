@@ -167,14 +167,14 @@ const Navbar1 = ({
             <Button
               variant="ghost"
               size="sm"
-              className="text-zinc-400 hover:text-white hover:bg-zinc-800"
+              className="text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full px-4"
               onClick={() => navigate(auth.login.url)}
             >
               {auth.login.text}
             </Button>
             <Button
               size="sm"
-              className="bg-white text-zinc-900 hover:bg-zinc-200"
+              className="bg-white text-zinc-900 hover:bg-zinc-200 rounded-full px-5"
               onClick={() => navigate(auth.signup.url)}
             >
               {auth.signup.text}
@@ -232,13 +232,13 @@ const Navbar1 = ({
                   <div className="flex flex-col gap-3">
                     <Button
                       variant="outline"
-                      className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                      className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 rounded-full"
                       onClick={() => navigate(auth.login.url)}
                     >
                       {auth.login.text}
                     </Button>
                     <Button
-                      className="bg-white text-zinc-900 hover:bg-zinc-200"
+                      className="bg-white text-zinc-900 hover:bg-zinc-200 rounded-full"
                       onClick={() => navigate(auth.signup.url)}
                     >
                       {auth.signup.text}
@@ -258,29 +258,19 @@ const renderMenuItem = (item: MenuItem) => {
   if (item.items) {
     return (
       <NavigationMenuItem key={item.title} className="text-zinc-400">
-        <NavigationMenuTrigger className="bg-transparent text-zinc-400 hover:bg-zinc-800 hover:text-white data-[state=open]:bg-zinc-800">
+        <NavigationMenuTrigger className="bg-transparent text-zinc-400 hover:bg-zinc-800/50 hover:text-white data-[state=open]:bg-zinc-800/50 data-[state=open]:text-white">
           {item.title}
         </NavigationMenuTrigger>
-        <NavigationMenuContent className="bg-zinc-900 border-zinc-800">
-          <ul className="w-80 p-3">
+        <NavigationMenuContent className="bg-zinc-900/95 backdrop-blur-md border border-zinc-800 rounded-xl shadow-xl">
+          <ul className="w-48 p-2">
             <NavigationMenuLink>
               {item.items.map((subItem) => (
                 <li key={subItem.title}>
                   <a
-                    className="flex select-none gap-4 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-zinc-800 hover:text-white text-zinc-300"
+                    className="block select-none rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-300 transition-colors hover:bg-zinc-800 hover:text-white"
                     href={subItem.url}
                   >
-                    <span className="text-zinc-400">{subItem.icon}</span>
-                    <div>
-                      <div className="text-sm font-semibold text-zinc-200">
-                        {subItem.title}
-                      </div>
-                      {subItem.description && (
-                        <p className="text-sm leading-snug text-zinc-500">
-                          {subItem.description}
-                        </p>
-                      )}
-                    </div>
+                    {subItem.title}
                   </a>
                 </li>
               ))}
@@ -294,7 +284,7 @@ const renderMenuItem = (item: MenuItem) => {
   return (
     <a
       key={item.title}
-      className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
+      className="group inline-flex h-10 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium text-zinc-400 transition-colors hover:text-white"
       href={item.url}
     >
       {item.title}
@@ -313,18 +303,10 @@ const renderMobileMenuItem = (item: MenuItem) => {
           {item.items.map((subItem) => (
             <a
               key={subItem.title}
-              className="flex select-none gap-4 rounded-md p-3 leading-none outline-none transition-colors hover:bg-zinc-800 text-zinc-300"
+              className="block select-none rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
               href={subItem.url}
             >
-              <span className="text-zinc-400">{subItem.icon}</span>
-              <div>
-                <div className="text-sm font-semibold text-zinc-200">{subItem.title}</div>
-                {subItem.description && (
-                  <p className="text-sm leading-snug text-zinc-500">
-                    {subItem.description}
-                  </p>
-                )}
-              </div>
+              {subItem.title}
             </a>
           ))}
         </AccordionContent>
