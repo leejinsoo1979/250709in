@@ -19,7 +19,7 @@ export default function LandingPage() {
     <div className="bg-zinc-950">
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
-        <nav className="max-w-6xl mx-auto px-6">
+        <nav className="max-w-[1400px] mx-auto px-8">
           <div className="flex items-center justify-between h-16">
             <Link to="/" className="flex items-center">
               <Logo />
@@ -94,8 +94,8 @@ export default function LandingPage() {
 
       <main>
         {/* Hero Section */}
-        <section className="relative pt-32 pb-20 px-6">
-          <div className="max-w-6xl mx-auto">
+        <section className="relative pt-32 pb-20 px-8">
+          <div className="max-w-[1400px] mx-auto">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-3 h-3 rounded-full bg-green-500" />
               <span className="text-zinc-400 text-sm">Professional Furniture Design Tool</span>
@@ -134,7 +134,7 @@ export default function LandingPage() {
           </div>
 
           {/* Hero Video with 3D Effect */}
-          <div className="max-w-6xl mx-auto mt-20 px-6">
+          <div className="max-w-[1400px] mx-auto mt-20 px-8">
             <div style={{ perspective: "1200px" }}>
               <div
                 className="rounded-2xl overflow-hidden border border-zinc-700/50 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)]"
@@ -156,8 +156,8 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section */}
-        <section id="features" className="relative py-32 px-6">
-          <div className="max-w-6xl mx-auto">
+        <section id="features" className="relative py-32 px-8">
+          <div className="max-w-[1400px] mx-auto">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-3 h-3 rounded-full bg-purple-500" />
               <span className="text-zinc-400 text-sm">Powerful Features</span>
@@ -211,8 +211,8 @@ export default function LandingPage() {
         </section>
 
         {/* Demo Section - Project Timeline Style */}
-        <section id="demo" className="relative py-32 px-6">
-          <div className="max-w-6xl mx-auto">
+        <section id="demo" className="relative py-32 px-8">
+          <div className="max-w-[1400px] mx-auto">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-3 h-3 rounded-full bg-green-500" />
               <span className="text-zinc-400 text-sm">Design Workflow</span>
@@ -457,8 +457,8 @@ export default function LandingPage() {
         </section>
 
         {/* Pricing Section */}
-        <section id="pricing" className="py-32 px-6">
-          <div className="max-w-6xl mx-auto">
+        <section id="pricing" className="py-32 px-8">
+          <div className="max-w-[1400px] mx-auto">
             <div className="flex items-center gap-2 mb-6">
               <div className="w-3 h-3 rounded-full bg-blue-500" />
               <span className="text-zinc-400 text-sm">Pricing</span>
@@ -553,8 +553,8 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section */}
-        <section className="py-32 px-6 border-t border-zinc-800">
-          <div className="max-w-6xl mx-auto text-center">
+        <section className="py-32 px-8 border-t border-zinc-800">
+          <div className="max-w-[1400px] mx-auto text-center">
             <h2
               className="text-3xl sm:text-4xl md:text-5xl font-medium text-white mb-6"
               style={{ letterSpacing: "-0.0325em", lineHeight: 1.1 }}>
@@ -573,8 +573,8 @@ export default function LandingPage() {
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-zinc-800 py-12 px-6">
-          <div className="max-w-6xl mx-auto">
+        <footer className="border-t border-zinc-800 py-12 px-8">
+          <div className="max-w-[1400px] mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
               <div>
                 <Logo className="mb-4" />
