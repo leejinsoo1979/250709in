@@ -161,7 +161,7 @@ const Navbar1 = ({
             <Link to={logo.url} className="flex items-center gap-3">
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-3xl leading-none"
-                style={{ backgroundColor: primaryColor }}
+                style={{ backgroundColor: primaryColor, fontFamily: '"Nunito", "Quicksand", "Varela Round", system-ui, sans-serif' }}
               >
                 m
               </div>
@@ -259,7 +259,7 @@ const Navbar1 = ({
             <Link to={logo.url} className="flex items-center gap-3">
               <div
                 className="w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold text-3xl leading-none"
-                style={{ backgroundColor: primaryColor }}
+                style={{ backgroundColor: primaryColor, fontFamily: '"Nunito", "Quicksand", "Varela Round", system-ui, sans-serif' }}
               >
                 m
               </div>
