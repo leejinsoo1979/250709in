@@ -636,24 +636,34 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 단내림 구간인 경우 해당 구간의 높이 사용
   let fullSpaceHeight = originalSpaceInfo.height;
 
-  console.log('🚪🔴 DoorModule zone 정보:', {
-    zone,
+  // zone prop이 없으면 spaceInfo.zone을 fallback으로 사용
+  const effectiveZone = zone ?? (spaceInfo as any)?.zone;
+
+  console.log('🚪🔴🔴🔴 DoorModule zone 정보 (중요!):', {
+    zoneProp: zone,
+    zoneFromSpaceInfo: (spaceInfo as any)?.zone,
+    effectiveZone,
     droppedCeilingEnabled: originalSpaceInfo.droppedCeiling?.enabled,
     dropHeight: originalSpaceInfo.droppedCeiling?.dropHeight,
     normalHeight: originalSpaceInfo.height,
-    willUseDroppedHeight: originalSpaceInfo.droppedCeiling?.enabled && zone === 'dropped'
+    willUseDroppedHeight: originalSpaceInfo.droppedCeiling?.enabled && effectiveZone === 'dropped',
+    isUpperCabinet,
+    isLowerCabinet,
+    moduleId: moduleData?.id,
+    경고: effectiveZone === undefined ? '⚠️ zone이 undefined입니다!' : `✅ zone=${effectiveZone}로 정상 전달됨`
   });
 
-  if (originalSpaceInfo.droppedCeiling?.enabled && zone === 'dropped') {
+  if (originalSpaceInfo.droppedCeiling?.enabled && effectiveZone === 'dropped') {
     // 단내림 구간 높이 = 전체 높이 - 내려온 높이
     const dropHeight = originalSpaceInfo.droppedCeiling.dropHeight || 0;
     fullSpaceHeight = originalSpaceInfo.height - dropHeight;
     console.log('🚪📏 단내림 구간 높이 사용:', {
-      zone,
+      effectiveZone,
       normalHeight: originalSpaceInfo.height,
       dropHeight,
       droppedHeight: fullSpaceHeight,
-      계산식: `${originalSpaceInfo.height} - ${dropHeight} = ${fullSpaceHeight}`
+      계산식: `${originalSpaceInfo.height} - ${dropHeight} = ${fullSpaceHeight}`,
+      설명: '키큰장 도어에 적용됨'
     });
   }
 
