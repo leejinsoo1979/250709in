@@ -163,7 +163,7 @@ export default function LandingPage() {
             </div>
             {/* Video bottom fade - transition to Features section */}
             <div
-              className="absolute -bottom-20 left-0 right-0 h-32 pointer-events-none"
+              className="absolute -bottom-40 left-0 right-0 h-64 pointer-events-none"
               style={{
                 background: "linear-gradient(to bottom, transparent, rgb(9, 9, 11))"
               }}
@@ -175,7 +175,7 @@ export default function LandingPage() {
         <section id="features" className="relative py-32 px-8">
           {/* Top fade - transition from video */}
           <div
-            className="absolute top-0 left-0 right-0 h-24 pointer-events-none"
+            className="absolute top-0 left-0 right-0 h-48 pointer-events-none"
             style={{
               background: "linear-gradient(to top, transparent, rgb(9, 9, 11))"
             }}
