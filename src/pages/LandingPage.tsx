@@ -95,15 +95,15 @@ export default function LandingPage() {
       <main>
         {/* Hero Section */}
         <section className="relative pt-32 pb-20 px-8">
-          <div className="max-w-[1400px] mx-auto">
-            <div className="flex items-center gap-2 mb-6">
+          <div className="max-w-[1400px] mx-auto text-center">
+            <div className="flex items-center justify-center gap-2 mb-6">
               <div className="w-3 h-3 rounded-full bg-green-500" />
               <span className="text-zinc-400 text-sm">Professional Furniture Design Tool</span>
               <ChevronRight className="w-4 h-4 text-zinc-500" />
             </div>
 
             <h1
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium text-white mb-8 max-w-4xl"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium text-white mb-8 max-w-4xl mx-auto"
               style={{
                 letterSpacing: "-0.0325em",
                 lineHeight: 1.1,
@@ -111,12 +111,12 @@ export default function LandingPage() {
               Design Your Perfect Furniture Space
             </h1>
 
-            <p className="text-zinc-400 text-lg max-w-xl mb-12">
+            <p className="text-zinc-400 text-lg max-w-xl mb-12 mx-auto">
               <span className="text-white font-medium">Create stunning 3D furniture layouts.</span>{' '}
               Professional design tools for visualizing, customizing, and exporting production-ready furniture designs.
             </p>
 
-            <div className="flex flex-wrap gap-4">
+            <div className="flex flex-wrap gap-4 justify-center">
               <Button
                 size="lg"
                 className="bg-white text-zinc-900 hover:bg-zinc-200"
