@@ -151,6 +151,8 @@ const Navbar1 = ({
     { id: 'yellow', color: '#eab308' },
   ];
 
+  const primaryColor = themeColors.find(c => c.id === theme.color)?.color || '#3b82f6';
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
       <div className="max-w-[1400px] mx-auto px-8">
@@ -224,14 +226,16 @@ const Navbar1 = ({
             <Button
               variant="ghost"
               size="sm"
-              className="text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-full px-4"
+              className="hover:bg-zinc-800/50 rounded-full px-4"
+              style={{ color: primaryColor }}
               onClick={() => navigate(auth.login.url)}
             >
               {auth.login.text}
             </Button>
             <Button
               size="sm"
-              className="bg-white text-zinc-900 hover:bg-zinc-200 rounded-full px-5"
+              className="text-white hover:opacity-90 rounded-full px-5"
+              style={{ backgroundColor: primaryColor }}
               onClick={() => navigate(auth.signup.url)}
             >
               {auth.signup.text}
@@ -281,13 +285,15 @@ const Navbar1 = ({
                   <div className="flex flex-col gap-3">
                     <Button
                       variant="outline"
-                      className="border-zinc-700 text-zinc-300 hover:bg-zinc-800 rounded-full"
+                      className="hover:bg-zinc-800/50 rounded-full"
+                      style={{ borderColor: primaryColor, color: primaryColor }}
                       onClick={() => navigate(auth.login.url)}
                     >
                       {auth.login.text}
                     </Button>
                     <Button
-                      className="bg-white text-zinc-900 hover:bg-zinc-200 rounded-full"
+                      className="text-white hover:opacity-90 rounded-full"
+                      style={{ backgroundColor: primaryColor }}
                       onClick={() => navigate(auth.signup.url)}
                     >
                       {auth.signup.text}
