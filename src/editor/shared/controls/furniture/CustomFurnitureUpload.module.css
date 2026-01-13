@@ -1,0 +1,324 @@
+.uploadContainer {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 480px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #999;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  color: #333;
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+/* 드롭존 */
+.dropzone {
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fafafa;
+}
+
+.dropzone:hover {
+  border-color: #4a90d9;
+  background: #f0f7ff;
+}
+
+.dropzone.dragOver {
+  border-color: #4a90d9;
+  background: #e8f2ff;
+}
+
+.dropzone.hasFile {
+  border-style: solid;
+  border-color: #4a90d9;
+  background: #f0f7ff;
+}
+
+.dropzoneContent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.uploadIcon {
+  font-size: 48px;
+  opacity: 0.6;
+}
+
+.dropzoneContent p {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+}
+
+.supportedFormats {
+  font-size: 12px;
+  color: #999;
+}
+
+.selectedFile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.fileIcon {
+  font-size: 48px;
+}
+
+.fileName {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.fileSize {
+  font-size: 12px;
+  color: #999;
+}
+
+/* 옵션 */
+.options {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.optionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.optionGroup label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #555;
+}
+
+.optionGroup input,
+.optionGroup select {
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s;
+}
+
+.optionGroup input:focus,
+.optionGroup select:focus {
+  outline: none;
+  border-color: #4a90d9;
+}
+
+.optionHint {
+  font-size: 11px;
+  color: #999;
+}
+
+/* 로딩 */
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.loadingContent {
+  text-align: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #eee;
+  border-top-color: #4a90d9;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadingContent p {
+  margin: 0 0 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+.progressBar {
+  width: 200px;
+  height: 4px;
+  background: #eee;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #4a90d9;
+  transition: width 0.3s ease;
+}
+
+/* 에러 메시지 */
+.errorMessage {
+  margin-top: 16px;
+  padding: 12px;
+  background: #fff5f5;
+  border: 1px solid #ffccc7;
+  border-radius: 6px;
+  color: #cf1322;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 안내 박스 */
+.infoBox {
+  margin-top: 20px;
+  padding: 16px;
+  background: #f6f8fa;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.infoBox h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+}
+
+.infoBox p {
+  margin: 0 0 8px;
+  color: #666;
+}
+
+.infoBox ul {
+  margin: 0;
+  padding-left: 20px;
+  color: #666;
+}
+
+.infoBox li {
+  margin-bottom: 4px;
+}
+
+.infoBox code {
+  background: #e8e8e8;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-family: 'Monaco', 'Consolas', monospace;
+}
+
+.guideLink {
+  display: inline-block;
+  margin-top: 8px;
+  color: #4a90d9;
+  text-decoration: none;
+  font-size: 12px;
+}
+
+.guideLink:hover {
+  text-decoration: underline;
+}
+
+/* 푸터 */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  border-top: 1px solid #eee;
+  background: #fafafa;
+}
+
+.cancelButton,
+.submitButton {
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelButton {
+  background: #fff;
+  border: 1px solid #ddd;
+  color: #666;
+}
+
+.cancelButton:hover:not(:disabled) {
+  border-color: #999;
+  color: #333;
+}
+
+.submitButton {
+  background: #4a90d9;
+  border: none;
+  color: #fff;
+}
+
+.submitButton:hover:not(:disabled) {
+  background: #3a7fc8;
+}
+
+.submitButton:disabled,
+.cancelButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
