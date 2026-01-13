@@ -172,14 +172,14 @@ const Navbar1 = ({
           <div className="flex items-center gap-3">
             <div className="relative">
               <button
-                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+                className="w-8 h-8 rounded-full flex items-center justify-center transition-colors hover:opacity-80"
                 onClick={() => setIsThemeOpen(!isThemeOpen)}
                 style={{
                   background: 'transparent',
-                  border: '1.5px solid rgb(113, 113, 122)'
+                  border: `1.5px solid ${primaryColor}`
                 }}
               >
-                <Palette className="size-4 text-zinc-400" />
+                <Palette className="size-4" style={{ color: primaryColor }} />
               </button>
               {isThemeOpen && (
                 <>
