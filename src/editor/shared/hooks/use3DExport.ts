@@ -34,48 +34,62 @@ export const use3DExport = () => {
   };
 
   /**
-   * 그룹 또는 메쉬가 내보내기에 포함되어야 하는지 확인
+   * 객체가 내보내기에서 제외되어야 하는지 확인
    */
-  const shouldInclude = (obj: THREE.Object3D): boolean => {
+  const shouldExclude = (obj: THREE.Object3D): boolean => {
     const name = obj.name || '';
     const type = obj.type || '';
-
-    const includePatterns = [
-      'FurnitureContainer', 'Furniture', 'Frame', 'Door', 'Cabinet',
-      'Shelf', 'Drawer', 'Panel', 'EndPanel', 'BackPanel', 'Hinge',
-      // 한글 패턴
-      '프레임', '상부프레임', '하부프레임', '가구', '도어', '캐비넷',
-      '선반', '서랍', '패널', '엔드패널', '백패널', '힌지',
-    ];
 
     const excludePatterns = [
       'Wall', 'Floor', 'Ceiling', 'Room', 'Grid', 'Axis', 'Helper',
       'Light', 'Camera', 'Text', 'Dimension', 'Label', 'Html', 'Guide',
       'Arrow', 'Marker', 'Placement', 'Environment', 'Sky', 'space-frame',
-      'Column', 'SlotDrop', 'Indicator', 'CAD', 'Dropped',
+      'SlotDrop', 'Indicator', 'CAD', 'Gradient', 'Background',
     ];
 
+    // 제외 패턴에 해당하면 제외
     if (excludePatterns.some(pattern =>
       name.toLowerCase().includes(pattern.toLowerCase()) ||
       type.toLowerCase().includes(pattern.toLowerCase())
     )) {
-      return false;
+      return true;
     }
 
-    if ((obj as any).isLight) return false;
-    if (type === 'Sprite') return false;
+    // 조명 제외
+    if ((obj as any).isLight) return true;
 
+    // Sprite 제외
+    if (type === 'Sprite') return true;
+
+    // Line 제외 (치수선 등)
+    if (type === 'Line' || type === 'LineSegments' || type === 'Line2') return true;
+
+    // 벽/바닥 메쉬 제외
     if ((obj as any).isMesh && isWallOrFloorMesh(obj as THREE.Mesh)) {
-      return false;
-    }
-
-    if (includePatterns.some(pattern =>
-      name.toLowerCase().includes(pattern.toLowerCase())
-    )) {
       return true;
     }
 
     return false;
+  };
+
+  /**
+   * 그룹 또는 메쉬가 내보내기에 포함되어야 하는지 확인 (FurnitureContainer 또는 Column 등)
+   */
+  const shouldIncludeTopLevel = (obj: THREE.Object3D): boolean => {
+    const name = obj.name || '';
+
+    const includePatterns = [
+      'FurnitureContainer', 'Furniture', 'Frame', 'Door', 'Cabinet',
+      'Shelf', 'Drawer', 'Panel', 'EndPanel', 'BackPanel', 'Hinge',
+      'Column', // 기둥 포함
+      // 한글 패턴
+      '프레임', '상부프레임', '하부프레임', '가구', '도어', '캐비넷',
+      '선반', '서랍', '패널', '엔드패널', '백패널', '힌지', '기둥',
+    ];
+
+    return includePatterns.some(pattern =>
+      name.toLowerCase().includes(pattern.toLowerCase())
+    );
   };
 
   /**
@@ -137,42 +151,88 @@ export const use3DExport = () => {
   };
 
   /**
-   * 씬에서 가구 찾기
+   * 씬에서 내보낼 객체 찾기 (가구 + 프레임)
+   * 새로운 접근: 제외 목록에 없는 모든 메쉬 포함
    */
-  const findFurniture = (scene: Scene | Group): THREE.Object3D[] => {
+  const findExportableObjects = (scene: Scene | Group): THREE.Object3D[] => {
     const result: THREE.Object3D[] = [];
-    const addedNames = new Set<string>();
+    const addedUuids = new Set<string>();
 
-    const traverse = (obj: THREE.Object3D) => {
-      const objKey = `${obj.name}_${obj.uuid}`;
+    console.log('🔍 내보낼 객체 탐색 시작...');
+
+    // 씬 전체 구조 로깅
+    scene.traverse((child: any) => {
+      if (child.isMesh || child.isGroup) {
+        console.log(`  📦 ${child.name || '(unnamed)'} [${child.type}]`);
+      }
+    });
+
+    const traverse = (obj: THREE.Object3D, depth: number = 0) => {
+      const indent = '  '.repeat(depth);
+
+      // 이미 추가된 객체는 건너뛰기
+      if (addedUuids.has(obj.uuid)) return;
 
       // FurnitureContainer는 전체 포함
       if (obj.name === 'FurnitureContainer') {
-        if (!addedNames.has(objKey)) {
-          result.push(obj);
-          addedNames.add(objKey);
-          console.log(`✅ FurnitureContainer 포함`);
-        }
+        result.push(obj);
+        addedUuids.add(obj.uuid);
+        console.log(`${indent}✅ FurnitureContainer 포함`);
+        return; // 하위 요소는 이미 포함됨
+      }
+
+      // Column (기둥)은 전체 포함
+      if (obj.name && obj.name.toLowerCase().includes('column') && !obj.name.toLowerCase().includes('columnguide')) {
+        result.push(obj);
+        addedUuids.add(obj.uuid);
+        console.log(`${indent}✅ Column 포함: ${obj.name}`);
         return;
       }
 
-      // 포함 패턴에 매칭되면 포함 (Group 또는 Mesh)
-      if (shouldInclude(obj)) {
-        if (!addedNames.has(objKey)) {
-          result.push(obj);
-          addedNames.add(objKey);
-          console.log(`✅ 포함: ${obj.name} (${obj.type})`);
-        }
+      // 명시적 포함 패턴에 매칭되면 포함
+      if (shouldIncludeTopLevel(obj)) {
+        result.push(obj);
+        addedUuids.add(obj.uuid);
+        console.log(`${indent}✅ 패턴 매칭으로 포함: ${obj.name || '(unnamed)'} (${obj.type})`);
         return;
+      }
+
+      // 메쉬인 경우 - 제외 대상이 아니면 포함
+      if ((obj as any).isMesh) {
+        const mesh = obj as THREE.Mesh;
+
+        // 제외 대상 확인
+        if (shouldExclude(obj)) {
+          console.log(`${indent}❌ 제외: ${obj.name || '(unnamed)'} (${obj.type})`);
+          return;
+        }
+
+        // BoxGeometry 메쉬는 프레임일 가능성이 높음 - 포함
+        if (mesh.geometry && mesh.geometry.type === 'BoxGeometry') {
+          // 크기 확인 - 너무 큰 것은 벽일 수 있음
+          const params = (mesh.geometry as THREE.BoxGeometry).parameters;
+          if (params) {
+            const maxDim = Math.max(params.width, params.height, params.depth);
+            // 50 단위 (5000mm = 5m) 이하면 가구/프레임으로 간주
+            if (maxDim <= 50) {
+              result.push(obj);
+              addedUuids.add(obj.uuid);
+              console.log(`${indent}✅ BoxGeometry 메쉬 포함: ${obj.name || '(unnamed)'} (${params.width.toFixed(1)} x ${params.height.toFixed(1)} x ${params.depth.toFixed(1)})`);
+              return;
+            }
+          }
+        }
       }
 
       // 자식 탐색
       if (obj.children && obj.children.length > 0) {
-        obj.children.forEach(child => traverse(child));
+        obj.children.forEach(child => traverse(child, depth + 1));
       }
     };
 
-    scene.children.forEach(child => traverse(child));
+    scene.children.forEach(child => traverse(child, 0));
+
+    console.log(`📊 총 ${result.length}개의 객체 발견`);
     return result;
   };
 
@@ -187,8 +247,8 @@ export const use3DExport = () => {
     exportGroup.name = 'FurnitureExport';
     exportGroup.scale.set(scale, scale, scale);
 
-    const objectsToExport = findFurniture(scene);
-    console.log(`📦 내보낼 가구 수: ${objectsToExport.length}`);
+    const objectsToExport = findExportableObjects(scene);
+    console.log(`📦 내보낼 객체 수: ${objectsToExport.length}`);
 
     objectsToExport.forEach((obj, index) => {
       console.log(`  ${index + 1}. ${obj.name || '(unnamed)'} - position: (${obj.position.x.toFixed(2)}, ${obj.position.y.toFixed(2)}, ${obj.position.z.toFixed(2)})`);
