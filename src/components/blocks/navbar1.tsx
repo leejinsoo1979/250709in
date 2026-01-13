@@ -141,12 +141,9 @@ const Navbar1 = ({
     <header className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/90 backdrop-blur-md border-b border-zinc-800">
       <div className="max-w-[1400px] mx-auto px-8">
         <nav className="hidden lg:flex h-16 items-center">
-          <div className="flex items-center gap-2">
-            <Link to={logo.url} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold">
-                F
-              </div>
-              <span className="text-lg font-semibold text-white">{logo.title}</span>
+          <div className="flex items-center">
+            <Link to={logo.url}>
+              <img src="/logo.png" alt={logo.title} className="h-8" />
             </Link>
           </div>
           <div className="flex-1 flex justify-center">
@@ -176,11 +173,8 @@ const Navbar1 = ({
         </nav>
         <div className="block lg:hidden">
           <div className="flex items-center justify-between h-16">
-            <Link to={logo.url} className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold">
-                F
-              </div>
-              <span className="text-lg font-semibold text-white">{logo.title}</span>
+            <Link to={logo.url}>
+              <img src="/logo.png" alt={logo.title} className="h-8" />
             </Link>
             <Sheet>
               <SheetTrigger asChild>
@@ -191,13 +185,8 @@ const Navbar1 = ({
               <SheetContent className="overflow-y-auto bg-zinc-950 border-zinc-800">
                 <SheetHeader>
                   <SheetTitle>
-                    <Link to={logo.url} className="flex items-center gap-2">
-                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold">
-                        F
-                      </div>
-                      <span className="text-lg font-semibold text-white">
-                        {logo.title}
-                      </span>
+                    <Link to={logo.url}>
+                      <img src="/logo.png" alt={logo.title} className="h-8" />
                     </Link>
                   </SheetTitle>
                 </SheetHeader>
