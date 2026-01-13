@@ -266,7 +266,8 @@ const renderMenuItem = (item: MenuItem) => {
             {item.items.map((subItem) => (
               <li key={subItem.title}>
                 <a
-                  className="block select-none rounded-lg px-3 py-2.5 text-sm font-medium text-zinc-200 transition-colors hover:bg-zinc-700 hover:text-white"
+                  className="block select-none rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-zinc-700"
+                  style={{ color: '#e4e4e7' }}
                   href={subItem.url}
                 >
                   {subItem.title}
