@@ -38,7 +38,8 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
   lowerSectionTopOffset,
   placedFurnitureId,
   panelGrainDirections,
-  renderMode: renderModeProp
+  renderMode: renderModeProp,
+  zone // 단내림 영역 정보
 }) => {
   console.log('🏠 [LowerCabinet] Props 확인:', {
     moduleId: moduleData.id,
@@ -221,6 +222,7 @@ const LowerCabinet: React.FC<FurnitureTypeProps> = ({
           textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
+          zone={zone}
         />
       )}
 

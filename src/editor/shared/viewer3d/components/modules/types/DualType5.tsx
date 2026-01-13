@@ -41,7 +41,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
   visibleSectionIndex = null, // 듀얼 가구 섹션 필터링 (0: 좌측, 1: 우측, null: 전체)
   textureUrl,
   panelGrainDirections,
-  lowerSectionTopOffset
+  lowerSectionTopOffset,
+  zone // 단내림 영역 정보
 }) => {
   // 공통 로직 사용 (좌측 깊이만 반영)
   const baseFurniture = useBaseFurniture(moduleData, {
@@ -1376,6 +1377,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
           panelGrainDirections={panelGrainDirections}
           furnitureId={placedFurnitureId}
           floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
+          zone={zone}
         />
       )}
     </>

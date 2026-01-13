@@ -44,7 +44,8 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   lowerDoorTopGap,
   lowerDoorBottomGap,
   lowerSectionTopOffset,
-  panelGrainDirections: propsPanelGrainDirections
+  panelGrainDirections: propsPanelGrainDirections,
+  zone // 단내림 영역 정보
 }) => {
   console.log('🔍🔍🔍 [DualType1] Props 확인 - 렌더링됨!');
   console.log('  moduleId:', moduleData.id);
@@ -148,6 +149,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
         doorTopGap={doorTopGap}
         doorBottomGap={doorBottomGap}
         floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
+        zone={zone}
       />
     ) : (
       <>
@@ -174,6 +176,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
           sectionIndex={1}
           totalSections={2}
           floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
+          zone={zone}
         />
 
         <DoorModule
@@ -199,6 +202,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
           sectionIndex={0}
           totalSections={2}
           floatHeight={spaceInfo.baseConfig?.placementType === 'float' ? (spaceInfo.baseConfig?.floatHeight || 0) : 0}
+          zone={zone}
         />
       </>
     )
