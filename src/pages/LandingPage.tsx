@@ -669,10 +669,7 @@ export default function LandingPage() {
 const Logo = ({ className }: { className?: string }) => {
   return (
     <div className={cn('flex items-center gap-2', className)}>
-      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center text-white font-bold">
-        F
-      </div>
-      <span className="font-semibold text-lg text-white">FurnitureDesigner</span>
+      <img src="/logo.png" alt="FurnitureDesigner" className="h-8" />
     </div>
   );
 };
