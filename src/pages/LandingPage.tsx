@@ -150,15 +150,16 @@ export default function LandingPage() {
             <div className="flex flex-wrap gap-6 justify-center">
               <Button
                 size="lg"
-                className="bg-white text-zinc-900 hover:bg-zinc-200 rounded-full px-8"
+                className="text-white hover:opacity-90 rounded-full px-8"
+                style={{ backgroundColor: primaryColor }}
                 onClick={() => navigate('/dashboard')}>
                 Start Designing
               </Button>
               <Button
                 size="lg"
                 variant="outline"
-                className="text-zinc-300 hover:bg-zinc-800 rounded-full px-8"
-                style={{ border: '1px solid rgb(161, 161, 170)' }}
+                className="hover:bg-zinc-800/50 rounded-full px-8"
+                style={{ border: `1px solid ${primaryColor}`, color: primaryColor }}
                 onClick={() => navigate('/configurator')}>
                 View Demo
               </Button>
