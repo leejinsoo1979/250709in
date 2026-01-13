@@ -616,7 +616,8 @@ export default function LandingPage() {
             </p>
             <Button
               size="lg"
-              className="bg-white text-zinc-900 hover:bg-zinc-200"
+              className="text-white hover:opacity-90 rounded-full px-8"
+              style={{ backgroundColor: primaryColor }}
               onClick={() => navigate('/dashboard')}>
               Get Started for Free
             </Button>
