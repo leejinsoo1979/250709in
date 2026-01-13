@@ -268,18 +268,13 @@ const DropdownMenuItem = ({ item }: { item: MenuItem }) => {
             className="absolute left-0 top-full z-50 pt-2"
           >
             <ul
-              className="w-48 rounded-xl p-2 shadow-2xl list-none m-0"
-              style={{
-                backgroundColor: 'rgb(24, 24, 27)',
-                border: '1px solid rgb(63, 63, 70)'
-              }}
+              className="w-48 rounded-xl p-2 shadow-2xl list-none m-0 bg-zinc-950 border border-zinc-800"
             >
               {item.items.map((subItem) => (
                 <li key={subItem.title} className="m-0 p-0">
                   <span
                     onClick={() => window.location.href = subItem.url}
-                    className="block rounded-lg px-3 py-2.5 text-sm font-medium cursor-pointer hover:bg-zinc-700"
-                    style={{ color: 'rgb(228, 228, 231)' }}
+                    className="block rounded-lg px-3 py-2.5 text-sm font-medium cursor-pointer hover:bg-zinc-800 text-zinc-200 transition-colors"
                   >
                     {subItem.title}
                   </span>
