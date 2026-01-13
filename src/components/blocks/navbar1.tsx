@@ -158,8 +158,16 @@ const Navbar1 = ({
       <div className="max-w-[1400px] mx-auto px-8">
         <nav className="hidden lg:flex h-16 items-center">
           <div className="flex items-center">
-            <Link to={logo.url}>
-              <img src="/logo.png" alt={logo.title} className="h-8" />
+            <Link to={logo.url} className="flex items-center gap-2">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                style={{ backgroundColor: primaryColor }}
+              >
+                m
+              </div>
+              <span style={{ color: primaryColor }} className="font-medium text-lg tracking-wide">
+                LOGO
+              </span>
             </Link>
           </div>
           <div className="flex-1 flex justify-center">
@@ -248,8 +256,16 @@ const Navbar1 = ({
         </nav>
         <div className="block lg:hidden">
           <div className="flex items-center justify-between h-16">
-            <Link to={logo.url}>
-              <img src="/logo.png" alt={logo.title} className="h-8" />
+            <Link to={logo.url} className="flex items-center gap-2">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                style={{ backgroundColor: primaryColor }}
+              >
+                m
+              </div>
+              <span style={{ color: primaryColor }} className="font-medium text-lg tracking-wide">
+                LOGO
+              </span>
             </Link>
             <Sheet>
               <SheetTrigger asChild>
@@ -260,8 +276,16 @@ const Navbar1 = ({
               <SheetContent className="overflow-y-auto bg-zinc-950 border-zinc-800">
                 <SheetHeader>
                   <SheetTitle>
-                    <Link to={logo.url}>
-                      <img src="/logo.png" alt={logo.title} className="h-8" />
+                    <Link to={logo.url} className="flex items-center gap-2">
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold text-sm"
+                        style={{ backgroundColor: primaryColor }}
+                      >
+                        m
+                      </div>
+                      <span style={{ color: primaryColor }} className="font-medium text-lg tracking-wide">
+                        LOGO
+                      </span>
                     </Link>
                   </SheetTitle>
                 </SheetHeader>
