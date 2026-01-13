@@ -2,10 +2,11 @@ import { useCallback } from 'react';
 import { GLTFExporter } from 'three/examples/jsm/exporters/GLTFExporter.js';
 import { OBJExporter } from 'three/examples/jsm/exporters/OBJExporter.js';
 import { STLExporter } from 'three/examples/jsm/exporters/STLExporter.js';
+import { ColladaExporter } from '../utils/ColladaExporter';
 import * as THREE from 'three';
 import type { Group, Scene } from 'three';
 
-export type ExportFormat = 'glb' | 'obj' | 'stl';
+export type ExportFormat = 'glb' | 'obj' | 'stl' | 'dae';
 
 interface ExportResult {
   success: boolean;
@@ -14,7 +15,7 @@ interface ExportResult {
 
 /**
  * 3D 모델 내보내기 기능을 제공하는 커스텀 훅
- * - GLB, OBJ, STL 포맷 지원
+ * - GLB, OBJ, STL, DAE 포맷 지원
  * - 가구만 내보내기, 벽/바닥/천장 제외
  */
 export const use3DExport = () => {
@@ -75,15 +76,28 @@ export const use3DExport = () => {
   };
 
   /**
-   * 복제된 객체에서 치수/텍스트 요소 제거
+   * 복제된 객체에서 치수/텍스트/조명 요소 제거
    */
-  const removeDimensionsFromClone = (obj: THREE.Object3D): void => {
+  const removeUnwantedFromClone = (obj: THREE.Object3D): void => {
     const childrenToRemove: THREE.Object3D[] = [];
 
     obj.traverse((child: any) => {
       const name = (child.name || '').toLowerCase();
       const type = child.type || '';
 
+      // 조명 관련 요소 식별
+      const isLight =
+        child.isLight ||
+        type.includes('Light') ||
+        name.includes('light') ||
+        type === 'SpotLight' ||
+        type === 'PointLight' ||
+        type === 'DirectionalLight' ||
+        type === 'AmbientLight' ||
+        type === 'HemisphereLight' ||
+        type === 'RectAreaLight';
+
+      // 치수 관련 요소 식별
       const isDimension =
         name.includes('dimension') ||
         name.includes('text') ||
@@ -98,7 +112,16 @@ export const use3DExport = () => {
          child.geometry && child.geometry.boundingSphere &&
          child.geometry.boundingSphere.radius < 1);
 
-      if (isDimension) {
+      // 헬퍼/카메라 요소 식별
+      const isHelper =
+        name.includes('helper') ||
+        name.includes('camera') ||
+        type.includes('Helper') ||
+        type === 'Camera' ||
+        type === 'PerspectiveCamera' ||
+        type === 'OrthographicCamera';
+
+      if (isLight || isDimension || isHelper) {
         childrenToRemove.push(child);
       }
     });
@@ -148,7 +171,7 @@ export const use3DExport = () => {
 
     objectsToExport.forEach((obj) => {
       const cloned = obj.clone(true);
-      removeDimensionsFromClone(cloned);
+      removeUnwantedFromClone(cloned);
       exportGroup.add(cloned);
     });
 
@@ -311,6 +334,46 @@ export const use3DExport = () => {
   }, []);
 
   /**
+   * DAE (Collada) 포맷으로 내보내기
+   * SketchUp에서 기본 지원하는 포맷
+   */
+  const exportToDAE = useCallback(async (
+    scene: Scene | Group,
+    filename: string = 'furniture-design.dae'
+  ): Promise<ExportResult> => {
+    try {
+      console.log('🔧 DAE 내보내기 시작...');
+
+      if (!scene) {
+        throw new Error('내보낼 씬이 없습니다.');
+      }
+
+      const exportGroup = prepareExportGroup(scene);
+
+      if (exportGroup.children.length === 0) {
+        throw new Error('내보낼 가구가 없습니다.');
+      }
+
+      // Y-up (Three.js) → Z-up (SketchUp, CAD) 좌표계 변환
+      convertToZUp(exportGroup);
+
+      const exporter = new ColladaExporter();
+      const result = exporter.parse(exportGroup);
+
+      const blob = new Blob([result], { type: 'model/vnd.collada+xml' });
+      downloadBlob(blob, filename);
+
+      console.log('✅ DAE 파일 다운로드 완료:', filename);
+      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'DAE 내보내기 중 오류가 발생했습니다.'
+      };
+    }
+  }, []);
+
+  /**
    * 포맷에 따라 내보내기
    */
   const exportTo3D = useCallback(async (
@@ -328,10 +391,12 @@ export const use3DExport = () => {
         return exportToOBJ(scene, finalFilename);
       case 'stl':
         return exportToSTL(scene, finalFilename);
+      case 'dae':
+        return exportToDAE(scene, finalFilename);
       default:
         return { success: false, error: `지원하지 않는 포맷: ${format}` };
     }
-  }, [exportToGLB, exportToOBJ, exportToSTL]);
+  }, [exportToGLB, exportToOBJ, exportToSTL, exportToDAE]);
 
   /**
    * Blob 다운로드 헬퍼
@@ -367,6 +432,7 @@ export const use3DExport = () => {
     exportToGLB,
     exportToOBJ,
     exportToSTL,
+    exportToDAE,
     exportTo3D,
     canExport,
   };

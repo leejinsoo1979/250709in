@@ -84,7 +84,7 @@ interface HeaderProps {
   isFileTreeOpen?: boolean;
   // 내보내기 관련 props
   onExportPDF?: () => void; // 실제로는 ConvertModal을 열어줌
-  onExport3D?: (format: 'glb' | 'obj' | 'stl') => void; // 3D 모델 내보내기
+  onExport3D?: (format: 'glb' | 'obj' | 'stl' | 'dae') => void; // 3D 모델 내보내기
   // 읽기 전용 모드
   readOnly?: boolean; // viewer 권한용 읽기 전용 모드 (디자인명 수정 불가)
   // 모바일 메뉴 토글
@@ -756,6 +756,19 @@ const Header: React.FC<HeaderProps> = ({
                             }}
                           >
                             STL 파일 (.stl)
+                          </button>
+                          <button
+                            className={styles.submenuItem}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log('📦 Header - DAE로 다운로드 버튼 클릭됨');
+                              setIsFileMenuOpen(false);
+                              setIs3DExportSubmenuOpen(false);
+                              onExport3D?.('dae');
+                            }}
+                          >
+                            DAE 파일 (.dae)
                           </button>
                         </div>
                       )}
