@@ -134,7 +134,7 @@ export default function LandingPage() {
           </div>
 
           {/* Hero Video with 3D Effect */}
-          <div className="max-w-[1600px] mt-20 px-4 ml-auto mr-auto translate-x-[10%]">
+          <div className="max-w-[1300px] mt-20 px-4 ml-auto mr-auto translate-x-[10%]">
             <div style={{ perspective: "1200px" }}>
               <div
                 className="overflow-hidden"
