@@ -137,14 +137,12 @@ export default function LandingPage() {
           <div className="max-w-[1600px] mt-20 px-4 ml-auto mr-auto translate-x-[10%]">
             <div style={{ perspective: "1200px" }}>
               <div
-                className="rounded-2xl overflow-hidden border border-zinc-700/50 shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)]"
+                className="overflow-hidden"
                 style={{
                   transform: "rotateX(8deg) rotateY(14deg) rotateZ(-16deg)",
                   transformOrigin: "center center",
-                  maskImage: "linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%), linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
-                  maskComposite: "intersect",
-                  WebkitMaskImage: "linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%), linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%)",
-                  WebkitMaskComposite: "source-in",
+                  maskImage: "radial-gradient(ellipse 90% 85% at center, black 60%, transparent 100%)",
+                  WebkitMaskImage: "radial-gradient(ellipse 90% 85% at center, black 60%, transparent 100%)",
                 }}>
                 <video
                   className="w-full block"
