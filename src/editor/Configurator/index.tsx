@@ -58,7 +58,7 @@ import {
   BaseControls
 } from '@/editor/shared/controls';
 import GapControls from '@/editor/shared/controls/customization/components/GapControls';
-import { BoringSettingsPanel, BoringExportDialog } from '@/editor/shared/controls/boring';
+import { BoringExportDialog } from '@/editor/shared/controls/boring';
 import { useFurnitureBoring } from '@/domain/boring';
 
 import styles from './style.module.css';
@@ -2706,79 +2706,6 @@ const Configurator: React.FC = () => {
               columns={spaceInfo.columns || []}
               onColumnsChange={(columns) => setSpaceInfo({ columns })}
             />
-          </div>
-        );
-      case 'boring':
-        return (
-          <div className={styles.sidebarPanel}>
-            <BoringSettingsPanel />
-            {/* 보링 데이터 요약 */}
-            <div style={{
-              padding: '16px',
-              borderTop: '1px solid var(--theme-border)',
-              background: 'var(--theme-background-secondary)'
-            }}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '12px',
-                marginBottom: '12px'
-              }}>
-                <div style={{
-                  padding: '12px',
-                  background: 'var(--theme-surface)',
-                  borderRadius: '8px',
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>가구 수</div>
-                  <div style={{ fontSize: '20px', fontWeight: '600', color: 'var(--theme-primary)' }}>
-                    {boringFurnitureCount}개
-                  </div>
-                </div>
-                <div style={{
-                  padding: '12px',
-                  background: 'var(--theme-surface)',
-                  borderRadius: '8px',
-                  textAlign: 'center'
-                }}>
-                  <div style={{ fontSize: '12px', color: 'var(--theme-text-secondary)' }}>총 보링 수</div>
-                  <div style={{ fontSize: '20px', fontWeight: '600', color: 'var(--theme-primary)' }}>
-                    {totalBorings}개
-                  </div>
-                </div>
-              </div>
-              <button
-                onClick={() => setShowBoringExportDialog(true)}
-                disabled={boringFurnitureCount === 0}
-                style={{
-                  width: '100%',
-                  padding: '12px 16px',
-                  background: boringFurnitureCount === 0 ? 'var(--theme-border)' : 'var(--theme-primary)',
-                  color: boringFurnitureCount === 0 ? 'var(--theme-text-secondary)' : 'white',
-                  border: 'none',
-                  borderRadius: '8px',
-                  fontSize: '14px',
-                  fontWeight: '500',
-                  cursor: boringFurnitureCount === 0 ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px'
-                }}
-              >
-                보링 데이터 내보내기
-              </button>
-              {boringFurnitureCount === 0 && (
-                <p style={{
-                  fontSize: '12px',
-                  color: 'var(--theme-text-secondary)',
-                  textAlign: 'center',
-                  marginTop: '8px'
-                }}>
-                  가구를 배치하면 보링 데이터가 생성됩니다
-                </p>
-              )}
-            </div>
           </div>
         );
       case 'etc':

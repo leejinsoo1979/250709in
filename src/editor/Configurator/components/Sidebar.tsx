@@ -6,7 +6,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { PaletteIcon, StructureIcon } from '@/components/common/Icons';
 import { HiOutlineColorSwatch } from 'react-icons/hi';
 import { HiPencilSquare } from 'react-icons/hi2';
-import { TbBoxAlignRight, TbBrandAsana, TbCircleDot } from 'react-icons/tb';
+import { TbBoxAlignRight, TbBrandAsana } from 'react-icons/tb';
 import { PiShareNetworkLight } from "react-icons/pi";
 import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -15,7 +15,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '@/i18n/useTranslation';
 
-export type SidebarTab = 'module' | 'material' | 'structure' | 'boring' | 'etc' | 'custom';
+export type SidebarTab = 'module' | 'material' | 'structure' | 'etc' | 'custom';
 
 interface SidebarProps {
   activeTab: SidebarTab | null;
@@ -189,11 +189,6 @@ const Sidebar: React.FC<SidebarProps> = ({
       id: 'structure' as SidebarTab,
       icon: <TbBoxAlignRight size={20} />,
       label: '기둥'
-    },
-    {
-      id: 'boring' as SidebarTab,
-      icon: <TbCircleDot size={20} />,
-      label: '보링'
     },
     {
       id: 'etc' as SidebarTab,
