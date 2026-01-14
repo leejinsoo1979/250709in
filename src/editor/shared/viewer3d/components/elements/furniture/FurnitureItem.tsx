@@ -2179,12 +2179,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 깊이 조정 방식 (기둥 C(300mm) 및 얕은 기둥)
       const slotDepth = 730; // 슬롯 기본 깊이
       const columnDepth = slotInfo.column.depth;
-      const remainingDepth = slotDepth - columnDepth;
+      const remainingDepth = slotDepth - columnDepth; // 430mm
 
-      // 듀얼캐비닛인지 확인
-      // isDualFurniture는 이미 위에서 계산됨
-
-      // '기둥 앞에 배치' 모드: 폭은 슬롯 전체, 깊이만 줄임 (Z 이동 없음)
+      // '기둥 앞에 배치' 모드: 폭은 슬롯 전체, 깊이만 줄임
       if (placedModule.columnPlacementMode === 'front') {
         // 기둥 앞에 배치 - 폭은 슬롯 전체, 깊이만 줄임
         furnitureWidthMm = indexing.columnWidth; // 슬롯 전체 너비
@@ -2194,13 +2191,35 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         };
         // 깊이 = 슬롯깊이 - 기둥깊이 = 730 - 300 = 430mm
         adjustedDepthMm = remainingDepth; // 430mm
-      } else if (isDualFurniture && remainingDepth <= 300) {
-        // 듀얼캐비닛이고 남은 깊이가 300mm 이하면 배치 불가
-        // 배치 불가 처리 (원래 깊이 유지하거나 다른 처리)
-        adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
       } else {
-        // 배치 가능 - 깊이만 조정, 폭과 위치는 그대로 (기둥 측면 배치)
-        adjustedDepthMm = remainingDepth;
+        // '기둥 측면 배치' 모드 (기본값): 폭 줄임, 깊이는 원래대로
+        // 폭 조정 로직 적용 (width-adjustment와 유사)
+        if (slotInfo.availableWidth) {
+          furnitureWidthMm = slotInfo.availableWidth;
+        }
+        // 깊이는 원래 모듈 깊이 유지 (줄이지 않음)
+        adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
+
+        // 위치 조정 (기둥 침범 방향에 따라)
+        if (slotInfo.intrusionDirection && slotInfo.availableWidth) {
+          const slotWidth = indexing.columnWidth;
+          const widthReduction = slotWidth - slotInfo.availableWidth;
+          const halfReductionUnits = mmToThreeUnits(widthReduction / 2);
+
+          if (slotInfo.intrusionDirection === 'left') {
+            // 기둥이 왼쪽에서 침범 - 가구를 오른쪽으로 이동
+            adjustedPosition = {
+              ...adjustedPosition,
+              x: originalSlotCenterX + halfReductionUnits
+            };
+          } else if (slotInfo.intrusionDirection === 'right') {
+            // 기둥이 오른쪽에서 침범 - 가구를 왼쪽으로 이동
+            adjustedPosition = {
+              ...adjustedPosition,
+              x: originalSlotCenterX - halfReductionUnits
+            };
+          }
+        }
       }
     }
   }
@@ -2348,10 +2367,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
 
-  // '기둥 앞에 배치' 모드: Z 이동 없음 (beside와 동일), 깊이만 줄임
-  const columnFrontOffset = 0;
-
-  const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset + columnFrontOffset;
+  const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset;
 
   const furnitureGroupPosition: [number, number, number] = [
     adjustedPosition.x + positionAdjustmentForEndPanel,
