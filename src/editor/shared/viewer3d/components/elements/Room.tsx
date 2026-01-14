@@ -22,6 +22,7 @@ import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/ind
 import { MaterialFactory } from '../../utils/materials/MaterialFactory';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import PlacedFurnitureContainer from './furniture/PlacedFurnitureContainer';
+import { FurnitureBoringOverlay } from './boring';
 import { useThree, useFrame } from '@react-three/fiber';
 
 interface RoomProps {
@@ -238,7 +239,7 @@ const Room: React.FC<RoomProps> = ({
   const { theme: appTheme } = useTheme(); // 앱 테마 가져오기
   const { renderMode: contextRenderMode } = useSpace3DView(); // context에서 renderMode 가져오기
   const renderMode = renderModeProp || contextRenderMode; // props로 전달된 값을 우선 사용
-  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
+  const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
 
   // props로 전달된 cameraMode가 있으면 우선 사용, 없으면 UIStore 값 사용
@@ -3355,16 +3356,26 @@ const Room: React.FC<RoomProps> = ({
             });
 
             return (
-              <PlacedFurnitureContainer
-                viewMode={viewMode}
-                view2DDirection={view2DDirection}
-                renderMode={renderMode}
-                placedModules={filteredModules}
-                showFurniture={showFurniture}
-                readOnly={readOnly}
-                onFurnitureClick={onFurnitureClick}
-                ghostHighlightSlotIndex={ghostHighlightSlotIndex}
-              />
+              <>
+                <PlacedFurnitureContainer
+                  viewMode={viewMode}
+                  view2DDirection={view2DDirection}
+                  renderMode={renderMode}
+                  placedModules={filteredModules}
+                  showFurniture={showFurniture}
+                  readOnly={readOnly}
+                  onFurnitureClick={onFurnitureClick}
+                  ghostHighlightSlotIndex={ghostHighlightSlotIndex}
+                />
+                {/* 보링 시각화 오버레이 */}
+                {showBorings && (
+                  <FurnitureBoringOverlay
+                    viewMode={viewMode}
+                    opacity={0.7}
+                    showLabels={false}
+                  />
+                )}
+              </>
             );
           })()}
         </>
@@ -3390,6 +3401,14 @@ const Room: React.FC<RoomProps> = ({
             onFurnitureClick={onFurnitureClick}
             ghostHighlightSlotIndex={ghostHighlightSlotIndex}
           />
+          {/* 보링 시각화 오버레이 */}
+          {showBorings && (
+            <FurnitureBoringOverlay
+              viewMode={viewMode}
+              opacity={0.7}
+              showLabels={false}
+            />
+          )}
         </>
       )}
     </group>

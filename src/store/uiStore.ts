@@ -142,6 +142,9 @@ interface UIState {
   // 그림자 설정
   shadowEnabled: boolean;
 
+  // 보링 시각화 상태
+  showBorings: boolean;
+
   // 측정 모드 상태
   isMeasureMode: boolean;
   measurePoints: [MeasurePoint, MeasurePoint | null] | null; // [시작점, 끝점 또는 null]
@@ -215,6 +218,8 @@ interface UIState {
   setCameraFov: (fov: number) => void;
   setCameraZoom: (zoom: number) => void;
   setShadowEnabled: (enabled: boolean) => void;
+  setShowBorings: (show: boolean) => void;
+  toggleBorings: () => void;
   setSelectedFurnitureId: (id: string | null) => void;
 
   // 측정 모드 액션들
@@ -280,6 +285,7 @@ const initialUIState = {
   cameraFov: 50,  // 기본값: FOV 50도
   cameraZoom: 1,  // 기본값: 줌 배율 1
   shadowEnabled: true,  // 기본값: 그림자 활성화
+  showBorings: false,  // 기본값: 보링 시각화 비활성화
   isMeasureMode: false,  // 기본값: 측정 모드 비활성화
   measurePoints: null,  // 기본값: 측정 포인트 없음
   measureLines: [],  // 기본값: 저장된 측정 라인 없음
@@ -589,6 +595,12 @@ export const useUIStore = create<UIState>()(
       
       setShadowEnabled: (enabled) =>
         set({ shadowEnabled: enabled }),
+
+      setShowBorings: (show) =>
+        set({ showBorings: show }),
+
+      toggleBorings: () =>
+        set((state) => ({ showBorings: !state.showBorings })),
 
       setSelectedFurnitureId: (id) =>
         set({ selectedFurnitureId: id }),
