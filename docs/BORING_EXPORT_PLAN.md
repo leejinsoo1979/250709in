@@ -813,7 +813,7 @@ function calculateCamHousingPositions(
 |----------|------|------|------------|
 | **1** | CSV | 범용, 다른 소프트웨어로 가져오기 | 쉬움 |
 | **2** | DXF | CAD 호환, 레이어별 보링 표시 | 중간 |
-| 3 | MPR | Homag WoodWOP | 어려움 |
+| **3** | **MPR** | **HOMAG woodWOP 네이티브** | **중간~어려움** |
 | 4 | CIX | Biesse bSolid | 어려움 |
 
 ### 9.2 CSV 형식 상세
@@ -914,6 +914,235 @@ LWPOLYLINE
 - CNC 소프트웨어가 폴리라인을 지원하지 않을 경우
 - 원형 홀 2개 (Ø5mm, 간격 5mm) + "SLOT" 라벨
 
+### 9.5 MPR 형식 상세 (HOMAG woodWOP)
+
+MPR(Machine Process Report)은 HOMAG woodWOP CNC 소프트웨어의 네이티브 가공 프로그램 형식입니다.
+
+#### 9.5.1 MPR 파일 구조
+
+```mpr
+[H                              // 헤더 섹션
+VERSION="4.0"                   // MPR 버전
+HP="1"                          // 헤더 페이지
+]
+
+[001                            // 패널 정보 섹션
+LA="패널명"                      // 패널 라벨
+L="600"                         // 길이 (X)
+B="400"                         // 너비 (Y)
+D="18"                          // 두께 (Z)
+]
+
+<100 \BO\                       // 수직 보링 (Vertical Bore)
+XA="37"                         // X 절대 위치
+YA="37"                         // Y 절대 위치
+DU="5"                          // 직경
+TI="12"                         // 깊이
+]
+
+<101 \BO\                       // 또 다른 보링
+XA="37"
+YA="69"
+DU="5"
+TI="12"
+]
+```
+
+#### 9.5.2 MPR 보링 명령어
+
+| 명령어 | 설명 | 용도 |
+|--------|------|------|
+| `\BO\` | Vertical Bore | 수직 보링 (상면/하면) |
+| `\HO\` | Horizontal Bore | 수평 보링 (측면) |
+| `\SL\` | Slot (Groove) | 장공/홈 가공 |
+
+#### 9.5.3 수직 보링 (상면/하면) - \BO\
+
+```mpr
+<100 \BO\                       // 보링 ID 및 타입
+XA="37"                         // X 절대 위치 (mm)
+YA="37"                         // Y 절대 위치 (mm)
+DU="5"                          // 직경 (mm)
+TI="12"                         // 깊이 (mm)
+TNO="1"                         // 공구 번호
+BO="0"                          // 보링면 (0=상면, 1=하면)
+AN="0"                          // 각도
+]
+```
+
+#### 9.5.4 수평 보링 (측면) - \HO\
+
+```mpr
+<200 \HO\                       // 수평 보링
+XA="37"                         // X 위치
+ZA="9"                          // Z 위치 (패널 두께 방향)
+YS="-30"                        // Y 시작점 (음수 = 측면 진입)
+DU="5"                          // 직경
+TI="12"                         // 깊이 (측면 진입 깊이)
+KA="1"                          // 가공면 (1=전면, 2=후면, 3=좌측, 4=우측)
+]
+```
+
+#### 9.5.5 장공 (슬롯) - \SL\
+
+```mpr
+<300 \SL\                       // 슬롯 가공
+XA="69"                         // X 시작 위치
+YA="50"                         // Y 시작 위치
+XE="79"                         // X 끝 위치 (10mm 장공)
+YE="50"                         // Y 끝 위치
+DU="5"                          // 공구 직경
+TI="12"                         // 깊이
+]
+```
+
+#### 9.5.6 보링 타입별 MPR 매핑
+
+| 보링 타입 | MPR 명령 | 파라미터 예시 |
+|-----------|----------|---------------|
+| 힌지 컵 (Ø35) | `\BO\` | `DU="35" TI="13" BO="1"` (하면) |
+| 힌지 나사 (Ø2.5) | `\HO\` | `DU="2.5" TI="12" KA="1"` (전면) |
+| 캠 하우징 (Ø15) | `\BO\` | `DU="15" TI="12" BO="0"` (상면/하면) |
+| 캠 볼트 (Ø5) | `\HO\` | `DU="5" TI="34" KA="3/4"` (측면) |
+| 선반핀 (Ø5) | `\HO\` | `DU="5" TI="12" KA="3/4"` (측면) |
+| 서랍레일 원형 (Ø5) | `\HO\` | `DU="5" TI="12" KA="3/4"` (측면) |
+| 서랍레일 장공 | `\SL\` | 슬롯 명령으로 처리 |
+| 조절발 (Ø10) | `\BO\` | `DU="10" TI="15" BO="1"` (하면) |
+
+#### 9.5.7 전체 MPR 예시 (측판)
+
+```mpr
+[H
+VERSION="4.0"
+HP="1"
+]
+
+[001
+LA="좌측판_P001"
+L="560"
+B="720"
+D="18"
+MAT="PB18"
+]
+
+// 선반핀 홀 (전면열)
+<100 \HO\
+XA="37" ZA="9" YS="-30" DU="5" TI="12" KA="4"
+]
+<101 \HO\
+XA="37" ZA="9" YS="-30" DU="5" TI="12" KA="4"
+YA="69"
+]
+<102 \HO\
+XA="37" ZA="9" YS="-30" DU="5" TI="12" KA="4"
+YA="101"
+]
+
+// 선반핀 홀 (후면열)
+<110 \HO\
+XA="523" ZA="9" YS="-30" DU="5" TI="12" KA="4"
+YA="37"
+]
+<111 \HO\
+XA="523" ZA="9" YS="-30" DU="5" TI="12" KA="4"
+YA="69"
+]
+
+// 캠 볼트홀 (상단)
+<200 \HO\
+XA="37" ZA="9" YS="-30" DU="5" TI="34" KA="1"
+YA="8"
+]
+<201 \HO\
+XA="523" ZA="9" YS="-30" DU="5" TI="34" KA="1"
+YA="8"
+]
+
+// 캠 볼트홀 (하단)
+<210 \HO\
+XA="37" ZA="9" YS="-30" DU="5" TI="34" KA="2"
+YA="712"
+]
+<211 \HO\
+XA="523" ZA="9" YS="-30" DU="5" TI="34" KA="2"
+YA="712"
+]
+
+// 힌지 마운팅 나사홀
+<300 \HO\
+XA="37" ZA="9" YS="-30" DU="2.5" TI="12" KA="4"
+YA="100"
+]
+<301 \HO\
+XA="69" ZA="9" YS="-30" DU="2.5" TI="12" KA="4"
+YA="100"
+]
+<302 \HO\
+XA="37" ZA="9" YS="-30" DU="2.5" TI="12" KA="4"
+YA="620"
+]
+<303 \HO\
+XA="69" ZA="9" YS="-30" DU="2.5" TI="12" KA="4"
+YA="620"
+]
+```
+
+#### 9.5.8 MPR 내보내기 설정
+
+```typescript
+interface MPRExportSettings {
+  version: '4.0' | '5.0';          // woodWOP 버전
+  toolMapping: {                    // 공구 번호 매핑
+    hingeCup: number;               // 힌지컵 드릴 (Ø35)
+    hingScrew: number;              // 힌지나사 드릴 (Ø2.5)
+    camHousing: number;             // 캠하우징 드릴 (Ø15)
+    camBolt: number;                // 캠볼트 드릴 (Ø5)
+    shelfPin: number;               // 선반핀 드릴 (Ø5)
+    drawerRail: number;             // 서랍레일 드릴 (Ø5)
+    adjustableFoot: number;         // 조절발 드릴 (Ø10)
+  };
+  useAbsoluteCoordinates: boolean;  // 절대 좌표 사용
+  includeComments: boolean;         // 주석 포함
+  filePerPanel: boolean;            // 패널당 개별 파일
+}
+
+// 기본 설정
+const defaultMPRSettings: MPRExportSettings = {
+  version: '4.0',
+  toolMapping: {
+    hingeCup: 1,
+    hingScrew: 2,
+    camHousing: 3,
+    camBolt: 4,
+    shelfPin: 4,    // 같은 Ø5 드릴 사용
+    drawerRail: 4,  // 같은 Ø5 드릴 사용
+    adjustableFoot: 5,
+  },
+  useAbsoluteCoordinates: true,
+  includeComments: true,
+  filePerPanel: true,
+};
+```
+
+#### 9.5.9 MPR 좌표계 변환
+
+```
+woodWOP 좌표계:
+- X: 패널 길이 방향 (0 = 좌측)
+- Y: 패널 너비 방향 (0 = 전면)
+- Z: 패널 두께 방향 (0 = 하면)
+
+가공면(KA) 코드:
+- KA="1": 전면 (Front)
+- KA="2": 후면 (Back)
+- KA="3": 좌측 (Left)
+- KA="4": 우측 (Right)
+
+보링면(BO) 코드:
+- BO="0": 상면 (Top)
+- BO="1": 하면 (Bottom)
+```
+
 ---
 
 ## 10. 구현 계획
@@ -944,6 +1173,15 @@ LWPOLYLINE
 - [ ] 레이어 구조 구현
 - [ ] 보링을 원형(CIRCLE)으로 표현
 - [ ] 장공(슬롯)을 LWPOLYLINE으로 표현
+
+### Phase 5.5: MPR 내보내기 (5일)
+- [ ] `src/domain/boring/exporters/mprExporter.ts`
+- [ ] MPR 헤더/패널 정보 생성
+- [ ] 수직 보링(\BO\) 명령 생성
+- [ ] 수평 보링(\HO\) 명령 생성
+- [ ] 슬롯(\SL\) 명령 생성
+- [ ] 좌표계 변환 (내부 → woodWOP)
+- [ ] 공구 번호 매핑 설정
 
 ### Phase 6: UI 통합 (3일)
 - [ ] 보링 설정 패널 컴포넌트
@@ -980,7 +1218,8 @@ src/
 │       └── exporters/
 │           ├── index.ts
 │           ├── csvExporter.ts       # CSV 내보내기
-│           └── dxfExporter.ts       # DXF 내보내기
+│           ├── dxfExporter.ts       # DXF 내보내기
+│           └── mprExporter.ts       # MPR 내보내기 (HOMAG woodWOP)
 │
 ├── store/
 │   └── boringStore.ts               # 보링 설정 스토어
@@ -1060,6 +1299,10 @@ src/
 │ │ ○ DXF (CAD)                                 │ │
 │ │   - 레이어별 보링 구분                        │ │
 │ │   - AutoCAD, 기타 CAD에서 열기 가능           │ │
+│ │                                              │ │
+│ │ ○ MPR (HOMAG woodWOP)                       │ │
+│ │   - CNC 기계 직접 제어 가능                   │ │
+│ │   - 수직/수평 보링, 슬롯 명령 포함             │ │
 │ └──────────────────────────────────────────────┘ │
 │                                                  │
 │ 옵션:                                            │
@@ -1101,11 +1344,11 @@ src/
 - [x] **Cabinet Vision** - CSV/DXF 호환
 - [x] **Microvellum** - CSV/DXF 호환
 - [x] **imos** - CSV/DXF 호환
-- [x] **HOMAG woodWOP** - CSV/DXF 호환
+- [x] **HOMAG woodWOP** - CSV/DXF/**MPR 네이티브** 호환
 - [x] **Biesse bSolid** - CSV/DXF 호환
 - [x] **ARDIS** - CSV/DXF 호환
 
-> 모든 CNC 소프트웨어에서 범용 CSV 및 DXF 형식을 지원하므로, 내보내기 형식 선택만으로 호환 가능
+> 범용 CSV/DXF 형식 외에, HOMAG woodWOP은 MPR 네이티브 형식으로 직접 CNC 프로그램 내보내기 지원
 
 ---
 
@@ -1120,3 +1363,4 @@ src/
 | 0.5 | 2025-01-14 | Claude | Blum 서랍 레일 추가 (사용자 선택 옵션) |
 | 0.6 | 2025-01-14 | Claude | 서랍장 보링 매핑, 양문도어, 상/하부장 차이점, 장공 DXF 표현 추가 |
 | 0.7 | 2025-01-14 | Claude | CNC 소프트웨어 지원 목록 추가 (Cabinet Vision, Microvellum, imos, HOMAG, Biesse, ARDIS) |
+| 0.8 | 2025-01-14 | Claude | MPR 형식 상세 추가 (HOMAG woodWOP 네이티브 포맷, 수직/수평 보링, 슬롯 명령) |
