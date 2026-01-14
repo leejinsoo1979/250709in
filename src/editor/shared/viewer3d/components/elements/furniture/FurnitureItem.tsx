@@ -2206,13 +2206,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           const widthReduction = slotWidth - slotInfo.availableWidth;
           const halfReductionUnits = mmToThreeUnits(widthReduction / 2);
 
-          if (slotInfo.intrusionDirection === 'left') {
+          if (slotInfo.intrusionDirection === 'from-left') {
             // 기둥이 왼쪽에서 침범 - 가구를 오른쪽으로 이동
             adjustedPosition = {
               ...adjustedPosition,
               x: originalSlotCenterX + halfReductionUnits
             };
-          } else if (slotInfo.intrusionDirection === 'right') {
+          } else if (slotInfo.intrusionDirection === 'from-right') {
             // 기둥이 오른쪽에서 침범 - 가구를 왼쪽으로 이동
             adjustedPosition = {
               ...adjustedPosition,
