@@ -3736,15 +3736,24 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           return null;
         }
 
-        // 모듈 데이터 가져오기
+        // 모듈 데이터 가져오기 (currentDragData에서 직접 가져오거나 getModuleById 사용)
         const moduleIdForFront = currentDragData?.moduleData?.id || selectedFurnitureId;
-        const moduleDataForFront = moduleIdForFront ? getModuleById(moduleIdForFront) : null;
+        const moduleDataForFront = currentDragData?.moduleData || (moduleIdForFront ? getModuleById(moduleIdForFront) : null);
 
-        // 싱글장만 기둥 앞 공간에 배치 가능
-        if (!moduleDataForFront || moduleDataForFront.slotType !== 'single') {
-          console.log('🔍 [Front Space Debug] 싱글장이 아님:', { moduleId: moduleIdForFront, slotType: moduleDataForFront?.slotType });
+        // 싱글장만 기둥 앞 공간에 배치 가능 (모듈 ID로 판단)
+        const isSingleModule = moduleIdForFront?.startsWith('single-') || moduleIdForFront?.includes('-single-');
+        console.log('🔍 [Front Space Debug] 싱글장 체크:', {
+          moduleId: moduleIdForFront,
+          isSingleModule,
+          hasModuleData: !!moduleDataForFront,
+          moduleDataSource: currentDragData?.moduleData ? 'currentDragData' : 'getModuleById'
+        });
+
+        if (!isSingleModule) {
+          console.log('🔍 [Front Space Debug] 싱글장이 아님 - 기둥 앞 공간 렌더링 스킵');
           return null;
         }
+        console.log('✅ [Front Space Debug] 싱글장 확인됨 - 기둥 앞 공간 렌더링 진행');
 
         // 기둥 앞 공간에 이미 가구가 배치되었는지 확인
         const availableSlots = frontSpaceSlots.filter(slotInfo => {
