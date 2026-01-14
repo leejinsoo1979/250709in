@@ -433,10 +433,18 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           })()}
 
           {/* 전면 패널 윤곽선 (18mm 두께) - 2D */}
-          <lineSegments position={[0, 0, (depth * 0.01) / 2 + 0.09]}>
-            <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, 0.18)]} />
-            <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.frameColor || "#999999")} />
-          </lineSegments>
+          {(() => {
+            const topFrameHeight = spaceConfig.spaceInfo.frameSize?.top || 10;
+            const baseHeight = spaceConfig.spaceInfo.baseConfig?.height || 65;
+            const panelHeight = height - topFrameHeight - baseHeight;
+            const panelCenterY = baseHeight + panelHeight / 2 - height / 2; // group 중심 기준 오프셋
+            return (
+              <lineSegments position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}>
+                <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, panelHeight * 0.01, 0.18)]} />
+                <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.frameColor || "#999999")} />
+              </lineSegments>
+            );
+          })()}
         </group>
       ) : renderMode === 'wireframe' ? (
         // 3D 와이어프레임 모드: 윤곽선과 대각선 표시
@@ -480,10 +488,18 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           />
 
           {/* 전면 패널 윤곽선 (18mm 두께) */}
-          <lineSegments position={[0, 0, (depth * 0.01) / 2 + 0.09]}>
-            <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, 0.18)]} />
-            <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.frameColor || "#333333")} />
-          </lineSegments>
+          {(() => {
+            const topFrameHeight = spaceConfig.spaceInfo.frameSize?.top || 10;
+            const baseHeight = spaceConfig.spaceInfo.baseConfig?.height || 65;
+            const panelHeight = height - topFrameHeight - baseHeight;
+            const panelCenterY = baseHeight + panelHeight / 2 - height / 2; // group 중심 기준 오프셋
+            return (
+              <lineSegments position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}>
+                <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, panelHeight * 0.01, 0.18)]} />
+                <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.frameColor || "#333333")} />
+              </lineSegments>
+            );
+          })()}
         </group>
       ) : (
         // 3D 솔리드 모드: 일반 메시
@@ -523,18 +539,26 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           )}
 
           {/* 전면 패널 (기둥과 같은 폭, 18mm 두께) - 프레임 재질 */}
-          <mesh
-            position={[0, (height * 0.01) / 2, (depth * 0.01) / 2 + 0.09]} // 기둥 전면에 18mm 패널 (9mm 오프셋)
-            receiveShadow={viewMode === '3D'}
-            castShadow={viewMode === '3D'}
-          >
-            <boxGeometry args={[width * 0.01, height * 0.01, 0.18]} /> {/* 18mm 두께 */}
-            <meshStandardMaterial
-              color={spaceConfig.spaceInfo.materialConfig?.frameColor || '#E0E0E0'}
-              roughness={0.6}
-              metalness={0.0}
-            />
-          </mesh>
+          {(() => {
+            const topFrameHeight = spaceConfig.spaceInfo.frameSize?.top || 10;
+            const baseHeight = spaceConfig.spaceInfo.baseConfig?.height || 65;
+            const panelHeight = height - topFrameHeight - baseHeight;
+            const panelCenterY = baseHeight + panelHeight / 2;
+            return (
+              <mesh
+                position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}
+                receiveShadow={viewMode === '3D'}
+                castShadow={viewMode === '3D'}
+              >
+                <boxGeometry args={[width * 0.01, panelHeight * 0.01, 0.18]} />
+                <meshStandardMaterial
+                  color={spaceConfig.spaceInfo.materialConfig?.frameColor || '#E0E0E0'}
+                  roughness={0.6}
+                  metalness={0.0}
+                />
+              </mesh>
+            );
+          })()}
         </>
       )}
     </group>
