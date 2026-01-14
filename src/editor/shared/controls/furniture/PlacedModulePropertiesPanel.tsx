@@ -728,8 +728,9 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
     
     const isCoverDoor = slotInfo?.hasColumn || false;
-    const isColumnC = slotInfo?.columnType === 'medium' && slotInfo?.allowMultipleFurniture || false;
-    
+    // 기둥 C 판단: columnType이 'medium'이고 columnProcessingMethod가 'depth-adjustment'인 경우
+    const isColumnC = slotInfo?.columnType === 'medium' && slotInfo?.columnProcessingMethod === 'depth-adjustment' || false;
+
     return { slotInfo, isCoverDoor, isColumnC };
   }, [currentPlacedModule, moduleData, spaceInfo]);
 
