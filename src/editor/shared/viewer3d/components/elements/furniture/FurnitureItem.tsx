@@ -2184,10 +2184,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 듀얼캐비닛인지 확인
       // isDualFurniture는 이미 위에서 계산됨
 
-      // '기둥 앞에 배치' 모드: 폭/X위치는 beside와 동일, 깊이는 줄인 상태, Z만 앞으로 이동
+      // '기둥 앞에 배치' 모드: 폭은 슬롯 전체, 깊이는 줄인 상태, Z는 동일
       if (placedModule.columnPlacementMode === 'front') {
-        // 기둥 앞에 배치 - 폭/위치는 그대로, 깊이는 줄인 상태, Z만 앞으로 (아래에서 처리)
-        adjustedDepthMm = remainingDepth;
+        // 기둥 앞에 배치 - 폭을 슬롯 전체로, X는 슬롯 중심, 깊이는 줄인 상태
+        furnitureWidthMm = slotWidthMmForBounds; // 슬롯 전체 너비
+        adjustedPosition = {
+          ...adjustedPosition,
+          x: originalSlotCenterX // 슬롯 중심
+        };
+        adjustedDepthMm = remainingDepth; // 430mm
       } else if (isDualFurniture && remainingDepth <= 300) {
         // 듀얼캐비닛이고 남은 깊이가 300mm 이하면 배치 불가
         // 배치 불가 처리 (원래 깊이 유지하거나 다른 처리)
@@ -2340,10 +2345,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
 
-  // '기둥 앞에 배치' 모드: Z 위치를 앞으로(사용자 쪽) 이동해서 기둥 앞에 배치
-  const columnFrontOffset = (placedModule.columnPlacementMode === 'front' && slotInfo?.hasColumn && slotInfo.column)
-    ? mmToThreeUnits(slotInfo.column.depth)  // 양수: 앞으로 이동
-    : 0;
+  // '기둥 앞에 배치' 모드: Z 위치는 beside와 동일 (이동 없음)
+  const columnFrontOffset = 0;
 
   const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset + columnFrontOffset;
 
