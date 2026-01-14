@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useMemo } from 'react';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -7,6 +7,12 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { useUIStore } from '@/store/uiStore';
+import {
+  isCabinetTexture1,
+  applyCabinetTexture1Settings,
+  isOakTexture,
+  applyOakTextureSettings
+} from '@/editor/shared/utils/materialConstants';
 
 
 interface ColumnAssetProps {
@@ -98,12 +104,66 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
     } else if (isDragging) {
       displayColor = "#ff6b6b"; // 드래그 중인 기둥은 빨간색
     }
-    
+
     return new THREE.LineBasicMaterial({
       color: new THREE.Color(displayColor),
       linewidth: 1
     });
   }, [isDragging, isSelected]);
+
+  // 전면 패널 재질 (텍스처 지원)
+  const frontPanelMaterial = useMemo(() => {
+    const interiorColor = spaceConfig.spaceInfo.materialConfig?.interiorColor || '#E0E0E0';
+    return new THREE.MeshStandardMaterial({
+      color: new THREE.Color(interiorColor),
+      roughness: 0.6,
+      metalness: 0.0,
+    });
+  }, [spaceConfig.spaceInfo.materialConfig?.interiorColor]);
+
+  // 전면 패널 텍스처 로딩
+  const textureUrl = spaceConfig.spaceInfo.materialConfig?.interiorTexture;
+
+  useEffect(() => {
+    if (!textureUrl || !frontPanelMaterial) return;
+
+    // Cabinet Texture1인 경우 미리 재질 설정
+    if (isCabinetTexture1(textureUrl)) {
+      applyCabinetTexture1Settings(frontPanelMaterial);
+    }
+
+    const textureLoader = new THREE.TextureLoader();
+    textureLoader.load(
+      textureUrl,
+      (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(1, 1);
+        frontPanelMaterial.map = texture;
+
+        if (isOakTexture(textureUrl)) {
+          applyOakTextureSettings(frontPanelMaterial, false);
+        } else if (!isCabinetTexture1(textureUrl)) {
+          frontPanelMaterial.color.setHex(0xffffff);
+          frontPanelMaterial.toneMapped = true;
+          frontPanelMaterial.roughness = 0.6;
+        }
+
+        frontPanelMaterial.needsUpdate = true;
+      },
+      undefined,
+      (error) => {
+        console.error('전면 패널 텍스처 로딩 실패:', error);
+      }
+    );
+
+    return () => {
+      if (frontPanelMaterial.map) {
+        frontPanelMaterial.map.dispose();
+        frontPanelMaterial.map = null;
+      }
+    };
+  }, [textureUrl, frontPanelMaterial]);
 
   // 클릭 처리 - 기둥 선택만
   const handleClick = (event: ThreeEvent<MouseEvent>) => {
@@ -565,13 +625,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                   position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}
                   receiveShadow={viewMode === '3D'}
                   castShadow={viewMode === '3D'}
+                  material={frontPanelMaterial}
                 >
                   <boxGeometry args={[width * 0.01, panelHeight * 0.01, 0.18]} />
-                  <meshStandardMaterial
-                    color={spaceConfig.spaceInfo.materialConfig?.interiorColor || '#E0E0E0'}
-                    roughness={0.6}
-                    metalness={0.0}
-                  />
                 </mesh>
               );
             }
