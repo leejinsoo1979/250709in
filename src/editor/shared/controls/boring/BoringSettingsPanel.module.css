@@ -1,0 +1,187 @@
+/* 컨테이너 */
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--theme-background);
+}
+
+/* 헤더 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--theme-text);
+}
+
+.resetButton {
+  padding: 6px 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 4px;
+  background: var(--theme-surface);
+  color: var(--theme-text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resetButton:hover {
+  border-color: var(--theme-primary);
+  color: var(--theme-primary);
+}
+
+/* 탭 네비게이션 */
+.tabNavigation {
+  display: flex;
+  gap: 0;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--theme-border);
+  overflow-x: auto;
+}
+
+.tab {
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  color: var(--theme-text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  color: var(--theme-text);
+  background: var(--theme-background-secondary);
+}
+
+.tabActive {
+  color: var(--theme-primary);
+  border-bottom-color: var(--theme-primary);
+}
+
+/* 콘텐츠 */
+.content {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+/* 설정 섹션 */
+.settingsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sectionTitle {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+/* 설정 그룹 */
+.settingsGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+}
+
+.groupTitle {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-text-secondary);
+}
+
+/* 서랍 레일 타입 그리드 */
+.drawerRailTypeGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.drawerRailTypeButton {
+  padding: 10px 16px;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.drawerRailTypeButton:hover {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-light);
+}
+
+.drawerRailTypeButtonActive {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: white;
+}
+
+.drawerRailTypeButtonActive:hover {
+  background: var(--theme-primary-hover);
+}
+
+/* 뒷쪽 홀 타입 표시 */
+.rearHoleType {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--theme-surface);
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.rearHoleTypeLabel {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+}
+
+.rearHoleTypeValue {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--theme-primary);
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .tabNavigation {
+    padding: 0 12px;
+  }
+
+  .tab {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .content {
+    padding: 12px;
+  }
+
+  .drawerRailTypeGrid {
+    grid-template-columns: 1fr;
+  }
+}

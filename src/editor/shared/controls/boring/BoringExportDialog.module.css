@@ -1,0 +1,359 @@
+/* 모달 오버레이 */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 모달 */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: var(--theme-surface);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 560px;
+  max-height: 85vh;
+  overflow: hidden;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+}
+
+/* 헤더 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--theme-border);
+}
+
+.title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--theme-text);
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: var(--theme-text-secondary);
+  cursor: pointer;
+  font-size: 24px;
+  line-height: 1;
+  padding: 4px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background: var(--theme-background-secondary);
+  color: var(--theme-text);
+}
+
+/* 콘텐츠 */
+.content {
+  padding: 20px 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.section {
+  margin-bottom: 24px;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text);
+  margin: 0 0 12px 0;
+}
+
+/* 요약 그리드 */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.summaryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+}
+
+.summaryLabel {
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+}
+
+.summaryValue {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--theme-primary);
+}
+
+/* 포맷 그리드 */
+.formatGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.formatButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border: 1px solid var(--theme-border);
+  border-radius: 8px;
+  background: var(--theme-surface);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.formatButton:hover {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-light);
+}
+
+.formatButtonActive {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: white;
+}
+
+.formatButtonActive:hover {
+  background: var(--theme-primary-hover);
+}
+
+.formatName {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.formatExt {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.formatInfo {
+  padding: 12px;
+  background: var(--theme-background-secondary);
+  border-radius: 8px;
+}
+
+.formatDescription {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  color: var(--theme-text);
+}
+
+.formatSoftware {
+  margin: 0;
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+}
+
+/* 옵션 */
+.optionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--theme-text);
+  cursor: pointer;
+}
+
+.option input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--theme-primary);
+  cursor: pointer;
+}
+
+/* 결과 */
+.resultSuccess {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+}
+
+.resultError {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+}
+
+.resultIcon {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.resultSuccess .resultIcon {
+  background: #10b981;
+  color: white;
+}
+
+.resultError .resultIcon {
+  background: #ef4444;
+  color: white;
+}
+
+.resultText {
+  flex: 1;
+}
+
+.resultTitle {
+  margin: 0 0 4px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--theme-text);
+}
+
+.resultDetail {
+  margin: 0;
+  font-size: 13px;
+  color: var(--theme-text-secondary);
+}
+
+.resultStats {
+  display: flex;
+  gap: 16px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+}
+
+.boringTypeBreakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.boringTypeItem {
+  padding: 4px 8px;
+  background: var(--theme-surface);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--theme-text-secondary);
+}
+
+/* 푸터 */
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--theme-border);
+  background: var(--theme-background-secondary);
+}
+
+.cancelButton {
+  padding: 10px 20px;
+  border: 1px solid var(--theme-border);
+  border-radius: 6px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: var(--theme-background-secondary);
+  border-color: var(--theme-text-secondary);
+}
+
+.exportButton {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 6px;
+  background: var(--theme-primary);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.exportButton:hover {
+  background: var(--theme-primary-hover);
+}
+
+.exportButton:disabled {
+  background: var(--theme-border);
+  color: var(--theme-text-secondary);
+  cursor: not-allowed;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .modal {
+    width: 95%;
+    max-height: 90vh;
+  }
+
+  .header {
+    padding: 16px 20px;
+  }
+
+  .content {
+    padding: 16px 20px;
+  }
+
+  .formatGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .footer {
+    padding: 12px 20px;
+  }
+}
