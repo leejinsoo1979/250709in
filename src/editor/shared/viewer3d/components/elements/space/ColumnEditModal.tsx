@@ -63,6 +63,12 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
     updateColumn(column.id, { hasBackPanelFinish });
   };
 
+  const handleFrontPanelFinishChange = (hasFrontPanelFinish: boolean) => {
+    const updated = { ...editedColumn, hasFrontPanelFinish };
+    setEditedColumn(updated);
+    updateColumn(column.id, { hasFrontPanelFinish });
+  };
+
   const handleDelete = () => {
     if (window.confirm('기둥을 삭제하시겠습니까?')) {
       removeColumn(column.id);
@@ -327,6 +333,17 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
                     onChange={(e) => handleBackPanelFinishChange(e.target.checked)}
                   />
                   뒷면 패널 마감
+                </label>
+              </div>
+
+              <div className={styles.inputGroup}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={editedColumn.hasFrontPanelFinish || false}
+                    onChange={(e) => handleFrontPanelFinishChange(e.target.checked)}
+                  />
+                  전면 패널 마감
                 </label>
               </div>
             </div>
