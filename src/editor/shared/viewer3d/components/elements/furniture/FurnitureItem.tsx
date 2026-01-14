@@ -2206,6 +2206,21 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           const widthReduction = slotWidth - slotInfo.availableWidth;
           const halfReductionUnits = mmToThreeUnits(widthReduction / 2);
 
+          // 디버그: 기둥 위치와 침범 방향 확인
+          console.log('🔵 [Column C beside mode] 위치 계산:', {
+            columnPosition: slotInfo.column?.position,
+            columnWidth: slotInfo.column?.width,
+            intrusionDirection: slotInfo.intrusionDirection,
+            slotWidth,
+            availableWidth: slotInfo.availableWidth,
+            widthReduction,
+            halfReductionUnits,
+            originalSlotCenterX,
+            계산된위치: slotInfo.intrusionDirection === 'from-left'
+              ? originalSlotCenterX + halfReductionUnits
+              : originalSlotCenterX - halfReductionUnits
+          });
+
           if (slotInfo.intrusionDirection === 'from-left') {
             // 기둥이 왼쪽에서 침범 - 가구를 오른쪽으로 이동
             adjustedPosition = {

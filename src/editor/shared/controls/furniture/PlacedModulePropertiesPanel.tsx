@@ -1376,9 +1376,21 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setUpperSectionDepth(remainingDepth.toString());
       } else {
         // 기둥 측면 배치: 폭은 줄임, 깊이는 원래대로
-        // 위치는 FurnitureItem.tsx에서 자동 계산하므로 여기서 설정하지 않음
         const availableWidth = slotInfo.availableWidth || (slotWidth - 200); // 기둥 침범 후 가용 폭
         const originalDepth = moduleData?.dimensions.depth || 600;
+
+        // 위치 계산 (FurnitureItem.tsx와 동일한 로직)
+        const widthReduction = slotWidth - availableWidth;
+        const halfReductionUnits = (widthReduction / 2) * 0.01; // mm를 Three.js 단위로 변환
+
+        let besidePositionX = slotCenterX;
+        if (slotInfo.intrusionDirection === 'from-left') {
+          // 기둥이 왼쪽에서 침범 - 가구를 오른쪽으로 이동
+          besidePositionX = slotCenterX + halfReductionUnits;
+        } else if (slotInfo.intrusionDirection === 'from-right') {
+          // 기둥이 오른쪽에서 침범 - 가구를 왼쪽으로 이동
+          besidePositionX = slotCenterX - halfReductionUnits;
+        }
 
         updatePlacedModule(activePopup.id, {
           columnPlacementMode: mode,
@@ -1386,8 +1398,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
           customDepth: undefined, // 깊이 원래대로
           lowerSectionDepth: undefined, // 섹션 깊이 원래대로
           upperSectionDepth: undefined, // 섹션 깊이 원래대로
-          adjustedWidth: availableWidth // beside 모드에서 폭 조정
-          // position은 설정하지 않음 - FurnitureItem.tsx가 자동으로 계산
+          adjustedWidth: availableWidth, // beside 모드에서 폭 조정
+          position: {
+            ...currentPlacedModule.position,
+            x: besidePositionX // 기둥 침범 방향에 따른 위치
+          }
         });
         // UI 입력 필드도 업데이트
         setCustomWidth(availableWidth.toString());
