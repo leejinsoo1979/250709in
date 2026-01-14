@@ -3788,22 +3788,23 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           const STANDARD_CABINET_DEPTH = 730;
           const calculatedFrontSpaceDepth = STANDARD_CABINET_DEPTH - columnDepth;
           const calculatedFrontSpaceWidth = slotInfo.column?.width || 300;
-          const columnCenterX = slotInfo.column?.position?.[0] || 0;
+          // fallback용 슬롯 X 위치 (indexing에서 가져오기)
+          const slotCenterX = indexing.threeUnitPositions[slotInfo.slotIndex] || 0;
 
           const frontSpace = slotInfo.frontSpace || {
             available: true,
             width: calculatedFrontSpaceWidth,
             depth: calculatedFrontSpaceDepth,
-            centerX: columnCenterX,
+            centerX: slotCenterX,
             centerZ: (calculatedFrontSpaceDepth / 2) * 0.01
           };
 
           console.log('🔍 [Front Space Render] 고스트 렌더링 데이터:', {
             slotIndex: slotInfo.slotIndex,
             hasFrontSpace: !!slotInfo.frontSpace,
-            frontSpace,
-            columnDepth,
-            columnCenterX
+            frontSpaceCenterX: frontSpace.centerX,
+            frontSpaceDepth: frontSpace.depth,
+            columnDepth
           });
 
           // Z축 위치 계산 - 기둥 앞쪽에 배치

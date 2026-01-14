@@ -303,14 +303,15 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           const STANDARD_CABINET_DEPTH = 730;
           const frontSpaceDepth = STANDARD_CABINET_DEPTH - columnInSlot.depth; // 430mm
           const frontSpaceWidth = indexing.columnWidth;
-          const columnCenterX = columnInSlot.position[0];
+          // 슬롯의 X 위치 사용 (기둥 position이 0인 경우가 있으므로)
+          const slotCenterX = indexing.threeUnitPositions[i];
           const columnCenterZ = (frontSpaceDepth / 2) * 0.01;
 
           frontSpace = {
             available: true,
             width: frontSpaceWidth,
             depth: frontSpaceDepth,
-            centerX: columnCenterX,
+            centerX: slotCenterX,
             centerZ: columnCenterZ
           };
 
@@ -318,7 +319,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
             slotIndex: i,
             frontSpaceWidth,
             frontSpaceDepth,
-            centerX: columnCenterX,
+            centerX: slotCenterX,
             centerZ: columnCenterZ
           });
         }
@@ -635,8 +636,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       const frontSpaceDepth = STANDARD_CABINET_DEPTH - columnInSlot.depth; // 430mm
       // 기둥 앞 공간의 폭 = 슬롯 전체 폭 (기둥이 차지하는 영역)
       const frontSpaceWidth = targetZone.columnWidth;
-      // 기둥의 X 위치 (슬롯 중심)
-      const columnCenterX = columnInSlot.position[0];
+      // 슬롯의 X 위치 사용 (기둥 position이 0인 경우가 있으므로)
+      const slotCenterX = targetZone.threeUnitPositions[localSlotIndex];
       // 기둥 앞쪽 Z 위치 (기둥 깊이의 절반 + 앞 공간 깊이의 절반)
       // Z축: 벽쪽이 음수, 앞쪽이 양수라고 가정
       const columnCenterZ = (frontSpaceDepth / 2) * 0.01; // 앞 공간의 중심
@@ -645,7 +646,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         available: true,
         width: frontSpaceWidth,
         depth: frontSpaceDepth,
-        centerX: columnCenterX,
+        centerX: slotCenterX,
         centerZ: columnCenterZ
       };
 
@@ -654,7 +655,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         zone,
         frontSpaceWidth,
         frontSpaceDepth,
-        centerX: columnCenterX,
+        centerX: slotCenterX,
         centerZ: columnCenterZ
       });
     }
@@ -901,8 +902,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         const frontSpaceDepth = STANDARD_CABINET_DEPTH - columnInSlot.depth; // 430mm
         // 기둥 앞 공간의 폭 = 슬롯 전체 폭 (기둥이 차지하는 영역)
         const frontSpaceWidth = indexing.columnWidth;
-        // 기둥의 X 위치 (슬롯 중심)
-        const columnCenterX = columnInSlot.position[0];
+        // 슬롯의 X 위치 사용 (기둥 position이 0인 경우가 있으므로)
+        const slotCenterX = indexing.threeUnitPositions[slotIndex];
         // 기둥 앞쪽 Z 위치 (기둥 깊이의 절반 + 앞 공간 깊이의 절반)
         const columnCenterZ = (frontSpaceDepth / 2) * 0.01; // 앞 공간의 중심
 
@@ -910,7 +911,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           available: true,
           width: frontSpaceWidth,
           depth: frontSpaceDepth,
-          centerX: columnCenterX,
+          centerX: slotCenterX,
           centerZ: columnCenterZ
         };
 
@@ -918,7 +919,7 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
           slotIndex,
           frontSpaceWidth,
           frontSpaceDepth,
-          centerX: columnCenterX,
+          centerX: slotCenterX,
           centerZ: columnCenterZ
         });
       }
