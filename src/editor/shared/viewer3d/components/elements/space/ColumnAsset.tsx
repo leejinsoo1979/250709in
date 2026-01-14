@@ -472,6 +472,12 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             color={isSelected ? "#4CAF50" : isDragging ? "#ff6b6b" : "#333333"}
             lineWidth={1}
           />
+
+          {/* 전면 패널 윤곽선 (18mm 두께) */}
+          <lineSegments position={[0, 0, (depth * 0.01) / 2 + 0.009]}>
+            <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, 0.018)]} />
+            <primitive object={wireframeMaterial} />
+          </lineSegments>
         </group>
       ) : (
         // 3D 솔리드 모드: 일반 메시
@@ -502,13 +508,27 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
               castShadow={viewMode === '3D'}
             >
               <boxGeometry args={[width * 0.01, height * 0.01, 0.018]} /> {/* 18mm 두께 */}
-              <meshStandardMaterial 
-                color="#F5F5DC" 
+              <meshStandardMaterial
+                color="#F5F5DC"
                 roughness={0.6}
                 metalness={0.0}
               />
             </mesh>
           )}
+
+          {/* 전면 패널 (기둥과 같은 폭, 18mm 두께) */}
+          <mesh
+            position={[0, (height * 0.01) / 2, (depth * 0.01) / 2 + 0.009]} // 기둥 전면에 18mm 패널
+            receiveShadow={viewMode === '3D'}
+            castShadow={viewMode === '3D'}
+          >
+            <boxGeometry args={[width * 0.01, height * 0.01, 0.018]} /> {/* 18mm 두께 */}
+            <meshStandardMaterial
+              color={color}
+              roughness={0.7}
+              metalness={0.1}
+            />
+          </mesh>
         </>
       )}
     </group>
