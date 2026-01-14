@@ -2345,10 +2345,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
 
-  // '기둥 앞에 배치' 모드: 가구 후면이 기둥 전면에 맞닿도록 Z를 앞으로 이동
-  const columnFrontOffset = (placedModule.columnPlacementMode === 'front' && slotInfo?.hasColumn && slotInfo.column)
-    ? mmToThreeUnits(slotInfo.column.depth)  // 기둥 깊이만큼 앞으로 이동
-    : 0;
+  // '기둥 앞에 배치' 모드: Z축 이동 없음, 폭만 슬롯 전체로 확장
+  const columnFrontOffset = 0;
 
   const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset + columnFrontOffset;
 
