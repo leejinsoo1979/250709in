@@ -2345,10 +2345,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
 
-  // '기둥 앞에 배치' 모드일 때 기둥 깊이만큼 뒤로(벽 쪽으로) 이동해서 기둥을 덮음
-  const columnFrontOffset = (placedModule.columnPlacementMode === 'front' && slotInfo?.hasColumn && slotInfo.column)
-    ? -mmToThreeUnits(slotInfo.column.depth)  // 음수: 뒤로 이동
-    : 0;
+  // '기둥 앞에 배치' 모드: Z 위치는 beside와 동일 (기둥 앞쪽 공간), X 위치로 기둥을 가림
+  // Z 오프셋 불필요 - 폭과 X 위치만 변경
+  const columnFrontOffset = 0;
 
   const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset + columnFrontOffset;
 
