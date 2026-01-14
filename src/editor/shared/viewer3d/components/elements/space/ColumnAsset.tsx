@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Line, Html } from '@react-three/drei';
+import { Line } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
@@ -452,35 +452,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
               );
             }
 
-            // +마감 버튼 표시 (2D)
-            return (
-              <Html
-                position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.01]}
-                center
-                style={{ pointerEvents: 'auto' }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onColumnUpdate?.(id, { hasFrontPanelFinish: true });
-                  }}
-                  style={{
-                    padding: '4px 8px',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    backgroundColor: '#4a90d9',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                  }}
-                >
-                  +마감
-                </button>
-              </Html>
-            );
+            return null;
           })()}
         </group>
       ) : renderMode === 'wireframe' ? (
@@ -540,35 +512,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
               );
             }
 
-            // +마감 버튼 표시 (wireframe)
-            return (
-              <Html
-                position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.01]}
-                center
-                style={{ pointerEvents: 'auto' }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onColumnUpdate?.(id, { hasFrontPanelFinish: true });
-                  }}
-                  style={{
-                    padding: '4px 8px',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    backgroundColor: '#4a90d9',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                  }}
-                >
-                  +마감
-                </button>
-              </Html>
-            );
+            return null;
           })()}
         </group>
       ) : (
@@ -632,35 +576,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
               );
             }
 
-            // +마감 버튼 표시
-            return (
-              <Html
-                position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.01]}
-                center
-                style={{ pointerEvents: 'auto' }}
-              >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onColumnUpdate?.(id, { hasFrontPanelFinish: true });
-                  }}
-                  style={{
-                    padding: '4px 8px',
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    backgroundColor: '#4a90d9',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
-                  }}
-                >
-                  +마감
-                </button>
-              </Html>
-            );
+            return null;
           })()}
         </>
       )}
