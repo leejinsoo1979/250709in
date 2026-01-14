@@ -240,13 +240,54 @@
   background: #a8a8a8;
 }
 
+/* 토글 버튼 스타일 */
+.toggleRow {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.toggleLabel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #fafbfc;
+  border: 1px solid #e1e5e9;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #333;
+}
+
+.toggleButton {
+  padding: 6px 16px;
+  border: 1px solid #e1e5e9;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.toggleButton:hover {
+  background-color: #e5e7eb;
+}
+
+.toggleButton.active {
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-hover) 100%);
+  color: white;
+  border-color: var(--theme-primary);
+}
+
 /* 반응형 대응 */
 @media (max-width: 768px) {
   .overlay {
     width: 100%;
     padding-top: 40px;
   }
-  
+
   .modal {
     width: 90%;
     max-width: 350px;

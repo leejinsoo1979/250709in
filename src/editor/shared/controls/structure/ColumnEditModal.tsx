@@ -286,6 +286,22 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
               </div>
             </div>
           </div>
+
+          {/* 마감재 설정 */}
+          <div className={styles.section}>
+            <h4 className={styles.sectionTitle}>마감재</h4>
+            <div className={styles.toggleRow}>
+              <label className={styles.toggleLabel}>
+                <span>전면 마감재</span>
+                <button
+                  className={`${styles.toggleButton} ${column.hasFrontPanelFinish ? styles.active : ''}`}
+                  onClick={() => handleInputChange('hasFrontPanelFinish', !column.hasFrontPanelFinish)}
+                >
+                  {column.hasFrontPanelFinish ? '있음' : '없음'}
+                </button>
+              </label>
+            </div>
+          </div>
         </div>
 
         <div className={styles.modalFooter}>
