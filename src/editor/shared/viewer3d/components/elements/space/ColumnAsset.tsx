@@ -435,7 +435,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           {/* 전면 패널 윤곽선 (18mm 두께) - 2D */}
           <lineSegments position={[0, 0, (depth * 0.01) / 2 + 0.09]}>
             <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, 0.18)]} />
-            <lineBasicMaterial color={isSelected ? "#4CAF50" : "#999999"} />
+            <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.material?.frameColor || "#999999")} />
           </lineSegments>
         </group>
       ) : renderMode === 'wireframe' ? (
@@ -482,7 +482,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           {/* 전면 패널 윤곽선 (18mm 두께) */}
           <lineSegments position={[0, 0, (depth * 0.01) / 2 + 0.09]}>
             <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, 0.18)]} />
-            <primitive object={wireframeMaterial} />
+            <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.material?.frameColor || "#333333")} />
           </lineSegments>
         </group>
       ) : (
