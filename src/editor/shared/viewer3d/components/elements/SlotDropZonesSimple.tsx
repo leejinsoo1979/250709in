@@ -3807,12 +3807,27 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
             columnDepth
           });
 
-          // Z축 위치 계산 - 기둥 앞쪽에 배치
-          const panelDepthMm = spaceInfo.depth || 600;
+          // Z축 위치 계산 - 일반 캐비닛 영역 내에서 앞쪽에 배치
+          const panelDepthMm = spaceInfo.depth || 730;
           const panelDepth = mmToThreeUnits(panelDepthMm);
+          const furnitureDepthMm = Math.min(panelDepthMm, 600);
+          const furnitureDepth = mmToThreeUnits(furnitureDepthMm);
           const panelZOffset = -panelDepth / 2;
-          // 기둥 앞 공간의 Z 중심 (벽에서 멀어지는 방향)
-          const frontSpaceZ = panelZOffset + panelDepth - mmToThreeUnits(frontSpace.depth / 2);
+          const furnitureZOffset = panelZOffset + (panelDepth - furnitureDepth) / 2;
+          // 기둥 앞 공간: 일반 가구 영역의 앞쪽에서 frontSpace.depth만큼 차지
+          // 가구 영역 앞쪽 끝에서 시작하여 뒤로 frontSpace.depth/2 들어간 위치
+          const frontSpaceDepthThree = mmToThreeUnits(frontSpace.depth);
+          const furnitureFrontZ = furnitureZOffset + furnitureDepth / 2;
+          const frontSpaceZ = furnitureFrontZ - frontSpaceDepthThree / 2;
+
+          console.log('🔍 [Front Space Z] Z 위치 계산:', {
+            panelDepthMm,
+            furnitureDepthMm,
+            frontSpaceDepth: frontSpace.depth,
+            furnitureZOffset,
+            furnitureFrontZ,
+            frontSpaceZ
+          });
 
           // Y축 위치 (바닥)
           const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';

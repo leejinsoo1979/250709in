@@ -145,6 +145,8 @@ const FurnitureBoringOverlay: React.FC<FurnitureBoringOverlayProps> = ({
 
   // 가구별 보링 시각화 데이터 생성
   const boringVisualizations = useMemo(() => {
+    console.log('🔵 FurnitureBoringOverlay - panels:', panels.length);
+
     if (panels.length === 0) return [];
 
     const internalSpace = calculateInternalSpace(spaceInfo);
@@ -188,6 +190,11 @@ const FurnitureBoringOverlay: React.FC<FurnitureBoringOverlayProps> = ({
 
       // 보링 시각화 추가
       if (panel.borings.length > 0) {
+        console.log('🔵 Panel:', panel.panelType, 'Borings:', panel.borings.length);
+        console.log('🔵 Furniture Position:', furniturePosition);
+        console.log('🔵 Panel Position:', panelPosition);
+        console.log('🔵 First boring:', panel.borings[0]);
+
         visualizations.push(
           <BoringVisualization
             key={`${panel.panelId}-${panelIndex}`}

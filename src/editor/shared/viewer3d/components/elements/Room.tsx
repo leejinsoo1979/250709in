@@ -242,6 +242,9 @@ const Room: React.FC<RoomProps> = ({
   const { highlightedFrame, activeDroppedCeilingTab, view2DTheme, shadowEnabled, cameraMode: cameraModeFromStore, selectedSlotIndex, showBorings } = useUIStore(); // 강조된 프레임 상태 및 활성 탭 가져오기
   const placedModulesFromStore = useFurnitureStore((state) => state.placedModules); // 가구 정보 가져오기
 
+  // 보링 시각화 디버그 로그
+  console.log('🔴 Room.tsx showBorings:', showBorings, 'placedModules:', placedModulesFromStore.length);
+
   // props로 전달된 cameraMode가 있으면 우선 사용, 없으면 UIStore 값 사용
   const cameraMode = cameraModeOverride || cameraModeFromStore;
 
