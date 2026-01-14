@@ -290,15 +290,14 @@ const ColumnEditModal: React.FC<ColumnEditModalProps> = ({
           {/* 마감재 설정 */}
           <div className={styles.section}>
             <h4 className={styles.sectionTitle}>마감재</h4>
-            <div className={styles.toggleRow}>
-              <label className={styles.toggleLabel}>
+            <div className={styles.checkboxRow}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  checked={column.hasFrontPanelFinish || false}
+                  onChange={(e) => handleInputChange('hasFrontPanelFinish', e.target.checked)}
+                />
                 <span>전면 마감재</span>
-                <button
-                  className={`${styles.toggleButton} ${column.hasFrontPanelFinish ? styles.active : ''}`}
-                  onClick={() => handleInputChange('hasFrontPanelFinish', !column.hasFrontPanelFinish)}
-                >
-                  {column.hasFrontPanelFinish ? '있음' : '없음'}
-                </button>
               </label>
             </div>
           </div>

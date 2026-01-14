@@ -240,45 +240,37 @@
   background: #a8a8a8;
 }
 
-/* 토글 버튼 스타일 */
-.toggleRow {
+/* 체크박스 스타일 */
+.checkboxRow {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
-.toggleLabel {
+.checkboxLabel {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 10px;
   padding: 10px 12px;
   background-color: #fafbfc;
   border: 1px solid #e1e5e9;
   border-radius: 8px;
   font-size: 14px;
   color: #333;
-}
-
-.toggleButton {
-  padding: 6px 16px;
-  border: 1px solid #e1e5e9;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.checkboxLabel:hover {
   background-color: #f3f4f6;
-  color: #6b7280;
-}
-
-.toggleButton:hover {
-  background-color: #e5e7eb;
-}
-
-.toggleButton.active {
-  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-hover) 100%);
-  color: white;
   border-color: var(--theme-primary);
+}
+
+.checkboxLabel input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--theme-primary);
+  cursor: pointer;
 }
 
 /* 반응형 대응 */
