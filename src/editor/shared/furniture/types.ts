@@ -6,14 +6,17 @@ export interface ColumnSlotMetadata {
   columnId?: string;
   columnPosition?: 'edge' | 'middle';
   availableWidth?: number;
+  adjustedWidth?: number; // 기둥 침범 시 조정된 너비
   needsMullion?: boolean;
   mullionSide?: 'left' | 'right';
   wasConvertedFromDual?: boolean; // 듀얼→싱글 변환 여부
   originalDualSlots?: number[]; // 원래 점유 슬롯 (듀얼 변환 시)
   actualSlots?: number[]; // 실제 점유 슬롯
   doorWidth?: number; // 기둥 커버용 도어 너비 (mm)
-  spaceType?: 'full' | 'front'; // Column C의 공간 타입
+  spaceType?: 'left' | 'right' | 'front' | 'full'; // 기둥 슬롯 내 배치 위치 (left: 왼쪽, right: 오른쪽, front: 기둥 앞)
   moduleOrder?: number; // 이 슬롯에서 몇 번째 모듈인지
+  intrusionDirection?: 'from-left' | 'from-right' | 'center'; // 기둥 침범 방향
+  furniturePosition?: 'left-aligned' | 'right-aligned' | 'center'; // 가구 배치 위치
 }
 
 // 배치된 모듈 타입

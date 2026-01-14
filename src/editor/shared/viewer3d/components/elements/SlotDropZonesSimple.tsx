@@ -1517,6 +1517,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
       // 기둥 정보가 있으면 추가
       if (slotInfo && slotInfo.hasColumn) {
+        // furniturePosition을 spaceType으로 매핑
+        let spaceType: 'left' | 'right' | 'front' | undefined;
+        if (slotInfo.furniturePosition === 'left-aligned') {
+          spaceType = 'left';
+        } else if (slotInfo.furniturePosition === 'right-aligned') {
+          spaceType = 'right';
+        }
+
         newModule.columnSlotInfo = {
           hasColumn: true,
           columnId: slotInfo.column?.id,
@@ -1524,7 +1532,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           availableWidth: slotInfo.availableWidth,
           adjustedWidth: slotInfo.adjustedWidth,
           intrusionDirection: slotInfo.intrusionDirection,
-          furniturePosition: slotInfo.furniturePosition
+          furniturePosition: slotInfo.furniturePosition,
+          spaceType // 'left', 'right', 'front' 중 하나
         };
 
         // 기둥 침범 시 실제 조정된 너비 재확인
@@ -2049,6 +2058,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
     // 기둥 정보가 있으면 추가
     if (slotInfo && slotInfo.hasColumn) {
+      // furniturePosition을 spaceType으로 매핑
+      let spaceType: 'left' | 'right' | 'front' | undefined;
+      if (slotInfo.furniturePosition === 'left-aligned') {
+        spaceType = 'left';
+      } else if (slotInfo.furniturePosition === 'right-aligned') {
+        spaceType = 'right';
+      }
+
       newModule.columnSlotInfo = {
         hasColumn: true,
         columnId: slotInfo.column?.id,
@@ -2056,7 +2073,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         availableWidth: slotInfo.availableWidth,
         adjustedWidth: slotInfo.adjustedWidth,
         intrusionDirection: slotInfo.intrusionDirection,
-        furniturePosition: slotInfo.furniturePosition
+        furniturePosition: slotInfo.furniturePosition,
+        spaceType // 'left', 'right', 'front' 중 하나
       };
     }
 
@@ -3700,18 +3718,33 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
         // 기둥 양옆에 가구가 배치된 슬롯만 필터링
         const availableSlots = frontSpaceSlots.filter(slotInfo => {
-          // 해당 슬롯에 기둥 양옆 가구가 배치되었는지 확인
-          const leftFurniture = placedModules.find(m =>
+          // Column C의 경우: 인접 슬롯에 가구가 있는지 확인
+          // 방법 1: 같은 슬롯 내 left/right spaceType 확인
+          const sameSlotLeft = placedModules.find(m =>
             m.slotIndex === slotInfo.slotIndex &&
             m.columnSlotInfo?.spaceType === 'left'
           );
-          const rightFurniture = placedModules.find(m =>
+          const sameSlotRight = placedModules.find(m =>
             m.slotIndex === slotInfo.slotIndex &&
             m.columnSlotInfo?.spaceType === 'right'
           );
 
-          // 양옆 모두 배치된 경우에만 기둥 앞 공간 고스트 표시
-          const hasBothSides = leftFurniture && rightFurniture;
+          // 방법 2: 인접 슬롯에 가구가 있는지 확인 (Column C의 일반적인 경우)
+          // 기둥 왼쪽 슬롯 (slotIndex - 1)에 가구가 있는지
+          const adjacentLeftFurniture = placedModules.find(m =>
+            m.slotIndex === slotInfo.slotIndex - 1 &&
+            !m.columnSlotInfo?.spaceType // 일반 가구 (기둥 앞 배치 가구가 아님)
+          );
+          // 기둥 오른쪽 슬롯 (slotIndex + 1)에 가구가 있는지
+          const adjacentRightFurniture = placedModules.find(m =>
+            m.slotIndex === slotInfo.slotIndex + 1 &&
+            !m.columnSlotInfo?.spaceType // 일반 가구 (기둥 앞 배치 가구가 아님)
+          );
+
+          // 양옆 확인 (같은 슬롯 내 또는 인접 슬롯)
+          const hasLeftFurniture = !!(sameSlotLeft || adjacentLeftFurniture);
+          const hasRightFurniture = !!(sameSlotRight || adjacentRightFurniture);
+          const hasBothSides = hasLeftFurniture && hasRightFurniture;
 
           // 기둥 앞에 이미 가구가 배치되었는지 확인
           const frontSpaceFurniture = placedModules.find(m =>
@@ -3721,8 +3754,14 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
           console.log('🔍 [Front Space] 슬롯 체크:', {
             slotIndex: slotInfo.slotIndex,
-            hasLeftFurniture: !!leftFurniture,
-            hasRightFurniture: !!rightFurniture,
+            sameSlotLeft: !!sameSlotLeft,
+            sameSlotRight: !!sameSlotRight,
+            adjacentLeftSlot: slotInfo.slotIndex - 1,
+            adjacentLeftFurniture: !!adjacentLeftFurniture,
+            adjacentRightSlot: slotInfo.slotIndex + 1,
+            adjacentRightFurniture: !!adjacentRightFurniture,
+            hasLeftFurniture,
+            hasRightFurniture,
             hasBothSides,
             hasFrontFurniture: !!frontSpaceFurniture
           });
