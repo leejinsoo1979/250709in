@@ -1054,9 +1054,9 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // 패널 두께 (18mm) - 먼저 선언
   const panelThickness = 18;
 
-  // 도어는 가구 몸통 앞면에서 5mm 떨어지고, 도어 두께의 절반만큼 더 앞으로
-  // 총 오프셋 = 28mm (도어 두께 18mm로 변경에 따른 2mm 보정)
-  const baseDepthOffset = mmToThreeUnits(28);
+  // 도어는 가구 몸통 앞면에서 5mm 떨어지고, 도어 두께의 절반(9mm)만큼 더 앞으로
+  // 총 오프셋 = 5mm + 9mm = 14mm
+  const baseDepthOffset = mmToThreeUnits(14);
   const doorDepth = mmToThreeUnits(moduleDepth) + baseDepthOffset;
 
   // 힌지 위치 오프셋(9mm) 상수 정의
