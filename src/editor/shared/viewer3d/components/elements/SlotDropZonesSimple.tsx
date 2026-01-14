@@ -3716,57 +3716,65 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           return null;
         }
 
-        // 기둥 양옆에 가구가 배치된 슬롯만 필터링
+        // 디버깅: 현재 배치된 모든 가구 정보 출력
+        console.log('🔍 [Front Space Debug] 배치된 가구 목록:', {
+          totalCount: placedModules.length,
+          modules: placedModules.map(m => ({
+            id: m.id,
+            slotIndex: m.slotIndex,
+            hasColumnSlotInfo: !!m.columnSlotInfo,
+            spaceType: m.columnSlotInfo?.spaceType
+          }))
+        });
+
+        // 기둥이 차지하는 슬롯 범위 계산 (같은 기둥 ID를 가진 모든 슬롯)
+        const columnSlotIndices = frontSpaceSlots.map(s => s.slotIndex);
+        const leftmostColumnSlot = Math.min(...columnSlotIndices);
+        const rightmostColumnSlot = Math.max(...columnSlotIndices);
+
+        console.log('🔍 [Front Space Debug] 기둥 범위:', {
+          columnSlotIndices,
+          leftmostColumnSlot,
+          rightmostColumnSlot
+        });
+
+        // 기둥 양옆(기둥 외부)에 가구가 있는지 확인
+        // 기둥 왼쪽 끝 바깥 슬롯에 가구가 있는지
+        const leftOutsideFurniture = placedModules.find(m =>
+          m.slotIndex === leftmostColumnSlot - 1 &&
+          m.columnSlotInfo?.spaceType !== 'front' // front 배치 가구 제외
+        );
+        // 기둥 오른쪽 끝 바깥 슬롯에 가구가 있는지
+        const rightOutsideFurniture = placedModules.find(m =>
+          m.slotIndex === rightmostColumnSlot + 1 &&
+          m.columnSlotInfo?.spaceType !== 'front' // front 배치 가구 제외
+        );
+
+        const hasBothSidesOutside = !!(leftOutsideFurniture && rightOutsideFurniture);
+
+        console.log('🔍 [Front Space Debug] 외부 가구 체크:', {
+          leftSlotToCheck: leftmostColumnSlot - 1,
+          hasLeftOutsideFurniture: !!leftOutsideFurniture,
+          leftFurnitureInfo: leftOutsideFurniture ? { id: leftOutsideFurniture.id, slotIndex: leftOutsideFurniture.slotIndex } : null,
+          rightSlotToCheck: rightmostColumnSlot + 1,
+          hasRightOutsideFurniture: !!rightOutsideFurniture,
+          rightFurnitureInfo: rightOutsideFurniture ? { id: rightOutsideFurniture.id, slotIndex: rightOutsideFurniture.slotIndex } : null,
+          hasBothSidesOutside
+        });
+
+        // 기둥 양옆에 가구가 없으면 빈 배열 반환
+        if (!hasBothSidesOutside) {
+          console.log('🔍 [Front Space Debug] 기둥 양옆 외부에 가구 없음 - 고스트 표시 안함');
+          return null;
+        }
+
+        // 기둥 앞에 이미 가구가 배치된 슬롯 제외
         const availableSlots = frontSpaceSlots.filter(slotInfo => {
-          // Column C의 경우: 인접 슬롯에 가구가 있는지 확인
-          // 방법 1: 같은 슬롯 내 left/right spaceType 확인
-          const sameSlotLeft = placedModules.find(m =>
-            m.slotIndex === slotInfo.slotIndex &&
-            m.columnSlotInfo?.spaceType === 'left'
-          );
-          const sameSlotRight = placedModules.find(m =>
-            m.slotIndex === slotInfo.slotIndex &&
-            m.columnSlotInfo?.spaceType === 'right'
-          );
-
-          // 방법 2: 인접 슬롯에 가구가 있는지 확인 (Column C의 일반적인 경우)
-          // 기둥 왼쪽 슬롯 (slotIndex - 1)에 가구가 있는지
-          const adjacentLeftFurniture = placedModules.find(m =>
-            m.slotIndex === slotInfo.slotIndex - 1 &&
-            !m.columnSlotInfo?.spaceType // 일반 가구 (기둥 앞 배치 가구가 아님)
-          );
-          // 기둥 오른쪽 슬롯 (slotIndex + 1)에 가구가 있는지
-          const adjacentRightFurniture = placedModules.find(m =>
-            m.slotIndex === slotInfo.slotIndex + 1 &&
-            !m.columnSlotInfo?.spaceType // 일반 가구 (기둥 앞 배치 가구가 아님)
-          );
-
-          // 양옆 확인 (같은 슬롯 내 또는 인접 슬롯)
-          const hasLeftFurniture = !!(sameSlotLeft || adjacentLeftFurniture);
-          const hasRightFurniture = !!(sameSlotRight || adjacentRightFurniture);
-          const hasBothSides = hasLeftFurniture && hasRightFurniture;
-
-          // 기둥 앞에 이미 가구가 배치되었는지 확인
           const frontSpaceFurniture = placedModules.find(m =>
             m.slotIndex === slotInfo.slotIndex &&
             m.columnSlotInfo?.spaceType === 'front'
           );
-
-          console.log('🔍 [Front Space] 슬롯 체크:', {
-            slotIndex: slotInfo.slotIndex,
-            sameSlotLeft: !!sameSlotLeft,
-            sameSlotRight: !!sameSlotRight,
-            adjacentLeftSlot: slotInfo.slotIndex - 1,
-            adjacentLeftFurniture: !!adjacentLeftFurniture,
-            adjacentRightSlot: slotInfo.slotIndex + 1,
-            adjacentRightFurniture: !!adjacentRightFurniture,
-            hasLeftFurniture,
-            hasRightFurniture,
-            hasBothSides,
-            hasFrontFurniture: !!frontSpaceFurniture
-          });
-
-          return hasBothSides && !frontSpaceFurniture;
+          return !frontSpaceFurniture;
         });
 
         console.log('🔍 [Front Space Debug] availableSlots:', {
