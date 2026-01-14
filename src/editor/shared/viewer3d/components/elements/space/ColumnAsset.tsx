@@ -447,7 +447,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
               return (
                 <lineSegments position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}>
                   <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, panelHeight * 0.01, 0.18)]} />
-                  <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.frameColor || "#999999")} />
+                  <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.interiorColor || "#999999")} />
                 </lineSegments>
               );
             }
@@ -507,7 +507,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
               return (
                 <lineSegments position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}>
                   <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, panelHeight * 0.01, 0.18)]} />
-                  <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.frameColor || "#333333")} />
+                  <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.interiorColor || "#333333")} />
                 </lineSegments>
               );
             }
@@ -568,7 +568,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
                 >
                   <boxGeometry args={[width * 0.01, panelHeight * 0.01, 0.18]} />
                   <meshStandardMaterial
-                    color={spaceConfig.spaceInfo.materialConfig?.frameColor || '#E0E0E0'}
+                    color={spaceConfig.spaceInfo.materialConfig?.interiorColor || '#E0E0E0'}
                     roughness={0.6}
                     metalness={0.0}
                   />
