@@ -4911,11 +4911,11 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             return;
           }
           
-          // 실제 깊이 정보 (스타일러장의 우측 660mm 깊이 고려)
-          const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
+          // 가구 본래 깊이 사용 (customDepth는 기둥 조정값이므로 무시)
+          const actualDepthMm = moduleData.dimensions.depth;
           const moduleWidthMm = moduleData.dimensions.width;
           const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
-          
+
           const moduleWidth = mmToThreeUnits(moduleWidthMm);
           const rightX = module.position.x + moduleWidth / 2;
           
@@ -5059,8 +5059,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               return;
             }
             
-            // 실제 깊이 정보 (스타일러장의 우측 660mm 깊이 고려)
-            const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
+            // 가구 본래 깊이 사용 (customDepth는 기둥 조정값이므로 무시)
+            const actualDepthMm = moduleData.dimensions.depth;
             const moduleWidthMm = moduleData.dimensions.width;
             const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
             
