@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { ThreeEvent, useThree } from '@react-three/fiber';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
-import { Line } from '@react-three/drei';
+import { Line, Html } from '@react-three/drei';
 import { useSpace3DView } from '../../../context/useSpace3DView';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
@@ -19,8 +19,10 @@ interface ColumnAssetProps {
   renderMode?: 'solid' | 'wireframe';
   onPositionChange?: (id: string, newPosition: [number, number, number]) => void;
   onRemove?: (id: string) => void;
+  onColumnUpdate?: (id: string, updates: any) => void;
   spaceInfo?: any;
   hasBackPanelFinish?: boolean;
+  hasFrontPanelFinish?: boolean;
 }
 
 const ColumnAsset: React.FC<ColumnAssetProps> = ({
@@ -33,8 +35,10 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
   renderMode = 'solid',
   onPositionChange,
   onRemove,
+  onColumnUpdate,
   spaceInfo,
-  hasBackPanelFinish = false
+  hasBackPanelFinish = false,
+  hasFrontPanelFinish = false
 }) => {
   const meshRef = useRef<THREE.Mesh>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -438,11 +442,44 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             const baseHeight = spaceConfig.spaceInfo.baseConfig?.height || 65;
             const panelHeight = height - topFrameHeight - baseHeight;
             const panelCenterY = baseHeight + panelHeight / 2 - height / 2; // group 중심 기준 오프셋
+
+            if (hasFrontPanelFinish) {
+              return (
+                <lineSegments position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}>
+                  <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, panelHeight * 0.01, 0.18)]} />
+                  <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.frameColor || "#999999")} />
+                </lineSegments>
+              );
+            }
+
+            // +마감 버튼 표시 (2D)
             return (
-              <lineSegments position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}>
-                <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, panelHeight * 0.01, 0.18)]} />
-                <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.frameColor || "#999999")} />
-              </lineSegments>
+              <Html
+                position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.01]}
+                center
+                style={{ pointerEvents: 'auto' }}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onColumnUpdate?.(id, { hasFrontPanelFinish: true });
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    backgroundColor: '#4a90d9',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  +마감
+                </button>
+              </Html>
             );
           })()}
         </group>
@@ -493,11 +530,44 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             const baseHeight = spaceConfig.spaceInfo.baseConfig?.height || 65;
             const panelHeight = height - topFrameHeight - baseHeight;
             const panelCenterY = baseHeight + panelHeight / 2 - height / 2; // group 중심 기준 오프셋
+
+            if (hasFrontPanelFinish) {
+              return (
+                <lineSegments position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}>
+                  <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, panelHeight * 0.01, 0.18)]} />
+                  <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.frameColor || "#333333")} />
+                </lineSegments>
+              );
+            }
+
+            // +마감 버튼 표시 (wireframe)
             return (
-              <lineSegments position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}>
-                <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, panelHeight * 0.01, 0.18)]} />
-                <lineBasicMaterial color={isSelected ? "#4CAF50" : (spaceConfig.spaceInfo.materialConfig?.frameColor || "#333333")} />
-              </lineSegments>
+              <Html
+                position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.01]}
+                center
+                style={{ pointerEvents: 'auto' }}
+              >
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onColumnUpdate?.(id, { hasFrontPanelFinish: true });
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    backgroundColor: '#4a90d9',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  +마감
+                </button>
+              </Html>
             );
           })()}
         </group>
@@ -544,19 +614,52 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             const baseHeight = spaceConfig.spaceInfo.baseConfig?.height || 65;
             const panelHeight = height - topFrameHeight - baseHeight;
             const panelCenterY = baseHeight + panelHeight / 2;
+
+            if (hasFrontPanelFinish) {
+              return (
+                <mesh
+                  position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}
+                  receiveShadow={viewMode === '3D'}
+                  castShadow={viewMode === '3D'}
+                >
+                  <boxGeometry args={[width * 0.01, panelHeight * 0.01, 0.18]} />
+                  <meshStandardMaterial
+                    color={spaceConfig.spaceInfo.materialConfig?.frameColor || '#E0E0E0'}
+                    roughness={0.6}
+                    metalness={0.0}
+                  />
+                </mesh>
+              );
+            }
+
+            // +마감 버튼 표시
             return (
-              <mesh
-                position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.09]}
-                receiveShadow={viewMode === '3D'}
-                castShadow={viewMode === '3D'}
+              <Html
+                position={[0, panelCenterY * 0.01, (depth * 0.01) / 2 + 0.01]}
+                center
+                style={{ pointerEvents: 'auto' }}
               >
-                <boxGeometry args={[width * 0.01, panelHeight * 0.01, 0.18]} />
-                <meshStandardMaterial
-                  color={spaceConfig.spaceInfo.materialConfig?.frameColor || '#E0E0E0'}
-                  roughness={0.6}
-                  metalness={0.0}
-                />
-              </mesh>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onColumnUpdate?.(id, { hasFrontPanelFinish: true });
+                  }}
+                  style={{
+                    padding: '4px 8px',
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    backgroundColor: '#4a90d9',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                  }}
+                >
+                  +마감
+                </button>
+              </Html>
             );
           })()}
         </>
@@ -578,6 +681,7 @@ export default React.memo(ColumnAsset, (prevProps, nextProps) => {
     prevProps.id === nextProps.id &&
     prevProps.renderMode === nextProps.renderMode &&
     prevProps.hasBackPanelFinish === nextProps.hasBackPanelFinish &&
+    prevProps.hasFrontPanelFinish === nextProps.hasFrontPanelFinish &&
     prevProps.spaceInfo?.width === nextProps.spaceInfo?.width &&
     prevProps.spaceInfo?.depth === nextProps.spaceInfo?.depth &&
     prevProps.spaceInfo?.height === nextProps.spaceInfo?.height

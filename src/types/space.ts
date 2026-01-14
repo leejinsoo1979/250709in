@@ -7,6 +7,7 @@ export interface Column {
   color: string;
   material: 'concrete' | 'steel' | 'wood';
   hasBackPanelFinish?: boolean; // 뒷면 패널 마감 여부
+  hasFrontPanelFinish?: boolean; // 전면 패널 마감 여부
 }
 
 export interface Wall {

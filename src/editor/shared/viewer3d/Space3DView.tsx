@@ -1590,6 +1590,7 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                       depth={column.depth}
                       color={column.color}
                       hasBackPanelFinish={column.hasBackPanelFinish}
+                      hasFrontPanelFinish={column.hasFrontPanelFinish}
                       spaceInfo={spaceInfo}
                       renderMode={renderMode}
                       onPositionChange={(id, newPosition) => {
@@ -1597,6 +1598,9 @@ const Space3DView: React.FC<Space3DViewProps> = (props) => {
                       }}
                       onRemove={(id) => {
                         removeColumn(id);
+                      }}
+                      onColumnUpdate={(id, updates) => {
+                        throttledUpdateColumn(id, updates);
                       }}
                     />
                     {/* 기둥 벽면 간격 라벨 (2D 모드에서 기둥 편집 모달이 열렸을 때만 표시) */}

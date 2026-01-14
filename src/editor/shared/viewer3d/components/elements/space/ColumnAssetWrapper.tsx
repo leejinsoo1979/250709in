@@ -13,8 +13,10 @@ interface ColumnAssetWrapperProps {
   renderMode?: 'solid' | 'wireframe';
   onPositionChange?: (id: string, newPosition: [number, number, number]) => void;
   onRemove?: (id: string) => void;
+  onColumnUpdate?: (id: string, updates: any) => void;
   spaceInfo?: any;
   hasBackPanelFinish?: boolean;
+  hasFrontPanelFinish?: boolean;
 }
 
 const ColumnAssetWrapper: React.FC<ColumnAssetWrapperProps> = (props) => {
