@@ -2319,11 +2319,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (placedModule.zone === 'dropped') {
     }
   
-  // 깊이 계산: customDepth 우선, 자동 조정 깊이, 기둥 충돌로 조정된 깊이, 기본 깊이 순
+  // 깊이 계산: 기둥 앞에 배치 모드면 adjustedDepthMm 강제 적용, 아니면 customDepth 우선
   const moduleDepth = actualModuleData?.dimensions?.depth || 0;
-  const actualDepthMm = placedModule.customDepth ||
-                        (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
-                         (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth));
+  const actualDepthMm = (placedModule.columnPlacementMode === 'front' && adjustedDepthMm !== moduleDepth)
+                        ? adjustedDepthMm  // front 모드: 깊이 강제 적용
+                        : (placedModule.customDepth ||
+                           (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
+                            (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth)));
   const depth = mmToThreeUnits(actualDepthMm);
 
   // 도어 두께 (20mm) - furnitureZ 계산에 필요하므로 먼저 선언
