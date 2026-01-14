@@ -4897,10 +4897,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         let deepestFrontZ = -Infinity;
         let deepestFurnitureRightX = spaceXOffset;
         let hasLeftFurniture = false;
-
-        // 기둥 슬롯 분석
-        const columnSlots = analyzeColumnSlots(spaceInfo);
-
+        
         placedModules.forEach((module) => {
           // 좌측에 배치된 가구만 고려 (x 좌표가 음수)
           if (module.position.x >= 0) return;
@@ -4909,23 +4906,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
             spaceInfo
           );
-
+          
           if (!moduleData || !moduleData.dimensions) {
             return;
           }
-
-          // 슬롯 정보 확인 (기둥에 의한 깊이 조정 확인)
-          const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
-
-          // 기둥에 의한 깊이 조정 적용 (FurnitureItem.tsx와 동일한 로직)
-          let actualDepthMm = module.customDepth || moduleData.dimensions.depth;
-          if (slotInfo?.hasColumn && slotInfo.columnProcessingMethod === 'depth-adjustment' && slotInfo.column) {
-            const slotDepth = 730; // 슬롯 기본 깊이
-            const columnDepth = slotInfo.column.depth;
-            const remainingDepth = slotDepth - columnDepth;
-            actualDepthMm = remainingDepth;
-          }
-
+          
+          // 실제 깊이 정보 (스타일러장의 우측 660mm 깊이 고려)
+          const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
           const moduleWidthMm = moduleData.dimensions.width;
           const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
           
@@ -5057,36 +5044,23 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           let deepestFrontZ = -Infinity;
           let deepestFurnitureLeftX = spaceXOffset;
           let hasRightFurniture = false;
-
-          // 기둥 슬롯 분석
-          const columnSlots = analyzeColumnSlots(spaceInfo);
-
+          
           placedModules.forEach((module) => {
             // 우측에 배치된 가구만 고려 (x 좌표가 0 이상)
             if (module.position.x < 0) return;
-
+            
             const moduleData = getModuleById(
               module.moduleId,
               { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
               spaceInfo
             );
-
+            
             if (!moduleData || !moduleData.dimensions) {
               return;
             }
-
-            // 슬롯 정보 확인 (기둥에 의한 깊이 조정 확인)
-            const slotInfo = module.slotIndex !== undefined ? columnSlots[module.slotIndex] : undefined;
-
-            // 기둥에 의한 깊이 조정 적용 (FurnitureItem.tsx와 동일한 로직)
-            let actualDepthMm = module.customDepth || moduleData.dimensions.depth;
-            if (slotInfo?.hasColumn && slotInfo.columnProcessingMethod === 'depth-adjustment' && slotInfo.column) {
-              const slotDepth = 730; // 슬롯 기본 깊이
-              const columnDepth = slotInfo.column.depth;
-              const remainingDepth = slotDepth - columnDepth;
-              actualDepthMm = remainingDepth;
-            }
-
+            
+            // 실제 깊이 정보 (스타일러장의 우측 660mm 깊이 고려)
+            const actualDepthMm = module.customDepth || moduleData.dimensions.depth;
             const moduleWidthMm = moduleData.dimensions.width;
             const isStylerModule = moduleData.id.includes('dual-2drawer-styler');
             
