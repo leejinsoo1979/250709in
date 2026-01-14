@@ -285,27 +285,68 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         };
         
         const intrusionAnalysis = analyzeIntrusionDirection();
-        
+
+        // 기둥 타입 결정 (노서라운드 모드)
+        const DEPTH_THRESHOLD = 500;
+        let columnType: 'deep' | 'shallow' | 'medium' | undefined;
+        if (columnInSlot.depth >= DEPTH_THRESHOLD) {
+          columnType = 'deep';
+        } else if (columnInSlot.depth === 300) {
+          columnType = 'medium'; // 기둥 C
+        } else {
+          columnType = 'shallow';
+        }
+
+        // 기둥 앞 공간 계산 (기둥 C일 때만) - 노서라운드 모드
+        let frontSpace: ColumnSlotInfo['frontSpace'];
+        if (columnType === 'medium' && columnInSlot.depth === 300) {
+          const STANDARD_CABINET_DEPTH = 730;
+          const frontSpaceDepth = STANDARD_CABINET_DEPTH - columnInSlot.depth; // 430mm
+          const frontSpaceWidth = indexing.columnWidth;
+          const columnCenterX = columnInSlot.position[0];
+          const columnCenterZ = (frontSpaceDepth / 2) * 0.01;
+
+          frontSpace = {
+            available: true,
+            width: frontSpaceWidth,
+            depth: frontSpaceDepth,
+            centerX: columnCenterX,
+            centerZ: columnCenterZ
+          };
+
+          console.log('🟢 기둥 앞 공간 계산 (노서라운드):', {
+            slotIndex: i,
+            frontSpaceWidth,
+            frontSpaceDepth,
+            centerX: columnCenterX,
+            centerZ: columnCenterZ
+          });
+        }
+
         slotInfos.push({
           slotIndex: i,
           hasColumn: true,
           column: columnInSlot,
           columnPosition: 'edge',
+          columnType, // 기둥 타입 추가
           intrusionDirection: intrusionAnalysis.intrusionDirection,
           furniturePosition: intrusionAnalysis.furniturePosition,
           availableWidth: Math.round((intrusionAnalysis.availableWidth || 0) * 100) / 100,
           adjustedWidth: Math.round((intrusionAnalysis.adjustedWidth || 0) * 100) / 100,
           doorWidth: indexing.columnWidth - 3, // 커버도어는 원래 슬롯 너비 사용
-          needsMullion: false
+          needsMullion: false,
+          frontSpace // 기둥 앞 공간 정보 추가
         });
-        
+
         console.log('🏗️ 노서라운드 기둥 슬롯 정보:', {
           slotIndex: i,
           columnWidth: columnInSlot.width,
           columnDepth: columnInSlot.depth,
+          columnType,
           intrusionDirection: intrusionAnalysis.intrusionDirection,
           availableWidth: Math.round((intrusionAnalysis.availableWidth || 0) * 100) / 100,
-          originalSlotWidth: indexing.columnWidth
+          originalSlotWidth: indexing.columnWidth,
+          frontSpace
         });
       }
     }
