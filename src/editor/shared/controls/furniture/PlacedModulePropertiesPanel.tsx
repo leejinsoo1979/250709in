@@ -551,6 +551,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [hasDoor, setHasDoor] = useState<boolean>(false);
   const [doorSplit, setDoorSplit] = useState<boolean>(false);
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
+  const [columnPlacementMode, setColumnPlacementMode] = useState<'beside' | 'front'>('beside'); // 기둥 C 배치 모드
 
   // 띄움배치일 때 바닥 이격거리를 띄움 높이로 연동
   const isFloatPlacement = spaceInfo.baseConfig?.placementType === 'float';
@@ -583,6 +584,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [originalHasDoor, setOriginalHasDoor] = useState<boolean>(false);
   const [originalDoorSplit, setOriginalDoorSplit] = useState<boolean>(false);
   const [originalHasGapBackPanel, setOriginalHasGapBackPanel] = useState<boolean>(false);
+  const [originalColumnPlacementMode, setOriginalColumnPlacementMode] = useState<'beside' | 'front'>('beside');
   const [originalUpperDoorTopGap, setOriginalUpperDoorTopGap] = useState<number>(5);
   const [originalUpperDoorBottomGap, setOriginalUpperDoorBottomGap] = useState<number>(0);
   const [originalLowerDoorTopGap, setOriginalLowerDoorTopGap] = useState<number>(0);
@@ -789,6 +791,11 @@ const PlacedModulePropertiesPanel: React.FC = () => {
       setOriginalHasDoor(hasDoorVal); // 원래 값 저장
       setOriginalDoorSplit(doorSplitVal); // 원래 값 저장
       setOriginalHasGapBackPanel(hasGapVal); // 원래 값 저장
+
+      // 기둥 C 배치 모드 초기화
+      const placementModeVal = currentPlacedModule.columnPlacementMode || 'beside';
+      setColumnPlacementMode(placementModeVal);
+      setOriginalColumnPlacementMode(placementModeVal);
 
       // 도어 상하 갭 초기값 설정 (천장/바닥 기준, 입력 중 방해 방지)
       // 띄움배치일 때는 띄움 높이를 바닥 이격거리로 자동 설정
@@ -1331,6 +1338,14 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     }
   };
 
+  // 기둥 C 배치 모드 변경 핸들러
+  const handleColumnPlacementModeChange = (mode: 'beside' | 'front') => {
+    setColumnPlacementMode(mode);
+    if (activePopup.id) {
+      updatePlacedModule(activePopup.id, { columnPlacementMode: mode });
+    }
+  };
+
 
   return (
     <div className={styles.overlay}>
@@ -1638,6 +1653,54 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                 <div className={styles.depthRange}>
                   {t('furniture.range')}: 150mm ~ {moduleData.dimensions.width}mm
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* 기둥 C 배치 모드 선택 (기둥 C인 경우만 표시) */}
+          {isColumnC && (
+            <div className={styles.propertySection}>
+              <h5 className={styles.sectionTitle}>배치 모드</h5>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button
+                  onClick={() => handleColumnPlacementModeChange('beside')}
+                  style={{
+                    flex: 1,
+                    padding: '10px 12px',
+                    border: columnPlacementMode === 'beside' ? '2px solid var(--theme-primary)' : '1px solid #ddd',
+                    borderRadius: '8px',
+                    backgroundColor: columnPlacementMode === 'beside' ? 'var(--theme-primary-light, #e8f5e9)' : '#fff',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: columnPlacementMode === 'beside' ? 600 : 400,
+                    color: columnPlacementMode === 'beside' ? 'var(--theme-primary)' : '#333',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  기둥 측면 배치
+                </button>
+                <button
+                  onClick={() => handleColumnPlacementModeChange('front')}
+                  style={{
+                    flex: 1,
+                    padding: '10px 12px',
+                    border: columnPlacementMode === 'front' ? '2px solid var(--theme-primary)' : '1px solid #ddd',
+                    borderRadius: '8px',
+                    backgroundColor: columnPlacementMode === 'front' ? 'var(--theme-primary-light, #e8f5e9)' : '#fff',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: columnPlacementMode === 'front' ? 600 : 400,
+                    color: columnPlacementMode === 'front' ? 'var(--theme-primary)' : '#333',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  기둥 앞에 배치
+                </button>
+              </div>
+              <div style={{ marginTop: '8px', fontSize: '11px', color: '#666' }}>
+                {columnPlacementMode === 'beside'
+                  ? '가구가 기둥 옆에 배치됩니다 (기본)'
+                  : '가구가 기둥 앞에 배치되어 기둥을 가립니다'}
               </div>
             </div>
           )}

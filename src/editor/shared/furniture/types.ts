@@ -60,6 +60,9 @@ export interface PlacedModule {
   // Column C 듀얼 배치 관련
   subSlotPosition?: 'left' | 'right'; // Column C에서 서브슬롯 위치
 
+  // 기둥 C 배치 모드
+  columnPlacementMode?: 'beside' | 'front'; // 'beside': 기둥 측면 배치 (기본), 'front': 기둥 앞에 배치 (기둥을 가림)
+
   // 섹션별 깊이 설정 (2섹션 가구용)
   lowerSectionDepth?: number; // 하부 섹션 깊이 (mm)
   upperSectionDepth?: number; // 상부 섹션 깊이 (mm)

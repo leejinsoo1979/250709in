@@ -2180,16 +2180,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const slotDepth = 730; // 슬롯 기본 깊이
       const columnDepth = slotInfo.column.depth;
       const remainingDepth = slotDepth - columnDepth;
-      
+
       // 듀얼캐비닛인지 확인
       // isDualFurniture는 이미 위에서 계산됨
-      
-     if (isDualFurniture && remainingDepth <= 300) {
+
+      // '기둥 앞에 배치' 모드인 경우 깊이를 줄이지 않고 원래 깊이 유지
+      if (placedModule.columnPlacementMode === 'front') {
+        // 기둥 앞에 배치 - 원래 깊이 유지, Z 위치만 앞으로 이동 (아래에서 처리)
+        adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
+      } else if (isDualFurniture && remainingDepth <= 300) {
         // 듀얼캐비닛이고 남은 깊이가 300mm 이하면 배치 불가
         // 배치 불가 처리 (원래 깊이 유지하거나 다른 처리)
         adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
       } else {
-        // 배치 가능 - 깊이만 조정, 폭과 위치는 그대로
+        // 배치 가능 - 깊이만 조정, 폭과 위치는 그대로 (기둥 측면 배치)
         adjustedDepthMm = remainingDepth;
       }
     }
@@ -2335,7 +2339,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 띄움배치일 때는 받침대 깊이만큼 앞으로 당김 (조절발이 없으므로)
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
-  const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset;
+
+  // '기둥 앞에 배치' 모드일 때 기둥 깊이만큼 앞으로 이동
+  const columnFrontOffset = (placedModule.columnPlacementMode === 'front' && slotInfo?.hasColumn && slotInfo.column)
+    ? mmToThreeUnits(slotInfo.column.depth)
+    : 0;
+
+  const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset + columnFrontOffset;
 
   const furnitureGroupPosition: [number, number, number] = [
     adjustedPosition.x + positionAdjustmentForEndPanel,
