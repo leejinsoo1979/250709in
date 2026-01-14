@@ -516,7 +516,7 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             </mesh>
           )}
 
-          {/* 전면 패널 (기둥과 같은 폭, 18mm 두께) */}
+          {/* 전면 패널 (기둥과 같은 폭, 18mm 두께) - 나무색 */}
           <mesh
             position={[0, (height * 0.01) / 2, (depth * 0.01) / 2 + 0.009]} // 기둥 전면에 18mm 패널
             receiveShadow={viewMode === '3D'}
@@ -524,9 +524,9 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           >
             <boxGeometry args={[width * 0.01, height * 0.01, 0.018]} /> {/* 18mm 두께 */}
             <meshStandardMaterial
-              color={color}
-              roughness={0.7}
-              metalness={0.1}
+              color="#D4A574"
+              roughness={0.6}
+              metalness={0.0}
             />
           </mesh>
         </>
