@@ -3674,42 +3674,63 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
 
       {/* 기둥 앞 공간 고스트 (기둥 C 전용) */}
       {(currentDragData || selectedFurnitureId) && (() => {
+        // 디버그: spaceInfo 기둥 정보 먼저 출력
+        console.log('🔍🔍🔍 [Front Space Debug] spaceInfo 기둥 정보:', {
+          surroundType: spaceInfo.surroundType,
+          hasDroppedCeiling: !!spaceInfo.droppedCeiling?.enabled,
+          columnsCount: spaceInfo.columns?.length || 0,
+          columns: spaceInfo.columns?.map(c => ({
+            id: c.id,
+            width: c.width,
+            depth: c.depth,
+            position: c.position
+          }))
+        });
+
         // 기둥 분석
         const columnSlotsForFront = analyzeColumnSlots(spaceInfo);
 
+        // 디버그: 모든 기둥 슬롯 정보 출력
+        console.log('🔍 [Front Space Debug] 기둥 슬롯 분석 결과:', {
+          totalSlots: columnSlotsForFront.length,
+          slotsWithColumn: columnSlotsForFront.filter(s => s.hasColumn).map(s => ({
+            slotIndex: s.slotIndex,
+            hasColumn: s.hasColumn,
+            columnType: s.columnType,
+            columnDepth: s.column?.depth,
+            allowMultipleFurniture: s.allowMultipleFurniture,
+            frontSpace: s.frontSpace
+          }))
+        });
+
         // 기둥 앞 공간이 있는 슬롯만 필터링 (Column C이고 frontSpace가 활성화된 경우)
+        // allowMultipleFurniture는 기둥 측면 배치용이므로 frontSpace.available만 확인
         const frontSpaceSlots = columnSlotsForFront.filter(
-          slot => slot.hasColumn && slot.frontSpace?.available && slot.allowMultipleFurniture
+          slot => slot.hasColumn && slot.frontSpace?.available && slot.columnType === 'medium'
         );
 
-        if (frontSpaceSlots.length === 0) return null;
+        console.log('🔍 [Front Space Debug] frontSpaceSlots:', {
+          count: frontSpaceSlots.length,
+          slots: frontSpaceSlots.map(s => ({ slotIndex: s.slotIndex, frontSpace: s.frontSpace }))
+        });
+
+        if (frontSpaceSlots.length === 0) {
+          console.log('🔍 [Front Space Debug] frontSpaceSlots가 비어있음 - 기둥 앞 공간이 없거나 Column C가 아님');
+          return null;
+        }
 
         // 모듈 데이터 가져오기
         const moduleIdForFront = currentDragData?.moduleData?.id || selectedFurnitureId;
         const moduleDataForFront = moduleIdForFront ? getModuleById(moduleIdForFront) : null;
 
         // 싱글장만 기둥 앞 공간에 배치 가능
-        if (!moduleDataForFront || moduleDataForFront.slotType !== 'single') return null;
-
-        // 기둥 양쪽에 가구가 배치되었는지 확인
-        const slotsWithBothSidesFilled = frontSpaceSlots.filter(slotInfo => {
-          // 해당 슬롯에 배치된 가구 중 기둥 측면 배치(beside) 모드인 가구 필터링
-          const modulesInSlot = placedModules.filter(m =>
-            m.slotIndex === slotInfo.slotIndex &&
-            m.columnPlacementMode === 'beside'
-          );
-
-          // 좌측과 우측 모두 가구가 있는지 확인
-          const hasLeftFurniture = modulesInSlot.some(m => m.subSlotPosition === 'left');
-          const hasRightFurniture = modulesInSlot.some(m => m.subSlotPosition === 'right');
-
-          return hasLeftFurniture && hasRightFurniture;
-        });
-
-        if (slotsWithBothSidesFilled.length === 0) return null;
+        if (!moduleDataForFront || moduleDataForFront.slotType !== 'single') {
+          console.log('🔍 [Front Space Debug] 싱글장이 아님:', { moduleId: moduleIdForFront, slotType: moduleDataForFront?.slotType });
+          return null;
+        }
 
         // 기둥 앞 공간에 이미 가구가 배치되었는지 확인
-        const availableSlots = slotsWithBothSidesFilled.filter(slotInfo => {
+        const availableSlots = frontSpaceSlots.filter(slotInfo => {
           const frontSpaceFurniture = placedModules.find(m =>
             m.slotIndex === slotInfo.slotIndex &&
             m.columnSlotInfo?.spaceType === 'front'
@@ -3717,7 +3738,15 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           return !frontSpaceFurniture; // 아직 기둥 앞에 가구가 없는 경우만
         });
 
-        if (availableSlots.length === 0) return null;
+        console.log('🔍 [Front Space Debug] availableSlots:', {
+          count: availableSlots.length,
+          slots: availableSlots.map(s => s.slotIndex)
+        });
+
+        if (availableSlots.length === 0) {
+          console.log('🔍 [Front Space Debug] 사용 가능한 슬롯 없음');
+          return null;
+        }
 
         console.log('🟢 [Front Space Ghost] 기둥 앞 공간 고스트 렌더링:', {
           availableSlots: availableSlots.map(s => ({
