@@ -118,7 +118,7 @@ function generateSidePanelBorings(
     thickness: params.thickness,
     material: params.material,
     grain: 'V',
-    borings: mergeBorings([borings]),
+    borings: mergeBorings(borings),
     isMirrored: !isLeftPanel,
     mirrorSourceId: isLeftPanel ? undefined : `${params.id}-side-left`,
   };
@@ -169,7 +169,7 @@ function generateHorizontalPanelBorings(
     thickness: params.thickness,
     material: params.material,
     grain: 'H',
-    borings: mergeBorings([borings]),
+    borings: mergeBorings(borings),
   };
 }
 
@@ -210,7 +210,7 @@ function generateDoorBorings(
     thickness: params.thickness,
     material: params.material,
     grain: 'V',
-    borings: mergeBorings([cupBorings]),
+    borings: mergeBorings(cupBorings),
   };
 }
 
@@ -256,6 +256,14 @@ export function generateLowerCabinetBorings(
     (sum, panel) => sum + panel.borings.length,
     0
   );
+
+  // Debug: Check borings array structure at generation
+  console.log('🔶 Generator output:', panels.map(p => ({
+    type: p.panelType,
+    isArray: Array.isArray(p.borings),
+    length: p.borings.length,
+    first: p.borings[0]?.type
+  })));
 
   return {
     panels,

@@ -241,6 +241,16 @@ export function convertFurnitureToBoring(
     }
   }
 
+  // Debug: Check borings array structure at creation
+  if (result.panels.length > 0) {
+    const firstPanel = result.panels[0];
+    console.log('🟠 Converter output:',
+      'panelType:', firstPanel.panelType,
+      'borings isArray:', Array.isArray(firstPanel.borings),
+      'borings length:', firstPanel.borings?.length,
+      'first boring x:', firstPanel.borings?.[0]?.x);
+  }
+
   return {
     panels: result.panels,
     summary: {

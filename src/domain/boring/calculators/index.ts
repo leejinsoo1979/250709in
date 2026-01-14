@@ -107,6 +107,17 @@ export function reindexBorings(borings: Boring[], prefix?: string): Boring[] {
  * 보링 배열 병합 및 ID 재생성
  */
 export function mergeBorings(...boringArrays: Boring[][]): Boring[] {
+  // Debug: Check input arrays
+  console.log('🔷 mergeBorings input:',
+    'arrays count:', boringArrays.length,
+    'first array length:', boringArrays[0]?.length,
+    'first array isArray:', Array.isArray(boringArrays[0]));
+
   const merged = boringArrays.flat();
+  console.log('🔷 mergeBorings after flat:',
+    'merged length:', merged.length,
+    'isArray:', Array.isArray(merged),
+    'first element type:', merged[0]?.type);
+
   return reindexBorings(merged);
 }

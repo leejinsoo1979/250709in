@@ -189,16 +189,19 @@ const FurnitureBoringOverlay: React.FC<FurnitureBoringOverlayProps> = ({
       );
 
       // 보링 시각화 추가
-      if (panel.borings.length > 0) {
-        console.log('🔵 Panel:', panel.panelType, 'Borings:', panel.borings.length);
-        console.log('🔵 Furniture Position:', furniturePosition);
-        console.log('🔵 Panel Position:', panelPosition);
-        console.log('🔵 First boring:', panel.borings[0]);
+      const boringsArray = Array.isArray(panel.borings) ? panel.borings : Object.values(panel.borings).filter(b => b && typeof b === 'object' && 'x' in b);
 
+      console.log('🟢 Panel:', panel.panelType,
+        'isArray:', Array.isArray(panel.borings),
+        'rawLength:', panel.borings?.length,
+        'boringsLength:', boringsArray.length,
+        'firstElement:', JSON.stringify(boringsArray[0]).substring(0, 200));
+
+      if (boringsArray.length > 0) {
         visualizations.push(
           <BoringVisualization
             key={`${panel.panelId}-${panelIndex}`}
-            borings={panel.borings}
+            borings={boringsArray}
             panelPosition={panelPosition}
             panelSize={{
               width: panel.width,

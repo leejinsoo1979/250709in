@@ -3672,8 +3672,8 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         );
       })}
 
-      {/* 기둥 앞 공간 고스트 (기둥 C 전용) */}
-      {(currentDragData || selectedFurnitureId) && (() => {
+      {/* 기둥 앞 공간 고스트 (기둥 C 전용) - 임시 비활성화 */}
+      {false && (currentDragData || selectedFurnitureId) && (() => {
         // 디버그: spaceInfo 기둥 정보 먼저 출력
         console.log('🔍🔍🔍 [Front Space Debug] spaceInfo 기둥 정보:', {
           surroundType: spaceInfo.surroundType,
