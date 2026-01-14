@@ -2712,36 +2712,6 @@ const Configurator: React.FC = () => {
         return (
           <div className={styles.sidebarPanel}>
             <BoringSettingsPanel />
-            {/* 보링 시각화 토글 */}
-            <div style={{
-              padding: '12px 16px',
-              borderTop: '1px solid var(--theme-border)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px'
-            }}>
-              <label style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                color: 'var(--theme-text-primary)'
-              }}>
-                <input
-                  type="checkbox"
-                  checked={showBorings}
-                  onChange={toggleBorings}
-                  style={{
-                    width: '16px',
-                    height: '16px',
-                    cursor: 'pointer',
-                    accentColor: 'var(--theme-primary)'
-                  }}
-                />
-                3D 뷰어에 보링 위치 표시
-              </label>
-            </div>
             {/* 보링 데이터 요약 */}
             <div style={{
               padding: '16px',
@@ -3774,6 +3744,11 @@ const Configurator: React.FC = () => {
         onExport3D={handleExport3D}
         readOnly={isReadOnly}
         onMobileMenuToggle={handleMobileMenuToggle}
+        showBorings={showBorings}
+        onToggleBorings={toggleBorings}
+        onBoringExport={() => setShowBoringExportDialog(true)}
+        totalBorings={totalBorings}
+        boringFurnitureCount={boringFurnitureCount}
       />
 
       <div className={styles.mainContent}>

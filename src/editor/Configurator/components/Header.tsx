@@ -89,6 +89,12 @@ interface HeaderProps {
   readOnly?: boolean; // viewer 권한용 읽기 전용 모드 (디자인명 수정 불가)
   // 모바일 메뉴 토글
   onMobileMenuToggle?: () => void;
+  // 보링 관련 props
+  showBorings?: boolean;
+  onToggleBorings?: () => void;
+  onBoringExport?: () => void;
+  totalBorings?: number;
+  boringFurnitureCount?: number;
 }
 
 const Header: React.FC<HeaderProps> = ({
@@ -120,7 +126,12 @@ const Header: React.FC<HeaderProps> = ({
   onExportPDF,
   onExport3D,
   readOnly = false,
-  onMobileMenuToggle
+  onMobileMenuToggle,
+  showBorings = false,
+  onToggleBorings,
+  onBoringExport,
+  totalBorings = 0,
+  boringFurnitureCount = 0
 }) => {
   console.log('🎯 Header 컴포넌트 렌더링:', {
     title,
@@ -1059,6 +1070,83 @@ const Header: React.FC<HeaderProps> = ({
                         <rect x="14" y="14" width="7" height="7" stroke="currentColor" strokeWidth="2" />
                       </svg>
                       {t('export.drawingEditor')}
+                    </button>
+                  )}
+
+                  {/* 보링 구분선 */}
+                  <div style={{
+                    height: '1px',
+                    background: 'var(--theme-border)',
+                    margin: '8px 0'
+                  }} />
+
+                  {/* 보링 시각화 토글 */}
+                  {onToggleBorings && (
+                    <button
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        onToggleBorings();
+                      }}
+                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                    >
+                      <span style={{ display: 'flex', alignItems: 'center' }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
+                          <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="2" />
+                          <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="2" strokeDasharray="4 2" />
+                        </svg>
+                        보링 위치 표시
+                      </span>
+                      <span style={{
+                        width: '16px',
+                        height: '16px',
+                        borderRadius: '3px',
+                        border: '2px solid var(--theme-primary)',
+                        background: showBorings ? 'var(--theme-primary)' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {showBorings && (
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                            <polyline points="20,6 9,17 4,12" stroke="white" strokeWidth="3" />
+                          </svg>
+                        )}
+                      </span>
+                    </button>
+                  )}
+
+                  {/* 보링 데이터 내보내기 */}
+                  {onBoringExport && (
+                    <button
+                      className={styles.dropdownItem}
+                      onClick={() => {
+                        onBoringExport();
+                        setIsConvertMenuOpen(false);
+                      }}
+                      disabled={boringFurnitureCount === 0}
+                      style={{
+                        opacity: boringFurnitureCount === 0 ? 0.5 : 1,
+                        cursor: boringFurnitureCount === 0 ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style={{ marginRight: '8px' }}>
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" stroke="currentColor" strokeWidth="2" />
+                        <polyline points="7,10 12,15 17,10" stroke="currentColor" strokeWidth="2" />
+                        <line x1="12" y1="15" x2="12" y2="3" stroke="currentColor" strokeWidth="2" />
+                      </svg>
+                      보링 데이터 내보내기
+                      {totalBorings > 0 && (
+                        <span style={{
+                          marginLeft: '8px',
+                          fontSize: '11px',
+                          color: 'var(--theme-text-secondary)',
+                          background: 'var(--theme-background-secondary)',
+                          padding: '2px 6px',
+                          borderRadius: '10px'
+                        }}>
+                          {totalBorings}개
+                        </span>
+                      )}
                     </button>
                   )}
                 </div>
