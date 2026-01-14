@@ -71,11 +71,11 @@ const ColumnControl: React.FC<ColumnControlProps> = ({ columns, onColumnsChange 
       <div className={styles.thumbnailSection}>
         <h4>{t('sidebar.structureTypes')}</h4>
         <div className={styles.thumbnailGrid}>
-          <ColumnThumbnail 
+          <ColumnThumbnail
             width={300}
             height={2400}
-            depth={730}
-            material="concrete" 
+            depth={712}
+            material="concrete"
             color="#888888"
             onDragStart={handleThumbnailDragStart}
             onDoubleClick={handleThumbnailDoubleClick}
