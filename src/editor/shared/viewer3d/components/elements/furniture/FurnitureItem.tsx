@@ -2887,9 +2887,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   internalHeight={furnitureHeightMm}
                   viewMode={viewMode}
                   renderMode={renderMode}
-                  hasDoor={(slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
-                    ? false // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 또는 엔드패널 조정이 필요한 경우 도어는 별도 렌더링
-                    : (placedModule.hasDoor ?? false)}
+                  hasDoor={
+                    // 기둥 앞에 배치 모드(front): 도어가 BoxModule 내부에서 렌더링됨
+                    placedModule.columnPlacementMode === 'front'
+                      ? (placedModule.hasDoor ?? false)
+                      : (
+                          // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 또는 엔드패널 조정이 필요한 경우 도어는 별도 렌더링
+                          (slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
+                            ? false
+                            : (placedModule.hasDoor ?? false)
+                        )
+                  }
                   customDepth={actualDepthMm}
                   hingePosition={optimalHingePosition}
                   spaceInfo={zoneSpaceInfo}
@@ -3087,10 +3095,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       {/* 기둥 침범 시 또는 엔드패널 조정이 필요한 경우 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
       {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 또는 엔드패널 조정이 필요한 경우 커버도어 렌더링 */}
-      {(placedModule.hasDoor ?? false) && 
-       ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') || 
+      {/* 기둥 앞에 배치 모드(front)는 제외 - BoxModule 내부에서 도어 렌더링 */}
+      {(placedModule.hasDoor ?? false) &&
+       placedModule.columnPlacementMode !== 'front' &&
+       ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') ||
         (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
-        needsEndPanelAdjustment) && 
+        needsEndPanelAdjustment) &&
        spaceInfo && (() => {
         return true;
       })() && (

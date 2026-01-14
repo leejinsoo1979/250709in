@@ -1342,8 +1342,58 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   // 기둥 C 배치 모드 변경 핸들러
   const handleColumnPlacementModeChange = (mode: 'beside' | 'front') => {
     setColumnPlacementMode(mode);
-    if (activePopup.id) {
-      updatePlacedModule(activePopup.id, { columnPlacementMode: mode });
+    if (activePopup.id && slotInfo && currentPlacedModule) {
+      const indexing = calculateSpaceIndexing(spaceInfo);
+      const slotWidth = indexing.columnWidth; // 슬롯 전체 너비 (586mm)
+      const columnDepth = slotInfo.column?.depth || 300; // 기둥 깊이 (300mm)
+      const remainingDepth = 730 - columnDepth; // 남은 깊이 (430mm)
+
+      // 슬롯 중심 위치 계산 (치수가이드 동기화용)
+      const slotIndex = currentPlacedModule.slotIndex;
+      const slotCenterX = slotIndex !== undefined && indexing.threeUnitPositions[slotIndex] !== undefined
+        ? indexing.threeUnitPositions[slotIndex]
+        : currentPlacedModule.position.x;
+
+      if (mode === 'front') {
+        // 기둥 앞에 배치: 폭은 슬롯 전체, 깊이는 줄임, 위치는 슬롯 중심
+        // 도어가 BoxModule 내부에서 렌더링되도록 adjustedWidth와 columnSlotInfo 클리어
+        updatePlacedModule(activePopup.id, {
+          columnPlacementMode: mode,
+          customWidth: slotWidth, // 586mm (슬롯 전체)
+          customDepth: remainingDepth, // 430mm (730 - 300)
+          lowerSectionDepth: remainingDepth, // 하부 섹션 깊이도 430mm
+          upperSectionDepth: remainingDepth, // 상부 섹션 깊이도 430mm
+          adjustedWidth: undefined, // 폭 조정 해제 (도어가 BoxModule 내부에서 렌더링되도록)
+          columnSlotInfo: undefined, // 기둥 슬롯 정보 클리어
+          position: {
+            ...currentPlacedModule.position,
+            x: slotCenterX // 슬롯 중심으로 위치 업데이트 (치수가이드 동기화)
+          }
+        });
+        // UI 입력 필드도 업데이트
+        setCustomWidth(slotWidth.toString());
+        setLowerSectionDepth(remainingDepth.toString());
+        setUpperSectionDepth(remainingDepth.toString());
+      } else {
+        // 기둥 측면 배치: 폭은 줄임, 깊이는 원래대로
+        // 위치는 FurnitureItem.tsx에서 자동 계산하므로 여기서 설정하지 않음
+        const availableWidth = slotInfo.availableWidth || (slotWidth - 200); // 기둥 침범 후 가용 폭
+        const originalDepth = moduleData?.dimensions.depth || 600;
+
+        updatePlacedModule(activePopup.id, {
+          columnPlacementMode: mode,
+          customWidth: availableWidth, // 줄어든 폭
+          customDepth: undefined, // 깊이 원래대로
+          lowerSectionDepth: undefined, // 섹션 깊이 원래대로
+          upperSectionDepth: undefined, // 섹션 깊이 원래대로
+          adjustedWidth: availableWidth // beside 모드에서 폭 조정
+          // position은 설정하지 않음 - FurnitureItem.tsx가 자동으로 계산
+        });
+        // UI 입력 필드도 업데이트
+        setCustomWidth(availableWidth.toString());
+        setLowerSectionDepth(originalDepth.toString());
+        setUpperSectionDepth(originalDepth.toString());
+      }
     }
   };
 
