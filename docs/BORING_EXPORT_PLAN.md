@@ -814,7 +814,7 @@ function calculateCamHousingPositions(
 | **1** | CSV | 범용, 다른 소프트웨어로 가져오기 | 쉬움 |
 | **2** | DXF | CAD 호환, 레이어별 보링 표시 | 중간 |
 | **3** | **MPR** | **HOMAG woodWOP 네이티브** | **중간~어려움** |
-| 4 | CIX | Biesse bSolid | 어려움 |
+| **4** | **CIX** | **Biesse bSolid 네이티브 (XML)** | **중간~어려움** |
 
 ### 9.2 CSV 형식 상세
 
@@ -1143,6 +1143,247 @@ woodWOP 좌표계:
 - BO="1": 하면 (Bottom)
 ```
 
+### 9.6 CIX 형식 상세 (Biesse bSolid)
+
+CIX(Cad Interchange eXtended)는 Biesse bSolid CNC 소프트웨어의 XML 기반 가공 프로그램 형식입니다.
+
+#### 9.6.1 CIX 파일 구조
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Programme>
+  <Header>
+    <Name>패널명_P001</Name>
+    <Version>4.0</Version>
+    <Date>2025-01-14</Date>
+  </Header>
+
+  <Piece>
+    <Length>600</Length>          <!-- X: 길이 -->
+    <Width>400</Width>            <!-- Y: 너비 -->
+    <Thickness>18</Thickness>     <!-- Z: 두께 -->
+    <Material>PB18</Material>
+  </Piece>
+
+  <Operations>
+    <!-- 보링 및 가공 명령 -->
+  </Operations>
+</Programme>
+```
+
+#### 9.6.2 CIX 보링 명령어
+
+| 명령어 | 설명 | 용도 |
+|--------|------|------|
+| `<Boring>` | 수직 보링 | 상면/하면 홀 가공 |
+| `<BoringSide>` | 수평 보링 | 측면 홀 가공 |
+| `<Slot>` | 슬롯 가공 | 장공/홈 가공 |
+| `<Pocket>` | 포켓 가공 | 사각형 홈 가공 |
+
+#### 9.6.3 수직 보링 (상면/하면)
+
+```xml
+<Boring id="B001">
+  <X>37</X>                       <!-- X 위치 (mm) -->
+  <Y>37</Y>                       <!-- Y 위치 (mm) -->
+  <Diameter>5</Diameter>          <!-- 직경 (mm) -->
+  <Depth>12</Depth>               <!-- 깊이 (mm) -->
+  <Side>0</Side>                  <!-- 0=상면, 1=하면 -->
+  <Tool>4</Tool>                  <!-- 공구 번호 -->
+  <SpindleSpeed>6000</SpindleSpeed>
+  <FeedRate>3</FeedRate>
+</Boring>
+```
+
+#### 9.6.4 수평 보링 (측면)
+
+```xml
+<BoringSide id="BS001">
+  <X>37</X>                       <!-- X 위치 -->
+  <Z>9</Z>                        <!-- Z 위치 (두께 방향) -->
+  <Diameter>5</Diameter>          <!-- 직경 -->
+  <Depth>34</Depth>               <!-- 진입 깊이 -->
+  <Side>1</Side>                  <!-- 1=전면, 2=후면, 3=좌측, 4=우측 -->
+  <Tool>4</Tool>
+</BoringSide>
+```
+
+#### 9.6.5 슬롯 가공 (장공)
+
+```xml
+<Slot id="SL001">
+  <StartX>69</StartX>             <!-- 시작 X -->
+  <StartY>50</StartY>             <!-- 시작 Y -->
+  <EndX>79</EndX>                 <!-- 끝 X (10mm 장공) -->
+  <EndY>50</EndY>                 <!-- 끝 Y -->
+  <Diameter>5</Diameter>          <!-- 공구 직경 -->
+  <Depth>12</Depth>               <!-- 깊이 -->
+  <Side>3</Side>                  <!-- 가공면 -->
+  <Tool>4</Tool>
+</Slot>
+```
+
+#### 9.6.6 보링 타입별 CIX 매핑
+
+| 보링 타입 | CIX 요소 | 속성 예시 |
+|-----------|----------|-----------|
+| 힌지 컵 (Ø35) | `<Boring>` | `Diameter="35" Depth="13" Side="1"` |
+| 힌지 나사 (Ø2.5) | `<BoringSide>` | `Diameter="2.5" Depth="12" Side="1"` |
+| 캠 하우징 (Ø15) | `<Boring>` | `Diameter="15" Depth="12" Side="0/1"` |
+| 캠 볼트 (Ø5) | `<BoringSide>` | `Diameter="5" Depth="34" Side="1/2"` |
+| 선반핀 (Ø5) | `<BoringSide>` | `Diameter="5" Depth="12" Side="3/4"` |
+| 서랍레일 원형 (Ø5) | `<BoringSide>` | `Diameter="5" Depth="12" Side="3/4"` |
+| 서랍레일 장공 | `<Slot>` | `Diameter="5" Depth="12"` |
+| 조절발 (Ø10) | `<Boring>` | `Diameter="10" Depth="15" Side="1"` |
+
+#### 9.6.7 전체 CIX 예시 (측판)
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Programme>
+  <Header>
+    <Name>좌측판_P001</Name>
+    <Version>4.0</Version>
+    <Date>2025-01-14</Date>
+    <Generator>FurnitureEditor</Generator>
+  </Header>
+
+  <Piece>
+    <Length>560</Length>
+    <Width>720</Width>
+    <Thickness>18</Thickness>
+    <Material>PB18</Material>
+    <Grain>V</Grain>
+  </Piece>
+
+  <Operations>
+    <!-- 선반핀 홀 (전면열) -->
+    <BoringSide id="SP001">
+      <X>37</X><Z>9</Z><Diameter>5</Diameter><Depth>12</Depth><Side>4</Side><Tool>4</Tool>
+      <Y>37</Y>
+    </BoringSide>
+    <BoringSide id="SP002">
+      <X>37</X><Z>9</Z><Diameter>5</Diameter><Depth>12</Depth><Side>4</Side><Tool>4</Tool>
+      <Y>69</Y>
+    </BoringSide>
+    <BoringSide id="SP003">
+      <X>37</X><Z>9</Z><Diameter>5</Diameter><Depth>12</Depth><Side>4</Side><Tool>4</Tool>
+      <Y>101</Y>
+    </BoringSide>
+
+    <!-- 선반핀 홀 (후면열) -->
+    <BoringSide id="SP010">
+      <X>523</X><Z>9</Z><Diameter>5</Diameter><Depth>12</Depth><Side>4</Side><Tool>4</Tool>
+      <Y>37</Y>
+    </BoringSide>
+    <BoringSide id="SP011">
+      <X>523</X><Z>9</Z><Diameter>5</Diameter><Depth>12</Depth><Side>4</Side><Tool>4</Tool>
+      <Y>69</Y>
+    </BoringSide>
+
+    <!-- 캠 볼트홀 (상단-전면) -->
+    <BoringSide id="CB001">
+      <X>37</X><Z>9</Z><Diameter>5</Diameter><Depth>34</Depth><Side>1</Side><Tool>4</Tool>
+      <Y>8</Y>
+    </BoringSide>
+    <BoringSide id="CB002">
+      <X>523</X><Z>9</Z><Diameter>5</Diameter><Depth>34</Depth><Side>1</Side><Tool>4</Tool>
+      <Y>8</Y>
+    </BoringSide>
+
+    <!-- 캠 볼트홀 (하단-후면) -->
+    <BoringSide id="CB003">
+      <X>37</X><Z>9</Z><Diameter>5</Diameter><Depth>34</Depth><Side>2</Side><Tool>4</Tool>
+      <Y>712</Y>
+    </BoringSide>
+    <BoringSide id="CB004">
+      <X>523</X><Z>9</Z><Diameter>5</Diameter><Depth>34</Depth><Side>2</Side><Tool>4</Tool>
+      <Y>712</Y>
+    </BoringSide>
+
+    <!-- 힌지 마운팅 나사홀 -->
+    <BoringSide id="HS001">
+      <X>37</X><Z>9</Z><Diameter>2.5</Diameter><Depth>12</Depth><Side>4</Side><Tool>2</Tool>
+      <Y>100</Y>
+    </BoringSide>
+    <BoringSide id="HS002">
+      <X>69</X><Z>9</Z><Diameter>2.5</Diameter><Depth>12</Depth><Side>4</Side><Tool>2</Tool>
+      <Y>100</Y>
+    </BoringSide>
+    <BoringSide id="HS003">
+      <X>37</X><Z>9</Z><Diameter>2.5</Diameter><Depth>12</Depth><Side>4</Side><Tool>2</Tool>
+      <Y>620</Y>
+    </BoringSide>
+    <BoringSide id="HS004">
+      <X>69</X><Z>9</Z><Diameter>2.5</Diameter><Depth>12</Depth><Side>4</Side><Tool>2</Tool>
+      <Y>620</Y>
+    </BoringSide>
+  </Operations>
+</Programme>
+```
+
+#### 9.6.8 CIX 내보내기 설정
+
+```typescript
+interface CIXExportSettings {
+  version: '3.0' | '4.0' | '5.0';  // bSolid 버전
+  toolMapping: {                    // 공구 번호 매핑
+    hingeCup: number;               // 힌지컵 드릴 (Ø35)
+    hingeScrew: number;             // 힌지나사 드릴 (Ø2.5)
+    camHousing: number;             // 캠하우징 드릴 (Ø15)
+    camBolt: number;                // 캠볼트 드릴 (Ø5)
+    shelfPin: number;               // 선반핀 드릴 (Ø5)
+    drawerRail: number;             // 서랍레일 드릴 (Ø5)
+    adjustableFoot: number;         // 조절발 드릴 (Ø10)
+  };
+  machineParams: {
+    spindleSpeed: number;           // 스핀들 속도 (RPM)
+    feedRate: number;               // 이송 속도 (m/min)
+  };
+  includeComments: boolean;         // XML 주석 포함
+  filePerPanel: boolean;            // 패널당 개별 파일
+}
+
+// 기본 설정
+const defaultCIXSettings: CIXExportSettings = {
+  version: '4.0',
+  toolMapping: {
+    hingeCup: 1,
+    hingeScrew: 2,
+    camHousing: 3,
+    camBolt: 4,
+    shelfPin: 4,
+    drawerRail: 4,
+    adjustableFoot: 5,
+  },
+  machineParams: {
+    spindleSpeed: 6000,
+    feedRate: 3,
+  },
+  includeComments: true,
+  filePerPanel: true,
+};
+```
+
+#### 9.6.9 CIX 좌표계
+
+```
+bSolid 좌표계:
+- X: 패널 길이 방향 (0 = 좌측)
+- Y: 패널 너비 방향 (0 = 전면)
+- Z: 패널 두께 방향 (0 = 하면)
+
+가공면(Side) 코드 - 수평 보링:
+- Side="1": 전면 (Front, -Y 방향)
+- Side="2": 후면 (Back, +Y 방향)
+- Side="3": 좌측 (Left, -X 방향)
+- Side="4": 우측 (Right, +X 방향)
+
+가공면(Side) 코드 - 수직 보링:
+- Side="0": 상면 (Top, +Z 방향)
+- Side="1": 하면 (Bottom, -Z 방향)
+```
+
 ---
 
 ## 10. 구현 계획
@@ -1183,6 +1424,15 @@ woodWOP 좌표계:
 - [ ] 좌표계 변환 (내부 → woodWOP)
 - [ ] 공구 번호 매핑 설정
 
+### Phase 5.6: CIX 내보내기 (5일)
+- [ ] `src/domain/boring/exporters/cixExporter.ts`
+- [ ] XML 구조 생성 (Header, Piece, Operations)
+- [ ] 수직 보링(`<Boring>`) 요소 생성
+- [ ] 수평 보링(`<BoringSide>`) 요소 생성
+- [ ] 슬롯(`<Slot>`) 요소 생성
+- [ ] 좌표계 변환 (내부 → bSolid)
+- [ ] 공구 번호 및 기계 파라미터 매핑
+
 ### Phase 6: UI 통합 (3일)
 - [ ] 보링 설정 패널 컴포넌트
 - [ ] 내보내기 다이얼로그
@@ -1219,7 +1469,8 @@ src/
 │           ├── index.ts
 │           ├── csvExporter.ts       # CSV 내보내기
 │           ├── dxfExporter.ts       # DXF 내보내기
-│           └── mprExporter.ts       # MPR 내보내기 (HOMAG woodWOP)
+│           ├── mprExporter.ts       # MPR 내보내기 (HOMAG woodWOP)
+│           └── cixExporter.ts       # CIX 내보내기 (Biesse bSolid)
 │
 ├── store/
 │   └── boringStore.ts               # 보링 설정 스토어
@@ -1303,6 +1554,10 @@ src/
 │ │ ○ MPR (HOMAG woodWOP)                       │ │
 │ │   - CNC 기계 직접 제어 가능                   │ │
 │ │   - 수직/수평 보링, 슬롯 명령 포함             │ │
+│ │                                              │ │
+│ │ ○ CIX (Biesse bSolid)                       │ │
+│ │   - XML 기반 CNC 프로그램                    │ │
+│ │   - 공구/스핀들 설정 포함                     │ │
 │ └──────────────────────────────────────────────┘ │
 │                                                  │
 │ 옵션:                                            │
@@ -1345,10 +1600,10 @@ src/
 - [x] **Microvellum** - CSV/DXF 호환
 - [x] **imos** - CSV/DXF 호환
 - [x] **HOMAG woodWOP** - CSV/DXF/**MPR 네이티브** 호환
-- [x] **Biesse bSolid** - CSV/DXF 호환
+- [x] **Biesse bSolid** - CSV/DXF/**CIX 네이티브** 호환
 - [x] **ARDIS** - CSV/DXF 호환
 
-> 범용 CSV/DXF 형식 외에, HOMAG woodWOP은 MPR 네이티브 형식으로 직접 CNC 프로그램 내보내기 지원
+> 범용 CSV/DXF 형식 외에, HOMAG woodWOP은 MPR, Biesse bSolid는 CIX 네이티브 형식으로 직접 CNC 프로그램 내보내기 지원
 
 ---
 
@@ -1364,3 +1619,4 @@ src/
 | 0.6 | 2025-01-14 | Claude | 서랍장 보링 매핑, 양문도어, 상/하부장 차이점, 장공 DXF 표현 추가 |
 | 0.7 | 2025-01-14 | Claude | CNC 소프트웨어 지원 목록 추가 (Cabinet Vision, Microvellum, imos, HOMAG, Biesse, ARDIS) |
 | 0.8 | 2025-01-14 | Claude | MPR 형식 상세 추가 (HOMAG woodWOP 네이티브 포맷, 수직/수평 보링, 슬롯 명령) |
+| 0.9 | 2025-01-14 | Claude | CIX 형식 상세 추가 (Biesse bSolid XML 네이티브 포맷) |
