@@ -114,7 +114,7 @@ export function useFurnitureBoring(
     // 변환 실행
     if (inputs.length === 0) {
       return {
-        panels: [],
+        allPanels: [],
         summary: {
           furnitureCount: 0,
           totalPanels: 0,
@@ -128,7 +128,7 @@ export function useFurnitureBoring(
   }, [placedModules, spaceInfo, settings, panelThickness, material, onlyWithDoors, furnitureIds]);
 
   return {
-    panels: result.allPanels,
+    panels: result.allPanels || [],
     summary: result.summary,
     isLoading: false,
     furnitureCount: result.summary.furnitureCount,
