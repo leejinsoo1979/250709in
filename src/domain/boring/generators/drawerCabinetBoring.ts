@@ -108,7 +108,7 @@ function generateSidePanelBorings(
     thickness: params.thickness,
     material: params.material,
     grain: 'V',
-    borings: mergeBorings([borings]),
+    borings: mergeBorings(borings),
     isMirrored: !isLeftPanel,
     mirrorSourceId: isLeftPanel ? undefined : `${params.id}-side-left`,
   };
@@ -159,7 +159,7 @@ function generateHorizontalPanelBorings(
     thickness: params.thickness,
     material: params.material,
     grain: 'H',
-    borings: mergeBorings([borings]),
+    borings: mergeBorings(borings),
   };
 }
 

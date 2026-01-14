@@ -257,14 +257,6 @@ export function generateLowerCabinetBorings(
     0
   );
 
-  // Debug: Check borings array structure at generation
-  console.log('🔶 Generator output:', panels.map(p => ({
-    type: p.panelType,
-    isArray: Array.isArray(p.borings),
-    length: p.borings.length,
-    first: p.borings[0]?.type
-  })));
-
   return {
     panels,
     summary: {

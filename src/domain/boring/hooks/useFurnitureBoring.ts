@@ -124,19 +124,7 @@ export function useFurnitureBoring(
       };
     }
 
-    const result = convertMultipleFurnitureToBoring(inputs, settings);
-
-    // Debug: Check borings array structure
-    if (result.allPanels.length > 0) {
-      const firstPanel = result.allPanels[0];
-      console.log('🟡 useFurnitureBoring result:',
-        'panelType:', firstPanel.panelType,
-        'borings isArray:', Array.isArray(firstPanel.borings),
-        'borings length:', firstPanel.borings?.length,
-        'first boring:', firstPanel.borings?.[0]);
-    }
-
-    return result;
+    return convertMultipleFurnitureToBoring(inputs, settings);
   }, [placedModules, spaceInfo, settings, panelThickness, material, onlyWithDoors, furnitureIds]);
 
   return {
