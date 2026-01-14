@@ -2184,15 +2184,17 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 듀얼캐비닛인지 확인
       // isDualFurniture는 이미 위에서 계산됨
 
-      // '기둥 앞에 배치' 모드: 폭은 슬롯 전체, 깊이는 줄인 상태, Z는 동일
+      // '기둥 앞에 배치' 모드: 폭은 슬롯 전체, 깊이는 기둥 앞 공간에 맞게
       if (placedModule.columnPlacementMode === 'front') {
-        // 기둥 앞에 배치 - 폭을 슬롯 전체로, X는 슬롯 중심, 깊이는 줄인 상태
-        furnitureWidthMm = slotWidthMmForBounds; // 슬롯 전체 너비
+        // 기둥 앞에 배치 - 폭을 슬롯 전체로, X는 슬롯 중심
+        furnitureWidthMm = indexing.columnWidth; // 실제 슬롯 전체 너비
         adjustedPosition = {
           ...adjustedPosition,
           x: originalSlotCenterX // 슬롯 중심
         };
-        adjustedDepthMm = remainingDepth; // 430mm
+        // 깊이 = 가구 공간(600mm) - 기둥 깊이(300mm) = 300mm
+        const furnitureSpaceDepth = 600;
+        adjustedDepthMm = furnitureSpaceDepth - columnDepth;
       } else if (isDualFurniture && remainingDepth <= 300) {
         // 듀얼캐비닛이고 남은 깊이가 300mm 이하면 배치 불가
         // 배치 불가 처리 (원래 깊이 유지하거나 다른 처리)
