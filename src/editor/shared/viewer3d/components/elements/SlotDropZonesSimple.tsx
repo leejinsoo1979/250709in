@@ -3703,11 +3703,28 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           }))
         });
 
-        // 기둥 앞 공간이 있는 슬롯만 필터링 (Column C이고 frontSpace가 활성화된 경우)
-        // allowMultipleFurniture는 기둥 측면 배치용이므로 frontSpace.available만 확인
-        const frontSpaceSlots = columnSlotsForFront.filter(
-          slot => slot.hasColumn && slot.frontSpace?.available && slot.columnType === 'medium'
-        );
+        // 기둥 앞 공간이 있는 슬롯만 필터링
+        // 조건 완화: frontSpace가 있거나, 기둥 depth가 300인 경우 (Column C)
+        const frontSpaceSlots = columnSlotsForFront.filter(slot => {
+          const hasColumn = slot.hasColumn;
+          const hasFrontSpace = slot.frontSpace?.available;
+          const isColumnC = slot.column?.depth === 300;
+          const isColumnTypeMedium = slot.columnType === 'medium';
+
+          console.log('🔍 [Front Space Filter] 슬롯 필터링:', {
+            slotIndex: slot.slotIndex,
+            hasColumn,
+            columnDepth: slot.column?.depth,
+            columnType: slot.columnType,
+            hasFrontSpace,
+            isColumnC,
+            isColumnTypeMedium,
+            willInclude: hasColumn && (hasFrontSpace || isColumnC)
+          });
+
+          // frontSpace가 있거나 Column C(depth=300)인 경우 포함
+          return hasColumn && (hasFrontSpace || isColumnC);
+        });
 
         console.log('🔍 [Front Space Debug] frontSpaceSlots:', {
           count: frontSpaceSlots.length,
@@ -3757,7 +3774,28 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         });
 
         return availableSlots.map(slotInfo => {
-          const frontSpace = slotInfo.frontSpace!;
+          // frontSpace가 없으면 기본값 계산 (Column C 기준: 730 - 300 = 430mm)
+          const columnDepth = slotInfo.column?.depth || 300;
+          const STANDARD_CABINET_DEPTH = 730;
+          const calculatedFrontSpaceDepth = STANDARD_CABINET_DEPTH - columnDepth;
+          const calculatedFrontSpaceWidth = slotInfo.column?.width || 300;
+          const columnCenterX = slotInfo.column?.position?.[0] || 0;
+
+          const frontSpace = slotInfo.frontSpace || {
+            available: true,
+            width: calculatedFrontSpaceWidth,
+            depth: calculatedFrontSpaceDepth,
+            centerX: columnCenterX,
+            centerZ: (calculatedFrontSpaceDepth / 2) * 0.01
+          };
+
+          console.log('🔍 [Front Space Render] 고스트 렌더링 데이터:', {
+            slotIndex: slotInfo.slotIndex,
+            hasFrontSpace: !!slotInfo.frontSpace,
+            frontSpace,
+            columnDepth,
+            columnCenterX
+          });
 
           // Z축 위치 계산 - 기둥 앞쪽에 배치
           const panelDepthMm = spaceInfo.depth || 600;
