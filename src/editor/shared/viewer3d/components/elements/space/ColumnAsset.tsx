@@ -431,6 +431,12 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
             
             return lines;
           })()}
+
+          {/* 전면 패널 윤곽선 (18mm 두께) - 2D */}
+          <lineSegments position={[0, 0, (depth * 0.01) / 2 + 0.09]}>
+            <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, 0.18)]} />
+            <lineBasicMaterial color={isSelected ? "#4CAF50" : "#999999"} />
+          </lineSegments>
         </group>
       ) : renderMode === 'wireframe' ? (
         // 3D 와이어프레임 모드: 윤곽선과 대각선 표시
