@@ -205,6 +205,13 @@
   cursor: pointer;
 }
 
+.optionNote {
+  margin: 0;
+  font-size: 12px;
+  color: var(--theme-text-secondary);
+  font-style: italic;
+}
+
 /* 결과 */
 .resultSuccess {
   display: flex;

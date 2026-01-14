@@ -35,7 +35,6 @@ const BoringExportDialog: React.FC<BoringExportDialogProps> = ({
   const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('csv');
   const [filePerPanel, setFilePerPanel] = useState(true);
   const [includeDimensions, setIncludeDimensions] = useState(true);
-  const [compressToZip, setCompressToZip] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [exportResult, setExportResult] = useState<BoringExportResult | null>(null);
 
@@ -52,37 +51,38 @@ const BoringExportDialog: React.FC<BoringExportDialogProps> = ({
       const result = exportBoringData(panels, selectedFormat, {
         filePerPanel,
         includeDimensions,
-        compressToZip,
       });
 
       setExportResult(result);
 
       if (result.success && result.files.length > 0) {
         // 파일 다운로드
-        if (compressToZip && result.files.length > 1) {
+        // 여러 파일이면 자동으로 ZIP 압축 (특히 MPR, CIX는 패널별 파일이므로)
+        const shouldZip = result.files.length > 1;
+
+        if (shouldZip) {
           // ZIP으로 다운로드
           await downloadCSVAsZip(
             result.files.map((f) => ({ filename: f.filename, content: f.content })),
             `boring_data_${selectedFormat}.zip`
           );
         } else {
-          // 개별 파일 다운로드
-          result.files.forEach((file) => {
-            switch (selectedFormat) {
-              case 'csv':
-                downloadCSV(file.content, file.filename);
-                break;
-              case 'dxf':
-                downloadDXF(file.content, file.filename);
-                break;
-              case 'mpr':
-                downloadMPR(file.content, file.filename);
-                break;
-              case 'cix':
-                downloadCIX(file.content, file.filename);
-                break;
-            }
-          });
+          // 단일 파일 다운로드
+          const file = result.files[0];
+          switch (selectedFormat) {
+            case 'csv':
+              downloadCSV(file.content, file.filename);
+              break;
+            case 'dxf':
+              downloadDXF(file.content, file.filename);
+              break;
+            case 'mpr':
+              downloadMPR(file.content, file.filename);
+              break;
+            case 'cix':
+              downloadCIX(file.content, file.filename);
+              break;
+          }
         }
       }
     } catch (error) {
@@ -196,15 +196,10 @@ const BoringExportDialog: React.FC<BoringExportDialogProps> = ({
                   <span>치수 포함</span>
                 </label>
               )}
-              {filePerPanel && (
-                <label className={styles.option}>
-                  <input
-                    type="checkbox"
-                    checked={compressToZip}
-                    onChange={(e) => setCompressToZip(e.target.checked)}
-                  />
-                  <span>ZIP 파일로 압축</span>
-                </label>
+              {filePerPanel && panels.length > 1 && (
+                <p className={styles.optionNote}>
+                  ※ 패널이 여러 개인 경우 ZIP 파일로 자동 압축됩니다
+                </p>
               )}
             </div>
           </div>

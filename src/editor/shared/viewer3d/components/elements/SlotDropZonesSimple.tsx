@@ -3672,96 +3672,62 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
         );
       })}
 
-      {/* 기둥 앞 공간 고스트 (기둥 C 전용) - 임시 비활성화 */}
-      {false && (currentDragData || selectedFurnitureId) && (() => {
-        // 디버그: spaceInfo 기둥 정보 먼저 출력
-        console.log('🔍🔍🔍 [Front Space Debug] spaceInfo 기둥 정보:', {
-          surroundType: spaceInfo.surroundType,
-          hasDroppedCeiling: !!spaceInfo.droppedCeiling?.enabled,
-          columnsCount: spaceInfo.columns?.length || 0,
-          columns: spaceInfo.columns?.map(c => ({
-            id: c.id,
-            width: c.width,
-            depth: c.depth,
-            position: c.position
-          }))
-        });
-
+      {/* 기둥 앞 공간 고스트 (기둥 C 전용) - 기둥 양옆에 가구가 배치된 후에만 표시 */}
+      {(currentDragData || selectedFurnitureId) && (() => {
         // 기둥 분석
         const columnSlotsForFront = analyzeColumnSlots(spaceInfo);
 
-        // 디버그: 모든 기둥 슬롯 정보 출력
-        console.log('🔍 [Front Space Debug] 기둥 슬롯 분석 결과:', {
-          totalSlots: columnSlotsForFront.length,
-          slotsWithColumn: columnSlotsForFront.filter(s => s.hasColumn).map(s => ({
-            slotIndex: s.slotIndex,
-            hasColumn: s.hasColumn,
-            columnType: s.columnType,
-            columnDepth: s.column?.depth,
-            allowMultipleFurniture: s.allowMultipleFurniture,
-            frontSpace: s.frontSpace
-          }))
-        });
-
-        // 기둥 앞 공간이 있는 슬롯만 필터링
-        // 조건 완화: frontSpace가 있거나, 기둥 depth가 300인 경우 (Column C)
+        // 기둥 앞 공간이 있는 슬롯만 필터링 (Column C = depth 300mm)
         const frontSpaceSlots = columnSlotsForFront.filter(slot => {
           const hasColumn = slot.hasColumn;
-          const hasFrontSpace = slot.frontSpace?.available;
           const isColumnC = slot.column?.depth === 300;
-          const isColumnTypeMedium = slot.columnType === 'medium';
-
-          console.log('🔍 [Front Space Filter] 슬롯 필터링:', {
-            slotIndex: slot.slotIndex,
-            hasColumn,
-            columnDepth: slot.column?.depth,
-            columnType: slot.columnType,
-            hasFrontSpace,
-            isColumnC,
-            isColumnTypeMedium,
-            willInclude: hasColumn && (hasFrontSpace || isColumnC)
-          });
-
-          // frontSpace가 있거나 Column C(depth=300)인 경우 포함
-          return hasColumn && (hasFrontSpace || isColumnC);
-        });
-
-        console.log('🔍 [Front Space Debug] frontSpaceSlots:', {
-          count: frontSpaceSlots.length,
-          slots: frontSpaceSlots.map(s => ({ slotIndex: s.slotIndex, frontSpace: s.frontSpace }))
+          return hasColumn && isColumnC;
         });
 
         if (frontSpaceSlots.length === 0) {
-          console.log('🔍 [Front Space Debug] frontSpaceSlots가 비어있음 - 기둥 앞 공간이 없거나 Column C가 아님');
           return null;
         }
 
-        // 모듈 데이터 가져오기 (currentDragData에서 직접 가져오거나 getModuleById 사용)
+        // 모듈 데이터 가져오기
         const moduleIdForFront = currentDragData?.moduleData?.id || selectedFurnitureId;
         const moduleDataForFront = currentDragData?.moduleData || (moduleIdForFront ? getModuleById(moduleIdForFront) : null);
 
-        // 싱글장만 기둥 앞 공간에 배치 가능 (모듈 ID로 판단)
+        // 싱글장만 기둥 앞 공간에 배치 가능
         const isSingleModule = moduleIdForFront?.startsWith('single-') || moduleIdForFront?.includes('-single-');
-        console.log('🔍 [Front Space Debug] 싱글장 체크:', {
-          moduleId: moduleIdForFront,
-          isSingleModule,
-          hasModuleData: !!moduleDataForFront,
-          moduleDataSource: currentDragData?.moduleData ? 'currentDragData' : 'getModuleById'
-        });
-
         if (!isSingleModule) {
-          console.log('🔍 [Front Space Debug] 싱글장이 아님 - 기둥 앞 공간 렌더링 스킵');
           return null;
         }
-        console.log('✅ [Front Space Debug] 싱글장 확인됨 - 기둥 앞 공간 렌더링 진행');
 
-        // 기둥 앞 공간에 이미 가구가 배치되었는지 확인
+        // 기둥 양옆에 가구가 배치된 슬롯만 필터링
         const availableSlots = frontSpaceSlots.filter(slotInfo => {
+          // 해당 슬롯에 기둥 양옆 가구가 배치되었는지 확인
+          const leftFurniture = placedModules.find(m =>
+            m.slotIndex === slotInfo.slotIndex &&
+            m.columnSlotInfo?.spaceType === 'left'
+          );
+          const rightFurniture = placedModules.find(m =>
+            m.slotIndex === slotInfo.slotIndex &&
+            m.columnSlotInfo?.spaceType === 'right'
+          );
+
+          // 양옆 모두 배치된 경우에만 기둥 앞 공간 고스트 표시
+          const hasBothSides = leftFurniture && rightFurniture;
+
+          // 기둥 앞에 이미 가구가 배치되었는지 확인
           const frontSpaceFurniture = placedModules.find(m =>
             m.slotIndex === slotInfo.slotIndex &&
             m.columnSlotInfo?.spaceType === 'front'
           );
-          return !frontSpaceFurniture; // 아직 기둥 앞에 가구가 없는 경우만
+
+          console.log('🔍 [Front Space] 슬롯 체크:', {
+            slotIndex: slotInfo.slotIndex,
+            hasLeftFurniture: !!leftFurniture,
+            hasRightFurniture: !!rightFurniture,
+            hasBothSides,
+            hasFrontFurniture: !!frontSpaceFurniture
+          });
+
+          return hasBothSides && !frontSpaceFurniture;
         });
 
         console.log('🔍 [Front Space Debug] availableSlots:', {
