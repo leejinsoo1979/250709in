@@ -5506,42 +5506,20 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
           );
         })}
 
-        {/* 기둥별 치수선 - 상부뷰 (가구와 동일한 스타일) */}
+        {/* 기둥별 치수 - 상부뷰 (기둥 내부에 텍스트만 표시) */}
         {showDimensions && spaceInfo.columns && spaceInfo.columns.length > 0 && spaceInfo.columns.map((column, index) => {
-          const columnWidthM = column.width * 0.01;
-          const leftX = column.position[0] - columnWidthM / 2;
-          const rightX = column.position[0] + columnWidthM / 2;
-          const dimZ = spaceZOffset - mmToThreeUnits(hasPlacedModules ? 80 : 60); // 가구 치수와 동일한 레벨
-          
+          const columnDepthM = (column.depth || 300) * 0.01;
+          // 기둥 중앙 Z 위치 계산
+          const columnCenterZ = column.position[2] || (spaceZOffset + columnDepthM / 2);
+
           return (
             <group key={`top-column-dim-${column.id}`}>
-              {/* 기둥 치수선 */}
-              <Line
-                points={[[leftX, spaceHeight, dimZ], [rightX, spaceHeight, dimZ]]}
-                color="#FF0000"
-                lineWidth={0.5}
-              />
-              
-              {/* 좌측 화살표 */}
-              <Line
-                points={createArrowHead([leftX, spaceHeight, dimZ], [leftX + 0.02, spaceHeight, dimZ], 0.01)}
-                color="#FF0000"
-                lineWidth={0.5}
-              />
-              
-              {/* 우측 화살표 */}
-              <Line
-                points={createArrowHead([rightX, spaceHeight, dimZ], [rightX - 0.02, spaceHeight, dimZ], 0.01)}
-                color="#FF0000"
-                lineWidth={0.5}
-              />
-              
-              {/* 기둥 치수 텍스트 - 상단뷰용 회전 적용 */}
+              {/* 기둥 치수 텍스트 - 기둥 내부 중앙에 표시 */}
               <Text
-                  renderOrder={1000}
-                  depthTest={false}
-                position={[column.position[0], spaceHeight + 0.1, dimZ - mmToThreeUnits(30)]}
-                fontSize={baseFontSize}
+                renderOrder={1000}
+                depthTest={false}
+                position={[column.position[0], spaceHeight + 0.1, columnCenterZ]}
+                fontSize={baseFontSize * 0.8}
                 color="#FF0000"
                 anchorX="center"
                 anchorY="middle"
@@ -5549,18 +5527,6 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               >
                 {column.width}
               </Text>
-              
-              {/* 연장선 - 가구와 동일한 길이로 수정 */}
-              <Line
-                points={[[leftX, spaceHeight, spaceZOffset], [leftX, spaceHeight, dimZ - mmToThreeUnits(50)]]}
-                color={dimensionColor}
-                lineWidth={0.5}
-              />
-              <Line
-                points={[[rightX, spaceHeight, spaceZOffset], [rightX, spaceHeight, dimZ - mmToThreeUnits(50)]]}
-                color={dimensionColor}
-                lineWidth={0.5}
-              />
             </group>
           );
         })}
