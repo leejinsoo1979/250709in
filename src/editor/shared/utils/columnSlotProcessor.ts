@@ -38,6 +38,14 @@ export interface ColumnSlotInfo {
     left: { availableWidth: number; center: number };
     right: { availableWidth: number; center: number };
   };
+  // 기둥 앞 공간 정보 (기둥 측면 배치 시 기둥 앞쪽 여유 공간에 추가 가구 배치용)
+  frontSpace?: {
+    available: boolean;      // 기둥 앞 공간 배치 가능 여부
+    width: number;           // 기둥 앞 공간의 폭 (mm)
+    depth: number;           // 기둥 앞 공간의 깊이 (730 - 기둥깊이 = 430mm)
+    centerX: number;         // 기둥 앞 공간의 X 중심 위치 (Three.js 단위)
+    centerZ: number;         // 기둥 앞 공간의 Z 중심 위치 (Three.js 단위)
+  };
 }
 
 // 기둥 커버 도어 타입
@@ -579,6 +587,37 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       hasDepthAnalysis: columnType !== undefined
     });
     
+    // 기둥 앞 공간 계산 (기둥 C일 때만)
+    let frontSpace: ColumnSlotInfo['frontSpace'];
+    if (columnType === 'medium' && columnInSlot.depth === 300) {
+      const STANDARD_CABINET_DEPTH = 730;
+      const frontSpaceDepth = STANDARD_CABINET_DEPTH - columnInSlot.depth; // 430mm
+      // 기둥 앞 공간의 폭 = 슬롯 전체 폭 (기둥이 차지하는 영역)
+      const frontSpaceWidth = targetZone.columnWidth;
+      // 기둥의 X 위치 (슬롯 중심)
+      const columnCenterX = columnInSlot.position[0];
+      // 기둥 앞쪽 Z 위치 (기둥 깊이의 절반 + 앞 공간 깊이의 절반)
+      // Z축: 벽쪽이 음수, 앞쪽이 양수라고 가정
+      const columnCenterZ = (frontSpaceDepth / 2) * 0.01; // 앞 공간의 중심
+
+      frontSpace = {
+        available: true,
+        width: frontSpaceWidth,
+        depth: frontSpaceDepth,
+        centerX: columnCenterX,
+        centerZ: columnCenterZ
+      };
+
+      console.log('🟢 기둥 앞 공간 계산 (단내림):', {
+        slotIndex: globalSlotIndex,
+        zone,
+        frontSpaceWidth,
+        frontSpaceDepth,
+        centerX: columnCenterX,
+        centerZ: columnCenterZ
+      });
+    }
+
     slotInfos.push({
       slotIndex: globalSlotIndex,
       hasColumn: true,
@@ -596,7 +635,8 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
       depthAdjustment,
       splitPlacement,
       allowMultipleFurniture,
-      subSlots // Column C의 서브슬롯 정보 추가
+      subSlots, // Column C의 서브슬롯 정보 추가
+      frontSpace // 기둥 앞 공간 정보 추가
     });
     }
     return slotInfos;
@@ -812,7 +852,36 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         columnType,
         hasDepthAnalysis: columnType !== undefined
       });
-      
+
+      // 기둥 앞 공간 계산 (기둥 C일 때만)
+      let frontSpace: ColumnSlotInfo['frontSpace'];
+      if (columnType === 'medium' && columnInSlot.depth === 300) {
+        const STANDARD_CABINET_DEPTH = 730;
+        const frontSpaceDepth = STANDARD_CABINET_DEPTH - columnInSlot.depth; // 430mm
+        // 기둥 앞 공간의 폭 = 슬롯 전체 폭 (기둥이 차지하는 영역)
+        const frontSpaceWidth = indexing.columnWidth;
+        // 기둥의 X 위치 (슬롯 중심)
+        const columnCenterX = columnInSlot.position[0];
+        // 기둥 앞쪽 Z 위치 (기둥 깊이의 절반 + 앞 공간 깊이의 절반)
+        const columnCenterZ = (frontSpaceDepth / 2) * 0.01; // 앞 공간의 중심
+
+        frontSpace = {
+          available: true,
+          width: frontSpaceWidth,
+          depth: frontSpaceDepth,
+          centerX: columnCenterX,
+          centerZ: columnCenterZ
+        };
+
+        console.log('🟢 기둥 앞 공간 계산:', {
+          slotIndex,
+          frontSpaceWidth,
+          frontSpaceDepth,
+          centerX: columnCenterX,
+          centerZ: columnCenterZ
+        });
+      }
+
       slotInfos.push({
         slotIndex,
         hasColumn: true,
@@ -830,11 +899,12 @@ export const analyzeColumnSlots = (spaceInfo: SpaceInfo): ColumnSlotInfo[] => {
         depthAdjustment,
         splitPlacement,
         allowMultipleFurniture,
-        subSlots // Column C의 서브슬롯 정보 추가
+        subSlots, // Column C의 서브슬롯 정보 추가
+        frontSpace // 기둥 앞 공간 정보 추가
       });
     }
   }
-  
+
   return slotInfos;
 };
 

@@ -2382,7 +2382,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
   const baseDepthOffset = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.depth || 0) : 0;
 
-  const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset;
+  // 기둥 앞 공간 가구인지 확인 (isColumnCFront는 나중에 정의되므로 직접 체크)
+  const isFrontSpaceFurniture = placedModule.columnSlotInfo?.spaceType === 'front';
+
+  // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
+  const furnitureZ = isFrontSpaceFurniture
+    ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
+    : furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset;  // 일반: 계산된 위치 사용
 
   const furnitureGroupPosition: [number, number, number] = [
     adjustedPosition.x + positionAdjustmentForEndPanel,

@@ -20,6 +20,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAlert } from '@/contexts/AlertContext';
 import { analyzeColumnSlots, canPlaceFurnitureInColumnSlot, calculateFurnitureBounds, calculateOptimalHingePosition } from '@/editor/shared/utils/columnSlotProcessor';
 import { useUIStore } from '@/store/uiStore';
+import { PlacedModule } from '@/editor/shared/furniture/types';
 
 interface SlotDropZonesSimpleProps {
   spaceInfo: SpaceInfo;
@@ -53,6 +54,7 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
   const addModule = useFurnitureStore(state => state.addModule);
   const currentDragData = useFurnitureStore(state => state.currentDragData);
   const selectedFurnitureId = useFurnitureStore(state => state.selectedFurnitureId);
+  const setSelectedFurnitureId = useFurnitureStore(state => state.setSelectedFurnitureId);
   const setCurrentDragData = useFurnitureStore(state => state.setCurrentDragData);
   const setFurniturePlacementMode = useFurnitureStore(state => state.setFurniturePlacementMode);
   const { showAlert } = useAlert();
@@ -3669,6 +3671,177 @@ const SlotDropZonesSimple: React.FC<SlotDropZonesSimpleProps> = ({ spaceInfo, sh
           </group>
         );
       })}
+
+      {/* 기둥 앞 공간 고스트 (기둥 C 전용) */}
+      {(currentDragData || selectedFurnitureId) && (() => {
+        // 기둥 분석
+        const columnSlotsForFront = analyzeColumnSlots(spaceInfo);
+
+        // 기둥 앞 공간이 있는 슬롯만 필터링 (Column C이고 frontSpace가 활성화된 경우)
+        const frontSpaceSlots = columnSlotsForFront.filter(
+          slot => slot.hasColumn && slot.frontSpace?.available && slot.allowMultipleFurniture
+        );
+
+        if (frontSpaceSlots.length === 0) return null;
+
+        // 모듈 데이터 가져오기
+        const moduleIdForFront = currentDragData?.moduleData?.id || selectedFurnitureId;
+        const moduleDataForFront = moduleIdForFront ? getModuleById(moduleIdForFront) : null;
+
+        // 싱글장만 기둥 앞 공간에 배치 가능
+        if (!moduleDataForFront || moduleDataForFront.slotType !== 'single') return null;
+
+        // 기둥 양쪽에 가구가 배치되었는지 확인
+        const slotsWithBothSidesFilled = frontSpaceSlots.filter(slotInfo => {
+          // 해당 슬롯에 배치된 가구 중 기둥 측면 배치(beside) 모드인 가구 필터링
+          const modulesInSlot = placedModules.filter(m =>
+            m.slotIndex === slotInfo.slotIndex &&
+            m.columnPlacementMode === 'beside'
+          );
+
+          // 좌측과 우측 모두 가구가 있는지 확인
+          const hasLeftFurniture = modulesInSlot.some(m => m.subSlotPosition === 'left');
+          const hasRightFurniture = modulesInSlot.some(m => m.subSlotPosition === 'right');
+
+          return hasLeftFurniture && hasRightFurniture;
+        });
+
+        if (slotsWithBothSidesFilled.length === 0) return null;
+
+        // 기둥 앞 공간에 이미 가구가 배치되었는지 확인
+        const availableSlots = slotsWithBothSidesFilled.filter(slotInfo => {
+          const frontSpaceFurniture = placedModules.find(m =>
+            m.slotIndex === slotInfo.slotIndex &&
+            m.columnSlotInfo?.spaceType === 'front'
+          );
+          return !frontSpaceFurniture; // 아직 기둥 앞에 가구가 없는 경우만
+        });
+
+        if (availableSlots.length === 0) return null;
+
+        console.log('🟢 [Front Space Ghost] 기둥 앞 공간 고스트 렌더링:', {
+          availableSlots: availableSlots.map(s => ({
+            slotIndex: s.slotIndex,
+            frontSpace: s.frontSpace
+          })),
+          moduleId: moduleIdForFront
+        });
+
+        return availableSlots.map(slotInfo => {
+          const frontSpace = slotInfo.frontSpace!;
+
+          // Z축 위치 계산 - 기둥 앞쪽에 배치
+          const panelDepthMm = spaceInfo.depth || 600;
+          const panelDepth = mmToThreeUnits(panelDepthMm);
+          const panelZOffset = -panelDepth / 2;
+          // 기둥 앞 공간의 Z 중심 (벽에서 멀어지는 방향)
+          const frontSpaceZ = panelZOffset + panelDepth - mmToThreeUnits(frontSpace.depth / 2);
+
+          // Y축 위치 (바닥)
+          const isFloating = spaceInfo.baseConfig?.type === 'stand' && spaceInfo.baseConfig?.placementType === 'float';
+          const floatHeight = isFloating ? mmToThreeUnits(spaceInfo.baseConfig?.floatHeight || 0) : 0;
+          const floorY = mmToThreeUnits(internalSpace.startY) + floatHeight;
+          const furnitureHeight = mmToThreeUnits(moduleDataForFront.dimensions.height);
+          const furnitureY = floorY + furnitureHeight / 2;
+
+          // 기둥 앞 공간에 맞는 고스트 크기
+          const ghostWidth = frontSpace.width;
+          const ghostDepth = frontSpace.depth;
+
+          return (
+            <group
+              key={`front-space-ghost-${slotInfo.slotIndex}`}
+              position={[frontSpace.centerX, furnitureY, frontSpaceZ]}
+            >
+              <BoxModule
+                moduleData={moduleDataForFront}
+                color={theme.color}
+                isDragging={true}
+                hasDoor={false}
+                customDepth={ghostDepth}
+                customWidth={ghostWidth}
+                spaceInfo={spaceInfo}
+              />
+              {/* + 아이콘 버튼 */}
+              <mesh
+                position={[0, 0, mmToThreeUnits(ghostDepth / 2) + 0.05]}
+                onClick={(e) => {
+                  e.stopPropagation();
+
+                  // 기둥 앞 공간에 가구 배치
+                  const newModuleId = `front-space-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+                  // Position 계산 (Three.js 단위)
+                  const positionX = frontSpace.centerX;
+                  const positionY = furnitureY;
+                  const positionZ = frontSpaceZ;
+
+                  // 새 모듈 생성
+                  const newModule: PlacedModule = {
+                    id: newModuleId,
+                    moduleId: moduleDataForFront.id,
+                    position: { x: positionX, y: positionY, z: positionZ },
+                    rotation: 0,
+                    hasDoor: false, // 오픈형 (도어 없음)
+                    customDepth: ghostDepth, // 기둥 앞 공간 깊이 (430mm)
+                    customWidth: ghostWidth, // 기둥 너비
+                    slotIndex: slotInfo.slotIndex,
+                    isDualSlot: false,
+                    isValidInCurrentSpace: true,
+                    zone: spaceInfo.droppedCeiling?.enabled ? 'dropped' : 'normal',
+                    columnSlotInfo: {
+                      hasColumn: true,
+                      columnId: slotInfo.column?.id,
+                      columnPosition: slotInfo.columnPosition,
+                      availableWidth: ghostWidth,
+                      spaceType: 'front', // 기둥 앞 공간 배치 표시
+                      moduleOrder: 2 // 양옆 가구 다음 순서
+                    },
+                    columnPlacementMode: 'beside' // 기둥 측면 배치 모드에서 사용
+                  };
+
+                  console.log('🟢 기둥 앞 공간에 가구 배치:', {
+                    moduleId: newModule.id,
+                    slotIndex: slotInfo.slotIndex,
+                    frontSpace,
+                    position: newModule.position,
+                    customDepth: newModule.customDepth,
+                    customWidth: newModule.customWidth
+                  });
+
+                  // 가구 추가
+                  addModule(newModule);
+
+                  // 선택 상태 초기화
+                  if (currentDragData) {
+                    setCurrentDragData(null);
+                  }
+                  setSelectedFurnitureId(null);
+
+                  // 가구 배치 완료 이벤트 발생
+                  window.dispatchEvent(new CustomEvent('furniture-placement-complete'));
+                }}
+              >
+                <circleGeometry args={[0.3, 32]} />
+                <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
+              </mesh>
+              <mesh position={[0, 0, mmToThreeUnits(ghostDepth / 2) + 0.06]}>
+                <ringGeometry args={[0.25, 0.3, 32]} />
+                <meshBasicMaterial color={theme.color} />
+              </mesh>
+              {/* + 기호 */}
+              <mesh position={[0, 0, mmToThreeUnits(ghostDepth / 2) + 0.07]}>
+                <planeGeometry args={[0.2, 0.05]} />
+                <meshBasicMaterial color={theme.color} />
+              </mesh>
+              <mesh position={[0, 0, mmToThreeUnits(ghostDepth / 2) + 0.07]}>
+                <planeGeometry args={[0.05, 0.2]} />
+                <meshBasicMaterial color={theme.color} />
+              </mesh>
+            </group>
+          );
+        });
+      })()}
     </group>
   );
 };
