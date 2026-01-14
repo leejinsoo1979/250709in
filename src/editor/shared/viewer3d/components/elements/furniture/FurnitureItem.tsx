@@ -3073,7 +3073,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         >
           <DoorModule
             moduleWidth={doorWidth}
-            moduleDepth={actualModuleData?.dimensions.depth || 0}
+            moduleDepth={actualDepthMm}
             hingePosition={optimalHingePosition}
             spaceInfo={spaceInfo}
             color={isDraggingThis ? '#ff6600' : actualModuleData?.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
