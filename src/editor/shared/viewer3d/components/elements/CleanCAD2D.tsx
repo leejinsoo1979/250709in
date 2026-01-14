@@ -2487,7 +2487,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={1000000}
               depthTest={false}
             >
-              {actualWidth}
+              {Math.round(actualWidth)}
             </Text>
             
             
@@ -5431,7 +5431,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                {actualWidth}
+                {Math.round(actualWidth)}
               </Text>
 
               {/* 연장선들 - 가구 앞단에서 치수선까지 */}
