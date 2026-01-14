@@ -474,8 +474,8 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
           />
 
           {/* 전면 패널 윤곽선 (18mm 두께) */}
-          <lineSegments position={[0, 0, (depth * 0.01) / 2 + 0.009]}>
-            <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, 0.018)]} />
+          <lineSegments position={[0, 0, (depth * 0.01) / 2 + 0.09]}>
+            <edgesGeometry args={[new THREE.BoxGeometry(width * 0.01, height * 0.01, 0.18)]} />
             <primitive object={wireframeMaterial} />
           </lineSegments>
         </group>
@@ -518,11 +518,11 @@ const ColumnAsset: React.FC<ColumnAssetProps> = ({
 
           {/* 전면 패널 (기둥과 같은 폭, 18mm 두께) - 프레임 재질 */}
           <mesh
-            position={[0, (height * 0.01) / 2, (depth * 0.01) / 2 + 0.009]} // 기둥 전면에 18mm 패널
+            position={[0, (height * 0.01) / 2, (depth * 0.01) / 2 + 0.09]} // 기둥 전면에 18mm 패널 (9mm 오프셋)
             receiveShadow={viewMode === '3D'}
             castShadow={viewMode === '3D'}
           >
-            <boxGeometry args={[width * 0.01, height * 0.01, 0.018]} /> {/* 18mm 두께 */}
+            <boxGeometry args={[width * 0.01, height * 0.01, 0.18]} /> {/* 18mm 두께 */}
             <meshStandardMaterial
               color={spaceConfig.spaceInfo.material?.frameColor || '#E0E0E0'}
               roughness={0.6}
