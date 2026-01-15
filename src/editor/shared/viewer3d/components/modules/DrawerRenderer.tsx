@@ -152,7 +152,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // 수평 패널들은 수직 패널의 안쪽(서랍 방향)으로 27mm 돌출
 
   // 수평 패널 공통 치수
-  const horizontalPanelWidth = mmToThreeUnits(27); // X축 폭: 27mm (수직패널에서 안쪽으로 돌출)
+  const horizontalPanelWidth = drawerFrameThickness; // X축 폭: 18mm (수직패널에서 측판쪽으로 돌출)
   const horizontalPanelHeight = drawerFrameThickness; // Y축 높이: 18mm
   const horizontalPanelDepthBack = drawerFrameThickness; // 후면 수평 패널 Z축 깊이: 18mm
   const horizontalPanelDepthFront = drawerFrameThickness; // 전면 수평 패널 Z축 깊이: 18mm
