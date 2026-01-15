@@ -250,8 +250,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-front-${mat.uuid}`}
-              args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), basicThickness]}
-              position={[centerX, centerY, drawerBodyCenterZ + drawerBodyDepth/2 - basicThickness/2]}
+              args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), DRAWER_SIDE_THICKNESS]}
+              position={[centerX, centerY, drawerBodyCenterZ + drawerBodyDepth/2 - DRAWER_SIDE_THICKNESS/2]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -270,8 +270,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-back-${mat.uuid}`}
-              args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), basicThickness]}
-              position={[centerX, centerY, drawerBodyCenterZ - drawerBodyDepth/2 + basicThickness/2]}
+              args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), DRAWER_SIDE_THICKNESS]}
+              position={[centerX, centerY, drawerBodyCenterZ - drawerBodyDepth/2 + DRAWER_SIDE_THICKNESS/2]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -283,15 +283,15 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 왼쪽 면 - 앞뒤 판재 두께(36mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
+        {/* 왼쪽 면 - 앞뒤 판재 두께(30mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 좌측판` : `서랍${drawerIndex + 1} 좌측판`;
           const mat = getPanelMaterial(panelName);
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-left-${mat.uuid}`}
-              args={[basicThickness, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - basicThickness * 2]}
-              position={[centerX - drawerWidth/2 + basicThickness/2 + mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
+              args={[DRAWER_SIDE_THICKNESS, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - DRAWER_SIDE_THICKNESS * 2]}
+              position={[centerX - drawerWidth/2 + DRAWER_SIDE_THICKNESS/2 + mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -303,15 +303,15 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 오른쪽 면 - 앞뒤 판재 두께(36mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
+        {/* 오른쪽 면 - 앞뒤 판재 두께(30mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 우측판` : `서랍${drawerIndex + 1} 우측판`;
           const mat = getPanelMaterial(panelName);
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-right-${mat.uuid}`}
-              args={[basicThickness, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - basicThickness * 2]}
-              position={[centerX + drawerWidth/2 - basicThickness/2 - mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
+              args={[DRAWER_SIDE_THICKNESS, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - DRAWER_SIDE_THICKNESS * 2]}
+              position={[centerX + drawerWidth/2 - DRAWER_SIDE_THICKNESS/2 - mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
