@@ -1050,10 +1050,10 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             </>
           ) : (
             <>
-              {/* 단일 섹션 백패널 */}
+              {/* 단일 섹션 백패널 - 측판 높이와 동일하게 height 사용 */}
               <BoxWithEdges
                 key={`back-panel-${getPanelMaterial('백패널').uuid}`}
-                args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), innerHeight + mmToThreeUnits(backPanelConfig.heightExtension), backPanelThickness]}
+                args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), height, backPanelThickness]}
                 position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
                 material={getPanelMaterial('백패널')}
                 renderMode={renderMode}
