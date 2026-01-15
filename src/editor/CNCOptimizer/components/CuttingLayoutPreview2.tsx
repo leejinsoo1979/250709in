@@ -732,20 +732,38 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           // 디버깅 로그
           console.log('=== 보링 표시 시도 ===');
           console.log('panel.name:', panel.name, '→ normalized:', normalizePanelName(panel.name));
-          console.log('boringData 패널명들:', boringData.map(b => `${b.panelName} → ${normalizePanelName(b.panelName)}`));
+          console.log('panel dimensions:', panel.width, 'x', panel.height);
+          console.log('boringData 패널들:', boringData.map(b =>
+            `${b.panelName} (${b.width}x${b.height}) → ${normalizePanelName(b.panelName)}`
+          ));
 
-          // 정규화된 이름으로 매칭
+          // 정규화된 이름으로 매칭 (크기도 함께 확인)
           const normalizedCncName = normalizePanelName(panel.name);
-          const panelBorings = boringData.find(b => {
+
+          // 이름이 같은 후보들 먼저 필터
+          const candidates = boringData.filter(b => {
             const normalizedBoringName = normalizePanelName(b.panelName);
-            // 정규화된 이름으로 매칭
             return normalizedCncName === normalizedBoringName ||
-              // 직접 비교도 유지
               b.panelName === panel.name ||
               b.panelId === panel.id;
           });
 
-          console.log('매칭된 보링 데이터:', panelBorings ? `${panelBorings.borings?.length}개` : '없음');
+          // 후보 중 크기가 가장 가까운 것 선택
+          let panelBorings = candidates[0];
+          if (candidates.length > 1) {
+            // 크기 차이로 정렬하여 가장 가까운 것 선택
+            const tolerance = 5; // 5mm 허용 오차
+            panelBorings = candidates.find(b =>
+              Math.abs(b.width - panel.width) <= tolerance &&
+              Math.abs(b.height - panel.height) <= tolerance
+            ) || candidates.reduce((best, current) => {
+              const bestDiff = Math.abs(best.width - panel.width) + Math.abs(best.height - panel.height);
+              const currDiff = Math.abs(current.width - panel.width) + Math.abs(current.height - panel.height);
+              return currDiff < bestDiff ? current : best;
+            });
+          }
+
+          console.log('매칭된 보링 데이터:', panelBorings ? `${panelBorings.panelName} (${panelBorings.borings?.length}개)` : '없음');
 
           if (panelBorings && panelBorings.borings && panelBorings.borings.length > 0) {
             ctx.save();
