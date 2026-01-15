@@ -466,7 +466,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-front-extra-left-${mat.uuid}`}
               args={[frontExtraFrameWidth, frontExtraFrameHeight, frontExtraFrameDepth]}
-              position={[-innerWidth/2 + horizontalPanelWidth/2, frontExtraFrameY, frontExtraFrameZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness + frontExtraFrameWidth/2, frontExtraFrameY, frontExtraFrameZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -486,7 +486,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-front-extra-right-${mat.uuid}`}
               args={[frontExtraFrameWidth, frontExtraFrameHeight, frontExtraFrameDepth]}
-              position={[innerWidth/2 - horizontalPanelWidth/2, frontExtraFrameY, frontExtraFrameZ]}
+              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness - frontExtraFrameWidth/2, frontExtraFrameY, frontExtraFrameZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -655,7 +655,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-front-extra-left-${mat.uuid}`}
               args={[frontExtraFrameWidth, frontExtraFrameHeight, frontExtraFrameDepth]}
-              position={[-innerWidth/2 + horizontalPanelWidth/2, frontExtraFrameY, frontExtraFrameZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness + frontExtraFrameWidth/2, frontExtraFrameY, frontExtraFrameZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -675,7 +675,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-front-extra-right-${mat.uuid}`}
               args={[frontExtraFrameWidth, frontExtraFrameHeight, frontExtraFrameDepth]}
-              position={[innerWidth/2 - horizontalPanelWidth/2, frontExtraFrameY, frontExtraFrameZ]}
+              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness - frontExtraFrameWidth/2, frontExtraFrameY, frontExtraFrameZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
