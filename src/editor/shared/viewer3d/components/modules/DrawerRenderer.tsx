@@ -153,7 +153,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
   // 수평 패널 공통 치수
   const horizontalPanelWidth = mmToThreeUnits(27); // X축 폭: 27mm (수직패널에서 측판쪽으로 돌출)
-  const horizontalPanelHeight = drawerFrameThickness; // Y축 높이: 18mm
+  const horizontalPanelHeight = innerHeight; // Y축 높이: 모듈 내경 전체 높이
   const horizontalPanelDepthBack = drawerFrameThickness; // 후면 수평 패널 Z축 깊이: 18mm
   const horizontalPanelDepthFront = drawerFrameThickness; // 전면 수평 패널 Z축 깊이: 18mm
 
@@ -162,26 +162,26 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const verticalPanelDepth = depth - mmToThreeUnits(85) - backPanelThickness - mmToThreeUnits(18);
   const verticalPanelZ = -depth/2 + backPanelThickness + mmToThreeUnits(18) + verticalPanelDepth/2 - mmToThreeUnits(1);
 
-  // 2. 후면 수평 패널 (상단, 좌/우 각각) - 실제로는 전면에 위치
-  // Y 위치: 상단
+  // 2. 후면 수평 패널 (좌/우 각각) - 실제로는 전면에 위치
+  // Y 위치: 중앙 (전체 높이)
   // Z 위치: 전면에서 85mm 뒤 (앞쪽)
   // Z 깊이: 18mm (전면이므로)
-  const backHorizontalPanelY = innerHeight/2 - horizontalPanelHeight/2;
+  const backHorizontalPanelY = 0; // 전체 높이이므로 중앙
   const backHorizontalPanelZ = depth/2 - mmToThreeUnits(85) - horizontalPanelDepthFront/2 - mmToThreeUnits(1);
 
-  // 4. 전면 추가 프레임 (상단, 좌/우 각각) - 전면 수평 패널 앞에 붙음
-  // X축 폭: 45mm, Y축 높이: 18mm, Z축 깊이: 18mm
+  // 4. 전면 추가 프레임 (좌/우 각각) - 전면 수평 패널 앞에 붙음
+  // X축 폭: 45mm, Y축 높이: 전체 높이, Z축 깊이: 18mm
   const frontExtraFrameWidth = mmToThreeUnits(45);
-  const frontExtraFrameHeight = drawerFrameThickness;
+  const frontExtraFrameHeight = innerHeight; // 모듈 내경 전체 높이
   const frontExtraFrameDepth = drawerFrameThickness;
-  const frontExtraFrameY = backHorizontalPanelY; // 상단 (전면 수평 패널과 같은 Y)
+  const frontExtraFrameY = 0; // 중앙 (전체 높이이므로)
   const frontExtraFrameZ = backHorizontalPanelZ + horizontalPanelDepthFront/2 + frontExtraFrameDepth/2; // 전면 수평 패널 앞에 붙음
 
-  // 3. 전면 수평 패널 (하단, 좌/우 각각) - 실제로는 후면에 위치
-  // Y 위치: 하단
+  // 3. 전면 수평 패널 (좌/우 각각) - 실제로는 후면에 위치
+  // Y 위치: 중앙 (전체 높이)
   // Z 위치: 백패널 앞면과 맞닿음 (뒤쪽)
   // Z 깊이: 18mm (후면이므로)
-  const frontHorizontalPanelY = -innerHeight/2 + horizontalPanelHeight/2;
+  const frontHorizontalPanelY = 0; // 전체 높이이므로 중앙
   const frontHorizontalPanelZ = -depth/2 + basicThickness + backPanelThickness + horizontalPanelDepthBack/2 - mmToThreeUnits(1);
   
   // 개별 서랍 렌더링 함수 (본체 + 손잡이 판)
