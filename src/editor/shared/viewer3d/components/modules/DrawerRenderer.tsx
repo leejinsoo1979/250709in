@@ -145,7 +145,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
   // 공통 설정
   const drawerFrameThickness = basicThickness; // 18mm
-  const drawerFrameHeight = innerHeight; // 모듈 내경 높이
+  const drawerFrameHeight = innerHeight - basicThickness; // 바닥판 위 ~ 하부섹션 상판 밑면
 
   // 서랍속장 (Drawer Interior Frame) - ㄷ자 프레임
   // 구조: 좌/우 각각 수직패널 + 후면수평패널(상단) + 전면수평패널(하단)
@@ -153,7 +153,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
   // 수평 패널 공통 치수
   const horizontalPanelWidth = mmToThreeUnits(27); // X축 폭: 27mm (수직패널에서 측판쪽으로 돌출)
-  const horizontalPanelHeight = innerHeight; // Y축 높이: 모듈 내경 전체 높이
+  const horizontalPanelHeight = innerHeight - basicThickness; // Y축 높이: 바닥판 위 ~ 하부섹션 상판 밑면
   const horizontalPanelDepthBack = drawerFrameThickness; // 후면 수평 패널 Z축 깊이: 18mm
   const horizontalPanelDepthFront = drawerFrameThickness; // 전면 수평 패널 Z축 깊이: 18mm
 
@@ -163,25 +163,25 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const verticalPanelZ = -depth/2 + backPanelThickness + mmToThreeUnits(18) + verticalPanelDepth/2 - mmToThreeUnits(1);
 
   // 2. 후면 수평 패널 (좌/우 각각) - 실제로는 전면에 위치
-  // Y 위치: 중앙 (전체 높이)
+  // Y 위치: 바닥판~상판 밑면 기준 중앙 (상판 두께만큼 아래로)
   // Z 위치: 전면에서 85mm 뒤 (앞쪽)
   // Z 깊이: 18mm (전면이므로)
-  const backHorizontalPanelY = 0; // 전체 높이이므로 중앙
+  const backHorizontalPanelY = -basicThickness / 2; // 상판 두께만큼 아래로
   const backHorizontalPanelZ = depth/2 - mmToThreeUnits(85) - horizontalPanelDepthFront/2 - mmToThreeUnits(1);
 
   // 4. 전면 추가 프레임 (좌/우 각각) - 전면 수평 패널 앞에 붙음
-  // X축 폭: 45mm, Y축 높이: 전체 높이, Z축 깊이: 18mm
+  // X축 폭: 45mm, Y축 높이: 바닥판~상판 밑면, Z축 깊이: 18mm
   const frontExtraFrameWidth = mmToThreeUnits(45);
-  const frontExtraFrameHeight = innerHeight; // 모듈 내경 전체 높이
+  const frontExtraFrameHeight = innerHeight - basicThickness; // 바닥판 위 ~ 하부섹션 상판 밑면
   const frontExtraFrameDepth = drawerFrameThickness;
-  const frontExtraFrameY = 0; // 중앙 (전체 높이이므로)
+  const frontExtraFrameY = -basicThickness / 2; // 상판 두께만큼 아래로
   const frontExtraFrameZ = backHorizontalPanelZ + horizontalPanelDepthFront/2 + frontExtraFrameDepth/2; // 전면 수평 패널 앞에 붙음
 
   // 3. 전면 수평 패널 (좌/우 각각) - 실제로는 후면에 위치
-  // Y 위치: 중앙 (전체 높이)
+  // Y 위치: 바닥판~상판 밑면 기준 중앙 (상판 두께만큼 아래로)
   // Z 위치: 백패널 앞면과 맞닿음 (뒤쪽)
   // Z 깊이: 18mm (후면이므로)
-  const frontHorizontalPanelY = 0; // 전체 높이이므로 중앙
+  const frontHorizontalPanelY = -basicThickness / 2; // 상판 두께만큼 아래로
   const frontHorizontalPanelZ = -depth/2 + basicThickness + backPanelThickness + horizontalPanelDepthBack/2 - mmToThreeUnits(1);
   
   // 개별 서랍 렌더링 함수 (본체 + 손잡이 판)
@@ -386,7 +386,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-left-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness/2, -basicThickness/2, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -406,7 +406,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-right-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness/2, -basicThickness/2, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -575,7 +575,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-left-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness/2, -basicThickness/2, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -595,7 +595,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-right-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness/2, -basicThickness/2, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
