@@ -546,17 +546,18 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         </>
       )}
 
-      {/* 상단 판재 */}
+      {/* 상단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       {(() => {
         // 상단 판재는 마지막 섹션(상부 섹션)의 깊이 사용
         const lastSectionIndex = isMultiSectionFurniture() ? getSectionHeights().length - 1 : 0;
         const topPanelDepth = sectionDepths[lastSectionIndex] || depth;
+        const backReduction = mmToThreeUnits(26); // 뒤에서 26mm 줄임
         const topPanelDepthDiff = depth - topPanelDepth;
-        const topPanelZOffset = topPanelDepthDiff / 2;
+        const topPanelZOffset = topPanelDepthDiff / 2 + backReduction / 2;
 
         return (
           <BoxWithEdges
-            args={[innerWidth, basicThickness, topPanelDepth]}
+            args={[innerWidth, basicThickness, topPanelDepth - backReduction]}
             position={[0, height/2 - basicThickness/2, topPanelZOffset]}
             material={material}
             renderMode={renderMode}
@@ -571,16 +572,17 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
         );
       })()}
 
-      {/* 하단 판재 */}
+      {/* 하단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       {(() => {
         // 하단 판재는 첫 번째 섹션(하부 섹션)의 깊이 사용
         const bottomPanelDepth = sectionDepths[0] || depth;
+        const backReduction = mmToThreeUnits(26); // 뒤에서 26mm 줄임
         const bottomPanelDepthDiff = depth - bottomPanelDepth;
-        const bottomPanelZOffset = bottomPanelDepthDiff / 2;
+        const bottomPanelZOffset = bottomPanelDepthDiff / 2 + backReduction / 2;
 
         return (
           <BoxWithEdges
-            args={[innerWidth, basicThickness, bottomPanelDepth]}
+            args={[innerWidth, basicThickness, bottomPanelDepth - backReduction]}
             position={[0, -height/2 + basicThickness/2, bottomPanelZOffset]}
             material={material}
             renderMode={renderMode}

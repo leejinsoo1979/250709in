@@ -730,14 +730,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           return normalized.toLowerCase();
         };
 
-        // 디버깅 로그
-        console.log('=== 보링 표시 시도 ===');
-        console.log('panel.name:', panel.name, '→ normalized:', normalizePanelName(panel.name));
-        console.log('panel dimensions:', panel.width, 'x', panel.height);
-        console.log('boringData 패널들:', boringData.map(b =>
-          `${b.panelName} (${b.width}x${b.height}) → ${normalizePanelName(b.panelName)}`
-        ));
-
         // 정규화된 이름으로 매칭 (크기도 함께 확인)
         const normalizedCncName = normalizePanelName(panel.name);
 
@@ -763,8 +755,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             return currDiff < bestDiff ? current : best;
           });
         }
-
-        console.log('매칭된 보링 데이터:', panelBorings ? `${panelBorings.panelName} (${panelBorings.borings?.length}개)` : '없음');
 
         if (panelBorings && panelBorings.borings && panelBorings.borings.length > 0) {
           ctx.save();

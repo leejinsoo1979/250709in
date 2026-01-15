@@ -756,28 +756,29 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
           </>
         )}
 
-        {/* 상단 판재 */}
+        {/* 상단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
         {(() => {
           const panelName = isMultiSectionFurniture() ? '(상)상판' : '상판';
           const topPanelMat = getPanelMaterial(panelName);
+          const backReduction = mmToThreeUnits(26); // 뒤에서 26mm 줄임
           return (
             <BoxWithEdges
               key={`top-panel-${topPanelMat.uuid}`}
               args={[innerWidth, basicThickness, (() => {
                 // 다중 섹션이고 상부 깊이가 있으면 상부 섹션 깊이 사용
                 if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
-                  return mmToThreeUnits(upperSectionDepthMm);
+                  return mmToThreeUnits(upperSectionDepthMm) - backReduction;
                 }
-                return depth;
+                return depth - backReduction;
               })()]}
               position={[0, height/2 - basicThickness/2, (() => {
                 // 다중 섹션이고 상부 깊이가 있으면 Z 오프셋 적용
                 if (isMultiSectionFurniture() && upperSectionDepthMm !== undefined) {
                   const upperDepth = mmToThreeUnits(upperSectionDepthMm);
                   const depthDiff = depth - upperDepth;
-                  return depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+                  return depthDiff / 2 + backReduction / 2; // 앞쪽 고정, 뒤쪽 줄어듦 + 백패널 맞춤
                 }
-                return 0;
+                return backReduction / 2; // 앞쪽 고정, 뒤에서 26mm 줄임
               })()]}
               material={topPanelMat}
               renderMode={renderMode}
@@ -837,28 +838,29 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
         </group>
         )}
 
-        {/* 하단 판재 */}
+        {/* 하단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
         {(() => {
           const panelName = isMultiSectionFurniture() ? '(하)바닥' : '바닥판';
           const bottomPanelMat = getPanelMaterial(panelName);
+          const backReduction = mmToThreeUnits(26); // 뒤에서 26mm 줄임
           return (
             <BoxWithEdges
               key={`bottom-panel-${bottomPanelMat.uuid}`}
               args={[innerWidth, basicThickness, (() => {
                 // 다중 섹션이고 하부 깊이가 있으면 하부 섹션 깊이 사용
                 if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
-                  return mmToThreeUnits(lowerSectionDepthMm);
+                  return mmToThreeUnits(lowerSectionDepthMm) - backReduction;
                 }
-                return depth;
+                return depth - backReduction;
               })()]}
               position={[0, -height/2 + basicThickness/2, (() => {
                 // 다중 섹션이고 하부 깊이가 있으면 Z 오프셋 적용
                 if (isMultiSectionFurniture() && lowerSectionDepthMm !== undefined) {
                   const lowerDepth = mmToThreeUnits(lowerSectionDepthMm);
                   const depthDiff = depth - lowerDepth;
-                  return depthDiff / 2; // 양수: 앞쪽 고정, 뒤쪽 줄어듦
+                  return depthDiff / 2 + backReduction / 2; // 앞쪽 고정, 뒤쪽 줄어듦 + 백패널 맞춤
                 }
-                return 0;
+                return backReduction / 2; // 앞쪽 고정, 뒤에서 26mm 줄임
               })()]}
               material={bottomPanelMat}
               renderMode={renderMode}
