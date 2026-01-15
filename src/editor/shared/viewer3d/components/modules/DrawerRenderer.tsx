@@ -133,9 +133,16 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // TopSupportPanel 기본 설정: 앞쪽 85mm 잘라내고, 뒤쪽은 백패널 공간 피하기
   const topSupportPanelDepth = depth - mmToThreeUnits(85 + 17 + 9); // 가구depth - (85+17+9) = depth - 111mm
   const topSupportPanelY = innerHeight / 2 - basicThickness - mmToThreeUnits(9); // 내경 상단에서 18+9mm 아래
-  
+
   // TopSupportPanel Z축 위치: 모듈 앞면에서 85mm 뒤로 시작
   const topSupportPanelZ = depth/2 - topSupportPanelDepth/2 - mmToThreeUnits(85); // 앞쪽 85mm 후퇴
+
+  // 서랍속장 (Drawer Interior Frame) 설정 - 서랍 레일 부착용 좌우 패널
+  const drawerFrameThickness = basicThickness; // 18mm
+  const drawerFrameHeight = innerHeight; // 모듈 내경 높이
+  const drawerFrameDepth = depth - mmToThreeUnits(85 + 17 + 9); // 상하부 덮개 깊이 - 85mm (topSupportPanelDepth와 동일)
+  // Z축 위치: 백패널 안쪽면에서 시작하여 앞쪽 85mm 전까지
+  const drawerFrameZ = -depth/2 + mmToThreeUnits(9) + drawerFrameDepth/2; // 백패널(9mm) 바로 앞에서 시작
   
   // 개별 서랍 렌더링 함수 (본체 + 손잡이 판)
   const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string, isTopDrawer: boolean = false, drawerIndex: number = 0) => {
@@ -329,6 +336,46 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     
     return (
       <group position={[0, yOffset, drawerZOffset + zOffset]}>
+        {/* 서랍속장 좌측 (Drawer Interior Frame Left) - 서랍 레일 부착용 */}
+        {(() => {
+          const panelName = sectionName ? `${sectionName}서랍속장(좌)` : `서랍속장(좌)`;
+          const mat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`drawer-frame-left-${mat.uuid}`}
+              args={[drawerFrameThickness, drawerFrameHeight, drawerFrameDepth]}
+              position={[-innerWidth/2 + drawerFrameThickness/2, 0, drawerFrameZ]}
+              material={mat}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+          );
+        })()}
+
+        {/* 서랍속장 우측 (Drawer Interior Frame Right) - 서랍 레일 부착용 */}
+        {(() => {
+          const panelName = sectionName ? `${sectionName}서랍속장(우)` : `서랍속장(우)`;
+          const mat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`drawer-frame-right-${mat.uuid}`}
+              args={[drawerFrameThickness, drawerFrameHeight, drawerFrameDepth]}
+              position={[innerWidth/2 - drawerFrameThickness/2, 0, drawerFrameZ]}
+              material={mat}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+          );
+        })()}
+
         {drawerHeights.map((drawerHeight, i) => {
           // 서랍 중심 위치 계산
           const drawerCenter = currentY + mmToThreeUnits(drawerHeight) / 2;
@@ -342,10 +389,10 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             i === drawerHeights.length - 1, // 마지막 인덱스가 최상단 서랍
             i // 서랍 인덱스 전달
           );
-          
+
           // 다음 서랍을 위해 Y 위치 업데이트
           currentY += mmToThreeUnits(drawerHeight + gapHeight);
-          
+
           return drawer;
         })}
       </group>
@@ -353,9 +400,49 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   } else {
     // 기존 방식: 균등 분할
     const drawerHeight = innerHeight / drawerCount;
-    
+
     return (
       <group position={[0, yOffset, drawerZOffset + zOffset]}>
+        {/* 서랍속장 좌측 (Drawer Interior Frame Left) - 서랍 레일 부착용 */}
+        {(() => {
+          const panelName = sectionName ? `${sectionName}서랍속장(좌)` : `서랍속장(좌)`;
+          const mat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`drawer-frame-left-${mat.uuid}`}
+              args={[drawerFrameThickness, drawerFrameHeight, drawerFrameDepth]}
+              position={[-innerWidth/2 + drawerFrameThickness/2, 0, drawerFrameZ]}
+              material={mat}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+          );
+        })()}
+
+        {/* 서랍속장 우측 (Drawer Interior Frame Right) - 서랍 레일 부착용 */}
+        {(() => {
+          const panelName = sectionName ? `${sectionName}서랍속장(우)` : `서랍속장(우)`;
+          const mat = getPanelMaterial(panelName);
+          return (
+            <BoxWithEdges
+              key={`drawer-frame-right-${mat.uuid}`}
+              args={[drawerFrameThickness, drawerFrameHeight, drawerFrameDepth]}
+              position={[innerWidth/2 - drawerFrameThickness/2, 0, drawerFrameZ]}
+              material={mat}
+              renderMode={renderMode}
+              isHighlighted={isHighlighted}
+              panelName={panelName}
+              textureUrl={textureUrl}
+              panelGrainDirections={panelGrainDirections}
+              furnitureId={furnitureId}
+            />
+          );
+        })()}
+
         {Array.from({ length: drawerCount }, (_, i) => {
           const relativeYPosition = (-innerHeight / 2) + (i + 0.5) * drawerHeight;
 
