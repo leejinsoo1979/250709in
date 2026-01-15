@@ -271,12 +271,12 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     </>
                   )}
                   
-                  {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 방향으로 26mm 늘림 + 사용자 오프셋 적용 (앞에서 줄어듦) */}
+                  {/* 중간 구분 패널 (하부 섹션 상판) - 뒤에서 26mm 줄여서 백패널과 맞닿게 + 사용자 오프셋 적용 (앞에서 줄어듦) */}
                   {index === 0 && (() => {
                     const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
                     const lowerDepthDiff = depth - lowerSectionDepth;
-                    const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0);
-                    const panelZOffset = lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2 - mmToThreeUnits(lowerSectionTopOffset || 0)/2;
+                    const panelDepth = lowerSectionDepth - mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0);
+                    const panelZOffset = lowerDepthDiff / 2 + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffset || 0)/2;
 
                     return (
                       <BoxWithEdges
@@ -296,12 +296,13 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     );
                   })()}
 
-                  {/* 상부 섹션의 바닥판 - 백패널 방향으로 26mm 늘림 */}
+                  {/* 상부 섹션의 바닥판 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
                   {index === 1 && (() => {
-                    const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
-                    const lowerDepthDiff = depth - lowerSectionDepth;
-                    const panelDepth = lowerSectionDepth - backPanelThickness - mmToThreeUnits(17) + mmToThreeUnits(26);
-                    const panelZOffset = lowerDepthDiff / 2 + (backPanelThickness + mmToThreeUnits(17)) / 2 - mmToThreeUnits(26)/2;
+                    // 상부 섹션 깊이 사용 (index=1)
+                    const upperSectionDepth = (sectionDepths && sectionDepths[1]) ? sectionDepths[1] : depth;
+                    const upperDepthDiff = depth - upperSectionDepth;
+                    const panelDepth = upperSectionDepth - mmToThreeUnits(26);
+                    const panelZOffset = upperDepthDiff / 2 + mmToThreeUnits(13);
 
                     return (
                       <BoxWithEdges

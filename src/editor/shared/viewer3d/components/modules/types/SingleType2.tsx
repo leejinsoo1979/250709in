@@ -274,10 +274,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
                   return (
                     <>
-                      {/* 하부 섹션 상판 - 하부 섹션 깊이 적용 + 사용자 오프셋 (앞에서 줄어듦) */}
+                      {/* 하부 섹션 상판 - 하부 섹션 깊이 적용 + 사용자 오프셋 (앞에서 줄어듦) + 뒤에서 26mm 줄임 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, lowerDepth - mmToThreeUnits(lowerSectionTopOffset || 0)]}
-                        position={[0, lowerTopPanelY, lowerZOffset - mmToThreeUnits(lowerSectionTopOffset || 0) / 2]}
+                        args={[innerWidth, basicThickness, lowerDepth - mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0)]}
+                        position={[0, lowerTopPanelY, lowerZOffset + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffset || 0) / 2]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
@@ -289,10 +289,10 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         textureUrl={spaceInfo.materialConfig?.doorTexture}
                       />
 
-                      {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 */}
+                      {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 + 뒤에서 26mm 줄임 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, upperDepth]}
-                        position={[0, middlePanelY + basicThickness, upperZOffset]}
+                        args={[innerWidth, basicThickness, upperDepth - mmToThreeUnits(26)]}
+                        position={[0, middlePanelY + basicThickness, upperZOffset + mmToThreeUnits(13)]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}

@@ -197,7 +197,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   textureUrl={spaceInfo.materialConfig?.doorTexture}
                 />
                 
-                {/* 중간 구분 패널 (하부 섹션 상판) - 백패널 방향으로 26mm 확장 + 사용자 오프셋 (앞에서 줄어듦) */}
+                {/* 중간 구분 패널 (하부 섹션 상판) - 뒤에서 26mm 줄여서 백패널과 맞닿게 + 사용자 오프셋 (앞에서 줄어듦) */}
                 {index === 0 && (() => {
                   const lowerTopPanelY = sectionCenterY + sectionHeight/2 - basicThickness/2;
 
@@ -205,20 +205,17 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   const lowerSectionDepth = (sectionDepths && sectionDepths[0]) ? sectionDepths[0] : depth;
                   const lowerDepthDiff = depth - lowerSectionDepth;
 
-                  // 백패널 방향으로 26mm 확장 (하부 섹션 깊이 기준) + 사용자 오프셋 적용
-                  const backPanelThickness = depth - adjustedDepthForShelves;
-                  const lowerAdjustedDepth = lowerSectionDepth - backPanelThickness;
-                  const originalDepth = lowerAdjustedDepth - basicThickness;
-                  const extendedDepth = originalDepth + mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0);
+                  // 뒤에서 26mm 줄임 (하부 섹션 깊이 기준) + 사용자 오프셋 적용
+                  const reducedDepth = lowerSectionDepth - mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0);
 
-                  // Z 위치: 뒤쪽으로만 줄어들도록 + 26mm 확장 고려 + 사용자 오프셋 적용 (양수: 앞쪽 고정, 뒤쪽 줄어듦)
+                  // Z 위치: 앞쪽 고정, 뒤쪽 줄어듦 + 사용자 오프셋 적용
                   const zOffset = lowerDepthDiff / 2;
-                  const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13) + zOffset - mmToThreeUnits(lowerSectionTopOffset || 0) / 2;
+                  const reducedZPosition = zOffset + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffset || 0) / 2;
 
                   return (
                     <BoxWithEdges
-                      args={[innerWidth, basicThickness, extendedDepth]}
-                      position={[0, lowerTopPanelY, extendedZPosition]}
+                      args={[innerWidth, basicThickness, reducedDepth]}
+                      position={[0, lowerTopPanelY, reducedZPosition]}
                       material={material}
                       renderMode={renderMode}
                       isDragging={isDragging}
@@ -231,7 +228,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   );
                 })()}
 
-                {/* 상부 섹션의 바닥판 - 백패널 방향으로 26mm 확장 */}
+                {/* 상부 섹션의 바닥판 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
                 {index === 1 && (() => {
                   // 하부 섹션의 높이와 중심 위치 계산
                   const lowerSectionHeight = sectionHeights[0];
@@ -243,22 +240,19 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
                   const upperSectionDepth = (sectionDepths && sectionDepths[1]) ? sectionDepths[1] : depth;
                   const upperDepthDiff = depth - upperSectionDepth;
 
-                  // 백패널 방향으로 26mm 확장 (상부 섹션 깊이 기준)
-                  const backPanelThickness = depth - adjustedDepthForShelves;
-                  const upperAdjustedDepth = upperSectionDepth - backPanelThickness;
-                  const originalDepth = upperAdjustedDepth - basicThickness;
-                  const extendedDepth = originalDepth + mmToThreeUnits(26);
+                  // 뒤에서 26mm 줄임 (상부 섹션 깊이 기준)
+                  const reducedDepth = upperSectionDepth - mmToThreeUnits(26);
 
-                  // Z 위치: 뒤쪽으로만 줄어들도록 + 26mm 확장 고려 (양수: 앞쪽 고정, 뒤쪽 줄어듦)
+                  // Z 위치: 앞쪽 고정, 뒤쪽 줄어듦
                   const zOffset = upperDepthDiff / 2;
-                  const extendedZPosition = basicThickness/2 + shelfZOffset - mmToThreeUnits(13) + zOffset;
+                  const reducedZPosition = zOffset + mmToThreeUnits(13);
 
                   return (
                     <>
                       {/* 상부 섹션 바닥판 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, extendedDepth]}
-                        position={[0, lowerTopPanelY + basicThickness, extendedZPosition]}
+                        args={[innerWidth, basicThickness, reducedDepth]}
+                        position={[0, lowerTopPanelY + basicThickness, reducedZPosition]}
                         material={material}
                         renderMode={renderMode}
                         isDragging={isDragging}
