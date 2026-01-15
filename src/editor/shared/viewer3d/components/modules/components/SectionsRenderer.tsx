@@ -388,8 +388,8 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             // 섹션별 강조 확인
             const isDrawerSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
 
-            // 서랍속장 프레임 높이 = 섹션 내경 그대로 (sectionHeight가 이미 내경)
-            const drawerInnerHeight = sectionHeight;
+            // 서랍속장 프레임 높이 = 섹션 내경 (외경 - 상판 - 바닥판)
+            const drawerInnerHeight = sectionHeight - basicThickness * 2;
             // Y 위치는 섹션 중앙 그대로
             const drawerYOffset = sectionCenterY;
 
