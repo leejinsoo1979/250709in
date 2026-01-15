@@ -312,8 +312,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               const sectionName = '(하)';
               // 서랍속장 프레임 높이 = 섹션 내경 (외경 - 구분판)
               const drawerFrameHeight = sectionHeight - basicThickness;
-              // Y 위치: 바닥판에 붙어야 하므로 18mm 아래로
-              const drawerYOffset = sectionCenterY - basicThickness;
+              // Y 위치: 바닥판에 붙어야 하므로 36mm 아래로
+              const drawerYOffset = sectionCenterY - basicThickness * 2;
               sectionContent = (
                 <DrawerRenderer
                   drawerCount={section.count}
