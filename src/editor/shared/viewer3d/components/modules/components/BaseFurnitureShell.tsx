@@ -936,34 +936,34 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                   basicThicknessMm: basicThickness / 0.01
                 });
 
-                // 백패널 높이 계산
+                // 가구 타입 확인
                 const is4Drawer = moduleData?.id?.includes('4drawer-hanging');
                 const isTwoDrawer = moduleData?.id?.includes('2drawer-hanging');
                 const isTwoHanging = moduleData?.id?.includes('2hanging');
 
-                const lowerBackPanelHeight = is4Drawer
-                  ? lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension)
-                  : lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension) + (isTwoHanging ? mmToThreeUnits(backPanelConfig.lowerHeightBonus) : 0);
+                // 측판과 동일한 높이 계산 로직 사용 (2단 행잉만 오프셋 적용)
+                const applyOffset = isTwoHanging && !isTwoDrawer;
 
-                const upperBackPanelHeight = isTwoHanging
-                  ? upperSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension) - basicThickness
-                  : upperSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension);
+                // 백패널 높이 = 측판 높이와 동일
+                const lowerBackPanelHeight = applyOffset
+                  ? lowerSectionHeight + basicThickness
+                  : lowerSectionHeight;
 
-                console.log('🔍🔍🔍 백패널 높이:', {
+                const upperBackPanelHeight = applyOffset
+                  ? upperSectionHeight - basicThickness
+                  : upperSectionHeight;
+
+                console.log('🔍🔍🔍 백패널 높이 (측판과 동일):', {
                   lowerBackPanelHeightMm: lowerBackPanelHeight / 0.01,
                   upperBackPanelHeightMm: upperBackPanelHeight / 0.01,
-                  expected_lower: lowerSectionHeight / 0.01 - basicThickness * 2 / 0.01 + 10,
-                  expected_upper: upperSectionHeight / 0.01 - basicThickness * 2 / 0.01 + 10
+                  applyOffset,
+                  isTwoHanging
                 });
 
-                // 백패널 Y 위치 조정
-                const yOffset = is4Drawer
-                  ? 0
-                  : (isTwoHanging ? mmToThreeUnits(backPanelConfig.yOffsetFor2Drawer) : 0);
-                const lowerBackPanelY = -height/2 + lowerSectionHeight/2 + yOffset - mmToThreeUnits(backPanelConfig.lowerYAdjustment);
-                const upperBackPanelY = is4Drawer
-                  ? -height/2 + lowerSectionHeight + upperSectionHeight/2
-                  : -height/2 + lowerSectionHeight + upperSectionHeight/2 + yOffset;
+                // 백패널 Y 위치 - 측판과 동일한 위치 사용
+                const lowerBackPanelY = -height/2 + lowerBackPanelHeight/2;
+                const upperOffset = applyOffset ? basicThickness : 0;
+                const upperBackPanelY = -height/2 + lowerSectionHeight + upperOffset + upperBackPanelHeight/2;
 
                 console.log('🔍🔍🔍 백패널 Y 위치:', {
                   lowerBackPanelYMm: lowerBackPanelY / 0.01,
