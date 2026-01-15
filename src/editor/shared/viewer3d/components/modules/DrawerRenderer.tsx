@@ -204,8 +204,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string, isTopDrawer: boolean = false, drawerIndex: number = 0) => {
     const [centerX, centerY, centerZ] = centerPosition;
     
-    // 서랍 실제 깊이 계산: 가구 앞면에서 30mm 후퇴, 뒷면에서 24mm 전진 = 총 54mm 감소
-    const actualDrawerDepth = drawerDepth - mmToThreeUnits(54);
+    // 서랍 실제 깊이 계산: 가구 앞면에서 30mm 후퇴, 뒷면에서 27mm 전진 = 총 57mm 감소
+    const actualDrawerDepth = drawerDepth - mmToThreeUnits(57);
     
     // 서랍 본체 깊이 (손잡이 판 20mm 제외)
     const drawerBodyDepth = actualDrawerDepth - HANDLE_PLATE_THICKNESS;
