@@ -313,8 +313,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               // DualType5의 drawer 섹션: 구분판이 섹션 상단에 포함됨
               // 내경 = sectionHeight - 구분판(18mm)
               const drawerFrameHeight = sectionHeight - basicThickness;
-              // Y 위치: 프레임 바닥이 바닥판 윗면에 붙도록 조정
-              const drawerYOffset = sectionCenterY - basicThickness / 2;
+              // Y 위치: 프레임 바닥이 바닥판 윗면에 붙도록 조정 (18mm 더 내림)
+              const drawerYOffset = sectionCenterY - basicThickness * 1.5;
               sectionContent = (
                 <DrawerRenderer
                   drawerCount={section.count}
