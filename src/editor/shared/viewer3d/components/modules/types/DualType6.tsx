@@ -805,7 +805,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
       <BoxWithEdges
-        args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+        args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(36), backPanelThickness]}
         position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
         material={material}
         renderMode={useSpace3DView().renderMode}

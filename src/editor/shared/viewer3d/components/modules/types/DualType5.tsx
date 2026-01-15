@@ -1225,7 +1225,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             return (
               <BoxWithEdges
                 key="left-backpanel-full"
-                args={[leftWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+                args={[leftWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(36), backPanelThickness]}
                 position={[leftXOffset, 0, -leftDepth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
                 material={material}
                 renderMode={renderMode}
@@ -1293,7 +1293,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         {/* 우측 백패널 (고정 깊이 660mm 기준) - 3D 모드에서는 항상 표시 */}
         {(viewMode === '3D' || visibleSectionIndex !== 0) && (
           <BoxWithEdges
-            args={[rightWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+            args={[rightWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(36), backPanelThickness]}
             position={[rightXOffset, 0, -rightDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + (leftDepth - rightDepth) / 2]}
             material={material}
             renderMode={renderMode}

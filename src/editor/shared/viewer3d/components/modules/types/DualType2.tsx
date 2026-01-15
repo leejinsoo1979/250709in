@@ -389,8 +389,8 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
             // 내경높이 = 섹션높이 - 상하판(36mm)
             const lowerInnerHeight = lowerSectionHeight - basicThickness * 2;
             const upperInnerHeight = upperSectionHeight - basicThickness * 2;
-            const lowerBackPanelHeight = lowerInnerHeight + mmToThreeUnits(10);
-            const upperBackPanelHeight = upperInnerHeight + mmToThreeUnits(10);
+            const lowerBackPanelHeight = lowerInnerHeight + mmToThreeUnits(36);
+            const upperBackPanelHeight = upperInnerHeight + mmToThreeUnits(36);
 
             // 백패널 Y 위치
             const lowerBackPanelY = -height/2 + basicThickness + lowerInnerHeight/2;
@@ -442,7 +442,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
       ) : (
         // 단일 섹션: 기존 통짜 백패널
         <BoxWithEdges
-          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(36), backPanelThickness]}
           position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
           material={material}
           renderMode={renderMode}
