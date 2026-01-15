@@ -140,24 +140,31 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // 서랍속장 (Drawer Interior Frame) 설정 - ㄷ자 프레임
   // 구조: 좌우 수직 패널 + 뒤쪽 수평 패널(좌우 연결) + 앞쪽 수평 패널(좌/우 각각)
 
+  // 백패널 두께 (basicThickness의 절반 = 9mm)
+  const backPanelThickness = basicThickness / 2; // 9mm
+
   // 공통 설정
   const drawerFrameThickness = basicThickness; // 18mm
   const drawerFrameHeight = innerHeight; // 모듈 내경 높이
 
   // 1. 좌우 수직 패널 (세로로 긴 패널)
-  const verticalPanelDepth = depth - mmToThreeUnits(85 + 9); // 백패널(9mm) 뒤에서 앞쪽 85mm 전까지
-  const verticalPanelZ = -depth/2 + mmToThreeUnits(9) + verticalPanelDepth/2;
+  // 뒤쪽: 뒤쪽 수평 패널 앞에서 시작 (백패널에서 27mm 앞)
+  // 앞쪽: 앞쪽 85mm 전까지
+  const verticalPanelDepth = depth - mmToThreeUnits(85) - backPanelThickness - mmToThreeUnits(27); // 뒤쪽 수평 패널(27mm) 앞에서 앞쪽 85mm 전까지
+  const verticalPanelZ = -depth/2 + backPanelThickness + mmToThreeUnits(27) + verticalPanelDepth/2;
 
   // 2. 뒤쪽 수평 패널 (좌우 수직 패널을 연결, 27mm 깊이)
-  const backPanelWidth = innerWidth - drawerFrameThickness * 2; // 좌우 수직 패널 사이 거리
-  const backPanelDepth = mmToThreeUnits(27); // 깊이 27mm
-  const backPanelZ = -depth/2 + mmToThreeUnits(9) + backPanelDepth/2;
+  // 백패널 안쪽 면에 맞닿아야 함 (겹치면 안 됨)
+  const backHorizontalPanelWidth = innerWidth - drawerFrameThickness * 2; // 좌우 수직 패널 사이 거리
+  const backHorizontalPanelDepth = mmToThreeUnits(27); // 깊이 27mm
+  // Z 위치: 백패널 안쪽 면에 맞닿음
+  const backHorizontalPanelZ = -depth/2 + backPanelThickness + backHorizontalPanelDepth/2;
 
   // 3. 앞쪽 수평 패널 (좌/우 각각, 수직 패널에서 안쪽으로 돌출)
-  const frontPanelWidth = mmToThreeUnits(27); // 안쪽으로 돌출 27mm (45mm - 측판18mm = 27mm)
-  const frontPanelDepth = drawerFrameThickness; // 깊이 18mm
+  const frontHorizontalPanelWidth = mmToThreeUnits(27); // 안쪽으로 돌출 27mm
+  const frontHorizontalPanelDepth = drawerFrameThickness; // 깊이 18mm
   // 앞쪽 수평 패널 Z 위치 (수직 패널 앞쪽 끝)
-  const frontPanelZ = verticalPanelZ + verticalPanelDepth/2 - frontPanelDepth/2;
+  const frontHorizontalPanelZ = verticalPanelZ + verticalPanelDepth/2 - frontHorizontalPanelDepth/2;
   
   // 개별 서랍 렌더링 함수 (본체 + 손잡이 판)
   const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string, isTopDrawer: boolean = false, drawerIndex: number = 0) => {
@@ -399,8 +406,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-frame-back-${mat.uuid}`}
-              args={[backPanelWidth, drawerFrameHeight, backPanelDepth]}
-              position={[0, 0, backPanelZ]}
+              args={[backHorizontalPanelWidth, drawerFrameHeight, backHorizontalPanelDepth]}
+              position={[0, 0, backHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -419,8 +426,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-frame-front-left-${mat.uuid}`}
-              args={[frontPanelWidth, drawerFrameHeight, frontPanelDepth]}
-              position={[-innerWidth/2 + drawerFrameThickness + frontPanelWidth/2, 0, frontPanelZ]}
+              args={[frontHorizontalPanelWidth, drawerFrameHeight, frontHorizontalPanelDepth]}
+              position={[-innerWidth/2 + drawerFrameThickness + frontHorizontalPanelWidth/2, 0, frontHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -439,8 +446,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-frame-front-right-${mat.uuid}`}
-              args={[frontPanelWidth, drawerFrameHeight, frontPanelDepth]}
-              position={[innerWidth/2 - drawerFrameThickness - frontPanelWidth/2, 0, frontPanelZ]}
+              args={[frontHorizontalPanelWidth, drawerFrameHeight, frontHorizontalPanelDepth]}
+              position={[innerWidth/2 - drawerFrameThickness - frontHorizontalPanelWidth/2, 0, frontHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -527,8 +534,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-frame-back-${mat.uuid}`}
-              args={[backPanelWidth, drawerFrameHeight, backPanelDepth]}
-              position={[0, 0, backPanelZ]}
+              args={[backHorizontalPanelWidth, drawerFrameHeight, backHorizontalPanelDepth]}
+              position={[0, 0, backHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -547,8 +554,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-frame-front-left-${mat.uuid}`}
-              args={[frontPanelWidth, drawerFrameHeight, frontPanelDepth]}
-              position={[-innerWidth/2 + drawerFrameThickness + frontPanelWidth/2, 0, frontPanelZ]}
+              args={[frontHorizontalPanelWidth, drawerFrameHeight, frontHorizontalPanelDepth]}
+              position={[-innerWidth/2 + drawerFrameThickness + frontHorizontalPanelWidth/2, 0, frontHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -567,8 +574,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-frame-front-right-${mat.uuid}`}
-              args={[frontPanelWidth, drawerFrameHeight, frontPanelDepth]}
-              position={[innerWidth/2 - drawerFrameThickness - frontPanelWidth/2, 0, frontPanelZ]}
+              args={[frontHorizontalPanelWidth, drawerFrameHeight, frontHorizontalPanelDepth]}
+              position={[innerWidth/2 - drawerFrameThickness - frontHorizontalPanelWidth/2, 0, frontHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
