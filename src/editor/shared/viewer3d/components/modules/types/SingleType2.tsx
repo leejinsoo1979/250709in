@@ -604,16 +604,17 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             const lowerSectionHeight = sectionHeights[0];
             const upperSectionHeight = sectionHeights[1];
 
-            // 백패널 높이 = 섹션 내경높이 + 10mm
+            // 백패널 높이 = 섹션 내경높이 + 10mm + 26mm (위아래 각각 13mm씩 확장)
             // 내경높이 = 섹션높이 - 상하판(36mm)
             const lowerInnerHeight = lowerSectionHeight - basicThickness * 2;
             const upperInnerHeight = upperSectionHeight - basicThickness * 2;
-            const lowerBackPanelHeight = lowerInnerHeight + mmToThreeUnits(10);
-            const upperBackPanelHeight = upperInnerHeight + mmToThreeUnits(10);
+            const backPanelExtension = 26; // 위아래 각각 13mm씩
+            const lowerBackPanelHeight = lowerInnerHeight + mmToThreeUnits(10 + backPanelExtension);
+            const upperBackPanelHeight = upperInnerHeight + mmToThreeUnits(10 + backPanelExtension);
 
-            // 백패널 Y 위치
-            const lowerBackPanelY = -height/2 + basicThickness + lowerInnerHeight/2;
-            const upperBackPanelY = -height/2 + lowerSectionHeight + basicThickness + upperInnerHeight/2;
+            // 백패널 Y 위치 (확장된 높이의 중앙)
+            const lowerBackPanelY = -height/2 + lowerSectionHeight/2;
+            const upperBackPanelY = -height/2 + lowerSectionHeight + upperSectionHeight/2;
 
             // 각 섹션의 깊이 가져오기
             const lowerDepth = sectionDepths[0] || depth;
@@ -663,9 +664,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
           })()}
         </>
       ) : (
-        // 단일 섹션: 기존 통짜 백패널
+        // 단일 섹션: 통짜 백패널 (위아래 13mm씩 확장)
         <BoxWithEdges
-          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10), backPanelThickness]}
+          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(10 + 26), backPanelThickness]}
           position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
           material={material}
           renderMode={renderMode}
