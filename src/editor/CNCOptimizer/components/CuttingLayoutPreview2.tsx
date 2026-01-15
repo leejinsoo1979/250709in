@@ -713,13 +713,39 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // 보링 표시
         if (showBorings && boringData && boringData.length > 0) {
-          // 패널 이름으로 보링 데이터 찾기
-          const panelBorings = boringData.find(b =>
-            b.panelName === panel.name ||
-            b.panelId === panel.id ||
-            panel.name?.includes(b.panelName) ||
-            b.panelName?.includes(panel.name || '')
-          );
+          // 패널 이름 정규화 함수 - 다양한 형식을 통일된 키로 변환
+          const normalizePanelName = (name: string): string => {
+            if (!name) return '';
+            // (상), (하) 접두사 제거
+            let normalized = name.replace(/^\([상하]\)/, '');
+            // 패널 타입 추출 및 정규화
+            if (normalized.includes('좌측') || normalized === '좌측판') return 'side-left';
+            if (normalized.includes('우측') || normalized === '우측판') return 'side-right';
+            if (normalized.includes('바닥') || normalized === '하판') return 'bottom';
+            if (normalized.includes('상판')) return 'top';
+            if (normalized.includes('도어')) return 'door';
+            if (normalized.includes('백패널') || normalized.includes('뒷판')) return 'back';
+            if (normalized.includes('서랍전판')) return 'drawer-front';
+            return normalized.toLowerCase();
+          };
+
+          // 디버깅 로그
+          console.log('=== 보링 표시 시도 ===');
+          console.log('panel.name:', panel.name, '→ normalized:', normalizePanelName(panel.name));
+          console.log('boringData 패널명들:', boringData.map(b => `${b.panelName} → ${normalizePanelName(b.panelName)}`));
+
+          // 정규화된 이름으로 매칭
+          const normalizedCncName = normalizePanelName(panel.name);
+          const panelBorings = boringData.find(b => {
+            const normalizedBoringName = normalizePanelName(b.panelName);
+            // 정규화된 이름으로 매칭
+            return normalizedCncName === normalizedBoringName ||
+              // 직접 비교도 유지
+              b.panelName === panel.name ||
+              b.panelId === panel.id;
+          });
+
+          console.log('매칭된 보링 데이터:', panelBorings ? `${panelBorings.borings?.length}개` : '없음');
 
           if (panelBorings && panelBorings.borings && panelBorings.borings.length > 0) {
             ctx.save();

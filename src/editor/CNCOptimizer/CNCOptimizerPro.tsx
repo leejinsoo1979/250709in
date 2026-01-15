@@ -43,8 +43,19 @@ function PageInner(){
   const { t, currentLanguage } = useTranslation();
   const { theme } = useTheme();
 
-  // 보링 데이터 가져오기
-  const { panelBoringData } = useFurnitureBoring(placedModules);
+  // 보링 데이터 가져오기 - 훅이 내부적으로 useFurnitureStore 사용
+  const { panels: boringPanels, totalBorings } = useFurnitureBoring();
+
+  // 디버깅: 보링 데이터 확인
+  useEffect(() => {
+    console.log('=== CNC Optimizer 보링 데이터 ===');
+    console.log('placedModules:', placedModules?.length);
+    console.log('boringPanels:', boringPanels?.length);
+    console.log('totalBorings:', totalBorings);
+    if (boringPanels && boringPanels.length > 0) {
+      console.log('첫 번째 패널 보링:', boringPanels[0]);
+    }
+  }, [placedModules, boringPanels, totalBorings]);
 
   // URL에서 디자인파일 정보 가져오기
   const [designFileName, setDesignFileName] = useState<string>('');
@@ -955,7 +966,7 @@ function PageInner(){
                   onCurrentSheetIndexChange={setCurrentSheetIndex}
                   showCuttingListTab={showCuttingList}
                   allCutSteps={allCutSteps}
-                  boringData={panelBoringData}
+                  boringData={boringPanels}
                 />
               </div>
               
