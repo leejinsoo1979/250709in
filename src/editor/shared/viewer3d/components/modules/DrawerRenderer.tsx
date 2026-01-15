@@ -75,8 +75,24 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     return mat;
   }, []); // 한 번만 생성
 
+  // 서랍속장 디버깅용 초록색 material (2D 뷰에서 사용)
+  const drawerFrameDebugMaterial = React.useMemo(() => {
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#00ff00'),
+      transparent: true,
+      opacity: 0.8
+    });
+    mat.needsUpdate = true;
+    return mat;
+  }, []);
+
   // 패널용 material 결정 - useCallback로 최적화
   const getPanelMaterial = React.useCallback((panelName: string) => {
+    // 2D 모드에서 서랍속장 패널은 초록색으로 표시
+    if (viewMode === '2D' && panelName.includes('서랍속장')) {
+      return drawerFrameDebugMaterial;
+    }
+
     // 패널 ID 생성
     const panelId = `${furnitureId}-${panelName}`;
 
@@ -96,7 +112,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
     // 항상 원래 material 사용 (dimming 제거)
     return material;
-  }, [highlightedPanel, furnitureId, material]);
+  }, [highlightedPanel, furnitureId, material, viewMode, drawerFrameDebugMaterial]);
 
   // 디버그: 측면 뷰에서 렌더링 확인
   React.useEffect(() => {
