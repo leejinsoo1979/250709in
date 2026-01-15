@@ -388,17 +388,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             // 섹션별 강조 확인
             const isDrawerSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
 
-            // 2단 vs 4단 서랍장 구분 (섹션 높이 기준: 700mm 미만이면 2단)
-            const is2TierDrawer = sectionHeight < mmToThreeUnits(700);
-
-            // 2단: 높이 = sectionHeight - 18mm, Y = 섹션 중앙
-            // 4단: 높이 = sectionHeight - 36mm, Y = 18mm 아래
-            const drawerInnerHeight = is2TierDrawer
-              ? sectionHeight - basicThickness
-              : sectionHeight - basicThickness * 2;
-            const drawerYOffset = is2TierDrawer
-              ? sectionCenterY
-              : sectionCenterY - basicThickness;
+            // 서랍속장 프레임 높이 = 섹션 내경 (외경 - 상판 - 바닥판)
+            const drawerInnerHeight = sectionHeight - basicThickness * 2;
+            // Y 위치는 섹션 중앙 그대로
+            const drawerYOffset = sectionCenterY;
 
             // 섹션 깊이에 따른 Z 오프셋 계산
             const drawerZOffset = depth - currentSectionDepth !== 0 ? (depth - currentSectionDepth) / 2 : 0;
