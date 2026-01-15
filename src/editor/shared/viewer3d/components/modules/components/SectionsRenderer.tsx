@@ -390,10 +390,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
 
             // 서랍속장 프레임 높이 = 섹션 내경 (외경 - 상판 - 바닥판)
             const drawerInnerHeight = sectionHeight - basicThickness * 2;
-            // 하부섹션(index===0): 바닥에 붙도록 아래로
+            // 하부섹션(index===0): 바닥에 붙도록 18mm 아래로
             const drawerYOffset = index === 0
-              ? sectionCenterY - basicThickness / 2
-              : sectionCenterY + basicThickness / 2;
+              ? sectionCenterY - basicThickness
+              : sectionCenterY + basicThickness;
 
             // 섹션 깊이에 따른 Z 오프셋 계산
             const drawerZOffset = depth - currentSectionDepth !== 0 ? (depth - currentSectionDepth) / 2 : 0;
