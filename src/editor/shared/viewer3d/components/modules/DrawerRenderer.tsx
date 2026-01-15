@@ -170,9 +170,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
   // 3. 전면 수평 패널 (하단, 좌/우 각각)
   // Y 위치: 하단
-  // Z 위치: 백패널과 맞닿음 (뒤쪽)
+  // Z 위치: 백패널에서 18mm 앞 (뒤쪽)
   const frontHorizontalPanelY = -innerHeight/2 + horizontalPanelHeight/2;
-  const frontHorizontalPanelZ = -depth/2 + backPanelThickness + horizontalPanelDepthFront/2;
+  const frontHorizontalPanelZ = -depth/2 + backPanelThickness + mmToThreeUnits(18) + horizontalPanelDepthFront/2;
   
   // 개별 서랍 렌더링 함수 (본체 + 손잡이 판)
   const renderDrawer = (drawerWidth: number, drawerHeight: number, drawerDepth: number, centerPosition: [number, number, number], key: string, isTopDrawer: boolean = false, drawerIndex: number = 0) => {
