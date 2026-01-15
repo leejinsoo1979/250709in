@@ -724,31 +724,31 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         isEditMode={isEditMode}
       />
       
-      {/* 상단 판재 - 통합 (상단 옷장이 좌우 연결되어 있음) */}
+      {/* 상단 판재 - 통합 (상단 옷장이 좌우 연결되어 있음), 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, depth]}
-        position={[0, height/2 - basicThickness/2, 0]}
+        args={[innerWidth, basicThickness, depth - mmToThreeUnits(26)]}
+        position={[0, height/2 - basicThickness/2, mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
         isEditMode={isEditMode}
       />
       
-      {/* 하단 판재 - 좌/우 분리 */}
+      {/* 하단 판재 - 좌/우 분리, 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <>
         {/* 좌측 하단판 */}
         <BoxWithEdges
-          args={[leftWidth, basicThickness, depth]}
-          position={[leftXOffset, -height/2 + basicThickness/2, 0]}
+          args={[leftWidth, basicThickness, depth - mmToThreeUnits(26)]}
+          position={[leftXOffset, -height/2 + basicThickness/2, mmToThreeUnits(13)]}
           material={material}
           renderMode={useSpace3DView().renderMode}
           isDragging={isDragging}
         />
-        
+
         {/* 우측 하단판 */}
         <BoxWithEdges
-          args={[rightWidth, basicThickness, depth]}
-          position={[rightXOffset, -height/2 + basicThickness/2, 0]}
+          args={[rightWidth, basicThickness, depth - mmToThreeUnits(26)]}
+          position={[rightXOffset, -height/2 + basicThickness/2, mmToThreeUnits(13)]}
           material={material}
           renderMode={useSpace3DView().renderMode}
           isDragging={isDragging}

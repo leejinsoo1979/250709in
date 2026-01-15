@@ -305,10 +305,10 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         </>
       )}
       
-      {/* 상단 판재 */}
+      {/* 상단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, sectionDepths && sectionDepths[1] ? sectionDepths[1] : depth]}
-        position={[0, height/2 - basicThickness/2, sectionDepths && sectionDepths[1] ? (depth - sectionDepths[1]) / 2 : 0]}
+        args={[innerWidth, basicThickness, (sectionDepths && sectionDepths[1] ? sectionDepths[1] : depth) - mmToThreeUnits(26)]}
+        position={[0, height/2 - basicThickness/2, (sectionDepths && sectionDepths[1] ? (depth - sectionDepths[1]) / 2 : 0) + mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}
@@ -364,10 +364,10 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         </group>
       )}
 
-      {/* 하단 판재 */}
+      {/* 하단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, sectionDepths && sectionDepths[0] ? sectionDepths[0] : depth]}
-        position={[0, -height/2 + basicThickness/2, sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) / 2 : 0]}
+        args={[innerWidth, basicThickness, (sectionDepths && sectionDepths[0] ? sectionDepths[0] : depth) - mmToThreeUnits(26)]}
+        position={[0, -height/2 + basicThickness/2, (sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) / 2 : 0) + mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
         isDragging={isDragging}

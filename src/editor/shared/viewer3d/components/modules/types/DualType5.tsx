@@ -1136,12 +1136,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         edgeOpacity={(view2DDirection === 'left' || visibleSectionIndex === 0) && visibleSectionIndex !== 1 ? 0.1 : undefined}
       />
       
-      {/* 상단 판재 - 좌/우 분리 */}
+      {/* 상단 판재 - 좌/우 분리, 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <>
         {/* 좌측 상단판 */}
         <BoxWithEdges
-          args={[leftWidth, basicThickness, leftDepth]}
-          position={[leftXOffset, height/2 - basicThickness/2, 0]}
+          args={[leftWidth, basicThickness, leftDepth - mmToThreeUnits(26)]}
+          position={[leftXOffset, height/2 - basicThickness/2, mmToThreeUnits(13)]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1151,8 +1151,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
         {/* 우측 상단판 */}
         <BoxWithEdges
-          args={[rightWidth, basicThickness, rightDepth]}
-          position={[rightXOffset, height/2 - basicThickness/2, (leftDepth - rightDepth) / 2]}
+          args={[rightWidth, basicThickness, rightDepth - mmToThreeUnits(26)]}
+          position={[rightXOffset, height/2 - basicThickness/2, (leftDepth - rightDepth) / 2 + mmToThreeUnits(13)]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1161,12 +1161,12 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
         />
       </>
       
-      {/* 하단 판재 - 좌/우 분리 */}
+      {/* 하단 판재 - 좌/우 분리, 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <>
         {/* 좌측 하단판 */}
         <BoxWithEdges
-          args={[leftWidth, basicThickness, leftDepth]}
-          position={[leftXOffset, -height/2 + basicThickness/2, 0]}
+          args={[leftWidth, basicThickness, leftDepth - mmToThreeUnits(26)]}
+          position={[leftXOffset, -height/2 + basicThickness/2, mmToThreeUnits(13)]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
@@ -1176,8 +1176,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
 
         {/* 우측 하단판 */}
         <BoxWithEdges
-          args={[rightWidth, basicThickness, rightDepth]}
-          position={[rightXOffset, -height/2 + basicThickness/2, (leftDepth - rightDepth) / 2]}
+          args={[rightWidth, basicThickness, rightDepth - mmToThreeUnits(26)]}
+          position={[rightXOffset, -height/2 + basicThickness/2, (leftDepth - rightDepth) / 2 + mmToThreeUnits(13)]}
           material={material}
           renderMode={renderMode}
           isDragging={isDragging}
