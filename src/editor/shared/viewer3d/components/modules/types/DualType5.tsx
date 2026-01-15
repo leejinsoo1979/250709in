@@ -314,6 +314,14 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               const drawerFrameHeight = sectionHeight - basicThickness;
               // Y 위치: 바닥판에 붙어야 하므로 36mm 아래로
               const drawerYOffset = sectionCenterY - basicThickness * 2;
+
+              console.log('🔴 DualType5 2단서랍장:', {
+                sectionHeight: Math.round(sectionHeight * 100),
+                sectionCenterY: Math.round(sectionCenterY * 100),
+                basicThickness: Math.round(basicThickness * 100),
+                drawerFrameHeight: Math.round(drawerFrameHeight * 100),
+                drawerYOffset: Math.round(drawerYOffset * 100)
+              });
               sectionContent = (
                 <DrawerRenderer
                   drawerCount={section.count}
