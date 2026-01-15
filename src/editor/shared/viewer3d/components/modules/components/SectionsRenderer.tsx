@@ -391,15 +391,11 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             // 2단 vs 4단 서랍장 구분 (섹션 높이 기준: 700mm 미만이면 2단)
             const is2TierDrawer = sectionHeight < mmToThreeUnits(700);
 
-            // 서랍속장 프레임 높이와 Y 위치
-            // 2단: 구분판이 섹션에 포함됨 → 내경 = sectionHeight - 18mm
-            // 4단: 상판/바닥판 제외 → 내경 = sectionHeight - 36mm
-            const drawerInnerHeight = is2TierDrawer
-              ? sectionHeight - basicThickness
-              : sectionHeight - basicThickness * 2;
-            // Y 위치: 2단은 구분판 제외 후 바닥에 붙도록 조정
+            // 서랍속장 프레임 높이 = 섹션 내경 (외경 - 상판 - 바닥판) - 2단/4단 동일
+            const drawerInnerHeight = sectionHeight - basicThickness * 2;
+            // Y 위치: 2단은 바닥에 붙도록 18mm 아래로
             const drawerYOffset = is2TierDrawer
-              ? sectionCenterY - basicThickness / 2
+              ? sectionCenterY - basicThickness
               : sectionCenterY;
 
             // 섹션 깊이에 따른 Z 오프셋 계산
