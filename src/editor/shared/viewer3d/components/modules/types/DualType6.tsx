@@ -822,27 +822,31 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               isEditMode={isEditMode}
               isBackPanel={true} // 백패널임을 표시
             />
-            {/* 보강대 (백패널 상/하단) - 60mm 높이, 15.5mm 두께 */}
-            <BoxWithEdges
-              key="reinforcement-bottom"
-              args={[innerWidth, reinforcementHeight, reinforcementDepth]}
-              position={[0, -backPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
-              material={material}
-              renderMode={renderMode}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              panelName="하단보강대"
-            />
-            <BoxWithEdges
-              key="reinforcement-top"
-              args={[innerWidth, reinforcementHeight, reinforcementDepth]}
-              position={[0, backPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
-              material={material}
-              renderMode={renderMode}
-              isDragging={isDragging}
-              isEditMode={isEditMode}
-              panelName="상단보강대"
-            />
+            {/* 보강대 (백패널 상/하단) - 60mm 높이, 15.5mm 두께 - 2D 정면도에서는 숨김 */}
+            {!(renderMode === '2d' && view2DDirection === 'front') && (
+              <>
+                <BoxWithEdges
+                  key="reinforcement-bottom"
+                  args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                  position={[0, -backPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  panelName="하단보강대"
+                />
+                <BoxWithEdges
+                  key="reinforcement-top"
+                  args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                  position={[0, backPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  isEditMode={isEditMode}
+                  panelName="상단보강대"
+                />
+              </>
+            )}
           </>
         );
       })()}

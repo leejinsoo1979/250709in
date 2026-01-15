@@ -662,8 +662,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                   textureUrl={spaceInfo.materialConfig?.doorTexture}
                 />
 
-                {/* 보강대 (각 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께 */}
-                {(() => {
+                {/* 보강대 (각 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께 - 2D 정면도에서는 숨김 */}
+                {!(renderMode === '2d' && view2DDirection === 'front') && (() => {
                   const reinforcementHeight = mmToThreeUnits(60);
                   const reinforcementDepth = mmToThreeUnits(15.5);
                   const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
@@ -679,6 +679,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                         panelName="(하)하단보강대"
                       />
                       {/* 하부 섹션 상단 보강대 */}
@@ -689,6 +690,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
                         panelName="(하)상단보강대"
                       />
                       {/* 상부 섹션 하단 보강대 */}
@@ -699,6 +701,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                         panelName="(상)하단보강대"
                       />
                       {/* 상부 섹션 상단 보강대 */}
@@ -709,6 +712,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         renderMode={renderMode}
                         isDragging={isDragging}
                         isEditMode={isEditMode}
+                        isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                         panelName="(상)상단보강대"
                       />
                     </>
@@ -734,8 +738,8 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
             textureUrl={spaceInfo.materialConfig?.doorTexture}
           />
 
-          {/* 보강대 (단일 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께 */}
-          {(() => {
+          {/* 보강대 (단일 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께 - 2D 정면도에서는 숨김 */}
+          {!(renderMode === '2d' && view2DDirection === 'front') && (() => {
             const singleBackPanelHeight = innerHeight + mmToThreeUnits(10 + 26);
             const reinforcementHeight = mmToThreeUnits(60);
             const reinforcementDepth = mmToThreeUnits(15.5);

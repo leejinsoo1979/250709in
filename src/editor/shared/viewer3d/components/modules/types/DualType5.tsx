@@ -69,7 +69,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
     modelConfig
   } = baseFurniture;
 
-  const { view2DDirection, showDimensions, showDimensionsText } = useUIStore();
+  const { view2DDirection, showDimensions, showDimensionsText, highlightedSection } = useUIStore();
   const { renderMode, viewMode } = useSpace3DView();
   const { dimensionColor, baseFontSize } = useDimensionColor();
 
@@ -1245,27 +1245,31 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   hideEdges={false}
                   isBackPanel={true}
                 />
-                {/* 보강대 (좌측 전체 백패널 상/하단) */}
-                <BoxWithEdges
-                  key="left-reinforcement-bottom"
-                  args={[leftWidth, reinforcementHeight, reinforcementDepth]}
-                  position={[leftXOffset, -fullBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
-                  material={material}
-                  renderMode={renderMode}
-                  isDragging={isDragging}
-                  isEditMode={isEditMode}
-                  panelName="(좌)하단보강대"
-                />
-                <BoxWithEdges
-                  key="left-reinforcement-top"
-                  args={[leftWidth, reinforcementHeight, reinforcementDepth]}
-                  position={[leftXOffset, fullBackPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
-                  material={material}
-                  renderMode={renderMode}
-                  isDragging={isDragging}
-                  isEditMode={isEditMode}
-                  panelName="(좌)상단보강대"
-                />
+                {/* 보강대 (좌측 전체 백패널 상/하단) - 2D 정면도에서는 숨김 */}
+                {!(renderMode === '2d' && view2DDirection === 'front') && (
+                  <>
+                    <BoxWithEdges
+                      key="left-reinforcement-bottom"
+                      args={[leftWidth, reinforcementHeight, reinforcementDepth]}
+                      position={[leftXOffset, -fullBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
+                      material={material}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      panelName="(좌)하단보강대"
+                    />
+                    <BoxWithEdges
+                      key="left-reinforcement-top"
+                      args={[leftWidth, reinforcementHeight, reinforcementDepth]}
+                      position={[leftXOffset, fullBackPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
+                      material={material}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isEditMode={isEditMode}
+                      panelName="(좌)상단보강대"
+                    />
+                  </>
+                )}
               </>
             );
           }
@@ -1304,27 +1308,33 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isBackPanel={true}
               />
 
-              {/* 하부 백패널 보강대 (상/하단) */}
-              <BoxWithEdges
-                key="left-lower-reinforcement-bottom"
-                args={[leftWidth, reinforcementHeight, reinforcementDepth]}
-                position={[leftXOffset, lowerBackPanelY - lowerBackPanelHeight/2 + reinforcementHeight/2, lowerReinforcementZ]}
-                material={material}
-                renderMode={renderMode}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                panelName="(좌하)하단보강대"
-              />
-              <BoxWithEdges
-                key="left-lower-reinforcement-top"
-                args={[leftWidth, reinforcementHeight, reinforcementDepth]}
-                position={[leftXOffset, lowerBackPanelY + lowerBackPanelHeight/2 - reinforcementHeight/2, lowerReinforcementZ]}
-                material={material}
-                renderMode={renderMode}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                panelName="(좌하)상단보강대"
-              />
+              {/* 하부 백패널 보강대 (상/하단) - 2D 정면도에서는 숨김 */}
+              {!(renderMode === '2d' && view2DDirection === 'front') && (
+                <>
+                  <BoxWithEdges
+                    key="left-lower-reinforcement-bottom"
+                    args={[leftWidth, reinforcementHeight, reinforcementDepth]}
+                    position={[leftXOffset, lowerBackPanelY - lowerBackPanelHeight/2 + reinforcementHeight/2, lowerReinforcementZ]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                    panelName="(좌하)하단보강대"
+                  />
+                  <BoxWithEdges
+                    key="left-lower-reinforcement-top"
+                    args={[leftWidth, reinforcementHeight, reinforcementDepth]}
+                    position={[leftXOffset, lowerBackPanelY + lowerBackPanelHeight/2 - reinforcementHeight/2, lowerReinforcementZ]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    isHighlighted={highlightedSection === `${placedFurnitureId}-0`}
+                    panelName="(좌하)상단보강대"
+                  />
+                </>
+              )}
 
               {/* 상부 백패널 */}
               <BoxWithEdges
@@ -1339,27 +1349,33 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isBackPanel={true}
               />
 
-              {/* 상부 백패널 보강대 (상/하단) */}
-              <BoxWithEdges
-                key="left-upper-reinforcement-bottom"
-                args={[leftWidth, reinforcementHeight, reinforcementDepth]}
-                position={[leftXOffset, upperBackPanelY - upperBackPanelHeight/2 + reinforcementHeight/2, upperReinforcementZ]}
-                material={material}
-                renderMode={renderMode}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                panelName="(좌상)하단보강대"
-              />
-              <BoxWithEdges
-                key="left-upper-reinforcement-top"
-                args={[leftWidth, reinforcementHeight, reinforcementDepth]}
-                position={[leftXOffset, upperBackPanelY + upperBackPanelHeight/2 - reinforcementHeight/2, upperReinforcementZ]}
-                material={material}
-                renderMode={renderMode}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                panelName="(좌상)상단보강대"
-              />
+              {/* 상부 백패널 보강대 (상/하단) - 2D 정면도에서는 숨김 */}
+              {!(renderMode === '2d' && view2DDirection === 'front') && (
+                <>
+                  <BoxWithEdges
+                    key="left-upper-reinforcement-bottom"
+                    args={[leftWidth, reinforcementHeight, reinforcementDepth]}
+                    position={[leftXOffset, upperBackPanelY - upperBackPanelHeight/2 + reinforcementHeight/2, upperReinforcementZ]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                    panelName="(좌상)하단보강대"
+                  />
+                  <BoxWithEdges
+                    key="left-upper-reinforcement-top"
+                    args={[leftWidth, reinforcementHeight, reinforcementDepth]}
+                    position={[leftXOffset, upperBackPanelY + upperBackPanelHeight/2 - reinforcementHeight/2, upperReinforcementZ]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
+                    panelName="(좌상)상단보강대"
+                  />
+                </>
+              )}
 
               {/* 상부 섹션 바닥판 (하부와 상부 사이) - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
               <BoxWithEdges
@@ -1396,29 +1412,33 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isBackPanel={true} // 백패널임을 표시
                 edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
               />
-              {/* 우측 백패널 보강대 (상/하단) */}
-              <BoxWithEdges
-                key="right-reinforcement-bottom"
-                args={[rightWidth, reinforcementHeight, reinforcementDepth]}
-                position={[rightXOffset, -rightBackPanelHeight/2 + reinforcementHeight/2, rightReinforcementZ]}
-                material={material}
-                renderMode={renderMode}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                panelName="(우)하단보강대"
-                edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
-              />
-              <BoxWithEdges
-                key="right-reinforcement-top"
-                args={[rightWidth, reinforcementHeight, reinforcementDepth]}
-                position={[rightXOffset, rightBackPanelHeight/2 - reinforcementHeight/2, rightReinforcementZ]}
-                material={material}
-                renderMode={renderMode}
-                isDragging={isDragging}
-                isEditMode={isEditMode}
-                panelName="(우)상단보강대"
-                edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
-              />
+              {/* 우측 백패널 보강대 (상/하단) - 2D 정면도에서는 숨김 */}
+              {!(renderMode === '2d' && view2DDirection === 'front') && (
+                <>
+                  <BoxWithEdges
+                    key="right-reinforcement-bottom"
+                    args={[rightWidth, reinforcementHeight, reinforcementDepth]}
+                    position={[rightXOffset, -rightBackPanelHeight/2 + reinforcementHeight/2, rightReinforcementZ]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    panelName="(우)하단보강대"
+                    edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
+                  />
+                  <BoxWithEdges
+                    key="right-reinforcement-top"
+                    args={[rightWidth, reinforcementHeight, reinforcementDepth]}
+                    position={[rightXOffset, rightBackPanelHeight/2 - reinforcementHeight/2, rightReinforcementZ]}
+                    material={material}
+                    renderMode={renderMode}
+                    isDragging={isDragging}
+                    isEditMode={isEditMode}
+                    panelName="(우)상단보강대"
+                    edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
+                  />
+                </>
+              )}
             </>
           );
         })()}
