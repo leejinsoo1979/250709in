@@ -708,137 +708,137 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         
           ctx.restore();
         } // End of showDimensions check
-        
-        ctx.restore();
 
-        // 보링 표시
-        if (showBorings && boringData && boringData.length > 0) {
-          // 패널 이름 정규화 함수 - 다양한 형식을 통일된 키로 변환
-          const normalizePanelName = (name: string): string => {
-            if (!name) return '';
-            // (상), (하) 접두사 제거
-            let normalized = name.replace(/^\([상하]\)/, '');
-            // 패널 타입 추출 및 정규화
-            if (normalized.includes('좌측') || normalized === '좌측판') return 'side-left';
-            if (normalized.includes('우측') || normalized === '우측판') return 'side-right';
-            if (normalized.includes('바닥') || normalized === '하판') return 'bottom';
-            if (normalized.includes('상판')) return 'top';
-            if (normalized.includes('도어')) return 'door';
-            if (normalized.includes('백패널') || normalized.includes('뒷판')) return 'back';
-            if (normalized.includes('서랍전판')) return 'drawer-front';
-            return normalized.toLowerCase();
-          };
+        ctx.restore(); // Restore labels save (line 583)
+      } // End of showLabels check
 
-          // 디버깅 로그
-          console.log('=== 보링 표시 시도 ===');
-          console.log('panel.name:', panel.name, '→ normalized:', normalizePanelName(panel.name));
-          console.log('panel dimensions:', panel.width, 'x', panel.height);
-          console.log('boringData 패널들:', boringData.map(b =>
-            `${b.panelName} (${b.width}x${b.height}) → ${normalizePanelName(b.panelName)}`
-          ));
+      // 보링 표시 (showLabels와 독립적으로 표시)
+      if (showBorings && boringData && boringData.length > 0) {
+        // 패널 이름 정규화 함수 - 다양한 형식을 통일된 키로 변환
+        const normalizePanelName = (name: string): string => {
+          if (!name) return '';
+          // (상), (하) 접두사 제거
+          let normalized = name.replace(/^\([상하]\)/, '');
+          // 패널 타입 추출 및 정규화
+          if (normalized.includes('좌측') || normalized === '좌측판') return 'side-left';
+          if (normalized.includes('우측') || normalized === '우측판') return 'side-right';
+          if (normalized.includes('바닥') || normalized === '하판') return 'bottom';
+          if (normalized.includes('상판')) return 'top';
+          if (normalized.includes('도어')) return 'door';
+          if (normalized.includes('백패널') || normalized.includes('뒷판')) return 'back';
+          if (normalized.includes('서랍전판')) return 'drawer-front';
+          return normalized.toLowerCase();
+        };
 
-          // 정규화된 이름으로 매칭 (크기도 함께 확인)
-          const normalizedCncName = normalizePanelName(panel.name);
+        // 디버깅 로그
+        console.log('=== 보링 표시 시도 ===');
+        console.log('panel.name:', panel.name, '→ normalized:', normalizePanelName(panel.name));
+        console.log('panel dimensions:', panel.width, 'x', panel.height);
+        console.log('boringData 패널들:', boringData.map(b =>
+          `${b.panelName} (${b.width}x${b.height}) → ${normalizePanelName(b.panelName)}`
+        ));
 
-          // 이름이 같은 후보들 먼저 필터
-          const candidates = boringData.filter(b => {
-            const normalizedBoringName = normalizePanelName(b.panelName);
-            return normalizedCncName === normalizedBoringName ||
-              b.panelName === panel.name ||
-              b.panelId === panel.id;
+        // 정규화된 이름으로 매칭 (크기도 함께 확인)
+        const normalizedCncName = normalizePanelName(panel.name);
+
+        // 이름이 같은 후보들 먼저 필터
+        const candidates = boringData.filter(b => {
+          const normalizedBoringName = normalizePanelName(b.panelName);
+          return normalizedCncName === normalizedBoringName ||
+            b.panelName === panel.name ||
+            b.panelId === panel.id;
+        });
+
+        // 후보 중 크기가 가장 가까운 것 선택
+        let panelBorings = candidates[0];
+        if (candidates.length > 1) {
+          // 크기 차이로 정렬하여 가장 가까운 것 선택
+          const tolerance = 5; // 5mm 허용 오차
+          panelBorings = candidates.find(b =>
+            Math.abs(b.width - panel.width) <= tolerance &&
+            Math.abs(b.height - panel.height) <= tolerance
+          ) || candidates.reduce((best, current) => {
+            const bestDiff = Math.abs(best.width - panel.width) + Math.abs(best.height - panel.height);
+            const currDiff = Math.abs(current.width - panel.width) + Math.abs(current.height - panel.height);
+            return currDiff < bestDiff ? current : best;
           });
-
-          // 후보 중 크기가 가장 가까운 것 선택
-          let panelBorings = candidates[0];
-          if (candidates.length > 1) {
-            // 크기 차이로 정렬하여 가장 가까운 것 선택
-            const tolerance = 5; // 5mm 허용 오차
-            panelBorings = candidates.find(b =>
-              Math.abs(b.width - panel.width) <= tolerance &&
-              Math.abs(b.height - panel.height) <= tolerance
-            ) || candidates.reduce((best, current) => {
-              const bestDiff = Math.abs(best.width - panel.width) + Math.abs(best.height - panel.height);
-              const currDiff = Math.abs(current.width - panel.width) + Math.abs(current.height - panel.height);
-              return currDiff < bestDiff ? current : best;
-            });
-          }
-
-          console.log('매칭된 보링 데이터:', panelBorings ? `${panelBorings.panelName} (${panelBorings.borings?.length}개)` : '없음');
-
-          if (panelBorings && panelBorings.borings && panelBorings.borings.length > 0) {
-            ctx.save();
-
-            panelBorings.borings.forEach(boring => {
-              const boringColor = boringColors[boring.type] || boringColors['custom'];
-
-              // 보링 위치 계산 (패널 좌표 기준)
-              // 패널이 회전되었는지 확인하고 좌표 변환
-              let boringX = x + boring.x;
-              let boringY = y + boring.y;
-
-              // 패널이 회전된 경우 보링 좌표도 회전
-              if (panel.rotated) {
-                // 90도 회전: (x, y) -> (height - y, x)
-                boringX = x + (panel.height - boring.y);
-                boringY = y + boring.x;
-              }
-
-              // 장공(슬롯) 처리
-              if (boring.type === 'drawer-rail-slot' && boring.slotWidth && boring.slotHeight) {
-                // 장공은 둥근 사각형으로 그리기
-                const slotW = boring.slotWidth;
-                const slotH = boring.slotHeight;
-                const radius = Math.min(slotW, slotH) / 2;
-
-                ctx.fillStyle = boringColor.fill;
-                ctx.strokeStyle = boringColor.stroke;
-                ctx.lineWidth = 1 / (baseScale * scale);
-
-                // 둥근 사각형 그리기
-                ctx.beginPath();
-                ctx.roundRect(
-                  boringX - slotW / 2,
-                  boringY - slotH / 2,
-                  slotW,
-                  slotH,
-                  radius
-                );
-                ctx.fill();
-                ctx.stroke();
-              } else {
-                // 원형 보링
-                const radius = boring.diameter / 2;
-
-                ctx.fillStyle = boringColor.fill;
-                ctx.strokeStyle = boringColor.stroke;
-                ctx.lineWidth = 1 / (baseScale * scale);
-
-                ctx.beginPath();
-                ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-
-                // 큰 보링(힌지컵 등)에는 십자선 추가
-                if (boring.diameter >= 15) {
-                  ctx.beginPath();
-                  ctx.moveTo(boringX - radius * 0.7, boringY);
-                  ctx.lineTo(boringX + radius * 0.7, boringY);
-                  ctx.moveTo(boringX, boringY - radius * 0.7);
-                  ctx.lineTo(boringX, boringY + radius * 0.7);
-                  ctx.stroke();
-                }
-              }
-            });
-
-            ctx.restore();
-          }
         }
 
-        // Reset shadow and transparency effects
-        ctx.shadowColor = 'transparent';
-        ctx.shadowBlur = 0;
-        ctx.globalAlpha = 1; // Reset transparency after drawing panel
+        console.log('매칭된 보링 데이터:', panelBorings ? `${panelBorings.panelName} (${panelBorings.borings?.length}개)` : '없음');
+
+        if (panelBorings && panelBorings.borings && panelBorings.borings.length > 0) {
+          ctx.save();
+
+          panelBorings.borings.forEach(boring => {
+            const boringColor = boringColors[boring.type] || boringColors['custom'];
+
+            // 보링 위치 계산 (패널 좌표 기준)
+            // 패널이 회전되었는지 확인하고 좌표 변환
+            let boringX = x + boring.x;
+            let boringY = y + boring.y;
+
+            // 패널이 회전된 경우 보링 좌표도 회전
+            if (panel.rotated) {
+              // 90도 회전: (x, y) -> (height - y, x)
+              boringX = x + (panel.height - boring.y);
+              boringY = y + boring.x;
+            }
+
+            // 장공(슬롯) 처리
+            if (boring.type === 'drawer-rail-slot' && boring.slotWidth && boring.slotHeight) {
+              // 장공은 둥근 사각형으로 그리기
+              const slotW = boring.slotWidth;
+              const slotH = boring.slotHeight;
+              const radius = Math.min(slotW, slotH) / 2;
+
+              ctx.fillStyle = boringColor.fill;
+              ctx.strokeStyle = boringColor.stroke;
+              ctx.lineWidth = 1 / (baseScale * scale);
+
+              // 둥근 사각형 그리기
+              ctx.beginPath();
+              ctx.roundRect(
+                boringX - slotW / 2,
+                boringY - slotH / 2,
+                slotW,
+                slotH,
+                radius
+              );
+              ctx.fill();
+              ctx.stroke();
+            } else {
+              // 원형 보링
+              const radius = boring.diameter / 2;
+
+              ctx.fillStyle = boringColor.fill;
+              ctx.strokeStyle = boringColor.stroke;
+              ctx.lineWidth = 1 / (baseScale * scale);
+
+              ctx.beginPath();
+              ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+
+              // 큰 보링(힌지컵 등)에는 십자선 추가
+              if (boring.diameter >= 15) {
+                ctx.beginPath();
+                ctx.moveTo(boringX - radius * 0.7, boringY);
+                ctx.lineTo(boringX + radius * 0.7, boringY);
+                ctx.moveTo(boringX, boringY - radius * 0.7);
+                ctx.lineTo(boringX, boringY + radius * 0.7);
+                ctx.stroke();
+              }
+            }
+          });
+
+          ctx.restore();
+        }
       }
+
+      // Reset shadow and transparency effects
+      ctx.shadowColor = 'transparent';
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1; // Reset transparency after drawing panel
     });
     
     // Log visible panel count during simulation
