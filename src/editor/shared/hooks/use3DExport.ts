@@ -45,6 +45,11 @@ export const use3DExport = () => {
       'Light', 'Camera', 'Text', 'Dimension', 'Label', 'Html', 'Guide',
       'Arrow', 'Marker', 'Placement', 'Environment', 'Sky', 'space-frame',
       'SlotDrop', 'Indicator', 'CAD', 'Gradient', 'Background',
+      // 추가 제외 패턴
+      'dimension_line', 'space', 'Space', 'measure', 'Measure',
+      '치수', '공간', '측정', 'NativeLine', 'DimensionText',
+      'ghost', 'Ghost', 'preview', 'Preview', 'overlay', 'Overlay',
+      'bounds', 'Bounds', 'outline', 'Outline', 'wireframe', 'Wireframe',
     ];
 
     // 제외 패턴에 해당하면 제외
@@ -120,6 +125,15 @@ export const use3DExport = () => {
         name.includes('text') ||
         name.includes('label') ||
         name.includes('치수') ||
+        name.includes('space') ||
+        name.includes('공간') ||
+        name.includes('measure') ||
+        name.includes('nativeline') ||
+        name.includes('ghost') ||
+        name.includes('preview') ||
+        name.includes('overlay') ||
+        name.includes('bounds') ||
+        name.includes('outline') ||
         type === 'Sprite' ||
         type === 'Line' ||
         type === 'LineSegments' ||
