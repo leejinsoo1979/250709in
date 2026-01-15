@@ -368,7 +368,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
       <group position={[0, yOffset, drawerZOffset + zOffset]}>
         {/* === 서랍속장 ㄷ자 프레임 (좌/우 각각 3개 패널 = 총 6개) === */}
 
-        {/* 1. 좌측 수직 패널 (전체 높이) */}
+        {/* 1. 좌측 수직 패널 (전체 높이, 측판에서 27mm 떨어짐) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌)` : `서랍속장(좌)`;
           const mat = getPanelMaterial(panelName);
@@ -376,7 +376,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-left-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[-innerWidth/2 + drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness/2, 0, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -388,7 +388,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 2. 우측 수직 패널 (전체 높이) */}
+        {/* 2. 우측 수직 패널 (전체 높이, 측판에서 27mm 떨어짐) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우)` : `서랍속장(우)`;
           const mat = getPanelMaterial(panelName);
@@ -396,7 +396,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-right-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[innerWidth/2 - drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness/2, 0, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -408,7 +408,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 3. 좌측 후면 수평 패널 (상단, 18mm 높이, 수직패널 안쪽으로 27mm 돌출) */}
+        {/* 3. 좌측 후면 수평 패널 (상단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌) 후면` : `서랍속장(좌) 후면`;
           const mat = getPanelMaterial(panelName);
@@ -416,7 +416,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-back-left-${mat.uuid}`}
               args={[horizontalPanelWidth, horizontalPanelHeight, horizontalPanelDepthBack]}
-              position={[-innerWidth/2 + drawerFrameThickness + horizontalPanelWidth/2, backHorizontalPanelY, backHorizontalPanelZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth/2, backHorizontalPanelY, backHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -428,7 +428,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 4. 우측 후면 수평 패널 (상단, 18mm 높이, 수직패널 안쪽으로 27mm 돌출) */}
+        {/* 4. 우측 후면 수평 패널 (상단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우) 후면` : `서랍속장(우) 후면`;
           const mat = getPanelMaterial(panelName);
@@ -436,7 +436,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-back-right-${mat.uuid}`}
               args={[horizontalPanelWidth, horizontalPanelHeight, horizontalPanelDepthBack]}
-              position={[innerWidth/2 - drawerFrameThickness - horizontalPanelWidth/2, backHorizontalPanelY, backHorizontalPanelZ]}
+              position={[innerWidth/2 - horizontalPanelWidth/2, backHorizontalPanelY, backHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -448,7 +448,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 5. 좌측 전면 수평 패널 (하단, 18mm 높이, 수직패널 안쪽으로 27mm 돌출) */}
+        {/* 5. 좌측 전면 수평 패널 (하단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌) 전면` : `서랍속장(좌) 전면`;
           const mat = getPanelMaterial(panelName);
@@ -456,7 +456,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-front-left-${mat.uuid}`}
               args={[horizontalPanelWidth, horizontalPanelHeight, horizontalPanelDepthFront]}
-              position={[-innerWidth/2 + drawerFrameThickness + horizontalPanelWidth/2, frontHorizontalPanelY, frontHorizontalPanelZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth/2, frontHorizontalPanelY, frontHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -468,7 +468,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 6. 우측 전면 수평 패널 (하단, 18mm 높이, 수직패널 안쪽으로 27mm 돌출) */}
+        {/* 6. 우측 전면 수평 패널 (하단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우) 전면` : `서랍속장(우) 전면`;
           const mat = getPanelMaterial(panelName);
@@ -476,7 +476,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-front-right-${mat.uuid}`}
               args={[horizontalPanelWidth, horizontalPanelHeight, horizontalPanelDepthFront]}
-              position={[innerWidth/2 - drawerFrameThickness - horizontalPanelWidth/2, frontHorizontalPanelY, frontHorizontalPanelZ]}
+              position={[innerWidth/2 - horizontalPanelWidth/2, frontHorizontalPanelY, frontHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -517,7 +517,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
       <group position={[0, yOffset, drawerZOffset + zOffset]}>
         {/* === 서랍속장 ㄷ자 프레임 (좌/우 각각 3개 패널 = 총 6개) === */}
 
-        {/* 1. 좌측 수직 패널 (전체 높이) */}
+        {/* 1. 좌측 수직 패널 (전체 높이, 측판에서 27mm 떨어짐) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌)` : `서랍속장(좌)`;
           const mat = getPanelMaterial(panelName);
@@ -525,7 +525,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-left-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[-innerWidth/2 + drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness/2, 0, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -537,7 +537,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 2. 우측 수직 패널 (전체 높이) */}
+        {/* 2. 우측 수직 패널 (전체 높이, 측판에서 27mm 떨어짐) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우)` : `서랍속장(우)`;
           const mat = getPanelMaterial(panelName);
@@ -545,7 +545,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-right-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[innerWidth/2 - drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness/2, 0, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -557,7 +557,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 3. 좌측 후면 수평 패널 (상단, 18mm 높이, 수직패널 안쪽으로 27mm 돌출) */}
+        {/* 3. 좌측 후면 수평 패널 (상단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌) 후면` : `서랍속장(좌) 후면`;
           const mat = getPanelMaterial(panelName);
@@ -565,7 +565,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-back-left-${mat.uuid}`}
               args={[horizontalPanelWidth, horizontalPanelHeight, horizontalPanelDepthBack]}
-              position={[-innerWidth/2 + drawerFrameThickness + horizontalPanelWidth/2, backHorizontalPanelY, backHorizontalPanelZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth/2, backHorizontalPanelY, backHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -577,7 +577,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 4. 우측 후면 수평 패널 (상단, 18mm 높이, 수직패널 안쪽으로 27mm 돌출) */}
+        {/* 4. 우측 후면 수평 패널 (상단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우) 후면` : `서랍속장(우) 후면`;
           const mat = getPanelMaterial(panelName);
@@ -585,7 +585,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-back-right-${mat.uuid}`}
               args={[horizontalPanelWidth, horizontalPanelHeight, horizontalPanelDepthBack]}
-              position={[innerWidth/2 - drawerFrameThickness - horizontalPanelWidth/2, backHorizontalPanelY, backHorizontalPanelZ]}
+              position={[innerWidth/2 - horizontalPanelWidth/2, backHorizontalPanelY, backHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -597,7 +597,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 5. 좌측 전면 수평 패널 (하단, 18mm 높이, 수직패널 안쪽으로 27mm 돌출) */}
+        {/* 5. 좌측 전면 수평 패널 (하단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌) 전면` : `서랍속장(좌) 전면`;
           const mat = getPanelMaterial(panelName);
@@ -605,7 +605,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-front-left-${mat.uuid}`}
               args={[horizontalPanelWidth, horizontalPanelHeight, horizontalPanelDepthFront]}
-              position={[-innerWidth/2 + drawerFrameThickness + horizontalPanelWidth/2, frontHorizontalPanelY, frontHorizontalPanelZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth/2, frontHorizontalPanelY, frontHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -617,7 +617,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 6. 우측 전면 수평 패널 (하단, 18mm 높이, 수직패널 안쪽으로 27mm 돌출) */}
+        {/* 6. 우측 전면 수평 패널 (하단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우) 전면` : `서랍속장(우) 전면`;
           const mat = getPanelMaterial(panelName);
@@ -625,7 +625,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-front-right-${mat.uuid}`}
               args={[horizontalPanelWidth, horizontalPanelHeight, horizontalPanelDepthFront]}
-              position={[innerWidth/2 - drawerFrameThickness - horizontalPanelWidth/2, frontHorizontalPanelY, frontHorizontalPanelZ]}
+              position={[innerWidth/2 - horizontalPanelWidth/2, frontHorizontalPanelY, frontHorizontalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
