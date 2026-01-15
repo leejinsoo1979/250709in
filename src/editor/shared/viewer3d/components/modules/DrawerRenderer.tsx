@@ -160,7 +160,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   // 1. 수직 패널 (세로로 긴 패널, 전체 높이)
   // 깊이: 백패널에서 18mm 앞부터 전면 85mm 전까지
   const verticalPanelDepth = depth - mmToThreeUnits(85) - backPanelThickness - mmToThreeUnits(18);
-  const verticalPanelZ = -depth/2 + backPanelThickness + mmToThreeUnits(18) + verticalPanelDepth/2;
+  const verticalPanelZ = -depth/2 + backPanelThickness + mmToThreeUnits(18) + verticalPanelDepth/2 - mmToThreeUnits(1);
 
   // 2. 후면 수평 패널 (상단, 좌/우 각각) - 실제로는 전면에 위치
   // Y 위치: 상단
