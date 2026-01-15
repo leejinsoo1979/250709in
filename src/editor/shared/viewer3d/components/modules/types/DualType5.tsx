@@ -310,8 +310,8 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
             if (section.count && section.count > 0) {
               // 서랍 섹션은 항상 하부장
               const sectionName = '(하)';
-              // 서랍속장 프레임 높이 = 섹션 내경 - 상판 두께
-              const drawerFrameHeight = sectionHeight - basicThickness;
+              // 서랍속장 프레임 높이 = 섹션 내경 그대로 (sectionHeight가 이미 내경)
+              const drawerFrameHeight = sectionHeight;
               // Y 위치는 섹션 중앙 그대로
               const drawerYOffset = sectionCenterY;
               sectionContent = (
