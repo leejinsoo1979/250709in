@@ -823,7 +823,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               isBackPanel={true} // 백패널임을 표시
             />
             {/* 보강대 (백패널 상/하단) - 60mm 높이, 15.5mm 두께 - 2D 정면도에서는 숨김 */}
-            {!(renderMode === '2d' && view2DDirection === 'front') && (
+            {!(viewMode === '2D' && view2DDirection === 'front') && (
               <>
                 <BoxWithEdges
                   key="reinforcement-bottom"

@@ -1246,7 +1246,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   isBackPanel={true}
                 />
                 {/* 보강대 (좌측 전체 백패널 상/하단) - 2D 정면도에서는 숨김 */}
-                {!(renderMode === '2d' && view2DDirection === 'front') && (
+                {!(viewMode === '2D' && view2DDirection === 'front') && (
                   <>
                     <BoxWithEdges
                       key="left-reinforcement-bottom"
@@ -1309,7 +1309,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               />
 
               {/* 하부 백패널 보강대 (상/하단) - 2D 정면도에서는 숨김 */}
-              {!(renderMode === '2d' && view2DDirection === 'front') && (
+              {!(viewMode === '2D' && view2DDirection === 'front') && (
                 <>
                   <BoxWithEdges
                     key="left-lower-reinforcement-bottom"
@@ -1350,7 +1350,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
               />
 
               {/* 상부 백패널 보강대 (상/하단) - 2D 정면도에서는 숨김 */}
-              {!(renderMode === '2d' && view2DDirection === 'front') && (
+              {!(viewMode === '2D' && view2DDirection === 'front') && (
                 <>
                   <BoxWithEdges
                     key="left-upper-reinforcement-bottom"
@@ -1413,7 +1413,7 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
               />
               {/* 우측 백패널 보강대 (상/하단) - 2D 정면도에서는 숨김 */}
-              {!(renderMode === '2d' && view2DDirection === 'front') && (
+              {!(viewMode === '2D' && view2DDirection === 'front') && (
                 <>
                   <BoxWithEdges
                     key="right-reinforcement-bottom"
