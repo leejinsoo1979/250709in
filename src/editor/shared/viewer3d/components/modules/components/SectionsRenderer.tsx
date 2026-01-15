@@ -388,10 +388,10 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
             // 섹션별 강조 확인
             const isDrawerSectionHighlighted = highlightedSection === `${placedFurnitureId}-${index}`;
 
-            // 상부섹션(index > 0)은 하판이 없으므로 innerHeight에서 basicThickness를 뺌
-            const drawerInnerHeight = index > 0 ? sectionHeight - basicThickness : sectionHeight;
+            // 서랍속장 프레임 높이 = 바닥판 위 ~ 상판 밑면 (상판 두께만큼 빼기)
+            const drawerInnerHeight = sectionHeight - basicThickness;
             // 상부섹션은 yOffset도 basicThickness/2만큼 위로 조정
-            const drawerYOffset = index > 0 ? sectionCenterY + basicThickness/2 : sectionCenterY;
+            const drawerYOffset = index > 0 ? sectionCenterY + basicThickness/2 : sectionCenterY - basicThickness/2;
 
             // 섹션 깊이에 따른 Z 오프셋 계산
             const drawerZOffset = depth - currentSectionDepth !== 0 ? (depth - currentSectionDepth) / 2 : 0;
