@@ -941,29 +941,41 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                 const isTwoDrawer = moduleData?.id?.includes('2drawer-hanging');
                 const isTwoHanging = moduleData?.id?.includes('2hanging');
 
+                // 백패널 높이 확장값 (위아래 각각 13mm씩 = 총 26mm)
+                const backPanelTopExtension = 13; // mm
+                const backPanelBottomExtension = 13; // mm
+                const totalHeightExtension = mmToThreeUnits(backPanelTopExtension + backPanelBottomExtension);
+
                 // 측판과 동일한 높이 계산 로직 사용 (2단 행잉만 오프셋 적용)
                 const applyOffset = isTwoHanging && !isTwoDrawer;
 
-                // 백패널 높이 = 측판 높이와 동일
+                // 원본 백패널 높이 (섹션 높이 - 상하판 두께×2 + 기본 확장값 10mm)
+                const originalLowerBackPanelHeight = lowerSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension);
+                const originalUpperBackPanelHeight = upperSectionHeight - basicThickness * 2 + mmToThreeUnits(backPanelConfig.heightExtension);
+
+                // 백패널 높이 = 원본 + 위아래 13mm씩 확장 (측판과 동일하게)
                 const lowerBackPanelHeight = applyOffset
-                  ? lowerSectionHeight + basicThickness
-                  : lowerSectionHeight;
+                  ? originalLowerBackPanelHeight + totalHeightExtension + mmToThreeUnits(backPanelConfig.lowerHeightBonus)
+                  : originalLowerBackPanelHeight + totalHeightExtension;
 
                 const upperBackPanelHeight = applyOffset
-                  ? upperSectionHeight - basicThickness
-                  : upperSectionHeight;
+                  ? originalUpperBackPanelHeight + totalHeightExtension - basicThickness
+                  : originalUpperBackPanelHeight + totalHeightExtension;
 
-                console.log('🔍🔍🔍 백패널 높이 (측판과 동일):', {
+                console.log('🔍🔍🔍 백패널 높이 (13mm씩 확장):', {
                   lowerBackPanelHeightMm: lowerBackPanelHeight / 0.01,
                   upperBackPanelHeightMm: upperBackPanelHeight / 0.01,
+                  originalLowerMm: originalLowerBackPanelHeight / 0.01,
+                  originalUpperMm: originalUpperBackPanelHeight / 0.01,
+                  extensionMm: backPanelTopExtension + backPanelBottomExtension,
                   applyOffset,
                   isTwoHanging
                 });
 
-                // 백패널 Y 위치 - 측판과 동일한 위치 사용
-                const lowerBackPanelY = -height/2 + lowerBackPanelHeight/2;
+                // 백패널 Y 위치 조정 (하단 13mm 확장분만큼 아래로 이동)
+                const lowerBackPanelY = -height/2 + lowerSectionHeight/2 - mmToThreeUnits(backPanelBottomExtension - backPanelTopExtension)/2;
                 const upperOffset = applyOffset ? basicThickness : 0;
-                const upperBackPanelY = -height/2 + lowerSectionHeight + upperOffset + upperBackPanelHeight/2;
+                const upperBackPanelY = -height/2 + lowerSectionHeight + upperOffset + upperSectionHeight/2;
 
                 console.log('🔍🔍🔍 백패널 Y 위치:', {
                   lowerBackPanelYMm: lowerBackPanelY / 0.01,
@@ -1050,33 +1062,55 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
             </>
           ) : (
             <>
-              {/* 단일 섹션 백패널 - 측판 높이와 동일하게 height 사용 */}
-              <BoxWithEdges
-                key={`back-panel-${getPanelMaterial('백패널').uuid}`}
-                args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), height, backPanelThickness]}
-                position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
-                material={getPanelMaterial('백패널')}
-                renderMode={renderMode}
-                isDragging={isDragging}
-                isBackPanel={true}
-                panelName="백패널"
-                panelGrainDirections={panelGrainDirections}
-                furnitureId={placedFurnitureId}
-                textureUrl={textureUrl}
-              />
+              {/* 단일 섹션 백패널 - 위아래 각각 13mm씩 확장하여 측판과 동일 높이 */}
+              {(() => {
+                // 백패널 높이 확장값 (위아래 각각 13mm씩 = 총 26mm)
+                const backPanelTopExtension = 13; // mm
+                const backPanelBottomExtension = 13; // mm
+                const totalHeightExtension = mmToThreeUnits(backPanelTopExtension + backPanelBottomExtension);
 
-              {/* 환기캡 - 백패널과 같은 Z 위치 */}
-              {!isDragging && (
-                <VentilationCap
-                  position={[
-                    innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
-                    height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
-                    -depth/2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset) + 0.01  // 백패널 앞쪽 표면에 붙음
-                  ]}
-                  diameter={98}
-                  renderMode={renderMode}
-                />
-              )}
+                // 원본 백패널 높이 + 26mm 확장 = 측판 높이와 동일
+                const singleBackPanelHeight = innerHeight + mmToThreeUnits(backPanelConfig.heightExtension) + totalHeightExtension;
+
+                console.log('🔍 단일 섹션 백패널 높이:', {
+                  innerHeightMm: innerHeight / 0.01,
+                  originalExtensionMm: backPanelConfig.heightExtension,
+                  additionalExtensionMm: backPanelTopExtension + backPanelBottomExtension,
+                  finalHeightMm: singleBackPanelHeight / 0.01,
+                  sidePanel_heightMm: height / 0.01
+                });
+
+                return (
+                  <>
+                    <BoxWithEdges
+                      key={`back-panel-${getPanelMaterial('백패널').uuid}`}
+                      args={[innerWidth + mmToThreeUnits(backPanelConfig.widthExtension), singleBackPanelHeight, backPanelThickness]}
+                      position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset)]}
+                      material={getPanelMaterial('백패널')}
+                      renderMode={renderMode}
+                      isDragging={isDragging}
+                      isBackPanel={true}
+                      panelName="백패널"
+                      panelGrainDirections={panelGrainDirections}
+                      furnitureId={placedFurnitureId}
+                      textureUrl={textureUrl}
+                    />
+
+                    {/* 환기캡 - 백패널과 같은 Z 위치 */}
+                    {!isDragging && (
+                      <VentilationCap
+                        position={[
+                          innerWidth/2 - mmToThreeUnits(132),  // 우측 패널 안쪽으로 132mm
+                          height/2 - basicThickness - mmToThreeUnits(115),  // 상단 패널 아래로 115mm
+                          -depth/2 + backPanelThickness + mmToThreeUnits(backPanelConfig.depthOffset) + 0.01  // 백패널 앞쪽 표면에 붙음
+                        ]}
+                        diameter={98}
+                        renderMode={renderMode}
+                      />
+                    )}
+                  </>
+                );
+              })()}
             </>
           )}
         </>
