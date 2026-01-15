@@ -1046,6 +1046,60 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       textureUrl={textureUrl}
                     />
 
+                    {/* 보강대 (각 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께 */}
+                    {(() => {
+                      const reinforcementHeight = mmToThreeUnits(60);
+                      const reinforcementDepth = mmToThreeUnits(15.5);
+                      // 보강대 Z 위치: 백패널 뒤쪽
+                      const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
+                      const upperReinforcementZ = upperBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
+
+                      return (
+                        <>
+                          {/* 하부 섹션 하단 보강대 */}
+                          <BoxWithEdges
+                            key="lower-reinforcement-bottom"
+                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            position={[0, lowerBackPanelY - lowerBackPanelHeight/2 + reinforcementHeight/2, lowerReinforcementZ]}
+                            material={material}
+                            renderMode={renderMode}
+                            isDragging={isDragging}
+                            panelName="(하)하단보강대"
+                          />
+                          {/* 하부 섹션 상단 보강대 */}
+                          <BoxWithEdges
+                            key="lower-reinforcement-top"
+                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            position={[0, lowerBackPanelY + lowerBackPanelHeight/2 - reinforcementHeight/2, lowerReinforcementZ]}
+                            material={material}
+                            renderMode={renderMode}
+                            isDragging={isDragging}
+                            panelName="(하)상단보강대"
+                          />
+                          {/* 상부 섹션 하단 보강대 */}
+                          <BoxWithEdges
+                            key="upper-reinforcement-bottom"
+                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            position={[0, upperBackPanelY - upperBackPanelHeight/2 + reinforcementHeight/2, upperReinforcementZ]}
+                            material={material}
+                            renderMode={renderMode}
+                            isDragging={isDragging}
+                            panelName="(상)하단보강대"
+                          />
+                          {/* 상부 섹션 상단 보강대 */}
+                          <BoxWithEdges
+                            key="upper-reinforcement-top"
+                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            position={[0, upperBackPanelY + upperBackPanelHeight/2 - reinforcementHeight/2, upperReinforcementZ]}
+                            material={material}
+                            renderMode={renderMode}
+                            isDragging={isDragging}
+                            panelName="(상)상단보강대"
+                          />
+                        </>
+                      );
+                    })()}
+
                     {/* 환기캡 - 상부 백패널과 같은 Z 위치 */}
                     {!isDragging && (
                       <VentilationCap
@@ -1097,6 +1151,39 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                       furnitureId={placedFurnitureId}
                       textureUrl={textureUrl}
                     />
+
+                    {/* 보강대 (단일 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께 */}
+                    {(() => {
+                      const reinforcementHeight = mmToThreeUnits(60);
+                      const reinforcementDepth = mmToThreeUnits(15.5);
+                      const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset);
+                      const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
+
+                      return (
+                        <>
+                          {/* 하단 보강대 */}
+                          <BoxWithEdges
+                            key="reinforcement-bottom"
+                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            position={[0, -singleBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
+                            material={material}
+                            renderMode={renderMode}
+                            isDragging={isDragging}
+                            panelName="하단보강대"
+                          />
+                          {/* 상단 보강대 */}
+                          <BoxWithEdges
+                            key="reinforcement-top"
+                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            position={[0, singleBackPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
+                            material={material}
+                            renderMode={renderMode}
+                            isDragging={isDragging}
+                            panelName="상단보강대"
+                          />
+                        </>
+                      );
+                    })()}
 
                     {/* 환기캡 - 백패널과 같은 Z 위치 */}
                     {!isDragging && (

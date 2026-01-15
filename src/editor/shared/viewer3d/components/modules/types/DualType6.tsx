@@ -804,15 +804,48 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       </>
       
       {/* 뒷면 판재 (9mm 얇은 백패널, 상하좌우 각 5mm 확장) */}
-      <BoxWithEdges
-        args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(36), backPanelThickness]}
-        position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-        material={material}
-        renderMode={useSpace3DView().renderMode}
-        isDragging={isDragging}
-        isEditMode={isEditMode}
-        isBackPanel={true} // 백패널임을 표시
-      />
+      {(() => {
+        const backPanelHeight = innerHeight + mmToThreeUnits(36);
+        const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(17);
+        const reinforcementHeight = mmToThreeUnits(60);
+        const reinforcementDepth = mmToThreeUnits(15.5);
+        const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
+
+        return (
+          <>
+            <BoxWithEdges
+              args={[innerWidth + mmToThreeUnits(10), backPanelHeight, backPanelThickness]}
+              position={[0, 0, backPanelZ]}
+              material={material}
+              renderMode={useSpace3DView().renderMode}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              isBackPanel={true} // 백패널임을 표시
+            />
+            {/* 보강대 (백패널 상/하단) - 60mm 높이, 15.5mm 두께 */}
+            <BoxWithEdges
+              key="reinforcement-bottom"
+              args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+              position={[0, -backPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
+              material={material}
+              renderMode={renderMode}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              panelName="하단보강대"
+            />
+            <BoxWithEdges
+              key="reinforcement-top"
+              args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+              position={[0, backPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
+              material={material}
+              renderMode={renderMode}
+              isDragging={isDragging}
+              isEditMode={isEditMode}
+              panelName="상단보강대"
+            />
+          </>
+        );
+      })()}
 
       {/* 환기캡 렌더링 */}
       {!isDragging && (

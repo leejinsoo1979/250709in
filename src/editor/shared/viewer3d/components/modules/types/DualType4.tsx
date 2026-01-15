@@ -466,20 +466,105 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                   isBackPanel={true}
                   isHighlighted={highlightedSection === `${placedFurnitureId}-1`}
                 />
+
+                {/* 보강대 (각 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께 */}
+                {(() => {
+                  const reinforcementHeight = mmToThreeUnits(60);
+                  const reinforcementDepth = mmToThreeUnits(15.5);
+                  const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + lowerZOffset;
+                  const upperBackPanelZ = -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + upperZOffset;
+                  const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
+                  const upperReinforcementZ = upperBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
+
+                  return (
+                    <>
+                      {/* 하부 섹션 하단 보강대 */}
+                      <BoxWithEdges
+                        args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                        position={[0, lowerBackPanelY - lowerBackPanelHeight/2 + reinforcementHeight/2, lowerReinforcementZ]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        panelName="(하)하단보강대"
+                      />
+                      {/* 하부 섹션 상단 보강대 */}
+                      <BoxWithEdges
+                        args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                        position={[0, lowerBackPanelY + lowerBackPanelHeight/2 - reinforcementHeight/2, lowerReinforcementZ]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        panelName="(하)상단보강대"
+                      />
+                      {/* 상부 섹션 하단 보강대 */}
+                      <BoxWithEdges
+                        args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                        position={[0, upperBackPanelY - upperBackPanelHeight/2 + reinforcementHeight/2, upperReinforcementZ]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        panelName="(상)하단보강대"
+                      />
+                      {/* 상부 섹션 상단 보강대 */}
+                      <BoxWithEdges
+                        args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                        position={[0, upperBackPanelY + upperBackPanelHeight/2 - reinforcementHeight/2, upperReinforcementZ]}
+                        material={material}
+                        renderMode={renderMode}
+                        isDragging={isDragging}
+                        panelName="(상)상단보강대"
+                      />
+                    </>
+                  );
+                })()}
               </>
             );
           })()}
         </>
       ) : (
         // 단일 섹션: 기존 통짜 백패널
-        <BoxWithEdges
-          args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(36), backPanelThickness]}
-          position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
-          material={material}
-          renderMode={renderMode}
-          isDragging={isDragging}
-          isBackPanel={true}
-        />
+        <>
+          <BoxWithEdges
+            args={[innerWidth + mmToThreeUnits(10), innerHeight + mmToThreeUnits(36), backPanelThickness]}
+            position={[0, 0, -depth/2 + backPanelThickness/2 + mmToThreeUnits(17)]}
+            material={material}
+            renderMode={renderMode}
+            isDragging={isDragging}
+            isBackPanel={true}
+          />
+
+          {/* 보강대 (단일 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께 */}
+          {(() => {
+            const singleBackPanelHeight = innerHeight + mmToThreeUnits(36);
+            const reinforcementHeight = mmToThreeUnits(60);
+            const reinforcementDepth = mmToThreeUnits(15.5);
+            const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(17);
+            const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
+
+            return (
+              <>
+                {/* 하단 보강대 */}
+                <BoxWithEdges
+                  args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                  position={[0, -singleBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  panelName="하단보강대"
+                />
+                {/* 상단 보강대 */}
+                <BoxWithEdges
+                  args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                  position={[0, singleBackPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
+                  material={material}
+                  renderMode={renderMode}
+                  isDragging={isDragging}
+                  panelName="상단보강대"
+                />
+              </>
+            );
+          })()}
+        </>
       )}
 
       {/* 환기캡 렌더링 */}
