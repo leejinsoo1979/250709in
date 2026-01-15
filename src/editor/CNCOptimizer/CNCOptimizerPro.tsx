@@ -2,12 +2,14 @@ import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react'
 import { CNCProvider, useCNCStore } from './store';
 import { useLivePanelData } from './hooks/useLivePanelData';
 import { useProjectStore } from '@/store/core/projectStore';
+import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Zap, Play, Pause, ChevronDown, ChevronRight, ChevronUp, Layout, Package, Grid3x3, Cpu, LogOut, Settings2 } from 'lucide-react';
 import Logo from '@/components/common/Logo';
 import { initializeTheme } from '@/theme';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useFurnitureBoring } from '@/domain/boring/hooks/useFurnitureBoring';
 
 // Components
 import PanelsTable from './components/SidebarLeft/PanelsTable';
@@ -36,9 +38,13 @@ function PageInner(){
   const navigate = useNavigate();
   const location = useLocation();
   const { basicInfo } = useProjectStore();
+  const { placedModules } = useFurnitureStore();
   const { panels: livePanels } = useLivePanelData();
   const { t, currentLanguage } = useTranslation();
   const { theme } = useTheme();
+
+  // 보링 데이터 가져오기
+  const { panelBoringData } = useFurnitureBoring(placedModules);
 
   // URL에서 디자인파일 정보 가져오기
   const [designFileName, setDesignFileName] = useState<string>('');
@@ -949,6 +955,7 @@ function PageInner(){
                   onCurrentSheetIndexChange={setCurrentSheetIndex}
                   showCuttingListTab={showCuttingList}
                   allCutSteps={allCutSteps}
+                  boringData={panelBoringData}
                 />
               </div>
               

@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { OptimizedResult } from '../types';
-import { ZoomIn, ZoomOut, RotateCw, Home, Maximize, Ruler, Type, ALargeSmall, ChevronLeft, ChevronRight, Play, Pause, SkipBack, SkipForward } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCw, Home, Maximize, Ruler, Type, ALargeSmall, ChevronLeft, ChevronRight, Play, Pause, SkipBack, SkipForward, Circle } from 'lucide-react';
 import { useCNCStore } from '../store';
 import { buildSequenceForPanel, runSimulation } from '@/utils/cut/simulate';
 import type { CutStep } from '@/types/cutlist';
+import type { PanelBoringData, BoringType } from '@/domain/boring/types';
 import styles from './CuttingLayoutPreview2.module.css';
 
 interface CuttingLayoutPreview2Props {
@@ -30,9 +31,11 @@ interface CuttingLayoutPreview2Props {
   onCurrentSheetIndexChange?: (index: number) => void;
   showCuttingListTab?: boolean; // 컷팅 리스트 탭이 활성화되어 있는지 여부
   allCutSteps?: any[]; // All cut steps for current sheet
+  // 보링 데이터
+  boringData?: PanelBoringData[];
 }
 
-const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({ 
+const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   result,
   highlightedPanelId,
   showLabels = true,
@@ -47,7 +50,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   sheetInfo,
   onCurrentSheetIndexChange,
   showCuttingListTab = false,
-  allCutSteps = []
+  allCutSteps = [],
+  boringData = []
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -81,6 +85,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   
   // Toggle dimension display
   const [showDimensions, setShowDimensions] = useState(true);
+
+  // Toggle boring display
+  const [showBorings, setShowBorings] = useState(false);
   
   // Get settings and simulation state from store
   const { 
@@ -408,7 +415,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     const themeColor = getComputedStyle(document.documentElement)
       .getPropertyValue('--theme')
       .trim();
-    
+
     // Use theme color for highlighted/active panels
     const materialColors: { [key: string]: { fill: string; stroke: string } } = {
       'PB': { fill: `hsl(${themeColor} / 0.08)`, stroke: `hsl(${themeColor} / 0.5)` },
@@ -417,6 +424,19 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       'PLY': { fill: '#f5e6d3', stroke: '#a68966' }, // 합판 더 밝은 나무색
       'HPL': { fill: `hsl(${themeColor} / 0.14)`, stroke: `hsl(${themeColor} / 0.8)` },
       'LPM': { fill: `hsl(${themeColor} / 0.16)`, stroke: `hsl(${themeColor} / 0.9)` }
+    };
+
+    // 보링 타입별 색상
+    const boringColors: { [key: string]: { fill: string; stroke: string } } = {
+      'hinge-cup': { fill: 'rgba(239, 68, 68, 0.3)', stroke: '#ef4444' },      // 빨강 - 힌지컵 Ø35
+      'hinge-screw': { fill: 'rgba(239, 68, 68, 0.2)', stroke: '#f87171' },    // 연빨강 - 힌지나사
+      'cam-housing': { fill: 'rgba(59, 130, 246, 0.3)', stroke: '#3b82f6' },   // 파랑 - 캠하우징 Ø15
+      'cam-bolt': { fill: 'rgba(59, 130, 246, 0.2)', stroke: '#60a5fa' },      // 연파랑 - 캠볼트
+      'shelf-pin': { fill: 'rgba(34, 197, 94, 0.3)', stroke: '#22c55e' },      // 초록 - 선반핀 Ø5
+      'adjustable-foot': { fill: 'rgba(168, 85, 247, 0.3)', stroke: '#a855f7' }, // 보라 - 조절발
+      'drawer-rail': { fill: 'rgba(249, 115, 22, 0.3)', stroke: '#f97316' },   // 주황 - 서랍레일
+      'drawer-rail-slot': { fill: 'rgba(249, 115, 22, 0.2)', stroke: '#fb923c' }, // 연주황 - 레일장공
+      'custom': { fill: 'rgba(107, 114, 128, 0.3)', stroke: '#6b7280' }        // 회색 - 사용자정의
     };
 
     // Count visible panels during simulation
@@ -690,7 +710,86 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         } // End of showDimensions check
         
         ctx.restore();
-        
+
+        // 보링 표시
+        if (showBorings && boringData && boringData.length > 0) {
+          // 패널 이름으로 보링 데이터 찾기
+          const panelBorings = boringData.find(b =>
+            b.panelName === panel.name ||
+            b.panelId === panel.id ||
+            panel.name?.includes(b.panelName) ||
+            b.panelName?.includes(panel.name || '')
+          );
+
+          if (panelBorings && panelBorings.borings && panelBorings.borings.length > 0) {
+            ctx.save();
+
+            panelBorings.borings.forEach(boring => {
+              const boringColor = boringColors[boring.type] || boringColors['custom'];
+
+              // 보링 위치 계산 (패널 좌표 기준)
+              // 패널이 회전되었는지 확인하고 좌표 변환
+              let boringX = x + boring.x;
+              let boringY = y + boring.y;
+
+              // 패널이 회전된 경우 보링 좌표도 회전
+              if (panel.rotated) {
+                // 90도 회전: (x, y) -> (height - y, x)
+                boringX = x + (panel.height - boring.y);
+                boringY = y + boring.x;
+              }
+
+              // 장공(슬롯) 처리
+              if (boring.type === 'drawer-rail-slot' && boring.slotWidth && boring.slotHeight) {
+                // 장공은 둥근 사각형으로 그리기
+                const slotW = boring.slotWidth;
+                const slotH = boring.slotHeight;
+                const radius = Math.min(slotW, slotH) / 2;
+
+                ctx.fillStyle = boringColor.fill;
+                ctx.strokeStyle = boringColor.stroke;
+                ctx.lineWidth = 1 / (baseScale * scale);
+
+                // 둥근 사각형 그리기
+                ctx.beginPath();
+                ctx.roundRect(
+                  boringX - slotW / 2,
+                  boringY - slotH / 2,
+                  slotW,
+                  slotH,
+                  radius
+                );
+                ctx.fill();
+                ctx.stroke();
+              } else {
+                // 원형 보링
+                const radius = boring.diameter / 2;
+
+                ctx.fillStyle = boringColor.fill;
+                ctx.strokeStyle = boringColor.stroke;
+                ctx.lineWidth = 1 / (baseScale * scale);
+
+                ctx.beginPath();
+                ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                // 큰 보링(힌지컵 등)에는 십자선 추가
+                if (boring.diameter >= 15) {
+                  ctx.beginPath();
+                  ctx.moveTo(boringX - radius * 0.7, boringY);
+                  ctx.lineTo(boringX + radius * 0.7, boringY);
+                  ctx.moveTo(boringX, boringY - radius * 0.7);
+                  ctx.lineTo(boringX, boringY + radius * 0.7);
+                  ctx.stroke();
+                }
+              }
+            });
+
+            ctx.restore();
+          }
+        }
+
         // Reset shadow and transparency effects
         ctx.shadowColor = 'transparent';
         ctx.shadowBlur = 0;
@@ -857,7 +956,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   // Call draw function when dependencies change
   useEffect(() => {
     draw();
-  }, [result, highlightedPanelId, hoveredPanelId, showLabels, scale, offset, rotation, fontScale, showDimensions, simulating, currentCutIndex]);
+  }, [result, highlightedPanelId, hoveredPanelId, showLabels, scale, offset, rotation, fontScale, showDimensions, showBorings, boringData, simulating, currentCutIndex]);
 
   // Animation loop for simulation
   useEffect(() => {
@@ -1144,14 +1243,22 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             >
               <RotateCw size={16} />
             </button>
-            <button 
+            <button
               className={`${styles.headerToolButton} ${showDimensions ? styles.active : ''}`}
               onClick={() => setShowDimensions(!showDimensions)}
               title="치수 표시"
             >
               <Ruler size={16} />
             </button>
-            
+            <button
+              className={`${styles.headerToolButton} ${showBorings ? styles.active : ''}`}
+              onClick={() => setShowBorings(!showBorings)}
+              title="보링 표시"
+              disabled={!boringData || boringData.length === 0}
+            >
+              <Circle size={16} />
+            </button>
+
             <div className={styles.headerDivider} />
             
             {/* 텍스트 크기 */}
