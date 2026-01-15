@@ -138,8 +138,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const drawerZOffset = mmToThreeUnits(0);
   
   // 서랍 구조 상수
-  // 손잡이 판 두께(특수 패널 두께) - 18mm
-  const SPECIAL_PANEL_THICKNESS = 18; // mm
+  // 손잡이 판 두께(마이다) - 15mm
+  const SPECIAL_PANEL_THICKNESS = 15; // mm
   const HANDLE_PLATE_THICKNESS = mmToThreeUnits(SPECIAL_PANEL_THICKNESS);
   // 서랍 옆면(앞, 뒤, 좌, 우) 두께 상수 (15mm)
   const DRAWER_SIDE_THICKNESS = mmToThreeUnits(15); // mm 단위 변환 일관 적용
