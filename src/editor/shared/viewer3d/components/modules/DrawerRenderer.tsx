@@ -180,10 +180,10 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
   // 2. 후면 수평 패널 (좌/우 각각) - 실제로는 전면에 위치
   // Y 위치: 전달받은 내경 중앙
-  // Z 위치: 전면에서 85mm 뒤 (앞쪽)
+  // Z 위치: 전면에서 85mm 뒤 (앞쪽) - 17mm 추가 후퇴
   // Z 깊이: 18mm (전면이므로)
   const backHorizontalPanelY = 0; // 전달받은 내경 중앙
-  const backHorizontalPanelZ = depth/2 - mmToThreeUnits(85) - horizontalPanelDepthFront/2 - mmToThreeUnits(1);
+  const backHorizontalPanelZ = depth/2 - mmToThreeUnits(85) - horizontalPanelDepthFront/2 - mmToThreeUnits(1) - mmToThreeUnits(17);
 
   // 4. 전면 추가 프레임 (좌/우 각각) - 전면 수평 패널 앞에 붙음
   // X축 폭: 45mm, Y축 높이: 수직 패널과 동일, Z축 깊이: 18mm
