@@ -79,7 +79,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
       // DAE 단위: inch (0.0254m)
       // inch → mm: * 25.4, mm → Three.js: * 0.01
       // 총: inch * 0.254
-      const scale = 0.01; // 스케일 키움
+      const scale = 0.1; // 스케일 더 키움
       scene.scale.set(scale, scale, scale);
 
       // Z-UP → Y-UP 좌표계 변환
