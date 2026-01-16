@@ -47,12 +47,12 @@ export class GuillotinePacker {
     let bestResult, bestEfficiency, bestStrategy;
     
     if (stripDirection === 'horizontal') {
-      // 가로 스트립만 사용 (BY_WIDTH)
+      // 가로 스트립 = 가로로 먼저 자름 = BY_LENGTH (L방향 우선)
       bestResult = this.packWithStrips(sortedPanels, true);
       bestEfficiency = this.calculateEfficiency(bestResult);
       bestStrategy = 'horizontal';
     } else if (stripDirection === 'vertical') {
-      // 세로 스트립만 사용 (BY_LENGTH)
+      // 세로 스트립 = 세로로 먼저 자름 = BY_WIDTH (W방향 우선)
       bestResult = this.packWithStrips(sortedPanels, false);
       bestEfficiency = this.calculateEfficiency(bestResult);
       bestStrategy = 'vertical';
@@ -270,13 +270,32 @@ export class GuillotinePacker {
       // 높이가 맞는 패널들을 가로로 배치
       let currentX = 0;
       const placedSet = new Set<Rect>();
-      
-      // 먼저 정확히 맞는 패널 배치
+
+      // 1차: 정확히 같은 높이의 패널 배치 (오차 2% 이내)
       for (const panel of panels) {
         if (placedSet.has(panel)) continue;
-        
+
         const heightDiff = Math.abs(panel.height - strip.height) / strip.height;
-        
+
+        if (heightDiff <= 0.02 && currentX + panel.width <= this.binWidth) {
+          const placedPanel: PlacedRect = {
+            ...panel,
+            x: currentX,
+            y: strip.y,
+            stripIndex: this.strips.length
+          };
+          strip.panels.push(placedPanel);
+          currentX += panel.width + this.kerf;
+          placedSet.add(panel);
+        }
+      }
+
+      // 2차: 유사한 높이의 패널 배치 (오차 10% 이내)
+      for (const panel of panels) {
+        if (placedSet.has(panel)) continue;
+
+        const heightDiff = Math.abs(panel.height - strip.height) / strip.height;
+
         if (heightDiff <= 0.1 && currentX + panel.width <= this.binWidth) {
           const placedPanel: PlacedRect = {
             ...panel,
@@ -289,11 +308,11 @@ export class GuillotinePacker {
           placedSet.add(panel);
         }
       }
-      
-      // 회전 가능한 패널 중 맞는 것 배치
+
+      // 3차: 회전 가능한 패널 중 맞는 것 배치
       for (const panel of panels) {
         if (placedSet.has(panel) || !panel.canRotate) continue;
-        
+
         const rotatedHeightDiff = Math.abs(panel.width - strip.height) / strip.height;
         if (rotatedHeightDiff <= 0.1 && currentX + panel.height <= this.binWidth) {
           const placedPanel: PlacedRect = {
@@ -361,13 +380,32 @@ export class GuillotinePacker {
       // 너비가 맞는 패널들을 세로로 배치
       let currentY = 0;
       const placedSet = new Set<Rect>();
-      
-      // 먼저 정확히 맞는 패널 배치
+
+      // 1차: 정확히 같은 너비의 패널 배치 (오차 2% 이내)
       for (const panel of panels) {
         if (placedSet.has(panel)) continue;
-        
+
         const widthDiff = Math.abs(panel.width - strip.width) / strip.width;
-        
+
+        if (widthDiff <= 0.02 && currentY + panel.height <= this.binHeight) {
+          const placedPanel: PlacedRect = {
+            ...panel,
+            x: strip.x,
+            y: currentY,
+            stripIndex: this.strips.length
+          };
+          strip.panels.push(placedPanel);
+          currentY += panel.height + this.kerf;
+          placedSet.add(panel);
+        }
+      }
+
+      // 2차: 유사한 너비의 패널 배치 (오차 10% 이내)
+      for (const panel of panels) {
+        if (placedSet.has(panel)) continue;
+
+        const widthDiff = Math.abs(panel.width - strip.width) / strip.width;
+
         if (widthDiff <= 0.1 && currentY + panel.height <= this.binHeight) {
           const placedPanel: PlacedRect = {
             ...panel,
@@ -380,11 +418,11 @@ export class GuillotinePacker {
           placedSet.add(panel);
         }
       }
-      
-      // 회전 가능한 패널 중 맞는 것 배치
+
+      // 3차: 회전 가능한 패널 중 맞는 것 배치
       for (const panel of panels) {
         if (placedSet.has(panel) || !panel.canRotate) continue;
-        
+
         const rotatedWidthDiff = Math.abs(panel.height - strip.width) / strip.width;
         if (rotatedWidthDiff <= 0.1 && currentY + panel.width <= this.binHeight) {
           const placedPanel: PlacedRect = {
@@ -406,21 +444,48 @@ export class GuillotinePacker {
   
   /**
    * 패널 정렬 (스트립 방향에 따라)
+   * 같은 크기의 패널들을 그룹화하여 효율적인 배치 유도
    */
   private sortPanels(panels: Rect[], horizontal: boolean): Rect[] {
-    return [...panels].sort((a, b) => {
+    // 1단계: 크기별로 패널 그룹화 (정확히 같은 크기끼리)
+    const sizeGroups = new Map<string, Rect[]>();
+
+    for (const panel of panels) {
+      // 크기 기준 키 생성 (소수점 반올림)
+      const key = `${Math.round(panel.width)}_${Math.round(panel.height)}`;
+      if (!sizeGroups.has(key)) {
+        sizeGroups.set(key, []);
+      }
+      sizeGroups.get(key)!.push(panel);
+    }
+
+    // 2단계: 그룹을 스트립 방향에 따라 정렬
+    const sortedGroups = [...sizeGroups.entries()].sort((a, b) => {
+      const [keyA] = a;
+      const [keyB] = b;
+      const [widthA, heightA] = keyA.split('_').map(Number);
+      const [widthB, heightB] = keyB.split('_').map(Number);
+
       if (horizontal) {
-        // 가로 스트립: 높이 우선, 그 다음 면적
-        const heightDiff = b.height - a.height;
+        // 가로 스트립: 높이 기준 정렬 (큰 것 먼저), 그 다음 개수 (많은 것 먼저)
+        const heightDiff = heightB - heightA;
         if (heightDiff !== 0) return heightDiff;
-        return (b.width * b.height) - (a.width * a.height);
+        return b[1].length - a[1].length;
       } else {
-        // 세로 스트립: 너비 우선, 그 다음 면적
-        const widthDiff = b.width - a.width;
+        // 세로 스트립: 너비 기준 정렬 (큰 것 먼저), 그 다음 개수 (많은 것 먼저)
+        const widthDiff = widthB - widthA;
         if (widthDiff !== 0) return widthDiff;
-        return (b.width * b.height) - (a.width * a.height);
+        return b[1].length - a[1].length;
       }
     });
+
+    // 3단계: 정렬된 그룹들을 순서대로 펼침
+    const result: Rect[] = [];
+    for (const [, group] of sortedGroups) {
+      result.push(...group);
+    }
+
+    return result;
   }
   
   /**
