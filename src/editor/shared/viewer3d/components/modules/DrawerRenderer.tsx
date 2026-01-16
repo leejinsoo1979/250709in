@@ -376,35 +376,34 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* === 서랍 레일 (좌/우) === */}
-        {/* 서랍속장 내측면(-innerWidth/2+45mm)과 서랍 측판 외측면(-innerWidth/2+50mm) 사이 */}
         {railModel && (
           <>
-            {/* 좌측 레일 - 서랍속장과 서랍 측판 사이 */}
-            <primitive
-              key={`drawer-${drawerIndex}-rail-left`}
-              object={railModel.clone()}
-              position={[
-                centerX - drawerWidth/2 + mmToThreeUnits(36), // 서랍속장-서랍 사이 (drawerWidth 기준 36mm)
-                centerY - drawerHeight/2 + mmToThreeUnits(15), // 서랍 바닥 근처
-                drawerBodyCenterZ // 서랍 본체 중심
-              ]}
-            />
-            {/* 우측 레일 - 서랍속장과 서랍 측판 사이 */}
+            {/* 좌측 레일 - 서랍 좌측 */}
             {(() => {
-              const rightRail = railModel.clone();
-              rightRail.scale.x *= -1; // X축 반전 (좌우 대칭)
+              const leftRail = railModel.clone();
+              leftRail.scale.x *= -1; // 좌측용 반전
               return (
                 <primitive
-                  key={`drawer-${drawerIndex}-rail-right`}
-                  object={rightRail}
+                  key={`drawer-${drawerIndex}-rail-left`}
+                  object={leftRail}
                   position={[
-                    centerX + drawerWidth/2 - mmToThreeUnits(36), // 서랍속장-서랍 사이
-                    centerY - drawerHeight/2 + mmToThreeUnits(15), // 서랍 바닥 근처
-                    drawerBodyCenterZ // 서랍 본체 중심
+                    centerX - drawerWidth/2 + mmToThreeUnits(36),
+                    centerY - drawerHeight/2 + mmToThreeUnits(15),
+                    drawerBodyCenterZ
                   ]}
                 />
               );
             })()}
+            {/* 우측 레일 - 서랍 우측 */}
+            <primitive
+              key={`drawer-${drawerIndex}-rail-right`}
+              object={railModel.clone()}
+              position={[
+                centerX + drawerWidth/2 - mmToThreeUnits(36),
+                centerY - drawerHeight/2 + mmToThreeUnits(15),
+                drawerBodyCenterZ
+              ]}
+            />
           </>
         )}
 
