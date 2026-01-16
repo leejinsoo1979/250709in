@@ -812,13 +812,162 @@ function PageInner(){
       };
     }, [showDropdown]);
 
-    const handleMethodChange = (method: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC') => {
+    const handleMethodChange = async (method: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC') => {
+      console.log('🔄 handleMethodChange called with:', method);
       setSettings({ optimizationType: method });
       setShowDropdown(false);
-      // 모드 변경 시 자동으로 최적화 실행
-      setTimeout(() => {
-        handleOptimize();
-      }, 50);
+
+      // setSettings 후에 직접 최적화 실행 (클로저 문제 방지를 위해 method 값 직접 전달)
+      // 기존의 setTimeout/handleOptimize 대신 직접 실행
+      if (panels.length === 0 || stock.length === 0) return;
+
+      setIsOptimizing(true);
+      setMethodChanged(false);
+      setOptimizationResults([]);
+      pendingResultsRef.current = [];
+
+      // 설정값을 전역 변수로 저장
+      (window as any).cncSettings = { ...settings, optimizationType: method };
+
+      try {
+        // Group panels by material AND thickness
+        const panelGroups = new Map<string, Panel[]>();
+
+        panels.forEach(panel => {
+          const processedPanel = { ...panel };
+
+          if (method === 'OPTIMAL_CNC') {
+            processedPanel.canRotate = true;
+          } else {
+            if (settings.considerGrain && panel.grain && (panel.grain === 'V' || panel.grain === 'H')) {
+              processedPanel.canRotate = false;
+            } else {
+              processedPanel.canRotate = true;
+            }
+          }
+
+          const key = settings.considerMaterial
+            ? `${processedPanel.material || 'PB'}_${processedPanel.thickness || 18}`
+            : `THICKNESS_${processedPanel.thickness || 18}`;
+          if (!panelGroups.has(key)) {
+            panelGroups.set(key, []);
+          }
+          panelGroups.get(key)!.push(processedPanel);
+        });
+
+        const allResults: OptimizedResult[] = [];
+
+        for (const [key, groupPanels] of panelGroups) {
+          let material: string | undefined;
+          let thickness: number;
+
+          if (key.startsWith('THICKNESS_')) {
+            thickness = parseInt(key.split('_')[1]) || 18;
+          } else {
+            const parts = key.split('_');
+            material = parts[0];
+            thickness = parseInt(parts[1]) || 18;
+          }
+
+          let matchingStock;
+          if (material) {
+            matchingStock = stock.find(s => s.material === material && s.thickness === thickness);
+          }
+          if (!matchingStock) {
+            matchingStock = stock.find(s => s.thickness === thickness);
+          }
+          if (!matchingStock && stock.length > 0) {
+            matchingStock = stock[0];
+          }
+
+          if (matchingStock) {
+            const stockPanel = {
+              id: matchingStock.label || 'stock',
+              width: matchingStock.width,
+              height: matchingStock.length,
+              material: matchingStock.material || 'PB',
+              color: 'MW',
+              price: 50000,
+              stock: matchingStock.quantity
+            };
+
+            const optimizerPanels = groupPanels.map(p => ({
+              id: p.id,
+              name: p.label,
+              width: p.width,
+              height: p.length,
+              thickness: p.thickness,
+              quantity: p.quantity,
+              material: p.material || 'PB',
+              color: 'MW',
+              grain: p.grain === 'H' ? 'HORIZONTAL' : 'VERTICAL',
+              canRotate: p.canRotate
+            }));
+
+            const adjustedStockPanel = {
+              ...stockPanel,
+              width: stockPanel.width - (settings.trimLeft || 10) - (settings.trimRight || 10),
+              height: stockPanel.height - (settings.trimTop || 10) - (settings.trimBottom || 10)
+            };
+
+            console.log('⚡ 직접 optimizePanelsMultiple 호출 with method:', method);
+            const results = await optimizePanelsMultiple(
+              optimizerPanels,
+              adjustedStockPanel,
+              settings.singleSheetOnly ? 1 : 999,
+              settings.alignVerticalCuts !== false,
+              settings.kerf || 5,
+              method // 직접 전달받은 method 값 사용
+            );
+
+            results.forEach(result => {
+              result.panels.forEach(panel => {
+                panel.x += (settings.trimLeft || 10);
+                panel.y += (settings.trimBottom || 10);
+              });
+              result.stockPanel = stockPanel;
+            });
+
+            allResults.push(...results);
+          }
+        }
+
+        // Generate placements
+        const placements: Placement[] = [];
+        allResults.forEach((result, sheetIndex) => {
+          result.panels.forEach(panel => {
+            placements.push({
+              sheetId: String(sheetIndex + 1),
+              panelId: panel.id,
+              x: panel.x,
+              y: panel.y,
+              width: panel.width,
+              height: panel.height,
+              rotated: panel.rotated
+            });
+          });
+        });
+        setPlacements(placements);
+
+        setOptimizationResults(allResults);
+
+        if (currentSheetIndex >= allResults.length && allResults.length > 0) {
+          setCurrentSheetIndex(allResults.length - 1);
+        } else if (currentSheetIndex < 0 && allResults.length > 0) {
+          setCurrentSheetIndex(0);
+        }
+
+        if (allResults.length > 0) {
+          const totalPanels = allResults.reduce((sum, r) => sum + r.panels.length, 0);
+          const avgEfficiency = allResults.reduce((sum, r) => sum + r.efficiency, 0) / allResults.length;
+          showToast(t('cnc.optimizationComplete', { panels: totalPanels, sheets: allResults.length, efficiency: avgEfficiency.toFixed(1) }), 'success', t('common.confirm'));
+        }
+      } catch (error) {
+        console.error('Optimization error:', error);
+        showToast(t('cnc.optimizationError'), 'error', t('common.confirm'));
+      } finally {
+        setIsOptimizing(false);
+      }
     };
 
     return (
