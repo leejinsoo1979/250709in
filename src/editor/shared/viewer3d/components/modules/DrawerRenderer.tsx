@@ -7,6 +7,7 @@ import NativeLine from '../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import BoxWithEdges from './components/BoxWithEdges';
 import DimensionText from './components/DimensionText';
+import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js';
 
 
 interface DrawerRendererProps {
@@ -63,6 +64,32 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
   const { viewMode } = useSpace3DView();
+
+  // 레일 모델 로드
+  const [railModel, setRailModel] = React.useState<THREE.Object3D | null>(null);
+
+  React.useEffect(() => {
+    const loader = new ColladaLoader();
+    loader.load('/models/drawer-rail.dae', (collada) => {
+      // '헤펠레500언더레일' 또는 '_500언더레일' 노드 찾기
+      let railNode: THREE.Object3D | null = null;
+      collada.scene.traverse((child) => {
+        if (child.name === '헤펠레500언더레일' || child.name.includes('언더레일')) {
+          if (!railNode) {
+            railNode = child.clone();
+          }
+        }
+      });
+      if (railNode) {
+        // 스케일 조정 (DAE는 mm 단위, Three.js는 0.01 스케일)
+        railNode.scale.set(0.01, 0.01, 0.01);
+        setRailModel(railNode);
+        console.log('✅ 서랍 레일 모델 로드 완료');
+      }
+    }, undefined, (error) => {
+      console.warn('⚠️ 레일 모델 로드 실패:', error);
+    });
+  }, []);
 
   // 패널 비활성화용 material - 한 번만 생성하고 재사용
   const panelDimmedMaterial = React.useMemo(() => {
@@ -343,7 +370,34 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             />
           );
         })()}
-        
+
+        {/* === 서랍 레일 (좌/우) === */}
+        {railModel && (
+          <>
+            {/* 좌측 레일 */}
+            <primitive
+              key={`drawer-${drawerIndex}-rail-left`}
+              object={railModel.clone()}
+              position={[
+                centerX - drawerWidth/2 + mmToThreeUnits(2),
+                centerY - drawerHeight/2 + mmToThreeUnits(3.2),
+                drawerBodyCenterZ
+              ]}
+            />
+            {/* 우측 레일 */}
+            <primitive
+              key={`drawer-${drawerIndex}-rail-right`}
+              object={railModel.clone()}
+              position={[
+                centerX + drawerWidth/2 - mmToThreeUnits(25),
+                centerY - drawerHeight/2 + mmToThreeUnits(3.2),
+                drawerBodyCenterZ
+              ]}
+              scale={[-0.01, 0.01, 0.01]}
+            />
+          </>
+        )}
+
         {/* 상단면은 제외 (서랍이 열려있어야 함) */}
         
         {/* CAD 기호 (삼각형) 및 서랍 깊이 표시 */}
