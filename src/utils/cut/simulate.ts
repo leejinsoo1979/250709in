@@ -63,12 +63,6 @@ export function generateGuillotineCuts(
   const sortedHorizontal = consolidatePositions(horizontalPositions, 0, sheetH);
   const sortedVertical = consolidatePositions(verticalPositions, 0, sheetW);
 
-  console.log('=== generateGuillotineCuts ===');
-  console.log('optimizationType:', optimizationType);
-  console.log('panels:', panels.length);
-  console.log('sortedHorizontal (Y positions):', sortedHorizontal);
-  console.log('sortedVertical (X positions):', sortedVertical);
-
   // L방향 우선 (BY_LENGTH): 가로 재단 먼저 (→ 방향, 톱날이 왼쪽→오른쪽)
   // W방향 우선 (BY_WIDTH): 세로 재단 먼저 (↓ 방향, 톱날이 위→아래)
   const horizontalFirst = optimizationType === 'BY_LENGTH';
@@ -150,7 +144,6 @@ export function generateGuillotineCuts(
     });
   }
 
-  console.log('Generated cuts:', cuts.map(c => ({ order: c.order, axis: c.axis, pos: c.pos, label: c.label })));
   return cuts;
 }
 
