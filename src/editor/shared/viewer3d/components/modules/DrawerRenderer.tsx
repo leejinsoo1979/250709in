@@ -77,9 +77,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
       const scene = collada.scene;
 
       // DAE 단위: inch (0.0254m)
-      // inch → mm: * 25.4, mm → Three.js: * 0.01
-      // 총: inch * 0.254
-      const scale = 0.1; // 스케일 더 키움
+      // inch → mm: × 25.4, mm → Three.js units: × 0.01
+      // 총: inch × 0.254
+      const scale = 0.254;
       scene.scale.set(scale, scale, scale);
 
       // Z-UP → Y-UP 좌표계 변환
@@ -89,7 +89,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
       scene.position.set(0, 0, 0);
 
       setRailModel(scene);
-      console.log('✅ 서랍 레일 로드 완료');
+      console.log('✅ 서랍 레일 로드 완료, scale:', scale);
     }, undefined, (error) => {
       console.error('❌ 레일 로드 실패:', error);
     });
@@ -376,30 +376,31 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* === 서랍 레일 (좌/우) === */}
+        {/* sample.dae 기준: 레일 X=1.99inch(≈50mm), Y=3.23inch(깊이≈82mm from back) */}
         {railModel && (
           <>
-            {/* 좌측 레일 - 서랍 좌측판 바깥쪽 */}
+            {/* 좌측 레일 - 서랍 좌측판 바깥쪽, 서랍속장 안쪽 */}
             <primitive
               key={`drawer-${drawerIndex}-rail-left`}
               object={railModel.clone()}
               position={[
-                centerX - drawerWidth/2 + mmToThreeUnits(50),
-                centerY - drawerHeight/2 + mmToThreeUnits(25),
-                drawerBodyCenterZ
+                centerX - drawerWidth/2 + mmToThreeUnits(25), // 서랍 좌측에서 25mm 안쪽
+                centerY - drawerHeight/2 + mmToThreeUnits(15), // 서랍 바닥에서 15mm 위
+                drawerBodyCenterZ - drawerBodyDepth/2 + mmToThreeUnits(82) // 뒤에서 82mm
               ]}
             />
-            {/* 우측 레일 - 서랍 우측판 바깥쪽 */}
+            {/* 우측 레일 - 서랍 우측판 바깥쪽, 서랍속장 안쪽 */}
             {(() => {
               const rightRail = railModel.clone();
-              rightRail.scale.x *= -1; // X축 반전
+              rightRail.scale.x *= -1; // X축 반전 (좌우 대칭)
               return (
                 <primitive
                   key={`drawer-${drawerIndex}-rail-right`}
                   object={rightRail}
                   position={[
-                    centerX + drawerWidth/2 - mmToThreeUnits(50),
-                    centerY - drawerHeight/2 + mmToThreeUnits(25),
-                    drawerBodyCenterZ
+                    centerX + drawerWidth/2 - mmToThreeUnits(25), // 서랍 우측에서 25mm 안쪽
+                    centerY - drawerHeight/2 + mmToThreeUnits(15), // 서랍 바닥에서 15mm 위
+                    drawerBodyCenterZ - drawerBodyDepth/2 + mmToThreeUnits(82) // 뒤에서 82mm
                   ]}
                 />
               );
