@@ -595,26 +595,24 @@ function PageInner(){
 
         if (matchingStock) {
           // Convert to optimizer format
-          // width = 가로(X축) = L방향 = 2440mm
-          // height = 세로(Y축) = W방향 = 1220mm
+          // stockPanel: width=W방향(1220), height=L방향(2440)
+          // 캔버스는 rotation=-90으로 가로로 표시됨
           const stockPanel = {
             id: matchingStock.label || 'stock',
-            width: matchingStock.length,  // L방향(긴 쪽)을 가로로
-            height: matchingStock.width,  // W방향(짧은 쪽)을 세로로
+            width: matchingStock.width,   // 1220 (W방향)
+            height: matchingStock.length, // 2440 (L방향)
             material: matchingStock.material || 'PB',
             color: 'MW',
             price: 50000,
             stock: matchingStock.quantity
           };
 
-          // 패널도 동일하게 변환
-          // p.width = W방향(짧은 쪽), p.length = L방향(긴 쪽)
-          // optimizer에서 width = X축(가로), height = Y축(세로)
+          // 패널: width=W방향, height=L방향 (시트와 동일한 좌표계)
           const optimizerPanels = groupPanels.map(p => ({
             id: p.id,
             name: p.label,
-            width: p.length,   // L방향을 가로로
-            height: p.width,   // W방향을 세로로
+            width: p.width,    // W방향
+            height: p.length,  // L방향
             thickness: p.thickness,
             quantity: p.quantity,
             material: p.material || 'PB',
