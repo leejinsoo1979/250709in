@@ -45,33 +45,14 @@ export function generateGuillotineCuts(
   const sortedHorizontal = Array.from(horizontalCutPositions).sort((a, b) => a - b);
   const sortedVertical = Array.from(verticalCutPositions).sort((a, b) => a - b);
 
-  // BY_LENGTH: 가로 재단 먼저 (L방향 우선) - 시트를 가로로 자름
-  // BY_WIDTH: 세로 재단 먼저 (W방향 우선) - 시트를 세로로 자름
-  const horizontalFirst = optimizationType !== 'BY_WIDTH';
+  // L방향 우선 (BY_LENGTH): 세로 재단 먼저 (L방향 = 가로로 배열된 패널들을 세로로 분리)
+  // W방향 우선 (BY_WIDTH): 가로 재단 먼저 (W방향 = 세로로 배열된 패널들을 가로로 분리)
+  const verticalFirst = optimizationType === 'BY_LENGTH';
 
-  if (horizontalFirst) {
+  if (verticalFirst) {
     // === L방향 우선 ===
-    // 1단계: 모든 가로 재단 (전체 시트 폭을 가로지름)
-    sortedHorizontal.forEach(yPos => {
-      cuts.push({
-        id: `cut-${order}`,
-        order: order++,
-        sheetId: '',
-        axis: 'y' as CutAxis,
-        pos: yPos,
-        spanStart: 0,
-        spanEnd: sheetW,
-        before: workpiece,
-        result: workpiece,
-        kerf,
-        label: `가로 재단 #${cuts.length + 1}`,
-        source: 'derived'
-      });
-    });
-
-    // 2단계: 모든 세로 재단
-    // 각 x 위치에서 하나의 재단만 생성 (전체 시트 높이를 가로지름)
-    // 실제 패널쏘: 톱날이 한번 지나가면 끝까지 쭉 감
+    // 1단계: 모든 세로 재단 (전체 시트 높이를 가로지름)
+    // 톱날이 위에서 아래로 쭉 지나감
     sortedVertical.forEach(xPos => {
       cuts.push({
         id: `cut-${order}`,
@@ -85,33 +66,33 @@ export function generateGuillotineCuts(
         result: workpiece,
         kerf,
         label: `세로 재단 #${cuts.length + 1}`,
+        source: 'derived'
+      });
+    });
+
+    // 2단계: 모든 가로 재단 (전체 시트 폭을 가로지름)
+    // 톱날이 왼쪽에서 오른쪽으로 쭉 지나감
+    sortedHorizontal.forEach(yPos => {
+      cuts.push({
+        id: `cut-${order}`,
+        order: order++,
+        sheetId: '',
+        axis: 'y' as CutAxis,
+        pos: yPos,
+        spanStart: 0,
+        spanEnd: sheetW,
+        before: workpiece,
+        result: workpiece,
+        kerf,
+        label: `가로 재단 #${cuts.length + 1}`,
         source: 'derived'
       });
     });
 
   } else {
     // === W방향 우선 ===
-    // 1단계: 모든 세로 재단 (전체 시트 높이를 가로지름)
-    sortedVertical.forEach(xPos => {
-      cuts.push({
-        id: `cut-${order}`,
-        order: order++,
-        sheetId: '',
-        axis: 'x' as CutAxis,
-        pos: xPos,
-        spanStart: 0,
-        spanEnd: sheetH,
-        before: workpiece,
-        result: workpiece,
-        kerf,
-        label: `세로 재단 #${cuts.length + 1}`,
-        source: 'derived'
-      });
-    });
-
-    // 2단계: 모든 가로 재단
-    // 각 y 위치에서 하나의 재단만 생성 (전체 시트 폭을 가로지름)
-    // 실제 패널쏘: 톱날이 한번 지나가면 끝까지 쭉 감
+    // 1단계: 모든 가로 재단 (전체 시트 폭을 가로지름)
+    // 톱날이 왼쪽에서 오른쪽으로 쭉 지나감
     sortedHorizontal.forEach(yPos => {
       cuts.push({
         id: `cut-${order}`,
@@ -125,6 +106,25 @@ export function generateGuillotineCuts(
         result: workpiece,
         kerf,
         label: `가로 재단 #${cuts.length + 1}`,
+        source: 'derived'
+      });
+    });
+
+    // 2단계: 모든 세로 재단 (전체 시트 높이를 가로지름)
+    // 톱날이 위에서 아래로 쭉 지나감
+    sortedVertical.forEach(xPos => {
+      cuts.push({
+        id: `cut-${order}`,
+        order: order++,
+        sheetId: '',
+        axis: 'x' as CutAxis,
+        pos: xPos,
+        spanStart: 0,
+        spanEnd: sheetH,
+        before: workpiece,
+        result: workpiece,
+        kerf,
+        label: `세로 재단 #${cuts.length + 1}`,
         source: 'derived'
       });
     });
