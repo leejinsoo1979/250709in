@@ -111,6 +111,59 @@
   height: 16px;
 }
 
+.simulationButton {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  margin-right: 8px;
+  background: #065f46;
+  border: 1px solid #047857;
+  border-radius: 4px;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.simulationButton:hover:not(:disabled) {
+  background: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.simulationButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #374151;
+  border-color: #4b5563;
+}
+
+.simulationButton.simulating {
+  background: #dc2626;
+  border-color: #b91c1c;
+  animation: simulationPulse 1s ease-in-out infinite;
+}
+
+.simulationButton.simulating:hover {
+  background: #b91c1c;
+}
+
+@keyframes simulationPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(220, 38, 38, 0);
+  }
+}
+
+.simulationButton svg {
+  width: 16px;
+  height: 16px;
+}
+
 .dropdownContainer {
   position: relative;
 }

@@ -4,7 +4,7 @@ import { useLivePanelData } from './hooks/useLivePanelData';
 import { useProjectStore } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, Zap, Play, Pause, ChevronDown, ChevronRight, ChevronUp, Layout, Package, Grid3x3, Cpu, LogOut, Settings2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Zap, Play, Pause, ChevronDown, ChevronRight, ChevronUp, Layout, Package, Grid3x3, Cpu, LogOut, Settings2, Scissors } from 'lucide-react';
 import Logo from '@/components/common/Logo';
 import { initializeTheme } from '@/theme';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -888,13 +888,30 @@ function PageInner(){
         <div className={styles.headerRight}>
           <CuttingMethodDropdown />
           <div className={styles.divider} />
-          <button 
+          <button
             className={`${styles.calculateButton} ${methodChanged ? styles.highlighted : ''}`}
             onClick={handleOptimize}
             disabled={isOptimizing || panels.length === 0}
           >
             <Play size={18} />
             <span>{t('cnc.calculate')}</span>
+          </button>
+          <button
+            className={`${styles.simulationButton} ${simulating ? styles.simulating : ''}`}
+            onClick={() => {
+              if (simulating) {
+                setSimulating(false);
+              } else if (optimizationResults.length > 0) {
+                setSelectedPanelId(null);
+                setSelectedSheetId(String(currentSheetIndex + 1));
+                setSimulating(true);
+              }
+            }}
+            disabled={optimizationResults.length === 0}
+            title={simulating ? "시뮬레이션 정지" : "재단 시뮬레이션"}
+          >
+            {simulating ? <Pause size={18} /> : <Scissors size={18} />}
+            <span>{simulating ? '정지' : '시뮬레이션'}</span>
           </button>
           <div className={styles.exportGroup}>
             <ExportBar optimizationResults={optimizationResults} />
