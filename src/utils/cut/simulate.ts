@@ -11,8 +11,8 @@ interface PanelPlacement {
 
 /**
  * Generate proper guillotine cuts for an entire sheet
- * 기요틴 재단: 패널을 관통하지 않는 재단선만 생성
- * 모든 패널의 4면 경계를 재단
+ * 기요틴 재단: 큰 영역부터 분할하여 재단
+ * 재귀적 분할 방식으로 올바른 재단 순서 생성
  */
 export function generateGuillotineCuts(
   sheetW: number,
@@ -27,51 +27,22 @@ export function generateGuillotineCuts(
 
   if (panels.length === 0) return cuts;
 
-  // 재단선 중복 체크용 (key: "axis-pos-spanStart-spanEnd")
+  // L방향 우선 = 세로 재단(x) 우선, W방향 우선 = 가로 재단(y) 우선
+  const preferVertical = optimizationType === 'BY_LENGTH';
+
+  // 이미 추가된 재단 위치 추적 (중복 방지)
   const addedCuts = new Set<string>();
 
-  // 특정 위치에서 재단이 패널을 관통하는지 확인
-  const wouldCutThroughPanel = (axis: 'x' | 'y', pos: number, spanStart: number, spanEnd: number): boolean => {
-    const tolerance = 0.1; // 부동소수점 오차 허용
-    for (const p of panels) {
-      if (axis === 'x') {
-        // 세로 재단: 패널 내부를 지나가는지 확인
-        // pos가 패널의 왼쪽 경계와 오른쪽 경계 사이에 있어야 관통
-        if (p.x + tolerance < pos && p.x + p.width - tolerance > pos) {
-          // 패널의 Y 범위와 재단 Y 범위가 겹치면 관통
-          if (p.y < spanEnd - tolerance && p.y + p.height > spanStart + tolerance) {
-            return true;
-          }
-        }
-      } else {
-        // 가로 재단: 패널 내부를 지나가는지 확인
-        // pos가 패널의 위쪽 경계와 아래쪽 경계 사이에 있어야 관통
-        if (p.y + tolerance < pos && p.y + p.height - tolerance > pos) {
-          // 패널의 X 범위와 재단 X 범위가 겹치면 관통
-          if (p.x < spanEnd - tolerance && p.x + p.width > spanStart + tolerance) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  };
-
-  // 재단 추가 함수 (중복 방지) - 같은 위치에는 하나의 재단만 허용
+  // 재단 추가 함수
   const addCut = (axis: 'x' | 'y', pos: number, spanStart: number, spanEnd: number) => {
-    // 시트 경계에 있는 재단은 스킵 (kerf 범위 내)
-    if (axis === 'x' && (pos <= kerf / 2 || pos >= sheetW - kerf / 2)) return;
-    if (axis === 'y' && (pos <= kerf / 2 || pos >= sheetH - kerf / 2)) return;
+    // 시트 경계에 있는 재단은 스킵
+    if (axis === 'x' && (pos <= 0.5 || pos >= sheetW - 0.5)) return;
+    if (axis === 'y' && (pos <= 0.5 || pos >= sheetH - 0.5)) return;
 
     // span이 유효한지 확인
-    if (spanEnd <= spanStart) return;
+    if (spanEnd <= spanStart + 0.5) return;
 
-    // 재단이 패널을 관통하면 스킵
-    if (wouldCutThroughPanel(axis, pos, spanStart, spanEnd)) {
-      return;
-    }
-
-    // 중복 체크 - axis와 pos만으로 체크 (같은 위치에 재단은 하나만)
+    // 중복 체크
     const key = `${axis}-${Math.round(pos)}`;
     if (addedCuts.has(key)) return;
     addedCuts.add(key);
@@ -92,127 +63,151 @@ export function generateGuillotineCuts(
     });
   };
 
-  // L방향 우선 = 세로 재단(x) 우선, W방향 우선 = 가로 재단(y) 우선
-  const preferVertical = optimizationType === 'BY_LENGTH';
+  // 재귀적 영역 분할 함수
+  const divideRegion = (
+    xStart: number,
+    yStart: number,
+    xEnd: number,
+    yEnd: number,
+    regionPanels: PanelPlacement[]
+  ) => {
+    // 패널이 없거나 1개면 더 이상 분할 불필요
+    if (regionPanels.length <= 1) return;
 
-  console.log('🔧 generateGuillotineCuts:', {
-    optimizationType,
-    preferVertical,
-    panelCount: panels.length,
-    sheetW,
-    sheetH
-  });
+    // 영역이 너무 작으면 종료
+    if (xEnd - xStart < kerf * 2 || yEnd - yStart < kerf * 2) return;
 
-  // 모든 패널의 경계에서 재단선 생성
-  interface CutCandidate {
-    axis: 'x' | 'y';
-    pos: number;
-    spanStart: number;
-    spanEnd: number;
-  }
-  const candidates: CutCandidate[] = [];
+    // 현재 영역 내 패널만 고려하여 재단 가능 여부 판단
+    const canCutVertically = (cutX: number): boolean => {
+      for (const p of regionPanels) {
+        // 재단선이 패널 내부를 지나가면 불가
+        if (p.x < cutX - 0.1 && p.x + p.width > cutX + 0.1) {
+          return false;
+        }
+      }
+      return true;
+    };
 
-  // 각 패널의 4면 경계를 재단 후보로 수집
-  panels.forEach((p, idx) => {
-    console.log(`  패널 ${idx}: x=${p.x.toFixed(1)} y=${p.y.toFixed(1)} w=${p.width.toFixed(1)} h=${p.height.toFixed(1)}`);
+    const canCutHorizontally = (cutY: number): boolean => {
+      for (const p of regionPanels) {
+        // 재단선이 패널 내부를 지나가면 불가
+        if (p.y < cutY - 0.1 && p.y + p.height > cutY + 0.1) {
+          return false;
+        }
+      }
+      return true;
+    };
 
-    // 세로 재단 (X 경계) - 좌측과 우측
-    // 좌측 경계: x 위치에서 패널 높이만큼 재단
-    candidates.push({ axis: 'x', pos: p.x, spanStart: p.y, spanEnd: p.y + p.height });
-    // 우측 경계: x + width 위치에서 패널 높이만큼 재단
-    candidates.push({ axis: 'x', pos: p.x + p.width, spanStart: p.y, spanEnd: p.y + p.height });
+    // 가능한 세로 재단 위치 수집 (패널 경계)
+    const verticalCuts: number[] = [];
+    regionPanels.forEach(p => {
+      if (p.x > xStart + kerf && p.x < xEnd - kerf) {
+        if (canCutVertically(p.x)) verticalCuts.push(p.x);
+      }
+      if (p.x + p.width > xStart + kerf && p.x + p.width < xEnd - kerf) {
+        if (canCutVertically(p.x + p.width)) verticalCuts.push(p.x + p.width);
+      }
+    });
 
-    // 가로 재단 (Y 경계) - 아래쪽과 위쪽
-    // 아래쪽 경계: y 위치에서 패널 너비만큼 재단
-    candidates.push({ axis: 'y', pos: p.y, spanStart: p.x, spanEnd: p.x + p.width });
-    // 위쪽 경계: y + height 위치에서 패널 너비만큼 재단
-    candidates.push({ axis: 'y', pos: p.y + p.height, spanStart: p.x, spanEnd: p.x + p.width });
-  });
+    // 가능한 가로 재단 위치 수집 (패널 경계)
+    const horizontalCuts: number[] = [];
+    regionPanels.forEach(p => {
+      if (p.y > yStart + kerf && p.y < yEnd - kerf) {
+        if (canCutHorizontally(p.y)) horizontalCuts.push(p.y);
+      }
+      if (p.y + p.height > yStart + kerf && p.y + p.height < yEnd - kerf) {
+        if (canCutHorizontally(p.y + p.height)) horizontalCuts.push(p.y + p.height);
+      }
+    });
 
-  console.log(`  후보 재단 수: ${candidates.length}`);
+    // 중복 제거 및 정렬
+    const uniqueVertical = [...new Set(verticalCuts.map(v => Math.round(v)))].sort((a, b) => a - b);
+    const uniqueHorizontal = [...new Set(horizontalCuts.map(v => Math.round(v)))].sort((a, b) => a - b);
 
-  // 같은 위치, 같은 방향의 재단은 span을 병합
-  // positionMap: "axis-pos" -> { spans: [{ start, end }, ...] }
-  const positionMap = new Map<string, { axis: 'x' | 'y'; pos: number; spans: { start: number; end: number }[] }>();
-
-  candidates.forEach(c => {
-    // 정수 단위로 반올림하여 같은 위치로 취급 (부동소수점 오차 방지)
-    const roundedPos = Math.round(c.pos);
-    const key = `${c.axis}-${roundedPos}`;
-    const existing = positionMap.get(key);
-    if (existing) {
-      existing.spans.push({ start: c.spanStart, end: c.spanEnd });
-    } else {
-      positionMap.set(key, {
-        axis: c.axis,
-        pos: roundedPos, // 반올림된 값 사용
-        spans: [{ start: c.spanStart, end: c.spanEnd }]
-      });
-    }
-  });
-
-  // span 병합 - 같은 위치의 모든 span을 하나로 합침 (기요틴 재단은 한 번에 전체 재단)
-  positionMap.forEach((value) => {
-    if (value.spans.length === 0) return;
-
-    // 모든 span의 최소 시작점과 최대 끝점을 찾아 하나로 합침
-    let minStart = value.spans[0].start;
-    let maxEnd = value.spans[0].end;
-
-    for (const span of value.spans) {
-      minStart = Math.min(minStart, span.start);
-      maxEnd = Math.max(maxEnd, span.end);
-    }
-
-    // 하나의 span으로 대체
-    value.spans = [{ start: minStart, end: maxEnd }];
-  });
-
-  // 우선순위에 따라 정렬
-  const sortedEntries = Array.from(positionMap.entries()).sort((a, b) => {
-    const [, aVal] = a;
-    const [, bVal] = b;
+    let cutMade = false;
 
     if (preferVertical) {
-      // 세로 재단(x) 먼저, 그 다음 가로 재단(y)
-      if (aVal.axis !== bVal.axis) return aVal.axis === 'x' ? -1 : 1;
+      // 세로 재단 우선
+      if (uniqueVertical.length > 0 && !cutMade) {
+        // 가장 효과적인 재단 위치 선택 (중앙에 가까운 것)
+        const midX = (xStart + xEnd) / 2;
+        uniqueVertical.sort((a, b) => Math.abs(a - midX) - Math.abs(b - midX));
+        const cutX = uniqueVertical[0];
+
+        addCut('x', cutX, yStart, yEnd);
+
+        // 왼쪽 영역
+        const leftPanels = regionPanels.filter(p => p.x + p.width <= cutX + kerf);
+        divideRegion(xStart, yStart, cutX, yEnd, leftPanels);
+
+        // 오른쪽 영역
+        const rightPanels = regionPanels.filter(p => p.x >= cutX - kerf);
+        divideRegion(cutX, yStart, xEnd, yEnd, rightPanels);
+
+        cutMade = true;
+      }
+
+      // 세로 재단이 안 되면 가로 재단
+      if (uniqueHorizontal.length > 0 && !cutMade) {
+        const midY = (yStart + yEnd) / 2;
+        uniqueHorizontal.sort((a, b) => Math.abs(a - midY) - Math.abs(b - midY));
+        const cutY = uniqueHorizontal[0];
+
+        addCut('y', cutY, xStart, xEnd);
+
+        // 아래쪽 영역
+        const bottomPanels = regionPanels.filter(p => p.y + p.height <= cutY + kerf);
+        divideRegion(xStart, yStart, xEnd, cutY, bottomPanels);
+
+        // 위쪽 영역
+        const topPanels = regionPanels.filter(p => p.y >= cutY - kerf);
+        divideRegion(xStart, cutY, xEnd, yEnd, topPanels);
+
+        cutMade = true;
+      }
     } else {
-      // 가로 재단(y) 먼저, 그 다음 세로 재단(x)
-      if (aVal.axis !== bVal.axis) return aVal.axis === 'y' ? -1 : 1;
+      // 가로 재단 우선
+      if (uniqueHorizontal.length > 0 && !cutMade) {
+        const midY = (yStart + yEnd) / 2;
+        uniqueHorizontal.sort((a, b) => Math.abs(a - midY) - Math.abs(b - midY));
+        const cutY = uniqueHorizontal[0];
+
+        addCut('y', cutY, xStart, xEnd);
+
+        // 아래쪽 영역
+        const bottomPanels = regionPanels.filter(p => p.y + p.height <= cutY + kerf);
+        divideRegion(xStart, yStart, xEnd, cutY, bottomPanels);
+
+        // 위쪽 영역
+        const topPanels = regionPanels.filter(p => p.y >= cutY - kerf);
+        divideRegion(xStart, cutY, xEnd, yEnd, topPanels);
+
+        cutMade = true;
+      }
+
+      // 가로 재단이 안 되면 세로 재단
+      if (uniqueVertical.length > 0 && !cutMade) {
+        const midX = (xStart + xEnd) / 2;
+        uniqueVertical.sort((a, b) => Math.abs(a - midX) - Math.abs(b - midX));
+        const cutX = uniqueVertical[0];
+
+        addCut('x', cutX, yStart, yEnd);
+
+        // 왼쪽 영역
+        const leftPanels = regionPanels.filter(p => p.x + p.width <= cutX + kerf);
+        divideRegion(xStart, yStart, cutX, yEnd, leftPanels);
+
+        // 오른쪽 영역
+        const rightPanels = regionPanels.filter(p => p.x >= cutX - kerf);
+        divideRegion(cutX, yStart, xEnd, yEnd, rightPanels);
+
+        cutMade = true;
+      }
     }
-    return aVal.pos - bVal.pos;
-  });
+  };
 
-  // 재단 생성 - 각 위치당 하나의 재단만 생성
-  console.log(`  정렬된 위치 수: ${sortedEntries.length}`);
-  for (const [key, value] of sortedEntries) {
-    const span = value.spans[0]; // 병합되어 하나만 존재
-    console.log(`  처리: ${key} span:${span.start.toFixed(1)}-${span.end.toFixed(1)}`);
-    addCut(value.axis, value.pos, span.start, span.end);
-  }
-
-  console.log(`  최종 재단 수: ${cuts.length}`);
-
-  // 중복 체크 - 같은 axis와 pos를 가진 재단이 있는지 확인
-  const posCheck = new Map<string, number>();
-  cuts.forEach(cut => {
-    const key = `${cut.axis}-${Math.round(cut.pos)}`;
-    posCheck.set(key, (posCheck.get(key) || 0) + 1);
-  });
-  const duplicates = Array.from(posCheck.entries()).filter(([, count]) => count > 1);
-  if (duplicates.length > 0) {
-    console.warn('⚠️ 중복 재단 발견:', duplicates);
-  }
-
-  // 재단 순서 재정렬 (우선 방향 고려)
-  cuts.sort((a, b) => {
-    if (preferVertical) {
-      if (a.axis !== b.axis) return a.axis === 'x' ? -1 : 1;
-    } else {
-      if (a.axis !== b.axis) return a.axis === 'y' ? -1 : 1;
-    }
-    return a.pos - b.pos;
-  });
+  // 전체 시트에서 시작
+  divideRegion(0, 0, sheetW, sheetH, panels);
 
   // order 재설정
   cuts.forEach((cut, idx) => {
@@ -249,7 +244,7 @@ export function deriveGuillotineForPanel(
       axis: 'y' as CutAxis,
       pos: p.y,
       spanStart: 0,
-      spanEnd: sheetW, // 전체 시트 너비
+      spanEnd: sheetW,
       before: currentWorkpiece,
       result: { width: sheetW, length: sheetH - p.y },
       kerf,
@@ -268,7 +263,7 @@ export function deriveGuillotineForPanel(
       axis: 'y' as CutAxis,
       pos: p.y + p.height,
       spanStart: 0,
-      spanEnd: sheetW, // 전체 시트 너비
+      spanEnd: sheetW,
       before: currentWorkpiece,
       result: { width: sheetW, length: resultHeight },
       kerf,
@@ -287,7 +282,7 @@ export function deriveGuillotineForPanel(
       axis: 'x' as CutAxis,
       pos: p.x,
       spanStart: 0,
-      spanEnd: sheetH, // 전체 시트 높이 (또는 스트립 높이)
+      spanEnd: sheetH,
       before: currentWorkpiece,
       result: { width: currentWorkpiece.width - p.x, length: currentWorkpiece.length },
       kerf,
@@ -305,7 +300,7 @@ export function deriveGuillotineForPanel(
       axis: 'x' as CutAxis,
       pos: p.x + p.width,
       spanStart: 0,
-      spanEnd: sheetH, // 전체 시트 높이 (또는 스트립 높이)
+      spanEnd: sheetH,
       before: currentWorkpiece,
       result: { width: p.width, length: p.height },
       yieldsPanelId: panelId,
@@ -336,7 +331,6 @@ export function deriveFreeCutPerimeter(
   const cuts: CutStep[] = [];
   let order = 0;
 
-  // Free Cut에서는 전체 시트에서 패널 주변을 자름
   const workpiece: WorkPiece = { width: sheetW, length: sheetH };
 
   // Top edge
@@ -387,7 +381,7 @@ export function deriveFreeCutPerimeter(
     source: 'derived'
   });
 
-  // Left edge - 마지막 재단으로 패널 완성
+  // Left edge
   cuts.push({
     id: `cut-${order}`,
     order: order++,
@@ -428,7 +422,6 @@ export function buildSequenceForPanel(opts: {
     cuts = deriveFreeCutPerimeter(sheetW, sheetH, placement, kerf, panelId);
   }
 
-  // Set sheetId for all cuts
   return cuts.map(cut => ({ ...cut, sheetId }));
 }
 
@@ -445,8 +438,7 @@ export function runSimulation(
   }
 ): void {
   const { onTick, onDone, speed, cancelRef } = controls;
-  const baseDelay = 1000 / speed; // Base delay in ms (1 second per cut at speed 1)
-
+  const baseDelay = 1000 / speed;
 
   let currentIndex = 0;
 
@@ -462,21 +454,19 @@ export function runSimulation(
     setTimeout(animate, baseDelay);
   };
 
-  // Start animation
   animate();
 }
 
 /**
  * Run simulation with smooth progress animation
- * The saw blade moves along each cut line progressively
  */
 export function runSmoothSimulation(
   steps: CutStep[],
   controls: {
-    onProgress: (cutIndex: number, progress: number) => void; // progress: 0-1
+    onProgress: (cutIndex: number, progress: number) => void;
     onCutComplete: (cutIndex: number) => void;
     onDone: () => void;
-    speed: number; // mm per second
+    speed: number;
     cancelRef: { current: boolean };
   }
 ): void {
@@ -484,7 +474,6 @@ export function runSmoothSimulation(
 
   let currentIndex = 0;
   let startTime = 0;
-  let animationId: number;
 
   const animateCut = (timestamp: number) => {
     if (cancelRef.current) {
@@ -499,7 +488,7 @@ export function runSmoothSimulation(
 
     const cut = steps[currentIndex];
     const cutLength = Math.abs(cut.spanEnd - cut.spanStart);
-    const duration = (cutLength / speed) * 1000; // Convert to milliseconds
+    const duration = (cutLength / speed) * 1000;
 
     if (startTime === 0) {
       startTime = timestamp;
@@ -511,21 +500,19 @@ export function runSmoothSimulation(
     onProgress(currentIndex, progress);
 
     if (progress >= 1) {
-      // Cut complete, move to next
       onCutComplete(currentIndex);
       currentIndex++;
       startTime = 0;
 
       if (currentIndex < steps.length) {
-        animationId = requestAnimationFrame(animateCut);
+        requestAnimationFrame(animateCut);
       } else {
         onDone();
       }
     } else {
-      animationId = requestAnimationFrame(animateCut);
+      requestAnimationFrame(animateCut);
     }
   };
 
-  // Start animation
-  animationId = requestAnimationFrame(animateCut);
+  requestAnimationFrame(animateCut);
 }

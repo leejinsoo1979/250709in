@@ -265,7 +265,11 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         },
         onCutComplete: (cutIndex) => {
           if (newCancelRef.current) return;
-          setCompletedCuts(prev => [...prev, cutIndex]);
+          // 중복 추가 방지
+          setCompletedCuts(prev => {
+            if (prev.includes(cutIndex)) return prev;
+            return [...prev, cutIndex];
+          });
           selectCutIndex(cutIndex);
         },
         onDone: () => {
