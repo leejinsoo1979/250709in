@@ -416,28 +416,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const railZ = drawerBodyCenterZ;
           const railLength = drawerBodyDepth - mmToThreeUnits(20); // 레일 길이
 
-          // 2D 모드: 흰색 박스로 레일 표시
-          if (viewMode === '2D') {
-            const railHeight2D = mmToThreeUnits(15);
-            const railDepth2D = mmToThreeUnits(3);
-
-            return (
-              <group name="drawer-rails-2d">
-                {/* 좌측 레일 */}
-                <mesh position={[railLeftX, railY, railZ]}>
-                  <boxGeometry args={[railDepth2D, railHeight2D, railLength]} />
-                  <meshBasicMaterial color="#FFFFFF" />
-                </mesh>
-                {/* 우측 레일 */}
-                <mesh position={[railRightX, railY, railZ]}>
-                  <boxGeometry args={[railDepth2D, railHeight2D, railLength]} />
-                  <meshBasicMaterial color="#FFFFFF" />
-                </mesh>
-              </group>
-            );
-          }
-
-          // 3D 모드: DAE 모델 렌더링
+          // 2D/3D 모두 DAE 모델 사용, 재질만 다르게
           if (!railModel || !railCenterOffset) return null;
 
           const offsetX = railCenterOffset.x;
