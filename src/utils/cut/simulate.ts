@@ -69,40 +69,24 @@ export function generateGuillotineCuts(
       });
     });
 
-    // 2단계: 모든 세로 재단 (각 스트립의 높이만큼)
-    // 스트립 경계 계산
-    const yBoundaries = [0, ...sortedHorizontal, sheetH];
-
+    // 2단계: 모든 세로 재단
+    // 각 x 위치에서 하나의 재단만 생성 (전체 시트 높이를 가로지름)
+    // 실제 패널쏘: 톱날이 한번 지나가면 끝까지 쭉 감
     sortedVertical.forEach(xPos => {
-      // 이 x 위치에서 재단이 필요한 스트립들 찾기
-      for (let i = 0; i < yBoundaries.length - 1; i++) {
-        const stripYStart = yBoundaries[i];
-        const stripYEnd = yBoundaries[i + 1];
-
-        // 이 스트립 내에 이 x 위치에서 재단이 필요한 패널이 있는지 확인
-        const needsCut = panels.some(p => {
-          const panelInStrip = p.y >= stripYStart - kerf && p.y + p.height <= stripYEnd + kerf;
-          const cutAtX = Math.abs(p.x - xPos) < kerf || Math.abs(p.x + p.width - xPos) < kerf;
-          return panelInStrip && cutAtX;
-        });
-
-        if (needsCut) {
-          cuts.push({
-            id: `cut-${order}`,
-            order: order++,
-            sheetId: '',
-            axis: 'x' as CutAxis,
-            pos: xPos,
-            spanStart: stripYStart,
-            spanEnd: stripYEnd,
-            before: workpiece,
-            result: workpiece,
-            kerf,
-            label: `세로 재단 #${cuts.length + 1}`,
-            source: 'derived'
-          });
-        }
-      }
+      cuts.push({
+        id: `cut-${order}`,
+        order: order++,
+        sheetId: '',
+        axis: 'x' as CutAxis,
+        pos: xPos,
+        spanStart: 0,
+        spanEnd: sheetH,
+        before: workpiece,
+        result: workpiece,
+        kerf,
+        label: `세로 재단 #${cuts.length + 1}`,
+        source: 'derived'
+      });
     });
 
   } else {
@@ -125,37 +109,24 @@ export function generateGuillotineCuts(
       });
     });
 
-    // 2단계: 모든 가로 재단 (각 스트립의 너비만큼)
-    const xBoundaries = [0, ...sortedVertical, sheetW];
-
+    // 2단계: 모든 가로 재단
+    // 각 y 위치에서 하나의 재단만 생성 (전체 시트 폭을 가로지름)
+    // 실제 패널쏘: 톱날이 한번 지나가면 끝까지 쭉 감
     sortedHorizontal.forEach(yPos => {
-      for (let i = 0; i < xBoundaries.length - 1; i++) {
-        const stripXStart = xBoundaries[i];
-        const stripXEnd = xBoundaries[i + 1];
-
-        const needsCut = panels.some(p => {
-          const panelInStrip = p.x >= stripXStart - kerf && p.x + p.width <= stripXEnd + kerf;
-          const cutAtY = Math.abs(p.y - yPos) < kerf || Math.abs(p.y + p.height - yPos) < kerf;
-          return panelInStrip && cutAtY;
-        });
-
-        if (needsCut) {
-          cuts.push({
-            id: `cut-${order}`,
-            order: order++,
-            sheetId: '',
-            axis: 'y' as CutAxis,
-            pos: yPos,
-            spanStart: stripXStart,
-            spanEnd: stripXEnd,
-            before: workpiece,
-            result: workpiece,
-            kerf,
-            label: `가로 재단 #${cuts.length + 1}`,
-            source: 'derived'
-          });
-        }
-      }
+      cuts.push({
+        id: `cut-${order}`,
+        order: order++,
+        sheetId: '',
+        axis: 'y' as CutAxis,
+        pos: yPos,
+        spanStart: 0,
+        spanEnd: sheetW,
+        before: workpiece,
+        result: workpiece,
+        kerf,
+        label: `가로 재단 #${cuts.length + 1}`,
+        source: 'derived'
+      });
     });
   }
 
