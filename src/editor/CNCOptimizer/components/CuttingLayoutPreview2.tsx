@@ -995,15 +995,19 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         let endX, endY;
         ctx.beginPath();
+        // axis='x': x위치 고정, y방향으로 세로선(│) 그림
+        // axis='y': y위치 고정, x방향으로 가로선(─) 그림
         if (cut.axis === 'x') {
-          ctx.moveTo(offsetX + cut.pos, offsetY + cut.spanStart);
-          ctx.lineTo(offsetX + cut.pos, offsetY + cut.spanEnd);
+          // 세로선: x=cut.pos 고정, y=spanStart~spanEnd
+          ctx.moveTo(offsetX + cut.pos, offsetY + (cut.spanStart ?? 0));
+          ctx.lineTo(offsetX + cut.pos, offsetY + (cut.spanEnd ?? 0));
           endX = offsetX + cut.pos;
-          endY = offsetY + cut.spanEnd;
+          endY = offsetY + (cut.spanEnd ?? 0);
         } else {
-          ctx.moveTo(offsetX + cut.spanStart, offsetY + cut.pos);
-          ctx.lineTo(offsetX + cut.spanEnd, offsetY + cut.pos);
-          endX = offsetX + cut.spanEnd;
+          // 가로선: y=cut.pos 고정, x=spanStart~spanEnd
+          ctx.moveTo(offsetX + (cut.spanStart ?? 0), offsetY + cut.pos);
+          ctx.lineTo(offsetX + (cut.spanEnd ?? 0), offsetY + cut.pos);
+          endX = offsetX + (cut.spanEnd ?? 0);
           endY = offsetY + cut.pos;
         }
         ctx.stroke();
