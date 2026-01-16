@@ -366,24 +366,24 @@ export const optimizePanelsMultiple = async (
   
   
   if (optimizationType === 'OPTIMAL_L' || optimizationType === 'BY_LENGTH') {
-    // L방향 우선 (세로 절단 우선): 세로 스트립을 만들고 각 스트립 내에서 가로로 자름
+    // L방향 우선: L방향(2440mm)과 평행한 가로 절단 먼저 → 가로 스트립 생성
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
       stockPanel.height,
       kerf,
       maxSheets,
-      'vertical' // 세로 스트립만 사용
+      'horizontal' // 가로 스트립 사용
     );
   } else if (optimizationType === 'OPTIMAL_W' || optimizationType === 'BY_WIDTH') {
-    // W방향 우선 (가로 절단 우선): 가로 밴드를 만들고 각 밴드 내에서 세로로 자름
+    // W방향 우선: W방향(1220mm)과 평행한 세로 절단 먼저 → 세로 스트립 생성
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
       stockPanel.height,
       kerf,
       maxSheets,
-      'horizontal' // 가로 스트립만 사용
+      'vertical' // 세로 스트립 사용
     );
   } else {
     // OPTIMAL_CNC는 개선된 MaxRects 알고리즘 사용
