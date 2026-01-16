@@ -2,11 +2,12 @@ import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
-import { Text } from '@react-three/drei';
+import { Text, useGLTF } from '@react-three/drei';
 import NativeLine from '../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import BoxWithEdges from './components/BoxWithEdges';
 import DimensionText from './components/DimensionText';
+import { useLoader } from '@react-three/fiber';
 import { ColladaLoader } from 'three/examples/jsm/loaders/ColladaLoader.js';
 
 
@@ -66,38 +67,35 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const { viewMode } = useSpace3DView();
 
   // 레일 모델 로드
-  const [railModel, setRailModel] = React.useState<THREE.Object3D | null>(null);
+  const [railModel, setRailModel] = React.useState<THREE.Group | null>(null);
 
   React.useEffect(() => {
     const loader = new ColladaLoader();
     loader.load('/models/drawer-rail.dae', (collada) => {
-      console.log('📦 DAE 로드됨, 씬 구조:', collada.scene);
+      console.log('📦 DAE 로드됨');
 
-      // library_nodes에서 '헤펠레500언더레일' 찾기
-      let railNode: THREE.Object3D | null = null;
-      collada.scene.traverse((child) => {
-        console.log('  - 노드:', child.name, child.type);
-        if (child.name === '헤펠레500언더레일') {
-          railNode = child.clone();
-          console.log('✅ 레일 노드 발견:', child.name);
-        }
+      // 전체 씬 사용
+      const scene = collada.scene.clone();
+
+      // 모든 노드 이름 출력
+      scene.traverse((child) => {
+        console.log('  노드:', child.name, child.type);
       });
 
-      if (railNode) {
-        // DAE 단위: inch (0.0254m), Three.js 스케일: 0.01
-        // inch to mm: 25.4, then * 0.01 = 0.254
-        const scale = 0.0254; // inch to Three.js units
-        railNode.scale.set(scale, scale, scale);
+      // DAE 단위: inch → meter (0.0254), 그리고 Three.js 스케일 (0.01)
+      // inch * 25.4 = mm, mm * 0.01 = Three.js units
+      // 따라서 inch * 0.254 = Three.js units
+      const scale = 0.254;
+      scene.scale.set(scale, scale, scale);
 
-        // Z-UP → Y-UP 좌표계 변환
-        railNode.rotation.x = -Math.PI / 2;
+      // Z-UP → Y-UP 좌표계 변환
+      scene.rotation.x = -Math.PI / 2;
 
-        setRailModel(railNode);
-        console.log('✅ 서랍 레일 모델 로드 완료');
-      } else {
-        console.warn('⚠️ 레일 노드를 찾지 못함');
-      }
-    }, undefined, (error) => {
+      setRailModel(scene);
+      console.log('✅ 서랍 레일 모델 로드 완료, children:', scene.children.length);
+    }, (progress) => {
+      console.log('📥 로딩 중...', Math.round((progress.loaded / progress.total) * 100) + '%');
+    }, (error) => {
       console.error('❌ 레일 모델 로드 실패:', error);
     });
   }, []);
@@ -382,42 +380,25 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* === 서랍 레일 (좌/우) === */}
-        {railModel && (
-          <>
-            {/* 좌측 레일 */}
-            {(() => {
-              const leftRail = railModel.clone();
-              return (
-                <primitive
-                  key={`drawer-${drawerIndex}-rail-left`}
-                  object={leftRail}
-                  position={[
-                    centerX - drawerWidth/2 + mmToThreeUnits(40),
-                    centerY - drawerHeight/2 + mmToThreeUnits(15),
-                    drawerBodyCenterZ
-                  ]}
-                />
-              );
-            })()}
-            {/* 우측 레일 - X축 반전 */}
-            {(() => {
-              const rightRail = railModel.clone();
-              rightRail.scale.x *= -1; // X축 반전 (좌우 대칭)
-              return (
-                <primitive
-                  key={`drawer-${drawerIndex}-rail-right`}
-                  object={rightRail}
-                  position={[
-                    centerX + drawerWidth/2 - mmToThreeUnits(40),
-                    centerY - drawerHeight/2 + mmToThreeUnits(15),
-                    drawerBodyCenterZ
-                  ]}
-                />
-              );
-            })()}
-          </>
-        )}
+        {/* === 서랍 레일 (테스트용 박스) === */}
+        {/* 좌측 레일 위치 테스트 */}
+        <mesh position={[
+          centerX - drawerWidth/2 + mmToThreeUnits(25),
+          centerY - drawerHeight/2 + mmToThreeUnits(20),
+          drawerBodyCenterZ
+        ]}>
+          <boxGeometry args={[mmToThreeUnits(15), mmToThreeUnits(15), mmToThreeUnits(450)]} />
+          <meshStandardMaterial color="#888888" />
+        </mesh>
+        {/* 우측 레일 위치 테스트 */}
+        <mesh position={[
+          centerX + drawerWidth/2 - mmToThreeUnits(25),
+          centerY - drawerHeight/2 + mmToThreeUnits(20),
+          drawerBodyCenterZ
+        ]}>
+          <boxGeometry args={[mmToThreeUnits(15), mmToThreeUnits(15), mmToThreeUnits(450)]} />
+          <meshStandardMaterial color="#888888" />
+        </mesh>
 
         {/* 상단면은 제외 (서랍이 열려있어야 함) */}
         
