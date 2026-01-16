@@ -83,13 +83,15 @@ export function generateGuillotineCuts(
     // 패널이 1개면 해당 패널의 오른쪽/위쪽 경계 재단만 추가
     if (regionPanels.length === 1) {
       const p = regionPanels[0];
-      // 오른쪽 경계 (패널 끝이 영역 끝보다 작으면 재단 필요)
-      if (p.x + p.width < xEnd - kerf) {
-        addCut('x', p.x + p.width, yStart, yEnd);
+      // 오른쪽 경계 재단 (패널 오른쪽 끝 위치)
+      const rightEdge = p.x + p.width;
+      if (rightEdge > xStart + kerf && rightEdge < sheetW - kerf) {
+        addCut('x', rightEdge, yStart, yEnd);
       }
-      // 위쪽 경계 (패널 끝이 영역 끝보다 작으면 재단 필요)
-      if (p.y + p.height < yEnd - kerf) {
-        addCut('y', p.y + p.height, xStart, xEnd);
+      // 위쪽 경계 재단 (패널 위쪽 끝 위치)
+      const topEdge = p.y + p.height;
+      if (topEdge > yStart + kerf && topEdge < sheetH - kerf) {
+        addCut('y', topEdge, xStart, xEnd);
       }
       return;
     }
@@ -198,11 +200,16 @@ export function generateGuillotineCuts(
     }
   };
 
-  // 먼저 가장자리 재단 추가 (왼쪽, 하단만)
-  // 왼쪽 가장자리 (x=0, 세로선)
-  addCut('x', 0, 0, sheetH, true);
-  // 하단 가장자리 (y=0, 가로선)
-  addCut('y', 0, 0, sheetW, true);
+  // 먼저 가장자리 재단 추가 (왼쪽, 하단만) - 방향 우선순위에 따라 순서 결정
+  if (preferVertical) {
+    // W방향 우선: 세로(왼쪽) 먼저
+    addCut('x', 0, 0, sheetH, true);
+    addCut('y', 0, 0, sheetW, true);
+  } else {
+    // L방향 우선: 가로(하단) 먼저
+    addCut('y', 0, 0, sheetW, true);
+    addCut('x', 0, 0, sheetH, true);
+  }
 
   // 전체 시트에서 시작
   divideRegion(0, 0, sheetW, sheetH, panels);
