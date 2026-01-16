@@ -511,7 +511,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       let isPanelSeparated = false;
       let justSeparated = false;
 
-      if (simulating) {
+      // 시뮬레이션 중이거나 재단이 진행된 경우 패널 분리 체크
+      if (simulating || completedCuts.length > 0) {
         if (cutSequence.length === 0) {
           return; // Hide all panels if no cuts
         }
@@ -549,6 +550,19 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         });
 
         isPanelSeparated = hasTopCut && hasBottomCut && hasLeftCut && hasRightCut;
+
+        // 첫 번째 패널만 디버그 로그
+        if (panelIndex === 0 && completedCuts.length > 0) {
+          console.log('🔍 Panel separation check:', {
+            panelId: panel.id,
+            panel: { x: panel.x, y: panel.y, w: panel.width, h: panel.height },
+            needs: { top: needsTopCut, bottom: needsBottomCut, left: needsLeftCut, right: needsRightCut },
+            has: { top: hasTopCut, bottom: hasBottomCut, left: hasLeftCut, right: hasRightCut },
+            isPanelSeparated,
+            completedCutsCount: completedCuts.length,
+            cuts: cutSequence.slice(0, 3).map(c => ({ axis: c.axis, pos: c.pos }))
+          });
+        }
 
         // 방금 분리되었는지 확인 (마지막 완료된 재단이 이 패널을 분리시켰는지)
         if (isPanelSeparated && completedCuts.length > 0) {
