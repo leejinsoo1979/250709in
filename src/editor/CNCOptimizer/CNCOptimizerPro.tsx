@@ -595,10 +595,12 @@ function PageInner(){
 
         if (matchingStock) {
           // Convert to optimizer format
+          // width = 가로(X축) = L방향 = 2440mm
+          // height = 세로(Y축) = W방향 = 1220mm
           const stockPanel = {
             id: matchingStock.label || 'stock',
-            width: matchingStock.width,
-            height: matchingStock.length,
+            width: matchingStock.length,  // L방향(긴 쪽)을 가로로
+            height: matchingStock.width,  // W방향(짧은 쪽)을 세로로
             material: matchingStock.material || 'PB',
             color: 'MW',
             price: 50000,
