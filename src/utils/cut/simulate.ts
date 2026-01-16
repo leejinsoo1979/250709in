@@ -198,6 +198,22 @@ export function generateGuillotineCuts(
         doVerticalCut(sortedV[0]);
       }
     }
+
+    // 재단이 안 됐는데 패널이 2개 이상이면 각 패널 경계 재단 추가
+    if (!cutMade && regionPanels.length > 1) {
+      regionPanels.forEach(p => {
+        // 오른쪽 경계
+        const rightEdge = p.x + p.width;
+        if (rightEdge > xStart + kerf && rightEdge < xEnd - kerf) {
+          addCut('x', rightEdge, yStart, yEnd);
+        }
+        // 위쪽 경계
+        const topEdge = p.y + p.height;
+        if (topEdge > yStart + kerf && topEdge < yEnd - kerf) {
+          addCut('y', topEdge, xStart, xEnd);
+        }
+      });
+    }
   };
 
   // 먼저 가장자리 재단 추가 (왼쪽, 하단만) - 방향 우선순위에 따라 순서 결정
