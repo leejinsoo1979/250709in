@@ -107,35 +107,76 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   
   // Generate cut sequence when panel is selected or for entire sheet simulation
   useEffect(() => {
-    
-    if (simulating && !selectedPanelId && result && allCutSteps && allCutSteps.length > 0) {
+    console.log('=== Simulation useEffect triggered ===', {
+      simulating,
+      selectedPanelId,
+      hasResult: !!result,
+      allCutStepsLength: allCutSteps?.length || 0,
+      sheetInfoCurrentIndex: sheetInfo?.currentIndex
+    });
+
+    // Full sheet simulation
+    if (simulating && !selectedPanelId && result) {
+      console.log('Full sheet simulation mode active');
+
+      if (!allCutSteps || allCutSteps.length === 0) {
+        console.log('ERROR: allCutSteps is empty or undefined, generating cuts from result...');
+        // 직접 생성 - allCutSteps가 없을 경우 대비
+        const generatedCuts: CutStep[] = [];
+        let order = 0;
+        result.panels.forEach((panel) => {
+          const panelCuts = buildSequenceForPanel({
+            mode: settings.optimizationType === 'OPTIMAL_CNC' ? 'free' : 'guillotine',
+            sheetW: result.stockPanel.width,
+            sheetH: result.stockPanel.height,
+            kerf: settings.kerf || 5,
+            placement: {
+              x: panel.x,
+              y: panel.y,
+              width: panel.width,
+              height: panel.height
+            },
+            sheetId: '1',
+            panelId: panel.id
+          });
+          panelCuts.forEach((cut, idx) => {
+            generatedCuts.push({
+              ...cut,
+              id: `gen_${panel.id}_${idx}`,
+              globalOrder: ++order
+            });
+          });
+        });
+
+        if (generatedCuts.length > 0) {
+          console.log('Generated', generatedCuts.length, 'cuts from result');
+          setCutSequence(generatedCuts);
+          setCurrentCutIndex(0);
+        } else {
+          console.log('No cuts could be generated');
+          setSimulating(false);
+        }
+        return;
+      }
+
       // Full sheet simulation - use all cut steps for current sheet
       const currentSheetNumber = (sheetInfo?.currentIndex ?? 0) + 1;
-      const sheetCuts = allCutSteps.filter(cut => 
+      const sheetCuts = allCutSteps.filter(cut =>
         cut.sheetNumber === currentSheetNumber
       );
-      
-      console.log('Setting up simulation:', { 
-        currentSheetNumber, 
+
+      console.log('Setting up simulation:', {
+        currentSheetNumber,
         totalCuts: sheetCuts.length,
         panelsInSheet: result.panels.length,
-        cutsWithYields: sheetCuts.filter(c => c.yieldsPanelId).length,
-        panelIds: result.panels.map(p => p.id),
-        yieldIds: sheetCuts.filter(c => c.yieldsPanelId).map(c => c.yieldsPanelId)
+        allCutStepsSheetNumbers: [...new Set(allCutSteps.map(c => c.sheetNumber))]
       });
-      
-      // Log the sequence of cuts with their yield panel IDs
-      console.log('Cut sequence order:');
-      sheetCuts.forEach((cut, idx) => {
-        if (cut.yieldsPanelId) {
-          console.log(`  Cut ${idx}: yields panel ${cut.yieldsPanelId}`);
-        }
-      });
-      
+
       if (sheetCuts.length > 0) {
         setCutSequence(sheetCuts);
         setCurrentCutIndex(0);
       } else {
+        console.log('No cuts found for sheet', currentSheetNumber);
         setSimulating(false);
       }
     } else if (selectedPanelId && selectedSheetId && result) {

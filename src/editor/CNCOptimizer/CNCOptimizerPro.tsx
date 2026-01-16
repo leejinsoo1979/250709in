@@ -900,11 +900,18 @@ function PageInner(){
           <button
             className={`${styles.simulationButton} ${simulating ? styles.simulating : ''}`}
             onClick={() => {
+              console.log('=== Simulation Button Clicked ===', {
+                currentSimulating: simulating,
+                optimizationResultsLength: optimizationResults.length,
+                allCutStepsLength: allCutSteps.length,
+                currentSheetIndex
+              });
               if (simulating) {
                 setSimulating(false);
               } else if (optimizationResults.length > 0) {
                 setSelectedPanelId(null);
                 setSelectedSheetId(String(currentSheetIndex + 1));
+                console.log('Setting simulating to true');
                 setSimulating(true);
               }
             }}
