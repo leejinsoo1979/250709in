@@ -1174,13 +1174,23 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // 시트가 변경될 때 항상 가로보기로 설정
+  // 시트가 변경될 때 항상 가로보기로 설정하고 시뮬레이션 상태 초기화
   useEffect(() => {
     if (result && !externalRotation) { // 외부에서 rotation을 제어하지 않을 때만
       // 항상 가로보기(-90도)로 설정
       setInternalRotation(-90);
     }
-  }, [result?.stockPanel.id]); // result의 id가 변경될 때만 실행
+
+    // 시트 변경 시 시뮬레이션 상태 초기화
+    cancelSimRef.current.current = true; // 진행 중인 시뮬레이션 취소
+    simulationStartedRef.current = false;
+    setCutSequence([]);
+    setCurrentCutIndex(0);
+    setCutProgress(0);
+    setCompletedCuts([]);
+    setSimulating(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result?.stockPanel.id, sheetInfo?.currentIndex]); // result의 id 또는 시트 인덱스가 변경될 때 실행
 
   // Update drawRef to latest draw function
   useEffect(() => {
