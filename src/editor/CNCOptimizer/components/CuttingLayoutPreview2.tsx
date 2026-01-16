@@ -256,9 +256,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         onDone: () => {
           console.log('Simulation completed');
           simulationStartedRef.current = false;
-          setCutSequence([]);
-          setCutProgress(0);
-          setCompletedCuts([]);
+          // 재단선 유지 - 모든 재단을 완료 상태로 설정
+          setCompletedCuts(cuts.map((_, idx) => idx));
+          setCutProgress(1);
           setSimulating(false);
         },
         speed: sawSpeed,
@@ -903,8 +903,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       console.log(`Cut ${currentCutIndex}: ${visiblePanelCount}/${result.panels.length} panels visible`);
     }
 
-    // Draw cutting line animation during simulation - 톱날이 이동하는 애니메이션
-    if (simulating && cutSequence.length > 0) {
+    // Draw cutting lines - 시뮬레이션 중이거나 완료 후에도 표시
+    if (cutSequence.length > 0) {
       // kerf는 실제 mm 단위 - 줌에 따라 스케일 적용됨 (좌표계가 이미 mm 단위)
       const kerfWidth = settings.kerf || 5;
 
@@ -951,8 +951,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore();
       });
 
-      // Draw current cut with progress animation (saw blade moving)
-      if (currentCutIndex < cutSequence.length) {
+      // Draw current cut with progress animation (saw blade moving) - 시뮬레이션 중에만
+      if (simulating && currentCutIndex < cutSequence.length && cutProgress < 1) {
         const currentCut = cutSequence[currentCutIndex];
         const progress = cutProgress; // 0 to 1
 
