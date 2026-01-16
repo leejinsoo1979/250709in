@@ -416,29 +416,41 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const railZ = drawerBodyCenterZ;
           const railLength = drawerBodyDepth - mmToThreeUnits(20); // 레일 길이
 
-          // 2D 모드: 라인으로 렌더링
+          // 2D 모드: 흰색 선으로 렌더링 (정면 뷰에서 보이도록 앞쪽에 배치)
           if (viewMode === '2D') {
+            // 정면 뷰에서 레일을 보여주기 위해 손잡이 앞쪽에 배치
+            const rail2DZ = centerZ + actualDrawerDepth/2 + 0.01; // 마이다 앞에 배치
+            const railHeight2D = mmToThreeUnits(15);
+
             return (
               <>
-                {/* 좌측 레일 - 수평 라인 */}
+                {/* 좌측 레일 - 정면에서 작은 직사각형으로 표시 */}
                 <NativeLine
-                  name="drawer-rail-left"
+                  name="drawer-rail-left-2d"
                   points={[
-                    [railLeftX, railY, railZ - railLength/2],
-                    [railLeftX, railY, railZ + railLength/2]
+                    [railLeftX - mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ],
+                    [railLeftX + mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ],
+                    [railLeftX + mmToThreeUnits(1.5), railY + railHeight2D/2, rail2DZ],
+                    [railLeftX - mmToThreeUnits(1.5), railY + railHeight2D/2, rail2DZ],
+                    [railLeftX - mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ]
                   ]}
                   color="#FFFFFF"
                   lineWidth={1}
+                  dashed={false}
                 />
-                {/* 우측 레일 - 수평 라인 */}
+                {/* 우측 레일 - 정면에서 작은 직사각형으로 표시 */}
                 <NativeLine
-                  name="drawer-rail-right"
+                  name="drawer-rail-right-2d"
                   points={[
-                    [railRightX, railY, railZ - railLength/2],
-                    [railRightX, railY, railZ + railLength/2]
+                    [railRightX - mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ],
+                    [railRightX + mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ],
+                    [railRightX + mmToThreeUnits(1.5), railY + railHeight2D/2, rail2DZ],
+                    [railRightX - mmToThreeUnits(1.5), railY + railHeight2D/2, rail2DZ],
+                    [railRightX - mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ]
                   ]}
                   color="#FFFFFF"
                   lineWidth={1}
+                  dashed={false}
                 />
               </>
             );
