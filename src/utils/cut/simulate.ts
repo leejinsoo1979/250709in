@@ -27,9 +27,12 @@ export function generateGuillotineCuts(
 
   if (panels.length === 0) return cuts;
 
-  // BY_LENGTH = L방향 우선 = 가로 재단(y축, 톱이 길이 방향으로 이동) 우선
-  // BY_WIDTH = W방향 우선 = 세로 재단(x축, 톱이 너비 방향으로 이동) 우선
-  const preferHorizontal = optimizationType === 'BY_LENGTH';
+  // 캔버스 좌표계 기준:
+  // - x축 재단 (axis='x') = 세로선 = W방향 (파란색)
+  // - y축 재단 (axis='y') = 가로선 = L방향 (빨간색)
+  // BY_LENGTH = L방향 우선 = y축 재단(가로선) 우선
+  // BY_WIDTH = W방향 우선 = x축 재단(세로선) 우선
+  const preferVertical = optimizationType === 'BY_WIDTH';
 
   // 이미 추가된 재단 위치 추적 (중복 방지)
   const addedCuts = new Set<string>();
@@ -153,8 +156,19 @@ export function generateGuillotineCuts(
       cutMade = true;
     };
 
-    if (preferHorizontal) {
-      // BY_LENGTH: L방향(가로) 우선 - 가로 재단이 있으면 무조건 가로 먼저
+    if (preferVertical) {
+      // BY_WIDTH: W방향(세로선, x축) 우선 - 세로 재단이 있으면 무조건 세로 먼저
+      if (uniqueVertical.length > 0 && !cutMade) {
+        const sortedV = [...uniqueVertical].sort((a, b) => a - b);
+        doVerticalCut(sortedV[0]);
+      }
+      // 세로 재단이 없으면 가로 재단
+      if (uniqueHorizontal.length > 0 && !cutMade) {
+        const sortedH = [...uniqueHorizontal].sort((a, b) => a - b);
+        doHorizontalCut(sortedH[0]);
+      }
+    } else {
+      // BY_LENGTH: L방향(가로선, y축) 우선 - 가로 재단이 있으면 무조건 가로 먼저
       if (uniqueHorizontal.length > 0 && !cutMade) {
         // 위치순 정렬 (아래에서 위로)
         const sortedH = [...uniqueHorizontal].sort((a, b) => a - b);
@@ -164,17 +178,6 @@ export function generateGuillotineCuts(
       if (uniqueVertical.length > 0 && !cutMade) {
         const sortedV = [...uniqueVertical].sort((a, b) => a - b);
         doVerticalCut(sortedV[0]);
-      }
-    } else {
-      // BY_WIDTH: W방향(세로) 우선 - 세로 재단이 있으면 무조건 세로 먼저
-      if (uniqueVertical.length > 0 && !cutMade) {
-        const sortedV = [...uniqueVertical].sort((a, b) => a - b);
-        doVerticalCut(sortedV[0]);
-      }
-      // 세로 재단이 없으면 가로 재단
-      if (uniqueHorizontal.length > 0 && !cutMade) {
-        const sortedH = [...uniqueHorizontal].sort((a, b) => a - b);
-        doHorizontalCut(sortedH[0]);
       }
     }
   };
