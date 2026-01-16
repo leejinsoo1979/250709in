@@ -295,7 +295,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-${drawerIndex}-bottom-${mat.uuid}`}
               args={[drawerWidth - mmToThreeUnits(70) - mmToThreeUnits(26), mmToThreeUnits(5), drawerBodyDepth - mmToThreeUnits(20)]}
-              position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(15) + mmToThreeUnits(5)/2, drawerBodyCenterZ]}
+              position={[centerX, centerY - drawerHeight/2 + basicThickness + mmToThreeUnits(10) + mmToThreeUnits(5)/2, drawerBodyCenterZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
