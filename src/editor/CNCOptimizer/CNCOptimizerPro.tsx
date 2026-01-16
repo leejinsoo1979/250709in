@@ -902,12 +902,15 @@ function PageInner(){
           rotated: panel.rotated
         }));
 
+        // OPTIMAL_L → BY_LENGTH, OPTIMAL_W → BY_WIDTH 변환
+        const cutOptimizationType = settings.optimizationType === 'OPTIMAL_W' ? 'BY_WIDTH' : 'BY_LENGTH';
+
         const sheetCuts = generateGuillotineCuts(
           result.stockPanel.width,
           result.stockPanel.height,
           panelPlacements,
           settings.kerf || 5,
-          settings.optimizationType as 'BY_LENGTH' | 'BY_WIDTH'
+          cutOptimizationType
         );
 
         sheetCuts.forEach((cut, cutIdx) => {

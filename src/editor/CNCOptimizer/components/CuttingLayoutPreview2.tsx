@@ -208,12 +208,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             rotated: p.rotated
           }));
 
+          // OPTIMAL_L → BY_LENGTH, OPTIMAL_W → BY_WIDTH 변환
+          const cutOptimizationType = currentSettings.optimizationType === 'OPTIMAL_W' ? 'BY_WIDTH' : 'BY_LENGTH';
+
           const guillotineCuts = generateGuillotineCuts(
             currentResult.stockPanel.width,
             currentResult.stockPanel.height,
             panelPlacements,
             currentSettings.kerf || 5,
-            currentSettings.optimizationType
+            cutOptimizationType
           );
 
           guillotineCuts.forEach((cut, idx) => {
