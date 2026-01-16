@@ -791,6 +791,11 @@ function PageInner(){
 
   // Memoize cut steps to avoid recalculation during render
   const allCutSteps = useMemo(() => {
+    console.log('🔄 allCutSteps useMemo 재계산:', {
+      optimizationType: settings.optimizationType,
+      resultsCount: optimizationResults.length
+    });
+
     if (optimizationResults.length === 0) {
       return [];
     }
@@ -855,6 +860,11 @@ function PageInner(){
           });
         });
       }
+    });
+
+    console.log('🔄 allCutSteps 생성 완료:', {
+      totalCuts: steps.length,
+      firstCut: steps[0] ? { axis: steps[0].axis, label: steps[0].label } : null
     });
 
     return steps;

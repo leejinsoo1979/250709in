@@ -67,6 +67,14 @@ export function generateGuillotineCuts(
   // W방향 우선 (BY_WIDTH): 세로 재단 먼저 (↓ 방향, 톱날이 위→아래)
   const horizontalFirst = optimizationType === 'BY_LENGTH';
 
+  console.log('🔧 generateGuillotineCuts:', {
+    optimizationType,
+    horizontalFirst,
+    '1차 방향': horizontalFirst ? 'L방향(가로) 먼저' : 'W방향(세로) 먼저',
+    sortedHorizontal: sortedHorizontal.length,
+    sortedVertical: sortedVertical.length
+  });
+
   if (horizontalFirst) {
     // === L방향 우선 (→) ===
     // 1단계: 모든 가로 재단 (전체 폭, 톱날이 왼쪽→오른쪽)

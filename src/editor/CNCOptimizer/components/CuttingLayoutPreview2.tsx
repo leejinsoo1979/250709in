@@ -170,7 +170,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       if (currentAllCutSteps && currentAllCutSteps.length > 0) {
         const currentSheetNumber = (currentSheetInfo?.currentIndex ?? 0) + 1;
         cuts = currentAllCutSteps.filter(cut => cut.sheetNumber === currentSheetNumber);
-        console.log('Using allCutSteps:', cuts.length, 'cuts for sheet', currentSheetNumber);
+        console.log('Using allCutSteps:', cuts.length, 'cuts for sheet', currentSheetNumber, {
+          optimizationType: currentSettings.optimizationType,
+          firstCut: cuts[0] ? { axis: cuts[0].axis, label: cuts[0].label } : null
+        });
       }
 
       if (cuts.length === 0 && currentResult.panels.length > 0) {
