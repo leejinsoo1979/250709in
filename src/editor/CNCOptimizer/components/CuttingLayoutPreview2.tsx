@@ -107,6 +107,24 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   const simulationStartedRef = useRef(false);
   const prevSimulatingRef = useRef(false);
 
+  // Props refs for latest values in useEffect
+  const resultRef = useRef(result);
+  const allCutStepsRef = useRef(allCutSteps);
+  const sheetInfoRef = useRef(sheetInfo);
+  const selectedPanelIdRef = useRef(selectedPanelId);
+  const settingsRef = useRef(settings);
+  const simSpeedRef = useRef(simSpeed);
+
+  // Update refs when props change
+  useEffect(() => {
+    resultRef.current = result;
+    allCutStepsRef.current = allCutSteps;
+    sheetInfoRef.current = sheetInfo;
+    selectedPanelIdRef.current = selectedPanelId;
+    settingsRef.current = settings;
+    simSpeedRef.current = simSpeed;
+  });
+
   // 시뮬레이션 시작/중지를 simulating 상태 변화에만 반응하도록 처리
   useEffect(() => {
     const wasSimulating = prevSimulatingRef.current;
@@ -126,29 +144,40 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
     // simulating이 true로 변경되었고, 아직 시작하지 않았으면 시작
     if (simulating && !wasSimulating && !simulationStartedRef.current) {
-      if (!result || selectedPanelId) {
-        console.log('Cannot start simulation: no result or panel selected');
+      // Use refs for latest values
+      const currentResult = resultRef.current;
+      const currentAllCutSteps = allCutStepsRef.current;
+      const currentSheetInfo = sheetInfoRef.current;
+      const currentSelectedPanelId = selectedPanelIdRef.current;
+      const currentSettings = settingsRef.current;
+      const currentSimSpeed = simSpeedRef.current;
+
+      if (!currentResult || currentSelectedPanelId) {
+        console.log('Cannot start simulation: no result or panel selected', {
+          hasResult: !!currentResult,
+          selectedPanelId: currentSelectedPanelId
+        });
         setSimulating(false);
         return;
       }
 
       let cuts: CutStep[] = [];
 
-      if (allCutSteps && allCutSteps.length > 0) {
-        const currentSheetNumber = (sheetInfo?.currentIndex ?? 0) + 1;
-        cuts = allCutSteps.filter(cut => cut.sheetNumber === currentSheetNumber);
+      if (currentAllCutSteps && currentAllCutSteps.length > 0) {
+        const currentSheetNumber = (currentSheetInfo?.currentIndex ?? 0) + 1;
+        cuts = currentAllCutSteps.filter(cut => cut.sheetNumber === currentSheetNumber);
         console.log('Using allCutSteps:', cuts.length, 'cuts for sheet', currentSheetNumber);
       }
 
-      if (cuts.length === 0 && result.panels.length > 0) {
-        console.log('Generating cuts from result panels');
+      if (cuts.length === 0 && currentResult.panels.length > 0) {
+        console.log('Generating cuts from result panels:', currentResult.panels.length);
         let order = 0;
-        result.panels.forEach((panel) => {
+        currentResult.panels.forEach((panel) => {
           const panelCuts = buildSequenceForPanel({
-            mode: settings.optimizationType === 'OPTIMAL_CNC' ? 'free' : 'guillotine',
-            sheetW: result.stockPanel.width,
-            sheetH: result.stockPanel.height,
-            kerf: settings.kerf || 5,
+            mode: currentSettings.optimizationType === 'OPTIMAL_CNC' ? 'free' : 'guillotine',
+            sheetW: currentResult.stockPanel.width,
+            sheetH: currentResult.stockPanel.height,
+            kerf: currentSettings.kerf || 5,
             placement: { x: panel.x, y: panel.y, width: panel.width, height: panel.height },
             sheetId: '1',
             panelId: panel.id
@@ -189,7 +218,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           setCutSequence([]);
           setSimulating(false);
         },
-        speed: simSpeed || 0.5,
+        speed: currentSimSpeed || 0.5,
         cancelRef: newCancelRef
       });
     }
