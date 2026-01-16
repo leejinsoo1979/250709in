@@ -416,128 +416,33 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const railZ = drawerBodyCenterZ;
           const railLength = drawerBodyDepth - mmToThreeUnits(20); // 레일 길이
 
-          // 2D 모드: 뷰 방향에 따라 다르게 렌더링
+          // 2D 모드: 레일을 직사각형 윤곽선으로 렌더링 (모든 뷰에서 동일)
           if (viewMode === '2D') {
             const railHeight2D = mmToThreeUnits(15);
-            const railThickness = mmToThreeUnits(3);
-
-            console.log('🔧 2D 레일 렌더링:', {
-              view2DDirection,
-              railLeftX,
-              railRightX,
-              railY,
-              railZ,
-              railLength
-            });
-
-            // 정면 뷰: 레일 단면 (작은 사각형)
-            if (view2DDirection === 'front') {
-              const rail2DZ = centerZ + actualDrawerDepth/2 + 0.01;
-              return (
-                <>
-                  <NativeLine
-                    name="drawer-rail-left-2d"
-                    points={[
-                      [railLeftX - railThickness/2, railY - railHeight2D/2, rail2DZ],
-                      [railLeftX + railThickness/2, railY - railHeight2D/2, rail2DZ],
-                      [railLeftX + railThickness/2, railY + railHeight2D/2, rail2DZ],
-                      [railLeftX - railThickness/2, railY + railHeight2D/2, rail2DZ],
-                      [railLeftX - railThickness/2, railY - railHeight2D/2, rail2DZ]
-                    ]}
-                    color="#FFFFFF"
-                    lineWidth={1}
-                    dashed={false}
-                  />
-                  <NativeLine
-                    name="drawer-rail-right-2d"
-                    points={[
-                      [railRightX - railThickness/2, railY - railHeight2D/2, rail2DZ],
-                      [railRightX + railThickness/2, railY - railHeight2D/2, rail2DZ],
-                      [railRightX + railThickness/2, railY + railHeight2D/2, rail2DZ],
-                      [railRightX - railThickness/2, railY + railHeight2D/2, rail2DZ],
-                      [railRightX - railThickness/2, railY - railHeight2D/2, rail2DZ]
-                    ]}
-                    color="#FFFFFF"
-                    lineWidth={1}
-                    dashed={false}
-                  />
-                </>
-              );
-            }
-
-            // 측면 뷰 (left/right): 레일 전체 길이 표시 (양쪽 모두)
-            if (view2DDirection === 'left' || view2DDirection === 'right') {
-              const railStartZ = railZ - railLength/2;
-              const railEndZ = railZ + railLength/2;
-
-              // 양쪽 레일 모두 렌더링
-              const renderRailSide = (railX: number, name: string) => (
-                <>
-                  {/* 레일 상단선 */}
-                  <NativeLine
-                    name={`${name}-top`}
-                    points={[
-                      [railX, railY + railHeight2D/2, railStartZ],
-                      [railX, railY + railHeight2D/2, railEndZ]
-                    ]}
-                    color="#FFFFFF"
-                    lineWidth={1}
-                    dashed={false}
-                  />
-                  {/* 레일 하단선 */}
-                  <NativeLine
-                    name={`${name}-bottom`}
-                    points={[
-                      [railX, railY - railHeight2D/2, railStartZ],
-                      [railX, railY - railHeight2D/2, railEndZ]
-                    ]}
-                    color="#FFFFFF"
-                    lineWidth={1}
-                    dashed={false}
-                  />
-                  {/* 레일 앞쪽 끝선 */}
-                  <NativeLine
-                    name={`${name}-front`}
-                    points={[
-                      [railX, railY - railHeight2D/2, railEndZ],
-                      [railX, railY + railHeight2D/2, railEndZ]
-                    ]}
-                    color="#FFFFFF"
-                    lineWidth={1}
-                    dashed={false}
-                  />
-                  {/* 레일 뒤쪽 끝선 */}
-                  <NativeLine
-                    name={`${name}-back`}
-                    points={[
-                      [railX, railY - railHeight2D/2, railStartZ],
-                      [railX, railY + railHeight2D/2, railStartZ]
-                    ]}
-                    color="#FFFFFF"
-                    lineWidth={1}
-                    dashed={false}
-                  />
-                </>
-              );
-
-              return (
-                <>
-                  {renderRailSide(railLeftX, 'rail-left-side')}
-                  {renderRailSide(railRightX, 'rail-right-side')}
-                </>
-              );
-            }
-
-            // 탑 뷰 또는 기타 모든 경우: 레일 전체 길이 표시
-            // (탑뷰가 아니더라도 fallback으로 측면 스타일 렌더링)
             const railStartZ = railZ - railLength/2;
             const railEndZ = railZ + railLength/2;
+            // 정면에서 보이도록 Z를 앞쪽에 배치
+            const frontZ = centerZ + actualDrawerDepth/2 + 0.02;
 
             return (
               <>
-                {/* 좌측 레일 - 상단/하단 라인 */}
+                {/* 좌측 레일 - 직사각형 윤곽선 */}
                 <NativeLine
-                  name="drawer-rail-left-top-line"
+                  name="drawer-rail-left-2d"
+                  points={[
+                    [railLeftX, railY - railHeight2D/2, frontZ],
+                    [railLeftX, railY - railHeight2D/2, railStartZ],
+                    [railLeftX, railY + railHeight2D/2, railStartZ],
+                    [railLeftX, railY + railHeight2D/2, frontZ],
+                    [railLeftX, railY - railHeight2D/2, frontZ]
+                  ]}
+                  color="#FFFFFF"
+                  lineWidth={1}
+                  dashed={false}
+                />
+                {/* 좌측 레일 - 상단 가로선 (깊이 방향) */}
+                <NativeLine
+                  name="drawer-rail-left-top"
                   points={[
                     [railLeftX, railY + railHeight2D/2, railStartZ],
                     [railLeftX, railY + railHeight2D/2, railEndZ]
@@ -546,8 +451,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   lineWidth={1}
                   dashed={false}
                 />
+                {/* 좌측 레일 - 하단 가로선 (깊이 방향) */}
                 <NativeLine
-                  name="drawer-rail-left-bottom-line"
+                  name="drawer-rail-left-bottom"
                   points={[
                     [railLeftX, railY - railHeight2D/2, railStartZ],
                     [railLeftX, railY - railHeight2D/2, railEndZ]
@@ -556,9 +462,24 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   lineWidth={1}
                   dashed={false}
                 />
-                {/* 우측 레일 - 상단/하단 라인 */}
+
+                {/* 우측 레일 - 직사각형 윤곽선 */}
                 <NativeLine
-                  name="drawer-rail-right-top-line"
+                  name="drawer-rail-right-2d"
+                  points={[
+                    [railRightX, railY - railHeight2D/2, frontZ],
+                    [railRightX, railY - railHeight2D/2, railStartZ],
+                    [railRightX, railY + railHeight2D/2, railStartZ],
+                    [railRightX, railY + railHeight2D/2, frontZ],
+                    [railRightX, railY - railHeight2D/2, frontZ]
+                  ]}
+                  color="#FFFFFF"
+                  lineWidth={1}
+                  dashed={false}
+                />
+                {/* 우측 레일 - 상단 가로선 (깊이 방향) */}
+                <NativeLine
+                  name="drawer-rail-right-top"
                   points={[
                     [railRightX, railY + railHeight2D/2, railStartZ],
                     [railRightX, railY + railHeight2D/2, railEndZ]
@@ -567,8 +488,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   lineWidth={1}
                   dashed={false}
                 />
+                {/* 우측 레일 - 하단 가로선 (깊이 방향) */}
                 <NativeLine
-                  name="drawer-rail-right-bottom-line"
+                  name="drawer-rail-right-bottom"
                   points={[
                     [railRightX, railY - railHeight2D/2, railStartZ],
                     [railRightX, railY - railHeight2D/2, railEndZ]
