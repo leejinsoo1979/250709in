@@ -44,6 +44,45 @@ function PageInner(){
   const { t, currentLanguage } = useTranslation();
   const { theme } = useTheme();
 
+  // Configurator에서 왔는지 확인
+  const fromConfigurator = location.state?.fromConfigurator;
+
+  // Configurator에서 온 경우 localStorage 초기화하여 새로운 패널 데이터 로드
+  const hasResetForConfigurator = useRef(false);
+  useEffect(() => {
+    if (fromConfigurator && placedModules.length > 0 && !hasResetForConfigurator.current) {
+      console.log('🔄 Configurator에서 진입 - localStorage 초기화');
+      localStorage.removeItem('cnc_panels');
+      localStorage.removeItem('cnc_user_modified');
+      setUserHasModifiedPanels(false);
+      hasResetForConfigurator.current = true;
+      // 페이지 리로드하여 깨끗한 상태로 시작 (선택적)
+      // window.location.reload();
+    }
+  }, [fromConfigurator, placedModules.length, setUserHasModifiedPanels]);
+
+  // 디버그: 데이터 소스 확인
+  useEffect(() => {
+    console.log('🏠 CNCOptimizer 데이터 소스 확인:');
+    console.log('  - fromConfigurator:', fromConfigurator);
+    console.log('  - placedModules (furnitureStore):', placedModules.length, '개');
+    console.log('  - placedModules 상세:', placedModules.map(m => ({
+      id: m.id,
+      moduleId: m.moduleId,
+      moduleType: m.moduleType,
+      width: m.width,
+      depth: m.depth
+    })));
+    console.log('  - livePanels (useLivePanelData):', livePanels.length, '개');
+    console.log('  - livePanels 상세:', livePanels.map(p => ({
+      id: p.id,
+      name: p.name,
+      width: p.width,
+      height: p.height,
+      material: p.material
+    })));
+  }, [fromConfigurator, placedModules, livePanels]);
+
   // 보링 데이터 가져오기 - 훅이 내부적으로 useFurnitureStore 사용
   const { panels: boringPanels } = useFurnitureBoring();
 
@@ -195,23 +234,32 @@ function PageInner(){
   // Track if panels have been initialized from livePanels
   const hasInitializedFromLive = useRef(false);
 
+  // Configurator에서 온 경우 hasInitializedFromLive 리셋
+  useEffect(() => {
+    if (fromConfigurator && livePanels.length > 0) {
+      console.log('🔄 Configurator에서 진입 - hasInitializedFromLive 리셋');
+      hasInitializedFromLive.current = false;
+    }
+  }, [fromConfigurator, livePanels.length]);
+
   // Initialize with live data - only run once on mount
   useEffect(() => {
     console.log('=== CNCOptimizerPro Initialization ===');
+    console.log('fromConfigurator:', fromConfigurator);
     console.log('livePanels from hook:', livePanels);
     console.log('livePanels.length:', livePanels.length);
     console.log('current panels in store:', panels);
     console.log('current stock in store:', stock);
-    
-    // If livePanels changed and we have panels from furniture, reset the user modified flag
-    if (livePanels.length > 0) {
+
+    // Configurator에서 왔거나 livePanels가 있으면 user modified flag 리셋
+    if (fromConfigurator || livePanels.length > 0) {
       // Reset user modified flag since we're getting fresh data from configurator
       setUserHasModifiedPanels(false);
       localStorage.removeItem('cnc_user_modified');
     }
-    
+
     // Skip initialization if user has already modified panels AFTER checking livePanels
-    if (userHasModifiedPanels && livePanels.length === 0) {
+    if (userHasModifiedPanels && livePanels.length === 0 && !fromConfigurator) {
       console.log('User has modified panels and no live panels, keeping user panels');
       return;
     }
@@ -362,8 +410,14 @@ function PageInner(){
       return;
     }
     
+    console.log('🔄 패널 초기화 체크:', {
+      livePanelsCount: livePanels.length,
+      hasInitializedFromLive: hasInitializedFromLive.current,
+      userHasModifiedPanels
+    });
+
     if (livePanels.length > 0 && !hasInitializedFromLive.current) {
-      console.log('Initializing from livePanels');
+      console.log('✅ livePanels에서 패널 초기화 시작:', livePanels.length, '개');
       const cutlistPanels: Panel[] = livePanels.map(p => {
         let width = p.width;
         let length = p.height;
