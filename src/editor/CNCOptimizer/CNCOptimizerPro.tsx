@@ -454,7 +454,8 @@ function PageInner(){
   }, [livePanels, userHasModifiedPanels, setPanels]);
 
   const handleOptimize = useCallback(async () => {
-    
+    console.log('⚡ handleOptimize called with optimizationType:', settings.optimizationType);
+
     if (panels.length === 0) {
       showToast(t('cnc.noPanelsError'), 'error', t('common.confirm'));
       return;
@@ -765,13 +766,14 @@ function PageInner(){
     // Don't auto-optimize for empty or manually added panels
     if (!hasAutoOptimized.current && livePanels.length > 0 && panels.length > 0 && stock.length > 0) {
       hasAutoOptimized.current = true;
-      
-      // Small delay to ensure UI is ready
+
+      // 더 긴 딜레이로 settings가 완전히 로드된 후 실행
       setTimeout(() => {
+        console.log('🚀 Auto-optimize with settings:', settings.optimizationType);
         handleOptimize();
-      }, 100);
+      }, 300);
     }
-  }, [livePanels, panels, stock, handleOptimize]);
+  }, [livePanels, panels, stock, settings.optimizationType, handleOptimize]);
 
   // URL 파라미터에서 프로젝트명 읽기 (fallback용)
   const urlProjectName = useMemo(() => {
