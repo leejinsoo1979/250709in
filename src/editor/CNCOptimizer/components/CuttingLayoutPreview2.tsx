@@ -228,6 +228,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         return;
       }
 
+      // 중복 재단 체크
+      const posCheck = new Map<string, number>();
+      cuts.forEach(cut => {
+        const key = `${cut.axis}-${Math.round(cut.pos)}`;
+        posCheck.set(key, (posCheck.get(key) || 0) + 1);
+      });
+      const duplicates = Array.from(posCheck.entries()).filter(([, count]) => count > 1);
+      if (duplicates.length > 0) {
+        console.warn('⚠️ CuttingLayoutPreview2 - 중복 재단 발견:', duplicates);
+        console.log('전체 재단 목록:', cuts.map(c => `${c.axis}-${Math.round(c.pos)}`));
+      }
+
       // 시뮬레이션 시작
       simulationStartedRef.current = true;
       setCutSequence(cuts);
@@ -240,7 +252,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const newCancelRef = { current: false };
       cancelSimRef.current = newCancelRef;
 
-      console.log('Starting smooth simulation with', cuts.length, 'cuts');
+      console.log('Starting smooth simulation with', cuts.length, 'cuts, unique positions:', posCheck.size);
 
       // 톱날 속도: mm/s (속도 조절 가능)
       const sawSpeed = (currentSimSpeed || 1) * 2000; // 기본 2000mm/s, 속도 배율 적용

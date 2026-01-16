@@ -193,6 +193,17 @@ export function generateGuillotineCuts(
 
   console.log(`  최종 재단 수: ${cuts.length}`);
 
+  // 중복 체크 - 같은 axis와 pos를 가진 재단이 있는지 확인
+  const posCheck = new Map<string, number>();
+  cuts.forEach(cut => {
+    const key = `${cut.axis}-${Math.round(cut.pos)}`;
+    posCheck.set(key, (posCheck.get(key) || 0) + 1);
+  });
+  const duplicates = Array.from(posCheck.entries()).filter(([, count]) => count > 1);
+  if (duplicates.length > 0) {
+    console.warn('⚠️ 중복 재단 발견:', duplicates);
+  }
+
   // 재단 순서 재정렬 (우선 방향 고려)
   cuts.sort((a, b) => {
     if (preferVertical) {
