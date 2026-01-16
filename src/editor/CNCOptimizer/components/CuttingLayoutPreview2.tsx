@@ -532,21 +532,36 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const needsRightCut = panel.x + panel.width < sheetW - tolerance;
 
         // 완료된 재단 중 해당 경계에 맞는 것이 있는지 확인
+        // 재단이 패널을 실제로 지나가는지 span 범위도 체크해야 함
         const hasTopCut = !needsTopCut || completedCuts.some(idx => {
           const cut = cutSequence[idx];
-          return cut && cut.axis === 'y' && Math.abs(cut.pos - panel.y) < tolerance;
+          if (!cut || cut.axis !== 'y' || Math.abs(cut.pos - panel.y) >= tolerance) return false;
+          // axis 'y' 재단의 span은 x 범위 (spanStart~spanEnd가 패널의 x 범위와 겹쳐야 함)
+          const spanStart = cut.spanStart ?? 0;
+          const spanEnd = cut.spanEnd ?? sheetW;
+          return spanStart <= panel.x + tolerance && spanEnd >= panel.x + panel.width - tolerance;
         });
         const hasBottomCut = !needsBottomCut || completedCuts.some(idx => {
           const cut = cutSequence[idx];
-          return cut && cut.axis === 'y' && Math.abs(cut.pos - (panel.y + panel.height)) < tolerance;
+          if (!cut || cut.axis !== 'y' || Math.abs(cut.pos - (panel.y + panel.height)) >= tolerance) return false;
+          const spanStart = cut.spanStart ?? 0;
+          const spanEnd = cut.spanEnd ?? sheetW;
+          return spanStart <= panel.x + tolerance && spanEnd >= panel.x + panel.width - tolerance;
         });
         const hasLeftCut = !needsLeftCut || completedCuts.some(idx => {
           const cut = cutSequence[idx];
-          return cut && cut.axis === 'x' && Math.abs(cut.pos - panel.x) < tolerance;
+          if (!cut || cut.axis !== 'x' || Math.abs(cut.pos - panel.x) >= tolerance) return false;
+          // axis 'x' 재단의 span은 y 범위 (spanStart~spanEnd가 패널의 y 범위와 겹쳐야 함)
+          const spanStart = cut.spanStart ?? 0;
+          const spanEnd = cut.spanEnd ?? sheetH;
+          return spanStart <= panel.y + tolerance && spanEnd >= panel.y + panel.height - tolerance;
         });
         const hasRightCut = !needsRightCut || completedCuts.some(idx => {
           const cut = cutSequence[idx];
-          return cut && cut.axis === 'x' && Math.abs(cut.pos - (panel.x + panel.width)) < tolerance;
+          if (!cut || cut.axis !== 'x' || Math.abs(cut.pos - (panel.x + panel.width)) >= tolerance) return false;
+          const spanStart = cut.spanStart ?? 0;
+          const spanEnd = cut.spanEnd ?? sheetH;
+          return spanStart <= panel.y + tolerance && spanEnd >= panel.y + panel.height - tolerance;
         });
 
         isPanelSeparated = hasTopCut && hasBottomCut && hasLeftCut && hasRightCut;
