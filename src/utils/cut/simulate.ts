@@ -11,9 +11,11 @@ interface PanelPlacement {
 
 /**
  * Generate proper guillotine cuts for an entire sheet
- * 실제 기요틴 재단 방식: 톱날이 시트 전체를 가로질러 재단
- * 1. 먼저 가로 재단(y축)으로 스트립 분리
- * 2. 각 스트립에서 세로 재단(x축)으로 패널 분리
+ * 실제 기요틴(패널쏘) 재단 방식:
+ * - 톱날이 한 번 지나가면 하나의 조각이 둘로 분리됨
+ * - 같은 위치를 두 번 자르지 않음
+ * - L방향 우선: 모든 가로 재단 먼저 (시트 전체 폭) → 그 다음 세로 재단
+ * - W방향 우선: 모든 세로 재단 먼저 (시트 전체 높이) → 그 다음 가로 재단
  */
 export function generateGuillotineCuts(
   sheetW: number,
@@ -28,23 +30,29 @@ export function generateGuillotineCuts(
 
   if (panels.length === 0) return cuts;
 
-  // BY_LENGTH: 가로 재단 먼저 (L방향 우선)
-  // BY_WIDTH: 세로 재단 먼저 (W방향 우선)
+  // 모든 패널 경계에서 고유한 재단 위치 수집 (중복 제거)
+  const horizontalCutPositions = new Set<number>(); // y 좌표 (가로 재단)
+  const verticalCutPositions = new Set<number>();   // x 좌표 (세로 재단)
+
+  panels.forEach(p => {
+    // 패널 경계가 시트 가장자리가 아닌 경우에만 재단 필요
+    if (p.y > kerf) horizontalCutPositions.add(p.y);
+    if (p.y + p.height < sheetH - kerf) horizontalCutPositions.add(p.y + p.height);
+    if (p.x > kerf) verticalCutPositions.add(p.x);
+    if (p.x + p.width < sheetW - kerf) verticalCutPositions.add(p.x + p.width);
+  });
+
+  const sortedHorizontal = Array.from(horizontalCutPositions).sort((a, b) => a - b);
+  const sortedVertical = Array.from(verticalCutPositions).sort((a, b) => a - b);
+
+  // BY_LENGTH: 가로 재단 먼저 (L방향 우선) - 시트를 가로로 자름
+  // BY_WIDTH: 세로 재단 먼저 (W방향 우선) - 시트를 세로로 자름
   const horizontalFirst = optimizationType !== 'BY_WIDTH';
 
   if (horizontalFirst) {
-    // === L방향 우선: 가로 재단 → 세로 재단 ===
-
-    // 1. 고유한 y 좌표 찾기 (스트립 경계)
-    const yPositions = new Set<number>();
-    panels.forEach(p => {
-      if (p.y > kerf) yPositions.add(p.y);
-      if (p.y + p.height < sheetH - kerf) yPositions.add(p.y + p.height);
-    });
-    const sortedY = Array.from(yPositions).sort((a, b) => a - b);
-
-    // 2. 가로 재단 (전체 너비를 가로지름)
-    sortedY.forEach(yPos => {
+    // === L방향 우선 ===
+    // 1단계: 모든 가로 재단 (전체 시트 폭을 가로지름)
+    sortedHorizontal.forEach(yPos => {
       cuts.push({
         id: `cut-${order}`,
         order: order++,
@@ -52,44 +60,31 @@ export function generateGuillotineCuts(
         axis: 'y' as CutAxis,
         pos: yPos,
         spanStart: 0,
-        spanEnd: sheetW, // 전체 시트 너비
+        spanEnd: sheetW,
         before: workpiece,
         result: workpiece,
         kerf,
-        label: `가로 재단 #${order}`,
+        label: `가로 재단 #${cuts.length + 1}`,
         source: 'derived'
       });
     });
 
-    // 3. 스트립별로 세로 재단
-    const strips: { yStart: number; yEnd: number; panels: PanelPlacement[] }[] = [];
-    const yBoundaries = [0, ...sortedY, sheetH];
+    // 2단계: 모든 세로 재단 (각 스트립의 높이만큼)
+    // 스트립 경계 계산
+    const yBoundaries = [0, ...sortedHorizontal, sheetH];
 
-    for (let i = 0; i < yBoundaries.length - 1; i++) {
-      const yStart = yBoundaries[i];
-      const yEnd = yBoundaries[i + 1];
-      const stripPanels = panels.filter(p =>
-        p.y >= yStart - kerf && p.y + p.height <= yEnd + kerf
-      );
-      if (stripPanels.length > 0) {
-        strips.push({ yStart, yEnd, panels: stripPanels });
-      }
-    }
+    sortedVertical.forEach(xPos => {
+      // 이 x 위치에서 재단이 필요한 스트립들 찾기
+      for (let i = 0; i < yBoundaries.length - 1; i++) {
+        const stripYStart = yBoundaries[i];
+        const stripYEnd = yBoundaries[i + 1];
 
-    // 4. 각 스트립에서 세로 재단 (스트립 높이 전체를 가로지름)
-    strips.forEach(strip => {
-      const xPositions = new Set<number>();
-      strip.panels.forEach(p => {
-        if (p.x > kerf) xPositions.add(p.x);
-        if (p.x + p.width < sheetW - kerf) xPositions.add(p.x + p.width);
-      });
-      const sortedX = Array.from(xPositions).sort((a, b) => a - b);
-
-      sortedX.forEach(xPos => {
-        // 이 x 위치에서 실제로 재단이 필요한지 확인
-        const needsCut = strip.panels.some(p =>
-          Math.abs(p.x - xPos) < kerf || Math.abs(p.x + p.width - xPos) < kerf
-        );
+        // 이 스트립 내에 이 x 위치에서 재단이 필요한 패널이 있는지 확인
+        const needsCut = panels.some(p => {
+          const panelInStrip = p.y >= stripYStart - kerf && p.y + p.height <= stripYEnd + kerf;
+          const cutAtX = Math.abs(p.x - xPos) < kerf || Math.abs(p.x + p.width - xPos) < kerf;
+          return panelInStrip && cutAtX;
+        });
 
         if (needsCut) {
           cuts.push({
@@ -98,31 +93,22 @@ export function generateGuillotineCuts(
             sheetId: '',
             axis: 'x' as CutAxis,
             pos: xPos,
-            spanStart: strip.yStart,
-            spanEnd: strip.yEnd, // 스트립 전체 높이
+            spanStart: stripYStart,
+            spanEnd: stripYEnd,
             before: workpiece,
             result: workpiece,
             kerf,
-            label: `세로 재단 #${order}`,
+            label: `세로 재단 #${cuts.length + 1}`,
             source: 'derived'
           });
         }
-      });
+      }
     });
 
   } else {
-    // === W방향 우선: 세로 재단 → 가로 재단 ===
-
-    // 1. 고유한 x 좌표 찾기 (스트립 경계)
-    const xPositions = new Set<number>();
-    panels.forEach(p => {
-      if (p.x > kerf) xPositions.add(p.x);
-      if (p.x + p.width < sheetW - kerf) xPositions.add(p.x + p.width);
-    });
-    const sortedX = Array.from(xPositions).sort((a, b) => a - b);
-
-    // 2. 세로 재단 (전체 높이를 가로지름)
-    sortedX.forEach(xPos => {
+    // === W방향 우선 ===
+    // 1단계: 모든 세로 재단 (전체 시트 높이를 가로지름)
+    sortedVertical.forEach(xPos => {
       cuts.push({
         id: `cut-${order}`,
         order: order++,
@@ -130,43 +116,28 @@ export function generateGuillotineCuts(
         axis: 'x' as CutAxis,
         pos: xPos,
         spanStart: 0,
-        spanEnd: sheetH, // 전체 시트 높이
+        spanEnd: sheetH,
         before: workpiece,
         result: workpiece,
         kerf,
-        label: `세로 재단 #${order}`,
+        label: `세로 재단 #${cuts.length + 1}`,
         source: 'derived'
       });
     });
 
-    // 3. 스트립별로 가로 재단
-    const strips: { xStart: number; xEnd: number; panels: PanelPlacement[] }[] = [];
-    const xBoundaries = [0, ...sortedX, sheetW];
+    // 2단계: 모든 가로 재단 (각 스트립의 너비만큼)
+    const xBoundaries = [0, ...sortedVertical, sheetW];
 
-    for (let i = 0; i < xBoundaries.length - 1; i++) {
-      const xStart = xBoundaries[i];
-      const xEnd = xBoundaries[i + 1];
-      const stripPanels = panels.filter(p =>
-        p.x >= xStart - kerf && p.x + p.width <= xEnd + kerf
-      );
-      if (stripPanels.length > 0) {
-        strips.push({ xStart, xEnd, panels: stripPanels });
-      }
-    }
+    sortedHorizontal.forEach(yPos => {
+      for (let i = 0; i < xBoundaries.length - 1; i++) {
+        const stripXStart = xBoundaries[i];
+        const stripXEnd = xBoundaries[i + 1];
 
-    // 4. 각 스트립에서 가로 재단 (스트립 너비 전체를 가로지름)
-    strips.forEach(strip => {
-      const yPositions = new Set<number>();
-      strip.panels.forEach(p => {
-        if (p.y > kerf) yPositions.add(p.y);
-        if (p.y + p.height < sheetH - kerf) yPositions.add(p.y + p.height);
-      });
-      const sortedY = Array.from(yPositions).sort((a, b) => a - b);
-
-      sortedY.forEach(yPos => {
-        const needsCut = strip.panels.some(p =>
-          Math.abs(p.y - yPos) < kerf || Math.abs(p.y + p.height - yPos) < kerf
-        );
+        const needsCut = panels.some(p => {
+          const panelInStrip = p.x >= stripXStart - kerf && p.x + p.width <= stripXEnd + kerf;
+          const cutAtY = Math.abs(p.y - yPos) < kerf || Math.abs(p.y + p.height - yPos) < kerf;
+          return panelInStrip && cutAtY;
+        });
 
         if (needsCut) {
           cuts.push({
@@ -175,16 +146,16 @@ export function generateGuillotineCuts(
             sheetId: '',
             axis: 'y' as CutAxis,
             pos: yPos,
-            spanStart: strip.xStart,
-            spanEnd: strip.xEnd, // 스트립 전체 너비
+            spanStart: stripXStart,
+            spanEnd: stripXEnd,
             before: workpiece,
             result: workpiece,
             kerf,
-            label: `가로 재단 #${order}`,
+            label: `가로 재단 #${cuts.length + 1}`,
             source: 'derived'
           });
         }
-      });
+      }
     });
   }
 
