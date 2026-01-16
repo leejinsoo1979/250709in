@@ -125,82 +125,57 @@ export function generateGuillotineCuts(
     const uniqueVertical = [...new Set(verticalCuts.map(v => Math.round(v)))].sort((a, b) => a - b);
     const uniqueHorizontal = [...new Set(horizontalCuts.map(v => Math.round(v)))].sort((a, b) => a - b);
 
-    // 각 재단 위치가 몇 개의 패널을 분리하는지 계산
-    const getVerticalSplit = (cutX: number) => {
-      const left = regionPanels.filter(p => p.x + p.width <= cutX + kerf).length;
-      const right = regionPanels.filter(p => p.x >= cutX - kerf).length;
-      return { left, right, total: left + right, balance: Math.min(left, right) };
-    };
-
-    const getHorizontalSplit = (cutY: number) => {
-      const bottom = regionPanels.filter(p => p.y + p.height <= cutY + kerf).length;
-      const top = regionPanels.filter(p => p.y >= cutY - kerf).length;
-      return { bottom, top, total: bottom + top, balance: Math.min(bottom, top) };
-    };
-
-    // 가장 균형잡힌 분리를 하는 재단 선택
-    let bestVerticalCut: number | null = null;
-    let bestVerticalBalance = -1;
-    for (const cutX of uniqueVertical) {
-      const split = getVerticalSplit(cutX);
-      // 양쪽 모두 패널이 있어야 유효한 분리
-      if (split.left > 0 && split.right > 0 && split.balance > bestVerticalBalance) {
-        bestVerticalBalance = split.balance;
-        bestVerticalCut = cutX;
-      }
-    }
-
-    let bestHorizontalCut: number | null = null;
-    let bestHorizontalBalance = -1;
-    for (const cutY of uniqueHorizontal) {
-      const split = getHorizontalSplit(cutY);
-      if (split.bottom > 0 && split.top > 0 && split.balance > bestHorizontalBalance) {
-        bestHorizontalBalance = split.balance;
-        bestHorizontalCut = cutY;
-      }
-    }
-
     let cutMade = false;
 
-    // 우선 방향에 따라 재단 선택, 단 유효한 분리가 가능한 경우만
-    const tryVerticalCut = () => {
-      if (bestVerticalCut !== null && !cutMade) {
-        const cutX = bestVerticalCut;
-        addCut('x', cutX, yStart, yEnd);
+    // 세로 재단 실행
+    const doVerticalCut = (cutX: number) => {
+      addCut('x', cutX, yStart, yEnd);
 
-        const leftPanels = regionPanels.filter(p => p.x + p.width <= cutX + kerf);
-        divideRegion(xStart, yStart, cutX, yEnd, leftPanels);
+      const leftPanels = regionPanels.filter(p => p.x + p.width <= cutX + kerf);
+      divideRegion(xStart, yStart, cutX, yEnd, leftPanels);
 
-        const rightPanels = regionPanels.filter(p => p.x >= cutX - kerf);
-        divideRegion(cutX, yStart, xEnd, yEnd, rightPanels);
+      const rightPanels = regionPanels.filter(p => p.x >= cutX - kerf);
+      divideRegion(cutX, yStart, xEnd, yEnd, rightPanels);
 
-        cutMade = true;
-      }
+      cutMade = true;
     };
 
-    const tryHorizontalCut = () => {
-      if (bestHorizontalCut !== null && !cutMade) {
-        const cutY = bestHorizontalCut;
-        addCut('y', cutY, xStart, xEnd);
+    // 가로 재단 실행
+    const doHorizontalCut = (cutY: number) => {
+      addCut('y', cutY, xStart, xEnd);
 
-        const bottomPanels = regionPanels.filter(p => p.y + p.height <= cutY + kerf);
-        divideRegion(xStart, yStart, xEnd, cutY, bottomPanels);
+      const bottomPanels = regionPanels.filter(p => p.y + p.height <= cutY + kerf);
+      divideRegion(xStart, yStart, xEnd, cutY, bottomPanels);
 
-        const topPanels = regionPanels.filter(p => p.y >= cutY - kerf);
-        divideRegion(xStart, cutY, xEnd, yEnd, topPanels);
+      const topPanels = regionPanels.filter(p => p.y >= cutY - kerf);
+      divideRegion(xStart, cutY, xEnd, yEnd, topPanels);
 
-        cutMade = true;
-      }
+      cutMade = true;
     };
 
     if (preferHorizontal) {
-      // BY_LENGTH: L방향(가로) 우선, 하지만 유효한 분리가 없으면 세로로
-      tryHorizontalCut();
-      tryVerticalCut();
+      // BY_LENGTH: L방향(가로) 우선 - 가로 재단이 있으면 무조건 가로 먼저
+      if (uniqueHorizontal.length > 0 && !cutMade) {
+        // 위치순 정렬 (아래에서 위로)
+        const sortedH = [...uniqueHorizontal].sort((a, b) => a - b);
+        doHorizontalCut(sortedH[0]);
+      }
+      // 가로 재단이 없으면 세로 재단
+      if (uniqueVertical.length > 0 && !cutMade) {
+        const sortedV = [...uniqueVertical].sort((a, b) => a - b);
+        doVerticalCut(sortedV[0]);
+      }
     } else {
-      // BY_WIDTH: W방향(세로) 우선
-      tryVerticalCut();
-      tryHorizontalCut();
+      // BY_WIDTH: W방향(세로) 우선 - 세로 재단이 있으면 무조건 세로 먼저
+      if (uniqueVertical.length > 0 && !cutMade) {
+        const sortedV = [...uniqueVertical].sort((a, b) => a - b);
+        doVerticalCut(sortedV[0]);
+      }
+      // 세로 재단이 없으면 가로 재단
+      if (uniqueHorizontal.length > 0 && !cutMade) {
+        const sortedH = [...uniqueHorizontal].sort((a, b) => a - b);
+        doHorizontalCut(sortedH[0]);
+      }
     }
   };
 
