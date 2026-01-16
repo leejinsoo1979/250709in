@@ -307,14 +307,14 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 앞면 (얇은 판) - 손잡이 판보다 30mm 작게, 폭은 좌우 38mm씩 총 76mm 줄임 */}
+        {/* 앞면 (얇은 판) - 좌우 측판 안쪽에 끼워짐 (좌우 15mm씩 추가 축소) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 앞판` : `서랍${drawerIndex + 1} 앞판`;
           const mat = getPanelMaterial(panelName);
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-front-${mat.uuid}`}
-              args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), DRAWER_SIDE_THICKNESS]}
+              args={[drawerWidth - mmToThreeUnits(106), drawerHeight - mmToThreeUnits(30), DRAWER_SIDE_THICKNESS]}
               position={[centerX, centerY, drawerBodyCenterZ + drawerBodyDepth/2 - DRAWER_SIDE_THICKNESS/2]}
               material={mat}
               renderMode={renderMode}
@@ -327,14 +327,14 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 뒷면 - 앞면 판과 높이 맞춤, 폭은 좌우 38mm씩 총 76mm 줄임 */}
+        {/* 뒷면 - 좌우 측판 안쪽에 끼워짐 (좌우 15mm씩 추가 축소) */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 뒷판` : `서랍${drawerIndex + 1} 뒷판`;
           const mat = getPanelMaterial(panelName);
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-back-${mat.uuid}`}
-              args={[drawerWidth - mmToThreeUnits(76), drawerHeight - mmToThreeUnits(30), DRAWER_SIDE_THICKNESS]}
+              args={[drawerWidth - mmToThreeUnits(106), drawerHeight - mmToThreeUnits(30), DRAWER_SIDE_THICKNESS]}
               position={[centerX, centerY, drawerBodyCenterZ - drawerBodyDepth/2 + DRAWER_SIDE_THICKNESS/2]}
               material={mat}
               renderMode={renderMode}
@@ -347,14 +347,14 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 왼쪽 면 - 앞뒤 판재 두께(30mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
+        {/* 왼쪽 면 - 앞뒤로 15mm씩 확장하여 전체 깊이 사용 */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 좌측판` : `서랍${drawerIndex + 1} 좌측판`;
           const mat = getPanelMaterial(panelName);
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-left-${mat.uuid}`}
-              args={[DRAWER_SIDE_THICKNESS, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - DRAWER_SIDE_THICKNESS * 2]}
+              args={[DRAWER_SIDE_THICKNESS, drawerHeight - mmToThreeUnits(30), drawerBodyDepth]}
               position={[centerX - drawerWidth/2 + DRAWER_SIDE_THICKNESS/2 + mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
               material={mat}
               renderMode={renderMode}
@@ -367,14 +367,14 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* 오른쪽 면 - 앞뒤 판재 두께(30mm) 고려하여 깊이 축소, 앞면 판과 높이 맞춤, 안쪽으로 38mm 더 들어옴 */}
+        {/* 오른쪽 면 - 앞뒤로 15mm씩 확장하여 전체 깊이 사용 */}
         {(() => {
           const panelName = sectionName ? `${sectionName}서랍${drawerIndex + 1} 우측판` : `서랍${drawerIndex + 1} 우측판`;
           const mat = getPanelMaterial(panelName);
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-right-${mat.uuid}`}
-              args={[DRAWER_SIDE_THICKNESS, drawerHeight - mmToThreeUnits(30), drawerBodyDepth - DRAWER_SIDE_THICKNESS * 2]}
+              args={[DRAWER_SIDE_THICKNESS, drawerHeight - mmToThreeUnits(30), drawerBodyDepth]}
               position={[centerX + drawerWidth/2 - DRAWER_SIDE_THICKNESS/2 - mmToThreeUnits(38), centerY, drawerBodyCenterZ]}
               material={mat}
               renderMode={renderMode}
@@ -409,11 +409,25 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
         {/* === 서랍 레일 (좌/우) === */}
         {(() => {
-          // 서랍 옆판과 레일 안쪽이 맞닿게 (안쪽으로 46mm 이동)
-          const railLeftX = centerX - drawerWidth/2 + mmToThreeUnits(76);
-          const railRightX = centerX + drawerWidth/2 - mmToThreeUnits(76);
-          const railY = centerY - drawerHeight/2 + mmToThreeUnits(25);
-          const railZ = drawerBodyCenterZ;
+          // 탑뷰에서는 레일 숨김
+          if (viewMode === '2D' && view2DDirection === 'top') {
+            return null;
+          }
+
+          // 서랍 옆판 위치 기준으로 레일 위치 동적 계산
+          // 서랍 옆판 오프셋 (38mm) + 옆판 두께 (15mm) + 레일 추가 오프셋 (19.5mm) = 72.5mm
+          const drawerSidePanelOffset = mmToThreeUnits(38); // 서랍 옆판이 서랍 가장자리에서 안쪽으로 들어온 거리
+          const railAdditionalOffset = mmToThreeUnits(19.5); // 레일과 서랍 옆판 안쪽 가장자리 사이 간격
+
+          // 서랍 옆판 안쪽 가장자리 위치
+          const leftSidePanelInnerEdge = centerX - drawerWidth/2 + drawerSidePanelOffset + DRAWER_SIDE_THICKNESS;
+          const rightSidePanelInnerEdge = centerX + drawerWidth/2 - drawerSidePanelOffset - DRAWER_SIDE_THICKNESS;
+
+          // 레일 위치 = 서랍 옆판 안쪽 가장자리 + 추가 오프셋
+          const railLeftX = leftSidePanelInnerEdge + railAdditionalOffset;
+          const railRightX = rightSidePanelInnerEdge - railAdditionalOffset;
+          const railY = centerY - drawerHeight/2 + mmToThreeUnits(25.5);
+          const railZ = drawerBodyCenterZ - mmToThreeUnits(8); // 백패널 방향으로 8mm 이동
           const railLength = drawerBodyDepth - mmToThreeUnits(20); // 레일 길이
 
           if (!railModel || !railCenterOffset) return null;
