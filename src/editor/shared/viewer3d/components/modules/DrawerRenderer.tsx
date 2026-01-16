@@ -422,25 +422,34 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
-          // 2D 모드: mesh 숨기고 edges만 표시
+          // 2D 모드: mesh를 투명하게 하고 edges 추가
           if (viewMode === '2D') {
             const leftRail = railModel.clone();
             leftRail.scale.x *= -1;
             const rightRail = railModel.clone();
 
             const lineMaterial = new THREE.LineBasicMaterial({ color: '#FFFFFF' });
+            const transparentMaterial = new THREE.MeshBasicMaterial({
+              transparent: true,
+              opacity: 0
+            });
 
-            // mesh를 숨기고 같은 위치에 edges 추가
             [leftRail, rightRail].forEach(rail => {
               rail.traverse((child) => {
                 if (child instanceof THREE.Mesh && child.geometry) {
-                  // mesh 숨기기
-                  child.visible = false;
+                  // mesh를 투명하게
+                  child.material = transparentMaterial;
 
-                  // edges 생성 및 mesh의 자식으로 추가 (동일 위치)
+                  // edges를 부모에 추가 (mesh와 형제로)
                   const edges = new THREE.EdgesGeometry(child.geometry, 30);
                   const line = new THREE.LineSegments(edges, lineMaterial);
-                  child.add(line);
+                  line.position.copy(child.position);
+                  line.rotation.copy(child.rotation);
+                  line.scale.copy(child.scale);
+
+                  if (child.parent) {
+                    child.parent.add(line);
+                  }
                 }
               });
             });
