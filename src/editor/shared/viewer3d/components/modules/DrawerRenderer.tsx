@@ -416,52 +416,23 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const railZ = drawerBodyCenterZ;
           const railLength = drawerBodyDepth - mmToThreeUnits(20); // 레일 길이
 
-          // 2D 모드: 은선(점선)으로 레일 표시 - 3D DAE 모델과 동일한 위치
+          // 2D 모드: 흰색 박스로 레일 표시
           if (viewMode === '2D') {
             const railHeight2D = mmToThreeUnits(15);
-            const railStartZ = railZ - railLength/2;
-            const railEndZ = railZ + railLength/2;
+            const railDepth2D = mmToThreeUnits(3);
 
             return (
-              <group name="drawer-rails-2d-hidden-lines">
-                {/* 좌측 레일 은선 - 상단/하단 */}
-                <Line
-                  points={[[railLeftX, railY + railHeight2D/2, railStartZ], [railLeftX, railY + railHeight2D/2, railEndZ]]}
-                  color="#FFFFFF"
-                  lineWidth={0.5}
-                  dashed={true}
-                  dashScale={50}
-                  dashSize={1}
-                  gapSize={0.5}
-                />
-                <Line
-                  points={[[railLeftX, railY - railHeight2D/2, railStartZ], [railLeftX, railY - railHeight2D/2, railEndZ]]}
-                  color="#FFFFFF"
-                  lineWidth={0.5}
-                  dashed={true}
-                  dashScale={50}
-                  dashSize={1}
-                  gapSize={0.5}
-                />
-                {/* 우측 레일 은선 - 상단/하단 */}
-                <Line
-                  points={[[railRightX, railY + railHeight2D/2, railStartZ], [railRightX, railY + railHeight2D/2, railEndZ]]}
-                  color="#FFFFFF"
-                  lineWidth={0.5}
-                  dashed={true}
-                  dashScale={50}
-                  dashSize={1}
-                  gapSize={0.5}
-                />
-                <Line
-                  points={[[railRightX, railY - railHeight2D/2, railStartZ], [railRightX, railY - railHeight2D/2, railEndZ]]}
-                  color="#FFFFFF"
-                  lineWidth={0.5}
-                  dashed={true}
-                  dashScale={50}
-                  dashSize={1}
-                  gapSize={0.5}
-                />
+              <group name="drawer-rails-2d">
+                {/* 좌측 레일 */}
+                <mesh position={[railLeftX, railY, railZ]}>
+                  <boxGeometry args={[railDepth2D, railHeight2D, railLength]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
+                {/* 우측 레일 */}
+                <mesh position={[railRightX, railY, railZ]}>
+                  <boxGeometry args={[railDepth2D, railHeight2D, railLength]} />
+                  <meshBasicMaterial color="#FFFFFF" />
+                </mesh>
               </group>
             );
           }
