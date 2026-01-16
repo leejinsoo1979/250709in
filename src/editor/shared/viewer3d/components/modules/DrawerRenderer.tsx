@@ -436,7 +436,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
-          // 2D 모드: 투명한 흰색 + 바운딩박스 아웃라인
+          // 2D 모드: 투명한 흰색으로 레일 렌더링 (아웃라인 제거)
           if (viewMode === '2D') {
             const leftRail = railModel.clone();
             leftRail.scale.x *= -1;
@@ -456,18 +456,6 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               });
             });
 
-            // 바운딩 박스 계산 (원본 모델 기준)
-            const box = new THREE.Box3().setFromObject(railModel);
-            const size = box.getSize(new THREE.Vector3());
-
-            // 바운딩 박스 외곽선 geometry
-            const boxGeo = new THREE.BoxGeometry(size.x, size.y, size.z);
-            const edgesGeo = new THREE.EdgesGeometry(boxGeo);
-            const lineMaterial = new THREE.LineBasicMaterial({ color: '#FFFFFF' });
-
-            const leftOutline = new THREE.LineSegments(edgesGeo, lineMaterial);
-            const rightOutline = new THREE.LineSegments(edgesGeo.clone(), lineMaterial);
-
             return (
               <>
                 <primitive
@@ -476,18 +464,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   position={[railLeftX + offsetX, railY - offsetY, railZ - offsetZ]}
                 />
                 <primitive
-                  key={`drawer-${drawerIndex}-rail-left-outline`}
-                  object={leftOutline}
-                  position={[railLeftX + offsetX, railY - offsetY, railZ - offsetZ]}
-                />
-                <primitive
                   key={`drawer-${drawerIndex}-rail-right-2d`}
                   object={rightRail}
-                  position={[railRightX - offsetX, railY - offsetY, railZ - offsetZ]}
-                />
-                <primitive
-                  key={`drawer-${drawerIndex}-rail-right-outline`}
-                  object={rightOutline}
                   position={[railRightX - offsetX, railY - offsetY, railZ - offsetZ]}
                 />
               </>

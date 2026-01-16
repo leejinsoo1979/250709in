@@ -198,39 +198,39 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
             const drawerBodyHeight = individualDrawerHeight - 30;
             const drawerBodyDepth = customDepth - 47 - drawerHandleThickness;
 
-            // 서랍 앞판
+            // 서랍 앞판 (두께 15mm)
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.frontPanel')}`,
               width: drawerFrontBackWidth,
               height: drawerBodyHeight,
-              thickness: basicThickness,
+              thickness: drawerSideThickness, // 15mm
               material: 'PB'
             });
 
-            // 서랍 뒷판
+            // 서랍 뒷판 (두께 15mm)
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.backPanel')}`,
               width: drawerFrontBackWidth,
               height: drawerBodyHeight,
-              thickness: basicThickness,
+              thickness: drawerSideThickness, // 15mm
               material: 'PB'
             });
 
-            // 서랍 좌측판 (전체 깊이 사용)
+            // 서랍 좌측판 (전체 깊이 사용, 두께 15mm)
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.leftPanel')}`,
               depth: drawerBodyDepth,
               height: drawerBodyHeight,
-              thickness: basicThickness,
+              thickness: drawerSideThickness, // 15mm
               material: 'PB'
             });
 
-            // 서랍 우측판 (전체 깊이 사용)
+            // 서랍 우측판 (전체 깊이 사용, 두께 15mm)
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.rightPanel')}`,
               depth: drawerBodyDepth,
               height: drawerBodyHeight,
-              thickness: basicThickness,
+              thickness: drawerSideThickness, // 15mm
               material: 'PB'
             });
             

@@ -198,33 +198,33 @@ const getFurnitureImagePath = (moduleId: string) => {
         material: 'PB'  // 기본 재질
       });
       
-      // 섹션 상판 (마지막 섹션에만)
+      // 섹션 상판 (마지막 섹션에만) - 뒤에서 26mm 줄임
       if (sectionIndex === sections.length - 1) {
         targetPanel.push({
           name: `${sectionName} ${t('furniture.topPanel')}`,
           width: innerWidth,
-          depth: customDepth,
+          depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
           thickness: basicThickness,
           material: 'PB'  // 기본 재질
         });
       }
-      
-      // 섹션 하판 (각 섹션의 바닥판)
+
+      // 섹션 하판 (각 섹션의 바닥판) - 뒤에서 26mm 줄임
       if (sectionIndex === 0) {
         // 하부섹션의 바닥판 (가구 전체 하판)
         targetPanel.push({
           name: `${sectionName} ${t('furniture.bottomPanel')}`,
           width: innerWidth,
-          depth: customDepth,
+          depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
           thickness: basicThickness,
           material: 'PB'  // 기본 재질
         });
       } else {
-        // 상부섹션의 바닥판
+        // 상부섹션의 바닥판 (하부 상판과 같은 깊이)
         targetPanel.push({
           name: `${sectionName} ${t('furniture.bottomPanel')}`,
           width: innerWidth,
-          depth: customDepth - backPanelThickness - 17, // 안전선반과 같은 깊이
+          depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
           thickness: basicThickness,
           material: 'PB'  // 기본 재질
         });
@@ -240,6 +240,25 @@ const getFurnitureImagePath = (moduleId: string) => {
         thickness: backPanelThickness,
         material: 'MDF'  // 뒷판은 MDF 재질
       });
+
+      // 백패널 보강대 (상단/하단) - 60mm 높이, 15mm 깊이
+      const reinforcementHeight = 60; // mm
+      const reinforcementDepth = 15; // mm
+      targetPanel.push({
+        name: `${sectionName} 하단보강대`,
+        width: innerWidth,
+        height: reinforcementHeight,
+        thickness: reinforcementDepth,
+        material: 'PB'
+      });
+      targetPanel.push({
+        name: `${sectionName} 상단보강대`,
+        width: innerWidth,
+        height: reinforcementHeight,
+        thickness: reinforcementDepth,
+        material: 'PB'
+      });
+
       if (section.type === 'drawer' && section.count) {
         // 서랍 개별 높이 계산 (DrawerRenderer.tsx 로직 참조)
         const drawerHeights = section.drawerHeights || [];
@@ -276,39 +295,39 @@ const getFurnitureImagePath = (moduleId: string) => {
           const drawerBodyHeight = individualDrawerHeight - 30; // 상하 15mm씩 감소
           const drawerBodyDepth = customDepth - 47 - drawerHandleThickness; // 앞30mm 뒤17mm 후퇴 + 손잡이판 두께
 
-          // 서랍 앞판
+          // 서랍 앞판 (두께 15mm)
           targetPanel.push({
             name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.frontPanel')}`,
             width: drawerFrontBackWidth,
             height: drawerBodyHeight,
-            thickness: basicThickness,
+            thickness: drawerSideThickness, // 15mm
             material: 'PB'  // 서랍 본체는 PB 재질
           });
 
-          // 서랍 뒷판
+          // 서랍 뒷판 (두께 15mm)
           targetPanel.push({
             name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.backPanel')}`,
             width: drawerFrontBackWidth,
             height: drawerBodyHeight,
-            thickness: basicThickness,
+            thickness: drawerSideThickness, // 15mm
             material: 'PB'  // 서랍 본체는 PB 재질
           });
 
-          // 서랍 좌측판 (전체 깊이 사용)
+          // 서랍 좌측판 (전체 깊이 사용, 두께 15mm)
           targetPanel.push({
             name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.leftPanel')}`,
             depth: drawerBodyDepth, // 전체 깊이 사용 (앞뒤로 확장됨)
             height: drawerBodyHeight,
-            thickness: basicThickness,
+            thickness: drawerSideThickness, // 15mm
             material: 'PB'  // 서랍 본체는 PB 재질
           });
 
-          // 서랍 우측판 (전체 깊이 사용)
+          // 서랍 우측판 (전체 깊이 사용, 두께 15mm)
           targetPanel.push({
             name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.rightPanel')}`,
             depth: drawerBodyDepth, // 전체 깊이 사용 (앞뒤로 확장됨)
             height: drawerBodyHeight,
-            thickness: basicThickness,
+            thickness: drawerSideThickness, // 15mm
             material: 'PB'  // 서랍 본체는 PB 재질
           });
           
