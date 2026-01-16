@@ -213,7 +213,7 @@ export function buildSequenceForPanel(opts: {
 }
 
 /**
- * Run simulation with animation
+ * Run simulation with animation (legacy - step by step)
  */
 export function runSimulation(
   steps: CutStep[],
@@ -226,22 +226,86 @@ export function runSimulation(
 ): void {
   const { onTick, onDone, speed, cancelRef } = controls;
   const baseDelay = 1000 / speed; // Base delay in ms (1 second per cut at speed 1)
-  
-  
+
+
   let currentIndex = 0;
-  
+
   const animate = () => {
     if (cancelRef.current || currentIndex >= steps.length) {
       onDone();
       return;
     }
-    
+
     onTick(currentIndex);
     currentIndex++;
-    
+
     setTimeout(animate, baseDelay);
   };
-  
+
   // Start animation
   animate();
+}
+
+/**
+ * Run simulation with smooth progress animation
+ * The saw blade moves along each cut line progressively
+ */
+export function runSmoothSimulation(
+  steps: CutStep[],
+  controls: {
+    onProgress: (cutIndex: number, progress: number) => void; // progress: 0-1
+    onCutComplete: (cutIndex: number) => void;
+    onDone: () => void;
+    speed: number; // mm per second
+    cancelRef: { current: boolean };
+  }
+): void {
+  const { onProgress, onCutComplete, onDone, speed, cancelRef } = controls;
+
+  let currentIndex = 0;
+  let startTime = 0;
+  let animationId: number;
+
+  const animateCut = (timestamp: number) => {
+    if (cancelRef.current) {
+      onDone();
+      return;
+    }
+
+    if (currentIndex >= steps.length) {
+      onDone();
+      return;
+    }
+
+    const cut = steps[currentIndex];
+    const cutLength = Math.abs(cut.spanEnd - cut.spanStart);
+    const duration = (cutLength / speed) * 1000; // Convert to milliseconds
+
+    if (startTime === 0) {
+      startTime = timestamp;
+    }
+
+    const elapsed = timestamp - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    onProgress(currentIndex, progress);
+
+    if (progress >= 1) {
+      // Cut complete, move to next
+      onCutComplete(currentIndex);
+      currentIndex++;
+      startTime = 0;
+
+      if (currentIndex < steps.length) {
+        animationId = requestAnimationFrame(animateCut);
+      } else {
+        onDone();
+      }
+    } else {
+      animationId = requestAnimationFrame(animateCut);
+    }
+  };
+
+  // Start animation
+  animationId = requestAnimationFrame(animateCut);
 }

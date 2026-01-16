@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { OptimizedResult } from '../types';
 import { ZoomIn, ZoomOut, RotateCw, Home, Maximize, Ruler, Type, ALargeSmall, ChevronLeft, ChevronRight, Play, Pause, SkipBack, SkipForward, Circle } from 'lucide-react';
 import { useCNCStore } from '../store';
-import { buildSequenceForPanel, runSimulation } from '@/utils/cut/simulate';
+import { buildSequenceForPanel, runSmoothSimulation } from '@/utils/cut/simulate';
 import type { CutStep } from '@/types/cutlist';
 import type { PanelBoringData, BoringType } from '@/domain/boring/types';
 import styles from './CuttingLayoutPreview2.module.css';
@@ -103,6 +103,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   // Simulation state
   const [cutSequence, setCutSequence] = useState<CutStep[]>([]);
   const [currentCutIndex, setCurrentCutIndex] = useState(0);
+  const [cutProgress, setCutProgress] = useState(0); // 0-1: progress of current cut
+  const [completedCuts, setCompletedCuts] = useState<number[]>([]); // indices of completed cuts
   const cancelSimRef = useRef({ current: false });
   const simulationStartedRef = useRef(false);
   const prevSimulatingRef = useRef(false);
@@ -138,6 +140,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         simulationStartedRef.current = false;
         setCutSequence([]);
         setCurrentCutIndex(0);
+        setCutProgress(0);
+        setCompletedCuts([]);
       }
       return;
     }
@@ -198,27 +202,39 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       simulationStartedRef.current = true;
       setCutSequence(cuts);
       setCurrentCutIndex(0);
+      setCutProgress(0);
+      setCompletedCuts([]);
 
       // 기존 취소 ref 취소 및 새로 생성
       cancelSimRef.current.current = true;
       const newCancelRef = { current: false };
       cancelSimRef.current = newCancelRef;
 
-      console.log('Starting simulation with', cuts.length, 'cuts');
+      console.log('Starting smooth simulation with', cuts.length, 'cuts');
 
-      runSimulation(cuts, {
-        onTick: (i) => {
+      // 톱날 속도: mm/s (속도 조절 가능)
+      const sawSpeed = (currentSimSpeed || 1) * 500; // 기본 500mm/s, 속도 배율 적용
+
+      runSmoothSimulation(cuts, {
+        onProgress: (cutIndex, progress) => {
           if (newCancelRef.current) return;
-          setCurrentCutIndex(i);
-          selectCutIndex(i);
+          setCurrentCutIndex(cutIndex);
+          setCutProgress(progress);
+        },
+        onCutComplete: (cutIndex) => {
+          if (newCancelRef.current) return;
+          setCompletedCuts(prev => [...prev, cutIndex]);
+          selectCutIndex(cutIndex);
         },
         onDone: () => {
           console.log('Simulation completed');
           simulationStartedRef.current = false;
           setCutSequence([]);
+          setCutProgress(0);
+          setCompletedCuts([]);
           setSimulating(false);
         },
-        speed: currentSimSpeed || 0.5,
+        speed: sawSpeed,
         cancelRef: newCancelRef
       });
     }
@@ -853,79 +869,168 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       console.log(`Cut ${currentCutIndex}: ${visiblePanelCount}/${result.panels.length} panels visible`);
     }
 
-    // Draw cutting line animation during simulation
-    if (simulating && cutSequence.length > 0 && currentCutIndex < cutSequence.length) {
-      const currentCut = cutSequence[currentCutIndex];
-      
-      // Draw all previous cuts as completed
-      for (let i = 0; i < currentCutIndex; i++) {
-        const cut = cutSequence[i];
+    // Draw cutting line animation during simulation - 톱날이 이동하는 애니메이션
+    if (simulating && cutSequence.length > 0) {
+      // kerf는 실제 mm 단위 - 줌에 따라 스케일 적용됨 (좌표계가 이미 mm 단위)
+      const kerfWidth = settings.kerf || 5;
+
+      // Draw all completed cuts (full line, faded) with cut number at end
+      completedCuts.forEach(cutIdx => {
+        const cut = cutSequence[cutIdx];
+        if (!cut) return;
+
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 0, 0, 0.3)';
-        ctx.lineWidth = 2 / (baseScale * scale);
-        ctx.setLineDash([5, 5]);
-        
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+        ctx.lineWidth = kerfWidth;
+        ctx.setLineDash([]);
+
+        let endX, endY;
         ctx.beginPath();
         if (cut.axis === 'x') {
-          // Vertical cut
           ctx.moveTo(offsetX + cut.pos, offsetY + cut.spanStart);
           ctx.lineTo(offsetX + cut.pos, offsetY + cut.spanEnd);
+          endX = offsetX + cut.pos;
+          endY = offsetY + cut.spanEnd;
         } else {
-          // Horizontal cut
           ctx.moveTo(offsetX + cut.spanStart, offsetY + cut.pos);
           ctx.lineTo(offsetX + cut.spanEnd, offsetY + cut.pos);
+          endX = offsetX + cut.spanEnd;
+          endY = offsetY + cut.pos;
+        }
+        ctx.stroke();
+
+        // Draw cut number at the end of the cut line
+        const numberRadius = Math.max(kerfWidth * 2, 20);
+        ctx.fillStyle = 'rgba(255, 50, 0, 0.85)';
+        ctx.beginPath();
+        ctx.arc(endX, endY, numberRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Cut number text
+        ctx.fillStyle = '#ffffff';
+        const fontSize = Math.max(numberRadius * 0.8, 14);
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${cutIdx + 1}`, endX, endY);
+
+        ctx.restore();
+      });
+
+      // Draw current cut with progress animation (saw blade moving)
+      if (currentCutIndex < cutSequence.length) {
+        const currentCut = cutSequence[currentCutIndex];
+        const progress = cutProgress; // 0 to 1
+
+        // Calculate current blade position based on progress
+        let startX, startY, currentX, currentY, endX, endY;
+
+        if (currentCut.axis === 'x') {
+          // Vertical cut (top to bottom)
+          startX = offsetX + currentCut.pos;
+          startY = offsetY + currentCut.spanStart;
+          endY = offsetY + currentCut.spanEnd;
+          currentX = startX;
+          currentY = startY + (endY - startY) * progress;
+          endX = startX;
+        } else {
+          // Horizontal cut (left to right)
+          startX = offsetX + currentCut.spanStart;
+          startY = offsetY + currentCut.pos;
+          endX = offsetX + currentCut.spanEnd;
+          currentX = startX + (endX - startX) * progress;
+          currentY = startY;
+          endY = startY;
+        }
+
+        // Draw the cut line up to current position (already cut part)
+        ctx.save();
+        ctx.strokeStyle = '#ff0000';
+        ctx.lineWidth = kerfWidth;
+        ctx.setLineDash([]);
+        ctx.lineCap = 'butt';
+
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(currentX, currentY);
+        ctx.stroke();
+        ctx.restore();
+
+        // Draw remaining cut line (not yet cut, dashed and lighter)
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.2)';
+        ctx.lineWidth = kerfWidth * 0.5;
+        ctx.setLineDash([20, 10]); // 20mm dash, 10mm gap (mm units)
+
+        ctx.beginPath();
+        ctx.moveTo(currentX, currentY);
+        if (currentCut.axis === 'x') {
+          ctx.lineTo(endX, endY);
+        } else {
+          ctx.lineTo(endX, endY);
         }
         ctx.stroke();
         ctx.restore();
+
+        // Draw saw blade indicator at current position
+        ctx.save();
+        // 톱날 반지름 = kerf의 3배 정도로 시각적으로 표현 (실제 톱날은 더 크지만 kerf만큼만 자름)
+        const bladeRadius = Math.max(kerfWidth * 3, 30); // 최소 30mm
+
+        // Blade glow effect
+        ctx.shadowColor = 'rgba(255, 50, 0, 0.8)';
+        ctx.shadowBlur = 15 / (baseScale * scale); // 글로우는 화면 픽셀 기준
+
+        // Rotating blade animation
+        const rotationAngle = (Date.now() / 30) % (Math.PI * 2);
+
+        // Draw blade circle (outer ring)
+        ctx.strokeStyle = 'rgba(255, 80, 0, 0.9)';
+        ctx.lineWidth = kerfWidth;
+        ctx.beginPath();
+        ctx.arc(currentX, currentY, bladeRadius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Draw blade teeth (rotating)
+        ctx.strokeStyle = '#ff3300';
+        ctx.lineWidth = kerfWidth * 0.8;
+        const teethCount = 12;
+        for (let i = 0; i < teethCount; i++) {
+          const angle = rotationAngle + (i * Math.PI * 2) / teethCount;
+          ctx.beginPath();
+          ctx.moveTo(
+            currentX + Math.cos(angle) * bladeRadius * 0.5,
+            currentY + Math.sin(angle) * bladeRadius * 0.5
+          );
+          ctx.lineTo(
+            currentX + Math.cos(angle) * bladeRadius,
+            currentY + Math.sin(angle) * bladeRadius
+          );
+          ctx.stroke();
+        }
+
+        // Draw center hole
+        ctx.fillStyle = '#222';
+        ctx.beginPath();
+        ctx.arc(currentX, currentY, bladeRadius * 0.2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Draw progress info (outside of transformation for consistent text size)
+        ctx.save();
+        ctx.fillStyle = '#ff3300';
+        const fontSize = 14 / (baseScale * scale);
+        ctx.font = `bold ${fontSize}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(
+          `${currentCutIndex + 1}/${cutSequence.length} (${Math.round(progress * 100)}%)`,
+          currentX,
+          currentY - bladeRadius - 10
+        );
+        ctx.restore();
       }
-      
-      // Draw current cut with animation
-      ctx.save();
-      ctx.strokeStyle = '#ff0000';
-      ctx.lineWidth = 3 / (baseScale * scale);
-      ctx.shadowColor = 'rgba(255, 0, 0, 0.5)';
-      ctx.shadowBlur = 10;
-      
-      // Animated dashed line
-      const dashOffset = (Date.now() / 50) % 20;
-      ctx.setLineDash([10, 10]);
-      ctx.lineDashOffset = -dashOffset;
-      
-      ctx.beginPath();
-      if (currentCut.axis === 'x') {
-        // Vertical cut
-        ctx.moveTo(offsetX + currentCut.pos, offsetY + currentCut.spanStart);
-        ctx.lineTo(offsetX + currentCut.pos, offsetY + currentCut.spanEnd);
-      } else {
-        // Horizontal cut
-        ctx.moveTo(offsetX + currentCut.spanStart, offsetY + currentCut.pos);
-        ctx.lineTo(offsetX + currentCut.spanEnd, offsetY + currentCut.pos);
-      }
-      ctx.stroke();
-      
-      // Draw cutting direction indicator
-      ctx.save();
-      ctx.fillStyle = '#ff0000';
-      ctx.font = `bold ${14 / (baseScale * scale)}px sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      
-      const cutMidX = currentCut.axis === 'x' 
-        ? offsetX + currentCut.pos
-        : offsetX + (currentCut.spanStart + currentCut.spanEnd) / 2;
-      const cutMidY = currentCut.axis === 'y'
-        ? offsetY + currentCut.pos  
-        : offsetY + (currentCut.spanStart + currentCut.spanEnd) / 2;
-      
-      // Draw cut info
-      ctx.fillText(
-        `${currentCut.axis === 'x' ? '↕' : '↔'} ${currentCut.axis}=${Math.round(currentCut.pos)}`,
-        cutMidX,
-        cutMidY
-      );
-      ctx.restore();
-      
-      ctx.restore();
     }
 
     ctx.restore(); // Restore main transformation
