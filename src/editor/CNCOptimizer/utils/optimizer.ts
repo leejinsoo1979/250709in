@@ -368,21 +368,9 @@ export const optimizePanelsMultiple = async (
   console.log('🎯 optimizer.ts optimizationType:', optimizationType);
 
   if (optimizationType === 'OPTIMAL_L' || optimizationType === 'BY_LENGTH') {
-    // L방향 우선: L방향(height=2440)을 따라 먼저 자름
-    // → strip이 Y축(height) 방향으로 쌓임 → horizontal=true
-    console.log('📍 BY_LENGTH selected → horizontal strip');
-    bins = packGuillotine(
-      rectangles,
-      stockPanel.width,
-      stockPanel.height,
-      kerf,
-      maxSheets,
-      'horizontal'
-    );
-  } else if (optimizationType === 'OPTIMAL_W' || optimizationType === 'BY_WIDTH') {
-    // W방향 우선: W방향(width=1220)을 따라 먼저 자름
-    // → strip이 X축(width) 방향으로 쌓임 → horizontal=false
-    console.log('📍 BY_WIDTH selected → vertical strip');
+    // L방향 우선: L방향(세로=2440)을 먼저 자름 = 세로 스트립
+    // 패널들이 세로로 쌓이고, 각 스트립 안에서는 가로로 배열
+    console.log('📍 BY_LENGTH selected → vertical strip (L방향 우선)');
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
@@ -390,6 +378,18 @@ export const optimizePanelsMultiple = async (
       kerf,
       maxSheets,
       'vertical'
+    );
+  } else if (optimizationType === 'OPTIMAL_W' || optimizationType === 'BY_WIDTH') {
+    // W방향 우선: W방향(가로=1220)을 먼저 자름 = 가로 스트립
+    // 패널들이 가로로 쌓이고, 각 스트립 안에서는 세로로 배열
+    console.log('📍 BY_WIDTH selected → horizontal strip (W방향 우선)');
+    bins = packGuillotine(
+      rectangles,
+      stockPanel.width,
+      stockPanel.height,
+      kerf,
+      maxSheets,
+      'horizontal'
     );
   } else {
     // OPTIMAL_CNC는 개선된 MaxRects 알고리즘 사용
