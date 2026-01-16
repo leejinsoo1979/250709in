@@ -422,36 +422,53 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
-          // 2D 모드: 아웃라인만 표시 - railModel을 클론해서 wireframe으로 표시
+          // 2D 모드: EdgesGeometry로 깔끔한 외곽선만 표시
           if (viewMode === '2D') {
-            const wireframeMaterial = new THREE.MeshBasicMaterial({
-              color: '#FFFFFF',
-              wireframe: true
+            const lineMaterial = new THREE.LineBasicMaterial({ color: '#FFFFFF' });
+
+            // 좌측 레일 엣지 그룹
+            const leftRailGroup = new THREE.Group();
+            // 우측 레일 엣지 그룹
+            const rightRailGroup = new THREE.Group();
+
+            railModel.traverse((child) => {
+              if (child instanceof THREE.Mesh && child.geometry) {
+                // 30도 이상 각도의 엣지만 추출 (깔끔한 외곽선)
+                const edges = new THREE.EdgesGeometry(child.geometry, 30);
+
+                // 좌측 레일용
+                const leftLine = new THREE.LineSegments(edges, lineMaterial);
+                leftLine.position.copy(child.position);
+                leftLine.rotation.copy(child.rotation);
+                leftLine.scale.copy(child.scale);
+                leftRailGroup.add(leftLine);
+
+                // 우측 레일용
+                const rightLine = new THREE.LineSegments(edges.clone(), lineMaterial);
+                rightLine.position.copy(child.position);
+                rightLine.rotation.copy(child.rotation);
+                rightLine.scale.copy(child.scale);
+                rightRailGroup.add(rightLine);
+              }
             });
 
-            const leftRail = railModel.clone();
-            leftRail.scale.x *= -1;
-            const rightRail = railModel.clone();
-
-            // wireframe 재질 적용
-            [leftRail, rightRail].forEach(rail => {
-              rail.traverse((child) => {
-                if (child instanceof THREE.Mesh) {
-                  child.material = wireframeMaterial;
-                }
-              });
-            });
+            // 원본 모델과 동일한 스케일/회전 적용
+            const scale = 0.254;
+            leftRailGroup.scale.set(-scale, scale, scale);
+            leftRailGroup.rotation.x = -Math.PI / 2;
+            rightRailGroup.scale.set(scale, scale, scale);
+            rightRailGroup.rotation.x = -Math.PI / 2;
 
             return (
               <>
                 <primitive
-                  key={`drawer-${drawerIndex}-rail-left-wireframe`}
-                  object={leftRail}
+                  key={`drawer-${drawerIndex}-rail-left-edges`}
+                  object={leftRailGroup}
                   position={[railLeftX + offsetX, railY - offsetY, railZ - offsetZ]}
                 />
                 <primitive
-                  key={`drawer-${drawerIndex}-rail-right-wireframe`}
-                  object={rightRail}
+                  key={`drawer-${drawerIndex}-rail-right-edges`}
+                  object={rightRailGroup}
                   position={[railRightX - offsetX, railY - offsetY, railZ - offsetZ]}
                 />
               </>
