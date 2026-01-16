@@ -66,8 +66,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
   const { viewMode } = useSpace3DView();
 
-  // 레일 모델 로드
+  // 레일 모델 및 중심 오프셋
   const [railModel, setRailModel] = React.useState<THREE.Group | null>(null);
+  const [railCenterOffset, setRailCenterOffset] = React.useState<THREE.Vector3 | null>(null);
 
   React.useEffect(() => {
     const loader = new ColladaLoader();
@@ -76,38 +77,26 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
       const scene = collada.scene;
 
-      // DAE 단위: inch (0.0254m)
-      // inch → mm: × 25.4, mm → Three.js units: × 0.01
-      // 총: inch × 0.254
+      // DAE 단위: inch → Three.js units: × 0.254
       const scale = 0.254;
       scene.scale.set(scale, scale, scale);
 
       // Z-UP → Y-UP 좌표계 변환
       scene.rotation.x = -Math.PI / 2;
 
-      // 스케일과 회전 적용 후 매트릭스 업데이트
+      // 매트릭스 업데이트
       scene.updateMatrixWorld(true);
 
-      // Bounding box로 geometry 중심 찾기
+      // Bounding box 중심 계산
       const box = new THREE.Box3().setFromObject(scene);
       const center = box.getCenter(new THREE.Vector3());
 
-      console.log('📐 레일 bounding box center:', center);
+      console.log('📐 레일 center offset:', { x: center.x, y: center.y, z: center.z });
 
-      // 모든 자식 geometry를 중심으로 이동
-      scene.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          child.position.x -= center.x;
-          child.position.y -= center.y;
-          child.position.z -= center.z;
-        }
-      });
-
-      // 루트 위치 리셋
-      scene.position.set(0, 0, 0);
-
+      // 중심 오프셋 저장 (배치 시 보정용)
+      setRailCenterOffset(center);
       setRailModel(scene);
-      console.log('✅ 서랍 레일 로드 완료 (중심 보정됨)');
+      console.log('✅ 서랍 레일 로드 완료');
     }, undefined, (error) => {
       console.error('❌ 레일 로드 실패:', error);
     });
@@ -394,30 +383,35 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* === 서랍 레일 (좌/우) === */}
-        {railModel && (() => {
+        {railModel && railCenterOffset && (() => {
           // 서랍 측판 바로 바깥에 위치
           const railLeftX = centerX - drawerWidth/2 + mmToThreeUnits(30);
           const railRightX = centerX + drawerWidth/2 - mmToThreeUnits(30);
           const railY = centerY - drawerHeight/2 + mmToThreeUnits(20);
           const railZ = drawerBodyCenterZ;
 
-          // 좌측 레일
-          const leftRail = railModel.clone();
-          // 우측 레일 - X축 반전
+          // bounding box 중심 오프셋 보정
+          const offsetX = railCenterOffset.x;
+          const offsetY = railCenterOffset.y;
+          const offsetZ = railCenterOffset.z;
+
+          // 우측 레일 (원본 모델) - 좌측 위치에 배치
           const rightRail = railModel.clone();
-          rightRail.scale.x *= -1;
+          // 좌측 레일 (X축 반전) - 우측 위치에 배치
+          const leftRail = railModel.clone();
+          leftRail.scale.x *= -1;
 
           return (
             <>
               <primitive
                 key={`drawer-${drawerIndex}-rail-left`}
-                object={leftRail}
-                position={[railLeftX, railY, railZ]}
+                object={rightRail}
+                position={[railLeftX - offsetX, railY - offsetY, railZ - offsetZ]}
               />
               <primitive
                 key={`drawer-${drawerIndex}-rail-right`}
-                object={rightRail}
-                position={[railRightX, railY, railZ]}
+                object={leftRail}
+                position={[railRightX + offsetX, railY - offsetY, railZ - offsetZ]}
               />
             </>
           );
