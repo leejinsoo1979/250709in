@@ -69,7 +69,7 @@ export function generateGuillotineCuts(
 
   if (horizontalFirst) {
     // === L방향 우선 (→) ===
-    // 1단계: 모든 가로 재단 (톱날이 왼쪽에서 오른쪽으로)
+    // 1단계: 모든 가로 재단 (전체 폭, 톱날이 왼쪽→오른쪽)
     sortedHorizontal.forEach(yPos => {
       cuts.push({
         id: `cut-${order}`,
@@ -87,27 +87,50 @@ export function generateGuillotineCuts(
       });
     });
 
-    // 2단계: 모든 세로 재단 (톱날이 위에서 아래로)
-    sortedVertical.forEach(xPos => {
-      cuts.push({
-        id: `cut-${order}`,
-        order: order++,
-        sheetId: '',
-        axis: 'x' as CutAxis,
-        pos: xPos,
-        spanStart: 0,
-        spanEnd: sheetH,
-        before: workpiece,
-        result: workpiece,
-        kerf,
-        label: `W방향 재단 #${cuts.length + 1}`,
-        source: 'derived'
+    // 2단계: 각 스트립별로 세로 재단 (스트립 높이만큼만)
+    // 스트립 경계: [0, ...sortedHorizontal, sheetH]
+    const yBoundaries = [0, ...sortedHorizontal, sheetH];
+
+    for (let i = 0; i < yBoundaries.length - 1; i++) {
+      const stripYStart = yBoundaries[i];
+      const stripYEnd = yBoundaries[i + 1];
+
+      // 이 스트립에 있는 패널들의 X 경계 수집
+      const stripXPositions: number[] = [];
+      panels.forEach(p => {
+        // 패널이 이 스트립에 속하는지 확인
+        const panelYCenter = p.y + p.height / 2;
+        if (panelYCenter > stripYStart && panelYCenter < stripYEnd) {
+          stripXPositions.push(p.x);
+          stripXPositions.push(p.x + p.width);
+        }
       });
-    });
+
+      // 이 스트립의 X 위치들 통합
+      const stripVerticalCuts = consolidatePositions(stripXPositions, 0, sheetW);
+
+      // 이 스트립 내 세로 재단 생성
+      stripVerticalCuts.forEach(xPos => {
+        cuts.push({
+          id: `cut-${order}`,
+          order: order++,
+          sheetId: '',
+          axis: 'x' as CutAxis,
+          pos: xPos,
+          spanStart: stripYStart,
+          spanEnd: stripYEnd,
+          before: workpiece,
+          result: workpiece,
+          kerf,
+          label: `W방향 재단 #${cuts.length + 1}`,
+          source: 'derived'
+        });
+      });
+    }
 
   } else {
     // === W방향 우선 (↓) ===
-    // 1단계: 모든 세로 재단 (톱날이 위에서 아래로)
+    // 1단계: 모든 세로 재단 (전체 높이, 톱날이 위→아래)
     sortedVertical.forEach(xPos => {
       cuts.push({
         id: `cut-${order}`,
@@ -125,23 +148,46 @@ export function generateGuillotineCuts(
       });
     });
 
-    // 2단계: 모든 가로 재단 (톱날이 왼쪽에서 오른쪽으로)
-    sortedHorizontal.forEach(yPos => {
-      cuts.push({
-        id: `cut-${order}`,
-        order: order++,
-        sheetId: '',
-        axis: 'y' as CutAxis,
-        pos: yPos,
-        spanStart: 0,
-        spanEnd: sheetW,
-        before: workpiece,
-        result: workpiece,
-        kerf,
-        label: `L방향 재단 #${cuts.length + 1}`,
-        source: 'derived'
+    // 2단계: 각 스트립별로 가로 재단 (스트립 폭만큼만)
+    // 스트립 경계: [0, ...sortedVertical, sheetW]
+    const xBoundaries = [0, ...sortedVertical, sheetW];
+
+    for (let i = 0; i < xBoundaries.length - 1; i++) {
+      const stripXStart = xBoundaries[i];
+      const stripXEnd = xBoundaries[i + 1];
+
+      // 이 스트립에 있는 패널들의 Y 경계 수집
+      const stripYPositions: number[] = [];
+      panels.forEach(p => {
+        // 패널이 이 스트립에 속하는지 확인
+        const panelXCenter = p.x + p.width / 2;
+        if (panelXCenter > stripXStart && panelXCenter < stripXEnd) {
+          stripYPositions.push(p.y);
+          stripYPositions.push(p.y + p.height);
+        }
       });
-    });
+
+      // 이 스트립의 Y 위치들 통합
+      const stripHorizontalCuts = consolidatePositions(stripYPositions, 0, sheetH);
+
+      // 이 스트립 내 가로 재단 생성
+      stripHorizontalCuts.forEach(yPos => {
+        cuts.push({
+          id: `cut-${order}`,
+          order: order++,
+          sheetId: '',
+          axis: 'y' as CutAxis,
+          pos: yPos,
+          spanStart: stripXStart,
+          spanEnd: stripXEnd,
+          before: workpiece,
+          result: workpiece,
+          kerf,
+          label: `L방향 재단 #${cuts.length + 1}`,
+          source: 'derived'
+        });
+      });
+    }
   }
 
   return cuts;
