@@ -376,20 +376,20 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* === 서랍 레일 (좌/우) === */}
-        {/* drawer.dae 기준: 레일 X=0.81inch(≈21mm), Y=2.05inch(깊이≈52mm), Z=1.38inch(높이≈35mm) */}
+        {/* 서랍속장 내측면(-innerWidth/2+45mm)과 서랍 측판 외측면(-innerWidth/2+50mm) 사이 */}
         {railModel && (
           <>
-            {/* 좌측 레일 - 서랍 좌측판 바깥쪽, 서랍속장 안쪽 */}
+            {/* 좌측 레일 - 서랍속장과 서랍 측판 사이 */}
             <primitive
               key={`drawer-${drawerIndex}-rail-left`}
               object={railModel.clone()}
               position={[
-                centerX - drawerWidth/2 + mmToThreeUnits(21), // 서랍 좌측에서 21mm
-                centerY - drawerHeight/2 + mmToThreeUnits(35), // 서랍 바닥에서 35mm 위
-                drawerBodyCenterZ - drawerBodyDepth/2 + mmToThreeUnits(52) // 뒤에서 52mm
+                centerX - drawerWidth/2 + mmToThreeUnits(36), // 서랍속장-서랍 사이 (drawerWidth 기준 36mm)
+                centerY - drawerHeight/2 + mmToThreeUnits(15), // 서랍 바닥 근처
+                drawerBodyCenterZ // 서랍 본체 중심
               ]}
             />
-            {/* 우측 레일 - 서랍 우측판 바깥쪽, 서랍속장 안쪽 */}
+            {/* 우측 레일 - 서랍속장과 서랍 측판 사이 */}
             {(() => {
               const rightRail = railModel.clone();
               rightRail.scale.x *= -1; // X축 반전 (좌우 대칭)
@@ -398,9 +398,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   key={`drawer-${drawerIndex}-rail-right`}
                   object={rightRail}
                   position={[
-                    centerX + drawerWidth/2 - mmToThreeUnits(21), // 서랍 우측에서 21mm
-                    centerY - drawerHeight/2 + mmToThreeUnits(35), // 서랍 바닥에서 35mm 위
-                    drawerBodyCenterZ - drawerBodyDepth/2 + mmToThreeUnits(52) // 뒤에서 52mm
+                    centerX + drawerWidth/2 - mmToThreeUnits(36), // 서랍속장-서랍 사이
+                    centerY - drawerHeight/2 + mmToThreeUnits(15), // 서랍 바닥 근처
+                    drawerBodyCenterZ // 서랍 본체 중심
                   ]}
                 />
               );
