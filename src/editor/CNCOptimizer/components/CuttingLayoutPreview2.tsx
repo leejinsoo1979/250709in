@@ -979,14 +979,14 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const kerfWidth = settings.kerf || 5;
 
       // Draw all completed cuts (full line, faded) with cut number at end
-      // L방향 (axis 'x', 세로선) = 빨간색, W방향 (axis 'y', 가로선) = 파란색
+      // W방향 (axis 'x', 세로선│) = 파란색, L방향 (axis 'y', 가로선─) = 빨간색
       completedCuts.forEach(cutIdx => {
         const cut = cutSequence[cutIdx];
         if (!cut) return;
 
-        const isLDirection = cut.axis === 'x'; // L방향 = 세로 재단
-        const cutColor = isLDirection ? 'rgba(255, 0, 0, 0.5)' : 'rgba(0, 100, 255, 0.5)';
-        const badgeColor = isLDirection ? 'rgba(255, 50, 0, 0.85)' : 'rgba(0, 100, 255, 0.85)';
+        const isWDirection = cut.axis === 'x'; // W방향 = 세로선(│)
+        const cutColor = isWDirection ? 'rgba(0, 100, 255, 0.5)' : 'rgba(255, 0, 0, 0.5)';
+        const badgeColor = isWDirection ? 'rgba(0, 100, 255, 0.85)' : 'rgba(255, 50, 0, 0.85)';
 
         ctx.save();
         ctx.strokeStyle = cutColor;
@@ -1052,10 +1052,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           endY = startY;
         }
 
-        // L방향 (axis 'x') = 빨간색, W방향 (axis 'y') = 파란색
-        const isLDirection = currentCut.axis === 'x';
-        const currentCutColor = isLDirection ? '#ff0000' : '#0064ff';
-        const currentCutColorFaded = isLDirection ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 100, 255, 0.2)';
+        // W방향 (axis 'x', 세로선│) = 파란색, L방향 (axis 'y', 가로선─) = 빨간색
+        const isWDirection = currentCut.axis === 'x';
+        const currentCutColor = isWDirection ? '#0064ff' : '#ff0000';
+        const currentCutColorFaded = isWDirection ? 'rgba(0, 100, 255, 0.2)' : 'rgba(255, 0, 0, 0.2)';
 
         // Draw the cut line up to current position (already cut part)
         ctx.save();
@@ -1091,10 +1091,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 톱날 반지름 = kerf의 3배 정도로 시각적으로 표현 (실제 톱날은 더 크지만 kerf만큼만 자름)
         const bladeRadius = Math.max(kerfWidth * 3, 30); // 최소 30mm
 
-        // L방향 = 빨간색, W방향 = 파란색
-        const bladeGlowColor = isLDirection ? 'rgba(255, 50, 0, 0.8)' : 'rgba(0, 100, 255, 0.8)';
-        const bladeRingColor = isLDirection ? 'rgba(255, 80, 0, 0.9)' : 'rgba(0, 120, 255, 0.9)';
-        const bladeTeethColor = isLDirection ? '#ff3300' : '#0064ff';
+        // W방향 (axis 'x') = 파란색, L방향 (axis 'y') = 빨간색
+        const bladeGlowColor = isWDirection ? 'rgba(0, 100, 255, 0.8)' : 'rgba(255, 50, 0, 0.8)';
+        const bladeRingColor = isWDirection ? 'rgba(0, 120, 255, 0.9)' : 'rgba(255, 80, 0, 0.9)';
+        const bladeTeethColor = isWDirection ? '#0064ff' : '#ff3300';
 
         // Blade glow effect
         ctx.shadowColor = bladeGlowColor;
