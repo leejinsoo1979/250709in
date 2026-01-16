@@ -531,70 +531,49 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const needsLeftCut = panel.x > tolerance;
         const needsRightCut = panel.x + panel.width < sheetW - tolerance;
 
-        // 완료된 재단 중 해당 경계에 맞는 것이 있는지 확인
-        // 재단이 패널을 실제로 지나가는지 span 범위도 체크해야 함
-        const hasTopCut = !needsTopCut || completedCuts.some(idx => {
-          const cut = cutSequence[idx];
-          if (!cut || cut.axis !== 'y' || Math.abs(cut.pos - panel.y) >= tolerance) return false;
-          // axis 'y' 재단의 span은 x 범위 (spanStart~spanEnd가 패널의 x 범위와 겹쳐야 함)
-          const spanStart = cut.spanStart ?? 0;
-          const spanEnd = cut.spanEnd ?? sheetW;
-          return spanStart <= panel.x + tolerance && spanEnd >= panel.x + panel.width - tolerance;
-        });
-        const hasBottomCut = !needsBottomCut || completedCuts.some(idx => {
-          const cut = cutSequence[idx];
-          if (!cut || cut.axis !== 'y' || Math.abs(cut.pos - (panel.y + panel.height)) >= tolerance) return false;
-          const spanStart = cut.spanStart ?? 0;
-          const spanEnd = cut.spanEnd ?? sheetW;
-          return spanStart <= panel.x + tolerance && spanEnd >= panel.x + panel.width - tolerance;
-        });
-        const hasLeftCut = !needsLeftCut || completedCuts.some(idx => {
-          const cut = cutSequence[idx];
-          if (!cut || cut.axis !== 'x' || Math.abs(cut.pos - panel.x) >= tolerance) return false;
-          // axis 'x' 재단의 span은 y 범위 (spanStart~spanEnd가 패널의 y 범위와 겹쳐야 함)
-          const spanStart = cut.spanStart ?? 0;
-          const spanEnd = cut.spanEnd ?? sheetH;
-          return spanStart <= panel.y + tolerance && spanEnd >= panel.y + panel.height - tolerance;
-        });
-        const hasRightCut = !needsRightCut || completedCuts.some(idx => {
-          const cut = cutSequence[idx];
-          if (!cut || cut.axis !== 'x' || Math.abs(cut.pos - (panel.x + panel.width)) >= tolerance) return false;
-          const spanStart = cut.spanStart ?? 0;
-          const spanEnd = cut.spanEnd ?? sheetH;
-          return spanStart <= panel.y + tolerance && spanEnd >= panel.y + panel.height - tolerance;
-        });
-
-        isPanelSeparated = hasTopCut && hasBottomCut && hasLeftCut && hasRightCut;
-
-        // 첫 번째 패널만 디버그 로그
-        if (panelIndex === 0 && completedCuts.length > 0) {
-          console.log('🔍 Panel separation check:', {
-            panelId: panel.id,
-            panel: { x: panel.x, y: panel.y, w: panel.width, h: panel.height },
-            needs: { top: needsTopCut, bottom: needsBottomCut, left: needsLeftCut, right: needsRightCut },
-            has: { top: hasTopCut, bottom: hasBottomCut, left: hasLeftCut, right: hasRightCut },
-            isPanelSeparated,
-            completedCutsCount: completedCuts.length,
-            cuts: cutSequence.slice(0, 3).map(c => ({ axis: c.axis, pos: c.pos }))
-          });
-        }
-
-        // 방금 분리되었는지 확인 (마지막 완료된 재단이 이 패널을 분리시켰는지)
-        if (isPanelSeparated && completedCuts.length > 0) {
-          const lastCompletedIdx = completedCuts[completedCuts.length - 1];
-          const lastCut = cutSequence[lastCompletedIdx];
-          if (lastCut) {
-            if (lastCut.axis === 'y' &&
-                (Math.abs(lastCut.pos - panel.y) < tolerance ||
-                 Math.abs(lastCut.pos - (panel.y + panel.height)) < tolerance)) {
-              justSeparated = true;
-            }
-            if (lastCut.axis === 'x' &&
-                (Math.abs(lastCut.pos - panel.x) < tolerance ||
-                 Math.abs(lastCut.pos - (panel.x + panel.width)) < tolerance)) {
-              justSeparated = true;
+        // 각 경계를 만족시키는 가장 빠른 재단 인덱스 찾기
+        // 패널이 분리되는 시점 = 4개 경계 중 가장 늦게 완료되는 재단
+        const findCutIndex = (axis: 'x' | 'y', pos: number, isXSpan: boolean): number => {
+          for (let i = 0; i < cutSequence.length; i++) {
+            const cut = cutSequence[i];
+            if (!cut || cut.axis !== axis || Math.abs(cut.pos - pos) >= tolerance) continue;
+            const spanStart = cut.spanStart ?? 0;
+            const spanEnd = cut.spanEnd ?? (isXSpan ? sheetW : sheetH);
+            if (isXSpan) {
+              if (spanStart <= panel.x + tolerance && spanEnd >= panel.x + panel.width - tolerance) return i;
+            } else {
+              if (spanStart <= panel.y + tolerance && spanEnd >= panel.y + panel.height - tolerance) return i;
             }
           }
+          return -1;
+        };
+
+        // 각 경계에 필요한 재단 인덱스 (-1: 필요없음 또는 아직 없음)
+        const topCutIdx = needsTopCut ? findCutIndex('y', panel.y, true) : -1;
+        const bottomCutIdx = needsBottomCut ? findCutIndex('y', panel.y + panel.height, true) : -1;
+        const leftCutIdx = needsLeftCut ? findCutIndex('x', panel.x, false) : -1;
+        const rightCutIdx = needsRightCut ? findCutIndex('x', panel.x + panel.width, false) : -1;
+
+        // 필요한 재단 중 가장 늦은 인덱스 = 패널이 분리되는 시점
+        const requiredCuts = [
+          needsTopCut ? topCutIdx : -2,
+          needsBottomCut ? bottomCutIdx : -2,
+          needsLeftCut ? leftCutIdx : -2,
+          needsRightCut ? rightCutIdx : -2
+        ].filter(idx => idx !== -2); // -2는 필요없는 경계
+
+        // 모든 필요한 재단이 존재하고, 완료되었는지 확인
+        const allCutsExist = requiredCuts.every(idx => idx >= 0);
+        const lastRequiredCutIdx = allCutsExist ? Math.max(...requiredCuts) : -1;
+
+        // 패널이 분리되려면 마지막 필요 재단까지 완료되어야 함
+        isPanelSeparated = allCutsExist && completedCuts.includes(lastRequiredCutIdx);
+
+        // 방금 분리되었는지 확인 (마지막 완료된 재단이 이 패널의 마지막 필요 재단인지)
+        if (isPanelSeparated && completedCuts.length > 0) {
+          const lastCompletedIdx = completedCuts[completedCuts.length - 1];
+          // 마지막 완료된 재단이 이 패널의 마지막 필요 재단이면 방금 분리된 것
+          justSeparated = lastCompletedIdx === lastRequiredCutIdx;
         }
 
         if (!isPanelSeparated) {
