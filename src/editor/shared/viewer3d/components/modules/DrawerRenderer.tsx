@@ -375,7 +375,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* === 서랍 레일 (좌/우) === */}
-        {railModel && (
+        {railModel ? (
           <>
             {/* 좌측 레일 */}
             <primitive
@@ -403,6 +403,18 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                 />
               );
             })()}
+          </>
+        ) : (
+          <>
+            {/* 레일 로드 전 테스트 박스 */}
+            <mesh position={[centerX - drawerWidth/2 + mmToThreeUnits(25), centerY - drawerHeight/2 + mmToThreeUnits(20), drawerBodyCenterZ]}>
+              <boxGeometry args={[mmToThreeUnits(15), mmToThreeUnits(15), mmToThreeUnits(450)]} />
+              <meshStandardMaterial color="red" />
+            </mesh>
+            <mesh position={[centerX + drawerWidth/2 - mmToThreeUnits(25), centerY - drawerHeight/2 + mmToThreeUnits(20), drawerBodyCenterZ]}>
+              <boxGeometry args={[mmToThreeUnits(15), mmToThreeUnits(15), mmToThreeUnits(450)]} />
+              <meshStandardMaterial color="red" />
+            </mesh>
           </>
         )}
 
