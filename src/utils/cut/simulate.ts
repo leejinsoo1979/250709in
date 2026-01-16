@@ -37,11 +37,13 @@ export function generateGuillotineCuts(
   // 이미 추가된 재단 위치 추적 (중복 방지)
   const addedCuts = new Set<string>();
 
-  // 재단 추가 함수
-  const addCut = (axis: 'x' | 'y', pos: number, spanStart: number, spanEnd: number) => {
-    // 시트 경계에 있는 재단은 스킵
-    if (axis === 'x' && (pos <= 0.5 || pos >= sheetW - 0.5)) return;
-    if (axis === 'y' && (pos <= 0.5 || pos >= sheetH - 0.5)) return;
+  // 재단 추가 함수 (isEdge=true면 경계 재단 허용)
+  const addCut = (axis: 'x' | 'y', pos: number, spanStart: number, spanEnd: number, isEdge = false) => {
+    // 시트 경계에 있는 재단은 스킵 (단, isEdge=true면 허용)
+    if (!isEdge) {
+      if (axis === 'x' && (pos <= 0.5 || pos >= sheetW - 0.5)) return;
+      if (axis === 'y' && (pos <= 0.5 || pos >= sheetH - 0.5)) return;
+    }
 
     // span이 유효한지 확인
     if (spanEnd <= spanStart + 0.5) return;
@@ -181,6 +183,12 @@ export function generateGuillotineCuts(
       }
     }
   };
+
+  // 먼저 가장자리 재단 추가 (왼쪽, 하단만)
+  // 왼쪽 가장자리 (x=0, 세로선)
+  addCut('x', 0, 0, sheetH, true);
+  // 하단 가장자리 (y=0, 가로선)
+  addCut('y', 0, 0, sheetW, true);
 
   // 전체 시트에서 시작
   divideRegion(0, 0, sheetW, sheetH, panels);
