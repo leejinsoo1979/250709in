@@ -138,16 +138,16 @@ export function generateGuillotineCuts(
 
   } else {
     // === W방향 우선 (화면상 세로 재단 먼저) ===
-    // 1단계: 모든 가로 재단 (axis 'y', 회전 후 세로로 보임)
-    sortedHorizontal.forEach(yPos => {
+    // 1단계: 세로 재단 먼저 (axis 'x') - 시트를 컬럼으로 나눔
+    sortedVertical.forEach(xPos => {
       cuts.push({
         id: `cut-${order}`,
         order: order++,
         sheetId: '',
-        axis: 'y' as CutAxis,
-        pos: yPos,
+        axis: 'x' as CutAxis,
+        pos: xPos,
         spanStart: 0,
-        spanEnd: sheetW,
+        spanEnd: sheetH,
         before: workpiece,
         result: workpiece,
         kerf,
@@ -156,33 +156,33 @@ export function generateGuillotineCuts(
       });
     });
 
-    // 2단계: 각 스트립별로 세로 재단 (axis 'x', 회전 후 가로로 보임)
-    const yBoundaries = [0, ...sortedHorizontal, sheetH];
+    // 2단계: 각 컬럼(스트립)별로 가로 재단 (axis 'y')
+    const xBoundaries = [0, ...sortedVertical, sheetW];
 
-    for (let i = 0; i < yBoundaries.length - 1; i++) {
-      const stripYStart = yBoundaries[i];
-      const stripYEnd = yBoundaries[i + 1];
+    for (let i = 0; i < xBoundaries.length - 1; i++) {
+      const stripXStart = xBoundaries[i];
+      const stripXEnd = xBoundaries[i + 1];
 
-      const stripXPositions: number[] = [];
+      const stripYPositions: number[] = [];
       panels.forEach(p => {
-        const panelYCenter = p.y + p.height / 2;
-        if (panelYCenter > stripYStart && panelYCenter < stripYEnd) {
-          stripXPositions.push(p.x);
-          stripXPositions.push(p.x + p.width);
+        const panelXCenter = p.x + p.width / 2;
+        if (panelXCenter > stripXStart && panelXCenter < stripXEnd) {
+          stripYPositions.push(p.y);
+          stripYPositions.push(p.y + p.height);
         }
       });
 
-      const stripVerticalCuts = consolidatePositions(stripXPositions, 0, sheetW);
+      const stripHorizontalCuts = consolidatePositions(stripYPositions, 0, sheetH);
 
-      stripVerticalCuts.forEach(xPos => {
+      stripHorizontalCuts.forEach(yPos => {
         cuts.push({
           id: `cut-${order}`,
           order: order++,
           sheetId: '',
-          axis: 'x' as CutAxis,
-          pos: xPos,
-          spanStart: stripYStart,
-          spanEnd: stripYEnd,
+          axis: 'y' as CutAxis,
+          pos: yPos,
+          spanStart: stripXStart,
+          spanEnd: stripXEnd,
           before: workpiece,
           result: workpiece,
           kerf,
