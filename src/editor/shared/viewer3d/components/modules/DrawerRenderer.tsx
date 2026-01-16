@@ -376,36 +376,43 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* === 서랍 레일 (좌/우) === */}
-        {railModel && (
-          <>
-            {/* 좌측 레일 - 서랍 좌측 */}
-            {(() => {
-              const leftRail = railModel.clone();
-              leftRail.scale.x *= -1; // 좌측용 반전
-              return (
-                <primitive
-                  key={`drawer-${drawerIndex}-rail-left`}
-                  object={leftRail}
-                  position={[
-                    centerX - drawerWidth/2 + mmToThreeUnits(36),
-                    centerY - drawerHeight/2 + mmToThreeUnits(15),
-                    drawerBodyCenterZ
-                  ]}
-                />
-              );
-            })()}
-            {/* 우측 레일 - 서랍 우측 */}
-            <primitive
-              key={`drawer-${drawerIndex}-rail-right`}
-              object={railModel.clone()}
-              position={[
-                centerX + drawerWidth/2 - mmToThreeUnits(36),
-                centerY - drawerHeight/2 + mmToThreeUnits(15),
-                drawerBodyCenterZ
-              ]}
-            />
-          </>
-        )}
+        {/* 서랍 측판(38mm 안쪽)과 서랍속장 사이 공간에 위치 */}
+        {railModel && (() => {
+          // 서랍 좌측판 외측: centerX - drawerWidth/2 + 38mm
+          // 서랍속장 내측: 약 45mm from innerWidth edge
+          // 레일은 서랍 측판 바로 바깥에 위치
+          const railLeftX = centerX - drawerWidth/2 + mmToThreeUnits(35);
+          const railRightX = centerX + drawerWidth/2 - mmToThreeUnits(35);
+          const railY = centerY - drawerHeight/2 + mmToThreeUnits(15);
+          const railZ = drawerBodyCenterZ;
+
+          console.log(`🔧 서랍${drawerIndex} 레일 위치:`, {
+            drawerWidth: drawerWidth * 100,
+            centerX,
+            railLeftX: railLeftX * 100,
+            railRightX: railRightX * 100,
+            railY: railY * 100,
+            railZ: railZ * 100
+          });
+
+          const leftRail = railModel.clone();
+          leftRail.scale.x *= -1;
+
+          return (
+            <>
+              <primitive
+                key={`drawer-${drawerIndex}-rail-left`}
+                object={leftRail}
+                position={[railLeftX, railY, railZ]}
+              />
+              <primitive
+                key={`drawer-${drawerIndex}-rail-right`}
+                object={railModel.clone()}
+                position={[railRightX, railY, railZ]}
+              />
+            </>
+          );
+        })()}
 
         {/* 상단면은 제외 (서랍이 열려있어야 함) */}
         
