@@ -156,16 +156,14 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const currentSettings = settingsRef.current;
       const currentSimSpeed = simSpeedRef.current;
 
-      if (!currentResult) {
-        console.log('Cannot start simulation: no result', {
-          hasResult: !!currentResult
+      if (!currentResult || currentSelectedPanelId) {
+        console.log('Cannot start simulation: no result or panel selected', {
+          hasResult: !!currentResult,
+          selectedPanelId: currentSelectedPanelId
         });
         setSimulating(false);
         return;
       }
-
-      // 패널이 선택되어 있어도 전체 시트 시뮬레이션 가능
-      // selectedPanelId 체크 제거
 
       let cuts: CutStep[] = [];
 
@@ -210,21 +208,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             rotated: p.rotated
           }));
 
-          // OPTIMAL_W -> BY_WIDTH, OPTIMAL_L/OPTIMAL_CNC -> BY_LENGTH 변환
-          let cutOptimizationType: 'BY_LENGTH' | 'BY_WIDTH';
-          if (currentSettings.optimizationType === 'OPTIMAL_W' || currentSettings.optimizationType === 'BY_WIDTH') {
-            cutOptimizationType = 'BY_WIDTH';
-          } else {
-            cutOptimizationType = 'BY_LENGTH';
-          }
-          console.log(`🔄 optimizationType 변환: ${currentSettings.optimizationType} -> ${cutOptimizationType}`);
-
           const guillotineCuts = generateGuillotineCuts(
             currentResult.stockPanel.width,
             currentResult.stockPanel.height,
             panelPlacements,
             currentSettings.kerf || 5,
-            cutOptimizationType
+            currentSettings.optimizationType
           );
 
           guillotineCuts.forEach((cut, idx) => {
@@ -239,24 +228,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         return;
       }
 
-      // 중복 재단 제거 (같은 axis-pos-spanStart-spanEnd 조합은 한 번만)
-      const uniqueCuts: typeof cuts = [];
-      const seenPositions = new Set<string>();
-
-      cuts.forEach(cut => {
-        const key = `${cut.axis}-${Math.round(cut.pos)}-${Math.round(cut.spanStart || 0)}-${Math.round(cut.spanEnd || 0)}`;
-        if (!seenPositions.has(key)) {
-          seenPositions.add(key);
-          uniqueCuts.push(cut);
-        }
-      });
-
-      if (uniqueCuts.length !== cuts.length) {
-        console.log(`🔧 중복 재단 제거: ${cuts.length} → ${uniqueCuts.length}`);
-      }
-
-      cuts = uniqueCuts;
-
       // 시뮬레이션 시작
       simulationStartedRef.current = true;
       setCutSequence(cuts);
@@ -269,7 +240,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const newCancelRef = { current: false };
       cancelSimRef.current = newCancelRef;
 
-      console.log('Starting smooth simulation with', cuts.length, 'cuts, unique positions:', seenPositions.size);
+      console.log('Starting smooth simulation with', cuts.length, 'cuts');
 
       // 톱날 속도: mm/s (속도 조절 가능)
       const sawSpeed = (currentSimSpeed || 1) * 2000; // 기본 2000mm/s, 속도 배율 적용
@@ -282,11 +253,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         },
         onCutComplete: (cutIndex) => {
           if (newCancelRef.current) return;
-          // 중복 추가 방지
-          setCompletedCuts(prev => {
-            if (prev.includes(cutIndex)) return prev;
-            return [...prev, cutIndex];
-          });
+          setCompletedCuts(prev => [...prev, cutIndex]);
           selectCutIndex(cutIndex);
         },
         onDone: () => {
@@ -560,9 +527,11 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       let isPanelSeparated = false;
       let justSeparated = false;
 
-      // 시뮬레이션 중이고 재단이 진행된 경우에만 패널 분리 체크
-      // 시뮬레이션 전이거나 cutSequence가 없으면 모든 패널 표시
-      if (simulating && completedCuts.length > 0 && cutSequence.length > 0) {
+      // 시뮬레이션 중이거나 재단이 진행된 경우 패널 분리 체크
+      if (simulating || completedCuts.length > 0) {
+        if (cutSequence.length === 0) {
+          return; // Hide all panels if no cuts
+        }
 
         const kerf = settings.kerf || 5;
         const sheetW = result.stockPanel.width;
@@ -979,14 +948,14 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const kerfWidth = settings.kerf || 5;
 
       // Draw all completed cuts (full line, faded) with cut number at end
-      // W방향 (axis 'x', 세로선│) = 파란색, L방향 (axis 'y', 가로선─) = 빨간색
+      // L방향 (axis 'x', 세로선) = 빨간색, W방향 (axis 'y', 가로선) = 파란색
       completedCuts.forEach(cutIdx => {
         const cut = cutSequence[cutIdx];
         if (!cut) return;
 
-        const isWDirection = cut.axis === 'x'; // W방향 = 세로선(│) = 파란색
-        const cutColor = isWDirection ? 'rgba(0, 100, 255, 0.5)' : 'rgba(255, 0, 0, 0.5)';
-        const badgeColor = isWDirection ? 'rgba(0, 100, 255, 0.85)' : 'rgba(255, 50, 0, 0.85)';
+        const isLDirection = cut.axis === 'x'; // L방향 = 세로 재단
+        const cutColor = isLDirection ? 'rgba(255, 0, 0, 0.5)' : 'rgba(0, 100, 255, 0.5)';
+        const badgeColor = isLDirection ? 'rgba(255, 50, 0, 0.85)' : 'rgba(0, 100, 255, 0.85)';
 
         ctx.save();
         ctx.strokeStyle = cutColor;
@@ -995,19 +964,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         let endX, endY;
         ctx.beginPath();
-        // axis='x': x위치 고정, y방향으로 세로선(│) 그림
-        // axis='y': y위치 고정, x방향으로 가로선(─) 그림
         if (cut.axis === 'x') {
-          // 세로선: x=cut.pos 고정, y=spanStart~spanEnd
-          ctx.moveTo(offsetX + cut.pos, offsetY + (cut.spanStart ?? 0));
-          ctx.lineTo(offsetX + cut.pos, offsetY + (cut.spanEnd ?? 0));
+          ctx.moveTo(offsetX + cut.pos, offsetY + cut.spanStart);
+          ctx.lineTo(offsetX + cut.pos, offsetY + cut.spanEnd);
           endX = offsetX + cut.pos;
-          endY = offsetY + (cut.spanEnd ?? 0);
+          endY = offsetY + cut.spanEnd;
         } else {
-          // 가로선: y=cut.pos 고정, x=spanStart~spanEnd
-          ctx.moveTo(offsetX + (cut.spanStart ?? 0), offsetY + cut.pos);
-          ctx.lineTo(offsetX + (cut.spanEnd ?? 0), offsetY + cut.pos);
-          endX = offsetX + (cut.spanEnd ?? 0);
+          ctx.moveTo(offsetX + cut.spanStart, offsetY + cut.pos);
+          ctx.lineTo(offsetX + cut.spanEnd, offsetY + cut.pos);
+          endX = offsetX + cut.spanEnd;
           endY = offsetY + cut.pos;
         }
         ctx.stroke();
@@ -1056,10 +1021,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           endY = startY;
         }
 
-        // W방향 (axis 'x', 세로선│) = 파란색, L방향 (axis 'y', 가로선─) = 빨간색
-        const isWDirection = currentCut.axis === 'x';
-        const currentCutColor = isWDirection ? '#0064ff' : '#ff0000';
-        const currentCutColorFaded = isWDirection ? 'rgba(0, 100, 255, 0.2)' : 'rgba(255, 0, 0, 0.2)';
+        // L방향 (axis 'x') = 빨간색, W방향 (axis 'y') = 파란색
+        const isLDirection = currentCut.axis === 'x';
+        const currentCutColor = isLDirection ? '#ff0000' : '#0064ff';
+        const currentCutColorFaded = isLDirection ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 100, 255, 0.2)';
 
         // Draw the cut line up to current position (already cut part)
         ctx.save();
@@ -1095,10 +1060,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 톱날 반지름 = kerf의 3배 정도로 시각적으로 표현 (실제 톱날은 더 크지만 kerf만큼만 자름)
         const bladeRadius = Math.max(kerfWidth * 3, 30); // 최소 30mm
 
-        // W방향 (axis 'x') = 파란색, L방향 (axis 'y') = 빨간색
-        const bladeGlowColor = isWDirection ? 'rgba(0, 100, 255, 0.8)' : 'rgba(255, 50, 0, 0.8)';
-        const bladeRingColor = isWDirection ? 'rgba(0, 120, 255, 0.9)' : 'rgba(255, 80, 0, 0.9)';
-        const bladeTeethColor = isWDirection ? '#0064ff' : '#ff3300';
+        // L방향 = 빨간색, W방향 = 파란색
+        const bladeGlowColor = isLDirection ? 'rgba(255, 50, 0, 0.8)' : 'rgba(0, 100, 255, 0.8)';
+        const bladeRingColor = isLDirection ? 'rgba(255, 80, 0, 0.9)' : 'rgba(0, 120, 255, 0.9)';
+        const bladeTeethColor = isLDirection ? '#ff3300' : '#0064ff';
 
         // Blade glow effect
         ctx.shadowColor = bladeGlowColor;
@@ -1142,7 +1107,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // Draw progress info (outside of transformation for consistent text size)
         ctx.save();
-        ctx.fillStyle = isWDirection ? '#0064ff' : '#ff3300';
+        ctx.fillStyle = isLDirection ? '#ff3300' : '#0064ff';
         const fontSize = 14 / (baseScale * scale);
         ctx.font = `bold ${fontSize}px sans-serif`;
         ctx.textAlign = 'center';
@@ -1597,9 +1562,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         onMouseLeave={handleMouseUp}
       />
       
-      {/* Simulation Overlay - 시뮬레이션 중이 아닐 때 선택된 재단만 표시 (시뮬레이션 중에는 Canvas에서 그림) */}
-      {showCuttingListTab && !simulating && selectedCutId && (
-        <div
+      {/* Simulation Overlay - 컷팅 리스트 탭이 활성화되어 있을 때만 표시 */}
+      {showCuttingListTab && ((selectedPanelId && cutSequence.length > 0) || selectedCutId) && (
+        <div 
           className={styles.simulationOverlay}
           style={{
             position: 'absolute',
@@ -1611,41 +1576,41 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             zIndex: 10
           }}
         >
-          <svg
-            style={{
-              width: '100%',
+          <svg 
+            style={{ 
+              width: '100%', 
               height: '100%',
               position: 'absolute'
             }}
           >
             {/* Render selected cut if not simulating */}
-            {(() => {
-              // Find the selected cut from allCutSteps
+            {!simulating && selectedCutId && (() => {
+              // Find the selected cut from allCutSteps  
               const currentSheetCuts = allCutSteps.filter(c => c.sheetNumber === (sheetInfo?.currentIndex || 0) + 1);
               const selectedCut = currentSheetCuts.find(c => c.id === selectedCutId);
               if (!selectedCut || !result || !containerRef.current) return null;
-
+              
               const containerRect = containerRef.current.getBoundingClientRect();
               const containerWidth = containerRect.width;
               const containerHeight = containerRect.height - (sheetInfo ? 40 : 0);
-
+              
               // Calculate scale and center
               const rotatedWidth = Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.width +
                                  Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.height;
               const rotatedHeight = Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.width +
                                   Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.height;
-
+              
               const scaleX = containerWidth * 0.9 / rotatedWidth;
               const scaleY = containerHeight * 0.9 / rotatedHeight;
               const baseScale = Math.min(scaleX, scaleY, 1.2);
               const totalScale = baseScale * scale;
-
+              
               const centerX = containerWidth / 2 + offset.x;
               const centerY = containerHeight / 2 + offset.y;
-
+              
               // Transform cut coordinates with guaranteed span
               const angle = (rotation * Math.PI) / 180;
-
+              
               let x1, y1, x2, y2;
               if (selectedCut.axis === 'x') {
                 // Vertical line
@@ -1660,35 +1625,35 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                 x2 = selectedCut.spanEnd != null ? selectedCut.spanEnd : result.stockPanel.width;
                 y2 = selectedCut.pos;
               }
-
+              
               // Clamp to sheet bounds
               x1 = Math.max(0, Math.min(result.stockPanel.width, x1));
               x2 = Math.max(0, Math.min(result.stockPanel.width, x2));
               y1 = Math.max(0, Math.min(result.stockPanel.height, y1));
               y2 = Math.max(0, Math.min(result.stockPanel.height, y2));
-
+              
               // Transform to view coordinates
               const transform = (x: number, y: number) => {
                 // Center the sheet
                 const cx = x - result.stockPanel.width / 2;
                 const cy = y - result.stockPanel.height / 2;
-
+                
                 // Apply rotation
                 const rx = cx * Math.cos(angle) - cy * Math.sin(angle);
                 const ry = cx * Math.sin(angle) + cy * Math.cos(angle);
-
+                
                 // Apply scale and offset
                 return {
                   x: centerX + rx * totalScale,
                   y: centerY + ry * totalScale
                 };
               };
-
+              
               const p1 = transform(x1, y1);
               const p2 = transform(x2, y2);
-
+              
               const strokeWidth = Math.max(2, (selectedCut.kerf || settings.kerf || 5) * totalScale);
-
+              
               return (
                 <line
                   x1={p1.x}
@@ -1703,7 +1668,84 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                 />
               );
             })()}
-            {/* 시뮬레이션 중에는 SVG 렌더링을 사용하지 않음 - Canvas에서 그림 */}
+            {/* Render simulation cuts */}
+            {cutSequence.slice(0, currentCutIndex + 1).map((cut, index) => {
+              if (!result || !containerRef.current) return null;
+              
+              const containerRect = containerRef.current.getBoundingClientRect();
+              const containerWidth = containerRect.width;
+              const containerHeight = containerRect.height - (sheetInfo ? 40 : 0);
+              
+              // Calculate scale and center
+              const rotatedWidth = Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.width +
+                                 Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.height;
+              const rotatedHeight = Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.width +
+                                  Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.height;
+              
+              const scaleX = containerWidth * 0.9 / rotatedWidth;
+              const scaleY = containerHeight * 0.9 / rotatedHeight;
+              const baseScale = Math.min(scaleX, scaleY, 1.2);
+              const totalScale = baseScale * scale;
+              
+              const centerX = containerWidth / 2 + offset.x;
+              const centerY = containerHeight / 2 + offset.y;
+              
+              // Transform cut coordinates
+              const angle = (rotation * Math.PI) / 180;
+              
+              let x1, y1, x2, y2;
+              if (cut.axis === 'x') {
+                // Vertical line
+                x1 = cut.pos;
+                y1 = cut.spanStart;
+                x2 = cut.pos;
+                y2 = cut.spanEnd;
+              } else {
+                // Horizontal line
+                x1 = cut.spanStart;
+                y1 = cut.pos;
+                x2 = cut.spanEnd;
+                y2 = cut.pos;
+              }
+              
+              // Transform to view coordinates
+              const transform = (x: number, y: number) => {
+                // Center the sheet
+                const cx = x - result.stockPanel.width / 2;
+                const cy = y - result.stockPanel.height / 2;
+                
+                // Apply rotation
+                const rx = cx * Math.cos(angle) - cy * Math.sin(angle);
+                const ry = cx * Math.sin(angle) + cy * Math.cos(angle);
+                
+                // Apply scale and offset
+                return {
+                  x: centerX + rx * totalScale,
+                  y: centerY + ry * totalScale
+                };
+              };
+              
+              const p1 = transform(x1, y1);
+              const p2 = transform(x2, y2);
+              
+              const isCurrentCut = index === currentCutIndex;
+              const strokeWidth = Math.max(2, (cut.kerf || settings.kerf || 5) * totalScale);
+              
+              return (
+                <line
+                  key={cut.id}
+                  x1={p1.x}
+                  y1={p1.y}
+                  x2={p2.x}
+                  y2={p2.y}
+                  stroke="#FF4D4F"
+                  strokeWidth={strokeWidth}
+                  opacity={isCurrentCut ? 1.0 : 0.35}
+                  strokeDasharray={isCurrentCut ? "5,5" : "none"}
+                  className={isCurrentCut ? styles.animatedCut : ''}
+                />
+              );
+            })}
           </svg>
           
           {/* Highlight selected panel */}

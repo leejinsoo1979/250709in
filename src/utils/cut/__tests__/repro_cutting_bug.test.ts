@@ -7,20 +7,21 @@ describe('Guillotine Cut Generation Bug Repro', () => {
         const sheetW = 1000;
         const sheetH = 1000;
 
-        // Panel 1: Left strip (0-100)
-        // Panel 2: Right strip (200-300)
-        // Panel 3: Middle strip (100-200) - taller
+        // Panel 1 & 2: Left strip (0-100) -> Split at y=50
+        // Panel 3 & 4: Right strip (200-300) -> Split at y=50
+        // Panel 5: Middle strip (100-200) -> Tall panel (0-100), no split at 50.
         const panels = [
-            { id: 'p1', x: 0, y: 0, width: 100, height: 100 },      // Needs cut at y=100
-            { id: 'p2', x: 200, y: 0, width: 100, height: 100 },    // Needs cut at y=100
-            { id: 'p3', x: 100, y: 0, width: 100, height: 200 }     // Spans y=0 to 200. Should NOT be cut at y=100.
+            { id: 'p1a', x: 0, y: 0, width: 100, height: 50 },
+            { id: 'p1b', x: 0, y: 50, width: 100, height: 50 },
+
+            { id: 'p2a', x: 200, y: 0, width: 100, height: 50 },
+            { id: 'p2b', x: 200, y: 50, width: 100, height: 50 },
+
+            { id: 'p3', x: 100, y: 0, width: 100, height: 100 } // Spans y=0 to 100. Should NOT be cut at y=50.
         ];
 
         // Optimization: BY_WIDTH (Vertical/X cuts first)
         // Expected Primary Cuts: x=100, x=200
-        // Expected Strips:
-        // 1. 0-100 (Contains p1) -> Secondary cut y=100.
-        // 2. 100-200 (Contains p3) -> No cut at y=100 needed (p3 height is 200).
         // 3. 200-300 (Contains p2) -> Secondary cut y=100.
 
         // Expected Result:
@@ -31,20 +32,22 @@ describe('Guillotine Cut Generation Bug Repro', () => {
 
         const cuts = generateGuillotineCuts(sheetW, sheetH, panels, 0, 'BY_WIDTH');
 
-        // Check for y=100 cuts
-        const y100Cuts = cuts.filter(c => c.axis === 'y' && Math.abs(c.pos - 100) < 1);
+        // Check for y=50 cuts
+        const y50Cuts = cuts.filter(c => c.axis === 'y' && Math.abs(c.pos - 50) < 1);
 
-        console.log('Cuts at y=100:', y100Cuts.map(c => ({
+        console.log('Cuts at y=50:', y50Cuts.map(c => ({
             pos: c.pos,
             start: c.spanStart,
             end: c.spanEnd
         })));
 
         // If merged incorrectly, we might see one cut from 0 to 300
-        const mergedCut = y100Cuts.find(c => c.spanStart === 0 && c.spanEnd >= 300);
-        expect(mergedCut).toBeUndefined('Found invalid merged cut spanning across uncut middle strip');
+        // Strip 1 is 0-100. Strip 2 is 200-300. Middle uncut is 100-200.
+        // An incorrect merge would span 0-300.
+        const mergedCut = y50Cuts.find(c => c.spanStart === 0 && c.spanEnd >= 300);
+        expect(mergedCut).toBeUndefined();
 
-        // We expect 2 cuts at y=100
-        expect(y100Cuts.length).toBeGreaterThanOrEqual(2);
+        // We expect 2 cuts at y=50 (one for strip 0-100, one for strip 200-300)
+        expect(y50Cuts.length).toBeGreaterThanOrEqual(2);
     });
 });
