@@ -48,11 +48,13 @@ export class GuillotinePacker {
     
     if (stripDirection === 'horizontal') {
       // 가로 스트립 = 가로로 먼저 자름 = BY_LENGTH (L방향 우선)
+      console.log('📐 packAll: horizontal strip mode (BY_LENGTH)');
       bestResult = this.packWithStrips(sortedPanels, true);
       bestEfficiency = this.calculateEfficiency(bestResult);
       bestStrategy = 'horizontal';
     } else if (stripDirection === 'vertical') {
       // 세로 스트립 = 세로로 먼저 자름 = BY_WIDTH (W방향 우선)
+      console.log('📐 packAll: vertical strip mode (BY_WIDTH)');
       bestResult = this.packWithStrips(sortedPanels, false);
       bestEfficiency = this.calculateEfficiency(bestResult);
       bestStrategy = 'vertical';
@@ -156,10 +158,11 @@ export class GuillotinePacker {
    * 지정된 방향의 스트립으로 패널 배치
    */
   private packWithStrips(panels: Rect[], horizontal: boolean): Strip[] {
+    console.log(`🔨 packWithStrips: horizontal=${horizontal} (${horizontal ? '가로 스트립' : '세로 스트립'})`);
     const strips: Strip[] = [];
     const sortedPanels = this.sortPanels(panels, horizontal);
     const remainingPanels = [...sortedPanels];
-    
+
     let currentPos = 0;
     
     while (remainingPanels.length > 0) {
@@ -572,15 +575,17 @@ export function packGuillotine(
   maxBins: number = 999,
   stripDirection: 'horizontal' | 'vertical' | 'auto' = 'auto'
 ): PackedBin[] {
-  
+  console.log('🔧 packGuillotine called:', { stripDirection, binWidth, binHeight, panelCount: panels.length });
+
   const bins: PackedBin[] = [];
   let currentBin = 0;
   const remainingPanels = [...panels];
-  
+
   while (remainingPanels.length > 0 && currentBin < maxBins) {
-    
+
     const packer = new GuillotinePacker(binWidth, binHeight, kerf);
     const result = packer.packAll(remainingPanels, stripDirection);
+    console.log(`📦 Bin ${currentBin}: placed ${result.panels.length} panels, stripDirection=${stripDirection}`);
     
     if (result.panels.length === 0) {
       console.warn('Cannot place any more panels in guillotine mode');
