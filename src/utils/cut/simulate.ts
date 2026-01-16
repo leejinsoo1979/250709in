@@ -29,33 +29,6 @@ export function generateGuillotineCuts(
 
   if (panels.length === 0) return cuts;
 
-  // 특정 위치에서 재단이 가능한지 확인 (패널을 관통하지 않는지)
-  const canCutVertically = (xPos: number, yStart: number, yEnd: number): boolean => {
-    for (const p of panels) {
-      // 패널이 이 X 위치를 가로지르고, Y 범위가 겹치는지 확인
-      if (p.x < xPos && p.x + p.width > xPos) {
-        // 패널의 Y 범위와 재단 Y 범위가 겹치면 재단 불가
-        if (p.y < yEnd && p.y + p.height > yStart) {
-          return false;
-        }
-      }
-    }
-    return true;
-  };
-
-  const canCutHorizontally = (yPos: number, xStart: number, xEnd: number): boolean => {
-    for (const p of panels) {
-      // 패널이 이 Y 위치를 가로지르고, X 범위가 겹치는지 확인
-      if (p.y < yPos && p.y + p.height > yPos) {
-        // 패널의 X 범위와 재단 X 범위가 겹치면 재단 불가
-        if (p.x < xEnd && p.x + p.width > xStart) {
-          return false;
-        }
-      }
-    }
-    return true;
-  };
-
   // 재귀적으로 영역을 분할하는 함수
   const divideRegion = (
     xStart: number, yStart: number,
@@ -64,6 +37,27 @@ export function generateGuillotineCuts(
     preferVertical: boolean
   ) => {
     if (regionPanels.length === 0) return;
+
+    // 특정 위치에서 재단이 가능한지 확인 (해당 영역의 패널만 검사)
+    const canCutVertically = (xPos: number): boolean => {
+      for (const p of regionPanels) {
+        // 패널이 이 X 위치를 가로지르는지 확인
+        if (p.x < xPos && p.x + p.width > xPos) {
+          return false;
+        }
+      }
+      return true;
+    };
+
+    const canCutHorizontally = (yPos: number): boolean => {
+      for (const p of regionPanels) {
+        // 패널이 이 Y 위치를 가로지르는지 확인
+        if (p.y < yPos && p.y + p.height > yPos) {
+          return false;
+        }
+      }
+      return true;
+    };
 
     // 이 영역 내의 가능한 재단 위치 수집
     const possibleVerticalCuts: number[] = [];
@@ -83,7 +77,7 @@ export function generateGuillotineCuts(
       // 패널 주변에 여백이 있으면 가장자리 재단 추가
 
       // 왼쪽 여백 재단
-      if (p.x > xStart + kerf && canCutVertically(p.x, yStart, yEnd)) {
+      if (p.x > xStart + kerf) {
         cuts.push({
           id: `cut-${order}`,
           order: order++,
@@ -101,7 +95,7 @@ export function generateGuillotineCuts(
       }
 
       // 오른쪽 여백 재단
-      if (p.x + p.width < xEnd - kerf && canCutVertically(p.x + p.width, yStart, yEnd)) {
+      if (p.x + p.width < xEnd - kerf) {
         cuts.push({
           id: `cut-${order}`,
           order: order++,
@@ -119,7 +113,7 @@ export function generateGuillotineCuts(
       }
 
       // 위쪽 여백 재단
-      if (p.y > yStart + kerf && canCutHorizontally(p.y, xStart, xEnd)) {
+      if (p.y > yStart + kerf) {
         cuts.push({
           id: `cut-${order}`,
           order: order++,
@@ -137,7 +131,7 @@ export function generateGuillotineCuts(
       }
 
       // 아래쪽 여백 재단
-      if (p.y + p.height < yEnd - kerf && canCutHorizontally(p.y + p.height, xStart, xEnd)) {
+      if (p.y + p.height < yEnd - kerf) {
         cuts.push({
           id: `cut-${order}`,
           order: order++,
@@ -162,8 +156,8 @@ export function generateGuillotineCuts(
     const uniqueHorizontal = [...new Set(possibleHorizontalCuts)].sort((a, b) => a - b);
 
     // 유효한 재단 위치 필터링 (패널을 관통하지 않는 것만)
-    const validVerticalCuts = uniqueVertical.filter(x => canCutVertically(x, yStart, yEnd));
-    const validHorizontalCuts = uniqueHorizontal.filter(y => canCutHorizontally(y, xStart, xEnd));
+    const validVerticalCuts = uniqueVertical.filter(x => canCutVertically(x));
+    const validHorizontalCuts = uniqueHorizontal.filter(y => canCutHorizontally(y));
 
     let cutMade = false;
 
