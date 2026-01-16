@@ -366,28 +366,24 @@ export const optimizePanelsMultiple = async (
   
   
   if (optimizationType === 'OPTIMAL_L' || optimizationType === 'BY_LENGTH') {
-    // L방향 우선: L방향(height=2440)을 따라 먼저 절단
-    // 데이터: vertical strip (x 방향으로 스트립 배치)
-    // 캔버스(rotation=-90): 가로 스트립처럼 보임
+    // L방향 우선: 가로 스트립 (패널이 가로로 나열)
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
       stockPanel.height,
       kerf,
       maxSheets,
-      'vertical' // L방향(height) 따라 절단 → vertical strip
+      'horizontal'
     );
   } else if (optimizationType === 'OPTIMAL_W' || optimizationType === 'BY_WIDTH') {
-    // W방향 우선: W방향(width=1220)을 따라 먼저 절단
-    // 데이터: horizontal strip (y 방향으로 스트립 배치)
-    // 캔버스(rotation=-90): 세로 스트립처럼 보임
+    // W방향 우선: 세로 스트립 (패널이 세로로 나열)
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
       stockPanel.height,
       kerf,
       maxSheets,
-      'horizontal' // W방향(width) 따라 절단 → horizontal strip
+      'vertical'
     );
   } else {
     // OPTIMAL_CNC는 개선된 MaxRects 알고리즘 사용
