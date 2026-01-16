@@ -70,6 +70,31 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const [railModel, setRailModel] = React.useState<THREE.Group | null>(null);
   const [railCenterOffset, setRailCenterOffset] = React.useState<THREE.Vector3 | null>(null);
 
+  // 레일 재질: 옷봉과 동일 (3D: 메탈릭, 2D: 흰색)
+  const railMaterial = React.useMemo(() => {
+    if (viewMode === '3D') {
+      return new THREE.MeshStandardMaterial({
+        color: '#e8e8e8',
+        metalness: 0.9,
+        roughness: 0.25,
+        envMapIntensity: 2.0,
+        emissive: new THREE.Color('#b8b8b8'),
+        emissiveIntensity: 0.15
+      });
+    } else {
+      return new THREE.MeshBasicMaterial({
+        color: '#FFFFFF'
+      });
+    }
+  }, [viewMode]);
+
+  // 레일 재질 cleanup
+  React.useEffect(() => {
+    return () => {
+      railMaterial.dispose();
+    };
+  }, [railMaterial]);
+
   React.useEffect(() => {
     const loader = new ColladaLoader();
     loader.load('/models/drawer-rail.dae', (collada) => {
@@ -400,6 +425,15 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           leftRail.scale.x *= -1;
           // 우측 레일 (원본 모델)
           const rightRail = railModel.clone();
+
+          // 재질 적용 (옷봉과 동일: 3D 메탈릭, 2D 흰색)
+          [leftRail, rightRail].forEach(rail => {
+            rail.traverse((child) => {
+              if (child instanceof THREE.Mesh) {
+                child.material = railMaterial;
+              }
+            });
+          });
 
           return (
             <>
