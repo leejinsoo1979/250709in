@@ -5,22 +5,7 @@ import { useProjectStore } from '@/store/core/projectStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, Zap, Play, Pause, ChevronDown, ChevronRight, ChevronUp, Layout, Package, Grid3x3, Cpu, LogOut, Settings2 } from 'lucide-react';
-
-// Custom Saw Blade Icon
-const SawBladeIcon = ({ size = 18 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="8" />
-    <circle cx="12" cy="12" r="3" />
-    <path d="M12 4V2" />
-    <path d="M12 22v-2" />
-    <path d="M4 12H2" />
-    <path d="M22 12h-2" />
-    <path d="M6.34 6.34L4.93 4.93" />
-    <path d="M19.07 19.07l-1.41-1.41" />
-    <path d="M6.34 17.66l-1.41 1.41" />
-    <path d="M19.07 4.93l-1.41 1.41" />
-  </svg>
-);
+import { GiCircularSawblade } from 'react-icons/gi';
 import Logo from '@/components/common/Logo';
 import { initializeTheme } from '@/theme';
 import { useTranslation } from '@/i18n/useTranslation';
@@ -926,7 +911,7 @@ function PageInner(){
             disabled={optimizationResults.length === 0}
             title={simulating ? "시뮬레이션 정지" : "재단 시뮬레이션"}
           >
-            {simulating ? <Pause size={18} /> : <SawBladeIcon size={18} />}
+            {simulating ? <Pause size={18} /> : <GiCircularSawblade size={18} />}
             <span>{simulating ? '정지' : '시뮬레이션'}</span>
           </button>
           <div className={styles.exportGroup}>
