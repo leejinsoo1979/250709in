@@ -453,8 +453,10 @@ function PageInner(){
     }
   }, [livePanels, userHasModifiedPanels, setPanels]);
 
-  const handleOptimize = useCallback(async () => {
-    console.log('⚡ handleOptimize called with optimizationType:', settings.optimizationType);
+  const handleOptimize = useCallback(async (overrideOptimizationType?: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC') => {
+    // overrideOptimizationType이 주어지면 그 값을 사용, 아니면 settings에서 가져옴
+    const effectiveOptimizationType = overrideOptimizationType || settings.optimizationType;
+    console.log('⚡ handleOptimize called with optimizationType:', effectiveOptimizationType);
 
     if (panels.length === 0) {
       showToast(t('cnc.noPanelsError'), 'error', t('common.confirm'));
@@ -481,7 +483,7 @@ function PageInner(){
     const animationStartTime = Date.now();
     
     // 설정값을 전역 변수로 저장 (뷰어에서 접근 가능하도록)
-    (window as any).cncSettings = settings;
+    (window as any).cncSettings = { ...settings, optimizationType: effectiveOptimizationType };
     
     // Calculate total panels to estimate loading time
     const totalPanels = panels.reduce((sum, p) => sum + (p.quantity || 1), 0);
@@ -532,7 +534,7 @@ function PageInner(){
         
         // CNC 최적화 모드에서는 결방향 무시하고 무조건 회전 가능 (효율 극대화)
         // BY_LENGTH, BY_WIDTH 모드에서만 결방향 고려
-        if (settings.optimizationType === 'OPTIMAL_CNC') {
+        if (effectiveOptimizationType === 'OPTIMAL_CNC') {
           // CNC 최적화: 테트리스처럼 최대 효율로 배치 - 결방향 무시
           processedPanel.canRotate = true;
         } else {
@@ -641,7 +643,7 @@ function PageInner(){
             settings.singleSheetOnly ? 1 : 999, // 제한 없음
             settings.alignVerticalCuts !== false, // Use aligned packing by default
             settings.kerf || 5, // 톱날 두께 전달
-            settings.optimizationType || 'OPTIMAL_CNC' // 최적화 타입 전달
+            effectiveOptimizationType // 최적화 타입 전달 (override 지원)
           );
           
           // 패널 위치를 여백만큼 오프셋
@@ -812,162 +814,12 @@ function PageInner(){
       };
     }, [showDropdown]);
 
-    const handleMethodChange = async (method: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC') => {
+    const handleMethodChange = (method: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC') => {
       console.log('🔄 handleMethodChange called with:', method);
       setSettings({ optimizationType: method });
       setShowDropdown(false);
-
-      // setSettings 후에 직접 최적화 실행 (클로저 문제 방지를 위해 method 값 직접 전달)
-      // 기존의 setTimeout/handleOptimize 대신 직접 실행
-      if (panels.length === 0 || stock.length === 0) return;
-
-      setIsOptimizing(true);
-      setMethodChanged(false);
-      setOptimizationResults([]);
-      pendingResultsRef.current = [];
-
-      // 설정값을 전역 변수로 저장
-      (window as any).cncSettings = { ...settings, optimizationType: method };
-
-      try {
-        // Group panels by material AND thickness
-        const panelGroups = new Map<string, Panel[]>();
-
-        panels.forEach(panel => {
-          const processedPanel = { ...panel };
-
-          if (method === 'OPTIMAL_CNC') {
-            processedPanel.canRotate = true;
-          } else {
-            if (settings.considerGrain && panel.grain && (panel.grain === 'V' || panel.grain === 'H')) {
-              processedPanel.canRotate = false;
-            } else {
-              processedPanel.canRotate = true;
-            }
-          }
-
-          const key = settings.considerMaterial
-            ? `${processedPanel.material || 'PB'}_${processedPanel.thickness || 18}`
-            : `THICKNESS_${processedPanel.thickness || 18}`;
-          if (!panelGroups.has(key)) {
-            panelGroups.set(key, []);
-          }
-          panelGroups.get(key)!.push(processedPanel);
-        });
-
-        const allResults: OptimizedResult[] = [];
-
-        for (const [key, groupPanels] of panelGroups) {
-          let material: string | undefined;
-          let thickness: number;
-
-          if (key.startsWith('THICKNESS_')) {
-            thickness = parseInt(key.split('_')[1]) || 18;
-          } else {
-            const parts = key.split('_');
-            material = parts[0];
-            thickness = parseInt(parts[1]) || 18;
-          }
-
-          let matchingStock;
-          if (material) {
-            matchingStock = stock.find(s => s.material === material && s.thickness === thickness);
-          }
-          if (!matchingStock) {
-            matchingStock = stock.find(s => s.thickness === thickness);
-          }
-          if (!matchingStock && stock.length > 0) {
-            matchingStock = stock[0];
-          }
-
-          if (matchingStock) {
-            const stockPanel = {
-              id: matchingStock.label || 'stock',
-              width: matchingStock.width,
-              height: matchingStock.length,
-              material: matchingStock.material || 'PB',
-              color: 'MW',
-              price: 50000,
-              stock: matchingStock.quantity
-            };
-
-            const optimizerPanels = groupPanels.map(p => ({
-              id: p.id,
-              name: p.label,
-              width: p.width,
-              height: p.length,
-              thickness: p.thickness,
-              quantity: p.quantity,
-              material: p.material || 'PB',
-              color: 'MW',
-              grain: p.grain === 'H' ? 'HORIZONTAL' : 'VERTICAL',
-              canRotate: p.canRotate
-            }));
-
-            const adjustedStockPanel = {
-              ...stockPanel,
-              width: stockPanel.width - (settings.trimLeft || 10) - (settings.trimRight || 10),
-              height: stockPanel.height - (settings.trimTop || 10) - (settings.trimBottom || 10)
-            };
-
-            console.log('⚡ 직접 optimizePanelsMultiple 호출 with method:', method);
-            const results = await optimizePanelsMultiple(
-              optimizerPanels,
-              adjustedStockPanel,
-              settings.singleSheetOnly ? 1 : 999,
-              settings.alignVerticalCuts !== false,
-              settings.kerf || 5,
-              method // 직접 전달받은 method 값 사용
-            );
-
-            results.forEach(result => {
-              result.panels.forEach(panel => {
-                panel.x += (settings.trimLeft || 10);
-                panel.y += (settings.trimBottom || 10);
-              });
-              result.stockPanel = stockPanel;
-            });
-
-            allResults.push(...results);
-          }
-        }
-
-        // Generate placements
-        const placements: Placement[] = [];
-        allResults.forEach((result, sheetIndex) => {
-          result.panels.forEach(panel => {
-            placements.push({
-              sheetId: String(sheetIndex + 1),
-              panelId: panel.id,
-              x: panel.x,
-              y: panel.y,
-              width: panel.width,
-              height: panel.height,
-              rotated: panel.rotated
-            });
-          });
-        });
-        setPlacements(placements);
-
-        setOptimizationResults(allResults);
-
-        if (currentSheetIndex >= allResults.length && allResults.length > 0) {
-          setCurrentSheetIndex(allResults.length - 1);
-        } else if (currentSheetIndex < 0 && allResults.length > 0) {
-          setCurrentSheetIndex(0);
-        }
-
-        if (allResults.length > 0) {
-          const totalPanels = allResults.reduce((sum, r) => sum + r.panels.length, 0);
-          const avgEfficiency = allResults.reduce((sum, r) => sum + r.efficiency, 0) / allResults.length;
-          showToast(t('cnc.optimizationComplete', { panels: totalPanels, sheets: allResults.length, efficiency: avgEfficiency.toFixed(1) }), 'success', t('common.confirm'));
-        }
-      } catch (error) {
-        console.error('Optimization error:', error);
-        showToast(t('cnc.optimizationError'), 'error', t('common.confirm'));
-      } finally {
-        setIsOptimizing(false);
-      }
+      // handleOptimize에 직접 method를 전달하여 클로저 문제 방지
+      handleOptimize(method);
     };
 
     return (
