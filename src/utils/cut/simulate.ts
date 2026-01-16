@@ -137,52 +137,68 @@ export function generateGuillotineCuts(
     }
 
   } else {
-    // === W방향 우선 (화면상 세로 재단 먼저) ===
-    // 1단계: 세로 재단 먼저 (axis 'x') - 시트를 컬럼으로 나눔
-    sortedVertical.forEach(xPos => {
-      cuts.push({
-        id: `cut-${order}`,
-        order: order++,
-        sheetId: '',
-        axis: 'x' as CutAxis,
-        pos: xPos,
-        spanStart: 0,
-        spanEnd: sheetH,
-        before: workpiece,
-        result: workpiece,
-        kerf,
-        label: `W방향 재단 #${cuts.length + 1}`,
-        source: 'derived'
-      });
-    });
+    // === W방향 우선 ===
+    // 기요틴 재단의 핵심: 패널을 자르지 않고 빈 공간(또는 패널 경계)에서만 재단
+    //
+    // 1단계: 가로 재단으로 시트를 수평 스트립으로 나눔
+    // 2단계: 각 스트립 내에서 세로 재단으로 패널 분리
 
-    // 2단계: 각 컬럼(스트립)별로 가로 재단 (axis 'y')
-    const xBoundaries = [0, ...sortedVertical, sheetW];
+    // 먼저 가로 재단 위치 계산 (모든 패널의 상/하 경계)
+    const yBoundaries = [0, ...sortedHorizontal, sheetH];
 
-    for (let i = 0; i < xBoundaries.length - 1; i++) {
-      const stripXStart = xBoundaries[i];
-      const stripXEnd = xBoundaries[i + 1];
+    // 각 수평 스트립별로 처리
+    for (let i = 0; i < yBoundaries.length - 1; i++) {
+      const stripYStart = yBoundaries[i];
+      const stripYEnd = yBoundaries[i + 1];
 
-      const stripYPositions: number[] = [];
-      panels.forEach(p => {
-        const panelXCenter = p.x + p.width / 2;
-        if (panelXCenter > stripXStart && panelXCenter < stripXEnd) {
-          stripYPositions.push(p.y);
-          stripYPositions.push(p.y + p.height);
-        }
+      // 이 스트립에 속하는 패널들 찾기
+      const panelsInStrip = panels.filter(p => {
+        const panelYCenter = p.y + p.height / 2;
+        return panelYCenter > stripYStart && panelYCenter < stripYEnd;
       });
 
-      const stripHorizontalCuts = consolidatePositions(stripYPositions, 0, sheetH);
+      if (panelsInStrip.length === 0) continue;
 
-      stripHorizontalCuts.forEach(yPos => {
+      // 스트립 상단 가로 재단 (stripYStart가 0이 아니면)
+      if (stripYStart > 0) {
+        // 이 스트립 내 패널들의 X 범위 계산
+        const minX = Math.min(...panelsInStrip.map(p => p.x));
+        const maxX = Math.max(...panelsInStrip.map(p => p.x + p.width));
+
         cuts.push({
           id: `cut-${order}`,
           order: order++,
           sheetId: '',
           axis: 'y' as CutAxis,
-          pos: yPos,
-          spanStart: stripXStart,
-          spanEnd: stripXEnd,
+          pos: stripYStart,
+          spanStart: minX,
+          spanEnd: maxX,
+          before: workpiece,
+          result: workpiece,
+          kerf,
+          label: `W방향 재단 #${cuts.length + 1}`,
+          source: 'derived'
+        });
+      }
+
+      // 이 스트립 내에서 세로 재단 (패널 사이)
+      const stripXPositions: number[] = [];
+      panelsInStrip.forEach(p => {
+        stripXPositions.push(p.x);
+        stripXPositions.push(p.x + p.width);
+      });
+
+      const stripVerticalCuts = consolidatePositions(stripXPositions, 0, sheetW);
+
+      stripVerticalCuts.forEach(xPos => {
+        cuts.push({
+          id: `cut-${order}`,
+          order: order++,
+          sheetId: '',
+          axis: 'x' as CutAxis,
+          pos: xPos,
+          spanStart: stripYStart,
+          spanEnd: stripYEnd,
           before: workpiece,
           result: workpiece,
           kerf,
