@@ -238,6 +238,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [setSimulating]);
 
+  // Ref for the latest draw function (to avoid stale closure in animation loop)
+  const drawRef = useRef<() => void>(() => {});
+
   // Drawing function (not memoized to ensure it rerenders)
   const draw = () => {
     if (!result || !canvasRef.current || !containerRef.current) return;
@@ -1001,27 +1004,36 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     }
   }, [result?.stockPanel.id]); // result의 id가 변경될 때만 실행
 
+  // Update drawRef to latest draw function
+  useEffect(() => {
+    drawRef.current = draw;
+  });
+
   // Call draw function when dependencies change
   useEffect(() => {
     draw();
   }, [result, highlightedPanelId, hoveredPanelId, showLabels, scale, offset, rotation, fontScale, showDimensions, showBorings, boringData, simulating, currentCutIndex]);
 
-  // Animation loop for simulation
+  // Animation loop for simulation - uses drawRef to always call latest draw
   useEffect(() => {
     let animationId: number;
-    
+    let isRunning = true;
+
     const animate = () => {
+      if (!isRunning) return;
       if (simulating) {
-        draw();
+        drawRef.current(); // Call latest draw function via ref
         animationId = requestAnimationFrame(animate);
       }
     };
-    
+
     if (simulating) {
+      console.log('Animation loop started');
       animate();
     }
-    
+
     return () => {
+      isRunning = false;
       if (animationId) {
         cancelAnimationFrame(animationId);
       }
