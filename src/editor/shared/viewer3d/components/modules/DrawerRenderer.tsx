@@ -85,11 +85,29 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
       // Z-UP → Y-UP 좌표계 변환
       scene.rotation.x = -Math.PI / 2;
 
-      // 원점 기준으로 위치 리셋
+      // 스케일과 회전 적용 후 매트릭스 업데이트
+      scene.updateMatrixWorld(true);
+
+      // Bounding box로 geometry 중심 찾기
+      const box = new THREE.Box3().setFromObject(scene);
+      const center = box.getCenter(new THREE.Vector3());
+
+      console.log('📐 레일 bounding box center:', center);
+
+      // 모든 자식 geometry를 중심으로 이동
+      scene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          child.position.x -= center.x;
+          child.position.y -= center.y;
+          child.position.z -= center.z;
+        }
+      });
+
+      // 루트 위치 리셋
       scene.position.set(0, 0, 0);
 
       setRailModel(scene);
-      console.log('✅ 서랍 레일 로드 완료, scale:', scale);
+      console.log('✅ 서랍 레일 로드 완료 (중심 보정됨)');
     }, undefined, (error) => {
       console.error('❌ 레일 로드 실패:', error);
     });
@@ -375,28 +393,32 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* === 서랍 레일 (좌/우) - 테스트용 박스 === */}
-        {(() => {
-          // 서랍 측판 위치: centerX ± (drawerWidth/2 - 38mm - 7.5mm)
-          // 레일은 측판 바로 바깥, 서랍속장 안쪽에 위치
+        {/* === 서랍 레일 (좌/우) === */}
+        {railModel && (() => {
+          // 서랍 측판 바로 바깥에 위치
           const railLeftX = centerX - drawerWidth/2 + mmToThreeUnits(30);
           const railRightX = centerX + drawerWidth/2 - mmToThreeUnits(30);
           const railY = centerY - drawerHeight/2 + mmToThreeUnits(20);
           const railZ = drawerBodyCenterZ;
 
-          // 테스트용 빨간 박스로 위치 확인
+          // 좌측 레일
+          const leftRail = railModel.clone();
+          // 우측 레일 - X축 반전
+          const rightRail = railModel.clone();
+          rightRail.scale.x *= -1;
+
           return (
             <>
-              {/* 좌측 레일 위치 - 빨간 박스 */}
-              <mesh position={[railLeftX, railY, railZ]}>
-                <boxGeometry args={[mmToThreeUnits(10), mmToThreeUnits(30), mmToThreeUnits(400)]} />
-                <meshBasicMaterial color="red" />
-              </mesh>
-              {/* 우측 레일 위치 - 파란 박스 */}
-              <mesh position={[railRightX, railY, railZ]}>
-                <boxGeometry args={[mmToThreeUnits(10), mmToThreeUnits(30), mmToThreeUnits(400)]} />
-                <meshBasicMaterial color="blue" />
-              </mesh>
+              <primitive
+                key={`drawer-${drawerIndex}-rail-left`}
+                object={leftRail}
+                position={[railLeftX, railY, railZ]}
+              />
+              <primitive
+                key={`drawer-${drawerIndex}-rail-right`}
+                object={rightRail}
+                position={[railRightX, railY, railZ]}
+              />
             </>
           );
         })()}
