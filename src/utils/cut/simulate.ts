@@ -98,12 +98,12 @@ function calculateValidSpans(
 
 /**
  * Generate guillotine cuts for an entire sheet
- * 기요틴 재단: 1차 방향으로 모든 스트립 분리 → 각 스트립 내에서 2차 방향 재단
+ * 기요틴 재단: 재귀적으로 1차 방향 우선 → 2차 방향 재단
  *
  * 핵심 원칙:
- * 1. W방향 우선: 먼저 모든 파란선(세로, x)으로 스트립 분리 → 각 스트립 내에서 빨간선(가로, y)
- * 2. L방향 우선: 먼저 모든 빨간선(가로, y)으로 스트립 분리 → 각 스트립 내에서 파란선(세로, x)
- * 3. kerf(5mm)는 이미 패널 간격에 반영되어 있음 - 같은 위치 재단 1회만
+ * 1. W방향 우선 (BY_WIDTH): 파란선(세로, x)을 우선 재단, 불가능하면 빨간선(가로, y)
+ * 2. L방향 우선 (BY_LENGTH): 빨간선(가로, y)을 우선 재단, 불가능하면 파란선(세로, x)
+ * 3. kerf(5mm)는 이미 패널 간격에 반영되어 있음 - 같은 위치는 1회만 재단
  */
 export function generateGuillotineCuts(
   sheetW: number,
@@ -117,181 +117,135 @@ export function generateGuillotineCuts(
   if (panels.length === 0) return [];
 
   // 시트: 2440mm(가로=sheetW) x 1220mm(세로=sheetH)
-  // W방향 = 1220mm = 파란색 = 세로선(│) = axis='x' (x 위치 고정, 위아래로 자름)
-  // L방향 = 2440mm = 빨간색 = 가로선(─) = axis='y' (y 위치 고정, 좌우로 자름)
-  //
-  // W방향 우선 (BY_WIDTH): 파란선(세로, x) 먼저 모두 → 각 스트립 내 빨간선(가로, y)
-  // L방향 우선 (BY_LENGTH): 빨간선(가로, y) 먼저 모두 → 각 스트립 내 파란선(세로, x)
+  // W방향 = 1220mm = 파란색 = 세로선(│) = axis='x'
+  // L방향 = 2440mm = 빨간색 = 가로선(─) = axis='y'
   const primaryAxis = optimizationType === 'BY_WIDTH' ? 'x' : 'y';
-  const secondaryAxis = primaryAxis === 'x' ? 'y' : 'x';
 
-  console.log(`🔪 generateGuillotineCuts: ${optimizationType}, primary=${primaryAxis}(${primaryAxis === 'x' ? '파란선/세로' : '빨간선/가로'}), panels=${panels.length}`);
+  console.log(`🔪 generateGuillotineCuts: ${optimizationType}, primaryAxis=${primaryAxis}, panels=${panels.length}`);
 
   interface CutInfo {
     axis: 'x' | 'y';
     pos: number;
     spanStart: number;
     spanEnd: number;
-    order: number;
   }
 
   const allCuts: CutInfo[] = [];
-  let cutOrder = 0;
+  const addedCutKeys = new Set<string>(); // 중복 방지 (axis-pos-spanStart-spanEnd)
 
-  // 해당 위치에서 패널을 관통하지 않는지 체크
-  const canCutAt = (pos: number, axis: 'x' | 'y', targetPanels: PanelPlacement[]): boolean => {
+  // 해당 위치에서 영역 내 패널을 관통하지 않는지 체크
+  const canCutThrough = (pos: number, axis: 'x' | 'y', targetPanels: PanelPlacement[]): boolean => {
     return targetPanels.every(p => {
       if (axis === 'x') {
-        // 세로선: 패널의 좌우 경계 밖이어야 함
         return pos <= Math.round(p.x) || pos >= Math.round(p.x + p.width);
       } else {
-        // 가로선: 패널의 상하 경계 밖이어야 함
         return pos <= Math.round(p.y) || pos >= Math.round(p.y + p.height);
       }
     });
   };
 
-  // 1차 재단: 시트 전체를 관통하는 선으로 스트립 분리
-  // 모든 패널 경계 위치 수집
-  const primaryPositions = new Set<number>();
+  // 재단 추가 (중복 체크)
+  const addCut = (axis: 'x' | 'y', pos: number, spanStart: number, spanEnd: number) => {
+    const key = `${axis}-${Math.round(pos)}-${Math.round(spanStart)}-${Math.round(spanEnd)}`;
+    if (addedCutKeys.has(key)) return;
+    addedCutKeys.add(key);
+    allCuts.push({ axis, pos, spanStart, spanEnd });
+  };
 
-  panels.forEach(p => {
-    if (primaryAxis === 'x') {
-      // W방향 우선: 세로선 위치 (패널의 좌우 경계)
-      primaryPositions.add(Math.round(p.x));
-      primaryPositions.add(Math.round(p.x + p.width));
-    } else {
-      // L방향 우선: 가로선 위치 (패널의 상하 경계)
-      primaryPositions.add(Math.round(p.y));
-      primaryPositions.add(Math.round(p.y + p.height));
-    }
-  });
+  // 재귀적 영역 분할
+  const divideRegion = (
+    left: number, top: number, right: number, bottom: number,
+    regionPanels: PanelPlacement[]
+  ) => {
+    if (regionPanels.length <= 1) return;
 
-  // 시트 경계 제외, 관통 가능한 위치만 필터링
-  const sheetMax = primaryAxis === 'x' ? sheetW : sheetH;
-  const validPrimaryPositions = Array.from(primaryPositions)
-    .filter(pos => pos > 0 && pos < sheetMax && canCutAt(pos, primaryAxis, panels))
-    .sort((a, b) => a - b);
+    // 이 영역 내 패널들의 경계 위치 수집
+    const xPositions = new Set<number>();
+    const yPositions = new Set<number>();
 
-  console.log(`  1차 재단 위치(${primaryAxis}): [${validPrimaryPositions.join(', ')}]`);
+    regionPanels.forEach(p => {
+      const pLeft = Math.round(p.x);
+      const pRight = Math.round(p.x + p.width);
+      const pTop = Math.round(p.y);
+      const pBottom = Math.round(p.y + p.height);
 
-  // 1차 재단선 추가 (시트 전체 관통)
-  validPrimaryPositions.forEach(pos => {
-    allCuts.push({
-      axis: primaryAxis,
-      pos,
-      spanStart: 0,
-      spanEnd: primaryAxis === 'x' ? sheetH : sheetW,
-      order: cutOrder++
-    });
-  });
-
-  // 스트립 경계 계산 (0, pos1, pos2, ..., sheetMax)
-  const stripBoundaries = [0, ...validPrimaryPositions, sheetMax];
-
-  // 2차 재단: 각 스트립 내에서 2차 방향 재단
-  for (let i = 0; i < stripBoundaries.length - 1; i++) {
-    const stripStart = stripBoundaries[i];
-    const stripEnd = stripBoundaries[i + 1];
-
-    // 이 스트립에 속한 패널들 (경계 포함)
-    const stripPanels = panels.filter(p => {
-      if (primaryAxis === 'x') {
-        // 세로 스트립: 패널이 이 스트립 범위 내에 있음
-        const pLeft = Math.round(p.x);
-        const pRight = Math.round(p.x + p.width);
-        return pLeft >= stripStart && pRight <= stripEnd;
-      } else {
-        // 가로 스트립: 패널이 이 스트립 범위 내에 있음
-        const pTop = Math.round(p.y);
-        const pBottom = Math.round(p.y + p.height);
-        return pTop >= stripStart && pBottom <= stripEnd;
-      }
+      // 영역 경계 안쪽에 있는 위치만
+      if (pLeft > left && pLeft < right) xPositions.add(pLeft);
+      if (pRight > left && pRight < right) xPositions.add(pRight);
+      if (pTop > top && pTop < bottom) yPositions.add(pTop);
+      if (pBottom > top && pBottom < bottom) yPositions.add(pBottom);
     });
 
-    console.log(`  스트립 ${i}: [${stripStart}-${stripEnd}], 패널 ${stripPanels.length}개`);
-
-    if (stripPanels.length <= 1) continue;
-
-    // 2차 방향 재단 위치 수집 (패널 경계)
-    const secondaryPositions = new Set<number>();
-    stripPanels.forEach(p => {
-      if (secondaryAxis === 'y') {
-        // 가로선 위치 (패널의 상하 경계)
-        secondaryPositions.add(Math.round(p.y));
-        secondaryPositions.add(Math.round(p.y + p.height));
-      } else {
-        // 세로선 위치 (패널의 좌우 경계)
-        secondaryPositions.add(Math.round(p.x));
-        secondaryPositions.add(Math.round(p.x + p.width));
-      }
-    });
-
-    const stripMax = secondaryAxis === 'y' ? sheetH : sheetW;
-
-    // 스트립 내 패널을 관통하지 않는 위치만 필터링
-    const validSecondaryPositions = Array.from(secondaryPositions)
-      .filter(pos => {
-        if (pos <= 0 || pos >= stripMax) return false;
-        // 이 위치가 스트립 내 패널을 관통하지 않는지 확인
-        return canCutAt(pos, secondaryAxis, stripPanels);
-      })
+    // 관통 가능한 위치만 필터링
+    const validX = Array.from(xPositions)
+      .filter(x => canCutThrough(x, 'x', regionPanels))
+      .sort((a, b) => a - b);
+    const validY = Array.from(yPositions)
+      .filter(y => canCutThrough(y, 'y', regionPanels))
       .sort((a, b) => a - b);
 
-    console.log(`    2차 재단 위치(${secondaryAxis}): [${validSecondaryPositions.join(', ')}]`);
+    // 우선 방향에 따라 재단 위치 선택
+    let cutAxis: 'x' | 'y' | null = null;
+    let cutPos = 0;
 
-    // 2차 재단선 추가 (스트립 범위 내에서만)
-    validSecondaryPositions.forEach(pos => {
-      allCuts.push({
-        axis: secondaryAxis,
-        pos,
-        spanStart: stripStart,
-        spanEnd: stripEnd,
-        order: cutOrder++
-      });
-    });
-  }
-
-  // 같은 위치(axis + pos)의 재단은 하나로 병합 (span 확장)
-  const cutMap = new Map<string, CutInfo>();
-
-  allCuts.forEach(cut => {
-    const key = `${cut.axis}-${Math.round(cut.pos)}`;
-    const existing = cutMap.get(key);
-
-    if (!existing) {
-      cutMap.set(key, { ...cut });
+    if (primaryAxis === 'x') {
+      // W방향 우선: 세로선(x) 먼저
+      if (validX.length > 0) {
+        cutAxis = 'x';
+        cutPos = validX[0];
+      } else if (validY.length > 0) {
+        cutAxis = 'y';
+        cutPos = validY[0];
+      }
     } else {
-      // 같은 위치면 span 확장, order는 더 작은 값 유지
-      existing.spanStart = Math.min(existing.spanStart, cut.spanStart);
-      existing.spanEnd = Math.max(existing.spanEnd, cut.spanEnd);
-      existing.order = Math.min(existing.order, cut.order);
+      // L방향 우선: 가로선(y) 먼저
+      if (validY.length > 0) {
+        cutAxis = 'y';
+        cutPos = validY[0];
+      } else if (validX.length > 0) {
+        cutAxis = 'x';
+        cutPos = validX[0];
+      }
     }
-  });
 
-  const uniqueCuts = Array.from(cutMap.values());
+    if (!cutAxis) return; // 더 이상 재단 불가
 
-  // order 순으로 정렬 (재단 순서 유지)
-  uniqueCuts.sort((a, b) => a.order - b.order);
+    // 재단 추가
+    if (cutAxis === 'x') {
+      addCut('x', cutPos, top, bottom);
+      // 좌우 분할
+      const leftPanels = regionPanels.filter(p => Math.round(p.x + p.width) <= cutPos);
+      const rightPanels = regionPanels.filter(p => Math.round(p.x) >= cutPos);
+      if (leftPanels.length > 0) divideRegion(left, top, cutPos, bottom, leftPanels);
+      if (rightPanels.length > 0) divideRegion(cutPos, top, right, bottom, rightPanels);
+    } else {
+      addCut('y', cutPos, left, right);
+      // 상하 분할
+      const topPanels = regionPanels.filter(p => Math.round(p.y + p.height) <= cutPos);
+      const bottomPanels = regionPanels.filter(p => Math.round(p.y) >= cutPos);
+      if (topPanels.length > 0) divideRegion(left, top, right, cutPos, topPanels);
+      if (bottomPanels.length > 0) divideRegion(left, cutPos, right, bottom, bottomPanels);
+    }
+  };
 
-  // CutStep 배열 생성
-  const cuts: CutStep[] = [];
-  uniqueCuts.forEach((cut, idx) => {
-    cuts.push({
-      id: `cut-${idx}`,
-      order: idx,
-      sheetId: '',
-      axis: cut.axis as CutAxis,
-      pos: cut.pos,
-      spanStart: cut.spanStart,
-      spanEnd: cut.spanEnd,
-      before: workpiece,
-      result: workpiece,
-      kerf,
-      label: cut.axis === 'x' ? `W방향 재단 #${idx + 1}` : `L방향 재단 #${idx + 1}`,
-      source: 'derived'
-    });
-  });
+  // 전체 시트에서 시작
+  divideRegion(0, 0, sheetW, sheetH, panels);
+
+  // CutStep 배열 생성 (추가된 순서 = 재단 순서)
+  const cuts: CutStep[] = allCuts.map((cut, idx) => ({
+    id: `cut-${idx}`,
+    order: idx,
+    sheetId: '',
+    axis: cut.axis as CutAxis,
+    pos: cut.pos,
+    spanStart: cut.spanStart,
+    spanEnd: cut.spanEnd,
+    before: workpiece,
+    result: workpiece,
+    kerf,
+    label: cut.axis === 'x' ? `W방향 재단 #${idx + 1}` : `L방향 재단 #${idx + 1}`,
+    source: 'derived'
+  }));
 
   const xCutCount = cuts.filter(c => c.axis === 'x').length;
   const yCutCount = cuts.filter(c => c.axis === 'y').length;
