@@ -214,6 +214,22 @@ export function generateGuillotineCuts(
   // 전체 시트에서 시작
   divideRegion(0, 0, sheetW, sheetH, panels);
 
+  // 모든 패널의 오른쪽/위쪽 경계 재단 확인 및 추가
+  // (재귀 분할에서 누락된 경계 재단 보완)
+  panels.forEach(p => {
+    const rightEdge = p.x + p.width;
+    const topEdge = p.y + p.height;
+
+    // 오른쪽 경계가 시트 내부에 있으면 재단 추가
+    if (rightEdge > kerf && rightEdge < sheetW - kerf) {
+      addCut('x', rightEdge, 0, sheetH);
+    }
+    // 위쪽 경계가 시트 내부에 있으면 재단 추가
+    if (topEdge > kerf && topEdge < sheetH - kerf) {
+      addCut('y', topEdge, 0, sheetW);
+    }
+  });
+
   // order 재설정
   cuts.forEach((cut, idx) => {
     cut.order = idx;
