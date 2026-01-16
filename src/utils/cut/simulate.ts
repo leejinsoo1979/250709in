@@ -179,32 +179,74 @@ export function buildSequenceForPanel(params: {
 }
 
 /**
- * Run smooth simulation (placeholder for animation)
+ * 시뮬레이션 옵션 인터페이스
+ */
+interface SimulationOptions {
+  onProgress: (cutIndex: number, progress: number) => void;
+  onCutComplete: (cutIndex: number) => void;
+  onDone: () => void;
+  speed: number; // mm/s
+  cancelRef: { current: boolean };
+}
+
+/**
+ * Run smooth simulation with animated saw movement
  */
 export function runSmoothSimulation(
   cuts: CutStep[],
-  onStep: (cut: CutStep, index: number) => void,
-  onComplete: () => void,
-  delay = 500
-): { cancel: () => void } {
-  let cancelled = false;
-  let currentIndex = 0;
+  options: SimulationOptions
+): void {
+  const { onProgress, onCutComplete, onDone, speed, cancelRef } = options;
 
-  const step = () => {
-    if (cancelled || currentIndex >= cuts.length) {
-      if (!cancelled) onComplete();
+  if (cuts.length === 0) {
+    onDone();
+    return;
+  }
+
+  let currentCutIndex = 0;
+
+  const animateCut = () => {
+    if (cancelRef.current || currentCutIndex >= cuts.length) {
+      if (!cancelRef.current) {
+        onDone();
+      }
       return;
     }
-    onStep(cuts[currentIndex], currentIndex);
-    currentIndex++;
-    setTimeout(step, delay);
+
+    const cut = cuts[currentCutIndex];
+    // 재단 길이 계산 (spanStart에서 spanEnd까지)
+    const cutLength = Math.abs((cut.spanEnd || 0) - (cut.spanStart || 0));
+    // 재단 시간 계산 (ms)
+    const cutDuration = cutLength > 0 ? (cutLength / speed) * 1000 : 500;
+    const startTime = Date.now();
+
+    const animate = () => {
+      if (cancelRef.current) return;
+
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / cutDuration, 1);
+
+      onProgress(currentCutIndex, progress);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        // 재단 완료
+        onCutComplete(currentCutIndex);
+        currentCutIndex++;
+
+        // 다음 재단으로 이동 (약간의 딜레이)
+        if (currentCutIndex < cuts.length) {
+          setTimeout(animateCut, 100);
+        } else {
+          onDone();
+        }
+      }
+    };
+
+    requestAnimationFrame(animate);
   };
 
-  setTimeout(step, delay);
-
-  return {
-    cancel: () => {
-      cancelled = true;
-    }
-  };
+  // 시작
+  animateCut();
 }
