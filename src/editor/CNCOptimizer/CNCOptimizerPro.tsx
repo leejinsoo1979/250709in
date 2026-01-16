@@ -902,8 +902,14 @@ function PageInner(){
           rotated: panel.rotated
         }));
 
-        // OPTIMAL_L → BY_LENGTH, OPTIMAL_W → BY_WIDTH 변환
-        const cutOptimizationType = settings.optimizationType === 'OPTIMAL_W' ? 'BY_WIDTH' : 'BY_LENGTH';
+        // OPTIMAL_L → BY_LENGTH, OPTIMAL_W/BY_WIDTH → BY_WIDTH 변환
+        let cutOptimizationType: 'BY_LENGTH' | 'BY_WIDTH';
+        if (settings.optimizationType === 'OPTIMAL_W' || settings.optimizationType === 'BY_WIDTH') {
+          cutOptimizationType = 'BY_WIDTH';
+        } else {
+          cutOptimizationType = 'BY_LENGTH';
+        }
+        console.log(`📐 allCutSteps: ${settings.optimizationType} -> ${cutOptimizationType}`);
 
         const sheetCuts = generateGuillotineCuts(
           result.stockPanel.width,
