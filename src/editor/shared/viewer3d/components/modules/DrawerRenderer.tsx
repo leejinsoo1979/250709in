@@ -408,14 +408,45 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* === 서랍 레일 (좌/우) === */}
-        {railModel && railCenterOffset && (() => {
+        {(() => {
           // 서랍 측판 바로 바깥에 위치
           const railLeftX = centerX - drawerWidth/2 + mmToThreeUnits(30);
           const railRightX = centerX + drawerWidth/2 - mmToThreeUnits(30);
           const railY = centerY - drawerHeight/2 + mmToThreeUnits(20);
           const railZ = drawerBodyCenterZ;
+          const railLength = drawerBodyDepth - mmToThreeUnits(20); // 레일 길이
 
-          // bounding box 중심 오프셋 보정
+          // 2D 모드: 라인으로 렌더링
+          if (viewMode === '2D') {
+            return (
+              <>
+                {/* 좌측 레일 - 수평 라인 */}
+                <NativeLine
+                  name="drawer-rail-left"
+                  points={[
+                    [railLeftX, railY, railZ - railLength/2],
+                    [railLeftX, railY, railZ + railLength/2]
+                  ]}
+                  color="#FFFFFF"
+                  lineWidth={1}
+                />
+                {/* 우측 레일 - 수평 라인 */}
+                <NativeLine
+                  name="drawer-rail-right"
+                  points={[
+                    [railRightX, railY, railZ - railLength/2],
+                    [railRightX, railY, railZ + railLength/2]
+                  ]}
+                  color="#FFFFFF"
+                  lineWidth={1}
+                />
+              </>
+            );
+          }
+
+          // 3D 모드: DAE 모델 렌더링
+          if (!railModel || !railCenterOffset) return null;
+
           const offsetX = railCenterOffset.x;
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
@@ -426,7 +457,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           // 우측 레일 (원본 모델)
           const rightRail = railModel.clone();
 
-          // 재질 적용 (옷봉과 동일: 3D 메탈릭, 2D 흰색)
+          // 재질 적용 (메탈릭)
           [leftRail, rightRail].forEach(rail => {
             rail.traverse((child) => {
               if (child instanceof THREE.Mesh) {
