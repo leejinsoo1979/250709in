@@ -948,12 +948,17 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const kerfWidth = settings.kerf || 5;
 
       // Draw all completed cuts (full line, faded) with cut number at end
+      // L방향 (axis 'x', 세로선) = 빨간색, W방향 (axis 'y', 가로선) = 파란색
       completedCuts.forEach(cutIdx => {
         const cut = cutSequence[cutIdx];
         if (!cut) return;
 
+        const isLDirection = cut.axis === 'x'; // L방향 = 세로 재단
+        const cutColor = isLDirection ? 'rgba(255, 0, 0, 0.5)' : 'rgba(0, 100, 255, 0.5)';
+        const badgeColor = isLDirection ? 'rgba(255, 50, 0, 0.85)' : 'rgba(0, 100, 255, 0.85)';
+
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+        ctx.strokeStyle = cutColor;
         ctx.lineWidth = kerfWidth;
         ctx.setLineDash([]);
 
@@ -974,7 +979,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // Draw cut number at the end of the cut line
         const numberRadius = Math.max(kerfWidth * 2, 20);
-        ctx.fillStyle = 'rgba(255, 50, 0, 0.85)';
+        ctx.fillStyle = badgeColor;
         ctx.beginPath();
         ctx.arc(endX, endY, numberRadius, 0, Math.PI * 2);
         ctx.fill();
@@ -1016,9 +1021,14 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           endY = startY;
         }
 
+        // L방향 (axis 'x') = 빨간색, W방향 (axis 'y') = 파란색
+        const isLDirection = currentCut.axis === 'x';
+        const currentCutColor = isLDirection ? '#ff0000' : '#0064ff';
+        const currentCutColorFaded = isLDirection ? 'rgba(255, 0, 0, 0.2)' : 'rgba(0, 100, 255, 0.2)';
+
         // Draw the cut line up to current position (already cut part)
         ctx.save();
-        ctx.strokeStyle = '#ff0000';
+        ctx.strokeStyle = currentCutColor;
         ctx.lineWidth = kerfWidth;
         ctx.setLineDash([]);
         ctx.lineCap = 'butt';
@@ -1031,7 +1041,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // Draw remaining cut line (not yet cut, dashed and lighter)
         ctx.save();
-        ctx.strokeStyle = 'rgba(255, 0, 0, 0.2)';
+        ctx.strokeStyle = currentCutColorFaded;
         ctx.lineWidth = kerfWidth * 0.5;
         ctx.setLineDash([20, 10]); // 20mm dash, 10mm gap (mm units)
 
@@ -1050,22 +1060,27 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 톱날 반지름 = kerf의 3배 정도로 시각적으로 표현 (실제 톱날은 더 크지만 kerf만큼만 자름)
         const bladeRadius = Math.max(kerfWidth * 3, 30); // 최소 30mm
 
+        // L방향 = 빨간색, W방향 = 파란색
+        const bladeGlowColor = isLDirection ? 'rgba(255, 50, 0, 0.8)' : 'rgba(0, 100, 255, 0.8)';
+        const bladeRingColor = isLDirection ? 'rgba(255, 80, 0, 0.9)' : 'rgba(0, 120, 255, 0.9)';
+        const bladeTeethColor = isLDirection ? '#ff3300' : '#0064ff';
+
         // Blade glow effect
-        ctx.shadowColor = 'rgba(255, 50, 0, 0.8)';
+        ctx.shadowColor = bladeGlowColor;
         ctx.shadowBlur = 15 / (baseScale * scale); // 글로우는 화면 픽셀 기준
 
         // Rotating blade animation
         const rotationAngle = (Date.now() / 30) % (Math.PI * 2);
 
         // Draw blade circle (outer ring)
-        ctx.strokeStyle = 'rgba(255, 80, 0, 0.9)';
+        ctx.strokeStyle = bladeRingColor;
         ctx.lineWidth = kerfWidth;
         ctx.beginPath();
         ctx.arc(currentX, currentY, bladeRadius, 0, Math.PI * 2);
         ctx.stroke();
 
         // Draw blade teeth (rotating)
-        ctx.strokeStyle = '#ff3300';
+        ctx.strokeStyle = bladeTeethColor;
         ctx.lineWidth = kerfWidth * 0.8;
         const teethCount = 12;
         for (let i = 0; i < teethCount; i++) {
@@ -1092,7 +1107,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // Draw progress info (outside of transformation for consistent text size)
         ctx.save();
-        ctx.fillStyle = '#ff3300';
+        ctx.fillStyle = isLDirection ? '#ff3300' : '#0064ff';
         const fontSize = 14 / (baseScale * scale);
         ctx.font = `bold ${fontSize}px sans-serif`;
         ctx.textAlign = 'center';
