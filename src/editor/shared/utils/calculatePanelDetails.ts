@@ -264,14 +264,14 @@ export const calculatePanelDetails = (
       const reinforcementHeight = 60; // mm
       const reinforcementDepth = 15; // mm
       targetPanel.push({
-        name: `${sectionPrefix}후면 하단보강대`,
+        name: `${sectionPrefix}후면 보강대`,
         width: innerWidth,
         height: reinforcementHeight,
         thickness: reinforcementDepth,
         material: 'PB'
       });
       targetPanel.push({
-        name: `${sectionPrefix}후면 상단보강대`,
+        name: `${sectionPrefix}후면 보강대`,
         width: innerWidth,
         height: reinforcementHeight,
         thickness: reinforcementDepth,
