@@ -422,53 +422,56 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
-          // 2D 모드: EdgesGeometry로 깔끔한 외곽선만 표시
+          // 2D 모드: 3D 모델 클론 후 엣지만 추출
           if (viewMode === '2D') {
+            // 3D 모델을 그대로 클론
+            const leftRail = railModel.clone();
+            leftRail.scale.x *= -1;
+            const rightRail = railModel.clone();
+
+            // 각 mesh를 LineSegments로 교체
             const lineMaterial = new THREE.LineBasicMaterial({ color: '#FFFFFF' });
 
-            // 좌측 레일 엣지 그룹
-            const leftRailGroup = new THREE.Group();
-            // 우측 레일 엣지 그룹
-            const rightRailGroup = new THREE.Group();
+            const convertToEdges = (group: THREE.Group) => {
+              const meshesToRemove: THREE.Mesh[] = [];
+              const linesToAdd: THREE.LineSegments[] = [];
 
-            railModel.traverse((child) => {
-              if (child instanceof THREE.Mesh && child.geometry) {
-                // 30도 이상 각도의 엣지만 추출 (깔끔한 외곽선)
-                const edges = new THREE.EdgesGeometry(child.geometry, 30);
+              group.traverse((child) => {
+                if (child instanceof THREE.Mesh && child.geometry) {
+                  const edges = new THREE.EdgesGeometry(child.geometry, 30);
+                  const line = new THREE.LineSegments(edges, lineMaterial);
 
-                // 좌측 레일용
-                const leftLine = new THREE.LineSegments(edges, lineMaterial);
-                leftLine.position.copy(child.position);
-                leftLine.rotation.copy(child.rotation);
-                leftLine.scale.copy(child.scale);
-                leftRailGroup.add(leftLine);
+                  // 월드 매트릭스 적용
+                  child.updateWorldMatrix(true, false);
+                  line.applyMatrix4(child.matrixWorld);
 
-                // 우측 레일용
-                const rightLine = new THREE.LineSegments(edges.clone(), lineMaterial);
-                rightLine.position.copy(child.position);
-                rightLine.rotation.copy(child.rotation);
-                rightLine.scale.copy(child.scale);
-                rightRailGroup.add(rightLine);
-              }
-            });
+                  linesToAdd.push(line);
+                  meshesToRemove.push(child);
+                }
+              });
 
-            // 원본 모델과 동일한 스케일/회전 적용
-            const scale = 0.254;
-            leftRailGroup.scale.set(-scale, scale, scale);
-            leftRailGroup.rotation.x = -Math.PI / 2;
-            rightRailGroup.scale.set(scale, scale, scale);
-            rightRailGroup.rotation.x = -Math.PI / 2;
+              // mesh 제거하고 line 추가
+              meshesToRemove.forEach(mesh => {
+                if (mesh.parent) mesh.parent.remove(mesh);
+              });
+              linesToAdd.forEach(line => group.add(line));
+            };
+
+            convertToEdges(leftRail);
+            convertToEdges(rightRail);
+
+            console.log('🔧 2D 레일 엣지:', { leftRail, rightRail });
 
             return (
               <>
                 <primitive
                   key={`drawer-${drawerIndex}-rail-left-edges`}
-                  object={leftRailGroup}
+                  object={leftRail}
                   position={[railLeftX + offsetX, railY - offsetY, railZ - offsetZ]}
                 />
                 <primitive
                   key={`drawer-${drawerIndex}-rail-right-edges`}
-                  object={rightRailGroup}
+                  object={rightRail}
                   position={[railRightX - offsetX, railY - offsetY, railZ - offsetZ]}
                 />
               </>
