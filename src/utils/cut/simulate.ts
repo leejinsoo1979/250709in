@@ -117,9 +117,9 @@ export function generateGuillotineCuts(
   if (panels.length === 0) return [];
 
   // 시트: 2440mm(가로=sheetW) x 1220mm(세로=sheetH)
-  // W방향 = 1220mm = 파란색 = 세로선(│) = axis='x'
-  // L방향 = 2440mm = 빨간색 = 가로선(─) = axis='y'
-  const primaryAxis = optimizationType === 'BY_WIDTH' ? 'x' : 'y';
+  // W방향 우선 = W방향(1220mm)을 따라 자름 = 가로선(─) 먼저 = axis='y'
+  // L방향 우선 = L방향(2440mm)을 따라 자름 = 세로선(│) 먼저 = axis='x'
+  const primaryAxis = optimizationType === 'BY_WIDTH' ? 'y' : 'x';
 
   console.log(`🔪 generateGuillotineCuts: ${optimizationType}, primaryAxis=${primaryAxis}, panels=${panels.length}`);
 
