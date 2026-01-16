@@ -375,40 +375,28 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           );
         })()}
 
-        {/* === 서랍 레일 (좌/우) === */}
-        {/* 레일 모델 내부 오프셋 보정: drawer.dae에서 레일이 X=20.6mm에 있었음 */}
-        {railModel && (() => {
-          const railModelOffset = mmToThreeUnits(20.6); // 레일 DAE 내부 X 오프셋
-
-          // 서랍 측판 바깥쪽에 레일 위치 (측판은 38mm 안쪽)
-          const railLeftX = centerX - drawerWidth/2 + mmToThreeUnits(35) - railModelOffset;
-          const railRightX = centerX + drawerWidth/2 - mmToThreeUnits(35) + railModelOffset;
-          const railY = centerY - drawerHeight/2 + mmToThreeUnits(15);
+        {/* === 서랍 레일 (좌/우) - 테스트용 박스 === */}
+        {(() => {
+          // 서랍 측판 위치: centerX ± (drawerWidth/2 - 38mm - 7.5mm)
+          // 레일은 측판 바로 바깥, 서랍속장 안쪽에 위치
+          const railLeftX = centerX - drawerWidth/2 + mmToThreeUnits(30);
+          const railRightX = centerX + drawerWidth/2 - mmToThreeUnits(30);
+          const railY = centerY - drawerHeight/2 + mmToThreeUnits(20);
           const railZ = drawerBodyCenterZ;
 
-          console.log(`🔧 서랍${drawerIndex} 레일:`, {
-            drawerWidth_mm: drawerWidth * 100,
-            railLeftX_mm: railLeftX * 100,
-            railRightX_mm: railRightX * 100
-          });
-
-          // 좌측 레일: 원본 모델 사용 (drawer.dae가 좌측용)
-          // 우측 레일: X축 반전
-          const rightRail = railModel.clone();
-          rightRail.scale.x *= -1;
-
+          // 테스트용 빨간 박스로 위치 확인
           return (
             <>
-              <primitive
-                key={`drawer-${drawerIndex}-rail-left`}
-                object={railModel.clone()}
-                position={[railLeftX, railY, railZ]}
-              />
-              <primitive
-                key={`drawer-${drawerIndex}-rail-right`}
-                object={rightRail}
-                position={[railRightX, railY, railZ]}
-              />
+              {/* 좌측 레일 위치 - 빨간 박스 */}
+              <mesh position={[railLeftX, railY, railZ]}>
+                <boxGeometry args={[mmToThreeUnits(10), mmToThreeUnits(30), mmToThreeUnits(400)]} />
+                <meshBasicMaterial color="red" />
+              </mesh>
+              {/* 우측 레일 위치 - 파란 박스 */}
+              <mesh position={[railRightX, railY, railZ]}>
+                <boxGeometry args={[mmToThreeUnits(10), mmToThreeUnits(30), mmToThreeUnits(400)]} />
+                <meshBasicMaterial color="blue" />
+              </mesh>
             </>
           );
         })()}
