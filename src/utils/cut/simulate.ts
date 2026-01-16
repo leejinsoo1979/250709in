@@ -63,19 +63,99 @@ export function generateGuillotineCuts(
     regionPanels: PanelPlacement[],
     preferVertical: boolean
   ) => {
-    if (regionPanels.length <= 1) return;
+    if (regionPanels.length === 0) return;
 
     // 이 영역 내의 가능한 재단 위치 수집
     const possibleVerticalCuts: number[] = [];
     const possibleHorizontalCuts: number[] = [];
 
     regionPanels.forEach(p => {
-      // 패널 경계 위치들
+      // 패널 경계 위치들 (패널 사이 재단)
       if (p.x > xStart + kerf) possibleVerticalCuts.push(p.x);
       if (p.x + p.width < xEnd - kerf) possibleVerticalCuts.push(p.x + p.width);
       if (p.y > yStart + kerf) possibleHorizontalCuts.push(p.y);
       if (p.y + p.height < yEnd - kerf) possibleHorizontalCuts.push(p.y + p.height);
     });
+
+    // 패널이 1개일 때도 가장자리 재단이 필요할 수 있음
+    if (regionPanels.length === 1) {
+      const p = regionPanels[0];
+      // 패널 주변에 여백이 있으면 가장자리 재단 추가
+
+      // 왼쪽 여백 재단
+      if (p.x > xStart + kerf && canCutVertically(p.x, yStart, yEnd)) {
+        cuts.push({
+          id: `cut-${order}`,
+          order: order++,
+          sheetId: '',
+          axis: 'x' as CutAxis,
+          pos: p.x,
+          spanStart: yStart,
+          spanEnd: yEnd,
+          before: workpiece,
+          result: workpiece,
+          kerf,
+          label: `L방향 재단 #${cuts.length + 1}`,
+          source: 'derived'
+        });
+      }
+
+      // 오른쪽 여백 재단
+      if (p.x + p.width < xEnd - kerf && canCutVertically(p.x + p.width, yStart, yEnd)) {
+        cuts.push({
+          id: `cut-${order}`,
+          order: order++,
+          sheetId: '',
+          axis: 'x' as CutAxis,
+          pos: p.x + p.width,
+          spanStart: yStart,
+          spanEnd: yEnd,
+          before: workpiece,
+          result: workpiece,
+          kerf,
+          label: `L방향 재단 #${cuts.length + 1}`,
+          source: 'derived'
+        });
+      }
+
+      // 위쪽 여백 재단
+      if (p.y > yStart + kerf && canCutHorizontally(p.y, xStart, xEnd)) {
+        cuts.push({
+          id: `cut-${order}`,
+          order: order++,
+          sheetId: '',
+          axis: 'y' as CutAxis,
+          pos: p.y,
+          spanStart: xStart,
+          spanEnd: xEnd,
+          before: workpiece,
+          result: workpiece,
+          kerf,
+          label: `W방향 재단 #${cuts.length + 1}`,
+          source: 'derived'
+        });
+      }
+
+      // 아래쪽 여백 재단
+      if (p.y + p.height < yEnd - kerf && canCutHorizontally(p.y + p.height, xStart, xEnd)) {
+        cuts.push({
+          id: `cut-${order}`,
+          order: order++,
+          sheetId: '',
+          axis: 'y' as CutAxis,
+          pos: p.y + p.height,
+          spanStart: xStart,
+          spanEnd: xEnd,
+          before: workpiece,
+          result: workpiece,
+          kerf,
+          label: `W방향 재단 #${cuts.length + 1}`,
+          source: 'derived'
+        });
+      }
+
+      return;
+    }
 
     // 중복 제거 및 정렬
     const uniqueVertical = [...new Set(possibleVerticalCuts)].sort((a, b) => a - b);
