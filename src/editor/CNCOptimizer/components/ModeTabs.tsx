@@ -4,13 +4,23 @@ import { OptimizationType } from '../../../types/cutlist';
 import { ArrowDownToLine, ArrowRightToLine, Cpu } from 'lucide-react';
 import styles from './ModeTabs.module.css';
 
-export default function ModeTabs(){ 
+interface ModeTabsProps {
+  onModeChange?: () => void;
+}
+
+export default function ModeTabs({ onModeChange }: ModeTabsProps = {}){
   const { settings, setSettings } = useCNCStore();
   const mode = settings.optimizationType || 'OPTIMAL_CNC';
-  
-  const click=(m: OptimizationType)=>{ 
+
+  const click=(m: OptimizationType)=>{
     console.log('Switching to mode:', m);
     setSettings({ optimizationType: m });
+    // 모드 변경 시 자동으로 최적화 실행
+    if (onModeChange) {
+      setTimeout(() => {
+        onModeChange();
+      }, 50);
+    }
   }; 
   
   return (

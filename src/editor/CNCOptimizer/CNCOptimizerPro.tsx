@@ -755,7 +755,10 @@ function PageInner(){
     const handleMethodChange = (method: 'OPTIMAL_L' | 'OPTIMAL_W' | 'OPTIMAL_CNC') => {
       setSettings({ optimizationType: method });
       setShowDropdown(false);
-      setMethodChanged(true); // Calculate 버튼 강조를 위한 플래그
+      // 모드 변경 시 자동으로 최적화 실행
+      setTimeout(() => {
+        handleOptimize();
+      }, 50);
     };
 
     return (
