@@ -504,7 +504,23 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
     // Count visible panels during simulation
     let visiblePanelCount = 0;
-    
+
+    // 디버그: 패널 및 재단 정보 로그
+    if (simulating && cutSequence.length > 0) {
+      console.log('📦 패널 정보:', result.panels.map(p => ({
+        id: p.id,
+        name: p.name,
+        x: p.x, y: p.y, w: p.width, h: p.height
+      })));
+      console.log('✂️ 재단 정보:', cutSequence.map((c, i) => ({
+        idx: i,
+        axis: c.axis,
+        pos: c.pos,
+        span: `${c.spanStart ?? 0}-${c.spanEnd ?? '?'}`,
+        completed: completedCuts.includes(i)
+      })));
+    }
+
     // Draw panels (show progressively during simulation)
     result.panels.forEach((panel, panelIndex) => {
       // During simulation, show panels after all surrounding cuts are completed
@@ -568,6 +584,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // 패널이 분리되려면 마지막 필요 재단까지 완료되어야 함
         isPanelSeparated = allCutsExist && completedCuts.includes(lastRequiredCutIdx);
+
+        // 디버그: 각 패널의 분리 상태
+        console.log(`🔍 패널 ${panel.name || panel.id}:`, {
+          pos: { x: panel.x, y: panel.y, w: panel.width, h: panel.height },
+          needs: { top: needsTopCut, bottom: needsBottomCut, left: needsLeftCut, right: needsRightCut },
+          cutIdx: { top: topCutIdx, bottom: bottomCutIdx, left: leftCutIdx, right: rightCutIdx },
+          requiredCuts,
+          lastRequiredCutIdx,
+          allCutsExist,
+          completedCutsIncludes: lastRequiredCutIdx >= 0 ? completedCuts.includes(lastRequiredCutIdx) : false,
+          isPanelSeparated
+        });
 
         // 방금 분리되었는지 확인 (마지막 완료된 재단이 이 패널의 마지막 필요 재단인지)
         if (isPanelSeparated && completedCuts.length > 0) {
