@@ -45,33 +45,13 @@ export function generateGuillotineCuts(
   const sortedHorizontal = Array.from(horizontalCutPositions).sort((a, b) => a - b);
   const sortedVertical = Array.from(verticalCutPositions).sort((a, b) => a - b);
 
-  // L방향 우선 (BY_LENGTH): 세로 재단 먼저 (L방향 = 가로로 배열된 패널들을 세로로 분리)
-  // W방향 우선 (BY_WIDTH): 가로 재단 먼저 (W방향 = 세로로 배열된 패널들을 가로로 분리)
-  const verticalFirst = optimizationType === 'BY_LENGTH';
+  // L방향 우선 (BY_LENGTH): 가로 재단 먼저 (→ 방향, 톱날이 왼쪽→오른쪽)
+  // W방향 우선 (BY_WIDTH): 세로 재단 먼저 (↓ 방향, 톱날이 위→아래)
+  const horizontalFirst = optimizationType === 'BY_LENGTH';
 
-  if (verticalFirst) {
-    // === L방향 우선 ===
-    // 1단계: 모든 세로 재단 (전체 시트 높이를 가로지름)
-    // 톱날이 위에서 아래로 쭉 지나감
-    sortedVertical.forEach(xPos => {
-      cuts.push({
-        id: `cut-${order}`,
-        order: order++,
-        sheetId: '',
-        axis: 'x' as CutAxis,
-        pos: xPos,
-        spanStart: 0,
-        spanEnd: sheetH,
-        before: workpiece,
-        result: workpiece,
-        kerf,
-        label: `세로 재단 #${cuts.length + 1}`,
-        source: 'derived'
-      });
-    });
-
-    // 2단계: 모든 가로 재단 (전체 시트 폭을 가로지름)
-    // 톱날이 왼쪽에서 오른쪽으로 쭉 지나감
+  if (horizontalFirst) {
+    // === L방향 우선 (→) ===
+    // 1단계: 모든 가로 재단 (톱날이 왼쪽에서 오른쪽으로)
     sortedHorizontal.forEach(yPos => {
       cuts.push({
         id: `cut-${order}`,
@@ -84,34 +64,32 @@ export function generateGuillotineCuts(
         before: workpiece,
         result: workpiece,
         kerf,
-        label: `가로 재단 #${cuts.length + 1}`,
+        label: `L방향 재단 #${cuts.length + 1}`,
+        source: 'derived'
+      });
+    });
+
+    // 2단계: 모든 세로 재단 (톱날이 위에서 아래로)
+    sortedVertical.forEach(xPos => {
+      cuts.push({
+        id: `cut-${order}`,
+        order: order++,
+        sheetId: '',
+        axis: 'x' as CutAxis,
+        pos: xPos,
+        spanStart: 0,
+        spanEnd: sheetH,
+        before: workpiece,
+        result: workpiece,
+        kerf,
+        label: `W방향 재단 #${cuts.length + 1}`,
         source: 'derived'
       });
     });
 
   } else {
-    // === W방향 우선 ===
-    // 1단계: 모든 가로 재단 (전체 시트 폭을 가로지름)
-    // 톱날이 왼쪽에서 오른쪽으로 쭉 지나감
-    sortedHorizontal.forEach(yPos => {
-      cuts.push({
-        id: `cut-${order}`,
-        order: order++,
-        sheetId: '',
-        axis: 'y' as CutAxis,
-        pos: yPos,
-        spanStart: 0,
-        spanEnd: sheetW,
-        before: workpiece,
-        result: workpiece,
-        kerf,
-        label: `가로 재단 #${cuts.length + 1}`,
-        source: 'derived'
-      });
-    });
-
-    // 2단계: 모든 세로 재단 (전체 시트 높이를 가로지름)
-    // 톱날이 위에서 아래로 쭉 지나감
+    // === W방향 우선 (↓) ===
+    // 1단계: 모든 세로 재단 (톱날이 위에서 아래로)
     sortedVertical.forEach(xPos => {
       cuts.push({
         id: `cut-${order}`,
@@ -124,7 +102,25 @@ export function generateGuillotineCuts(
         before: workpiece,
         result: workpiece,
         kerf,
-        label: `세로 재단 #${cuts.length + 1}`,
+        label: `W방향 재단 #${cuts.length + 1}`,
+        source: 'derived'
+      });
+    });
+
+    // 2단계: 모든 가로 재단 (톱날이 왼쪽에서 오른쪽으로)
+    sortedHorizontal.forEach(yPos => {
+      cuts.push({
+        id: `cut-${order}`,
+        order: order++,
+        sheetId: '',
+        axis: 'y' as CutAxis,
+        pos: yPos,
+        spanStart: 0,
+        spanEnd: sheetW,
+        before: workpiece,
+        result: workpiece,
+        kerf,
+        label: `L방향 재단 #${cuts.length + 1}`,
         source: 'derived'
       });
     });
