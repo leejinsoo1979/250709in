@@ -57,7 +57,7 @@ export function generateGuillotineCuts(
     return false;
   };
 
-  // 재단 추가 함수 (중복 방지)
+  // 재단 추가 함수 (중복 방지) - 같은 위치에는 하나의 재단만 허용
   const addCut = (axis: 'x' | 'y', pos: number, spanStart: number, spanEnd: number) => {
     // 시트 경계에 있는 재단은 스킵 (kerf 범위 내)
     if (axis === 'x' && (pos <= kerf / 2 || pos >= sheetW - kerf / 2)) return;
@@ -68,16 +68,13 @@ export function generateGuillotineCuts(
 
     // 재단이 패널을 관통하면 스킵
     if (wouldCutThroughPanel(axis, pos, spanStart, spanEnd)) {
-      console.log(`  ❌ 관통 - axis:${axis} pos:${pos.toFixed(1)} span:${spanStart.toFixed(1)}-${spanEnd.toFixed(1)}`);
       return;
     }
 
-    // 중복 체크 (소수점 반올림)
-    const key = `${axis}-${Math.round(pos * 10) / 10}-${Math.round(spanStart * 10) / 10}-${Math.round(spanEnd * 10) / 10}`;
+    // 중복 체크 - axis와 pos만으로 체크 (같은 위치에 재단은 하나만)
+    const key = `${axis}-${Math.round(pos)}`;
     if (addedCuts.has(key)) return;
     addedCuts.add(key);
-
-    console.log(`  ✅ 추가 - axis:${axis} pos:${pos.toFixed(1)} span:${spanStart.toFixed(1)}-${spanEnd.toFixed(1)}`);
 
     cuts.push({
       id: `cut-${order}`,
@@ -139,14 +136,16 @@ export function generateGuillotineCuts(
   const positionMap = new Map<string, { axis: 'x' | 'y'; pos: number; spans: { start: number; end: number }[] }>();
 
   candidates.forEach(c => {
-    const key = `${c.axis}-${Math.round(c.pos * 10) / 10}`;
+    // 정수 단위로 반올림하여 같은 위치로 취급 (부동소수점 오차 방지)
+    const roundedPos = Math.round(c.pos);
+    const key = `${c.axis}-${roundedPos}`;
     const existing = positionMap.get(key);
     if (existing) {
       existing.spans.push({ start: c.spanStart, end: c.spanEnd });
     } else {
       positionMap.set(key, {
         axis: c.axis,
-        pos: c.pos,
+        pos: roundedPos, // 반올림된 값 사용
         spans: [{ start: c.spanStart, end: c.spanEnd }]
       });
     }
