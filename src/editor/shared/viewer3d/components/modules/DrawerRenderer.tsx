@@ -422,34 +422,18 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
-          // 2D 모드: mesh를 투명하게 하고 edges 추가
+          // 2D 모드: 3D와 동일한 모델, 흰색 재질
           if (viewMode === '2D') {
             const leftRail = railModel.clone();
             leftRail.scale.x *= -1;
             const rightRail = railModel.clone();
 
-            const lineMaterial = new THREE.LineBasicMaterial({ color: '#FFFFFF' });
-            const transparentMaterial = new THREE.MeshBasicMaterial({
-              transparent: true,
-              opacity: 0
-            });
+            const whiteMaterial = new THREE.MeshBasicMaterial({ color: '#FFFFFF' });
 
             [leftRail, rightRail].forEach(rail => {
               rail.traverse((child) => {
-                if (child instanceof THREE.Mesh && child.geometry) {
-                  // mesh를 투명하게
-                  child.material = transparentMaterial;
-
-                  // edges를 부모에 추가 (mesh와 형제로) - 85도 이상만 추출 (주요 외곽선만)
-                  const edges = new THREE.EdgesGeometry(child.geometry, 85);
-                  const line = new THREE.LineSegments(edges, lineMaterial);
-                  line.position.copy(child.position);
-                  line.rotation.copy(child.rotation);
-                  line.scale.copy(child.scale);
-
-                  if (child.parent) {
-                    child.parent.add(line);
-                  }
+                if (child instanceof THREE.Mesh) {
+                  child.material = whiteMaterial;
                 }
               });
             });
@@ -457,12 +441,12 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             return (
               <>
                 <primitive
-                  key={`drawer-${drawerIndex}-rail-left-edges`}
+                  key={`drawer-${drawerIndex}-rail-left-2d`}
                   object={leftRail}
                   position={[railLeftX + offsetX, railY - offsetY, railZ - offsetZ]}
                 />
                 <primitive
-                  key={`drawer-${drawerIndex}-rail-right-edges`}
+                  key={`drawer-${drawerIndex}-rail-right-2d`}
                   object={rightRail}
                   position={[railRightX - offsetX, railY - offsetY, railZ - offsetZ]}
                 />
