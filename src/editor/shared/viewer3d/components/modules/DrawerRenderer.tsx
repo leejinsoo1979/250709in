@@ -422,7 +422,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
-          // 2D 모드: 투명한 흰색 + 아웃라인
+          // 2D 모드: 투명한 흰색 + 바운딩박스 아웃라인
           if (viewMode === '2D') {
             const leftRail = railModel.clone();
             leftRail.scale.x *= -1;
@@ -433,20 +433,26 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               transparent: true,
               opacity: 0.3
             });
-            const lineMaterial = new THREE.LineBasicMaterial({ color: '#FFFFFF' });
 
             [leftRail, rightRail].forEach(rail => {
               rail.traverse((child) => {
-                if (child instanceof THREE.Mesh && child.geometry) {
+                if (child instanceof THREE.Mesh) {
                   child.material = whiteMaterial;
-
-                  // 아웃라인 추가
-                  const edges = new THREE.EdgesGeometry(child.geometry, 89);
-                  const line = new THREE.LineSegments(edges, lineMaterial);
-                  child.add(line);
                 }
               });
             });
+
+            // 바운딩 박스 계산 (원본 모델 기준)
+            const box = new THREE.Box3().setFromObject(railModel);
+            const size = box.getSize(new THREE.Vector3());
+
+            // 바운딩 박스 외곽선 geometry
+            const boxGeo = new THREE.BoxGeometry(size.x, size.y, size.z);
+            const edgesGeo = new THREE.EdgesGeometry(boxGeo);
+            const lineMaterial = new THREE.LineBasicMaterial({ color: '#FFFFFF' });
+
+            const leftOutline = new THREE.LineSegments(edgesGeo, lineMaterial);
+            const rightOutline = new THREE.LineSegments(edgesGeo.clone(), lineMaterial);
 
             return (
               <>
@@ -456,8 +462,18 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   position={[railLeftX + offsetX, railY - offsetY, railZ - offsetZ]}
                 />
                 <primitive
+                  key={`drawer-${drawerIndex}-rail-left-outline`}
+                  object={leftOutline}
+                  position={[railLeftX + offsetX, railY - offsetY, railZ - offsetZ]}
+                />
+                <primitive
                   key={`drawer-${drawerIndex}-rail-right-2d`}
                   object={rightRail}
+                  position={[railRightX - offsetX, railY - offsetY, railZ - offsetZ]}
+                />
+                <primitive
+                  key={`drawer-${drawerIndex}-rail-right-outline`}
+                  object={rightOutline}
                   position={[railRightX - offsetX, railY - offsetY, railZ - offsetZ]}
                 />
               </>
