@@ -48,8 +48,8 @@ export function generateGuillotineCuts(
     const result: number[] = [];
 
     for (const pos of sorted) {
-      // 시트 가장자리는 제외 (kerf 이내)
-      if (pos <= minVal + kerf || pos >= maxVal - kerf) continue;
+      // 시트 끝(0, maxVal)은 제외 - 그 외 모든 위치는 재단 필요
+      if (pos <= minVal || pos >= maxVal) continue;
 
       // 이전 위치와 kerf*2 이내면 중복으로 간주하고 스킵
       if (result.length > 0 && pos - result[result.length - 1] <= kerf * 2) {
