@@ -504,75 +504,82 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     
     // Draw panels (show progressively during simulation)
     result.panels.forEach((panel, panelIndex) => {
-      // During simulation, hide panels initially and show them as they are cut
+      // During simulation, show panels after all surrounding cuts are completed
+      let isPanelSeparated = false;
+      let justSeparated = false;
+
       if (simulating) {
-        // If no cut sequence, skip all panels during simulation
         if (cutSequence.length === 0) {
           return; // Hide all panels if no cuts
         }
-        
-        // Debug: Log panel ID matching for first render
-        if (panelIndex === 0 && currentCutIndex === 0) {
-          console.log('Panel ID matching debug:', {
-            panelId: panel.id,
-            panelIdType: typeof panel.id,
-            yieldsPanelIds: cutSequence.filter(c => c.yieldsPanelId).map(c => ({
-              id: c.yieldsPanelId,
-              type: typeof c.yieldsPanelId,
-              cutIndex: cutSequence.indexOf(c)
-            }))
-          });
-        }
-        
-        // Find when this panel will be completed (yielded)
-        // Try exact match first, then try flexible matching
-        let yieldCutIndex = -1;
-        for (let i = 0; i < cutSequence.length; i++) {
-          const yieldId = cutSequence[i].yieldsPanelId;
-          if (yieldId === panel.id) {
-            yieldCutIndex = i;
-            break;
+
+        const kerf = settings.kerf || 5;
+        const sheetW = result.stockPanel.width;
+        const sheetH = result.stockPanel.height;
+
+        // 패널이 분리되려면 4개 경계가 모두 재단되어야 함 (시트 가장자리는 제외)
+        // 각 경계에 해당하는 재단이 completedCuts에 있는지 확인
+        const tolerance = kerf * 3; // 위치 비교 허용 오차
+
+        // 필요한 재단 체크
+        const needsTopCut = panel.y > tolerance;
+        const needsBottomCut = panel.y + panel.height < sheetH - tolerance;
+        const needsLeftCut = panel.x > tolerance;
+        const needsRightCut = panel.x + panel.width < sheetW - tolerance;
+
+        // 완료된 재단 중 해당 경계에 맞는 것이 있는지 확인
+        const hasTopCut = !needsTopCut || completedCuts.some(idx => {
+          const cut = cutSequence[idx];
+          return cut && cut.axis === 'y' && Math.abs(cut.pos - panel.y) < tolerance;
+        });
+        const hasBottomCut = !needsBottomCut || completedCuts.some(idx => {
+          const cut = cutSequence[idx];
+          return cut && cut.axis === 'y' && Math.abs(cut.pos - (panel.y + panel.height)) < tolerance;
+        });
+        const hasLeftCut = !needsLeftCut || completedCuts.some(idx => {
+          const cut = cutSequence[idx];
+          return cut && cut.axis === 'x' && Math.abs(cut.pos - panel.x) < tolerance;
+        });
+        const hasRightCut = !needsRightCut || completedCuts.some(idx => {
+          const cut = cutSequence[idx];
+          return cut && cut.axis === 'x' && Math.abs(cut.pos - (panel.x + panel.width)) < tolerance;
+        });
+
+        isPanelSeparated = hasTopCut && hasBottomCut && hasLeftCut && hasRightCut;
+
+        // 방금 분리되었는지 확인 (마지막 완료된 재단이 이 패널을 분리시켰는지)
+        if (isPanelSeparated && completedCuts.length > 0) {
+          const lastCompletedIdx = completedCuts[completedCuts.length - 1];
+          const lastCut = cutSequence[lastCompletedIdx];
+          if (lastCut) {
+            if (lastCut.axis === 'y' &&
+                (Math.abs(lastCut.pos - panel.y) < tolerance ||
+                 Math.abs(lastCut.pos - (panel.y + panel.height)) < tolerance)) {
+              justSeparated = true;
+            }
+            if (lastCut.axis === 'x' &&
+                (Math.abs(lastCut.pos - panel.x) < tolerance ||
+                 Math.abs(lastCut.pos - (panel.x + panel.width)) < tolerance)) {
+              justSeparated = true;
+            }
           }
-          // Try flexible matching if exact match fails
-          // Sometimes panel.id might be "m0_p0-0" and yieldId might be "m0_p0-0" or vice versa
-          if (yieldId && panel.id && (
-            yieldId.toString() === panel.id.toString() ||
-            yieldId.toString().includes(panel.id.toString()) ||
-            panel.id.toString().includes(yieldId.toString())
-          )) {
-            yieldCutIndex = i;
-            break;
-          }
         }
-        
-        // If panel ID not found in cut sequence, hide it
-        if (yieldCutIndex === -1) {
-          if (panelIndex === 0) {
-            console.warn('Panel not found in cut sequence:', panel.id);
-          }
-          return;
+
+        if (!isPanelSeparated) {
+          return; // 패널이 아직 분리되지 않음 - 숨김
         }
-        
-        // Check if panel has been completed
-        if (currentCutIndex < yieldCutIndex) {
-          // Panel not yet completed - hide it completely
-          return;
-        } else if (currentCutIndex === yieldCutIndex) {
-          // Panel is being completed right now - show with animation
-          ctx.globalAlpha = 0.9;
-          visiblePanelCount++;
-          
-          // Add a strong glow effect for newly completed panel
+
+        visiblePanelCount++;
+
+        if (justSeparated) {
+          // 방금 분리된 패널 - 강조 효과
+          ctx.globalAlpha = 0.95;
           ctx.shadowColor = `hsl(${themeColor})`;
           ctx.shadowBlur = 30;
           ctx.shadowOffsetX = 0;
           ctx.shadowOffsetY = 0;
-        } else {
-          // Panel already completed
-          visiblePanelCount++;
         }
-        // If currentCutIndex > yieldCutIndex, panel is fully visible (globalAlpha remains 1)
-      } else if (!simulating) {
+      } else {
         visiblePanelCount++;
       }
       
