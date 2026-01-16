@@ -77,8 +77,22 @@ export function generateGuillotineCuts(
     yEnd: number,
     regionPanels: PanelPlacement[]
   ) => {
-    // 패널이 없거나 1개면 더 이상 분할 불필요
-    if (regionPanels.length <= 1) return;
+    // 패널이 없으면 종료
+    if (regionPanels.length === 0) return;
+
+    // 패널이 1개면 해당 패널의 오른쪽/위쪽 경계 재단만 추가
+    if (regionPanels.length === 1) {
+      const p = regionPanels[0];
+      // 오른쪽 경계 (패널 끝이 영역 끝보다 작으면 재단 필요)
+      if (p.x + p.width < xEnd - kerf) {
+        addCut('x', p.x + p.width, yStart, yEnd);
+      }
+      // 위쪽 경계 (패널 끝이 영역 끝보다 작으면 재단 필요)
+      if (p.y + p.height < yEnd - kerf) {
+        addCut('y', p.y + p.height, xStart, xEnd);
+      }
+      return;
+    }
 
     // 영역이 너무 작으면 종료
     if (xEnd - xStart < kerf * 2 || yEnd - yStart < kerf * 2) return;
