@@ -161,3 +161,49 @@ export function deriveGuillotineForPanel(
 
   return cuts;
 }
+
+/**
+ * Build sequence for a single panel (OPTIMAL_CNC mode)
+ */
+export function buildSequenceForPanel(params: {
+  sheetW: number;
+  sheetH: number;
+  kerf: number;
+  placement: { x: number; y: number; width: number; height: number };
+  sheetId: string;
+  panelId: string;
+}): CutStep[] {
+  const { sheetW, sheetH, kerf, placement: p, panelId } = params;
+  return deriveGuillotineForPanel(sheetW, sheetH, p, kerf, panelId);
+}
+
+/**
+ * Run smooth simulation (placeholder for animation)
+ */
+export function runSmoothSimulation(
+  cuts: CutStep[],
+  onStep: (cut: CutStep, index: number) => void,
+  onComplete: () => void,
+  delay = 500
+): { cancel: () => void } {
+  let cancelled = false;
+  let currentIndex = 0;
+
+  const step = () => {
+    if (cancelled || currentIndex >= cuts.length) {
+      if (!cancelled) onComplete();
+      return;
+    }
+    onStep(cuts[currentIndex], currentIndex);
+    currentIndex++;
+    setTimeout(step, delay);
+  };
+
+  setTimeout(step, delay);
+
+  return {
+    cancel: () => {
+      cancelled = true;
+    }
+  };
+}
