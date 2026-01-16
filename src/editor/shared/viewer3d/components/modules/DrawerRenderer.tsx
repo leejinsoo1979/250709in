@@ -440,8 +440,8 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   // mesh를 투명하게
                   child.material = transparentMaterial;
 
-                  // edges를 부모에 추가 (mesh와 형제로) - 60도 이상만 추출
-                  const edges = new THREE.EdgesGeometry(child.geometry, 60);
+                  // edges를 부모에 추가 (mesh와 형제로) - 85도 이상만 추출 (주요 외곽선만)
+                  const edges = new THREE.EdgesGeometry(child.geometry, 85);
                   const line = new THREE.LineSegments(edges, lineMaterial);
                   line.position.copy(child.position);
                   line.rotation.copy(child.rotation);
