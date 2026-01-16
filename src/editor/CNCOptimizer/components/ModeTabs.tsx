@@ -34,7 +34,7 @@ export default function ModeTabs(){
           ) : (
             <>
               <Cpu size={14} />
-              CNC 최적화
+              Nesting
             </>
           )}
         </button>

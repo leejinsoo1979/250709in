@@ -354,7 +354,7 @@
     }
   },
   "cnc": {
-    "title": "CNC 최적화",
+    "title": "Nesting",
     "calculate": "계산하기",
     "export": "내보내기",
     "panels": "패널",
@@ -392,7 +392,7 @@
     "keyboardNavigationHint": "방향키로 시트 이동",
     "optimalL": "L방향 우선",
     "optimalW": "W방향 우선",
-    "optimalCNC": "CNC 최적화",
+    "optimalCNC": "Nesting",
     "optimizationComplete": "최적화 완료! {{panels}}개 패널, {{sheets}}개 시트 (평균 효율: {{efficiency}}%)",
     "optimizationFailed": "최적화 실패: 패널을 배치할 수 없습니다",
     "noPanelsError": "최적화할 패널이 없습니다",
