@@ -9,9 +9,117 @@ interface PanelPlacement {
   rotated?: boolean;
 }
 
+interface Strip {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  panels: PanelPlacement[];
+}
+
 /**
- * Generate guillotine cuts for an entire sheet
- * 모든 패널 경계를 수집하고 방향 우선순위에 따라 정렬하여 재단
+ * 패널들을 스트립으로 그룹화
+ * W방향 우선 (horizontal=true): 가로 스트립으로 그룹화 (같은 y 위치의 패널들)
+ * L방향 우선 (horizontal=false): 세로 스트립으로 그룹화 (같은 x 위치의 패널들)
+ */
+function groupPanelsIntoStrips(
+  panels: PanelPlacement[],
+  sheetW: number,
+  sheetH: number,
+  kerf: number,
+  horizontal: boolean
+): Strip[] {
+  if (panels.length === 0) return [];
+
+  const tolerance = kerf * 2;
+  const strips: Strip[] = [];
+  const usedPanels = new Set<string>();
+
+  // 패널들을 위치별로 정렬
+  const sortedPanels = [...panels].sort((a, b) => {
+    if (horizontal) {
+      // 가로 스트립: y 위치로 정렬, 그 다음 x 위치
+      return a.y !== b.y ? a.y - b.y : a.x - b.x;
+    } else {
+      // 세로 스트립: x 위치로 정렬, 그 다음 y 위치
+      return a.x !== b.x ? a.x - b.x : a.y - b.y;
+    }
+  });
+
+  for (const panel of sortedPanels) {
+    if (usedPanels.has(panel.id)) continue;
+
+    // 이 패널과 같은 스트립에 속하는 패널들 찾기
+    const stripPanels: PanelPlacement[] = [panel];
+    usedPanels.add(panel.id);
+
+    if (horizontal) {
+      // 가로 스트립: 비슷한 y 위치의 패널들
+      for (const other of sortedPanels) {
+        if (usedPanels.has(other.id)) continue;
+
+        // 같은 높이 행에 있는지 확인 (y 범위가 겹치는지)
+        const panelTop = panel.y;
+        const panelBottom = panel.y + panel.height;
+        const otherTop = other.y;
+        const otherBottom = other.y + other.height;
+
+        // y 범위가 상당 부분 겹치면 같은 스트립
+        const overlapStart = Math.max(panelTop, otherTop);
+        const overlapEnd = Math.min(panelBottom, otherBottom);
+        const overlap = overlapEnd - overlapStart;
+        const minHeight = Math.min(panel.height, other.height);
+
+        if (overlap > minHeight * 0.5) {
+          stripPanels.push(other);
+          usedPanels.add(other.id);
+        }
+      }
+    } else {
+      // 세로 스트립: 비슷한 x 위치의 패널들
+      for (const other of sortedPanels) {
+        if (usedPanels.has(other.id)) continue;
+
+        // 같은 너비 열에 있는지 확인 (x 범위가 겹치는지)
+        const panelLeft = panel.x;
+        const panelRight = panel.x + panel.width;
+        const otherLeft = other.x;
+        const otherRight = other.x + other.width;
+
+        // x 범위가 상당 부분 겹치면 같은 스트립
+        const overlapStart = Math.max(panelLeft, otherLeft);
+        const overlapEnd = Math.min(panelRight, otherRight);
+        const overlap = overlapEnd - overlapStart;
+        const minWidth = Math.min(panel.width, other.width);
+
+        if (overlap > minWidth * 0.5) {
+          stripPanels.push(other);
+          usedPanels.add(other.id);
+        }
+      }
+    }
+
+    // 스트립 경계 계산
+    const minX = Math.min(...stripPanels.map(p => p.x));
+    const minY = Math.min(...stripPanels.map(p => p.y));
+    const maxX = Math.max(...stripPanels.map(p => p.x + p.width));
+    const maxY = Math.max(...stripPanels.map(p => p.y + p.height));
+
+    strips.push({
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+      panels: stripPanels
+    });
+  }
+
+  return strips;
+}
+
+/**
+ * Generate hierarchical guillotine cuts for an entire sheet
+ * 계층적 기요틴 재단: 먼저 큰 스트립을 분리하고, 각 스트립 내에서 패널 분리
  */
 export function generateGuillotineCuts(
   sheetW: number,
@@ -26,20 +134,26 @@ export function generateGuillotineCuts(
 
   if (panels.length === 0) return cuts;
 
-  // BY_WIDTH = W방향 우선 = y축 재단(가로선) 우선 (W는 가로 방향이므로 가로선을 먼저 재단)
-  // BY_LENGTH = L방향 우선 = x축 재단(세로선) 우선 (L은 세로 방향이므로 세로선을 먼저 재단)
-  const preferHorizontal = optimizationType === 'BY_WIDTH';
+  // BY_WIDTH = W방향 우선 = 가로선(y축)을 먼저 재단하여 가로 스트립으로 분리
+  // BY_LENGTH = L방향 우선 = 세로선(x축)을 먼저 재단하여 세로 스트립으로 분리
+  const horizontal = optimizationType === 'BY_WIDTH';
+
+  console.log(`🔪 generateGuillotineCuts: ${optimizationType}, horizontal=${horizontal}`);
 
   // 이미 추가된 재단 위치 추적 (중복 방지)
   const addedCuts = new Set<string>();
 
   // 재단 추가 함수
   const addCut = (axis: 'x' | 'y', pos: number, spanStart: number, spanEnd: number) => {
-    // span이 유효한지 확인
-    if (spanEnd <= spanStart + 0.5) return;
+    // 시트 가장자리 재단 제외
+    if (axis === 'x' && (pos <= kerf || pos >= sheetW - kerf)) return;
+    if (axis === 'y' && (pos <= kerf || pos >= sheetH - kerf)) return;
 
-    // 중복 체크
-    const key = `${axis}-${Math.round(pos)}`;
+    // span이 유효한지 확인
+    if (spanEnd <= spanStart + kerf) return;
+
+    // 중복 체크 (위치와 범위 모두 체크)
+    const key = `${axis}-${Math.round(pos)}-${Math.round(spanStart)}-${Math.round(spanEnd)}`;
     if (addedCuts.has(key)) return;
     addedCuts.add(key);
 
@@ -54,53 +168,111 @@ export function generateGuillotineCuts(
       before: workpiece,
       result: workpiece,
       kerf,
+      // axis 'y' = 가로선 = W방향 재단, axis 'x' = 세로선 = L방향 재단
       label: axis === 'y' ? `W방향 재단 #${cuts.length + 1}` : `L방향 재단 #${cuts.length + 1}`,
       source: 'derived'
     });
   };
 
-  // 모든 패널 경계 위치 수집
-  const verticalPositions = new Set<number>(); // x축 재단 위치 (세로선)
-  const horizontalPositions = new Set<number>(); // y축 재단 위치 (가로선)
+  // 패널들을 스트립으로 그룹화
+  const strips = groupPanelsIntoStrips(panels, sheetW, sheetH, kerf, horizontal);
 
-  // 주의: 시트 가장자리(x=0, y=0, x=sheetW, y=sheetH)는 이미 재단된 상태이므로 추가하지 않음
+  console.log(`📦 Found ${strips.length} strips:`, strips.map(s => ({
+    x: s.x, y: s.y, w: s.width, h: s.height, panels: s.panels.length
+  })));
 
-  // 모든 패널의 4면 경계 수집
-  panels.forEach(p => {
-    // 왼쪽 경계 (세로선)
-    if (p.x > kerf) verticalPositions.add(Math.round(p.x));
-    // 오른쪽 경계 (세로선)
-    if (p.x + p.width < sheetW - kerf) verticalPositions.add(Math.round(p.x + p.width));
+  if (horizontal) {
+    // W방향 우선: 가로선으로 스트립 분리 먼저, 그 다음 각 스트립 내 세로선
 
-    // 아래 경계 (가로선)
-    if (p.y > kerf) horizontalPositions.add(Math.round(p.y));
-    // 위 경계 (가로선)
-    if (p.y + p.height < sheetH - kerf) horizontalPositions.add(Math.round(p.y + p.height));
-  });
+    // 1단계: 스트립 분리를 위한 가로선 (y축 재단)
+    // 스트립을 y 위치순으로 정렬
+    const sortedStrips = [...strips].sort((a, b) => a.y - b.y);
 
-  // 정렬
-  const sortedVertical = [...verticalPositions].sort((a, b) => a - b);
-  const sortedHorizontal = [...horizontalPositions].sort((a, b) => a - b);
+    for (let i = 0; i < sortedStrips.length; i++) {
+      const strip = sortedStrips[i];
 
-  // 방향 우선순위에 따라 재단 추가
-  if (preferHorizontal) {
-    // W방향 우선: 가로선(y축) 먼저, 그 다음 세로선(x축)
-    // W방향 = 가로 방향, 가로선을 먼저 재단해서 W방향으로 스트립 분리
-    sortedHorizontal.forEach(y => addCut('y', y, 0, sheetW));
-    sortedVertical.forEach(x => addCut('x', x, 0, sheetH));
+      // 스트립 하단 경계 (다음 스트립과의 분리)
+      if (strip.y > kerf) {
+        addCut('y', strip.y, 0, sheetW);
+      }
+
+      // 마지막 스트립의 상단 경계
+      if (strip.y + strip.height < sheetH - kerf) {
+        addCut('y', strip.y + strip.height, 0, sheetW);
+      }
+    }
+
+    // 2단계: 각 스트립 내에서 패널 분리를 위한 세로선 (x축 재단)
+    for (const strip of sortedStrips) {
+      // 스트립 내 패널들을 x 위치순으로 정렬
+      const sortedPanels = [...strip.panels].sort((a, b) => a.x - b.x);
+
+      for (const panel of sortedPanels) {
+        // 패널 왼쪽 경계 (스트립 범위 내에서만)
+        if (panel.x > kerf && panel.x > strip.x) {
+          addCut('x', panel.x, strip.y, strip.y + strip.height);
+        }
+
+        // 패널 오른쪽 경계 (스트립 범위 내에서만)
+        if (panel.x + panel.width < sheetW - kerf && panel.x + panel.width < strip.x + strip.width) {
+          addCut('x', panel.x + panel.width, strip.y, strip.y + strip.height);
+        }
+      }
+    }
   } else {
-    // L방향 우선: 세로선(x축) 먼저, 그 다음 가로선(y축)
-    // L방향 = 세로 방향, 세로선을 먼저 재단해서 L방향으로 스트립 분리
-    sortedVertical.forEach(x => addCut('x', x, 0, sheetH));
-    sortedHorizontal.forEach(y => addCut('y', y, 0, sheetW));
+    // L방향 우선: 세로선으로 스트립 분리 먼저, 그 다음 각 스트립 내 가로선
+
+    // 1단계: 스트립 분리를 위한 세로선 (x축 재단)
+    // 스트립을 x 위치순으로 정렬
+    const sortedStrips = [...strips].sort((a, b) => a.x - b.x);
+
+    for (let i = 0; i < sortedStrips.length; i++) {
+      const strip = sortedStrips[i];
+
+      // 스트립 왼쪽 경계 (다음 스트립과의 분리)
+      if (strip.x > kerf) {
+        addCut('x', strip.x, 0, sheetH);
+      }
+
+      // 마지막 스트립의 오른쪽 경계
+      if (strip.x + strip.width < sheetW - kerf) {
+        addCut('x', strip.x + strip.width, 0, sheetH);
+      }
+    }
+
+    // 2단계: 각 스트립 내에서 패널 분리를 위한 가로선 (y축 재단)
+    for (const strip of sortedStrips) {
+      // 스트립 내 패널들을 y 위치순으로 정렬
+      const sortedPanels = [...strip.panels].sort((a, b) => a.y - b.y);
+
+      for (const panel of sortedPanels) {
+        // 패널 하단 경계 (스트립 범위 내에서만)
+        if (panel.y > kerf && panel.y > strip.y) {
+          addCut('y', panel.y, strip.x, strip.x + strip.width);
+        }
+
+        // 패널 상단 경계 (스트립 범위 내에서만)
+        if (panel.y + panel.height < sheetH - kerf && panel.y + panel.height < strip.y + strip.height) {
+          addCut('y', panel.y + panel.height, strip.x, strip.x + strip.width);
+        }
+      }
+    }
   }
 
-  // order 재설정
+  // order 재설정 및 라벨 업데이트
   cuts.forEach((cut, idx) => {
     cut.order = idx;
     cut.id = `cut-${idx}`;
     cut.label = cut.axis === 'y' ? `W방향 재단 #${idx + 1}` : `L방향 재단 #${idx + 1}`;
   });
+
+  console.log(`✂️ Generated ${cuts.length} cuts:`, cuts.map(c => ({
+    order: c.order,
+    axis: c.axis,
+    pos: c.pos,
+    span: `${c.spanStart}-${c.spanEnd}`,
+    label: c.label
+  })));
 
   return cuts;
 }
