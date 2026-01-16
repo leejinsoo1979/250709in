@@ -2,7 +2,7 @@ import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
-import { Text, useGLTF } from '@react-three/drei';
+import { Text, useGLTF, Line } from '@react-three/drei';
 import NativeLine from '../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import BoxWithEdges from './components/BoxWithEdges';
@@ -416,90 +416,72 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const railZ = drawerBodyCenterZ;
           const railLength = drawerBodyDepth - mmToThreeUnits(20); // 레일 길이
 
-          // 2D 모드: 레일을 직사각형 윤곽선으로 렌더링 (모든 뷰에서 동일)
+          // 2D 모드: 옷봉처럼 가로선 여러 개로 렌더링 (Z 방향)
           if (viewMode === '2D') {
             const railHeight2D = mmToThreeUnits(15);
             const railStartZ = railZ - railLength/2;
             const railEndZ = railZ + railLength/2;
-            // 정면에서 보이도록 Z를 앞쪽에 배치
-            const frontZ = centerZ + actualDrawerDepth/2 + 0.02;
 
             return (
-              <>
-                {/* 좌측 레일 - 직사각형 윤곽선 */}
-                <NativeLine
-                  name="drawer-rail-left-2d"
-                  points={[
-                    [railLeftX, railY - railHeight2D/2, frontZ],
-                    [railLeftX, railY - railHeight2D/2, railStartZ],
-                    [railLeftX, railY + railHeight2D/2, railStartZ],
-                    [railLeftX, railY + railHeight2D/2, frontZ],
-                    [railLeftX, railY - railHeight2D/2, frontZ]
-                  ]}
-                  color="#FFFFFF"
-                  lineWidth={1}
-                  dashed={false}
-                />
-                {/* 좌측 레일 - 상단 가로선 (깊이 방향) */}
-                <NativeLine
+              <group name="drawer-rails-2d">
+                {/* 좌측 레일 - 가로선 3개 (Z 방향, 측면 뷰에서 보임) */}
+                <Line
                   name="drawer-rail-left-top"
                   points={[
                     [railLeftX, railY + railHeight2D/2, railStartZ],
                     [railLeftX, railY + railHeight2D/2, railEndZ]
                   ]}
                   color="#FFFFFF"
-                  lineWidth={1}
-                  dashed={false}
+                  lineWidth={0.5}
                 />
-                {/* 좌측 레일 - 하단 가로선 (깊이 방향) */}
-                <NativeLine
+                <Line
+                  name="drawer-rail-left-mid"
+                  points={[
+                    [railLeftX, railY, railStartZ],
+                    [railLeftX, railY, railEndZ]
+                  ]}
+                  color="#FFFFFF"
+                  lineWidth={0.5}
+                />
+                <Line
                   name="drawer-rail-left-bottom"
                   points={[
                     [railLeftX, railY - railHeight2D/2, railStartZ],
                     [railLeftX, railY - railHeight2D/2, railEndZ]
                   ]}
                   color="#FFFFFF"
-                  lineWidth={1}
-                  dashed={false}
+                  lineWidth={0.5}
                 />
 
-                {/* 우측 레일 - 직사각형 윤곽선 */}
-                <NativeLine
-                  name="drawer-rail-right-2d"
-                  points={[
-                    [railRightX, railY - railHeight2D/2, frontZ],
-                    [railRightX, railY - railHeight2D/2, railStartZ],
-                    [railRightX, railY + railHeight2D/2, railStartZ],
-                    [railRightX, railY + railHeight2D/2, frontZ],
-                    [railRightX, railY - railHeight2D/2, frontZ]
-                  ]}
-                  color="#FFFFFF"
-                  lineWidth={1}
-                  dashed={false}
-                />
-                {/* 우측 레일 - 상단 가로선 (깊이 방향) */}
-                <NativeLine
+                {/* 우측 레일 - 가로선 3개 (Z 방향, 측면 뷰에서 보임) */}
+                <Line
                   name="drawer-rail-right-top"
                   points={[
                     [railRightX, railY + railHeight2D/2, railStartZ],
                     [railRightX, railY + railHeight2D/2, railEndZ]
                   ]}
                   color="#FFFFFF"
-                  lineWidth={1}
-                  dashed={false}
+                  lineWidth={0.5}
                 />
-                {/* 우측 레일 - 하단 가로선 (깊이 방향) */}
-                <NativeLine
+                <Line
+                  name="drawer-rail-right-mid"
+                  points={[
+                    [railRightX, railY, railStartZ],
+                    [railRightX, railY, railEndZ]
+                  ]}
+                  color="#FFFFFF"
+                  lineWidth={0.5}
+                />
+                <Line
                   name="drawer-rail-right-bottom"
                   points={[
                     [railRightX, railY - railHeight2D/2, railStartZ],
                     [railRightX, railY - railHeight2D/2, railEndZ]
                   ]}
                   color="#FFFFFF"
-                  lineWidth={1}
-                  dashed={false}
+                  lineWidth={0.5}
                 />
-              </>
+              </group>
             );
           }
 
