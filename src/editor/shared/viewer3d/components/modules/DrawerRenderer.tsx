@@ -376,7 +376,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* === 서랍 레일 (좌/우) === */}
-        {/* sample.dae 기준: 레일 X=1.99inch(≈50mm), Y=3.23inch(깊이≈82mm from back) */}
+        {/* drawer.dae 기준: 레일 X=0.81inch(≈21mm), Y=2.05inch(깊이≈52mm), Z=1.38inch(높이≈35mm) */}
         {railModel && (
           <>
             {/* 좌측 레일 - 서랍 좌측판 바깥쪽, 서랍속장 안쪽 */}
@@ -384,9 +384,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               key={`drawer-${drawerIndex}-rail-left`}
               object={railModel.clone()}
               position={[
-                centerX - drawerWidth/2 + mmToThreeUnits(25), // 서랍 좌측에서 25mm 안쪽
-                centerY - drawerHeight/2 + mmToThreeUnits(15), // 서랍 바닥에서 15mm 위
-                drawerBodyCenterZ - drawerBodyDepth/2 + mmToThreeUnits(82) // 뒤에서 82mm
+                centerX - drawerWidth/2 + mmToThreeUnits(21), // 서랍 좌측에서 21mm
+                centerY - drawerHeight/2 + mmToThreeUnits(35), // 서랍 바닥에서 35mm 위
+                drawerBodyCenterZ - drawerBodyDepth/2 + mmToThreeUnits(52) // 뒤에서 52mm
               ]}
             />
             {/* 우측 레일 - 서랍 우측판 바깥쪽, 서랍속장 안쪽 */}
@@ -398,9 +398,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   key={`drawer-${drawerIndex}-rail-right`}
                   object={rightRail}
                   position={[
-                    centerX + drawerWidth/2 - mmToThreeUnits(25), // 서랍 우측에서 25mm 안쪽
-                    centerY - drawerHeight/2 + mmToThreeUnits(15), // 서랍 바닥에서 15mm 위
-                    drawerBodyCenterZ - drawerBodyDepth/2 + mmToThreeUnits(82) // 뒤에서 82mm
+                    centerX + drawerWidth/2 - mmToThreeUnits(21), // 서랍 우측에서 21mm
+                    centerY - drawerHeight/2 + mmToThreeUnits(35), // 서랍 바닥에서 35mm 위
+                    drawerBodyCenterZ - drawerBodyDepth/2 + mmToThreeUnits(52) // 뒤에서 52mm
                   ]}
                 />
               );
