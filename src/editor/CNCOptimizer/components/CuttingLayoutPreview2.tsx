@@ -1581,9 +1581,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         onMouseLeave={handleMouseUp}
       />
       
-      {/* Simulation Overlay - 컷팅 리스트 탭이 활성화되어 있을 때만 표시 */}
-      {showCuttingListTab && ((selectedPanelId && cutSequence.length > 0) || selectedCutId) && (
-        <div 
+      {/* Simulation Overlay - 시뮬레이션 중이 아닐 때 선택된 재단만 표시 (시뮬레이션 중에는 Canvas에서 그림) */}
+      {showCuttingListTab && !simulating && selectedCutId && (
+        <div
           className={styles.simulationOverlay}
           style={{
             position: 'absolute',
@@ -1595,41 +1595,41 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             zIndex: 10
           }}
         >
-          <svg 
-            style={{ 
-              width: '100%', 
+          <svg
+            style={{
+              width: '100%',
               height: '100%',
               position: 'absolute'
             }}
           >
             {/* Render selected cut if not simulating */}
-            {!simulating && selectedCutId && (() => {
-              // Find the selected cut from allCutSteps  
+            {(() => {
+              // Find the selected cut from allCutSteps
               const currentSheetCuts = allCutSteps.filter(c => c.sheetNumber === (sheetInfo?.currentIndex || 0) + 1);
               const selectedCut = currentSheetCuts.find(c => c.id === selectedCutId);
               if (!selectedCut || !result || !containerRef.current) return null;
-              
+
               const containerRect = containerRef.current.getBoundingClientRect();
               const containerWidth = containerRect.width;
               const containerHeight = containerRect.height - (sheetInfo ? 40 : 0);
-              
+
               // Calculate scale and center
               const rotatedWidth = Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.width +
                                  Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.height;
               const rotatedHeight = Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.width +
                                   Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.height;
-              
+
               const scaleX = containerWidth * 0.9 / rotatedWidth;
               const scaleY = containerHeight * 0.9 / rotatedHeight;
               const baseScale = Math.min(scaleX, scaleY, 1.2);
               const totalScale = baseScale * scale;
-              
+
               const centerX = containerWidth / 2 + offset.x;
               const centerY = containerHeight / 2 + offset.y;
-              
+
               // Transform cut coordinates with guaranteed span
               const angle = (rotation * Math.PI) / 180;
-              
+
               let x1, y1, x2, y2;
               if (selectedCut.axis === 'x') {
                 // Vertical line
@@ -1644,35 +1644,35 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                 x2 = selectedCut.spanEnd != null ? selectedCut.spanEnd : result.stockPanel.width;
                 y2 = selectedCut.pos;
               }
-              
+
               // Clamp to sheet bounds
               x1 = Math.max(0, Math.min(result.stockPanel.width, x1));
               x2 = Math.max(0, Math.min(result.stockPanel.width, x2));
               y1 = Math.max(0, Math.min(result.stockPanel.height, y1));
               y2 = Math.max(0, Math.min(result.stockPanel.height, y2));
-              
+
               // Transform to view coordinates
               const transform = (x: number, y: number) => {
                 // Center the sheet
                 const cx = x - result.stockPanel.width / 2;
                 const cy = y - result.stockPanel.height / 2;
-                
+
                 // Apply rotation
                 const rx = cx * Math.cos(angle) - cy * Math.sin(angle);
                 const ry = cx * Math.sin(angle) + cy * Math.cos(angle);
-                
+
                 // Apply scale and offset
                 return {
                   x: centerX + rx * totalScale,
                   y: centerY + ry * totalScale
                 };
               };
-              
+
               const p1 = transform(x1, y1);
               const p2 = transform(x2, y2);
-              
+
               const strokeWidth = Math.max(2, (selectedCut.kerf || settings.kerf || 5) * totalScale);
-              
+
               return (
                 <line
                   x1={p1.x}
@@ -1687,84 +1687,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                 />
               );
             })()}
-            {/* Render simulation cuts */}
-            {cutSequence.slice(0, currentCutIndex + 1).map((cut, index) => {
-              if (!result || !containerRef.current) return null;
-              
-              const containerRect = containerRef.current.getBoundingClientRect();
-              const containerWidth = containerRect.width;
-              const containerHeight = containerRect.height - (sheetInfo ? 40 : 0);
-              
-              // Calculate scale and center
-              const rotatedWidth = Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.width +
-                                 Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.height;
-              const rotatedHeight = Math.abs(Math.sin((rotation * Math.PI) / 180)) * result.stockPanel.width +
-                                  Math.abs(Math.cos((rotation * Math.PI) / 180)) * result.stockPanel.height;
-              
-              const scaleX = containerWidth * 0.9 / rotatedWidth;
-              const scaleY = containerHeight * 0.9 / rotatedHeight;
-              const baseScale = Math.min(scaleX, scaleY, 1.2);
-              const totalScale = baseScale * scale;
-              
-              const centerX = containerWidth / 2 + offset.x;
-              const centerY = containerHeight / 2 + offset.y;
-              
-              // Transform cut coordinates
-              const angle = (rotation * Math.PI) / 180;
-              
-              let x1, y1, x2, y2;
-              if (cut.axis === 'x') {
-                // Vertical line
-                x1 = cut.pos;
-                y1 = cut.spanStart;
-                x2 = cut.pos;
-                y2 = cut.spanEnd;
-              } else {
-                // Horizontal line
-                x1 = cut.spanStart;
-                y1 = cut.pos;
-                x2 = cut.spanEnd;
-                y2 = cut.pos;
-              }
-              
-              // Transform to view coordinates
-              const transform = (x: number, y: number) => {
-                // Center the sheet
-                const cx = x - result.stockPanel.width / 2;
-                const cy = y - result.stockPanel.height / 2;
-                
-                // Apply rotation
-                const rx = cx * Math.cos(angle) - cy * Math.sin(angle);
-                const ry = cx * Math.sin(angle) + cy * Math.cos(angle);
-                
-                // Apply scale and offset
-                return {
-                  x: centerX + rx * totalScale,
-                  y: centerY + ry * totalScale
-                };
-              };
-              
-              const p1 = transform(x1, y1);
-              const p2 = transform(x2, y2);
-              
-              const isCurrentCut = index === currentCutIndex;
-              const strokeWidth = Math.max(2, (cut.kerf || settings.kerf || 5) * totalScale);
-              
-              return (
-                <line
-                  key={cut.id}
-                  x1={p1.x}
-                  y1={p1.y}
-                  x2={p2.x}
-                  y2={p2.y}
-                  stroke="#FF4D4F"
-                  strokeWidth={strokeWidth}
-                  opacity={isCurrentCut ? 1.0 : 0.35}
-                  strokeDasharray={isCurrentCut ? "5,5" : "none"}
-                  className={isCurrentCut ? styles.animatedCut : ''}
-                />
-              );
-            })}
+            {/* 시뮬레이션 중에는 SVG 렌더링을 사용하지 않음 - Canvas에서 그림 */}
           </svg>
           
           {/* Highlight selected panel */}

@@ -26,9 +26,9 @@ export function generateGuillotineCuts(
 
   if (panels.length === 0) return cuts;
 
-  // BY_WIDTH = W방향 우선 = x축 재단(세로선) 우선
-  // BY_LENGTH = L방향 우선 = y축 재단(가로선) 우선
-  const preferVertical = optimizationType === 'BY_WIDTH';
+  // BY_WIDTH = W방향 우선 = y축 재단(가로선) 우선 (W는 가로 방향이므로 가로선을 먼저 재단)
+  // BY_LENGTH = L방향 우선 = x축 재단(세로선) 우선 (L은 세로 방향이므로 세로선을 먼저 재단)
+  const preferHorizontal = optimizationType === 'BY_WIDTH';
 
   // 이미 추가된 재단 위치 추적 (중복 방지)
   const addedCuts = new Set<string>();
@@ -54,7 +54,7 @@ export function generateGuillotineCuts(
       before: workpiece,
       result: workpiece,
       kerf,
-      label: axis === 'y' ? `L방향 재단 #${cuts.length + 1}` : `W방향 재단 #${cuts.length + 1}`,
+      label: axis === 'y' ? `W방향 재단 #${cuts.length + 1}` : `L방향 재단 #${cuts.length + 1}`,
       source: 'derived'
     });
   };
@@ -63,9 +63,7 @@ export function generateGuillotineCuts(
   const verticalPositions = new Set<number>(); // x축 재단 위치 (세로선)
   const horizontalPositions = new Set<number>(); // y축 재단 위치 (가로선)
 
-  // 가장자리 추가 (왼쪽 x=0, 하단 y=0)
-  verticalPositions.add(0);
-  horizontalPositions.add(0);
+  // 주의: 시트 가장자리(x=0, y=0, x=sheetW, y=sheetH)는 이미 재단된 상태이므로 추가하지 않음
 
   // 모든 패널의 4면 경계 수집
   panels.forEach(p => {
@@ -85,21 +83,23 @@ export function generateGuillotineCuts(
   const sortedHorizontal = [...horizontalPositions].sort((a, b) => a - b);
 
   // 방향 우선순위에 따라 재단 추가
-  if (preferVertical) {
-    // W방향 우선: 세로선 먼저, 그 다음 가로선
-    sortedVertical.forEach(x => addCut('x', x, 0, sheetH));
+  if (preferHorizontal) {
+    // W방향 우선: 가로선(y축) 먼저, 그 다음 세로선(x축)
+    // W방향 = 가로 방향, 가로선을 먼저 재단해서 W방향으로 스트립 분리
     sortedHorizontal.forEach(y => addCut('y', y, 0, sheetW));
+    sortedVertical.forEach(x => addCut('x', x, 0, sheetH));
   } else {
-    // L방향 우선: 가로선 먼저, 그 다음 세로선
-    sortedHorizontal.forEach(y => addCut('y', y, 0, sheetW));
+    // L방향 우선: 세로선(x축) 먼저, 그 다음 가로선(y축)
+    // L방향 = 세로 방향, 세로선을 먼저 재단해서 L방향으로 스트립 분리
     sortedVertical.forEach(x => addCut('x', x, 0, sheetH));
+    sortedHorizontal.forEach(y => addCut('y', y, 0, sheetW));
   }
 
   // order 재설정
   cuts.forEach((cut, idx) => {
     cut.order = idx;
     cut.id = `cut-${idx}`;
-    cut.label = cut.axis === 'y' ? `L방향 재단 #${idx + 1}` : `W방향 재단 #${idx + 1}`;
+    cut.label = cut.axis === 'y' ? `W방향 재단 #${idx + 1}` : `L방향 재단 #${idx + 1}`;
   });
 
   return cuts;
