@@ -428,7 +428,11 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             leftRail.scale.x *= -1;
             const rightRail = railModel.clone();
 
-            const whiteMaterial = new THREE.MeshBasicMaterial({ color: '#FFFFFF' });
+            const whiteMaterial = new THREE.MeshBasicMaterial({
+              color: '#FFFFFF',
+              transparent: true,
+              opacity: 0.3
+            });
 
             [leftRail, rightRail].forEach(rail => {
               rail.traverse((child) => {
