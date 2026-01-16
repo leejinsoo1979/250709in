@@ -422,50 +422,36 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
-          // 2D 모드: 아웃라인만 표시
+          // 2D 모드: 아웃라인만 표시 - railModel을 클론해서 wireframe으로 표시
           if (viewMode === '2D') {
-            // DAE 모델에서 엣지 추출
-            const edgesGroup: THREE.LineSegments[] = [];
-            const lineMaterial = new THREE.LineBasicMaterial({ color: '#FFFFFF' });
-
-            railModel.traverse((child) => {
-              if (child instanceof THREE.Mesh && child.geometry) {
-                const edges = new THREE.EdgesGeometry(child.geometry, 15);
-                const lineSegments = new THREE.LineSegments(edges, lineMaterial);
-                // 원본 mesh의 변환 복사
-                lineSegments.position.copy(child.position);
-                lineSegments.rotation.copy(child.rotation);
-                lineSegments.scale.copy(child.scale);
-                edgesGroup.push(lineSegments);
-              }
+            const wireframeMaterial = new THREE.MeshBasicMaterial({
+              color: '#FFFFFF',
+              wireframe: true
             });
 
-            // 좌측/우측 레일 그룹 생성
-            const leftRailEdges = new THREE.Group();
-            const rightRailEdges = new THREE.Group();
+            const leftRail = railModel.clone();
+            leftRail.scale.x *= -1;
+            const rightRail = railModel.clone();
 
-            edgesGroup.forEach(edge => {
-              leftRailEdges.add(edge.clone());
-              rightRailEdges.add(edge.clone());
+            // wireframe 재질 적용
+            [leftRail, rightRail].forEach(rail => {
+              rail.traverse((child) => {
+                if (child instanceof THREE.Mesh) {
+                  child.material = wireframeMaterial;
+                }
+              });
             });
-
-            // 스케일 및 회전 적용 (원본 모델과 동일)
-            const scale = 0.254;
-            leftRailEdges.scale.set(-scale, scale, scale); // X축 반전
-            leftRailEdges.rotation.x = -Math.PI / 2;
-            rightRailEdges.scale.set(scale, scale, scale);
-            rightRailEdges.rotation.x = -Math.PI / 2;
 
             return (
               <>
                 <primitive
-                  key={`drawer-${drawerIndex}-rail-left-edges`}
-                  object={leftRailEdges}
+                  key={`drawer-${drawerIndex}-rail-left-wireframe`}
+                  object={leftRail}
                   position={[railLeftX + offsetX, railY - offsetY, railZ - offsetZ]}
                 />
                 <primitive
-                  key={`drawer-${drawerIndex}-rail-right-edges`}
-                  object={rightRailEdges}
+                  key={`drawer-${drawerIndex}-rail-right-wireframe`}
+                  object={rightRail}
                   position={[railRightX - offsetX, railY - offsetY, railZ - offsetZ]}
                 />
               </>
