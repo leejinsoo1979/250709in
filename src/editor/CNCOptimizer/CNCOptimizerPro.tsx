@@ -607,17 +607,20 @@ function PageInner(){
             stock: matchingStock.quantity
           };
 
+          // 패널도 동일하게 변환
+          // p.width = W방향(짧은 쪽), p.length = L방향(긴 쪽)
+          // optimizer에서 width = X축(가로), height = Y축(세로)
           const optimizerPanels = groupPanels.map(p => ({
             id: p.id,
             name: p.label,
-            width: p.width,
-            height: p.length,
+            width: p.length,   // L방향을 가로로
+            height: p.width,   // W방향을 세로로
             thickness: p.thickness,
             quantity: p.quantity,
             material: p.material || 'PB',
             color: 'MW',
-            grain: p.grain === 'H' ? 'HORIZONTAL' : 
-                   p.grain === 'V' ? 'VERTICAL' : 
+            grain: p.grain === 'H' ? 'HORIZONTAL' :
+                   p.grain === 'V' ? 'VERTICAL' :
                    'VERTICAL', // 기본값은 VERTICAL (세로)
             canRotate: p.canRotate
           }));
