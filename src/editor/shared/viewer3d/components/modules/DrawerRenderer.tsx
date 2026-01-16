@@ -376,19 +376,19 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* === 서랍 레일 (좌/우) === */}
-        {railModel ? (
+        {railModel && (
           <>
-            {/* 좌측 레일 */}
+            {/* 좌측 레일 - 서랍 좌측판 바깥쪽 */}
             <primitive
               key={`drawer-${drawerIndex}-rail-left`}
               object={railModel.clone()}
               position={[
-                centerX - drawerWidth/2 + mmToThreeUnits(25),
-                centerY - drawerHeight/2 + mmToThreeUnits(20),
+                centerX - drawerWidth/2 + mmToThreeUnits(50),
+                centerY - drawerHeight/2 + mmToThreeUnits(25),
                 drawerBodyCenterZ
               ]}
             />
-            {/* 우측 레일 */}
+            {/* 우측 레일 - 서랍 우측판 바깥쪽 */}
             {(() => {
               const rightRail = railModel.clone();
               rightRail.scale.x *= -1; // X축 반전
@@ -397,25 +397,13 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   key={`drawer-${drawerIndex}-rail-right`}
                   object={rightRail}
                   position={[
-                    centerX + drawerWidth/2 - mmToThreeUnits(25),
-                    centerY - drawerHeight/2 + mmToThreeUnits(20),
+                    centerX + drawerWidth/2 - mmToThreeUnits(50),
+                    centerY - drawerHeight/2 + mmToThreeUnits(25),
                     drawerBodyCenterZ
                   ]}
                 />
               );
             })()}
-          </>
-        ) : (
-          <>
-            {/* 레일 로드 전 테스트 박스 */}
-            <mesh position={[centerX - drawerWidth/2 + mmToThreeUnits(25), centerY - drawerHeight/2 + mmToThreeUnits(20), drawerBodyCenterZ]}>
-              <boxGeometry args={[mmToThreeUnits(15), mmToThreeUnits(15), mmToThreeUnits(450)]} />
-              <meshStandardMaterial color="red" />
-            </mesh>
-            <mesh position={[centerX + drawerWidth/2 - mmToThreeUnits(25), centerY - drawerHeight/2 + mmToThreeUnits(20), drawerBodyCenterZ]}>
-              <boxGeometry args={[mmToThreeUnits(15), mmToThreeUnits(15), mmToThreeUnits(450)]} />
-              <meshStandardMaterial color="red" />
-            </mesh>
           </>
         )}
 
