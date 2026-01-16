@@ -26,7 +26,7 @@ import ExitConfirmModal from './components/ExitConfirmModal';
 // Utils
 import { optimizePanelsMultiple } from './utils/optimizer';
 import { showToast } from '@/utils/cutlist/csv';
-import { buildSequenceForPanel } from '@/utils/cut/simulate';
+import { buildSequenceForPanel, generateGuillotineCuts } from '@/utils/cut/simulate';
 import { formatSize } from '@/utils/cut/format';
 import { computeSawStats } from '@/utils/cut/stats';
 import type { Panel, StockSheet, Placement } from '../../types/cutlist';
@@ -795,46 +795,68 @@ function PageInner(){
       return [];
     }
 
-    const steps = [];
+    const steps: any[] = [];
     let globalOrder = 0;
-    
-    // 모든 시트의 모든 패널에 대한 재단 순서 생성
+
+    // 각 시트별로 전체 기요틴 재단 순서 생성
     optimizationResults.forEach((result, sheetIdx) => {
       const sheetId = String(sheetIdx + 1);
-      
-      // 이 시트의 모든 패널에 대한 재단 순서 생성
-      result.panels.forEach((panel) => {
-        const placement = {
+
+      // OPTIMAL_CNC (Nesting)는 free cut 모드 사용 - 패널별 재단
+      if (settings.optimizationType === 'OPTIMAL_CNC') {
+        result.panels.forEach((panel) => {
+          const panelCuts = buildSequenceForPanel({
+            mode: 'free',
+            sheetW: result.stockPanel.width,
+            sheetH: result.stockPanel.height,
+            kerf: settings.kerf || 5,
+            placement: { x: panel.x, y: panel.y, width: panel.width, height: panel.height },
+            sheetId,
+            panelId: panel.id
+          });
+
+          panelCuts.forEach((cut, cutIdx) => {
+            steps.push({
+              ...cut,
+              id: `s${sheetIdx}_p${panel.id}_c${cutIdx}`,
+              globalOrder: ++globalOrder,
+              sheetNumber: sheetIdx + 1,
+              panelInfo: panel
+            });
+          });
+        });
+      } else {
+        // BY_LENGTH / BY_WIDTH: 전체 시트에 대한 기요틴 재단 생성
+        // 톱날이 끝까지 직선으로 가는 실제 기계 방식
+        const panelPlacements = result.panels.map(panel => ({
+          id: panel.id,
           x: panel.x,
           y: panel.y,
           width: panel.width,
-          height: panel.height
-        };
-        
-        // 각 패널의 재단 단계 생성
-        const panelCuts = buildSequenceForPanel({
-          mode: settings.optimizationType === 'OPTIMAL_CNC' ? 'free' : 'guillotine',
-          sheetW: result.stockPanel.width,
-          sheetH: result.stockPanel.height,
-          kerf: settings.kerf || 5,
-          placement,
-          sheetId,
-          panelId: panel.id
-        });
-        
-        // 전역 순서 번호 할당 및 고유 ID 생성
-        panelCuts.forEach((cut, cutIdx) => {
+          height: panel.height,
+          rotated: panel.rotated
+        }));
+
+        const sheetCuts = generateGuillotineCuts(
+          result.stockPanel.width,
+          result.stockPanel.height,
+          panelPlacements,
+          settings.kerf || 5,
+          settings.optimizationType as 'BY_LENGTH' | 'BY_WIDTH'
+        );
+
+        sheetCuts.forEach((cut, cutIdx) => {
           steps.push({
             ...cut,
-            id: `s${sheetIdx}_p${panel.id}_c${cutIdx}`, // 고유 ID 생성
+            id: `s${sheetIdx}_c${cutIdx}`,
+            sheetId,
             globalOrder: ++globalOrder,
-            sheetNumber: sheetIdx + 1,
-            panelInfo: panel
+            sheetNumber: sheetIdx + 1
           });
         });
-      });
+      }
     });
-    
+
     return steps;
   }, [optimizationResults, showCuttingList, settings.optimizationType, settings.kerf]);
 

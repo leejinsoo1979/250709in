@@ -1,12 +1,204 @@
 import type { CutStep, CutAxis, WorkPiece } from '@/types/cutlist';
 
+interface PanelPlacement {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotated?: boolean;
+}
+
+/**
+ * Generate proper guillotine cuts for an entire sheet
+ * 실제 기요틴 재단 방식: 톱날이 시트 전체를 가로질러 재단
+ * 1. 먼저 가로 재단(y축)으로 스트립 분리
+ * 2. 각 스트립에서 세로 재단(x축)으로 패널 분리
+ */
+export function generateGuillotineCuts(
+  sheetW: number,
+  sheetH: number,
+  panels: PanelPlacement[],
+  kerf: number,
+  optimizationType: 'BY_LENGTH' | 'BY_WIDTH' | 'OPTIMAL_CNC' = 'BY_LENGTH'
+): CutStep[] {
+  const cuts: CutStep[] = [];
+  let order = 0;
+  const workpiece: WorkPiece = { width: sheetW, length: sheetH };
+
+  if (panels.length === 0) return cuts;
+
+  // BY_LENGTH: 가로 재단 먼저 (L방향 우선)
+  // BY_WIDTH: 세로 재단 먼저 (W방향 우선)
+  const horizontalFirst = optimizationType !== 'BY_WIDTH';
+
+  if (horizontalFirst) {
+    // === L방향 우선: 가로 재단 → 세로 재단 ===
+
+    // 1. 고유한 y 좌표 찾기 (스트립 경계)
+    const yPositions = new Set<number>();
+    panels.forEach(p => {
+      if (p.y > kerf) yPositions.add(p.y);
+      if (p.y + p.height < sheetH - kerf) yPositions.add(p.y + p.height);
+    });
+    const sortedY = Array.from(yPositions).sort((a, b) => a - b);
+
+    // 2. 가로 재단 (전체 너비를 가로지름)
+    sortedY.forEach(yPos => {
+      cuts.push({
+        id: `cut-${order}`,
+        order: order++,
+        sheetId: '',
+        axis: 'y' as CutAxis,
+        pos: yPos,
+        spanStart: 0,
+        spanEnd: sheetW, // 전체 시트 너비
+        before: workpiece,
+        result: workpiece,
+        kerf,
+        label: `가로 재단 #${order}`,
+        source: 'derived'
+      });
+    });
+
+    // 3. 스트립별로 세로 재단
+    const strips: { yStart: number; yEnd: number; panels: PanelPlacement[] }[] = [];
+    const yBoundaries = [0, ...sortedY, sheetH];
+
+    for (let i = 0; i < yBoundaries.length - 1; i++) {
+      const yStart = yBoundaries[i];
+      const yEnd = yBoundaries[i + 1];
+      const stripPanels = panels.filter(p =>
+        p.y >= yStart - kerf && p.y + p.height <= yEnd + kerf
+      );
+      if (stripPanels.length > 0) {
+        strips.push({ yStart, yEnd, panels: stripPanels });
+      }
+    }
+
+    // 4. 각 스트립에서 세로 재단 (스트립 높이 전체를 가로지름)
+    strips.forEach(strip => {
+      const xPositions = new Set<number>();
+      strip.panels.forEach(p => {
+        if (p.x > kerf) xPositions.add(p.x);
+        if (p.x + p.width < sheetW - kerf) xPositions.add(p.x + p.width);
+      });
+      const sortedX = Array.from(xPositions).sort((a, b) => a - b);
+
+      sortedX.forEach(xPos => {
+        // 이 x 위치에서 실제로 재단이 필요한지 확인
+        const needsCut = strip.panels.some(p =>
+          Math.abs(p.x - xPos) < kerf || Math.abs(p.x + p.width - xPos) < kerf
+        );
+
+        if (needsCut) {
+          cuts.push({
+            id: `cut-${order}`,
+            order: order++,
+            sheetId: '',
+            axis: 'x' as CutAxis,
+            pos: xPos,
+            spanStart: strip.yStart,
+            spanEnd: strip.yEnd, // 스트립 전체 높이
+            before: workpiece,
+            result: workpiece,
+            kerf,
+            label: `세로 재단 #${order}`,
+            source: 'derived'
+          });
+        }
+      });
+    });
+
+  } else {
+    // === W방향 우선: 세로 재단 → 가로 재단 ===
+
+    // 1. 고유한 x 좌표 찾기 (스트립 경계)
+    const xPositions = new Set<number>();
+    panels.forEach(p => {
+      if (p.x > kerf) xPositions.add(p.x);
+      if (p.x + p.width < sheetW - kerf) xPositions.add(p.x + p.width);
+    });
+    const sortedX = Array.from(xPositions).sort((a, b) => a - b);
+
+    // 2. 세로 재단 (전체 높이를 가로지름)
+    sortedX.forEach(xPos => {
+      cuts.push({
+        id: `cut-${order}`,
+        order: order++,
+        sheetId: '',
+        axis: 'x' as CutAxis,
+        pos: xPos,
+        spanStart: 0,
+        spanEnd: sheetH, // 전체 시트 높이
+        before: workpiece,
+        result: workpiece,
+        kerf,
+        label: `세로 재단 #${order}`,
+        source: 'derived'
+      });
+    });
+
+    // 3. 스트립별로 가로 재단
+    const strips: { xStart: number; xEnd: number; panels: PanelPlacement[] }[] = [];
+    const xBoundaries = [0, ...sortedX, sheetW];
+
+    for (let i = 0; i < xBoundaries.length - 1; i++) {
+      const xStart = xBoundaries[i];
+      const xEnd = xBoundaries[i + 1];
+      const stripPanels = panels.filter(p =>
+        p.x >= xStart - kerf && p.x + p.width <= xEnd + kerf
+      );
+      if (stripPanels.length > 0) {
+        strips.push({ xStart, xEnd, panels: stripPanels });
+      }
+    }
+
+    // 4. 각 스트립에서 가로 재단 (스트립 너비 전체를 가로지름)
+    strips.forEach(strip => {
+      const yPositions = new Set<number>();
+      strip.panels.forEach(p => {
+        if (p.y > kerf) yPositions.add(p.y);
+        if (p.y + p.height < sheetH - kerf) yPositions.add(p.y + p.height);
+      });
+      const sortedY = Array.from(yPositions).sort((a, b) => a - b);
+
+      sortedY.forEach(yPos => {
+        const needsCut = strip.panels.some(p =>
+          Math.abs(p.y - yPos) < kerf || Math.abs(p.y + p.height - yPos) < kerf
+        );
+
+        if (needsCut) {
+          cuts.push({
+            id: `cut-${order}`,
+            order: order++,
+            sheetId: '',
+            axis: 'y' as CutAxis,
+            pos: yPos,
+            spanStart: strip.xStart,
+            spanEnd: strip.xEnd, // 스트립 전체 너비
+            before: workpiece,
+            result: workpiece,
+            kerf,
+            label: `가로 재단 #${order}`,
+            source: 'derived'
+          });
+        }
+      });
+    });
+  }
+
+  return cuts;
+}
+
 /**
  * Generate guillotine cuts for a panel - 2-4 cuts to isolate the panel
  * Order: horizontal cuts first (rip), then vertical cuts (crosscut)
+ * @deprecated Use generateGuillotineCuts for proper full-span cuts
  */
 export function deriveGuillotineForPanel(
   sheetW: number,
-  sheetH: number, 
+  sheetH: number,
   p: { x: number; y: number; width: number; height: number },
   kerf: number,
   panelId?: string
@@ -14,18 +206,17 @@ export function deriveGuillotineForPanel(
   const cuts: CutStep[] = [];
   let order = 0;
   let currentWorkpiece: WorkPiece = { width: sheetW, length: sheetH };
-  
-  // Horizontal cuts (y-axis) - rip cuts
-  // Bottom edge of panel
+
+  // Horizontal cuts (y-axis) - rip cuts - FULL WIDTH
   if (p.y > 0) {
     cuts.push({
       id: `cut-${order}`,
       order: order++,
       sheetId: '',
       axis: 'y' as CutAxis,
-      pos: p.y - kerf / 2,
+      pos: p.y,
       spanStart: 0,
-      spanEnd: sheetW,
+      spanEnd: sheetW, // 전체 시트 너비
       before: currentWorkpiece,
       result: { width: sheetW, length: sheetH - p.y },
       kerf,
@@ -34,8 +225,7 @@ export function deriveGuillotineForPanel(
     });
     currentWorkpiece = { width: sheetW, length: sheetH - p.y };
   }
-  
-  // Top edge of panel
+
   if (p.y + p.height < sheetH) {
     const resultHeight = p.height + (p.y > 0 ? 0 : p.y);
     cuts.push({
@@ -43,9 +233,9 @@ export function deriveGuillotineForPanel(
       order: order++,
       sheetId: '',
       axis: 'y' as CutAxis,
-      pos: p.y + p.height + kerf / 2,
+      pos: p.y + p.height,
       spanStart: 0,
-      spanEnd: sheetW,
+      spanEnd: sheetW, // 전체 시트 너비
       before: currentWorkpiece,
       result: { width: sheetW, length: resultHeight },
       kerf,
@@ -54,18 +244,17 @@ export function deriveGuillotineForPanel(
     });
     currentWorkpiece = { width: sheetW, length: resultHeight };
   }
-  
-  // Vertical cuts (x-axis) - crosscuts
-  // Left edge of panel
+
+  // Vertical cuts (x-axis) - crosscuts - FULL STRIP HEIGHT
   if (p.x > 0) {
     cuts.push({
       id: `cut-${order}`,
       order: order++,
       sheetId: '',
       axis: 'x' as CutAxis,
-      pos: p.x - kerf / 2,
-      spanStart: Math.max(0, p.y - kerf),
-      spanEnd: Math.min(sheetH, p.y + p.height + kerf),
+      pos: p.x,
+      spanStart: 0,
+      spanEnd: sheetH, // 전체 시트 높이 (또는 스트립 높이)
       before: currentWorkpiece,
       result: { width: currentWorkpiece.width - p.x, length: currentWorkpiece.length },
       kerf,
@@ -74,17 +263,16 @@ export function deriveGuillotineForPanel(
     });
     currentWorkpiece = { width: currentWorkpiece.width - p.x, length: currentWorkpiece.length };
   }
-  
-  // Right edge of panel - 마지막 재단으로 패널 완성
+
   if (p.x + p.width < sheetW) {
     cuts.push({
       id: `cut-${order}`,
       order: order++,
       sheetId: '',
       axis: 'x' as CutAxis,
-      pos: p.x + p.width + kerf / 2,
-      spanStart: Math.max(0, p.y - kerf),
-      spanEnd: Math.min(sheetH, p.y + p.height + kerf),
+      pos: p.x + p.width,
+      spanStart: 0,
+      spanEnd: sheetH, // 전체 시트 높이 (또는 스트립 높이)
       before: currentWorkpiece,
       result: { width: p.width, length: p.height },
       yieldsPanelId: panelId,
@@ -93,12 +281,11 @@ export function deriveGuillotineForPanel(
       source: 'derived'
     });
   }
-  
-  // 마지막 컷에 패널 ID 표시 (패널이 완성됨)
+
   if (cuts.length > 0 && panelId) {
     cuts[cuts.length - 1].yieldsPanelId = panelId;
   }
-  
+
   return cuts;
 }
 
