@@ -1138,7 +1138,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // Draw progress info (outside of transformation for consistent text size)
         ctx.save();
-        ctx.fillStyle = isLDirection ? '#ff3300' : '#0064ff';
+        ctx.fillStyle = isWDirection ? '#0064ff' : '#ff3300';
         const fontSize = 14 / (baseScale * scale);
         ctx.font = `bold ${fontSize}px sans-serif`;
         ctx.textAlign = 'center';
