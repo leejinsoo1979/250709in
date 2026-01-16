@@ -240,7 +240,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       console.log('Starting smooth simulation with', cuts.length, 'cuts');
 
       // 톱날 속도: mm/s (속도 조절 가능)
-      const sawSpeed = (currentSimSpeed || 1) * 500; // 기본 500mm/s, 속도 배율 적용
+      const sawSpeed = (currentSimSpeed || 1) * 2000; // 기본 2000mm/s, 속도 배율 적용
 
       runSmoothSimulation(cuts, {
         onProgress: (cutIndex, progress) => {
