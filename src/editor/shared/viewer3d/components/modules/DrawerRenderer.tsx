@@ -421,6 +421,15 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             const railHeight2D = mmToThreeUnits(15);
             const railThickness = mmToThreeUnits(3);
 
+            console.log('🔧 2D 레일 렌더링:', {
+              view2DDirection,
+              railLeftX,
+              railRightX,
+              railY,
+              railZ,
+              railLength
+            });
+
             // 정면 뷰: 레일 단면 (작은 사각형)
             if (view2DDirection === 'front') {
               const rail2DZ = centerZ + actualDrawerDepth/2 + 0.01;
@@ -456,19 +465,17 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               );
             }
 
-            // 측면 뷰 (left/right): 레일 전체 길이 표시
+            // 측면 뷰 (left/right): 레일 전체 길이 표시 (양쪽 모두)
             if (view2DDirection === 'left' || view2DDirection === 'right') {
-              // 레일 시작/끝 Z 위치
               const railStartZ = railZ - railLength/2;
               const railEndZ = railZ + railLength/2;
-              // 측면 뷰에서 X 위치 (뷰 방향에 따라 좌측 또는 우측 레일만 표시)
-              const railX = view2DDirection === 'left' ? railLeftX + 0.01 : railRightX - 0.01;
 
-              return (
+              // 양쪽 레일 모두 렌더링
+              const renderRailSide = (railX: number, name: string) => (
                 <>
                   {/* 레일 상단선 */}
                   <NativeLine
-                    name="drawer-rail-side-top"
+                    name={`${name}-top`}
                     points={[
                       [railX, railY + railHeight2D/2, railStartZ],
                       [railX, railY + railHeight2D/2, railEndZ]
@@ -479,7 +486,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   />
                   {/* 레일 하단선 */}
                   <NativeLine
-                    name="drawer-rail-side-bottom"
+                    name={`${name}-bottom`}
                     points={[
                       [railX, railY - railHeight2D/2, railStartZ],
                       [railX, railY - railHeight2D/2, railEndZ]
@@ -490,7 +497,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   />
                   {/* 레일 앞쪽 끝선 */}
                   <NativeLine
-                    name="drawer-rail-side-front"
+                    name={`${name}-front`}
                     points={[
                       [railX, railY - railHeight2D/2, railEndZ],
                       [railX, railY + railHeight2D/2, railEndZ]
@@ -501,7 +508,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   />
                   {/* 레일 뒤쪽 끝선 */}
                   <NativeLine
-                    name="drawer-rail-side-back"
+                    name={`${name}-back`}
                     points={[
                       [railX, railY - railHeight2D/2, railStartZ],
                       [railX, railY + railHeight2D/2, railStartZ]
@@ -512,43 +519,66 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
                   />
                 </>
               );
-            }
-
-            // 탑 뷰: 레일을 위에서 본 모습 (두 줄)
-            if (view2DDirection === 'top') {
-              const railStartZ = railZ - railLength/2;
-              const railEndZ = railZ + railLength/2;
-              const rail2DY = railY + 0.01;
 
               return (
                 <>
-                  {/* 좌측 레일 */}
-                  <NativeLine
-                    name="drawer-rail-top-left"
-                    points={[
-                      [railLeftX, rail2DY, railStartZ],
-                      [railLeftX, rail2DY, railEndZ]
-                    ]}
-                    color="#FFFFFF"
-                    lineWidth={1}
-                    dashed={false}
-                  />
-                  {/* 우측 레일 */}
-                  <NativeLine
-                    name="drawer-rail-top-right"
-                    points={[
-                      [railRightX, rail2DY, railStartZ],
-                      [railRightX, rail2DY, railEndZ]
-                    ]}
-                    color="#FFFFFF"
-                    lineWidth={1}
-                    dashed={false}
-                  />
+                  {renderRailSide(railLeftX, 'rail-left-side')}
+                  {renderRailSide(railRightX, 'rail-right-side')}
                 </>
               );
             }
 
-            return null;
+            // 탑 뷰 또는 기타 모든 경우: 레일 전체 길이 표시
+            // (탑뷰가 아니더라도 fallback으로 측면 스타일 렌더링)
+            const railStartZ = railZ - railLength/2;
+            const railEndZ = railZ + railLength/2;
+
+            return (
+              <>
+                {/* 좌측 레일 - 상단/하단 라인 */}
+                <NativeLine
+                  name="drawer-rail-left-top-line"
+                  points={[
+                    [railLeftX, railY + railHeight2D/2, railStartZ],
+                    [railLeftX, railY + railHeight2D/2, railEndZ]
+                  ]}
+                  color="#FFFFFF"
+                  lineWidth={1}
+                  dashed={false}
+                />
+                <NativeLine
+                  name="drawer-rail-left-bottom-line"
+                  points={[
+                    [railLeftX, railY - railHeight2D/2, railStartZ],
+                    [railLeftX, railY - railHeight2D/2, railEndZ]
+                  ]}
+                  color="#FFFFFF"
+                  lineWidth={1}
+                  dashed={false}
+                />
+                {/* 우측 레일 - 상단/하단 라인 */}
+                <NativeLine
+                  name="drawer-rail-right-top-line"
+                  points={[
+                    [railRightX, railY + railHeight2D/2, railStartZ],
+                    [railRightX, railY + railHeight2D/2, railEndZ]
+                  ]}
+                  color="#FFFFFF"
+                  lineWidth={1}
+                  dashed={false}
+                />
+                <NativeLine
+                  name="drawer-rail-right-bottom-line"
+                  points={[
+                    [railRightX, railY - railHeight2D/2, railStartZ],
+                    [railRightX, railY - railHeight2D/2, railEndZ]
+                  ]}
+                  color="#FFFFFF"
+                  lineWidth={1}
+                  dashed={false}
+                />
+              </>
+            );
           }
 
           // 3D 모드: DAE 모델 렌더링
