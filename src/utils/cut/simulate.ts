@@ -152,27 +152,21 @@ export function generateGuillotineCuts(
     }
   });
 
-  // span 병합 및 연속 span 확장
+  // span 병합 - 같은 위치의 모든 span을 하나로 합침 (기요틴 재단은 한 번에 전체 재단)
   positionMap.forEach((value) => {
-    // 겹치거나 인접한 span 병합
-    value.spans.sort((a, b) => a.start - b.start);
-    const merged: { start: number; end: number }[] = [];
+    if (value.spans.length === 0) return;
+
+    // 모든 span의 최소 시작점과 최대 끝점을 찾아 하나로 합침
+    let minStart = value.spans[0].start;
+    let maxEnd = value.spans[0].end;
 
     for (const span of value.spans) {
-      if (merged.length === 0) {
-        merged.push({ ...span });
-      } else {
-        const last = merged[merged.length - 1];
-        // 겹치거나 kerf 이내로 인접하면 병합
-        if (span.start <= last.end + kerf) {
-          last.end = Math.max(last.end, span.end);
-        } else {
-          merged.push({ ...span });
-        }
-      }
+      minStart = Math.min(minStart, span.start);
+      maxEnd = Math.max(maxEnd, span.end);
     }
 
-    value.spans = merged;
+    // 하나의 span으로 대체
+    value.spans = [{ start: minStart, end: maxEnd }];
   });
 
   // 우선순위에 따라 정렬
@@ -190,13 +184,12 @@ export function generateGuillotineCuts(
     return aVal.pos - bVal.pos;
   });
 
-  // 재단 생성
+  // 재단 생성 - 각 위치당 하나의 재단만 생성
   console.log(`  정렬된 위치 수: ${sortedEntries.length}`);
   for (const [key, value] of sortedEntries) {
-    console.log(`  처리: ${key} spans:${value.spans.length}`);
-    for (const span of value.spans) {
-      addCut(value.axis, value.pos, span.start, span.end);
-    }
+    const span = value.spans[0]; // 병합되어 하나만 존재
+    console.log(`  처리: ${key} span:${span.start.toFixed(1)}-${span.end.toFixed(1)}`);
+    addCut(value.axis, value.pos, span.start, span.end);
   }
 
   console.log(`  최종 재단 수: ${cuts.length}`);
