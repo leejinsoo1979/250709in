@@ -210,8 +210,14 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             rotated: p.rotated
           }));
 
-          // optimizationType 그대로 전달 (BY_LENGTH, BY_WIDTH)
-          const cutOptimizationType = currentSettings.optimizationType as 'BY_LENGTH' | 'BY_WIDTH';
+          // OPTIMAL_W -> BY_WIDTH, OPTIMAL_L/OPTIMAL_CNC -> BY_LENGTH 변환
+          let cutOptimizationType: 'BY_LENGTH' | 'BY_WIDTH';
+          if (currentSettings.optimizationType === 'OPTIMAL_W' || currentSettings.optimizationType === 'BY_WIDTH') {
+            cutOptimizationType = 'BY_WIDTH';
+          } else {
+            cutOptimizationType = 'BY_LENGTH';
+          }
+          console.log(`🔄 optimizationType 변환: ${currentSettings.optimizationType} -> ${cutOptimizationType}`);
 
           const guillotineCuts = generateGuillotineCuts(
             currentResult.stockPanel.width,
@@ -554,11 +560,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       let isPanelSeparated = false;
       let justSeparated = false;
 
-      // 시뮬레이션 중이거나 재단이 진행된 경우 패널 분리 체크
-      if (simulating || completedCuts.length > 0) {
-        if (cutSequence.length === 0) {
-          return; // Hide all panels if no cuts
-        }
+      // 시뮬레이션 중이고 재단이 진행된 경우에만 패널 분리 체크
+      // 시뮬레이션 전이거나 cutSequence가 없으면 모든 패널 표시
+      if (simulating && completedCuts.length > 0 && cutSequence.length > 0) {
 
         const kerf = settings.kerf || 5;
         const sheetW = result.stockPanel.width;
