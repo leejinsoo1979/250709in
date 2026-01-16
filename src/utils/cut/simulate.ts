@@ -166,6 +166,7 @@ export function deriveGuillotineForPanel(
  * Build sequence for a single panel (OPTIMAL_CNC mode)
  */
 export function buildSequenceForPanel(params: {
+  mode?: string;
   sheetW: number;
   sheetH: number;
   kerf: number;
