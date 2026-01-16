@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { OptimizedResult } from '../types';
 import { ZoomIn, ZoomOut, RotateCw, Home, Maximize, Ruler, Type, ALargeSmall, ChevronLeft, ChevronRight, Play, Pause, SkipBack, SkipForward, Circle } from 'lucide-react';
 import { useCNCStore } from '../store';
-import { buildSequenceForPanel, runSmoothSimulation } from '@/utils/cut/simulate';
+import { buildSequenceForPanel, generateGuillotineCuts, runSmoothSimulation } from '@/utils/cut/simulate';
 import type { CutStep } from '@/types/cutlist';
 import type { PanelBoringData, BoringType } from '@/domain/boring/types';
 import styles from './CuttingLayoutPreview2.module.css';
@@ -175,21 +175,48 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
       if (cuts.length === 0 && currentResult.panels.length > 0) {
         console.log('Generating cuts from result panels:', currentResult.panels.length);
-        let order = 0;
-        currentResult.panels.forEach((panel) => {
-          const panelCuts = buildSequenceForPanel({
-            mode: currentSettings.optimizationType === 'OPTIMAL_CNC' ? 'free' : 'guillotine',
-            sheetW: currentResult.stockPanel.width,
-            sheetH: currentResult.stockPanel.height,
-            kerf: currentSettings.kerf || 5,
-            placement: { x: panel.x, y: panel.y, width: panel.width, height: panel.height },
-            sheetId: '1',
-            panelId: panel.id
+
+        if (currentSettings.optimizationType === 'OPTIMAL_CNC') {
+          // Nesting/Free cut: 패널별로 따내기 방식
+          let order = 0;
+          currentResult.panels.forEach((panel) => {
+            const panelCuts = buildSequenceForPanel({
+              mode: 'free',
+              sheetW: currentResult.stockPanel.width,
+              sheetH: currentResult.stockPanel.height,
+              kerf: currentSettings.kerf || 5,
+              placement: { x: panel.x, y: panel.y, width: panel.width, height: panel.height },
+              sheetId: '1',
+              panelId: panel.id
+            });
+            panelCuts.forEach((cut, idx) => {
+              cuts.push({ ...cut, id: `gen_${panel.id}_${idx}`, globalOrder: ++order });
+            });
           });
-          panelCuts.forEach((cut, idx) => {
-            cuts.push({ ...cut, id: `gen_${panel.id}_${idx}`, globalOrder: ++order });
+        } else {
+          // BY_LENGTH / BY_WIDTH: 기요틴 재단 방식
+          // 전체 시트에서 고유한 재단 위치만 사용 (중복 없음)
+          const panelPlacements = currentResult.panels.map(p => ({
+            id: p.id,
+            x: p.x,
+            y: p.y,
+            width: p.width,
+            height: p.height,
+            rotated: p.rotated
+          }));
+
+          const guillotineCuts = generateGuillotineCuts(
+            currentResult.stockPanel.width,
+            currentResult.stockPanel.height,
+            panelPlacements,
+            currentSettings.kerf || 5,
+            currentSettings.optimizationType
+          );
+
+          guillotineCuts.forEach((cut, idx) => {
+            cuts.push({ ...cut, id: `guillotine_${idx}`, globalOrder: idx + 1, sheetId: '1' });
           });
-        });
+        }
       }
 
       if (cuts.length === 0) {
