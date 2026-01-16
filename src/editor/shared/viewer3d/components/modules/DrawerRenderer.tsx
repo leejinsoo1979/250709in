@@ -395,23 +395,23 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
-          // 우측 레일 (원본 모델) - 좌측 위치에 배치
-          const rightRail = railModel.clone();
-          // 좌측 레일 (X축 반전) - 우측 위치에 배치
+          // 좌측 레일 (X축 반전)
           const leftRail = railModel.clone();
           leftRail.scale.x *= -1;
+          // 우측 레일 (원본 모델)
+          const rightRail = railModel.clone();
 
           return (
             <>
               <primitive
                 key={`drawer-${drawerIndex}-rail-left`}
-                object={rightRail}
-                position={[railLeftX - offsetX, railY - offsetY, railZ - offsetZ]}
+                object={leftRail}
+                position={[railLeftX + offsetX, railY - offsetY, railZ - offsetZ]}
               />
               <primitive
                 key={`drawer-${drawerIndex}-rail-right`}
-                object={leftRail}
-                position={[railRightX + offsetX, railY - offsetY, railZ - offsetZ]}
+                object={rightRail}
+                position={[railRightX - offsetX, railY - offsetY, railZ - offsetZ]}
               />
             </>
           );
