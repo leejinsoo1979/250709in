@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { OptimizedResult } from '../types';
 import { ZoomIn, ZoomOut, RotateCw, Home, Maximize, Ruler, Type, ALargeSmall, ChevronLeft, ChevronRight, Play, Pause, SkipBack, SkipForward, Circle } from 'lucide-react';
 import { useCNCStore } from '../store';
@@ -104,26 +104,44 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   const [cutSequence, setCutSequence] = useState<CutStep[]>([]);
   const [currentCutIndex, setCurrentCutIndex] = useState(0);
   const cancelSimRef = useRef({ current: false });
-  const simulationStartedRef = useRef(false); // 시뮬레이션 시작 여부 추적
-  
-  // Generate cut sequence when panel is selected or for entire sheet simulation
+  const simulationStartedRef = useRef(false);
+  const prevSimulatingRef = useRef(false);
+
+  // 시뮬레이션 시작/중지를 simulating 상태 변화에만 반응하도록 처리
   useEffect(() => {
-    console.log('=== Simulation useEffect triggered ===', {
-      simulating,
-      selectedPanelId,
-      hasResult: !!result,
-      allCutStepsLength: allCutSteps?.length || 0,
-      sheetInfoCurrentIndex: sheetInfo?.currentIndex
-    });
+    const wasSimulating = prevSimulatingRef.current;
+    prevSimulatingRef.current = simulating;
 
-    // Full sheet simulation
-    if (simulating && !selectedPanelId && result) {
-      console.log('Full sheet simulation mode active');
+    // simulating이 false로 변경되면 중지
+    if (!simulating) {
+      if (simulationStartedRef.current) {
+        console.log('Stopping simulation');
+        cancelSimRef.current.current = true;
+        simulationStartedRef.current = false;
+        setCutSequence([]);
+        setCurrentCutIndex(0);
+      }
+      return;
+    }
 
-      if (!allCutSteps || allCutSteps.length === 0) {
-        console.log('ERROR: allCutSteps is empty or undefined, generating cuts from result...');
-        // 직접 생성 - allCutSteps가 없을 경우 대비
-        const generatedCuts: CutStep[] = [];
+    // simulating이 true로 변경되었고, 아직 시작하지 않았으면 시작
+    if (simulating && !wasSimulating && !simulationStartedRef.current) {
+      if (!result || selectedPanelId) {
+        console.log('Cannot start simulation: no result or panel selected');
+        setSimulating(false);
+        return;
+      }
+
+      let cuts: CutStep[] = [];
+
+      if (allCutSteps && allCutSteps.length > 0) {
+        const currentSheetNumber = (sheetInfo?.currentIndex ?? 0) + 1;
+        cuts = allCutSteps.filter(cut => cut.sheetNumber === currentSheetNumber);
+        console.log('Using allCutSteps:', cuts.length, 'cuts for sheet', currentSheetNumber);
+      }
+
+      if (cuts.length === 0 && result.panels.length > 0) {
+        console.log('Generating cuts from result panels');
         let order = 0;
         result.panels.forEach((panel) => {
           const panelCuts = buildSequenceForPanel({
@@ -131,137 +149,52 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             sheetW: result.stockPanel.width,
             sheetH: result.stockPanel.height,
             kerf: settings.kerf || 5,
-            placement: {
-              x: panel.x,
-              y: panel.y,
-              width: panel.width,
-              height: panel.height
-            },
+            placement: { x: panel.x, y: panel.y, width: panel.width, height: panel.height },
             sheetId: '1',
             panelId: panel.id
           });
           panelCuts.forEach((cut, idx) => {
-            generatedCuts.push({
-              ...cut,
-              id: `gen_${panel.id}_${idx}`,
-              globalOrder: ++order
-            });
+            cuts.push({ ...cut, id: `gen_${panel.id}_${idx}`, globalOrder: ++order });
           });
         });
+      }
 
-        if (generatedCuts.length > 0) {
-          console.log('Generated', generatedCuts.length, 'cuts from result');
-          setCutSequence(generatedCuts);
-          setCurrentCutIndex(0);
-        } else {
-          console.log('No cuts could be generated');
-          setSimulating(false);
-        }
+      if (cuts.length === 0) {
+        console.log('No cuts to simulate');
+        setSimulating(false);
         return;
       }
 
-      // Full sheet simulation - use all cut steps for current sheet
-      const currentSheetNumber = (sheetInfo?.currentIndex ?? 0) + 1;
-      const sheetCuts = allCutSteps.filter(cut =>
-        cut.sheetNumber === currentSheetNumber
-      );
-
-      console.log('Setting up simulation:', {
-        currentSheetNumber,
-        totalCuts: sheetCuts.length,
-        panelsInSheet: result.panels.length,
-        allCutStepsSheetNumbers: [...new Set(allCutSteps.map(c => c.sheetNumber))]
-      });
-
-      if (sheetCuts.length > 0) {
-        setCutSequence(sheetCuts);
-        setCurrentCutIndex(0);
-      } else {
-        console.log('No cuts found for sheet', currentSheetNumber);
-        setSimulating(false);
-      }
-    } else if (selectedPanelId && selectedSheetId && result) {
-      // Single panel simulation
-      const placement = placements.find(
-        p => p.panelId === selectedPanelId && p.sheetId === String(sheetInfo?.currentIndex + 1 || 1)
-      );
-      
-      if (placement) {
-        // Generate cut sequence
-        const sequence = buildSequenceForPanel({
-          mode: settings.optimizationType === 'OPTIMAL_CNC' ? 'free' : 'guillotine',
-          sheetW: result.stockPanel.width,
-          sheetH: result.stockPanel.height,
-          kerf: settings.kerf || 5,
-          placement: {
-            x: placement.x,
-            y: placement.y,
-            width: placement.width,
-            height: placement.height
-          },
-          sheetId: placement.sheetId,
-          panelId: placement.panelId
-        });
-        setCutSequence(sequence);
-        setCurrentCutIndex(0);
-      }
-    } else {
-      setCutSequence([]);
-      setCurrentCutIndex(0);
-    }
-  }, [selectedPanelId, selectedSheetId, result, placements, settings, sheetInfo, simulating, allCutSteps]);
-  
-  // Run simulation when simulating flag is set
-  useEffect(() => {
-    // 시뮬레이션이 꺼지면 리셋
-    if (!simulating) {
-      simulationStartedRef.current = false;
-      cancelSimRef.current.current = true;
-      return;
-    }
-
-    // 이미 시뮬레이션이 시작되었으면 다시 시작하지 않음
-    if (simulationStartedRef.current) {
-      return;
-    }
-
-    if (simulating && cutSequence.length > 0) {
-      // 시뮬레이션 시작 표시
+      // 시뮬레이션 시작
       simulationStartedRef.current = true;
-
-      // Reset to initial state
+      setCutSequence(cuts);
       setCurrentCutIndex(0);
 
-      // Cancel any existing simulation
+      // 기존 취소 ref 취소 및 새로 생성
       cancelSimRef.current.current = true;
-
-      // Create new cancel ref for this simulation
       const newCancelRef = { current: false };
       cancelSimRef.current = newCancelRef;
 
-      // Wait a frame to ensure clean state
-      setTimeout(() => {
-        if (newCancelRef.current) return; // 이미 취소되었으면 시작하지 않음
+      console.log('Starting simulation with', cuts.length, 'cuts');
 
-        console.log('Starting runSimulation with', cutSequence.length, 'cuts');
-        runSimulation(cutSequence, {
-          onTick: (i) => {
-            if (newCancelRef.current) return;
-            console.log('Simulation tick:', i, '/', cutSequence.length - 1);
-            setCurrentCutIndex(i);
-            selectCutIndex(i);
-          },
-          onDone: () => {
-            console.log('Simulation completed');
-            simulationStartedRef.current = false;
-            setSimulating(false);
-          },
-          speed: 0.5, // Moderate speed (2 seconds per cut)
-          cancelRef: newCancelRef
-        });
-      }, 100);
+      runSimulation(cuts, {
+        onTick: (i) => {
+          if (newCancelRef.current) return;
+          setCurrentCutIndex(i);
+          selectCutIndex(i);
+        },
+        onDone: () => {
+          console.log('Simulation completed');
+          simulationStartedRef.current = false;
+          setCutSequence([]);
+          setSimulating(false);
+        },
+        speed: simSpeed || 0.5,
+        cancelRef: newCancelRef
+      });
     }
-  }, [simulating, cutSequence, simSpeed, selectCutIndex, setSimulating]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [simulating]);
   
   // Handle ESC key to stop simulation
   useEffect(() => {
