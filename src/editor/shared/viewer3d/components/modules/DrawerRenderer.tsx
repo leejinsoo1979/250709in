@@ -422,7 +422,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
-          // 2D 모드: 3D와 동일한 모델, 흰색 재질
+          // 2D 모드: 투명한 흰색 + 아웃라인
           if (viewMode === '2D') {
             const leftRail = railModel.clone();
             leftRail.scale.x *= -1;
@@ -433,11 +433,17 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
               transparent: true,
               opacity: 0.3
             });
+            const lineMaterial = new THREE.LineBasicMaterial({ color: '#FFFFFF' });
 
             [leftRail, rightRail].forEach(rail => {
               rail.traverse((child) => {
-                if (child instanceof THREE.Mesh) {
+                if (child instanceof THREE.Mesh && child.geometry) {
                   child.material = whiteMaterial;
+
+                  // 아웃라인 추가
+                  const edges = new THREE.EdgesGeometry(child.geometry, 89);
+                  const line = new THREE.LineSegments(edges, lineMaterial);
+                  child.add(line);
                 }
               });
             });
