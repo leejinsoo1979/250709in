@@ -104,6 +104,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   const [cutSequence, setCutSequence] = useState<CutStep[]>([]);
   const [currentCutIndex, setCurrentCutIndex] = useState(0);
   const cancelSimRef = useRef({ current: false });
+  const simulationStartedRef = useRef(false); // 시뮬레이션 시작 여부 추적
   
   // Generate cut sequence when panel is selected or for entire sheet simulation
   useEffect(() => {
@@ -212,44 +213,54 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   
   // Run simulation when simulating flag is set
   useEffect(() => {
+    // 시뮬레이션이 꺼지면 리셋
+    if (!simulating) {
+      simulationStartedRef.current = false;
+      cancelSimRef.current.current = true;
+      return;
+    }
+
+    // 이미 시뮬레이션이 시작되었으면 다시 시작하지 않음
+    if (simulationStartedRef.current) {
+      return;
+    }
+
     if (simulating && cutSequence.length > 0) {
+      // 시뮬레이션 시작 표시
+      simulationStartedRef.current = true;
+
       // Reset to initial state
       setCurrentCutIndex(0);
-      
+
       // Cancel any existing simulation
-      if (cancelSimRef.current) {
-        cancelSimRef.current.current = true;
-      }
-      
+      cancelSimRef.current.current = true;
+
       // Create new cancel ref for this simulation
       const newCancelRef = { current: false };
       cancelSimRef.current = newCancelRef;
-      
+
       // Wait a frame to ensure clean state
-      requestAnimationFrame(() => {
-        // Start new simulation with faster speed
+      setTimeout(() => {
+        if (newCancelRef.current) return; // 이미 취소되었으면 시작하지 않음
+
         console.log('Starting runSimulation with', cutSequence.length, 'cuts');
-          runSimulation(cutSequence, {
+        runSimulation(cutSequence, {
           onTick: (i) => {
+            if (newCancelRef.current) return;
             console.log('Simulation tick:', i, '/', cutSequence.length - 1);
             setCurrentCutIndex(i);
             selectCutIndex(i);
           },
           onDone: () => {
             console.log('Simulation completed');
+            simulationStartedRef.current = false;
             setSimulating(false);
           },
           speed: 0.5, // Moderate speed (2 seconds per cut)
           cancelRef: newCancelRef
         });
-      });
-    } else if (!simulating && cancelSimRef.current) {
-      cancelSimRef.current.current = true;
+      }, 100);
     }
-    
-    return () => {
-      cancelSimRef.current.current = true;
-    };
   }, [simulating, cutSequence, simSpeed, selectCutIndex, setSimulating]);
   
   // Handle ESC key to stop simulation
