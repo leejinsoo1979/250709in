@@ -156,14 +156,16 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const currentSettings = settingsRef.current;
       const currentSimSpeed = simSpeedRef.current;
 
-      if (!currentResult || currentSelectedPanelId) {
-        console.log('Cannot start simulation: no result or panel selected', {
-          hasResult: !!currentResult,
-          selectedPanelId: currentSelectedPanelId
+      if (!currentResult) {
+        console.log('Cannot start simulation: no result', {
+          hasResult: !!currentResult
         });
         setSimulating(false);
         return;
       }
+
+      // 패널이 선택되어 있어도 전체 시트 시뮬레이션 가능
+      // selectedPanelId 체크 제거
 
       let cuts: CutStep[] = [];
 
