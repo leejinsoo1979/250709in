@@ -812,7 +812,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         const backPanelHeight = innerHeight + mmToThreeUnits(36);
         const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(17);
         const reinforcementHeight = mmToThreeUnits(60);
-        const reinforcementDepth = mmToThreeUnits(15.5);
+        const reinforcementDepth = mmToThreeUnits(15);
         const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
         return (

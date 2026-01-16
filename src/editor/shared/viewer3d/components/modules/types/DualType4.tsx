@@ -470,7 +470,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                 {/* 보강대 (각 섹션 백패널 상/하단) - 60mm 높이, 15.5mm 두께 - 2D 정면도에서는 숨김 */}
                 {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
                   const reinforcementHeight = mmToThreeUnits(60);
-                  const reinforcementDepth = mmToThreeUnits(15.5);
+                  const reinforcementDepth = mmToThreeUnits(15);
                   const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + lowerZOffset;
                   const upperBackPanelZ = -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + upperZOffset;
                   const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
@@ -541,7 +541,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
           {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
             const singleBackPanelHeight = innerHeight + mmToThreeUnits(36);
             const reinforcementHeight = mmToThreeUnits(60);
-            const reinforcementDepth = mmToThreeUnits(15.5);
+            const reinforcementDepth = mmToThreeUnits(15);
             const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(17);
             const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
