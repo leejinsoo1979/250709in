@@ -409,9 +409,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
 
         {/* === 서랍 레일 (좌/우) === */}
         {(() => {
-          // 서랍 측판 바로 바깥에 위치
-          const railLeftX = centerX - drawerWidth/2 + mmToThreeUnits(30);
-          const railRightX = centerX + drawerWidth/2 - mmToThreeUnits(30);
+          // 서랍 옆판과 레일 안쪽이 맞닿게 (안쪽으로 46mm 이동)
+          const railLeftX = centerX - drawerWidth/2 + mmToThreeUnits(76);
+          const railRightX = centerX + drawerWidth/2 - mmToThreeUnits(76);
           const railY = centerY - drawerHeight/2 + mmToThreeUnits(20);
           const railZ = drawerBodyCenterZ;
           const railLength = drawerBodyDepth - mmToThreeUnits(20); // 레일 길이
