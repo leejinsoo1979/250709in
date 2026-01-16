@@ -365,8 +365,10 @@ export const optimizePanelsMultiple = async (
   let bins: PackedBin[];
   
   
+  console.log('🎯 optimizer.ts optimizationType:', optimizationType);
+
   if (optimizationType === 'OPTIMAL_L' || optimizationType === 'BY_LENGTH') {
-    // L방향 우선: 세로 스트립
+    console.log('📍 BY_LENGTH selected → vertical strip');
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
@@ -376,7 +378,7 @@ export const optimizePanelsMultiple = async (
       'vertical'
     );
   } else if (optimizationType === 'OPTIMAL_W' || optimizationType === 'BY_WIDTH') {
-    // W방향 우선: 가로 스트립
+    console.log('📍 BY_WIDTH selected → horizontal strip');
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
