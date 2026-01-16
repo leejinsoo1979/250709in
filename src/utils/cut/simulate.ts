@@ -27,8 +27,9 @@ export function generateGuillotineCuts(
 
   if (panels.length === 0) return cuts;
 
-  // L방향 우선 = 세로 재단(x) 우선, W방향 우선 = 가로 재단(y) 우선
-  const preferVertical = optimizationType === 'BY_LENGTH';
+  // BY_LENGTH = L방향 우선 = 가로 재단(y축, 톱이 길이 방향으로 이동) 우선
+  // BY_WIDTH = W방향 우선 = 세로 재단(x축, 톱이 너비 방향으로 이동) 우선
+  const preferHorizontal = optimizationType === 'BY_LENGTH';
 
   // 이미 추가된 재단 위치 추적 (중복 방지)
   const addedCuts = new Set<string>();
@@ -58,7 +59,7 @@ export function generateGuillotineCuts(
       before: workpiece,
       result: workpiece,
       kerf,
-      label: axis === 'x' ? `L방향 재단 #${cuts.length + 1}` : `W방향 재단 #${cuts.length + 1}`,
+      label: axis === 'y' ? `L방향 재단 #${cuts.length + 1}` : `W방향 재단 #${cuts.length + 1}`,
       source: 'derived'
     });
   };
@@ -126,47 +127,8 @@ export function generateGuillotineCuts(
 
     let cutMade = false;
 
-    if (preferVertical) {
-      // 세로 재단 우선
-      if (uniqueVertical.length > 0 && !cutMade) {
-        // 가장 효과적인 재단 위치 선택 (중앙에 가까운 것)
-        const midX = (xStart + xEnd) / 2;
-        uniqueVertical.sort((a, b) => Math.abs(a - midX) - Math.abs(b - midX));
-        const cutX = uniqueVertical[0];
-
-        addCut('x', cutX, yStart, yEnd);
-
-        // 왼쪽 영역
-        const leftPanels = regionPanels.filter(p => p.x + p.width <= cutX + kerf);
-        divideRegion(xStart, yStart, cutX, yEnd, leftPanels);
-
-        // 오른쪽 영역
-        const rightPanels = regionPanels.filter(p => p.x >= cutX - kerf);
-        divideRegion(cutX, yStart, xEnd, yEnd, rightPanels);
-
-        cutMade = true;
-      }
-
-      // 세로 재단이 안 되면 가로 재단
-      if (uniqueHorizontal.length > 0 && !cutMade) {
-        const midY = (yStart + yEnd) / 2;
-        uniqueHorizontal.sort((a, b) => Math.abs(a - midY) - Math.abs(b - midY));
-        const cutY = uniqueHorizontal[0];
-
-        addCut('y', cutY, xStart, xEnd);
-
-        // 아래쪽 영역
-        const bottomPanels = regionPanels.filter(p => p.y + p.height <= cutY + kerf);
-        divideRegion(xStart, yStart, xEnd, cutY, bottomPanels);
-
-        // 위쪽 영역
-        const topPanels = regionPanels.filter(p => p.y >= cutY - kerf);
-        divideRegion(xStart, cutY, xEnd, yEnd, topPanels);
-
-        cutMade = true;
-      }
-    } else {
-      // 가로 재단 우선
+    if (preferHorizontal) {
+      // BY_LENGTH: L방향 우선 = 가로 재단(y축) 우선
       if (uniqueHorizontal.length > 0 && !cutMade) {
         const midY = (yStart + yEnd) / 2;
         uniqueHorizontal.sort((a, b) => Math.abs(a - midY) - Math.abs(b - midY));
@@ -203,6 +165,44 @@ export function generateGuillotineCuts(
 
         cutMade = true;
       }
+    } else {
+      // BY_WIDTH: W방향 우선 = 세로 재단(x축) 우선
+      if (uniqueVertical.length > 0 && !cutMade) {
+        const midX = (xStart + xEnd) / 2;
+        uniqueVertical.sort((a, b) => Math.abs(a - midX) - Math.abs(b - midX));
+        const cutX = uniqueVertical[0];
+
+        addCut('x', cutX, yStart, yEnd);
+
+        // 왼쪽 영역
+        const leftPanels = regionPanels.filter(p => p.x + p.width <= cutX + kerf);
+        divideRegion(xStart, yStart, cutX, yEnd, leftPanels);
+
+        // 오른쪽 영역
+        const rightPanels = regionPanels.filter(p => p.x >= cutX - kerf);
+        divideRegion(cutX, yStart, xEnd, yEnd, rightPanels);
+
+        cutMade = true;
+      }
+
+      // 세로 재단이 안 되면 가로 재단
+      if (uniqueHorizontal.length > 0 && !cutMade) {
+        const midY = (yStart + yEnd) / 2;
+        uniqueHorizontal.sort((a, b) => Math.abs(a - midY) - Math.abs(b - midY));
+        const cutY = uniqueHorizontal[0];
+
+        addCut('y', cutY, xStart, xEnd);
+
+        // 아래쪽 영역
+        const bottomPanels = regionPanels.filter(p => p.y + p.height <= cutY + kerf);
+        divideRegion(xStart, yStart, xEnd, cutY, bottomPanels);
+
+        // 위쪽 영역
+        const topPanels = regionPanels.filter(p => p.y >= cutY - kerf);
+        divideRegion(xStart, cutY, xEnd, yEnd, topPanels);
+
+        cutMade = true;
+      }
     }
   };
 
@@ -213,7 +213,7 @@ export function generateGuillotineCuts(
   cuts.forEach((cut, idx) => {
     cut.order = idx;
     cut.id = `cut-${idx}`;
-    cut.label = cut.axis === 'x' ? `L방향 재단 #${idx + 1}` : `W방향 재단 #${idx + 1}`;
+    cut.label = cut.axis === 'y' ? `L방향 재단 #${idx + 1}` : `W방향 재단 #${idx + 1}`;
   });
 
   return cuts;
