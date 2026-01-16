@@ -422,45 +422,28 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
-          // 2D 모드: 3D 모델 클론 후 엣지만 추출
+          // 2D 모드: mesh 숨기고 edges만 표시
           if (viewMode === '2D') {
-            // 3D 모델을 그대로 클론
             const leftRail = railModel.clone();
             leftRail.scale.x *= -1;
             const rightRail = railModel.clone();
 
-            // 각 mesh를 LineSegments로 교체
             const lineMaterial = new THREE.LineBasicMaterial({ color: '#FFFFFF' });
 
-            const convertToEdges = (group: THREE.Group) => {
-              const meshesToRemove: THREE.Mesh[] = [];
-              const linesToAdd: THREE.LineSegments[] = [];
-
-              group.traverse((child) => {
+            // mesh를 숨기고 같은 위치에 edges 추가
+            [leftRail, rightRail].forEach(rail => {
+              rail.traverse((child) => {
                 if (child instanceof THREE.Mesh && child.geometry) {
+                  // mesh 숨기기
+                  child.visible = false;
+
+                  // edges 생성 및 mesh의 자식으로 추가 (동일 위치)
                   const edges = new THREE.EdgesGeometry(child.geometry, 30);
                   const line = new THREE.LineSegments(edges, lineMaterial);
-
-                  // 월드 매트릭스 적용
-                  child.updateWorldMatrix(true, false);
-                  line.applyMatrix4(child.matrixWorld);
-
-                  linesToAdd.push(line);
-                  meshesToRemove.push(child);
+                  child.add(line);
                 }
               });
-
-              // mesh 제거하고 line 추가
-              meshesToRemove.forEach(mesh => {
-                if (mesh.parent) mesh.parent.remove(mesh);
-              });
-              linesToAdd.forEach(line => group.add(line));
-            };
-
-            convertToEdges(leftRail);
-            convertToEdges(rightRail);
-
-            console.log('🔧 2D 레일 엣지:', { leftRail, rightRail });
+            });
 
             return (
               <>
