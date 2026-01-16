@@ -77,8 +77,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
       const scene = collada.scene;
 
       // DAE 단위: inch (0.0254m)
-      // inch → Three.js units: inch * 25.4 * 0.01 = inch * 0.254
-      const scale = 0.00254; // 더 작게 조정
+      // inch → mm: * 25.4, mm → Three.js: * 0.01
+      // 총: inch * 0.254
+      const scale = 0.01; // 스케일 키움
       scene.scale.set(scale, scale, scale);
 
       // Z-UP → Y-UP 좌표계 변환
