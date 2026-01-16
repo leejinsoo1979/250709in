@@ -368,17 +368,9 @@ export const optimizePanelsMultiple = async (
   console.log('🎯 optimizer.ts optimizationType:', optimizationType);
 
   if (optimizationType === 'OPTIMAL_L' || optimizationType === 'BY_LENGTH') {
-    console.log('📍 BY_LENGTH selected → vertical strip');
-    bins = packGuillotine(
-      rectangles,
-      stockPanel.width,
-      stockPanel.height,
-      kerf,
-      maxSheets,
-      'vertical'
-    );
-  } else if (optimizationType === 'OPTIMAL_W' || optimizationType === 'BY_WIDTH') {
-    console.log('📍 BY_WIDTH selected → horizontal strip');
+    // L방향 우선: L방향(height=2440)을 따라 먼저 자름
+    // → strip이 Y축(height) 방향으로 쌓임 → horizontal=true
+    console.log('📍 BY_LENGTH selected → horizontal strip');
     bins = packGuillotine(
       rectangles,
       stockPanel.width,
@@ -386,6 +378,18 @@ export const optimizePanelsMultiple = async (
       kerf,
       maxSheets,
       'horizontal'
+    );
+  } else if (optimizationType === 'OPTIMAL_W' || optimizationType === 'BY_WIDTH') {
+    // W방향 우선: W방향(width=1220)을 따라 먼저 자름
+    // → strip이 X축(width) 방향으로 쌓임 → horizontal=false
+    console.log('📍 BY_WIDTH selected → vertical strip');
+    bins = packGuillotine(
+      rectangles,
+      stockPanel.width,
+      stockPanel.height,
+      kerf,
+      maxSheets,
+      'vertical'
     );
   } else {
     // OPTIMAL_CNC는 개선된 MaxRects 알고리즘 사용
