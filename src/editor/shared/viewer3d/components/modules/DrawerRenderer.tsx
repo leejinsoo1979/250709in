@@ -376,38 +376,37 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* === 서랍 레일 (좌/우) === */}
-        {/* 서랍 측판(38mm 안쪽)과 서랍속장 사이 공간에 위치 */}
+        {/* 레일 모델 내부 오프셋 보정: drawer.dae에서 레일이 X=20.6mm에 있었음 */}
         {railModel && (() => {
-          // 서랍 좌측판 외측: centerX - drawerWidth/2 + 38mm
-          // 서랍속장 내측: 약 45mm from innerWidth edge
-          // 레일은 서랍 측판 바로 바깥에 위치
-          const railLeftX = centerX - drawerWidth/2 + mmToThreeUnits(35);
-          const railRightX = centerX + drawerWidth/2 - mmToThreeUnits(35);
+          const railModelOffset = mmToThreeUnits(20.6); // 레일 DAE 내부 X 오프셋
+
+          // 서랍 측판 바깥쪽에 레일 위치 (측판은 38mm 안쪽)
+          const railLeftX = centerX - drawerWidth/2 + mmToThreeUnits(35) - railModelOffset;
+          const railRightX = centerX + drawerWidth/2 - mmToThreeUnits(35) + railModelOffset;
           const railY = centerY - drawerHeight/2 + mmToThreeUnits(15);
           const railZ = drawerBodyCenterZ;
 
-          console.log(`🔧 서랍${drawerIndex} 레일 위치:`, {
-            drawerWidth: drawerWidth * 100,
-            centerX,
-            railLeftX: railLeftX * 100,
-            railRightX: railRightX * 100,
-            railY: railY * 100,
-            railZ: railZ * 100
+          console.log(`🔧 서랍${drawerIndex} 레일:`, {
+            drawerWidth_mm: drawerWidth * 100,
+            railLeftX_mm: railLeftX * 100,
+            railRightX_mm: railRightX * 100
           });
 
-          const leftRail = railModel.clone();
-          leftRail.scale.x *= -1;
+          // 좌측 레일: 원본 모델 사용 (drawer.dae가 좌측용)
+          // 우측 레일: X축 반전
+          const rightRail = railModel.clone();
+          rightRail.scale.x *= -1;
 
           return (
             <>
               <primitive
                 key={`drawer-${drawerIndex}-rail-left`}
-                object={leftRail}
+                object={railModel.clone()}
                 position={[railLeftX, railY, railZ]}
               />
               <primitive
                 key={`drawer-${drawerIndex}-rail-right`}
-                object={railModel.clone()}
+                object={rightRail}
                 position={[railRightX, railY, railZ]}
               />
             </>
