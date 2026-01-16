@@ -47,19 +47,8 @@ function PageInner(){
   // Configurator에서 왔는지 확인
   const fromConfigurator = location.state?.fromConfigurator;
 
-  // Configurator에서 온 경우 localStorage 초기화하여 새로운 패널 데이터 로드
+  // Configurator에서 온 경우 localStorage 초기화 ref
   const hasResetForConfigurator = useRef(false);
-  useEffect(() => {
-    if (fromConfigurator && placedModules.length > 0 && !hasResetForConfigurator.current) {
-      console.log('🔄 Configurator에서 진입 - localStorage 초기화');
-      localStorage.removeItem('cnc_panels');
-      localStorage.removeItem('cnc_user_modified');
-      setUserHasModifiedPanels(false);
-      hasResetForConfigurator.current = true;
-      // 페이지 리로드하여 깨끗한 상태로 시작 (선택적)
-      // window.location.reload();
-    }
-  }, [fromConfigurator, placedModules.length, setUserHasModifiedPanels]);
 
   // 디버그: 데이터 소스 확인
   useEffect(() => {
@@ -167,7 +156,18 @@ function PageInner(){
     selectedCutId, selectCutId, setSelectedSheetId,
     sawStats, setSawStats
   } = useCNCStore();
-  
+
+  // Configurator에서 온 경우 localStorage 초기화하여 새로운 패널 데이터 로드
+  useEffect(() => {
+    if (fromConfigurator && placedModules.length > 0 && !hasResetForConfigurator.current) {
+      console.log('🔄 Configurator에서 진입 - localStorage 초기화');
+      localStorage.removeItem('cnc_panels');
+      localStorage.removeItem('cnc_user_modified');
+      setUserHasModifiedPanels(false);
+      hasResetForConfigurator.current = true;
+    }
+  }, [fromConfigurator, placedModules.length, setUserHasModifiedPanels]);
+
   const [optimizationResults, setOptimizationResults] = useState<OptimizedResult[]>([]);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const optimizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
