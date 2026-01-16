@@ -416,44 +416,139 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const railZ = drawerBodyCenterZ;
           const railLength = drawerBodyDepth - mmToThreeUnits(20); // 레일 길이
 
-          // 2D 모드: 흰색 선으로 렌더링 (정면 뷰에서 보이도록 앞쪽에 배치)
+          // 2D 모드: 뷰 방향에 따라 다르게 렌더링
           if (viewMode === '2D') {
-            // 정면 뷰에서 레일을 보여주기 위해 손잡이 앞쪽에 배치
-            const rail2DZ = centerZ + actualDrawerDepth/2 + 0.01; // 마이다 앞에 배치
             const railHeight2D = mmToThreeUnits(15);
+            const railThickness = mmToThreeUnits(3);
 
-            return (
-              <>
-                {/* 좌측 레일 - 정면에서 작은 직사각형으로 표시 */}
-                <NativeLine
-                  name="drawer-rail-left-2d"
-                  points={[
-                    [railLeftX - mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ],
-                    [railLeftX + mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ],
-                    [railLeftX + mmToThreeUnits(1.5), railY + railHeight2D/2, rail2DZ],
-                    [railLeftX - mmToThreeUnits(1.5), railY + railHeight2D/2, rail2DZ],
-                    [railLeftX - mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ]
-                  ]}
-                  color="#FFFFFF"
-                  lineWidth={1}
-                  dashed={false}
-                />
-                {/* 우측 레일 - 정면에서 작은 직사각형으로 표시 */}
-                <NativeLine
-                  name="drawer-rail-right-2d"
-                  points={[
-                    [railRightX - mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ],
-                    [railRightX + mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ],
-                    [railRightX + mmToThreeUnits(1.5), railY + railHeight2D/2, rail2DZ],
-                    [railRightX - mmToThreeUnits(1.5), railY + railHeight2D/2, rail2DZ],
-                    [railRightX - mmToThreeUnits(1.5), railY - railHeight2D/2, rail2DZ]
-                  ]}
-                  color="#FFFFFF"
-                  lineWidth={1}
-                  dashed={false}
-                />
-              </>
-            );
+            // 정면 뷰: 레일 단면 (작은 사각형)
+            if (view2DDirection === 'front') {
+              const rail2DZ = centerZ + actualDrawerDepth/2 + 0.01;
+              return (
+                <>
+                  <NativeLine
+                    name="drawer-rail-left-2d"
+                    points={[
+                      [railLeftX - railThickness/2, railY - railHeight2D/2, rail2DZ],
+                      [railLeftX + railThickness/2, railY - railHeight2D/2, rail2DZ],
+                      [railLeftX + railThickness/2, railY + railHeight2D/2, rail2DZ],
+                      [railLeftX - railThickness/2, railY + railHeight2D/2, rail2DZ],
+                      [railLeftX - railThickness/2, railY - railHeight2D/2, rail2DZ]
+                    ]}
+                    color="#FFFFFF"
+                    lineWidth={1}
+                    dashed={false}
+                  />
+                  <NativeLine
+                    name="drawer-rail-right-2d"
+                    points={[
+                      [railRightX - railThickness/2, railY - railHeight2D/2, rail2DZ],
+                      [railRightX + railThickness/2, railY - railHeight2D/2, rail2DZ],
+                      [railRightX + railThickness/2, railY + railHeight2D/2, rail2DZ],
+                      [railRightX - railThickness/2, railY + railHeight2D/2, rail2DZ],
+                      [railRightX - railThickness/2, railY - railHeight2D/2, rail2DZ]
+                    ]}
+                    color="#FFFFFF"
+                    lineWidth={1}
+                    dashed={false}
+                  />
+                </>
+              );
+            }
+
+            // 측면 뷰 (left/right): 레일 전체 길이 표시
+            if (view2DDirection === 'left' || view2DDirection === 'right') {
+              // 레일 시작/끝 Z 위치
+              const railStartZ = railZ - railLength/2;
+              const railEndZ = railZ + railLength/2;
+              // 측면 뷰에서 X 위치 (뷰 방향에 따라 좌측 또는 우측 레일만 표시)
+              const railX = view2DDirection === 'left' ? railLeftX + 0.01 : railRightX - 0.01;
+
+              return (
+                <>
+                  {/* 레일 상단선 */}
+                  <NativeLine
+                    name="drawer-rail-side-top"
+                    points={[
+                      [railX, railY + railHeight2D/2, railStartZ],
+                      [railX, railY + railHeight2D/2, railEndZ]
+                    ]}
+                    color="#FFFFFF"
+                    lineWidth={1}
+                    dashed={false}
+                  />
+                  {/* 레일 하단선 */}
+                  <NativeLine
+                    name="drawer-rail-side-bottom"
+                    points={[
+                      [railX, railY - railHeight2D/2, railStartZ],
+                      [railX, railY - railHeight2D/2, railEndZ]
+                    ]}
+                    color="#FFFFFF"
+                    lineWidth={1}
+                    dashed={false}
+                  />
+                  {/* 레일 앞쪽 끝선 */}
+                  <NativeLine
+                    name="drawer-rail-side-front"
+                    points={[
+                      [railX, railY - railHeight2D/2, railEndZ],
+                      [railX, railY + railHeight2D/2, railEndZ]
+                    ]}
+                    color="#FFFFFF"
+                    lineWidth={1}
+                    dashed={false}
+                  />
+                  {/* 레일 뒤쪽 끝선 */}
+                  <NativeLine
+                    name="drawer-rail-side-back"
+                    points={[
+                      [railX, railY - railHeight2D/2, railStartZ],
+                      [railX, railY + railHeight2D/2, railStartZ]
+                    ]}
+                    color="#FFFFFF"
+                    lineWidth={1}
+                    dashed={false}
+                  />
+                </>
+              );
+            }
+
+            // 탑 뷰: 레일을 위에서 본 모습 (두 줄)
+            if (view2DDirection === 'top') {
+              const railStartZ = railZ - railLength/2;
+              const railEndZ = railZ + railLength/2;
+              const rail2DY = railY + 0.01;
+
+              return (
+                <>
+                  {/* 좌측 레일 */}
+                  <NativeLine
+                    name="drawer-rail-top-left"
+                    points={[
+                      [railLeftX, rail2DY, railStartZ],
+                      [railLeftX, rail2DY, railEndZ]
+                    ]}
+                    color="#FFFFFF"
+                    lineWidth={1}
+                    dashed={false}
+                  />
+                  {/* 우측 레일 */}
+                  <NativeLine
+                    name="drawer-rail-top-right"
+                    points={[
+                      [railRightX, rail2DY, railStartZ],
+                      [railRightX, rail2DY, railEndZ]
+                    ]}
+                    color="#FFFFFF"
+                    lineWidth={1}
+                    dashed={false}
+                  />
+                </>
+              );
+            }
+
+            return null;
           }
 
           // 3D 모드: DAE 모델 렌더링
