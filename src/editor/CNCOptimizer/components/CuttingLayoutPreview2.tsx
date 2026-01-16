@@ -210,8 +210,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             rotated: p.rotated
           }));
 
-          // OPTIMAL_L → BY_LENGTH, OPTIMAL_W → BY_WIDTH 변환
-          const cutOptimizationType = currentSettings.optimizationType === 'OPTIMAL_W' ? 'BY_WIDTH' : 'BY_LENGTH';
+          // optimizationType 그대로 전달 (BY_LENGTH, BY_WIDTH)
+          const cutOptimizationType = currentSettings.optimizationType as 'BY_LENGTH' | 'BY_WIDTH';
 
           const guillotineCuts = generateGuillotineCuts(
             currentResult.stockPanel.width,
@@ -233,17 +233,23 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         return;
       }
 
-      // 중복 재단 체크
-      const posCheck = new Map<string, number>();
+      // 중복 재단 제거 (같은 axis-pos-spanStart-spanEnd 조합은 한 번만)
+      const uniqueCuts: typeof cuts = [];
+      const seenPositions = new Set<string>();
+
       cuts.forEach(cut => {
-        const key = `${cut.axis}-${Math.round(cut.pos)}`;
-        posCheck.set(key, (posCheck.get(key) || 0) + 1);
+        const key = `${cut.axis}-${Math.round(cut.pos)}-${Math.round(cut.spanStart || 0)}-${Math.round(cut.spanEnd || 0)}`;
+        if (!seenPositions.has(key)) {
+          seenPositions.add(key);
+          uniqueCuts.push(cut);
+        }
       });
-      const duplicates = Array.from(posCheck.entries()).filter(([, count]) => count > 1);
-      if (duplicates.length > 0) {
-        console.warn('⚠️ CuttingLayoutPreview2 - 중복 재단 발견:', duplicates);
-        console.log('전체 재단 목록:', cuts.map(c => `${c.axis}-${Math.round(c.pos)}`));
+
+      if (uniqueCuts.length !== cuts.length) {
+        console.log(`🔧 중복 재단 제거: ${cuts.length} → ${uniqueCuts.length}`);
       }
+
+      cuts = uniqueCuts;
 
       // 시뮬레이션 시작
       simulationStartedRef.current = true;
@@ -257,7 +263,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const newCancelRef = { current: false };
       cancelSimRef.current = newCancelRef;
 
-      console.log('Starting smooth simulation with', cuts.length, 'cuts, unique positions:', posCheck.size);
+      console.log('Starting smooth simulation with', cuts.length, 'cuts, unique positions:', seenPositions.size);
 
       // 톱날 속도: mm/s (속도 조절 가능)
       const sawSpeed = (currentSimSpeed || 1) * 2000; // 기본 2000mm/s, 속도 배율 적용

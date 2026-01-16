@@ -194,35 +194,51 @@ export function generateGuillotineCuts(
     const stripStart = stripBoundaries[i];
     const stripEnd = stripBoundaries[i + 1];
 
-    // 이 스트립에 속한 패널들
+    // 이 스트립에 속한 패널들 (경계 포함)
     const stripPanels = panels.filter(p => {
       if (primaryAxis === 'x') {
-        // 세로 스트립: 패널의 x가 stripStart 이상, x+width가 stripEnd 이하
-        return Math.round(p.x) >= stripStart && Math.round(p.x + p.width) <= stripEnd;
+        // 세로 스트립: 패널이 이 스트립 범위 내에 있음
+        const pLeft = Math.round(p.x);
+        const pRight = Math.round(p.x + p.width);
+        return pLeft >= stripStart && pRight <= stripEnd;
       } else {
-        // 가로 스트립: 패널의 y가 stripStart 이상, y+height가 stripEnd 이하
-        return Math.round(p.y) >= stripStart && Math.round(p.y + p.height) <= stripEnd;
+        // 가로 스트립: 패널이 이 스트립 범위 내에 있음
+        const pTop = Math.round(p.y);
+        const pBottom = Math.round(p.y + p.height);
+        return pTop >= stripStart && pBottom <= stripEnd;
       }
     });
 
+    console.log(`  스트립 ${i}: [${stripStart}-${stripEnd}], 패널 ${stripPanels.length}개`);
+
     if (stripPanels.length <= 1) continue;
 
-    // 2차 방향 재단 위치 수집
+    // 2차 방향 재단 위치 수집 (패널 경계)
     const secondaryPositions = new Set<number>();
     stripPanels.forEach(p => {
       if (secondaryAxis === 'y') {
+        // 가로선 위치 (패널의 상하 경계)
         secondaryPositions.add(Math.round(p.y));
         secondaryPositions.add(Math.round(p.y + p.height));
       } else {
+        // 세로선 위치 (패널의 좌우 경계)
         secondaryPositions.add(Math.round(p.x));
         secondaryPositions.add(Math.round(p.x + p.width));
       }
     });
 
     const stripMax = secondaryAxis === 'y' ? sheetH : sheetW;
+
+    // 스트립 내 패널을 관통하지 않는 위치만 필터링
     const validSecondaryPositions = Array.from(secondaryPositions)
-      .filter(pos => pos > 0 && pos < stripMax && canCutAt(pos, secondaryAxis, stripPanels))
+      .filter(pos => {
+        if (pos <= 0 || pos >= stripMax) return false;
+        // 이 위치가 스트립 내 패널을 관통하지 않는지 확인
+        return canCutAt(pos, secondaryAxis, stripPanels);
+      })
       .sort((a, b) => a - b);
+
+    console.log(`    2차 재단 위치(${secondaryAxis}): [${validSecondaryPositions.join(', ')}]`);
 
     // 2차 재단선 추가 (스트립 범위 내에서만)
     validSecondaryPositions.forEach(pos => {
