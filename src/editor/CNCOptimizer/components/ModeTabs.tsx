@@ -44,7 +44,7 @@ export default function ModeTabs({ onModeChange }: ModeTabsProps = {}){
           ) : (
             <>
               <Cpu size={14} />
-              Nesting
+              CNC Optimizer
             </>
           )}
         </button>
