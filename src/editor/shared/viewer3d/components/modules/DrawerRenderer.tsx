@@ -423,9 +423,9 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const leftSidePanelInnerEdge = centerX - drawerWidth/2 + drawerSidePanelOffset + DRAWER_SIDE_THICKNESS;
           const rightSidePanelInnerEdge = centerX + drawerWidth/2 - drawerSidePanelOffset - DRAWER_SIDE_THICKNESS;
 
-          // 레일 위치 = 서랍 옆판 안쪽 가장자리 + 추가 오프셋
-          const railLeftX = leftSidePanelInnerEdge + railAdditionalOffset;
-          const railRightX = rightSidePanelInnerEdge - railAdditionalOffset;
+          // 레일 위치 = 서랍 옆판 안쪽 가장자리 + 추가 오프셋 + 0.5mm 안쪽 이동
+          const railLeftX = leftSidePanelInnerEdge + railAdditionalOffset + mmToThreeUnits(0.5);
+          const railRightX = rightSidePanelInnerEdge - railAdditionalOffset - mmToThreeUnits(0.5);
           const railY = centerY - drawerHeight/2 + mmToThreeUnits(25.5);
           const railZ = drawerBodyCenterZ - mmToThreeUnits(8); // 백패널 방향으로 8mm 이동
           const railLength = drawerBodyDepth - mmToThreeUnits(20); // 레일 길이
@@ -562,7 +562,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-left-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness/2 + mmToThreeUnits(0.5), 0, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -582,7 +582,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-right-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness/2 - mmToThreeUnits(0.5), 0, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -751,7 +751,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-left-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[-innerWidth/2 + horizontalPanelWidth + drawerFrameThickness/2 + mmToThreeUnits(0.5), 0, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
@@ -771,7 +771,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             <BoxWithEdges
               key={`drawer-frame-right-vertical-${mat.uuid}`}
               args={[drawerFrameThickness, drawerFrameHeight, verticalPanelDepth]}
-              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness/2, 0, verticalPanelZ]}
+              position={[innerWidth/2 - horizontalPanelWidth - drawerFrameThickness/2 - mmToThreeUnits(0.5), 0, verticalPanelZ]}
               material={mat}
               renderMode={renderMode}
               isHighlighted={isHighlighted}
