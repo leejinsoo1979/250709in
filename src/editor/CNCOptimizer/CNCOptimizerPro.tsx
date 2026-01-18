@@ -22,6 +22,7 @@ import SheetThumbnail from './components/SheetThumbnail';
 import ModeTabs from './components/ModeTabs';
 import AILoadingModal from './components/AILoadingModal';
 import ExitConfirmModal from './components/ExitConfirmModal';
+import SimulationStatsModal from './components/SimulationStatsModal';
 
 // Utils
 import { optimizePanelsMultiple } from './utils/optimizer';
@@ -1581,41 +1582,11 @@ function PageInner(){
       />
       
       {/* Simulation Stats Modal */}
-      {showSimulationStats && simulationStatsData && (
-        <div className={styles.modalOverlay} onClick={() => setShowSimulationStats(false)}>
-          <div className={styles.simulationStatsModal} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.simulationStatsHeader}>
-              <h3>🎉 시뮬레이션 완료</h3>
-            </div>
-            <div className={styles.simulationStatsContent}>
-              <div className={styles.statItem}>
-                <span className={styles.statLabel}>시트 수</span>
-                <span className={styles.statValue}>{simulationStatsData.sheetCount}장</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statLabel}>패널 수</span>
-                <span className={styles.statValue}>{simulationStatsData.totalPanels}개</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statLabel}>총 재단 길이</span>
-                <span className={styles.statValue}>{simulationStatsData.totalCutLength.toFixed(2)}m</span>
-              </div>
-              <div className={styles.statItem}>
-                <span className={styles.statLabel}>평균 효율</span>
-                <span className={styles.statValue}>{simulationStatsData.avgEfficiency.toFixed(1)}%</span>
-              </div>
-            </div>
-            <div className={styles.simulationStatsFooter}>
-              <button
-                className={styles.simulationStatsCloseBtn}
-                onClick={() => setShowSimulationStats(false)}
-              >
-                확인
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <SimulationStatsModal
+        isOpen={showSimulationStats && simulationStatsData !== null}
+        onClose={() => setShowSimulationStats(false)}
+        stats={simulationStatsData || { sheetCount: 0, totalPanels: 0, totalCutLength: 0, avgEfficiency: 0 }}
+      />
 
       {/* Exit Confirmation Modal */}
       <ExitConfirmModal
