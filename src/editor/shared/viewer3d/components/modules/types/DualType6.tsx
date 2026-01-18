@@ -535,7 +535,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         {hasSharedMiddlePanel && middlePanelHeight > 0 && (
           <>
             <BoxWithEdges
-              args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+              args={[innerWidth - mmToThreeUnits(1), basicThickness, adjustedDepthForShelves - basicThickness]}
               position={[0, -height/2 + basicThickness + mmToThreeUnits(middlePanelHeight - 9), basicThickness/2 + shelfZOffset]}
               material={material}
               renderMode={useSpace3DView().renderMode}
@@ -596,7 +596,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         {hasSharedSafetyShelf && safetyShelfHeight > 0 && (
           <>
             <BoxWithEdges
-              args={[innerWidth, basicThickness, adjustedDepthForShelves - basicThickness]}
+              args={[innerWidth - mmToThreeUnits(1), basicThickness, adjustedDepthForShelves - basicThickness]}
               position={[0, -height/2 + basicThickness + mmToThreeUnits(safetyShelfHeight), basicThickness/2 + shelfZOffset]}
               material={material}
               renderMode={useSpace3DView().renderMode}
@@ -730,7 +730,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
       
       {/* 상단 판재 - 통합 (상단 옷장이 좌우 연결되어 있음), 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, depth - mmToThreeUnits(26)]}
+        args={[innerWidth - mmToThreeUnits(1), basicThickness, depth - mmToThreeUnits(26)]}
         position={[0, height/2 - basicThickness/2, mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}

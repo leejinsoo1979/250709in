@@ -274,9 +274,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
                   return (
                     <>
-                      {/* 하부 섹션 상판 - 하부 섹션 깊이 적용 + 사용자 오프셋 (앞에서 줄어듦) + 뒤에서 26mm 줄임 */}
+                      {/* 하부 섹션 상판 - 하부 섹션 깊이 적용 + 사용자 오프셋 (앞에서 줄어듦) + 뒤에서 26mm 줄임, 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, lowerDepth - mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0)]}
+                        args={[innerWidth - mmToThreeUnits(1), basicThickness, lowerDepth - mmToThreeUnits(26) - mmToThreeUnits(lowerSectionTopOffset || 0)]}
                         position={[0, lowerTopPanelY, lowerZOffset + mmToThreeUnits(13) - mmToThreeUnits(lowerSectionTopOffset || 0) / 2]}
                         material={material}
                         renderMode={renderMode}
@@ -289,9 +289,9 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
                         textureUrl={spaceInfo.materialConfig?.doorTexture}
                       />
 
-                      {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 + 뒤에서 26mm 줄임 */}
+                      {/* 상부 섹션 바닥판 - 상부 섹션 깊이 적용 + 뒤에서 26mm 줄임, 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, upperDepth - mmToThreeUnits(26)]}
+                        args={[innerWidth - mmToThreeUnits(1), basicThickness, upperDepth - mmToThreeUnits(26)]}
                         position={[0, middlePanelY + basicThickness, upperZOffset + mmToThreeUnits(13)]}
                         material={material}
                         renderMode={renderMode}
@@ -557,7 +557,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
         return (
           <BoxWithEdges
-            args={[innerWidth, basicThickness, topPanelDepth - backReduction]}
+            args={[innerWidth - mmToThreeUnits(1), basicThickness, topPanelDepth - backReduction]}
             position={[0, height/2 - basicThickness/2, topPanelZOffset]}
             material={material}
             renderMode={renderMode}
@@ -582,7 +582,7 @@ const SingleType2: React.FC<FurnitureTypeProps> = ({
 
         return (
           <BoxWithEdges
-            args={[innerWidth, basicThickness, bottomPanelDepth - backReduction]}
+            args={[innerWidth - mmToThreeUnits(1), basicThickness, bottomPanelDepth - backReduction]}
             position={[0, -height/2 + basicThickness/2, bottomPanelZOffset]}
             material={material}
             renderMode={renderMode}

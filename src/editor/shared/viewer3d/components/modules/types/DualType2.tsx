@@ -214,7 +214,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
 
                   return (
                     <BoxWithEdges
-                      args={[innerWidth, basicThickness, reducedDepth]}
+                      args={[innerWidth - mmToThreeUnits(1), basicThickness, reducedDepth]}
                       position={[0, lowerTopPanelY, reducedZPosition]}
                       material={material}
                       renderMode={renderMode}
@@ -249,9 +249,9 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
 
                   return (
                     <>
-                      {/* 상부 섹션 바닥판 */}
+                      {/* 상부 섹션 바닥판 - 좌우 각 0.5mm씩 줄임 */}
                       <BoxWithEdges
-                        args={[innerWidth, basicThickness, reducedDepth]}
+                        args={[innerWidth - mmToThreeUnits(1), basicThickness, reducedDepth]}
                         position={[0, lowerTopPanelY + basicThickness, reducedZPosition]}
                         material={material}
                         renderMode={renderMode}
@@ -299,9 +299,9 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         </>
       )}
       
-      {/* 상단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
+      {/* 상단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, (sectionDepths && sectionDepths[1] ? sectionDepths[1] : depth) - mmToThreeUnits(26)]}
+        args={[innerWidth - mmToThreeUnits(1), basicThickness, (sectionDepths && sectionDepths[1] ? sectionDepths[1] : depth) - mmToThreeUnits(26)]}
         position={[0, height/2 - basicThickness/2, (sectionDepths && sectionDepths[1] ? (depth - sectionDepths[1]) / 2 : 0) + mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
@@ -358,9 +358,9 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         </group>
       )}
 
-      {/* 하단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게 */}
+      {/* 하단 판재 - 뒤에서 26mm 줄여서 백패널과 맞닿게, 좌우 각 0.5mm씩 줄임 */}
       <BoxWithEdges
-        args={[innerWidth, basicThickness, (sectionDepths && sectionDepths[0] ? sectionDepths[0] : depth) - mmToThreeUnits(26)]}
+        args={[innerWidth - mmToThreeUnits(1), basicThickness, (sectionDepths && sectionDepths[0] ? sectionDepths[0] : depth) - mmToThreeUnits(26)]}
         position={[0, -height/2 + basicThickness/2, (sectionDepths && sectionDepths[0] ? (depth - sectionDepths[0]) / 2 : 0) + mmToThreeUnits(13)]}
         material={material}
         renderMode={renderMode}
