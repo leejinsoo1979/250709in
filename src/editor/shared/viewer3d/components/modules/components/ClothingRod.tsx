@@ -57,9 +57,10 @@ export const ClothingRod: React.FC<ClothingRodProps> = ({
   const bracketDepth = mmToThreeUnits(12);
   const bracketHeight = mmToThreeUnits(75);
 
-  // 브라켓 X 위치 (가구 내부 양 끝)
-  const leftBracketX = -innerWidth / 2 + bracketWidth / 2;
-  const rightBracketX = innerWidth / 2 - bracketWidth / 2;
+  // 브라켓 X 위치 (가구 내부 양 끝에서 각각 0.5mm씩 안쪽으로)
+  const widthReduction = mmToThreeUnits(0.5); // 좌우 각 0.5mm씩 줄임
+  const leftBracketX = -innerWidth / 2 + bracketWidth / 2 + widthReduction;
+  const rightBracketX = innerWidth / 2 - bracketWidth / 2 - widthReduction;
 
   // 옷봉 크기 및 위치: 브라켓 안쪽에서 안쪽까지
   // 옷봉 시작 = 좌측 브라켓 안쪽 (leftBracketX + bracketWidth/2)
