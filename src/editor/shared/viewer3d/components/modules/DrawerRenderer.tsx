@@ -314,7 +314,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-front-${mat.uuid}`}
-              args={[drawerWidth - mmToThreeUnits(106), drawerHeight - mmToThreeUnits(30), DRAWER_SIDE_THICKNESS]}
+              args={[drawerWidth - mmToThreeUnits(107), drawerHeight - mmToThreeUnits(30), DRAWER_SIDE_THICKNESS]}
               position={[centerX, centerY, drawerBodyCenterZ + drawerBodyDepth/2 - DRAWER_SIDE_THICKNESS/2]}
               material={mat}
               renderMode={renderMode}
@@ -334,7 +334,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           return (
             <BoxWithEdges
               key={`drawer-${drawerIndex}-back-${mat.uuid}`}
-              args={[drawerWidth - mmToThreeUnits(106), drawerHeight - mmToThreeUnits(30), DRAWER_SIDE_THICKNESS]}
+              args={[drawerWidth - mmToThreeUnits(107), drawerHeight - mmToThreeUnits(30), DRAWER_SIDE_THICKNESS]}
               position={[centerX, centerY, drawerBodyCenterZ - drawerBodyDepth/2 + DRAWER_SIDE_THICKNESS/2]}
               material={mat}
               renderMode={renderMode}
