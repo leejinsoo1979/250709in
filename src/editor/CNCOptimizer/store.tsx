@@ -18,6 +18,10 @@ type Store = {
   simSpeed: number;
   simProgress: number;
   sawStats: SawStats;
+  // 전체 시뮬레이션 상태
+  fullSimulating: boolean;
+  fullSimCurrentSheet: number;
+  fullSimTotalSheets: number;
   // Actions
   setPanels: (p: Panel[], isUserModified?: boolean) => void;
   setStock: (s: StockSheet[]) => void;
@@ -36,6 +40,10 @@ type Store = {
   setSimSpeed: (v: number) => void;
   setSimProgress: (v: number) => void;
   setSawStats: (stats: SawStats) => void;
+  // 전체 시뮬레이션 액션
+  setFullSimulating: (v: boolean) => void;
+  setFullSimCurrentSheet: (v: number) => void;
+  setFullSimTotalSheets: (v: number) => void;
   metrics: () => { partsCount: number; partsArea: number; stockArea: number };
 };
 
@@ -120,6 +128,10 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
   const [simSpeed, setSimSpeed] = useState(1.0);
   const [simProgress, setSimProgress] = useState(0);
   const [sawStats, setSawStats] = useState<SawStats>({ bySheet: {}, total: 0, unit: 'm' });
+  // 전체 시뮬레이션 상태
+  const [fullSimulating, setFullSimulating] = useState(false);
+  const [fullSimCurrentSheet, setFullSimCurrentSheet] = useState(0);
+  const [fullSimTotalSheets, setFullSimTotalSheets] = useState(0);
 
   const setSettings = (k: Partial<CutSettings>) => {
     setSettingsState(s => {
@@ -174,6 +186,10 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
     simSpeed,
     simProgress,
     sawStats,
+    // 전체 시뮬레이션 상태
+    fullSimulating,
+    fullSimCurrentSheet,
+    fullSimTotalSheets,
     // Actions
     setPanels, 
     setStock, 
@@ -192,9 +208,14 @@ export function CNCProvider({ children }: { children: React.ReactNode }){
     setSimSpeed,
     setSimProgress,
     setSawStats,
+    // 전체 시뮬레이션 액션
+    setFullSimulating,
+    setFullSimCurrentSheet,
+    setFullSimTotalSheets,
     metrics 
   }), [panels, stock, settings, selectedPanelId, currentSheetIndex, userHasModifiedPanels,
-      placements, cuts, selectedSheetId, selectedCutIndex, selectedCutId, simulating, simSpeed, simProgress, sawStats]);
+      placements, cuts, selectedSheetId, selectedCutIndex, selectedCutId, simulating, simSpeed, simProgress, sawStats,
+      fullSimulating, fullSimCurrentSheet, fullSimTotalSheets]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

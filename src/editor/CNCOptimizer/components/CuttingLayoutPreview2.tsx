@@ -33,6 +33,8 @@ interface CuttingLayoutPreview2Props {
   allCutSteps?: any[]; // All cut steps for current sheet
   // 보링 데이터
   boringData?: PanelBoringData[];
+  // 시뮬레이션 완료 콜백
+  onSimulationComplete?: () => void;
 }
 
 const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
@@ -51,7 +53,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   onCurrentSheetIndexChange,
   showCuttingListTab = false,
   allCutSteps = [],
-  boringData = []
+  boringData = [],
+  onSimulationComplete
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -263,6 +266,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           setCompletedCuts(cuts.map((_, idx) => idx));
           setCutProgress(1);
           setSimulating(false);
+          // 시뮬레이션 완료 콜백 호출
+          if (onSimulationComplete) {
+            onSimulationComplete();
+          }
         },
         speed: sawSpeed,
         cancelRef: newCancelRef

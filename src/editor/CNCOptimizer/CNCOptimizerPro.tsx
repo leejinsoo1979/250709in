@@ -154,7 +154,9 @@ function PageInner(){
     simulating, setSimulating, simSpeed, setSimSpeed,
     selectedCutIndex, selectCutIndex,
     selectedCutId, selectCutId, setSelectedSheetId,
-    sawStats, setSawStats
+    sawStats, setSawStats,
+    fullSimulating, setFullSimulating, fullSimCurrentSheet, setFullSimCurrentSheet,
+    fullSimTotalSheets, setFullSimTotalSheets
   } = useCNCStore();
 
   // Configurator에서 온 경우 localStorage 초기화하여 새로운 패널 데이터 로드
@@ -761,7 +763,37 @@ function PageInner(){
       setIsOptimizing(false);
     }
   }, [panels, stock, settings, setPlacements, setCurrentSheetIndex, setSawStats]);
-  
+
+  // 시뮬레이션 완료 콜백 - 전체 시뮬레이션 모드일 때 다음 시트로 진행
+  const handleSimulationComplete = useCallback(() => {
+    console.log('=== Simulation Complete ===', {
+      fullSimulating,
+      fullSimCurrentSheet,
+      fullSimTotalSheets,
+      currentSheetIndex
+    });
+
+    if (fullSimulating) {
+      const nextSheet = fullSimCurrentSheet + 1;
+      if (nextSheet < fullSimTotalSheets) {
+        // 다음 시트로 진행
+        console.log(`Moving to next sheet: ${nextSheet + 1}/${fullSimTotalSheets}`);
+        setFullSimCurrentSheet(nextSheet);
+        setCurrentSheetIndex(nextSheet);
+        setSelectedSheetId(String(nextSheet + 1));
+        // 잠시 후 시뮬레이션 재시작
+        setTimeout(() => {
+          setSimulating(true);
+        }, 500);
+      } else {
+        // 모든 시트 시뮬레이션 완료
+        console.log('All sheets simulation completed');
+        setFullSimulating(false);
+        setFullSimCurrentSheet(0);
+      }
+    }
+  }, [fullSimulating, fullSimCurrentSheet, fullSimTotalSheets, currentSheetIndex, setFullSimCurrentSheet, setCurrentSheetIndex, setSelectedSheetId, setSimulating, setFullSimulating]);
+
   // Auto-optimize effect - must be after handleOptimize definition
   useEffect(() => {
     // Only auto-optimize when we have actual furniture panels from livePanels
@@ -999,28 +1031,36 @@ function PageInner(){
             <span>{t('cnc.calculate')}</span>
           </button>
           <button
-            className={`${styles.simulationButton} ${simulating ? styles.simulating : ''}`}
+            className={`${styles.simulationButton} ${fullSimulating ? styles.simulating : ''}`}
             onClick={() => {
-              console.log('=== Simulation Button Clicked ===', {
+              console.log('=== Full Simulation Button Clicked ===', {
+                currentFullSimulating: fullSimulating,
                 currentSimulating: simulating,
                 optimizationResultsLength: optimizationResults.length,
                 allCutStepsLength: allCutSteps.length,
                 currentSheetIndex
               });
-              if (simulating) {
+              if (fullSimulating || simulating) {
+                // 시뮬레이션 정지
+                setFullSimulating(false);
                 setSimulating(false);
               } else if (optimizationResults.length > 0) {
+                // 전체 시뮬레이션 시작 (시트 1번부터)
+                setFullSimulating(true);
+                setFullSimTotalSheets(optimizationResults.length);
+                setFullSimCurrentSheet(0);
+                setCurrentSheetIndex(0);
                 setSelectedPanelId(null);
-                setSelectedSheetId(String(currentSheetIndex + 1));
-                console.log('Setting simulating to true');
+                setSelectedSheetId('1');
+                console.log('Starting full simulation from sheet 1');
                 setSimulating(true);
               }
             }}
             disabled={optimizationResults.length === 0}
-            title={simulating ? "시뮬레이션 정지" : "재단 시뮬레이션"}
+            title={fullSimulating ? "전체 시뮬레이션 정지" : "전체 시트 시뮬레이션"}
           >
-            {simulating ? <Pause size={18} /> : <GiCircularSawblade size={18} />}
-            <span>{simulating ? '정지' : '시뮬레이션'}</span>
+            {fullSimulating ? <Pause size={18} /> : <GiCircularSawblade size={18} />}
+            <span>{fullSimulating ? '정지' : '전체 시뮬레이션'}</span>
           </button>
           <div className={styles.exportGroup}>
             <ExportBar optimizationResults={optimizationResults} />
@@ -1085,6 +1125,7 @@ function PageInner(){
                   showCuttingListTab={showCuttingList}
                   allCutSteps={allCutSteps}
                   boringData={boringPanels}
+                  onSimulationComplete={handleSimulationComplete}
                 />
               </div>
               
@@ -1373,6 +1414,25 @@ function PageInner(){
                             <span className={styles.sheetEfficiency}>
                               {result.efficiency.toFixed(0)}%
                             </span>
+                            <button
+                              className={`${styles.sheetPlayButton} ${simulating && currentSheetIndex === index && !fullSimulating ? styles.playing : ''}`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // 해당 시트만 시뮬레이션
+                                if (simulating && currentSheetIndex === index) {
+                                  setSimulating(false);
+                                } else {
+                                  setFullSimulating(false); // 전체 시뮬레이션 아님
+                                  setCurrentSheetIndex(index);
+                                  setSelectedPanelId(null);
+                                  setSelectedSheetId(String(index + 1));
+                                  setSimulating(true);
+                                }
+                              }}
+                              title={simulating && currentSheetIndex === index ? "시뮬레이션 정지" : `시트 ${index + 1} 시뮬레이션`}
+                            >
+                              {simulating && currentSheetIndex === index && !fullSimulating ? <Pause size={12} /> : <Play size={12} />}
+                            </button>
                           </div>
                           
                           {isExpanded && (
