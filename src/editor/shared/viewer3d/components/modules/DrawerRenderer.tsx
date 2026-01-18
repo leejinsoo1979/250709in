@@ -1,7 +1,6 @@
 import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
-import { useViewerTheme } from '../../context/ViewerThemeContext';
 import { Text, useGLTF, Line } from '@react-three/drei';
 import NativeLine from '../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
@@ -64,6 +63,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
   const showDimensionsText = useUIStore(state => state.showDimensionsText);
   const view2DDirection = useUIStore(state => state.view2DDirection);
   const highlightedPanel = useUIStore(state => state.highlightedPanel);
+  const view2DTheme = useUIStore(state => state.view2DTheme);
   const { viewMode } = useSpace3DView();
 
   // 레일 모델 및 중심 오프셋
@@ -436,22 +436,24 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
-          // 2D 모드: 투명한 흰색으로 레일 렌더링 (아웃라인 제거)
+          // 2D 모드: 테마에 따른 색상으로 레일 렌더링 (옷봉과 동일)
+          // 라이트 모드: 짙은 회색(#808080), 다크 모드: 흰색(#FFFFFF)
           if (viewMode === '2D') {
             const leftRail = railModel.clone();
             leftRail.scale.x *= -1;
             const rightRail = railModel.clone();
 
-            const whiteMaterial = new THREE.MeshBasicMaterial({
-              color: '#FFFFFF',
+            const railColor = view2DTheme === 'light' ? '#808080' : '#FFFFFF';
+            const rail2DMaterial = new THREE.MeshBasicMaterial({
+              color: railColor,
               transparent: true,
-              opacity: 0.3
+              opacity: 0.8
             });
 
             [leftRail, rightRail].forEach(rail => {
               rail.traverse((child) => {
                 if (child instanceof THREE.Mesh) {
-                  child.material = whiteMaterial;
+                  child.material = rail2DMaterial;
                 }
               });
             });
