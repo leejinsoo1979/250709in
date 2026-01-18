@@ -193,7 +193,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
       <group position={[0, yOffset, 0]}>
         <BoxWithEdges
           key={`top-finish-${topFinishMat.uuid}`}
-          args={[innerWidth, basicThickness, depth - basicThickness]}
+          args={[innerWidth - mmToThreeUnits(1), basicThickness, depth - basicThickness]}
           position={[0, topPosition, basicThickness/2 + zOffset]}
           material={topFinishMat}
           renderMode={renderMode}
@@ -280,7 +280,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
           return (
             <BoxWithEdges
               key={`shelf-${i}-${shelfMat.uuid}`}
-              args={[innerWidth, basicThickness, shelfDepth]}
+              args={[innerWidth - mmToThreeUnits(1), basicThickness, shelfDepth]}
               position={[0, relativeYPosition, shelfZPosition]}
               material={shelfMat}
               renderMode={renderMode}
@@ -724,7 +724,7 @@ export const ShelfRenderer: React.FC<ShelfRendererProps> = ({
         return (
           <BoxWithEdges
             key={`shelf-${i}-${shelfMat.uuid}`}
-            args={[innerWidth, basicThickness, depth - basicThickness]}
+            args={[innerWidth - mmToThreeUnits(1), basicThickness, depth - basicThickness]}
             position={[0, relativeYPosition, basicThickness/2 + zOffset]}
             material={shelfMat}
             renderMode={renderMode}
