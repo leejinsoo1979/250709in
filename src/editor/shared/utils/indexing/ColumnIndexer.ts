@@ -671,39 +671,20 @@ export class ColumnIndexer {
         let leftGap = spaceInfo.gapConfig?.left || 0;
         let rightGap = spaceInfo.gapConfig?.right || 0;
         
-        // 벽이 있는 경우 이격거리를 정수 슬롯을 위해 조정
+        // 빌트인: 사용자가 설정한 gapConfig 값을 그대로 사용 (자동 조정 비활성화)
+        // calculateSpaceIndexing과 일관성 유지
         if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-          // 빌트인: 양쪽 벽 모두 2-5mm 범위에서 조정
-          const baseWidth = spaceInfo.width;
-          
-          // 양쪽 모두 2-5mm 범위에서 정수 슬롯이 되는 조합 찾기
-          let found = false;
-          for (let leftG = 2; leftG <= 5 && !found; leftG++) {
-            for (let rightG = 2; rightG <= 5 && !found; rightG++) {
-              const availableWidth = baseWidth - leftG - rightG;
-              const slotWidth = availableWidth / columnCount;
-              
-              if (Number.isInteger(slotWidth)) {
-                leftGap = leftG;
-                rightGap = rightG;
-                found = true;
-                console.log('✅ 빌트인 정수 슬롯 너비 조정:', {
-                  좌측이격거리: leftG,
-                  우측이격거리: rightG,
-                  슬롯너비: slotWidth,
-                  사용가능너비: availableWidth
-                });
-                break;
-              }
-            }
-          }
-          
-          // 정수가 안되면 기본값
-          if (!found) {
-            leftGap = 2;
-            rightGap = 2;
-          }
-          
+          // 사용자 설정값 또는 기본값 2mm 사용
+          leftGap = spaceInfo.gapConfig?.left ?? 2;
+          rightGap = spaceInfo.gapConfig?.right ?? 2;
+
+          console.log('📐 빌트인 이격거리 (gapConfig 사용):', {
+            좌측이격거리: leftGap,
+            우측이격거리: rightGap,
+            전체너비: spaceInfo.width,
+            사용가능너비: spaceInfo.width - leftGap - rightGap
+          });
+
         } else if (spaceInfo.installType === 'freestanding') {
           // 프리스탠딩: 엔드패널 포함, 전체 너비를 슬롯에 분할
           leftGap = 0;
