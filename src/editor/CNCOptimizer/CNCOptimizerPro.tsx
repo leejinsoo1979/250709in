@@ -194,6 +194,15 @@ function PageInner(){
   // Exit confirmation state
   const [showExitConfirm, setShowExitConfirm] = useState(false);
 
+  // Simulation complete stats popup state
+  const [showSimulationStats, setShowSimulationStats] = useState(false);
+  const [simulationStatsData, setSimulationStatsData] = useState<{
+    sheetCount: number;
+    totalCutLength: number;
+    avgEfficiency: number;
+    totalPanels: number;
+  } | null>(null);
+
 
   // Handle keyboard navigation
   useEffect(() => {
@@ -786,13 +795,40 @@ function PageInner(){
           setSimulating(true);
         }, 500);
       } else {
-        // 모든 시트 시뮬레이션 완료
+        // 모든 시트 시뮬레이션 완료 - 통계 팝업 표시
         console.log('All sheets simulation completed');
         setFullSimulating(false);
         setFullSimCurrentSheet(0);
+
+        // 통계 데이터 계산
+        const totalPanels = optimizationResults.reduce((sum, r) => sum + r.panels.length, 0);
+        const avgEfficiency = optimizationResults.length > 0
+          ? optimizationResults.reduce((sum, r) => sum + r.efficiency, 0) / optimizationResults.length
+          : 0;
+
+        setSimulationStatsData({
+          sheetCount: fullSimTotalSheets,
+          totalCutLength: sawStats.total,
+          avgEfficiency,
+          totalPanels
+        });
+        setShowSimulationStats(true);
+      }
+    } else {
+      // 단일 시트 시뮬레이션 완료 - 해당 시트 통계 팝업 표시
+      const currentResult = optimizationResults[currentSheetIndex];
+      if (currentResult) {
+        const sheetCutLength = sawStats.bySheet[String(currentSheetIndex + 1)] || 0;
+        setSimulationStatsData({
+          sheetCount: 1,
+          totalCutLength: sheetCutLength,
+          avgEfficiency: currentResult.efficiency,
+          totalPanels: currentResult.panels.length
+        });
+        setShowSimulationStats(true);
       }
     }
-  }, [fullSimulating, fullSimCurrentSheet, fullSimTotalSheets, currentSheetIndex, setFullSimCurrentSheet, setCurrentSheetIndex, setSelectedSheetId, setSimulating, setFullSimulating]);
+  }, [fullSimulating, fullSimCurrentSheet, fullSimTotalSheets, currentSheetIndex, setFullSimCurrentSheet, setCurrentSheetIndex, setSelectedSheetId, setSimulating, setFullSimulating, optimizationResults, sawStats]);
 
   // Auto-optimize effect - must be after handleOptimize definition
   useEffect(() => {
@@ -1544,6 +1580,43 @@ function PageInner(){
         duration={aiLoadingDuration}
       />
       
+      {/* Simulation Stats Modal */}
+      {showSimulationStats && simulationStatsData && (
+        <div className={styles.modalOverlay} onClick={() => setShowSimulationStats(false)}>
+          <div className={styles.simulationStatsModal} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.simulationStatsHeader}>
+              <h3>🎉 시뮬레이션 완료</h3>
+            </div>
+            <div className={styles.simulationStatsContent}>
+              <div className={styles.statItem}>
+                <span className={styles.statLabel}>시트 수</span>
+                <span className={styles.statValue}>{simulationStatsData.sheetCount}장</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statLabel}>패널 수</span>
+                <span className={styles.statValue}>{simulationStatsData.totalPanels}개</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statLabel}>총 재단 길이</span>
+                <span className={styles.statValue}>{simulationStatsData.totalCutLength.toFixed(2)}m</span>
+              </div>
+              <div className={styles.statItem}>
+                <span className={styles.statLabel}>평균 효율</span>
+                <span className={styles.statValue}>{simulationStatsData.avgEfficiency.toFixed(1)}%</span>
+              </div>
+            </div>
+            <div className={styles.simulationStatsFooter}>
+              <button
+                className={styles.simulationStatsCloseBtn}
+                onClick={() => setShowSimulationStats(false)}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Exit Confirmation Modal */}
       <ExitConfirmModal
         isOpen={showExitConfirm}
