@@ -89,8 +89,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   // Toggle dimension display
   const [showDimensions, setShowDimensions] = useState(true);
 
-  // Toggle boring display
-  const [showBorings, setShowBorings] = useState(false);
+  // Toggle boring display (기본값 true로 변경 - 보링 항상 표시)
+  const [showBorings, setShowBorings] = useState(true);
   
   // Get settings and simulation state from store
   const { 
@@ -834,8 +834,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           // (상), (하) 접두사 제거
           let normalized = name.replace(/^\([상하]\)/, '');
           // 패널 타입 추출 및 정규화
-          if (normalized.includes('좌측') || normalized === '좌측판') return 'side-left';
-          if (normalized.includes('우측') || normalized === '우측판') return 'side-right';
+          // "좌측", "좌측판", "좌" 등 다양한 패턴 지원
+          if (normalized.includes('좌측') || normalized === '좌측판' || normalized === '좌측' || normalized === '좌') return 'side-left';
+          if (normalized.includes('우측') || normalized === '우측판' || normalized === '우측' || normalized === '우') return 'side-right';
           if (normalized.includes('바닥') || normalized === '하판') return 'bottom';
           if (normalized.includes('상판')) return 'top';
           if (normalized.includes('도어')) return 'door';
