@@ -876,32 +876,46 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         if (isFurnitureSidePanel) {
           // ★★★ 2D 뷰어 SidePanelBoring.tsx와 동일한 방식으로 보링 위치 계산 ★★★
           //
-          // 측판 패널 좌표계 (옵티마이저):
-          // - panel.width = 측판 깊이 (depth), 패널의 X축
-          // - panel.height = 측판 높이, 패널의 Y축
-          //
-          // 2D 뷰어 보링 위치:
-          // - Y위치: boringPositions 배열 (가구 바닥 기준 mm)
-          // - X위치: 앞쪽 50mm, 가운데, 뒤쪽 50mm (백패널 18mm 고려)
+          // 듀얼 타입 가구의 경우:
+          // - CNC 패널: (상)좌측 1400mm, (하)좌측 1000mm 로 분리됨
+          // - boringData: 전체 가구 기준 side-left 2289mm
+          // 따라서 높이 매칭 대신 타입만 매칭하고, 해당 패널 높이 범위의 보링만 필터링
+
+          // 패널 이름에서 상부/하부 구분 확인
+          const isUpperSection = panel.name.startsWith('(상)');
+          const isLowerSection = panel.name.startsWith('(하)');
+          const panelHeight = panel.height; // 이 CNC 패널의 실제 높이
 
           // 이 패널에 해당하는 가구의 보링 위치 데이터 찾기
-          // boringData의 panelType은 'side-left', 'side-right' 형식
-          const panelBoringData = boringData.find(b => {
-            // panelType으로 직접 매칭 (더 정확함)
-            const isMatchingType = b.panelType === normalizedCncName;
-            // 높이 매칭 (측판 높이 = 가구 내부 높이)
-            const isMatchingSize = Math.abs(b.height - panel.height) <= 10;
-            return isMatchingType && isMatchingSize;
-          });
+          const panelBoringData = boringData.find(b => b.panelType === normalizedCncName);
 
           if (panelBoringData && panelBoringData.borings && panelBoringData.borings.length > 0) {
             ctx.save();
 
             // 보링 타입이 shelf-pin인 것들만 필터링하고 Y위치 추출
-            const shelfPinBorings = panelBoringData.borings.filter(b => b.type === 'shelf-pin');
+            let shelfPinBorings = panelBoringData.borings.filter(b => b.type === 'shelf-pin');
+
+            // 듀얼 타입 가구에서 상부/하부 섹션별 보링 필터링
+            // boringData의 Y 좌표는 측판 전체 기준 (0 = 측판 하단)
+            let yOffset = 0;
+            if (isUpperSection || isLowerSection) {
+              // 전체 측판 높이에서 현재 패널이 차지하는 범위 계산
+              const fullSidePanelHeight = panelBoringData.height; // 전체 측판 높이
+
+              if (isLowerSection) {
+                // 하부 패널: Y가 0 ~ panelHeight 범위의 보링만
+                shelfPinBorings = shelfPinBorings.filter(b => b.y >= 0 && b.y <= panelHeight);
+              } else if (isUpperSection) {
+                // 상부 패널: Y가 (전체높이 - 상부패널높이) ~ 전체높이 범위의 보링만
+                const lowerSectionHeight = fullSidePanelHeight - panelHeight;
+                shelfPinBorings = shelfPinBorings.filter(b => b.y > lowerSectionHeight && b.y <= fullSidePanelHeight);
+                // 상부 패널 기준으로 Y 좌표 변환 (상부 패널 하단이 0이 되도록)
+                yOffset = lowerSectionHeight;
+              }
+            }
 
             // Y위치 중복 제거 (같은 Y에 3개 홀이 있으므로)
-            const uniqueYPositions = [...new Set(shelfPinBorings.map(b => b.y))].sort((a, b) => a - b);
+            const uniqueYPositions = [...new Set(shelfPinBorings.map(b => b.y - yOffset))].sort((a, b) => a - b);
 
             // X위치 계산 (2D 뷰어와 동일: 앞쪽 50mm, 가운데, 뒤쪽 50mm)
             const edgeOffset = 50; // mm
