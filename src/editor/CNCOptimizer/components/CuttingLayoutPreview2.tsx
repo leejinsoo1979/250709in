@@ -975,9 +975,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const grooveStartX = originalWidth - backPanelDepthOffset - grooveWidth;
         const grooveEndX = originalWidth - backPanelDepthOffset;
 
-        // 홈 스타일 설정
-        ctx.strokeStyle = '#8b4513'; // 갈색 (나무 홈 색상)
-        ctx.fillStyle = 'rgba(139, 69, 19, 0.3)'; // 반투명 갈색
+        // 홈 스타일 설정 (보링 홀과 동일한 색상 사용)
+        const grooveColor = boringColors['shelf-pin'];
+        ctx.strokeStyle = grooveColor.stroke;
+        ctx.fillStyle = grooveColor.fill;
         ctx.lineWidth = 1.5 / (baseScale * scale);
 
         // 시트 좌표로 변환하여 홈 그리기
