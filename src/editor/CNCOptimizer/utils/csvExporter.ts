@@ -83,25 +83,37 @@ export const exportPanelsToCSV = (panels: Panel[], settings: CutSettings = {
  *
  * @param yPos 보링 Y 위치 (패널 하단 기준 mm)
  * @param panelHeight 패널 높이 (mm)
+ * @param panelName 패널 이름 (상/하 섹션 구분용)
  * @param thickness 패널 두께 (mm)
- * @returns 보링 타입 이름 (상판보링, 지판보링, 선반보링, 중판보링)
+ * @returns 보링 타입 이름 (상판보링, 지판보링, 선반보링)
  */
-function getBoringTypeName(yPos: number, panelHeight: number, thickness: number = 18): string {
+function getBoringTypeName(
+  yPos: number,
+  panelHeight: number,
+  panelName: string,
+  thickness: number = 18
+): string {
   const halfThickness = thickness / 2; // 9mm
   const tolerance = 5; // 5mm 허용 오차
 
-  // 바닥판 보링 (패널 하단 근처, 약 9mm)
+  const isUpperSection = panelName.includes('(상)');
+  const isLowerSection = panelName.includes('(하)');
+
+  // 패널 하단 근처 보링 (약 9mm 위치)
   if (yPos <= halfThickness + tolerance) {
-    return '지판보링';
+    // 하부 섹션의 바닥 = 전체 가구의 지판
+    // 상부 섹션의 바닥 = 중판 (섹션 구분판)
+    return isLowerSection ? '지판보링' : (isUpperSection ? '중판보링' : '지판보링');
   }
 
-  // 상판 보링 (패널 상단 근처, 약 panelHeight - 9mm)
+  // 패널 상단 근처 보링 (약 panelHeight - 9mm)
   if (yPos >= panelHeight - halfThickness - tolerance) {
-    return '상판보링';
+    // 상부 섹션의 상단 = 전체 가구의 상판
+    // 하부 섹션의 상단 = 중판 (섹션 구분판)
+    return isUpperSection ? '상판보링' : (isLowerSection ? '중판보링' : '상판보링');
   }
 
-  // 중판보링 또는 선반보링 (중간 위치)
-  // 정확히 중간에 가까우면 중판보링, 그 외는 선반보링
+  // 중간 위치 = 선반
   return '선반보링';
 }
 
@@ -155,7 +167,7 @@ export const exportBoringToCSV = (panels: Panel[]): string => {
 
     // 각 Y 위치에 대해 3개의 X 위치
     sortedBoringPositions.forEach((yPos, yIndex) => {
-      const boringTypeName = getBoringTypeName(yPos, panelHeight);
+      const boringTypeName = getBoringTypeName(yPos, panelHeight, panel.name);
       const yIndexLabel = yIndex + 1; // 1부터 시작
 
       xPositions.forEach((xPos, xIndex) => {
