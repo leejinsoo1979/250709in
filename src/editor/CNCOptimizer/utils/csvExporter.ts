@@ -34,8 +34,8 @@ export interface CutSettings {
   allowGrainRotation: boolean;
 }
 
-// CutList Optimizer CSV 헤더
-const PANEL_CSV_HEADERS = 'Length,Width,Qty,Label,Enabled,Grain';
+// CutList Optimizer CSV 헤더 (보링 포지션 포함)
+const PANEL_CSV_HEADERS = 'Length,Width,Qty,Label,Enabled,Grain,Boring_Y_Positions';
 const STOCK_CSV_HEADERS = 'Length,Width,Qty,Label';
 
 // 패널 데이터를 CutList Optimizer CSV 형식으로 변환
@@ -49,7 +49,7 @@ export const exportPanelsToCSV = (panels: Panel[], settings: CutSettings = {
   allowGrainRotation: false
 }): string => {
   const lines: string[] = [PANEL_CSV_HEADERS];
-  
+
   panels.forEach(panel => {
     // 결 방향 결정
     // 1. panel에 이미 grain이 있으면 그것을 사용
@@ -57,13 +57,18 @@ export const exportPanelsToCSV = (panels: Panel[], settings: CutSettings = {
     let grain = 'V'; // 기본값은 세로
     if (panel.grain) {
       // 이미 설정된 grain 값 사용
-      grain = panel.grain === 'VERTICAL' || panel.grain === 'WIDTH' ? 'V' : 
+      grain = panel.grain === 'VERTICAL' || panel.grain === 'WIDTH' ? 'V' :
               panel.grain === 'HORIZONTAL' || panel.grain === 'LENGTH' ? 'H' : 'V';
     } else {
       // grain이 없으면 세로가 긴 경우 V, 가로가 긴 경우 H
       grain = panel.height > panel.width ? 'V' : 'H';
     }
-    
+
+    // 보링 Y 위치 (패널 하단 기준 mm, 없으면 -)
+    const boringPositionsStr = panel.boringPositions && panel.boringPositions.length > 0
+      ? panel.boringPositions.map(p => Math.round(p)).join(';')
+      : '-';
+
     // CutList Optimizer는 Length가 세로, Width가 가로
     const line = [
       panel.height, // Length (세로)
@@ -71,12 +76,13 @@ export const exportPanelsToCSV = (panels: Panel[], settings: CutSettings = {
       panel.quantity,
       panel.name.replace(/,/g, '_'), // 콤마 제거
       'TRUE', // Enabled
-      settings.allowGrainRotation ? 'NONE' : grain
+      settings.allowGrainRotation ? 'NONE' : grain,
+      boringPositionsStr // 보링 Y 위치 (패널 로컬 좌표)
     ].join(',');
-    
+
     lines.push(line);
   });
-  
+
   return lines.join('\n');
 };
 
