@@ -67,6 +67,7 @@ export const DEFAULT_CAM_LOCK_SETTINGS: CamLockSettings = {
 
 // ============================================
 // 선반핀 기본 설정
+// 2D 뷰어와 동일: 앞쪽 끝에서 50mm, 가운데, 뒤쪽 끝에서 50mm (백패널 두께 고려)
 // ============================================
 
 export const DEFAULT_SHELF_PIN_SETTINGS: ShelfPinSettings = {
@@ -75,9 +76,9 @@ export const DEFAULT_SHELF_PIN_SETTINGS: ShelfPinSettings = {
   pitch: 32,
   startHeight: 37,
   endMargin: 37,
-  frontRowPosition: 37,
-  backRowPosition: 37,
-  rowCount: 2,
+  frontRowPosition: 50,   // 2D 뷰어와 동일: 앞쪽 끝에서 50mm
+  backRowPosition: 50,    // 2D 뷰어와 동일: 뒤쪽 끝에서 50mm (백패널 두께는 별도 고려)
+  rowCount: 3,            // 2D 뷰어와 동일: 앞쪽, 가운데, 뒤쪽 3열
 };
 
 // ============================================

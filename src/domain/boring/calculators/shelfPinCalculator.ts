@@ -18,6 +18,7 @@ export interface ShelfPinBoringParams {
   endMargin?: number;      // 상단 마진 (mm), 기본 37mm
   settings?: Partial<ShelfPinSettings>;
   customYPositions?: number[];  // 커스텀 Y 위치 배열 (선반/패널 실제 위치)
+  backPanelThickness?: number;  // 백패널 두께 (mm), 기본 18mm
 }
 
 export interface ShelfPinBoringResult {
@@ -53,31 +54,54 @@ export function calculateShelfPinYPositions(
 
 // ============================================
 // X 위치 계산 (깊이 방향)
+// 2D 뷰어와 동일: 앞쪽 끝에서 50mm, 가운데, 뒤쪽 끝에서 50mm
 // ============================================
 
 /**
  * 선반핀 X 위치 계산
- * 2열 또는 4열 기준
+ * 2D 뷰어와 동일하게 3열 기준 (앞쪽, 가운데, 뒤쪽)
+ * - rowCount === 2: 전면열, 후면열
+ * - rowCount === 3: 전면열, 중앙열, 후면열 (2D 뷰어와 동일)
+ * - rowCount === 4: 전면열, 전면중간열, 후면중간열, 후면열
+ *
+ * @param panelDepth 패널 깊이 (mm)
+ * @param settings 선반핀 설정
+ * @param backPanelThickness 백패널 두께 (mm), 기본 18mm - 2D 뷰어에서 백패널 두께 고려
  */
 export function calculateShelfPinXPositions(
   panelDepth: number,
-  settings: ShelfPinSettings = DEFAULT_SHELF_PIN_SETTINGS
+  settings: ShelfPinSettings = DEFAULT_SHELF_PIN_SETTINGS,
+  backPanelThickness: number = 18
 ): number[] {
   const positions: number[] = [];
 
-  // 전면열
-  positions.push(settings.frontRowPosition);
+  // 전면열 (앞쪽 끝에서 frontRowPosition mm)
+  const frontX = settings.frontRowPosition;
+  positions.push(frontX);
 
-  // 4열인 경우 중간열 추가
-  if (settings.rowCount === 4) {
-    const midFront = settings.frontRowPosition + SYSTEM_32MM.PITCH * 2;  // 37 + 64 = 101
-    const midBack = panelDepth - settings.backRowPosition - SYSTEM_32MM.PITCH * 2;
+  // 3열인 경우 중앙열 추가 (2D 뷰어와 동일)
+  if (settings.rowCount === 3) {
+    // 뒤쪽 끝에서 backRowPosition mm (백패널 두께 고려)
+    const backX = panelDepth - backPanelThickness - settings.backRowPosition;
+    // 가운데 = (앞쪽 + 뒤쪽) / 2
+    const centerX = (frontX + backX) / 2;
+    positions.push(centerX);
+    positions.push(backX);
+  }
+  // 4열인 경우 (32mm 시스템 기반)
+  else if (settings.rowCount === 4) {
+    const midFront = settings.frontRowPosition + SYSTEM_32MM.PITCH * 2;  // 50 + 64 = 114
+    const backX = panelDepth - backPanelThickness - settings.backRowPosition;
+    const midBack = backX - SYSTEM_32MM.PITCH * 2;
     positions.push(midFront);
     positions.push(midBack);
+    positions.push(backX);
   }
-
-  // 후면열
-  positions.push(panelDepth - settings.backRowPosition);
+  // 2열인 경우
+  else {
+    const backX = panelDepth - backPanelThickness - settings.backRowPosition;
+    positions.push(backX);
+  }
 
   return positions;
 }
@@ -109,7 +133,10 @@ export function calculateShelfPinBorings(params: ShelfPinBoringParams): ShelfPin
   const yPositions = params.customYPositions && params.customYPositions.length > 0
     ? params.customYPositions.filter(y => y > 0 && y < params.panelHeight)
     : calculateShelfPinYPositions(params.panelHeight, settings);
-  const xPositions = calculateShelfPinXPositions(params.panelDepth, settings);
+
+  // 백패널 두께 (기본 18mm)
+  const backPanelThickness = params.backPanelThickness ?? 18;
+  const xPositions = calculateShelfPinXPositions(params.panelDepth, settings, backPanelThickness);
 
   const borings: Boring[] = [];
 
@@ -153,6 +180,9 @@ export function calculateShelfPinBorings(params: ShelfPinBoringParams): ShelfPin
 function getRowName(index: number, total: number): string {
   if (total === 2) {
     return index === 0 ? '전면열' : '후면열';
+  } else if (total === 3) {
+    const names = ['전면열', '중앙열', '후면열'];
+    return names[index] || `열${index + 1}`;
   } else if (total === 4) {
     const names = ['전면열', '전면중간열', '후면중간열', '후면열'];
     return names[index] || `열${index + 1}`;
