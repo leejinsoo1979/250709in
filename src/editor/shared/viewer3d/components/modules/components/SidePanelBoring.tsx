@@ -111,13 +111,18 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
   }
 
   // 정면뷰 (front) - 양쪽 측판에 보링 표시
-  // 정면에서 측판을 바라보면 관통홀이 측판 두께 안에서 하나의 점으로 보임
-  // 깊이 방향의 3개 홀은 겹쳐서 보이므로 각 보링 위치마다 1개만 표시
+  // 정면에서 측판을 바라보면 관통홀이 측판 두께를 가로지르는 수평선으로 표시
   if (view2DDirection === 'front') {
-    // 좌측판 X 위치 (측판 두께 중앙)
-    const leftPanelX = -totalWidth / 2 + basicThickness / 2;
-    // 우측판 X 위치 (측판 두께 중앙)
-    const rightPanelX = totalWidth / 2 - basicThickness / 2;
+    // 좌측판 X 범위 (측판 두께만큼)
+    const leftPanelXStart = -totalWidth / 2;
+    const leftPanelXEnd = -totalWidth / 2 + basicThickness;
+    // 우측판 X 범위
+    const rightPanelXStart = totalWidth / 2 - basicThickness;
+    const rightPanelXEnd = totalWidth / 2;
+
+    // 수평선 길이 (측판 두께)
+    const lineLength = basicThickness;
+    const lineThickness = mmToThreeUnits(0.5); // 선 두께
 
     return (
       <group>
@@ -126,28 +131,24 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
 
           return (
             <group key={`boring-${boringIndex}`}>
-              {/* 좌측판 보링 - 정면에서는 하나의 점으로 표시 */}
+              {/* 좌측판 보링 - 수평선 (측판 두께 관통) */}
               <mesh
-                key={`left-hole-${boringIndex}`}
-                position={[leftPanelX, boringY, depth / 2 + mmToThreeUnits(1)]} // 앞쪽으로 약간 돌출
-                rotation={[0, 0, 0]}
+                position={[(leftPanelXStart + leftPanelXEnd) / 2, boringY, depth / 2 + mmToThreeUnits(1)]}
                 renderOrder={100}
               >
-                <ringGeometry args={[holeInnerRadius, holeOuterRadius, 32]} />
+                <planeGeometry args={[lineLength, lineThickness]} />
                 <meshBasicMaterial
                   color={holeColor}
                   side={THREE.DoubleSide}
                   depthTest={false}
                 />
               </mesh>
-              {/* 우측판 보링 */}
+              {/* 우측판 보링 - 수평선 */}
               <mesh
-                key={`right-hole-${boringIndex}`}
-                position={[rightPanelX, boringY, depth / 2 + mmToThreeUnits(1)]}
-                rotation={[0, 0, 0]}
+                position={[(rightPanelXStart + rightPanelXEnd) / 2, boringY, depth / 2 + mmToThreeUnits(1)]}
                 renderOrder={100}
               >
-                <ringGeometry args={[holeInnerRadius, holeOuterRadius, 32]} />
+                <planeGeometry args={[lineLength, lineThickness]} />
                 <meshBasicMaterial
                   color={holeColor}
                   side={THREE.DoubleSide}
