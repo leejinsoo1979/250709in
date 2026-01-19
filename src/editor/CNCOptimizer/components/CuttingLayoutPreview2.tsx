@@ -101,8 +101,16 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   // 선택된 보링 홀 좌표 (클릭 시 표시)
   const [selectedBoring, setSelectedBoring] = useState<{
     panelName: string;
-    x: number;
-    y: number;
+    panelId: string;
+    x: number;  // 패널 내 X 좌표 (깊이 방향)
+    y: number;  // 패널 내 Y 좌표 (높이 방향)
+    sheetX: number; // 시트 내 X 좌표
+    sheetY: number; // 시트 내 Y 좌표
+    panelX: number; // 패널 시트 내 X 위치
+    panelY: number; // 패널 시트 내 Y 위치
+    panelWidth: number;
+    panelHeight: number;
+    panelRotated: boolean;
     xIndex: number;
     yIndex: number;
   } | null>(null);
@@ -937,6 +945,78 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               ctx.arc(boringX, boringY, radius * 1.5, 0, Math.PI * 2);
               ctx.fill();
               ctx.stroke();
+
+              // ★★★ 선택된 보링: X/Y축 거리 라인 표시 ★★★
+              if (isSelected && selectedBoring) {
+                ctx.save();
+                ctx.strokeStyle = '#ff0000'; // 붉은색 라인
+                ctx.fillStyle = '#ff0000';
+                ctx.lineWidth = 1.5 / (baseScale * scale);
+                ctx.setLineDash([5, 3]); // 점선
+
+                // 패널 경계 좌표 (시트 좌표)
+                const panelLeft = x;
+                const panelTop = y;
+                const panelRight = x + width;
+                const panelBottom = y + height;
+
+                // X축 라인 (홀에서 좌측 가장자리까지)
+                ctx.beginPath();
+                ctx.moveTo(panelLeft, boringY);
+                ctx.lineTo(boringX, boringY);
+                ctx.stroke();
+
+                // Y축 라인 (홀에서 하단 가장자리까지)
+                ctx.beginPath();
+                ctx.moveTo(boringX, panelTop);
+                ctx.lineTo(boringX, boringY);
+                ctx.stroke();
+
+                ctx.setLineDash([]); // 점선 해제
+
+                // X 거리 텍스트 (좌측 가장자리에서 홀까지)
+                const xDistFromLeft = panel.rotated ? boringPosMm : depthPosMm;
+                const yDistFromBottom = panel.rotated ? depthPosMm : boringPosMm;
+
+                // 거리 텍스트 배경 및 표시
+                const fontSize = 14 / (baseScale * scale);
+                ctx.font = `bold ${fontSize}px -apple-system, BlinkMacSystemFont, sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                // X 거리 표시 (라인 중간)
+                const xTextX = (panelLeft + boringX) / 2;
+                const xTextY = boringY - 15 / (baseScale * scale);
+                const xText = `${Math.round(xDistFromLeft)}`;
+
+                // 텍스트 배경
+                const xTextWidth = ctx.measureText(xText).width + 8 / (baseScale * scale);
+                const textHeight = fontSize + 4 / (baseScale * scale);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.fillRect(xTextX - xTextWidth / 2, xTextY - textHeight / 2, xTextWidth, textHeight);
+                ctx.strokeStyle = '#ff0000';
+                ctx.lineWidth = 1 / (baseScale * scale);
+                ctx.strokeRect(xTextX - xTextWidth / 2, xTextY - textHeight / 2, xTextWidth, textHeight);
+
+                ctx.fillStyle = '#ff0000';
+                ctx.fillText(xText, xTextX, xTextY);
+
+                // Y 거리 표시 (라인 중간)
+                const yTextX = boringX + 20 / (baseScale * scale);
+                const yTextY = (panelTop + boringY) / 2;
+                const yText = `${Math.round(yDistFromBottom)}`;
+
+                const yTextWidth = ctx.measureText(yText).width + 8 / (baseScale * scale);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.fillRect(yTextX - yTextWidth / 2, yTextY - textHeight / 2, yTextWidth, textHeight);
+                ctx.strokeStyle = '#ff0000';
+                ctx.strokeRect(yTextX - yTextWidth / 2, yTextY - textHeight / 2, yTextWidth, textHeight);
+
+                ctx.fillStyle = '#ff0000';
+                ctx.fillText(yText, yTextX, yTextY);
+
+                ctx.restore();
+              }
             } else {
               // 일반 보링
               ctx.fillStyle = boringColor.fill;
@@ -1460,7 +1540,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     const sheetX = rotatedX / totalScale + result.stockPanel.width / 2;
     const sheetY = rotatedY / totalScale + result.stockPanel.height / 2;
 
-    const hoverRadius = 8 / totalScale;
+    const hoverRadius = 15 / totalScale; // 마우스 감지 반경 확대
 
     for (const panel of result.panels) {
       if (!panel.boringPositions || panel.boringPositions.length === 0) continue;
@@ -1639,7 +1719,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
     // ★★★ 보링 홀 클릭 감지 ★★★
     if (showBorings) {
-      const clickRadius = 10 / totalScale; // 클릭 감지 반경 (화면 픽셀 기준으로 10px)
+      const clickRadius = 15 / totalScale; // 클릭 감지 반경 확대
 
       for (const panel of result.panels) {
         if (!panel.boringPositions || panel.boringPositions.length === 0) continue;
@@ -1681,8 +1761,16 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               // 보링 홀 클릭됨!
               setSelectedBoring({
                 panelName: panel.name,
+                panelId: panel.id,
                 x: Math.round(depthPosMm),
                 y: Math.round(boringPosMm),
+                sheetX: boringX,
+                sheetY: boringY,
+                panelX: x,
+                panelY: y,
+                panelWidth: panel.rotated ? panel.height : panel.width,
+                panelHeight: panel.rotated ? panel.width : panel.height,
+                panelRotated: panel.rotated || false,
                 xIndex: xIdx + 1,
                 yIndex: yIdx + 1
               });
