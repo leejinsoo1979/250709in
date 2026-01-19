@@ -855,92 +855,55 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           // 해당 가구의 보링 위치 가져오기 (가구 바닥 기준 mm)
           const boringPositions = moduleKey ? shelfBoringPositions[moduleKey] : null;
 
-          // 디버그 로그
-          console.log(`🔵 보링 패널: ${panel.name}`, {
-            moduleKey,
-            panelId: panel.id,
-            panelWidth: panel.width,
-            panelHeight: panel.height,
-            rotated: panel.rotated,
-            boringPositions,
-            shelfBoringPositionsKeys: Object.keys(shelfBoringPositions),
-          });
-
           if (boringPositions && boringPositions.length > 0) {
             ctx.save();
 
-            // 패널이 상부/하부 섹션인지 확인
-            const isUpperSection = panel.name.startsWith('(상)');
-            const isLowerSection = panel.name.startsWith('(하)');
-            const panelHeight = panel.height; // CNC 패널 높이
+            // ★★★ 2D 뷰어 SidePanelBoring.tsx와 동일한 좌표 계산 ★★★
+            //
+            // CNC 패널 좌표계:
+            // - panel.width = 측판의 깊이(depth) 방향
+            // - panel.height = 측판의 높이 방향
+            // - panel.rotated = true이면 시트에서 90도 회전 배치됨
+            //
+            // 보링 위치:
+            // - boringPositions = 가구 바닥 기준 mm 위치 (상판, 하판, 선반 중심 위치)
+            // - X방향(깊이): 앞쪽 50mm, 중앙, 뒤쪽 50mm (백패널 18mm 고려)
+            // - Y방향(높이): boringPositions 값 그대로 사용
+
             const basicThickness = 18; // 패널 두께
+            const edgeOffset = 50; // 끝에서 50mm
+            const panelDepthMm = panel.width; // 측판 깊이 = panel.width
 
-            // 이 패널에 표시할 보링 위치 계산
-            let panelBoringPositions: number[];
-
-            if (isUpperSection || isLowerSection) {
-              // 듀얼 타입 가구: 상부/하부 섹션별로 필터링
-              // boringPositions는 가구 바닥 기준 절대 위치
-              // 측판 좌표 = 가구 좌표 - 바닥판 두께(18mm)
-
-              if (isLowerSection) {
-                // 하부 패널: 가구 바닥 기준 0 ~ (panelHeight + 18) 범위
-                // 측판 좌표로 변환: y - 18
-                panelBoringPositions = boringPositions
-                  .filter(y => y >= 0 && y <= panelHeight + basicThickness)
-                  .map(y => y - basicThickness)
-                  .filter(y => y >= 0 && y <= panelHeight);
-              } else {
-                // 상부 패널: 가구 바닥 기준 (전체높이 - 상부높이 - 18) ~ 전체높이 범위
-                // 전체 가구 높이 = 하부 패널 높이 + 상부 패널 높이 + 중간 패널들 두께
-                // 보링 위치에서 하부 섹션 높이를 빼서 상부 패널 기준으로 변환
-
-                // 상부 섹션의 시작 위치 = 전체 높이에서 상부 패널 높이를 뺀 값
-                // 상부 패널 기준: y - (전체높이 - 상부패널높이)
-                const upperSectionStart = boringPositions[boringPositions.length - 1] - panelHeight;
-
-                panelBoringPositions = boringPositions
-                  .filter(y => y > upperSectionStart)
-                  .map(y => y - upperSectionStart - basicThickness)
-                  .filter(y => y >= 0 && y <= panelHeight);
-              }
-            } else {
-              // 단일 섹션 가구: 모든 보링 위치 사용
-              // 가구 바닥 기준 → 측판 기준으로 변환 (바닥판 두께 제외)
-              panelBoringPositions = boringPositions
-                .map(y => y - basicThickness)
-                .filter(y => y >= 0 && y <= panelHeight);
-            }
-
-            // X위치 계산 (2D 뷰어와 동일: 앞쪽 50mm, 가운데, 뒤쪽 50mm)
-            const edgeOffset = 50; // mm
-            const backPanelThickness = 18; // mm
-            const panelDepth = panel.width; // 측판의 깊이 = 패널 width
-
+            // X 위치 (깊이 방향) - 2D 뷰어와 동일
             const frontX = edgeOffset; // 앞쪽에서 50mm
-            const backX = panelDepth - backPanelThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 제외)
+            const backX = panelDepthMm - basicThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 두께 고려)
             const centerX = (frontX + backX) / 2; // 가운데
             const xPositions = [frontX, centerX, backX];
 
-            // 보링 색상 (검정)
+            // 보링 색상 및 크기
             const boringColor = boringColors['shelf-pin'];
-            const holeDiameter = 3; // mm (2D 뷰어와 동일)
+            const holeDiameter = 5; // mm - 더 잘 보이도록
             const radius = holeDiameter / 2;
 
-            // 각 Y위치에 대해 3개의 X위치에 보링 그리기
-            panelBoringPositions.forEach(yPos => {
-              xPositions.forEach(xPos => {
-                // 패널 좌표 기준으로 변환
+            // 각 보링 위치에 대해 3개의 홀 그리기
+            boringPositions.forEach(boringPosMm => {
+              xPositions.forEach(xPosMm => {
+                // CNC 패널 좌표로 변환
                 let boringX: number, boringY: number;
 
                 if (panel.rotated) {
-                  // 90도 회전된 경우: (x, y) -> (height - y, x)
-                  boringX = x + (panel.height - yPos);
-                  boringY = y + xPos;
+                  // 패널이 90도 회전된 경우
+                  // 원래 (깊이, 높이) -> 시트에서 (높이, 깊이)로 매핑
+                  // X = x + boringPosMm (높이가 X축으로)
+                  // Y = y + xPosMm (깊이가 Y축으로)
+                  boringX = x + boringPosMm;
+                  boringY = y + xPosMm;
                 } else {
-                  // 회전 안된 경우
-                  boringX = x + xPos;
-                  boringY = y + yPos;
+                  // 패널이 회전 안된 경우
+                  // X = x + xPosMm (깊이가 X축)
+                  // Y = y + boringPosMm (높이가 Y축)
+                  boringX = x + xPosMm;
+                  boringY = y + boringPosMm;
                 }
 
                 // 원형 보링 그리기
