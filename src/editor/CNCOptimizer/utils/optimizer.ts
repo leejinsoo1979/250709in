@@ -226,7 +226,9 @@ export const optimizePanels = async (
         material: originalPanel.material,
         color: originalPanel.color,
         name: originalPanel.name,
-        boringPositions: originalPanel.boringPositions // 보링 위치 유지
+        boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
+        boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
+        groovePositions: originalPanel.groovePositions // 홈 위치 유지
       });
     } else {
       unplacedPanels.push(rect);
@@ -310,7 +312,9 @@ export const optimizePanelsImproved = async (
         material: originalPanel.material,
         color: originalPanel.color,
         name: originalPanel.name,
-        boringPositions: originalPanel.boringPositions // 보링 위치 유지
+        boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
+        boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
+        groovePositions: originalPanel.groovePositions // 홈 위치 유지
       });
     }
   }
@@ -438,10 +442,12 @@ export const optimizePanelsMultiple = async (
         material: originalPanel.material,
         color: originalPanel.color,
         name: originalPanel.name,
-        boringPositions: originalPanel.boringPositions // 보링 위치 유지
+        boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
+        boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
+        groovePositions: originalPanel.groovePositions // 홈 위치 유지
       };
     });
-    
+
     // 정밀도 검증
     const validation = PlacementValidator.validatePlacement(
       placedPanels,
@@ -540,11 +546,13 @@ export const optimizePanelsMultipleImproved = async (
         material: originalPanel.material,
         color: originalPanel.color,
         name: originalPanel.name,
-        boringPositions: originalPanel.boringPositions // 보링 위치 유지
+        boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
+        boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
+        groovePositions: originalPanel.groovePositions // 홈 위치 유지
       };
     });
 
-    
+
     // 효율 재계산 확인
     const recalculatedUsedArea = placedPanels.reduce((sum, panel) => {
       return sum + (panel.width * panel.height);
