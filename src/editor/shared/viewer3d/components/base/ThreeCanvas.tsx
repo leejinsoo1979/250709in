@@ -681,21 +681,11 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     };
   }, [viewMode]);
 
-  // 2D 모드에서 트랙패드 줌 속도 조절 및 좌우 스와이프로 인한 브라우저 네비게이션 방지
+  // 2D 모드에서 트랙패드 줌 속도 조절
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || viewMode !== '2D') return;
 
     const handleWheel = (e: WheelEvent) => {
-      // 좌우 스크롤(deltaX)이 있으면 브라우저 뒤로가기/앞으로가기 방지
-      // 트랙패드에서 좌우 스와이프가 브라우저 히스토리 네비게이션을 트리거하는 것을 막음
-      if (Math.abs(e.deltaX) > 0) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-
-      // 2D 모드에서만 줌 속도 조절
-      if (viewMode !== '2D') return;
-
       // 줌 이벤트인 경우 (Ctrl 키 또는 핀치 제스처)
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
@@ -706,7 +696,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         // 새로운 휠 이벤트 생성
         const newEvent = new WheelEvent('wheel', {
           deltaY: scaledDeltaY,
-          deltaX: 0, // 좌우 스크롤은 무시
+          deltaX: e.deltaX,
           deltaMode: e.deltaMode,
           ctrlKey: e.ctrlKey,
           shiftKey: e.shiftKey,
@@ -866,7 +856,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          touchAction: 'none'
+          touchAction: 'none',
+          overscrollBehavior: 'none', // 브라우저 스와이프 네비게이션 방지
+          overscrollBehaviorX: 'none'
         }}
       >
         <Canvas
