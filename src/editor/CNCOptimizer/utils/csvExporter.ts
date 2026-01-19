@@ -96,24 +96,17 @@ function getBoringTypeName(
   const halfThickness = thickness / 2; // 9mm
   const tolerance = 5; // 5mm 허용 오차
 
-  const isUpperSection = panelName.includes('(상)');
-  const isLowerSection = panelName.includes('(하)');
-
-  // 패널 하단 근처 보링 (약 9mm 위치)
+  // 패널 하단 근처 보링 (약 9mm 위치) = 지판보링
   if (yPos <= halfThickness + tolerance) {
-    // 하부 섹션의 바닥 = 전체 가구의 지판
-    // 상부 섹션의 바닥 = 중판 (섹션 구분판)
-    return isLowerSection ? '지판보링' : (isUpperSection ? '중판보링' : '지판보링');
+    return '지판보링';
   }
 
-  // 패널 상단 근처 보링 (약 panelHeight - 9mm)
+  // 패널 상단 근처 보링 (약 panelHeight - 9mm) = 상판보링
   if (yPos >= panelHeight - halfThickness - tolerance) {
-    // 상부 섹션의 상단 = 전체 가구의 상판
-    // 하부 섹션의 상단 = 중판 (섹션 구분판)
-    return isUpperSection ? '상판보링' : (isLowerSection ? '중판보링' : '상판보링');
+    return '상판보링';
   }
 
-  // 중간 위치 = 선반
+  // 중간 위치 = 선반보링
   return '선반보링';
 }
 
