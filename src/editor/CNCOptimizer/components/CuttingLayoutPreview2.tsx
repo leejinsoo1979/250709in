@@ -1214,13 +1214,20 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             console.log(`[GROOVE DRAW] 서랍측판 ${panel.name}: grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
           } else if (isDrawerFrontBackPanel) {
             // ★★★ 서랍 앞판/뒷판 ★★★
-            // 홈은 패널 하단(Y=10)에 width 방향 전체
-            // 시트에서도 하단에 가로 방향 전체로 표시
-            gx = x; // 시트 X 시작
-            gw = width; // 홈 길이 (패널 전체 너비)
-            gy = y + grooveY; // 시트 Y 위치 (하단에서 grooveY)
-            gh = grooveH; // 홈 높이
-            console.log(`[GROOVE DRAW] 서랍앞뒷판 ${panel.name}: grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+            // 원본: width=앞판폭, height=서랍높이
+            // 시트 배치: width가 더 길면 세로(Y축)로 배치됨
+            // 홈: 패널 기준 하단(height 방향 Y=10)에 width 방향 전체
+            //
+            // 시트 배치 후:
+            // - width → 시트 세로(Y축) = height 변수
+            // - height → 시트 가로(X축) = width 변수
+            // - 패널 하단(height 방향) → 시트 좌측(X축)
+            // - 홈은 시트 좌측(X=grooveY)에 시트 세로(Y축) 전체
+            gx = x + grooveY; // 시트 X 위치 (좌측에서 grooveY=10)
+            gw = grooveH; // 홈 너비 (5mm)
+            gy = y; // 시트 Y 시작
+            gh = height; // 홈 길이 (시트 세로 전체)
+            console.log(`[GROOVE DRAW] 서랍앞뒷판 ${panel.name}: width=${panel.width}, height=${panel.height}, rotated=${panel.rotated}, 시트배치 w=${width}, h=${height}, grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
           } else if (panel.rotated) {
             // 기타 회전된 패널
             gx = x;
