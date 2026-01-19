@@ -685,7 +685,8 @@ function PageInner(){
             grain: p.grain === 'H' ? 'HORIZONTAL' :
                    p.grain === 'V' ? 'VERTICAL' :
                    'VERTICAL', // 기본값은 VERTICAL (세로)
-            canRotate: p.canRotate
+            canRotate: p.canRotate,
+            boringPositions: p.boringPositions // 보링 위치 유지
           }));
 
           // 여백을 고려한 사용 가능한 공간 계산
