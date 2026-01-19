@@ -833,8 +833,27 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           if (!name) return '';
           // (상), (하) 접두사 제거
           let normalized = name.replace(/^\([상하]\)/, '');
+
+          // ★ 서랍 관련 패턴을 먼저 체크 (가구 측판과 혼동 방지)
+          // 서랍 측판: "서랍1 좌측판", "서랍2 우측판" 등
+          if (normalized.includes('서랍')) {
+            // 서랍 앞판
+            if (normalized.includes('앞판')) return 'drawer-front-panel';
+            // 서랍 뒷판
+            if (normalized.includes('뒷판')) return 'drawer-back-panel';
+            // 서랍 측판 (좌/우)
+            if (normalized.includes('측판') || normalized.includes('좌측') || normalized.includes('우측')) {
+              if (normalized.includes('좌')) return 'drawer-side-left';
+              if (normalized.includes('우')) return 'drawer-side-right';
+            }
+            // 서랍전판 (전면 데코판)
+            if (normalized.includes('전판')) return 'drawer-front';
+            // 기타 서랍 패널
+            return `drawer-${normalized.toLowerCase()}`;
+          }
+
           // 패널 타입 추출 및 정규화
-          // "좌측", "좌측판", "좌" 등 다양한 패턴 지원
+          // "좌측", "좌측판", "좌" 등 다양한 패턴 지원 (서랍이 아닌 경우만)
           if (normalized.includes('좌측') || normalized === '좌측판' || normalized === '좌측' || normalized === '좌') return 'side-left';
           if (normalized.includes('우측') || normalized === '우측판' || normalized === '우측' || normalized === '우') return 'side-right';
           if (normalized.includes('바닥') || normalized === '하판') return 'bottom';
@@ -842,11 +861,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           if (normalized.includes('도어')) return 'door';
           if (normalized.includes('백패널') || normalized.includes('뒷판')) return 'back';
           if (normalized.includes('서랍전판')) return 'drawer-front';
-          // 서랍 측판 패턴 추가
-          if (normalized.includes('서랍') && normalized.includes('측판')) {
-            if (normalized.includes('좌')) return 'drawer-side-left';
-            if (normalized.includes('우')) return 'drawer-side-right';
-          }
           return normalized.toLowerCase();
         };
 
