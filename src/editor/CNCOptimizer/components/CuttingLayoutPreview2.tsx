@@ -1582,6 +1582,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   }, [simulating]);
 
 
+  // 줌 애니메이션 프레임 참조 (중복 렌더링 방지)
+  const zoomFrameRef = useRef<number | null>(null);
+  const pendingZoomRef = useRef<{ scale: number; offset: { x: number; y: number } } | null>(null);
+
   // Handle wheel zoom with mouse position as center
   const handleWheelRef = useRef((e: WheelEvent) => {
     e.preventDefault();
@@ -1599,24 +1603,40 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     const mouseY = e.clientY - rect.top;
 
     // 줌 속도 조절 (트랙패드와 마우스 휠 모두 부드럽게)
-    const zoomSpeed = 0.001; // Configurator와 동일한 부드러운 줌
+    const zoomSpeed = 0.001;
     const scaledDelta = e.deltaY * zoomSpeed;
 
     // 지수 함수로 부드러운 줌 계산
     const zoomFactor = Math.exp(-scaledDelta);
-    const newScale = Math.min(Math.max(0.05, scale * zoomFactor), 10);
+    // 최소 스케일을 0.1로 상향 (너무 작은 스케일에서 부동소수점 오차 방지)
+    const newScale = Math.min(Math.max(0.1, scale * zoomFactor), 10);
 
-    if (Math.abs(newScale - scale) > 0.001) {
+    // 부동소수점 정밀도를 위해 소수점 4자리로 반올림
+    const roundedScale = Math.round(newScale * 10000) / 10000;
+
+    if (Math.abs(roundedScale - scale) > 0.0001) {
       // 마우스 위치를 월드 좌표로 변환
       const worldX = (mouseX - canvasWidth / 2 - offset.x) / scale;
       const worldY = (mouseY - canvasHeight / 2 - offset.y) / scale;
 
       // 새로운 스케일에서 마우스 위치가 동일하게 유지되도록 오프셋 조정
-      const newOffsetX = mouseX - canvasWidth / 2 - worldX * newScale;
-      const newOffsetY = mouseY - canvasHeight / 2 - worldY * newScale;
+      const newOffsetX = Math.round((mouseX - canvasWidth / 2 - worldX * roundedScale) * 100) / 100;
+      const newOffsetY = Math.round((mouseY - canvasHeight / 2 - worldY * roundedScale) * 100) / 100;
 
-      setScale(newScale);
-      setOffset({ x: newOffsetX, y: newOffsetY });
+      // 펜딩 줌 상태 저장
+      pendingZoomRef.current = { scale: roundedScale, offset: { x: newOffsetX, y: newOffsetY } };
+
+      // requestAnimationFrame으로 배치 처리 (떨림 방지)
+      if (zoomFrameRef.current === null) {
+        zoomFrameRef.current = requestAnimationFrame(() => {
+          if (pendingZoomRef.current) {
+            setScale(pendingZoomRef.current.scale);
+            setOffset(pendingZoomRef.current.offset);
+            pendingZoomRef.current = null;
+          }
+          zoomFrameRef.current = null;
+        });
+      }
     }
   });
 
@@ -1636,19 +1656,40 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const zoomSpeed = 0.001;
       const scaledDelta = e.deltaY * zoomSpeed;
       const zoomFactor = Math.exp(-scaledDelta);
-      const newScale = Math.min(Math.max(0.05, scale * zoomFactor), 10);
+      // 최소 스케일을 0.1로 상향
+      const newScale = Math.min(Math.max(0.1, scale * zoomFactor), 10);
+      const roundedScale = Math.round(newScale * 10000) / 10000;
 
-      if (Math.abs(newScale - scale) > 0.001) {
+      if (Math.abs(roundedScale - scale) > 0.0001) {
         const worldX = (mouseX - canvasWidth / 2 - offset.x) / scale;
         const worldY = (mouseY - canvasHeight / 2 - offset.y) / scale;
-        const newOffsetX = mouseX - canvasWidth / 2 - worldX * newScale;
-        const newOffsetY = mouseY - canvasHeight / 2 - worldY * newScale;
+        const newOffsetX = Math.round((mouseX - canvasWidth / 2 - worldX * roundedScale) * 100) / 100;
+        const newOffsetY = Math.round((mouseY - canvasHeight / 2 - worldY * roundedScale) * 100) / 100;
 
-        setScale(newScale);
-        setOffset({ x: newOffsetX, y: newOffsetY });
+        pendingZoomRef.current = { scale: roundedScale, offset: { x: newOffsetX, y: newOffsetY } };
+
+        if (zoomFrameRef.current === null) {
+          zoomFrameRef.current = requestAnimationFrame(() => {
+            if (pendingZoomRef.current) {
+              setScale(pendingZoomRef.current.scale);
+              setOffset(pendingZoomRef.current.offset);
+              pendingZoomRef.current = null;
+            }
+            zoomFrameRef.current = null;
+          });
+        }
       }
     };
   }, [scale, offset]);
+
+  // 컴포넌트 언마운트 시 애니메이션 프레임 정리
+  useEffect(() => {
+    return () => {
+      if (zoomFrameRef.current !== null) {
+        cancelAnimationFrame(zoomFrameRef.current);
+      }
+    };
+  }, []);
 
   // Register wheel event with passive: false
   useEffect(() => {
