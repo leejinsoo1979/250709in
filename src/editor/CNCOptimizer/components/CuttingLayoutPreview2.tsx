@@ -1161,13 +1161,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         }
 
         // 홈 영역 채우기 (반투명)
-        ctx.globalAlpha = 0.3;
+        ctx.globalAlpha = 0.5;
         ctx.fillRect(grooveX1, grooveY1, grooveW, grooveH);
 
-        // 빗금 패턴 그리기 (흐리게)
-        ctx.globalAlpha = 0.2;
+        // 빗금 패턴 그리기
+        ctx.globalAlpha = 0.6;
         ctx.strokeStyle = groovePanelColor.stroke;
-        ctx.lineWidth = 0.5 / (baseScale * scale);
+        ctx.lineWidth = 0.8 / (baseScale * scale);
         ctx.beginPath();
         const hatchSpacing = 3 / (baseScale * scale); // 빗금 간격
         if (grooveW > grooveH) {
@@ -1186,9 +1186,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.stroke();
 
         // 홈 테두리 그리기
-        ctx.globalAlpha = 0.4;
+        ctx.globalAlpha = 0.8;
         ctx.strokeStyle = groovePanelColor.stroke;
-        ctx.lineWidth = 1 / (baseScale * scale);
+        ctx.lineWidth = 1.5 / (baseScale * scale);
         ctx.strokeRect(grooveX1, grooveY1, grooveW, grooveH);
 
         ctx.globalAlpha = 1;
@@ -1271,12 +1271,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           }
 
           // 홈 영역 채우기 (반투명)
-          ctx.globalAlpha = 0.3;
+          ctx.globalAlpha = 0.5;
           ctx.fillRect(gx, gy, gw, gh);
 
-          // 빗금 패턴 그리기 (흐리게)
-          ctx.globalAlpha = 0.2;
-          ctx.lineWidth = 0.5 / (baseScale * scale);
+          // 빗금 패턴 그리기
+          ctx.globalAlpha = 0.6;
+          ctx.lineWidth = 0.8 / (baseScale * scale);
           ctx.beginPath();
           const hatchSpacing = 3 / (baseScale * scale); // 빗금 간격
           if (gw > gh) {
@@ -1295,8 +1295,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           ctx.stroke();
 
           // 홈 테두리 그리기
-          ctx.globalAlpha = 0.4;
-          ctx.lineWidth = 1 / (baseScale * scale);
+          ctx.globalAlpha = 0.8;
+          ctx.lineWidth = 1.5 / (baseScale * scale);
           ctx.strokeRect(gx, gy, gw, gh);
 
           ctx.globalAlpha = 1;
