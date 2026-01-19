@@ -600,10 +600,18 @@ function PageInner(){
     await new Promise(resolve => setTimeout(resolve, 1000));
     
     try {
-      
+
+      // ★★★ 디버그: panels store의 boringDepthPositions 확인 ★★★
+      console.log('[handleOptimize] panels store 확인:');
+      panels.forEach(p => {
+        if (p.label.includes('서랍') && (p.label.includes('좌측판') || p.label.includes('우측판'))) {
+          console.log(`[handleOptimize] ${p.label}: boringDepthPositions=`, p.boringDepthPositions);
+        }
+      });
+
       // Group panels by material AND thickness
       const panelGroups = new Map<string, Panel[]>();
-      
+
       panels.forEach(panel => {
         // Apply grain and rotation settings
         const processedPanel = { ...panel };
