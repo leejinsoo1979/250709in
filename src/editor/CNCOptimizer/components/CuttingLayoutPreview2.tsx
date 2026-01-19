@@ -930,15 +930,37 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // 시트 좌표로 변환
             let boringX: number, boringY: number;
 
-            // ★★★ 모든 측판 (가구/서랍) 동일한 로직 ★★★
+            // ★★★ 보링 시트 좌표 변환 (최종 수정) ★★★
+            //
+            // 원본 패널 좌표계:
+            // - boringPosMm = 높이 방향 Y위치 (상중하: 20, 112.5, 205mm)
+            // - depthPosMm = 깊이 방향 X위치 (좌우 끝: 7.5, 527.5mm)
+            //
+            // 서랍 측판 (rotated=true, 원본 width=535, height=225):
+            // - 시트 배치: placedWidth=225 (가로), placedHeight=535 (세로)
+            // - 보링이 좌/우 끝(X축)에 세로(Y축)로 3개씩 배치되어야 함
+            //
+            // 문제: 현재 보링이 상/하(Y축)에 가로(X축)로 나옴 → X/Y 반대
+            //
+            // 해결:
+            // - 시트 X = depthPosMm (좌우 끝: 7.5, 527.5)
+            // - 시트 Y = boringPosMm (상중하: 20, 112.5, 205)
+
             if (panel.rotated) {
-              // 회전된 경우: 시트 X=높이방향, 시트 Y=깊이방향
-              boringX = x + boringPosMm;
-              boringY = y + depthPosMm;
+              // ★★★ 회전된 패널 (서랍 측판) ★★★
+              // 패널 90도 회전 → 원래 좌표축이 바뀜
+              // - 원래 height 방향 → 시트 X축 (placedWidth = 225)
+              // - 원래 width 방향 → 시트 Y축 (placedHeight = 535)
+              // boringPosMm = 원래 height 기준 (상중하: 20, 112.5, 205)
+              // depthPosMm = 원래 width 기준 (좌우끝: 7.5, 527.5)
+              boringX = x + boringPosMm;  // 시트 X = 원래 높이 방향 (좌우 20, 112.5, 205)
+              boringY = y + depthPosMm;   // 시트 Y = 원래 깊이 방향 (상하 7.5, 527.5)
             } else {
-              // 회전 안된 경우: 시트 X=깊이방향, 시트 Y=높이방향
-              boringX = x + depthPosMm;
-              boringY = y + boringPosMm;
+              // 비회전 패널: 원래 좌표 그대로
+              // - width 방향 → 시트 X축
+              // - height 방향 → 시트 Y축
+              boringX = x + depthPosMm;   // 시트 X = 깊이 방향
+              boringY = y + boringPosMm;  // 시트 Y = 높이 방향
             }
 
             // 호버/선택 상태 확인
