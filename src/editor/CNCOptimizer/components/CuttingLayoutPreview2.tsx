@@ -954,10 +954,38 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               // 서랍 측판 (rotated=true):
               // - 원본: width=535(깊이), height=225(높이)
               // - 시트 배치: placedWidth=225, placedHeight=535
-              // - depthPosMm(7.5~527.5)은 시트 Y축(535 범위)에 매핑
-              // - boringPosMm(20~205)은 시트 X축(225 범위)에 매핑
-              boringX = x + boringPosMm;  // 시트 X = 높이 방향 (20, 112.5, 205)
-              boringY = y + depthPosMm;   // 시트 Y = 깊이 방향 (7.5, 527.5)
+              // - 회전됐으므로 원본 좌표를 시트 좌표로 변환
+              //
+              // 원하는 결과: 좌우 양끝(시트X)에 세로(시트Y)로 3개씩
+              // - depthPosMm(7.5, 527.5): 원본 깊이 방향 → 시트 Y축 (0~535)
+              // - boringPosMm(20, 112.5, 205): 원본 높이 방향 → 시트 X축 (0~225)
+              //
+              // 시트 좌표 변환:
+              // - 시트 X = boringPosMm (원본 높이 방향 → 시트 가로)
+              // - 시트 Y = depthPosMm (원본 깊이 방향 → 시트 세로)
+              //
+              // 그러나 이렇게 하면 보링이 상/하에 가로로 나옴
+              // 원하는 건 좌/우에 세로로 나와야 함
+              //
+              // 문제 분석:
+              // - depthPosMm = 7.5, 527.5 (원본 width=535 기준, 깊이 방향)
+              // - boringPosMm = 20, 112.5, 205 (원본 height=225 기준, 높이 방향)
+              // - 시트 배치: placedWidth=225(가로), placedHeight=535(세로)
+              //
+              // 해결책:
+              // - 깊이방향(7.5, 527.5)이 시트Y(세로 535)에 매핑 → depthPosMm을 그대로 Y로
+              // - 높이방향(20~205)이 시트X(가로 225)에 매핑 → boringPosMm을 그대로 X로
+              //
+              // 하지만 원하는건 깊이방향이 X축(좌우 끝)에, 높이방향이 Y축(세로)에 배치
+              // 즉, 90도 더 회전된 형태가 필요
+              //
+              // 최종 해결:
+              // - 시트 X = (depthPosMm / originalWidth) * placedWidth
+              // - 시트 Y = (boringPosMm / originalHeight) * placedHeight
+              const scaleX = placedWidth / originalWidth;   // 225/535 = 0.42
+              const scaleY = placedHeight / originalHeight; // 535/225 = 2.38
+              boringX = x + depthPosMm * scaleX;   // 깊이방향 → 시트 X (좌우)
+              boringY = y + boringPosMm * scaleY;  // 높이방향 → 시트 Y (세로)
             } else {
               // 가구 측판 (rotated=false): 원래 좌표 그대로
               boringX = x + depthPosMm;   // 시트 X = 깊이 방향
