@@ -158,4 +158,112 @@ export function calculateShelfBoringPositionsFromThreeUnits(params: {
   });
 }
 
+/**
+ * 섹션별 보링 위치 계산 (상/하 분리 측판용)
+ *
+ * 각 섹션의 측판에 대해 해당 섹션 범위 내의 보링만 반환하고,
+ * 좌표를 해당 섹션의 바닥 기준으로 변환합니다.
+ *
+ * @example
+ * ```ts
+ * const result = calculateSectionBoringPositions({
+ *   sections: moduleData.modelConfig.sections,
+ *   totalHeightMm: 1600,
+ *   basicThicknessMm: 18,
+ * });
+ *
+ * // 결과:
+ * // result.sectionPositions[0] = { positions: [9, 200, 391], sectionStart: 0, sectionEnd: 400, height: 400 }
+ * // result.sectionPositions[1] = { positions: [9, 200, 391], sectionStart: 400, sectionEnd: 800, height: 400 }
+ * ```
+ */
+export interface SectionBoringInfo {
+  /** 섹션 내 보링 위치 (섹션 바닥 기준 mm) */
+  positions: number[];
+  /** 섹션 시작 위치 (가구 바닥 기준 mm) */
+  sectionStart: number;
+  /** 섹션 끝 위치 (가구 바닥 기준 mm) */
+  sectionEnd: number;
+  /** 섹션 높이 (mm) */
+  height: number;
+}
+
+export interface SectionBoringPositionsResult {
+  /** 섹션별 보링 정보 배열 (인덱스 = 섹션 인덱스) */
+  sectionPositions: SectionBoringInfo[];
+  /** 전체 가구의 모든 보링 위치 (가구 바닥 기준 mm) */
+  allPositions: number[];
+}
+
+export function calculateSectionBoringPositions(
+  params: CalculateShelfBoringPositionsParams
+): SectionBoringPositionsResult {
+  const { sections, totalHeightMm, basicThicknessMm } = params;
+
+  if (!sections || sections.length === 0) {
+    return {
+      sectionPositions: [],
+      allPositions: [],
+    };
+  }
+
+  const halfThicknessMm = basicThicknessMm / 2;
+  const availableHeightMm = totalHeightMm - basicThicknessMm * 2;
+
+  // 먼저 각 섹션의 범위 계산
+  const sectionRanges: { start: number; end: number; height: number }[] = [];
+  let currentY = basicThicknessMm; // 바닥판 상면에서 시작
+
+  sections.forEach((section, index) => {
+    let sectionHeightMm: number;
+    if (section.heightType === 'absolute') {
+      sectionHeightMm = section.height;
+    } else {
+      sectionHeightMm = availableHeightMm * (section.height / 100);
+    }
+
+    const sectionStart = currentY;
+    const sectionEnd = currentY + sectionHeightMm - basicThicknessMm;
+
+    sectionRanges.push({
+      start: sectionStart,
+      end: sectionEnd,
+      height: sectionEnd - sectionStart + basicThicknessMm, // 측판 높이
+    });
+
+    currentY += sectionHeightMm;
+  });
+
+  // 전체 보링 위치 계산
+  const fullResult = calculateShelfBoringPositions(params);
+  const allPositions = fullResult.positions;
+
+  // 각 섹션별로 보링 위치 필터링 및 변환
+  const sectionPositions: SectionBoringInfo[] = sectionRanges.map((range, sectionIndex) => {
+    // 해당 섹션 범위 내의 보링만 필터링
+    const sectionBorings = allPositions.filter(pos => {
+      // 섹션 범위 내에 있는 보링만 선택
+      // 약간의 여유를 두어 경계에 있는 보링도 포함
+      return pos >= range.start - halfThicknessMm && pos <= range.end + halfThicknessMm;
+    });
+
+    // 섹션 바닥 기준으로 좌표 변환
+    const transformedPositions = sectionBorings.map(pos => {
+      return pos - range.start + halfThicknessMm;
+    });
+
+    return {
+      positions: transformedPositions.sort((a, b) => a - b),
+      sectionStart: range.start,
+      sectionEnd: range.end,
+      height: range.height,
+    };
+  });
+
+  return {
+    sectionPositions,
+    allPositions,
+  };
+}
+
 export default calculateShelfBoringPositions;

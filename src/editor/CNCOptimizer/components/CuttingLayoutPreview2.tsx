@@ -858,63 +858,99 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           if (boringPositions && boringPositions.length > 0) {
             ctx.save();
 
-            // ★★★ 2D 뷰어 SidePanelBoring.tsx와 동일한 좌표 계산 ★★★
-            //
-            // CNC 패널 좌표계:
-            // - panel.width = 측판의 깊이(depth) 방향
-            // - panel.height = 측판의 높이 방향
-            // - panel.rotated = true이면 시트에서 90도 회전 배치됨
-            //
-            // 보링 위치:
-            // - boringPositions = 가구 바닥 기준 mm 위치 (상판, 하판, 선반 중심 위치)
-            // - X방향(깊이): 앞쪽 50mm, 중앙, 뒤쪽 50mm (백패널 18mm 고려)
-            // - Y방향(높이): boringPositions 값 그대로 사용
+            // ★★★ 측판 패널의 원래 치수 (배치 전) ★★★
+            // panel.width, panel.height는 원래 패널 치수 (rotated와 무관)
+            // 측판의 경우:
+            // - 원래 width = 가구 깊이 (540mm 등)
+            // - 원래 height = 측판 높이 (섹션별로 다름)
+            const originalWidth = panel.width;   // 측판의 깊이 방향 (가구 깊이)
+            const originalHeight = panel.height; // 측판의 높이 방향
 
-            const basicThickness = 18; // 패널 두께
+            // 시트에 배치된 크기 (회전 고려)
+            const placedWidth = panel.rotated ? originalHeight : originalWidth;
+            const placedHeight = panel.rotated ? originalWidth : originalHeight;
+
+            // ★★★ 보링 X 위치 계산 (깊이 방향) - 2D 뷰어와 동일 ★★★
+            const basicThickness = 18; // 백패널 두께
             const edgeOffset = 50; // 끝에서 50mm
-            const panelDepthMm = panel.width; // 측판 깊이 = panel.width
 
-            // X 위치 (깊이 방향) - 2D 뷰어와 동일
+            // 깊이 방향 3개의 X 위치 (원래 좌표계 기준)
             const frontX = edgeOffset; // 앞쪽에서 50mm
-            const backX = panelDepthMm - basicThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 두께 고려)
+            const backX = originalWidth - basicThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 고려)
             const centerX = (frontX + backX) / 2; // 가운데
-            const xPositions = [frontX, centerX, backX];
+            const depthPositions = [frontX, centerX, backX]; // 깊이 방향 위치들
+
+            // ★★★ 보링 Y 위치 필터링 (상/하 분리 측판 처리) ★★★
+            // 패널 이름에 "(상)" 또는 "(하)"가 있으면 해당 섹션 범위만 사용
+            // 보링 위치가 패널 높이 범위 내에 있어야 함
+            const isUpperSection = panel.name.includes('(상)');
+            const isLowerSection = panel.name.includes('(하)');
+            const isSplitPanel = isUpperSection || isLowerSection;
+
+            let filteredBoringPositions: number[];
+
+            if (isSplitPanel) {
+              // 상/하 분리 측판: 패널 높이 범위 내의 보링만 사용
+              // 보링 위치는 가구 전체 높이 기준이므로, 섹션 범위로 필터링 후 섹션 기준으로 변환 필요
+              // 하부 섹션: 0 ~ 하부섹션높이 범위의 보링
+              // 상부 섹션: 상부섹션시작 ~ 끝 범위의 보링, 좌표를 상부섹션 기준으로 변환
+
+              // 전체 가구 높이 추정 (모든 보링 위치 중 최대값 + 여유)
+              const maxBoringPos = Math.max(...boringPositions);
+
+              if (isLowerSection) {
+                // 하부 섹션: 패널 높이 범위 내의 보링 위치 (좌표 그대로 사용)
+                filteredBoringPositions = boringPositions.filter(pos => pos <= originalHeight + 10);
+              } else {
+                // 상부 섹션: 하부섹션 끝(= 전체높이 - 상부높이)부터 시작
+                // 상부 섹션의 보링 위치를 상부 측판 좌표로 변환
+                const lowerSectionEnd = maxBoringPos - originalHeight + 18; // 대략적인 하부 섹션 끝
+                filteredBoringPositions = boringPositions
+                  .filter(pos => pos >= lowerSectionEnd - 10)
+                  .map(pos => pos - lowerSectionEnd + 9); // 상부 섹션 기준으로 변환
+              }
+            } else {
+              // 통짜 측판: 모든 보링 위치 사용
+              filteredBoringPositions = boringPositions.filter(pos => pos <= originalHeight + 10);
+            }
 
             // 보링 색상 및 크기
             const boringColor = boringColors['shelf-pin'];
-            const holeDiameter = 5; // mm - 더 잘 보이도록
+            const holeDiameter = 5;
             const radius = holeDiameter / 2;
 
             // 각 보링 위치에 대해 3개의 홀 그리기
-            boringPositions.forEach(boringPosMm => {
-              xPositions.forEach(xPosMm => {
-                // CNC 패널 좌표로 변환
+            filteredBoringPositions.forEach(boringPosMm => {
+              depthPositions.forEach(depthPosMm => {
+                // 시트 좌표로 변환
                 let boringX: number, boringY: number;
 
                 if (panel.rotated) {
-                  // 패널이 90도 회전된 경우
-                  // 원래 (깊이, 높이) -> 시트에서 (높이, 깊이)로 매핑
-                  // X = x + boringPosMm (높이가 X축으로)
-                  // Y = y + xPosMm (깊이가 Y축으로)
-                  boringX = x + boringPosMm;
-                  boringY = y + xPosMm;
+                  // 패널이 90도 회전된 경우:
+                  // - 원래 깊이(X) → 시트 Y축
+                  // - 원래 높이(Y) → 시트 X축
+                  boringX = x + boringPosMm;   // 높이 위치 → X축
+                  boringY = y + depthPosMm;    // 깊이 위치 → Y축
                 } else {
-                  // 패널이 회전 안된 경우
-                  // X = x + xPosMm (깊이가 X축)
-                  // Y = y + boringPosMm (높이가 Y축)
-                  boringX = x + xPosMm;
-                  boringY = y + boringPosMm;
+                  // 패널이 회전 안된 경우:
+                  // - 원래 깊이(X) → 시트 X축
+                  // - 원래 높이(Y) → 시트 Y축
+                  boringX = x + depthPosMm;    // 깊이 위치 → X축
+                  boringY = y + boringPosMm;   // 높이 위치 → Y축
                 }
 
-                // 원형 보링 그리기
-                ctx.fillStyle = boringColor.fill;
-                ctx.strokeStyle = boringColor.stroke;
-                ctx.lineWidth = 1 / (baseScale * scale);
+                // 패널 범위 내에 있는지 확인
+                if (boringX >= x && boringX <= x + placedWidth &&
+                    boringY >= y && boringY <= y + placedHeight) {
+                  ctx.fillStyle = boringColor.fill;
+                  ctx.strokeStyle = boringColor.stroke;
+                  ctx.lineWidth = 1 / (baseScale * scale);
 
-                ctx.beginPath();
-                ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
+                  ctx.beginPath();
+                  ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
+                  ctx.fill();
+                  ctx.stroke();
+                }
               });
             });
 

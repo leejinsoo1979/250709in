@@ -10,7 +10,7 @@ import Logo from '@/components/common/Logo';
 import { initializeTheme } from '@/theme';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useFurnitureBoring, calculateShelfBoringPositions } from '@/domain/boring';
+import { useFurnitureBoring, calculateShelfBoringPositions, calculateSectionBoringPositions } from '@/domain/boring';
 import { getModuleById } from '@/data/modules';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
