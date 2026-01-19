@@ -827,6 +827,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       } // End of showLabels check
 
       // 보링 표시 (showLabels와 독립적으로 표시)
+      // ★ 2D 뷰어와 동일하게 가구 측판(좌측판/우측판)에만 선반핀 보링 표시
+      // 서랍 패널, 상판, 하판, 도어 등에는 보링 표시하지 않음
       if (showBorings && boringData && boringData.length > 0) {
         // 패널 이름 정규화 함수 - 다양한 형식을 통일된 키로 변환
         const normalizePanelName = (name: string): string => {
@@ -866,6 +868,16 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // 정규화된 이름으로 매칭 (크기도 함께 확인)
         const normalizedCncName = normalizePanelName(panel.name);
+
+        // ★ 가구 측판(side-left, side-right)만 보링 표시 대상
+        // 2D 뷰어의 SidePanelBoring과 동일하게 가구 측판에만 선반핀 보링 표시
+        const isFurnitureSidePanel = normalizedCncName === 'side-left' || normalizedCncName === 'side-right';
+
+        if (!isFurnitureSidePanel) {
+          // 가구 측판이 아니면 보링 표시 건너뜀
+          // (서랍 패널, 상판, 하판, 도어, 백패널 등)
+        } else {
+          // 가구 측판인 경우에만 보링 매칭 진행
 
         // 이름이 같은 후보들 먼저 필터
         const candidates = boringData.filter(b => {
@@ -957,6 +969,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
           ctx.restore();
         }
+        } // end of else (isFurnitureSidePanel)
       }
 
       // Reset shadow and transparency effects
