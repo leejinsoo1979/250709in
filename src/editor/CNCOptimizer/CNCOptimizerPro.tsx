@@ -698,23 +698,29 @@ function PageInner(){
           };
 
           // 패널: width=W방향, height=L방향 (시트와 동일한 좌표계)
-          const optimizerPanels = groupPanels.map(p => ({
-            id: p.id,
-            name: p.label,
-            width: p.width,    // W방향
-            height: p.length,  // L방향
-            thickness: p.thickness,
-            quantity: p.quantity,
-            material: p.material || 'PB',
-            color: 'MW',
-            grain: p.grain === 'H' ? 'HORIZONTAL' :
-                   p.grain === 'V' ? 'VERTICAL' :
-                   'VERTICAL', // 기본값은 VERTICAL (세로)
-            canRotate: p.canRotate,
-            boringPositions: p.boringPositions, // 보링 위치 유지
-            boringDepthPositions: p.boringDepthPositions, // 보링 X 위치
-            groovePositions: p.groovePositions // 홈 위치
-          }));
+          const optimizerPanels = groupPanels.map(p => {
+            // 디버그: 서랍 측판 데이터 확인
+            if (p.label.includes('서랍') && (p.label.includes('좌측판') || p.label.includes('우측판'))) {
+              console.log(`[optimizerPanels] ${p.label}: boringDepthPositions=`, p.boringDepthPositions, 'groovePositions=', p.groovePositions);
+            }
+            return {
+              id: p.id,
+              name: p.label,
+              width: p.width,    // W방향
+              height: p.length,  // L방향
+              thickness: p.thickness,
+              quantity: p.quantity,
+              material: p.material || 'PB',
+              color: 'MW',
+              grain: p.grain === 'H' ? 'HORIZONTAL' :
+                     p.grain === 'V' ? 'VERTICAL' :
+                     'VERTICAL', // 기본값은 VERTICAL (세로)
+              canRotate: p.canRotate,
+              boringPositions: p.boringPositions, // 보링 위치 유지
+              boringDepthPositions: p.boringDepthPositions, // 보링 X 위치
+              groovePositions: p.groovePositions // 홈 위치
+            };
+          });
 
           // 여백을 고려한 사용 가능한 공간 계산
           const adjustedStockPanel = {
@@ -741,6 +747,10 @@ function PageInner(){
             result.panels.forEach(panel => {
               panel.x += (settings.trimLeft || 10);
               panel.y += (settings.trimBottom || 10);
+              // 디버그: optimizer 결과 확인
+              if (panel.name?.includes('서랍') && (panel.name?.includes('좌측판') || panel.name?.includes('우측판'))) {
+                console.log(`[optimizer result] ${panel.name}: boringDepthPositions=`, panel.boringDepthPositions, 'groovePositions=', panel.groovePositions);
+              }
             });
             // 원본 크기 정보 복원
             result.stockPanel = stockPanel;
