@@ -155,8 +155,8 @@ export const exportBoringToCSV = (panels: Panel[]): string => {
     // 패널명에서 쉼표 제거
     const cleanPanelName = panel.name.replace(/,/g, '_');
 
-    // 보링 위치를 Y 순서대로 정렬
-    const sortedBoringPositions = [...panel.boringPositions].sort((a, b) => a - b);
+    // 보링 위치를 Y 내림차순 정렬 (상단→하단, 상판→선반→지판 순서)
+    const sortedBoringPositions = [...panel.boringPositions].sort((a, b) => b - a);
 
     // 각 Y 위치에 대해 3개의 X 위치
     sortedBoringPositions.forEach((yPos, yIndex) => {
