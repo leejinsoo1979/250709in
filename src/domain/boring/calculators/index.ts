@@ -53,6 +53,16 @@ export {
   type AdjustableFootBoringResult,
 } from './adjustableFootCalculator';
 
+// 서랍 측판-앞뒤판 체결 계산기
+export {
+  calculateDrawerPanelConnectorBorings,
+  DRAWER_CONNECTOR_DIAMETER,
+  DRAWER_CONNECTOR_DEPTH,
+  DRAWER_CONNECTOR_EDGE_OFFSET,
+  type DrawerPanelConnectorParams,
+  type DrawerPanelConnectorResult,
+} from './drawerPanelConnectorCalculator';
+
 // ============================================
 // 통합 유틸리티
 // ============================================

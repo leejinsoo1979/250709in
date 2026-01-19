@@ -187,6 +187,7 @@ export function convertFurnitureToBoring(
   // 가구 타입별 처리
   switch (cabinetType) {
     case 'drawer': {
+      const drawerCount = getDrawerCount(sections) || 4;
       const drawerParams: DrawerCabinetParams = {
         id: furnitureId,
         name: furnitureName,
@@ -195,7 +196,8 @@ export function convertFurnitureToBoring(
         depth: dims.depth,
         thickness: panelThickness,
         material,
-        drawerCount: getDrawerCount(sections) || 4,
+        drawerCount,
+        drawerRailType: 'tandem', // 기본 레일 타입
         hasAdjustableFoot: false, // 기본값
         settings: mergedSettings,
       };

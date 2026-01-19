@@ -9,6 +9,7 @@ import {
   calculateCamHousingBorings,
   calculateDrawerRailBorings,
   calculateAdjustableFootBorings,
+  calculateDrawerPanelConnectorBorings,
   mergeBorings,
 } from '../calculators';
 import { DEFAULT_BORING_SETTINGS } from '../constants';
@@ -25,8 +26,9 @@ export interface DrawerCabinetParams {
   depth: number;           // 가구 외부 깊이 (mm)
   thickness: number;       // 패널 두께 (mm), 기본 18mm
   material: string;        // 재질
-  drawerHeights: number[]; // 각 서랍 높이 배열 (mm)
-  drawerRailType: DrawerRailType;  // 서랍 레일 타입
+  drawerCount: number;     // 서랍 개수
+  drawerHeights?: number[]; // 각 서랍 높이 배열 (mm), 없으면 균등 분배
+  drawerRailType?: DrawerRailType;  // 서랍 레일 타입, 기본 tandem
   hasAdjustableFoot: boolean;      // 조절발 유무
   settings?: Partial<BoringSettings>;
 }
@@ -226,6 +228,52 @@ function generateDrawerFrontBorings(
 }
 
 // ============================================
+// 서랍 측판 보링 생성 (앞/뒤판 체결용)
+// ============================================
+
+function generateDrawerSidePanelBorings(
+  params: DrawerCabinetParams,
+  drawerIndex: number,
+  drawerHeight: number,
+  isLeftPanel: boolean
+): PanelBoringData {
+  const panelId = `${params.id}-drawer-${drawerIndex + 1}-side-${isLeftPanel ? 'left' : 'right'}`;
+
+  // 서랍 측판 치수 계산
+  // 서랍 측판 두께는 보통 15mm
+  const sideThickness = 15;
+  // 서랍 깊이 = 가구 깊이 - 백패널 - 전면 간격
+  const drawerDepth = params.depth - params.thickness - 20;
+  // 서랍 측판 높이 = 서랍 높이 - 바닥판 두께 - 간격
+  const sidePanelHeight = drawerHeight - sideThickness - 10;
+
+  // 앞/뒤판 체결용 보링 계산
+  const connectorResult = calculateDrawerPanelConnectorBorings({
+    drawerHeight: sidePanelHeight,
+    drawerDepth,
+    sideThickness,
+    isLeftPanel,
+    drawerIndex,
+  });
+
+  return {
+    panelId,
+    furnitureId: params.id,
+    furnitureName: params.name,
+    panelType: isLeftPanel ? 'drawer-side-left' : 'drawer-side-right',
+    panelName: `서랍${drawerIndex + 1}측판-${isLeftPanel ? '좌' : '우'}`,
+    width: drawerDepth,
+    height: sidePanelHeight,
+    thickness: sideThickness,
+    material: params.material,
+    grain: 'V',
+    borings: connectorResult.borings,
+    isMirrored: !isLeftPanel,
+    mirrorSourceId: isLeftPanel ? undefined : `${params.id}-drawer-${drawerIndex + 1}-side-left`,
+  };
+}
+
+// ============================================
 // 메인 생성 함수
 // ============================================
 
@@ -236,20 +284,27 @@ export function generateDrawerCabinetBorings(
   params: DrawerCabinetParams
 ): DrawerCabinetBoringResult {
   const settings = { ...DEFAULT_BORING_SETTINGS, ...params.settings };
+  const drawerRailType = params.drawerRailType || 'tandem';
 
   // 서랍 레일 설정 업데이트
   settings.drawerRail = {
     ...settings.drawerRail,
-    type: params.drawerRailType,
+    type: drawerRailType,
   };
 
   const panels: PanelBoringData[] = [];
 
+  // 서랍 높이 계산 (개별 지정 또는 균등 분배)
+  const drawerHeights = params.drawerHeights ||
+    Array(params.drawerCount).fill(
+      (params.height - 2 * params.thickness) / params.drawerCount
+    );
+
   // 1. 좌측판
-  panels.push(generateSidePanelBorings(params, true, settings));
+  panels.push(generateSidePanelBorings({...params, drawerHeights}, true, settings));
 
   // 2. 우측판
-  panels.push(generateSidePanelBorings(params, false, settings));
+  panels.push(generateSidePanelBorings({...params, drawerHeights}, false, settings));
 
   // 3. 상판
   panels.push(generateHorizontalPanelBorings(params, true, settings));
@@ -257,9 +312,16 @@ export function generateDrawerCabinetBorings(
   // 4. 하판
   panels.push(generateHorizontalPanelBorings(params, false, settings));
 
-  // 5. 서랍 전판들
-  params.drawerHeights.forEach((drawerHeight, index) => {
+  // 5. 서랍별 패널들
+  drawerHeights.forEach((drawerHeight, index) => {
+    // 서랍 전판
     panels.push(generateDrawerFrontBorings(params, index, drawerHeight));
+
+    // 서랍 좌측판 (앞/뒤판 체결용 보링)
+    panels.push(generateDrawerSidePanelBorings(params, index, drawerHeight, true));
+
+    // 서랍 우측판 (앞/뒤판 체결용 보링)
+    panels.push(generateDrawerSidePanelBorings(params, index, drawerHeight, false));
   });
 
   const totalBorings = panels.reduce(
@@ -268,14 +330,14 @@ export function generateDrawerCabinetBorings(
   );
 
   // 장공 포함 여부 확인
-  const hasSlots = ['tandem', 'movento'].includes(params.drawerRailType);
+  const hasSlots = ['tandem', 'movento'].includes(drawerRailType);
 
   return {
     panels,
     summary: {
       panelCount: panels.length,
       totalBorings,
-      drawerCount: params.drawerHeights.length,
+      drawerCount: drawerHeights.length,
       hasSlots,
     },
   };

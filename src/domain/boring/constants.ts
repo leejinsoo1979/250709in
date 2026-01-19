@@ -176,8 +176,9 @@ export const DEFAULT_DXF_EXPORT_SETTINGS: DXFExportSettings = {
     '5_SHELF_PIN': 2,      // Yellow
     '6_DRAWER_RAIL': 3,    // Green
     '7_ADJUSTABLE_FOOT': 7, // White
-    '8_DIMENSIONS': 4,     // Cyan
-    '9_LABELS': 6,         // Magenta
+    '8_DRAWER_CONNECTOR': 3, // Green
+    '9_DIMENSIONS': 4,     // Cyan
+    '10_LABELS': 6,        // Magenta
   },
 };
 
@@ -252,8 +253,9 @@ export const DXF_LAYERS = {
   SHELF_PIN: '5_SHELF_PIN',
   DRAWER_RAIL: '6_DRAWER_RAIL',
   ADJUSTABLE_FOOT: '7_ADJUSTABLE_FOOT',
-  DIMENSIONS: '8_DIMENSIONS',
-  LABELS: '9_LABELS',
+  DRAWER_PANEL_CONNECTOR: '8_DRAWER_CONNECTOR',
+  DIMENSIONS: '9_DIMENSIONS',
+  LABELS: '10_LABELS',
 } as const;
 
 // ============================================
@@ -269,6 +271,7 @@ export const BORING_DIAMETERS = {
   'adjustable-foot': 10,
   'drawer-rail': 5,
   'drawer-rail-slot': 5,
+  'drawer-panel-connector': 3,
   'custom': 5,
 } as const;
 
@@ -285,6 +288,7 @@ export const BORING_DEPTHS = {
   'adjustable-foot': 15,
   'drawer-rail': 12,
   'drawer-rail-slot': 12,
+  'drawer-panel-connector': 15, // 관통 (측판 두께)
   'custom': 10,
 } as const;
 
@@ -301,5 +305,6 @@ export const BORING_TYPE_TO_LAYER = {
   'adjustable-foot': DXF_LAYERS.ADJUSTABLE_FOOT,
   'drawer-rail': DXF_LAYERS.DRAWER_RAIL,
   'drawer-rail-slot': DXF_LAYERS.DRAWER_RAIL,
+  'drawer-panel-connector': DXF_LAYERS.DRAWER_PANEL_CONNECTOR,
   'custom': DXF_LAYERS.LABELS,
 } as const;

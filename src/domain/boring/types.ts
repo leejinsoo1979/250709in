@@ -19,6 +19,7 @@ export type BoringType =
   | 'adjustable-foot'  // 조절발 Ø10mm
   | 'drawer-rail'      // 서랍레일 원형홀
   | 'drawer-rail-slot' // 서랍레일 장공 (TANDEM/MOVENTO)
+  | 'drawer-panel-connector' // 서랍 측판-앞뒤판 체결홀 Ø3mm
   | 'custom';          // 사용자 정의
 
 /**
@@ -43,6 +44,8 @@ export type PanelType =
   | 'shelf'        // 선반
   | 'door'         // 도어
   | 'drawer-front' // 서랍 전판
+  | 'drawer-side-left'  // 서랍 좌측판
+  | 'drawer-side-right' // 서랍 우측판
   | 'back-panel'   // 백패널
   | 'partition';   // 칸막이
 
