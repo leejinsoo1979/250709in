@@ -205,15 +205,19 @@ export interface BoringCoordinate {
 }
 
 /**
- * 측판 보링 좌표 데이터 생성
- * 2D 뷰어와 동일한 방식으로 3개의 깊이 위치에 보링 생성
+ * 측판 보링 좌표 데이터 생성 (관통홀 - CNC 테이블 기준)
+ *
+ * 측판 보링은 관통홀입니다. CNC 테이블에 측판을 평평하게 놓고 위에서 관통 가공합니다.
+ * 패널 배치: 측판을 CNC 테이블에 놓을 때
+ *   - X축 = 패널의 깊이 방향 (가구 깊이)
+ *   - Y축 = 패널의 높이 방향 (측판 높이)
  *
  * @param panelId 패널 ID
  * @param panelName 패널 이름
- * @param panelWidth 패널 너비 (= 가구 깊이, mm)
- * @param panelHeight 패널 높이 (mm)
- * @param boringYPositions 보링 Y 위치 배열 (패널 기준 mm)
- * @param isLeftPanel 좌측판 여부 (우측판이면 false)
+ * @param panelWidth 패널 너비 (= 가구 깊이, mm) - CNC X축
+ * @param panelHeight 패널 높이 (mm) - CNC Y축
+ * @param boringYPositions 보링 Y 위치 배열 (패널 높이 방향 기준 mm)
+ * @param panelThickness 패널 두께 (mm) - 관통 깊이
  */
 export const generateSidePanelBoringCoordinates = (
   panelId: string,
@@ -221,7 +225,7 @@ export const generateSidePanelBoringCoordinates = (
   panelWidth: number,
   panelHeight: number,
   boringYPositions: number[],
-  isLeftPanel: boolean = true
+  panelThickness: number = 18
 ): BoringCoordinate[] => {
   const coordinates: BoringCoordinate[] = [];
 
@@ -229,9 +233,9 @@ export const generateSidePanelBoringCoordinates = (
   const backPanelThickness = 18; // 백패널 두께
   const edgeOffset = 50; // 끝에서 50mm
   const boringDiameter = 5; // 선반핀홀 직경
-  const boringDepth = 12; // 선반핀홀 깊이
 
   // 깊이 방향 3개의 X 위치 (2D 뷰어와 동일)
+  // CNC 테이블에서 X축 = 패널의 깊이 방향
   const frontX = edgeOffset; // 앞쪽에서 50mm
   const backX = panelWidth - backPanelThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 고려)
   const centerX = (frontX + backX) / 2; // 가운데
@@ -239,23 +243,24 @@ export const generateSidePanelBoringCoordinates = (
   const depthPositions = [frontX, centerX, backX];
   const depthNames = ['전면', '중앙', '후면'];
 
-  // 보링 가공면 (좌측판은 오른쪽 면에, 우측판은 왼쪽 면에 보링)
-  const face = isLeftPanel ? 'right' : 'left';
+  // 관통홀: 위에서 아래로 가공, 깊이 = 패널 두께 (관통)
+  const face = 'top'; // 패널 상면에서 관통
+  const boringDepth = panelThickness; // 관통이므로 패널 두께
 
   // 패널 높이 범위 내의 유효한 보링 위치만 사용
   const validYPositions = boringYPositions.filter(y => y > 0 && y < panelHeight);
 
   let boringIndex = 1;
-  validYPositions.forEach((yPos, yIndex) => {
+  validYPositions.forEach((yPos) => {
     depthPositions.forEach((xPos, xIndex) => {
       coordinates.push({
         panelId: `${panelId}_boring_${boringIndex}`,
         panelName: panelName,
         boringType: `shelf-pin-${depthNames[xIndex]}`,
-        x: Math.round(xPos * 10) / 10,
-        y: Math.round(yPos * 10) / 10,
+        x: Math.round(xPos * 10) / 10,  // CNC X = 깊이 방향
+        y: Math.round(yPos * 10) / 10,  // CNC Y = 높이 방향
         diameter: boringDiameter,
-        depth: boringDepth,
+        depth: boringDepth, // 관통
         face: face
       });
       boringIndex++;
@@ -311,7 +316,8 @@ export interface SidePanelBoringInfo {
 }
 
 export const exportAllBoringCoordinatesToCSV = (
-  sidePanels: SidePanelBoringInfo[]
+  sidePanels: SidePanelBoringInfo[],
+  panelThickness: number = 18
 ): string => {
   const allCoordinates: BoringCoordinate[] = [];
 
@@ -322,7 +328,7 @@ export const exportAllBoringCoordinatesToCSV = (
       panel.width,
       panel.height,
       panel.boringPositions,
-      panel.isLeft
+      panelThickness // 관통홀이므로 패널 두께 전달
     );
     allCoordinates.push(...coordinates);
   });
@@ -332,12 +338,17 @@ export const exportAllBoringCoordinatesToCSV = (
 
 /**
  * 보링 좌표 CSV 파일 다운로드
+ *
+ * @param sidePanels 측판 정보 배열
+ * @param fileName 파일명 (확장자 제외)
+ * @param panelThickness 패널 두께 (mm) - 관통홀 깊이, 기본 18mm
  */
 export const downloadBoringCoordinatesCSV = (
   sidePanels: SidePanelBoringInfo[],
-  fileName: string = 'boring_coordinates'
+  fileName: string = 'boring_coordinates',
+  panelThickness: number = 18
 ) => {
-  const csvContent = exportAllBoringCoordinatesToCSV(sidePanels);
+  const csvContent = exportAllBoringCoordinatesToCSV(sidePanels, panelThickness);
 
   const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM 추가
   const url = URL.createObjectURL(blob);
