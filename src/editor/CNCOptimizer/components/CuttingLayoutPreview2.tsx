@@ -1182,8 +1182,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const originalWidth = panel.width;
         const originalHeight = panel.height;
         const groovePanelColor = materialColors[panel.material] || { fill: '#f3f4f6', stroke: '#9ca3af' };
-        ctx.strokeStyle = '#666666'; // 진한 회색 라인
-        ctx.fillStyle = '#cccccc'; // 연한 회색 채우기
+        ctx.strokeStyle = groovePanelColor.stroke; // 패널 색상과 동일
+        ctx.fillStyle = groovePanelColor.fill; // 패널 색상과 동일
         ctx.lineWidth = 1 / (baseScale * scale);
 
         panel.groovePositions.forEach((groove) => {
