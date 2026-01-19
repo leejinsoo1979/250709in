@@ -949,15 +949,17 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // - 시트 X = depthPosMm (좌우 끝: 7.5, 527.5)
             // - 시트 Y = boringPosMm (상중하: 20, 112.5, 205)
 
-            // ★★★ 모든 측판 동일한 로직 사용 ★★★
-            // 서랍 측판도 가구 측판과 동일하게 처리
-            // rotated 값과 상관없이:
-            // - 시트 X = depthPosMm (깊이 방향)
-            // - 시트 Y = boringPosMm (높이 방향)
-            {
-              // 가구/서랍 측판 모두: 원래 좌표 그대로
-              // - width 방향 → 시트 X축
-              // - height 방향 → 시트 Y축
+            // ★★★ 서랍 측판 vs 가구 측판 ★★★
+            if (panel.rotated) {
+              // 서랍 측판 (rotated=true):
+              // - 원본: width=535(깊이), height=225(높이)
+              // - 시트 배치: placedWidth=225, placedHeight=535
+              // - depthPosMm(7.5~527.5)은 시트 Y축(535 범위)에 매핑
+              // - boringPosMm(20~205)은 시트 X축(225 범위)에 매핑
+              boringX = x + boringPosMm;  // 시트 X = 높이 방향 (20, 112.5, 205)
+              boringY = y + depthPosMm;   // 시트 Y = 깊이 방향 (7.5, 527.5)
+            } else {
+              // 가구 측판 (rotated=false): 원래 좌표 그대로
               boringX = x + depthPosMm;   // 시트 X = 깊이 방향
               boringY = y + boringPosMm;  // 시트 Y = 높이 방향
             }
@@ -1672,9 +1674,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         for (let xIdx = 0; xIdx < depthPositions.length; xIdx++) {
           const depthPosMm = depthPositions[xIdx];
 
-          // 모든 측판 동일한 로직 (rotated 무시)
-          const boringX = x + depthPosMm;
-          const boringY = y + boringPosMm;
+          // 서랍 측판 vs 가구 측판
+          let boringX: number, boringY: number;
+          if (panel.rotated) {
+            boringX = x + boringPosMm;
+            boringY = y + depthPosMm;
+          } else {
+            boringX = x + depthPosMm;
+            boringY = y + boringPosMm;
+          }
 
           const dist = Math.sqrt(Math.pow(sheetX - boringX, 2) + Math.pow(sheetY - boringY, 2));
 
@@ -1859,9 +1867,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           for (let xIdx = 0; xIdx < depthPositions.length; xIdx++) {
             const depthPosMm = depthPositions[xIdx];
 
-            // 시트 좌표로 변환 - 모든 측판 동일한 로직 (rotated 무시)
-            const boringX = x + depthPosMm;
-            const boringY = y + boringPosMm;
+            // 시트 좌표로 변환 - 서랍 측판 vs 가구 측판
+            let boringX: number, boringY: number;
+            if (panel.rotated) {
+              boringX = x + boringPosMm;
+              boringY = y + depthPosMm;
+            } else {
+              boringX = x + depthPosMm;
+              boringY = y + boringPosMm;
+            }
 
             // 클릭 위치와 보링 위치 간 거리 계산
             const dist = Math.sqrt(Math.pow(sheetX - boringX, 2) + Math.pow(sheetY - boringY, 2));
