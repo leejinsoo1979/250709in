@@ -387,7 +387,12 @@ function PageInner(){
           };
         });
         
-        console.log('Setting panels from livePanels:', cutlistPanels);
+        console.log('[CNCOptimizerPro] Setting panels from livePanels:');
+        cutlistPanels.forEach(p => {
+          if (p.label.includes('서랍') && (p.label.includes('좌측판') || p.label.includes('우측판'))) {
+            console.log(`[CNCOptimizerPro] ${p.label}: boringDepthPositions=`, p.boringDepthPositions);
+          }
+        });
         setPanels(cutlistPanels);
         hasInitializedFromLive.current = true;
       }
@@ -500,6 +505,12 @@ function PageInner(){
           material = 'PET';
         }
         
+        console.log('[CNCOptimizerPro] 패널 초기화:', p.name, {
+          boringPositions: p.boringPositions,
+          boringDepthPositions: p.boringDepthPositions,
+          groovePositions: p.groovePositions
+        });
+
         return {
           id: p.id,
           label: p.name || `Panel_${p.id}`,
@@ -510,7 +521,9 @@ function PageInner(){
           material: material,
           grain: grain,
           canRotate: true,
-          boringPositions: p.boringPositions // 보링 위치 유지
+          boringPositions: p.boringPositions,
+          boringDepthPositions: p.boringDepthPositions,
+          groovePositions: p.groovePositions
         };
       });
 
