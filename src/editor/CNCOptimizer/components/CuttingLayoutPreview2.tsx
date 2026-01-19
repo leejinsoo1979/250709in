@@ -975,9 +975,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const grooveStartX = originalWidth - backPanelDepthOffset - grooveWidth;
         const grooveEndX = originalWidth - backPanelDepthOffset;
 
-        // 홈 스타일 설정
+        // 홈 스타일 설정 (관통 홈이므로 흰색 배경)
         ctx.strokeStyle = '#888888'; // 회색 라인
-        ctx.fillStyle = 'rgba(200, 200, 200, 0.3)'; // 연한 회색 채우기
+        ctx.fillStyle = '#ffffff'; // 흰색 (관통)
         ctx.lineWidth = 1.5 / (baseScale * scale);
 
         // 시트 좌표로 변환하여 홈 그리기
