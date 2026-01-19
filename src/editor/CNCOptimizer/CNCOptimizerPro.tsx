@@ -506,10 +506,11 @@ function PageInner(){
           quantity: p.quantity || 1,
           material: material,
           grain: grain,
-          canRotate: true
+          canRotate: true,
+          boringPositions: p.boringPositions // 보링 위치 유지
         };
       });
-      
+
       setPanels(cutlistPanels);
       hasInitializedFromLive.current = true;
     }
