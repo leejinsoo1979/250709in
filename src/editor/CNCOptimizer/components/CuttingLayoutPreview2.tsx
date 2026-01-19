@@ -883,29 +883,19 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         let depthPositions: number[];
 
         if (isDrawerSidePanel) {
-          // ★★★ 서랍 측판 보링 위치 (2D 도면과 동일) ★★★
+          // ★★★ 서랍 측판 보링 위치 - calculatePanelDetails에서 계산된 값 사용 ★★★
           //
-          // DrawerRenderer.tsx 참조:
-          // - boringZ (앞뒤 위치): sideThickness/2 = 7.5mm, depth - sideThickness/2
-          // - boringY (상중하 위치): 끝에서 20mm, 중간, 끝에서 20mm
+          // panel.boringDepthPositions: X위치 (width=깊이 기준, 앞뒤 2개)
+          // panel.boringPositions: Y위치 (height=높이 기준, 상중하 3개)
           //
-          // 서랍 측판 (CNC 옵티마이저 시트):
-          // - panel.width = 서랍 깊이 (L방향, 세로 = 489mm)
-          // - panel.height = 서랍 높이 (W방향, 가로 = 148mm)
-          //
-          // 2D 도면에서 보링은 **측판의 깊이 방향(앞뒤)** 양끝에 있음
-          // 즉, 앞판 체결용 + 뒷판 체결용 = 2열
-          // 각 열마다 상중하 3개 = 총 6개
-          //
-          // CNC 시트에서:
-          // - 패널이 회전 안됨: 시트 X축 = width(깊이), 시트 Y축 = height(높이)
-          //   → 보링 앞뒤(Z) = 시트 X축의 양끝
-          // - 패널이 회전됨: 시트 X축 = height(높이), 시트 Y축 = width(깊이)
-          //   → 보링 앞뒤(Z) = 시트 Y축의 양끝
-          const sideThickness = 15; // 서랍 앞판/뒷판 두께 (DrawerRenderer와 동일)
-          const frontPanelPos = sideThickness / 2; // 7.5mm (앞쪽 끝에서)
-          const backPanelPos = originalWidth - sideThickness / 2; // 깊이 - 7.5mm (뒤쪽 끝에서)
-          depthPositions = [frontPanelPos, backPanelPos]; // 앞, 뒤 순서
+          // boringDepthPositions가 없으면 기본값 사용 (호환성)
+          if (panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
+            depthPositions = panel.boringDepthPositions;
+          } else {
+            // 기본값: 앞끝 7.5mm, 뒤끝 7.5mm (sideThickness=15mm 기준)
+            const sideThickness = 15;
+            depthPositions = [sideThickness / 2, originalWidth - sideThickness / 2];
+          }
         } else {
           // 가구 측판: 선반핀 보링 (3개)
           const backPanelThickness = 18; // 백패널 두께
@@ -921,8 +911,11 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           depthPositions = [frontX, safeCenterX, safeBackX]; // 깊이 방향 위치들 (3개)
         }
 
-        console.log(`[BORING] ${panel.name}: isDrawer=${isDrawerSidePanel}, rotated=${panel.rotated}, width=${originalWidth}, height=${originalHeight}`);
-        console.log(`[BORING] ${panel.name}: boringPositions(Y)=${panel.boringPositions.length}개=[${panel.boringPositions.map(p=>p.toFixed(0)).join(',')}], depthPositions(X)=${depthPositions.length}개=[${depthPositions.map(d=>d.toFixed(0)).join(',')}]`);
+        console.log(`[BORING] ${panel.name}: isDrawer=${isDrawerSidePanel}, rotated=${panel.rotated}`);
+        console.log(`[BORING] ${panel.name}: panel.width=${originalWidth}, panel.height=${originalHeight}`);
+        console.log(`[BORING] ${panel.name}: 시트 배치 size=(${placedWidth}x${placedHeight}), pos=(${x.toFixed(0)},${y.toFixed(0)})`);
+        console.log(`[BORING] ${panel.name}: boringPositions(Y/height)=[${panel.boringPositions.map(p=>p.toFixed(1)).join(',')}]`);
+        console.log(`[BORING] ${panel.name}: depthPositions(X/width)=[${depthPositions.map(d=>d.toFixed(1)).join(',')}]`);
 
         // 보링 색상 및 크기 (2D 도면과 동일)
         const boringColor = boringColors['shelf-pin'];
@@ -940,33 +933,33 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             if (isDrawerSidePanel) {
               // ★★★ 서랍 측판 보링 (2D 도면과 동일) ★★★
               //
-              // 2D 도면(DrawerRenderer.tsx):
-              // - boringY (상중하 3개): height 기준, 끝에서 20mm, 중간, 끝에서 20mm
-              // - boringZ (앞뒤 2개): depth 기준, 7.5mm, depth-7.5mm
+              // 서랍 측판 특성:
+              // - L방향(세로) = panel.width = 깊이 (489mm)
+              // - W방향(가로) = panel.height = 높이 (148mm)
+              // - 가구 측판과 L/W 방향이 반대!
               //
-              // CNC 패널:
-              // - panel.width = 서랍 깊이 (489mm) = depth
-              // - panel.height = 서랍 높이 (148mm) = height
-              // - boringPosMm = height 기준 [20, 74, 128] ← 이건 맞음
-              // - depthPosMm = width(깊이) 기준 [7.5, 481.5]
+              // 보링 위치:
+              // - boringPosMm = height 기준 [20, 74, 128] = W방향(가로) 상중하
+              // - depthPosMm = width 기준 [7.5, 481.5] = L방향(세로) 앞뒤
               //
-              // 시트 배치:
-              // - 회전 안됨: 시트 X = width(깊이=489), 시트 Y = height(높이=148)
-              //   → 보링 X = 깊이 방향 앞뒤 = depthPosMm [7.5, 481.5]
-              //   → 보링 Y = 높이 방향 상중하 = boringPosMm [20, 74, 128]
+              // 시트 배치 (L방향=세로, W방향=가로):
+              // - placedWidth = W방향 = height (패널이 L방향으로 세워짐)
+              // - placedHeight = L방향 = width
               //
-              // - 회전됨: 시트 X = height(높이=148), 시트 Y = width(깊이=489)
-              //   → 보링 X = 높이 방향 상중하 = boringPosMm [20, 74, 128]
-              //   → 보링 Y = 깊이 방향 앞뒤 = depthPosMm [7.5, 481.5]
-
+              // 따라서:
+              // - 시트 X = W방향 = height 범위 → boringPosMm 사용
+              // - 시트 Y = L방향 = width 범위 → depthPosMm 사용
+              //
+              // 서랍판은 가구판과 반대로 X/Y 매핑!
               if (panel.rotated) {
-                // 회전됨: 시트 X = height, 시트 Y = width
-                boringX = x + boringPosMm;   // 높이방향 상중하 → 시트 X
-                boringY = y + depthPosMm;    // 깊이방향 앞뒤 → 시트 Y
+                // 회전됨: L/W가 다시 바뀜
+                // 시트 X = L방향 = width, 시트 Y = W방향 = height
+                boringX = x + depthPosMm;    // L방향 앞뒤 → 시트 X
+                boringY = y + boringPosMm;   // W방향 상중하 → 시트 Y
               } else {
-                // 회전 안됨: 시트 X = width, 시트 Y = height
-                boringX = x + depthPosMm;    // 깊이방향 앞뒤 → 시트 X
-                boringY = y + boringPosMm;   // 높이방향 상중하 → 시트 Y
+                // 회전 안됨: 시트 X = W방향 = height, 시트 Y = L방향 = width
+                boringX = x + boringPosMm;   // W방향 상중하 → 시트 X
+                boringY = y + depthPosMm;    // L방향 앞뒤 → 시트 Y
               }
             } else if (panel.rotated) {
               // 가구 측판 (회전된 경우):

@@ -15,7 +15,8 @@ export interface Panel {
   color: string;
   quantity: number;
   grain?: 'NONE' | 'LENGTH' | 'WIDTH' | 'HORIZONTAL' | 'VERTICAL';
-  boringPositions?: number[]; // 해당 패널의 보링 Y위치 (패널 기준 mm)
+  boringPositions?: number[]; // 해당 패널의 보링 Y위치 (패널 기준 mm, height 기준 상중하)
+  boringDepthPositions?: number[]; // 해당 패널의 보링 X위치 (패널 기준 mm, width 기준 앞뒤)
   groovePositions?: GroovePosition[]; // 바닥판 끼우는 홈 위치
 }
 
