@@ -999,16 +999,20 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     });
   };
   
-  // 모든 섹션에서 선반 위치 수집 (보링 시각화용)
-  const allShelfPositions = useMemo(() => {
+  // 모든 보링 위치 수집 (선반 + 섹션 상판/바닥판)
+  const allBoringPositions = useMemo(() => {
     const { sections } = modelConfig;
     if (!sections || sections.length === 0) return [];
 
     const positions: number[] = [];
     const availableHeight = height - basicThickness * 2;
+    const basicThicknessMm = basicThickness * 100;
 
-    // 각 섹션의 선반 위치를 절대 위치로 변환
-    let currentYPositionMm = basicThickness * 100; // 바닥판 두께 (mm)
+    // 각 섹션의 높이 계산
+    let currentYPositionMm = basicThicknessMm; // 바닥판 두께 (mm) - 바닥판 상단 위치
+
+    // 1. 바닥판 위치 (가구 바닥에서 18mm)
+    positions.push(basicThicknessMm);
 
     sections.forEach((section, index) => {
       let sectionHeightMm: number;
@@ -1026,19 +1030,32 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         sectionHeightMm = section.height;
       }
 
-      // 선반 위치가 있으면 절대 위치로 변환
+      // 2. 선반 위치가 있으면 절대 위치로 변환
       if (section.shelfPositions && section.shelfPositions.length > 0) {
         section.shelfPositions.forEach(pos => {
-          if (pos > 0) { // 0은 바닥판이므로 제외
+          if (pos > 0) { // 0은 바닥판이므로 제외 (이미 추가됨)
             positions.push(currentYPositionMm + pos);
           }
         });
       }
 
+      // 3. 섹션 상판 위치 (마지막 섹션이 아닌 경우 = 중간 구분 패널)
+      if (index < sections.length - 1) {
+        // 섹션 경계 = currentYPositionMm + sectionHeightMm (다음 섹션 바닥판 = 현재 섹션 상판)
+        positions.push(currentYPositionMm + sectionHeightMm);
+      }
+
       currentYPositionMm += sectionHeightMm;
     });
 
-    return positions;
+    // 4. 상판 위치 (가구 전체 높이 - 상판 두께 = 상판 하단 위치)
+    const totalHeightMm = height * 100;
+    positions.push(totalHeightMm - basicThicknessMm);
+
+    // 중복 제거 및 정렬
+    const uniquePositions = [...new Set(positions)].sort((a, b) => a - b);
+
+    return uniquePositions;
   }, [modelConfig, height, basicThickness]);
 
   return (
@@ -1051,8 +1068,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         depth={depth}
         basicThickness={basicThickness}
         innerWidth={innerWidth}
-        innerHeight={height - basicThickness * 2}
-        shelfPositions={allShelfPositions}
+        boringPositions={allBoringPositions}
         mmToThreeUnits={mmToThreeUnits}
       />
     </>
