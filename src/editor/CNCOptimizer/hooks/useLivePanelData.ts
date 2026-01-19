@@ -114,11 +114,15 @@ export function useLivePanelData() {
         console.log(`Module ${moduleIndex}: panelGrainDirections:`, panelGrainDirections);
 
         // 보링 위치 계산 (2D 뷰어와 동일한 데이터)
-        const sections = moduleData.modelConfig?.sections || [];
+        // sections가 없으면 leftSections 사용 (듀얼 비대칭 가구 대응)
+        const modelConfig = moduleData.modelConfig;
+        const sections = modelConfig?.sections || modelConfig?.leftSections || [];
         const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
         const basicThicknessMm = 18; // 기본 패널 두께
 
+        console.log(`[BORING DEBUG] Module ${moduleIndex}: moduleData.id=${moduleData.id}`);
         console.log(`[BORING DEBUG] Module ${moduleIndex}: sections=`, sections);
+        console.log(`[BORING DEBUG] Module ${moduleIndex}: leftSections=`, modelConfig?.leftSections);
         console.log(`[BORING DEBUG] Module ${moduleIndex}: furnitureHeight=${furnitureHeight}`);
 
         // 전체 가구 보링 위치 계산
@@ -160,7 +164,7 @@ export function useLivePanelData() {
             panel.name.includes('측판')
           );
 
-          console.log(`[BORING CHECK] Panel "${panel.name}": isDrawerSidePanel=${isDrawerSidePanel}, isSidePanel=${isSidePanel}`);
+          console.log(`[BORING CHECK] Panel "${panel.name}": isDrawerSidePanel=${isDrawerSidePanel}, isSidePanel=${isSidePanel}, panel=`, panel);
 
           // 측판의 보링 위치 결정
           let panelBoringPositions: number[] | undefined = undefined;
@@ -175,10 +179,11 @@ export function useLivePanelData() {
             const isUpperSection = panel.name.includes('(상)');
             const isLowerSection = panel.name.includes('(하)');
             const isSplitPanel = isUpperSection || isLowerSection;
-            const panelHeight = panel.height || panel.depth || 0; // 측판 높이 (mm)
+            // 측판 높이: panel.height 또는 panel.depth, 없으면 가구 전체 높이 사용
+            const panelHeight = panel.height || panel.depth || furnitureHeight; // 측판 높이 (mm)
             const halfThickness = basicThicknessMm / 2; // 9mm
 
-            console.log(`  [BORING CALC] "${panel.name}": isUpper=${isUpperSection}, isLower=${isLowerSection}, isSplit=${isSplitPanel}, panelHeight=${panelHeight}`);
+            console.log(`  [BORING CALC] "${panel.name}": isUpper=${isUpperSection}, isLower=${isLowerSection}, isSplit=${isSplitPanel}, panelHeight=${panelHeight}, furnitureHeight=${furnitureHeight}`);
             console.log(`  [BORING CALC] allBoringPositions:`, allBoringPositions);
             console.log(`  [BORING CALC] sectionBoringResult:`, sectionBoringResult);
 
@@ -391,9 +396,13 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const panelGrainDirections = placedModule.panelGrainDirections || {};
 
       // 보링 위치 계산 (2D 뷰어와 동일한 데이터)
-      const sections = moduleData.modelConfig?.sections || [];
+      // sections가 없으면 leftSections 사용 (듀얼 비대칭 가구 대응)
+      const modelConfig = moduleData.modelConfig;
+      const sections = modelConfig?.sections || modelConfig?.leftSections || [];
       const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
       const basicThicknessMm = 18; // 기본 패널 두께
+
+      console.log(`[OPT BORING DEBUG] moduleId=${moduleId}, sections=`, sections);
 
       // 전체 가구 보링 위치 계산
       const boringResult = calculateShelfBoringPositions({
@@ -402,6 +411,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         basicThicknessMm,
       });
       const allBoringPositions = boringResult.positions;
+
+      console.log(`[OPT BORING DEBUG] allBoringPositions=`, allBoringPositions);
 
       // 섹션별 보링 위치 계산 (상/하 분리 측판용)
       const sectionBoringResult = calculateSectionBoringPositions({
@@ -427,6 +438,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           panel.name.includes('측판')
         );
 
+        console.log(`[OPT PANEL CHECK] "${panel.name}": isDrawerSidePanel=${isDrawerSidePanel}, isSidePanel=${isSidePanel}, panel=`, panel);
+
         // 측판의 보링 위치 결정
         let panelBoringPositions: number[] | undefined = undefined;
 
@@ -434,10 +447,11 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           const isUpperSection = panel.name.includes('(상)');
           const isLowerSection = panel.name.includes('(하)');
           const isSplitPanel = isUpperSection || isLowerSection;
-          const panelHeight = panel.height || panel.depth || 0; // 측판 높이 (mm)
+          // 측판 높이: panel.height 또는 panel.depth, 없으면 가구 전체 높이 사용
+          const panelHeight = panel.height || panel.depth || furnitureHeight; // 측판 높이 (mm)
           const halfThickness = basicThicknessMm / 2; // 9mm
 
-          console.log(`[OPT BORING] "${panel.name}": isUpper=${isUpperSection}, isLower=${isLowerSection}, isSplit=${isSplitPanel}, panelHeight=${panelHeight}`);
+          console.log(`[OPT BORING] "${panel.name}": isUpper=${isUpperSection}, isLower=${isLowerSection}, isSplit=${isSplitPanel}, panelHeight=${panelHeight}, furnitureHeight=${furnitureHeight}`);
 
           if (isSplitPanel && sectionBoringResult.sectionPositions.length >= 2) {
             // 상/하 분리 측판: 패널 높이 기준으로 보링 위치 직접 계산
