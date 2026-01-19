@@ -5,10 +5,9 @@ import { PDFExporter } from '../utils/pdfExporter';
 import { DXFExporter } from '../utils/dxfExporter';
 import { SimpleDXFExporter } from '../utils/simpleDxfExporter';
 import {
-  downloadBoringCoordinatesCSV,
-  SidePanelBoringInfo
+  exportBoringToCSV
 } from '../utils/csvExporter';
-import { OptimizedResult, PlacedPanel } from '../types';
+import { OptimizedResult, PlacedPanel, Panel } from '../types';
 import { Download, FileText, FileDown, Package, Layers, ChevronDown, Circle } from 'lucide-react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
@@ -29,72 +28,18 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // 측판 보링 데이터 추출 (최적화 결과에서)
-  const sidePanelBoringData = useMemo((): SidePanelBoringInfo[] => {
-    const boringInfoList: SidePanelBoringInfo[] = [];
-
-    if (optimizationResults.length === 0 || Object.keys(shelfBoringPositions).length === 0) {
-      return boringInfoList;
-    }
-
-    // 모든 시트의 패널을 순회
+  // 보링이 있는 패널 수 계산 (패널에 직접 boringPositions가 포함됨)
+  const panelsWithBoring = useMemo(() => {
+    const allPanels: PlacedPanel[] = [];
     optimizationResults.forEach(result => {
-      result.panels.forEach((panel: PlacedPanel) => {
-        // 측판인지 확인 (서랍 제외)
-        const isDrawerPanel = panel.name.includes('서랍');
-        const isSidePanel = !isDrawerPanel &&
-          (panel.name.includes('좌측') || panel.name.includes('우측'));
-
-        if (!isSidePanel) return;
-
-        // 패널 ID에서 moduleKey 추출
-        const match = panel.id?.match(/^(m\d+)_/);
-        if (!match) return;
-
-        const moduleKey = match[1];
-        const boringPositions = shelfBoringPositions[moduleKey];
-        if (!boringPositions || boringPositions.length === 0) return;
-
-        // 상/하 분리 측판 처리
-        const isUpperSection = panel.name.includes('(상)');
-        const isLowerSection = panel.name.includes('(하)');
-        const isSplitPanel = isUpperSection || isLowerSection;
-
-        let filteredPositions: number[];
-
-        if (isSplitPanel) {
-          const maxBoringPos = Math.max(...boringPositions);
-
-          if (isLowerSection) {
-            // 하부 섹션
-            filteredPositions = boringPositions.filter(pos => pos <= panel.height + 10);
-          } else {
-            // 상부 섹션
-            const lowerSectionEnd = maxBoringPos - panel.height + 18;
-            filteredPositions = boringPositions
-              .filter(pos => pos >= lowerSectionEnd - 10)
-              .map(pos => pos - lowerSectionEnd + 9);
-          }
-        } else {
-          // 통짜 측판
-          filteredPositions = boringPositions.filter(pos => pos <= panel.height + 10);
+      result.panels.forEach(panel => {
+        if (panel.boringPositions && panel.boringPositions.length > 0) {
+          allPanels.push(panel);
         }
-
-        const isLeft = panel.name.includes('좌측');
-
-        boringInfoList.push({
-          id: panel.id,
-          name: panel.name,
-          width: panel.width,   // 패널 너비 = 가구 깊이
-          height: panel.height, // 패널 높이
-          boringPositions: filteredPositions,
-          isLeft: isLeft
-        });
       });
     });
-
-    return boringInfoList;
-  }, [optimizationResults, shelfBoringPositions]);
+    return allPanels;
+  }, [optimizationResults]);
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -170,19 +115,36 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
 
   // 보링 좌표 CSV 내보내기
   const handleExportBoringCSV = () => {
-    if (sidePanelBoringData.length === 0) {
+    if (panelsWithBoring.length === 0) {
       alert('내보낼 보링 데이터가 없습니다. 측판이 있는 가구를 배치하세요.');
       return;
     }
 
+    // 최적화 결과에서 모든 패널 추출
+    const allPanels: Panel[] = [];
+    optimizationResults.forEach(result => {
+      result.panels.forEach(panel => {
+        allPanels.push(panel);
+      });
+    });
+
+    const boringCSV = exportBoringToCSV(allPanels);
     const timestamp = new Date().toISOString().slice(0, 10);
     const projectName = basicInfo?.title || 'project';
-    downloadBoringCoordinatesCSV(sidePanelBoringData, `${projectName}_boring_${timestamp}`);
+
+    // BOM 추가하여 한글 인코딩 지원
+    const blob = new Blob(['\uFEFF' + boringCSV], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${projectName}_boring_${timestamp}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
     setIsOpen(false);
   };
 
   const hasData = panels.length > 0 || stock.length > 0 || optimizationResults.length > 0;
-  const hasBoringData = sidePanelBoringData.length > 0;
+  const hasBoringData = panelsWithBoring.length > 0;
 
   return (
     <div className={styles.exportDropdown} ref={dropdownRef}>
