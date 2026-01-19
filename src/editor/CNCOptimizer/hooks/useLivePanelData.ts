@@ -153,6 +153,13 @@ export function useLivePanelData() {
           // horizontal -> HORIZONTAL, vertical -> VERTICAL
           const grainValue = grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
 
+          // ★★★ 디버그: boringDepthPositions 전달 확인 ★★★
+          if (panel.name.includes('서랍') && panel.name.includes('측판')) {
+            console.log(`[useLivePanelData DEBUG] "${panel.name}": boringDepthPositions=`, panel.boringDepthPositions);
+            console.log(`[useLivePanelData DEBUG] "${panel.name}": boringPositions=`, panel.boringPositions);
+            console.log(`[useLivePanelData DEBUG] "${panel.name}": full panel=`, panel);
+          }
+
           // 측판인지 확인 (가구 측판 + 서랍 본체 측판 모두 포함)
           // 가구 측판: "(하)좌측", "(상)우측", "좌측판", "우측판" 등 - 가구 본체의 좌우 측판
           // 서랍 측판: "서랍1 좌측판", "서랍1 우측판" 등 - 서랍 본체의 좌우측 패널
