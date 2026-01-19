@@ -975,10 +975,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const grooveStartX = originalWidth - backPanelDepthOffset - grooveWidth;
         const grooveEndX = originalWidth - backPanelDepthOffset;
 
-        // 홈 스타일 설정 (보링 홀과 동일한 색상 사용)
-        const grooveColor = boringColors['shelf-pin'];
-        ctx.strokeStyle = grooveColor.stroke;
-        ctx.fillStyle = grooveColor.fill;
+        // 홈 스타일 설정
+        ctx.strokeStyle = '#888888'; // 회색 라인
+        ctx.fillStyle = 'rgba(200, 200, 200, 0.3)'; // 연한 회색 채우기
         ctx.lineWidth = 1.5 / (baseScale * scale);
 
         // 시트 좌표로 변환하여 홈 그리기
@@ -1009,24 +1008,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // 홈 테두리 그리기
         ctx.strokeRect(grooveX1, grooveY1, grooveW, grooveH);
-
-        // 홈 내부에 빗금 패턴 추가 (선택적)
-        ctx.beginPath();
-        const lineSpacing = 8; // 빗금 간격
-        if (panel.rotated) {
-          // 가로 빗금 (Y축 방향 홈)
-          for (let lineX = grooveX1; lineX < grooveX1 + grooveW; lineX += lineSpacing) {
-            ctx.moveTo(lineX, grooveY1);
-            ctx.lineTo(lineX + lineSpacing / 2, grooveY1 + grooveH);
-          }
-        } else {
-          // 세로 빗금 (X축 방향 홈)
-          for (let lineY = grooveY1; lineY < grooveY1 + grooveH; lineY += lineSpacing) {
-            ctx.moveTo(grooveX1, lineY);
-            ctx.lineTo(grooveX1 + grooveW, lineY + lineSpacing / 2);
-          }
-        }
-        ctx.stroke();
 
         ctx.restore();
       }
