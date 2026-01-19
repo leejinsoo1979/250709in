@@ -839,6 +839,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const isFurnitureSidePanel = !isDrawerPanel &&
           (panel.name.includes('좌측') || panel.name.includes('우측'));
 
+        // 디버그 로그
+        console.log(`[BORING DEBUG] Panel: ${panel.name}, ID: ${panel.id}, isSidePanel: ${isFurnitureSidePanel}, shelfBoringKeys:`, Object.keys(shelfBoringPositions));
+
         if (isFurnitureSidePanel) {
           // 패널 ID에서 moduleIndex 추출
           // panel.id 형식: "m{moduleIndex}_p{panelIndex}-{instanceIndex}" (예: "m0_p8-0")
@@ -852,8 +855,11 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             }
           }
 
+          console.log(`[BORING DEBUG] moduleKey: ${moduleKey}`);
+
           // 해당 가구의 보링 위치 가져오기 (가구 바닥 기준 mm)
           const boringPositions = moduleKey ? shelfBoringPositions[moduleKey] : null;
+          console.log(`[BORING DEBUG] boringPositions:`, boringPositions);
 
           if (boringPositions && boringPositions.length > 0) {
             ctx.save();
@@ -919,7 +925,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             const holeDiameter = 5;
             const radius = holeDiameter / 2;
 
-            // 각 보링 위치에 대해 3개의 홀 그리기
+            console.log(`[BORING DEBUG] Panel ${panel.name}: originalWidth=${originalWidth}, originalHeight=${originalHeight}, rotated=${panel.rotated}`);
+            console.log(`[BORING DEBUG] depthPositions: [${frontX}, ${centerX}, ${backX}], filteredBoringPositions:`, filteredBoringPositions);
+            console.log(`[BORING DEBUG] panel position: x=${x}, y=${y}, placedWidth=${placedWidth}, placedHeight=${placedHeight}`);
+
+            // 각 보링 위치에 대해 3개의 홀 그리기 (가로로 3개)
+            // boringPosMm = 높이 방향 위치 (Y축)
+            // depthPosMm = 깊이 방향 위치 (X축) - 3개가 가로로 나란히
             filteredBoringPositions.forEach(boringPosMm => {
               depthPositions.forEach(depthPosMm => {
                 // 시트 좌표로 변환
@@ -927,16 +939,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
                 if (panel.rotated) {
                   // 패널이 90도 회전된 경우:
-                  // - 원래 깊이(X) → 시트 Y축
-                  // - 원래 높이(Y) → 시트 X축
-                  boringX = x + boringPosMm;   // 높이 위치 → X축
-                  boringY = y + depthPosMm;    // 깊이 위치 → Y축
+                  // 원래 패널: width=깊이, height=높이
+                  // 회전 후 시트: X축=높이방향, Y축=깊이방향
+                  boringX = x + boringPosMm;   // 높이(Y) → 시트 X
+                  boringY = y + depthPosMm;    // 깊이(X) → 시트 Y
                 } else {
                   // 패널이 회전 안된 경우:
-                  // - 원래 깊이(X) → 시트 X축
-                  // - 원래 높이(Y) → 시트 Y축
-                  boringX = x + depthPosMm;    // 깊이 위치 → X축
-                  boringY = y + boringPosMm;   // 높이 위치 → Y축
+                  // 시트: X축=깊이방향, Y축=높이방향
+                  boringX = x + depthPosMm;    // 깊이(X) → 시트 X
+                  boringY = y + boringPosMm;   // 높이(Y) → 시트 Y
                 }
 
                 // 보링 그리기 (범위 체크 제거 - 좌표가 정확하면 범위 내에 있어야 함)

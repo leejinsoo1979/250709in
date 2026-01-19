@@ -220,7 +220,7 @@ const CNCOptimizerNew: React.FC = () => {
             <ArrowLeft size={20} />
             돌아가기
           </button>
-          <h1>Nesting</h1>
+          <h1>CNC Optimizer</h1>
           <span className={styles.projectName}>{projectName}</span>
         </div>
         
