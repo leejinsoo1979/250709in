@@ -111,18 +111,18 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
   }
 
   // 정면뷰 (front) - 양쪽 측판에 보링 표시
-  // 정면에서 측판을 바라보면 관통홀이 측판 두께를 가로지르는 수평선으로 표시
+  // 정면에서 측판을 바라보면 3mm 지름 관통홀이 측판 두께를 가로지르는 형태
+  // 위/아래 2개의 수평선으로 표현 (3mm 간격)
   if (view2DDirection === 'front') {
-    // 좌측판 X 범위 (측판 두께만큼)
-    const leftPanelXStart = -totalWidth / 2;
-    const leftPanelXEnd = -totalWidth / 2 + basicThickness;
-    // 우측판 X 범위
-    const rightPanelXStart = totalWidth / 2 - basicThickness;
-    const rightPanelXEnd = totalWidth / 2;
+    // 좌측판 X 중앙
+    const leftPanelXCenter = -totalWidth / 2 + basicThickness / 2;
+    // 우측판 X 중앙
+    const rightPanelXCenter = totalWidth / 2 - basicThickness / 2;
 
     // 수평선 길이 (측판 두께)
     const lineLength = basicThickness;
-    const lineThickness = mmToThreeUnits(0.5); // 선 두께
+    const lineThickness = mmToThreeUnits(0.3); // 선 두께
+    const holeRadius = mmToThreeUnits(holeDiameter / 2); // 1.5mm
 
     return (
       <group>
@@ -131,9 +131,9 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
 
           return (
             <group key={`boring-${boringIndex}`}>
-              {/* 좌측판 보링 - 수평선 (측판 두께 관통) */}
+              {/* 좌측판 보링 - 상단 수평선 */}
               <mesh
-                position={[(leftPanelXStart + leftPanelXEnd) / 2, boringY, depth / 2 + mmToThreeUnits(1)]}
+                position={[leftPanelXCenter, boringY + holeRadius, depth / 2 + mmToThreeUnits(1)]}
                 renderOrder={100}
               >
                 <planeGeometry args={[lineLength, lineThickness]} />
@@ -143,9 +143,34 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
                   depthTest={false}
                 />
               </mesh>
-              {/* 우측판 보링 - 수평선 */}
+              {/* 좌측판 보링 - 하단 수평선 */}
               <mesh
-                position={[(rightPanelXStart + rightPanelXEnd) / 2, boringY, depth / 2 + mmToThreeUnits(1)]}
+                position={[leftPanelXCenter, boringY - holeRadius, depth / 2 + mmToThreeUnits(1)]}
+                renderOrder={100}
+              >
+                <planeGeometry args={[lineLength, lineThickness]} />
+                <meshBasicMaterial
+                  color={holeColor}
+                  side={THREE.DoubleSide}
+                  depthTest={false}
+                />
+              </mesh>
+
+              {/* 우측판 보링 - 상단 수평선 */}
+              <mesh
+                position={[rightPanelXCenter, boringY + holeRadius, depth / 2 + mmToThreeUnits(1)]}
+                renderOrder={100}
+              >
+                <planeGeometry args={[lineLength, lineThickness]} />
+                <meshBasicMaterial
+                  color={holeColor}
+                  side={THREE.DoubleSide}
+                  depthTest={false}
+                />
+              </mesh>
+              {/* 우측판 보링 - 하단 수평선 */}
+              <mesh
+                position={[rightPanelXCenter, boringY - holeRadius, depth / 2 + mmToThreeUnits(1)]}
                 renderOrder={100}
               >
                 <planeGeometry args={[lineLength, lineThickness]} />
