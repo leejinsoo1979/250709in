@@ -873,103 +873,79 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // 2D 뷰어의 SidePanelBoring과 동일하게 가구 측판에만 선반핀 보링 표시
         const isFurnitureSidePanel = normalizedCncName === 'side-left' || normalizedCncName === 'side-right';
 
-        if (!isFurnitureSidePanel) {
-          // 가구 측판이 아니면 보링 표시 건너뜀
-          // (서랍 패널, 상판, 하판, 도어, 백패널 등)
-        } else {
-          // 가구 측판인 경우에만 보링 매칭 진행
+        if (isFurnitureSidePanel) {
+          // ★★★ 2D 뷰어 SidePanelBoring.tsx와 동일한 방식으로 보링 위치 계산 ★★★
+          //
+          // 측판 패널 좌표계 (옵티마이저):
+          // - panel.width = 측판 깊이 (depth), 패널의 X축
+          // - panel.height = 측판 높이, 패널의 Y축
+          //
+          // 2D 뷰어 보링 위치:
+          // - Y위치: boringPositions 배열 (가구 바닥 기준 mm)
+          // - X위치: 앞쪽 50mm, 가운데, 뒤쪽 50mm (백패널 18mm 고려)
 
-        // 이름이 같은 후보들 먼저 필터
-        const candidates = boringData.filter(b => {
-          const normalizedBoringName = normalizePanelName(b.panelName);
-          return normalizedCncName === normalizedBoringName ||
-            b.panelName === panel.name ||
-            b.panelId === panel.id;
-        });
-
-        // 후보 중 크기가 가장 가까운 것 선택
-        let panelBorings = candidates[0];
-        if (candidates.length > 1) {
-          // 크기 차이로 정렬하여 가장 가까운 것 선택
-          const tolerance = 5; // 5mm 허용 오차
-          panelBorings = candidates.find(b =>
-            Math.abs(b.width - panel.width) <= tolerance &&
-            Math.abs(b.height - panel.height) <= tolerance
-          ) || candidates.reduce((best, current) => {
-            const bestDiff = Math.abs(best.width - panel.width) + Math.abs(best.height - panel.height);
-            const currDiff = Math.abs(current.width - panel.width) + Math.abs(current.height - panel.height);
-            return currDiff < bestDiff ? current : best;
+          // 이 패널에 해당하는 가구의 보링 위치 데이터 찾기
+          const panelBoringData = boringData.find(b => {
+            const normalizedBoringName = normalizePanelName(b.panelName);
+            return normalizedCncName === normalizedBoringName &&
+              Math.abs(b.height - panel.height) <= 5; // 높이로 매칭
           });
-        }
 
-        if (panelBorings && panelBorings.borings && panelBorings.borings.length > 0) {
-          ctx.save();
+          if (panelBoringData && panelBoringData.borings && panelBoringData.borings.length > 0) {
+            ctx.save();
 
-          panelBorings.borings.forEach(boring => {
-            const boringColor = boringColors[boring.type] || boringColors['custom'];
+            // 보링 타입이 shelf-pin인 것들만 필터링하고 Y위치 추출
+            const shelfPinBorings = panelBoringData.borings.filter(b => b.type === 'shelf-pin');
 
-            // 보링 위치 계산 (패널 좌표 기준)
-            // 패널이 회전되었는지 확인하고 좌표 변환
-            let boringX = x + boring.x;
-            let boringY = y + boring.y;
+            // Y위치 중복 제거 (같은 Y에 3개 홀이 있으므로)
+            const uniqueYPositions = [...new Set(shelfPinBorings.map(b => b.y))].sort((a, b) => a - b);
 
-            // 패널이 회전된 경우 보링 좌표도 회전
-            if (panel.rotated) {
-              // 90도 회전: (x, y) -> (height - y, x)
-              boringX = x + (panel.height - boring.y);
-              boringY = y + boring.x;
-            }
+            // X위치 계산 (2D 뷰어와 동일: 앞쪽 50mm, 가운데, 뒤쪽 50mm)
+            const edgeOffset = 50; // mm
+            const backPanelThickness = 18; // mm
+            const panelDepth = panel.width; // 측판의 깊이 = 패널 width
 
-            // 장공(슬롯) 처리
-            if (boring.type === 'drawer-rail-slot' && boring.slotWidth && boring.slotHeight) {
-              // 장공은 둥근 사각형으로 그리기
-              const slotW = boring.slotWidth;
-              const slotH = boring.slotHeight;
-              const radius = Math.min(slotW, slotH) / 2;
+            const frontX = edgeOffset; // 앞쪽에서 50mm
+            const backX = panelDepth - backPanelThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 제외)
+            const centerX = (frontX + backX) / 2; // 가운데
+            const xPositions = [frontX, centerX, backX];
 
-              ctx.fillStyle = boringColor.fill;
-              ctx.strokeStyle = boringColor.stroke;
-              ctx.lineWidth = 1 / (baseScale * scale);
+            // 보링 색상 (검정)
+            const boringColor = boringColors['shelf-pin'];
+            const holeDiameter = 3; // mm (2D 뷰어와 동일)
+            const radius = holeDiameter / 2;
 
-              // 둥근 사각형 그리기
-              ctx.beginPath();
-              ctx.roundRect(
-                boringX - slotW / 2,
-                boringY - slotH / 2,
-                slotW,
-                slotH,
-                radius
-              );
-              ctx.fill();
-              ctx.stroke();
-            } else {
-              // 원형 보링
-              const radius = boring.diameter / 2;
+            // 각 Y위치에 대해 3개의 X위치에 보링 그리기
+            uniqueYPositions.forEach(yPos => {
+              xPositions.forEach(xPos => {
+                // 패널 좌표 기준으로 변환
+                let boringX: number, boringY: number;
 
-              ctx.fillStyle = boringColor.fill;
-              ctx.strokeStyle = boringColor.stroke;
-              ctx.lineWidth = 1 / (baseScale * scale);
+                if (panel.rotated) {
+                  // 90도 회전된 경우: (x, y) -> (height - y, x)
+                  boringX = x + (panel.height - yPos);
+                  boringY = y + xPos;
+                } else {
+                  // 회전 안된 경우
+                  boringX = x + xPos;
+                  boringY = y + yPos;
+                }
 
-              ctx.beginPath();
-              ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
-              ctx.fill();
-              ctx.stroke();
+                // 원형 보링 그리기
+                ctx.fillStyle = boringColor.fill;
+                ctx.strokeStyle = boringColor.stroke;
+                ctx.lineWidth = 1 / (baseScale * scale);
 
-              // 큰 보링(힌지컵 등)에는 십자선 추가
-              if (boring.diameter >= 15) {
                 ctx.beginPath();
-                ctx.moveTo(boringX - radius * 0.7, boringY);
-                ctx.lineTo(boringX + radius * 0.7, boringY);
-                ctx.moveTo(boringX, boringY - radius * 0.7);
-                ctx.lineTo(boringX, boringY + radius * 0.7);
+                ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
+                ctx.fill();
                 ctx.stroke();
-              }
-            }
-          });
+              });
+            });
 
-          ctx.restore();
+            ctx.restore();
+          }
         }
-        } // end of else (isFurnitureSidePanel)
       }
 
       // Reset shadow and transparency effects
