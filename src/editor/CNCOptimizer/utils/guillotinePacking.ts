@@ -588,7 +588,12 @@ export function packGuillotine(
     console.log(`📦 Bin ${currentBin}: placed ${result.panels.length} panels, stripDirection=${stripDirection}`);
     
     if (result.panels.length === 0) {
-      console.warn('Cannot place any more panels in guillotine mode');
+      console.warn('[packGuillotine] Cannot place any more panels!');
+      console.warn(`[packGuillotine] Remaining ${remainingPanels.length} panels:`);
+      remainingPanels.forEach(p => {
+        console.warn(`  - ${p.name || p.id}: ${p.width}x${p.height}mm, canRotate=${p.canRotate}`);
+      });
+      console.warn(`[packGuillotine] Bin size: ${binWidth}x${binHeight}mm, kerf: ${kerf}mm`);
       break;
     }
     

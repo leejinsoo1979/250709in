@@ -414,9 +414,23 @@ export const optimizePanelsMultiple = async (
     );
   }
 
+  // 패킹 결과 디버그
+  console.log('[OPTIMIZER] Packing results:');
+  console.log(`  - Input rectangles: ${rectangles.length}`);
+  console.log(`  - Output bins: ${bins.length}`);
+  let totalPlacedPanels = 0;
+  bins.forEach((bin, idx) => {
+    totalPlacedPanels += bin.panels.length;
+    console.log(`  - Bin ${idx + 1}: ${bin.panels.length} panels, efficiency: ${bin.efficiency?.toFixed(1) || 'N/A'}%`);
+  });
+  console.log(`  - Total placed panels: ${totalPlacedPanels}`);
+  if (totalPlacedPanels < rectangles.length) {
+    console.warn(`[OPTIMIZER] ⚠️ ${rectangles.length - totalPlacedPanels} panels NOT placed!`);
+  }
+
   // 결과 변환
   const results: OptimizedResult[] = [];
-  
+
   bins.slice(0, maxSheets).forEach((bin, index) => {
     const placedPanels: PlacedPanel[] = bin.panels.map(rect => {
       const originalPanel = panelMap.get(rect.id!)!;

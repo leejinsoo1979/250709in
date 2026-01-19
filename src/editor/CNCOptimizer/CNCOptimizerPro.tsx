@@ -647,6 +647,16 @@ function PageInner(){
 
       const allResults: OptimizedResult[] = [];
 
+      // 디버그: 그룹화 결과 출력
+      console.log('[handleOptimize] 패널 그룹화 결과:');
+      let totalGroupedPanels = 0;
+      panelGroups.forEach((groupPanels, key) => {
+        const totalQty = groupPanels.reduce((sum, p) => sum + (p.quantity || 1), 0);
+        totalGroupedPanels += totalQty;
+        console.log(`  - ${key}: ${groupPanels.length}개 패널 (총 수량: ${totalQty})`);
+      });
+      console.log(`[handleOptimize] 총 패널 수: ${panels.length}, 그룹화된 패널 수: ${totalGroupedPanels}`);
+
       // Optimize each material/thickness group
       for (const [key, groupPanels] of panelGroups) {
         // Parse material and thickness from key

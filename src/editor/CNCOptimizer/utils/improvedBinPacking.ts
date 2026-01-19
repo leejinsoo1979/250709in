@@ -267,7 +267,12 @@ export function packMaxRects(
     }
     
     if (placedInThisBin.length === 0) {
-      console.warn('Cannot place any more panels');
+      console.warn('[packMaxRects] Cannot place any more panels!');
+      console.warn(`[packMaxRects] Remaining ${remainingPanels.length} panels:`);
+      remainingPanels.forEach(p => {
+        console.warn(`  - ${p.name || p.id}: ${p.width}x${p.height}mm, canRotate=${p.canRotate}`);
+      });
+      console.warn(`[packMaxRects] Bin size: ${binWidth}x${binHeight}mm, kerf: ${kerf}mm`);
       break;
     }
     
