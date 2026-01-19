@@ -10,7 +10,10 @@ import Logo from '@/components/common/Logo';
 import { initializeTheme } from '@/theme';
 import { useTranslation } from '@/i18n/useTranslation';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useFurnitureBoring } from '@/domain/boring/hooks/useFurnitureBoring';
+import { useFurnitureBoring, calculateShelfBoringPositions } from '@/domain/boring';
+import { getModuleById } from '@/data/modules';
+import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
+import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
 
 // Components
 import PanelsTable from './components/SidebarLeft/PanelsTable';
@@ -41,6 +44,7 @@ function PageInner(){
   const location = useLocation();
   const { basicInfo } = useProjectStore();
   const { placedModules } = useFurnitureStore();
+  const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
   const { panels: livePanels } = useLivePanelData();
   const { t, currentLanguage } = useTranslation();
   const { theme } = useTheme();
@@ -73,8 +77,39 @@ function PageInner(){
     })));
   }, [fromConfigurator, placedModules, livePanels]);
 
-  // 보링 데이터 가져오기 - 훅이 내부적으로 useFurnitureStore 사용
-  const { panels: boringPanels } = useFurnitureBoring();
+  // 가구별 커스텀 선반 보링 위치 계산
+  const customShelfPositionsByFurniture = useMemo(() => {
+    const positionsMap: Record<string, number[]> = {};
+    const internalSpace = calculateInternalSpace(spaceInfo);
+
+    placedModules.forEach((placedModule) => {
+      const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
+      if (!moduleData?.modelConfig?.sections) return;
+
+      // 가구 높이 계산 (mm)
+      const height = placedModule.customHeight || moduleData.dimensions.height;
+      const basicThicknessMm = 18; // 기본 패널 두께
+
+      // 실제 선반/패널 위치 계산
+      const result = calculateShelfBoringPositions({
+        sections: moduleData.modelConfig.sections,
+        totalHeightMm: height,
+        basicThicknessMm,
+      });
+
+      if (result.positions.length > 0) {
+        positionsMap[placedModule.id] = result.positions;
+      }
+    });
+
+    return positionsMap;
+  }, [placedModules, spaceInfo]);
+
+  // 보링 데이터 가져오기 - 커스텀 위치 사용
+  const { panels: boringPanels } = useFurnitureBoring({
+    useCustomPositions: true,
+    customShelfPositionsByFurniture,
+  });
 
   // URL에서 디자인파일 정보 가져오기
   const [designFileName, setDesignFileName] = useState<string>('');
