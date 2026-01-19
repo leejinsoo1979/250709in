@@ -146,9 +146,11 @@ export function useLivePanelData() {
           // horizontal -> HORIZONTAL, vertical -> VERTICAL
           const grainValue = grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
 
-          // 측판인지 확인 (서랍 제외) - 다양한 패널 이름 패턴 지원
-          const isDrawerPanel = panel.name.includes('서랍');
-          const isSidePanel = !isDrawerPanel && (
+          // 측판인지 확인 (서랍 측판 제외, 가구 측판만 포함)
+          // 서랍 측판: "서랍1 좌측판" 등 - 서랍 본체의 좌우측 패널
+          // 가구 측판: "(하)좌측", "(상)우측", "좌측판", "우측판" 등 - 가구 본체의 좌우 측판
+          const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
+          const isSidePanel = !isDrawerSidePanel && (
             panel.name.includes('좌측') ||
             panel.name.includes('우측') ||
             panel.name.includes('좌측판') ||
@@ -158,7 +160,7 @@ export function useLivePanelData() {
             panel.name.includes('측판')
           );
 
-          console.log(`[BORING CHECK] Panel "${panel.name}": isDrawerPanel=${isDrawerPanel}, isSidePanel=${isSidePanel}`);
+          console.log(`[BORING CHECK] Panel "${panel.name}": isDrawerSidePanel=${isDrawerSidePanel}, isSidePanel=${isSidePanel}`);
 
           // 측판의 보링 위치 결정
           let panelBoringPositions: number[] | undefined = undefined;
@@ -415,10 +417,15 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         // horizontal -> HORIZONTAL, vertical -> VERTICAL
         const grainValue = grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
 
-        // 측판인지 확인 (서랍 제외)
-        const isDrawerPanel = panel.name.includes('서랍');
-        const isSidePanel = !isDrawerPanel &&
-          (panel.name.includes('좌측') || panel.name.includes('우측'));
+        // 측판인지 확인 (서랍 측판 제외, 가구 측판만 포함)
+        const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
+        const isSidePanel = !isDrawerSidePanel && (
+          panel.name.includes('좌측') ||
+          panel.name.includes('우측') ||
+          panel.name.includes('좌측판') ||
+          panel.name.includes('우측판') ||
+          panel.name.includes('측판')
+        );
 
         // 측판의 보링 위치 결정
         let panelBoringPositions: number[] | undefined = undefined;
