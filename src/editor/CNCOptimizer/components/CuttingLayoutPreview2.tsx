@@ -912,20 +912,33 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const holeDiameter = 3; // 2D 도면(SidePanelBoring.tsx)과 동일
         const radius = holeDiameter / 2;
 
-        // 각 보링 위치에 대해 3개의 홀 그리기 (가로로 3개)
+        // 각 보링 위치에 홀 그리기
+        // 서랍 측판: boringPositions=Y위치(높이방향), depthPositions=X위치(좌우 양끝)
+        // 가구 측판: boringPositions=Y위치(높이방향), depthPositions=X위치(깊이방향 3개)
         panel.boringPositions.forEach((boringPosMm, yIdx) => {
           depthPositions.forEach((depthPosMm, xIdx) => {
             // 시트 좌표로 변환
             let boringX: number, boringY: number;
 
-            if (panel.rotated) {
-              // 패널이 90도 회전된 경우:
+            if (isDrawerSidePanel) {
+              // 서랍 측판: width=깊이, height=높이
+              // boringPosMm = Y 위치 (높이 방향, 위/중간/아래)
+              // depthPosMm = X 위치 (깊이 방향, 앞판/뒷판 = 좌우 양끝)
+              if (panel.rotated) {
+                boringX = x + boringPosMm;   // 높이 → 시트 X
+                boringY = y + depthPosMm;    // 깊이 → 시트 Y
+              } else {
+                boringX = x + depthPosMm;    // 깊이 → 시트 X (좌우)
+                boringY = y + boringPosMm;   // 높이 → 시트 Y (상하)
+              }
+            } else if (panel.rotated) {
+              // 가구 측판 (회전된 경우):
               // 원래 패널: width=깊이, height=높이
               // 회전 후 시트: X축=높이방향, Y축=깊이방향
               boringX = x + boringPosMm;   // 높이(Y) → 시트 X
               boringY = y + depthPosMm;    // 깊이(X) → 시트 Y
             } else {
-              // 패널이 회전 안된 경우:
+              // 가구 측판 (회전 안된 경우):
               // 시트: X축=깊이방향, Y축=높이방향
               boringX = x + depthPosMm;    // 깊이(X) → 시트 X
               boringY = y + boringPosMm;   // 높이(Y) → 시트 Y
