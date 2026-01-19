@@ -949,11 +949,23 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // - 시트 X = depthPosMm (좌우 끝: 7.5, 527.5)
             // - 시트 Y = boringPosMm (상중하: 20, 112.5, 205)
 
-            // ★★★ 모든 측판 동일 로직 (섹션/서랍 구분 없음) ★★★
-            // - depthPositions: 깊이방향 → 시트 X
-            // - boringPositions: 높이방향 → 시트 Y
-            boringX = x + depthPosMm;
-            boringY = y + boringPosMm;
+            // ★★★ rotated 여부에 따라 좌표 매핑 ★★★
+            if (panel.rotated) {
+              // 서랍 측판 (rotated=true):
+              // - 원본: width=535, height=225
+              // - 시트 배치: 225(가로) x 535(세로)
+              // - depthPosMm(0~535) → 시트 Y(0~535)
+              // - boringPosMm(0~225) → 시트 X(0~225)
+              boringX = x + boringPosMm;   // 높이방향 → 시트 X (0~225)
+              boringY = y + depthPosMm;    // 깊이방향 → 시트 Y (0~535)
+            } else {
+              // 섹션 측판 (rotated=false):
+              // - 원본과 시트 배치 동일
+              // - depthPosMm → 시트 X
+              // - boringPosMm → 시트 Y
+              boringX = x + depthPosMm;    // 깊이방향 → 시트 X
+              boringY = y + boringPosMm;   // 높이방향 → 시트 Y
+            }
 
             // 호버/선택 상태 확인
             const isHovered = hoveredBoring &&
