@@ -103,6 +103,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     xIndex: number;
     yIndex: number;
   } | null>(null);
+
+  // 호버된 보링 홀 (마우스 오버 시)
+  const [hoveredBoring, setHoveredBoring] = useState<{
+    panelId: string;
+    xIndex: number;
+    yIndex: number;
+  } | null>(null);
   
   // Get settings and simulation state from store
   const { 
@@ -897,15 +904,47 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               boringY = y + boringPosMm;   // 높이(Y) → 시트 Y
             }
 
-            // 보링 그리기
-            ctx.fillStyle = boringColor.fill;
-            ctx.strokeStyle = boringColor.stroke;
-            ctx.lineWidth = 1 / (baseScale * scale);
+            // 호버/선택 상태 확인
+            const isHovered = hoveredBoring &&
+              hoveredBoring.panelId === panel.id &&
+              hoveredBoring.xIndex === xIdx &&
+              hoveredBoring.yIndex === yIdx;
 
-            ctx.beginPath();
-            ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.stroke();
+            const isSelected = selectedBoring &&
+              selectedBoring.panelName === panel.name &&
+              selectedBoring.xIndex === xIdx + 1 &&
+              selectedBoring.yIndex === yIdx + 1;
+
+            // 보링 그리기 (호버/선택 시 강조)
+            if (isHovered || isSelected) {
+              // 강조 표시: 더 큰 원과 밝은 색상
+              ctx.fillStyle = isSelected ? '#ff6b6b' : '#ffd93d';
+              ctx.strokeStyle = isSelected ? '#c92a2a' : '#fab005';
+              ctx.lineWidth = 2 / (baseScale * scale);
+
+              // 외곽 글로우 효과
+              ctx.beginPath();
+              ctx.arc(boringX, boringY, radius * 3, 0, Math.PI * 2);
+              ctx.globalAlpha = 0.3;
+              ctx.fill();
+              ctx.globalAlpha = 1;
+
+              // 메인 원
+              ctx.beginPath();
+              ctx.arc(boringX, boringY, radius * 1.5, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+            } else {
+              // 일반 보링
+              ctx.fillStyle = boringColor.fill;
+              ctx.strokeStyle = boringColor.stroke;
+              ctx.lineWidth = 1 / (baseScale * scale);
+
+              ctx.beginPath();
+              ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.stroke();
+            }
           });
         });
 
@@ -1196,7 +1235,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   // Call draw function when dependencies change
   useEffect(() => {
     draw();
-  }, [result, highlightedPanelId, hoveredPanelId, showLabels, scale, offset, rotation, fontScale, showDimensions, showBorings, boringData, simulating, currentCutIndex]);
+  }, [result, highlightedPanelId, hoveredPanelId, showLabels, scale, offset, rotation, fontScale, showDimensions, showBorings, boringData, simulating, currentCutIndex, hoveredBoring, selectedBoring]);
 
   // Animation loop for simulation - uses drawRef to always call latest draw
   useEffect(() => {
@@ -1318,7 +1357,90 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         x: e.clientX - dragStart.x,
         y: e.clientY - dragStart.y
       });
+      return;
     }
+
+    // 보링 호버 감지
+    if (!result || !canvasRef.current || !showBorings) {
+      if (hoveredBoring) setHoveredBoring(null);
+      return;
+    }
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+
+    const canvasWidth = rect.width;
+    const canvasHeight = rect.height;
+
+    const padding = 60;
+    const maxWidth = canvasWidth - padding * 2;
+    const maxHeight = canvasHeight - padding * 2;
+    const rotatedWidth = rotation % 180 === 0 ? result.stockPanel.width : result.stockPanel.height;
+    const rotatedHeight = rotation % 180 === 0 ? result.stockPanel.height : result.stockPanel.width;
+    const scaleX = maxWidth / rotatedWidth;
+    const scaleY = maxHeight / rotatedHeight;
+    const baseScale = Math.min(scaleX, scaleY, 1.2);
+    const totalScale = baseScale * scale;
+
+    const centerX = canvasWidth / 2 + offset.x;
+    const centerY = canvasHeight / 2 + offset.y;
+
+    const angle = (rotation * Math.PI) / 180;
+    const cos = Math.cos(-angle);
+    const sin = Math.sin(-angle);
+
+    const dx = mouseX - centerX;
+    const dy = mouseY - centerY;
+    const rotatedX = dx * cos - dy * sin;
+    const rotatedY = dx * sin + dy * cos;
+
+    const sheetX = rotatedX / totalScale + result.stockPanel.width / 2;
+    const sheetY = rotatedY / totalScale + result.stockPanel.height / 2;
+
+    const hoverRadius = 8 / totalScale;
+
+    for (const panel of result.panels) {
+      if (!panel.boringPositions || panel.boringPositions.length === 0) continue;
+
+      const x = panel.x;
+      const y = panel.y;
+      const originalWidth = panel.width;
+
+      const backPanelThickness = 18;
+      const edgeOffset = 50;
+      const frontX = edgeOffset;
+      const backX = originalWidth - backPanelThickness - edgeOffset;
+      const safeBackX = Math.max(backX, frontX + 40);
+      const safeCenterX = (frontX + safeBackX) / 2;
+      const depthPositions = [frontX, safeCenterX, safeBackX];
+
+      for (let yIdx = 0; yIdx < panel.boringPositions.length; yIdx++) {
+        const boringPosMm = panel.boringPositions[yIdx];
+
+        for (let xIdx = 0; xIdx < depthPositions.length; xIdx++) {
+          const depthPosMm = depthPositions[xIdx];
+
+          let boringX: number, boringY: number;
+          if (panel.rotated) {
+            boringX = x + boringPosMm;
+            boringY = y + depthPosMm;
+          } else {
+            boringX = x + depthPosMm;
+            boringY = y + boringPosMm;
+          }
+
+          const dist = Math.sqrt(Math.pow(sheetX - boringX, 2) + Math.pow(sheetY - boringY, 2));
+
+          if (dist <= hoverRadius) {
+            setHoveredBoring({ panelId: panel.id, xIndex: xIdx, yIndex: yIdx });
+            return;
+          }
+        }
+      }
+    }
+
+    if (hoveredBoring) setHoveredBoring(null);
   };
 
   const handleMouseUp = () => {
@@ -1635,7 +1757,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ref={canvasRef}
         className={`${styles.canvas} panel-clickable`}
         style={{
-          cursor: isDragging ? 'grabbing' : 'grab',
+          cursor: isDragging ? 'grabbing' : hoveredBoring ? 'pointer' : 'grab',
           top: sheetInfo ? '40px' : '0',
           height: sheetInfo ? 'calc(100% - 40px)' : '100%'
         }}
@@ -1643,7 +1765,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
+        onMouseLeave={() => {
+          handleMouseUp();
+          setHoveredBoring(null);
+        }}
       />
 
       {/* 선택된 보링 홀 좌표 표시 */}
