@@ -518,18 +518,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       'LPM': { fill: `hsl(${themeColor} / 0.16)`, stroke: `hsl(${themeColor} / 0.9)` }
     };
 
-    // 보링 타입별 색상 - 모두 검정색으로 통일
+    // 보링 타입별 색상 - 관통홀이므로 흰색 배경에 검정 테두리
     const boringColors: { [key: string]: { fill: string; stroke: string } } = {
-      'hinge-cup': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },          // 검정 - 힌지컵 Ø35
-      'hinge-screw': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },        // 검정 - 힌지나사
-      'cam-housing': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },        // 검정 - 캠하우징 Ø15
-      'cam-bolt': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },           // 검정 - 캠볼트
-      'shelf-pin': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },          // 검정 - 선반핀 Ø5
-      'adjustable-foot': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },    // 검정 - 조절발
-      'drawer-rail': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },        // 검정 - 서랍레일
-      'drawer-rail-slot': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },   // 검정 - 레일장공
-      'drawer-panel-connector': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' }, // 검정 - 서랍 측판 체결홀 Ø3
-      'custom': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' }              // 검정 - 사용자정의
+      'hinge-cup': { fill: '#ffffff', stroke: '#000000' },          // 흰색 - 힌지컵 Ø35
+      'hinge-screw': { fill: '#ffffff', stroke: '#000000' },        // 흰색 - 힌지나사
+      'cam-housing': { fill: '#ffffff', stroke: '#000000' },        // 흰색 - 캠하우징 Ø15
+      'cam-bolt': { fill: '#ffffff', stroke: '#000000' },           // 흰색 - 캠볼트
+      'shelf-pin': { fill: '#ffffff', stroke: '#000000' },          // 흰색 - 선반핀 Ø5
+      'adjustable-foot': { fill: '#ffffff', stroke: '#000000' },    // 흰색 - 조절발
+      'drawer-rail': { fill: '#ffffff', stroke: '#000000' },        // 흰색 - 서랍레일
+      'drawer-rail-slot': { fill: '#ffffff', stroke: '#000000' },   // 흰색 - 레일장공
+      'drawer-panel-connector': { fill: '#ffffff', stroke: '#000000' }, // 흰색 - 서랍 측판 체결홀 Ø3
+      'custom': { fill: '#ffffff', stroke: '#000000' }              // 흰색 - 사용자정의
     };
 
     // Count visible panels during simulation
