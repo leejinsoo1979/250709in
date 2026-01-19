@@ -1061,11 +1061,32 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
         });
       }
 
-      // 섹션 구분 패널 중심 (마지막 섹션이 아닌 경우)
+      // 섹션 구분 패널 (마지막 섹션이 아닌 경우)
+      // BaseFurnitureShell에서는 하부섹션 상판과 상부섹션 바닥판이 별도로 렌더링됨
+      //
+      // BaseFurnitureShell 계산:
+      // - currentYPosition = -height/2 + basicThickness (초기값)
+      // - for loop: currentYPosition += sectionHeight
+      // - sectionBoundaryY = currentYPosition - basicThickness
+      //                    = -height/2 + section[0].height (가구 바닥 기준 section[0].height mm)
+      // - 하부섹션 상판 Y = sectionBoundaryY - basicThickness/2 = -height/2 + section[0].height - 9mm
+      // - 상부섹션 바닥판 Y = sectionBoundaryY + basicThickness/2 = -height/2 + section[0].height + 9mm
+      //
+      // 가구 바닥 기준 mm로 변환:
+      // - 하부섹션 상판 중심 = 지금까지 섹션 높이 합 - 9mm
+      // - 상부섹션 바닥판 중심 = 지금까지 섹션 높이 합 + 9mm
       if (index < sections.length - 1) {
-        // 구분 패널 = 현재 섹션 끝 위치에서 시작
-        // 구분 패널 중심 = currentYPositionFromBottom + sectionHeightMm + 9mm
-        positions.push(currentYPositionFromBottom + sectionHeightMm + halfThicknessMm);
+        // 지금까지 섹션 높이 합 계산 (currentYPositionFromBottom이 아닌 순수 섹션 높이 합)
+        // 첫 번째 섹션 끝 = sectionHeightMm (바닥판 두께 미포함)
+        // 하지만 현재 루프에서 currentYPositionFromBottom은 이미 바닥판 두께(18mm)를 포함하고 있음
+        // 따라서 섹션 끝의 가구 바닥 기준 위치 = currentYPositionFromBottom + sectionHeightMm - basicThicknessMm
+        //                                      = 18 + 600 - 18 = 600mm (정확!)
+        const sectionEndFromBottom = currentYPositionFromBottom + sectionHeightMm - basicThicknessMm;
+
+        // 하부섹션 상판 중심 (섹션 끝에서 9mm 아래)
+        positions.push(sectionEndFromBottom - halfThicknessMm);
+        // 상부섹션 바닥판 중심 (섹션 끝에서 9mm 위)
+        positions.push(sectionEndFromBottom + halfThicknessMm);
       }
 
       // ShelfRenderer와 동일: currentYPosition += sectionHeight
