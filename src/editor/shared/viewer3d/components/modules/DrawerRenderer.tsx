@@ -447,7 +447,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
             const rail2DMaterial = new THREE.MeshBasicMaterial({
               color: railColor,
               transparent: true,
-              opacity: 0.8
+              opacity: 0.4
             });
 
             [leftRail, rightRail].forEach(rail => {
