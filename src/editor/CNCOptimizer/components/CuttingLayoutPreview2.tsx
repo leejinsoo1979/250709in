@@ -533,7 +533,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     }
 
     // Draw panels (show progressively during simulation)
+    console.log('[CuttingLayoutPreview2] Drawing panels. Total:', result.panels.length);
     result.panels.forEach((panel, panelIndex) => {
+      // 보링 데이터 디버그
+      if (panelIndex === 0) {
+        console.log(`[CuttingLayoutPreview2] First panel "${panel.name}" boringPositions:`, panel.boringPositions);
+      }
       // During simulation, show panels after all surrounding cuts are completed
       let isPanelSeparated = false;
       let justSeparated = false;

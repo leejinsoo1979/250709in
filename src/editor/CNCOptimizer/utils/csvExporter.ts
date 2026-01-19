@@ -34,9 +34,12 @@ export interface CutSettings {
   allowGrainRotation: boolean;
 }
 
-// CutList Optimizer CSV 헤더 (보링 포지션 포함)
-const PANEL_CSV_HEADERS = 'Length,Width,Qty,Label,Enabled,Grain,Boring_Y_Positions';
+// CutList Optimizer CSV 헤더
+const PANEL_CSV_HEADERS = 'Length,Width,Qty,Label,Enabled,Grain';
 const STOCK_CSV_HEADERS = 'Length,Width,Qty,Label';
+
+// 보링 CSV 헤더 (별도 파일)
+const BORING_CSV_HEADERS = 'Panel_Name,Hole_No,X,Y,Z,Diameter';
 
 // 패널 데이터를 CutList Optimizer CSV 형식으로 변환
 export const exportPanelsToCSV = (panels: Panel[], settings: CutSettings = {
@@ -52,35 +55,80 @@ export const exportPanelsToCSV = (panels: Panel[], settings: CutSettings = {
 
   panels.forEach(panel => {
     // 결 방향 결정
-    // 1. panel에 이미 grain이 있으면 그것을 사용
-    // 2. 없으면 세로가 기본 (height > width면 V, 아니면 H)
-    let grain = 'V'; // 기본값은 세로
+    let grain = 'V';
     if (panel.grain) {
-      // 이미 설정된 grain 값 사용
       grain = panel.grain === 'VERTICAL' || panel.grain === 'WIDTH' ? 'V' :
               panel.grain === 'HORIZONTAL' || panel.grain === 'LENGTH' ? 'H' : 'V';
     } else {
-      // grain이 없으면 세로가 긴 경우 V, 가로가 긴 경우 H
       grain = panel.height > panel.width ? 'V' : 'H';
     }
 
-    // 보링 Y 위치 (패널 하단 기준 mm, 없으면 -)
-    const boringPositionsStr = panel.boringPositions && panel.boringPositions.length > 0
-      ? panel.boringPositions.map(p => Math.round(p)).join(';')
-      : '-';
-
-    // CutList Optimizer는 Length가 세로, Width가 가로
     const line = [
-      panel.height, // Length (세로)
-      panel.width,  // Width (가로)
+      panel.height,
+      panel.width,
       panel.quantity,
-      panel.name.replace(/,/g, '_'), // 콤마 제거
-      'TRUE', // Enabled
-      settings.allowGrainRotation ? 'NONE' : grain,
-      boringPositionsStr // 보링 Y 위치 (패널 로컬 좌표)
+      panel.name.replace(/,/g, '_'),
+      'TRUE',
+      settings.allowGrainRotation ? 'NONE' : grain
     ].join(',');
 
     lines.push(line);
+  });
+
+  return lines.join('\n');
+};
+
+/**
+ * 패널별 보링 좌표 CSV 생성
+ * 각 보링 홀: Panel_Name, Hole_No, X, Y, Z(타공깊이), Diameter
+ *
+ * 측판 보링 좌표 기준 (CNC 테이블에 패널을 놓았을 때):
+ * - X: 깊이 방향 (앞쪽 50mm, 중앙, 뒤쪽 50mm - 백패널 18mm 제외)
+ * - Y: 높이 방향 (패널 하단 = 0)
+ * - Z: 타공 깊이 (관통홀이므로 패널 두께 = 18mm)
+ * - Diameter: 3mm
+ */
+export const exportBoringToCSV = (panels: Panel[]): string => {
+  const lines: string[] = [BORING_CSV_HEADERS];
+
+  const HOLE_DIAMETER = 3; // mm
+  const HOLE_DEPTH = 18; // mm (관통홀 = 패널 두께)
+  const EDGE_OFFSET = 50; // mm (앞/뒤 끝에서 50mm)
+  const BACK_PANEL_THICKNESS = 18; // mm
+
+  let holeNo = 1;
+
+  panels.forEach(panel => {
+    // 보링 위치가 있는 패널만 처리 (측판)
+    if (!panel.boringPositions || panel.boringPositions.length === 0) {
+      return;
+    }
+
+    // 패널 너비 = 가구 깊이 방향
+    const panelWidth = panel.width;
+
+    // X 위치 3개 (깊이 방향)
+    const frontX = EDGE_OFFSET; // 50mm
+    const backX = panelWidth - BACK_PANEL_THICKNESS - EDGE_OFFSET;
+    const safeBackX = Math.max(backX, frontX + 40);
+    const centerX = (frontX + safeBackX) / 2;
+    const xPositions = [frontX, centerX, safeBackX];
+
+    // 각 Y 위치에 대해 3개의 X 위치
+    panel.boringPositions.forEach(yPos => {
+      xPositions.forEach(xPos => {
+        const line = [
+          panel.name.replace(/,/g, '_'),
+          holeNo,
+          Math.round(xPos),
+          Math.round(yPos),
+          HOLE_DEPTH,
+          HOLE_DIAMETER
+        ].join(',');
+        lines.push(line);
+        holeNo++;
+      });
+    });
   });
 
   return lines.join('\n');
@@ -190,6 +238,22 @@ export const downloadCutListFiles = async (
   settingsLink.download = `${projectName}_settings.ini`;
   settingsLink.click();
   URL.revokeObjectURL(settingsUrl);
+
+  // 잠시 대기
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  // 보링 CSV 다운로드 (측판에 보링이 있는 경우만)
+  const boringCSV = exportBoringToCSV(panels);
+  const boringLines = boringCSV.split('\n');
+  if (boringLines.length > 1) { // 헤더 외에 데이터가 있으면
+    const boringBlob = new Blob(['\uFEFF' + boringCSV], { type: 'text/csv;charset=utf-8;' }); // BOM 추가
+    const boringUrl = URL.createObjectURL(boringBlob);
+    const boringLink = document.createElement('a');
+    boringLink.href = boringUrl;
+    boringLink.download = `${projectName}_boring.csv`;
+    boringLink.click();
+    URL.revokeObjectURL(boringUrl);
+  }
 };
 
 // ============================================

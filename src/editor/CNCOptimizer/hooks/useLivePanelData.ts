@@ -143,10 +143,19 @@ export function useLivePanelData() {
           // horizontal -> HORIZONTAL, vertical -> VERTICAL
           const grainValue = grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
 
-          // 측판인지 확인 (서랍 제외)
+          // 측판인지 확인 (서랍 제외) - 다양한 패널 이름 패턴 지원
           const isDrawerPanel = panel.name.includes('서랍');
-          const isSidePanel = !isDrawerPanel &&
-            (panel.name.includes('좌측') || panel.name.includes('우측'));
+          const isSidePanel = !isDrawerPanel && (
+            panel.name.includes('좌측') ||
+            panel.name.includes('우측') ||
+            panel.name.includes('좌측판') ||
+            panel.name.includes('우측판') ||
+            panel.name.includes('Left') ||
+            panel.name.includes('Right') ||
+            panel.name.includes('측판')
+          );
+
+          console.log(`  [BORING CHECK] Panel "${panel.name}": isDrawerPanel=${isDrawerPanel}, isSidePanel=${isSidePanel}`);
 
           // 측판의 보링 위치 결정
           let panelBoringPositions: number[] | undefined = undefined;
