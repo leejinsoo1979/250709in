@@ -930,26 +930,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // 시트 좌표로 변환
             let boringX: number, boringY: number;
 
-            if (isDrawerSidePanel) {
-              // ★★★ 서랍 측판 보링 - 가구 측판과 동일한 로직 ★★★
-              if (panel.rotated) {
-                boringX = x + boringPosMm;
-                boringY = y + depthPosMm;
-              } else {
-                boringX = x + depthPosMm;
-                boringY = y + boringPosMm;
-              }
-            } else if (panel.rotated) {
-              // 가구 측판 (회전된 경우):
-              // 원래 패널: width=깊이, height=높이
-              // 회전 후 시트: X축=높이방향, Y축=깊이방향
-              boringX = x + boringPosMm;   // 높이(Y) → 시트 X
-              boringY = y + depthPosMm;    // 깊이(X) → 시트 Y
+            // ★★★ 모든 측판 (가구/서랍) 동일한 로직 ★★★
+            if (panel.rotated) {
+              // 회전된 경우: 시트 X=높이방향, 시트 Y=깊이방향
+              boringX = x + boringPosMm;
+              boringY = y + depthPosMm;
             } else {
-              // 가구 측판 (회전 안된 경우):
-              // 시트: X축=깊이방향, Y축=높이방향
-              boringX = x + depthPosMm;    // 깊이(X) → 시트 X
-              boringY = y + boringPosMm;   // 높이(Y) → 시트 Y
+              // 회전 안된 경우: 시트 X=깊이방향, 시트 Y=높이방향
+              boringX = x + depthPosMm;
+              boringY = y + boringPosMm;
             }
 
             // 호버/선택 상태 확인
