@@ -496,18 +496,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       'LPM': { fill: `hsl(${themeColor} / 0.16)`, stroke: `hsl(${themeColor} / 0.9)` }
     };
 
-    // 보링 타입별 색상
+    // 보링 타입별 색상 - 모두 검정색으로 통일
     const boringColors: { [key: string]: { fill: string; stroke: string } } = {
-      'hinge-cup': { fill: 'rgba(239, 68, 68, 0.3)', stroke: '#ef4444' },      // 빨강 - 힌지컵 Ø35
-      'hinge-screw': { fill: 'rgba(239, 68, 68, 0.2)', stroke: '#f87171' },    // 연빨강 - 힌지나사
-      'cam-housing': { fill: 'rgba(59, 130, 246, 0.3)', stroke: '#3b82f6' },   // 파랑 - 캠하우징 Ø15
-      'cam-bolt': { fill: 'rgba(59, 130, 246, 0.2)', stroke: '#60a5fa' },      // 연파랑 - 캠볼트
-      'shelf-pin': { fill: 'rgba(34, 197, 94, 0.3)', stroke: '#22c55e' },      // 초록 - 선반핀 Ø5
-      'adjustable-foot': { fill: 'rgba(168, 85, 247, 0.3)', stroke: '#a855f7' }, // 보라 - 조절발
-      'drawer-rail': { fill: 'rgba(249, 115, 22, 0.3)', stroke: '#f97316' },   // 주황 - 서랍레일
-      'drawer-rail-slot': { fill: 'rgba(249, 115, 22, 0.2)', stroke: '#fb923c' }, // 연주황 - 레일장공
-      'drawer-panel-connector': { fill: 'rgba(236, 72, 153, 0.3)', stroke: '#ec4899' }, // 핑크 - 서랍 측판 체결홀 Ø3
-      'custom': { fill: 'rgba(107, 114, 128, 0.3)', stroke: '#6b7280' }        // 회색 - 사용자정의
+      'hinge-cup': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },          // 검정 - 힌지컵 Ø35
+      'hinge-screw': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },        // 검정 - 힌지나사
+      'cam-housing': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },        // 검정 - 캠하우징 Ø15
+      'cam-bolt': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },           // 검정 - 캠볼트
+      'shelf-pin': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },          // 검정 - 선반핀 Ø5
+      'adjustable-foot': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },    // 검정 - 조절발
+      'drawer-rail': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },        // 검정 - 서랍레일
+      'drawer-rail-slot': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' },   // 검정 - 레일장공
+      'drawer-panel-connector': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' }, // 검정 - 서랍 측판 체결홀 Ø3
+      'custom': { fill: 'rgba(0, 0, 0, 0.3)', stroke: '#000000' }              // 검정 - 사용자정의
     };
 
     // Count visible panels during simulation
