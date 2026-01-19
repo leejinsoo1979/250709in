@@ -437,27 +437,50 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           const panelHeight = panel.height || panel.depth || 0; // 측판 높이 (mm)
           const halfThickness = basicThicknessMm / 2; // 9mm
 
+          console.log(`[OPT BORING] "${panel.name}": isUpper=${isUpperSection}, isLower=${isLowerSection}, isSplit=${isSplitPanel}, panelHeight=${panelHeight}`);
+
           if (isSplitPanel && sectionBoringResult.sectionPositions.length >= 2) {
-            // 상/하 분리 측판: 해당 섹션의 보링 위치를 패널 로컬 좌표로 변환
+            // 상/하 분리 측판: 패널 높이 기준으로 보링 위치 직접 계산
             const sectionInfo = isLowerSection
               ? sectionBoringResult.sectionPositions[0]
               : sectionBoringResult.sectionPositions[1];
 
+            console.log(`[OPT BORING] sectionInfo:`, sectionInfo);
+
             if (sectionInfo) {
-              // sectionInfo.positions는 섹션 바닥판 상면 기준 좌표
-              // 패널 하단(=섹션 바닥판 하면) 기준으로 변환: pos - halfThickness
-              // 단, 패널 높이 범위 내의 유효한 위치만 포함
-              panelBoringPositions = sectionInfo.positions
-                .map(pos => pos - halfThickness)
-                .filter(pos => pos > 0 && pos < panelHeight);
+              // 패널 높이 기준으로 보링 위치 재계산
+              // 지판보링: 패널 하단에서 9mm (halfThickness)
+              // 상판보링: 패널 상단에서 9mm 아래 (panelHeight - halfThickness)
+              const bottomBoring = halfThickness; // 9mm
+              const topBoring = panelHeight - halfThickness; // panelHeight - 9mm
+
+              // 선반보링: sectionInfo.positions에서 지판/상판 제외한 중간 값들
+              const shelfBorings: number[] = [];
+              if (sectionInfo.positions.length > 2) {
+                const sectionHeight = sectionInfo.height || panelHeight;
+                const ratio = panelHeight / sectionHeight;
+
+                sectionInfo.positions.forEach(pos => {
+                  if (pos > halfThickness + 5 && pos < sectionHeight - halfThickness - 5) {
+                    shelfBorings.push(Math.round(pos * ratio));
+                  }
+                });
+              }
+
+              panelBoringPositions = [bottomBoring, ...shelfBorings, topBoring].sort((a, b) => a - b);
+              console.log(`[OPT BORING] recalculated:`, panelBoringPositions);
             }
           } else {
             // 통짜 측판: 전체 가구 보링 위치를 패널 로컬 좌표로 변환
             // allBoringPositions는 가구 바닥 기준 절대 좌표
-            // 측판 하단(=바닥판 하면=0) 기준으로는 그대로 사용, 단 패널 높이 범위 내만
+            // 가장자리 보링도 포함하도록 >= 및 <= 사용
+            console.log(`[OPT BORING] 통짜 측판 - allBoringPositions:`, allBoringPositions);
             panelBoringPositions = allBoringPositions
-              .filter(pos => pos > 0 && pos < panelHeight);
+              .filter(pos => pos >= 0 && pos <= panelHeight);
+            console.log(`[OPT BORING] result:`, panelBoringPositions);
           }
+
+          console.log(`[OPT BORING FINAL] "${panel.name}" - boringPositions:`, panelBoringPositions);
         }
 
         return {
