@@ -889,12 +889,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           // panel.boringPositions: Y위치 (height=높이 기준, 상중하 3개)
           //
           // boringDepthPositions가 없으면 기본값 사용 (호환성)
+          console.log(`[BORING DEBUG] ${panel.name}: boringDepthPositions=`, panel.boringDepthPositions);
           if (panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
             depthPositions = panel.boringDepthPositions;
+            console.log(`[BORING DEBUG] ${panel.name}: 사용 boringDepthPositions (2개)`);
           } else {
             // 기본값: 앞끝 7.5mm, 뒤끝 7.5mm (sideThickness=15mm 기준)
             const sideThickness = 15;
             depthPositions = [sideThickness / 2, originalWidth - sideThickness / 2];
+            console.log(`[BORING DEBUG] ${panel.name}: 사용 기본값 (2개)`);
           }
         } else {
           // 가구 측판: 선반핀 보링 (3개)
@@ -952,27 +955,25 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               // 서랍 측판 원본: width=535(깊이), height=225(높이)
               // 시트 배치(90도 회전): placedWidth=225, placedHeight=535
               //
-              // 보링 원하는 위치: 좌우 끝(X)에 세로로(Y) 3개씩
-              // - depthPosMm = 7.5, 527.5 → 시트 Y축 방향 (상/하 끝)
-              // - boringPosMm = 20, 112.5, 205 → 시트 X축 방향 (좌/중/우)
+              // 90도 회전 의미:
+              // - 원래 height(225) 방향 → 시트 X축 (placedWidth=225)
+              // - 원래 width(535) 방향 → 시트 Y축 (placedHeight=535)
               //
-              // 잠깐! 이렇게 하면 보링이 상하 끝에 가로로 배치됨.
+              // boringPosMm = height 기준 (20, 112.5, 205) → 시트 X축에 직접 매핑
+              // depthPosMm = width 기준 (7.5, 527.5) → 시트 Y축에 직접 매핑
               //
-              // 원하는 것: 보링이 좌/우 끝에 세로로 배치
-              // - 시트 X = 좌/우 끝 = depthPosMm (7.5, 527.5) ← 아니, placedWidth=225인데!
+              // 결과: 보링이 좌/우 끝(Y=7.5, 527.5)에 세로로(X=20~205) 3개씩 배치
+              //       → 아니! 이러면 상/하에 가로로 배치됨!
               //
-              // 문제: 서랍 측판이 회전되면 depthPosMm(7.5~527.5)이 시트 Y축 범위(535)에 맞음
-              //       boringPosMm(20~205)이 시트 X축 범위(225)에 맞음
+              // 원하는 것: 좌/우 끝(X)에 세로로(Y) 3개씩
+              // - 시트 X = depthPosMm (좌/우 끝: 7.5, 527.5) → 스케일링 필요 (535→225)
+              // - 시트 Y = boringPosMm (상/중/하: 20, 112.5, 205) → 스케일링 필요 (225→535)
               //
-              // 따라서 좌우 끝에 세로로 배치하려면:
-              // - 시트 X = depthPosMm를 placedWidth 범위로 스케일링
-              // - 시트 Y = boringPosMm를 placedHeight 범위로 스케일링
-              //
-              // 스케일링: depthPosMm(0~535) → (0~225), boringPosMm(0~225) → (0~535)
-              const scaleX = width / originalWidth;   // 225/535
-              const scaleY = height / originalHeight; // 535/225
-              boringX = x + depthPosMm * scaleX;      // 좌우 끝: 7.5*(225/535)=3.2, 527.5*(225/535)=221.8
-              boringY = y + boringPosMm * scaleY;     // 상중하: 20*(535/225)=47.6, 112.5*2.38=267.5, 205*2.38=487.4
+              // 스케일링:
+              // - X: depthPosMm * (placedWidth / originalWidth) = depthPosMm * (225/535)
+              // - Y: boringPosMm * (placedHeight / originalHeight) = boringPosMm * (535/225)
+              boringX = x + depthPosMm * (width / originalWidth);   // 7.5*(225/535)≈3.2, 527.5*(225/535)≈221.8
+              boringY = y + boringPosMm * (height / originalHeight); // 20*(535/225)≈47.6, 112.5*2.38≈267.5, 205*2.38≈487.4
             } else {
               // 비회전 패널 (가구 측판): 원래 좌표 그대로
               // - width 방향 → 시트 X축
