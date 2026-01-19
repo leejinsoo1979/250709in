@@ -360,23 +360,35 @@ export const calculatePanelDetails = (
           ];
 
           // 서랍 좌측판 (전체 깊이 사용, 두께 15mm)
+          // 바닥판 홈 가공 + 앞판/뒷판 보링
           targetPanel.push({
             name: `${sectionPrefix}서랍${drawerNum} 좌측판`,
             width: drawerBodyDepth, // 전체 깊이 사용
             height: drawerBodyHeight,
             thickness: drawerSideThickness, // 15mm
             material: 'PB',  // 서랍 본체는 PB 재질
-            boringPositions: drawerBoringPositions
+            boringPositions: drawerBoringPositions,
+            groovePositions: [{
+              y: drawerGroovePositionY,
+              height: drawerGrooveHeight,
+              depth: 5 // 홈 깊이 5mm
+            }]
           });
 
           // 서랍 우측판 (전체 깊이 사용, 두께 15mm)
+          // 바닥판 홈 가공 + 앞판/뒷판 보링
           targetPanel.push({
             name: `${sectionPrefix}서랍${drawerNum} 우측판`,
             width: drawerBodyDepth, // 전체 깊이 사용
             height: drawerBodyHeight,
             thickness: drawerSideThickness, // 15mm
             material: 'PB',  // 서랍 본체는 PB 재질
-            boringPositions: drawerBoringPositions
+            boringPositions: drawerBoringPositions,
+            groovePositions: [{
+              y: drawerGroovePositionY,
+              height: drawerGrooveHeight,
+              depth: 5 // 홈 깊이 5mm
+            }]
           });
 
           // 서랍 바닥판 (DrawerRenderer의 Drawer Bottom)

@@ -883,22 +883,27 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         let depthPositions: number[];
 
         if (isDrawerSidePanel) {
-          // ★★★ 서랍 측판 좌표계 ★★★
-          // - L방향(세로/긴 방향) = panel.width = 서랍 깊이 (489mm)
-          // - W방향(가로/짧은 방향) = panel.height = 서랍 높이 (148mm)
+          // ★★★ 서랍 측판 보링 위치 (2D 도면과 동일) ★★★
           //
-          // 보링 위치:
-          // - W방향(가로) 양끝에 앞판/뒷판 연결 보링 (2개)
-          // - L방향(세로) 상/중/하 3개씩
+          // DrawerRenderer.tsx 참조:
+          // - boringZ: 앞판/뒷판 중간 = drawerDepth/2 - sideThickness/2, -drawerDepth/2 + sideThickness/2
+          // - boringY: 끝에서 20mm, 중간, 끝에서 20mm
           //
-          // 따라서:
-          // - depthPositions = W방향(height) 기준 양끝 X좌표
-          // - boringPositions = L방향(width) 기준 상중하 Y좌표 (이건 이미 계산되어 있음)
-          const drawerSideThickness = 15; // 서랍 앞판/뒷판 두께
-          // W방향(height) 양끝에서 7.5mm 안쪽
-          const frontPanelX = originalHeight - drawerSideThickness / 2; // 140.5 (height=148 기준)
-          const backPanelX = drawerSideThickness / 2; // 7.5
-          depthPositions = [backPanelX, frontPanelX]; // 뒤, 앞 순서
+          // 서랍 측판 (CNC 옵티마이저):
+          // - panel.width = 서랍 깊이 (489mm)
+          // - panel.height = 서랍 높이 (148mm)
+          //
+          // 시트에 배치 시 (회전 고려):
+          // - 회전 안됨: 시트 X = width(깊이), 시트 Y = height(높이)
+          // - 회전됨: 시트 X = height(높이), 시트 Y = width(깊이)
+          //
+          // 보링 위치 (패널 기준):
+          // - 깊이 방향 (width 기준): 앞끝 = sideThickness/2, 뒤끝 = width - sideThickness/2
+          // - 높이 방향 (height 기준): boringPositions (이미 계산됨)
+          const sideThickness = 15; // 서랍 앞판/뒷판 두께 (DrawerRenderer와 동일)
+          const frontPanelPos = sideThickness / 2; // 7.5mm (앞쪽 끝에서)
+          const backPanelPos = originalWidth - sideThickness / 2; // width - 7.5mm (뒤쪽 끝에서)
+          depthPositions = [frontPanelPos, backPanelPos]; // 앞, 뒤 순서
         } else {
           // 가구 측판: 선반핀 보링 (3개)
           const backPanelThickness = 18; // 백패널 두께
@@ -931,11 +936,24 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             let boringX: number, boringY: number;
 
             if (isDrawerSidePanel) {
-              // ★★★ 서랍 측판 보링 - 좌우 끝에 세로로 배치 ★★★
-              // 보링 방향 90도 회전: 현재 위아래(X축)에 가로로 → 좌우(X축)에 세로로
-              // 단순히 X와 Y를 교체
-              boringX = x + depthPosMm;    // 좌우 양끝
-              boringY = y + boringPosMm;   // 세로 상중하
+              // ★★★ 서랍 측판 보링 (2D 도면과 동일한 배치) ★★★
+              //
+              // 패널 좌표계:
+              // - depthPosMm = 깊이 방향 (width 기준: 7.5, width-7.5)
+              // - boringPosMm = 높이 방향 (height 기준: 20, 중간, height-20)
+              //
+              // 시트 좌표계 (회전 고려):
+              if (panel.rotated) {
+                // 회전됨: 시트 X = height, 시트 Y = width
+                // 깊이 방향 → 시트 Y, 높이 방향 → 시트 X
+                boringX = x + boringPosMm;    // 높이 → 시트 X
+                boringY = y + depthPosMm;     // 깊이 → 시트 Y
+              } else {
+                // 회전 안됨: 시트 X = width, 시트 Y = height
+                // 깊이 방향 → 시트 X, 높이 방향 → 시트 Y
+                boringX = x + depthPosMm;     // 깊이 → 시트 X
+                boringY = y + boringPosMm;    // 높이 → 시트 Y
+              }
             } else if (panel.rotated) {
               // 가구 측판 (회전된 경우):
               // 원래 패널: width=깊이, height=높이
@@ -1127,12 +1145,58 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore();
       }
 
+      // ★★★ 서랍 바닥판 홈 가공 표시 (서랍 앞판/뒷판/좌측판/우측판) ★★★
+      // panel.groovePositions가 있는 서랍 패널에 바닥판 홈 표시
+      if (showGrooves && panel.groovePositions && panel.groovePositions.length > 0 && panel.name?.includes('서랍')) {
+        ctx.save();
+
+        const originalWidth = panel.width;
+        const originalHeight = panel.height;
+        const groovePanelColor = materialColors[panel.material] || { fill: '#f3f4f6', stroke: '#9ca3af' };
+        ctx.strokeStyle = '#666666'; // 진한 회색 라인
+        ctx.fillStyle = '#cccccc'; // 연한 회색 채우기
+        ctx.lineWidth = 1 / (baseScale * scale);
+
+        panel.groovePositions.forEach((groove) => {
+          // groove.y = 하단에서의 Y 위치 (10mm)
+          // groove.height = 홈 높이 (5mm)
+          const grooveY = groove.y;
+          const grooveH = groove.height;
+
+          let gx: number, gy: number, gw: number, gh: number;
+
+          if (panel.rotated) {
+            // 회전된 경우: 시트 X = height, 시트 Y = width
+            // 홈은 패널 전체 너비에 걸쳐 있음 (height 방향이 시트 X)
+            gx = x; // 시트 X 시작
+            gw = height; // 시트에서의 높이 = 원래 width (홈 길이)
+            // grooveY는 원래 height 기준, 시트에서는 X 방향
+            // 하지만 홈은 하단(Y=0 근처)에 있으므로...
+            // 회전 후: 원래 Y가 시트 X가 됨
+            gy = y + grooveY; // 시트 Y 위치
+            gh = grooveH; // 홈 높이
+          } else {
+            // 회전 안된 경우: 시트 X = width, 시트 Y = height
+            // 홈은 패널 전체 너비(width)에 걸쳐 있음
+            gx = x; // 시트 X 시작
+            gw = width; // 홈 길이 (패널 전체 너비)
+            gy = y + grooveY; // 시트 Y 위치 (하단에서 grooveY)
+            gh = grooveH; // 홈 높이
+          }
+
+          ctx.fillRect(gx, gy, gw, gh);
+          ctx.strokeRect(gx, gy, gw, gh);
+        });
+
+        ctx.restore();
+      }
+
       // Reset shadow and transparency effects
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
       ctx.globalAlpha = 1; // Reset transparency after drawing panel
     });
-    
+
     // Log visible panel count during simulation
     if (simulating && currentCutIndex % 4 === 0) { // Log every 4 cuts
       console.log(`Cut ${currentCutIndex}: ${visiblePanelCount}/${result.panels.length} panels visible`);
