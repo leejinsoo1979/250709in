@@ -14,6 +14,7 @@ import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { updateSectionHeight } from '@/editor/shared/utils/sectionHeightUpdater';
 import { getThemeHex } from '@/theme';
 import SidePanelBoring from './SidePanelBoring';
+import { calculateShelfBoringPositionsFromThreeUnits } from '@/domain/boring';
 
 // SectionsRenderer Props 인터페이스
 interface SectionsRendererProps {
@@ -1007,96 +1008,18 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
   //          = currentYPosition + mmToThreeUnits(positionMm)
   // - currentYPosition 초기값: -height/2 + basicThickness
   // - currentYPosition 업데이트: currentYPosition += sectionHeight
-  //
-  // Three.js 단위로 계산 후 mm로 변환
+  // 선반/패널 보링 위치 계산 (유틸리티 함수 사용)
   const allBoringPositions = useMemo(() => {
     const { sections } = modelConfig;
     if (!sections || sections.length === 0) return [];
 
-    const positions: number[] = [];
-    const basicThicknessMm = basicThickness * 100; // 18mm
-    const halfThicknessMm = basicThicknessMm / 2; // 9mm - 패널 중심까지의 거리
-    const totalHeightMm = height * 100;
-
-    // 1. 바닥판 중심 위치 (가구 바닥에서 9mm = 18/2)
-    positions.push(halfThicknessMm);
-
-    // 2. 상판 중심 위치 (가구 전체 높이 - 9mm)
-    positions.push(totalHeightMm - halfThicknessMm);
-
-    // 3. 선반 위치 수집 - ShelfRenderer와 동일한 계산 방식 사용
-    // ShelfRenderer에서: currentYPosition = -height/2 + basicThickness
-    // 이것을 가구 바닥 기준 mm으로 변환: (currentYPosition + height/2) * 100 = basicThickness * 100 = 18mm
-    let currentYPositionFromBottom = basicThicknessMm; // = 18mm
-
-    sections.forEach((section, index) => {
-      // 섹션의 계산된 높이 (Three.js 단위를 mm로)
-      // SectionsRenderer에서 section.calculatedHeight 사용하지만, 여기서는 section.height 사용
-      // calculatedHeight은 renderSections 내부에서 계산되므로, 여기서는 직접 계산해야 함
-      const availableHeightMm = totalHeightMm - basicThicknessMm * 2; // 상판+바닥판 제외
-
-      // 섹션 높이 계산 (간단화: absolute heightType 가정)
-      let sectionHeightMm: number;
-      if (section.heightType === 'absolute') {
-        sectionHeightMm = section.height;
-      } else {
-        // percentage 타입: 가용 높이에서 비율로 계산
-        sectionHeightMm = availableHeightMm * (section.height / 100);
-      }
-
-      // 선반 위치가 있으면 추가
-      if (section.shelfPositions && section.shelfPositions.length > 0) {
-        section.shelfPositions.forEach(pos => {
-          if (pos > 0) {
-            // ShelfRenderer에서: relativeYPosition = (-innerHeight / 2) + mmToThreeUnits(positionMm)
-            // 절대 Y = currentYPosition + relativeYPosition
-            //        = currentYPosition - sectionHeight/2 + pos*0.01
-            // 그런데 ShelfRenderer의 yOffset = sectionCenterY = currentYPosition + sectionHeight/2
-            // 따라서: 절대 Y = yOffset + relativeYPosition
-            //                = (currentYPosition + sectionHeight/2) + (-sectionHeight/2 + pos*0.01)
-            //                = currentYPosition + pos*0.01
-            // mm 단위로: currentYPositionFromBottom + pos
-            positions.push(currentYPositionFromBottom + pos);
-          }
-        });
-      }
-
-      // 섹션 구분 패널 (마지막 섹션이 아닌 경우)
-      // BaseFurnitureShell에서는 하부섹션 상판과 상부섹션 바닥판이 별도로 렌더링됨
-      //
-      // BaseFurnitureShell 계산:
-      // - currentYPosition = -height/2 + basicThickness (초기값)
-      // - for loop: currentYPosition += sectionHeight
-      // - sectionBoundaryY = currentYPosition - basicThickness
-      //                    = -height/2 + section[0].height (가구 바닥 기준 section[0].height mm)
-      // - 하부섹션 상판 Y = sectionBoundaryY - basicThickness/2 = -height/2 + section[0].height - 9mm
-      // - 상부섹션 바닥판 Y = sectionBoundaryY + basicThickness/2 = -height/2 + section[0].height + 9mm
-      //
-      // 가구 바닥 기준 mm로 변환:
-      // - 하부섹션 상판 중심 = 지금까지 섹션 높이 합 - 9mm
-      // - 상부섹션 바닥판 중심 = 지금까지 섹션 높이 합 + 9mm
-      if (index < sections.length - 1) {
-        // 지금까지 섹션 높이 합 계산 (currentYPositionFromBottom이 아닌 순수 섹션 높이 합)
-        // 첫 번째 섹션 끝 = sectionHeightMm (바닥판 두께 미포함)
-        // 하지만 현재 루프에서 currentYPositionFromBottom은 이미 바닥판 두께(18mm)를 포함하고 있음
-        // 따라서 섹션 끝의 가구 바닥 기준 위치 = currentYPositionFromBottom + sectionHeightMm - basicThicknessMm
-        //                                      = 18 + 600 - 18 = 600mm (정확!)
-        const sectionEndFromBottom = currentYPositionFromBottom + sectionHeightMm - basicThicknessMm;
-
-        // 하부섹션 상판 중심 (섹션 끝에서 9mm 아래)
-        positions.push(sectionEndFromBottom - halfThicknessMm);
-        // 상부섹션 바닥판 중심 (섹션 끝에서 9mm 위)
-        positions.push(sectionEndFromBottom + halfThicknessMm);
-      }
-
-      // ShelfRenderer와 동일: currentYPosition += sectionHeight
-      currentYPositionFromBottom += sectionHeightMm;
+    const result = calculateShelfBoringPositionsFromThreeUnits({
+      sections,
+      heightInThreeUnits: height,
+      basicThicknessInThreeUnits: basicThickness,
     });
 
-    // 중복 제거 및 정렬
-    const uniquePositions = [...new Set(positions)].sort((a, b) => a - b);
-
-    return uniquePositions;
+    return result.positions;
   }, [modelConfig, height, basicThickness]);
 
   return (

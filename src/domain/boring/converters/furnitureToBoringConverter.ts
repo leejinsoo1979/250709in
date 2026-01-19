@@ -25,6 +25,8 @@ export interface FurnitureBoringInput {
   moduleData: ModuleData;
   panelThickness?: number;  // 기본 18mm
   material?: string;        // 기본 '멜라민'
+  customShelfYPositions?: number[];  // 커스텀 선반/패널 Y 위치 배열 (측판 기준 mm)
+  useCustomPositions?: boolean;      // true면 32mm 피치 대신 커스텀 위치 사용
 }
 
 export interface FurnitureBoringResult {
@@ -167,6 +169,8 @@ export function convertFurnitureToBoring(
     moduleData,
     panelThickness = 18,
     material = '멜라민',
+    customShelfYPositions,
+    useCustomPositions = false,
   } = input;
 
   const mergedSettings = { ...DEFAULT_BORING_SETTINGS, ...settings };
@@ -235,6 +239,9 @@ export function convertFurnitureToBoring(
         shelfCount: getShelfCount(sections),
         hasAdjustableFoot: false, // 기본값
         settings: mergedSettings,
+        // 커스텀 선반 위치 지원 (실제 선반/패널 위치에만 보링)
+        customShelfYPositions: useCustomPositions ? customShelfYPositions : undefined,
+        useCustomPositions,
       };
       result = generateLowerCabinetBorings(lowerParams);
       break;

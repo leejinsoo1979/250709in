@@ -17,6 +17,7 @@ export interface ShelfPinBoringParams {
   startHeight?: number;    // 시작 높이 (mm), 기본 37mm
   endMargin?: number;      // 상단 마진 (mm), 기본 37mm
   settings?: Partial<ShelfPinSettings>;
+  customYPositions?: number[];  // 커스텀 Y 위치 배열 (선반/패널 실제 위치)
 }
 
 export interface ShelfPinBoringResult {
@@ -90,6 +91,8 @@ export function calculateShelfPinXPositions(
  * - 보링면: 측판 내면 (좌측판→우측면, 우측판→좌측면)
  * - 직경: 5mm
  * - 깊이: 12mm
+ * - customYPositions가 있으면 실제 선반/패널 위치에만 보링
+ * - 없으면 32mm 피치 시스템 사용
  */
 export function calculateShelfPinBorings(params: ShelfPinBoringParams): ShelfPinBoringResult {
   const settings = { ...DEFAULT_SHELF_PIN_SETTINGS, ...params.settings };
@@ -102,7 +105,10 @@ export function calculateShelfPinBorings(params: ShelfPinBoringParams): ShelfPin
     settings.endMargin = params.endMargin;
   }
 
-  const yPositions = calculateShelfPinYPositions(params.panelHeight, settings);
+  // 커스텀 Y 위치가 제공되면 해당 위치만 사용, 아니면 32mm 피치 시스템
+  const yPositions = params.customYPositions && params.customYPositions.length > 0
+    ? params.customYPositions.filter(y => y > 0 && y < params.panelHeight)
+    : calculateShelfPinYPositions(params.panelHeight, settings);
   const xPositions = calculateShelfPinXPositions(params.panelDepth, settings);
 
   const borings: Boring[] = [];

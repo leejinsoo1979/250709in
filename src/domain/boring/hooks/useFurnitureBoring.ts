@@ -29,6 +29,10 @@ export interface UseFurnitureBoringOptions {
   onlyWithDoors?: boolean;
   /** 특정 가구 ID만 포함 */
   furnitureIds?: string[];
+  /** 32mm 피치 대신 커스텀 위치 사용 */
+  useCustomPositions?: boolean;
+  /** 가구별 커스텀 선반 위치 (가구ID → Y위치 배열) */
+  customShelfPositionsByFurniture?: Record<string, number[]>;
 }
 
 export interface UseFurnitureBoringResult {
@@ -71,6 +75,8 @@ export function useFurnitureBoring(
     material = '멜라민',
     onlyWithDoors = false,
     furnitureIds,
+    useCustomPositions = false,
+    customShelfPositionsByFurniture,
   } = options;
 
   // Store에서 데이터 가져오기
@@ -103,11 +109,16 @@ export function useFurnitureBoring(
         return;
       }
 
+      // 가구별 커스텀 선반 위치 가져오기
+      const customShelfYPositions = customShelfPositionsByFurniture?.[placedModule.id];
+
       inputs.push({
         placedModule,
         moduleData,
         panelThickness,
         material,
+        useCustomPositions,
+        customShelfYPositions,
       });
     });
 
@@ -125,7 +136,7 @@ export function useFurnitureBoring(
     }
 
     return convertMultipleFurnitureToBoring(inputs, settings);
-  }, [placedModules, spaceInfo, settings, panelThickness, material, onlyWithDoors, furnitureIds]);
+  }, [placedModules, spaceInfo, settings, panelThickness, material, onlyWithDoors, furnitureIds, useCustomPositions, customShelfPositionsByFurniture]);
 
   return {
     panels: result.allPanels || [],

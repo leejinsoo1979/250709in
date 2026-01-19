@@ -33,6 +33,8 @@ export interface LowerCabinetParams {
   shelfCount: number;      // 고정 선반 개수
   hasAdjustableFoot: boolean;  // 조절발 유무
   settings?: Partial<BoringSettings>;
+  customShelfYPositions?: number[];  // 커스텀 선반/패널 Y 위치 (바닥판 중심부터의 mm)
+  useCustomPositions?: boolean;      // true면 32mm 피치 대신 커스텀 위치 사용
 }
 
 export interface LowerCabinetBoringResult {
@@ -77,6 +79,8 @@ function generateSidePanelBorings(
     panelDepth: dims.sidePanelDepth,
     isLeftPanel,
     settings: settings.shelfPin,
+    // 커스텀 위치가 있으면 사용, 없으면 32mm 피치 시스템
+    customYPositions: params.useCustomPositions ? params.customShelfYPositions : undefined,
   });
   borings.push(...shelfPinResult.borings);
 

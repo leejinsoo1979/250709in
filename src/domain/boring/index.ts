@@ -22,3 +22,6 @@ export * from './converters';
 
 // React 훅
 export * from './hooks';
+
+// 유틸리티 함수
+export * from './utils/calculateShelfBoringPositions';
