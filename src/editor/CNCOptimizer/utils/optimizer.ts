@@ -225,7 +225,8 @@ export const optimizePanels = async (
         grain: originalPanel.grain || 'NONE',
         material: originalPanel.material,
         color: originalPanel.color,
-        name: originalPanel.name
+        name: originalPanel.name,
+        boringPositions: originalPanel.boringPositions // 보링 위치 유지
       });
     } else {
       unplacedPanels.push(rect);
@@ -308,7 +309,8 @@ export const optimizePanelsImproved = async (
         grain: originalPanel.grain || 'NONE',
         material: originalPanel.material,
         color: originalPanel.color,
-        name: originalPanel.name
+        name: originalPanel.name,
+        boringPositions: originalPanel.boringPositions // 보링 위치 유지
       });
     }
   }
@@ -423,7 +425,8 @@ export const optimizePanelsMultiple = async (
         grain: originalPanel.grain || 'NONE',
         material: originalPanel.material,
         color: originalPanel.color,
-        name: originalPanel.name
+        name: originalPanel.name,
+        boringPositions: originalPanel.boringPositions // 보링 위치 유지
       };
     });
     
@@ -524,7 +527,8 @@ export const optimizePanelsMultipleImproved = async (
         grain: originalPanel.grain || 'NONE',
         material: originalPanel.material,
         color: originalPanel.color,
-        name: originalPanel.name
+        name: originalPanel.name,
+        boringPositions: originalPanel.boringPositions // 보링 위치 유지
       };
     });
 
