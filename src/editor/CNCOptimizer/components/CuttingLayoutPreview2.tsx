@@ -855,6 +855,17 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           // 해당 가구의 보링 위치 가져오기 (가구 바닥 기준 mm)
           const boringPositions = moduleKey ? shelfBoringPositions[moduleKey] : null;
 
+          // 디버그 로그
+          console.log(`🔵 보링 패널: ${panel.name}`, {
+            moduleKey,
+            panelId: panel.id,
+            panelWidth: panel.width,
+            panelHeight: panel.height,
+            rotated: panel.rotated,
+            boringPositions,
+            shelfBoringPositionsKeys: Object.keys(shelfBoringPositions),
+          });
+
           if (boringPositions && boringPositions.length > 0) {
             ctx.save();
 
