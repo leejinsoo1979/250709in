@@ -1005,60 +1005,79 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     if (!sections || sections.length === 0) return [];
 
     const positions: number[] = [];
-    const availableHeight = height - basicThickness * 2;
-    const basicThicknessMm = basicThickness * 100;
-    const halfThicknessMm = basicThicknessMm / 2; // 패널 중심까지의 거리
-
-    // 각 섹션의 높이 계산
-    let currentYPositionMm = basicThicknessMm; // 바닥판 두께 (mm) - 바닥판 상단 위치
+    const basicThicknessMm = basicThickness * 100; // 18mm
+    const halfThicknessMm = basicThicknessMm / 2; // 9mm - 패널 중심까지의 거리
 
     // 1. 바닥판 중심 위치 (가구 바닥에서 9mm = 18/2)
     positions.push(halfThicknessMm);
 
+    // 섹션별 높이 계산 및 보링 위치 수집
+    // currentSectionBottomMm: 현재 섹션의 바닥 위치 (가구 바닥 기준, mm)
+    let currentSectionBottomMm = basicThicknessMm; // 첫 섹션은 바닥판(18mm) 위에서 시작
+
     sections.forEach((section, index) => {
-      let sectionHeightMm: number;
+      // 섹션 높이 계산 (section.height는 mm 단위)
+      const sectionHeightMm = section.height;
 
-      if (section.heightType === 'absolute') {
-        if (index === 0) {
-          sectionHeightMm = section.height;
-        } else {
-          const lowerSectionsHeightMm = sections
-            .slice(0, index)
-            .reduce((sum, s) => sum + (s.heightType === 'absolute' ? s.height : 0), 0);
-          sectionHeightMm = (availableHeight * 100) - lowerSectionsHeightMm;
-        }
-      } else {
-        sectionHeightMm = section.height;
-      }
-
-      // 2. 선반 위치가 있으면 절대 위치로 변환 (선반은 이미 중심 위치)
+      // 2. 선반 위치 (shelfPositions는 섹션 바닥 기준 mm 값)
       if (section.shelfPositions && section.shelfPositions.length > 0) {
         section.shelfPositions.forEach(pos => {
-          if (pos > 0) { // 0은 바닥판이므로 제외 (이미 추가됨)
-            positions.push(currentYPositionMm + pos);
+          if (pos > 0) { // 0은 바닥판이므로 제외
+            // 선반 중심 위치 = 섹션 바닥 + 선반 위치
+            positions.push(currentSectionBottomMm + pos);
           }
         });
       }
 
-      // 3. 섹션 중간 구분 패널 중심 위치 (마지막 섹션이 아닌 경우)
-      if (index < sections.length - 1) {
-        // 섹션 경계 위치에서 패널 두께의 절반만큼 위로 이동 (패널 중심)
-        // 경계 = currentYPositionMm + sectionHeightMm - halfThicknessMm
-        // 하지만 shelfPositions이 섹션 내부 기준이므로,
-        // 실제로는 currentYPositionMm + sectionHeightMm 가 다음 섹션 시작점
-        // 중간 패널의 중심 = currentYPositionMm + sectionHeightMm + halfThicknessMm
-        positions.push(currentYPositionMm + sectionHeightMm + halfThicknessMm);
+      // 3. 서랍 섹션의 경우 - 서랍 구분 패널 위치 추가
+      if (section.type === 'drawer' && section.drawerHeights && section.drawerHeights.length > 0) {
+        // 서랍속장은 섹션 상단에서 시작하여 아래로 쌓임
+        // 서랍속장 자체의 상판/바닥판 패널 위치 추가
+        const drawerFrameTopMm = currentSectionBottomMm + sectionHeightMm - basicThicknessMm; // 서랍속장 상판 하단
+        const drawerFrameBottomMm = currentSectionBottomMm; // 서랍속장 바닥판 상단
+
+        // 서랍속장 상판 중심
+        positions.push(drawerFrameTopMm + halfThicknessMm);
+        // 서랍속장 바닥판 중심
+        positions.push(drawerFrameBottomMm + halfThicknessMm);
+
+        // 서랍 간 구분 패널 위치 (서랍 사이)
+        let currentDrawerTopMm = drawerFrameTopMm; // 서랍속장 상판 하단에서 시작
+        section.drawerHeights.forEach((drawerHeight, drawerIndex) => {
+          if (drawerIndex < section.drawerHeights!.length - 1) {
+            // 서랍 바닥 위치 = 현재 위치 - 서랍 높이
+            const drawerBottomMm = currentDrawerTopMm - drawerHeight;
+            // 구분 패널 중심 (패널 두께 고려)
+            positions.push(drawerBottomMm - halfThicknessMm);
+            currentDrawerTopMm = drawerBottomMm - basicThicknessMm; // 다음 서랍 상단
+          }
+        });
       }
 
-      currentYPositionMm += sectionHeightMm;
+      // 4. 섹션 구분 패널 (마지막 섹션이 아닌 경우)
+      if (index < sections.length - 1) {
+        // 섹션 경계 = 현재 섹션 상단 = currentSectionBottomMm + sectionHeightMm
+        // 구분 패널 중심 = 섹션 경계 + halfThicknessMm
+        positions.push(currentSectionBottomMm + sectionHeightMm + halfThicknessMm);
+      }
+
+      // 다음 섹션으로 이동 (섹션 높이 + 구분 패널 두께)
+      currentSectionBottomMm += sectionHeightMm + (index < sections.length - 1 ? basicThicknessMm : 0);
     });
 
-    // 4. 상판 중심 위치 (가구 전체 높이 - 상판 두께/2 = 상판 중심)
+    // 5. 상판 중심 위치 (가구 전체 높이 - 상판 두께/2)
     const totalHeightMm = height * 100;
     positions.push(totalHeightMm - halfThicknessMm);
 
     // 중복 제거 및 정렬
     const uniquePositions = [...new Set(positions)].sort((a, b) => a - b);
+
+    console.log('🔵 보링 위치 계산:', {
+      totalHeightMm,
+      basicThicknessMm,
+      halfThicknessMm,
+      positions: uniquePositions
+    });
 
     return uniquePositions;
   }, [modelConfig, height, basicThickness]);
