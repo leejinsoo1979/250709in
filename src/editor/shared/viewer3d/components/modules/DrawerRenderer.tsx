@@ -1,7 +1,7 @@
 import React from 'react';
 import * as THREE from 'three';
 import { useSpace3DView } from '../../context/useSpace3DView';
-import { Line } from '@react-three/drei';
+import { Text, useGLTF, Line } from '@react-three/drei';
 import NativeLine from '../elements/NativeLine';
 import { useUIStore } from '@/store/uiStore';
 import BoxWithEdges from './components/BoxWithEdges';
@@ -430,111 +430,51 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
           const railZ = drawerBodyCenterZ - mmToThreeUnits(8); // 백패널 방향으로 8mm 이동
           const railLength = drawerBodyDepth - mmToThreeUnits(20); // 레일 길이
 
-          // 2D 도면용 선 색상 (옷봉과 동일)
-          const railLineColor = view2DTheme === 'light' ? '#808080' : '#FFFFFF';
-
-          // 레일 크기 상수 (간단한 박스 형태로 표현)
-          const railHeight = mmToThreeUnits(45); // 레일 높이 45mm
-          const railDepth = railLength; // 레일 깊이 = 서랍 깊이
-
-          // 2D 모드: Line 컴포넌트로 레일 렌더링 (DXF 추출 가능)
-          if (viewMode === '2D') {
-            return (
-              <group name="drawer-rails-2d">
-                {/* 좌측 레일 - 사각형 외곽선 */}
-                {/* 레일 상단선 */}
-                <Line
-                  name={`drawer-${drawerIndex}-rail-left-top`}
-                  points={[
-                    [railLeftX, railY + railHeight / 2, railZ - railDepth / 2],
-                    [railLeftX, railY + railHeight / 2, railZ + railDepth / 2]
-                  ]}
-                  color={railLineColor}
-                  lineWidth={0.5}
-                />
-                {/* 레일 하단선 */}
-                <Line
-                  name={`drawer-${drawerIndex}-rail-left-bottom`}
-                  points={[
-                    [railLeftX, railY - railHeight / 2, railZ - railDepth / 2],
-                    [railLeftX, railY - railHeight / 2, railZ + railDepth / 2]
-                  ]}
-                  color={railLineColor}
-                  lineWidth={0.5}
-                />
-                {/* 레일 앞쪽 수직선 */}
-                <Line
-                  name={`drawer-${drawerIndex}-rail-left-front`}
-                  points={[
-                    [railLeftX, railY - railHeight / 2, railZ + railDepth / 2],
-                    [railLeftX, railY + railHeight / 2, railZ + railDepth / 2]
-                  ]}
-                  color={railLineColor}
-                  lineWidth={0.5}
-                />
-                {/* 레일 뒤쪽 수직선 */}
-                <Line
-                  name={`drawer-${drawerIndex}-rail-left-back`}
-                  points={[
-                    [railLeftX, railY - railHeight / 2, railZ - railDepth / 2],
-                    [railLeftX, railY + railHeight / 2, railZ - railDepth / 2]
-                  ]}
-                  color={railLineColor}
-                  lineWidth={0.5}
-                />
-
-                {/* 우측 레일 - 사각형 외곽선 */}
-                {/* 레일 상단선 */}
-                <Line
-                  name={`drawer-${drawerIndex}-rail-right-top`}
-                  points={[
-                    [railRightX, railY + railHeight / 2, railZ - railDepth / 2],
-                    [railRightX, railY + railHeight / 2, railZ + railDepth / 2]
-                  ]}
-                  color={railLineColor}
-                  lineWidth={0.5}
-                />
-                {/* 레일 하단선 */}
-                <Line
-                  name={`drawer-${drawerIndex}-rail-right-bottom`}
-                  points={[
-                    [railRightX, railY - railHeight / 2, railZ - railDepth / 2],
-                    [railRightX, railY - railHeight / 2, railZ + railDepth / 2]
-                  ]}
-                  color={railLineColor}
-                  lineWidth={0.5}
-                />
-                {/* 레일 앞쪽 수직선 */}
-                <Line
-                  name={`drawer-${drawerIndex}-rail-right-front`}
-                  points={[
-                    [railRightX, railY - railHeight / 2, railZ + railDepth / 2],
-                    [railRightX, railY + railHeight / 2, railZ + railDepth / 2]
-                  ]}
-                  color={railLineColor}
-                  lineWidth={0.5}
-                />
-                {/* 레일 뒤쪽 수직선 */}
-                <Line
-                  name={`drawer-${drawerIndex}-rail-right-back`}
-                  points={[
-                    [railRightX, railY - railHeight / 2, railZ - railDepth / 2],
-                    [railRightX, railY + railHeight / 2, railZ - railDepth / 2]
-                  ]}
-                  color={railLineColor}
-                  lineWidth={0.5}
-                />
-              </group>
-            );
-          }
-
-          // 3D 모드: DAE 모델 렌더링
           if (!railModel || !railCenterOffset) return null;
 
           const offsetX = railCenterOffset.x;
           const offsetY = railCenterOffset.y;
           const offsetZ = railCenterOffset.z;
 
+          // 2D 모드: 테마에 따른 색상으로 레일 렌더링 (옷봉과 동일)
+          // 라이트 모드: 짙은 회색(#808080), 다크 모드: 흰색(#FFFFFF)
+          if (viewMode === '2D') {
+            const leftRail = railModel.clone();
+            leftRail.scale.x *= -1;
+            const rightRail = railModel.clone();
+
+            const railColor = view2DTheme === 'light' ? '#808080' : '#FFFFFF';
+            const rail2DMaterial = new THREE.MeshBasicMaterial({
+              color: railColor,
+              transparent: true,
+              opacity: 0.8
+            });
+
+            [leftRail, rightRail].forEach(rail => {
+              rail.traverse((child) => {
+                if (child instanceof THREE.Mesh) {
+                  child.material = rail2DMaterial;
+                }
+              });
+            });
+
+            return (
+              <>
+                <primitive
+                  key={`drawer-${drawerIndex}-rail-left-2d`}
+                  object={leftRail}
+                  position={[railLeftX + offsetX, railY - offsetY, railZ - offsetZ]}
+                />
+                <primitive
+                  key={`drawer-${drawerIndex}-rail-right-2d`}
+                  object={rightRail}
+                  position={[railRightX - offsetX, railY - offsetY, railZ - offsetZ]}
+                />
+              </>
+            );
+          }
+
+          // 3D 모드: DAE 모델 렌더링
           const leftRail = railModel.clone();
           leftRail.scale.x *= -1;
           const rightRail = railModel.clone();
