@@ -33,6 +33,8 @@ interface CuttingLayoutPreview2Props {
   allCutSteps?: any[]; // All cut steps for current sheet
   // 보링 데이터
   boringData?: PanelBoringData[];
+  // 선반 보링 위치 (가구별, 가구 바닥 기준 mm)
+  shelfBoringPositions?: Record<string, number[]>;
   // 시뮬레이션 완료 콜백
   onSimulationComplete?: () => void;
 }
@@ -54,6 +56,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   showCuttingListTab = false,
   allCutSteps = [],
   boringData = [],
+  shelfBoringPositions = {},
   onSimulationComplete
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -826,96 +829,68 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore(); // Restore labels save (line 583)
       } // End of showLabels check
 
-      // 보링 표시 (showLabels와 독립적으로 표시)
-      // ★ 2D 뷰어와 동일하게 가구 측판(좌측판/우측판)에만 선반핀 보링 표시
-      // 서랍 패널, 상판, 하판, 도어 등에는 보링 표시하지 않음
-      if (showBorings && boringData && boringData.length > 0) {
-        // 패널 이름 정규화 함수 - 다양한 형식을 통일된 키로 변환
-        const normalizePanelName = (name: string): string => {
-          if (!name) return '';
-          // (상), (하) 접두사 제거
-          let normalized = name.replace(/^\([상하]\)/, '');
+      // ★★★ 보링 표시 (shelfBoringPositions 사용 - 2D 뷰어와 동일) ★★★
+      // 가구 측판(좌측판/우측판)에만 선반핀 보링 표시
+      if (showBorings && Object.keys(shelfBoringPositions).length > 0) {
+        // 서랍 패널인지 확인 (서랍 패널에는 보링 표시 안함)
+        const isDrawerPanel = panel.name.includes('서랍');
 
-          // ★ 서랍 관련 패턴을 먼저 체크 (가구 측판과 혼동 방지)
-          // 서랍 측판: "서랍1 좌측판", "서랍2 우측판" 등
-          if (normalized.includes('서랍')) {
-            // 서랍 앞판
-            if (normalized.includes('앞판')) return 'drawer-front-panel';
-            // 서랍 뒷판
-            if (normalized.includes('뒷판')) return 'drawer-back-panel';
-            // 서랍 측판 (좌/우)
-            if (normalized.includes('측판') || normalized.includes('좌측') || normalized.includes('우측')) {
-              if (normalized.includes('좌')) return 'drawer-side-left';
-              if (normalized.includes('우')) return 'drawer-side-right';
-            }
-            // 서랍전판 (전면 데코판)
-            if (normalized.includes('전판')) return 'drawer-front';
-            // 기타 서랍 패널
-            return `drawer-${normalized.toLowerCase()}`;
-          }
-
-          // 패널 타입 추출 및 정규화
-          // "좌측", "좌측판", "좌" 등 다양한 패턴 지원 (서랍이 아닌 경우만)
-          if (normalized.includes('좌측') || normalized === '좌측판' || normalized === '좌측' || normalized === '좌') return 'side-left';
-          if (normalized.includes('우측') || normalized === '우측판' || normalized === '우측' || normalized === '우') return 'side-right';
-          if (normalized.includes('바닥') || normalized === '하판') return 'bottom';
-          if (normalized.includes('상판')) return 'top';
-          if (normalized.includes('도어')) return 'door';
-          if (normalized.includes('백패널') || normalized.includes('뒷판')) return 'back';
-          if (normalized.includes('서랍전판')) return 'drawer-front';
-          return normalized.toLowerCase();
-        };
-
-        // 정규화된 이름으로 매칭 (크기도 함께 확인)
-        const normalizedCncName = normalizePanelName(panel.name);
-
-        // ★ 가구 측판(side-left, side-right)만 보링 표시 대상
-        // 2D 뷰어의 SidePanelBoring과 동일하게 가구 측판에만 선반핀 보링 표시
-        const isFurnitureSidePanel = normalizedCncName === 'side-left' || normalizedCncName === 'side-right';
+        // 가구 측판인지 확인 (좌측/우측 키워드 포함, 서랍 제외)
+        const isFurnitureSidePanel = !isDrawerPanel &&
+          (panel.name.includes('좌측') || panel.name.includes('우측'));
 
         if (isFurnitureSidePanel) {
-          // ★★★ 2D 뷰어 SidePanelBoring.tsx와 동일한 방식으로 보링 위치 계산 ★★★
-          //
-          // 듀얼 타입 가구의 경우:
-          // - CNC 패널: (상)좌측 1400mm, (하)좌측 1000mm 로 분리됨
-          // - boringData: 전체 가구 기준 side-left 2289mm
-          // 따라서 높이 매칭 대신 타입만 매칭하고, 해당 패널 높이 범위의 보링만 필터링
+          // 패널의 가구 ID 찾기
+          const furnitureId = panel.furnitureId || panel.id?.split('-')[0];
 
-          // 패널 이름에서 상부/하부 구분 확인
-          const isUpperSection = panel.name.startsWith('(상)');
-          const isLowerSection = panel.name.startsWith('(하)');
-          const panelHeight = panel.height; // 이 CNC 패널의 실제 높이
+          // 해당 가구의 보링 위치 가져오기 (가구 바닥 기준 mm)
+          const boringPositions = furnitureId ? shelfBoringPositions[furnitureId] : null;
 
-          // 이 패널에 해당하는 가구의 보링 위치 데이터 찾기
-          const panelBoringData = boringData.find(b => b.panelType === normalizedCncName);
-
-          if (panelBoringData && panelBoringData.borings && panelBoringData.borings.length > 0) {
+          if (boringPositions && boringPositions.length > 0) {
             ctx.save();
 
-            // 보링 타입이 shelf-pin인 것들만 필터링하고 Y위치 추출
-            let shelfPinBorings = panelBoringData.borings.filter(b => b.type === 'shelf-pin');
+            // 패널이 상부/하부 섹션인지 확인
+            const isUpperSection = panel.name.startsWith('(상)');
+            const isLowerSection = panel.name.startsWith('(하)');
+            const panelHeight = panel.height; // CNC 패널 높이
+            const basicThickness = 18; // 패널 두께
 
-            // 듀얼 타입 가구에서 상부/하부 섹션별 보링 필터링
-            // boringData의 Y 좌표는 측판 전체 기준 (0 = 측판 하단)
-            let yOffset = 0;
+            // 이 패널에 표시할 보링 위치 계산
+            let panelBoringPositions: number[];
+
             if (isUpperSection || isLowerSection) {
-              // 전체 측판 높이에서 현재 패널이 차지하는 범위 계산
-              const fullSidePanelHeight = panelBoringData.height; // 전체 측판 높이
+              // 듀얼 타입 가구: 상부/하부 섹션별로 필터링
+              // boringPositions는 가구 바닥 기준 절대 위치
+              // 측판 좌표 = 가구 좌표 - 바닥판 두께(18mm)
 
               if (isLowerSection) {
-                // 하부 패널: Y가 0 ~ panelHeight 범위의 보링만
-                shelfPinBorings = shelfPinBorings.filter(b => b.y >= 0 && b.y <= panelHeight);
-              } else if (isUpperSection) {
-                // 상부 패널: Y가 (전체높이 - 상부패널높이) ~ 전체높이 범위의 보링만
-                const lowerSectionHeight = fullSidePanelHeight - panelHeight;
-                shelfPinBorings = shelfPinBorings.filter(b => b.y > lowerSectionHeight && b.y <= fullSidePanelHeight);
-                // 상부 패널 기준으로 Y 좌표 변환 (상부 패널 하단이 0이 되도록)
-                yOffset = lowerSectionHeight;
-              }
-            }
+                // 하부 패널: 가구 바닥 기준 0 ~ (panelHeight + 18) 범위
+                // 측판 좌표로 변환: y - 18
+                panelBoringPositions = boringPositions
+                  .filter(y => y >= 0 && y <= panelHeight + basicThickness)
+                  .map(y => y - basicThickness)
+                  .filter(y => y >= 0 && y <= panelHeight);
+              } else {
+                // 상부 패널: 가구 바닥 기준 (전체높이 - 상부높이 - 18) ~ 전체높이 범위
+                // 전체 가구 높이 = 하부 패널 높이 + 상부 패널 높이 + 중간 패널들 두께
+                // 보링 위치에서 하부 섹션 높이를 빼서 상부 패널 기준으로 변환
 
-            // Y위치 중복 제거 (같은 Y에 3개 홀이 있으므로)
-            const uniqueYPositions = [...new Set(shelfPinBorings.map(b => b.y - yOffset))].sort((a, b) => a - b);
+                // 상부 섹션의 시작 위치 = 전체 높이에서 상부 패널 높이를 뺀 값
+                // 상부 패널 기준: y - (전체높이 - 상부패널높이)
+                const upperSectionStart = boringPositions[boringPositions.length - 1] - panelHeight;
+
+                panelBoringPositions = boringPositions
+                  .filter(y => y > upperSectionStart)
+                  .map(y => y - upperSectionStart - basicThickness)
+                  .filter(y => y >= 0 && y <= panelHeight);
+              }
+            } else {
+              // 단일 섹션 가구: 모든 보링 위치 사용
+              // 가구 바닥 기준 → 측판 기준으로 변환 (바닥판 두께 제외)
+              panelBoringPositions = boringPositions
+                .map(y => y - basicThickness)
+                .filter(y => y >= 0 && y <= panelHeight);
+            }
 
             // X위치 계산 (2D 뷰어와 동일: 앞쪽 50mm, 가운데, 뒤쪽 50mm)
             const edgeOffset = 50; // mm
@@ -933,7 +908,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             const radius = holeDiameter / 2;
 
             // 각 Y위치에 대해 3개의 X위치에 보링 그리기
-            uniqueYPositions.forEach(yPos => {
+            panelBoringPositions.forEach(yPos => {
               xPositions.forEach(xPos => {
                 // 패널 좌표 기준으로 변환
                 let boringX: number, boringY: number;

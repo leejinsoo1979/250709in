@@ -1197,6 +1197,7 @@ function PageInner(){
                   showCuttingListTab={showCuttingList}
                   allCutSteps={allCutSteps}
                   boringData={boringPanels}
+                  shelfBoringPositions={customShelfPositionsByFurniture}
                   onSimulationComplete={handleSimulationComplete}
                 />
               </div>
