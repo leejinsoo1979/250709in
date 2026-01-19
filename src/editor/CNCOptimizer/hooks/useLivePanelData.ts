@@ -303,7 +303,20 @@ export function useLivePanelData() {
         allPanels.push(...convertedPanels);
       });
 
-      console.log('Total panels extracted:', allPanels.length);
+      console.log('========================================');
+      console.log('📊 패널 추출 완료 요약:');
+      console.log(`   - 배치된 가구 수: ${placedModules.length}`);
+      console.log(`   - 총 추출된 패널 수: ${allPanels.length}`);
+      console.log('   - 가구별 패널 수:');
+      const panelCountByModule = new Map<number, number>();
+      allPanels.forEach(p => {
+        const moduleIdx = parseInt(p.id.split('_')[0].replace('m', ''));
+        panelCountByModule.set(moduleIdx, (panelCountByModule.get(moduleIdx) || 0) + 1);
+      });
+      panelCountByModule.forEach((count, moduleIdx) => {
+        console.log(`     가구 ${moduleIdx}: ${count}개 패널`);
+      });
+      console.log('========================================');
       console.log('All panels:', allPanels);
 
       setPanels(allPanels);
