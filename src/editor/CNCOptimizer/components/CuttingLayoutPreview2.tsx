@@ -939,18 +939,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                   boringY = y + boringPosMm;   // 높이 위치 → Y축
                 }
 
-                // 패널 범위 내에 있는지 확인
-                if (boringX >= x && boringX <= x + placedWidth &&
-                    boringY >= y && boringY <= y + placedHeight) {
-                  ctx.fillStyle = boringColor.fill;
-                  ctx.strokeStyle = boringColor.stroke;
-                  ctx.lineWidth = 1 / (baseScale * scale);
+                // 보링 그리기 (범위 체크 제거 - 좌표가 정확하면 범위 내에 있어야 함)
+                ctx.fillStyle = boringColor.fill;
+                ctx.strokeStyle = boringColor.stroke;
+                ctx.lineWidth = 1 / (baseScale * scale);
 
-                  ctx.beginPath();
-                  ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
-                  ctx.fill();
-                  ctx.stroke();
-                }
+                ctx.beginPath();
+                ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
               });
             });
 
