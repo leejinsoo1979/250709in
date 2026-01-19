@@ -1133,8 +1133,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         // 홈 스타일 설정 (반턱 가공이므로 패널과 같은 색상)
         const groovePanelColor = materialColors[panel.material] || { fill: '#f3f4f6', stroke: '#9ca3af' };
-        ctx.strokeStyle = '#888888'; // 회색 라인
-        ctx.fillStyle = groovePanelColor.fill; // 패널과 같은 색상
+        ctx.strokeStyle = groovePanelColor.stroke; // 패널 색상과 동일
+        ctx.fillStyle = groovePanelColor.fill; // 패널 색상과 동일
         ctx.lineWidth = 1.5 / (baseScale * scale);
 
         // 시트 좌표로 변환하여 홈 그리기
