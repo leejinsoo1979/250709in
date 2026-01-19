@@ -191,19 +191,20 @@ export function useLivePanelData() {
               if (sectionInfo) {
                 // sectionInfo.positions는 섹션 바닥판 상면 기준 좌표
                 // 패널 하단(=섹션 바닥판 하면) 기준으로 변환: pos - halfThickness
-                // 단, 패널 높이 범위 내의 유효한 위치만 포함
+                // 가장자리(0 또는 panelHeight)에 있는 보링도 포함하도록 >= 및 <= 사용
                 const beforeFilter = sectionInfo.positions.map(pos => pos - halfThickness);
                 console.log(`  [BORING CALC] beforeFilter (pos - ${halfThickness}):`, beforeFilter);
-                panelBoringPositions = beforeFilter.filter(pos => pos > 0 && pos < panelHeight);
-                console.log(`  [BORING CALC] afterFilter (0 < pos < ${panelHeight}):`, panelBoringPositions);
+                panelBoringPositions = beforeFilter.filter(pos => pos >= 0 && pos <= panelHeight);
+                console.log(`  [BORING CALC] afterFilter (0 <= pos <= ${panelHeight}):`, panelBoringPositions);
               }
             } else {
               // 통짜 측판: 전체 가구 보링 위치를 패널 로컬 좌표로 변환
               // allBoringPositions는 가구 바닥 기준 절대 좌표
-              // 측판 하단(=바닥판 하면=0) 기준으로는 그대로 사용, 단 패널 높이 범위 내만
-              console.log(`  [BORING CALC] 통짜 측판 - filtering allBoringPositions for height < ${panelHeight}`);
+              // 측판 하단(=바닥판 하면=0) 기준으로는 그대로 사용
+              // 가장자리(0 또는 panelHeight)에 있는 보링도 포함하도록 >= 및 <= 사용
+              console.log(`  [BORING CALC] 통짜 측판 - filtering allBoringPositions for height <= ${panelHeight}`);
               panelBoringPositions = allBoringPositions
-                .filter(pos => pos > 0 && pos < panelHeight);
+                .filter(pos => pos >= 0 && pos <= panelHeight);
               console.log(`  [BORING CALC] result:`, panelBoringPositions);
             }
 
