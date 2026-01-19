@@ -1161,11 +1161,37 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         }
 
         // 홈 영역 채우기 (반투명)
+        ctx.globalAlpha = 0.3;
         ctx.fillRect(grooveX1, grooveY1, grooveW, grooveH);
 
+        // 빗금 패턴 그리기 (흐리게)
+        ctx.globalAlpha = 0.2;
+        ctx.strokeStyle = groovePanelColor.stroke;
+        ctx.lineWidth = 0.5 / (baseScale * scale);
+        ctx.beginPath();
+        const hatchSpacing = 3 / (baseScale * scale); // 빗금 간격
+        if (grooveW > grooveH) {
+          // 가로로 긴 홈: 대각선 빗금
+          for (let i = grooveX1; i < grooveX1 + grooveW + grooveH; i += hatchSpacing) {
+            ctx.moveTo(i, grooveY1);
+            ctx.lineTo(i - grooveH, grooveY1 + grooveH);
+          }
+        } else {
+          // 세로로 긴 홈: 대각선 빗금
+          for (let i = grooveY1; i < grooveY1 + grooveH + grooveW; i += hatchSpacing) {
+            ctx.moveTo(grooveX1, i);
+            ctx.lineTo(grooveX1 + grooveW, i - grooveW);
+          }
+        }
+        ctx.stroke();
+
         // 홈 테두리 그리기
+        ctx.globalAlpha = 0.4;
+        ctx.strokeStyle = groovePanelColor.stroke;
+        ctx.lineWidth = 1 / (baseScale * scale);
         ctx.strokeRect(grooveX1, grooveY1, grooveW, grooveH);
 
+        ctx.globalAlpha = 1;
         ctx.restore();
       }
 
@@ -1244,8 +1270,36 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             console.log(`[GROOVE DRAW] ${panel.name}: rotated=${panel.rotated}, grooveY=${grooveY}, gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
           }
 
+          // 홈 영역 채우기 (반투명)
+          ctx.globalAlpha = 0.3;
           ctx.fillRect(gx, gy, gw, gh);
+
+          // 빗금 패턴 그리기 (흐리게)
+          ctx.globalAlpha = 0.2;
+          ctx.lineWidth = 0.5 / (baseScale * scale);
+          ctx.beginPath();
+          const hatchSpacing = 3 / (baseScale * scale); // 빗금 간격
+          if (gw > gh) {
+            // 가로로 긴 홈: 대각선 빗금
+            for (let i = gx; i < gx + gw + gh; i += hatchSpacing) {
+              ctx.moveTo(i, gy);
+              ctx.lineTo(i - gh, gy + gh);
+            }
+          } else {
+            // 세로로 긴 홈: 대각선 빗금
+            for (let i = gy; i < gy + gh + gw; i += hatchSpacing) {
+              ctx.moveTo(gx, i);
+              ctx.lineTo(gx + gw, i - gw);
+            }
+          }
+          ctx.stroke();
+
+          // 홈 테두리 그리기
+          ctx.globalAlpha = 0.4;
+          ctx.lineWidth = 1 / (baseScale * scale);
           ctx.strokeRect(gx, gy, gw, gh);
+
+          ctx.globalAlpha = 1;
         });
 
         ctx.restore();
