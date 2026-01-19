@@ -883,12 +883,21 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         let depthPositions: number[];
 
         if (isDrawerSidePanel) {
-          // 서랍 측판: 앞판/뒷판 연결 보링 (2개)
-          // 서랍 측판의 앞끝에 앞판이, 뒤끝에 뒷판이 있음
-          // 보링은 앞판/뒷판 중간 위치 = 측판 끝에서 앞판/뒷판 두께의 절반
+          // ★★★ 서랍 측판 좌표계 ★★★
+          // - L방향(세로/긴 방향) = panel.width = 서랍 깊이 (489mm)
+          // - W방향(가로/짧은 방향) = panel.height = 서랍 높이 (148mm)
+          //
+          // 보링 위치:
+          // - W방향(가로) 양끝에 앞판/뒷판 연결 보링 (2개)
+          // - L방향(세로) 상/중/하 3개씩
+          //
+          // 따라서:
+          // - depthPositions = W방향(height) 기준 양끝 X좌표
+          // - boringPositions = L방향(width) 기준 상중하 Y좌표 (이건 이미 계산되어 있음)
           const drawerSideThickness = 15; // 서랍 앞판/뒷판 두께
-          const frontPanelX = originalWidth - drawerSideThickness / 2; // 앞끝에서 7.5mm 안쪽 (앞판 중간)
-          const backPanelX = drawerSideThickness / 2; // 뒤끝에서 7.5mm 안쪽 (뒷판 중간)
+          // W방향(height) 양끝에서 7.5mm 안쪽
+          const frontPanelX = originalHeight - drawerSideThickness / 2; // 140.5 (height=148 기준)
+          const backPanelX = drawerSideThickness / 2; // 7.5
           depthPositions = [backPanelX, frontPanelX]; // 뒤, 앞 순서
         } else {
           // 가구 측판: 선반핀 보링 (3개)
@@ -905,7 +914,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           depthPositions = [frontX, safeCenterX, safeBackX]; // 깊이 방향 위치들 (3개)
         }
 
-        console.log(`[BORING] ${panel.name}: boringPositions=${panel.boringPositions.length}개, Y=[${panel.boringPositions.map(p=>p.toFixed(0)).join(',')}], X=[${depthPositions.map(d=>d.toFixed(0)).join(',')}]`);
+        console.log(`[BORING] ${panel.name}: isDrawer=${isDrawerSidePanel}, rotated=${panel.rotated}, width=${originalWidth}, height=${originalHeight}`);
+        console.log(`[BORING] ${panel.name}: boringPositions(Y)=${panel.boringPositions.length}개=[${panel.boringPositions.map(p=>p.toFixed(0)).join(',')}], depthPositions(X)=${depthPositions.length}개=[${depthPositions.map(d=>d.toFixed(0)).join(',')}]`);
 
         // 보링 색상 및 크기 (2D 도면과 동일)
         const boringColor = boringColors['shelf-pin'];
@@ -921,16 +931,11 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             let boringX: number, boringY: number;
 
             if (isDrawerSidePanel) {
-              // 서랍 측판: width=깊이, height=높이
-              // boringPosMm = Y 위치 (높이 방향, 위/중간/아래)
-              // depthPosMm = X 위치 (깊이 방향, 앞판/뒷판 = 좌우 양끝)
-              if (panel.rotated) {
-                boringX = x + boringPosMm;   // 높이 → 시트 X
-                boringY = y + depthPosMm;    // 깊이 → 시트 Y
-              } else {
-                boringX = x + depthPosMm;    // 깊이 → 시트 X (좌우)
-                boringY = y + boringPosMm;   // 높이 → 시트 Y (상하)
-              }
+              // ★★★ 서랍 측판 보링 - 좌우 끝에 세로로 배치 ★★★
+              // 보링 방향 90도 회전: 현재 위아래(X축)에 가로로 → 좌우(X축)에 세로로
+              // 단순히 X와 Y를 교체
+              boringX = x + depthPosMm;    // 좌우 양끝
+              boringY = y + boringPosMm;   // 세로 상중하
             } else if (panel.rotated) {
               // 가구 측판 (회전된 경우):
               // 원래 패널: width=깊이, height=높이
