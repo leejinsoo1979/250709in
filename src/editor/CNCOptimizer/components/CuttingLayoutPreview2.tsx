@@ -931,26 +931,23 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             let boringX: number, boringY: number;
 
             if (isDrawerSidePanel) {
-              // ★★★ 서랍 측판 보링 - 가구 측판과 동일한 로직 사용 ★★★
+              // ★★★ 서랍 측판 보링 ★★★
               //
-              // 서랍 측판도 시트에 배치될 때:
-              // - 회전 안됨: 시트 X = width(깊이), 시트 Y = height(높이)
-              // - 회전됨: 시트 X = height(높이), 시트 Y = width(깊이)
+              // 패널 원본:
+              // - width = 깊이 (535mm)
+              // - height = 높이 (225mm)
+              // - boringPosMm = height 기준 상중하
+              // - depthPosMm = width 기준 앞뒤 [7.5, 527.5]
               //
-              // 보링 위치:
-              // - depthPosMm = width 기준 [7.5, 481.5] = 깊이 방향 앞뒤 (좌우 끝)
-              // - boringPosMm = height 기준 [20, 74, 128] = 높이 방향 상중하
+              // 시트에서 원하는 배치:
+              // - 좌우 끝(X축 양끝)에 세로로 3개씩
+              // - 즉, depthPosMm → 시트 X, boringPosMm → 시트 Y
               //
-              // 가구 측판과 동일하게:
-              // - 회전 안됨: boringX=depthPosMm(좌우끝), boringY=boringPosMm(상중하)
-              // - 회전됨: boringX=boringPosMm, boringY=depthPosMm
-              if (panel.rotated) {
-                boringX = x + boringPosMm;   // 높이(Y) → 시트 X
-                boringY = y + depthPosMm;    // 깊이(X) → 시트 Y
-              } else {
-                boringX = x + depthPosMm;    // 깊이(X) → 시트 X (좌우 끝)
-                boringY = y + boringPosMm;   // 높이(Y) → 시트 Y (상중하)
-              }
+              // 하지만 실제 시트 배치에서 X/Y가 바뀌어 있음
+              // 시트에서: X = 긴쪽(535), Y = 짧은쪽(225)
+              // 이 경우 rotated와 상관없이 X/Y 매핑 고정
+              boringX = x + depthPosMm;    // 깊이(앞뒤) → 시트 X (좌우 끝)
+              boringY = y + boringPosMm;   // 높이(상중하) → 시트 Y
             } else if (panel.rotated) {
               // 가구 측판 (회전된 경우):
               // 원래 패널: width=깊이, height=높이
