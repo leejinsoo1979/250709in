@@ -56,16 +56,15 @@ const DrawerSidePanelBoring: React.FC<DrawerSidePanelBoringProps> = ({
   const leftPanelX = centerX - drawerWidth / 2 + sideThickness / 2 + sidePanelOffset;
   const rightPanelX = centerX + drawerWidth / 2 - sideThickness / 2 - sidePanelOffset;
 
-  // 보링 Y 위치: 서랍 하단에서 25.5mm 위 (레일 장착 위치)
-  const boringY = centerY - drawerHeight / 2 + mmToThreeUnits(25.5);
+  // 보링 Y 위치: 서랍 높이 중앙 (측판-앞판/뒷판 체결용)
+  const boringY = centerY;
 
-  // 보링 Z 위치: 서랍 깊이 방향으로 3개 위치
-  const edgeOffset = mmToThreeUnits(50); // 끝에서 50mm
-  const frontZ = centerZ + drawerDepth / 2 - edgeOffset;
-  const backZ = centerZ - drawerDepth / 2 + edgeOffset;
-  const middleZ = centerZ;
+  // 보링 Z 위치: 앞판, 뒷판 중간 지점 (2개만)
+  // 앞판은 drawerDepth/2 - sideThickness/2 위치, 뒷판은 -drawerDepth/2 + sideThickness/2 위치
+  const frontPanelZ = centerZ + drawerDepth / 2 - sideThickness / 2; // 앞판 중간
+  const backPanelZ = centerZ - drawerDepth / 2 + sideThickness / 2; // 뒷판 중간
 
-  const boringZPositions = [frontZ, middleZ, backZ];
+  const boringZPositions = [frontPanelZ, backPanelZ];
 
   // 측면뷰 (left/right) - 해당 측판에만 보링 표시 (원형)
   if (view2DDirection === 'left' || view2DDirection === 'right') {
