@@ -197,24 +197,26 @@ export const calculatePanelDetails = (
         });
       }
 
+      // === 수평 패널 너비 계산 (상판, 바닥판, 선반 공통) ===
+      // 좌우 측판과 각각 0.5mm 갭 → 총 1mm 감소
+      const horizontalPanelWidth = innerWidth - 1;
+
       // === 하판 (첫 번째 섹션만) - 뒤에서 26mm 줄임 ===
       if (sectionIndex === 0) {
         targetPanel.push({
           name: `${sectionPrefix}바닥`,
-          width: innerWidth,
+          width: horizontalPanelWidth,
           depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
           thickness: basicThickness,
           material: 'PB'
         });
       }
-
-      // === 상판 또는 중간판 - 뒤에서 26mm 줄임 ===
       const isMultiSection = sections.length >= 2;
       if (isMultiSection && sectionIndex < sections.length - 1) {
         // 다중 섹션이고 마지막이 아니면: 하부섹션 상판
         targetPanel.push({
           name: `${sectionPrefix}상판`,
-          width: innerWidth,
+          width: horizontalPanelWidth,
           depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
           thickness: basicThickness,
           material: 'PB'
@@ -225,7 +227,7 @@ export const calculatePanelDetails = (
           // 다중 섹션: 상부섹션 바닥판
           targetPanel.push({
             name: `${sectionPrefix}바닥`,
-            width: innerWidth,
+            width: horizontalPanelWidth,
             depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
             thickness: basicThickness,
             material: 'PB'
@@ -234,7 +236,7 @@ export const calculatePanelDetails = (
         // 상판 - 뒤에서 26mm 줄임
         targetPanel.push({
           name: `${sectionPrefix}상판`,
-          width: innerWidth,
+          width: horizontalPanelWidth,
           depth: customDepth - 26, // 백패널과 맞닿게 26mm 감소
           thickness: basicThickness,
           material: 'PB'
@@ -365,7 +367,7 @@ export const calculatePanelDetails = (
         if (section.shelfPositions && section.shelfPositions.length > 0) {
           targetPanel.push({
             name: `${sectionPrefix}선반 1`,
-            width: innerWidth,
+            width: horizontalPanelWidth, // 좌우 0.5mm씩 갭
             depth: customDepth - 8 - basicThickness, // 실제 선반 깊이 = adjustedDepthForShelves - basicThickness
             thickness: basicThickness,
             material: 'PB'
@@ -376,7 +378,7 @@ export const calculatePanelDetails = (
         for (let i = 1; i <= section.count; i++) {
           targetPanel.push({
             name: `${sectionPrefix}선반 ${i}`,
-            width: innerWidth,
+            width: horizontalPanelWidth, // 좌우 0.5mm씩 갭
             depth: customDepth - 8 - basicThickness, // 실제 선반 깊이 = adjustedDepthForShelves - basicThickness
             thickness: basicThickness,
             material: 'PB'  // 기본 재질
