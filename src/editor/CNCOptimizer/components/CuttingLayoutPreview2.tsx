@@ -931,9 +931,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               filteredBoringPositions = boringPositions.filter(pos => pos <= originalHeight + 10);
             }
 
-            // 보링 색상 및 크기 (실제 크기)
+            // 보링 색상 및 크기 (2D 도면과 동일)
             const boringColor = boringColors['shelf-pin'];
-            const holeDiameter = 5; // 실제 선반핀 보링홀 직경 5mm
+            const holeDiameter = 3; // 2D 도면(SidePanelBoring.tsx)과 동일
             const radius = holeDiameter / 2;
 
             // 각 보링 위치에 대해 3개의 홀 그리기 (가로로 3개)
