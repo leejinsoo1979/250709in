@@ -1015,31 +1015,29 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     // 2. 상판 중심 위치 (가구 전체 높이 - 9mm)
     positions.push(totalHeightMm - halfThicknessMm);
 
-    // 3. 선반 위치 수집 (shelfPositions는 섹션 바닥 기준 mm 값)
-    // 첫 번째 섹션 바닥 = 바닥판 상단 = 18mm
-    let sectionBottomMm = basicThicknessMm;
+    // 3. 선반 위치 수집 (shelfPositions는 섹션 하단 기준 mm 값)
+    // 첫 번째 섹션 내부 바닥 = 바닥판 상단 = 18mm
+    let sectionInternalBottomMm = basicThicknessMm;
 
     sections.forEach((section, index) => {
       const sectionHeightMm = section.height;
 
-      // 선반 위치가 있으면 추가 (shelfPositions는 섹션 내부 기준)
+      // 선반 위치가 있으면 추가 (shelfPositions는 섹션 내부 하단 기준)
       if (section.shelfPositions && section.shelfPositions.length > 0) {
         section.shelfPositions.forEach(pos => {
           if (pos > 0) {
-            // 선반 중심 위치 = 섹션 바닥 + 선반 위치 (shelfPositions는 이미 패널 중심 기준)
-            positions.push(sectionBottomMm + pos);
+            // 선반 중심 위치 = 섹션 내부 바닥 + 선반 위치
+            positions.push(sectionInternalBottomMm + pos);
           }
         });
       }
 
       // 섹션 구분 패널 중심 (마지막 섹션이 아닌 경우)
       if (index < sections.length - 1) {
-        // 구분 패널 중심 = 섹션 바닥 + 섹션 높이 + 9mm
-        positions.push(sectionBottomMm + sectionHeightMm + halfThicknessMm);
-        // 다음 섹션 바닥 = 현재 섹션 상단 + 구분 패널 두께
-        sectionBottomMm += sectionHeightMm + basicThicknessMm;
-      } else {
-        sectionBottomMm += sectionHeightMm;
+        // 구분 패널 중심 = 섹션 내부 바닥 + 섹션 높이 + 9mm
+        positions.push(sectionInternalBottomMm + sectionHeightMm + halfThicknessMm);
+        // 다음 섹션 내부 바닥 = 현재 섹션 내부 바닥 + 섹션 높이 + 구분 패널 두께
+        sectionInternalBottomMm += sectionHeightMm + basicThicknessMm;
       }
     });
 
