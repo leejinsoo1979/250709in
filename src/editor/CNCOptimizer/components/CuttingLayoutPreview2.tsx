@@ -931,22 +931,14 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             let boringX: number, boringY: number;
 
             if (isDrawerSidePanel) {
-              // ★★★ 서랍 측판 보링 ★★★
-              //
-              // 패널 원본: width=깊이(535), height=높이(225)
-              // boringPosMm = height 기준 [20, 112.5, 205] (3개)
-              // depthPosMm = width 기준 [7.5, 527.5] (2개)
-              //
-              // 패널이 rotated=true로 배치됨 (결방향 유지)
-              // 시트 배치: 가로 535, 세로 225
-              //
-              // 원하는 결과: 좌우 끝에 세로로 3개씩
-              // - 시트 X 좌우끝 = depthPosMm [7.5, 527.5]
-              // - 시트 Y 세로 = boringPosMm [20, 112.5, 205]
-              //
-              // rotated=true여도 시트 X=가로=535, Y=세로=225 유지
-              boringX = x + depthPosMm;    // 깊이(앞뒤) → 시트 X 좌우끝
-              boringY = y + boringPosMm;   // 높이(상중하) → 시트 Y 세로
+              // ★★★ 서랍 측판 보링 - 가구 측판과 동일한 로직 ★★★
+              if (panel.rotated) {
+                boringX = x + boringPosMm;
+                boringY = y + depthPosMm;
+              } else {
+                boringX = x + depthPosMm;
+                boringY = y + boringPosMm;
+              }
             } else if (panel.rotated) {
               // 가구 측판 (회전된 경우):
               // 원래 패널: width=깊이, height=높이
