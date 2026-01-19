@@ -877,17 +877,32 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const placedHeight = panel.rotated ? originalWidth : originalHeight;
 
         // ★★★ 보링 X 위치 계산 (깊이 방향) - 2D 뷰어와 동일 ★★★
-        const backPanelThickness = 18; // 백패널 두께
-        const edgeOffset = 50; // 끝에서 50mm
+        // 서랍 측판 vs 가구 측판 구분
+        const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
 
-        // 깊이 방향 3개의 X 위치
-        const frontX = edgeOffset; // 앞쪽에서 50mm = 50
-        const backX = originalWidth - backPanelThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 18mm 고려)
+        let depthPositions: number[];
 
-        // 최소 간격 보장 (패널이 너무 작은 경우 대비)
-        const safeBackX = Math.max(backX, frontX + 40);
-        const safeCenterX = (frontX + safeBackX) / 2;
-        const depthPositions = [frontX, safeCenterX, safeBackX]; // 깊이 방향 위치들 (항상 3개)
+        if (isDrawerSidePanel) {
+          // 서랍 측판: 앞판/뒷판 연결 보링 (2개)
+          // DrawerRenderer.tsx와 동일: 앞판 중간, 뒷판 중간
+          const drawerSideThickness = 15; // 서랍 앞판/뒷판 두께
+          const frontPanelX = originalWidth - drawerSideThickness / 2; // 앞쪽 (앞판 중간)
+          const backPanelX = drawerSideThickness / 2; // 뒤쪽 (뒷판 중간)
+          depthPositions = [backPanelX, frontPanelX]; // 뒤→앞 순서
+        } else {
+          // 가구 측판: 선반핀 보링 (3개)
+          const backPanelThickness = 18; // 백패널 두께
+          const edgeOffset = 50; // 끝에서 50mm
+
+          // 깊이 방향 3개의 X 위치
+          const frontX = edgeOffset; // 앞쪽에서 50mm = 50
+          const backX = originalWidth - backPanelThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 18mm 고려)
+
+          // 최소 간격 보장 (패널이 너무 작은 경우 대비)
+          const safeBackX = Math.max(backX, frontX + 40);
+          const safeCenterX = (frontX + safeBackX) / 2;
+          depthPositions = [frontX, safeCenterX, safeBackX]; // 깊이 방향 위치들 (3개)
+        }
 
         console.log(`[BORING] ${panel.name}: boringPositions=${panel.boringPositions.length}개, Y=[${panel.boringPositions.map(p=>p.toFixed(0)).join(',')}], X=[${depthPositions.map(d=>d.toFixed(0)).join(',')}]`);
 
