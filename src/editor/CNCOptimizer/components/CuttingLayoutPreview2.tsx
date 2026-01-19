@@ -948,15 +948,33 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
             if (panel.rotated) {
               // ★★★ 회전된 패널 (서랍 측판) ★★★
-              // 패널 90도 회전 → 원래 좌표축이 바뀜
-              // - 원래 height 방향 → 시트 X축 (placedWidth = 225)
-              // - 원래 width 방향 → 시트 Y축 (placedHeight = 535)
-              // boringPosMm = 원래 height 기준 (상중하: 20, 112.5, 205)
-              // depthPosMm = 원래 width 기준 (좌우끝: 7.5, 527.5)
-              boringX = x + boringPosMm;  // 시트 X = 원래 높이 방향 (좌우 20, 112.5, 205)
-              boringY = y + depthPosMm;   // 시트 Y = 원래 깊이 방향 (상하 7.5, 527.5)
+              //
+              // 서랍 측판 원본: width=535(깊이), height=225(높이)
+              // 시트 배치(90도 회전): placedWidth=225, placedHeight=535
+              //
+              // 보링 원하는 위치: 좌우 끝(X)에 세로로(Y) 3개씩
+              // - depthPosMm = 7.5, 527.5 → 시트 Y축 방향 (상/하 끝)
+              // - boringPosMm = 20, 112.5, 205 → 시트 X축 방향 (좌/중/우)
+              //
+              // 잠깐! 이렇게 하면 보링이 상하 끝에 가로로 배치됨.
+              //
+              // 원하는 것: 보링이 좌/우 끝에 세로로 배치
+              // - 시트 X = 좌/우 끝 = depthPosMm (7.5, 527.5) ← 아니, placedWidth=225인데!
+              //
+              // 문제: 서랍 측판이 회전되면 depthPosMm(7.5~527.5)이 시트 Y축 범위(535)에 맞음
+              //       boringPosMm(20~205)이 시트 X축 범위(225)에 맞음
+              //
+              // 따라서 좌우 끝에 세로로 배치하려면:
+              // - 시트 X = depthPosMm를 placedWidth 범위로 스케일링
+              // - 시트 Y = boringPosMm를 placedHeight 범위로 스케일링
+              //
+              // 스케일링: depthPosMm(0~535) → (0~225), boringPosMm(0~225) → (0~535)
+              const scaleX = width / originalWidth;   // 225/535
+              const scaleY = height / originalHeight; // 535/225
+              boringX = x + depthPosMm * scaleX;      // 좌우 끝: 7.5*(225/535)=3.2, 527.5*(225/535)=221.8
+              boringY = y + boringPosMm * scaleY;     // 상중하: 20*(535/225)=47.6, 112.5*2.38=267.5, 205*2.38=487.4
             } else {
-              // 비회전 패널: 원래 좌표 그대로
+              // 비회전 패널 (가구 측판): 원래 좌표 그대로
               // - width 방향 → 시트 X축
               // - height 방향 → 시트 Y축
               boringX = x + depthPosMm;   // 시트 X = 깊이 방향
@@ -1647,14 +1665,25 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const x = panel.x;
       const y = panel.y;
       const originalWidth = panel.width;
+      const originalHeight = panel.height;
+      const placedWidth = panel.rotated ? originalHeight : originalWidth;
+      const placedHeight = panel.rotated ? originalWidth : originalHeight;
 
-      const backPanelThickness = 18;
-      const edgeOffset = 50;
-      const frontX = edgeOffset;
-      const backX = originalWidth - backPanelThickness - edgeOffset;
-      const safeBackX = Math.max(backX, frontX + 40);
-      const safeCenterX = (frontX + safeBackX) / 2;
-      const depthPositions = [frontX, safeCenterX, safeBackX];
+      // 서랍 측판 여부 확인
+      const isDrawerSidePanel = panel.name.includes('서랍') && panel.name.includes('측판');
+
+      let depthPositions: number[];
+      if (isDrawerSidePanel && panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
+        depthPositions = panel.boringDepthPositions;
+      } else {
+        const backPanelThickness = 18;
+        const edgeOffset = 50;
+        const frontX = edgeOffset;
+        const backX = originalWidth - backPanelThickness - edgeOffset;
+        const safeBackX = Math.max(backX, frontX + 40);
+        const safeCenterX = (frontX + safeBackX) / 2;
+        depthPositions = [frontX, safeCenterX, safeBackX];
+      }
 
       for (let yIdx = 0; yIdx < panel.boringPositions.length; yIdx++) {
         const boringPosMm = panel.boringPositions[yIdx];
@@ -1664,8 +1693,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
           let boringX: number, boringY: number;
           if (panel.rotated) {
-            boringX = x + boringPosMm;
-            boringY = y + depthPosMm;
+            const scaleX = placedWidth / originalWidth;
+            const scaleY = placedHeight / originalHeight;
+            boringX = x + depthPosMm * scaleX;
+            boringY = y + boringPosMm * scaleY;
           } else {
             boringX = x + depthPosMm;
             boringY = y + boringPosMm;
@@ -1826,15 +1857,26 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const x = panel.x;
         const y = panel.y;
         const originalWidth = panel.width;
+        const originalHeight = panel.height;
+        const placedWidth = panel.rotated ? originalHeight : originalWidth;
+        const placedHeight = panel.rotated ? originalWidth : originalHeight;
+
+        // 서랍 측판 여부 확인
+        const isDrawerSidePanel = panel.name.includes('서랍') && panel.name.includes('측판');
 
         // 보링 X 위치 계산 (깊이 방향)
-        const backPanelThickness = 18;
-        const edgeOffset = 50;
-        const frontX = edgeOffset;
-        const backX = originalWidth - backPanelThickness - edgeOffset;
-        const safeBackX = Math.max(backX, frontX + 40);
-        const safeCenterX = (frontX + safeBackX) / 2;
-        const depthPositions = [frontX, safeCenterX, safeBackX];
+        let depthPositions: number[];
+        if (isDrawerSidePanel && panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
+          depthPositions = panel.boringDepthPositions;
+        } else {
+          const backPanelThickness = 18;
+          const edgeOffset = 50;
+          const frontX = edgeOffset;
+          const backX = originalWidth - backPanelThickness - edgeOffset;
+          const safeBackX = Math.max(backX, frontX + 40);
+          const safeCenterX = (frontX + safeBackX) / 2;
+          depthPositions = [frontX, safeCenterX, safeBackX];
+        }
 
         // 각 보링 위치 체크
         for (let yIdx = 0; yIdx < panel.boringPositions.length; yIdx++) {
@@ -1846,8 +1888,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // 시트 좌표로 변환
             let boringX: number, boringY: number;
             if (panel.rotated) {
-              boringX = x + boringPosMm;
-              boringY = y + depthPosMm;
+              const scaleX = placedWidth / originalWidth;
+              const scaleY = placedHeight / originalHeight;
+              boringX = x + depthPosMm * scaleX;
+              boringY = y + boringPosMm * scaleY;
             } else {
               boringX = x + depthPosMm;
               boringY = y + boringPosMm;
