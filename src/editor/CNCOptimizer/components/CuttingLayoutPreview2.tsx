@@ -839,44 +839,21 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const isFurnitureSidePanel = !isDrawerPanel &&
           (panel.name.includes('좌측') || panel.name.includes('우측'));
 
-        // 디버그: 첫 번째 측판에서 한번만 로그
-        if (isFurnitureSidePanel && panel.name.includes('좌측') && !panel.name.startsWith('(상)')) {
-          console.log('🔍 보링 디버그:', {
-            panelName: panel.name,
-            panelId: panel.id,
-            furnitureId: panel.furnitureId,
-            shelfBoringPositionsKeys: Object.keys(shelfBoringPositions),
-            panelKeys: Object.keys(panel),
-          });
-        }
-
         if (isFurnitureSidePanel) {
-          // 패널의 가구 ID 찾기 - 다양한 방법 시도
-          let furnitureId = panel.furnitureId;
+          // 패널 ID에서 moduleIndex 추출
+          // panel.id 형식: "m{moduleIndex}_p{panelIndex}-{instanceIndex}" (예: "m0_p8-0")
+          let moduleKey: string | null = null;
 
-          // furnitureId가 없으면 panel.id에서 추출 시도
-          if (!furnitureId && panel.id) {
-            // panel.id 형식: "furniture-1-side-left" 또는 "placed-xxx-side-left"
-            const idParts = panel.id.split('-');
-            if (idParts.length >= 2) {
-              // "furniture-1" 또는 "placed-xxx" 형태 추출
-              furnitureId = `${idParts[0]}-${idParts[1]}`;
-            }
-          }
-
-          // shelfBoringPositions의 키와 매칭 시도
-          if (!shelfBoringPositions[furnitureId]) {
-            // 정확한 매칭 실패 시, 부분 매칭 시도
-            const matchingKey = Object.keys(shelfBoringPositions).find(key =>
-              panel.id?.includes(key) || key.includes(panel.id?.split('-')[0] || '')
-            );
-            if (matchingKey) {
-              furnitureId = matchingKey;
+          if (panel.id) {
+            // "m0_p8-0" -> "m0" 추출
+            const match = panel.id.match(/^(m\d+)_/);
+            if (match) {
+              moduleKey = match[1];
             }
           }
 
           // 해당 가구의 보링 위치 가져오기 (가구 바닥 기준 mm)
-          const boringPositions = furnitureId ? shelfBoringPositions[furnitureId] : null;
+          const boringPositions = moduleKey ? shelfBoringPositions[moduleKey] : null;
 
           if (boringPositions && boringPositions.length > 0) {
             ctx.save();

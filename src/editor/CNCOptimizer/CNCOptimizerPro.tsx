@@ -78,13 +78,26 @@ function PageInner(){
   }, [fromConfigurator, placedModules, livePanels]);
 
   // 가구별 커스텀 선반 보링 위치 계산
+  // 키는 moduleIndex 기반 (useLivePanelData의 패널 ID "m{moduleIndex}_p{panelIndex}"와 매칭)
   const customShelfPositionsByFurniture = useMemo(() => {
     const positionsMap: Record<string, number[]> = {};
     const internalSpace = calculateInternalSpace(spaceInfo);
 
-    placedModules.forEach((placedModule) => {
-      const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
+    placedModules.forEach((placedModule, moduleIndex) => {
+      // customSections가 있으면 사용, 없으면 원본 moduleData에서 가져옴
+      let moduleData = placedModule.moduleData || getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
       if (!moduleData?.modelConfig?.sections) return;
+
+      // customSections 적용
+      if (placedModule.customSections) {
+        moduleData = {
+          ...moduleData,
+          modelConfig: {
+            ...moduleData.modelConfig,
+            sections: placedModule.customSections
+          }
+        };
+      }
 
       // 가구 높이 계산 (mm)
       const height = placedModule.customHeight || moduleData.dimensions.height;
@@ -98,7 +111,8 @@ function PageInner(){
       });
 
       if (result.positions.length > 0) {
-        positionsMap[placedModule.id] = result.positions;
+        // 키: "m{moduleIndex}" - useLivePanelData의 패널 ID와 매칭
+        positionsMap[`m${moduleIndex}`] = result.positions;
       }
     });
 
