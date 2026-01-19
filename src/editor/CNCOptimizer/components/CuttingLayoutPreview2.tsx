@@ -1088,9 +1088,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore();
       }
 
-      // ★★★ 백패널 홈 가공 표시 (측판에만) ★★★
-      // 측판 패널에 백패널이 끼워지는 위치에 10mm 폭의 홈 가공 라인 표시
-      if (showGrooves && (panel.name?.includes('좌측') || panel.name?.includes('우측') || panel.name?.includes('측판'))) {
+      // ★★★ 백패널 홈 가공 표시 (가구 측판에만 - 서랍 측판 제외) ★★★
+      // 가구 측판 패널에 백패널이 끼워지는 위치에 10mm 폭의 홈 가공 라인 표시
+      // 서랍 측판은 바닥판 홈가공(groovePositions)으로 별도 처리
+      const isFurnitureSidePanel = (panel.name?.includes('좌측') || panel.name?.includes('우측') || panel.name?.includes('측판'))
+        && !panel.name?.includes('서랍'); // 서랍 측판 제외
+      if (showGrooves && isFurnitureSidePanel) {
         ctx.save();
 
         // 측판 패널의 원래 치수 (배치 전)
