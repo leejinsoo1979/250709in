@@ -241,6 +241,10 @@ export function calculateSectionBoringPositions(
   const fullResult = calculateShelfBoringPositions(params);
   const allPositions = fullResult.positions;
 
+  console.log('[SECTION BORING] sectionRanges:', sectionRanges);
+  console.log('[SECTION BORING] allPositions (absolute):', allPositions);
+  console.log('[SECTION BORING] fullResult:', fullResult);
+
   // 각 섹션별로 보링 위치 필터링 및 변환
   const sectionPositions: SectionBoringInfo[] = sectionRanges.map((range, sectionIndex) => {
     // 해당 섹션 범위 내의 보링만 필터링
@@ -300,6 +304,13 @@ export function calculateSectionBoringPositions(
 
     const transformedPositions = sectionBorings.map(pos => {
       return pos - panelBottomAbsolute;
+    });
+
+    console.log(`[SECTION BORING] Section ${sectionIndex}:`, {
+      range,
+      panelBottomAbsolute,
+      sectionBorings,
+      transformedPositions
     });
 
     return {
