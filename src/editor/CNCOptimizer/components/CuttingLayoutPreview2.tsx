@@ -895,7 +895,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             const safeCenterX = (frontX + safeBackX) / 2;
             const depthPositions = [frontX, safeCenterX, safeBackX]; // 깊이 방향 위치들 (항상 3개)
 
-            console.log(`[BORING] 패널 "${panel.name}": originalWidth=${originalWidth}mm, 보링 X위치: front=${frontX}, center=${safeCenterX.toFixed(0)}, back=${safeBackX.toFixed(0)} (${depthPositions.length}개)`);
+            // 디버그 로그 제거됨 - 3개 보링 정상 동작 확인됨
 
             // ★★★ 보링 Y 위치 필터링 (상/하 분리 측판 처리) ★★★
             // 패널 이름에 "(상)" 또는 "(하)"가 있으면 해당 섹션 범위만 사용
@@ -931,26 +931,16 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               filteredBoringPositions = boringPositions.filter(pos => pos <= originalHeight + 10);
             }
 
-            // 보링 색상 및 크기
+            // 보링 색상 및 크기 (실제 크기)
             const boringColor = boringColors['shelf-pin'];
-            const holeDiameter = 5;
+            const holeDiameter = 5; // 실제 선반핀 보링홀 직경 5mm
             const radius = holeDiameter / 2;
-
-            console.log(`[BORING DEBUG] ========== Panel: ${panel.name} ==========`);
-            console.log(`[BORING DEBUG] panel.width=${panel.width}, panel.height=${panel.height}`);
-            console.log(`[BORING DEBUG] originalWidth(=깊이)=${originalWidth}, originalHeight(=높이)=${originalHeight}`);
-            console.log(`[BORING DEBUG] rotated=${panel.rotated}`);
-            console.log(`[BORING DEBUG] depthPositions (X방향 3개): frontX=${frontX}, centerX=${centerX}, backX=${backX}`);
-            console.log(`[BORING DEBUG] filteredBoringPositions (Y방향):`, filteredBoringPositions);
-            console.log(`[BORING DEBUG] sheet position: x=${x}, y=${y}, placedWidth=${placedWidth}, placedHeight=${placedHeight}`);
 
             // 각 보링 위치에 대해 3개의 홀 그리기 (가로로 3개)
             // boringPosMm = 높이 방향 위치 (Y축)
             // depthPosMm = 깊이 방향 위치 (X축) - 3개가 가로로 나란히
-            console.log(`[BORING DEBUG] Drawing borings for ${panel.name}:`);
-            let boringCount = 0;
-            filteredBoringPositions.forEach((boringPosMm, yIdx) => {
-              depthPositions.forEach((depthPosMm, xIdx) => {
+            filteredBoringPositions.forEach((boringPosMm) => {
+              depthPositions.forEach((depthPosMm) => {
                 // 시트 좌표로 변환
                 let boringX: number, boringY: number;
 
@@ -967,23 +957,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                   boringY = y + boringPosMm;   // 높이(Y) → 시트 Y
                 }
 
-                // 범위 체크: 보링이 패널 내에 있는지 확인
-                const isInBounds = (
-                  boringX >= x &&
-                  boringX <= x + placedWidth &&
-                  boringY >= y &&
-                  boringY <= y + placedHeight
-                );
-
-                console.log(`[BORING DEBUG]   boring[${yIdx}][${xIdx}]: depthPos=${depthPosMm.toFixed(1)}, boringPos=${boringPosMm.toFixed(1)} => sheet(${boringX.toFixed(1)}, ${boringY.toFixed(1)}) inBounds=${isInBounds}`);
-
-                if (!isInBounds) {
-                  console.log(`[BORING DEBUG]     ⚠️ OUT OF BOUNDS! panel bounds: x=${x.toFixed(1)}~${(x+placedWidth).toFixed(1)}, y=${y.toFixed(1)}~${(y+placedHeight).toFixed(1)}`);
-                }
-
-                boringCount++;
-
-                // 보링 그리기 (범위 상관없이 일단 그림 - 디버깅용)
+                // 보링 그리기
                 ctx.fillStyle = boringColor.fill;
                 ctx.strokeStyle = boringColor.stroke;
                 ctx.lineWidth = 1 / (baseScale * scale);
@@ -994,7 +968,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
                 ctx.stroke();
               });
             });
-            console.log(`[BORING DEBUG] Total borings drawn for ${panel.name}: ${boringCount}`);
 
             ctx.restore();
           }
