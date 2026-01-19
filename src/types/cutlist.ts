@@ -1,6 +1,12 @@
 export type Grain = 'H' | 'V' | 'NONE';
 export type Unit = 'mm' | 'cm' | 'in';
 
+export interface GroovePosition {
+  y: number;       // 홈 Y 위치 (패널 하단 기준 mm)
+  height: number;  // 홈 높이 (mm)
+  depth: number;   // 홈 깊이 (mm)
+}
+
 export interface Panel {
   id: string;
   label: string;
@@ -12,6 +18,8 @@ export interface Panel {
   grain?: Grain;
   canRotate?: boolean;
   boringPositions?: number[];  // 측판 보링 Y위치 (패널 기준 mm)
+  boringDepthPositions?: number[];  // 측판 보링 X위치 (패널 기준 mm, 서랍 측판용)
+  groovePositions?: GroovePosition[];  // 바닥판 끼우는 홈 위치 (서랍 앞판/뒷판용)
 }
 
 export interface StockSheet {
