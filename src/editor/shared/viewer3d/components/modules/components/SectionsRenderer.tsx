@@ -999,7 +999,7 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     });
   };
   
-  // 모든 보링 위치 수집 (선반 + 섹션 상판/바닥판 - 모두 패널 중심 위치)
+  // 모든 보링 위치 수집 (선반 + 상판/바닥판 중심 위치)
   const allBoringPositions = useMemo(() => {
     const { sections } = modelConfig;
     if (!sections || sections.length === 0) return [];
@@ -1007,77 +1007,44 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     const positions: number[] = [];
     const basicThicknessMm = basicThickness * 100; // 18mm
     const halfThicknessMm = basicThicknessMm / 2; // 9mm - 패널 중심까지의 거리
+    const totalHeightMm = height * 100;
 
     // 1. 바닥판 중심 위치 (가구 바닥에서 9mm = 18/2)
     positions.push(halfThicknessMm);
 
-    // 섹션별 높이 계산 및 보링 위치 수집
-    // currentSectionBottomMm: 현재 섹션의 바닥 위치 (가구 바닥 기준, mm)
-    let currentSectionBottomMm = basicThicknessMm; // 첫 섹션은 바닥판(18mm) 위에서 시작
+    // 2. 상판 중심 위치 (가구 전체 높이 - 9mm)
+    positions.push(totalHeightMm - halfThicknessMm);
+
+    // 3. 선반 위치 수집 (shelfPositions는 섹션 바닥 기준 mm 값)
+    // 첫 번째 섹션 바닥 = 바닥판 상단 = 18mm
+    let sectionBottomMm = basicThicknessMm;
 
     sections.forEach((section, index) => {
-      // 섹션 높이 계산 (section.height는 mm 단위)
       const sectionHeightMm = section.height;
 
-      // 2. 선반 위치 (shelfPositions는 섹션 바닥 기준 mm 값)
+      // 선반 위치가 있으면 추가 (shelfPositions는 섹션 내부 기준)
       if (section.shelfPositions && section.shelfPositions.length > 0) {
         section.shelfPositions.forEach(pos => {
-          if (pos > 0) { // 0은 바닥판이므로 제외
-            // 선반 중심 위치 = 섹션 바닥 + 선반 위치
-            positions.push(currentSectionBottomMm + pos);
+          if (pos > 0) {
+            // 선반 중심 위치 = 섹션 바닥 + 선반 위치 (shelfPositions는 이미 패널 중심 기준)
+            positions.push(sectionBottomMm + pos);
           }
         });
       }
 
-      // 3. 서랍 섹션의 경우 - 서랍 구분 패널 위치 추가
-      if (section.type === 'drawer' && section.drawerHeights && section.drawerHeights.length > 0) {
-        // 서랍속장은 섹션 상단에서 시작하여 아래로 쌓임
-        // 서랍속장 자체의 상판/바닥판 패널 위치 추가
-        const drawerFrameTopMm = currentSectionBottomMm + sectionHeightMm - basicThicknessMm; // 서랍속장 상판 하단
-        const drawerFrameBottomMm = currentSectionBottomMm; // 서랍속장 바닥판 상단
-
-        // 서랍속장 상판 중심
-        positions.push(drawerFrameTopMm + halfThicknessMm);
-        // 서랍속장 바닥판 중심
-        positions.push(drawerFrameBottomMm + halfThicknessMm);
-
-        // 서랍 간 구분 패널 위치 (서랍 사이)
-        let currentDrawerTopMm = drawerFrameTopMm; // 서랍속장 상판 하단에서 시작
-        section.drawerHeights.forEach((drawerHeight, drawerIndex) => {
-          if (drawerIndex < section.drawerHeights!.length - 1) {
-            // 서랍 바닥 위치 = 현재 위치 - 서랍 높이
-            const drawerBottomMm = currentDrawerTopMm - drawerHeight;
-            // 구분 패널 중심 (패널 두께 고려)
-            positions.push(drawerBottomMm - halfThicknessMm);
-            currentDrawerTopMm = drawerBottomMm - basicThicknessMm; // 다음 서랍 상단
-          }
-        });
-      }
-
-      // 4. 섹션 구분 패널 (마지막 섹션이 아닌 경우)
+      // 섹션 구분 패널 중심 (마지막 섹션이 아닌 경우)
       if (index < sections.length - 1) {
-        // 섹션 경계 = 현재 섹션 상단 = currentSectionBottomMm + sectionHeightMm
-        // 구분 패널 중심 = 섹션 경계 + halfThicknessMm
-        positions.push(currentSectionBottomMm + sectionHeightMm + halfThicknessMm);
+        // 구분 패널 중심 = 섹션 바닥 + 섹션 높이 + 9mm
+        positions.push(sectionBottomMm + sectionHeightMm + halfThicknessMm);
+        // 다음 섹션 바닥 = 현재 섹션 상단 + 구분 패널 두께
+        sectionBottomMm += sectionHeightMm + basicThicknessMm;
+      } else {
+        sectionBottomMm += sectionHeightMm;
       }
-
-      // 다음 섹션으로 이동 (섹션 높이 + 구분 패널 두께)
-      currentSectionBottomMm += sectionHeightMm + (index < sections.length - 1 ? basicThicknessMm : 0);
     });
-
-    // 5. 상판 중심 위치 (가구 전체 높이 - 상판 두께/2)
-    const totalHeightMm = height * 100;
-    positions.push(totalHeightMm - halfThicknessMm);
 
     // 중복 제거 및 정렬
     const uniquePositions = [...new Set(positions)].sort((a, b) => a - b);
-
-    console.log('🔵 보링 위치 계산:', {
-      totalHeightMm,
-      basicThicknessMm,
-      halfThicknessMm,
-      positions: uniquePositions
-    });
 
     return uniquePositions;
   }, [modelConfig, height, basicThickness]);
