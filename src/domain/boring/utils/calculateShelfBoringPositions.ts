@@ -273,9 +273,33 @@ export function calculateSectionBoringPositions(
       return true;
     });
 
-    // 섹션 바닥 기준으로 좌표 변환
+    // 섹션 측판 하단 기준으로 좌표 변환
+    //
+    // 측판 하단 위치 (가구 바닥 = 0 기준):
+    // - 첫 번째 섹션(하부): 측판 하단 = 가구 바닥 = 0mm
+    // - 두 번째 섹션(상부): 측판 하단 = 하부섹션 상판 상면 = 이전 sectionEnd + halfThickness
+    //
+    // 예시 (전체 높이 800mm, 하부 400mm, 상부 400mm):
+    // 하부섹션: range.start=18, range.end=400
+    // 상부섹션: range.start=418, range.end=782
+    //
+    // 하부 측판 하단 = 0mm
+    // 상부 측판 하단 = 400 + 9 = 409mm? 아니, 실제로는 400mm (상판 상면)
+    //
+    // 정확한 측판 하단:
+    // - 첫 번째 섹션: 0mm (바닥판 하면 = 가구 바닥)
+    // - 두 번째 이후 섹션: 이전 range.end (이전 섹션 상판 하면)
+    //   → 상부섹션 측판은 하부섹션 상판 위에 놓임
+    //
+    // 그러나 분리된 측판의 경우, 각 측판은 독립적인 패널임
+    // CNC에서는 각 측판을 개별 패널로 취급하므로
+    // 측판 자체의 하단 = 0mm 기준으로 좌표 설정
+    const panelBottomAbsolute = sectionIndex === 0
+      ? 0  // 첫 번째 섹션: 측판 하단 = 가구 바닥 = 0mm
+      : sectionRanges[sectionIndex - 1].end;  // 이후 섹션: 이전 섹션 상판 하면
+
     const transformedPositions = sectionBorings.map(pos => {
-      return pos - range.start + halfThicknessMm;
+      return pos - panelBottomAbsolute;
     });
 
     return {
