@@ -877,14 +877,25 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             const placedHeight = panel.rotated ? originalWidth : originalHeight;
 
             // ★★★ 보링 X 위치 계산 (깊이 방향) - 2D 뷰어와 동일 ★★★
-            const basicThickness = 18; // 백패널 두께
+            // 측판의 originalWidth = 가구 깊이 (예: 540mm)
+            // 측판의 originalHeight = 측판 높이 (예: 800mm)
+            const backPanelThickness = 18; // 백패널 두께
             const edgeOffset = 50; // 끝에서 50mm
 
-            // 깊이 방향 3개의 X 위치 (원래 좌표계 기준)
-            const frontX = edgeOffset; // 앞쪽에서 50mm
-            const backX = originalWidth - basicThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 고려)
+            // 깊이 방향 3개의 X 위치 (패널 좌표계: 왼쪽 아래가 0,0)
+            // CNC 테이블에 측판을 놓으면:
+            //   - X축 방향이 패널의 깊이(가구 깊이) 방향
+            //   - 앞쪽(전면)이 X=0, 뒤쪽(백패널)이 X=originalWidth
+            const frontX = edgeOffset; // 앞쪽에서 50mm = 50
+            const backX = originalWidth - backPanelThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 18mm 고려)
             const centerX = (frontX + backX) / 2; // 가운데
-            const depthPositions = [frontX, centerX, backX]; // 깊이 방향 위치들
+
+            // 최소 간격 보장 (패널이 너무 작은 경우 대비)
+            const safeBackX = Math.max(backX, frontX + 40);
+            const safeCenterX = (frontX + safeBackX) / 2;
+            const depthPositions = [frontX, safeCenterX, safeBackX]; // 깊이 방향 위치들 (항상 3개)
+
+            console.log(`[BORING] 패널 "${panel.name}": originalWidth=${originalWidth}mm, 보링 X위치: front=${frontX}, center=${safeCenterX.toFixed(0)}, back=${safeBackX.toFixed(0)} (${depthPositions.length}개)`);
 
             // ★★★ 보링 Y 위치 필터링 (상/하 분리 측판 처리) ★★★
             // 패널 이름에 "(상)" 또는 "(하)"가 있으면 해당 섹션 범위만 사용
