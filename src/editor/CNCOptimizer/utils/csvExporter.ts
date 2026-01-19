@@ -148,12 +148,19 @@ export const exportBoringToCSV = (panels: Panel[]): string => {
     const panelWidth = panel.width;
     const panelHeight = panel.height;
 
-    // X 위치 3개 (깊이 방향)
-    const frontX = EDGE_OFFSET; // 50mm
-    const backX = panelWidth - BACK_PANEL_THICKNESS - EDGE_OFFSET;
-    const safeBackX = Math.max(backX, frontX + 40);
-    const centerX = (frontX + safeBackX) / 2;
-    const xPositions = [frontX, centerX, safeBackX];
+    // X 위치 결정: boringDepthPositions가 있으면 사용, 없으면 기본 3개
+    let xPositions: number[];
+    if (panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
+      // 서랍 측판: 앞뒤 2개 (7.5mm, width-7.5mm)
+      xPositions = panel.boringDepthPositions;
+    } else {
+      // 가구 측판: 3개 (50mm, 중간, 뒤쪽)
+      const frontX = EDGE_OFFSET; // 50mm
+      const backX = panelWidth - BACK_PANEL_THICKNESS - EDGE_OFFSET;
+      const safeBackX = Math.max(backX, frontX + 40);
+      const centerX = (frontX + safeBackX) / 2;
+      xPositions = [frontX, centerX, safeBackX];
+    }
 
     // 패널명에서 쉼표 제거
     const cleanPanelName = panel.name.replace(/,/g, '_');
