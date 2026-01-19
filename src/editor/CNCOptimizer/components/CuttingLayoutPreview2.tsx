@@ -885,10 +885,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           // - X위치: 앞쪽 50mm, 가운데, 뒤쪽 50mm (백패널 18mm 고려)
 
           // 이 패널에 해당하는 가구의 보링 위치 데이터 찾기
+          // boringData의 panelType은 'side-left', 'side-right' 형식
           const panelBoringData = boringData.find(b => {
-            const normalizedBoringName = normalizePanelName(b.panelName);
-            return normalizedCncName === normalizedBoringName &&
-              Math.abs(b.height - panel.height) <= 5; // 높이로 매칭
+            // panelType으로 직접 매칭 (더 정확함)
+            const isMatchingType = b.panelType === normalizedCncName;
+            // 높이 매칭 (측판 높이 = 가구 내부 높이)
+            const isMatchingSize = Math.abs(b.height - panel.height) <= 10;
+            return isMatchingType && isMatchingSize;
           });
 
           if (panelBoringData && panelBoringData.borings && panelBoringData.borings.length > 0) {
