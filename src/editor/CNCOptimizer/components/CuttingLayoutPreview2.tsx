@@ -506,6 +506,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       'adjustable-foot': { fill: 'rgba(168, 85, 247, 0.3)', stroke: '#a855f7' }, // 보라 - 조절발
       'drawer-rail': { fill: 'rgba(249, 115, 22, 0.3)', stroke: '#f97316' },   // 주황 - 서랍레일
       'drawer-rail-slot': { fill: 'rgba(249, 115, 22, 0.2)', stroke: '#fb923c' }, // 연주황 - 레일장공
+      'drawer-panel-connector': { fill: 'rgba(236, 72, 153, 0.3)', stroke: '#ec4899' }, // 핑크 - 서랍 측판 체결홀 Ø3
       'custom': { fill: 'rgba(107, 114, 128, 0.3)', stroke: '#6b7280' }        // 회색 - 사용자정의
     };
 
@@ -840,6 +841,11 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           if (normalized.includes('도어')) return 'door';
           if (normalized.includes('백패널') || normalized.includes('뒷판')) return 'back';
           if (normalized.includes('서랍전판')) return 'drawer-front';
+          // 서랍 측판 패턴 추가
+          if (normalized.includes('서랍') && normalized.includes('측판')) {
+            if (normalized.includes('좌')) return 'drawer-side-left';
+            if (normalized.includes('우')) return 'drawer-side-right';
+          }
           return normalized.toLowerCase();
         };
 
