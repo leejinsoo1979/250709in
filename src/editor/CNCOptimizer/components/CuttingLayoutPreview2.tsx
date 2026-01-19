@@ -985,8 +985,24 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               //
               // boringPosMm은 originalHeight(225) 기준 → 시트 X축에 직접 사용 가능 (범위 내)
               // depthPosMm은 originalWidth(535) 기준 → 시트 Y축에 직접 사용 가능 (범위 내)
-              boringX = x + boringPosMm;  // 시트 X = 상/중/하 (20, 112.5, 205) - 3개
-              boringY = y + depthPosMm;   // 시트 Y = 좌/우 끝 (7.5, 527.5) - 2개
+              // 원하는 것: 좌/우 끝(X)에 세로로(Y) 3개씩
+              // depthPosMm = 7.5, 527.5 (2개) → X축 좌/우 끝
+              // boringPosMm = 20, 112.5, 205 (3개) → Y축 상/중/하
+              //
+              // 하지만 placedWidth=225, placedHeight=535 이므로:
+              // - depthPosMm(7.5~527.5)은 placedHeight(535) 범위에 맞음 → Y축
+              // - boringPosMm(20~205)은 placedWidth(225) 범위에 맞음 → X축
+              //
+              // 그래서 현재 배치가 X=boringPosMm, Y=depthPosMm이면
+              // 상/하 끝(Y=7.5, 527.5)에 가로로(X=20~205) 3개씩 나옴
+              //
+              // 원하는 건 그 반대! 좌/우 끝(X)에 세로로(Y) 3개씩
+              // → depthPosMm을 placedWidth(225) 범위로 스케일링해서 X축에
+              // → boringPosMm을 placedHeight(535) 범위로 스케일링해서 Y축에
+              const scaleToX = width / originalWidth;   // 225/535 ≈ 0.42
+              const scaleToY = height / originalHeight; // 535/225 ≈ 2.38
+              boringX = x + depthPosMm * scaleToX;      // 7.5*0.42≈3.2, 527.5*0.42≈221.8 → 좌/우 끝
+              boringY = y + boringPosMm * scaleToY;     // 20*2.38≈47.6, 112.5*2.38≈267.5, 205*2.38≈487.4 → 상/중/하
             } else {
               // 비회전 패널 (가구 측판): 원래 좌표 그대로
               // - width 방향 → 시트 X축
@@ -1707,9 +1723,11 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
           let boringX: number, boringY: number;
           if (panel.rotated) {
-            // 회전된 패널: boringPosMm→X축, depthPosMm→Y축
-            boringX = x + boringPosMm;
-            boringY = y + depthPosMm;
+            // 회전된 패널: 스케일링 적용
+            const scaleToX = placedWidth / originalWidth;
+            const scaleToY = placedHeight / originalHeight;
+            boringX = x + depthPosMm * scaleToX;
+            boringY = y + boringPosMm * scaleToY;
           } else {
             boringX = x + depthPosMm;
             boringY = y + boringPosMm;
@@ -1901,9 +1919,11 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // 시트 좌표로 변환
             let boringX: number, boringY: number;
             if (panel.rotated) {
-              // 회전된 패널: boringPosMm→X축, depthPosMm→Y축
-              boringX = x + boringPosMm;
-              boringY = y + depthPosMm;
+              // 회전된 패널: 스케일링 적용
+              const scaleToX = placedWidth / originalWidth;
+              const scaleToY = placedHeight / originalHeight;
+              boringX = x + depthPosMm * scaleToX;
+              boringY = y + boringPosMm * scaleToY;
             } else {
               boringX = x + depthPosMm;
               boringY = y + boringPosMm;
