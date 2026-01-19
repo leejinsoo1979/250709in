@@ -1728,8 +1728,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
       const placedWidth = panel.rotated ? originalHeight : originalWidth;
       const placedHeight = panel.rotated ? originalWidth : originalHeight;
 
-      // 서랍 측판 여부 확인
-      const isDrawerSidePanel = panel.name.includes('서랍') && panel.name.includes('측판');
+      // 서랍 측판 여부 확인 (그리기 로직과 동일하게)
+      const isDrawerSidePanel = panel.name?.includes('서랍') &&
+        (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
 
       let depthPositions: number[];
       if (isDrawerSidePanel && panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
@@ -1750,12 +1751,20 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         for (let xIdx = 0; xIdx < depthPositions.length; xIdx++) {
           const depthPosMm = depthPositions[xIdx];
 
-          // 서랍 측판 vs 가구 측판
+          // 서랍 측판 vs 가구 측판 (그리기 로직과 동일하게)
           let boringX: number, boringY: number;
-          if (panel.rotated) {
+          if (isDrawerSidePanel) {
+            // 서랍 측판: boringPosMm → X축, depthPosMm → Y축
             boringX = x + boringPosMm;
             boringY = y + depthPosMm;
+          } else if (panel.rotated) {
+            // 가구 측판 (rotated)
+            const scaleX = placedWidth / originalWidth;
+            const scaleY = placedHeight / originalHeight;
+            boringX = x + depthPosMm * scaleX;
+            boringY = y + boringPosMm * scaleY;
           } else {
+            // 가구 측판 (not rotated)
             boringX = x + depthPosMm;
             boringY = y + boringPosMm;
           }
