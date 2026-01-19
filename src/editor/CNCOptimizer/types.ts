@@ -1,14 +1,22 @@
 // CNC 옵티마이저 타입 정의
+export interface GroovePosition {
+  y: number;       // 홈 Y 위치 (패널 하단 기준 mm)
+  height: number;  // 홈 높이 (mm)
+  depth: number;   // 홈 깊이 (mm)
+}
+
 export interface Panel {
   id: string;
   name: string;
   width: number;
   height: number;
+  thickness?: number;
   material: string;
   color: string;
   quantity: number;
   grain?: 'NONE' | 'LENGTH' | 'WIDTH' | 'HORIZONTAL' | 'VERTICAL';
   boringPositions?: number[]; // 해당 패널의 보링 Y위치 (패널 기준 mm)
+  groovePositions?: GroovePosition[]; // 바닥판 끼우는 홈 위치
 }
 
 export interface StockPanel {

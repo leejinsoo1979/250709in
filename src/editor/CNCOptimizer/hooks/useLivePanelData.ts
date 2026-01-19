@@ -181,19 +181,19 @@ export function useLivePanelData() {
           }
 
           if (isSidePanel) {
-            // 서랍 본체 측판인 경우 별도 처리
+            // 서랍 본체 측판인 경우: calculatePanelDetails에서 이미 계산된 boringPositions 사용
             if (isDrawerSidePanel) {
-              // 서랍 측판 보링: 앞판/뒷판 연결 위치 (위/중간/아래 3개)
-              // DrawerRenderer와 동일한 로직 사용
-              const drawerHeight = panel.height || 0;
-              const edgeOffsetY = 20; // 끝에서 20mm
-
-              if (drawerHeight > 0) {
-                const topBoring = drawerHeight - edgeOffsetY; // 위쪽
-                const middleBoring = drawerHeight / 2; // 중간
-                const bottomBoring = edgeOffsetY; // 아래쪽
-                panelBoringPositions = [bottomBoring, middleBoring, topBoring];
-                console.log(`  [BORING CALC] 서랍 측판 "${panel.name}": height=${drawerHeight}, positions=`, panelBoringPositions);
+              if (panel.boringPositions && panel.boringPositions.length > 0) {
+                panelBoringPositions = panel.boringPositions;
+                console.log(`  [BORING CALC] 서랍 측판 "${panel.name}": 이미 계산된 boringPositions 사용`, panelBoringPositions);
+              } else {
+                // fallback: 직접 계산
+                const drawerHeight = panel.height || 0;
+                const edgeOffsetY = 20;
+                if (drawerHeight > 0) {
+                  panelBoringPositions = [edgeOffsetY, drawerHeight / 2, drawerHeight - edgeOffsetY];
+                  console.log(`  [BORING CALC] 서랍 측판 "${panel.name}": fallback 계산`, panelBoringPositions);
+                }
               }
             } else {
               // 가구 본체 측판
@@ -286,7 +286,8 @@ export function useLivePanelData() {
             color: color,
             quantity: 1,
             grain: grainValue,
-            boringPositions: panelBoringPositions
+            boringPositions: panelBoringPositions,
+            groovePositions: panel.groovePositions // 서랍 앞판/뒷판 바닥판 홈
           };
         });
 
@@ -476,18 +477,23 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         let panelBoringPositions: number[] | undefined = undefined;
 
         if (isSidePanel) {
-          // 서랍 본체 측판인 경우 별도 처리
+          // 서랍 본체 측판인 경우: calculatePanelDetails에서 이미 계산된 boringPositions 사용
           if (isDrawerSidePanel) {
-            // 서랍 측판 보링: 앞판/뒷판 연결 위치 (위/중간/아래 3개)
-            const drawerHeight = panel.height || 0;
-            const edgeOffsetY = 20; // 끝에서 20mm
+            if (panel.boringPositions && panel.boringPositions.length > 0) {
+              panelBoringPositions = panel.boringPositions;
+              console.log(`[OPT BORING] 서랍 측판 "${panel.name}": 이미 계산된 boringPositions 사용`, panelBoringPositions);
+            } else {
+              // fallback: 직접 계산
+              const drawerHeight = panel.height || 0;
+              const edgeOffsetY = 20; // 끝에서 20mm
 
-            if (drawerHeight > 0) {
-              const topBoring = drawerHeight - edgeOffsetY;
-              const middleBoring = drawerHeight / 2;
-              const bottomBoring = edgeOffsetY;
-              panelBoringPositions = [bottomBoring, middleBoring, topBoring];
-              console.log(`[OPT BORING] 서랍 측판 "${panel.name}": height=${drawerHeight}, positions=`, panelBoringPositions);
+              if (drawerHeight > 0) {
+                const topBoring = drawerHeight - edgeOffsetY;
+                const middleBoring = drawerHeight / 2;
+                const bottomBoring = edgeOffsetY;
+                panelBoringPositions = [bottomBoring, middleBoring, topBoring];
+                console.log(`[OPT BORING] 서랍 측판 "${panel.name}": fallback 계산`, panelBoringPositions);
+              }
             }
           } else {
             // 가구 본체 측판
@@ -563,7 +569,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           color: color,
           quantity: 1,
           grain: grainValue,
-          boringPositions: panelBoringPositions
+          boringPositions: panelBoringPositions,
+          groovePositions: panel.groovePositions // 서랍 앞판/뒷판 바닥판 홈
         };
       });
 

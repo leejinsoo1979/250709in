@@ -41,6 +41,9 @@ const STOCK_CSV_HEADERS = 'Length,Width,Qty,Label';
 // 보링 CSV 헤더 (별도 파일)
 const BORING_CSV_HEADERS = 'Panel_Name,Hole_No,X,Y,Z,Diameter';
 
+// 홈(Groove) CSV 헤더 (별도 파일) - 서랍 앞판/뒷판의 바닥판 끼우는 홈
+const GROOVE_CSV_HEADERS = 'Panel_Name,Groove_No,Start_X,End_X,Y,Height,Depth';
+
 // 패널 데이터를 CutList Optimizer CSV 형식으로 변환
 export const exportPanelsToCSV = (panels: Panel[], settings: CutSettings = {
   unit: 'mm',
@@ -186,6 +189,53 @@ export const exportBoringToCSV = (panels: Panel[]): string => {
   return lines.join('\n');
 };
 
+/**
+ * 패널별 홈(groove) 좌표 CSV 생성
+ * 서랍 앞판/뒷판에 바닥판을 끼우는 홈 정보
+ *
+ * 홈 좌표 기준:
+ * - Start_X, End_X: 홈 시작/끝 X 좌표 (패널 좌측 기준)
+ * - Y: 홈 Y 위치 (패널 하단 기준)
+ * - Height: 홈 높이 (mm)
+ * - Depth: 홈 깊이 (mm)
+ */
+export const exportGrooveToCSV = (panels: Panel[]): string => {
+  const lines: string[] = [GROOVE_CSV_HEADERS];
+
+  let globalGrooveNo = 1;
+
+  panels.forEach(panel => {
+    // 홈 정보가 있는 패널만 처리 (서랍 앞판/뒷판)
+    if (!panel.groovePositions || panel.groovePositions.length === 0) {
+      return;
+    }
+
+    const panelWidth = panel.width;
+    const cleanPanelName = panel.name.replace(/,/g, '_');
+
+    // 홈은 패널 전체 너비에 걸쳐 있음 (좌우 측판 두께 제외)
+    const sideThickness = 15; // 측판 두께 15mm
+    const startX = sideThickness;
+    const endX = panelWidth - sideThickness;
+
+    panel.groovePositions.forEach((groove, grooveIndex) => {
+      const line = [
+        `${cleanPanelName} 바닥홈 ${grooveIndex + 1}`,
+        globalGrooveNo,
+        Math.round(startX),
+        Math.round(endX),
+        Math.round(groove.y),
+        Math.round(groove.height),
+        Math.round(groove.depth)
+      ].join(',');
+      lines.push(line);
+      globalGrooveNo++;
+    });
+  });
+
+  return lines.join('\n');
+};
+
 // 재고 시트를 CutList Optimizer CSV 형식으로 변환
 export const exportStockToCSV = (stockPanels: StockPanel[]): string => {
   const lines: string[] = [STOCK_CSV_HEADERS];
@@ -305,5 +355,21 @@ export const downloadCutListFiles = async (
     boringLink.download = `${projectName}_boring.csv`;
     boringLink.click();
     URL.revokeObjectURL(boringUrl);
+  }
+
+  // 잠시 대기
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  // 홈(groove) CSV 다운로드 (서랍 앞판/뒷판에 홈이 있는 경우만)
+  const grooveCSV = exportGrooveToCSV(panels);
+  const grooveLines = grooveCSV.split('\n');
+  if (grooveLines.length > 1) { // 헤더 외에 데이터가 있으면
+    const grooveBlob = new Blob(['\uFEFF' + grooveCSV], { type: 'text/csv;charset=utf-8;' }); // BOM 추가
+    const grooveUrl = URL.createObjectURL(grooveBlob);
+    const grooveLink = document.createElement('a');
+    grooveLink.href = grooveUrl;
+    grooveLink.download = `${projectName}_groove.csv`;
+    grooveLink.click();
+    URL.revokeObjectURL(grooveUrl);
   }
 };

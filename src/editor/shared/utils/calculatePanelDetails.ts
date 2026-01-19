@@ -316,13 +316,24 @@ export const calculatePanelDetails = (
           const drawerBodyHeight = individualDrawerHeight - 30; // 상하 15mm씩 감소
           const drawerBodyDepth = customDepth - 47 - drawerHandleThickness; // 앞30mm 뒤17mm 후퇴 + 손잡이판 두께
 
+          // 서랍 앞판/뒷판 바닥판 끼우는 홈 위치 계산
+          // 바닥판은 하단에서 10mm + 5mm/2 = 12.5mm 위치
+          // 홈 높이는 5mm (바닥판 두께)
+          const drawerGroovePositionY = 10; // 하단에서 10mm 위치에 홈 시작
+          const drawerGrooveHeight = 5; // 바닥판 두께 = 홈 높이
+
           // 서랍 앞판 (두께 15mm)
           targetPanel.push({
             name: `${sectionPrefix}서랍${drawerNum} 앞판`,
             width: drawerFrontBackWidth,
             height: drawerBodyHeight,
             thickness: drawerSideThickness, // 15mm
-            material: 'PB'  // 서랍 본체는 PB 재질
+            material: 'PB',  // 서랍 본체는 PB 재질
+            groovePositions: [{
+              y: drawerGroovePositionY,
+              height: drawerGrooveHeight,
+              depth: 5 // 홈 깊이 5mm
+            }]
           });
 
           // 서랍 뒷판 (두께 15mm)
@@ -331,8 +342,22 @@ export const calculatePanelDetails = (
             width: drawerFrontBackWidth,
             height: drawerBodyHeight,
             thickness: drawerSideThickness, // 15mm
-            material: 'PB'  // 서랍 본체는 PB 재질
+            material: 'PB',  // 서랍 본체는 PB 재질
+            groovePositions: [{
+              y: drawerGroovePositionY,
+              height: drawerGrooveHeight,
+              depth: 5 // 홈 깊이 5mm
+            }]
           });
+
+          // 서랍 측판 보링 위치 계산 (DrawerRenderer와 동일)
+          // 위/중간/아래 3개, 끝에서 20mm
+          const drawerEdgeOffsetY = 20;
+          const drawerBoringPositions = [
+            drawerEdgeOffsetY, // 아래쪽
+            drawerBodyHeight / 2, // 중간
+            drawerBodyHeight - drawerEdgeOffsetY // 위쪽
+          ];
 
           // 서랍 좌측판 (전체 깊이 사용, 두께 15mm)
           targetPanel.push({
@@ -340,7 +365,8 @@ export const calculatePanelDetails = (
             width: drawerBodyDepth, // 전체 깊이 사용
             height: drawerBodyHeight,
             thickness: drawerSideThickness, // 15mm
-            material: 'PB'  // 서랍 본체는 PB 재질
+            material: 'PB',  // 서랍 본체는 PB 재질
+            boringPositions: drawerBoringPositions
           });
 
           // 서랍 우측판 (전체 깊이 사용, 두께 15mm)
@@ -349,7 +375,8 @@ export const calculatePanelDetails = (
             width: drawerBodyDepth, // 전체 깊이 사용
             height: drawerBodyHeight,
             thickness: drawerSideThickness, // 15mm
-            material: 'PB'  // 서랍 본체는 PB 재질
+            material: 'PB',  // 서랍 본체는 PB 재질
+            boringPositions: drawerBoringPositions
           });
 
           // 서랍 바닥판 (DrawerRenderer의 Drawer Bottom)
