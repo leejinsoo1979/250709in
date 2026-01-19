@@ -153,11 +153,11 @@ export function useLivePanelData() {
           // horizontal -> HORIZONTAL, vertical -> VERTICAL
           const grainValue = grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
 
-          // 측판인지 확인 (서랍 측판 제외, 가구 측판만 포함)
-          // 서랍 측판: "서랍1 좌측판" 등 - 서랍 본체의 좌우측 패널
+          // 측판인지 확인 (가구 측판 + 서랍 본체 측판 모두 포함)
           // 가구 측판: "(하)좌측", "(상)우측", "좌측판", "우측판" 등 - 가구 본체의 좌우 측판
+          // 서랍 측판: "서랍1 좌측판", "서랍1 우측판" 등 - 서랍 본체의 좌우측 패널
           const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
-          const isSidePanel = !isDrawerSidePanel && (
+          const isFurnitureSidePanel = (
             panel.name.includes('좌측') ||
             panel.name.includes('우측') ||
             panel.name.includes('좌측판') ||
@@ -166,6 +166,8 @@ export function useLivePanelData() {
             panel.name.includes('Right') ||
             panel.name.includes('측판')
           );
+          // 가구 측판 또는 서랍 측판 모두 보링 대상
+          const isSidePanel = isFurnitureSidePanel;
 
           console.log(`[BORING CHECK] Panel "${panel.name}": isDrawerSidePanel=${isDrawerSidePanel}, isSidePanel=${isSidePanel}, panel=`, panel);
 
@@ -173,20 +175,36 @@ export function useLivePanelData() {
           let panelBoringPositions: number[] | undefined = undefined;
 
           if (isSidePanel) {
-            console.log(`[BORING] ★ 측판 감지! "${panel.name}"`);
+            console.log(`[BORING] ★ 측판 감지! "${panel.name}" isDrawerSidePanel=${isDrawerSidePanel}`);
           } else {
             console.log(`[BORING] 측판 아님: "${panel.name}"`);
           }
 
           if (isSidePanel) {
-            const isUpperSection = panel.name.includes('(상)');
-            const isLowerSection = panel.name.includes('(하)');
-            const isSplitPanel = isUpperSection || isLowerSection;
-            // 측판 높이: panel.height 또는 panel.depth, 없으면 가구 전체 높이 사용
-            const panelHeight = panel.height || panel.depth || furnitureHeight; // 측판 높이 (mm)
-            const halfThickness = basicThicknessMm / 2; // 9mm
+            // 서랍 본체 측판인 경우 별도 처리
+            if (isDrawerSidePanel) {
+              // 서랍 측판 보링: 앞판/뒷판 연결 위치 (위/중간/아래 3개)
+              // DrawerRenderer와 동일한 로직 사용
+              const drawerHeight = panel.height || 0;
+              const edgeOffsetY = 20; // 끝에서 20mm
 
-            console.log(`  [BORING CALC] "${panel.name}": isUpper=${isUpperSection}, isLower=${isLowerSection}, isSplit=${isSplitPanel}, panelHeight=${panelHeight}, furnitureHeight=${furnitureHeight}`);
+              if (drawerHeight > 0) {
+                const topBoring = drawerHeight - edgeOffsetY; // 위쪽
+                const middleBoring = drawerHeight / 2; // 중간
+                const bottomBoring = edgeOffsetY; // 아래쪽
+                panelBoringPositions = [bottomBoring, middleBoring, topBoring];
+                console.log(`  [BORING CALC] 서랍 측판 "${panel.name}": height=${drawerHeight}, positions=`, panelBoringPositions);
+              }
+            } else {
+              // 가구 본체 측판
+              const isUpperSection = panel.name.includes('(상)');
+              const isLowerSection = panel.name.includes('(하)');
+              const isSplitPanel = isUpperSection || isLowerSection;
+              // 측판 높이: panel.height 또는 panel.depth, 없으면 가구 전체 높이 사용
+              const panelHeight = panel.height || panel.depth || furnitureHeight; // 측판 높이 (mm)
+              const halfThickness = basicThicknessMm / 2; // 9mm
+
+              console.log(`  [BORING CALC] "${panel.name}": isUpper=${isUpperSection}, isLower=${isLowerSection}, isSplit=${isSplitPanel}, panelHeight=${panelHeight}, furnitureHeight=${furnitureHeight}`);
             console.log(`  [BORING CALC] allBoringPositions:`, allBoringPositions);
             console.log(`  [BORING CALC] sectionBoringResult:`, sectionBoringResult);
 
@@ -253,6 +271,7 @@ export function useLivePanelData() {
             }
 
             console.log(`  [BORING FINAL] "${panel.name}" - boringPositions:`, panelBoringPositions);
+            }
           }
 
           console.log(`  Panel ${panelIndex}: "${panel.name}" - grain: ${grainDirection} -> ${grainValue}`);
@@ -439,15 +458,17 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         // horizontal -> HORIZONTAL, vertical -> VERTICAL
         const grainValue = grainDirection === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
 
-        // 측판인지 확인 (서랍 측판 제외, 가구 측판만 포함)
+        // 측판인지 확인 (가구 측판 + 서랍 본체 측판 모두 포함)
         const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
-        const isSidePanel = !isDrawerSidePanel && (
+        const isFurnitureSidePanel = (
           panel.name.includes('좌측') ||
           panel.name.includes('우측') ||
           panel.name.includes('좌측판') ||
           panel.name.includes('우측판') ||
           panel.name.includes('측판')
         );
+        // 가구 측판 또는 서랍 측판 모두 보링 대상
+        const isSidePanel = isFurnitureSidePanel;
 
         console.log(`[OPT PANEL CHECK] "${panel.name}": isDrawerSidePanel=${isDrawerSidePanel}, isSidePanel=${isSidePanel}, panel=`, panel);
 
@@ -455,14 +476,29 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         let panelBoringPositions: number[] | undefined = undefined;
 
         if (isSidePanel) {
-          const isUpperSection = panel.name.includes('(상)');
-          const isLowerSection = panel.name.includes('(하)');
-          const isSplitPanel = isUpperSection || isLowerSection;
-          // 측판 높이: panel.height 또는 panel.depth, 없으면 가구 전체 높이 사용
-          const panelHeight = panel.height || panel.depth || furnitureHeight; // 측판 높이 (mm)
-          const halfThickness = basicThicknessMm / 2; // 9mm
+          // 서랍 본체 측판인 경우 별도 처리
+          if (isDrawerSidePanel) {
+            // 서랍 측판 보링: 앞판/뒷판 연결 위치 (위/중간/아래 3개)
+            const drawerHeight = panel.height || 0;
+            const edgeOffsetY = 20; // 끝에서 20mm
 
-          console.log(`[OPT BORING] "${panel.name}": isUpper=${isUpperSection}, isLower=${isLowerSection}, isSplit=${isSplitPanel}, panelHeight=${panelHeight}, furnitureHeight=${furnitureHeight}`);
+            if (drawerHeight > 0) {
+              const topBoring = drawerHeight - edgeOffsetY;
+              const middleBoring = drawerHeight / 2;
+              const bottomBoring = edgeOffsetY;
+              panelBoringPositions = [bottomBoring, middleBoring, topBoring];
+              console.log(`[OPT BORING] 서랍 측판 "${panel.name}": height=${drawerHeight}, positions=`, panelBoringPositions);
+            }
+          } else {
+            // 가구 본체 측판
+            const isUpperSection = panel.name.includes('(상)');
+            const isLowerSection = panel.name.includes('(하)');
+            const isSplitPanel = isUpperSection || isLowerSection;
+            // 측판 높이: panel.height 또는 panel.depth, 없으면 가구 전체 높이 사용
+            const panelHeight = panel.height || panel.depth || furnitureHeight; // 측판 높이 (mm)
+            const halfThickness = basicThicknessMm / 2; // 9mm
+
+            console.log(`[OPT BORING] "${panel.name}": isUpper=${isUpperSection}, isLower=${isLowerSection}, isSplit=${isSplitPanel}, panelHeight=${panelHeight}, furnitureHeight=${furnitureHeight}`);
 
           if (isSplitPanel && sectionBoringResult.sectionPositions.length >= 2) {
             // 상/하 분리 측판: 패널 높이 기준으로 보링 위치 직접 계산
@@ -514,6 +550,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           }
 
           console.log(`[OPT BORING FINAL] "${panel.name}" - boringPositions:`, panelBoringPositions);
+          }
         }
 
         return {
