@@ -8,6 +8,7 @@ export interface Panel {
   color: string;
   quantity: number;
   grain?: 'NONE' | 'LENGTH' | 'WIDTH' | 'HORIZONTAL' | 'VERTICAL';
+  boringPositions?: number[]; // 해당 패널의 보링 Y위치 (패널 기준 mm)
 }
 
 export interface StockPanel {

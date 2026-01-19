@@ -829,149 +829,73 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore(); // Restore labels save (line 583)
       } // End of showLabels check
 
-      // ★★★ 보링 표시 (shelfBoringPositions 사용 - 2D 뷰어와 동일) ★★★
-      // 가구 측판(좌측판/우측판)에만 선반핀 보링 표시
-      if (showBorings && Object.keys(shelfBoringPositions).length > 0) {
-        // 서랍 패널인지 확인 (서랍 패널에는 보링 표시 안함)
-        const isDrawerPanel = panel.name.includes('서랍');
+      // ★★★ 보링 표시 (panel.boringPositions 직접 사용 - 2D 뷰어와 동일한 데이터) ★★★
+      // 패널에 boringPositions가 있으면 해당 측판에 선반핀 보링 표시
+      if (showBorings && panel.boringPositions && panel.boringPositions.length > 0) {
+        ctx.save();
 
-        // 가구 측판인지 확인 (좌측/우측 키워드 포함, 서랍 제외)
-        const isFurnitureSidePanel = !isDrawerPanel &&
-          (panel.name.includes('좌측') || panel.name.includes('우측'));
+        // 측판 패널의 원래 치수 (배치 전)
+        // panel.width = 가구 깊이 (540mm 등)
+        // panel.height = 측판 높이 (섹션별로 다름)
+        const originalWidth = panel.width;   // 측판의 깊이 방향 (가구 깊이)
+        const originalHeight = panel.height; // 측판의 높이 방향
 
-        // 디버그 로그
-        console.log(`[BORING DEBUG] Panel: ${panel.name}, ID: ${panel.id}, isSidePanel: ${isFurnitureSidePanel}, shelfBoringKeys:`, Object.keys(shelfBoringPositions));
+        // 시트에 배치된 크기 (회전 고려)
+        const placedWidth = panel.rotated ? originalHeight : originalWidth;
+        const placedHeight = panel.rotated ? originalWidth : originalHeight;
 
-        if (isFurnitureSidePanel) {
-          // 패널 ID에서 moduleIndex 추출
-          // panel.id 형식: "m{moduleIndex}_p{panelIndex}-{instanceIndex}" (예: "m0_p8-0")
-          let moduleKey: string | null = null;
+        // ★★★ 보링 X 위치 계산 (깊이 방향) - 2D 뷰어와 동일 ★★★
+        const backPanelThickness = 18; // 백패널 두께
+        const edgeOffset = 50; // 끝에서 50mm
 
-          if (panel.id) {
-            // "m0_p8-0" -> "m0" 추출
-            const match = panel.id.match(/^(m\d+)_/);
-            if (match) {
-              moduleKey = match[1];
-            }
-          }
+        // 깊이 방향 3개의 X 위치
+        const frontX = edgeOffset; // 앞쪽에서 50mm = 50
+        const backX = originalWidth - backPanelThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 18mm 고려)
 
-          console.log(`[BORING DEBUG] moduleKey: ${moduleKey}`);
+        // 최소 간격 보장 (패널이 너무 작은 경우 대비)
+        const safeBackX = Math.max(backX, frontX + 40);
+        const safeCenterX = (frontX + safeBackX) / 2;
+        const depthPositions = [frontX, safeCenterX, safeBackX]; // 깊이 방향 위치들 (항상 3개)
 
-          // 해당 가구의 보링 위치 가져오기 (가구 바닥 기준 mm)
-          const boringPositions = moduleKey ? shelfBoringPositions[moduleKey] : null;
-          console.log(`[BORING DEBUG] boringPositions:`, boringPositions);
+        console.log(`[BORING] ${panel.name}: boringPositions=${panel.boringPositions.length}개, Y=[${panel.boringPositions.map(p=>p.toFixed(0)).join(',')}], X=[${depthPositions.map(d=>d.toFixed(0)).join(',')}]`);
 
-          if (boringPositions && boringPositions.length > 0) {
-            ctx.save();
+        // 보링 색상 및 크기 (2D 도면과 동일)
+        const boringColor = boringColors['shelf-pin'];
+        const holeDiameter = 3; // 2D 도면(SidePanelBoring.tsx)과 동일
+        const radius = holeDiameter / 2;
 
-            // ★★★ 측판 패널의 원래 치수 (배치 전) ★★★
-            // panel.width, panel.height는 원래 패널 치수 (rotated와 무관)
-            // 측판의 경우:
-            // - 원래 width = 가구 깊이 (540mm 등)
-            // - 원래 height = 측판 높이 (섹션별로 다름)
-            const originalWidth = panel.width;   // 측판의 깊이 방향 (가구 깊이)
-            const originalHeight = panel.height; // 측판의 높이 방향
+        // 각 보링 위치에 대해 3개의 홀 그리기 (가로로 3개)
+        panel.boringPositions.forEach((boringPosMm, yIdx) => {
+          depthPositions.forEach((depthPosMm, xIdx) => {
+            // 시트 좌표로 변환
+            let boringX: number, boringY: number;
 
-            // 시트에 배치된 크기 (회전 고려)
-            const placedWidth = panel.rotated ? originalHeight : originalWidth;
-            const placedHeight = panel.rotated ? originalWidth : originalHeight;
-
-            // ★★★ 보링 X 위치 계산 (깊이 방향) - 2D 뷰어와 동일 ★★★
-            // 측판의 originalWidth = 가구 깊이 (예: 540mm)
-            // 측판의 originalHeight = 측판 높이 (예: 800mm)
-            const backPanelThickness = 18; // 백패널 두께
-            const edgeOffset = 50; // 끝에서 50mm
-
-            // 깊이 방향 3개의 X 위치 (패널 좌표계: 왼쪽 아래가 0,0)
-            // CNC 테이블에 측판을 놓으면:
-            //   - X축 방향이 패널의 깊이(가구 깊이) 방향
-            //   - 앞쪽(전면)이 X=0, 뒤쪽(백패널)이 X=originalWidth
-            const frontX = edgeOffset; // 앞쪽에서 50mm = 50
-            const backX = originalWidth - backPanelThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 18mm 고려)
-            const centerX = (frontX + backX) / 2; // 가운데
-
-            // 최소 간격 보장 (패널이 너무 작은 경우 대비)
-            const safeBackX = Math.max(backX, frontX + 40);
-            const safeCenterX = (frontX + safeBackX) / 2;
-            const depthPositions = [frontX, safeCenterX, safeBackX]; // 깊이 방향 위치들 (항상 3개)
-
-            // 디버그 로그 제거됨 - 3개 보링 정상 동작 확인됨
-
-            // ★★★ 보링 Y 위치 필터링 (상/하 분리 측판 처리) ★★★
-            // 패널 이름에 "(상)" 또는 "(하)"가 있으면 해당 섹션 범위만 사용
-            // 보링 위치가 패널 높이 범위 내에 있어야 함
-            const isUpperSection = panel.name.includes('(상)');
-            const isLowerSection = panel.name.includes('(하)');
-            const isSplitPanel = isUpperSection || isLowerSection;
-
-            let filteredBoringPositions: number[];
-
-            if (isSplitPanel) {
-              // 상/하 분리 측판: 패널 높이 범위 내의 보링만 사용
-              // 보링 위치는 가구 전체 높이 기준이므로, 섹션 범위로 필터링 후 섹션 기준으로 변환 필요
-              // 하부 섹션: 0 ~ 하부섹션높이 범위의 보링
-              // 상부 섹션: 상부섹션시작 ~ 끝 범위의 보링, 좌표를 상부섹션 기준으로 변환
-
-              // 전체 가구 높이 추정 (모든 보링 위치 중 최대값 + 여유)
-              const maxBoringPos = Math.max(...boringPositions);
-
-              if (isLowerSection) {
-                // 하부 섹션: 패널 높이 범위 내의 보링 위치 (좌표 그대로 사용)
-                filteredBoringPositions = boringPositions.filter(pos => pos <= originalHeight + 10);
-              } else {
-                // 상부 섹션: 하부섹션 끝(= 전체높이 - 상부높이)부터 시작
-                // 상부 섹션의 보링 위치를 상부 측판 좌표로 변환
-                const lowerSectionEnd = maxBoringPos - originalHeight + 18; // 대략적인 하부 섹션 끝
-                filteredBoringPositions = boringPositions
-                  .filter(pos => pos >= lowerSectionEnd - 10)
-                  .map(pos => pos - lowerSectionEnd + 9); // 상부 섹션 기준으로 변환
-              }
+            if (panel.rotated) {
+              // 패널이 90도 회전된 경우:
+              // 원래 패널: width=깊이, height=높이
+              // 회전 후 시트: X축=높이방향, Y축=깊이방향
+              boringX = x + boringPosMm;   // 높이(Y) → 시트 X
+              boringY = y + depthPosMm;    // 깊이(X) → 시트 Y
             } else {
-              // 통짜 측판: 모든 보링 위치 사용
-              filteredBoringPositions = boringPositions.filter(pos => pos <= originalHeight + 10);
+              // 패널이 회전 안된 경우:
+              // 시트: X축=깊이방향, Y축=높이방향
+              boringX = x + depthPosMm;    // 깊이(X) → 시트 X
+              boringY = y + boringPosMm;   // 높이(Y) → 시트 Y
             }
 
-            // 보링 색상 및 크기 (2D 도면과 동일)
-            const boringColor = boringColors['shelf-pin'];
-            const holeDiameter = 3; // 2D 도면(SidePanelBoring.tsx)과 동일
-            const radius = holeDiameter / 2;
+            // 보링 그리기
+            ctx.fillStyle = boringColor.fill;
+            ctx.strokeStyle = boringColor.stroke;
+            ctx.lineWidth = 1 / (baseScale * scale);
 
-            // 각 보링 위치에 대해 3개의 홀 그리기 (가로로 3개)
-            // boringPosMm = 높이 방향 위치 (Y축)
-            // depthPosMm = 깊이 방향 위치 (X축) - 3개가 가로로 나란히
-            filteredBoringPositions.forEach((boringPosMm) => {
-              depthPositions.forEach((depthPosMm) => {
-                // 시트 좌표로 변환
-                let boringX: number, boringY: number;
+            ctx.beginPath();
+            ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+          });
+        });
 
-                if (panel.rotated) {
-                  // 패널이 90도 회전된 경우:
-                  // 원래 패널: width=깊이, height=높이
-                  // 회전 후 시트: X축=높이방향, Y축=깊이방향
-                  boringX = x + boringPosMm;   // 높이(Y) → 시트 X
-                  boringY = y + depthPosMm;    // 깊이(X) → 시트 Y
-                } else {
-                  // 패널이 회전 안된 경우:
-                  // 시트: X축=깊이방향, Y축=높이방향
-                  boringX = x + depthPosMm;    // 깊이(X) → 시트 X
-                  boringY = y + boringPosMm;   // 높이(Y) → 시트 Y
-                }
-
-                // 보링 그리기
-                ctx.fillStyle = boringColor.fill;
-                ctx.strokeStyle = boringColor.stroke;
-                ctx.lineWidth = 1 / (baseScale * scale);
-
-                ctx.beginPath();
-                ctx.arc(boringX, boringY, radius, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.stroke();
-              });
-            });
-
-            ctx.restore();
-          }
-        }
+        ctx.restore();
       }
 
       // Reset shadow and transparency effects
@@ -1288,42 +1212,85 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
 
   // Handle wheel zoom with mouse position as center
-  const handleWheel = (e: React.WheelEvent) => {
+  const handleWheelRef = useRef((e: WheelEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
-    
+
     // Use canvas actual dimensions
     const canvasWidth = rect.width;
     const canvasHeight = rect.height;
-    
+
     // 마우스 위치 (캔버스 기준)
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    
+
     // 줌 속도 조절 (트랙패드와 마우스 휠 모두 부드럽게)
     const zoomSpeed = 0.001; // Configurator와 동일한 부드러운 줌
     const scaledDelta = e.deltaY * zoomSpeed;
-    
+
     // 지수 함수로 부드러운 줌 계산
     const zoomFactor = Math.exp(-scaledDelta);
     const newScale = Math.min(Math.max(0.05, scale * zoomFactor), 10);
-    
+
     if (Math.abs(newScale - scale) > 0.001) {
       // 마우스 위치를 월드 좌표로 변환
       const worldX = (mouseX - canvasWidth / 2 - offset.x) / scale;
       const worldY = (mouseY - canvasHeight / 2 - offset.y) / scale;
-      
+
       // 새로운 스케일에서 마우스 위치가 동일하게 유지되도록 오프셋 조정
       const newOffsetX = mouseX - canvasWidth / 2 - worldX * newScale;
       const newOffsetY = mouseY - canvasHeight / 2 - worldY * newScale;
-      
+
       setScale(newScale);
       setOffset({ x: newOffsetX, y: newOffsetY });
     }
-  };
+  });
+
+  // Update wheel handler ref when dependencies change
+  useEffect(() => {
+    handleWheelRef.current = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      const canvasWidth = rect.width;
+      const canvasHeight = rect.height;
+      const mouseX = e.clientX - rect.left;
+      const mouseY = e.clientY - rect.top;
+      const zoomSpeed = 0.001;
+      const scaledDelta = e.deltaY * zoomSpeed;
+      const zoomFactor = Math.exp(-scaledDelta);
+      const newScale = Math.min(Math.max(0.05, scale * zoomFactor), 10);
+
+      if (Math.abs(newScale - scale) > 0.001) {
+        const worldX = (mouseX - canvasWidth / 2 - offset.x) / scale;
+        const worldY = (mouseY - canvasHeight / 2 - offset.y) / scale;
+        const newOffsetX = mouseX - canvasWidth / 2 - worldX * newScale;
+        const newOffsetY = mouseY - canvasHeight / 2 - worldY * newScale;
+
+        setScale(newScale);
+        setOffset({ x: newOffsetX, y: newOffsetY });
+      }
+    };
+  }, [scale, offset]);
+
+  // Register wheel event with passive: false
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const wheelHandler = (e: WheelEvent) => handleWheelRef.current(e);
+    canvas.addEventListener('wheel', wheelHandler, { passive: false });
+
+    return () => {
+      canvas.removeEventListener('wheel', wheelHandler);
+    };
+  }, []);
 
   // Handle mouse drag for panning
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -1598,7 +1565,6 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           height: sheetInfo ? 'calc(100% - 40px)' : '100%'
         }}
         onClick={handleCanvasClick}
-        onWheel={handleWheel}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
