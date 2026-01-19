@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useMemo } from 'react';
 import * as THREE from 'three';
 import { SectionConfig } from '@/data/modules/shelving';
 import { useSpace3DView } from '../../../context/useSpace3DView';
@@ -13,6 +13,7 @@ import EditableDimensionText from './EditableDimensionText';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { updateSectionHeight } from '@/editor/shared/utils/sectionHeightUpdater';
 import { getThemeHex } from '@/theme';
+import SidePanelBoring from './SidePanelBoring';
 
 // SectionsRenderer Props 인터페이스
 interface SectionsRendererProps {
@@ -998,9 +999,62 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
     });
   };
   
+  // 모든 섹션에서 선반 위치 수집 (보링 시각화용)
+  const allShelfPositions = useMemo(() => {
+    const { sections } = modelConfig;
+    if (!sections || sections.length === 0) return [];
+
+    const positions: number[] = [];
+    const availableHeight = height - basicThickness * 2;
+
+    // 각 섹션의 선반 위치를 절대 위치로 변환
+    let currentYPositionMm = basicThickness * 100; // 바닥판 두께 (mm)
+
+    sections.forEach((section, index) => {
+      let sectionHeightMm: number;
+
+      if (section.heightType === 'absolute') {
+        if (index === 0) {
+          sectionHeightMm = section.height;
+        } else {
+          const lowerSectionsHeightMm = sections
+            .slice(0, index)
+            .reduce((sum, s) => sum + (s.heightType === 'absolute' ? s.height : 0), 0);
+          sectionHeightMm = (availableHeight * 100) - lowerSectionsHeightMm;
+        }
+      } else {
+        sectionHeightMm = section.height;
+      }
+
+      // 선반 위치가 있으면 절대 위치로 변환
+      if (section.shelfPositions && section.shelfPositions.length > 0) {
+        section.shelfPositions.forEach(pos => {
+          if (pos > 0) { // 0은 바닥판이므로 제외
+            positions.push(currentYPositionMm + pos);
+          }
+        });
+      }
+
+      currentYPositionMm += sectionHeightMm;
+    });
+
+    return positions;
+  }, [modelConfig, height, basicThickness]);
+
   return (
     <>
       {renderSections()}
+
+      {/* 측면뷰에서 선반핀 보링 시각화 */}
+      <SidePanelBoring
+        height={height}
+        depth={depth}
+        basicThickness={basicThickness}
+        innerWidth={innerWidth}
+        innerHeight={height - basicThickness * 2}
+        shelfPositions={allShelfPositions}
+        mmToThreeUnits={mmToThreeUnits}
+      />
     </>
   );
 };
