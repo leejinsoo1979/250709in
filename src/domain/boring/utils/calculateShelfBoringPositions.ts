@@ -87,8 +87,11 @@ export function calculateShelfBoringPositions(
     }
 
     // 선반 위치가 있으면 추가
+    // 주의: shelfPositions: [0]은 "치수 표시용"으로만 사용되며 실제 선반이 아님
+    // pos === 0은 무시해야 함 (shelving.ts에서 치수 표시용으로 사용)
     if (section.shelfPositions && section.shelfPositions.length > 0) {
       section.shelfPositions.forEach(pos => {
+        // pos > 0 조건: 0은 치수 표시용이므로 무시
         if (pos > 0) {
           // ShelfRenderer 계산 방식과 동일:
           // 절대 Y = currentYPositionFromBottom + pos
@@ -241,10 +244,33 @@ export function calculateSectionBoringPositions(
   // 각 섹션별로 보링 위치 필터링 및 변환
   const sectionPositions: SectionBoringInfo[] = sectionRanges.map((range, sectionIndex) => {
     // 해당 섹션 범위 내의 보링만 필터링
+    //
+    // 중요: 섹션 경계의 보링 처리
+    // - 하부섹션 상판 보링 (sectionEnd - halfThickness): 하부섹션에만 포함
+    // - 상부섹션 바닥판 보링 (다음 섹션 start + halfThickness): 상부섹션에만 포함
+    //
+    // 각 섹션에는 다음 보링이 포함되어야 함:
+    // - 첫 번째 섹션(하부): 바닥판 중심(9mm) + 선반들 + 상판 중심(섹션끝-9mm)
+    // - 중간 섹션들: 바닥판 중심(9mm) + 선반들 + 상판 중심(섹션끝-9mm)
+    // - 마지막 섹션(상부): 바닥판 중심(9mm) + 선반들 + 상판 중심(전체높이-9mm)
     const sectionBorings = allPositions.filter(pos => {
-      // 섹션 범위 내에 있는 보링만 선택
-      // 약간의 여유를 두어 경계에 있는 보링도 포함
-      return pos >= range.start - halfThicknessMm && pos <= range.end + halfThicknessMm;
+      // 기본 범위: 섹션 내부 (바닥판 상면 ~ 상판 하면)
+      const inSectionRange = pos >= range.start - halfThicknessMm && pos <= range.end + halfThicknessMm;
+
+      if (!inSectionRange) return false;
+
+      // 섹션 경계 보링 처리 (다음 섹션의 바닥판 보링 제외)
+      // sectionDividers에서 생성된 상부섹션 바닥판 보링(섹션끝+9mm)은 하부섹션에서 제외
+      if (sectionIndex < sections.length - 1) {
+        // 마지막 섹션이 아닌 경우, 다음 섹션 바닥판 보링(range.end + halfThickness 근처)은 제외
+        const nextSectionBottomBoring = range.end + halfThicknessMm;
+        // 허용 오차 2mm 이내이면 다음 섹션 바닥판으로 간주
+        if (Math.abs(pos - nextSectionBottomBoring) < 2) {
+          return false;
+        }
+      }
+
+      return true;
     });
 
     // 섹션 바닥 기준으로 좌표 변환
