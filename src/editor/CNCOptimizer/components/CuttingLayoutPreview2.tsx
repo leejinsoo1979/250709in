@@ -949,28 +949,11 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // - 시트 X = depthPosMm (좌우 끝: 7.5, 527.5)
             // - 시트 Y = boringPosMm (상중하: 20, 112.5, 205)
 
-            // ★★★ 서랍 측판 vs 가구 측판 ★★★
-            //
-            // 섹션 측판 (rotated=false, 예: 600 x 1782):
-            // - depthPositions: 깊이방향 (0~600), 시트 X에 매핑
-            // - boringPositions: 높이방향 (0~1782), 시트 Y에 매핑
-            // - 결과: 좌우 끝에 세로로 ✓
-            //
-            // 서랍 측판 (rotated=true, 원본 535 x 225 → 시트 225 x 535):
-            // - 90도 회전됨: 원본 X축 → 시트 Y축, 원본 Y축 → 시트 X축
-            // - depthPositions: 원본 깊이방향 (0~535) → 시트 Y (0~535)
-            // - boringPositions: 원본 높이방향 (0~225) → 시트 X (0~225)
-            //
-            if (panel.rotated) {
-              // rotated=true: 90도 회전
-              // 원본 X(깊이) → 시트 Y, 원본 Y(높이) → 시트 X
-              boringX = x + boringPosMm;  // 원본 높이방향(0~225) → 시트 X
-              boringY = y + depthPosMm;   // 원본 깊이방향(0~535) → 시트 Y
-            } else {
-              // rotated=false: 회전 없음
-              boringX = x + depthPosMm;   // 깊이방향 → 시트 X
-              boringY = y + boringPosMm;  // 높이방향 → 시트 Y
-            }
+            // ★★★ 모든 측판 동일 로직 (섹션/서랍 구분 없음) ★★★
+            // - depthPositions: 깊이방향 → 시트 X
+            // - boringPositions: 높이방향 → 시트 Y
+            boringX = x + depthPosMm;
+            boringY = y + boringPosMm;
 
             // 호버/선택 상태 확인
             const isHovered = hoveredBoring &&
