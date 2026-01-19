@@ -56,17 +56,22 @@ const DrawerSidePanelBoring: React.FC<DrawerSidePanelBoringProps> = ({
   const leftPanelX = centerX - drawerWidth / 2 + sideThickness / 2 + sidePanelOffset;
   const rightPanelX = centerX + drawerWidth / 2 - sideThickness / 2 - sidePanelOffset;
 
-  // 보링 Y 위치: 서랍 높이 중앙 (측판-앞판/뒷판 체결용)
-  const boringY = centerY;
+  // 보링 Y 위치: 앞판/뒷판 체결용 - 위/중간/아래 3개
+  // 위아래 끝에서 20mm 떨어진 위치 + 중간
+  const edgeOffsetY = mmToThreeUnits(20); // 끝에서 20mm
+  const topBoringY = centerY + drawerHeight / 2 - edgeOffsetY; // 위쪽 (끝에서 20mm)
+  const middleBoringY = centerY; // 중간
+  const bottomBoringY = centerY - drawerHeight / 2 + edgeOffsetY; // 아래쪽 (끝에서 20mm)
+  const boringYPositions = [topBoringY, middleBoringY, bottomBoringY];
 
-  // 보링 Z 위치: 앞판, 뒷판 중간 지점 (2개만)
+  // 보링 Z 위치: 앞판, 뒷판 중간 지점 (2개)
   // 앞판은 drawerDepth/2 - sideThickness/2 위치, 뒷판은 -drawerDepth/2 + sideThickness/2 위치
   const frontPanelZ = centerZ + drawerDepth / 2 - sideThickness / 2; // 앞판 중간
   const backPanelZ = centerZ - drawerDepth / 2 + sideThickness / 2; // 뒷판 중간
-
   const boringZPositions = [frontPanelZ, backPanelZ];
 
   // 측면뷰 (left/right) - 해당 측판에만 보링 표시 (원형)
+  // 앞/뒤 패널 각각에 3개의 보링 (위/중간/아래) = 총 6개
   if (view2DDirection === 'left' || view2DDirection === 'right') {
     const xPosition = view2DDirection === 'left' ? leftPanelX : rightPanelX;
     const holeOuterRadius = mmToThreeUnits(holeDiameter / 2);
@@ -74,62 +79,69 @@ const DrawerSidePanelBoring: React.FC<DrawerSidePanelBoringProps> = ({
 
     return (
       <group>
-        {boringZPositions.map((zPos, holeIndex) => (
-          <mesh
-            key={`drawer-${drawerIndex}-boring-${holeIndex}`}
-            position={[xPosition, boringY, zPos]}
-            rotation={[0, Math.PI / 2, 0]}
-            renderOrder={100}
-          >
-            <ringGeometry args={[holeInnerRadius, holeOuterRadius, 32]} />
-            <meshBasicMaterial
-              color={holeColor}
-              side={THREE.DoubleSide}
-              depthTest={false}
-            />
-          </mesh>
+        {boringZPositions.map((zPos, zIndex) => (
+          boringYPositions.map((yPos, yIndex) => (
+            <mesh
+              key={`drawer-${drawerIndex}-boring-z${zIndex}-y${yIndex}`}
+              position={[xPosition, yPos, zPos]}
+              rotation={[0, Math.PI / 2, 0]}
+              renderOrder={100}
+            >
+              <ringGeometry args={[holeInnerRadius, holeOuterRadius, 32]} />
+              <meshBasicMaterial
+                color={holeColor}
+                side={THREE.DoubleSide}
+                depthTest={false}
+              />
+            </mesh>
+          ))
         ))}
       </group>
     );
   }
 
-  // 정면뷰 (front) - 양쪽 측판에 2개의 수평선 (3mm 간격)
+  // 정면뷰 (front) - 양쪽 측판에 3개의 보링 (위/중간/아래)
+  // 각 보링은 상/하 수평선으로 표현 (3mm 간격)
   if (view2DDirection === 'front') {
     const lineLength = sideThickness;
 
     return (
       <group>
-        {/* 좌측판 보링 */}
-        <mesh
-          position={[leftPanelX, boringY + holeRadius, centerZ + drawerDepth / 2 + mmToThreeUnits(1)]}
-          renderOrder={100}
-        >
-          <planeGeometry args={[lineLength, lineThickness]} />
-          <meshBasicMaterial color={holeColor} side={THREE.DoubleSide} depthTest={false} />
-        </mesh>
-        <mesh
-          position={[leftPanelX, boringY - holeRadius, centerZ + drawerDepth / 2 + mmToThreeUnits(1)]}
-          renderOrder={100}
-        >
-          <planeGeometry args={[lineLength, lineThickness]} />
-          <meshBasicMaterial color={holeColor} side={THREE.DoubleSide} depthTest={false} />
-        </mesh>
+        {boringYPositions.map((yPos, yIndex) => (
+          <group key={`drawer-${drawerIndex}-front-boring-y${yIndex}`}>
+            {/* 좌측판 보링 - 상단/하단 수평선 */}
+            <mesh
+              position={[leftPanelX, yPos + holeRadius, centerZ + drawerDepth / 2 + mmToThreeUnits(1)]}
+              renderOrder={100}
+            >
+              <planeGeometry args={[lineLength, lineThickness]} />
+              <meshBasicMaterial color={holeColor} side={THREE.DoubleSide} depthTest={false} />
+            </mesh>
+            <mesh
+              position={[leftPanelX, yPos - holeRadius, centerZ + drawerDepth / 2 + mmToThreeUnits(1)]}
+              renderOrder={100}
+            >
+              <planeGeometry args={[lineLength, lineThickness]} />
+              <meshBasicMaterial color={holeColor} side={THREE.DoubleSide} depthTest={false} />
+            </mesh>
 
-        {/* 우측판 보링 */}
-        <mesh
-          position={[rightPanelX, boringY + holeRadius, centerZ + drawerDepth / 2 + mmToThreeUnits(1)]}
-          renderOrder={100}
-        >
-          <planeGeometry args={[lineLength, lineThickness]} />
-          <meshBasicMaterial color={holeColor} side={THREE.DoubleSide} depthTest={false} />
-        </mesh>
-        <mesh
-          position={[rightPanelX, boringY - holeRadius, centerZ + drawerDepth / 2 + mmToThreeUnits(1)]}
-          renderOrder={100}
-        >
-          <planeGeometry args={[lineLength, lineThickness]} />
-          <meshBasicMaterial color={holeColor} side={THREE.DoubleSide} depthTest={false} />
-        </mesh>
+            {/* 우측판 보링 - 상단/하단 수평선 */}
+            <mesh
+              position={[rightPanelX, yPos + holeRadius, centerZ + drawerDepth / 2 + mmToThreeUnits(1)]}
+              renderOrder={100}
+            >
+              <planeGeometry args={[lineLength, lineThickness]} />
+              <meshBasicMaterial color={holeColor} side={THREE.DoubleSide} depthTest={false} />
+            </mesh>
+            <mesh
+              position={[rightPanelX, yPos - holeRadius, centerZ + drawerDepth / 2 + mmToThreeUnits(1)]}
+              renderOrder={100}
+            >
+              <planeGeometry args={[lineLength, lineThickness]} />
+              <meshBasicMaterial color={holeColor} side={THREE.DoubleSide} depthTest={false} />
+            </mesh>
+          </group>
+        ))}
       </group>
     );
   }
