@@ -95,6 +95,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
   // Toggle boring display (기본값 true로 변경 - 보링 항상 표시)
   const [showBorings, setShowBorings] = useState(true);
 
+  // Toggle groove display (백패널 홈 가공 표시)
+  const [showGrooves, setShowGrooves] = useState(true);
+
   // 선택된 보링 홀 좌표 (클릭 시 표시)
   const [selectedBoring, setSelectedBoring] = useState<{
     panelName: string;
@@ -951,6 +954,82 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore();
       }
 
+      // ★★★ 백패널 홈 가공 표시 (측판에만) ★★★
+      // 측판 패널에 백패널이 끼워지는 위치에 10mm 폭의 홈 가공 라인 표시
+      if (showGrooves && (panel.name?.includes('좌측') || panel.name?.includes('우측') || panel.name?.includes('측판'))) {
+        ctx.save();
+
+        // 측판 패널의 원래 치수 (배치 전)
+        const originalWidth = panel.width;   // 측판의 깊이 방향 (가구 깊이)
+        const originalHeight = panel.height; // 측판의 높이 방향
+
+        // 백패널 홈 위치 계산
+        // 백패널 위치: 측판 뒤쪽에서 17mm 앞 (depthOffset)
+        // 백패널 두께: 9mm
+        // 홈 폭: 10mm (백패널 9mm + 여유 1mm)
+        const backPanelDepthOffset = 17; // mm (측판 뒤쪽 끝에서 백패널까지 거리)
+        const grooveWidth = 10; // mm (홈 폭)
+
+        // 홈 시작 위치 (측판 뒤쪽 기준) = 뒤쪽 끝에서 (depthOffset + grooveWidth/2) 앞
+        // 측판 좌표계에서: X = originalWidth - backPanelDepthOffset - grooveWidth/2
+        const grooveStartX = originalWidth - backPanelDepthOffset - grooveWidth;
+        const grooveEndX = originalWidth - backPanelDepthOffset;
+
+        // 홈 스타일 설정
+        ctx.strokeStyle = '#8b4513'; // 갈색 (나무 홈 색상)
+        ctx.fillStyle = 'rgba(139, 69, 19, 0.3)'; // 반투명 갈색
+        ctx.lineWidth = 1.5 / (baseScale * scale);
+
+        // 시트 좌표로 변환하여 홈 그리기
+        let grooveX1: number, grooveY1: number, grooveX2: number, grooveY2: number;
+        let grooveW: number, grooveH: number;
+
+        if (panel.rotated) {
+          // 패널이 90도 회전된 경우:
+          // 원래: width=깊이, height=높이 → 회전 후: X축=높이, Y축=깊이
+          // 홈은 깊이 방향으로 있으므로 Y축을 따라 세로 줄로 표시
+          grooveX1 = x; // 패널 왼쪽 끝부터
+          grooveX2 = x + originalHeight; // 패널 오른쪽 끝까지 (높이가 X축)
+          grooveY1 = y + grooveStartX; // 홈 시작 Y 위치
+          grooveW = originalHeight; // 홈 길이 (높이 방향 전체)
+          grooveH = grooveWidth; // 홈 폭
+        } else {
+          // 패널이 회전 안된 경우:
+          // X축=깊이, Y축=높이
+          // 홈은 깊이 방향이므로 특정 X 위치에 세로 줄로 표시
+          grooveX1 = x + grooveStartX; // 홈 시작 X 위치
+          grooveY1 = y; // 패널 위쪽 끝부터
+          grooveW = grooveWidth; // 홈 폭
+          grooveH = originalHeight; // 홈 길이 (높이 방향 전체)
+        }
+
+        // 홈 영역 채우기 (반투명)
+        ctx.fillRect(grooveX1, grooveY1, grooveW, grooveH);
+
+        // 홈 테두리 그리기
+        ctx.strokeRect(grooveX1, grooveY1, grooveW, grooveH);
+
+        // 홈 내부에 빗금 패턴 추가 (선택적)
+        ctx.beginPath();
+        const lineSpacing = 8; // 빗금 간격
+        if (panel.rotated) {
+          // 가로 빗금 (Y축 방향 홈)
+          for (let lineX = grooveX1; lineX < grooveX1 + grooveW; lineX += lineSpacing) {
+            ctx.moveTo(lineX, grooveY1);
+            ctx.lineTo(lineX + lineSpacing / 2, grooveY1 + grooveH);
+          }
+        } else {
+          // 세로 빗금 (X축 방향 홈)
+          for (let lineY = grooveY1; lineY < grooveY1 + grooveH; lineY += lineSpacing) {
+            ctx.moveTo(grooveX1, lineY);
+            ctx.lineTo(grooveX1 + grooveW, lineY + lineSpacing / 2);
+          }
+        }
+        ctx.stroke();
+
+        ctx.restore();
+      }
+
       // Reset shadow and transparency effects
       ctx.shadowColor = 'transparent';
       ctx.shadowBlur = 0;
@@ -1727,6 +1806,13 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               disabled={!boringData || boringData.length === 0}
             >
               <Circle size={16} />
+            </button>
+            <button
+              className={`${styles.headerToolButton} ${showGrooves ? styles.active : ''}`}
+              onClick={() => setShowGrooves(!showGrooves)}
+              title="백패널 홈 가공 표시"
+            >
+              <span style={{ fontSize: '12px', fontWeight: 'bold' }}>홈</span>
             </button>
 
             <div className={styles.headerDivider} />
