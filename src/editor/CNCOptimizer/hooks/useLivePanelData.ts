@@ -287,6 +287,7 @@ export function useLivePanelData() {
             quantity: 1,
             grain: grainValue,
             boringPositions: panelBoringPositions,
+            boringDepthPositions: panel.boringDepthPositions, // 서랍 측판 보링 X위치
             groovePositions: panel.groovePositions // 서랍 앞판/뒷판 바닥판 홈
           };
         });
@@ -570,6 +571,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           quantity: 1,
           grain: grainValue,
           boringPositions: panelBoringPositions,
+          boringDepthPositions: panel.boringDepthPositions, // 서랍 측판 보링 X위치
           groovePositions: panel.groovePositions // 서랍 앞판/뒷판 바닥판 홈
         };
       });

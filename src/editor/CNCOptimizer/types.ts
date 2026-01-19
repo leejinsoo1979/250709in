@@ -46,6 +46,7 @@ export interface PlacedPanel extends Panel {
   grain?: 'NONE' | 'LENGTH' | 'WIDTH' | 'HORIZONTAL' | 'VERTICAL';
   thickness?: number;
   label?: string;
+  boringDepthPositions?: number[]; // 서랍 측판 보링 X위치 (width 기준)
 }
 
 export interface CuttingGuide {
