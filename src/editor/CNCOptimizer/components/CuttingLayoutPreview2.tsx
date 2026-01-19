@@ -1170,29 +1170,36 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         panel.groovePositions.forEach((groove) => {
           // groove.y = 하단에서의 Y 위치 (10mm)
           // groove.height = 홈 높이 (5mm)
+          // 홈은 패널 width 방향 전체에 걸쳐 있음 (깊이 방향)
           const grooveY = groove.y;
           const grooveH = groove.height;
 
           let gx: number, gy: number, gw: number, gh: number;
 
+          // ★★★ 서랍 측판/앞판/뒷판 바닥판 홈 위치 ★★★
+          // 홈은 패널 하단(Y=10)에 width 방향 전체로 있음
+          // 시트 배치 시: 홈은 항상 Y축 방향(하단)에 X축 전체로 표시
+
           if (panel.rotated) {
-            // 회전된 경우: 시트 X = height, 시트 Y = width
-            // 홈은 패널 전체 너비에 걸쳐 있음 (height 방향이 시트 X)
+            // 회전된 경우: 원본 width→시트Y, 원본 height→시트X
+            // 서랍 측판: 원본 width=535(깊이), height=225(높이)
+            // 시트 배치: X=225, Y=535
+            // 홈: 원본 기준 하단(Y=10)에 width(535) 방향 전체
+            // 시트 기준: Y=10 위치에 X방향(225) 전체
             gx = x; // 시트 X 시작
-            gw = height; // 시트에서의 높이 = 원래 width (홈 길이)
-            // grooveY는 원래 height 기준, 시트에서는 X 방향
-            // 하지만 홈은 하단(Y=0 근처)에 있으므로...
-            // 회전 후: 원래 Y가 시트 X가 됨
-            gy = y + grooveY; // 시트 Y 위치
+            gw = width; // 시트에서의 가로 (패널 전체 가로)
+            gy = y + grooveY; // 시트 Y 위치 (하단에서 grooveY)
             gh = grooveH; // 홈 높이
           } else {
-            // 회전 안된 경우: 시트 X = width, 시트 Y = height
+            // 회전 안된 경우: 원본 width→시트X, 원본 height→시트Y
             // 홈은 패널 전체 너비(width)에 걸쳐 있음
             gx = x; // 시트 X 시작
             gw = width; // 홈 길이 (패널 전체 너비)
             gy = y + grooveY; // 시트 Y 위치 (하단에서 grooveY)
             gh = grooveH; // 홈 높이
           }
+
+          console.log(`[GROOVE DRAW] ${panel.name}: rotated=${panel.rotated}, grooveY=${grooveY}, gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
 
           ctx.fillRect(gx, gy, gw, gh);
           ctx.strokeRect(gx, gy, gw, gh);
