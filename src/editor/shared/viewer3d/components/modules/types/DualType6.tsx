@@ -813,6 +813,8 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
         const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(17);
         const reinforcementHeight = mmToThreeUnits(60);
         const reinforcementDepth = mmToThreeUnits(15);
+        // 양쪽 0.5mm씩 축소 (총 1mm)
+        const reinforcementWidth = innerWidth - mmToThreeUnits(1);
         const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
         return (
@@ -831,7 +833,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
               <>
                 <BoxWithEdges
                   key="reinforcement-bottom"
-                  args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                  args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                   position={[0, -backPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
                   material={material}
                   renderMode={renderMode}
@@ -841,7 +843,7 @@ const DualType6: React.FC<FurnitureTypeProps> = ({
                 />
                 <BoxWithEdges
                   key="reinforcement-top"
-                  args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                  args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                   position={[0, backPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
                   material={material}
                   renderMode={renderMode}

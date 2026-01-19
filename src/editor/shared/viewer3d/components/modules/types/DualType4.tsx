@@ -471,6 +471,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                 {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
                   const reinforcementHeight = mmToThreeUnits(60);
                   const reinforcementDepth = mmToThreeUnits(15);
+                  // 양쪽 0.5mm씩 축소 (총 1mm)
+                  const reinforcementWidth = innerWidth - mmToThreeUnits(1);
                   const lowerBackPanelZ = -lowerSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + lowerZOffset;
                   const upperBackPanelZ = -upperSectionDepth/2 + backPanelThickness/2 + mmToThreeUnits(17) + upperZOffset;
                   const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
@@ -480,7 +482,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                     <>
                       {/* 하부 섹션 하단 보강대 */}
                       <BoxWithEdges
-                        args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                        args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                         position={[0, lowerBackPanelY - lowerBackPanelHeight/2 + reinforcementHeight/2, lowerReinforcementZ]}
                         material={material}
                         renderMode={renderMode}
@@ -490,7 +492,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                       />
                       {/* 하부 섹션 상단 보강대 */}
                       <BoxWithEdges
-                        args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                        args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                         position={[0, lowerBackPanelY + lowerBackPanelHeight/2 - reinforcementHeight/2, lowerReinforcementZ]}
                         material={material}
                         renderMode={renderMode}
@@ -500,7 +502,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                       />
                       {/* 상부 섹션 하단 보강대 */}
                       <BoxWithEdges
-                        args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                        args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                         position={[0, upperBackPanelY - upperBackPanelHeight/2 + reinforcementHeight/2, upperReinforcementZ]}
                         material={material}
                         renderMode={renderMode}
@@ -510,7 +512,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                       />
                       {/* 상부 섹션 상단 보강대 */}
                       <BoxWithEdges
-                        args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                        args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                         position={[0, upperBackPanelY + upperBackPanelHeight/2 - reinforcementHeight/2, upperReinforcementZ]}
                         material={material}
                         renderMode={renderMode}
@@ -542,6 +544,8 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
             const singleBackPanelHeight = innerHeight + mmToThreeUnits(36);
             const reinforcementHeight = mmToThreeUnits(60);
             const reinforcementDepth = mmToThreeUnits(15);
+            // 양쪽 0.5mm씩 축소 (총 1mm)
+            const reinforcementWidth = innerWidth - mmToThreeUnits(1);
             const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(17);
             const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
@@ -549,7 +553,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
               <>
                 {/* 하단 보강대 */}
                 <BoxWithEdges
-                  args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                  args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                   position={[0, -singleBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
                   material={material}
                   renderMode={renderMode}
@@ -558,7 +562,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
                 />
                 {/* 상단 보강대 */}
                 <BoxWithEdges
-                  args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                  args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                   position={[0, singleBackPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
                   material={material}
                   renderMode={renderMode}

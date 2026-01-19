@@ -1052,6 +1052,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
                       const reinforcementHeight = mmToThreeUnits(60);
                       const reinforcementDepth = mmToThreeUnits(15);
+                      // 양쪽 0.5mm씩 축소 (총 1mm)
+                      const reinforcementWidth = innerWidth - mmToThreeUnits(1);
                       // 보강대 Z 위치: 백패널 뒤쪽
                       const lowerReinforcementZ = lowerBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
                       const upperReinforcementZ = upperBackPanelZ - backPanelThickness/2 - reinforcementDepth/2;
@@ -1061,7 +1063,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           {/* 하부 섹션 하단 보강대 */}
                           <BoxWithEdges
                             key="lower-reinforcement-bottom"
-                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                             position={[0, lowerBackPanelY - lowerBackPanelHeight/2 + reinforcementHeight/2, lowerReinforcementZ]}
                             material={material}
                             renderMode={renderMode}
@@ -1072,7 +1074,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           {/* 하부 섹션 상단 보강대 */}
                           <BoxWithEdges
                             key="lower-reinforcement-top"
-                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                             position={[0, lowerBackPanelY + lowerBackPanelHeight/2 - reinforcementHeight/2, lowerReinforcementZ]}
                             material={material}
                             renderMode={renderMode}
@@ -1083,7 +1085,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           {/* 상부 섹션 하단 보강대 */}
                           <BoxWithEdges
                             key="upper-reinforcement-bottom"
-                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                             position={[0, upperBackPanelY - upperBackPanelHeight/2 + reinforcementHeight/2, upperReinforcementZ]}
                             material={material}
                             renderMode={renderMode}
@@ -1094,7 +1096,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           {/* 상부 섹션 상단 보강대 */}
                           <BoxWithEdges
                             key="upper-reinforcement-top"
-                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                             position={[0, upperBackPanelY + upperBackPanelHeight/2 - reinforcementHeight/2, upperReinforcementZ]}
                             material={material}
                             renderMode={renderMode}
@@ -1162,6 +1164,8 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                     {!(viewMode === '2D' && view2DDirection === 'front') && (() => {
                       const reinforcementHeight = mmToThreeUnits(60);
                       const reinforcementDepth = mmToThreeUnits(15);
+                      // 양쪽 0.5mm씩 축소 (총 1mm)
+                      const reinforcementWidth = innerWidth - mmToThreeUnits(1);
                       const backPanelZ = -depth/2 + backPanelThickness/2 + mmToThreeUnits(backPanelConfig.depthOffset);
                       const reinforcementZ = backPanelZ - backPanelThickness/2 - reinforcementDepth/2;
 
@@ -1170,7 +1174,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           {/* 하단 보강대 */}
                           <BoxWithEdges
                             key="reinforcement-bottom"
-                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                             position={[0, -singleBackPanelHeight/2 + reinforcementHeight/2, reinforcementZ]}
                             material={material}
                             renderMode={renderMode}
@@ -1180,7 +1184,7 @@ const BaseFurnitureShell: React.FC<BaseFurnitureShellProps> = ({
                           {/* 상단 보강대 */}
                           <BoxWithEdges
                             key="reinforcement-top"
-                            args={[innerWidth, reinforcementHeight, reinforcementDepth]}
+                            args={[reinforcementWidth, reinforcementHeight, reinforcementDepth]}
                             position={[0, singleBackPanelHeight/2 - reinforcementHeight/2, reinforcementZ]}
                             material={material}
                             renderMode={renderMode}
