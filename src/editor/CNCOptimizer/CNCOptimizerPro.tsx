@@ -1149,7 +1149,10 @@ function PageInner(){
             <span>{fullSimulating ? '정지' : '전체 시뮬레이션'}</span>
           </button>
           <div className={styles.exportGroup}>
-            <ExportBar optimizationResults={optimizationResults} />
+            <ExportBar
+              optimizationResults={optimizationResults}
+              shelfBoringPositions={customShelfPositionsByFurniture}
+            />
           </div>
           <div className={styles.divider} />
           <button 
