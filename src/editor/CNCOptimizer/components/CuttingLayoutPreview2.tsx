@@ -884,11 +884,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
         if (isDrawerSidePanel) {
           // 서랍 측판: 앞판/뒷판 연결 보링 (2개)
-          // DrawerRenderer.tsx와 동일: 앞판 중간, 뒷판 중간
+          // 서랍 측판의 앞끝에 앞판이, 뒤끝에 뒷판이 있음
+          // 보링은 앞판/뒷판 중간 위치 = 측판 끝에서 앞판/뒷판 두께의 절반
           const drawerSideThickness = 15; // 서랍 앞판/뒷판 두께
-          const frontPanelX = originalWidth - drawerSideThickness / 2; // 앞쪽 (앞판 중간)
-          const backPanelX = drawerSideThickness / 2; // 뒤쪽 (뒷판 중간)
-          depthPositions = [backPanelX, frontPanelX]; // 뒤→앞 순서
+          const frontPanelX = originalWidth - drawerSideThickness / 2; // 앞끝에서 7.5mm 안쪽 (앞판 중간)
+          const backPanelX = drawerSideThickness / 2; // 뒤끝에서 7.5mm 안쪽 (뒷판 중간)
+          depthPositions = [backPanelX, frontPanelX]; // 뒤, 앞 순서
         } else {
           // 가구 측판: 선반핀 보링 (3개)
           const backPanelThickness = 18; // 백패널 두께
