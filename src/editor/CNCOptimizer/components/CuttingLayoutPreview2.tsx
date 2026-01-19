@@ -950,30 +950,43 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // - 시트 Y = boringPosMm (상중하: 20, 112.5, 205)
 
             if (panel.rotated) {
-              // ★★★ 회전된 패널 (서랍 측판) ★★★
+              // ★★★ 회전된 패널 (서랍 측판) - 최종 수정 ★★★
               //
               // 서랍 측판 원본: width=535(깊이), height=225(높이)
               // 시트 배치(90도 회전): placedWidth=225, placedHeight=535
               //
-              // 90도 회전 의미:
-              // - 원래 height(225) 방향 → 시트 X축 (placedWidth=225)
-              // - 원래 width(535) 방향 → 시트 Y축 (placedHeight=535)
+              // boringPosMm = height 기준 (20, 112.5, 205) - 3개
+              // depthPosMm = width 기준 (7.5, 527.5) - 2개
               //
-              // boringPosMm = height 기준 (20, 112.5, 205) → 시트 X축에 직접 매핑
-              // depthPosMm = width 기준 (7.5, 527.5) → 시트 Y축에 직접 매핑
+              // 원하는 결과: 좌/우 끝(X)에 세로로(Y) 3개씩
+              // - 시트 X = 좌/우 끝 (2개) → depthPosMm 스케일링
+              // - 시트 Y = 상/중/하 (3개) → boringPosMm 스케일링
               //
-              // 결과: 보링이 좌/우 끝(Y=7.5, 527.5)에 세로로(X=20~205) 3개씩 배치
-              //       → 아니! 이러면 상/하에 가로로 배치됨!
+              // ★ 스크린샷 결과: 상/하(Y)에 가로로(X) 3개씩 나옴
+              // → 현재 X/Y가 반대로 적용되고 있음!
+              // → boringPosMm이 X축에, depthPosMm이 Y축에 가고 있음
               //
-              // 원하는 것: 좌/우 끝(X)에 세로로(Y) 3개씩
-              // - 시트 X = depthPosMm (좌/우 끝: 7.5, 527.5) → 스케일링 필요 (535→225)
-              // - 시트 Y = boringPosMm (상/중/하: 20, 112.5, 205) → 스케일링 필요 (225→535)
+              // 해결: X/Y를 바꾸지 말고, 스케일링만 반대로!
+              // - 시트 X = boringPosMm (3개를 placedWidth=225 범위에 배치)
+              // - 시트 Y = depthPosMm (2개를 placedHeight=535 범위에 배치)
               //
-              // 스케일링:
-              // - X: depthPosMm * (placedWidth / originalWidth) = depthPosMm * (225/535)
-              // - Y: boringPosMm * (placedHeight / originalHeight) = boringPosMm * (535/225)
-              boringX = x + depthPosMm * (width / originalWidth);   // 7.5*(225/535)≈3.2, 527.5*(225/535)≈221.8
-              boringY = y + boringPosMm * (height / originalHeight); // 20*(535/225)≈47.6, 112.5*2.38≈267.5, 205*2.38≈487.4
+              // 아니다! 이건 상/하에 가로로 3개씩 나옴.
+              //
+              // 진짜 해결: depthPosMm을 X축에, boringPosMm을 Y축에 배치
+              // - 시트 X = depthPosMm (2개: 7.5, 527.5) → 그대로 사용 (0~535 범위, 시트 X는 225지만 시트 원점 기준)
+              // - 시트 Y = boringPosMm (3개: 20, 112.5, 205) → 그대로 사용
+              //
+              // 잠깐! placedWidth=225인데 depthPosMm=527.5는 범위 초과!
+              // → 스케일링 필요 없이 그냥 직접 매핑하면 됨
+              //
+              // 실제 시트 배치:
+              // - width(시트에서 가로) = 225 = originalHeight
+              // - height(시트에서 세로) = 535 = originalWidth
+              //
+              // boringPosMm은 originalHeight(225) 기준 → 시트 X축에 직접 사용 가능 (범위 내)
+              // depthPosMm은 originalWidth(535) 기준 → 시트 Y축에 직접 사용 가능 (범위 내)
+              boringX = x + boringPosMm;  // 시트 X = 상/중/하 (20, 112.5, 205) - 3개
+              boringY = y + depthPosMm;   // 시트 Y = 좌/우 끝 (7.5, 527.5) - 2개
             } else {
               // 비회전 패널 (가구 측판): 원래 좌표 그대로
               // - width 방향 → 시트 X축
@@ -1694,10 +1707,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
           let boringX: number, boringY: number;
           if (panel.rotated) {
-            const scaleX = placedWidth / originalWidth;
-            const scaleY = placedHeight / originalHeight;
-            boringX = x + depthPosMm * scaleX;
-            boringY = y + boringPosMm * scaleY;
+            // 회전된 패널: boringPosMm→X축, depthPosMm→Y축
+            boringX = x + boringPosMm;
+            boringY = y + depthPosMm;
           } else {
             boringX = x + depthPosMm;
             boringY = y + boringPosMm;
@@ -1889,10 +1901,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // 시트 좌표로 변환
             let boringX: number, boringY: number;
             if (panel.rotated) {
-              const scaleX = placedWidth / originalWidth;
-              const scaleY = placedHeight / originalHeight;
-              boringX = x + depthPosMm * scaleX;
-              boringY = y + boringPosMm * scaleY;
+              // 회전된 패널: boringPosMm→X축, depthPosMm→Y축
+              boringX = x + boringPosMm;
+              boringY = y + depthPosMm;
             } else {
               boringX = x + depthPosMm;
               boringY = y + boringPosMm;
