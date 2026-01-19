@@ -380,7 +380,9 @@ function PageInner(){
             material: material,
             grain: grain,
             canRotate: true, // CNC 최적화에서는 기본적으로 회전 가능 (나중에 설정에 따라 조정됨)
-            boringPositions: p.boringPositions // 보링 위치 유지
+            boringPositions: p.boringPositions, // 보링 Y위치 유지
+            boringDepthPositions: p.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
+            groovePositions: p.groovePositions // 홈 위치 유지 (서랍 앞판/뒷판)
           };
         });
         

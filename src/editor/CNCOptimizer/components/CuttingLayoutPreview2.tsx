@@ -863,6 +863,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
       // ★★★ 보링 표시 (panel.boringPositions 직접 사용 - 2D 뷰어와 동일한 데이터) ★★★
       // 패널에 boringPositions가 있으면 해당 측판에 선반핀 보링 표시
+      console.log(`[PANEL CHECK] ${panel.name}: boringPositions=`, panel.boringPositions, 'boringDepthPositions=', panel.boringDepthPositions, 'rotated=', panel.rotated);
       if (showBorings && panel.boringPositions && panel.boringPositions.length > 0) {
         ctx.save();
 
@@ -950,27 +951,22 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // - 시트 Y = boringPosMm (상중하: 20, 112.5, 205)
 
             // ★★★ rotated 여부에 따라 좌표 매핑 ★★★
-            // 컷팅 레이아웃 기준: X=가로(225), Y=세로(535)
+            // 컷팅 레이아웃 기준: 225=X(가로), 535=Y(세로)
             if (panel.rotated) {
               // 서랍 측판 (rotated=true):
-              // - 원본: width=535(깊이), height=225(높이)
-              // - 시트 배치: X=225, Y=535
-              // - depthPosMm(0~535) → 시트 Y (세로)
-              // - boringPosMm(0~225) → 시트 X (가로)
-              // 원하는 결과: 좌우 끝(X)에 세로(Y)로 3개씩
-              // - boringPosMm(20,112.5,205)이 X축에 → 가로로 3개 (X)
-              // - depthPosMm(7.5,527.5)이 Y축에 → 상하 끝 (X)
-              // 이건 반대임. 뒤집어야 함:
-              // - depthPosMm을 X로 스케일: (7.5,527.5) * (225/535) = (3.2, 221.8)
-              // - boringPosMm을 Y로 스케일: (20,112.5,205) * (535/225) = (47.6, 267.5, 487.2)
-              const scaleX = 225 / 535;  // depthPosMm을 X로 변환
-              const scaleY = 535 / 225;  // boringPosMm을 Y로 변환
+              // placedWidth=225(X축), placedHeight=535(Y축)
+              // depthPosMm(7.5,527.5) 범위 0~535 → X축(0~225)으로 스케일
+              // boringPosMm(20,112.5,205) 범위 0~225 → Y축(0~535)으로 스케일
+              const scaleX = placedWidth / originalWidth;   // 225/535
+              const scaleY = placedHeight / originalHeight; // 535/225
               boringX = x + depthPosMm * scaleX;
               boringY = y + boringPosMm * scaleY;
+              console.log(`[BORING CALC] rotated=true: depthPosMm=${depthPosMm.toFixed(1)} * ${scaleX.toFixed(3)} = X=${(depthPosMm * scaleX).toFixed(1)}, boringPosMm=${boringPosMm.toFixed(1)} * ${scaleY.toFixed(3)} = Y=${(boringPosMm * scaleY).toFixed(1)}`);
             } else {
               // 섹션 측판 (rotated=false):
               boringX = x + depthPosMm;
               boringY = y + boringPosMm;
+              console.log(`[BORING CALC] rotated=false: depthPosMm=${depthPosMm.toFixed(1)} → X, boringPosMm=${boringPosMm.toFixed(1)} → Y`);
             }
 
             // 호버/선택 상태 확인
