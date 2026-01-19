@@ -122,8 +122,11 @@ export function useLivePanelData() {
 
         console.log(`[BORING DEBUG] Module ${moduleIndex}: moduleData.id=${moduleData.id}`);
         console.log(`[BORING DEBUG] Module ${moduleIndex}: sections=`, sections);
+        console.log(`[BORING DEBUG] Module ${moduleIndex}: sections.length=`, sections?.length);
         console.log(`[BORING DEBUG] Module ${moduleIndex}: leftSections=`, modelConfig?.leftSections);
+        console.log(`[BORING DEBUG] Module ${moduleIndex}: rightSections=`, modelConfig?.rightSections);
         console.log(`[BORING DEBUG] Module ${moduleIndex}: furnitureHeight=${furnitureHeight}`);
+        console.log(`[BORING DEBUG] Module ${moduleIndex}: modelConfig=`, modelConfig);
 
         // 전체 가구 보링 위치 계산
         const boringResult = calculateShelfBoringPositions({
@@ -230,6 +233,14 @@ export function useLivePanelData() {
                 panelBoringPositions = [bottomBoring, ...shelfBorings, topBoring].sort((a, b) => a - b);
                 console.log(`  [BORING CALC] recalculated positions:`, panelBoringPositions);
               }
+            } else if (isSplitPanel) {
+              // 상/하 분리 측판이지만 sectionPositions가 부족한 경우
+              // 패널 높이 기준으로 기본 보링 위치 계산 (상판/바닥판 위치)
+              console.log(`  [BORING CALC] 분리 측판이지만 sectionPositions 부족 - 패널 높이 기준 기본 보링 계산`);
+              const bottomBoring = halfThickness; // 9mm
+              const topBoring = panelHeight - halfThickness; // panelHeight - 9mm
+              panelBoringPositions = [bottomBoring, topBoring];
+              console.log(`  [BORING CALC] fallback positions:`, panelBoringPositions);
             } else {
               // 통짜 측판: 전체 가구 보링 위치를 패널 로컬 좌표로 변환
               // allBoringPositions는 가구 바닥 기준 절대 좌표
@@ -484,6 +495,14 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
               panelBoringPositions = [bottomBoring, ...shelfBorings, topBoring].sort((a, b) => a - b);
               console.log(`[OPT BORING] recalculated:`, panelBoringPositions);
             }
+          } else if (isSplitPanel) {
+            // 상/하 분리 측판이지만 sectionPositions가 부족한 경우
+            // 패널 높이 기준으로 기본 보링 위치 계산 (상판/바닥판 위치)
+            console.log(`[OPT BORING] 분리 측판이지만 sectionPositions 부족 - 패널 높이 기준 기본 보링 계산`);
+            const bottomBoring = halfThickness; // 9mm
+            const topBoring = panelHeight - halfThickness; // panelHeight - 9mm
+            panelBoringPositions = [bottomBoring, topBoring];
+            console.log(`[OPT BORING] fallback positions:`, panelBoringPositions);
           } else {
             // 통짜 측판: 전체 가구 보링 위치를 패널 로컬 좌표로 변환
             // allBoringPositions는 가구 바닥 기준 절대 좌표
