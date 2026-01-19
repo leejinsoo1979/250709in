@@ -79,14 +79,46 @@ export const exportPanelsToCSV = (panels: Panel[], settings: CutSettings = {
 };
 
 /**
+ * 보링 타입 결정 (Y 위치와 패널 높이 기준)
+ *
+ * @param yPos 보링 Y 위치 (패널 하단 기준 mm)
+ * @param panelHeight 패널 높이 (mm)
+ * @param thickness 패널 두께 (mm)
+ * @returns 보링 타입 이름 (상판보링, 지판보링, 선반보링, 중판보링)
+ */
+function getBoringTypeName(yPos: number, panelHeight: number, thickness: number = 18): string {
+  const halfThickness = thickness / 2; // 9mm
+  const tolerance = 5; // 5mm 허용 오차
+
+  // 바닥판 보링 (패널 하단 근처, 약 9mm)
+  if (yPos <= halfThickness + tolerance) {
+    return '지판보링';
+  }
+
+  // 상판 보링 (패널 상단 근처, 약 panelHeight - 9mm)
+  if (yPos >= panelHeight - halfThickness - tolerance) {
+    return '상판보링';
+  }
+
+  // 중판보링 또는 선반보링 (중간 위치)
+  // 정확히 중간에 가까우면 중판보링, 그 외는 선반보링
+  return '선반보링';
+}
+
+/**
  * 패널별 보링 좌표 CSV 생성
- * 각 보링 홀: Panel_Name, Hole_No, X, Y, Z(타공깊이), Diameter
+ * 각 보링 홀: Panel_Name (패널명 보링타입 Y인덱스-X인덱스), Hole_No, X, Y, Z(타공깊이), Diameter
  *
  * 측판 보링 좌표 기준 (CNC 테이블에 패널을 놓았을 때):
  * - X: 깊이 방향 (앞쪽 50mm, 중앙, 뒤쪽 50mm - 백패널 18mm 제외)
  * - Y: 높이 방향 (패널 하단 = 0)
  * - Z: 타공 깊이 (관통홀이므로 패널 두께 = 18mm)
  * - Diameter: 3mm
+ *
+ * Panel_Name 형식: "(상)좌측 상판보링 1-1"
+ * - (상)좌측: 원본 패널명
+ * - 상판보링/선반보링/지판보링/중판보링: 보링이 고정되는 구조물 타입
+ * - 1-1: Y인덱스-X인덱스 (Y 위치 순서, X 위치 순서)
  */
 export const exportBoringToCSV = (panels: Panel[]): string => {
   const lines: string[] = [BORING_CSV_HEADERS];
@@ -96,7 +128,7 @@ export const exportBoringToCSV = (panels: Panel[]): string => {
   const EDGE_OFFSET = 50; // mm (앞/뒤 끝에서 50mm)
   const BACK_PANEL_THICKNESS = 18; // mm
 
-  let holeNo = 1;
+  let globalHoleNo = 1;
 
   panels.forEach(panel => {
     // 보링 위치가 있는 패널만 처리 (측판)
@@ -106,6 +138,7 @@ export const exportBoringToCSV = (panels: Panel[]): string => {
 
     // 패널 너비 = 가구 깊이 방향
     const panelWidth = panel.width;
+    const panelHeight = panel.height;
 
     // X 위치 3개 (깊이 방향)
     const frontX = EDGE_OFFSET; // 50mm
@@ -114,19 +147,33 @@ export const exportBoringToCSV = (panels: Panel[]): string => {
     const centerX = (frontX + safeBackX) / 2;
     const xPositions = [frontX, centerX, safeBackX];
 
+    // 패널명에서 쉼표 제거
+    const cleanPanelName = panel.name.replace(/,/g, '_');
+
+    // 보링 위치를 Y 순서대로 정렬
+    const sortedBoringPositions = [...panel.boringPositions].sort((a, b) => a - b);
+
     // 각 Y 위치에 대해 3개의 X 위치
-    panel.boringPositions.forEach(yPos => {
-      xPositions.forEach(xPos => {
+    sortedBoringPositions.forEach((yPos, yIndex) => {
+      const boringTypeName = getBoringTypeName(yPos, panelHeight);
+      const yIndexLabel = yIndex + 1; // 1부터 시작
+
+      xPositions.forEach((xPos, xIndex) => {
+        const xIndexLabel = xIndex + 1; // 1부터 시작
+
+        // Panel_Name 형식: "(상)좌측 상판보링 1-1"
+        const boringName = `${cleanPanelName} ${boringTypeName} ${yIndexLabel}-${xIndexLabel}`;
+
         const line = [
-          panel.name.replace(/,/g, '_'),
-          holeNo,
+          boringName,
+          globalHoleNo,
           Math.round(xPos),
           Math.round(yPos),
           HOLE_DEPTH,
           HOLE_DIAMETER
         ].join(',');
         lines.push(line);
-        holeNo++;
+        globalHoleNo++;
       });
     });
   });
