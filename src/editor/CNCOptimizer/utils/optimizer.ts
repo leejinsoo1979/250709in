@@ -343,8 +343,14 @@ export const optimizePanelsMultiple = async (
   // 모든 패널을 Rect 형식으로 변환
   const rectangles: Rect[] = [];
   const panelMap = new Map<string, Panel>();
-  
+
+  console.log('[OPTIMIZER] Input panels count:', panels.length);
   panels.forEach(panel => {
+    // 보링 디버그 로그
+    if (panel.boringPositions && panel.boringPositions.length > 0) {
+      console.log(`[OPTIMIZER] Panel "${panel.name}" has boringPositions:`, panel.boringPositions);
+    }
+
     for (let i = 0; i < panel.quantity; i++) {
       const id = `${panel.id}-${i}`;
       const canRotate = panel.grain && panel.grain !== 'NONE' ? false : (panel.canRotate !== false);
@@ -412,6 +418,12 @@ export const optimizePanelsMultiple = async (
       const originalPanel = panelMap.get(rect.id!)!;
       // 회전된 경우 실제 배치된 크기 사용
       const isRotated = rect.rotated || false;
+
+      // 보링 디버그 로그
+      if (originalPanel.boringPositions && originalPanel.boringPositions.length > 0) {
+        console.log(`[OPTIMIZER RESULT] "${originalPanel.name}" boringPositions:`, originalPanel.boringPositions);
+      }
+
       return {
         ...originalPanel,
         id: rect.id!, // Use the unique ID from rect (e.g., "m0_p0-0", "m0_p0-1")

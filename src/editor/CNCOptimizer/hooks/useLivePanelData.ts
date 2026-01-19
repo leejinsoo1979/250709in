@@ -118,6 +118,9 @@ export function useLivePanelData() {
         const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
         const basicThicknessMm = 18; // 기본 패널 두께
 
+        console.log(`[BORING DEBUG] Module ${moduleIndex}: sections=`, sections);
+        console.log(`[BORING DEBUG] Module ${moduleIndex}: furnitureHeight=${furnitureHeight}`);
+
         // 전체 가구 보링 위치 계산
         const boringResult = calculateShelfBoringPositions({
           sections,
@@ -133,8 +136,8 @@ export function useLivePanelData() {
           basicThicknessMm,
         });
 
-        console.log(`Module ${moduleIndex}: allBoringPositions:`, allBoringPositions);
-        console.log(`Module ${moduleIndex}: sectionBoringResult:`, sectionBoringResult);
+        console.log(`[BORING DEBUG] Module ${moduleIndex}: allBoringPositions:`, allBoringPositions);
+        console.log(`[BORING DEBUG] Module ${moduleIndex}: sectionBoringResult:`, sectionBoringResult);
 
         // Panel 타입으로 변환하고 고유 ID 할당
         const convertedPanels: Panel[] = modulePanels.map((panel, panelIndex) => {
@@ -155,10 +158,16 @@ export function useLivePanelData() {
             panel.name.includes('측판')
           );
 
-          console.log(`  [BORING CHECK] Panel "${panel.name}": isDrawerPanel=${isDrawerPanel}, isSidePanel=${isSidePanel}`);
+          console.log(`[BORING CHECK] Panel "${panel.name}": isDrawerPanel=${isDrawerPanel}, isSidePanel=${isSidePanel}`);
 
           // 측판의 보링 위치 결정
           let panelBoringPositions: number[] | undefined = undefined;
+
+          if (isSidePanel) {
+            console.log(`[BORING] ★ 측판 감지! "${panel.name}"`);
+          } else {
+            console.log(`[BORING] 측판 아님: "${panel.name}"`);
+          }
 
           if (isSidePanel) {
             const isUpperSection = panel.name.includes('(상)');
@@ -167,29 +176,38 @@ export function useLivePanelData() {
             const panelHeight = panel.height || panel.depth || 0; // 측판 높이 (mm)
             const halfThickness = basicThicknessMm / 2; // 9mm
 
+            console.log(`  [BORING CALC] "${panel.name}": isUpper=${isUpperSection}, isLower=${isLowerSection}, isSplit=${isSplitPanel}, panelHeight=${panelHeight}`);
+            console.log(`  [BORING CALC] allBoringPositions:`, allBoringPositions);
+            console.log(`  [BORING CALC] sectionBoringResult:`, sectionBoringResult);
+
             if (isSplitPanel && sectionBoringResult.sectionPositions.length >= 2) {
               // 상/하 분리 측판: 해당 섹션의 보링 위치를 패널 로컬 좌표로 변환
               const sectionInfo = isLowerSection
                 ? sectionBoringResult.sectionPositions[0]
                 : sectionBoringResult.sectionPositions[1];
 
+              console.log(`  [BORING CALC] sectionInfo for ${isLowerSection ? 'lower' : 'upper'}:`, sectionInfo);
+
               if (sectionInfo) {
                 // sectionInfo.positions는 섹션 바닥판 상면 기준 좌표
                 // 패널 하단(=섹션 바닥판 하면) 기준으로 변환: pos - halfThickness
                 // 단, 패널 높이 범위 내의 유효한 위치만 포함
-                panelBoringPositions = sectionInfo.positions
-                  .map(pos => pos - halfThickness)
-                  .filter(pos => pos > 0 && pos < panelHeight);
+                const beforeFilter = sectionInfo.positions.map(pos => pos - halfThickness);
+                console.log(`  [BORING CALC] beforeFilter (pos - ${halfThickness}):`, beforeFilter);
+                panelBoringPositions = beforeFilter.filter(pos => pos > 0 && pos < panelHeight);
+                console.log(`  [BORING CALC] afterFilter (0 < pos < ${panelHeight}):`, panelBoringPositions);
               }
             } else {
               // 통짜 측판: 전체 가구 보링 위치를 패널 로컬 좌표로 변환
               // allBoringPositions는 가구 바닥 기준 절대 좌표
               // 측판 하단(=바닥판 하면=0) 기준으로는 그대로 사용, 단 패널 높이 범위 내만
+              console.log(`  [BORING CALC] 통짜 측판 - filtering allBoringPositions for height < ${panelHeight}`);
               panelBoringPositions = allBoringPositions
                 .filter(pos => pos > 0 && pos < panelHeight);
+              console.log(`  [BORING CALC] result:`, panelBoringPositions);
             }
 
-            console.log(`  Panel ${panelIndex}: "${panel.name}" - panelHeight: ${panelHeight}, boringPositions:`, panelBoringPositions);
+            console.log(`  [BORING FINAL] "${panel.name}" - boringPositions:`, panelBoringPositions);
           }
 
           console.log(`  Panel ${panelIndex}: "${panel.name}" - grain: ${grainDirection} -> ${grainValue}`);

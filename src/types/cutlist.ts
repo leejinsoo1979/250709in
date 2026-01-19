@@ -11,6 +11,7 @@ export interface Panel {
   material?: string;
   grain?: Grain;
   canRotate?: boolean;
+  boringPositions?: number[];  // 측판 보링 Y위치 (패널 기준 mm)
 }
 
 export interface StockSheet {

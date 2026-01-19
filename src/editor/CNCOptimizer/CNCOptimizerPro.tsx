@@ -379,7 +379,8 @@ function PageInner(){
             quantity: p.quantity || 1,
             material: material,
             grain: grain,
-            canRotate: true // CNC 최적화에서는 기본적으로 회전 가능 (나중에 설정에 따라 조정됨)
+            canRotate: true, // CNC 최적화에서는 기본적으로 회전 가능 (나중에 설정에 따라 조정됨)
+            boringPositions: p.boringPositions // 보링 위치 유지
           };
         });
         
