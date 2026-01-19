@@ -74,13 +74,25 @@ function generateSidePanelBorings(
   const borings: Boring[] = [];
 
   // 1. 선반핀 보링
+  // customShelfYPositions는 가구 바닥(0mm) 기준 절대 위치
+  // 측판 좌표로 변환 필요: 측판 바닥 = 가구 바닥 + 하판두께(thickness)
+  // 측판 기준 Y = 가구 기준 Y - thickness
+  let convertedCustomYPositions: number[] | undefined;
+  if (params.useCustomPositions && params.customShelfYPositions) {
+    // 가구 바닥 기준 → 측판 바닥 기준으로 변환
+    // 상판/하판 위치는 측판 범위 밖이므로 자동 필터링됨
+    convertedCustomYPositions = params.customShelfYPositions
+      .map(y => y - params.thickness)  // 측판 좌표로 변환
+      .filter(y => y > 0 && y < dims.sidePanelHeight);  // 측판 범위 내만
+  }
+
   const shelfPinResult = calculateShelfPinBorings({
     panelHeight: dims.sidePanelHeight,
     panelDepth: dims.sidePanelDepth,
     isLeftPanel,
     settings: settings.shelfPin,
     // 커스텀 위치가 있으면 사용, 없으면 32mm 피치 시스템
-    customYPositions: params.useCustomPositions ? params.customShelfYPositions : undefined,
+    customYPositions: convertedCustomYPositions,
   });
   borings.push(...shelfPinResult.borings);
 
