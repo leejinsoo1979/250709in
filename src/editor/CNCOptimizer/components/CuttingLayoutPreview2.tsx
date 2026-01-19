@@ -561,6 +561,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
     // Draw panels (show progressively during simulation)
     console.log('[CuttingLayoutPreview2] Drawing panels. Total:', result.panels.length);
+    // 디버그: 서랍 측판 데이터 확인
+    result.panels.forEach(p => {
+      if (p.name?.includes('서랍') && (p.name?.includes('좌측판') || p.name?.includes('우측판'))) {
+        console.log(`[CuttingLayoutPreview2 ENTRY] ${p.name}: boringDepthPositions=`, p.boringDepthPositions, 'groovePositions=', p.groovePositions);
+      }
+    });
     result.panels.forEach((panel, panelIndex) => {
       // 보링 데이터 디버그
       if (panelIndex === 0) {
