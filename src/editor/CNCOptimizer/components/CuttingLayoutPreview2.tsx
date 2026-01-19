@@ -936,23 +936,37 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             let boringX: number, boringY: number;
 
             if (isDrawerSidePanel) {
-              // ★★★ 서랍 측판 보링 (2D 도면과 동일한 배치) ★★★
+              // ★★★ 서랍 측판 보링 ★★★
               //
-              // 패널 좌표계:
-              // - depthPosMm = 깊이 방향 (width 기준: 7.5, width-7.5)
-              // - boringPosMm = 높이 방향 (height 기준: 20, 중간, height-20)
+              // 서랍 측판 좌표계:
+              // - L방향(세로) = width = 서랍 깊이 (489mm)
+              // - W방향(가로) = height = 서랍 높이 (148mm)
               //
-              // 시트 좌표계 (회전 고려):
+              // 보링 위치:
+              // - depthPosMm = W방향(가로=height) 양끝 (7.5, height-7.5)
+              // - boringPosMm = L방향(세로=width) 상중하 (20, 중간, width-20)
+              //   ※ 현재 boringPosMm은 height 기준으로 잘못 계산되어 있음
+              //
+              // 시트 배치:
+              // - 회전 안됨: 시트 X = width(L방향), 시트 Y = height(W방향)
+              //   → 보링 X = L방향(세로) 상중하 = boringPosMm 스케일링 필요
+              //   → 보링 Y = W방향(가로) 양끝 = depthPosMm
+              //
+              // - 회전됨: 시트 X = height(W방향), 시트 Y = width(L방향)
+              //   → 보링 X = W방향 양끝 = depthPosMm
+              //   → 보링 Y = L방향 상중하 = boringPosMm 스케일링 필요
+
+              // boringPosMm은 height 기준으로 계산됨, width 기준으로 스케일링
+              const scaledBoringPos = boringPosMm * (originalWidth / originalHeight);
+
               if (panel.rotated) {
-                // 회전됨: 시트 X = height, 시트 Y = width
-                // 깊이 방향 → 시트 Y, 높이 방향 → 시트 X
-                boringX = x + boringPosMm;    // 높이 → 시트 X
-                boringY = y + depthPosMm;     // 깊이 → 시트 Y
+                // 회전됨: 시트 X = height(W), 시트 Y = width(L)
+                boringX = x + depthPosMm;        // W방향 양끝 → 시트 X
+                boringY = y + scaledBoringPos;   // L방향 상중하 → 시트 Y
               } else {
-                // 회전 안됨: 시트 X = width, 시트 Y = height
-                // 깊이 방향 → 시트 X, 높이 방향 → 시트 Y
-                boringX = x + depthPosMm;     // 깊이 → 시트 X
-                boringY = y + boringPosMm;    // 높이 → 시트 Y
+                // 회전 안됨: 시트 X = width(L), 시트 Y = height(W)
+                boringX = x + scaledBoringPos;   // L방향 상중하 → 시트 X
+                boringY = y + depthPosMm;        // W방향 양끝 → 시트 Y
               }
             } else if (panel.rotated) {
               // 가구 측판 (회전된 경우):
@@ -1147,7 +1161,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
       // ★★★ 서랍 바닥판 홈 가공 표시 (서랍 앞판/뒷판/좌측판/우측판) ★★★
       // panel.groovePositions가 있는 서랍 패널에 바닥판 홈 표시
-      if (showGrooves && panel.groovePositions && panel.groovePositions.length > 0 && panel.name?.includes('서랍')) {
+      const isDrawerPanel = panel.name?.includes('서랍');
+      const hasGroove = panel.groovePositions && panel.groovePositions.length > 0;
+      if (isDrawerPanel) {
+        console.log(`[GROOVE] ${panel.name}: hasGroove=${hasGroove}, groovePositions=`, panel.groovePositions);
+      }
+      if (showGrooves && hasGroove && isDrawerPanel) {
         ctx.save();
 
         const originalWidth = panel.width;
