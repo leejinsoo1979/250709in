@@ -869,7 +869,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
       // ★★★ 보링 표시 (panel.boringPositions 직접 사용 - 2D 뷰어와 동일한 데이터) ★★★
       // 패널에 boringPositions가 있으면 해당 측판에 선반핀 보링 표시
-      console.log(`[PANEL CHECK] ${panel.name}: boringPositions=`, panel.boringPositions, 'boringDepthPositions=', panel.boringDepthPositions, 'rotated=', panel.rotated);
+      console.log(`[PANEL CHECK] ${panel.name}: width=${panel.width}, height=${panel.height}, rotated=${panel.rotated}, boringPositions=`, panel.boringPositions, 'boringDepthPositions=', panel.boringDepthPositions);
       if (showBorings && panel.boringPositions && panel.boringPositions.length > 0) {
         ctx.save();
 
@@ -956,20 +956,33 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // - 시트 X = depthPosMm (좌우 끝: 7.5, 527.5)
             // - 시트 Y = boringPosMm (상중하: 20, 112.5, 205)
 
-            // ★★★ rotated 여부에 따라 좌표 매핑 ★★★
-            // 컷팅 레이아웃 기준: 225=X(가로), 535=Y(세로)
-            if (panel.rotated) {
-              // 서랍 측판 (rotated=true):
-              // placedWidth=225(X축), placedHeight=535(Y축)
-              // depthPosMm(7.5,527.5) 범위 0~535 → X축(0~225)으로 스케일
-              // boringPosMm(20,112.5,205) 범위 0~225 → Y축(0~535)으로 스케일
-              const scaleX = placedWidth / originalWidth;   // 225/535
-              const scaleY = placedHeight / originalHeight; // 535/225
+            // ★★★ 서랍 측판 vs 가구 측판 좌표 매핑 ★★★
+            //
+            // 서랍 측판 (isDrawerSidePanel=true):
+            // - 원본: width=535(깊이), height=225(높이)
+            // - 시트 배치: width 방향이 시트의 L방향(세로=Y축)
+            // - 보링: 좌우 양끝(boringPositions=X축)에 세로(depthPositions=Y축)로 3개씩
+            // - 따라서: boringPosMm → X축, depthPosMm → Y축
+            //
+            // 가구 측판 (isDrawerSidePanel=false):
+            // - rotated 여부에 따라 좌표 매핑
+
+            if (isDrawerSidePanel) {
+              // ★★★ 서랍 측판: width가 시트의 세로(Y축) ★★★
+              // boringPositions(높이방향 0~225) → 시트 X축
+              // depthPositions(깊이방향 0~535) → 시트 Y축
+              boringX = x + boringPosMm;
+              boringY = y + depthPosMm;
+              console.log(`[BORING CALC] 서랍측판: boringPosMm=${boringPosMm.toFixed(1)} → X, depthPosMm=${depthPosMm.toFixed(1)} → Y`);
+            } else if (panel.rotated) {
+              // 가구 측판 (rotated=true):
+              const scaleX = placedWidth / originalWidth;
+              const scaleY = placedHeight / originalHeight;
               boringX = x + depthPosMm * scaleX;
               boringY = y + boringPosMm * scaleY;
               console.log(`[BORING CALC] rotated=true: depthPosMm=${depthPosMm.toFixed(1)} * ${scaleX.toFixed(3)} = X=${(depthPosMm * scaleX).toFixed(1)}, boringPosMm=${boringPosMm.toFixed(1)} * ${scaleY.toFixed(3)} = Y=${(boringPosMm * scaleY).toFixed(1)}`);
             } else {
-              // 섹션 측판 (rotated=false):
+              // 가구 측판 (rotated=false):
               boringX = x + depthPosMm;
               boringY = y + boringPosMm;
               console.log(`[BORING CALC] rotated=false: depthPosMm=${depthPosMm.toFixed(1)} → X, boringPosMm=${boringPosMm.toFixed(1)} → Y`);
@@ -1174,7 +1187,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.lineWidth = 1 / (baseScale * scale);
 
         panel.groovePositions.forEach((groove) => {
-          // groove.y = 하단에서의 Y 위치 (10mm)
+          // groove.y = 하단에서의 Y 위치 (10mm, height 기준)
           // groove.height = 홈 높이 (5mm)
           // 홈은 패널 width 방향 전체에 걸쳐 있음 (깊이 방향)
           const grooveY = groove.y;
@@ -1183,29 +1196,46 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           let gx: number, gy: number, gw: number, gh: number;
 
           // ★★★ 서랍 측판/앞판/뒷판 바닥판 홈 위치 ★★★
-          // 홈은 패널 하단(Y=10)에 width 방향 전체로 있음
-          // 시트 배치 시: 홈은 항상 Y축 방향(하단)에 X축 전체로 표시
+          const isDrawerSidePanelForGroove = panel.name?.includes('서랍') &&
+            (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
+          const isDrawerFrontBackPanel = panel.name?.includes('서랍') &&
+            (panel.name?.includes('앞판') || panel.name?.includes('뒷판'));
 
-          if (panel.rotated) {
-            // 회전된 경우: 원본 width→시트Y, 원본 height→시트X
-            // 서랍 측판: 원본 width=535(깊이), height=225(높이)
-            // 시트 배치: X=225, Y=535
-            // 홈: 원본 기준 하단(Y=10)에 width(535) 방향 전체
-            // 시트 기준: Y=10 위치에 X방향(225) 전체
-            gx = x; // 시트 X 시작
-            gw = width; // 시트에서의 가로 (패널 전체 가로)
-            gy = y + grooveY; // 시트 Y 위치 (하단에서 grooveY)
-            gh = grooveH; // 홈 높이
-          } else {
-            // 회전 안된 경우: 원본 width→시트X, 원본 height→시트Y
-            // 홈은 패널 전체 너비(width)에 걸쳐 있음
+          if (isDrawerSidePanelForGroove) {
+            // ★★★ 서랍 측판: width가 시트의 세로(Y축) ★★★
+            // 원본: width=535(깊이), height=225(높이)
+            // 시트 배치: width 방향 → 세로(Y축), height 방향 → 가로(X축)
+            // 홈: 원본 기준 하단(height 방향 Y=10)에 width(깊이=535) 방향 전체
+            // 시트 기준: 좌측(X=grooveY)에 Y축 방향 전체
+            gx = x + grooveY; // 시트 X 위치 (좌측에서 grooveY=10)
+            gw = grooveH; // 홈 너비 (5mm, 가로 방향)
+            gy = y; // 시트 Y 시작
+            gh = height; // 홈 길이 (시트 세로 전체 = 패널 깊이 535)
+            console.log(`[GROOVE DRAW] 서랍측판 ${panel.name}: grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+          } else if (isDrawerFrontBackPanel) {
+            // ★★★ 서랍 앞판/뒷판 ★★★
+            // 홈은 패널 하단(Y=10)에 width 방향 전체
+            // 시트에서도 하단에 가로 방향 전체로 표시
             gx = x; // 시트 X 시작
             gw = width; // 홈 길이 (패널 전체 너비)
             gy = y + grooveY; // 시트 Y 위치 (하단에서 grooveY)
             gh = grooveH; // 홈 높이
+            console.log(`[GROOVE DRAW] 서랍앞뒷판 ${panel.name}: grooveY=${grooveY} → gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+          } else if (panel.rotated) {
+            // 기타 회전된 패널
+            gx = x;
+            gw = width;
+            gy = y + grooveY;
+            gh = grooveH;
+            console.log(`[GROOVE DRAW] rotated ${panel.name}: grooveY=${grooveY}, gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
+          } else {
+            // 기타 회전 안된 패널
+            gx = x;
+            gw = width;
+            gy = y + grooveY;
+            gh = grooveH;
+            console.log(`[GROOVE DRAW] ${panel.name}: rotated=${panel.rotated}, grooveY=${grooveY}, gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
           }
-
-          console.log(`[GROOVE DRAW] ${panel.name}: rotated=${panel.rotated}, grooveY=${grooveY}, gx=${gx.toFixed(0)}, gy=${gy.toFixed(0)}, gw=${gw.toFixed(0)}, gh=${gh.toFixed(0)}`);
 
           ctx.fillRect(gx, gy, gw, gh);
           ctx.strokeRect(gx, gy, gw, gh);
