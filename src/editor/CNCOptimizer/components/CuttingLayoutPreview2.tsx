@@ -931,35 +931,25 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             let boringX: number, boringY: number;
 
             if (isDrawerSidePanel) {
-              // ★★★ 서랍 측판 보링 (2D 도면과 동일) ★★★
+              // ★★★ 서랍 측판 보링 - 가구 측판과 동일한 로직 사용 ★★★
               //
-              // 서랍 측판 특성:
-              // - L방향(세로) = panel.width = 깊이 (489mm)
-              // - W방향(가로) = panel.height = 높이 (148mm)
-              // - 가구 측판과 L/W 방향이 반대!
+              // 서랍 측판도 시트에 배치될 때:
+              // - 회전 안됨: 시트 X = width(깊이), 시트 Y = height(높이)
+              // - 회전됨: 시트 X = height(높이), 시트 Y = width(깊이)
               //
               // 보링 위치:
-              // - boringPosMm = height 기준 [20, 74, 128] = W방향(가로) 상중하
-              // - depthPosMm = width 기준 [7.5, 481.5] = L방향(세로) 앞뒤
+              // - depthPosMm = width 기준 [7.5, 481.5] = 깊이 방향 앞뒤 (좌우 끝)
+              // - boringPosMm = height 기준 [20, 74, 128] = 높이 방향 상중하
               //
-              // 시트 배치 (L방향=세로, W방향=가로):
-              // - placedWidth = W방향 = height (패널이 L방향으로 세워짐)
-              // - placedHeight = L방향 = width
-              //
-              // 따라서:
-              // - 시트 X = W방향 = height 범위 → boringPosMm 사용
-              // - 시트 Y = L방향 = width 범위 → depthPosMm 사용
-              //
-              // 서랍판은 가구판과 반대로 X/Y 매핑!
+              // 가구 측판과 동일하게:
+              // - 회전 안됨: boringX=depthPosMm(좌우끝), boringY=boringPosMm(상중하)
+              // - 회전됨: boringX=boringPosMm, boringY=depthPosMm
               if (panel.rotated) {
-                // 회전됨: L/W가 다시 바뀜
-                // 시트 X = L방향 = width, 시트 Y = W방향 = height
-                boringX = x + depthPosMm;    // L방향 앞뒤 → 시트 X
-                boringY = y + boringPosMm;   // W방향 상중하 → 시트 Y
+                boringX = x + boringPosMm;   // 높이(Y) → 시트 X
+                boringY = y + depthPosMm;    // 깊이(X) → 시트 Y
               } else {
-                // 회전 안됨: 시트 X = W방향 = height, 시트 Y = L방향 = width
-                boringX = x + boringPosMm;   // W방향 상중하 → 시트 X
-                boringY = y + depthPosMm;    // L방향 앞뒤 → 시트 Y
+                boringX = x + depthPosMm;    // 깊이(X) → 시트 X (좌우 끝)
+                boringY = y + boringPosMm;   // 높이(Y) → 시트 Y (상중하)
               }
             } else if (panel.rotated) {
               // 가구 측판 (회전된 경우):
