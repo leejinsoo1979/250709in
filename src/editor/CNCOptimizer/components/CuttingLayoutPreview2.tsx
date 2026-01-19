@@ -94,6 +94,15 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
   // Toggle boring display (기본값 true로 변경 - 보링 항상 표시)
   const [showBorings, setShowBorings] = useState(true);
+
+  // 선택된 보링 홀 좌표 (클릭 시 표시)
+  const [selectedBoring, setSelectedBoring] = useState<{
+    panelName: string;
+    x: number;
+    y: number;
+    xIndex: number;
+    yIndex: number;
+  } | null>(null);
   
   // Get settings and simulation state from store
   const { 
@@ -1402,18 +1411,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     ctx.stroke();
   }
 
-  // Handle canvas click - Updated for transformations
+  // Handle canvas click - Updated for transformations and boring detection
   const handleCanvasClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!result || !canvasRef.current || !onPanelClick || isDragging) return;
+    if (!result || !canvasRef.current || isDragging) return;
 
     const rect = canvasRef.current.getBoundingClientRect();
     const mouseX = e.clientX - rect.left;
     const mouseY = e.clientY - rect.top;
-    
+
     // Use canvas actual dimensions
     const canvasWidth = rect.width;
     const canvasHeight = rect.height;
-    
+
     // Calculate base scale
     const padding = 60;
     const maxWidth = canvasWidth - padding * 2;
@@ -1424,38 +1433,99 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
     const scaleY = maxHeight / rotatedHeight;
     const baseScale = Math.min(scaleX, scaleY, 1.2);
     const totalScale = baseScale * scale;
-    
+
     // Transform mouse position to panel coordinate system
     const centerX = canvasWidth / 2 + offset.x;
     const centerY = canvasHeight / 2 + offset.y;
-    
+
     // Calculate rotation transformation
     const angle = (rotation * Math.PI) / 180;
     const cos = Math.cos(-angle);
     const sin = Math.sin(-angle);
-    
+
     // Transform mouse coordinates
     const dx = mouseX - centerX;
     const dy = mouseY - centerY;
     const rotatedX = dx * cos - dy * sin;
     const rotatedY = dx * sin + dy * cos;
-    
-    // Scale to panel space
-    const panelX = rotatedX / totalScale + result.stockPanel.width / 2;
-    const panelY = rotatedY / totalScale + result.stockPanel.height / 2;
-    
-    // Check which panel was clicked
-    let clickedPanelId = null;
-    for (const panel of result.panels) {
-      if (panelX >= panel.x && panelX <= panel.x + panel.width &&
-          panelY >= panel.y && panelY <= panel.y + panel.height) {
-        clickedPanelId = panel.id;
-        break;
+
+    // Scale to panel space (시트 좌표)
+    const sheetX = rotatedX / totalScale + result.stockPanel.width / 2;
+    const sheetY = rotatedY / totalScale + result.stockPanel.height / 2;
+
+    // ★★★ 보링 홀 클릭 감지 ★★★
+    if (showBorings) {
+      const clickRadius = 10 / totalScale; // 클릭 감지 반경 (화면 픽셀 기준으로 10px)
+
+      for (const panel of result.panels) {
+        if (!panel.boringPositions || panel.boringPositions.length === 0) continue;
+
+        const x = panel.x;
+        const y = panel.y;
+        const originalWidth = panel.width;
+
+        // 보링 X 위치 계산 (깊이 방향)
+        const backPanelThickness = 18;
+        const edgeOffset = 50;
+        const frontX = edgeOffset;
+        const backX = originalWidth - backPanelThickness - edgeOffset;
+        const safeBackX = Math.max(backX, frontX + 40);
+        const safeCenterX = (frontX + safeBackX) / 2;
+        const depthPositions = [frontX, safeCenterX, safeBackX];
+
+        // 각 보링 위치 체크
+        for (let yIdx = 0; yIdx < panel.boringPositions.length; yIdx++) {
+          const boringPosMm = panel.boringPositions[yIdx];
+
+          for (let xIdx = 0; xIdx < depthPositions.length; xIdx++) {
+            const depthPosMm = depthPositions[xIdx];
+
+            // 시트 좌표로 변환
+            let boringX: number, boringY: number;
+            if (panel.rotated) {
+              boringX = x + boringPosMm;
+              boringY = y + depthPosMm;
+            } else {
+              boringX = x + depthPosMm;
+              boringY = y + boringPosMm;
+            }
+
+            // 클릭 위치와 보링 위치 간 거리 계산
+            const dist = Math.sqrt(Math.pow(sheetX - boringX, 2) + Math.pow(sheetY - boringY, 2));
+
+            if (dist <= clickRadius) {
+              // 보링 홀 클릭됨!
+              setSelectedBoring({
+                panelName: panel.name,
+                x: Math.round(depthPosMm),
+                y: Math.round(boringPosMm),
+                xIndex: xIdx + 1,
+                yIndex: yIdx + 1
+              });
+              return; // 보링 클릭 시 패널 클릭 이벤트 무시
+            }
+          }
+        }
       }
+
+      // 보링이 아닌 곳 클릭 시 선택 해제
+      setSelectedBoring(null);
     }
-    
-    // Call the click handler with the panel ID or null
-    onPanelClick(clickedPanelId);
+
+    // Check which panel was clicked
+    if (onPanelClick) {
+      let clickedPanelId = null;
+      for (const panel of result.panels) {
+        if (sheetX >= panel.x && sheetX <= panel.x + panel.width &&
+            sheetY >= panel.y && sheetY <= panel.y + panel.height) {
+          clickedPanelId = panel.id;
+          break;
+        }
+      }
+
+      // Call the click handler with the panel ID or null
+      onPanelClick(clickedPanelId);
+    }
   };
 
   return (
@@ -1561,10 +1631,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           </div>
         </div>
       )}
-      <canvas 
+      <canvas
         ref={canvasRef}
         className={`${styles.canvas} panel-clickable`}
-        style={{ 
+        style={{
           cursor: isDragging ? 'grabbing' : 'grab',
           top: sheetInfo ? '40px' : '0',
           height: sheetInfo ? 'calc(100% - 40px)' : '100%'
@@ -1575,7 +1645,56 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
       />
-      
+
+      {/* 선택된 보링 홀 좌표 표시 */}
+      {selectedBoring && (
+        <div
+          className={styles.boringInfoPanel}
+          style={{
+            position: 'absolute',
+            bottom: '10px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: 'rgba(0, 0, 0, 0.85)',
+            color: '#fff',
+            padding: '8px 16px',
+            borderRadius: '6px',
+            fontSize: '13px',
+            fontWeight: 500,
+            zIndex: 100,
+            display: 'flex',
+            gap: '16px',
+            alignItems: 'center',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
+          }}
+        >
+          <span style={{ color: '#aaa' }}>{selectedBoring.panelName}</span>
+          <span style={{ color: '#4fc3f7' }}>
+            X: <strong>{selectedBoring.x}mm</strong>
+          </span>
+          <span style={{ color: '#81c784' }}>
+            Y: <strong>{selectedBoring.y}mm</strong>
+          </span>
+          <span style={{ color: '#ffb74d', fontSize: '11px' }}>
+            ({selectedBoring.yIndex}-{selectedBoring.xIndex})
+          </span>
+          <button
+            onClick={() => setSelectedBoring(null)}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#888',
+              cursor: 'pointer',
+              padding: '0 4px',
+              fontSize: '16px',
+              lineHeight: 1
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Simulation Overlay - 컷팅 리스트 탭이 활성화되어 있을 때만 표시 */}
       {showCuttingListTab && ((selectedPanelId && cutSequence.length > 0) || selectedCutId) && (
         <div 
