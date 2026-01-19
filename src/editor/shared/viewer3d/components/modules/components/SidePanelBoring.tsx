@@ -189,46 +189,81 @@ export const SidePanelBoring: React.FC<SidePanelBoringProps> = ({
 
   // 탑뷰 (top) - 양쪽 측판에 보링 표시 (위에서 내려다본 관통홀)
   // 탑뷰에서는 Y축 방향으로 관통된 모든 보링이 겹쳐서 보임
-  // 깊이(Z) 방향의 3개 위치에만 홀 표시 (boringPositions는 Y 위치이므로 탑뷰에서는 무관)
+  // 깊이(Z) 방향의 3개 위치에 3mm 너비 관통홀 표시 (좌/우 세로선 2개로 표현)
   if (view2DDirection === 'top') {
-    // 좌측판 X 위치
-    const leftPanelX = -totalWidth / 2 + basicThickness / 2;
-    // 우측판 X 위치
-    const rightPanelX = totalWidth / 2 - basicThickness / 2;
+    // 좌측판 X 중앙
+    const leftPanelXCenter = -totalWidth / 2 + basicThickness / 2;
+    // 우측판 X 중앙
+    const rightPanelXCenter = totalWidth / 2 - basicThickness / 2;
+
+    // 세로선 길이 (측판 두께)
+    const lineLength = basicThickness;
+    const lineThickness = mmToThreeUnits(0.3); // 선 두께
+    const holeRadius = mmToThreeUnits(holeDiameter / 2); // 1.5mm
 
     return (
       <group>
-        {/* 좌측판 보링 - 깊이 방향 3개 홀 (Y 위치와 무관하게 겹쳐서 보임) */}
+        {/* 좌측판 보링 - 깊이 방향 3개 위치 */}
         {holeZPositions.map((zPos, holeIndex) => (
-          <mesh
-            key={`left-hole-${holeIndex}`}
-            position={[leftPanelX, height / 2 + mmToThreeUnits(1), zPos]}
-            rotation={[Math.PI / 2, 0, 0]}
-            renderOrder={100}
-          >
-            <ringGeometry args={[holeInnerRadius, holeOuterRadius, 32]} />
-            <meshBasicMaterial
-              color={holeColor}
-              side={THREE.DoubleSide}
-              depthTest={false}
-            />
-          </mesh>
+          <group key={`left-hole-${holeIndex}`}>
+            {/* 앞쪽 세로선 */}
+            <mesh
+              position={[leftPanelXCenter, height / 2 + mmToThreeUnits(1), zPos + holeRadius]}
+              rotation={[Math.PI / 2, 0, 0]}
+              renderOrder={100}
+            >
+              <planeGeometry args={[lineLength, lineThickness]} />
+              <meshBasicMaterial
+                color={holeColor}
+                side={THREE.DoubleSide}
+                depthTest={false}
+              />
+            </mesh>
+            {/* 뒤쪽 세로선 */}
+            <mesh
+              position={[leftPanelXCenter, height / 2 + mmToThreeUnits(1), zPos - holeRadius]}
+              rotation={[Math.PI / 2, 0, 0]}
+              renderOrder={100}
+            >
+              <planeGeometry args={[lineLength, lineThickness]} />
+              <meshBasicMaterial
+                color={holeColor}
+                side={THREE.DoubleSide}
+                depthTest={false}
+              />
+            </mesh>
+          </group>
         ))}
-        {/* 우측판 보링 - 깊이 방향 3개 홀 */}
+        {/* 우측판 보링 - 깊이 방향 3개 위치 */}
         {holeZPositions.map((zPos, holeIndex) => (
-          <mesh
-            key={`right-hole-${holeIndex}`}
-            position={[rightPanelX, height / 2 + mmToThreeUnits(1), zPos]}
-            rotation={[Math.PI / 2, 0, 0]}
-            renderOrder={100}
-          >
-            <ringGeometry args={[holeInnerRadius, holeOuterRadius, 32]} />
-            <meshBasicMaterial
-              color={holeColor}
-              side={THREE.DoubleSide}
-              depthTest={false}
-            />
-          </mesh>
+          <group key={`right-hole-${holeIndex}`}>
+            {/* 앞쪽 세로선 */}
+            <mesh
+              position={[rightPanelXCenter, height / 2 + mmToThreeUnits(1), zPos + holeRadius]}
+              rotation={[Math.PI / 2, 0, 0]}
+              renderOrder={100}
+            >
+              <planeGeometry args={[lineLength, lineThickness]} />
+              <meshBasicMaterial
+                color={holeColor}
+                side={THREE.DoubleSide}
+                depthTest={false}
+              />
+            </mesh>
+            {/* 뒤쪽 세로선 */}
+            <mesh
+              position={[rightPanelXCenter, height / 2 + mmToThreeUnits(1), zPos - holeRadius]}
+              rotation={[Math.PI / 2, 0, 0]}
+              renderOrder={100}
+            >
+              <planeGeometry args={[lineLength, lineThickness]} />
+              <meshBasicMaterial
+                color={holeColor}
+                side={THREE.DoubleSide}
+                depthTest={false}
+              />
+            </mesh>
+          </group>
         ))}
       </group>
     );
