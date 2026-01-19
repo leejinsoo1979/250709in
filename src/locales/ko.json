@@ -354,7 +354,7 @@
     }
   },
   "cnc": {
-    "title": "Nesting",
+    "title": "CNC Optimizer",
     "calculate": "계산하기",
     "export": "내보내기",
     "panels": "패널",

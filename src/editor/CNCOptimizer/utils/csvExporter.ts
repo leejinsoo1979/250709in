@@ -151,7 +151,7 @@ export const downloadCutListFiles = async (
     settings,
     projectName
   );
-  
+
   // 패널 CSV 다운로드
   const panelBlob = new Blob([panelsCSV], { type: 'text/csv;charset=utf-8;' });
   const panelUrl = URL.createObjectURL(panelBlob);
@@ -160,10 +160,10 @@ export const downloadCutListFiles = async (
   panelLink.download = `${projectName}_panels.csv`;
   panelLink.click();
   URL.revokeObjectURL(panelUrl);
-  
+
   // 잠시 대기
   await new Promise(resolve => setTimeout(resolve, 100));
-  
+
   // 재고 CSV 다운로드
   const stockBlob = new Blob([stockCSV], { type: 'text/csv;charset=utf-8;' });
   const stockUrl = URL.createObjectURL(stockBlob);
@@ -172,10 +172,10 @@ export const downloadCutListFiles = async (
   stockLink.download = `${projectName}_stock.csv`;
   stockLink.click();
   URL.revokeObjectURL(stockUrl);
-  
+
   // 잠시 대기
   await new Promise(resolve => setTimeout(resolve, 100));
-  
+
   // 설정 INI 다운로드
   const settingsBlob = new Blob([settingsINI], { type: 'text/plain;charset=utf-8;' });
   const settingsUrl = URL.createObjectURL(settingsBlob);
@@ -184,4 +184,166 @@ export const downloadCutListFiles = async (
   settingsLink.download = `${projectName}_settings.ini`;
   settingsLink.click();
   URL.revokeObjectURL(settingsUrl);
+};
+
+// ============================================
+// 보링 좌표 CSV 내보내기
+// ============================================
+
+/**
+ * 보링 좌표 인터페이스
+ */
+export interface BoringCoordinate {
+  panelId: string;
+  panelName: string;
+  boringType: string;
+  x: number;          // X 좌표 (mm) - 깊이 방향
+  y: number;          // Y 좌표 (mm) - 높이 방향
+  diameter: number;   // 직경 (mm)
+  depth: number;      // 깊이 (mm)
+  face: string;       // 가공면 (top, bottom, left, right, front, back)
+}
+
+/**
+ * 측판 보링 좌표 데이터 생성
+ * 2D 뷰어와 동일한 방식으로 3개의 깊이 위치에 보링 생성
+ *
+ * @param panelId 패널 ID
+ * @param panelName 패널 이름
+ * @param panelWidth 패널 너비 (= 가구 깊이, mm)
+ * @param panelHeight 패널 높이 (mm)
+ * @param boringYPositions 보링 Y 위치 배열 (패널 기준 mm)
+ * @param isLeftPanel 좌측판 여부 (우측판이면 false)
+ */
+export const generateSidePanelBoringCoordinates = (
+  panelId: string,
+  panelName: string,
+  panelWidth: number,
+  panelHeight: number,
+  boringYPositions: number[],
+  isLeftPanel: boolean = true
+): BoringCoordinate[] => {
+  const coordinates: BoringCoordinate[] = [];
+
+  // 설정값
+  const backPanelThickness = 18; // 백패널 두께
+  const edgeOffset = 50; // 끝에서 50mm
+  const boringDiameter = 5; // 선반핀홀 직경
+  const boringDepth = 12; // 선반핀홀 깊이
+
+  // 깊이 방향 3개의 X 위치 (2D 뷰어와 동일)
+  const frontX = edgeOffset; // 앞쪽에서 50mm
+  const backX = panelWidth - backPanelThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 고려)
+  const centerX = (frontX + backX) / 2; // 가운데
+
+  const depthPositions = [frontX, centerX, backX];
+  const depthNames = ['전면', '중앙', '후면'];
+
+  // 보링 가공면 (좌측판은 오른쪽 면에, 우측판은 왼쪽 면에 보링)
+  const face = isLeftPanel ? 'right' : 'left';
+
+  // 패널 높이 범위 내의 유효한 보링 위치만 사용
+  const validYPositions = boringYPositions.filter(y => y > 0 && y < panelHeight);
+
+  let boringIndex = 1;
+  validYPositions.forEach((yPos, yIndex) => {
+    depthPositions.forEach((xPos, xIndex) => {
+      coordinates.push({
+        panelId: `${panelId}_boring_${boringIndex}`,
+        panelName: panelName,
+        boringType: `shelf-pin-${depthNames[xIndex]}`,
+        x: Math.round(xPos * 10) / 10,
+        y: Math.round(yPos * 10) / 10,
+        diameter: boringDiameter,
+        depth: boringDepth,
+        face: face
+      });
+      boringIndex++;
+    });
+  });
+
+  return coordinates;
+};
+
+/**
+ * 보링 좌표 CSV 헤더
+ */
+const BORING_CSV_HEADERS = 'Panel_ID,Panel_Name,Boring_Type,X_mm,Y_mm,Diameter_mm,Depth_mm,Face';
+
+/**
+ * 보링 좌표를 CSV 형식으로 내보내기
+ */
+export const exportBoringCoordinatesToCSV = (
+  coordinates: BoringCoordinate[]
+): string => {
+  const lines: string[] = [BORING_CSV_HEADERS];
+
+  coordinates.forEach(coord => {
+    const line = [
+      coord.panelId,
+      coord.panelName.replace(/,/g, '_'), // 콤마 제거
+      coord.boringType,
+      coord.x.toFixed(1),
+      coord.y.toFixed(1),
+      coord.diameter.toFixed(1),
+      coord.depth.toFixed(1),
+      coord.face
+    ].join(',');
+
+    lines.push(line);
+  });
+
+  return lines.join('\n');
+};
+
+/**
+ * 전체 패널에 대한 보링 좌표 생성 및 CSV 내보내기
+ *
+ * @param sidePanels 측판 정보 배열 [{id, name, width, height, boringPositions, isLeft}, ...]
+ */
+export interface SidePanelBoringInfo {
+  id: string;
+  name: string;
+  width: number;          // 패널 너비 (= 가구 깊이)
+  height: number;         // 패널 높이
+  boringPositions: number[]; // 보링 Y 위치들 (패널 기준)
+  isLeft: boolean;        // 좌측판 여부
+}
+
+export const exportAllBoringCoordinatesToCSV = (
+  sidePanels: SidePanelBoringInfo[]
+): string => {
+  const allCoordinates: BoringCoordinate[] = [];
+
+  sidePanels.forEach(panel => {
+    const coordinates = generateSidePanelBoringCoordinates(
+      panel.id,
+      panel.name,
+      panel.width,
+      panel.height,
+      panel.boringPositions,
+      panel.isLeft
+    );
+    allCoordinates.push(...coordinates);
+  });
+
+  return exportBoringCoordinatesToCSV(allCoordinates);
+};
+
+/**
+ * 보링 좌표 CSV 파일 다운로드
+ */
+export const downloadBoringCoordinatesCSV = (
+  sidePanels: SidePanelBoringInfo[],
+  fileName: string = 'boring_coordinates'
+) => {
+  const csvContent = exportAllBoringCoordinatesToCSV(sidePanels);
+
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM 추가
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = `${fileName}.csv`;
+  link.click();
+  URL.revokeObjectURL(url);
 };

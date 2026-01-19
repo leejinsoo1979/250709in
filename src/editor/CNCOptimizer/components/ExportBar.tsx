@@ -1,11 +1,15 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useCNCStore } from '../store';
 import { exportPanelsCsv, exportStockCsv } from '../../../utils/cutlist/export';
 import { PDFExporter } from '../utils/pdfExporter';
 import { DXFExporter } from '../utils/dxfExporter';
 import { SimpleDXFExporter } from '../utils/simpleDxfExporter';
-import { OptimizedResult } from '../types';
-import { Download, FileText, FileDown, Package, Layers, ChevronDown } from 'lucide-react';
+import {
+  downloadBoringCoordinatesCSV,
+  SidePanelBoringInfo
+} from '../utils/csvExporter';
+import { OptimizedResult, PlacedPanel } from '../types';
+import { Download, FileText, FileDown, Package, Layers, ChevronDown, Circle } from 'lucide-react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -13,6 +17,7 @@ import styles from './ExportBar.module.css';
 
 interface ExportBarProps {
   optimizationResults: OptimizedResult[];
+  shelfBoringPositions?: Record<string, number[]>; // 가구별 보링 위치 (moduleKey -> positions)
 }
 
 export default function ExportBar({ optimizationResults }: ExportBarProps){
