@@ -189,12 +189,11 @@ export function useLivePanelData() {
               console.log(`  [BORING CALC] sectionInfo for ${isLowerSection ? 'lower' : 'upper'}:`, sectionInfo);
 
               if (sectionInfo) {
-                // sectionInfo.positions는 섹션 바닥판 상면 기준 좌표
-                // 패널 하단(=섹션 바닥판 하면) 기준으로 변환: pos - halfThickness
-                // 가장자리(0 또는 panelHeight)에 있는 보링도 포함하도록 >= 및 <= 사용
-                const beforeFilter = sectionInfo.positions.map(pos => pos - halfThickness);
-                console.log(`  [BORING CALC] beforeFilter (pos - ${halfThickness}):`, beforeFilter);
-                panelBoringPositions = beforeFilter.filter(pos => pos >= 0 && pos <= panelHeight);
+                // sectionInfo.positions는 이미 섹션 바닥 기준으로 변환된 좌표
+                // (calculateSectionBoringPositions에서 pos - range.start + halfThickness 적용됨)
+                // 추가 변환 없이 그대로 사용
+                console.log(`  [BORING CALC] sectionInfo.positions (already transformed):`, sectionInfo.positions);
+                panelBoringPositions = sectionInfo.positions.filter(pos => pos >= 0 && pos <= panelHeight);
                 console.log(`  [BORING CALC] afterFilter (0 <= pos <= ${panelHeight}):`, panelBoringPositions);
               }
             } else {
