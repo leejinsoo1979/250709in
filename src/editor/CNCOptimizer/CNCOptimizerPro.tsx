@@ -346,7 +346,8 @@ function PageInner(){
     // Convert live panels to CutList format - always update when we have live panels
     if (livePanels.length > 0) {
       // Always use live panels when they exist (even after refresh)
-      if (!hasInitializedFromLive.current || panels.length === 0) {
+      // 항상 livePanels로 업데이트 (boringDepthPositions, groovePositions 포함)
+      if (true) { // 항상 업데이트
         const cutlistPanels: Panel[] = livePanels.map(p => {
           // 패널의 긴 방향을 L(세로) 방향으로 배치
           // 긴 쪽이 length가 되도록 설정
