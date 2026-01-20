@@ -11,81 +11,68 @@
   z-index: 1000;
 }
 
-/* 로딩 화면 스타일 */
+/* 로딩 화면 스타일 - 미니멀 디자인 */
 .loadingOverlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(10, 10, 20, 0.95) 0%, rgba(20, 20, 40, 0.98) 100%);
-  backdrop-filter: blur(10px);
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  animation: fadeIn 0.3s ease-out;
+  animation: fadeIn 0.2s ease-out;
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .loadingContent {
   text-align: center;
   color: white;
+  padding: 40px;
 }
 
 .loadingIcon {
-  width: 120px;
-  height: 120px;
-  margin: 0 auto 30px;
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 24px;
   position: relative;
 }
 
+/* 외부 원 - 점선 회전 */
 .loadingCircle {
   position: absolute;
   width: 100%;
   height: 100%;
-  border: 3px solid rgba(255, 255, 255, 0.1);
+  border: 2px dashed rgba(255, 255, 255, 0.2);
   border-radius: 50%;
+  animation: spin 8s linear infinite;
 }
 
+/* 메인 스피너 */
 .loadingCircleActive {
   position: absolute;
   width: 100%;
   height: 100%;
-  border: 3px solid transparent;
-  border-top: 3px solid #4a9eff;
+  border: 2px solid transparent;
+  border-top: 2px solid var(--theme-primary, #3b82f6);
+  border-right: 2px solid var(--theme-primary, #3b82f6);
   border-radius: 50%;
-  animation: spin 1.5s linear infinite;
+  animation: spin 0.8s cubic-bezier(0.5, 0, 0.5, 1) infinite;
 }
 
 .loadingCircleInner {
-  position: absolute;
-  top: 15%;
-  left: 15%;
-  width: 70%;
-  height: 70%;
-  border: 2px solid rgba(255, 255, 255, 0.05);
-  border-radius: 50%;
+  display: none;
 }
 
 .loadingCircleInnerActive {
-  position: absolute;
-  top: 15%;
-  left: 15%;
-  width: 70%;
-  height: 70%;
-  border: 2px solid transparent;
-  border-bottom: 2px solid #7ab8ff;
-  border-radius: 50%;
-  animation: spinReverse 2s linear infinite;
+  display: none;
 }
 
 .pdfIcon {
@@ -93,118 +80,114 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 32px;
-  color: #4a9eff;
-  font-weight: bold;
-  animation: pulse 2s ease-in-out infinite;
+  font-size: 16px;
+  color: var(--theme-primary, #3b82f6);
+  font-weight: 600;
+  letter-spacing: -0.5px;
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes spinReverse {
-  0% {
-    transform: rotate(360deg);
-  }
-  100% {
-    transform: rotate(0deg);
-  }
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
-  50% {
-    opacity: 0.8;
-    transform: translate(-50%, -50%) scale(0.95);
-  }
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
 .loadingTitle {
-  font-size: 28px;
+  font-size: 18px;
   font-weight: 600;
-  margin-bottom: 12px;
-  background: linear-gradient(90deg, #4a9eff 0%, #7ab8ff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  margin-bottom: 8px;
+  color: white;
 }
 
 .loadingSubtitle {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 40px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  margin-bottom: 32px;
 }
 
 .loadingProgress {
-  width: 300px;
+  width: 240px;
   margin: 0 auto;
 }
 
 .progressBar {
-  height: 4px;
+  height: 3px;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
+  border-radius: 4px;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .progressFill {
   height: 100%;
-  background: linear-gradient(90deg, #4a9eff 0%, #7ab8ff 100%);
-  border-radius: 2px;
+  background: var(--theme-primary, #3b82f6);
+  border-radius: 4px;
   transition: width 0.3s ease;
-  animation: shimmer 2s ease-in-out infinite;
+  position: relative;
+}
+
+.progressFill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 1.5s infinite;
 }
 
 @keyframes shimmer {
-  0% {
-    opacity: 0.8;
-  }
-  50% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0.8;
-  }
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .loadingSteps {
   display: flex;
-  justify-content: space-between;
-  margin-bottom: 20px;
+  justify-content: center;
+  gap: 24px;
+  margin-bottom: 16px;
 }
 
 .loadingStep {
-  flex: 1;
-  text-align: center;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.4);
-  transition: color 0.3s ease;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.loadingStep::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  margin-right: 6px;
+  vertical-align: middle;
+  transition: all 0.2s ease;
 }
 
 .loadingStep.active {
-  color: #4a9eff;
-  font-weight: 500;
+  color: var(--theme-primary, #3b82f6);
+}
+
+.loadingStep.active::before {
+  background: var(--theme-primary, #3b82f6);
+  box-shadow: 0 0 8px var(--theme-primary, #3b82f6);
 }
 
 .loadingStep.completed {
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.loadingStep.completed::before {
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .loadingStatus {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
-  margin-top: 10px;
-  min-height: 20px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.4);
+  min-height: 18px;
 }
 
 .modal {
