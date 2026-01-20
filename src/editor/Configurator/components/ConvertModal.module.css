@@ -353,7 +353,7 @@
 
 .renderMode.active {
   border-color: var(--theme-primary);
-  background: var(--theme-primary-light);
+  background: var(--theme-surface);
 }
 
 .renderMode input[type="radio"] {
