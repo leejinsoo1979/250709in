@@ -141,10 +141,10 @@ const parseDxfTexts = (dxfString: string): ParsedText[] => {
   return texts;
 };
 
-// 뷰 제목
+// 뷰 제목 (jsPDF는 기본적으로 한글 미지원, 영문 사용)
 const getViewTitle = (v: PdfViewDirection): string => {
-  const titles: Record<string, string> = { front: '정면도', left: '좌측면도', right: '우측면도', top: '평면도' };
-  return titles[v] || '도면';
+  const titles: Record<string, string> = { front: 'Front View', left: 'Left Side View', right: 'Right Side View', top: 'Top View' };
+  return titles[v] || 'Drawing';
 };
 
 // 측면뷰 필터
