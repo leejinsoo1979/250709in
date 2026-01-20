@@ -7,8 +7,7 @@ import { usePDFExport } from '@/editor/shared/hooks/usePDFExport';
 import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { extractViewData, generatePdfFromViewData, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
-import { sceneHolder } from '@/editor/shared/viewer3d/sceneHolder';
+import { downloadDxfAsPdf, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
 
 interface ConvertModalProps {
   isOpen: boolean;
@@ -311,11 +310,12 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
 
     try {
       // 와이어프레임 모드: DXF 기반 벡터 PDF 사용 (CAD처럼 깔끔한 벡터 도면)
+      // DXF 내보내기와 완전히 동일한 generateDxfFromData 함수 사용
       if (renderMode === 'wireframe') {
         console.log('🔧 DXF→PDF 변환 시작...');
         setIsCapturing(true);
-        setLoadingProgress(10);
-        setLoadingStatus('도면 추출 준비 중...');
+        setLoadingProgress(30);
+        setLoadingStatus('도면 생성 중...');
 
         // 선택된 뷰를 PdfViewDirection으로 변환
         const pdfViews: PdfViewDirection[] = [];
@@ -329,69 +329,14 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
           pdfViews.push('front');
         }
 
-        // 현재 UI 상태 저장
-        const {
-          viewMode: originalViewMode,
-          view2DDirection: originalView2DDirection,
-          renderMode: originalRenderMode,
-          setViewMode,
-          setView2DDirection,
-          setRenderMode: setUIRenderMode
-        } = useUIStore.getState();
+        setLoadingProgress(60);
 
-        const scene = sceneHolder.getScene();
-        if (!scene) {
-          console.error('❌ 씬을 찾을 수 없습니다');
-          setIsCapturing(false);
-          alert('씬을 찾을 수 없습니다.');
-          return;
-        }
+        // DXF 내보내기와 동일한 방식으로 PDF 생성
+        // generateDxfFromData를 직접 호출하여 DXF 문자열 생성 후 PDF로 변환
+        await downloadDxfAsPdf(spaceInfo, placedModules, pdfViews);
 
-        // 각 뷰별로 씬을 전환하고 데이터 추출
-        const viewDataList: Array<{ viewDirection: PdfViewDirection; lines: any[]; texts: any[] }> = [];
-
-        try {
-          for (let i = 0; i < pdfViews.length; i++) {
-            const viewDirection = pdfViews[i];
-            const progress = 20 + (i / pdfViews.length) * 60;
-            setLoadingProgress(progress);
-            setLoadingStatus(`${viewDirection === 'front' ? '정면도' : viewDirection === 'top' ? '평면도' : viewDirection === 'left' ? '좌측면도' : '우측면도'} 추출 중...`);
-
-            // 씬을 해당 2D 모드로 전환
-            setViewMode('2D');
-            setView2DDirection(viewDirection);
-            setUIRenderMode('wireframe');
-
-            // 씬이 업데이트될 시간 대기 (2D 요소들이 렌더링되어야 함)
-            await new Promise(resolve => setTimeout(resolve, 800));
-
-            // 씬에서 데이터 추출
-            const viewData = extractViewData(scene, spaceInfo, placedModules, viewDirection);
-            console.log(`📐 ${viewDirection}: ${viewData.lines.length}개 라인 추출됨`);
-
-            viewDataList.push({
-              viewDirection,
-              lines: viewData.lines,
-              texts: viewData.texts
-            });
-          }
-
-          setLoadingProgress(90);
-          setLoadingStatus('PDF 생성 중...');
-
-          // PDF 생성
-          generatePdfFromViewData(viewDataList, spaceInfo);
-
-          setLoadingProgress(100);
-          console.log('✅ DXF→PDF 다운로드 성공');
-
-        } finally {
-          // 원래 UI 상태 복원
-          setViewMode(originalViewMode);
-          setView2DDirection(originalView2DDirection);
-          setUIRenderMode(originalRenderMode);
-          console.log('🔄 UI 상태 복원 완료');
-        }
+        setLoadingProgress(100);
+        console.log('✅ DXF→PDF 다운로드 성공');
 
         setTimeout(() => {
           setIsCapturing(false);

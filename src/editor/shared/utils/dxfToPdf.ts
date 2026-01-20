@@ -1,42 +1,144 @@
 /**
  * DXF 데이터를 PDF로 변환
- * 기존 DXF 생성 로직(dxfDataRenderer.ts)을 그대로 활용
+ *
+ * DXF 내보내기(dxfFromScene.ts)와 완전히 동일한 방식 사용:
+ * - generateDxfFromData를 호출하여 씬에서 라인/텍스트 추출
+ * - 추출된 DXF 데이터를 파싱하여 PDF로 변환
+ *
+ * 주의: 이 함수는 현재 씬 상태에서 추출하므로,
+ * 호출 전에 씬이 적절한 2D 모드로 설정되어 있어야 함
  */
 
 import { jsPDF } from 'jspdf';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
 import { PlacedModule } from '@/editor/shared/furniture/types';
 import {
-  extractFromScene,
-  generateExternalDimensions,
+  generateDxfFromData,
   type ViewDirection,
-  type SideViewFilter,
-  type DxfLine,
-  type DxfText
+  type SideViewFilter
 } from './dxfDataRenderer';
-import { sceneHolder } from '../viewer3d/sceneHolder';
 
 // PDF 뷰 타입
 export type PdfViewDirection = 'front' | 'left' | 'right' | 'top';
 
-// DXF ACI 색상 → hex
-const aciToHex = (aci: number): string => {
-  const aciColors: Record<number, string> = {
-    1: '#FF0000', 2: '#FFFF00', 3: '#00AA00', 4: '#00FFFF',
-    5: '#0000FF', 6: '#FF00FF', 7: '#333333', 8: '#666666',
-    9: '#999999', 30: '#FF4500', 250: '#444444', 254: '#CCCCCC',
-  };
-  return aciColors[aci] || '#333333';
+// DXF에서 추출한 라인 정보
+interface ParsedLine {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+  layer: string;
+}
+
+// DXF에서 추출한 텍스트 정보
+interface ParsedText {
+  x: number;
+  y: number;
+  text: string;
+  height: number;
+  layer: string;
+}
+
+/**
+ * DXF 문자열에서 LINE 엔티티 파싱
+ */
+const parseDxfLines = (dxfString: string): ParsedLine[] => {
+  const lines: ParsedLine[] = [];
+  const entitySection = dxfString.split('ENTITIES')[1]?.split('ENDSEC')[0];
+  if (!entitySection) return lines;
+
+  // LINE 엔티티 찾기
+  const lineRegex = /\s+0\nLINE\n([\s\S]*?)(?=\s+0\n(?:LINE|TEXT|MTEXT|ENDSEC))/g;
+  let match;
+
+  while ((match = lineRegex.exec(entitySection)) !== null) {
+    const lineData = match[1];
+
+    // 레이어 추출
+    const layerMatch = lineData.match(/\s+8\n([^\n]+)/);
+    const layer = layerMatch ? layerMatch[1].trim() : 'DEFAULT';
+
+    // 좌표 추출
+    const x1Match = lineData.match(/\s+10\n([-\d.]+)/);
+    const y1Match = lineData.match(/\s+20\n([-\d.]+)/);
+    const x2Match = lineData.match(/\s+11\n([-\d.]+)/);
+    const y2Match = lineData.match(/\s+21\n([-\d.]+)/);
+
+    if (x1Match && y1Match && x2Match && y2Match) {
+      lines.push({
+        x1: parseFloat(x1Match[1]),
+        y1: parseFloat(y1Match[1]),
+        x2: parseFloat(x2Match[1]),
+        y2: parseFloat(y2Match[1]),
+        layer
+      });
+    }
+  }
+
+  return lines;
 };
 
-// hex → RGB
-const hexToRgb = (hex: string): { r: number; g: number; b: number } => {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result ? {
-    r: parseInt(result[1], 16),
-    g: parseInt(result[2], 16),
-    b: parseInt(result[3], 16)
-  } : { r: 0, g: 0, b: 0 };
+/**
+ * DXF 문자열에서 TEXT/MTEXT 엔티티 파싱
+ */
+const parseDxfTexts = (dxfString: string): ParsedText[] => {
+  const texts: ParsedText[] = [];
+  const entitySection = dxfString.split('ENTITIES')[1]?.split('ENDSEC')[0];
+  if (!entitySection) return texts;
+
+  // TEXT 엔티티 찾기
+  const textRegex = /\s+0\nTEXT\n([\s\S]*?)(?=\s+0\n(?:LINE|TEXT|MTEXT|ENDSEC))/g;
+  let match;
+
+  while ((match = textRegex.exec(entitySection)) !== null) {
+    const textData = match[1];
+
+    // 레이어 추출
+    const layerMatch = textData.match(/\s+8\n([^\n]+)/);
+    const layer = layerMatch ? layerMatch[1].trim() : 'DEFAULT';
+
+    // 좌표 추출
+    const xMatch = textData.match(/\s+10\n([-\d.]+)/);
+    const yMatch = textData.match(/\s+20\n([-\d.]+)/);
+    const heightMatch = textData.match(/\s+40\n([-\d.]+)/);
+    const contentMatch = textData.match(/\s+1\n([^\n]+)/);
+
+    if (xMatch && yMatch && contentMatch) {
+      texts.push({
+        x: parseFloat(xMatch[1]),
+        y: parseFloat(yMatch[1]),
+        text: contentMatch[1].trim(),
+        height: heightMatch ? parseFloat(heightMatch[1]) : 25,
+        layer
+      });
+    }
+  }
+
+  // MTEXT 엔티티도 찾기
+  const mtextRegex = /\s+0\nMTEXT\n([\s\S]*?)(?=\s+0\n(?:LINE|TEXT|MTEXT|ENDSEC))/g;
+  while ((match = mtextRegex.exec(entitySection)) !== null) {
+    const textData = match[1];
+
+    const layerMatch = textData.match(/\s+8\n([^\n]+)/);
+    const layer = layerMatch ? layerMatch[1].trim() : 'DEFAULT';
+
+    const xMatch = textData.match(/\s+10\n([-\d.]+)/);
+    const yMatch = textData.match(/\s+20\n([-\d.]+)/);
+    const heightMatch = textData.match(/\s+40\n([-\d.]+)/);
+    const contentMatch = textData.match(/\s+1\n([^\n]+)/);
+
+    if (xMatch && yMatch && contentMatch) {
+      texts.push({
+        x: parseFloat(xMatch[1]),
+        y: parseFloat(yMatch[1]),
+        text: contentMatch[1].trim(),
+        height: heightMatch ? parseFloat(heightMatch[1]) : 25,
+        layer
+      });
+    }
+  }
+
+  return texts;
 };
 
 // 뷰 제목
@@ -57,8 +159,8 @@ const getSideViewFilter = (v: PdfViewDirection): SideViewFilter => {
  */
 const renderToPdf = (
   pdf: jsPDF,
-  lines: DxfLine[],
-  texts: DxfText[],
+  lines: ParsedLine[],
+  texts: ParsedText[],
   spaceInfo: SpaceInfo,
   viewDirection: PdfViewDirection,
   pageWidth: number,
@@ -86,7 +188,10 @@ const renderToPdf = (
     maxY = Math.max(maxY, t.y);
   });
 
-  if (minX === Infinity) return;
+  if (minX === Infinity) {
+    console.warn(`⚠️ ${viewDirection}: 렌더링할 데이터가 없습니다`);
+    return;
+  }
 
   const dxfWidth = maxX - minX;
   const dxfHeight = maxY - minY;
@@ -127,102 +232,47 @@ const renderToPdf = (
 };
 
 /**
- * 단일 뷰에 대한 DXF 데이터 추출 (씬이 이미 해당 2D 모드로 설정된 상태에서 호출)
+ * 단일 뷰에 대한 DXF 생성 및 파싱
+ * generateDxfFromData를 직접 호출하여 DXF 문자열 생성 후 파싱
  */
-export const extractViewData = (
-  scene: THREE.Scene,
+export const generateViewDataFromDxf = (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
   viewDirection: PdfViewDirection
-): { lines: DxfLine[]; texts: DxfText[] } => {
+): { lines: ParsedLine[]; texts: ParsedText[] } => {
   const sideViewFilter = getSideViewFilter(viewDirection);
-  const extracted = extractFromScene(scene, viewDirection as ViewDirection, null);
 
-  console.log(`📐 ${viewDirection}: 씬에서 ${extracted.lines.length}개 라인, ${extracted.texts.length}개 텍스트 추출됨`);
+  console.log(`📐 ${viewDirection}: generateDxfFromData 호출...`);
 
-  let lines: DxfLine[];
-  let texts: DxfText[];
+  try {
+    // DXF 문자열 생성 (generateDXFFromScene과 동일한 방식)
+    const dxfString = generateDxfFromData(
+      spaceInfo,
+      placedModules,
+      viewDirection as ViewDirection,
+      sideViewFilter
+    );
 
-  // 측면뷰: generateDxfFromData와 동일한 로직 (씬에서 추출 + 좌표 정규화 + 치수선)
-  if (viewDirection === 'left' || viewDirection === 'right') {
-    // 1. 씬에서 추출한 라인 중 DIMENSIONS 레이어만 제외 (가구 형상 유지)
-    let filteredLines = extracted.lines.filter(line => line.layer !== 'DIMENSIONS');
+    // DXF 파싱
+    const lines = parseDxfLines(dxfString);
+    const texts = parseDxfTexts(dxfString);
 
-    // 2. X 좌표 정규화 + 좌우 반전 (generateDxfFromData와 동일)
-    if (filteredLines.length > 0) {
-      let minX = Infinity, maxX = -Infinity;
-      filteredLines.forEach(line => {
-        minX = Math.min(minX, line.x1, line.x2);
-        maxX = Math.max(maxX, line.x1, line.x2);
-      });
+    console.log(`📐 ${viewDirection}: DXF에서 ${lines.length}개 라인, ${texts.length}개 텍스트 파싱됨`);
 
-      const furnitureWidth = maxX - minX;
-      filteredLines = filteredLines.map(line => ({
-        ...line,
-        x1: furnitureWidth - (line.x1 - minX),
-        x2: furnitureWidth - (line.x2 - minX)
-      }));
-
-      // 3. 정규화 후 실제 가구 X 범위 계산
-      let actualMinX = Infinity, actualMaxX = -Infinity;
-      filteredLines.forEach(line => {
-        actualMinX = Math.min(actualMinX, line.x1, line.x2);
-        actualMaxX = Math.max(actualMaxX, line.x1, line.x2);
-      });
-      const actualFurnitureWidth = actualMaxX - actualMinX;
-
-      // 4. 외부 치수선 생성 (dimensionsOnly=true)
-      const dimensions = generateExternalDimensions(
-        spaceInfo, placedModules, viewDirection as ViewDirection, sideViewFilter,
-        true, actualFurnitureWidth, actualMinX, actualMaxX
-      );
-
-      lines = [...filteredLines, ...dimensions.lines];
-      texts = [...dimensions.texts];
-    } else {
-      lines = [];
-      texts = [];
-    }
-  } else {
-    // 정면뷰/탑뷰: 기존 방식
-    const dimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection as ViewDirection, sideViewFilter);
-    lines = [...extracted.lines, ...dimensions.lines];
-    texts = [...extracted.texts, ...dimensions.texts];
+    return { lines, texts };
+  } catch (error) {
+    console.error(`❌ ${viewDirection}: DXF 생성 실패`, error);
+    return { lines: [], texts: [] };
   }
-
-  return { lines, texts };
-};
-
-// Three.js 타입 import
-import * as THREE from 'three';
-
-/**
- * 미리 추출된 뷰 데이터들을 PDF로 변환
- * ConvertModal에서 각 뷰마다 씬을 전환하고 추출한 데이터를 전달받음
- */
-export const generatePdfFromViewData = (
-  viewDataList: Array<{ viewDirection: PdfViewDirection; lines: DxfLine[]; texts: DxfText[] }>,
-  spaceInfo: SpaceInfo
-): void => {
-  console.log('📄 PDF 생성 시작...');
-
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-  const pageWidth = pdf.internal.pageSize.getWidth();
-  const pageHeight = pdf.internal.pageSize.getHeight();
-
-  viewDataList.forEach((viewData, index) => {
-    if (index > 0) pdf.addPage();
-
-    console.log(`📐 ${viewData.viewDirection}: ${viewData.lines.length}개 라인, ${viewData.texts.length}개 텍스트`);
-    renderToPdf(pdf, viewData.lines, viewData.texts, spaceInfo, viewData.viewDirection, pageWidth, pageHeight);
-  });
-
-  pdf.save(`도면_${new Date().toISOString().slice(0, 10)}.pdf`);
-  console.log('✅ PDF 다운로드 완료');
 };
 
 /**
- * DXF 데이터를 PDF로 내보내기 (레거시 - 동기적 추출)
+ * DXF 데이터를 PDF로 내보내기
+ *
+ * DXF 내보내기(useDXFExport)와 완전히 동일한 방식:
+ * - 각 뷰마다 generateDxfFromData 호출
+ * - 생성된 DXF 문자열을 파싱하여 PDF에 렌더링
+ *
  * 주의: 이 함수는 현재 씬 상태에서 추출하므로,
  * 호출 전에 씬이 적절한 2D 모드로 설정되어 있어야 함
  */
@@ -231,13 +281,8 @@ export const downloadDxfAsPdf = async (
   placedModules: PlacedModule[],
   views: PdfViewDirection[] = ['front', 'top', 'left', 'right']
 ): Promise<void> => {
-  const scene = sceneHolder.getScene();
-  if (!scene) {
-    console.error('❌ 씬을 찾을 수 없습니다');
-    return;
-  }
-
   console.log('📄 DXF→PDF 변환 시작...');
+  console.log(`📊 변환할 뷰: ${views.join(', ')}`);
 
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -246,8 +291,10 @@ export const downloadDxfAsPdf = async (
   views.forEach((viewDirection, index) => {
     if (index > 0) pdf.addPage();
 
-    const { lines, texts } = extractViewData(scene, spaceInfo, placedModules, viewDirection);
-    console.log(`📐 ${viewDirection}: ${lines.length}개 라인, ${texts.length}개 텍스트`);
+    // DXF 생성 및 파싱
+    const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, viewDirection);
+
+    console.log(`📐 ${viewDirection}: 최종 ${lines.length}개 라인, ${texts.length}개 텍스트`);
     renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight);
   });
 
