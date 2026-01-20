@@ -2088,11 +2088,31 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 기둥 침범에 따른 새로운 가구 경계 계산
     const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
     
-    // 기둥 A(deep) 등에 대해 폭 조정 방식 적용 (기둥 C는 제외 - 깊이 조정)
     // 기둥 침범 시에는 가구 폭을 조정하여 기둥과 겹치지 않도록 함
     if (columnProcessingMethod === 'width-adjustment') {
-      // 일반 폭 조정 방식: 가구 크기와 위치 조정
-      // 기둥 침범 시에는 항상 폭 조정
+      // 기둥 C(300mm)에서 'front' 모드: 폭은 슬롯 전체, 깊이만 줄임, 기둥 앞으로 배치
+      if (slotInfo.columnType === 'medium' && placedModule.columnPlacementMode === 'front') {
+        const slotDepth = 730;
+        const columnDepth = slotInfo.column?.depth || 300;
+        const remainingDepth = slotDepth - columnDepth; // 430mm
+
+        furnitureWidthMm = indexing.columnWidth; // 슬롯 전체 너비
+        adjustedDepthMm = remainingDepth; // 깊이 조정
+        adjustedPosition = {
+          ...adjustedPosition,
+          x: originalSlotCenterX // 슬롯 중심
+        };
+
+        console.log('🟢 [Column C front mode] 폭/깊이 조정:', {
+          slotWidth: indexing.columnWidth,
+          furnitureWidthMm,
+          adjustedDepthMm,
+          columnDepth,
+          position: adjustedPosition.x
+        });
+      } else {
+        // 일반 폭 조정 방식: 가구 크기와 위치 조정
+        // 기둥 침범 시에는 항상 폭 조정
       const slotHalfWidthM = (slotWidthMmForBounds * 0.01) / 2;
       let furnitureHalfWidthM = (furnitureBounds.renderWidth * 0.01) / 2;
       const originalHalfWidthM = furnitureHalfWidthM;
@@ -2158,7 +2178,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       // 기둥 변경으로 인한 폭 조정이 필요한 경우 실시간 업데이트
       if (!isFurnitureDragging && (
-        placedModule.adjustedWidth !== furnitureWidthMm || 
+        placedModule.adjustedWidth !== furnitureWidthMm ||
         placedModule.position.x !== adjustedPosition.x
       )) {
         updatePlacedModule(placedModule.id, {
@@ -2175,6 +2195,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           }
         });
       }
+      } // end of else (기둥 측면 배치 모드)
     } else if (columnProcessingMethod === 'depth-adjustment') {
       // 깊이 조정 방식 (기둥 C(300mm) 및 얕은 기둥)
       const slotDepth = 730; // 슬롯 기본 깊이
