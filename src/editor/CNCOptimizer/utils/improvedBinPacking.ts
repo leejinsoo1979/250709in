@@ -102,11 +102,20 @@ export class MaxRectsPacker {
       };
       
       this.placedPanels.push(placed);
-      
-      // 자유 공간 업데이트
-      this.splitFreeRect(bestFreeRect, bestFitIndex, actualWidth + this.kerf, actualHeight + this.kerf);
+
+      // 자유 공간 업데이트 - 표준 MaxRects 방식
+      // 배치된 패널 영역 (kerf 포함)
+      const placedRect: FreeRect = {
+        x: bestFreeRect.x,
+        y: bestFreeRect.y,
+        width: actualWidth + this.kerf,
+        height: actualHeight + this.kerf
+      };
+
+      // 모든 자유 공간에 대해 배치된 영역과 겹치는 부분 분할
+      this.splitAllFreeRects(placedRect);
       this.pruneFreeRects();
-      
+
       return placed;
     }
     
@@ -114,41 +123,72 @@ export class MaxRectsPacker {
   }
   
   /**
-   * 자유 공간을 분할
+   * 두 사각형이 겹치는지 확인
    */
-  private splitFreeRect(freeRect: FreeRect, index: number, usedWidth: number, usedHeight: number) {
-    // 기존 자유 공간 제거
-    this.freeRects.splice(index, 1);
-    
-    // 오른쪽 남은 공간
-    if (freeRect.width > usedWidth) {
-      this.freeRects.push({
-        x: freeRect.x + usedWidth,
-        y: freeRect.y,
-        width: freeRect.width - usedWidth,
-        height: usedHeight
-      });
+  private rectsIntersect(a: FreeRect, b: FreeRect): boolean {
+    return !(a.x >= b.x + b.width ||
+             a.x + a.width <= b.x ||
+             a.y >= b.y + b.height ||
+             a.y + a.height <= b.y);
+  }
+
+  /**
+   * 표준 MaxRects 알고리즘 - 모든 자유 공간에 대해 배치된 영역과 겹치는 부분 분할
+   */
+  private splitAllFreeRects(placedRect: FreeRect) {
+    const newFreeRects: FreeRect[] = [];
+
+    for (const freeRect of this.freeRects) {
+      // 겹치지 않으면 그대로 유지
+      if (!this.rectsIntersect(freeRect, placedRect)) {
+        newFreeRects.push(freeRect);
+        continue;
+      }
+
+      // 겹치는 경우: 최대 4개의 새 사각형으로 분할
+
+      // 왼쪽 부분 (placedRect 왼쪽에 남는 공간)
+      if (placedRect.x > freeRect.x) {
+        newFreeRects.push({
+          x: freeRect.x,
+          y: freeRect.y,
+          width: placedRect.x - freeRect.x,
+          height: freeRect.height
+        });
+      }
+
+      // 오른쪽 부분 (placedRect 오른쪽에 남는 공간)
+      if (placedRect.x + placedRect.width < freeRect.x + freeRect.width) {
+        newFreeRects.push({
+          x: placedRect.x + placedRect.width,
+          y: freeRect.y,
+          width: (freeRect.x + freeRect.width) - (placedRect.x + placedRect.width),
+          height: freeRect.height
+        });
+      }
+
+      // 아래쪽 부분 (placedRect 아래에 남는 공간)
+      if (placedRect.y > freeRect.y) {
+        newFreeRects.push({
+          x: freeRect.x,
+          y: freeRect.y,
+          width: freeRect.width,
+          height: placedRect.y - freeRect.y
+        });
+      }
+
+      // 위쪽 부분 (placedRect 위에 남는 공간)
+      if (placedRect.y + placedRect.height < freeRect.y + freeRect.height) {
+        newFreeRects.push({
+          x: freeRect.x,
+          y: placedRect.y + placedRect.height,
+          width: freeRect.width,
+          height: (freeRect.y + freeRect.height) - (placedRect.y + placedRect.height)
+        });
+      }
     }
-    
-    // 위쪽 남은 공간
-    if (freeRect.height > usedHeight) {
-      this.freeRects.push({
-        x: freeRect.x,
-        y: freeRect.y + usedHeight,
-        width: freeRect.width,
-        height: freeRect.height - usedHeight
-      });
-    }
-    
-    // 오른쪽 위 코너 (더 큰 공간)
-    if (freeRect.width > usedWidth && freeRect.height > usedHeight) {
-      this.freeRects.push({
-        x: freeRect.x + usedWidth,
-        y: freeRect.y + usedHeight,
-        width: freeRect.width - usedWidth,
-        height: freeRect.height - usedHeight
-      });
-    }
+
+    this.freeRects = newFreeRects;
   }
   
   /**
