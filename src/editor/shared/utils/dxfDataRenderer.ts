@@ -110,7 +110,7 @@ export type ViewDirection = 'front' | 'left' | 'right' | 'top';
 // 측면뷰 필터링 타입: 좌측뷰는 leftmost 가구만, 우측뷰는 rightmost 가구만
 export type SideViewFilter = 'all' | 'leftmost' | 'rightmost';
 
-interface DxfLine {
+export interface DxfLine {
   x1: number;
   y1: number;
   x2: number;
@@ -119,7 +119,7 @@ interface DxfLine {
   color: number; // DXF ACI color code
 }
 
-interface DxfText {
+export interface DxfText {
   x: number;
   y: number;
   text: string;
@@ -1650,8 +1650,9 @@ const aciToLayerName = (aciColor: number): string => {
 /**
  * 외부 치수선 생성 (spaceInfo + placedModules 기반)
  * 2D 화면에 표시되는 모든 치수선을 DXF에 직접 생성
+ * PDF 내보내기에서도 재사용
  */
-const generateExternalDimensions = (
+export const generateExternalDimensions = (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
   viewDirection: ViewDirection,

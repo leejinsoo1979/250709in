@@ -7,7 +7,7 @@ import { usePDFExport } from '@/editor/shared/hooks/usePDFExport';
 import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
-import { downloadVectorPDF, type ViewDirection } from '@/editor/shared/utils/vectorPdfExport';
+import { downloadDxfAsPdf, type PdfViewDirection } from '@/editor/shared/utils/dxfToPdf';
 
 interface ConvertModalProps {
   isOpen: boolean;
@@ -309,30 +309,30 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     }
 
     try {
-      // 와이어프레임 모드: 벡터 PDF 사용 (CAD처럼 깔끔한 벡터 도면)
+      // 와이어프레임 모드: DXF 기반 벡터 PDF 사용 (CAD처럼 깔끔한 벡터 도면)
       if (renderMode === 'wireframe') {
-        console.log('🔧 벡터 PDF 내보내기 시작...');
+        console.log('🔧 DXF→PDF 변환 시작...');
         setIsCapturing(true);
         setLoadingProgress(30);
 
-        // 선택된 뷰를 ViewDirection으로 변환
-        const vectorViews: ViewDirection[] = [];
-        if (selectedViews['2d-front']) vectorViews.push('front');
-        if (selectedViews['2d-top']) vectorViews.push('top');
-        if (selectedViews['2d-left']) vectorViews.push('left');
-        if (selectedViews['2d-right']) vectorViews.push('right');
+        // 선택된 뷰를 PdfViewDirection으로 변환
+        const pdfViews: PdfViewDirection[] = [];
+        if (selectedViews['2d-front']) pdfViews.push('front');
+        if (selectedViews['2d-top']) pdfViews.push('top');
+        if (selectedViews['2d-left']) pdfViews.push('left');
+        if (selectedViews['2d-right']) pdfViews.push('right');
 
         // 2D 뷰가 선택되지 않았으면 정면도 기본 추가
-        if (vectorViews.length === 0) {
-          vectorViews.push('front');
+        if (pdfViews.length === 0) {
+          pdfViews.push('front');
         }
 
         setLoadingProgress(60);
 
-        await downloadVectorPDF(spaceInfo, placedModules, vectorViews);
+        await downloadDxfAsPdf(spaceInfo, placedModules, pdfViews);
 
         setLoadingProgress(100);
-        console.log('✅ 벡터 PDF 다운로드 성공');
+        console.log('✅ DXF→PDF 다운로드 성공');
 
         setTimeout(() => {
           setIsCapturing(false);
