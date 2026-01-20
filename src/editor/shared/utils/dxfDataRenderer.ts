@@ -1882,7 +1882,7 @@ const generateExternalDimensions = (
         });
         texts.push({
           x: (moduleLeftX + moduleRightX) / 2, y: dim3Y + 15,
-          text: `${moduleWidth}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
+          text: `${Math.round(moduleWidth)}`, height: 20, color: dimensionColor, layer: 'DIMENSIONS'
         });
       });
     } else if (spaceInfo.columns && spaceInfo.columns.length > 0) {
@@ -2168,7 +2168,10 @@ const generateExternalDimensions = (
 
     if (placedModules && placedModules.length > 0) {
       placedModules.forEach((module) => {
-        const moduleWidth = module.customWidth || 600;
+        // 실제 가구 폭 계산 (CleanCAD2D.tsx와 동일한 우선순위)
+        const originalModuleData = getModuleById(module.moduleId);
+        const originalWidth = originalModuleData?.dimensions?.width || 600;
+        const moduleWidth = module.customWidth || module.adjustedWidth || originalWidth;
         const moduleX = module.position?.x || 0;
         const moduleLeftX = (moduleX * 100) - moduleWidth / 2;  // position.x는 meter 단위
         const moduleRightX = (moduleX * 100) + moduleWidth / 2;
@@ -2191,7 +2194,7 @@ const generateExternalDimensions = (
         // 가구 너비 텍스트
         texts.push({
           x: (moduleLeftX + moduleRightX) / 2, y: dim2Y + 20,
-          text: `${moduleWidth}`, height: 20, color: dimColor, layer: 'DIMENSIONS'
+          text: `${Math.round(moduleWidth)}`, height: 20, color: dimColor, layer: 'DIMENSIONS'
         });
       });
     }
