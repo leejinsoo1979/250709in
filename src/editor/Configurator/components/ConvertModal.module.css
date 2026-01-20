@@ -366,6 +366,7 @@
 
 .renderModeContent {
   flex: 1;
+  user-select: none;
 }
 
 .renderModeContent h4 {
@@ -373,6 +374,7 @@
   font-size: 16px;
   font-weight: 600;
   color: var(--theme-text);
+  user-select: none;
 }
 
 .renderModeContent p {
