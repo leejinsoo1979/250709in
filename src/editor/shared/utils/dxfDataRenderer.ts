@@ -1859,9 +1859,20 @@ const generateExternalDimensions = (
         // 실제 가구 폭 계산 (CleanCAD2D.tsx와 동일한 우선순위)
         // 1. customWidth (사용자 지정)
         // 2. adjustedWidth (기둥에 의한 조정)
-        // 3. 원본 모듈 dimensions.width
+        // 3. moduleId에서 폭 추출 (듀얼 가구: dual-xxx-1200 형태)
+        // 4. 원본 모듈 dimensions.width
         const originalModuleData = getModuleById(module.moduleId);
-        const originalWidth = originalModuleData?.dimensions?.width || 600;
+
+        // moduleId에서 폭 추출 시도 (예: dual-lower-cabinet-2tier-1200 -> 1200)
+        let widthFromId: number | undefined;
+        if (module.moduleId) {
+          const match = module.moduleId.match(/-(\d+)$/);
+          if (match) {
+            widthFromId = parseInt(match[1], 10);
+          }
+        }
+
+        const originalWidth = originalModuleData?.dimensions?.width || widthFromId || 600;
         const moduleWidth = module.customWidth || module.adjustedWidth || originalWidth;
         const moduleX = module.position?.x || 0;
         const moduleLeftX = (moduleX * 100) - moduleWidth / 2; // position.x는 meter 단위이므로 mm로 변환
@@ -2168,9 +2179,19 @@ const generateExternalDimensions = (
 
     if (placedModules && placedModules.length > 0) {
       placedModules.forEach((module) => {
-        // 실제 가구 폭 계산 (CleanCAD2D.tsx와 동일한 우선순위)
+        // 실제 가구 폭 계산 (정면도와 동일한 로직)
         const originalModuleData = getModuleById(module.moduleId);
-        const originalWidth = originalModuleData?.dimensions?.width || 600;
+
+        // moduleId에서 폭 추출 시도 (예: dual-lower-cabinet-2tier-1200 -> 1200)
+        let widthFromId: number | undefined;
+        if (module.moduleId) {
+          const match = module.moduleId.match(/-(\d+)$/);
+          if (match) {
+            widthFromId = parseInt(match[1], 10);
+          }
+        }
+
+        const originalWidth = originalModuleData?.dimensions?.width || widthFromId || 600;
         const moduleWidth = module.customWidth || module.adjustedWidth || originalWidth;
         const moduleX = module.position?.x || 0;
         const moduleLeftX = (moduleX * 100) - moduleWidth / 2;  // position.x는 meter 단위
