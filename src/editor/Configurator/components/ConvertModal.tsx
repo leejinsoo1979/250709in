@@ -7,6 +7,7 @@ import { usePDFExport } from '@/editor/shared/hooks/usePDFExport';
 import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
+import { downloadVectorPDF, type ViewDirection } from '@/editor/shared/utils/vectorPdfExport';
 
 interface ConvertModalProps {
   isOpen: boolean;
@@ -287,12 +288,12 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
 
   const handlePDFDownload = async () => {
     console.log('📄 PDF 다운로드 버튼 클릭됨');
-    
+
     if (!spaceInfo) {
       alert('공간 정보가 없습니다. 먼저 공간을 설정해주세요.');
       return;
     }
-    
+
     // 선택된 뷰만 필터링 및 올바른 ID로 매핑
     const viewsToExport = Object.entries(selectedViews)
       .filter(([_, selected]) => selected)
@@ -301,15 +302,48 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
         if (view === '3d') return '3d-front';
         return view;
       });
-    
+
     if (viewsToExport.length === 0) {
       alert('최소 하나 이상의 뷰를 선택해주세요.');
       return;
     }
-    
+
     try {
+      // 와이어프레임 모드: 벡터 PDF 사용 (CAD처럼 깔끔한 벡터 도면)
+      if (renderMode === 'wireframe') {
+        console.log('🔧 벡터 PDF 내보내기 시작...');
+        setIsCapturing(true);
+        setLoadingProgress(30);
+
+        // 선택된 뷰를 ViewDirection으로 변환
+        const vectorViews: ViewDirection[] = [];
+        if (selectedViews['2d-front']) vectorViews.push('front');
+        if (selectedViews['2d-top']) vectorViews.push('top');
+        if (selectedViews['2d-left']) vectorViews.push('left');
+        if (selectedViews['2d-right']) vectorViews.push('right');
+
+        // 2D 뷰가 선택되지 않았으면 정면도 기본 추가
+        if (vectorViews.length === 0) {
+          vectorViews.push('front');
+        }
+
+        setLoadingProgress(60);
+
+        await downloadVectorPDF(spaceInfo, placedModules, vectorViews);
+
+        setLoadingProgress(100);
+        console.log('✅ 벡터 PDF 다운로드 성공');
+
+        setTimeout(() => {
+          setIsCapturing(false);
+          onClose();
+        }, 500);
+        return;
+      }
+
+      // 솔리드 모드: 기존 캡처 기반 PDF
       const result = await exportToPDF(spaceInfo, placedModules, viewsToExport as any, renderMode);
-      
+
       if (result.success) {
         console.log('✅ PDF 다운로드 성공:', result.filename);
         // 모달 자동 닫기
@@ -322,6 +356,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       }
     } catch (error) {
       console.error('❌ PDF 다운로드 예외:', error);
+      setIsCapturing(false);
       alert('PDF 다운로드 중 오류가 발생했습니다.');
     }
   };
