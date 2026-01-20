@@ -68,27 +68,8 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
         <p className={styles.loadingSubtitle}>{isDXF ? 'DXF 도면 파일을 생성하고 있습니다' : '고품질 PDF 문서를 생성하고 있습니다'}</p>
         
         <div className={styles.loadingProgress}>
-          <div className={styles.loadingSteps}>
-            <div className={`${styles.loadingStep} ${loadingStep >= 1 ? styles.completed : ''} ${loadingStep === 0 ? styles.active : ''}`}>
-              준비
-            </div>
-            <div className={`${styles.loadingStep} ${loadingStep >= 2 ? styles.completed : ''} ${loadingStep === 1 ? styles.active : ''}`}>
-              캡처
-            </div>
-            <div className={`${styles.loadingStep} ${loadingStep >= 3 ? styles.completed : ''} ${loadingStep === 2 ? styles.active : ''}`}>
-              변환
-            </div>
-            <div className={`${styles.loadingStep} ${loadingStep >= 4 ? styles.completed : ''} ${loadingStep === 3 ? styles.active : ''}`}>
-              생성
-            </div>
-          </div>
-          
           <div className={styles.progressBar}>
             <div className={styles.progressFill} style={{ width: `${loadingProgress}%` }}></div>
-          </div>
-          
-          <div className={styles.loadingStatus}>
-            {loadingStatus}
           </div>
         </div>
       </div>

@@ -1856,7 +1856,13 @@ const generateExternalDimensions = (
     // placedModules가 있으면 개별 가구 폭 치수선
     if (placedModules && placedModules.length > 0) {
       placedModules.forEach((module) => {
-        const moduleWidth = module.customWidth || 600; // 기본 600mm
+        // 실제 가구 폭 계산 (CleanCAD2D.tsx와 동일한 우선순위)
+        // 1. customWidth (사용자 지정)
+        // 2. adjustedWidth (기둥에 의한 조정)
+        // 3. 원본 모듈 dimensions.width
+        const originalModuleData = getModuleById(module.moduleId);
+        const originalWidth = originalModuleData?.dimensions?.width || 600;
+        const moduleWidth = module.customWidth || module.adjustedWidth || originalWidth;
         const moduleX = module.position?.x || 0;
         const moduleLeftX = (moduleX * 100) - moduleWidth / 2; // position.x는 meter 단위이므로 mm로 변환
         const moduleRightX = (moduleX * 100) + moduleWidth / 2;
