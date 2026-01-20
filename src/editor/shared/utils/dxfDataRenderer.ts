@@ -969,6 +969,15 @@ const extractFromScene = (
       return;
     }
 
+    // 정면뷰에서 보강대 제외 (정면에서는 보이지 않음)
+    if (viewDirection === 'front') {
+      const lowerNameCheck = name.toLowerCase();
+      if (lowerNameCheck.includes('보강대') ||
+          lowerNameCheck.includes('reinforcement')) {
+        skippedByFilter++;
+        return;
+      }
+    }
 
     const lowerNameForFilter = name.toLowerCase();
 
