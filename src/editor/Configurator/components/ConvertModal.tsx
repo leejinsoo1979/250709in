@@ -3,7 +3,6 @@ import styles from './ConvertModal.module.css';
 import { PDFTemplatePreview } from '@/editor/shared/components/PDFTemplatePreview';
 import { useUIStore } from '@/store/uiStore';
 import { useTranslation } from '@/i18n/useTranslation';
-import { usePDFExport } from '@/editor/shared/hooks/usePDFExport';
 import { useDXFExport, type DrawingType } from '@/editor/shared/hooks/useDXFExport';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
@@ -32,7 +31,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
   
   // 내보내기 옵션 상태
   const [exportType, setExportType] = useState<'pdf' | 'dxf'>('pdf');
-  const [renderMode, setRenderMode] = useState<'solid' | 'wireframe'>('solid');
+  // PDF는 무조건 와이어프레임(벡터 도면)으로 내보내기
   const [selectedViews, setSelectedViews] = useState({
     '3d': true,
     '2d-top': true,
@@ -43,7 +42,6 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
   const [selectedDXFTypes, setSelectedDXFTypes] = useState<DrawingType[]>(['front', 'plan', 'sideLeft', 'sideRight']);
   
   // 내보내기 훅 사용
-  const { exportToPDF, isExporting: isPDFExporting } = usePDFExport();
   const { exportToZIP, canExportDXF, isExporting: isDXFExporting } = useDXFExport();
   const spaceInfo = useSpaceConfigStore((state) => state.spaceInfo);
   const placedModules = useFurnitureStore((state) => state.placedModules);
@@ -53,7 +51,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
   // 로딩 화면 컴포넌트 - DXF/PDF에 따라 다른 메시지 표시
   const LoadingScreen = () => {
     const isDXF = isDXFExporting;
-    console.log('🔍 LoadingScreen 렌더링:', { isDXF, isDXFExporting, isPDFExporting, isCapturing });
+    console.log('🔍 LoadingScreen 렌더링:', { isDXF, isDXFExporting, isCapturing });
     return (
     <div className={styles.loadingOverlay}>
       <div className={styles.loadingContent}>
@@ -309,55 +307,37 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
     }
 
     try {
-      // 와이어프레임 모드: DXF 기반 벡터 PDF 사용 (CAD처럼 깔끔한 벡터 도면)
+      // PDF는 무조건 2D 와이어프레임(벡터 도면)으로 내보내기
       // DXF 내보내기와 완전히 동일한 generateDxfFromData 함수 사용
-      if (renderMode === 'wireframe') {
-        console.log('🔧 DXF→PDF 변환 시작...');
-        setIsCapturing(true);
-        setLoadingProgress(30);
-        setLoadingStatus('도면 생성 중...');
+      console.log('🔧 DXF→PDF 변환 시작...');
+      setIsCapturing(true);
+      setLoadingProgress(30);
+      setLoadingStatus('도면 생성 중...');
 
-        // 선택된 뷰를 PdfViewDirection으로 변환
-        const pdfViews: PdfViewDirection[] = [];
-        if (selectedViews['2d-front']) pdfViews.push('front');
-        if (selectedViews['2d-top']) pdfViews.push('top');
-        if (selectedViews['2d-left']) pdfViews.push('left');
-        if (selectedViews['2d-right']) pdfViews.push('right');
+      // 선택된 뷰를 PdfViewDirection으로 변환
+      const pdfViews: PdfViewDirection[] = [];
+      if (selectedViews['2d-front']) pdfViews.push('front');
+      if (selectedViews['2d-top']) pdfViews.push('top');
+      if (selectedViews['2d-left']) pdfViews.push('left');
+      if (selectedViews['2d-right']) pdfViews.push('right');
 
-        // 2D 뷰가 선택되지 않았으면 정면도 기본 추가
-        if (pdfViews.length === 0) {
-          pdfViews.push('front');
-        }
-
-        setLoadingProgress(60);
-
-        // DXF 내보내기와 동일한 방식으로 PDF 생성
-        // generateDxfFromData를 직접 호출하여 DXF 문자열 생성 후 PDF로 변환
-        await downloadDxfAsPdf(spaceInfo, placedModules, pdfViews);
-
-        setLoadingProgress(100);
-        console.log('✅ DXF→PDF 다운로드 성공');
-
-        setTimeout(() => {
-          setIsCapturing(false);
-          onClose();
-        }, 500);
-        return;
+      // 2D 뷰가 선택되지 않았으면 정면도 기본 추가
+      if (pdfViews.length === 0) {
+        pdfViews.push('front');
       }
 
-      // 솔리드 모드: 기존 캡처 기반 PDF
-      const result = await exportToPDF(spaceInfo, placedModules, viewsToExport as any, renderMode);
+      setLoadingProgress(60);
 
-      if (result.success) {
-        console.log('✅ PDF 다운로드 성공:', result.filename);
-        // 모달 자동 닫기
-        setTimeout(() => {
-          onClose();
-        }, 1000);
-      } else {
-        console.error('❌ PDF 다운로드 실패:', result.message);
-        alert(`PDF 다운로드 실패: ${result.message}`);
-      }
+      // DXF 내보내기와 동일한 방식으로 PDF 생성
+      await downloadDxfAsPdf(spaceInfo, placedModules, pdfViews);
+
+      setLoadingProgress(100);
+      console.log('✅ PDF 다운로드 성공');
+
+      setTimeout(() => {
+        setIsCapturing(false);
+        onClose();
+      }, 500);
     } catch (error) {
       console.error('❌ PDF 다운로드 예외:', error);
       setIsCapturing(false);
@@ -368,7 +348,7 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
   return (
     <>
       {/* 로딩 화면 */}
-      {(isCapturing || isPDFExporting || isDXFExporting) && <LoadingScreen />}
+      {(isCapturing || isDXFExporting) && <LoadingScreen />}
       
       <div className={styles.overlay} onClick={onClose}>
         <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
@@ -460,39 +440,6 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
             {/* PDF 옵션 */}
             {exportType === 'pdf' && (
               <>
-                {/* 렌더링 모드 선택 */}
-                <div className={styles.section}>
-                  <h3 className={styles.sectionHeader}>렌더링 모드</h3>
-                  <div className={styles.renderModes}>
-                    <label className={`${styles.renderMode} ${renderMode === 'solid' ? styles.active : ''}`}>
-                      <input 
-                        type="radio"
-                        name="renderMode"
-                        value="solid"
-                        checked={renderMode === 'solid'}
-                        onChange={(e) => setRenderMode(e.target.value as 'solid' | 'wireframe')}
-                      />
-                      <div className={styles.renderModeContent}>
-                        <h4>솔리드</h4>
-                        <p>재질과 색상이 표현됩니다</p>
-                      </div>
-                    </label>
-                    <label className={`${styles.renderMode} ${renderMode === 'wireframe' ? styles.active : ''}`}>
-                      <input 
-                        type="radio"
-                        name="renderMode"
-                        value="wireframe"
-                        checked={renderMode === 'wireframe'}
-                        onChange={(e) => setRenderMode(e.target.value as 'solid' | 'wireframe')}
-                      />
-                      <div className={styles.renderModeContent}>
-                        <h4>와이어프레임</h4>
-                        <p>구조만 표현됩니다</p>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-
                 {/* 포함할 뷰 선택 */}
                 <div className={styles.section}>
                   <h3 className={styles.sectionHeader}>포함할 뷰 선택</h3>
@@ -548,9 +495,9 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
                 <button 
                   className={styles.downloadButton}
                   onClick={handlePDFDownload}
-                  disabled={isPDFExporting || Object.values(selectedViews).every(v => !v)}
+                  disabled={isCapturing || Object.values(selectedViews).every(v => !v)}
                 >
-                  {isPDFExporting ? '처리 중...' : `PDF 다운로드 (${Object.values(selectedViews).filter(v => v).length}개 뷰)`}
+                  {isCapturing ? '처리 중...' : `PDF 다운로드 (${Object.values(selectedViews).filter(v => v).length}개 뷰)`}
                 </button>
               </>
             )}
