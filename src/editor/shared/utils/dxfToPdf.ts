@@ -128,7 +128,7 @@ const renderToPdf = (
 
 /**
  * DXF 데이터를 PDF로 내보내기
- * dxfDataRenderer.ts의 extractFromScene + generateExternalDimensions 사용
+ * dxfDataRenderer.ts의 generateDxfFromData와 동일한 로직 사용
  */
 export const downloadDxfAsPdf = async (
   spaceInfo: SpaceInfo,
@@ -151,16 +151,60 @@ export const downloadDxfAsPdf = async (
     if (index > 0) pdf.addPage();
 
     const sideViewFilter = getSideViewFilter(viewDirection);
-
-    // dxfDataRenderer.ts의 함수들 직접 사용 (DXF 내보내기와 동일한 로직)
     const extracted = extractFromScene(scene, viewDirection as ViewDirection, null);
-    const dimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection as ViewDirection, sideViewFilter);
 
-    const lines = [...extracted.lines, ...dimensions.lines];
-    const texts = [...extracted.texts, ...dimensions.texts];
+    let lines: DxfLine[];
+    let texts: DxfText[];
+
+    // 측면뷰: generateDxfFromData와 동일한 좌표 정규화 로직 적용
+    if (viewDirection === 'left' || viewDirection === 'right') {
+      // 씬에서 추출한 라인 중 DIMENSIONS 레이어 제외
+      let filteredLines = extracted.lines.filter(line => line.layer !== 'DIMENSIONS');
+
+      // X 좌표 정규화 + 좌우 반전 (generateDxfFromData와 동일)
+      if (filteredLines.length > 0) {
+        let minX = Infinity, maxX = -Infinity;
+        filteredLines.forEach(line => {
+          minX = Math.min(minX, line.x1, line.x2);
+          maxX = Math.max(maxX, line.x1, line.x2);
+        });
+
+        const furnitureWidth = maxX - minX;
+        filteredLines = filteredLines.map(line => ({
+          ...line,
+          x1: furnitureWidth - (line.x1 - minX),
+          x2: furnitureWidth - (line.x2 - minX)
+        }));
+
+        // 정규화 후 실제 가구 X 범위 계산
+        let actualMinX = Infinity, actualMaxX = -Infinity;
+        filteredLines.forEach(line => {
+          actualMinX = Math.min(actualMinX, line.x1, line.x2);
+          actualMaxX = Math.max(actualMaxX, line.x1, line.x2);
+        });
+
+        const actualFurnitureWidth = actualMaxX - actualMinX;
+
+        // 외부 치수선 생성 - 실제 가구 범위 전달
+        const dimensions = generateExternalDimensions(
+          spaceInfo, placedModules, viewDirection as ViewDirection, sideViewFilter,
+          true, actualFurnitureWidth, actualMinX, actualMaxX
+        );
+
+        lines = [...filteredLines, ...dimensions.lines];
+        texts = [...dimensions.texts]; // 측면뷰는 외부 치수선 텍스트만
+      } else {
+        lines = [];
+        texts = [];
+      }
+    } else {
+      // 정면뷰/탑뷰: 기존 방식
+      const dimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection as ViewDirection, sideViewFilter);
+      lines = [...extracted.lines, ...dimensions.lines];
+      texts = [...extracted.texts, ...dimensions.texts];
+    }
 
     console.log(`📐 ${viewDirection}: ${lines.length}개 라인, ${texts.length}개 텍스트`);
-
     renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight);
   });
 
