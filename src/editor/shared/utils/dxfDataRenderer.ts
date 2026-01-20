@@ -884,7 +884,7 @@ const getColorFromObjectHierarchy = (object: THREE.Object3D): number | null => {
  * 씬에서 모든 Line 객체와 텍스트 추출
  * @param allowedXRange 측면뷰에서 허용되는 X 위치 범위 (null이면 필터링 안함)
  */
-const extractFromScene = (
+export const extractFromScene = (
   scene: THREE.Scene,
   viewDirection: ViewDirection,
   allowedXRange: { min: number; max: number } | null = null
