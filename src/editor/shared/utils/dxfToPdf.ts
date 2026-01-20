@@ -100,25 +100,22 @@ const renderToPdf = (
   pdf.setTextColor(0, 0, 0);
   pdf.text(getViewTitle(viewDirection), pageWidth / 2, margin + 8, { align: 'center' });
 
-  // 라인
+  // 라인 (모노 색상)
+  pdf.setDrawColor(0, 0, 0); // 검정
   lines.forEach(line => {
-    const rgb = hexToRgb(aciToHex(line.color));
-    pdf.setDrawColor(rgb.r, rgb.g, rgb.b);
-
-    let lw = 0.3;
-    if (line.layer === 'DIMENSIONS') lw = 0.2;
-    else if (line.layer === 'SPACE_FRAME') lw = 0.4;
-    else if (line.layer === 'FURNITURE_PANEL') lw = 0.35;
-    else if (line.layer === 'BACK_PANEL') lw = 0.15;
+    let lw = 0.1;
+    if (line.layer === 'DIMENSIONS') lw = 0.08;
+    else if (line.layer === 'SPACE_FRAME') lw = 0.15;
+    else if (line.layer === 'FURNITURE_PANEL') lw = 0.12;
+    else if (line.layer === 'BACK_PANEL') lw = 0.05;
 
     pdf.setLineWidth(lw);
     pdf.line(toX(line.x1), toY(line.y1), toX(line.x2), toY(line.y2));
   });
 
-  // 텍스트
+  // 텍스트 (모노 색상)
   texts.forEach(text => {
-    const rgb = hexToRgb(aciToHex(text.color));
-    pdf.setTextColor(rgb.r, rgb.g, rgb.b);
+    pdf.setTextColor(0, 0, 0); // 검정
     pdf.setFontSize(Math.max(text.height * scale * 0.5, 6));
     pdf.text(text.text, toX(text.x), toY(text.y), { align: 'center' });
   });
