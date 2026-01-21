@@ -955,7 +955,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 빗금 해칭 패턴 생성
           const hatchLines: JSX.Element[] = [];
           const hatchSpacing = mmToThreeUnits(40); // 40mm 간격
-          const hatchColor = view2DTheme === 'light' ? '#999999' : '#FFD700';
+          const hatchColor = view2DTheme === 'dark' ? '#FFD700' : '#999999';
 
           // 단내림 벽 영역: Z방향으로 spaceDepth, Y방향으로 dropHeight
           const wallStartZ = -spaceDepth / 2;
@@ -1011,6 +1011,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           return (
             <group>
+              {/* 회색 반투명 배경 메쉬 (정면도와 동일) */}
+              <mesh
+                position={[0, (wallStartY + wallEndY) / 2, (wallStartZ + wallEndZ) / 2]}
+                rotation={[0, -Math.PI / 2, 0]}
+                renderOrder={99998}
+              >
+                <planeGeometry args={[spaceDepth, dropHeight]} />
+                <meshBasicMaterial color="#999999" transparent opacity={0.15} depthTest={false} />
+              </mesh>
               {/* 단내림 벽 테두리 */}
               <NativeLine
                 name="dropped_ceiling_border"
@@ -1022,7 +1031,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   [0, wallStartY, wallStartZ]
                 ]}
                 color={hatchColor}
-                lineWidth={1}
+                lineWidth={0.8}
                 renderOrder={100000}
                 depthTest={false}
               />
@@ -1682,7 +1691,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           // 빗금 해칭 패턴 생성
           const hatchLines: JSX.Element[] = [];
           const hatchSpacing = mmToThreeUnits(40); // 40mm 간격
-          const hatchColor = view2DTheme === 'light' ? '#999999' : '#FFD700';
+          const hatchColor = view2DTheme === 'dark' ? '#FFD700' : '#999999';
 
           // 단내림 벽 영역: Z방향으로 spaceDepth, Y방향으로 dropHeight
           const wallStartZ = -spaceDepth / 2;
@@ -1738,6 +1747,15 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
 
           return (
             <group>
+              {/* 회색 반투명 배경 메쉬 (정면도와 동일) */}
+              <mesh
+                position={[0, (wallStartY + wallEndY) / 2, (wallStartZ + wallEndZ) / 2]}
+                rotation={[0, Math.PI / 2, 0]}
+                renderOrder={99998}
+              >
+                <planeGeometry args={[spaceDepth, dropHeight]} />
+                <meshBasicMaterial color="#999999" transparent opacity={0.15} depthTest={false} />
+              </mesh>
               {/* 단내림 벽 테두리 */}
               <NativeLine
                 name="dropped_ceiling_border"
@@ -1749,7 +1767,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                   [0, wallStartY, wallStartZ]
                 ]}
                 color={hatchColor}
-                lineWidth={1}
+                lineWidth={0.8}
                 renderOrder={100000}
                 depthTest={false}
               />
