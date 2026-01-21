@@ -2634,6 +2634,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
+                            name="door-diagonal"
                             color="#FF8800"
                             lineWidth={1}
                             transparent={true}
@@ -2656,6 +2657,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                               [start2[0] + dx2 * t1, start2[1] + dy2 * t1, 0],
                               [start2[0] + dx2 * t2, start2[1] + dy2 * t2, 0]
                             ]}
+                            name="door-diagonal"
                             color="#FF8800"
                             lineWidth={1}
                             transparent={true}
