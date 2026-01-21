@@ -3191,7 +3191,98 @@ export const generateDxfFromData = (
     const actualFurnitureWidth = actualFurnitureMaxX - actualFurnitureMinX;
     console.log(`📐 측면뷰 실제 가구 깊이: ${actualFurnitureWidth.toFixed(1)}mm`);
 
-    // 외부 치수선 + 상부/하부 프레임 생성 (씬에서 조건부로 렌더링되어 누락될 수 있음)
+    // ========================================
+    // 씬에서 SPACE_FRAME이 추출되었는지 확인
+    // Room.tsx의 조건부 렌더링으로 인해 PDF 내보내기 시 프레임이 누락될 수 있음
+    // ========================================
+    const hasSpaceFrameFromScene = filteredLines.some(line => line.layer === 'SPACE_FRAME');
+    console.log(`📐 측면뷰: 씬에서 SPACE_FRAME 추출됨? ${hasSpaceFrameFromScene}`);
+
+    // 프레임 라인을 별도로 생성 (씬에서 추출되지 않은 경우만)
+    let frameLines: DxfLine[] = [];
+    if (!hasSpaceFrameFromScene) {
+      console.log(`📐 측면뷰: 씬에서 프레임 미추출 - 데이터 기반 프레임 생성`);
+
+      // spaceInfo에서 프레임 정보 가져오기
+      const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 10 };
+      const topFrameHeightMm = frameSize.top || 0;
+      const baseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65, depth: 0 };
+      const isFloating = baseConfig.type === 'stand' && baseConfig.placementType === 'float';
+      const isStandType = baseConfig.type === 'stand';
+      const baseFrameHeightMm = isFloating ? 0 : (baseConfig.height || 0);
+      const baseDepthMm = baseConfig.depth || 0;
+
+      const frameColor = 7; // ACI 7 = 흰색
+
+      // 실제 가구 깊이 (정규화 후)
+      const furnitureDepthMm = actualFurnitureWidth > 0 ? actualFurnitureWidth : 600;
+
+      // 프레임은 0 ~ furnitureDepthMm 범위에 그려짐 (정규화된 좌표계)
+
+      // 상부 프레임 (있는 경우)
+      if (topFrameHeightMm > 0) {
+        const topFrameBottom = height - topFrameHeightMm;
+        const topFrameTop = height;
+
+        // 상부 프레임 사각형 (정규화된 좌표계에서)
+        frameLines.push({ x1: 0, y1: topFrameBottom, x2: furnitureDepthMm, y2: topFrameBottom, layer: 'SPACE_FRAME', color: frameColor });
+        frameLines.push({ x1: furnitureDepthMm, y1: topFrameBottom, x2: furnitureDepthMm, y2: topFrameTop, layer: 'SPACE_FRAME', color: frameColor });
+        frameLines.push({ x1: furnitureDepthMm, y1: topFrameTop, x2: 0, y2: topFrameTop, layer: 'SPACE_FRAME', color: frameColor });
+        frameLines.push({ x1: 0, y1: topFrameTop, x2: 0, y2: topFrameBottom, layer: 'SPACE_FRAME', color: frameColor });
+        console.log(`  ✅ 상부 프레임: Y ${topFrameBottom.toFixed(1)} ~ ${topFrameTop.toFixed(1)}`);
+      }
+
+      // 하부 프레임/받침대 (있는 경우)
+      if (baseFrameHeightMm > 0) {
+        const baseBottom = 0;
+        const baseTop = baseFrameHeightMm;
+        const actualBaseDepth = baseDepthMm > 0 ? Math.min(baseDepthMm, furnitureDepthMm) : furnitureDepthMm;
+
+        // 하부 프레임 사각형 (정규화된 좌표계에서)
+        frameLines.push({ x1: 0, y1: baseBottom, x2: actualBaseDepth, y2: baseBottom, layer: 'SPACE_FRAME', color: frameColor });
+        frameLines.push({ x1: actualBaseDepth, y1: baseBottom, x2: actualBaseDepth, y2: baseTop, layer: 'SPACE_FRAME', color: frameColor });
+        frameLines.push({ x1: actualBaseDepth, y1: baseTop, x2: 0, y2: baseTop, layer: 'SPACE_FRAME', color: frameColor });
+        frameLines.push({ x1: 0, y1: baseTop, x2: 0, y2: baseBottom, layer: 'SPACE_FRAME', color: frameColor });
+        console.log(`  ✅ 하부 프레임: Y ${baseBottom.toFixed(1)} ~ ${baseTop.toFixed(1)}, 깊이 ${actualBaseDepth.toFixed(1)}`);
+      }
+
+      // 조절발 생성 (floor 타입이고 받침대가 있는 경우)
+      if (!isStandType && baseFrameHeightMm > 0) {
+        const footPlateSize = 64;
+        const footPlateThickness = 7;
+        const footDiameter = 56;
+        const footCylinderHeight = Math.max(baseFrameHeightMm - footPlateThickness, 0);
+        const actualBaseDepthForFoot = baseDepthMm > 0 ? baseDepthMm : 0;
+
+        // 뒷면 조절발 X 위치
+        const backFootX = furnitureDepthMm - 32; // 뒷면에서 32mm (플레이트 반)
+        // 앞면 조절발 X 위치
+        const frontFootX = 20 + actualBaseDepthForFoot + 32; // 앞면에서 20mm + 받침대 깊이 + 플레이트 반
+
+        // 플레이트 Y는 0 (바닥)
+        const plateY = 0;
+        const plateHalfSize = footPlateSize / 2;
+
+        // 조절발 플레이트 (뒷면)
+        if (backFootX > 0) {
+          frameLines.push({ x1: backFootX - plateHalfSize, y1: plateY, x2: backFootX + plateHalfSize, y2: plateY, layer: 'ACCESSORIES', color: 8 });
+          frameLines.push({ x1: backFootX + plateHalfSize, y1: plateY, x2: backFootX + plateHalfSize, y2: plateY + footPlateThickness, layer: 'ACCESSORIES', color: 8 });
+          frameLines.push({ x1: backFootX + plateHalfSize, y1: plateY + footPlateThickness, x2: backFootX - plateHalfSize, y2: plateY + footPlateThickness, layer: 'ACCESSORIES', color: 8 });
+          frameLines.push({ x1: backFootX - plateHalfSize, y1: plateY + footPlateThickness, x2: backFootX - plateHalfSize, y2: plateY, layer: 'ACCESSORIES', color: 8 });
+        }
+
+        // 조절발 플레이트 (앞면)
+        if (frontFootX > 0 && frontFootX < furnitureDepthMm) {
+          frameLines.push({ x1: frontFootX - plateHalfSize, y1: plateY, x2: frontFootX + plateHalfSize, y2: plateY, layer: 'ACCESSORIES', color: 8 });
+          frameLines.push({ x1: frontFootX + plateHalfSize, y1: plateY, x2: frontFootX + plateHalfSize, y2: plateY + footPlateThickness, layer: 'ACCESSORIES', color: 8 });
+          frameLines.push({ x1: frontFootX + plateHalfSize, y1: plateY + footPlateThickness, x2: frontFootX - plateHalfSize, y2: plateY + footPlateThickness, layer: 'ACCESSORIES', color: 8 });
+          frameLines.push({ x1: frontFootX - plateHalfSize, y1: plateY + footPlateThickness, x2: frontFootX - plateHalfSize, y2: plateY, layer: 'ACCESSORIES', color: 8 });
+        }
+        console.log(`  ✅ 조절발: 뒷면 X=${backFootX.toFixed(1)}, 앞면 X=${frontFootX.toFixed(1)}`);
+      }
+    }
+
+    // 외부 치수선 생성
     const externalDimensions = generateExternalDimensions(
       spaceInfo,
       placedModules,
@@ -3203,9 +3294,10 @@ export const generateDxfFromData = (
       actualFurnitureMaxX // 실제 가구 X 최대값
     );
 
-    lines = [...filteredLines, ...externalDimensions.lines];
+    // 가구 형상(씬 추출) + 프레임(데이터 생성) + 치수선 합치기
+    lines = [...filteredLines, ...frameLines, ...externalDimensions.lines];
     texts = [...externalDimensions.texts];
-    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 가구형상 ${filteredLines.length}개 + 치수선 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
+    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 ${filteredLines.length}개 + 프레임 ${frameLines.length}개 + 치수선 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
   } else {
     // 정면뷰/탑뷰: 기존 방식대로 외부 치수선 생성 후 합치기
     const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection, sideViewFilter);
