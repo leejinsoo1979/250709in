@@ -144,7 +144,8 @@ const BoxWithEdges: React.FC<{
   isEndPanel?: boolean; // 엔드패널 여부
   shadowEnabled?: boolean; // 그림자 활성화 여부
   hideEdges?: boolean; // 외곽선 숨김
-}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false }) => {
+  name?: string; // 씬 추출용 이름
+}> = ({ args, position, material, renderMode, onBeforeRender, viewMode: viewModeProp, view2DTheme, isEndPanel = false, shadowEnabled = true, hideEdges = false, name }) => {
   // Debug: 측면 프레임 확인
   if (args[0] < 1 && args[1] > 15) {
     const bottom = position[1] - args[1] / 2;
@@ -178,16 +179,16 @@ const BoxWithEdges: React.FC<{
   }, [geometry, edgesGeometry]);
 
   return (
-    <group position={position}>
+    <group position={position} name={name}>
       {/* Solid 모드일 때만 면 렌더링 */}
       {renderMode === 'solid' && (
-        <mesh geometry={geometry} receiveShadow={viewMode === '3D' && shadowEnabled} castShadow={viewMode === '3D' && shadowEnabled} onBeforeRender={onBeforeRender}>
+        <mesh geometry={geometry} receiveShadow={viewMode === '3D' && shadowEnabled} castShadow={viewMode === '3D' && shadowEnabled} onBeforeRender={onBeforeRender} name={name ? `${name}-mesh` : undefined}>
           <primitive object={material} />
         </mesh>
       )}
       {/* 모서리 라인 렌더링 - hideEdges가 false일 때만 표시 */}
       {!hideEdges && (
-        <lineSegments name="space-frame" geometry={edgesGeometry}>
+        <lineSegments name={name || "space-frame"} geometry={edgesGeometry}>
           <lineBasicMaterial
             color={
               // MeshBasicMaterial인 경우 (프레임 형광색) material의 색상 사용
@@ -2410,6 +2411,7 @@ const Room: React.FC<RoomProps> = ({
               return (
                 <BoxWithEdges
                   hideEdges={hideEdges}
+                  name="top-frame"
                   args={[
                     frameWidth, // 이미 엔드패널이 조정된 너비
                     topBottomFrameHeight,
@@ -3177,6 +3179,7 @@ const Room: React.FC<RoomProps> = ({
                     <BoxWithEdges
                       hideEdges={hideEdges}
                       key={`base-frame-zone-${zoneIndex}`}
+                      name="base-frame"
                       args={[
                         frameWidth, // 이미 엔드패널이 조정된 너비
                         baseFrameHeight,

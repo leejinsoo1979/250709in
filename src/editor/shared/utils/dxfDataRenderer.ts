@@ -741,8 +741,9 @@ const determineLayerWithParent = (obj: THREE.Object3D): string => {
     return 'DIMENSIONS';
   }
 
-  // 공간 프레임 (Room.tsx의 space-frame)
-  if (combinedNames.includes('space-frame') || combinedNames.includes('space_frame')) {
+  // 공간 프레임 (Room.tsx의 space-frame, top-frame, base-frame)
+  if (combinedNames.includes('space-frame') || combinedNames.includes('space_frame') ||
+      combinedNames.includes('top-frame') || combinedNames.includes('base-frame')) {
     return 'SPACE_FRAME';
   }
 
@@ -799,8 +800,9 @@ const determineLayer = (name: string): string => {
     return 'DIMENSIONS';
   }
 
-  // 공간 프레임 (Room.tsx의 space-frame)
-  if (lowerName.includes('space-frame') || lowerName.includes('space_frame')) {
+  // 공간 프레임 (Room.tsx의 space-frame, top-frame, base-frame)
+  if (lowerName.includes('space-frame') || lowerName.includes('space_frame') ||
+      lowerName.includes('top-frame') || lowerName.includes('base-frame')) {
     return 'SPACE_FRAME';
   }
 
@@ -3153,14 +3155,13 @@ export const generateDxfFromData = (
     const actualFurnitureWidth = actualFurnitureMaxX - actualFurnitureMinX;
     console.log(`📐 측면뷰 실제 가구 깊이: ${actualFurnitureWidth.toFixed(1)}mm`);
 
-    // 외부 치수선 + 프레임 형상 생성 - 실제 가구 깊이와 X 범위를 전달하여 처음부터 올바른 위치에 생성
-    // dimensionsOnly: false로 설정하여 상부/하부 프레임 형상도 함께 생성
+    // 외부 치수선만 생성 (프레임 형상은 씬에서 추출되므로 중복 방지)
     const externalDimensions = generateExternalDimensions(
       spaceInfo,
       placedModules,
       viewDirection,
       sideViewFilter,
-      false, // dimensionsOnly: false로 변경 - 상부/하부 프레임 형상도 생성
+      true, // dimensionsOnly: true - 치수선만 생성 (프레임 형상은 씬에서 추출)
       actualFurnitureWidth, // 실제 가구 깊이 전달
       actualFurnitureMinX, // 실제 가구 X 최소값
       actualFurnitureMaxX // 실제 가구 X 최대값
@@ -3168,7 +3169,7 @@ export const generateDxfFromData = (
 
     lines = [...filteredLines, ...externalDimensions.lines];
     texts = [...externalDimensions.texts];
-    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 가구형상 ${filteredLines.length}개 + 프레임/치수선 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
+    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 가구형상 ${filteredLines.length}개 + 치수선 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
   } else {
     // 정면뷰/탑뷰: 기존 방식대로 외부 치수선 생성 후 합치기
     const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection, sideViewFilter);
