@@ -105,6 +105,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const [mounted, setMounted] = useState(false);
   const [canvasKey, setCanvasKey] = useState(() => `canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   const [canvasReady, setCanvasReady] = useState(false);
+  // viewMode 전환 시 깜빡임 방지용 - 전환 중에는 Canvas를 숨김
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const prevViewModeRef = useRef(viewMode);
   // isFurnitureDragging 상태는 UIStore에서 가져옴
 
   // 캔버스 참조 저장
@@ -134,15 +137,20 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   });
 
 
-  // 뷰모드 변경 시 캔버스 재생성 (테마는 무시)
+  // 뷰모드 변경 시 전환 애니메이션 처리
   useEffect(() => {
-    // 뷰 모드 변경 시 해당 모드의 초기 상태 리셋 - 제거
-    // 초기 상태를 null로 리셋하면 스페이스 키 누를 때 초기값이 없어서 문제 발생
-    // if (viewMode === '2D') {
-    //   initialCameraSetup.current.position2D = null;
-    //   initialCameraSetup.current.target2D = null;
-    //   initialCameraSetup.current.zoom2D = null;
-    // }
+    // viewMode가 실제로 변경된 경우에만 전환 애니메이션 적용
+    if (prevViewModeRef.current !== viewMode) {
+      setIsTransitioning(true);
+      // 짧은 지연 후 Canvas 표시 (카메라 설정이 적용된 후)
+      const timer = setTimeout(() => {
+        setIsTransitioning(false);
+      }, 50); // 50ms 지연
+      prevViewModeRef.current = viewMode;
+      return () => clearTimeout(timer);
+    }
+
+    // view2DDirection 변경 시에도 캔버스 키 업데이트 (단, 전환 애니메이션 없이)
     setCanvasKey(`canvas-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
   }, [viewMode, view2DDirection]);
 
@@ -867,6 +875,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           style={{
             ...style,
             background: '#ffffff',
+            // viewMode 전환 시 깜빡임 방지 - 전환 중에는 투명하게
+            opacity: isTransitioning ? 0 : 1,
+            transition: 'opacity 0.05s ease-in-out',
             cursor: (isEraserMode && viewMode === '2D')
               ? (view2DTheme === 'dark'
                 ? `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 16 16" fill="white"><path d="M8.086 2.207a2 2 0 0 1 2.828 0l3.879 3.879a2 2 0 0 1 0 2.828l-5.5 5.5A2 2 0 0 1 7.879 15H5.12a2 2 0 0 1-1.414-.586l-2.5-2.5a2 2 0 0 1 0-2.828l6.879-6.879zm2.121.707a1 1 0 0 0-1.414 0L4.16 7.547l5.293 5.293 4.633-4.633a1 1 0 0 0 0-1.414l-3.879-3.879zM8.746 13.547 3.453 8.254 1.914 9.793a1 1 0 0 0 0 1.414l2.5 2.5a1 1 0 0 0 .707.293H7.88a1 1 0 0 0 .707-.293l.16-.16z"/></svg>') 12 12, pointer`
