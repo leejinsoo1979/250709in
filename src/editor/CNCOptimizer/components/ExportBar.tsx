@@ -7,8 +7,13 @@ import { SimpleDXFExporter } from '../utils/simpleDxfExporter';
 import {
   exportBoringToCSV
 } from '../utils/csvExporter';
+import {
+  downloadMPR,
+  downloadCIX,
+} from '@/domain/boring/exporters';
+import type { PanelBoringData, Boring } from '@/domain/boring/types';
 import { OptimizedResult, PlacedPanel, Panel } from '../types';
-import { Download, FileText, FileDown, Package, Layers, ChevronDown, Circle } from 'lucide-react';
+import { Download, FileText, FileDown, Package, Layers, ChevronDown, Circle, Cpu } from 'lucide-react';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useProjectStore } from '@/store/core/projectStore';
@@ -143,6 +148,59 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
     setIsOpen(false);
   };
 
+  // 패널 데이터를 PanelBoringData 형식으로 변환
+  const convertToPanelBoringData = (panel: PlacedPanel): PanelBoringData => {
+    const borings: Boring[] = (panel.boringPositions || []).map((pos, idx) => ({
+      id: `boring-${panel.id}-${idx}`,
+      type: 'shelf-pin' as const,
+      face: 'front' as const,
+      x: pos.x,
+      y: pos.y,
+      diameter: pos.diameter || 5,
+      depth: pos.depth || 13,
+    }));
+
+    return {
+      panelId: panel.id,
+      furnitureId: panel.furnitureId || '',
+      furnitureName: panel.furnitureName || '',
+      panelType: 'side-left',
+      panelName: panel.name,
+      width: panel.width,
+      height: panel.height,
+      thickness: panel.thickness || 18,
+      material: panel.material || 'MDF',
+      grain: panel.grain || 'none',
+      borings,
+    };
+  };
+
+  // HOMAG MPR 내보내기
+  const handleExportMPR = () => {
+    if (panelsWithBoring.length === 0) {
+      alert('내보낼 보링 데이터가 없습니다. 측판이 있는 가구를 배치하세요.');
+      return;
+    }
+
+    const panelBoringData = panelsWithBoring.map(convertToPanelBoringData);
+    const projectName = basicInfo?.title || 'project';
+    downloadMPR(panelBoringData, projectName);
+    setIsOpen(false);
+  };
+
+  // Biesse CIX 내보내기
+  const handleExportCIX = () => {
+    if (panelsWithBoring.length === 0) {
+      alert('내보낼 보링 데이터가 없습니다. 측판이 있는 가구를 배치하세요.');
+      return;
+    }
+
+    const panelBoringData = panelsWithBoring.map(convertToPanelBoringData);
+    const projectName = basicInfo?.title || 'project';
+    downloadCIX(panelBoringData, projectName);
+    setIsOpen(false);
+  };
+
   const hasData = panels.length > 0 || stock.length > 0 || optimizationResults.length > 0;
   const hasBoringData = panelsWithBoring.length > 0;
 
@@ -195,6 +253,34 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
             <div className={styles.menuItemContent}>
               <span className={styles.menuItemTitle}>보링 좌표 (CSV)</span>
               <span className={styles.menuItemDesc}>측판 선반핀 보링 X, Y, 직경, 깊이</span>
+            </div>
+          </button>
+
+          <div className={styles.menuDivider} />
+
+          <div className={styles.menuHeader}>CNC 제조사별 내보내기</div>
+
+          <button
+            className={styles.menuItem}
+            onClick={handleExportMPR}
+            disabled={!hasBoringData}
+          >
+            <Cpu size={16} />
+            <div className={styles.menuItemContent}>
+              <span className={styles.menuItemTitle}>HOMAG (MPR)</span>
+              <span className={styles.menuItemDesc}>woodWOP 네이티브 형식</span>
+            </div>
+          </button>
+
+          <button
+            className={styles.menuItem}
+            onClick={handleExportCIX}
+            disabled={!hasBoringData}
+          >
+            <Cpu size={16} />
+            <div className={styles.menuItemContent}>
+              <span className={styles.menuItemTitle}>Biesse (CIX)</span>
+              <span className={styles.menuItemDesc}>bSolid XML 형식</span>
             </div>
           </button>
 
