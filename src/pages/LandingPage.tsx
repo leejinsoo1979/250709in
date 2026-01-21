@@ -207,9 +207,9 @@ export default function LandingPage() {
             }}
           />
           <div className="max-w-[1400px] mx-auto">
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-3 mb-6">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }} />
-              <span className="text-zinc-400 text-sm">Powerful Features</span>
+              <span className="text-zinc-400 text-sm ml-1">Powerful Features</span>
               <ChevronRight className="w-4 h-4 text-zinc-500" />
             </div>
 
@@ -262,9 +262,9 @@ export default function LandingPage() {
         {/* Pricing Section */}
         <section id="pricing" className="py-32 px-8">
           <div className="max-w-[1400px] mx-auto">
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-3 mb-6">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }} />
-              <span className="text-zinc-400 text-sm">Pricing</span>
+              <span className="text-zinc-400 text-sm ml-1">Pricing</span>
               <ChevronRight className="w-4 h-4 text-zinc-500" />
             </div>
 
