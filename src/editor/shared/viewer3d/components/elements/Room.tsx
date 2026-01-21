@@ -2543,9 +2543,13 @@ const Room: React.FC<RoomProps> = ({
               const normalSlotCount = zoneSlotInfo.normal?.columnCount || (spaceInfo.customColumnCount || 4);
               const isSelectedSlotInDroppedZone = hasDroppedCeiling && selectedSlotIndex !== null && selectedSlotIndex >= normalSlotCount;
 
+              // 슬롯이 선택되지 않은 경우 (PDF 내보내기 등) 모든 프레임 표시
+              const noSlotSelected = selectedSlotIndex === null;
+
               // 측면뷰일 때 선택된 zone에 따라 프레임 표시 여부 결정
-              const showDroppedFrame = !isSideView || isSelectedSlotInDroppedZone;
-              const showNormalFrame = !isSideView || !isSelectedSlotInDroppedZone;
+              // 슬롯 미선택 시 모든 프레임 표시 (PDF 내보내기용)
+              const showDroppedFrame = !isSideView || noSlotSelected || isSelectedSlotInDroppedZone;
+              const showNormalFrame = !isSideView || noSlotSelected || !isSelectedSlotInDroppedZone;
 
               // 단내림 영역과 일반 영역 프레임 렌더링
               return (
