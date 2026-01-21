@@ -605,11 +605,64 @@ export const downloadDxfAsPdf = async (
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
 
-  views.forEach((viewDirection, index) => {
-    if (index > 0) pdf.addPage();
+  // 슬롯 정보 계산 (측면도 슬롯별 페이지 생성용)
+  const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
+  const normalSlotCount = spaceInfo.customColumnCount || 4;
+  const droppedSlotCount = hasDroppedCeiling ? (spaceInfo.droppedCeiling?.columnCount || 0) : 0;
+  const totalSlotCount = normalSlotCount + droppedSlotCount;
 
+  // 가구가 있는 슬롯 인덱스 추출
+  const uniqueSlotIndices = [...new Set(
+    placedModules
+      .filter(m => m.slotIndex !== undefined)
+      .map(m => {
+        // 단내림 구간 가구면 글로벌 인덱스로 변환
+        if (hasDroppedCeiling && m.zone === 'dropped') {
+          return normalSlotCount + (m.slotIndex || 0);
+        }
+        return m.slotIndex || 0;
+      })
+  )].sort((a, b) => a - b);
+
+  console.log('📊 슬롯 정보:', { totalSlotCount, uniqueSlotIndices, hasDroppedCeiling });
+
+  let isFirstPage = true;
+
+  for (const viewDirection of views) {
+    // 측면도(left)는 각 슬롯별로 페이지 생성
+    if (viewDirection === 'left' && uniqueSlotIndices.length > 0) {
+      for (let slotIdx = 0; slotIdx < uniqueSlotIndices.length; slotIdx++) {
+        const slotIndex = uniqueSlotIndices[slotIdx];
+
+        if (!isFirstPage) pdf.addPage();
+        isFirstPage = false;
+
+        // 해당 슬롯의 가구만 필터링
+        const slotModules = placedModules.filter(m => {
+          if (m.slotIndex === undefined) return false;
+
+          let globalSlotIndex = m.slotIndex;
+          if (hasDroppedCeiling && m.zone === 'dropped') {
+            globalSlotIndex = normalSlotCount + m.slotIndex;
+          }
+
+          return globalSlotIndex === slotIndex;
+        });
+
+        console.log(`📐 left (slot ${slotIndex + 1}): ${slotModules.length}개 가구`);
+
+        const { lines, texts } = generateViewDataFromDxf(spaceInfo, slotModules, viewDirection);
+        console.log(`📐 left (slot ${slotIndex + 1}): ${lines.length}개 라인, ${texts.length}개 텍스트`);
+
+        // 슬롯 번호를 제목에 포함
+        renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, slotIndex + 1);
+      }
+    }
     // 도어도면은 별도 렌더링 함수 사용
-    if (viewDirection === 'door') {
+    else if (viewDirection === 'door') {
+      if (!isFirstPage) pdf.addPage();
+      isFirstPage = false;
+
       console.log(`📐 door: 도어도면 전용 렌더링 시작...`);
       console.log(`📐 door: placedModules 개수: ${placedModules.length}`);
 
@@ -635,13 +688,97 @@ export const downloadDxfAsPdf = async (
       console.log(`📐 door: ${doorItems.length}개 가구에서 도어/서랍 추출됨`);
       renderDoorDrawingToPdf(pdf, doorItems, spaceInfo, pageWidth, pageHeight);
     } else {
-      // 일반 뷰는 DXF 파싱 방식 사용
+      // 일반 뷰 (front, top)
+      if (!isFirstPage) pdf.addPage();
+      isFirstPage = false;
+
       const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, viewDirection);
       console.log(`📐 ${viewDirection}: 최종 ${lines.length}개 라인, ${texts.length}개 텍스트`);
       renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight);
     }
-  });
+  }
 
   pdf.save(`drawing_${new Date().toISOString().slice(0, 10)}.pdf`);
   console.log('✅ PDF 다운로드 완료');
+};
+
+/**
+ * 슬롯 정보를 포함한 PDF 렌더링 (측면도용)
+ */
+const renderToPdfWithSlotInfo = (
+  pdf: jsPDF,
+  lines: ParsedLine[],
+  texts: ParsedText[],
+  spaceInfo: SpaceInfo,
+  viewDirection: PdfViewDirection,
+  pageWidth: number,
+  pageHeight: number,
+  slotNumber: number
+) => {
+  const margin = 20;
+  const titleHeight = 15;
+  const drawableWidth = pageWidth - margin * 2;
+  const drawableHeight = pageHeight - margin * 2 - titleHeight;
+  const centerX = margin + drawableWidth / 2;
+  const centerY = margin + titleHeight + drawableHeight / 2;
+
+  // 바운딩 박스 계산
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  lines.forEach(l => {
+    minX = Math.min(minX, l.x1, l.x2);
+    minY = Math.min(minY, l.y1, l.y2);
+    maxX = Math.max(maxX, l.x1, l.x2);
+    maxY = Math.max(maxY, l.y1, l.y2);
+  });
+  texts.forEach(t => {
+    minX = Math.min(minX, t.x);
+    minY = Math.min(minY, t.y);
+    maxX = Math.max(maxX, t.x);
+    maxY = Math.max(maxY, t.y);
+  });
+
+  if (minX === Infinity) {
+    // 데이터가 없으면 메시지 표시
+    pdf.setFontSize(14);
+    pdf.setTextColor(150, 150, 150);
+    pdf.text(`Side View (Slot ${slotNumber}) - No data`, pageWidth / 2, pageHeight / 2, { align: 'center' });
+    return;
+  }
+
+  const dxfWidth = maxX - minX;
+  const dxfHeight = maxY - minY;
+  const scale = Math.min(drawableWidth / dxfWidth, drawableHeight / dxfHeight) * 0.85;
+
+  const toX = (x: number) => centerX + (x - (minX + maxX) / 2) * scale;
+  const toY = (y: number) => centerY - (y - (minY + maxY) / 2) * scale;
+
+  // 제목 (슬롯 번호 포함)
+  pdf.setFontSize(14);
+  pdf.setTextColor(0, 0, 0);
+  pdf.text(`Side View (Slot ${slotNumber})`, pageWidth / 2, margin + 8, { align: 'center' });
+
+  // 라인 (모노 색상)
+  pdf.setDrawColor(0, 0, 0);
+  lines.forEach(line => {
+    let lw = 0.1;
+    if (line.layer === 'DIMENSIONS') lw = 0.08;
+    else if (line.layer === 'SPACE_FRAME') lw = 0.15;
+    else if (line.layer === 'FURNITURE_PANEL') lw = 0.12;
+    else if (line.layer === 'BACK_PANEL') lw = 0.05;
+
+    pdf.setLineWidth(lw);
+    pdf.line(toX(line.x1), toY(line.y1), toX(line.x2), toY(line.y2));
+  });
+
+  // 텍스트 (모노 색상)
+  texts.forEach(text => {
+    pdf.setTextColor(0, 0, 0);
+    pdf.setFontSize(Math.max(text.height * scale * 0.5, 6));
+    pdf.text(text.text, toX(text.x), toY(text.y), { align: 'center' });
+  });
+
+  // 하단 정보
+  pdf.setFontSize(8);
+  pdf.setTextColor(128, 128, 128);
+  pdf.text(`${spaceInfo.width}mm × ${spaceInfo.height}mm × ${spaceInfo.depth}mm`, pageWidth / 2, pageHeight - margin / 2, { align: 'center' });
 };
