@@ -2,10 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { getModulesByCategory, ModuleData } from '@/data/modules';
 import { useSpaceConfigStore, SpaceInfo } from '@/store/core/spaceConfigStore';
 import { calculateInternalSpace } from '@/editor/shared/viewer3d/utils/geometry';
-import { calculateSpaceIndexing, ColumnIndexer, SpaceCalculator } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { isSlotAvailable } from '@/editor/shared/utils/slotAvailability';
-import { analyzeColumnSlots, calculateFurnitureBounds } from '@/editor/shared/utils/columnSlotProcessor';
+import { analyzeColumnSlots } from '@/editor/shared/utils/columnSlotProcessor';
+import { placeFurnitureAtSlot } from '@/editor/shared/furniture/hooks/usePlaceFurnitureAtSlot';
 import styles from './ModuleGallery.module.css';
 import { useAlert } from '@/hooks/useAlert';
 import { useUIStore } from '@/store/uiStore';
@@ -631,268 +632,52 @@ const ThumbnailItem: React.FC<ThumbnailItemProps> = ({ module, iconPath, isValid
         return;
       }
 
-      // 가구 위치 계산 - 나중에 zone별 indexing 사용하므로 일단 임시값
-      let positionX: number = 0;
-
-      // 기본 깊이 계산
-      const getDefaultDepth = (moduleData: ModuleData) => {
-        if (moduleData?.defaultDepth) {
-          return Math.min(moduleData.defaultDepth, spaceInfo.depth);
-        }
-        const spaceBasedDepth = Math.floor(spaceInfo.depth * 0.9);
-        return Math.min(spaceBasedDepth, 580);
-      };
-
-      // 고유 ID 생성
-      const placedId = `placed-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-      // 슬롯 인덱스에 따라 zone 결정하고 zone별 정보 가져오기
-      let localSlotIndex = availableSlotIndex; // 로컬 슬롯 인덱스
-      let zoneIndexing = indexing; // 기본값은 전체 indexing
+      // 슬롯 인덱스에 따라 zone 결정
+      let localSlotIndex = availableSlotIndex;
 
       if (spaceInfo.droppedCeiling?.enabled) {
         const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
 
         // 단내림 위치에 따라 zone 판단
         if (spaceInfo.droppedCeiling.position === 'left') {
-          // 왼쪽 단내림: 첫 번째 슬롯부터 dropped 구간
           if (zoneInfo.dropped && availableSlotIndex < zoneInfo.dropped.columnCount) {
             targetZone = 'dropped';
             localSlotIndex = availableSlotIndex;
-            // 단내림 구간의 indexing 정보 사용
-            zoneIndexing = {
-              columnCount: zoneInfo.dropped.columnCount,
-              columnWidth: zoneInfo.dropped.columnWidth,
-              slotWidths: zoneInfo.dropped.slotWidths || Array(zoneInfo.dropped.columnCount).fill(zoneInfo.dropped.columnWidth),
-              threeUnitPositions: zoneInfo.dropped.threeUnitPositions || [],
-              threeUnitDualPositions: zoneInfo.dropped.threeUnitDualPositions || [],
-              threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(zoneInfo.dropped.columnWidth),
-              internalStartX: zoneInfo.dropped.startX,
-              zones: { normal: zoneInfo.normal, dropped: zoneInfo.dropped }
-            } as any;
           } else {
             targetZone = 'normal';
             localSlotIndex = availableSlotIndex - (zoneInfo.dropped?.columnCount || 0);
-            // 메인 구간의 indexing 정보 사용
-            zoneIndexing = {
-              columnCount: zoneInfo.normal.columnCount,
-              columnWidth: zoneInfo.normal.columnWidth,
-              slotWidths: zoneInfo.normal.slotWidths || Array(zoneInfo.normal.columnCount).fill(zoneInfo.normal.columnWidth),
-              threeUnitPositions: zoneInfo.normal.threeUnitPositions || [],
-              threeUnitDualPositions: zoneInfo.normal.threeUnitDualPositions || [],
-              threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(zoneInfo.normal.columnWidth),
-              internalStartX: zoneInfo.normal.startX,
-              zones: { normal: zoneInfo.normal, dropped: zoneInfo.dropped }
-            } as any;
           }
         } else {
-          // 오른쪽 단내림: normal 구간이 먼저, 그 다음 dropped 구간
           if (zoneInfo.normal && availableSlotIndex < zoneInfo.normal.columnCount) {
             targetZone = 'normal';
             localSlotIndex = availableSlotIndex;
-            // 메인 구간의 indexing 정보 사용
-            zoneIndexing = {
-              columnCount: zoneInfo.normal.columnCount,
-              columnWidth: zoneInfo.normal.columnWidth,
-              slotWidths: zoneInfo.normal.slotWidths || Array(zoneInfo.normal.columnCount).fill(zoneInfo.normal.columnWidth),
-              threeUnitPositions: zoneInfo.normal.threeUnitPositions || [],
-              threeUnitDualPositions: zoneInfo.normal.threeUnitDualPositions || [],
-              threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(zoneInfo.normal.columnWidth),
-              internalStartX: zoneInfo.normal.startX,
-              zones: { normal: zoneInfo.normal, dropped: zoneInfo.dropped }
-            } as any;
           } else {
             targetZone = 'dropped';
             localSlotIndex = availableSlotIndex - zoneInfo.normal.columnCount;
-            // 단내림 구간의 indexing 정보 사용
-            zoneIndexing = {
-              columnCount: zoneInfo.dropped?.columnCount || 0,
-              columnWidth: zoneInfo.dropped?.columnWidth || 0,
-              slotWidths: zoneInfo.dropped?.slotWidths || Array(zoneInfo.dropped?.columnCount || 0).fill(zoneInfo.dropped?.columnWidth || 0),
-              threeUnitPositions: zoneInfo.dropped?.threeUnitPositions || [],
-              threeUnitDualPositions: zoneInfo.dropped?.threeUnitDualPositions || [],
-              threeUnitColumnWidth: SpaceCalculator.mmToThreeUnits(zoneInfo.dropped?.columnWidth || 0),
-              internalStartX: zoneInfo.dropped?.startX || 0,
-              zones: { normal: zoneInfo.normal, dropped: zoneInfo.dropped }
-            } as any;
           }
         }
       }
 
-      // 실제 슬롯 너비 계산 - zone별 indexing 사용
-      let customWidth;
-      let targetModuleId = module.id;
-
-      if (isDualFurniture && zoneIndexing.slotWidths && zoneIndexing.slotWidths[localSlotIndex] !== undefined) {
-        customWidth = zoneIndexing.slotWidths[localSlotIndex] + (zoneIndexing.slotWidths[localSlotIndex + 1] || zoneIndexing.slotWidths[localSlotIndex]);
-        // 듀얼 가구의 경우 정확한 너비를 포함한 ID 생성 (소수점 1자리로 반올림)
-        const widthForId = Math.round(customWidth * 10) / 10;
-        const moduleBaseType = module.id.replace(/-[\d.]+$/, '');
-        targetModuleId = `${moduleBaseType}-${widthForId}`;
-      } else if (zoneIndexing.slotWidths && zoneIndexing.slotWidths[localSlotIndex] !== undefined) {
-        customWidth = zoneIndexing.slotWidths[localSlotIndex];
-        // 싱글 가구의 경우 정확한 너비를 포함한 ID 생성 (소수점 1자리로 반올림)
-        const widthForId = Math.round(customWidth * 10) / 10;
-        const moduleBaseType = module.id.replace(/-[\d.]+$/, '');
-        targetModuleId = `${moduleBaseType}-${widthForId}`;
-      } else {
-        customWidth = zoneIndexing.columnWidth;
-      }
-
-      // Zone별 위치 계산 - 직접 계산 (threeUnitPositions이 없을 수 있음)
-
-      if (isDualFurniture) {
-        // 듀얼장의 경우 두 슬롯의 중앙에 배치
-        const slot1StartX = zoneIndexing.internalStartX + (localSlotIndex * zoneIndexing.columnWidth);
-        const slot1CenterX = slot1StartX + (zoneIndexing.columnWidth / 2);
-        const slot2StartX = zoneIndexing.internalStartX + ((localSlotIndex + 1) * zoneIndexing.columnWidth);
-        const slot2CenterX = slot2StartX + (zoneIndexing.columnWidth / 2);
-        const dualCenterX = (slot1CenterX + slot2CenterX) / 2;
-        positionX = SpaceCalculator.mmToThreeUnits(dualCenterX);
-      } else {
-        // 싱글장의 경우 슬롯 중앙에 배치
-        const slotStartX = zoneIndexing.internalStartX + (localSlotIndex * zoneIndexing.columnWidth);
-        const slotCenterX = slotStartX + (zoneIndexing.columnWidth / 2);
-        positionX = SpaceCalculator.mmToThreeUnits(slotCenterX);
-      }
-
-      // Y 위치 계산 - 카테고리별로 적절한 Y 위치 계산
-      let yPosition = 0;
-
-      // 단내림 구간인 경우 zone에 맞는 spaceInfo 생성
-      let zoneSpaceInfo = fullSpaceInfo;
-      if (targetZone === 'dropped' && spaceInfo.droppedCeiling?.enabled) {
-        const droppedOuterWidth = spaceInfo.droppedCeiling?.width || 900;
-        zoneSpaceInfo = {
-          ...fullSpaceInfo,
-          width: droppedOuterWidth,
-          zone: 'dropped' as const
-        };
-      } else if (targetZone === 'normal' && spaceInfo.droppedCeiling?.enabled) {
-        const normalOuterWidth = spaceInfo.width - (spaceInfo.droppedCeiling?.width || 900);
-        zoneSpaceInfo = {
-          ...fullSpaceInfo,
-          width: normalOuterWidth,
-          zone: 'normal' as const
-        };
-      }
-
-      const furnitureHeightMm = module.dimensions.height || 600;
-      const furnitureHeight = furnitureHeightMm * 0.01; // Three.js 단위로 변환
-
-      // Three.js 단위로 변환하는 함수
-      const mmToThreeUnits = (mm: number) => mm * 0.01;
-
-      if (module.category === 'upper') {
-        // 상부장: 천장에 붙어있음
-        const floorY = mmToThreeUnits(internalSpace.startY);
-        const ceilingY = floorY + mmToThreeUnits(internalSpace.height);
-        yPosition = ceilingY - furnitureHeight / 2;
-      } else if (module.category === 'lower') {
-        // 하부장: 바닥에서 시작
-        const floorY = mmToThreeUnits(internalSpace.startY);
-        yPosition = floorY + furnitureHeight / 2;
-      } else if (module.category === 'full') {
-        // 키큰장: 바닥에서 시작
-        const floorY = mmToThreeUnits(internalSpace.startY);
-        yPosition = floorY + furnitureHeight / 2;
-      } else {
-        // 기본 가구: 바닥에서 시작
-        const floorY = mmToThreeUnits(internalSpace.startY);
-        yPosition = floorY + furnitureHeight / 2;
-      }
-
-      // 기둥 체크 및 크기 조정
-      const columnSlots = analyzeColumnSlots(fullSpaceInfo);
-      const targetSlotInfo = columnSlots[availableSlotIndex];
-
-      console.log('🔍 [ModuleGallery] 가구 배치 시작:', {
-        zone: targetZone,
-        slotIndex: availableSlotIndex,
+      // ★★★ 공통 배치 함수 사용 (클릭+고스트, 드래그앤드랍과 동일) ★★★
+      const result = placeFurnitureAtSlot({
         moduleId: module.id,
-        targetSlotInfo,
-        hasColumn: targetSlotInfo?.hasColumn,
-        columnSlotsLength: columnSlots.length
+        slotIndex: localSlotIndex,
+        zone: targetZone,
+        spaceInfo: correctedSpaceInfo
       });
 
-      let finalAdjustedWidth: number | undefined = undefined;
-      let finalCustomWidth: number | undefined;
-      let finalCustomDepth: number | undefined = getDefaultDepth(module);
-
-      if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
-        // 기둥이 있는 슬롯 - calculateFurnitureBounds로 조정된 크기 계산
-        const indexing = calculateSpaceIndexing(spaceInfo);
-        const slotWidthM = indexing.columnWidth * 0.01;
-        const originalSlotBounds = {
-          left: positionX - slotWidthM / 2,
-          right: positionX + slotWidthM / 2,
-          center: positionX
-        };
-
-        const furnitureBounds = calculateFurnitureBounds(targetSlotInfo, originalSlotBounds, spaceInfo);
-        finalAdjustedWidth = furnitureBounds.renderWidth;
-        finalCustomWidth = undefined; // 기둥 슬롯에서는 customWidth 사용 안 함
-        positionX = furnitureBounds.center; // 위치도 조정
-
-        // Column C (300mm)의 경우 깊이 조정
-        const columnDepth = targetSlotInfo.column.depth;
-        if (columnDepth === 300 && furnitureBounds.renderWidth === indexing.columnWidth) {
-          finalCustomDepth = 730 - columnDepth; // 430mm
-        }
-
-        console.log('🔧 [ModuleGallery] 기둥 슬롯 배치 - 자동 조정:', {
-          zone: targetZone,
-          slotIndex: availableSlotIndex,
-          originalWidth: module.dimensions.width,
-          adjustedWidth: finalAdjustedWidth,
-          adjustedX: positionX,
-          columnDepth,
-          customDepth: finalCustomDepth
-        });
-      } else {
-        // 기둥 없는 슬롯 - 기존 로직
-        finalCustomWidth = spaceInfo.surroundType === 'no-surround' ? undefined : customWidth;
-      }
-
-      // 새 모듈 생성
-      const newModule = {
-        id: placedId,
-        moduleId: targetModuleId, // 정확한 너비의 모듈 ID 사용
-        baseModuleType: module.id.replace(/-[\d.]+$/, ''), // 소수점 포함 숫자만 정확히 제거
-        moduleWidth: module.dimensions.width, // 실제 모듈 너비 저장
-        position: {
-          x: positionX,
-          y: yPosition,
-          z: 0
-        },
-        rotation: 0,
-        hasDoor: false,
-        customDepth: finalCustomDepth,
-        adjustedWidth: finalAdjustedWidth,
-        slotIndex: availableSlotIndex, // 글로벌 슬롯 인덱스 사용 (zone 정보는 별도로 저장)
-        isDualSlot: isDualFurniture,
-        isValidInCurrentSpace: true,
-        hingePosition: 'right' as 'left' | 'right',
-        zone: targetZone || undefined, // 영역 정보 저장
-        customWidth: finalCustomWidth
-      };
-
-      // 가구 배치
-      if (!addModule) {
-        console.error('❌❌❌ addModule function is not defined!');
+      if (!result.success) {
+        console.error('❌ 가구 배치 실패:', result.error);
         return;
       }
 
-      try {
-        addModule(newModule);
-      } catch (addError) {
-        console.error('❌ [ModuleGallery] Failed to add module:', addError);
-        throw addError;
-      }
+      if (result.module) {
+        addModule(result.module);
 
-      // 배치된 가구를 자동으로 선택
-      const setSelectedPlacedModuleId = useFurnitureStore.getState().setSelectedPlacedModuleId;
-      setSelectedPlacedModuleId(placedId);
+        // 배치된 가구를 자동으로 선택
+        const setSelectedPlacedModuleId = useFurnitureStore.getState().setSelectedPlacedModuleId;
+        setSelectedPlacedModuleId(result.module.id);
+      }
 
     } catch (error) {
       console.error('🚨🚨🚨 [ModuleGallery] 가구 자동 배치 중 오류 발생:', error);

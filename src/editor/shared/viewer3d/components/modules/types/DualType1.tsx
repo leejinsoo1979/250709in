@@ -52,6 +52,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
   console.log('  lowerSectionTopOffset:', lowerSectionTopOffset);
   console.log('  lowerSectionTopOffset type:', typeof lowerSectionTopOffset);
   console.log('  hasLowerSectionTopOffset:', lowerSectionTopOffset !== undefined);
+  console.log('  🔴 zone:', zone, '(단내림:', zone === 'dropped' ? '✅' : '❌', ')');
 
   // 공통 로직 사용
   const baseFurniture = useBaseFurniture(moduleData, {
