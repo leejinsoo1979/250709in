@@ -338,26 +338,30 @@ export class PDFExporter {
         this.pdf.setLineDashPattern([], 0);
       }
 
-      // 서랍 패널 바닥판 홈
+      // 서랍 패널 바닥판 홈 - 비율 기반으로 계산 (보링과 동일한 방식)
       if (panel.groovePositions && panel.groovePositions.length > 0) {
         this.pdf.setDrawColor(100, 100, 100);
         this.pdf.setLineWidth(0.1);
         this.pdf.setLineDashPattern([1, 1], 0);
 
-        panel.groovePositions.forEach((groove: { y: number; height: number; depth: number }) => {
-          let gx: number, gw: number, gy: number, gh: number;
+        const originalWidth = panel.width;
+        const originalHeight = panel.height;
 
-          if (isRotated) {
-            gx = x + groove.y * scale;
-            gw = groove.height * scale;
-            gy = y;
-            gh = height;
-          } else {
-            gx = x;
-            gw = width;
-            gy = y + groove.y * scale;
-            gh = groove.height * scale;
-          }
+        panel.groovePositions.forEach((groove: { y: number; height: number; depth: number }) => {
+          // 홈은 패널의 height 방향(Y축)에 있음
+          // groove.y = 홈 시작 위치 (height 기준)
+          // groove.height = 홈 높이
+          // 홈은 패널 전체 width를 가로지름
+
+          // 비율 기반 계산 (PDF의 width/height는 이미 isRotated에 따라 변환됨)
+          const grooveYRatio = groove.y / originalHeight;
+          const grooveHeightRatio = groove.height / originalHeight;
+
+          // 홈은 가로 방향 전체를 차지하고, 세로 방향에서 특정 위치
+          const gx = x;
+          const gw = width;
+          const gy = y + grooveYRatio * height;
+          const gh = grooveHeightRatio * height;
 
           this.pdf.rect(gx, gy, gw, gh, 'S');
         });
