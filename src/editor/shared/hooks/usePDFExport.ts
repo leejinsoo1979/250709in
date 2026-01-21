@@ -5,19 +5,136 @@ import { useProjectStore } from '@/store/core/projectStore';
 import { useUIStore } from '@/store/uiStore';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { getModuleById } from '@/data/modules';
+import { getModuleById, ModuleData } from '@/data/modules';
 import { addKoreanText, addMixedText } from '@/editor/shared/utils/pdfKoreanFont';
 import { exportWithPersistence } from '@/services/exportService';
 import { getCurrentVersionId } from '@/services/designs.repo';
 import { auth } from '@/firebase/config';
 
-export type ViewType = '3d-front' | '2d-front' | '2d-top' | '2d-left';
+// 도어/서랍 정보 인터페이스
+interface DoorDrawingItem {
+  moduleId: string;
+  moduleName: string;
+  furnitureX: number; // 가구 X 위치 (mm)
+  furnitureWidth: number; // 가구 전체 너비 (mm)
+  furnitureHeight: number; // 가구 전체 높이 (mm)
+  items: {
+    type: 'door' | 'drawer';
+    x: number; // 도어/서랍 X 위치 (가구 기준, mm)
+    y: number; // 도어/서랍 Y 위치 (가구 바닥 기준, mm)
+    width: number; // 도어/서랍 너비 (mm)
+    height: number; // 도어/서랍 높이 (mm)
+    label?: string; // 라벨 (서랍1, 서랍2 등)
+  }[];
+}
+
+/**
+ * 가구에서 도어/서랍 정보 추출
+ */
+const extractDoorInfo = (
+  placedModule: PlacedModule,
+  moduleData: ModuleData | undefined,
+  spaceInfo: SpaceInfo
+): DoorDrawingItem | null => {
+  if (!moduleData) return null;
+
+  const hasDoor = placedModule.hasDoor ?? moduleData.hasDoor ?? false;
+  const sections = moduleData.modelConfig?.sections || [];
+
+  // 도어나 서랍이 있는 섹션이 있는지 확인
+  const hasDrawer = sections.some(s => s.type === 'drawer');
+
+  if (!hasDoor && !hasDrawer) return null;
+
+  const furnitureWidth = placedModule.customWidth || moduleData.dimensions.width;
+  const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
+  const furnitureX = placedModule.position.x * 100; // Three.js 좌표를 mm로 변환
+
+  const items: DoorDrawingItem['items'] = [];
+
+  // 기본 두께 (측판, 하판 등)
+  const basicThickness = moduleData.modelConfig?.basicThickness || 18;
+
+  // 도어 갭 설정
+  const doorTopGap = placedModule.doorTopGap ?? 10;
+  const doorBottomGap = placedModule.doorBottomGap ?? 65;
+
+  // 서랍 처리
+  let currentY = basicThickness; // 하판 위부터 시작
+
+  for (const section of sections) {
+    if (section.type === 'drawer') {
+      const drawerHeights = section.drawerHeights || [];
+      const gapHeight = section.gapHeight || 24;
+
+      for (let i = 0; i < drawerHeights.length; i++) {
+        const drawerHeight = drawerHeights[i];
+
+        items.push({
+          type: 'drawer',
+          x: basicThickness, // 좌측판 두께
+          y: currentY,
+          width: furnitureWidth - basicThickness * 2, // 양쪽 측판 두께 제외
+          height: drawerHeight,
+          label: `서랍 ${i + 1}`
+        });
+
+        currentY += drawerHeight + gapHeight;
+      }
+    } else if (section.type === 'hanging' || section.type === 'shelf' || section.type === 'open') {
+      // 서랍이 아닌 섹션의 높이를 계산
+      if (section.heightType === 'absolute') {
+        currentY += section.height;
+      } else {
+        // 퍼센트 기반 높이 계산
+        currentY += (section.height / 100) * furnitureHeight;
+      }
+    }
+  }
+
+  // 도어 처리 (hasDoor가 true인 경우)
+  if (hasDoor) {
+    const doorX = basicThickness;
+    const doorY = doorBottomGap;
+    const doorWidth = furnitureWidth - basicThickness * 2;
+    const doorHeight = furnitureHeight - doorTopGap - doorBottomGap;
+
+    // 도어가 서랍과 겹치지 않도록 서랍 영역 위에 도어 배치
+    // 서랍이 있는 경우 도어 영역 조정
+    const hasDrawerSections = sections.some(s => s.type === 'drawer');
+
+    if (!hasDrawerSections && doorHeight > 0) {
+      items.push({
+        type: 'door',
+        x: doorX,
+        y: doorY,
+        width: doorWidth,
+        height: doorHeight,
+        label: '도어'
+      });
+    }
+  }
+
+  if (items.length === 0) return null;
+
+  return {
+    moduleId: placedModule.moduleId,
+    moduleName: moduleData.name,
+    furnitureX,
+    furnitureWidth,
+    furnitureHeight,
+    items
+  };
+};
+
+export type ViewType = '3d-front' | '2d-front' | '2d-top' | '2d-left' | '2d-door';
 
 interface ViewInfo {
   id: ViewType;
   name: string;
   viewMode: '2D' | '3D';
   viewDirection?: 'front' | 'top' | 'left';
+  isDoorDrawing?: boolean; // 도어도면 여부
 }
 
 const VIEW_TYPES: ViewInfo[] = [
@@ -25,7 +142,204 @@ const VIEW_TYPES: ViewInfo[] = [
   { id: '2d-front', name: '입면도 (Front View)', viewMode: '2D', viewDirection: 'front' },
   { id: '2d-top', name: '평면도 (Top View)', viewMode: '2D', viewDirection: 'top' },
   { id: '2d-left', name: '측면도 (Side View)', viewMode: '2D', viewDirection: 'left' },
+  { id: '2d-door', name: '도어도면 (Door Drawing)', viewMode: '2D', viewDirection: 'front', isDoorDrawing: true },
 ];
+
+/**
+ * 도어도면 페이지 렌더링 함수
+ * 가구 본체 없이 도어/서랍만 정면뷰로 사이즈와 함께 표시
+ */
+const renderDoorDrawingPage = async (
+  pdf: jsPDF,
+  doorItems: DoorDrawingItem[],
+  pageWidth: number,
+  pageHeight: number,
+  borderMargin: number,
+  innerMargin: number,
+  titleBlockHeight: number,
+  titleBlockWidth: number,
+  projectTitle: string,
+  currentDate: string,
+  pageIndex: number,
+  totalPages: number,
+  colors: { black: string; gray: string; lightGray: string; text: string; white: string }
+): Promise<void> => {
+  // 도면 영역 정의
+  const drawingAreaX = borderMargin + innerMargin + 10;
+  const drawingAreaY = borderMargin + innerMargin + 20;
+  const drawingAreaWidth = pageWidth - 2 * (borderMargin + innerMargin) - titleBlockWidth - 30;
+  const drawingAreaHeight = pageHeight - 2 * (borderMargin + innerMargin) - 60;
+
+  // 전체 도어/서랍의 범위 계산 (스케일 결정용)
+  let minX = Infinity, maxX = -Infinity;
+  let minY = Infinity, maxY = -Infinity;
+
+  for (const doorItem of doorItems) {
+    for (const item of doorItem.items) {
+      const absX = doorItem.furnitureX + item.x;
+      minX = Math.min(minX, absX);
+      maxX = Math.max(maxX, absX + item.width);
+      minY = Math.min(minY, item.y);
+      maxY = Math.max(maxY, item.y + item.height);
+    }
+  }
+
+  // 여유 마진 추가
+  const marginMm = 100; // 100mm 여유
+  minX -= marginMm;
+  maxX += marginMm;
+  minY -= marginMm;
+  maxY += marginMm;
+
+  const totalWidthMm = maxX - minX;
+  const totalHeightMm = maxY - minY;
+
+  // 스케일 계산 (가로/세로 중 작은 쪽에 맞춤)
+  const scaleX = drawingAreaWidth / totalWidthMm;
+  const scaleY = drawingAreaHeight / totalHeightMm;
+  const scale = Math.min(scaleX, scaleY) * 0.85; // 85%로 줄여서 여유 확보
+
+  // mm 좌표를 PDF 좌표로 변환하는 함수
+  const toPageX = (mmX: number): number => {
+    return drawingAreaX + (mmX - minX) * scale + (drawingAreaWidth - totalWidthMm * scale) / 2;
+  };
+  const toPageY = (mmY: number): number => {
+    // Y축 반전 (PDF는 위에서 아래로, 도면은 아래에서 위로)
+    return drawingAreaY + drawingAreaHeight - (mmY - minY) * scale - (drawingAreaHeight - totalHeightMm * scale) / 2;
+  };
+
+  // 스케일 표시
+  const scaleText = `1:${Math.round(1 / scale)}`;
+  pdf.setFontSize(8);
+  pdf.setTextColor(100, 100, 100);
+  pdf.text(`Scale: ${scaleText}`, drawingAreaX + drawingAreaWidth - 50, drawingAreaY - 5);
+
+  // 각 가구의 도어/서랍 그리기
+  for (const doorItem of doorItems) {
+    for (const item of doorItem.items) {
+      const absX = doorItem.furnitureX + item.x;
+      const pdfX = toPageX(absX);
+      const pdfY = toPageY(item.y + item.height); // Y 반전으로 상단 좌표
+      const pdfWidth = item.width * scale;
+      const pdfHeight = item.height * scale;
+
+      // 도어/서랍 사각형 그리기
+      if (item.type === 'door') {
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.5);
+        pdf.setFillColor(245, 245, 245); // 연한 회색 배경
+        pdf.rect(pdfX, pdfY, pdfWidth, pdfHeight, 'FD');
+
+        // 도어 힌지 표시 (왼쪽에 작은 원)
+        pdf.setFillColor(0, 0, 0);
+        pdf.circle(pdfX + 3, pdfY + 10, 2, 'F');
+        pdf.circle(pdfX + 3, pdfY + pdfHeight - 10, 2, 'F');
+      } else {
+        // 서랍
+        pdf.setDrawColor(0, 0, 0);
+        pdf.setLineWidth(0.5);
+        pdf.setFillColor(250, 250, 250);
+        pdf.rect(pdfX, pdfY, pdfWidth, pdfHeight, 'FD');
+
+        // 서랍 손잡이 표시 (중앙에 가로선)
+        const handleY = pdfY + pdfHeight / 2;
+        const handleWidth = Math.min(pdfWidth * 0.3, 30);
+        pdf.setLineWidth(1);
+        pdf.line(pdfX + pdfWidth / 2 - handleWidth / 2, handleY, pdfX + pdfWidth / 2 + handleWidth / 2, handleY);
+      }
+
+      // 치수선 그리기
+      pdf.setLineWidth(0.2);
+      pdf.setDrawColor(100, 100, 100);
+
+      // 너비 치수선 (상단)
+      const dimLineOffset = 8;
+      const dimY = pdfY - dimLineOffset;
+
+      // 치수선
+      pdf.line(pdfX, dimY, pdfX + pdfWidth, dimY);
+      // 끝단 표시
+      pdf.line(pdfX, dimY - 2, pdfX, dimY + 2);
+      pdf.line(pdfX + pdfWidth, dimY - 2, pdfX + pdfWidth, dimY + 2);
+      // 연장선
+      pdf.setDrawColor(200, 200, 200);
+      pdf.line(pdfX, pdfY, pdfX, dimY - 2);
+      pdf.line(pdfX + pdfWidth, pdfY, pdfX + pdfWidth, dimY - 2);
+
+      // 너비 텍스트
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setTextColor(0, 0, 0);
+      pdf.setFontSize(7);
+      pdf.text(`${Math.round(item.width)}`, pdfX + pdfWidth / 2, dimY - 2, { align: 'center' });
+
+      // 높이 치수선 (우측)
+      const dimX = pdfX + pdfWidth + dimLineOffset;
+
+      pdf.setDrawColor(100, 100, 100);
+      pdf.line(dimX, pdfY, dimX, pdfY + pdfHeight);
+      // 끝단 표시
+      pdf.line(dimX - 2, pdfY, dimX + 2, pdfY);
+      pdf.line(dimX - 2, pdfY + pdfHeight, dimX + 2, pdfY + pdfHeight);
+      // 연장선
+      pdf.setDrawColor(200, 200, 200);
+      pdf.line(pdfX + pdfWidth, pdfY, dimX - 2, pdfY);
+      pdf.line(pdfX + pdfWidth, pdfY + pdfHeight, dimX - 2, pdfY + pdfHeight);
+
+      // 높이 텍스트 (세로로 회전)
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setTextColor(0, 0, 0);
+      pdf.text(`${Math.round(item.height)}`, dimX + 3, pdfY + pdfHeight / 2, { angle: 90 });
+
+      // 라벨 표시 (도어/서랍 내부)
+      if (item.label) {
+        pdf.setFontSize(6);
+        pdf.setTextColor(80, 80, 80);
+        await addKoreanText(pdf, item.label, pdfX + pdfWidth / 2, pdfY + pdfHeight - 5, {
+          fontSize: 6,
+          color: '#505050',
+          align: 'center'
+        });
+      }
+    }
+
+    // 가구 이름 표시 (하단)
+    const furnitureCenterX = toPageX(doorItem.furnitureX + doorItem.furnitureWidth / 2);
+    const furnitureBottomY = toPageY(0) + 15;
+    pdf.setFontSize(8);
+    await addKoreanText(pdf, doorItem.moduleName, furnitureCenterX, furnitureBottomY, {
+      fontSize: 8,
+      color: '#333333',
+      align: 'center'
+    });
+  }
+
+  // 범례 추가 (좌측 하단)
+  const legendX = drawingAreaX;
+  const legendY = pageHeight - borderMargin - innerMargin - titleBlockHeight - 50;
+
+  pdf.setFontSize(7);
+  pdf.setTextColor(0, 0, 0);
+  await addKoreanText(pdf, '범례:', legendX, legendY, { fontSize: 7, color: '#000000' });
+
+  // 도어 범례
+  pdf.setFillColor(245, 245, 245);
+  pdf.setDrawColor(0, 0, 0);
+  pdf.setLineWidth(0.3);
+  pdf.rect(legendX, legendY + 3, 15, 10, 'FD');
+  pdf.setFontSize(6);
+  await addKoreanText(pdf, '도어', legendX + 20, legendY + 10, { fontSize: 6, color: '#000000' });
+
+  // 서랍 범례
+  pdf.setFillColor(250, 250, 250);
+  pdf.rect(legendX + 50, legendY + 3, 15, 10, 'FD');
+  pdf.line(legendX + 55, legendY + 8, legendX + 60, legendY + 8); // 손잡이
+  await addKoreanText(pdf, '서랍', legendX + 70, legendY + 10, { fontSize: 6, color: '#000000' });
+
+  // 단위 표시
+  pdf.setFontSize(6);
+  pdf.setTextColor(100, 100, 100);
+  pdf.text('All dimensions in mm', legendX, legendY + 20);
+};
 
 export function usePDFExport() {
   const [isExporting, setIsExporting] = useState(false);
@@ -461,23 +775,84 @@ export function usePDFExport() {
 
           // 렌더링 모드
           pdf.text('RENDER:', titleBlockX + 145, titleBlockY + 37);
-          pdf.text(targetRenderMode.toUpperCase(), titleBlockX + 175, titleBlockY + 37);
+          pdf.text(viewInfo.isDoorDrawing ? 'DOOR DETAIL' : targetRenderMode.toUpperCase(), titleBlockX + 175, titleBlockY + 37);
 
           try {
-            // 뷰 캡처 (측면뷰의 경우 슬롯 인덱스 전달)
-            const imageData = await captureView(viewType, targetRenderMode, currentSlotIndex);
-          
           // 이미지 영역 정의 (타이틀 블록을 피해서)
           const drawingAreaX = borderMargin + innerMargin + 5;
           const drawingAreaY = borderMargin + innerMargin + 5;
           const drawingAreaWidth = pageWidth - 2 * (borderMargin + innerMargin) - 10;
           const drawingAreaHeight = pageHeight - 2 * (borderMargin + innerMargin) - titleBlockHeight - 15;
-          
+
+          // 도어도면인 경우 별도 렌더링
+          if (viewInfo.isDoorDrawing) {
+            // 도어/서랍 정보 추출
+            const doorItems: DoorDrawingItem[] = [];
+            for (const placedModule of placedModules) {
+              const moduleData = getModuleById(placedModule.moduleId, spaceInfo);
+              const doorInfo = extractDoorInfo(placedModule, moduleData, spaceInfo);
+              if (doorInfo) {
+                doorItems.push(doorInfo);
+              }
+            }
+
+            if (doorItems.length > 0) {
+              // 도어도면 렌더링
+              await renderDoorDrawingPage(
+                pdf,
+                doorItems,
+                pageWidth,
+                pageHeight,
+                borderMargin,
+                innerMargin,
+                titleBlockHeight,
+                titleBlockWidth,
+                projectTitle,
+                currentDate,
+                pageIndex,
+                totalPages,
+                colors
+              );
+
+              // 뷰 타이틀 (좌측 하단)
+              const viewTitleY = titleBlockY + 10;
+              pdf.setLineWidth(0.3);
+              pdf.rect(drawingAreaX, viewTitleY, 100, 25, 'S');
+
+              pdf.setFont('helvetica', 'bold');
+              pdf.setFontSize(10);
+              pdf.text('VIEW TITLE', drawingAreaX + 50, viewTitleY + 8, { align: 'center' });
+
+              pdf.setFont('helvetica', 'normal');
+              pdf.setFontSize(9);
+              await addMixedText(pdf, viewInfo.name.toUpperCase(), drawingAreaX + 50, viewTitleY + 15, {
+                fontSize: 9,
+                color: colors.text,
+                align: 'center'
+              });
+
+              pdf.setFontSize(8);
+              pdf.text('SCALE: AS SHOWN', drawingAreaX + 50, viewTitleY + 21, { align: 'center' });
+            } else {
+              // 도어/서랍이 없는 경우 메시지 표시
+              pdf.setTextColor(150, 150, 150);
+              pdf.setFontSize(14);
+              await addKoreanText(pdf, '도어/서랍이 없습니다', pageWidth / 2, pageHeight / 2 - 10, {
+                fontSize: 14,
+                color: '#969696',
+                align: 'center'
+              });
+              pdf.text('NO DOORS OR DRAWERS FOUND', pageWidth / 2, pageHeight / 2 + 5, { align: 'center' });
+            }
+          } else {
+            // 기존 캔버스 캡처 방식
+            const imageData = await captureView(viewType, targetRenderMode, currentSlotIndex);
+
           // 뷰 타이틀 (좌측 하단)
           const viewTitleY = titleBlockY + 10;
           pdf.setLineWidth(0.3);
           pdf.rect(drawingAreaX, viewTitleY, 100, 25, 'S');
-          
+
           // 뷰 타이틀 내용 - 텍스트 위치를 박스 내부 중앙에 맞춤
           pdf.setFont('helvetica', 'bold');
           pdf.setFontSize(10);
@@ -505,6 +880,7 @@ export function usePDFExport() {
             undefined,
             'NONE' // 압축 없이 원본 품질 유지 (벡터 품질에 가깝게)
           );
+          } // else (기존 캔버스 캡처) 끝
         } catch (error) {
           console.error(`뷰 캡처 실패 (${viewType}):`, error);
           // 캡처 실패 시 플레이스홀더 표시
