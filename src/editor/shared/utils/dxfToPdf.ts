@@ -717,23 +717,21 @@ export const downloadDxfAsPdf = async (
       console.log(`📐 door-only: ${doorItems.length}개 가구에서 도어/서랍 추출됨`);
       renderDoorDrawingToPdf(pdf, doorItems, spaceInfo, pageWidth, pageHeight);
     }
-    // 입면도 (도어 없음) - 가구의 hasDoor를 false로 설정하여 렌더링
+    // 입면도 (도어 없음) - DOOR 레이어 필터링하여 렌더링
     else if (viewDirection === 'front-no-door') {
       if (!isFirstPage) pdf.addPage();
       isFirstPage = false;
 
       console.log(`📐 front-no-door: 도어 없는 입면도 렌더링...`);
 
-      // 가구의 hasDoor를 임시로 false로 설정
-      const modulesWithoutDoor = placedModules.map(m => ({
-        ...m,
-        hasDoor: false
-      }));
-
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
-      const { lines, texts } = generateViewDataFromDxf(spaceInfo, modulesWithoutDoor, dxfViewDirection);
-      console.log(`📐 front-no-door: ${lines.length}개 라인, ${texts.length}개 텍스트`);
-      renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight);
+      const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
+
+      // DOOR 레이어 필터링 (도어 없는 정면도)
+      const filteredLines = lines.filter(line => line.layer !== 'DOOR');
+
+      console.log(`📐 front-no-door: 원본 ${lines.length}개 라인 → 필터링 후 ${filteredLines.length}개 라인, ${texts.length}개 텍스트`);
+      renderToPdf(pdf, filteredLines, texts, spaceInfo, viewDirection, pageWidth, pageHeight);
     }
     else {
       // 일반 뷰 (front, top)
