@@ -639,33 +639,44 @@ const DoorModule: React.FC<DoorModuleProps> = ({
   // zone prop이 없으면 spaceInfo.zone을 fallback으로 사용
   const effectiveZone = zone ?? (spaceInfo as any)?.zone;
 
+  // 🔴🔴🔴 디버깅: 듀얼/싱글 구분하여 zone 전달 확인
+  const isDualModule = moduleData?.id?.includes('dual');
+  console.log('🚪🔴🔴🔴 [도어 zone 확인]:', {
+    isDualModule,
+    moduleId: moduleData?.id,
+    zoneProp: zone,
+    spaceInfoZone: (spaceInfo as any)?.zone,
+    effectiveZone,
+    droppedCeilingEnabled: originalSpaceInfo.droppedCeiling?.enabled,
+    조건충족: originalSpaceInfo.droppedCeiling?.enabled && effectiveZone === 'dropped'
+  });
+
   // 단내림 높이 조정 (싱글/듀얼 모두 동일하게 처리)
   // 키큰장(싱글/듀얼)이면서 단내림 구간에 배치된 경우
   if (originalSpaceInfo.droppedCeiling?.enabled && effectiveZone === 'dropped') {
     // 단내림 구간 높이 = 전체 높이 - 내려온 높이
     const dropHeight = originalSpaceInfo.droppedCeiling.dropHeight || 0;
     fullSpaceHeight = originalSpaceInfo.height - dropHeight;
-    console.log('🚪📏 [도어] 단내림 구간 높이 적용:', {
+    console.log('🚪✅ [도어] 단내림 구간 높이 적용:', {
       effectiveZone,
       moduleId: moduleData?.id,
-      isDual: moduleData?.id?.includes('dual'),
+      isDual: isDualModule,
       normalHeight: originalSpaceInfo.height,
       dropHeight,
       droppedHeight: fullSpaceHeight
     });
-  } else {
+  } else if (originalSpaceInfo.droppedCeiling?.enabled) {
     // 디버그: 단내림 조정이 적용되지 않은 이유 로깅
-    console.log('🚪⚠️ [도어] 단내림 높이 미적용:', {
+    console.log('🚪❌ [도어] 단내림 높이 미적용:', {
       droppedCeilingEnabled: originalSpaceInfo.droppedCeiling?.enabled,
       zoneProp: zone,
       spaceInfoZone: (spaceInfo as any)?.zone,
       effectiveZone,
       moduleId: moduleData?.id,
-      이유: !originalSpaceInfo.droppedCeiling?.enabled
-        ? '단내림 비활성화'
-        : effectiveZone !== 'dropped'
-          ? `zone이 'dropped'가 아님 (현재: ${effectiveZone})`
-          : '알 수 없음'
+      isDual: isDualModule,
+      이유: effectiveZone !== 'dropped'
+        ? `zone이 'dropped'가 아님 (현재: ${effectiveZone})`
+        : '알 수 없음'
     });
   }
 

@@ -376,39 +376,62 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 내경 공간 계산 - zone 정보가 있으면 zone별 계산
   let internalSpace = calculateInternalSpace(spaceInfo);
   let zoneSpaceInfo = spaceInfo;
-  
+
+  // zone 자동 감지: placedModule.zone이 없으면 위치 기반으로 zone 결정
+  let effectiveZone = placedModule.zone;
+  if (spaceInfo.droppedCeiling?.enabled && !effectiveZone && placedModule.slotIndex !== undefined) {
+    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+    const droppedPosition = spaceInfo.droppedCeiling.position;
+    const droppedCount = zoneInfo.dropped?.columnCount ?? 0;
+    const normalCount = zoneInfo.normal?.columnCount ?? 0;
+
+    // 위치 기반 zone 결정
+    if (droppedPosition === 'left') {
+      // 단내림 왼쪽: 0 ~ (droppedCount-1)은 dropped, 나머지는 normal
+      effectiveZone = placedModule.slotIndex < droppedCount ? 'dropped' : 'normal';
+    } else {
+      // 단내림 오른쪽: 0 ~ (normalCount-1)은 normal, 나머지는 dropped
+      effectiveZone = placedModule.slotIndex < normalCount ? 'normal' : 'dropped';
+    }
+    console.log('🔴 [FurnitureItem] zone 자동 감지:', {
+      slotIndex: placedModule.slotIndex,
+      droppedPosition,
+      droppedCount,
+      normalCount,
+      effectiveZone
+    });
+  }
+
   // 단내림이 활성화되고 zone 정보가 있는 경우 영역별 처리
   // 높이는 항상 재계산해야 하므로 조건 제거
-  if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
+  if (spaceInfo.droppedCeiling?.enabled && effectiveZone) {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-    const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-    
+    const targetZone = effectiveZone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
+
     // 단내림 영역별 외경 너비 계산 (프레임 포함)
     const droppedCeilingWidth = spaceInfo.droppedCeiling?.width || 900;
     let zoneOuterWidth: number;
-    
-    if (placedModule.zone === 'dropped') {
+
+    if (effectiveZone === 'dropped') {
       // 단내림 영역의 외경 너비
       zoneOuterWidth = droppedCeilingWidth;
     } else {
       // 메인 영역의 외경 너비
       zoneOuterWidth = spaceInfo.width - droppedCeilingWidth;
     }
-    
+
     // 영역별 spaceInfo 생성
     zoneSpaceInfo = {
       ...spaceInfo,
       width: zoneOuterWidth,  // zone의 외경 너비
-      zone: placedModule.zone  // zone 정보 추가
+      zone: effectiveZone  // zone 정보 추가 (자동 감지된 zone 사용)
     };
-    
+
     internalSpace = calculateInternalSpace(zoneSpaceInfo);
     internalSpace.startX = targetZone.startX;
-    
+
     // calculateInternalSpace에서 이미 zone === 'dropped'일 때 높이를 조정하므로
     // 여기서는 추가 조정하지 않음
-    if (placedModule.zone === 'dropped') {
-      }
   }
   
   // 모듈 데이터 가져오기 - zone별 spaceInfo 사용
@@ -2976,9 +2999,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     });
                     return placedModule.panelGrainDirections;
                   })()} // 패널별 개별 결 방향
-                  zone={(() => {
-                    return placedModule.zone;
-                  })()}
+                  zone={effectiveZone}
                 />
               );
             })()}
