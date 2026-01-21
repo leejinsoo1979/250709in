@@ -401,16 +401,6 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const droppedBoundary = totalWidth / 2 - droppedCeilingWidth;
       effectiveZone = positionXMm > droppedBoundary ? 'dropped' : 'normal';
     }
-    console.log('🔴 [FurnitureItem] zone 자동 감지 (X 위치 기반):', {
-      moduleId: placedModule.moduleId,
-      isDual: placedModule.moduleId.includes('dual'),
-      positionX: placedModule.position.x,
-      positionXMm,
-      droppedPosition,
-      droppedCeilingWidth,
-      totalWidth,
-      effectiveZone
-    });
   }
 
   // 단내림이 활성화되고 zone 정보가 있는 경우 영역별 처리
