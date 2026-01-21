@@ -326,7 +326,8 @@ export class PDFExporter {
         && !panel.name?.includes('도어');
 
       if (isFurnitureSidePanel) {
-        const originalWidth = panel.width;
+        const originalWidth = panel.width;   // 측판의 깊이 방향 (가구 깊이)
+        const originalHeight = panel.height; // 측판의 높이 방향
         const backPanelDepthOffset = 17;
         const grooveWidth = 10;
         const grooveStartX = originalWidth - backPanelDepthOffset - grooveWidth;
@@ -335,18 +336,41 @@ export class PDFExporter {
         this.pdf.setLineWidth(0.1);
         this.pdf.setLineDashPattern([1, 1], 0);
 
-        let gx: number, gw: number, gy: number, gh: number;
+        // 먼저 시트 좌표 계산 (옵티마이저와 동일)
+        let sheetGx: number, sheetGy: number, sheetGw: number, sheetGh: number;
+
+        if (panel.rotated) {
+          // 패널이 90도 회전된 경우:
+          // 원래: width=깊이, height=높이 → 회전 후: X축=높이, Y축=깊이
+          // 홈은 깊이 방향으로 있으므로 Y축을 따라 세로 줄로 표시
+          sheetGx = panel.x; // 패널 왼쪽 끝부터
+          sheetGw = originalHeight; // 홈 길이 (높이 방향 전체)
+          sheetGy = panel.y + grooveStartX; // 홈 시작 Y 위치
+          sheetGh = grooveWidth; // 홈 폭
+        } else {
+          // 패널이 회전 안된 경우:
+          // X축=깊이, Y축=높이
+          // 홈은 깊이 방향이므로 특정 X 위치에 세로 줄로 표시
+          sheetGx = panel.x + grooveStartX; // 홈 시작 X 위치
+          sheetGw = grooveWidth; // 홈 폭
+          sheetGy = panel.y; // 패널 위쪽 끝부터
+          sheetGh = originalHeight; // 홈 길이 (높이 방향 전체)
+        }
+
+        // 시트 좌표를 PDF 좌표로 변환
+        let gx: number, gy: number, gw: number, gh: number;
 
         if (isRotated) {
-          gx = x;
-          gw = width;
-          gy = y + (result.stockPanel.width - panel.x - grooveStartX - grooveWidth) * scale;
-          gh = grooveWidth * scale;
+          // PDF 시트 회전: 시트Y → PDF X, (stockWidth - 시트X) → PDF Y
+          gx = offsetX + sheetGy * scale;
+          gy = offsetY + (result.stockPanel.width - sheetGx - sheetGw) * scale;
+          gw = sheetGh * scale;
+          gh = sheetGw * scale;
         } else {
-          gx = x + grooveStartX * scale;
-          gw = grooveWidth * scale;
-          gy = y;
-          gh = height;
+          gx = offsetX + sheetGx * scale;
+          gy = offsetY + sheetGy * scale;
+          gw = sheetGw * scale;
+          gh = sheetGh * scale;
         }
 
         this.pdf.rect(gx, gy, gw, gh, 'S');
