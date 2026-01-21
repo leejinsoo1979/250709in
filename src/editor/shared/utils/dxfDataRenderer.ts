@@ -1269,6 +1269,7 @@ export const extractFromScene = (
         const combinedNames = lowerName + parentNames;
 
         const isBackPanelEdge = combinedNames.includes('back-panel') || combinedNames.includes('백패널');
+        const isReinforcementEdge = combinedNames.includes('보강대') || combinedNames.includes('reinforcement');
         const isClothingRodEdge = combinedNames.includes('clothing-rod') || combinedNames.includes('옷봉');
         const isAdjustableFootEdge = combinedNames.includes('adjustable-foot') || combinedNames.includes('조절발');
         const isVentilationEdge = combinedNames.includes('ventilation') || combinedNames.includes('환기');
@@ -1305,6 +1306,8 @@ export const extractFromScene = (
         // 디버그 로깅
         if (isBackPanelEdge) {
           console.log(`📐 백패널 엣지: ${name}, 추출된 색상 ACI=${lsColor}`);
+        } else if (isReinforcementEdge) {
+          console.log(`📐 보강대 엣지: ${name}, 추출된 색상 ACI=${lsColor}`);
         } else if (isVentilationEdge) {
           console.log(`📐 환기캡 엣지: ${name}, 추출된 색상 ACI=${lsColor}`);
         } else if (isAdjustableFootEdge) {
@@ -1318,7 +1321,8 @@ export const extractFromScene = (
         }
 
         // 가구 패널/공간 프레임/도어 엣지는 뒤쪽 필터링 건너뜀 (좌측판, 우측판, 상판, 하판, 좌우상하 프레임 등 모두 보임)
-        const skipBackFilter = isFurniturePanelEdge || isBackPanelEdge || isClothingRodEdge || isAdjustableFootEdge || isSpaceFrame || isDoorEdge;
+        // 보강대(reinforcement)도 탑뷰에서 보여야 하므로 필터링 제외
+        const skipBackFilter = isFurniturePanelEdge || isBackPanelEdge || isReinforcementEdge || isClothingRodEdge || isAdjustableFootEdge || isSpaceFrame || isDoorEdge;
 
         // 레이어 및 색상 결정 이유 로깅
         let lsLayer = layer; // 기본값은 determineLayer에서 결정된 값
@@ -1328,6 +1332,10 @@ export const extractFromScene = (
           lsLayer = 'BACK_PANEL';
           lsColor = 30; // ACI 30 = 오렌지 (2D에서 가구패널과 동일한 색상, 투명도 10%는 CAD에서 별도 설정)
           colorReason = '백패널';
+        } else if (isReinforcementEdge) {
+          lsLayer = 'BACK_PANEL'; // 보강대도 BACK_PANEL 레이어 사용
+          lsColor = 30; // ACI 30 = 오렌지 (백패널과 동일)
+          colorReason = '보강대';
         } else if (isClothingRodEdge) {
           lsLayer = 'CLOTHING_ROD';
           lsColor = 7; // ACI 7 = 흰색/검정 (레이어 색상과 동일)
@@ -1358,7 +1366,7 @@ export const extractFromScene = (
         lineSegmentsObjects++;
 
         // 가구/프레임 관련 객체는 항상 로깅
-        if (isFurniturePanelEdge || isSpaceFrame || isBackPanelEdge) {
+        if (isFurniturePanelEdge || isSpaceFrame || isBackPanelEdge || isReinforcementEdge) {
           console.log(`📐 [${colorReason}] LineSegments: ${name || '(이름없음)'}, 버텍스 ${posCount}개, 라인 ${extractedLines.length}개, 색상 ACI=${lsColor}${skipBackFilter ? ' (뒤쪽 필터링 스킵)' : ''}`);
         }
       } else {
