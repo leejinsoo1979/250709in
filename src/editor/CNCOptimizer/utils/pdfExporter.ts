@@ -272,25 +272,42 @@ export class PDFExporter {
         this.pdf.setFillColor(255, 255, 255);
         this.pdf.setLineWidth(0.1);
 
-        // CuttingLayoutPreview2.tsx와 동일한 좌표 계산
+        // ★★★ 보링 좌표 계산 - PDF 시트 회전 고려 ★★★
+        // PDF에서 isRotated=true일 때 시트 자체가 90도 회전되어 그려짐:
+        // - 패널의 panel.y → PDF X축
+        // - 패널의 panel.x → PDF Y축 (반전)
+        // - panel.height → PDF width
+        // - panel.width → PDF height
         panel.boringPositions.forEach((boringPosMm: number) => {
           depthPositions.forEach((depthPosMm: number) => {
             let boringX: number, boringY: number;
 
-            // ★★★ PDF에서 패널은 이미 x, y, width, height로 그려짐 ★★★
-            // 옵티마이저와 동일하게: 패널 내부 좌표를 PDF 좌표로 변환
-            if (isDrawerSidePanel || isDrawerFrontPanel) {
-              // 서랍 측판/앞판: boringPosMm → X축, depthPosMm → Y축
-              boringX = x + boringPosMm * scale;
-              boringY = y + depthPosMm * scale;
-            } else if (panel.rotated) {
-              // 가구 측판 (rotated=true)
-              boringX = x + depthPosMm * scale;
-              boringY = y + boringPosMm * scale;
+            if (isRotated) {
+              // ★★★ 시트가 90도 회전된 경우 ★★★
+              // 원본 패널 좌표계에서:
+              // - depthPosMm = X방향 (깊이, 0 ~ panel.width)
+              // - boringPosMm = Y방향 (높이, 0 ~ panel.height)
+              // PDF 변환 후:
+              // - PDF X = 패널의 Y방향 → boringPosMm
+              // - PDF Y = 패널의 X방향 (반전) → panel.width - depthPosMm
+              if (isDrawerSidePanel || isDrawerFrontPanel) {
+                // 서랍: boringPosMm=높이방향, depthPosMm=깊이방향
+                boringX = x + boringPosMm * scale;
+                boringY = y + (originalWidth - depthPosMm) * scale;
+              } else {
+                // 가구 측판: depthPosMm=깊이방향(X), boringPosMm=높이방향(Y)
+                boringX = x + boringPosMm * scale;
+                boringY = y + (originalWidth - depthPosMm) * scale;
+              }
             } else {
-              // 가구 측판 (rotated=false)
-              boringX = x + depthPosMm * scale;
-              boringY = y + boringPosMm * scale;
+              // ★★★ 시트가 회전 안 된 경우 (기존 로직) ★★★
+              if (isDrawerSidePanel || isDrawerFrontPanel) {
+                boringX = x + boringPosMm * scale;
+                boringY = y + depthPosMm * scale;
+              } else {
+                boringX = x + depthPosMm * scale;
+                boringY = y + boringPosMm * scale;
+              }
             }
 
             // 원 그리기 (타공 홀)
