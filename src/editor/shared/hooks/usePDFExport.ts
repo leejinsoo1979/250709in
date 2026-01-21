@@ -91,17 +91,17 @@ export function usePDFExport() {
       if ((viewInfo.viewDirection === 'left' || viewInfo.viewDirection === 'right') && slotIndex !== undefined) {
         setSelectedSlotIndex(slotIndex);
         console.log(`📸 측면뷰 슬롯 ${slotIndex} 선택`);
-
-        // 슬롯 선택 후 추가 대기 (상태 변경 + 리렌더링)
-        await new Promise(resolve => setTimeout(resolve, 500));
       } else if (viewInfo.viewDirection === 'left' || viewInfo.viewDirection === 'right') {
         // 측면뷰인데 슬롯 지정이 없으면 null로 리셋
         setSelectedSlotIndex(null);
       }
     }
 
-    // 뷰 변경이 적용되길 기다림 (2초로 증가)
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // 뷰 변경이 적용되길 기다림 (3초로 증가 - 카메라 및 씬 업데이트 완료 대기)
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // 추가 렌더링 사이클 대기 (requestAnimationFrame 2회)
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
     console.log(`📸 캡처 직전 상태: viewType=${viewType}, slotIndex=${slotIndex}`);
     
