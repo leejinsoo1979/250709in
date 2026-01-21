@@ -76,7 +76,7 @@ const extractDoorInfo = (
           y: currentY,
           width: furnitureWidth - basicThickness * 2, // 양쪽 측판 두께 제외
           height: drawerHeight,
-          label: `서랍 ${i + 1}`
+          label: `Drawer ${i + 1}`
         });
 
         currentY += drawerHeight + gapHeight;
@@ -110,7 +110,7 @@ const extractDoorInfo = (
         y: doorY,
         width: doorWidth,
         height: doorHeight,
-        label: '도어'
+        label: 'Door'
       });
     }
   }
@@ -294,23 +294,18 @@ const renderDoorDrawingPage = async (
       if (item.label) {
         pdf.setFontSize(6);
         pdf.setTextColor(80, 80, 80);
-        await addKoreanText(pdf, item.label, pdfX + pdfWidth / 2, pdfY + pdfHeight - 5, {
-          fontSize: 6,
-          color: '#505050',
-          align: 'center'
-        });
+        pdf.text(item.label, pdfX + pdfWidth / 2, pdfY + pdfHeight - 5, { align: 'center' });
       }
     }
 
-    // 가구 이름 표시 (하단)
+    // 가구 이름 표시 (하단) - 영문으로만 표시
     const furnitureCenterX = toPageX(doorItem.furnitureX + doorItem.furnitureWidth / 2);
     const furnitureBottomY = toPageY(0) + 15;
     pdf.setFontSize(8);
-    await addKoreanText(pdf, doorItem.moduleName, furnitureCenterX, furnitureBottomY, {
-      fontSize: 8,
-      color: '#333333',
-      align: 'center'
-    });
+    pdf.setTextColor(51, 51, 51);
+    // 모듈 이름에서 영문/숫자만 추출하거나 간단한 이름 사용
+    const simpleName = doorItem.moduleId.substring(0, 20);
+    pdf.text(simpleName, furnitureCenterX, furnitureBottomY, { align: 'center' });
   }
 
   // 범례 추가 (좌측 하단)
@@ -319,7 +314,7 @@ const renderDoorDrawingPage = async (
 
   pdf.setFontSize(7);
   pdf.setTextColor(0, 0, 0);
-  await addKoreanText(pdf, '범례:', legendX, legendY, { fontSize: 7, color: '#000000' });
+  pdf.text('Legend:', legendX, legendY);
 
   // 도어 범례
   pdf.setFillColor(245, 245, 245);
@@ -327,13 +322,13 @@ const renderDoorDrawingPage = async (
   pdf.setLineWidth(0.3);
   pdf.rect(legendX, legendY + 3, 15, 10, 'FD');
   pdf.setFontSize(6);
-  await addKoreanText(pdf, '도어', legendX + 20, legendY + 10, { fontSize: 6, color: '#000000' });
+  pdf.text('Door', legendX + 20, legendY + 10);
 
   // 서랍 범례
   pdf.setFillColor(250, 250, 250);
   pdf.rect(legendX + 50, legendY + 3, 15, 10, 'FD');
   pdf.line(legendX + 55, legendY + 8, legendX + 60, legendY + 8); // 손잡이
-  await addKoreanText(pdf, '서랍', legendX + 70, legendY + 10, { fontSize: 6, color: '#000000' });
+  pdf.text('Drawer', legendX + 70, legendY + 10);
 
   // 단위 표시
   pdf.setFontSize(6);
@@ -837,12 +832,7 @@ export function usePDFExport() {
               // 도어/서랍이 없는 경우 메시지 표시
               pdf.setTextColor(150, 150, 150);
               pdf.setFontSize(14);
-              await addKoreanText(pdf, '도어/서랍이 없습니다', pageWidth / 2, pageHeight / 2 - 10, {
-                fontSize: 14,
-                color: '#969696',
-                align: 'center'
-              });
-              pdf.text('NO DOORS OR DRAWERS FOUND', pageWidth / 2, pageHeight / 2 + 5, { align: 'center' });
+              pdf.text('NO DOORS OR DRAWERS FOUND', pageWidth / 2, pageHeight / 2, { align: 'center' });
             }
           } else {
             // 기존 캔버스 캡처 방식
@@ -899,13 +889,6 @@ export function usePDFExport() {
           pdf.setTextColor(150, 150, 150);
           pdf.setFont('helvetica', 'normal');
           pdf.setFontSize(14);
-          await addKoreanText(pdf, '뷰 캡처 실패', pageWidth / 2, pageHeight / 2 - 20, {
-            fontSize: 14,
-            color: '#969696',
-            align: 'center'
-          });
-          
-          pdf.setFontSize(10);
           pdf.text('VIEW CAPTURE FAILED', pageWidth / 2, pageHeight / 2, { align: 'center' });
         }
         
