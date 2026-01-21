@@ -715,7 +715,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
   // 치수선 위치 설정 - 일관된 간격으로 배치
   const hasPlacedModules = placedModules.length > 0;
   const is3DMode = currentViewDirection === '3D'; // 3D 모드인지 판단
-  const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
+  // hasDroppedCeiling은 이미 상단(212번줄)에서 선언됨
 
   // 치수선 간격 상수 (일관성 있는 레이아웃)
   const DIMENSION_GAP = 120; // 치수선 간 간격 (mm)
