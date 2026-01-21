@@ -1385,6 +1385,7 @@ export const extractFromScene = (
     // 모든 텍스트는 DIMENSIONS 레이어로 강제 (치수 텍스트이므로)
     // DIMENSIONS 레이어를 끄면 모든 숫자가 함께 사라짐
     // 탑뷰에서만 치수 텍스트 제외 (정면뷰, 측면뷰는 치수 표시)
+    // 도어 치수 텍스트(door-dimension-text)는 DOOR 레이어로 분류
     if (mesh.geometry && (mesh as any).text !== undefined) {
       // 탑뷰에서만 치수 텍스트 제외
       if (viewDirection === 'top') {
@@ -1399,16 +1400,33 @@ export const extractFromScene = (
 
         const projPos = projectTo2D(worldPos, scale);
 
+        // 자신 또는 부모 계층에서 door-dimension 확인
+        let textLayer = 'DIMENSIONS';
+        const textName = name.toLowerCase();
+        if (textName.includes('door-dimension')) {
+          textLayer = 'DOOR';
+        } else {
+          // 부모 계층에서 door-dimension 확인
+          let current: THREE.Object3D | null = mesh.parent;
+          while (current) {
+            if (current.name && current.name.toLowerCase().includes('door-dimension')) {
+              textLayer = 'DOOR';
+              break;
+            }
+            current = current.parent;
+          }
+        }
+
         texts.push({
           x: projPos.x,
           y: projPos.y,
           text: textContent,
           height: 25, // 2.5mm text height
           color: 7, // 치수 텍스트는 흰색/검정 (ACI 7)
-          layer: 'DIMENSIONS' // 모든 텍스트는 DIMENSIONS 레이어로 강제
+          layer: textLayer
         });
         textObjects++;
-        console.log(`📝 텍스트 추출: "${textContent}" → DIMENSIONS 레이어 (Z=${worldPos.z.toFixed(3)})`);
+        console.log(`📝 텍스트 추출: "${textContent}" → ${textLayer} 레이어 (Z=${worldPos.z.toFixed(3)})`);
       }
       return;
     }
