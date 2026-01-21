@@ -353,37 +353,55 @@ export class PDFExporter {
         this.pdf.setLineDashPattern([], 0);
       }
 
-      // 서랍 패널 바닥판 홈 - 시트 좌표 기반으로 계산 (보링과 동일한 방식)
-      if (panel.groovePositions && panel.groovePositions.length > 0) {
+      // 서랍 패널 바닥판 홈 - 옵티마이저와 동일한 방식
+      const isDrawerPanel = panel.name?.includes('서랍');
+      if (panel.groovePositions && panel.groovePositions.length > 0 && isDrawerPanel) {
         this.pdf.setDrawColor(100, 100, 100);
         this.pdf.setLineWidth(0.1);
         this.pdf.setLineDashPattern([1, 1], 0);
 
+        const isDrawerSidePanelForGroove = panel.name?.includes('서랍') &&
+          (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
+        const isDrawerFrontBackPanel = panel.name?.includes('서랍') &&
+          (panel.name?.includes('앞판') || panel.name?.includes('뒷판'));
+
         panel.groovePositions.forEach((groove: { y: number; height: number; depth: number }) => {
-          // 홈은 패널의 height 방향(Y축)에 있음
-          // groove.y = 홈 시작 위치 (height 기준)
+          // groove.y = 하단에서의 Y 위치 (height 기준)
           // groove.height = 홈 높이
-          // 홈은 패널 전체 width를 가로지름
+          // 옵티마이저: 서랍 측판/앞뒷판은 시트 좌측(X축)에 세로(Y축) 전체로 그림
 
-          // 시트 좌표 계산
-          const sheetGrooveX1 = panel.x;
-          const sheetGrooveX2 = panel.x + panel.width;
-          const sheetGrooveY1 = panel.y + groove.y;
-          const sheetGrooveY2 = panel.y + groove.y + groove.height;
+          // 옵티마이저에서의 시트 좌표 (x, y는 패널 위치)
+          // gx = x + grooveY, gw = grooveH, gy = y, gh = height
+          let sheetGx: number, sheetGy: number, sheetGw: number, sheetGh: number;
 
-          let gx: number, gy: number, gw: number, gh: number;
-
-          if (isRotated) {
-            // PDF 시트 회전
-            gx = offsetX + sheetGrooveY1 * scale;
-            gy = offsetY + (result.stockPanel.width - sheetGrooveX2) * scale;
-            gw = groove.height * scale;
-            gh = panel.width * scale;
+          if (isDrawerSidePanelForGroove || isDrawerFrontBackPanel) {
+            // 서랍 측판/앞뒷판: 좌측(X축)에 세로(Y축) 전체
+            // 시트 좌표: x + groove.y, 너비 groove.height, y부터 height 전체
+            sheetGx = panel.x + groove.y;
+            sheetGw = groove.height;
+            sheetGy = panel.y;
+            sheetGh = panel.height;
           } else {
-            gx = offsetX + sheetGrooveX1 * scale;
-            gy = offsetY + sheetGrooveY1 * scale;
-            gw = panel.width * scale;
-            gh = groove.height * scale;
+            // 기타: width 방향 전체에 groove.y 위치
+            sheetGx = panel.x;
+            sheetGw = panel.width;
+            sheetGy = panel.y + groove.y;
+            sheetGh = groove.height;
+          }
+
+          // 시트 좌표를 PDF 좌표로 변환
+          let gx: number, gy: number, gw: number, gh: number;
+          if (isRotated) {
+            // PDF 시트 회전: 시트Y → PDF X, (stockWidth - 시트X) → PDF Y
+            gx = offsetX + sheetGy * scale;
+            gy = offsetY + (result.stockPanel.width - sheetGx - sheetGw) * scale;
+            gw = sheetGh * scale;
+            gh = sheetGw * scale;
+          } else {
+            gx = offsetX + sheetGx * scale;
+            gy = offsetY + sheetGy * scale;
+            gw = sheetGw * scale;
+            gh = sheetGh * scale;
           }
 
           this.pdf.rect(gx, gy, gw, gh, 'S');
