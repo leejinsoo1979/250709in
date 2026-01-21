@@ -18,8 +18,8 @@ interface DrawingTypeInfo {
 const DRAWING_TYPES: DrawingTypeInfo[] = [
   {
     id: 'front',
-    name: '정면도',
-    description: '정면에서 본 도면',
+    name: '입면도',
+    description: '정면에서 본 도면 (Front View)',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <rect x="4" y="6" width="16" height="12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -31,7 +31,7 @@ const DRAWING_TYPES: DrawingTypeInfo[] = [
   {
     id: 'plan',
     name: '평면도',
-    description: '위에서 본 도면',
+    description: '위에서 본 도면 (Top View)',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <rect x="4" y="4" width="16" height="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -43,8 +43,8 @@ const DRAWING_TYPES: DrawingTypeInfo[] = [
   },
   {
     id: 'sideLeft',
-    name: '좌측면도',
-    description: '좌측에서 본 도면',
+    name: '측면도',
+    description: '측면에서 본 도면 (Side View)',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
         <path d="M4 6L8 8V18L4 20V6Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -54,14 +54,14 @@ const DRAWING_TYPES: DrawingTypeInfo[] = [
     )
   },
   {
-    id: 'sideRight',
-    name: '우측면도',
-    description: '우측에서 본 도면',
+    id: 'door',
+    name: '도어도면',
+    description: '도어/서랍 상세 도면',
     icon: (
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-        <rect x="4" y="8" width="12" height="10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M16 8L20 6V20L16 18V8Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <line x1="4" y1="13" x2="16" y2="13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeDasharray="2 2"/>
+        <rect x="6" y="4" width="12" height="16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        <circle cx="15" cy="12" r="1.5" stroke="currentColor" strokeWidth="1.5"/>
+        <line x1="9" y1="8" x2="9" y2="16" stroke="currentColor" strokeWidth="1" strokeDasharray="2 2"/>
       </svg>
     )
   }
@@ -75,7 +75,7 @@ const ExportPanel: React.FC = () => {
   const { validateDXFExport, getFirstErrorMessage } = useDXFValidation();
   
   const [isExporting, setIsExporting] = useState(false);
-  const [selectedDrawingTypes, setSelectedDrawingTypes] = useState<DrawingType[]>(['front', 'plan', 'sideLeft', 'sideRight']);
+  const [selectedDrawingTypes, setSelectedDrawingTypes] = useState<DrawingType[]>(['front', 'plan', 'sideLeft', 'door']);
   const [selectedPDFViews, setSelectedPDFViews] = useState<ViewType[]>(['2d-front', '2d-top', '2d-left']);
   const [pdfRenderMode, setPDFRenderMode] = useState<'solid' | 'wireframe'>('solid');
   const [activeTab, setActiveTab] = useState<'dxf' | 'pdf'>('dxf');

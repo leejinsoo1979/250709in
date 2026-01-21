@@ -8,8 +8,8 @@ import { getCurrentVersionId } from '@/services/designs.repo';
 import { auth } from '@/firebase/config';
 import { sceneHolder } from '../viewer3d/sceneHolder';
 
-// 도면 타입 정의 - 좌측뷰/우측뷰 분리
-export type DrawingType = 'front' | 'plan' | 'side' | 'sideLeft' | 'sideRight';
+// 도면 타입 정의
+export type DrawingType = 'front' | 'plan' | 'side' | 'sideLeft' | 'door';
 
 /**
  * DXF 내보내기 기능을 제공하는 커스텀 훅
@@ -83,11 +83,11 @@ export const useDXFExport = () => {
       console.log(`✅ DXF ${drawingType} 도면 내보내기 완료!`);
 
       const drawingTypeNames: Record<DrawingType, string> = {
-        front: '정면도',
+        front: '입면도',
         plan: '평면도',
-        side: '좌측면도',
-        sideLeft: '좌측면도',
-        sideRight: '우측면도'
+        side: '측면도',
+        sideLeft: '측면도',
+        door: '도어도면'
       };
 
       return {
@@ -229,11 +229,11 @@ export const useDXFExport = () => {
       console.log(`✅ DXF ZIP 파일 다운로드 완료: ${zipFilename}`);
 
       const drawingTypeNames: Record<DrawingType, string> = {
-        front: '정면도',
+        front: '입면도',
         plan: '평면도',
-        side: '좌측면도',
-        sideLeft: '좌측면도',
-        sideRight: '우측면도'
+        side: '측면도',
+        sideLeft: '측면도',
+        door: '도어도면'
       };
 
       const selectedDrawingNames = drawingTypes.map(type => drawingTypeNames[type]).join(', ');

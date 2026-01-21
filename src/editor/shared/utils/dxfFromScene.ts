@@ -3,8 +3,8 @@ import { PlacedModule } from '@/editor/shared/furniture/types';
 import { formatDxfDate } from './dxfKoreanText';
 import { generateDxfFromData, downloadDxf, type ViewDirection, type SideViewFilter } from './dxfDataRenderer';
 
-// 도면 타입 정의 - 좌측뷰/우측뷰 분리
-export type DrawingType = 'front' | 'plan' | 'side' | 'sideLeft' | 'sideRight';
+// 도면 타입 정의
+export type DrawingType = 'front' | 'plan' | 'side' | 'sideLeft' | 'door';
 
 /**
  * 도면 타입을 뷰 방향으로 변환
@@ -18,13 +18,11 @@ const drawingTypeToViewDirection = (drawingType: DrawingType): ViewDirection => 
       return 'top';
     case 'side':
     case 'sideLeft':
-      // 좌측면도: "좌측에서 본 도면" (ExportPanel 설명과 일치)
-      // 관찰자가 왼쪽(-X)에서 봄 = UI view2DDirection='left'와 동일
+      // 측면도: "측면에서 본 도면"
       return 'left';
-    case 'sideRight':
-      // 우측면도: "우측에서 본 도면" (ExportPanel 설명과 일치)
-      // 관찰자가 오른쪽(+X)에서 봄 = UI view2DDirection='right'와 동일
-      return 'right';
+    case 'door':
+      // 도어도면: 정면에서 도어/서랍만 표시
+      return 'front';
     default:
       return 'front';
   }
@@ -37,11 +35,11 @@ const drawingTypeToViewDirection = (drawingType: DrawingType): ViewDirection => 
 const drawingTypeToSideViewFilter = (drawingType: DrawingType): SideViewFilter => {
   switch (drawingType) {
     case 'sideLeft':
-      // 좌측면도: 가장 왼쪽에 있는 가구의 왼쪽 면을 봄
+      // 측면도: 가장 왼쪽에 있는 가구의 측면을 봄
       return 'leftmost';
-    case 'sideRight':
-      // 우측면도: 가장 오른쪽에 있는 가구의 오른쪽 면을 봄
-      return 'rightmost';
+    case 'door':
+      // 도어도면: 모든 가구의 도어/서랍 표시
+      return 'all';
     default:
       return 'all';
   }
@@ -56,7 +54,6 @@ const drawingTypeToSideViewFilter = (drawingType: DrawingType): SideViewFilter =
  *
  * 측면뷰 필터링:
  * - sideLeft: leftmost X 위치의 가구만 포함
- * - sideRight: rightmost X 위치의 가구만 포함
  */
 export const generateDXFFromScene = (
   spaceInfo: SpaceInfo,
@@ -121,9 +118,9 @@ export const generateDXFFilenameFromScene = (
   const typeNames: Record<DrawingType, string> = {
     front: 'front',
     plan: 'plan',
-    side: 'side-left', // 기존 side는 좌측으로 취급
-    sideLeft: 'side-left',
-    sideRight: 'side-right'
+    side: 'side',
+    sideLeft: 'side',
+    door: 'door'
   };
 
   return `furniture-${typeNames[drawingType]}-${dimensions}-${timestamp}.dxf`;
