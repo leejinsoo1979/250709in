@@ -8,9 +8,10 @@ import {
   exportBoringToCSV
 } from '../utils/csvExporter';
 import {
-  downloadMPR,
-  downloadCIX,
+  exportToMPR,
+  exportToCIX,
 } from '@/domain/boring/exporters';
+import JSZip from 'jszip';
 import type { PanelBoringData, Boring } from '@/domain/boring/types';
 import { OptimizedResult, PlacedPanel, Panel } from '../types';
 import { Download, FileText, FileDown, Package, Layers, ChevronDown, Circle, Cpu } from 'lucide-react';
@@ -176,7 +177,7 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
   };
 
   // HOMAG MPR 내보내기
-  const handleExportMPR = () => {
+  const handleExportMPR = async () => {
     if (panelsWithBoring.length === 0) {
       alert('내보낼 보링 데이터가 없습니다. 측판이 있는 가구를 배치하세요.');
       return;
@@ -184,12 +185,35 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
 
     const panelBoringData = panelsWithBoring.map(convertToPanelBoringData);
     const projectName = basicInfo?.title || 'project';
-    downloadMPR(panelBoringData, projectName);
+    const timestamp = new Date().toISOString().slice(0, 10);
+
+    // exportToMPR로 MPR 콘텐츠 생성
+    const result = exportToMPR(panelBoringData);
+
+    if (!result.success || result.files.length === 0) {
+      alert('MPR 파일 생성에 실패했습니다: ' + (result.error || '보링 데이터 없음'));
+      return;
+    }
+
+    // 패널별 개별 MPR 파일을 ZIP으로 묶어서 다운로드
+    const zip = new JSZip();
+    result.files.forEach(file => {
+      zip.file(file.filename, file.content);
+    });
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${projectName}_mpr_${timestamp}.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+
     setIsOpen(false);
   };
 
   // Biesse CIX 내보내기
-  const handleExportCIX = () => {
+  const handleExportCIX = async () => {
     if (panelsWithBoring.length === 0) {
       alert('내보낼 보링 데이터가 없습니다. 측판이 있는 가구를 배치하세요.');
       return;
@@ -197,7 +221,30 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
 
     const panelBoringData = panelsWithBoring.map(convertToPanelBoringData);
     const projectName = basicInfo?.title || 'project';
-    downloadCIX(panelBoringData, projectName);
+    const timestamp = new Date().toISOString().slice(0, 10);
+
+    // exportToCIX로 CIX 콘텐츠 생성
+    const result = exportToCIX(panelBoringData);
+
+    if (!result.success || result.files.length === 0) {
+      alert('CIX 파일 생성에 실패했습니다: ' + (result.error || '보링 데이터 없음'));
+      return;
+    }
+
+    // 패널별 개별 CIX 파일을 ZIP으로 묶어서 다운로드
+    const zip = new JSZip();
+    result.files.forEach(file => {
+      zip.file(file.filename, file.content);
+    });
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${projectName}_cix_${timestamp}.zip`;
+    a.click();
+    URL.revokeObjectURL(url);
+
     setIsOpen(false);
   };
 
