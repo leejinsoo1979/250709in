@@ -3185,7 +3185,7 @@ export const generateDxfFromData = (
       placedModules,
       viewDirection,
       sideViewFilter,
-      false, // dimensionsOnly: false - 가구형상(상부/하부 프레임) + 치수선 모두 생성
+      true, // dimensionsOnly: true - 치수선만 생성 (가구형상은 씬에서 추출)
       actualFurnitureWidth, // 실제 가구 깊이 전달
       actualFurnitureMinX, // 실제 가구 X 최소값
       actualFurnitureMaxX // 실제 가구 X 최대값
