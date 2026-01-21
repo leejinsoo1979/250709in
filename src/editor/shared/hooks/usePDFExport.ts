@@ -345,8 +345,11 @@ export function usePDFExport() {
         const isSideView = viewInfo.viewDirection === 'left' || viewInfo.viewDirection === 'right';
         const slotIndicesToRender = isSideView ? uniqueSlotIndices : [undefined as number | undefined];
 
+        console.log(`📄 PDF 페이지 생성 시작: viewType=${viewType}, isSideView=${isSideView}, slotIndicesToRender=`, slotIndicesToRender);
+
         for (let slotIdx = 0; slotIdx < slotIndicesToRender.length; slotIdx++) {
           const currentSlotIndex = slotIndicesToRender[slotIdx];
+          console.log(`  📄 슬롯 ${slotIdx}/${slotIndicesToRender.length}: currentSlotIndex=${currentSlotIndex}`);
 
           // 새 페이지 추가 (첫 페이지 제외)
           if (pageIndex > 0) {
