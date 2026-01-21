@@ -91,11 +91,19 @@ export function usePDFExport() {
       if ((viewInfo.viewDirection === 'left' || viewInfo.viewDirection === 'right') && slotIndex !== undefined) {
         setSelectedSlotIndex(slotIndex);
         console.log(`📸 측면뷰 슬롯 ${slotIndex} 선택`);
+
+        // 슬롯 선택 후 추가 대기 (상태 변경 + 리렌더링)
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } else if (viewInfo.viewDirection === 'left' || viewInfo.viewDirection === 'right') {
+        // 측면뷰인데 슬롯 지정이 없으면 null로 리셋
+        setSelectedSlotIndex(null);
       }
     }
 
-    // 뷰 변경이 적용되길 기다림
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    // 뷰 변경이 적용되길 기다림 (2초로 증가)
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    console.log(`📸 캡처 직전 상태: viewType=${viewType}, slotIndex=${slotIndex}`);
     
     // 캔버스를 직접 찾기 (2D/3D 모두 지원)
     let canvas: HTMLCanvasElement | null = null;
@@ -274,6 +282,17 @@ export function usePDFExport() {
           const moduleB = placedModules.find(m => m.slotIndex === b);
           return (moduleA?.position.x || 0) - (moduleB?.position.x || 0);
         });
+
+      console.log('📋 PDF 내보내기 - 가구 정보:', {
+        totalModules: placedModules.length,
+        modules: placedModules.map(m => ({
+          id: m.id.slice(-8),
+          moduleId: m.moduleId,
+          slotIndex: m.slotIndex,
+          positionX: m.position.x.toFixed(3)
+        })),
+        uniqueSlotIndices
+      });
 
       let pageIndex = 0;
 

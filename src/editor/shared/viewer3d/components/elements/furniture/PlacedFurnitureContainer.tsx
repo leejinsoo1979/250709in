@@ -54,6 +54,17 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
 
   // 측면뷰이고 selectedSlotIndex가 있는 경우 필터링
   const finalView2DDirection = view2DDirection || contextView2DDirection;
+
+  // 디버깅: 현재 뷰 상태 출력
+  console.log('👀 [PlacedFurnitureContainer] 뷰 상태:', {
+    viewMode,
+    view2DDirection,
+    contextView2DDirection,
+    finalView2DDirection,
+    selectedSlotIndex,
+    modulesCount: basePlacedModules.length
+  });
+
   if (
     viewMode === '2D' &&
     (finalView2DDirection === 'left' || finalView2DDirection === 'right') &&
@@ -63,7 +74,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
     const normalSlotCount = zones?.normal?.columnCount || (spaceInfo.customColumnCount || 4);
 
-    console.log('🔍 [PlacedFurnitureContainer] 슬롯 필터링 시작:', {
+    console.log('🔍🔍🔍 [PlacedFurnitureContainer] 슬롯 필터링 시작:', {
       selectedSlotIndex,
       hasDroppedCeiling,
       normalSlotCount,
@@ -77,6 +88,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         isDualSlot: m.isDualSlot
       }))
     });
+    console.log('🔍🔍🔍 viewMode:', viewMode, 'finalView2DDirection:', finalView2DDirection);
 
     basePlacedModules = basePlacedModules.filter(module => {
       if (module.slotIndex === undefined) return false;
