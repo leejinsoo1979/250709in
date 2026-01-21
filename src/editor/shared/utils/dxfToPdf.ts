@@ -394,6 +394,10 @@ export const downloadDxfAsPdf = async (
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
       const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
 
+      // 디버깅: 모든 텍스트의 레이어 정보 출력
+      console.log(`📐 door-only: 전체 텍스트 ${texts.length}개:`, texts.map(t => ({ text: t.text, layer: t.layer })));
+      console.log(`📐 door-only: 전체 라인 레이어:`, [...new Set(lines.map(l => l.layer))]);
+
       // DOOR 레이어만 필터링 (도어 형상 + 도어 치수선)
       const doorOnlyLines = lines.filter(line => line.layer === 'DOOR');
 
@@ -410,10 +414,14 @@ export const downloadDxfAsPdf = async (
 
       console.log(`📐 front-no-door: 도어 없는 입면도 렌더링 (excludeDoor=true)...`);
 
-      const dxfViewDirection = pdfViewToViewDirection(viewDirection);
       // excludeDoor=true로 DXF 생성 시 도어 관련 객체 모두 제외
-      const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection, true);
+      // 'front'를 직접 전달하고 excludeDoor=true로 도어 필터링
+      const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, 'front', true);
 
+      // 디버깅: 라인 레이어 확인 (DOOR가 있으면 안됨)
+      const doorLines = lines.filter(l => l.layer === 'DOOR');
+      const doorTexts = texts.filter(t => t.layer === 'DOOR');
+      console.log(`📐 front-no-door: DOOR 레이어 라인 ${doorLines.length}개, 텍스트 ${doorTexts.length}개 (모두 0이어야 함)`);
       console.log(`📐 front-no-door: ${lines.length}개 라인, ${texts.length}개 텍스트 (도어 제외됨)`);
       renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }

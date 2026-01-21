@@ -6,34 +6,37 @@ import { useSpace3DView } from '../../../context/useSpace3DView';
 interface DimensionTextProps {
   // 치수 값
   value: number;
-  
+
   // 위치
   position: [number, number, number];
-  
+
   // 텍스트 앵커
   anchorX?: 'left' | 'center' | 'right';
   anchorY?: 'top' | 'middle' | 'bottom';
-  
+
   // 색상 (옵션, 기본값은 테마 색상)
   color?: string;
-  
+
   // 폰트 크기 배율 (옵션, 기본값 1.0)
   sizeMultiplier?: number;
-  
+
   // 접두사 (예: "D" for depth)
   prefix?: string;
-  
+
   // 그림자 효과 (3D 모드에서만)
   showShadow?: boolean;
-  
+
   // 강제 표시 (showDimensions 무시)
   forceShow?: boolean;
-  
+
   // 회전 (Euler 각도)
   rotation?: [number, number, number];
-  
+
   // 그림자 오프셋 (3D 모드)
   shadowOffset?: [number, number, number];
+
+  // Three.js 객체 이름 (DXF 추출 시 레이어 분류에 사용)
+  name?: string;
 }
 
 /**
@@ -53,7 +56,8 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   showShadow = true,
   forceShow = false,
   rotation,
-  shadowOffset = [0.01, -0.01, 0]
+  shadowOffset = [0.01, -0.01, 0],
+  name
 }) => {
   const { showDimensions, showDimensionsText, view2DDirection, view2DTheme } = useUIStore();
   const { viewMode } = useSpace3DView();
@@ -108,6 +112,7 @@ const DimensionText: React.FC<DimensionTextProps> = ({
   
   return (
     <Text
+      name={name}
       renderOrder={999}
       depthTest={false}
       position={position}

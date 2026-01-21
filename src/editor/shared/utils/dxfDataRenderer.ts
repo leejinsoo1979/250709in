@@ -966,13 +966,29 @@ export const extractFromScene = (
     }
 
     // excludeDoor 옵션이 true이면 도어 관련 객체 모두 제외 (front-no-door용)
+    // 자신의 이름뿐만 아니라 부모 계층의 이름도 확인해서 door 관련 객체의 자식도 모두 제외
     if (excludeDoor) {
       const lowerNameForDoor = name.toLowerCase();
+      // 자신의 이름 확인
       if (lowerNameForDoor.includes('door') ||
           lowerNameForDoor.includes('drawer-front') ||
           lowerNameForDoor.includes('서랍')) {
         skippedByFilter++;
         return;
+      }
+      // 부모 계층에서 door 관련 이름 확인 (door-diagonal, door-dimension 등의 자식 요소)
+      let currentParent: THREE.Object3D | null = object.parent;
+      while (currentParent) {
+        if (currentParent.name) {
+          const parentName = currentParent.name.toLowerCase();
+          if (parentName.includes('door') ||
+              parentName.includes('drawer-front') ||
+              parentName.includes('서랍')) {
+            skippedByFilter++;
+            return;
+          }
+        }
+        currentParent = currentParent.parent;
       }
     }
 
