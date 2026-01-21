@@ -278,13 +278,36 @@ export function usePDFExport() {
       const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
       const normalSlotCount = spaceInfo.customColumnCount || 4;
       const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+      const droppedWidth = spaceInfo.droppedCeiling?.width || 0;
+
+      // 내경 너비 계산 (mm)
+      const wallThickness = (spaceInfo.wallConfig?.thickness || 18) * 2;
+      const innerWidth = spaceInfo.width - wallThickness;
+      const normalWidth = innerWidth - droppedWidth;
+
+      // 가구가 단내림 구간에 있는지 X 위치로 판별하는 함수
+      const isModuleInDroppedZone = (module: PlacedModule): boolean => {
+        // zone이 명시적으로 설정된 경우 사용
+        if (module.zone === 'dropped') return true;
+        if (module.zone === 'normal') return false;
+
+        // zone이 없으면 X 위치로 판별
+        if (!hasDroppedCeiling) return false;
+
+        const moduleXMm = module.position.x * 100; // Three.js 좌표를 mm로 변환
+        if (droppedPosition === 'left') {
+          return moduleXMm < droppedWidth;
+        } else {
+          return moduleXMm >= normalWidth;
+        }
+      };
 
       // 고유 글로벌 슬롯 인덱스 추출 (단내림 구간 고려)
       const uniqueSlotIndices = [...new Set(placedModules.map(m => {
         if (m.slotIndex === undefined) return undefined;
 
-        // zone이 'dropped'이면 글로벌 인덱스로 변환
-        if (hasDroppedCeiling && m.zone === 'dropped') {
+        // 단내림 구간 가구면 글로벌 인덱스로 변환
+        if (hasDroppedCeiling && isModuleInDroppedZone(m)) {
           return normalSlotCount + m.slotIndex;
         }
         return m.slotIndex;
@@ -294,11 +317,18 @@ export function usePDFExport() {
 
       console.log('📋 PDF 내보내기 - 가구 정보:', {
         totalModules: placedModules.length,
+        hasDroppedCeiling,
+        normalSlotCount,
+        droppedPosition,
+        normalWidth,
+        droppedWidth,
         modules: placedModules.map(m => ({
           id: m.id.slice(-8),
           moduleId: m.moduleId,
           slotIndex: m.slotIndex,
-          positionX: m.position.x.toFixed(3)
+          zone: m.zone,
+          positionX: m.position.x.toFixed(3),
+          isDropped: isModuleInDroppedZone(m)
         })),
         uniqueSlotIndices
       });
