@@ -973,6 +973,7 @@ export const extractFromScene = (
       if (lowerNameForDoor.includes('door') ||
           lowerNameForDoor.includes('drawer-front') ||
           lowerNameForDoor.includes('서랍')) {
+        console.log(`🚫 excludeDoor: 자신의 이름으로 제외 - ${name}`);
         skippedByFilter++;
         return;
       }
@@ -984,6 +985,7 @@ export const extractFromScene = (
           if (parentName.includes('door') ||
               parentName.includes('drawer-front') ||
               parentName.includes('서랍')) {
+            console.log(`🚫 excludeDoor: 부모 이름으로 제외 - ${name} (부모: ${currentParent.name})`);
             skippedByFilter++;
             return;
           }

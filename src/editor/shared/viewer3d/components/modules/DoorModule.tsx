@@ -1656,6 +1656,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                 return (
                   <animated.group
+                    name="door-diagonal-group"
                     position={[0, 0, doorThicknessUnits / 2 + 0.001]}
                     rotation-y={indicatorRotation}
                   >
@@ -2062,6 +2063,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                 return (
                   <animated.group
+                    name="door-diagonal-group"
                     position={[0, 0, doorThicknessUnits / 2 + 0.001]}
                     rotation-y={indicatorRotation}
                   >
@@ -2454,6 +2456,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
               return (
                 <animated.group
+                  name="door-diagonal-group"
                   position={[0, 0, doorThicknessUnits / 2 + 0.001]}
                   rotation-y={indicatorRotation}
                 >
