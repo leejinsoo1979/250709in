@@ -161,21 +161,48 @@ const parseDxfTexts = (dxfString: string): ParsedText[] => {
 
 /**
  * 가구에서 도어/서랍 정보 추출
+ *
+ * 도어 판별 로직:
+ * 1. placedModule.hasDoor가 명시적으로 설정되어 있으면 그 값 사용
+ * 2. 아니면 moduleData.hasDoor 사용 (기본값: false)
+ * 3. 서랍은 sections에서 type='drawer'인 섹션 확인
  */
 const extractDoorInfo = (
   placedModule: PlacedModule,
   moduleData: ModuleData | undefined,
   spaceInfo: SpaceInfo
 ): DoorDrawingItem | null => {
-  if (!moduleData) return null;
+  if (!moduleData) {
+    console.log(`  ❌ 모듈 데이터 없음: ${placedModule.moduleId}`);
+    return null;
+  }
 
-  const hasDoor = placedModule.hasDoor ?? moduleData.hasDoor ?? false;
+  // hasDoor 판별: placedModule에 명시적으로 설정되어 있으면 그 값, 아니면 moduleData 값
+  const hasDoor = placedModule.hasDoor !== undefined
+    ? placedModule.hasDoor
+    : (moduleData.hasDoor ?? false);
+
   const sections = moduleData.modelConfig?.sections || [];
+  const leftSections = moduleData.modelConfig?.leftSections || [];
+  const rightSections = moduleData.modelConfig?.rightSections || [];
+  const allSections = [...sections, ...leftSections, ...rightSections];
 
-  // 도어나 서랍이 있는 섹션이 있는지 확인
-  const hasDrawer = sections.some(s => s.type === 'drawer');
+  // 서랍이 있는 섹션 확인
+  const hasDrawer = allSections.some(s => s.type === 'drawer');
 
-  if (!hasDoor && !hasDrawer) return null;
+  console.log(`  🚪 도어 정보 추출: ${moduleData.name}`, {
+    placedHasDoor: placedModule.hasDoor,
+    moduleHasDoor: moduleData.hasDoor,
+    finalHasDoor: hasDoor,
+    hasDrawer,
+    sectionsCount: allSections.length
+  });
+
+  // 도어도 서랍도 없으면 스킵
+  if (!hasDoor && !hasDrawer) {
+    console.log(`  ⏭️ 도어/서랍 없음 - 스킵`);
+    return null;
+  }
 
   const furnitureWidth = placedModule.customWidth || moduleData.dimensions.width;
   const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
@@ -190,10 +217,10 @@ const extractDoorInfo = (
   const doorTopGap = placedModule.doorTopGap ?? 10;
   const doorBottomGap = placedModule.doorBottomGap ?? 65;
 
-  // 서랍 처리
+  // 서랍 처리 - 모든 섹션 순회
   let currentY = basicThickness; // 하판 위부터 시작
 
-  for (const section of sections) {
+  for (const section of allSections) {
     if (section.type === 'drawer') {
       const drawerHeights = section.drawerHeights || [];
       const gapHeight = section.gapHeight || 24;
@@ -230,10 +257,8 @@ const extractDoorInfo = (
     const doorWidth = furnitureWidth - basicThickness * 2;
     const doorHeight = furnitureHeight - doorTopGap - doorBottomGap;
 
-    // 서랍이 없고 도어 높이가 유효한 경우에만 도어 추가
-    const hasDrawerSections = sections.some(s => s.type === 'drawer');
-
-    if (!hasDrawerSections && doorHeight > 0) {
+    // 도어 높이가 유효한 경우에만 도어 추가
+    if (doorHeight > 0) {
       items.push({
         type: 'door',
         x: doorX,
@@ -242,10 +267,16 @@ const extractDoorInfo = (
         height: doorHeight,
         label: 'Door'
       });
+      console.log(`  ✅ 도어 추가: ${doorWidth}x${doorHeight}mm`);
     }
   }
 
-  if (items.length === 0) return null;
+  if (items.length === 0) {
+    console.log(`  ⏭️ 추출된 아이템 없음`);
+    return null;
+  }
+
+  console.log(`  ✅ 도어/서랍 ${items.length}개 추출됨`);
 
   return {
     moduleId: placedModule.moduleId,
