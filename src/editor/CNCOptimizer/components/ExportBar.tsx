@@ -151,15 +151,29 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
 
   // 패널 데이터를 PanelBoringData 형식으로 변환
   const convertToPanelBoringData = (panel: PlacedPanel): PanelBoringData => {
-    const borings: Boring[] = (panel.boringPositions || []).map((pos, idx) => ({
-      id: `boring-${panel.id}-${idx}`,
-      type: 'shelf-pin' as const,
-      face: 'front' as const,
-      x: pos.x,
-      y: pos.y,
-      diameter: pos.diameter || 5,
-      depth: pos.depth || 13,
-    }));
+    // boringPositions = Y위치 배열 (높이 방향)
+    // boringDepthPositions = X위치 배열 (깊이 방향)
+    const yPositions = panel.boringPositions || [];
+    const xPositions = panel.boringDepthPositions || [];
+
+    // 기본 X위치 (depthPositions가 없는 경우)
+    const defaultXPositions = xPositions.length > 0 ? xPositions : [50, panel.width / 2, panel.width - 50];
+
+    // 각 Y위치 × X위치 조합으로 Boring 생성
+    const borings: Boring[] = [];
+    yPositions.forEach((yPos, yIdx) => {
+      defaultXPositions.forEach((xPos, xIdx) => {
+        borings.push({
+          id: `boring-${panel.id}-${yIdx}-${xIdx}`,
+          type: 'shelf-pin' as const,
+          face: 'front' as const,
+          x: xPos,
+          y: yPos,
+          diameter: 5,
+          depth: 13,
+        });
+      });
+    });
 
     return {
       panelId: panel.id,
