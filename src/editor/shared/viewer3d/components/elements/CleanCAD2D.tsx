@@ -5,6 +5,7 @@ import NativeLine from './NativeLine';
 import { useSpaceConfigStore } from '@/store/core/spaceConfigStore';
 import { useFurnitureStore } from '@/store/core/furnitureStore';
 import { useUIStore } from '@/store/uiStore';
+import { useDerivedSpaceStore } from '@/store/derivedSpaceStore';
 import { getModuleById } from '@/data/modules';
 import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
 import { useViewerTheme } from '../../context/ViewerThemeContext';
@@ -204,7 +205,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
     () => (showFurniture ? placedModulesStore : []),
     [placedModulesStore, showFurniture]
   );
-  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme } = useUIStore();
+  const { view2DDirection, showDimensions: showDimensionsFromStore, showDimensionsText, view2DTheme, selectedSlotIndex } = useUIStore();
+  const { zones } = useDerivedSpaceStore();
+
+  // 단내림 설정
+  const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled;
+  const dropHeightMm = hasDroppedCeiling ? (spaceInfo.droppedCeiling?.dropHeight || 200) : 0;
+
+  // 선택된 슬롯이 단내림 구간에 해당하는지 판단
+  const normalSlotCount = zones?.normal?.columnCount || (spaceInfo.customColumnCount || 4);
+  const isSelectedSlotInDroppedZone = hasDroppedCeiling && selectedSlotIndex !== null && selectedSlotIndex >= normalSlotCount;
+
+  // 표시할 높이 (단내림 구간이면 단내림 높이, 아니면 전체 높이)
+  const displaySpaceHeightMm = isSelectedSlotInDroppedZone ? (spaceInfo.height - dropHeightMm) : spaceInfo.height;
 
   // props로 전달된 값이 있으면 사용, 없으면 store 값 사용
   const showDimensions = showDimensionsProp !== undefined ? showDimensionsProp : showDimensionsFromStore;
@@ -2963,7 +2976,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               topFrameHeight
             } = furnitureHeights;
 
-            const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역
+            // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
+            const cabinetPlacementHeight = Math.max(displaySpaceHeightMm - topFrameHeight - bottomFrameHeight, 0); // 캐비넷 배치 영역
 
             const bottomY = 0; // 바닥
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight); // 하부 프레임 상단
@@ -3877,7 +3891,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               topFrameHeight
             } = furnitureHeights;
 
-            const cabinetPlacementHeight = Math.max(spaceInfo.height - topFrameHeight - bottomFrameHeight, 0);
+            // 단내림 구간이면 단내림 높이, 일반 구간이면 전체 높이 사용
+            const cabinetPlacementHeight = Math.max(displaySpaceHeightMm - topFrameHeight - bottomFrameHeight, 0);
 
             const bottomY = 0;
             const bottomFrameTopY = mmToThreeUnits(bottomFrameHeight);
