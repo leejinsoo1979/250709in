@@ -31,9 +31,15 @@ const VIEW_TYPES: ViewInfo[] = [
 export function usePDFExport() {
   const [isExporting, setIsExporting] = useState(false);
   const { title } = useProjectStore();
-  const { viewMode, view2DDirection, showGuides, showAxis, showDimensions, showDimensionsText, showFurniture, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setShowDimensionsText, setShowFurniture, setRenderMode } = useUIStore();
-  
-  const captureView = useCallback(async (viewType: ViewType, targetRenderMode: 'solid' | 'wireframe'): Promise<string> => {
+  const { viewMode, view2DDirection, showGuides, showAxis, showDimensions, showDimensionsText, showFurniture, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setShowDimensionsText, setShowFurniture, setRenderMode, selectedSlotIndex, setSelectedSlotIndex } = useUIStore();
+
+  /**
+   * 단일 뷰 캡처 (slotIndex 지정 가능)
+   * @param viewType 뷰 타입
+   * @param targetRenderMode 렌더 모드
+   * @param slotIndex 측면뷰에서 특정 슬롯만 보여줄 때 사용
+   */
+  const captureView = useCallback(async (viewType: ViewType, targetRenderMode: 'solid' | 'wireframe', slotIndex?: number): Promise<string> => {
     const viewInfo = VIEW_TYPES.find(v => v.id === viewType);
     if (!viewInfo) throw new Error('잘못된 뷰 타입입니다.');
     
@@ -46,9 +52,11 @@ export function usePDFExport() {
     const originalShowDimensionsText = showDimensionsText;
     const originalShowFurniture = showFurniture;
     const originalRenderMode = renderMode;
-    
+    const originalSelectedSlotIndex = selectedSlotIndex;
+
     console.log('📸 PDF 캡처 시작:', {
       viewType,
+      slotIndex,
       원래설정: {
         viewMode: originalViewMode,
         view2DDirection: originalView2DDirection,
@@ -56,10 +64,11 @@ export function usePDFExport() {
         showAxis: originalShowAxis,
         showDimensions: originalShowDimensions,
         showDimensionsText: originalShowDimensionsText,
-        renderMode: originalRenderMode
+        renderMode: originalRenderMode,
+        selectedSlotIndex: originalSelectedSlotIndex
       }
     });
-    
+
     // 요청된 뷰로 변경
     if (viewInfo.viewMode === '3D') {
       setViewMode('3D');
@@ -77,8 +86,14 @@ export function usePDFExport() {
       if (viewInfo.viewDirection) {
         setView2DDirection(viewInfo.viewDirection);
       }
+
+      // 측면뷰에서 특정 슬롯을 지정한 경우, selectedSlotIndex 설정
+      if ((viewInfo.viewDirection === 'left' || viewInfo.viewDirection === 'right') && slotIndex !== undefined) {
+        setSelectedSlotIndex(slotIndex);
+        console.log(`📸 측면뷰 슬롯 ${slotIndex} 선택`);
+      }
     }
-    
+
     // 뷰 변경이 적용되길 기다림
     await new Promise(resolve => setTimeout(resolve, 1500));
     
@@ -184,7 +199,8 @@ export function usePDFExport() {
     setShowDimensionsText(originalShowDimensionsText);
     setShowFurniture(originalShowFurniture);
     setRenderMode(originalRenderMode);
-    
+    setSelectedSlotIndex(originalSelectedSlotIndex);
+
     console.log('📸 PDF 캡처 완료 - 설정 복원:', {
       viewMode: originalViewMode,
       view2DDirection: originalView2DDirection,
@@ -192,14 +208,15 @@ export function usePDFExport() {
       showAxis: originalShowAxis,
       showDimensions: originalShowDimensions,
       showDimensionsText: originalShowDimensionsText,
-      renderMode: originalRenderMode
+      renderMode: originalRenderMode,
+      selectedSlotIndex: originalSelectedSlotIndex
     });
-    
+
     // 복원 대기
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     return imageData;
-  }, [viewMode, view2DDirection, showGuides, showAxis, showDimensions, showDimensionsText, showFurniture, renderMode, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setShowDimensionsText, setShowFurniture, setRenderMode]);
+  }, [viewMode, view2DDirection, showGuides, showAxis, showDimensions, showDimensionsText, showFurniture, renderMode, selectedSlotIndex, setViewMode, setView2DDirection, setShowGuides, setShowAxis, setShowDimensions, setShowDimensionsText, setShowFurniture, setRenderMode, setSelectedSlotIndex]);
   
   const exportToPDF = useCallback(async (
     spaceInfo: SpaceInfo,
@@ -249,16 +266,35 @@ export function usePDFExport() {
         };
       });
       
+      // 고유 슬롯 인덱스 추출 (position.x 기준으로 정렬)
+      const uniqueSlotIndices = [...new Set(placedModules.map(m => m.slotIndex))]
+        .filter((idx): idx is number => idx !== undefined)
+        .sort((a, b) => {
+          const moduleA = placedModules.find(m => m.slotIndex === a);
+          const moduleB = placedModules.find(m => m.slotIndex === b);
+          return (moduleA?.position.x || 0) - (moduleB?.position.x || 0);
+        });
+
+      let pageIndex = 0;
+
       for (let i = 0; i < selectedViews.length; i++) {
         const viewType = selectedViews[i];
         const viewInfo = VIEW_TYPES.find(v => v.id === viewType);
-        
+
         if (!viewInfo) continue;
-        
-        // 새 페이지 추가 (첫 페이지 제외)
-        if (i > 0) {
-          pdf.addPage();
-        }
+
+        // 측면뷰(left/right)의 경우 각 슬롯별로 페이지 생성
+        const isSideView = viewInfo.viewDirection === 'left' || viewInfo.viewDirection === 'right';
+        const slotIndicesToRender = isSideView ? uniqueSlotIndices : [undefined as number | undefined];
+
+        for (let slotIdx = 0; slotIdx < slotIndicesToRender.length; slotIdx++) {
+          const currentSlotIndex = slotIndicesToRender[slotIdx];
+
+          // 새 페이지 추가 (첫 페이지 제외)
+          if (pageIndex > 0) {
+            pdf.addPage();
+          }
+          pageIndex++;
         
         // 페이지 외곽 테두리 (건축 도면 표준)
         pdf.setDrawColor(0, 0, 0);
@@ -312,38 +348,54 @@ export function usePDFExport() {
           color: colors.text
         });
         
-        // 도면 정보 필드 - 텍스트 위치 조정
-        pdf.text('SHEET:', titleBlockX + 5, titleBlockY + 25);
-        pdf.text(`${i + 1} / ${selectedViews.length}`, titleBlockX + 25, titleBlockY + 25);
-        
-        pdf.text('DATE:', titleBlockX + 5, titleBlockY + 31);
-        pdf.text(currentDate, titleBlockX + 25, titleBlockY + 31);
-        
-        pdf.text('SCALE:', titleBlockX + 5, titleBlockY + 37);
-        pdf.text('AS SHOWN', titleBlockX + 25, titleBlockY + 37);
-        
-        // 공간 사양 - 중앙 칸 정렬
-        pdf.text('SPACE:', titleBlockX + 95, titleBlockY + 25);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text(`${spaceInfo.width} × ${spaceInfo.height} × ${spaceInfo.depth}`, titleBlockX + 115, titleBlockY + 31);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text('(W × H × D) mm', titleBlockX + 115, titleBlockY + 37);
-        
-        // 도면 타입 - 우측 칸 정렬
-        pdf.text('VIEW:', titleBlockX + 145, titleBlockY + 25);
-        await addMixedText(pdf, viewInfo.name, titleBlockX + 165, titleBlockY + 31, {
-          fontSize: 9,
-          color: colors.text,
-          fontWeight: '500'
-        });
-        
-        // 렌더링 모드
-        pdf.text('RENDER:', titleBlockX + 145, titleBlockY + 37);
-        pdf.text(targetRenderMode.toUpperCase(), titleBlockX + 175, titleBlockY + 37);
-        
-        try {
-          // 뷰 캡처
-          const imageData = await captureView(viewType, targetRenderMode);
+        // 측면뷰에서 슬롯 정보가 있으면 뷰 이름에 추가
+          const displayViewName = isSideView && currentSlotIndex !== undefined
+            ? `${viewInfo.name} - Slot ${currentSlotIndex + 1}`
+            : viewInfo.name;
+
+          // 총 페이지 수 계산
+          const totalSideViewPages = selectedViews.filter(v => {
+            const info = VIEW_TYPES.find(vi => vi.id === v);
+            return info?.viewDirection === 'left' || info?.viewDirection === 'right';
+          }).length * uniqueSlotIndices.length;
+          const totalNonSideViewPages = selectedViews.filter(v => {
+            const info = VIEW_TYPES.find(vi => vi.id === v);
+            return info?.viewDirection !== 'left' && info?.viewDirection !== 'right';
+          }).length;
+          const totalPages = totalSideViewPages + totalNonSideViewPages;
+
+          // 도면 정보 필드 - 텍스트 위치 조정
+          pdf.text('SHEET:', titleBlockX + 5, titleBlockY + 25);
+          pdf.text(`${pageIndex} / ${totalPages}`, titleBlockX + 25, titleBlockY + 25);
+
+          pdf.text('DATE:', titleBlockX + 5, titleBlockY + 31);
+          pdf.text(currentDate, titleBlockX + 25, titleBlockY + 31);
+
+          pdf.text('SCALE:', titleBlockX + 5, titleBlockY + 37);
+          pdf.text('AS SHOWN', titleBlockX + 25, titleBlockY + 37);
+
+          // 공간 사양 - 중앙 칸 정렬
+          pdf.text('SPACE:', titleBlockX + 95, titleBlockY + 25);
+          pdf.setFont('helvetica', 'bold');
+          pdf.text(`${spaceInfo.width} × ${spaceInfo.height} × ${spaceInfo.depth}`, titleBlockX + 115, titleBlockY + 31);
+          pdf.setFont('helvetica', 'normal');
+          pdf.text('(W × H × D) mm', titleBlockX + 115, titleBlockY + 37);
+
+          // 도면 타입 - 우측 칸 정렬
+          pdf.text('VIEW:', titleBlockX + 145, titleBlockY + 25);
+          await addMixedText(pdf, displayViewName, titleBlockX + 145, titleBlockY + 31, {
+            fontSize: 8,
+            color: colors.text,
+            fontWeight: '500'
+          });
+
+          // 렌더링 모드
+          pdf.text('RENDER:', titleBlockX + 145, titleBlockY + 37);
+          pdf.text(targetRenderMode.toUpperCase(), titleBlockX + 175, titleBlockY + 37);
+
+          try {
+            // 뷰 캡처 (측면뷰의 경우 슬롯 인덱스 전달)
+            const imageData = await captureView(viewType, targetRenderMode, currentSlotIndex);
           
           // 이미지 영역 정의 (타이틀 블록을 피해서)
           const drawingAreaX = borderMargin + innerMargin + 5;
@@ -428,8 +480,9 @@ export function usePDFExport() {
         // 좌하단
         pdf.text(`${i + 1}`, borderMargin + innerMargin + 3, pageHeight - borderMargin - innerMargin - 2);
         // 우하단 (타이틀 블록에 포함됨)
-      }
-      
+        } // slotIndicesToRender 루프 끝
+      } // selectedViews 루프 끝
+
       // 마지막 페이지에 가구 목록 추가
       if (furnitureList.length > 0) {
         pdf.addPage();

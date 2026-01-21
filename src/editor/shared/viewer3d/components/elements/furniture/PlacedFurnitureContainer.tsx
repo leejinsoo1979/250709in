@@ -63,6 +63,21 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
     const normalSlotCount = zones?.normal?.columnCount || (spaceInfo.customColumnCount || 4);
 
+    console.log('🔍 [PlacedFurnitureContainer] 슬롯 필터링 시작:', {
+      selectedSlotIndex,
+      hasDroppedCeiling,
+      normalSlotCount,
+      zonesNormal: zones?.normal?.columnCount,
+      zonesDropped: zones?.dropped?.columnCount,
+      totalModules: basePlacedModules.length,
+      modules: basePlacedModules.map(m => ({
+        id: m.id.slice(-8),
+        slotIndex: m.slotIndex,
+        zone: m.zone,
+        isDualSlot: m.isDualSlot
+      }))
+    });
+
     basePlacedModules = basePlacedModules.filter(module => {
       if (module.slotIndex === undefined) return false;
 
@@ -75,14 +90,16 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         moduleGlobalSlotIndex = normalSlotCount + module.slotIndex;
       }
 
-      // 듀얼 가구인 경우: 시작 슬롯 또는 다음 슬롯 확인
-      if (module.isDualSlot) {
-        return moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex;
-      }
+      const isMatch = module.isDualSlot
+        ? (moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex)
+        : (moduleGlobalSlotIndex === selectedSlotIndex);
 
-      // 싱글 가구인 경우: 정확히 일치하는 슬롯만
-      return moduleGlobalSlotIndex === selectedSlotIndex;
+      console.log(`  📦 모듈 ${module.id.slice(-8)}: slotIndex=${module.slotIndex}, zone=${module.zone}, globalIndex=${moduleGlobalSlotIndex}, selected=${selectedSlotIndex}, match=${isMatch}`);
+
+      return isMatch;
     });
+
+    console.log('🔍 [PlacedFurnitureContainer] 필터링 결과:', basePlacedModules.length, '개');
   }
 
   const placedModules = basePlacedModules;
