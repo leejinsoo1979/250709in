@@ -620,32 +620,22 @@ export const downloadDxfAsPdf = async (
 
   // 슬롯 정보 계산 (측면도 슬롯별 페이지 생성용)
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
+  // customColumnCount가 1부터 시작하는지 0부터 시작하는지 확인
   const normalSlotCount = spaceInfo.customColumnCount || 4;
   const droppedSlotCount = hasDroppedCeiling ? (spaceInfo.droppedCeiling?.columnCount || 0) : 0;
   const totalSlotCount = normalSlotCount + droppedSlotCount;
 
-  // 가구가 있는 슬롯 인덱스 추출
-  const uniqueSlotIndices = [...new Set(
-    placedModules
-      .filter(m => m.slotIndex !== undefined)
-      .map(m => {
-        // 단내림 구간 가구면 글로벌 인덱스로 변환
-        if (hasDroppedCeiling && m.zone === 'dropped') {
-          return normalSlotCount + (m.slotIndex || 0);
-        }
-        return m.slotIndex || 0;
-      })
-  )].sort((a, b) => a - b);
+  // 모든 슬롯 인덱스 생성 (가구 유무와 관계없이 모든 칸에 대해 페이지 생성)
+  const allSlotIndices = Array.from({ length: totalSlotCount }, (_, i) => i);
 
-  console.log('📊 슬롯 정보:', { totalSlotCount, uniqueSlotIndices, hasDroppedCeiling });
+  console.log('📊 슬롯 정보:', { normalSlotCount, droppedSlotCount, totalSlotCount, allSlotIndices, hasDroppedCeiling });
 
   let isFirstPage = true;
 
   for (const viewDirection of views) {
-    // 측면도(left)는 각 슬롯별로 페이지 생성
-    if (viewDirection === 'left' && uniqueSlotIndices.length > 0) {
-      for (let slotIdx = 0; slotIdx < uniqueSlotIndices.length; slotIdx++) {
-        const slotIndex = uniqueSlotIndices[slotIdx];
+    // 측면도(left)는 각 슬롯별로 페이지 생성 (가구 유무와 관계없이 모든 슬롯)
+    if (viewDirection === 'left' && allSlotIndices.length > 0) {
+      for (const slotIndex of allSlotIndices) {
 
         if (!isFirstPage) pdf.addPage();
         isFirstPage = false;
