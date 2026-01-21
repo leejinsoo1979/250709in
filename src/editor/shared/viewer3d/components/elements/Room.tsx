@@ -2536,46 +2536,59 @@ const Room: React.FC<RoomProps> = ({
                 }
               });
 
+              // 측면뷰에서 선택된 슬롯이 어느 zone에 있는지 확인
+              const isSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
+              const normalSlotCount = zoneSlotInfo.normal?.columnCount || (spaceInfo.customColumnCount || 4);
+              const isSelectedSlotInDroppedZone = hasDroppedCeiling && selectedSlotIndex !== null && selectedSlotIndex >= normalSlotCount;
+
+              // 측면뷰일 때 선택된 zone에 따라 프레임 표시 여부 결정
+              const showDroppedFrame = !isSideView || isSelectedSlotInDroppedZone;
+              const showNormalFrame = !isSideView || !isSelectedSlotInDroppedZone;
+
               // 단내림 영역과 일반 영역 프레임 렌더링
               return (
                 <>
-                  {/* 단내림 영역 상부 프레임 */}
-                  <BoxWithEdges
-                    hideEdges={hideEdges}
-                    args={[
-                      droppedFrameWidth,
-                      topBottomFrameHeight,
-                      mmToThreeUnits(END_PANEL_THICKNESS)
-                    ]}
-                    position={[
-                      droppedX,
-                      panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight / 2, // 단내림 천장 위치에서 프레임 높이의 절반만큼 아래
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
-                    ]}
-                    material={createFrameMaterial('top')}
-                    renderMode={renderMode}
-                    shadowEnabled={shadowEnabled}
-                  />
-                  {/* 일반 영역 상부 프레임 */}
-                  <BoxWithEdges
-                    hideEdges={hideEdges}
-                    args={[
-                      normalFrameWidth,
-                      topBottomFrameHeight,
-                      mmToThreeUnits(END_PANEL_THICKNESS)
-                    ]}
-                    position={[
-                      normalX,
-                      topElementsY,
-                      furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
-                      mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
-                    ]}
-                    material={createFrameMaterial('top')}
-                    renderMode={renderMode}
+                  {/* 단내림 영역 상부 프레임 - 측면뷰에서 단내림 구간 선택시만 표시 */}
+                  {showDroppedFrame && (
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      args={[
+                        droppedFrameWidth,
+                        topBottomFrameHeight,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ]}
+                      position={[
+                        droppedX,
+                        panelStartY + (height - mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight)) - topBottomFrameHeight / 2, // 단내림 천장 위치에서 프레임 높이의 절반만큼 아래
+                        furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+                        mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                      ]}
+                      material={createFrameMaterial('top')}
+                      renderMode={renderMode}
+                      shadowEnabled={shadowEnabled}
+                    />
+                  )}
+                  {/* 일반 영역 상부 프레임 - 측면뷰에서 일반 구간 선택시만 표시 */}
+                  {showNormalFrame && (
+                    <BoxWithEdges
+                      hideEdges={hideEdges}
+                      args={[
+                        normalFrameWidth,
+                        topBottomFrameHeight,
+                        mmToThreeUnits(END_PANEL_THICKNESS)
+                      ]}
+                      position={[
+                        normalX,
+                        topElementsY,
+                        furnitureZOffset + furnitureDepth / 2 - mmToThreeUnits(END_PANEL_THICKNESS) / 2 -
+                        mmToThreeUnits(calculateMaxNoSurroundOffset(spaceInfo))
+                      ]}
+                      material={createFrameMaterial('top')}
+                      renderMode={renderMode}
 
-                    shadowEnabled={shadowEnabled}
-                  />
+                      shadowEnabled={shadowEnabled}
+                    />
+                  )}
                 </>
               );
             }
