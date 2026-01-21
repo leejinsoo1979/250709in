@@ -18,6 +18,7 @@ import {
   type SideViewFilter
 } from './dxfDataRenderer';
 import { getModuleById, ModuleData } from '@/data/modules';
+import { ColumnIndexer } from './indexing/ColumnIndexer';
 
 // 도어/서랍 정보 인터페이스
 interface DoorDrawingItem {
@@ -621,16 +622,30 @@ export const downloadDxfAsPdf = async (
   const pageHeight = pdf.internal.pageSize.getHeight();
 
   // 슬롯 정보 계산 (측면도 슬롯별 페이지 생성용)
+  // ColumnIndexer를 사용하여 정확한 슬롯 개수 계산
+  const indexing = ColumnIndexer.calculateSpaceIndexing(spaceInfo);
   const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
-  // customColumnCount가 1부터 시작하는지 0부터 시작하는지 확인
-  const normalSlotCount = spaceInfo.customColumnCount || 4;
-  const droppedSlotCount = hasDroppedCeiling ? (spaceInfo.droppedCeiling?.columnCount || 0) : 0;
+
+  // indexing.zones가 있으면 해당 정보 사용, 없으면 columnCount 사용
+  const normalSlotCount = indexing.zones?.normal.columnCount || indexing.columnCount;
+  const droppedSlotCount = hasDroppedCeiling && indexing.zones?.dropped
+    ? indexing.zones.dropped.columnCount
+    : 0;
   const totalSlotCount = normalSlotCount + droppedSlotCount;
 
   // 모든 슬롯 인덱스 생성 (가구 유무와 관계없이 모든 칸에 대해 페이지 생성)
   const allSlotIndices = Array.from({ length: totalSlotCount }, (_, i) => i);
 
-  console.log('📊 슬롯 정보:', { normalSlotCount, droppedSlotCount, totalSlotCount, allSlotIndices, hasDroppedCeiling });
+  console.log('📊 슬롯 정보:', {
+    indexingColumnCount: indexing.columnCount,
+    zonesNormal: indexing.zones?.normal.columnCount,
+    zonesDropped: indexing.zones?.dropped?.columnCount,
+    normalSlotCount,
+    droppedSlotCount,
+    totalSlotCount,
+    allSlotIndices,
+    hasDroppedCeiling
+  });
 
   let isFirstPage = true;
 
