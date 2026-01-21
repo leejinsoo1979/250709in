@@ -226,8 +226,9 @@ export class PDFExporter {
         }
       }
 
-      // ★★★ 타공(보링) 표시 ★★★
-      if (panel.boringPositions && panel.boringPositions.length > 0) {
+      // ★★★ 타공(보링) 표시 - CuttingLayoutPreview2.tsx와 동일한 로직 ★★★
+      const isDoorPanel = panel.name?.includes('도어') || panel.name?.includes('Door');
+      if (panel.boringPositions && panel.boringPositions.length > 0 && !isDoorPanel) {
         const originalWidth = panel.width;
         const originalHeight = panel.height;
 
@@ -236,7 +237,7 @@ export class PDFExporter {
           (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
         const isDrawerFrontPanel = panel.name?.includes('서랍') && panel.name?.includes('앞판');
 
-        // 보링 X위치 결정
+        // 보링 X위치 결정 (깊이 방향)
         let depthPositions: number[] = [];
         if (isDrawerSidePanel) {
           if (panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
@@ -253,8 +254,14 @@ export class PDFExporter {
             depthPositions = [edgeOffset, originalWidth / 2, originalWidth - edgeOffset];
           }
         } else {
-          // 가구 측판: 전면 37mm, 중간, 후면 17mm
-          depthPositions = [37, originalWidth / 2, originalWidth - 17];
+          // 가구 측판: 선반핀 보링 (3개)
+          const backPanelThickness = 18;
+          const edgeOffset = 50;
+          const frontX = edgeOffset;
+          const backX = originalWidth - backPanelThickness - edgeOffset;
+          const safeBackX = Math.max(backX, frontX + 40);
+          const safeCenterX = (frontX + safeBackX) / 2;
+          depthPositions = [frontX, safeCenterX, safeBackX];
         }
 
         // 보링 홀 그리기
@@ -265,34 +272,25 @@ export class PDFExporter {
         this.pdf.setFillColor(255, 255, 255);
         this.pdf.setLineWidth(0.1);
 
+        // CuttingLayoutPreview2.tsx와 동일한 좌표 계산
         panel.boringPositions.forEach((boringPosMm: number) => {
           depthPositions.forEach((depthPosMm: number) => {
             let boringX: number, boringY: number;
 
-            if (isRotated) {
-              // 시트가 세로일 때 90도 회전
-              if (isDrawerSidePanel || isDrawerFrontPanel) {
-                boringX = x + boringPosMm * scale;
-                boringY = y + (result.stockPanel.width - panel.x - depthPosMm) * scale;
-              } else if (panel.rotated) {
-                boringX = x + depthPosMm * scale;
-                boringY = y + (result.stockPanel.width - panel.x - boringPosMm) * scale;
-              } else {
-                boringX = x + depthPosMm * scale;
-                boringY = y + (result.stockPanel.width - panel.x - boringPosMm) * scale;
-              }
+            // ★★★ PDF에서 패널은 이미 x, y, width, height로 그려짐 ★★★
+            // 옵티마이저와 동일하게: 패널 내부 좌표를 PDF 좌표로 변환
+            if (isDrawerSidePanel || isDrawerFrontPanel) {
+              // 서랍 측판/앞판: boringPosMm → X축, depthPosMm → Y축
+              boringX = x + boringPosMm * scale;
+              boringY = y + depthPosMm * scale;
+            } else if (panel.rotated) {
+              // 가구 측판 (rotated=true)
+              boringX = x + depthPosMm * scale;
+              boringY = y + boringPosMm * scale;
             } else {
-              // 시트가 가로일 때
-              if (isDrawerSidePanel || isDrawerFrontPanel) {
-                boringX = x + boringPosMm * scale;
-                boringY = y + depthPosMm * scale;
-              } else if (panel.rotated) {
-                boringX = x + depthPosMm * scale;
-                boringY = y + boringPosMm * scale;
-              } else {
-                boringX = x + depthPosMm * scale;
-                boringY = y + boringPosMm * scale;
-              }
+              // 가구 측판 (rotated=false)
+              boringX = x + depthPosMm * scale;
+              boringY = y + boringPosMm * scale;
             }
 
             // 원 그리기 (타공 홀)
