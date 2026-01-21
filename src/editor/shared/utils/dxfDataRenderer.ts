@@ -105,7 +105,7 @@ const computeSectionHeightsInfo = (
   };
 };
 
-export type ViewDirection = 'front' | 'left' | 'right' | 'top';
+export type ViewDirection = 'front' | 'left' | 'top' | 'door';
 
 // 측면뷰 필터링 타입: 좌측뷰는 leftmost 가구만, 우측뷰는 rightmost 가구만
 export type SideViewFilter = 'all' | 'leftmost' | 'rightmost';

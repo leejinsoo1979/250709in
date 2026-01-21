@@ -19,7 +19,7 @@ import {
 } from './dxfDataRenderer';
 
 // PDF 뷰 타입
-export type PdfViewDirection = 'front' | 'left' | 'right' | 'top';
+export type PdfViewDirection = 'front' | 'left' | 'top' | 'door';
 
 // DXF에서 추출한 라인 정보
 interface ParsedLine {
@@ -143,14 +143,19 @@ const parseDxfTexts = (dxfString: string): ParsedText[] => {
 
 // 뷰 제목 (jsPDF는 기본적으로 한글 미지원, 영문 사용)
 const getViewTitle = (v: PdfViewDirection): string => {
-  const titles: Record<string, string> = { front: 'Front View', left: 'Left Side View', right: 'Right Side View', top: 'Top View' };
+  const titles: Record<string, string> = {
+    front: '입면도 (Front View)',
+    left: '측면도 (Side View)',
+    top: '평면도 (Top View)',
+    door: '도어도면 (Door Drawing)'
+  };
   return titles[v] || 'Drawing';
 };
 
 // 측면뷰 필터
 const getSideViewFilter = (v: PdfViewDirection): SideViewFilter => {
   if (v === 'left') return 'leftmost';
-  if (v === 'right') return 'rightmost';
+  if (v === 'door') return 'all'; // 도어도면은 모든 가구 표시
   return 'all';
 };
 
@@ -279,7 +284,7 @@ export const generateViewDataFromDxf = (
 export const downloadDxfAsPdf = async (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
-  views: PdfViewDirection[] = ['front', 'top', 'left', 'right']
+  views: PdfViewDirection[] = ['front', 'top', 'left', 'door']
 ): Promise<void> => {
   console.log('📄 DXF→PDF 변환 시작...');
   console.log(`📊 변환할 뷰: ${views.join(', ')}`);

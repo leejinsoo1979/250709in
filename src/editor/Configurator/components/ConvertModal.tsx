@@ -34,12 +34,12 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
   // PDF는 무조건 와이어프레임(벡터 도면)으로 내보내기
   const [selectedViews, setSelectedViews] = useState({
     '3d': true,
-    '2d-top': true,
-    '2d-front': false,
+    '2d-front': true,
+    '2d-top': false,
     '2d-left': false,
-    '2d-right': false
+    '2d-door': false
   });
-  const [selectedDXFTypes, setSelectedDXFTypes] = useState<DrawingType[]>(['front', 'plan', 'sideLeft', 'sideRight']);
+  const [selectedDXFTypes, setSelectedDXFTypes] = useState<DrawingType[]>(['front', 'plan', 'sideLeft', 'door']);
   
   // 내보내기 훅 사용
   const { exportToZIP, canExportDXF, isExporting: isDXFExporting } = useDXFExport();
@@ -319,9 +319,9 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       if (selectedViews['2d-front']) pdfViews.push('front');
       if (selectedViews['2d-top']) pdfViews.push('top');
       if (selectedViews['2d-left']) pdfViews.push('left');
-      if (selectedViews['2d-right']) pdfViews.push('right');
+      if (selectedViews['2d-door']) pdfViews.push('door');
 
-      // 2D 뷰가 선택되지 않았으면 정면도 기본 추가
+      // 2D 뷰가 선택되지 않았으면 입면도 기본 추가
       if (pdfViews.length === 0) {
         pdfViews.push('front');
       }
@@ -388,22 +388,22 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
                   <h3 className={styles.sectionHeader}>포함할 도면 선택</h3>
                   <div className={styles.viewList}>
                     <label className={`${styles.viewOption} ${selectedDXFTypes.includes('front') ? styles.selected : ''}`}>
-                      <input 
+                      <input
                         type="checkbox"
                         checked={selectedDXFTypes.includes('front')}
                         onChange={() => handleDXFTypeToggle('front')}
                       />
-                      <span>정면도</span>
-                      <span className={styles.viewDescription}>정면에서 본 도면</span>
+                      <span>입면도</span>
+                      <span className={styles.viewDescription}>정면에서 본 도면 (Front View)</span>
                     </label>
                     <label className={`${styles.viewOption} ${selectedDXFTypes.includes('plan') ? styles.selected : ''}`}>
-                      <input 
+                      <input
                         type="checkbox"
                         checked={selectedDXFTypes.includes('plan')}
                         onChange={() => handleDXFTypeToggle('plan')}
                       />
                       <span>평면도</span>
-                      <span className={styles.viewDescription}>위에서 본 도면</span>
+                      <span className={styles.viewDescription}>위에서 본 도면 (Top View)</span>
                     </label>
                     <label className={`${styles.viewOption} ${selectedDXFTypes.includes('sideLeft') ? styles.selected : ''}`}>
                       <input
@@ -411,17 +411,17 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
                         checked={selectedDXFTypes.includes('sideLeft')}
                         onChange={() => handleDXFTypeToggle('sideLeft')}
                       />
-                      <span>좌측면도</span>
-                      <span className={styles.viewDescription}>좌측에서 본 도면</span>
+                      <span>측면도</span>
+                      <span className={styles.viewDescription}>측면에서 본 도면 (Side View)</span>
                     </label>
-                    <label className={`${styles.viewOption} ${selectedDXFTypes.includes('sideRight') ? styles.selected : ''}`}>
+                    <label className={`${styles.viewOption} ${selectedDXFTypes.includes('door') ? styles.selected : ''}`}>
                       <input
                         type="checkbox"
-                        checked={selectedDXFTypes.includes('sideRight')}
-                        onChange={() => handleDXFTypeToggle('sideRight')}
+                        checked={selectedDXFTypes.includes('door')}
+                        onChange={() => handleDXFTypeToggle('door')}
                       />
-                      <span>우측면도</span>
-                      <span className={styles.viewDescription}>우측에서 본 도면</span>
+                      <span>도어도면</span>
+                      <span className={styles.viewDescription}>도어/서랍 상세 도면</span>
                     </label>
                   </div>
                 </div>
@@ -445,47 +445,47 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
                   <h3 className={styles.sectionHeader}>포함할 뷰 선택</h3>
                   <div className={styles.viewList}>
                     <label className={`${styles.viewOption} ${selectedViews['3d'] ? styles.selected : ''}`}>
-                      <input 
+                      <input
                         type="checkbox"
                         checked={selectedViews['3d']}
                         onChange={() => handleViewToggle('3d')}
                       />
-                      <span>3D 정면뷰</span>
-                    </label>
-                    <label className={`${styles.viewOption} ${selectedViews['2d-top'] ? styles.selected : ''}`}>
-                      <input 
-                        type="checkbox"
-                        checked={selectedViews['2d-top']}
-                        onChange={() => handleViewToggle('2d-top')}
-                      />
-                      <span>2D 평면도 (위에서 본 뷰)</span>
-                      <button className={styles.viewDetail}>치수 포함</button>
+                      <span>3D 투시도 (Perspective)</span>
                     </label>
                     <label className={`${styles.viewOption} ${selectedViews['2d-front'] ? styles.selected : ''}`}>
-                      <input 
+                      <input
                         type="checkbox"
                         checked={selectedViews['2d-front']}
                         onChange={() => handleViewToggle('2d-front')}
                       />
-                      <span>2D 정면도 (앞에서 본 뷰)</span>
+                      <span>입면도 (Front View)</span>
+                      <button className={styles.viewDetail}>치수 포함</button>
+                    </label>
+                    <label className={`${styles.viewOption} ${selectedViews['2d-top'] ? styles.selected : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedViews['2d-top']}
+                        onChange={() => handleViewToggle('2d-top')}
+                      />
+                      <span>평면도 (Top View)</span>
                       <button className={styles.viewDetail}>치수 포함</button>
                     </label>
                     <label className={`${styles.viewOption} ${selectedViews['2d-left'] ? styles.selected : ''}`}>
-                      <input 
+                      <input
                         type="checkbox"
                         checked={selectedViews['2d-left']}
                         onChange={() => handleViewToggle('2d-left')}
                       />
-                      <span>2D 좌측면도 (왼쪽에서 본 뷰)</span>
+                      <span>측면도 (Side View)</span>
                       <button className={styles.viewDetail}>치수 포함</button>
                     </label>
-                    <label className={`${styles.viewOption} ${selectedViews['2d-right'] ? styles.selected : ''}`}>
-                      <input 
+                    <label className={`${styles.viewOption} ${selectedViews['2d-door'] ? styles.selected : ''}`}>
+                      <input
                         type="checkbox"
-                        checked={selectedViews['2d-right']}
-                        onChange={() => handleViewToggle('2d-right')}
+                        checked={selectedViews['2d-door']}
+                        onChange={() => handleViewToggle('2d-door')}
                       />
-                      <span>2D 우측면도 (오른쪽에서 본 뷰)</span>
+                      <span>도어도면 (Door Drawing)</span>
                       <button className={styles.viewDetail}>치수 포함</button>
                     </label>
                   </div>
