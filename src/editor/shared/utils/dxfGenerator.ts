@@ -303,18 +303,21 @@ const drawPlanView = (dxf: DxfWriter, spaceInfo: SpaceInfo, placedModules: DXFPl
 };
 
 /**
- * 측면도 전체 그리기
+ * 측면도 전체 그리기 - 각 슬롯별로 분리하여 나란히 배치
  */
 const drawSideSection = (dxf: DxfWriter, spaceInfo: SpaceInfo, placedModules: DXFPlacedModule[]): void => {
-  // 공간 외곽선 그리기 (FURNITURE 레이어로)
-  drawSideSpaceBoundary(dxf, spaceInfo);
-  
-  // 하부 프레임 그리기 (있는 경우)
-  drawBaseFrame(dxf, spaceInfo, 'side');
-  
-  // 가구 모듈들 그리기 (FURNITURE 레이어로)
+  // 가구 모듈들 그리기 (각 슬롯별로 분리 - FURNITURE 레이어로)
+  // 참고: 공간 외곽선은 drawSideFurnitureModules에서 각 슬롯별로 그려짐
   drawSideFurnitureModules(dxf, placedModules, spaceInfo);
-  
+
+  // 측면도 제목 추가
+  dxf.setCurrentLayerName('TEXT');
+  dxf.addText(
+    point3d(0, -200),
+    60,
+    formatDxfText(`Side Section - ${placedModules.length} Slots`)
+  );
+
   // 레이어별 엔티티 카운트 로그
   logLayerEntityCounts('Side Section');
 };
@@ -982,13 +985,21 @@ const drawPlanFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
 };
 
 /**
- * 가구 모듈들을 그리기 (측면도 기준) - 2D 화면과 동일한 좌표 사용
+ * 가구 모듈들을 그리기 (측면도 기준) - 각 슬롯별로 분리하여 나란히 배치
+ *
+ * 변경사항: 각 슬롯(가구)별로 별도의 측면도를 생성하여 X축으로 나란히 배치
  */
 const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule[], spaceInfo: SpaceInfo): void => {
-  // FURNITURE 레이어로 전환
-  dxf.setCurrentLayerName('FURNITURE');
+  // 슬롯 간격 설정 (각 측면도 사이의 간격)
+  const SLOT_GAP = 300; // mm
 
-  placedModules.forEach((module, index) => {
+  // 가구를 position.x (슬롯 위치) 기준으로 정렬
+  const sortedModules = [...placedModules].sort((a, b) => a.position.x - b.position.x);
+
+  // 현재까지의 X 오프셋 추적
+  let currentXOffset = 0;
+
+  sortedModules.forEach((module, index) => {
     const { position, moduleData, moduleId } = module;
 
     // useDXFExport에서 전달받은 치수 사용 (customDepth, adjustedWidth 등이 이미 반영됨)
@@ -1000,34 +1011,39 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     // 가구 깊이 계산 (이미 customDepth가 반영된 상태)
     const actualDepthMm = dimensions.depth;
 
-    // 측면도 좌표 계산 - 2D 화면과 동일하게 position.z 사용
-    // X축: 깊이 방향 (position.z를 mm로 변환)
-    // Y축: 높이 방향 (position.y를 mm로 변환)
-    // Three.js에서 1 단위 = 100mm (MM_TO_THREE_UNITS = 0.01)
-    const dxfXPosition = position.z * 100; // 가구 중심의 깊이 위치
+    // 각 슬롯별로 별도의 측면도 위치 계산
+    // X축: 각 슬롯을 순서대로 나란히 배치
+    // Y축: 높이 방향 (모든 가구 동일한 Y 기준)
+    const slotCenterX = currentXOffset + (actualDepthMm / 2);
 
     // 가구 높이 위치 계산 (baseFrameHeight 포함)
     const baseFrameHeight = spaceInfo.baseConfig?.type === 'base_frame' ? (spaceInfo.baseConfig?.height || 100) : 0;
-    const furnitureBottomY = baseFrameHeight + (position.y * 100); // 하부 프레임 + position.y
-    const furnitureTopY = furnitureBottomY + dimensions.height;
-    const furnitureCenterY = furnitureBottomY + (dimensions.height / 2);
-    const furnitureCenterX = dxfXPosition;
 
-    // 좌표 변환 완료: Three.js → DXF (2D 화면과 동일)
-    console.log(`🎯 [DXF] Side View - ${moduleData.name}:`, {
-      'ThreeJS_Z': position.z,
-      'ThreeJS_Y': position.y,
-      'DXF_X': dxfXPosition,
-      'baseFrameHeight': baseFrameHeight,
-      'furnitureBottomY': furnitureBottomY,
+    // position.y를 mm로 변환하여 바닥 위치 계산
+    // Three.js에서 position.y는 가구 중심 높이이므로, 바닥 위치 계산 필요
+    const furnitureHalfHeight = dimensions.height / 2;
+    const furnitureBottomY = baseFrameHeight; // 모든 가구가 동일한 바닥 기준
+    const furnitureTopY = furnitureBottomY + dimensions.height;
+    const furnitureCenterY = furnitureBottomY + furnitureHalfHeight;
+    const furnitureCenterX = slotCenterX;
+
+    // 좌표 변환 완료: 각 슬롯별 개별 측면도
+    console.log(`🎯 [DXF] Side View - Slot ${index + 1} - ${moduleData.name}:`, {
+      'slotIndex': module.slotIndex,
+      'currentXOffset': currentXOffset,
+      'slotCenterX': slotCenterX,
       'depth': actualDepthMm,
-      'height': dimensions.height
+      'height': dimensions.height,
+      'width': dimensions.width
     });
 
+    // FURNITURE 레이어로 전환
+    dxf.setCurrentLayerName('FURNITURE');
+
     // 가구 사각형 그리기 (측면도: depth x height)
-    const x1 = dxfXPosition - (actualDepthMm / 2); // 중심에서 앞면
+    const x1 = currentXOffset; // 앞면
     const y1 = furnitureBottomY; // 바닥
-    const x2 = dxfXPosition + (actualDepthMm / 2); // 중심에서 뒷면
+    const x2 = currentXOffset + actualDepthMm; // 뒷면
     const y2 = furnitureTopY; // 상단
 
     // 가구 외곽선 그리기 (측면도 - 옆에서 본 모습)
@@ -1040,14 +1056,14 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
     const shelfCount = modelConfig?.shelfCount || 0;
     const sections = modelConfig?.sections || [];
 
-    console.log(`🏗️ 측면도 가구 ${index + 1} 내부 구조:`, {
+    console.log(`🏗️ 측면도 슬롯 ${index + 1} 내부 구조:`, {
       moduleId,
       shelfCount,
       sections: sections.length,
       actualDepthMm,
       height: dimensions.height
     });
-    
+
     // 가구가 충분히 클 때만 내부 구조 표시
     if (dimensions.height > 200 && actualDepthMm > 200) {
       if (shelfCount > 0) {
@@ -1060,66 +1076,109 @@ const drawSideFurnitureModules = (dxf: DxfWriter, placedModules: DXFPlacedModule
       }
       // 오픈 박스는 외곽선만 표시
     }
-    
+
     // TEXT 레이어로 전환 (텍스트용)
     dxf.setCurrentLayerName('TEXT');
-    
+
+    // 슬롯 번호 라벨 (상단에 배치)
+    const slotLabel = `Slot ${(module.slotIndex ?? index) + 1}`;
+    dxf.addText(
+      point3d(furnitureCenterX, y2 + 80),
+      30, // 텍스트 높이
+      slotLabel
+    );
+
     // 가구 이름 텍스트 (중앙에 배치)
-    const centerX = furnitureCenterX;
-    const centerY = furnitureCenterY;
-    
     const safeFurnitureName = getSafeFurnitureName(moduleData.name || `Furniture${index + 1}`);
     dxf.addText(
-      point3d(centerX, centerY),
-      Math.min(actualDepthMm / 4, dimensions.height / 4, 50), // 크기에 비례한 텍스트 크기
+      point3d(furnitureCenterX, furnitureCenterY),
+      Math.min(actualDepthMm / 4, dimensions.height / 6, 40), // 크기에 비례한 텍스트 크기
       safeFurnitureName
     );
-    
-    // 가구 타입 정보 표시 (디버깅용)
-    const furnitureType = shelfCount === 0 ? 'Open Box' : 
+
+    // 가구 타입 정보 표시
+    const furnitureType = shelfCount === 0 ? 'Open Box' :
                          shelfCount === 1 ? '2-Shelf' :
                          shelfCount === 6 ? '7-Shelf' :
                          shelfCount === 2 ? 'Dual 2-Shelf' :
                          shelfCount === 12 ? 'Dual 7-Shelf' : `${shelfCount}-Shelf`;
-    
+
     dxf.addText(
-      point3d(centerX, y1 - 80),
+      point3d(furnitureCenterX, furnitureCenterY - 50),
       15,
-      `${furnitureType} | #${index + 1}`
+      furnitureType
     );
-    
+
     // 가구 치수 표기 (하단에 표시)
     dxf.addText(
-      point3d(centerX, y1 - 50),
-      20, // 텍스트 높이
+      point3d(furnitureCenterX, y1 - 50),
+      18, // 텍스트 높이
       formatDimensionsText(dimensions.width, dimensions.height, actualDepthMm)
     );
-    
+
     // 깊이 치수선 (하단에 표시)
     if (actualDepthMm > 100) {
-      const dimensionY = y1 - 120; // 가구 하단에서 120mm 아래
-      
+      const dimensionY = y1 - 100; // 가구 하단에서 100mm 아래
+
       // DIMENSIONS 레이어로 전환
       dxf.setCurrentLayerName('DIMENSIONS');
-      
+
       // 치수선
       dxf.addLine(point3d(x1, dimensionY), point3d(x2, dimensionY));
-      
+
       // 치수 화살표 (간단한 선으로 표현)
-      dxf.addLine(point3d(x1, dimensionY - 10), point3d(x1, dimensionY + 10));
-      dxf.addLine(point3d(x2, dimensionY - 10), point3d(x2, dimensionY + 10));
-      
+      dxf.addLine(point3d(x1, dimensionY - 15), point3d(x1, dimensionY + 15));
+      dxf.addLine(point3d(x2, dimensionY - 15), point3d(x2, dimensionY + 15));
+
+      // 연장선
+      dxf.addLine(point3d(x1, y1), point3d(x1, dimensionY + 15));
+      dxf.addLine(point3d(x2, y1), point3d(x2, dimensionY + 15));
+
       // TEXT 레이어로 전환
       dxf.setCurrentLayerName('TEXT');
-      
+
       // 깊이 치수 텍스트
       dxf.addText(
-        point3d(centerX, dimensionY - 30),
+        point3d(furnitureCenterX, dimensionY - 35),
         15,
-        `${actualDepthMm}mm`
+        `D: ${actualDepthMm}mm`
       );
     }
+
+    // 높이 치수선 (우측에 표시)
+    if (dimensions.height > 100) {
+      const dimensionX = x2 + 30; // 가구 우측에서 30mm 떨어진 위치
+
+      // DIMENSIONS 레이어로 전환
+      dxf.setCurrentLayerName('DIMENSIONS');
+
+      // 치수선 (세로)
+      dxf.addLine(point3d(dimensionX, y1), point3d(dimensionX, y2));
+
+      // 치수 화살표
+      dxf.addLine(point3d(dimensionX - 15, y1), point3d(dimensionX + 15, y1));
+      dxf.addLine(point3d(dimensionX - 15, y2), point3d(dimensionX + 15, y2));
+
+      // 연장선
+      dxf.addLine(point3d(x2, y1), point3d(dimensionX - 15, y1));
+      dxf.addLine(point3d(x2, y2), point3d(dimensionX - 15, y2));
+
+      // TEXT 레이어로 전환
+      dxf.setCurrentLayerName('TEXT');
+
+      // 높이 치수 텍스트
+      dxf.addText(
+        point3d(dimensionX + 50, furnitureCenterY),
+        15,
+        `H: ${dimensions.height}mm`
+      );
+    }
+
+    // 다음 슬롯의 X 시작 위치 업데이트
+    currentXOffset += actualDepthMm + SLOT_GAP;
   });
+
+  console.log(`✅ [DXF] Side View - Total ${sortedModules.length} slots drawn`);
 };
 
 /**

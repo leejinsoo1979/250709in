@@ -85,11 +85,11 @@ const checkAdjacentUpperLowerToFull = (
   if (!currentModuleData) {
     return { hasAdjacentUpperLower: false, adjacentSide: null };
   }
-  
+
   // 키큰장(full)이 아니면 처리하지 않음
   // 듀얼 캐비넷이어도 상부장/하부장이면 엔드패널 처리하지 않음
   const isDualCabinet = currentModule.moduleId?.includes('dual-');
-  
+
   // 키큰장(full 카테고리)만 처리
   // 듀얼 상부장/하부장은 처리하지 않음 (같은 카테고리끼리는 엔드패널 불필요)
   if (currentModuleData.category !== 'full') {
@@ -104,12 +104,12 @@ const checkAdjacentUpperLowerToFull = (
 
   // 듀얼 캐비넷의 경우 두 개의 슬롯을 차지
   const isCurrentDual = isDualCabinet || currentModule.isDualSlot;
-  
+
   // 단내림이 활성화된 경우, 현재 모듈의 zone 사용
   let currentZone: 'normal' | 'dropped' | undefined = currentModule.zone;
   if (spaceInfo.droppedCeiling?.enabled && currentZone) {
-    }
-  
+  }
+
   const indexing = calculateSpaceIndexing(spaceInfo);
 
   // 인접한 슬롯에 상부장/하부장이 있는지 확인
@@ -194,7 +194,7 @@ const checkAdjacentUpperLowerToFull = (
 
     return false;
   });
-  
+
   // 왼쪽 인접 모듈이 상부장/하부장인지 확인
   let hasLeftAdjacent = false;
   if (leftAdjacentModule) {
@@ -299,7 +299,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const [isHovered, setIsHovered] = React.useState(false);
   const isSelected = viewMode === '3D' && selectedFurnitureId === placedModule.id;
   const { theme: appTheme } = useTheme();
-  
+
   // 테마 색상 매핑
   const themeColorMap: Record<string, string> = {
     green: '#10b981',
@@ -334,11 +334,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     forest: '#1B3924',
     olive: '#4C462C'
   };
-  
+
   const selectionHighlightColor = themeColorMap[appTheme.color] || '#3b82f6';
   const highlightPadding = 0.02; // ≒2mm 추가 여유
   const highlightMeshRef = React.useRef<THREE.Mesh>(null);
-  
+
   // 렌더링 추적 및 클린업
   React.useEffect(() => {
     // 마운트/언마운트 로그 제거 (성능 최적화)
@@ -366,13 +366,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       upperSectionDepth: placedModule.upperSectionDepth
     });
   }, [placedModule.lowerSectionDepth, placedModule.upperSectionDepth, placedModule.id, placedModule.moduleId]);
-  
+
   // 테마 색상 가져오기
   const getThemeColor = () => {
     const computedStyle = getComputedStyle(document.documentElement);
     return computedStyle.getPropertyValue('--theme-primary').trim() || '#10b981';
   };
-  
+
   // 내경 공간 계산 - zone 정보가 있으면 zone별 계산
   let internalSpace = calculateInternalSpace(spaceInfo);
   let zoneSpaceInfo = spaceInfo;
@@ -434,23 +434,23 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // calculateInternalSpace에서 이미 zone === 'dropped'일 때 높이를 조정하므로
     // 여기서는 추가 조정하지 않음
   }
-  
+
   // 모듈 데이터 가져오기 - zone별 spaceInfo 사용
   // 가구 위치 변경 시 렌더링 업데이트 및 그림자 업데이트
   // Hook은 조건부 return 전에 선언되어야 함
   useEffect(() => {
     invalidate();
-    
+
     // 3D 모드에서 그림자 강제 업데이트
     if (gl && gl.shadowMap) {
       gl.shadowMap.needsUpdate = true;
-      
+
       // 메쉬 렌더링 완료 보장을 위한 지연 업데이트
       setTimeout(() => {
         gl.shadowMap.needsUpdate = true;
         invalidate();
       }, 100);
-      
+
       // 추가로 300ms 후에도 한 번 더 (완전한 렌더링 보장)
       setTimeout(() => {
         gl.shadowMap.needsUpdate = true;
@@ -475,7 +475,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     depth: 300,
     width: 600
   });
-  
+
   const columnCResize = useColumnCResize(
     placedModule,
     columnCParams.isEnabled,
@@ -485,10 +485,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 위치 변경 로깅용 useEffect - early return 전에 선언
   const [positionLogData, setPositionLogData] = React.useState<any>(null);
-  
+
   useEffect(() => {
     if (positionLogData) {
-      }
+    }
   }, [positionLogData]);
 
   // Column C 파라미터 업데이트를 위한 상태와 useEffect
@@ -497,41 +497,41 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     depth: number;
     width: number;
   } | null>(null);
-  
+
   React.useEffect(() => {
     if (columnCState) {
       setColumnCParams(columnCState);
     }
   }, [columnCState]);
-  
+
   // 위치 로깅을 위한 상태와 useEffect
   const [positionState, setPositionState] = React.useState<any>(null);
-  
+
   React.useEffect(() => {
     if (positionState) {
       setPositionLogData(positionState);
     }
   }, [positionState]);
-  
+
   // 모든 Hook 선언을 여기에 추가 (조건부 return 이전)
   // 이 Hook들은 나중에 계산되는 변수들을 사용하므로 별도 state로 관리
   const [deferredEffects, setDeferredEffects] = React.useState<{
     columnC?: any;
     position?: any;
   }>({});
-  
+
   React.useEffect(() => {
     if (deferredEffects.columnC) {
       setColumnCParams(deferredEffects.columnC);
     }
   }, [deferredEffects.columnC]);
-  
+
   React.useEffect(() => {
     if (deferredEffects.position) {
       setPositionLogData(deferredEffects.position);
     }
   }, [deferredEffects.position]);
-  
+
   // Column C와 위치 계산을 위한 상태 - 나중에 계산될 값들
   const [calculatedValues, setCalculatedValues] = React.useState<{
     isColumnCFront?: boolean;
@@ -540,7 +540,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     adjustedPosition?: any;
     actualModuleData?: any;
   }>({});
-  
+
   // 계산된 값들이 변경될 때 deferredEffects 업데이트
   React.useEffect(() => {
     if (calculatedValues.isColumnCFront !== undefined) {
@@ -569,12 +569,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 너비에 따라 모듈 ID 생성 (targetModuleId 정의를 getModuleById 호출 전으로 이동)
   let targetModuleId = placedModule.moduleId;
-  
+
   // 싱글 상하부장 디버깅
   const isUpperCabinet = placedModule.moduleId.includes('upper-cabinet');
   const isLowerCabinet = placedModule.moduleId.includes('lower-cabinet');
   const isDualCabinet = placedModule.moduleId.includes('dual-');
-  
+
   if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
     debugLog('🔍 싱글 상하부장 처리 시작:', {
       original: placedModule.moduleId,
@@ -584,7 +584,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       zoneSpaceInfo
     });
   }
-  
+
   // adjustedWidth가 있는 경우 (기둥 A 침범) - 원본 모듈 ID 사용
   // 폭 조정은 렌더링 시에만 적용
   if (placedModule.adjustedWidth) {
@@ -594,13 +594,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   else if (placedModule.customWidth && !placedModule.adjustedWidth) {
     // 상하부장 특별 처리
     const isUpperLower = targetModuleId.includes('upper-cabinet') || targetModuleId.includes('lower-cabinet');
-    
+
     if (isUpperLower) {
       // 싱글 상하부장의 경우 customWidth를 무조건 적용
       // 이미 customWidth가 포함되어 있어도 다시 설정
       const baseId = targetModuleId.replace(/-\d+$/, '');
       targetModuleId = `${baseId}-${placedModule.customWidth}`;
-      
+
       if (!isDualCabinet) {
         debugLog('🎯 싱글 상하부장 ID 강제 변경:', {
           original: placedModule.moduleId,
@@ -654,7 +654,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       moduleData: moduleData ? { id: moduleData.id, dimensions: moduleData.dimensions } : null
     });
   }
-  
+
   // moduleData가 없으면 기본 모듈 ID로 재시도 (커스텀 가구는 제외)
   if (!moduleData && !isCustomFurniture && targetModuleId !== placedModule.moduleId) {
     if ((isUpperCabinet || isLowerCabinet) && !isDualCabinet) {
@@ -677,20 +677,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 상하부장 특별 처리
     const isUpperCabinetFallback = placedModule.moduleId.includes('upper-cabinet');
     const isLowerCabinetFallback = placedModule.moduleId.includes('lower-cabinet');
-    
+
     if (isUpperCabinetFallback || isLowerCabinetFallback) {
       if (!isDualCabinet) {
         debugLog('🚨 싱글 상하부장 모든 시도 실패, 패턴 재시도 시작');
       }
-      
+
       // 상하부장의 경우 너비를 변경해서 재시도
       // 예: upper-cabinet-shelf-600 -> upper-cabinet-shelf-[슬롯너비]
       if (internalSpace) {
         const baseId = targetModuleId.replace(/-\d+$/, '');
-        
+
         // 슬롯 너비 우선 사용
         let tryWidth = placedModule.customWidth || internalSpace.width;
-        
+
         // 슬롯 인덱스가 있고 indexing 정보가 있으면 슬롯 너비 사용
         if (placedModule.slotIndex !== undefined && indexing && indexing.columnWidth) {
           tryWidth = indexing.columnWidth;
@@ -702,15 +702,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             });
           }
         }
-        
+
         const newId = `${baseId}-${tryWidth}`;
-        
+
         if (!isDualCabinet) {
           debugLog('🔧 싱글 상하부장 시도 ID:', newId);
         }
-        
+
         moduleData = getModuleById(newId, internalSpace, zoneSpaceInfo);
-        
+
         // 그래도 못 찾으면 다양한 너비들로 시도
         if (!moduleData) {
           // 슬롯 기반 너비들 먼저 시도
@@ -720,10 +720,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             internalSpace.width,
             600, 900, 1200, 1500, 1800
           ].filter(w => w && w > 0);
-          
+
           // 중복 제거
           const uniqueWidths = [...new Set(tryWidths)];
-          
+
           for (const width of uniqueWidths) {
             const testId = `${baseId}-${width}`;
             if (!isDualCabinet) {
@@ -747,14 +747,14 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           const withoutWidth = parts.slice(0, -1).join('-');
           moduleData = getModuleById(withoutWidth, internalSpace, zoneSpaceInfo);
         }
-        
+
         // 그래도 없으면 upper/lower 제거하고 시도  
         if (!moduleData && (parts.includes('upper') || parts.includes('lower'))) {
           const withoutCategory = parts.filter(p => p !== 'upper' && p !== 'lower').join('-');
           moduleData = getModuleById(withoutCategory, internalSpace, zoneSpaceInfo);
         }
       }
-      
+
       // 패턴 2: 기본 타입만으로 시도 (single-open)
       if (!moduleData) {
         const baseType = parts.slice(0, 2).join('-');
@@ -763,7 +763,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
       }
     }
-    
+
     // customWidth 적용
     if (moduleData && placedModule.customWidth) {
       moduleData = {
@@ -775,10 +775,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       };
     }
   }
-  
+
   // moduleData가 없을 때 체크 - 단순 변수로 처리
   const moduleNotFound = !moduleData;
-  
+
   // 도어 위치 고정을 위한 원래 슬롯 정보 계산 - zone별 처리
   const indexing = React.useMemo(() => {
     if (spaceInfo.droppedCeiling?.enabled && placedModule.zone) {
@@ -968,7 +968,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   }, [normalizedSlotIndex, spaceInfo.droppedCeiling?.enabled, placedModule.zone, zoneSlotInfo, indexing.threeUnitBoundaries]);
 
   const isColumnC = (slotInfo?.columnType === 'medium') || false;
-  
+
   // 듀얼 → 싱글 변환 확인 (드래그 중이 아닐 때만, 기둥 C가 아닐 때만)
   const actualModuleData = React.useMemo(() => {
     let result = moduleData;
@@ -980,7 +980,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           result = conversionResult.convertedModuleData;
         }
       }
-      
+
       // Column C에서 싱글 가구로 변환 (듀얼 가구가 Column C에 배치된 경우)
       // isDualSlot이 true이면 듀얼 가구 유지
       if (!isFurnitureDragging && isColumnC && moduleData.id.includes('dual-') && !placedModule.isDualSlot) {
@@ -990,10 +990,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           name: moduleData.name.replace('듀얼', '싱글'),
           dimensions: {
             ...moduleData.dimensions,
-            width: slotInfo?.subSlots ? 
-              (placedModule.subSlotPosition === 'left' ? 
-                slotInfo.subSlots.left.availableWidth : 
-                slotInfo.subSlots.right.availableWidth) : 
+            width: slotInfo?.subSlots ?
+              (placedModule.subSlotPosition === 'left' ?
+                slotInfo.subSlots.left.availableWidth :
+                slotInfo.subSlots.right.availableWidth) :
               indexing.columnWidth / 2
           }
         };
@@ -1001,7 +1001,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     return result;
   }, [moduleData, isFurnitureDragging, slotInfo, isColumnC, spaceInfo, placedModule.subSlotPosition, indexing.columnWidth]);
-  
+
   // 듀얼 가구인지 확인 (가장 먼저 계산)
   // placedModule.isDualSlot이 있으면 그것을 사용, 없으면 모듈 ID로 판단
   const isDualFurniture = placedModule.isDualSlot !== undefined
@@ -1030,31 +1030,31 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     });
   }
 
-  
+
   // 마지막 슬롯인지 확인 (adjustedPosition 초기화 전에 필요)
   // 단내림이 있으면 zone별 columnCount 사용
   const isLastSlot = normalizedSlotIndex !== undefined
     ? (() => {
-        if (spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone) {
-          const zoneData = placedModule.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
-          const totalColumnCount = zoneData?.columnCount ?? indexing.columnCount;
+      if (spaceInfo.droppedCeiling?.enabled && indexing.zones && placedModule.zone) {
+        const zoneData = placedModule.zone === 'dropped' ? indexing.zones.dropped : indexing.zones.normal;
+        const totalColumnCount = zoneData?.columnCount ?? indexing.columnCount;
 
-          // 듀얼 가구: 정확히 마지막-1 슬롯에서 시작할 때만 마지막 (두 슬롯 차지하므로)
-          const result = isDualFurniture
-            ? normalizedSlotIndex === totalColumnCount - 2
-            : normalizedSlotIndex === totalColumnCount - 1;
-
-
-          return result;
-        }
-        // 단내림 없을 때도 동일 로직 적용
+        // 듀얼 가구: 정확히 마지막-1 슬롯에서 시작할 때만 마지막 (두 슬롯 차지하므로)
         const result = isDualFurniture
-          ? normalizedSlotIndex === indexing.columnCount - 2
-          : normalizedSlotIndex === indexing.columnCount - 1;
+          ? normalizedSlotIndex === totalColumnCount - 2
+          : normalizedSlotIndex === totalColumnCount - 1;
+
+
         return result;
-      })()
+      }
+      // 단내림 없을 때도 동일 로직 적용
+      const result = isDualFurniture
+        ? normalizedSlotIndex === indexing.columnCount - 2
+        : normalizedSlotIndex === indexing.columnCount - 1;
+      return result;
+    })()
     : false;
-  
+
   // adjustedPosition 계산을 useMemo로 최적화 (초기값만 설정)
   const initialAdjustedPosition = React.useMemo(() => {
     const basePosition = { ...(placedModule.position || { x: 0, y: 0, z: 0 }) };
@@ -1064,22 +1064,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     }
     return basePosition;
   }, [placedModule.position, isLastSlot, isFurnitureDragging]);
-  
+
   // 🔴🔴🔴 Y축 위치 계산 - actualModuleData가 정의된 후에 실행
   // 상부장 체크 (변수명 변경: 위에서 이미 선언됨)
-  const isUpperCabinetForY = placedModule.moduleId?.includes('upper-cabinet') || 
-                             placedModule.moduleId?.includes('dual-upper-cabinet');
-  
+  const isUpperCabinetForY = placedModule.moduleId?.includes('upper-cabinet') ||
+    placedModule.moduleId?.includes('dual-upper-cabinet');
+
   // 하부장 체크 (변수명 변경: 위에서 이미 선언됨)
-  const isLowerCabinetForY = placedModule.moduleId?.includes('lower-cabinet') || 
-                             placedModule.moduleId?.includes('dual-lower-cabinet');
-  
+  const isLowerCabinetForY = placedModule.moduleId?.includes('lower-cabinet') ||
+    placedModule.moduleId?.includes('dual-lower-cabinet');
+
   // 키큰장 체크
   const isTallCabinetForY = actualModuleData?.category === 'full';
-  
+
   // adjustedPosition 계산 (Y축 위치 포함)
   let adjustedPosition = initialAdjustedPosition;
-  
+
   if (isUpperCabinetForY && actualModuleData) {
     // 드래그 중일 때는 position.y 그대로 사용
     if (isDraggingThis) {
@@ -1104,7 +1104,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 상부장 상단 Y = 천장 높이 - 상부프레임 높이 (상부프레임 하단)
       const upperCabinetTopY = ceilingHeight - topFrameHeightMm;
       // 상부장 중심 Y = 상부장 상단 - 상부장 높이/2
-      const upperCabinetCenterY = (upperCabinetTopY - upperCabinetHeight/2) * 0.01;
+      const upperCabinetCenterY = (upperCabinetTopY - upperCabinetHeight / 2) * 0.01;
 
 
       adjustedPosition = {
@@ -1112,7 +1112,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         y: upperCabinetCenterY
       };
     }
-    }
+  }
 
   // 가구 높이 계산 (Y 위치 계산 전에 필요)
   let furnitureHeightMm = actualModuleData?.dimensions.height || 0;
@@ -1153,7 +1153,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
       if (isFloatPlacement) {
         const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
-                                    spaceInfo.floorFinish.height : 0;
+          spaceInfo.floorFinish.height : 0;
         const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
         const floatHeightMm = spaceInfo.baseConfig?.floatHeight || 0;
         const floatHeight = floatHeightMm * 0.01; // mm to Three.js units
@@ -1184,7 +1184,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
         // 바닥 마감재 높이
         const floorFinishHeightMm = spaceInfo.hasFloorFinish && spaceInfo.floorFinish ?
-                                    spaceInfo.floorFinish.height : 0;
+          spaceInfo.floorFinish.height : 0;
         const floorFinishHeight = floorFinishHeightMm * 0.01; // mm to Three.js units
 
         // 가구 높이 (단내림 구간에서 조정된 높이 사용)
@@ -1204,7 +1204,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
     }
   }
-  
+
   // 기둥 침범 상황 확인 및 가구/도어 크기 조정
   // customWidth는 슬롯 기반 너비 조정 시 사용, adjustedWidth는 기둥 침범 시 사용
   // 듀얼 가구는 customWidth가 올바른지 확인 필요
@@ -1272,7 +1272,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       ? indexing.slotWidths[normalizedSlotIndex] + indexing.slotWidths[normalizedSlotIndex + 1]
       : indexing.slotWidths[normalizedSlotIndex];
 
-    }
+  }
 
   // 키큰장인지 확인 (2hanging이 포함된 모듈 ID)
   const isTallCabinet = actualModuleData?.id?.includes('2hanging') || false;
@@ -1286,11 +1286,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   const needsEndPanelAdjustment = adjacentCheck.hasAdjacentUpperLower;
   const endPanelSide = adjacentCheck.adjacentSide;
 
-  
+
   // 🔴🔴🔴 엔드패널 디버깅 - 키큰장일 때만
   if (actualModuleData?.category === 'full') {
-    }
-  
+  }
+
   // 노서라운드 첫/마지막 슬롯 여부 확인 (상하부장 처리에서 사용)
   // 세미스탠딩도 프리스탠딩과 동일하게 처리
   // 세미스탠딩의 경우 벽이 없는 쪽 슬롯만 해당
@@ -1321,119 +1321,119 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   })();
 
   const isNoSurroundFirstSlot = spaceInfo.surroundType === 'no-surround' &&
-                                  ((spaceInfo.installType === 'freestanding') ||
-                                   (isSemiStanding && !hasLeftWall)) && // 세미스탠딩에서 왼쪽 벽이 없는 경우
-                                  !isAtDroppedBoundary && // 경계 슬롯 제외
-                                  (() => {
-                                    // 단내림이 있으면 zone별 바깥쪽 끝 첫 슬롯 확인
-                                    if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
-                                      const droppedPosition = spaceInfo.droppedCeiling.position;
-                                      const localIndex = localSlotIndex ?? placedModule.slotIndex;
+    ((spaceInfo.installType === 'freestanding') ||
+      (isSemiStanding && !hasLeftWall)) && // 세미스탠딩에서 왼쪽 벽이 없는 경우
+    !isAtDroppedBoundary && // 경계 슬롯 제외
+    (() => {
+      // 단내림이 있으면 zone별 바깥쪽 끝 첫 슬롯 확인
+      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
+        const droppedPosition = spaceInfo.droppedCeiling.position;
+        const localIndex = localSlotIndex ?? placedModule.slotIndex;
 
-                                      if (placedModule.zone === 'dropped') {
-                                        // 단내림 왼쪽: 단내림구간 첫 슬롯(0)이 바깥쪽 끝 (단, 한쪽벽에서 왼쪽벽이 있으면 제외)
-                                        // 단내림 오른쪽: 단내림구간 첫 슬롯(0)은 안쪽 경계
-                                        if (droppedPosition === 'left') {
-                                          // 한쪽벽에서 왼쪽벽이 있으면 바깥쪽 끝이 아님
-                                          if (isSemiStanding && hasLeftWall) return false;
-                                          return localIndex === 0;
-                                        }
-                                        return false;
-                                      } else {
-                                        // 메인구간: zone 첫 슬롯 (단, 한쪽벽에서 왼쪽벽이 있으면 제외)
-                                        if (isSemiStanding && hasLeftWall) return false;
-                                        return localIndex === 0;
-                                      }
-                                    }
-                                    // 단내림이 없으면 전체 첫 슬롯
-                                    return normalizedSlotIndex === 0;
-                                  })();
+        if (placedModule.zone === 'dropped') {
+          // 단내림 왼쪽: 단내림구간 첫 슬롯(0)이 바깥쪽 끝 (단, 한쪽벽에서 왼쪽벽이 있으면 제외)
+          // 단내림 오른쪽: 단내림구간 첫 슬롯(0)은 안쪽 경계
+          if (droppedPosition === 'left') {
+            // 한쪽벽에서 왼쪽벽이 있으면 바깥쪽 끝이 아님
+            if (isSemiStanding && hasLeftWall) return false;
+            return localIndex === 0;
+          }
+          return false;
+        } else {
+          // 메인구간: zone 첫 슬롯 (단, 한쪽벽에서 왼쪽벽이 있으면 제외)
+          if (isSemiStanding && hasLeftWall) return false;
+          return localIndex === 0;
+        }
+      }
+      // 단내림이 없으면 전체 첫 슬롯
+      return normalizedSlotIndex === 0;
+    })();
 
   // 노서라운드 마지막 슬롯: zone별 바깥쪽 끝 마지막 슬롯
   let isNoSurroundLastSlot = spaceInfo.surroundType === 'no-surround' &&
-                                 ((spaceInfo.installType === 'freestanding') ||
-                                  (isSemiStanding && !hasRightWall)) && // 세미스탠딩에서 오른쪽 벽이 없는 경우
-                                 !isAtDroppedBoundary && // 경계 슬롯 제외
-                                 (() => {
-                                   // 단내림이 있으면 zone별 바깥쪽 끝 마지막 슬롯 확인
-                                   if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
-                                     const droppedPosition = spaceInfo.droppedCeiling.position;
-                                     const targetZone = placedModule.zone === 'dropped' ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
-                                     const localIndex = localSlotIndex ?? placedModule.slotIndex;
-                                     const zoneColumnCount = targetZone?.columnCount ?? indexing.columnCount;
+    ((spaceInfo.installType === 'freestanding') ||
+      (isSemiStanding && !hasRightWall)) && // 세미스탠딩에서 오른쪽 벽이 없는 경우
+    !isAtDroppedBoundary && // 경계 슬롯 제외
+    (() => {
+      // 단내림이 있으면 zone별 바깥쪽 끝 마지막 슬롯 확인
+      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
+        const droppedPosition = spaceInfo.droppedCeiling.position;
+        const targetZone = placedModule.zone === 'dropped' ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
+        const localIndex = localSlotIndex ?? placedModule.slotIndex;
+        const zoneColumnCount = targetZone?.columnCount ?? indexing.columnCount;
 
-                                     if (placedModule.zone === 'dropped') {
-                                       // 단내림 왼쪽: 단내림구간 마지막 슬롯은 안쪽 경계
-                                       // 단내림 오른쪽: 단내림구간 마지막 슬롯이 바깥쪽 끝 (단, 한쪽벽에서 오른쪽벽이 있으면 제외)
-                                       if (droppedPosition === 'right') {
-                                         // 한쪽벽에서 오른쪽벽이 있으면 바깥쪽 끝이 아님
-                                         if (isSemiStanding && hasRightWall) return false;
-                                         return localIndex === zoneColumnCount - 1;
-                                       }
-                                       return false;
-                                     } else {
-                                       // 메인구간: zone 마지막 슬롯 (단, 한쪽벽에서 오른쪽벽이 있으면 제외)
-                                       // 단내림 좌측: 메인구간은 바깥쪽 끝이 아님 (좌측에 있는 단내림 구간이 바깥쪽)
-                                       if (droppedPosition === 'left') return false;
-                                       if (isSemiStanding && hasRightWall) return false;
-                                       return localIndex === zoneColumnCount - 1;
-                                     }
-                                   }
-                                   // 단내림이 없으면 isLastSlot 사용
-                                   return isLastSlot;
-                                 })();
+        if (placedModule.zone === 'dropped') {
+          // 단내림 왼쪽: 단내림구간 마지막 슬롯은 안쪽 경계
+          // 단내림 오른쪽: 단내림구간 마지막 슬롯이 바깥쪽 끝 (단, 한쪽벽에서 오른쪽벽이 있으면 제외)
+          if (droppedPosition === 'right') {
+            // 한쪽벽에서 오른쪽벽이 있으면 바깥쪽 끝이 아님
+            if (isSemiStanding && hasRightWall) return false;
+            return localIndex === zoneColumnCount - 1;
+          }
+          return false;
+        } else {
+          // 메인구간: zone 마지막 슬롯 (단, 한쪽벽에서 오른쪽벽이 있으면 제외)
+          // 단내림 좌측: 메인구간은 바깥쪽 끝이 아님 (좌측에 있는 단내림 구간이 바깥쪽)
+          if (droppedPosition === 'left') return false;
+          if (isSemiStanding && hasRightWall) return false;
+          return localIndex === zoneColumnCount - 1;
+        }
+      }
+      // 단내림이 없으면 isLastSlot 사용
+      return isLastSlot;
+    })();
 
   // 듀얼 가구가 전체 공간의 맨 마지막 슬롯에 있는 경우 (바깥쪽 끝)
   let isNoSurroundDualLastSlot = spaceInfo.surroundType === 'no-surround' &&
-                                    ((spaceInfo.installType === 'freestanding') ||
-                                     (isSemiStanding && !hasRightWall)) && // 세미스탠딩에서 오른쪽 벽이 없는 경우
+    ((spaceInfo.installType === 'freestanding') ||
+      (isSemiStanding && !hasRightWall)) && // 세미스탠딩에서 오른쪽 벽이 없는 경우
     isDualFurniture &&
-                                    (() => {
-                                      // 단내림이 있으면 dropped zone의 마지막에서 두번째 슬롯만 체크 (전체 공간의 바깥쪽 끝)
-                                      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
-                                        if (placedModule.zone === 'dropped' && zoneSlotInfo.dropped) {
-                                          const localIndex = localSlotIndex ?? placedModule.slotIndex;
-                                          const zoneColumnCount = zoneSlotInfo.dropped.columnCount ?? indexing.columnCount;
-                                          return localIndex === zoneColumnCount - 2;
-                                        }
-                                        // normal zone은 전체 공간의 바깥쪽 끝이 아니므로 false
-                                        return false;
-                                      }
-                                      // 단내림이 없으면 전체 마지막에서 두번째 슬롯
-                                      return normalizedSlotIndex === indexing.columnCount - 2;
-                                    })();
+    (() => {
+      // 단내림이 있으면 dropped zone의 마지막에서 두번째 슬롯만 체크 (전체 공간의 바깥쪽 끝)
+      if (spaceInfo.droppedCeiling?.enabled && placedModule.zone && zoneSlotInfo) {
+        if (placedModule.zone === 'dropped' && zoneSlotInfo.dropped) {
+          const localIndex = localSlotIndex ?? placedModule.slotIndex;
+          const zoneColumnCount = zoneSlotInfo.dropped.columnCount ?? indexing.columnCount;
+          return localIndex === zoneColumnCount - 2;
+        }
+        // normal zone은 전체 공간의 바깥쪽 끝이 아니므로 false
+        return false;
+      }
+      // 단내림이 없으면 전체 마지막에서 두번째 슬롯
+      return normalizedSlotIndex === indexing.columnCount - 2;
+    })();
 
   // 서라운드 모드: 단내림구간 바깥쪽 끝 슬롯 확인
   const isSurroundDroppedEdgeSlot = spaceInfo.surroundType === 'surround' &&
-                                     (spaceInfo.installType === 'freestanding' || isSemiStanding) &&
-                                     spaceInfo.droppedCeiling?.enabled &&
-                                     placedModule.zone === 'dropped' &&
-                                     !isAtDroppedBoundary &&
-                                     (() => {
-                                       if (zoneSlotInfo?.dropped) {
-                                         const localIndex = localSlotIndex ?? placedModule.slotIndex;
-                                         const zoneColumnCount = zoneSlotInfo.dropped.columnCount ?? indexing.columnCount;
-                                         // 한쪽벽일 때: 오른쪽 벽이 없으면 오른쪽 끝만, 왼쪽 벽이 없으면 왼쪽 끝만
-                                         if (isSemiStanding) {
-                                           if (!hasRightWall) {
-                                             // 듀얼: 마지막에서 두번째, 싱글: 마지막
-                                             return isDualFurniture
-                                               ? localIndex === zoneColumnCount - 2
-                                               : localIndex === zoneColumnCount - 1;
-                                           } else if (!hasLeftWall) {
-                                             return localIndex === 0;
-                                           }
-                                           return false;
-                                         }
-                                         // 프리스탠딩: 양쪽 끝 모두
-                                         if (isDualFurniture) {
-                                           // 듀얼: 첫슬롯 또는 마지막에서 두번째 슬롯
-                                           return localIndex === 0 || localIndex === zoneColumnCount - 2;
-                                         }
-                                         return localIndex === 0 || localIndex === zoneColumnCount - 1;
-                                       }
-                                       return false;
-                                     })();
+    (spaceInfo.installType === 'freestanding' || isSemiStanding) &&
+    spaceInfo.droppedCeiling?.enabled &&
+    placedModule.zone === 'dropped' &&
+    !isAtDroppedBoundary &&
+    (() => {
+      if (zoneSlotInfo?.dropped) {
+        const localIndex = localSlotIndex ?? placedModule.slotIndex;
+        const zoneColumnCount = zoneSlotInfo.dropped.columnCount ?? indexing.columnCount;
+        // 한쪽벽일 때: 오른쪽 벽이 없으면 오른쪽 끝만, 왼쪽 벽이 없으면 왼쪽 끝만
+        if (isSemiStanding) {
+          if (!hasRightWall) {
+            // 듀얼: 마지막에서 두번째, 싱글: 마지막
+            return isDualFurniture
+              ? localIndex === zoneColumnCount - 2
+              : localIndex === zoneColumnCount - 1;
+          } else if (!hasLeftWall) {
+            return localIndex === 0;
+          }
+          return false;
+        }
+        // 프리스탠딩: 양쪽 끝 모두
+        if (isDualFurniture) {
+          // 듀얼: 첫슬롯 또는 마지막에서 두번째 슬롯
+          return localIndex === 0 || localIndex === zoneColumnCount - 2;
+        }
+        return localIndex === 0 || localIndex === zoneColumnCount - 1;
+      }
+      return false;
+    })();
 
   // 듀얼 가구: 바깥쪽 끝 슬롯만 엔드패널만큼 줄임
   // - 노서라운드: 바깥쪽 끝 슬롯(첫/마지막)만
@@ -1509,15 +1509,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       positionAdjustment: positionAdjustmentForEndPanel
     });
   }
-  
+
   // 노서라운드 모드에서 엔드패널 처리
   // 벽없음(freestanding) 또는 한쪽벽(semistanding) 모드에서 엔드패널이 있는 슬롯 처리
 
   if (spaceInfo.surroundType === 'no-surround' &&
-      (spaceInfo.installType === 'freestanding' ||
-       spaceInfo.installType === 'semistanding' ||
-       spaceInfo.installType === 'semi-standing') &&
-      normalizedSlotIndex !== undefined) {
+    (spaceInfo.installType === 'freestanding' ||
+      spaceInfo.installType === 'semistanding' ||
+      spaceInfo.installType === 'semi-standing') &&
+    normalizedSlotIndex !== undefined) {
 
     // 프리스탠딩에서는 양쪽 모두, 세미스탠딩에서는 벽이 없는 쪽만 처리
     let shouldProcessFirstSlot = false;
@@ -1599,8 +1599,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
     // 듀얼 가구의 경우: 첫번째 슬롯에 있고, 왼쪽에 벽이 없으면 처리 (경계면 제외)
     const isDualFirstSlot = isDualFurniture && zoneLocalIndex === 0 && !isAtBoundary &&
-                            (spaceInfo.installType === 'freestanding' ||
-                             ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.left));
+      (spaceInfo.installType === 'freestanding' ||
+        ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.left));
 
     const isFirstSlotNoSurround = shouldProcessFirstSlot && !isDualFirstSlot;
 
@@ -1610,8 +1610,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       spaceInfo.droppedCeiling?.enabled && placedModule.zone === 'dropped';
 
     const isDualLastSlot = isDualFurniture && zoneLocalIndex === zoneColumnCount - 2 && (!isAtBoundary || isDualEndSlotAtOuter) &&
-                            (spaceInfo.installType === 'freestanding' ||
-                             ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
+      (spaceInfo.installType === 'freestanding' ||
+        ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
 
 
     // 듀얼 가구가 마지막 슬롯에 있으면 isLastSlot 처리를 하지 않음
@@ -1631,7 +1631,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 메인구간: 조정 불필요
         positionAdjustmentForEndPanel = 0;
       }
-      }
+    }
     // 듀얼 가구 마지막 슬롯 특별 처리 (상하부장 유무와 관계없이 항상 처리)
     else if ((isDualLastSlot || (widthReduced && (isNoSurroundLastSlot || isNoSurroundDualLastSlot))) && !needsEndPanelAdjustment) {
       // 단내림구간: 엔드패널에서 멀어지는 방향으로 9mm 이동
@@ -1646,7 +1646,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 메인구간: 조정 불필요
         positionAdjustmentForEndPanel = 0;
       }
-      }
+    }
     // 싱글 가구 첫/마지막 슬롯 처리 (상하부장도 포함)
     else if ((isFirstSlotNoSurround || isLastSlotNoSurround)) {
       // 키큰장이 아니거나, 키큰장이지만 상하부장과 인접하지 않은 경우
@@ -1654,7 +1654,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 가구 너비를 18mm 줄임
         const originalWidth = furnitureWidthMm;
         furnitureWidthMm = originalWidth - END_PANEL_THICKNESS;
-        
+
         // 노서라운드 모드에서 위치 조정
         // 키큰장: 엔드패널에서 멀어지는 방향으로 9mm 이동 (침범 방지)
         // 상하부장: 엔드패널 쪽으로 9mm 이동 (엔드패널과 함께 이동)
@@ -1690,8 +1690,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             positionAdjustmentForEndPanel = 0;
           }
         }
-        
-        } else {
+
+      } else {
         // 키큰장이 상하부장과 인접한 경우는 위에서 이미 처리했으므로
         // 하지만 노서라운드 첫/마지막 슬롯이면 추가 위치 조정이 필요할 수 있음
         // 상하부장 자체는 추가 처리가 필요함
@@ -1716,22 +1716,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               positionAdjustmentForEndPanel = 0;
             }
 
-            }
+          }
         }
       }
     }
-    
+
     // 노서라운드 모드에서는 slotWidths가 이미 엔드패널을 고려하여 계산되어 있음
     // FurnitureItem에서 추가로 조정하지 않음
-    }
+  }
 
   // 디버깅용 로그 추가 제거됨
 
   // 키큰장 높이는 항상 내경 높이와 동일 (띄워서 배치와 관계없이)
   // 키큰장은 바닥(또는 띄움 위치)부터 시작해서 상부프레임 하단까지
-  
+
   // 노서라운드 모드에서 엔드패널 위치 조정은 나중에 적용
-  
+
   let adjustedDepthMm = actualModuleData?.dimensions.depth || 0;
 
   // 단내림 구간 높이 디버깅
@@ -1745,24 +1745,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     debugLog('  droppedCeilingEnabled:', spaceInfo.droppedCeiling?.enabled);
     debugLog('  dropHeight:', spaceInfo.droppedCeiling?.dropHeight);
   }
-  
+
   // Column C 가구 너비 디버깅
   if (slotInfo?.columnType === 'medium' && slotInfo?.allowMultipleFurniture) {
-    }
-  
+  }
+
   // 듀얼 가구인지 확인하여 도어 크기 결정 (이미 위에서 계산됨)
   // 단내림 구간에서는 zone별 columnWidth 사용
   let originalSlotWidthMm: number;
-  
+
   // 노서라운드 모드에서 끝 슬롯인지 확인
-  const isEndSlotInNoSurround = spaceInfo.surroundType === 'no-surround' && 
+  const isEndSlotInNoSurround = spaceInfo.surroundType === 'no-surround' &&
     normalizedSlotIndex !== undefined &&
     (normalizedSlotIndex === 0 || normalizedSlotIndex === indexing.columnCount - 1);
-  
+
   if (placedModule.zone && spaceInfo.droppedCeiling?.enabled && zoneSlotInfo) {
     const targetZone = placedModule.zone === 'dropped' && zoneSlotInfo.dropped ? zoneSlotInfo.dropped : zoneSlotInfo.normal;
     const localIndex = localSlotIndex ?? placedModule.slotIndex ?? 0;
-    
+
     // 마지막 슬롯의 경우 실제 남은 너비 사용
     if (isLastSlot && !isDualFurniture) {
       const usedWidth = targetZone.columnWidth * (targetZone.columnCount - 1);
@@ -1791,7 +1791,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         originalSlotWidthMm = targetZone.columnWidth;
       }
     }
-    
+
   } else {
     // 단내림이 없는 경우도 마지막 슬롯 처리
     if (isLastSlot && !isDualFurniture) {
@@ -1816,7 +1816,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
     }
   }
-  
+
   // 도어 크기 디버깅
   if (placedModule.hasDoor) {
     let targetZoneSlotWidths = null;
@@ -1827,7 +1827,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       targetZoneSlotWidths = targetZone.slotWidths;
       targetZoneInfo = targetZone;
     }
-    
+
     // 도어 너비가 가구 너비와 크게 차이나는 경우 - 기둥 침범 시와 엔드패널 있는 경우에는 보정하지 않음
     // 기둥 침범 시 도어는 원래 슬롯 너비를 유지해야 함 (커버도어)
     // 키큰장에 엔드패널이 있을 때도 도어는 원래 슬롯 너비를 유지해야 함
@@ -1836,9 +1836,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       // 기둥이 없고 엔드패널도 없는 경우에만 가구 너비를 기준으로 도어 너비 보정
       originalSlotWidthMm = furnitureWidthMm;
     } else if (needsEndPanelAdjustment) {
-      }
+    }
   }
-  
+
   // 벽없음 + 노서라운드 모드에서 벽이 없는 쪽의 가구는 도어가 엔드패널을 덮도록 확장
   let doorWidthExpansion = 0;
   let doorWidth = actualModuleData?.dimensions.width || 0;
@@ -1848,20 +1848,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 상하부장 인접 시 도어 확장 비활성화 (엔드패널이 공간을 채우므로)
   if (needsEndPanelAdjustment) {
   }
-  
+
   // 노서라운드 엔드패널이 있는 슬롯 도어 확장 처리
   // hasLeftWall과 hasRightWall은 이미 위에서 선언됨 (809-810줄)
   // 단, 상하부장 인접 시에는 도어 확장하지 않음
-  if (!needsEndPanelAdjustment && spaceInfo.surroundType === 'no-surround' && 
-      (spaceInfo.installType === 'freestanding' || 
-       spaceInfo.installType === 'semistanding' || 
-       spaceInfo.installType === 'semi-standing') && 
-      normalizedSlotIndex !== undefined) {
-    
+  if (!needsEndPanelAdjustment && spaceInfo.surroundType === 'no-surround' &&
+    (spaceInfo.installType === 'freestanding' ||
+      spaceInfo.installType === 'semistanding' ||
+      spaceInfo.installType === 'semi-standing') &&
+    normalizedSlotIndex !== undefined) {
+
     // 프리스탠딩에서는 양쪽 모두, 세미스탠딩에서는 벽이 없는 쪽만 처리
     let shouldExpandFirstSlot = false;
     let shouldExpandLastSlot = false;
-    
+
     if (spaceInfo.installType === 'freestanding') {
       // 프리스탠딩: 양쪽 모두 확장
       shouldExpandFirstSlot = normalizedSlotIndex === 0;
@@ -1878,8 +1878,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
     // 듀얼 가구의 경우: 각 zone의 첫번째 슬롯에 있고, 벽이 없으면 처리
     const isDualFirstSlotDoor = isDualFurniture && currentLocalSlotIndex === 0 &&
-                            (spaceInfo.installType === 'freestanding' ||
-                             ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.left));
+      (spaceInfo.installType === 'freestanding' ||
+        ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.left));
 
 
     const isFirstSlotFreestanding = shouldExpandFirstSlot && !isDualFirstSlotDoor;
@@ -1892,9 +1892,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       : (zoneInfo.normal?.columnCount ?? indexing.columnCount);
 
     const isDualLastSlot = isDualFurniture && currentLocalSlotIndex === zoneColumnCount - 2 &&
-                            (spaceInfo.installType === 'freestanding' ||
-                             ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
-    
+      (spaceInfo.installType === 'freestanding' ||
+        ((spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') && !spaceInfo.wallConfig?.right));
+
     // 첫번째 또는 마지막 슬롯: 도어 확장
     if (isFirstSlotFreestanding || isLastSlotFreestanding || isDualFirstSlotDoor || isDualLastSlot) {
       if (isDualFurniture && isDualFirstSlotDoor) {
@@ -1909,7 +1909,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
         }
 
-        } else if (isDualFurniture && isDualLastSlot) {
+      } else if (isDualFurniture && isDualLastSlot) {
         // 듀얼 가구가 마지막 슬롯에 있는 경우: 오른쪽 도어만 18mm 확장
         doorWidthExpansion = END_PANEL_THICKNESS; // 18mm 확장
         // 단내림 구간 듀얼장: 가구 이동을 상쇄해서 도어를 슬롯 중심에 고정
@@ -1925,8 +1925,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           // 단내림이 없을 때 → 기본 9mm 우측 이동
           doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
         }
-        
-        } else {
+
+      } else {
         // 싱글 가구 또는 듀얼 가구 첫번째 슬롯: 한쪽만 18mm 확장
         doorWidthExpansion = END_PANEL_THICKNESS;
 
@@ -1946,22 +1946,22 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
           doorXOffset = needsEndPanelAdjustment ? positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
         }
 
-        }
+      }
     }
-    
+
     // 벽 위치 설정 (freestanding은 양쪽 벽 없음) - hasLeftWall, hasRightWall은 이미 위에서 설정됨
   } else if (!needsEndPanelAdjustment && spaceInfo.surroundType === 'no-surround' && normalizedSlotIndex !== undefined) {
     const isFirstSlot = normalizedSlotIndex === 0;
     const isLastSlotForDual = isDualFurniture && normalizedSlotIndex === indexing.columnCount - 2;
     const isLastSlotForSingle = !isDualFurniture && isLastSlot;
-    
+
     // 벽 위치 확인
     if (spaceInfo.installType === 'freestanding') {
       // 벽없음 모드: 양쪽 모두 벽 없음 - hasLeftWall, hasRightWall은 이미 위에서 false로 설정됨
     } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
       // 반벽 모드: hasLeftWall, hasRightWall은 이미 wallConfig에서 설정됨
     }
-    
+
     if (isFirstSlot && !hasLeftWall) {
       // 왼쪽 벽이 없는 첫번째 슬롯
       if (isDualFurniture) {
@@ -1971,18 +1971,18 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         // 도어는 원래 슬롯 너비 그대로 (슬롯 기준)
         doorWidthExpansion = firstSlotReduction + secondSlotReduction;
         // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
-        doorXOffset = needsEndPanelAdjustment && isNoSurroundFirstSlot ? 
+        doorXOffset = needsEndPanelAdjustment && isNoSurroundFirstSlot ?
           positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
-        
-        } else {
+
+      } else {
         // 싱글장: 18mm 확장, 상하부장 인접 시 위치 조정
         doorWidthExpansion = END_PANEL_THICKNESS;
         // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
-        doorXOffset = needsEndPanelAdjustment && isNoSurroundFirstSlot ? 
+        doorXOffset = needsEndPanelAdjustment && isNoSurroundFirstSlot ?
           positionAdjustmentForEndPanel : -(END_PANEL_THICKNESS / 2) * 0.01;
-        
-        }
-      
+
+      }
+
     } else if ((isLastSlotForDual || isLastSlotForSingle) && !hasRightWall) {
       // 오른쪽 벽이 없는 마지막 슬롯
       if (isDualFurniture && isLastSlotForDual) {
@@ -1999,25 +1999,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         doorXOffset = needsEndPanelAdjustment && isNoSurroundLastSlot ?
           positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
 
-        } else {
+      } else {
         // 싱글장: 18mm 확장, 상하부장 인접 시 위치 조정
         doorWidthExpansion = END_PANEL_THICKNESS;
         // 상하부장이 인접한 경우 positionAdjustmentForEndPanel 값 사용, 아니면 기본 9mm 이동
         doorXOffset = needsEndPanelAdjustment && isNoSurroundLastSlot ?
           positionAdjustmentForEndPanel : (END_PANEL_THICKNESS / 2) * 0.01;
 
-        }
+      }
     }
   }
-  
+
   // 도어는 항상 원래 슬롯 중심에 고정 (가구 이동과 무관)
   let originalSlotCenterX: number;
-  
+
   // zone이 있는 경우 zone별 위치 계산
   if (placedModule.zone && spaceInfo.droppedCeiling?.enabled) {
     const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
     const targetZone = placedModule.zone === 'dropped' && zoneInfo.dropped ? zoneInfo.dropped : zoneInfo.normal;
-    
+
     // zone 내 로컬 슬롯 인덱스 사용
     const localSlotIndexForZone = localSlotIndex ?? placedModule.slotIndex ?? 0;
 
@@ -2039,10 +2039,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     } else {
       // 싱글 가구
       // targetZone의 threeUnitPositions나 계산된 위치 사용
-      const zoneIndexing = placedModule.zone === 'dropped' && indexing.zones?.dropped 
-        ? indexing.zones.dropped 
+      const zoneIndexing = placedModule.zone === 'dropped' && indexing.zones?.dropped
+        ? indexing.zones.dropped
         : (placedModule.zone === 'normal' && indexing.zones?.normal ? indexing.zones.normal : indexing);
-      
+
       if (zoneIndexing.threeUnitPositions && zoneIndexing.threeUnitPositions[localSlotIndexForZone] !== undefined) {
         originalSlotCenterX = zoneIndexing.threeUnitPositions[localSlotIndexForZone];
       } else {
@@ -2058,16 +2058,16 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       const leftSlotX = indexing.threeUnitPositions[normalizedSlotIndex];
       const rightSlotX = indexing.threeUnitPositions[normalizedSlotIndex + 1] || leftSlotX;
       originalSlotCenterX = (leftSlotX + rightSlotX) / 2;
-      
-      } else if (normalizedSlotIndex !== undefined && indexing.threeUnitPositions[normalizedSlotIndex] !== undefined) {
+
+    } else if (normalizedSlotIndex !== undefined && indexing.threeUnitPositions[normalizedSlotIndex] !== undefined) {
       // 싱글 가구: 슬롯 중심 위치
       originalSlotCenterX = indexing.threeUnitPositions[normalizedSlotIndex]; // 실제 슬롯 중심 위치
     } else {
       // 슬롯 인덱스가 없는 경우, 듀얼 가구라면 듀얼 위치에서 찾기
-      
+
       if (isDualFurniture && indexing.threeUnitDualPositions) {
         // 듀얼 가구의 경우 듀얼 위치에서 가장 가까운 위치 찾기
-        const closestDualIndex = indexing.threeUnitPositions.findIndex(pos => 
+        const closestDualIndex = indexing.threeUnitPositions.findIndex(pos =>
           Math.abs(pos - placedModule.position.x) < 0.2 // 20cm 오차 허용
         );
         if (closestDualIndex >= 0) {
@@ -2078,7 +2078,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         }
       } else {
         // 싱글 가구의 경우 싱글 위치에서 가장 가까운 위치 찾기
-        const closestSingleIndex = indexing.threeUnitPositions.findIndex(pos => 
+        const closestSingleIndex = indexing.threeUnitPositions.findIndex(pos =>
           Math.abs(pos - placedModule.position.x) < 0.2 // 20cm 오차 허용
         );
         if (closestSingleIndex >= 0) {
@@ -2090,7 +2090,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       }
     }
   }
-  
+
   // 마지막 슬롯도 일반 슬롯과 동일하게 처리 (특별 처리 제거)
   // threeUnitPositions가 이미 올바른 위치를 가지고 있음
 
@@ -2100,7 +2100,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn && slotInfo.column) {
     // 기둥 타입에 따른 처리 방식 확인
     const columnProcessingMethod = slotInfo.columnProcessingMethod || 'width-adjustment';
-    
+
     const slotWidthMmForBounds = slotInfo.slotWidth ?? indexing.slotWidths?.[normalizedSlotIndex] ?? indexing.columnWidth;
     const slotWidthM = slotWidthMmForBounds * 0.01; // mm to meters
     const originalSlotBounds = {
@@ -2108,10 +2108,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       right: originalSlotCenterX + slotWidthM / 2,
       center: originalSlotCenterX
     };
-    
+
     // 기둥 침범에 따른 새로운 가구 경계 계산
     const furnitureBounds = calculateFurnitureBounds(slotInfo, originalSlotBounds, spaceInfo);
-    
+
     // 기둥 침범 시에는 가구 폭을 조정하여 기둥과 겹치지 않도록 함
     if (columnProcessingMethod === 'width-adjustment') {
       // 기둥 C(300mm)에서 'front' 모드: 폭은 슬롯 전체, 깊이만 줄임, 기둥 앞으로 배치
@@ -2137,88 +2137,88 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
       } else {
         // 일반 폭 조정 방식: 가구 크기와 위치 조정
         // 기둥 침범 시에는 항상 폭 조정
-      const slotHalfWidthM = (slotWidthMmForBounds * 0.01) / 2;
-      let furnitureHalfWidthM = (furnitureBounds.renderWidth * 0.01) / 2;
-      const originalHalfWidthM = furnitureHalfWidthM;
-      const slotLeft = originalSlotCenterX - slotHalfWidthM;
-      const slotRight = originalSlotCenterX + slotHalfWidthM;
+        const slotHalfWidthM = (slotWidthMmForBounds * 0.01) / 2;
+        let furnitureHalfWidthM = (furnitureBounds.renderWidth * 0.01) / 2;
+        const originalHalfWidthM = furnitureHalfWidthM;
+        const slotLeft = originalSlotCenterX - slotHalfWidthM;
+        const slotRight = originalSlotCenterX + slotHalfWidthM;
 
-      const desiredOffset = (needsEndPanelAdjustment || widthReduced) ? positionAdjustmentForEndPanel : 0;
-      let targetCenter = furnitureBounds.center + desiredOffset;
+        const desiredOffset = (needsEndPanelAdjustment || widthReduced) ? positionAdjustmentForEndPanel : 0;
+        let targetCenter = furnitureBounds.center + desiredOffset;
 
-      if (targetCenter - furnitureHalfWidthM < slotLeft) {
-        targetCenter = slotLeft + furnitureHalfWidthM;
-      }
-      if (targetCenter + furnitureHalfWidthM > slotRight) {
-        targetCenter = slotRight - furnitureHalfWidthM;
-      }
-
-      const appliedOffset = targetCenter - furnitureBounds.center;
-
-      if (needsEndPanelAdjustment || widthReduced || appliedOffset !== desiredOffset) {
-        positionAdjustmentForEndPanel = appliedOffset;
-      }
-
-      let adjustedWidthAfterColumn = furnitureBounds.renderWidth;
-
-      let appliedReduction = 0;
-      if (widthReductionBeforeColumn > 0) {
-        const maxReduction = Math.max(0, adjustedWidthAfterColumn - 50); // 최소 폭 확보
-        appliedReduction = Math.min(widthReductionBeforeColumn, maxReduction);
-        if (appliedReduction > 0) {
-          adjustedWidthAfterColumn -= appliedReduction;
-          furnitureHalfWidthM = (adjustedWidthAfterColumn * 0.01) / 2;
+        if (targetCenter - furnitureHalfWidthM < slotLeft) {
+          targetCenter = slotLeft + furnitureHalfWidthM;
         }
-      }
-
-      if (appliedReduction > 0 && (needsEndPanelAdjustment || widthReduced)) {
-        const shiftSign = (() => {
-          if (positionAdjustmentForEndPanel > 0) return 1;
-          if (positionAdjustmentForEndPanel < 0) return -1;
-          if (endPanelSide === 'left') return 1;
-          if (endPanelSide === 'right') return -1;
-          return 0;
-        })();
-
-        if (shiftSign !== 0) {
-          const halfDiff = originalHalfWidthM - furnitureHalfWidthM;
-          let shiftedCenter = targetCenter + halfDiff * shiftSign;
-          const minCenter = slotLeft + furnitureHalfWidthM;
-          const maxCenter = slotRight - furnitureHalfWidthM;
-          shiftedCenter = Math.min(maxCenter, Math.max(minCenter, shiftedCenter));
-          targetCenter = shiftedCenter;
+        if (targetCenter + furnitureHalfWidthM > slotRight) {
+          targetCenter = slotRight - furnitureHalfWidthM;
         }
-      }
 
-      furnitureWidthMm = adjustedWidthAfterColumn;
-      adjustedPosition = {
-        ...adjustedPosition, // adjustedPosition 사용하여 상부장 Y 위치 보존
-        x: targetCenter
-      };
+        const appliedOffset = targetCenter - furnitureBounds.center;
 
-      if (needsEndPanelAdjustment || widthReduced) {
-        positionAdjustmentForEndPanel = targetCenter - furnitureBounds.center;
-      }
+        if (needsEndPanelAdjustment || widthReduced || appliedOffset !== desiredOffset) {
+          positionAdjustmentForEndPanel = appliedOffset;
+        }
 
-      // 기둥 변경으로 인한 폭 조정이 필요한 경우 실시간 업데이트
-      if (!isFurnitureDragging && (
-        placedModule.adjustedWidth !== furnitureWidthMm ||
-        placedModule.position.x !== adjustedPosition.x
-      )) {
-        updatePlacedModule(placedModule.id, {
-          adjustedWidth: furnitureWidthMm,
-          position: adjustedPosition,
-          columnSlotInfo: {
-            hasColumn: true,
-            columnId: slotInfo.column?.id,
-            columnPosition: slotInfo.columnPosition,
-            availableWidth: slotInfo.availableWidth,
-            adjustedWidth: slotInfo.adjustedWidth,
-            intrusionDirection: slotInfo.intrusionDirection,
-            furniturePosition: slotInfo.furniturePosition
+        let adjustedWidthAfterColumn = furnitureBounds.renderWidth;
+
+        let appliedReduction = 0;
+        if (widthReductionBeforeColumn > 0) {
+          const maxReduction = Math.max(0, adjustedWidthAfterColumn - 50); // 최소 폭 확보
+          appliedReduction = Math.min(widthReductionBeforeColumn, maxReduction);
+          if (appliedReduction > 0) {
+            adjustedWidthAfterColumn -= appliedReduction;
+            furnitureHalfWidthM = (adjustedWidthAfterColumn * 0.01) / 2;
           }
-        });
-      }
+        }
+
+        if (appliedReduction > 0 && (needsEndPanelAdjustment || widthReduced)) {
+          const shiftSign = (() => {
+            if (positionAdjustmentForEndPanel > 0) return 1;
+            if (positionAdjustmentForEndPanel < 0) return -1;
+            if (endPanelSide === 'left') return 1;
+            if (endPanelSide === 'right') return -1;
+            return 0;
+          })();
+
+          if (shiftSign !== 0) {
+            const halfDiff = originalHalfWidthM - furnitureHalfWidthM;
+            let shiftedCenter = targetCenter + halfDiff * shiftSign;
+            const minCenter = slotLeft + furnitureHalfWidthM;
+            const maxCenter = slotRight - furnitureHalfWidthM;
+            shiftedCenter = Math.min(maxCenter, Math.max(minCenter, shiftedCenter));
+            targetCenter = shiftedCenter;
+          }
+        }
+
+        furnitureWidthMm = adjustedWidthAfterColumn;
+        adjustedPosition = {
+          ...adjustedPosition, // adjustedPosition 사용하여 상부장 Y 위치 보존
+          x: targetCenter
+        };
+
+        if (needsEndPanelAdjustment || widthReduced) {
+          positionAdjustmentForEndPanel = targetCenter - furnitureBounds.center;
+        }
+
+        // 기둥 변경으로 인한 폭 조정이 필요한 경우 실시간 업데이트
+        if (!isFurnitureDragging && (
+          placedModule.adjustedWidth !== furnitureWidthMm ||
+          placedModule.position.x !== adjustedPosition.x
+        )) {
+          updatePlacedModule(placedModule.id, {
+            adjustedWidth: furnitureWidthMm,
+            position: adjustedPosition,
+            columnSlotInfo: {
+              hasColumn: true,
+              columnId: slotInfo.column?.id,
+              columnPosition: slotInfo.columnPosition,
+              availableWidth: slotInfo.availableWidth,
+              adjustedWidth: slotInfo.adjustedWidth,
+              intrusionDirection: slotInfo.intrusionDirection,
+              furniturePosition: slotInfo.furniturePosition
+            }
+          });
+        }
       } // end of else (기둥 측면 배치 모드)
     } else if (columnProcessingMethod === 'depth-adjustment') {
       // 깊이 조정 방식 (기둥 C(300mm) 및 얕은 기둥)
@@ -2326,7 +2326,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     // 기둥이 슬롯을 벗어났을 때 폭도 원상복구
     // 폭을 원래대로 복구
     furnitureWidthMm = actualModuleData?.dimensions.width || 0;
-    
+
     // 위치도 슬롯 중심으로 복구
     const slotCenterX = (normalizedSlotIndex !== undefined && indexing.threeUnitPositions[normalizedSlotIndex] !== undefined)
       ? indexing.threeUnitPositions[normalizedSlotIndex]
@@ -2351,8 +2351,8 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (spaceInfo.surroundType === 'no-surround') {
       // 단내림 좌측 메인 구간: 엔드패널과 안 겹치도록 왼쪽으로 9mm 이동
       if (spaceInfo.droppedCeiling?.enabled &&
-          spaceInfo.droppedCeiling.position === 'left' &&
-          placedModule.zone === 'normal') {
+        spaceInfo.droppedCeiling.position === 'left' &&
+        placedModule.zone === 'normal') {
         // zone의 마지막 슬롯인지 확인
         if (zoneSlotInfo && zoneSlotInfo.normal) {
           const localIndex = localSlotIndex ?? placedModule.slotIndex;
@@ -2388,24 +2388,24 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 가구 치수를 Three.js 단위로 변환
   const width = mmToThreeUnits(furnitureWidthMm);
-  
+
   // 가구 높이 계산: actualModuleData.dimensions.height가 이미 올바른 높이를 가지고 있음
   // generateShelvingModules에서 internalSpace.height를 기반으로 가구를 생성했기 때문
   // 추가 조정 불필요
-  
+
   const height = mmToThreeUnits(furnitureHeightMm);
-  
+
   // 단내림 구간 최종 높이 디버깅
   if (placedModule.zone === 'dropped') {
-    }
-  
+  }
+
   // 깊이 계산: 기둥 앞에 배치 모드면 adjustedDepthMm 강제 적용, 아니면 customDepth 우선
   const moduleDepth = actualModuleData?.dimensions?.depth || 0;
   const actualDepthMm = (placedModule.columnPlacementMode === 'front' && adjustedDepthMm !== moduleDepth)
-                        ? adjustedDepthMm  // front 모드: 깊이 강제 적용
-                        : (placedModule.customDepth ||
-                           (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
-                            (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth)));
+    ? adjustedDepthMm  // front 모드: 깊이 강제 적용
+    : (placedModule.customDepth ||
+      (autoAdjustedDepthMm !== null ? autoAdjustedDepthMm :
+        (adjustedDepthMm !== moduleDepth ? adjustedDepthMm : moduleDepth)));
   const depth = mmToThreeUnits(actualDepthMm);
 
   // 도어 두께 (20mm) - furnitureZ 계산에 필요하므로 먼저 선언
@@ -2433,7 +2433,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   // 기둥 앞 공간 가구는 저장된 Z 위치 사용, 일반 가구는 계산된 Z 위치 사용
   const furnitureZ = isFrontSpaceFurniture
     ? placedModule.position.z  // 기둥 앞 공간: 저장된 위치 사용
-    : furnitureZOffset + furnitureDepth/2 - doorThickness - depth/2 + baseDepthOffset;  // 일반: 계산된 위치 사용
+    : furnitureZOffset + furnitureDepth / 2 - doorThickness - depth / 2 + baseDepthOffset;  // 일반: 계산된 위치 사용
 
   const furnitureGroupPosition: [number, number, number] = [
     adjustedPosition.x + positionAdjustmentForEndPanel,
@@ -2449,35 +2449,35 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // Column C 깊이 디버깅
   if (isColumnC && slotInfo) {
-    }
-  
+  }
+
   // 기둥 C 디버깅 - 위치는 유지, 깊이만 조정
   if (adjustedDepthMm !== moduleDepth && slotInfo?.hasColumn) {
-    }
-  
+  }
+
   // 기둥 C가 있는 경우 디버깅
   if (slotInfo?.hasColumn && slotInfo.columnProcessingMethod === 'depth-adjustment' && slotInfo.column) {
-    }
+  }
 
   // 색상 설정: 드래그 중일 때만 색상 전달, 다른 상태에서는 MaterialPanel 색상 사용
   const furnitureColor = isDraggingThis ? '#66ff66' : undefined;
-  
+
   // 기둥 침범 상황에 따른 최적 힌지 방향 계산 (드래그 중이 아닐 때만)
   let optimalHingePosition = placedModule.hingePosition || 'right';
-  
+
   // 노서라운드 모드에서 커버도어의 힌지 위치 조정
   if (spaceInfo.surroundType === 'no-surround' && normalizedSlotIndex !== undefined) {
     const isFirstSlot = normalizedSlotIndex === 0;
     // isLastSlot은 이미 위에서 정의됨
-    
+
     if (spaceInfo.installType === 'freestanding') {
       if (isFirstSlot) {
         // 첫번째 슬롯: 힌지가 오른쪽에 있어야 왼쪽 엔드패널을 덮음
         optimalHingePosition = 'right';
-        } else if (isLastSlot) {
+      } else if (isLastSlot) {
         // 마지막 슬롯: 힌지가 왼쪽에 있어야 오른쪽 엔드패널을 덮음
         optimalHingePosition = 'left';
-        }
+      }
     } else if (spaceInfo.installType === 'semistanding' || spaceInfo.installType === 'semi-standing') {
       if (isFirstSlot && !spaceInfo.wallConfig?.left) {
         optimalHingePosition = 'right';
@@ -2488,11 +2488,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   } else if (!isFurnitureDragging && slotInfo && slotInfo.hasColumn) {
     // 기둥 침범 상황에 따른 힌지 조정
     optimalHingePosition = calculateOptimalHingePosition(slotInfo);
-    }
+  }
 
   // Column C 기둥 앞 가구인지 확인
   const isColumnCFront = isColumnC && placedModule.columnSlotInfo?.spaceType === 'front';
-  
+
   // adjustedPosition을 memoize하여 참조 안정성 확보
   const memoizedAdjustedPosition = React.useMemo(() => ({
     x: adjustedPosition.x,
@@ -2518,12 +2518,12 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
     if (!widthResetPayload) return;
     updatePlacedModule(placedModule.id, widthResetPayload);
   }, [widthResetPayload, placedModule.id, updatePlacedModule]);
-  
+
   // 계산된 값들을 상태로 업데이트 - 값이 실제로 변경될 때만 업데이트
   React.useEffect(() => {
     setCalculatedValues(prev => {
       // 값이 실제로 변경되었는지 확인
-      const hasChanged = 
+      const hasChanged =
         prev.isColumnCFront !== isColumnCFront ||
         prev.slotInfoColumn !== slotInfo?.column ||
         prev.indexingColumnWidth !== indexing.columnWidth ||
@@ -2531,11 +2531,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
         prev.adjustedPosition?.y !== memoizedAdjustedPosition.y ||
         prev.adjustedPosition?.z !== memoizedAdjustedPosition.z ||
         prev.actualModuleData?.id !== actualModuleData?.id;
-      
+
       if (!hasChanged) {
         return prev; // 변경 없으면 이전 값 유지 (리렌더링 방지)
       }
-      
+
       return {
         isColumnCFront,
         slotInfoColumn: slotInfo?.column,
@@ -2583,13 +2583,13 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 🔴🔴🔴 최종 Y 위치 확인
   const finalYPosition = adjustedPosition.y;
-  
+
   if (isUpperCabinet) {
-    }
+  }
 
   // 모듈 데이터는 이미 line 458에서 체크했으므로 여기서는 체크하지 않음
   // 이곳에서 early return하면 React Hooks 에러 발생
-  
+
   // moduleData가 없으면 빈 그룹 반환
   // 도어 크기는 상하부장 배치 여부와 무관하게 항상 동일하게 생성
   // 듀얼 가구인 경우 개별 슬롯 너비 배열 계산
@@ -2752,114 +2752,114 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     boxShadow: '0 3px 12px rgba(0,0,0,0.25)'
                   }}
                 >
-                {/* 잠금 버튼 */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const updatePlacedModule = useFurnitureStore.getState().updatePlacedModule;
-                    const newLockedState = !placedModule.isLocked;
-                    updatePlacedModule(placedModule.id, { isLocked: newLockedState });
+                  {/* 잠금 버튼 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const updatePlacedModule = useFurnitureStore.getState().updatePlacedModule;
+                      const newLockedState = !placedModule.isLocked;
+                      updatePlacedModule(placedModule.id, { isLocked: newLockedState });
 
-                    // 상태 확인
-                    setTimeout(() => {
-                      const currentState = useFurnitureStore.getState().placedModules.find(m => m.id === placedModule.id);
-                    }, 100);
-                  }}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    background: 'transparent',
-                    border: 'none',
-                    borderRadius: '0',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'opacity 0.2s',
-                    padding: 0
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
-                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="5" y="11" width="14" height="10" rx="2" />
-                    <path d="M12 17a1 1 0 100-2 1 1 0 000 2z" fill="white" />
-                    {placedModule.isLocked ? (
-                      <path d="M7 11V7a5 5 0 0110 0v4" />
-                    ) : (
-                      <path d="M7 11V7a5 5 0 019.9-1" />
-                    )}
-                  </svg>
-                </button>
+                      // 상태 확인
+                      setTimeout(() => {
+                        const currentState = useFurnitureStore.getState().placedModules.find(m => m.id === placedModule.id);
+                      }, 100);
+                    }}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      background: 'transparent',
+                      border: 'none',
+                      borderRadius: '0',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'opacity 0.2s',
+                      padding: 0
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="5" y="11" width="14" height="10" rx="2" />
+                      <path d="M12 17a1 1 0 100-2 1 1 0 000 2z" fill="white" />
+                      {placedModule.isLocked ? (
+                        <path d="M7 11V7a5 5 0 0110 0v4" />
+                      ) : (
+                        <path d="M7 11V7a5 5 0 019.9-1" />
+                      )}
+                    </svg>
+                  </button>
 
-                {/* 삭제 버튼 */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (placedModule.isLocked) {
-                      return;
-                    }
-                    const removeModule = useFurnitureStore.getState().removeModule;
-                    removeModule(placedModule.id);
-                  }}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    background: 'transparent',
-                    border: 'none',
-                    borderRadius: '0',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'opacity 0.2s',
-                    padding: 0
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
-                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M3 6h18" />
-                    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" />
-                    <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
-                    <line x1="10" y1="11" x2="10" y2="17" />
-                    <line x1="14" y1="11" x2="14" y2="17" />
-                  </svg>
-                </button>
+                  {/* 삭제 버튼 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (placedModule.isLocked) {
+                        return;
+                      }
+                      const removeModule = useFurnitureStore.getState().removeModule;
+                      removeModule(placedModule.id);
+                    }}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      background: 'transparent',
+                      border: 'none',
+                      borderRadius: '0',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'opacity 0.2s',
+                      padding: 0
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M3 6h18" />
+                      <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6" />
+                      <path d="M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                      <line x1="10" y1="11" x2="10" y2="17" />
+                      <line x1="14" y1="11" x2="14" y2="17" />
+                    </svg>
+                  </button>
 
-                {/* 복제 버튼 */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (placedModule.isLocked) {
-                      return;
-                    }
-                    window.dispatchEvent(new CustomEvent('duplicate-furniture', {
-                      detail: { furnitureId: placedModule.id }
-                    }));
-                  }}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    background: 'transparent',
-                    border: 'none',
-                    borderRadius: '0',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'opacity 0.2s',
-                    padding: 0
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
-                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" />
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                  </svg>
-                </button>
-              </div>
+                  {/* 복제 버튼 */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (placedModule.isLocked) {
+                        return;
+                      }
+                      window.dispatchEvent(new CustomEvent('duplicate-furniture', {
+                        detail: { furnitureId: placedModule.id }
+                      }));
+                    }}
+                    style={{
+                      width: '32px',
+                      height: '32px',
+                      background: 'transparent',
+                      border: 'none',
+                      borderRadius: '0',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'opacity 0.2s',
+                      padding: 0
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                    onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="9" y="9" width="13" height="13" rx="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                  </button>
+                </div>
               </Html>
             )}
 
@@ -2891,7 +2891,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
               }}
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+                <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z" />
               </svg>
             </div>
           </Html>
@@ -2958,11 +2958,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                     placedModule.columnPlacementMode === 'front'
                       ? (placedModule.hasDoor ?? false)
                       : (
-                          // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 또는 엔드패널 조정이 필요한 경우 도어는 별도 렌더링
-                          (slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
-                            ? false
-                            : (placedModule.hasDoor ?? false)
-                        )
+                        // 기둥 A(deep) 또는 adjustedWidth가 있는 경우 또는 엔드패널 조정이 필요한 경우 도어는 별도 렌더링
+                        (slotInfo && slotInfo.hasColumn && (slotInfo.columnType === 'deep' || (placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null))) || needsEndPanelAdjustment
+                          ? false
+                          : (placedModule.hasDoor ?? false)
+                      )
                   }
                   customDepth={actualDepthMm}
                   hingePosition={optimalHingePosition}
@@ -3004,9 +3004,9 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 />
               );
             })()}
-            
+
             {/* 가구 너비 디버깅 */}
-              {(() => {
+            {(() => {
               const slotWidthMm = (() => {
                 if (placedModule.zone && spaceInfo.droppedCeiling?.enabled && indexing.zones) {
                   const targetZone = placedModule.zone === 'dropped' && indexing.zones.dropped ? indexing.zones.dropped : indexing.zones.normal;
@@ -3021,20 +3021,20 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 }
                 return indexing.columnWidth;
               })();
-              
+
               const expectedThreeUnits = mmToThreeUnits(slotWidthMm);
               const actualThreeUnits = mmToThreeUnits(furnitureWidthMm);
-              
+
               return null;
             })()}
           </>
         ) : (
           // 기본 가구 (단순 Box) 렌더링
           <>
-            <Box 
+            <Box
               args={[width, height, depth]}
             >
-              <meshPhysicalMaterial 
+              <meshPhysicalMaterial
                 color={furnitureColor}
                 clearcoat={0.1}
                 clearcoatRoughness={0.8}
@@ -3045,7 +3045,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 opacity={isDraggingThis || isEditMode ? 0.8 : 1.0}
               />
             </Box>
-            <Edges 
+            <Edges
               color={columnCResize.isResizing ? '#ff6600' : getEdgeColor({
                 isDragging: isDraggingThis,
                 isEditMode,
@@ -3053,15 +3053,15 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                 viewMode,
                 view2DTheme,
                 renderMode
-              })} 
-              threshold={1} 
+              })}
+              threshold={1}
               scale={1.001}
               linewidth={columnCResize.isResizing ? 3 : 1}
             />
-            
+
             {/* 편집 모드일 때 안내 텍스트 */}
             {isEditMode && (
-              <primitive 
+              <primitive
                 object={(() => {
                   const canvas = document.createElement('canvas');
                   const context = canvas.getContext('2d')!;
@@ -3079,10 +3079,10 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
                   context.fillText('←→: 이동', 128, 70);
                   context.fillText('Del: 삭제', 128, 85);
                   context.fillText('Esc: 해제', 128, 100);
-                  
+
                   const texture = new THREE.CanvasTexture(canvas);
-                  const material = new THREE.MeshBasicMaterial({ 
-                    map: texture, 
+                  const material = new THREE.MeshBasicMaterial({
+                    map: texture,
                     transparent: true,
                     depthTest: false
                   });
@@ -3096,11 +3096,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             )}
           </>
         )}
-        
+
         {/* Column C 기둥 앞 가구 리사이즈 안내 표시 */}
         {isColumnCFront && isHovered && !isDragMode && !columnCResize.isResizing && (
           <Html
-            position={[0, height/2 + 0.5, depth/2 + 0.1]}
+            position={[0, height / 2 + 0.5, depth / 2 + 0.1]}
             center
             occlude={false}  // 메쉬에 가려지지 않도록 설정
             style={{
@@ -3125,11 +3125,11 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             </div>
           </Html>
         )}
-        
+
         {/* Column C 리사이즈 방향 표시 */}
         {columnCResize.isResizing && columnCResize.resizeDirection && (
           <Html
-            position={[0, 0, depth/2 + 0.1]}
+            position={[0, 0, depth / 2 + 0.1]}
             center
             occlude={false}  // 메쉬에 가려지지 않도록 설정
             style={{
@@ -3154,55 +3154,55 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
             </div>
           </Html>
         )}
-        
+
       </group>
 
       {/* 기둥 침범 시 또는 엔드패널 조정이 필요한 경우 도어를 별도로 렌더링 (원래 슬롯 위치에 고정) */}
       {/* 기둥 A (deep 타입) 또는 기둥이 있고 adjustedWidth가 설정된 경우 또는 엔드패널 조정이 필요한 경우 커버도어 렌더링 */}
       {/* 기둥 앞에 배치 모드(front)는 제외 - BoxModule 내부에서 도어 렌더링 */}
       {(placedModule.hasDoor ?? false) &&
-       placedModule.columnPlacementMode !== 'front' &&
-       ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') ||
-        (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
-        needsEndPanelAdjustment) &&
-       spaceInfo && (() => {
-        return true;
-      })() && (
-        <group
-          userData={{ furnitureId: placedModule.id, type: 'cover-door' }}
-          position={[
-            originalSlotCenterX + doorXOffset, // 도어 중심에 오프셋 적용
-            finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
-            furnitureZ // 다른 도어들과 동일한 z축 위치
-          ]}
-          rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
-        >
-          <DoorModule
-            moduleWidth={doorWidth}
-            moduleDepth={actualDepthMm}
-            hingePosition={optimalHingePosition}
-            spaceInfo={spaceInfo}
-            color={isDraggingThis ? '#ff6600' : actualModuleData?.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
-            textureUrl={spaceInfo.materialConfig?.doorTexture}
-            originalSlotWidth={originalSlotWidthForDoor}
-            slotCenterX={doorXOffset}
-            moduleData={actualModuleData}
-            isDragging={isDraggingThis}
-            isEditMode={isEditMode}
-            adjustedWidth={furnitureWidthMm}
-            floatHeight={
-              // **중요**: 저장된 값 무시하고 항상 현재 spaceInfo의 placementType을 우선 사용
-              spaceInfo.baseConfig?.placementType === 'float'
-                ? (spaceInfo.baseConfig?.floatHeight || 0)
-                : 0
-            }
-            doorTopGap={placedModule.doorTopGap}
-            doorBottomGap={placedModule.doorBottomGap}
-            slotWidths={undefined}
-            zone={placedModule.zone}
-          />
-        </group>
-      )}
+        placedModule.columnPlacementMode !== 'front' &&
+        ((slotInfo && slotInfo.hasColumn && slotInfo.columnType === 'deep') ||
+          (slotInfo && slotInfo.hasColumn && placedModule.adjustedWidth !== undefined && placedModule.adjustedWidth !== null) ||
+          needsEndPanelAdjustment) &&
+        spaceInfo && (() => {
+          return true;
+        })() && (
+          <group
+            userData={{ furnitureId: placedModule.id, type: 'cover-door' }}
+            position={[
+              originalSlotCenterX + doorXOffset, // 도어 중심에 오프셋 적용
+              finalYPosition, // 상부장은 14, 나머지는 adjustedPosition.y
+              furnitureZ // 다른 도어들과 동일한 z축 위치
+            ]}
+            rotation={[0, (placedModule.rotation * Math.PI) / 180, 0]}
+          >
+            <DoorModule
+              moduleWidth={doorWidth}
+              moduleDepth={actualDepthMm}
+              hingePosition={optimalHingePosition}
+              spaceInfo={spaceInfo}
+              color={isDraggingThis ? '#ff6600' : actualModuleData?.category === 'full' ? undefined : spaceInfo.materialConfig?.doorColor}
+              textureUrl={spaceInfo.materialConfig?.doorTexture}
+              originalSlotWidth={originalSlotWidthForDoor}
+              slotCenterX={doorXOffset}
+              moduleData={actualModuleData}
+              isDragging={isDraggingThis}
+              isEditMode={isEditMode}
+              adjustedWidth={furnitureWidthMm}
+              floatHeight={
+                // **중요**: 저장된 값 무시하고 항상 현재 spaceInfo의 placementType을 우선 사용
+                spaceInfo.baseConfig?.placementType === 'float'
+                  ? (spaceInfo.baseConfig?.floatHeight || 0)
+                  : 0
+              }
+              doorTopGap={placedModule.doorTopGap}
+              doorBottomGap={placedModule.doorBottomGap}
+              slotWidths={undefined}
+              zone={effectiveZone}
+            />
+          </group>
+        )}
 
       {/* 키큰장/듀얼 캐비넷 옆에 상하부장이 있을 때 엔드패널 렌더링 */}
       {/* 노서라운드/서라운드 무관하게 무조건 렌더링 (높이 차이를 메우기 위함) */}
@@ -3299,7 +3299,7 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
 
       {/* 도어는 BoxModule 내부에서 렌더링하도록 변경 */}
-      
+
       {/* 3D 모드에서 편집 아이콘 표시 - showDimensions가 true이고 3D 모드일 때만 표시, 읽기 전용 모드에서는 숨김 */}
       {!readOnly && showFurnitureEditHandles && showDimensions && viewMode === '3D' && (
         <Html
