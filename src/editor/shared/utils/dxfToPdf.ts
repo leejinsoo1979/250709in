@@ -631,10 +631,19 @@ export const downloadDxfAsPdf = async (
   const droppedSlotCount = hasDroppedCeiling && indexing.zones?.dropped
     ? indexing.zones.dropped.columnCount
     : 0;
-  const totalSlotCount = normalSlotCount + droppedSlotCount;
 
-  // 모든 슬롯 인덱스 생성 (가구 유무와 관계없이 모든 칸에 대해 페이지 생성)
-  const allSlotIndices = Array.from({ length: totalSlotCount }, (_, i) => i);
+  // 가구가 있는 슬롯만 추출 (측면도는 가구가 있는 슬롯만 페이지 생성)
+  const occupiedSlotIndices = new Set<number>();
+  placedModules.forEach(m => {
+    if (m.slotIndex !== undefined) {
+      let globalSlotIndex = m.slotIndex;
+      if (hasDroppedCeiling && m.zone === 'dropped') {
+        globalSlotIndex = normalSlotCount + m.slotIndex;
+      }
+      occupiedSlotIndices.add(globalSlotIndex);
+    }
+  });
+  const sortedOccupiedSlots = Array.from(occupiedSlotIndices).sort((a, b) => a - b);
 
   console.log('📊 슬롯 정보:', {
     indexingColumnCount: indexing.columnCount,
@@ -642,17 +651,16 @@ export const downloadDxfAsPdf = async (
     zonesDropped: indexing.zones?.dropped?.columnCount,
     normalSlotCount,
     droppedSlotCount,
-    totalSlotCount,
-    allSlotIndices,
+    occupiedSlotIndices: sortedOccupiedSlots,
     hasDroppedCeiling
   });
 
   let isFirstPage = true;
 
   for (const viewDirection of views) {
-    // 측면도(left)는 각 슬롯별로 페이지 생성 (가구 유무와 관계없이 모든 슬롯)
-    if (viewDirection === 'left' && allSlotIndices.length > 0) {
-      for (const slotIndex of allSlotIndices) {
+    // 측면도(left)는 가구가 있는 슬롯만 페이지 생성
+    if (viewDirection === 'left' && sortedOccupiedSlots.length > 0) {
+      for (const slotIndex of sortedOccupiedSlots) {
 
         if (!isFirstPage) pdf.addPage();
         isFirstPage = false;
