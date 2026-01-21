@@ -297,6 +297,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
   // 엣지 색상 결정
   const edgeColor = React.useMemo(() => {
+    // 2D 모드에서 서랍속장 패널은 초록색 윤곽선
+    if (viewMode === '2D' && panelName && panelName.includes('서랍속장')) {
+      return '#00ff00'; // 초록색
+    }
+
     // 옷걸이 봉인 경우: 2D 모드에서 view2DTheme에 따라 색상 변경
     if (isClothingRod && viewMode === '2D') {
       return view2DTheme === 'light' ? '#808080' : '#FFFFFF';
@@ -351,7 +356,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
         return view2DTheme === 'dark' ? "#FF4500" : "#444444"; // 다크모드는 붉은 주황색
       }
     }
-  }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor]);
+  }, [viewMode, renderMode, view2DTheme, view2DDirection, baseMaterial, isHighlighted, highlightColor, panelName]);
 
   // Debug log for position
   React.useEffect(() => {
