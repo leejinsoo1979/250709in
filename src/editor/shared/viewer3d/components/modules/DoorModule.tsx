@@ -1684,6 +1684,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   <>
                     {/* 왼쪽 연장선 */}
                     <Line
+                      name="door-dimension"
                       points={isTopView ? [
                         [-leftDoorWidthUnits / 2 + xOffset, 0, extensionStart],
                         [-leftDoorWidthUnits / 2 + xOffset, 0, dimensionLinePos]
@@ -1697,6 +1698,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     {/* 오른쪽 연장선 */}
                     <Line
+                      name="door-dimension"
                       points={isTopView ? [
                         [leftDoorWidthUnits / 2 + xOffset, 0, extensionStart],
                         [leftDoorWidthUnits / 2 + xOffset, 0, dimensionLinePos]
@@ -1710,6 +1712,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     {/* 치수선 (가로선) */}
                     <Line
+                      name="door-dimension"
                       points={isTopView ? [
                         [-leftDoorWidthUnits / 2 + xOffset, 0, dimensionLinePos],
                         [leftDoorWidthUnits / 2 + xOffset, 0, dimensionLinePos]
@@ -1723,6 +1726,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     {/* 왼쪽 틱 마크 (수평선) */}
                     <Line
+                      name="door-dimension"
                       points={isTopView ? [
                         [-leftDoorWidthUnits / 2 - tickSize + xOffset, 0, dimensionLinePos],
                         [-leftDoorWidthUnits / 2 + tickSize + xOffset, 0, dimensionLinePos]
@@ -1736,6 +1740,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     {/* 오른쪽 틱 마크 (수평선) */}
                     <Line
+                      name="door-dimension"
                       points={isTopView ? [
                         [leftDoorWidthUnits / 2 - tickSize + xOffset, 0, dimensionLinePos],
                         [leftDoorWidthUnits / 2 + tickSize + xOffset, 0, dimensionLinePos]
@@ -1749,6 +1754,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     {/* 치수 텍스트 - 치수선 아래에 배치 */}
                     <DimensionText
+                      name="door-dimension-text"
                       value={leftDoorWidth}
                       position={isTopView ?
                         [xOffset, 0, dimensionLinePos - mmToThreeUnits(15)] :
@@ -2084,6 +2090,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                   <>
                     {/* 왼쪽 연장선 */}
                     <Line
+                      name="door-dimension"
                       points={isTopView ? [
                         [-rightDoorWidthUnits / 2 + xOffset, 0, extensionStart],
                         [-rightDoorWidthUnits / 2 + xOffset, 0, dimensionLinePos]
@@ -2097,6 +2104,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     {/* 오른쪽 연장선 */}
                     <Line
+                      name="door-dimension"
                       points={isTopView ? [
                         [rightDoorWidthUnits / 2 + xOffset, 0, extensionStart],
                         [rightDoorWidthUnits / 2 + xOffset, 0, dimensionLinePos]
@@ -2110,6 +2118,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     {/* 치수선 (가로선) */}
                     <Line
+                      name="door-dimension"
                       points={isTopView ? [
                         [-rightDoorWidthUnits / 2 + xOffset, 0, dimensionLinePos],
                         [rightDoorWidthUnits / 2 + xOffset, 0, dimensionLinePos]
@@ -2123,6 +2132,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     {/* 왼쪽 틱 마크 (수평선) */}
                     <Line
+                      name="door-dimension"
                       points={isTopView ? [
                         [-rightDoorWidthUnits / 2 - tickSize + xOffset, 0, dimensionLinePos],
                         [-rightDoorWidthUnits / 2 + tickSize + xOffset, 0, dimensionLinePos]
@@ -2136,6 +2146,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     {/* 오른쪽 틱 마크 (수평선) */}
                     <Line
+                      name="door-dimension"
                       points={isTopView ? [
                         [rightDoorWidthUnits / 2 - tickSize + xOffset, 0, dimensionLinePos],
                         [rightDoorWidthUnits / 2 + tickSize + xOffset, 0, dimensionLinePos]
@@ -2149,6 +2160,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                     {/* 치수 텍스트 - 치수선 아래에 배치 */}
                     <DimensionText
+                      name="door-dimension-text"
                       value={rightDoorWidth}
                       position={isTopView ?
                         [xOffset, 0, dimensionLinePos - mmToThreeUnits(15)] :
@@ -2682,6 +2694,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
                 <>
                   {/* 왼쪽 연장선 */}
                   <Line
+                    name="door-dimension"
                     points={isTopView ? [
                       [-doorWidthUnits / 2 + xOffset, 0, extensionStart],
                       [-doorWidthUnits / 2 + xOffset, 0, dimensionLinePos]
@@ -2695,6 +2708,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                   {/* 오른쪽 연장선 */}
                   <Line
+                    name="door-dimension"
                     points={isTopView ? [
                       [doorWidthUnits / 2 + xOffset, 0, extensionStart],
                       [doorWidthUnits / 2 + xOffset, 0, dimensionLinePos]
@@ -2708,6 +2722,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                   {/* 치수선 (가로선) */}
                   <Line
+                    name="door-dimension"
                     points={isTopView ? [
                       [-doorWidthUnits / 2 + xOffset, 0, dimensionLinePos],
                       [doorWidthUnits / 2 + xOffset, 0, dimensionLinePos]
@@ -2721,6 +2736,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                   {/* 왼쪽 틱 마크 (수평선) */}
                   <Line
+                    name="door-dimension"
                     points={isTopView ? [
                       [-doorWidthUnits / 2 - tickSize + xOffset, 0, dimensionLinePos],
                       [-doorWidthUnits / 2 + tickSize + xOffset, 0, dimensionLinePos]
@@ -2734,6 +2750,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                   {/* 오른쪽 틱 마크 (수평선) */}
                   <Line
+                    name="door-dimension"
                     points={isTopView ? [
                       [doorWidthUnits / 2 - tickSize + xOffset, 0, dimensionLinePos],
                       [doorWidthUnits / 2 + tickSize + xOffset, 0, dimensionLinePos]
@@ -2747,6 +2764,7 @@ const DoorModule: React.FC<DoorModuleProps> = ({
 
                   {/* 치수 텍스트 - 치수선 아래에 배치 */}
                   <DimensionText
+                    name="door-dimension-text"
                     value={doorWidth}
                     position={isTopView ?
                       [xOffset, 0, dimensionLinePos - mmToThreeUnits(15)] :
