@@ -97,7 +97,31 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
       // selectedSlotIndex는 글로벌 인덱스
       // 글로벌 인덱스로 변환하여 비교해야 함
       let moduleGlobalSlotIndex = module.slotIndex;
-      if (hasDroppedCeiling && module.zone === 'dropped') {
+
+      // zone이 명시적으로 'dropped'이거나, zone이 없지만 X 위치로 단내림 구간으로 판별
+      let isInDroppedZone = module.zone === 'dropped';
+
+      // zone이 설정되지 않은 경우 X 위치로 판별
+      if (hasDroppedCeiling && module.zone === undefined && zones?.dropped && zones?.normal) {
+        const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+        const moduleXMm = module.position.x * 100; // Three.js 좌표를 mm로 변환
+
+        // 내경 너비에서 단내림/일반 영역 경계 계산
+        const normalWidth = zones.normal.width;
+        const droppedWidth = zones.dropped.width;
+
+        if (droppedPosition === 'left') {
+          // 단내림이 왼쪽: 0 ~ droppedWidth가 단내림 영역
+          isInDroppedZone = moduleXMm < droppedWidth;
+        } else {
+          // 단내림이 오른쪽: normalWidth ~ (normalWidth + droppedWidth)가 단내림 영역
+          isInDroppedZone = moduleXMm >= normalWidth;
+        }
+
+        console.log(`  🔎 zone 미설정 가구 판별: moduleX=${moduleXMm.toFixed(0)}mm, droppedPosition=${droppedPosition}, normalWidth=${normalWidth}, droppedWidth=${droppedWidth}, isDropped=${isInDroppedZone}`);
+      }
+
+      if (hasDroppedCeiling && isInDroppedZone) {
         // 단내림 구간 가구: 로컬 인덱스 + normalSlotCount = 글로벌 인덱스
         moduleGlobalSlotIndex = normalSlotCount + module.slotIndex;
       }
@@ -106,7 +130,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
         ? (moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex)
         : (moduleGlobalSlotIndex === selectedSlotIndex);
 
-      console.log(`  📦 모듈 ${module.id.slice(-8)}: slotIndex=${module.slotIndex}, zone=${module.zone}, globalIndex=${moduleGlobalSlotIndex}, selected=${selectedSlotIndex}, match=${isMatch}`);
+      console.log(`  📦 모듈 ${module.id.slice(-8)}: slotIndex=${module.slotIndex}, zone=${module.zone}, isInDroppedZone=${isInDroppedZone}, globalIndex=${moduleGlobalSlotIndex}, selected=${selectedSlotIndex}, match=${isMatch}`);
 
       return isMatch;
     });
