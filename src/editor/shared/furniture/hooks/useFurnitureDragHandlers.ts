@@ -1,7 +1,7 @@
 import React from 'react';
 import { useThree } from '@react-three/fiber';
 import { SpaceInfo } from '@/store/core/spaceConfigStore';
-import { calculateSpaceIndexing } from '@/editor/shared/utils/indexing';
+import { calculateSpaceIndexing, ColumnIndexer, SpaceCalculator } from '@/editor/shared/utils/indexing';
 import { useFurnitureStore } from '@/store';
 import { useSlotOccupancy } from './useSlotOccupancy';
 import { useDropPositioning } from './useDropPositioning';
@@ -128,10 +128,96 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
         // 기둥 슬롯 정보 확인
         const columnSlots = analyzeColumnSlots(spaceInfo, placedModules);
         const targetSlotInfo = columnSlots[dropPosition.column];
-        
+
         let adjustedWidth: number | undefined = undefined;
         let adjustedPosition = { x: finalX, y: 0, z: 0 };
         let adjustedDepth = customDepth;
+
+        // ★★★ customWidth 계산 - 클릭+고스트 방식과 동일하게 slotWidths 기반으로 계산 ★★★
+        let customWidth: number | undefined = undefined;
+        const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
+
+        // zone별 indexing 정보 가져오기
+        let targetIndexing: {
+          columnCount: number;
+          columnWidth: number;
+          slotWidths?: number[];
+        };
+
+        if (hasDroppedCeiling && dropPosition.zone && indexing.zones) {
+          if (dropPosition.zone === 'dropped' && indexing.zones.dropped) {
+            targetIndexing = indexing.zones.dropped;
+          } else {
+            targetIndexing = indexing.zones.normal;
+          }
+        } else {
+          targetIndexing = indexing;
+        }
+
+        // slotWidths 기반 customWidth 계산 (클릭+고스트 방식과 동일)
+        if (targetIndexing.slotWidths && targetIndexing.slotWidths[dropPosition.column] !== undefined) {
+          if (dropPosition.isDualFurniture && dropPosition.column < targetIndexing.slotWidths.length - 1) {
+            // 듀얼 가구: 두 슬롯의 너비 합
+            const slot1Width = targetIndexing.slotWidths[dropPosition.column];
+            const slot2Width = targetIndexing.slotWidths[dropPosition.column + 1];
+            customWidth = slot1Width + slot2Width;
+
+            console.log('🟢 [handleDrop] 듀얼 가구 customWidth 계산:', {
+              slotIndex: dropPosition.column,
+              slot1Width,
+              slot2Width,
+              customWidth,
+              zone: dropPosition.zone
+            });
+          } else {
+            // 싱글 가구: 해당 슬롯의 실제 너비
+            customWidth = targetIndexing.slotWidths[dropPosition.column];
+
+            console.log('🟢 [handleDrop] 싱글 가구 customWidth 계산:', {
+              slotIndex: dropPosition.column,
+              customWidth,
+              zone: dropPosition.zone,
+              slotWidths: targetIndexing.slotWidths
+            });
+          }
+        }
+
+        // ★★★ 정확한 위치 계산 - 클릭+고스트 방식과 동일하게 ★★★
+        // zone별 정확한 X 위치 재계산
+        if (hasDroppedCeiling && dropPosition.zone && indexing.zones) {
+          const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
+          const targetZoneInfo = dropPosition.zone === 'dropped' ? zoneInfo.dropped : zoneInfo.normal;
+
+          if (targetZoneInfo) {
+            const zoneColumnWidth = targetZoneInfo.columnWidth;
+            const zoneStartX = targetZoneInfo.startX;
+
+            if (dropPosition.isDualFurniture) {
+              // 듀얼장: 두 슬롯의 중앙
+              const slot1StartX = zoneStartX + (dropPosition.column * zoneColumnWidth);
+              const slot1CenterX = slot1StartX + (zoneColumnWidth / 2);
+              const slot2StartX = zoneStartX + ((dropPosition.column + 1) * zoneColumnWidth);
+              const slot2CenterX = slot2StartX + (zoneColumnWidth / 2);
+              const dualCenterX = (slot1CenterX + slot2CenterX) / 2;
+              finalX = SpaceCalculator.mmToThreeUnits(dualCenterX);
+            } else {
+              // 싱글장: 슬롯 중앙
+              const slotStartX = zoneStartX + (dropPosition.column * zoneColumnWidth);
+              const slotCenterX = slotStartX + (zoneColumnWidth / 2);
+              finalX = SpaceCalculator.mmToThreeUnits(slotCenterX);
+            }
+
+            adjustedPosition.x = finalX;
+
+            console.log('🟢 [handleDrop] zone별 위치 재계산:', {
+              zone: dropPosition.zone,
+              slotIndex: dropPosition.column,
+              finalX,
+              zoneStartX,
+              zoneColumnWidth
+            });
+          }
+        }
 
         // 기둥이 있는 슬롯에 배치하는 경우
         if (targetSlotInfo && targetSlotInfo.hasColumn && targetSlotInfo.column) {
@@ -141,10 +227,14 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           if (targetSlotInfo.columnType === 'medium' && targetSlotInfo.allowMultipleFurniture && targetSlotInfo.subSlots) {
             // 듀얼 가구를 Column C 슬롯에 배치하는 경우 두 개의 싱글로 분할
             if (dropPosition.isDualFurniture) {
+              const singleModuleId = currentDragData.moduleData.id.replace('dual-', 'single-');
+              const singleBaseType = singleModuleId.replace(/-[\d.]+$/, '');
+
               // 왼쪽 싱글 캐비넷
               const leftModule = {
-                id: `placed-left-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                moduleId: currentDragData.moduleData.id.replace('dual-', 'single-'),
+                id: `placed-left-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+                moduleId: singleModuleId,
+                baseModuleType: singleBaseType,
                 position: {
                   x: targetSlotInfo.subSlots.left.center,
                   y: 0,
@@ -152,7 +242,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
                 },
                 rotation: 0,
                 slotIndex: dropPosition.column,
-                subSlotPosition: 'left', // Column C 서브슬롯 위치
+                subSlotPosition: 'left' as const, // Column C 서브슬롯 위치
                 isDualSlot: false,
                 hasDoor: false,
                 customDepth: getDefaultDepth(moduleData),
@@ -162,8 +252,9 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
 
               // 오른쪽 싱글 캐비넷
               const rightModule = {
-                id: `placed-right-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                moduleId: currentDragData.moduleData.id.replace('dual-', 'single-'),
+                id: `placed-right-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`,
+                moduleId: singleModuleId,
+                baseModuleType: singleBaseType,
                 position: {
                   x: targetSlotInfo.subSlots.right.center,
                   y: 0,
@@ -171,7 +262,7 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
                 },
                 rotation: 0,
                 slotIndex: dropPosition.column,
-                subSlotPosition: 'right', // Column C 서브슬롯 위치
+                subSlotPosition: 'right' as const, // Column C 서브슬롯 위치
                 isDualSlot: false,
                 hasDoor: false,
                 customDepth: getDefaultDepth(moduleData),
@@ -244,10 +335,28 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           }
         }
         
+        // ★★★ 모듈 ID 생성 - 클릭+고스트 방식과 동일하게 정확한 너비 포함 ★★★
+        let targetModuleId = currentDragData.moduleData.id;
+        const baseModuleType = currentDragData.moduleData.id.replace(/-[\d.]+$/, '');
+
+        // 동적 가구인 경우 정확한 너비를 포함한 ID 생성
+        if (customWidth && moduleData.isDynamic) {
+          const widthForId = Math.round(customWidth * 10) / 10;
+          targetModuleId = `${baseModuleType}-${widthForId}`;
+
+          console.log('🟢 [handleDrop] 동적 가구 ID 생성:', {
+            originalId: currentDragData.moduleData.id,
+            baseModuleType,
+            customWidth,
+            targetModuleId
+          });
+        }
+
         // 새 모듈 배치
-        let newModuleData: any = {
+        const newModuleData: any = {
           id: placedId,
-          moduleId: currentDragData.moduleData.id,
+          moduleId: targetModuleId, // 정확한 너비가 포함된 모듈 ID
+          baseModuleType: baseModuleType, // 기본 모듈 타입 저장
           position: adjustedPosition,
           rotation: 0,
           slotIndex: dropPosition.column, // 슬롯 인덱스 저장
@@ -255,11 +364,14 @@ export const useFurnitureDragHandlers = (spaceInfo: SpaceInfo) => {
           hasDoor: false, // 배치 시 항상 도어 없음 (오픈형)
           customDepth: adjustedDepth, // 기둥에 따른 깊이 조정
           adjustedWidth: adjustedWidth, // 기둥에 따른 폭 조정
+          customWidth: targetSlotInfo?.hasColumn ? undefined : customWidth, // 기둥 슬롯이 아닌 경우에만 customWidth 적용
           zone: dropPosition.zone || 'normal' // 단내림 구역 정보 저장 (기본값: normal)
         };
 
         console.log('🔵🔵🔵 newModuleData 저장:', {
           moduleId: newModuleData.moduleId,
+          baseModuleType: newModuleData.baseModuleType,
+          customWidth: newModuleData.customWidth,
           zone: newModuleData.zone,
           dropPositionZone: dropPosition.zone,
           position: newModuleData.position
