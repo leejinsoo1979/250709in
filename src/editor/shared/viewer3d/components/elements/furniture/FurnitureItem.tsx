@@ -377,27 +377,38 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
   let internalSpace = calculateInternalSpace(spaceInfo);
   let zoneSpaceInfo = spaceInfo;
 
-  // zone 자동 감지: placedModule.zone이 없으면 위치 기반으로 zone 결정
+  // zone 자동 감지: placedModule.zone이 없으면 X 위치 기반으로 zone 결정
   let effectiveZone = placedModule.zone;
-  if (spaceInfo.droppedCeiling?.enabled && !effectiveZone && placedModule.slotIndex !== undefined) {
-    const zoneInfo = ColumnIndexer.calculateZoneSlotInfo(spaceInfo, spaceInfo.customColumnCount);
-    const droppedPosition = spaceInfo.droppedCeiling.position;
-    const droppedCount = zoneInfo.dropped?.columnCount ?? 0;
-    const normalCount = zoneInfo.normal?.columnCount ?? 0;
 
-    // 위치 기반 zone 결정
+  // 단내림이 활성화되어 있고 zone 정보가 없으면 X 위치로 판단
+  if (spaceInfo.droppedCeiling?.enabled && !effectiveZone) {
+    const droppedPosition = spaceInfo.droppedCeiling.position;
+    const droppedCeilingWidth = spaceInfo.droppedCeiling.width || 900;
+    const totalWidth = spaceInfo.width;
+
+    // X 위치를 mm로 변환 (Three.js 단위 * 100)
+    const positionXMm = placedModule.position.x * 100;
+    // 공간 중심이 0이므로, 왼쪽 끝은 -totalWidth/2, 오른쪽 끝은 totalWidth/2
+
     if (droppedPosition === 'left') {
-      // 단내림 왼쪽: 0 ~ (droppedCount-1)은 dropped, 나머지는 normal
-      effectiveZone = placedModule.slotIndex < droppedCount ? 'dropped' : 'normal';
+      // 단내림 왼쪽: 왼쪽 끝 ~ (droppedCeilingWidth)까지가 dropped
+      // X 위치가 (-totalWidth/2 + droppedCeilingWidth) 미만이면 dropped
+      const droppedBoundary = -totalWidth / 2 + droppedCeilingWidth;
+      effectiveZone = positionXMm < droppedBoundary ? 'dropped' : 'normal';
     } else {
-      // 단내림 오른쪽: 0 ~ (normalCount-1)은 normal, 나머지는 dropped
-      effectiveZone = placedModule.slotIndex < normalCount ? 'normal' : 'dropped';
+      // 단내림 오른쪽: 오른쪽 끝에서 droppedCeilingWidth 만큼이 dropped
+      // X 위치가 (totalWidth/2 - droppedCeilingWidth) 초과이면 dropped
+      const droppedBoundary = totalWidth / 2 - droppedCeilingWidth;
+      effectiveZone = positionXMm > droppedBoundary ? 'dropped' : 'normal';
     }
-    console.log('🔴 [FurnitureItem] zone 자동 감지:', {
-      slotIndex: placedModule.slotIndex,
+    console.log('🔴 [FurnitureItem] zone 자동 감지 (X 위치 기반):', {
+      moduleId: placedModule.moduleId,
+      isDual: placedModule.moduleId.includes('dual'),
+      positionX: placedModule.position.x,
+      positionXMm,
       droppedPosition,
-      droppedCount,
-      normalCount,
+      droppedCeilingWidth,
+      totalWidth,
       effectiveZone
     });
   }
