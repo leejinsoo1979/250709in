@@ -274,14 +274,23 @@ export function usePDFExport() {
         };
       });
       
-      // 고유 슬롯 인덱스 추출 (position.x 기준으로 정렬)
-      const uniqueSlotIndices = [...new Set(placedModules.map(m => m.slotIndex))]
+      // 단내림 구간 정보
+      const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
+      const normalSlotCount = spaceInfo.customColumnCount || 4;
+      const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
+
+      // 고유 글로벌 슬롯 인덱스 추출 (단내림 구간 고려)
+      const uniqueSlotIndices = [...new Set(placedModules.map(m => {
+        if (m.slotIndex === undefined) return undefined;
+
+        // zone이 'dropped'이면 글로벌 인덱스로 변환
+        if (hasDroppedCeiling && m.zone === 'dropped') {
+          return normalSlotCount + m.slotIndex;
+        }
+        return m.slotIndex;
+      }))]
         .filter((idx): idx is number => idx !== undefined)
-        .sort((a, b) => {
-          const moduleA = placedModules.find(m => m.slotIndex === a);
-          const moduleB = placedModules.find(m => m.slotIndex === b);
-          return (moduleA?.position.x || 0) - (moduleB?.position.x || 0);
-        });
+        .sort((a, b) => a - b); // 글로벌 인덱스 순으로 정렬
 
       console.log('📋 PDF 내보내기 - 가구 정보:', {
         totalModules: placedModules.length,
