@@ -127,9 +127,9 @@ export default function LandingPage() {
         {/* Hero Section */}
         <section className="relative pt-32 pb-20 px-8">
           <div className="max-w-[1400px] mx-auto text-center">
-            <div className="flex items-center justify-center gap-2 mb-6">
+            <div className="flex items-center justify-center gap-3 mb-6">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }} />
-              <span className="text-zinc-400 text-sm">Professional Furniture Design Tool</span>
+              <span className="text-zinc-400 text-sm ml-1">Professional Furniture Design Tool</span>
               <ChevronRight className="w-4 h-4 text-zinc-500" />
             </div>
 
