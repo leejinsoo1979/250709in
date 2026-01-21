@@ -1249,8 +1249,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                   hideEdges={false}
                   isBackPanel={true}
                 />
-                {/* 보강대 (좌측 전체 백패널 상/하단) - 2D 정면도에서는 숨김 */}
-                {!(viewMode === '2D' && view2DDirection === 'front') && (
+                {/* 보강대 (좌측 전체 백패널 상/하단)
+                    참고: 항상 렌더링됨 (PDF 탑뷰/측면뷰 내보내기를 위해) */}
+                {(
                   <>
                     <BoxWithEdges
                       key="left-reinforcement-bottom"
@@ -1312,8 +1313,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isBackPanel={true}
               />
 
-              {/* 하부 백패널 보강대 (상/하단) - 2D 정면도에서는 숨김 */}
-              {!(viewMode === '2D' && view2DDirection === 'front') && (
+              {/* 하부 백패널 보강대 (상/하단)
+                  참고: 항상 렌더링됨 (PDF 탑뷰/측면뷰 내보내기를 위해) */}
+              {(
                 <>
                   <BoxWithEdges
                     key="left-lower-reinforcement-bottom"
@@ -1353,8 +1355,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isBackPanel={true}
               />
 
-              {/* 상부 백패널 보강대 (상/하단) - 2D 정면도에서는 숨김 */}
-              {!(viewMode === '2D' && view2DDirection === 'front') && (
+              {/* 상부 백패널 보강대 (상/하단)
+                  참고: 항상 렌더링됨 (PDF 탑뷰/측면뷰 내보내기를 위해) */}
+              {(
                 <>
                   <BoxWithEdges
                     key="left-upper-reinforcement-bottom"
@@ -1416,8 +1419,9 @@ const DualType5: React.FC<FurnitureTypeProps> = ({
                 isBackPanel={true} // 백패널임을 표시
                 edgeOpacity={view2DDirection === 'left' && visibleSectionIndex !== 1 ? 0.1 : undefined}
               />
-              {/* 우측 백패널 보강대 (상/하단) - 2D 정면도에서는 숨김 */}
-              {!(viewMode === '2D' && view2DDirection === 'front') && (
+              {/* 우측 백패널 보강대 (상/하단)
+                  참고: 항상 렌더링됨 (PDF 탑뷰/측면뷰 내보내기를 위해) */}
+              {(
                 <>
                   <BoxWithEdges
                     key="right-reinforcement-bottom"

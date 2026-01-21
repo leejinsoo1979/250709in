@@ -462,15 +462,23 @@ const renderToPdfWithSlotInfo = (
   const centerX = margin + drawableWidth / 2;
   const centerY = margin + titleHeight + drawableHeight / 2;
 
+  // 측면뷰에서는 DOOR 레이어 및 DOOR_DIMENSIONS 필터링 (도어 치수는 정면뷰에서만 의미가 있음)
+  const filteredLines = viewDirection === 'left'
+    ? lines.filter(l => l.layer !== 'DOOR' && l.layer !== 'DOOR_DIMENSIONS')
+    : lines;
+  const filteredTexts = viewDirection === 'left'
+    ? texts.filter(t => t.layer !== 'DOOR' && t.layer !== 'DOOR_DIMENSIONS')
+    : texts;
+
   // 바운딩 박스 계산
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  lines.forEach(l => {
+  filteredLines.forEach(l => {
     minX = Math.min(minX, l.x1, l.x2);
     minY = Math.min(minY, l.y1, l.y2);
     maxX = Math.max(maxX, l.x1, l.x2);
     maxY = Math.max(maxY, l.y1, l.y2);
   });
-  texts.forEach(t => {
+  filteredTexts.forEach(t => {
     minX = Math.min(minX, t.x);
     minY = Math.min(minY, t.y);
     maxX = Math.max(maxX, t.x);
@@ -499,7 +507,7 @@ const renderToPdfWithSlotInfo = (
 
   // 라인 (모노 색상)
   pdf.setDrawColor(0, 0, 0);
-  lines.forEach(line => {
+  filteredLines.forEach(line => {
     let lw = 0.1;
     if (line.layer === 'DIMENSIONS') lw = 0.08;
     else if (line.layer === 'SPACE_FRAME') lw = 0.15;
@@ -511,7 +519,7 @@ const renderToPdfWithSlotInfo = (
   });
 
   // 텍스트 (모노 색상)
-  texts.forEach(text => {
+  filteredTexts.forEach(text => {
     pdf.setTextColor(0, 0, 0);
     pdf.setFontSize(Math.max(text.height * scale * 0.5, 6));
     pdf.text(text.text, toX(text.x), toY(text.y), { align: 'center' });
