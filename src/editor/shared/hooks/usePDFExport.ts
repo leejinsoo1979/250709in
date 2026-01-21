@@ -736,8 +736,9 @@ export function usePDFExport() {
         pdf.text('FURNITURE POSITIONS REFER TO FLOOR PLAN', tableX, yPos + 20);
       }
       
-      // PDF 파일명 생성
-      const filename = `${projectTitle.replace(/[^a-zA-Z0-9가-힣]/g, '_')}_${currentDate.replace(/\./g, '')}.pdf`;
+      // PDF 파일명 생성 (디버그: 슬롯 정보 포함)
+      const slotInfo = `slots${uniqueSlotIndices.length}_[${uniqueSlotIndices.join('-')}]`;
+      const filename = `도면_${currentDate.replace(/\./g, '-')}_${slotInfo}.pdf`;
       
       // 직접 다운로드 (Storage 업로드 스킵)
       try {
