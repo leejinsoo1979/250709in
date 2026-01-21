@@ -225,6 +225,142 @@ export class PDFExporter {
           this.pdf.text(panel.material, x + 2, y + height - 2);
         }
       }
+
+      // ★★★ 타공(보링) 표시 ★★★
+      if (panel.boringPositions && panel.boringPositions.length > 0) {
+        const originalWidth = panel.width;
+        const originalHeight = panel.height;
+
+        // 서랍 측판/앞판 여부 확인
+        const isDrawerSidePanel = panel.name?.includes('서랍') &&
+          (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
+        const isDrawerFrontPanel = panel.name?.includes('서랍') && panel.name?.includes('앞판');
+
+        // 보링 X위치 결정
+        let depthPositions: number[] = [];
+        if (isDrawerSidePanel) {
+          if (panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
+            depthPositions = panel.boringDepthPositions;
+          } else {
+            const sideThickness = 15;
+            depthPositions = [sideThickness / 2, originalWidth - sideThickness / 2];
+          }
+        } else if (isDrawerFrontPanel) {
+          if (panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
+            depthPositions = panel.boringDepthPositions;
+          } else {
+            const edgeOffset = 50;
+            depthPositions = [edgeOffset, originalWidth / 2, originalWidth - edgeOffset];
+          }
+        } else {
+          // 가구 측판: 전면 37mm, 중간, 후면 17mm
+          depthPositions = [37, originalWidth / 2, originalWidth - 17];
+        }
+
+        // 보링 홀 그리기
+        const holeDiameter = 3; // mm
+        const holeRadius = holeDiameter / 2 * scale;
+
+        this.pdf.setDrawColor(0, 0, 0);
+        this.pdf.setFillColor(255, 255, 255);
+        this.pdf.setLineWidth(0.1);
+
+        panel.boringPositions.forEach((boringPosMm: number) => {
+          depthPositions.forEach((depthPosMm: number) => {
+            let boringX: number, boringY: number;
+
+            if (isRotated) {
+              // 시트가 세로일 때 90도 회전
+              if (isDrawerSidePanel || isDrawerFrontPanel) {
+                boringX = x + boringPosMm * scale;
+                boringY = y + (result.stockPanel.width - panel.x - depthPosMm) * scale;
+              } else if (panel.rotated) {
+                boringX = x + depthPosMm * scale;
+                boringY = y + (result.stockPanel.width - panel.x - boringPosMm) * scale;
+              } else {
+                boringX = x + depthPosMm * scale;
+                boringY = y + (result.stockPanel.width - panel.x - boringPosMm) * scale;
+              }
+            } else {
+              // 시트가 가로일 때
+              if (isDrawerSidePanel || isDrawerFrontPanel) {
+                boringX = x + boringPosMm * scale;
+                boringY = y + depthPosMm * scale;
+              } else if (panel.rotated) {
+                boringX = x + depthPosMm * scale;
+                boringY = y + boringPosMm * scale;
+              } else {
+                boringX = x + depthPosMm * scale;
+                boringY = y + boringPosMm * scale;
+              }
+            }
+
+            // 원 그리기 (타공 홀)
+            this.pdf.circle(boringX, boringY, holeRadius, 'FD');
+          });
+        });
+      }
+
+      // ★★★ 홈가공 표시 ★★★
+      // 가구 측판 백패널 홈
+      const isFurnitureSidePanel = (panel.name?.includes('좌측') || panel.name?.includes('우측') || panel.name?.includes('측판'))
+        && !panel.name?.includes('서랍')
+        && !panel.name?.includes('도어');
+
+      if (isFurnitureSidePanel) {
+        const originalWidth = panel.width;
+        const backPanelDepthOffset = 17;
+        const grooveWidth = 10;
+        const grooveStartX = originalWidth - backPanelDepthOffset - grooveWidth;
+
+        this.pdf.setDrawColor(100, 100, 100);
+        this.pdf.setLineWidth(0.1);
+        this.pdf.setLineDashPattern([1, 1], 0);
+
+        let gx: number, gw: number, gy: number, gh: number;
+
+        if (isRotated) {
+          gx = x;
+          gw = width;
+          gy = y + (result.stockPanel.width - panel.x - grooveStartX - grooveWidth) * scale;
+          gh = grooveWidth * scale;
+        } else {
+          gx = x + grooveStartX * scale;
+          gw = grooveWidth * scale;
+          gy = y;
+          gh = height;
+        }
+
+        this.pdf.rect(gx, gy, gw, gh, 'S');
+        this.pdf.setLineDashPattern([], 0);
+      }
+
+      // 서랍 패널 바닥판 홈
+      if (panel.groovePositions && panel.groovePositions.length > 0) {
+        this.pdf.setDrawColor(100, 100, 100);
+        this.pdf.setLineWidth(0.1);
+        this.pdf.setLineDashPattern([1, 1], 0);
+
+        panel.groovePositions.forEach((groove: { y: number; height: number; depth: number }) => {
+          let gx: number, gw: number, gy: number, gh: number;
+
+          if (isRotated) {
+            gx = x + groove.y * scale;
+            gw = groove.height * scale;
+            gy = y;
+            gh = height;
+          } else {
+            gx = x;
+            gw = width;
+            gy = y + groove.y * scale;
+            gh = groove.height * scale;
+          }
+
+          this.pdf.rect(gx, gy, gw, gh, 'S');
+        });
+
+        this.pdf.setLineDashPattern([], 0);
+      }
     });
     
     // Draw dimensions (가로 방향 고려)
