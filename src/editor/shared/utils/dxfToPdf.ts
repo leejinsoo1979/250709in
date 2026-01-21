@@ -17,25 +17,7 @@ import {
   type ViewDirection,
   type SideViewFilter
 } from './dxfDataRenderer';
-import { getModuleById, ModuleData } from '@/data/modules';
 import { ColumnIndexer } from './indexing/ColumnIndexer';
-
-// 도어/서랍 정보 인터페이스
-interface DoorDrawingItem {
-  moduleId: string;
-  moduleName: string;
-  furnitureX: number; // 가구 X 위치 (mm)
-  furnitureWidth: number; // 가구 전체 너비 (mm)
-  furnitureHeight: number; // 가구 전체 높이 (mm)
-  items: {
-    type: 'door' | 'drawer';
-    x: number; // 도어/서랍 X 위치 (가구 기준, mm)
-    y: number; // 도어/서랍 Y 위치 (가구 바닥 기준, mm)
-    width: number; // 도어/서랍 너비 (mm)
-    height: number; // 도어/서랍 높이 (mm)
-    label?: string; // 라벨 (서랍1, 서랍2 등)
-  }[];
-}
 
 // PDF 뷰 타입
 // - front: 입면도 (도어 있음) - 도어가 장착된 정면도
@@ -163,302 +145,6 @@ const parseDxfTexts = (dxfString: string): ParsedText[] => {
   }
 
   return texts;
-};
-
-/**
- * 가구에서 도어/서랍 정보 추출
- *
- * 도어 판별 로직:
- * 1. placedModule.hasDoor가 명시적으로 설정되어 있으면 그 값 사용
- * 2. 아니면 moduleData.hasDoor 사용 (기본값: false)
- * 3. 서랍은 sections에서 type='drawer'인 섹션 확인
- */
-const extractDoorInfo = (
-  placedModule: PlacedModule,
-  moduleData: ModuleData | undefined,
-  spaceInfo: SpaceInfo
-): DoorDrawingItem | null => {
-  if (!moduleData) {
-    console.log(`  ❌ 모듈 데이터 없음: ${placedModule.moduleId}`);
-    return null;
-  }
-
-  // hasDoor 판별: placedModule에 명시적으로 설정되어 있으면 그 값, 아니면 moduleData 값
-  const hasDoor = placedModule.hasDoor !== undefined
-    ? placedModule.hasDoor
-    : (moduleData.hasDoor ?? false);
-
-  const sections = moduleData.modelConfig?.sections || [];
-  const leftSections = moduleData.modelConfig?.leftSections || [];
-  const rightSections = moduleData.modelConfig?.rightSections || [];
-  const allSections = [...sections, ...leftSections, ...rightSections];
-
-  // 서랍이 있는 섹션 확인
-  const hasDrawer = allSections.some(s => s.type === 'drawer');
-
-  console.log(`  🚪 도어 정보 추출: ${moduleData.name}`, {
-    placedHasDoor: placedModule.hasDoor,
-    moduleHasDoor: moduleData.hasDoor,
-    finalHasDoor: hasDoor,
-    hasDrawer,
-    sectionsCount: allSections.length
-  });
-
-  // 도어도 서랍도 없으면 스킵
-  if (!hasDoor && !hasDrawer) {
-    console.log(`  ⏭️ 도어/서랍 없음 - 스킵`);
-    return null;
-  }
-
-  const furnitureWidth = placedModule.customWidth || moduleData.dimensions.width;
-  const furnitureHeight = placedModule.customHeight || moduleData.dimensions.height;
-  const furnitureX = placedModule.position.x * 1000; // Three.js 좌표(m)를 mm로 변환
-
-  const items: DoorDrawingItem['items'] = [];
-
-  // 기본 두께 (측판, 하판 등)
-  const basicThickness = moduleData.modelConfig?.basicThickness || 18;
-
-  // 도어 갭 설정
-  const doorTopGap = placedModule.doorTopGap ?? 10;
-  const doorBottomGap = placedModule.doorBottomGap ?? 65;
-
-  // 도어가 있는 경우: 도어만 표시 (서랍은 도어 뒤에 있으므로 제외)
-  // 도어가 없는 경우: 서랍만 표시
-  if (hasDoor) {
-    // 도어 처리
-    const doorX = basicThickness;
-    const doorY = doorBottomGap;
-    const doorWidth = furnitureWidth - basicThickness * 2;
-    const doorHeight = furnitureHeight - doorTopGap - doorBottomGap;
-
-    // 도어 높이가 유효한 경우에만 도어 추가
-    if (doorHeight > 0) {
-      items.push({
-        type: 'door',
-        x: doorX,
-        y: doorY,
-        width: doorWidth,
-        height: doorHeight,
-        label: 'Door'
-      });
-      console.log(`  ✅ 도어 추가: ${doorWidth}x${doorHeight}mm`);
-    }
-  } else if (hasDrawer) {
-    // 도어가 없고 서랍만 있는 경우 - 서랍 처리
-    let currentY = basicThickness; // 하판 위부터 시작
-
-    for (const section of allSections) {
-      if (section.type === 'drawer') {
-        const drawerHeights = section.drawerHeights || [];
-        const gapHeight = section.gapHeight || 24;
-
-        for (let i = 0; i < drawerHeights.length; i++) {
-          const drawerHeight = drawerHeights[i];
-
-          items.push({
-            type: 'drawer',
-            x: basicThickness, // 좌측판 두께
-            y: currentY,
-            width: furnitureWidth - basicThickness * 2, // 양쪽 측판 두께 제외
-            height: drawerHeight,
-            label: `Drawer ${i + 1}`
-          });
-
-          currentY += drawerHeight + gapHeight;
-        }
-      } else if (section.type === 'hanging' || section.type === 'shelf' || section.type === 'open') {
-        // 서랍이 아닌 섹션의 높이를 계산
-        if (section.heightType === 'absolute') {
-          currentY += section.height;
-        } else {
-          // 퍼센트 기반 높이 계산
-          currentY += (section.height / 100) * furnitureHeight;
-        }
-      }
-    }
-  }
-
-  if (items.length === 0) {
-    console.log(`  ⏭️ 추출된 아이템 없음`);
-    return null;
-  }
-
-  console.log(`  ✅ 도어/서랍 ${items.length}개 추출됨`);
-
-  return {
-    moduleId: placedModule.moduleId,
-    moduleName: moduleData.name,
-    furnitureX,
-    furnitureWidth,
-    furnitureHeight,
-    items
-  };
-};
-
-/**
- * 도어도면 전용 렌더링 함수
- * 가구 본체 없이 도어/서랍만 치수와 함께 표시
- */
-const renderDoorDrawingToPdf = (
-  pdf: jsPDF,
-  doorItems: DoorDrawingItem[],
-  spaceInfo: SpaceInfo,
-  pageWidth: number,
-  pageHeight: number
-): void => {
-  const margin = 20;
-  const titleHeight = 15;
-
-  // 타이틀
-  pdf.setFontSize(14);
-  pdf.setFont('helvetica', 'bold');
-  pdf.text('Door Drawing', margin, margin + 10);
-  pdf.setFont('helvetica', 'normal');
-
-  if (doorItems.length === 0) {
-    pdf.setFontSize(12);
-    pdf.text('No doors or drawers found', pageWidth / 2, pageHeight / 2, { align: 'center' });
-    return;
-  }
-
-  // 도면 영역
-  const drawableWidth = pageWidth - margin * 2;
-  const drawableHeight = pageHeight - margin * 2 - titleHeight;
-
-  // 전체 범위 계산
-  let minX = Infinity, maxX = -Infinity;
-  let minY = 0, maxY = -Infinity;
-
-  for (const doorItem of doorItems) {
-    for (const item of doorItem.items) {
-      const absX = doorItem.furnitureX + item.x;
-      minX = Math.min(minX, absX);
-      maxX = Math.max(maxX, absX + item.width);
-      maxY = Math.max(maxY, item.y + item.height);
-    }
-  }
-
-  // 여유 마진
-  const marginMm = 150;
-  minX -= marginMm;
-  maxX += marginMm;
-  maxY += marginMm;
-
-  const totalWidthMm = maxX - minX;
-  const totalHeightMm = maxY - minY;
-
-  // 스케일 계산
-  const scaleX = drawableWidth / totalWidthMm;
-  const scaleY = drawableHeight / totalHeightMm;
-  const scale = Math.min(scaleX, scaleY) * 0.8;
-
-  // 좌표 변환 함수
-  const toPageX = (mmX: number): number => {
-    return margin + (mmX - minX) * scale + (drawableWidth - totalWidthMm * scale) / 2;
-  };
-  const toPageY = (mmY: number): number => {
-    // Y축 반전
-    return margin + titleHeight + drawableHeight - (mmY - minY) * scale - (drawableHeight - totalHeightMm * scale) / 2;
-  };
-
-  // 스케일 표시
-  pdf.setFontSize(8);
-  pdf.text(`Scale: 1:${Math.round(1 / scale)}`, pageWidth - margin - 30, margin + 10);
-
-  // 각 도어/서랍 그리기
-  for (const doorItem of doorItems) {
-    for (const item of doorItem.items) {
-      const absX = doorItem.furnitureX + item.x;
-      const pdfX = toPageX(absX);
-      const pdfY = toPageY(item.y + item.height);
-      const pdfWidth = item.width * scale;
-      const pdfHeight = item.height * scale;
-
-      // 사각형 그리기
-      pdf.setDrawColor(0, 0, 0);
-      pdf.setLineWidth(0.5);
-
-      if (item.type === 'door') {
-        pdf.setFillColor(240, 240, 240);
-        pdf.rect(pdfX, pdfY, pdfWidth, pdfHeight, 'FD');
-
-        // 힌지 표시
-        pdf.setFillColor(0, 0, 0);
-        pdf.circle(pdfX + 2, pdfY + 8, 1.5, 'F');
-        pdf.circle(pdfX + 2, pdfY + pdfHeight - 8, 1.5, 'F');
-      } else {
-        // 서랍
-        pdf.setFillColor(250, 250, 250);
-        pdf.rect(pdfX, pdfY, pdfWidth, pdfHeight, 'FD');
-
-        // 손잡이
-        const handleY = pdfY + pdfHeight / 2;
-        const handleWidth = Math.min(pdfWidth * 0.25, 20);
-        pdf.setLineWidth(0.8);
-        pdf.line(
-          pdfX + pdfWidth / 2 - handleWidth / 2,
-          handleY,
-          pdfX + pdfWidth / 2 + handleWidth / 2,
-          handleY
-        );
-      }
-
-      // 너비 치수선 (상단)
-      const dimOffset = 6;
-      pdf.setLineWidth(0.2);
-      pdf.setDrawColor(100, 100, 100);
-
-      // 상단 치수선
-      pdf.line(pdfX, pdfY - dimOffset, pdfX + pdfWidth, pdfY - dimOffset);
-      pdf.line(pdfX, pdfY - dimOffset - 2, pdfX, pdfY - dimOffset + 2);
-      pdf.line(pdfX + pdfWidth, pdfY - dimOffset - 2, pdfX + pdfWidth, pdfY - dimOffset + 2);
-
-      // 너비 텍스트
-      pdf.setFontSize(7);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text(`${Math.round(item.width)}`, pdfX + pdfWidth / 2, pdfY - dimOffset - 2, { align: 'center' });
-
-      // 우측 치수선 (높이)
-      const dimX = pdfX + pdfWidth + dimOffset;
-      pdf.setDrawColor(100, 100, 100);
-      pdf.line(dimX, pdfY, dimX, pdfY + pdfHeight);
-      pdf.line(dimX - 2, pdfY, dimX + 2, pdfY);
-      pdf.line(dimX - 2, pdfY + pdfHeight, dimX + 2, pdfY + pdfHeight);
-
-      // 높이 텍스트 (가로로 표시)
-      pdf.text(`${Math.round(item.height)}`, dimX + 3, pdfY + pdfHeight / 2 + 2);
-
-      // 라벨 (도어/서랍 내부)
-      if (item.label) {
-        pdf.setFontSize(6);
-        pdf.setTextColor(80, 80, 80);
-        pdf.text(item.label, pdfX + pdfWidth / 2, pdfY + pdfHeight - 3, { align: 'center' });
-      }
-    }
-  }
-
-  // 범례
-  const legendY = pageHeight - margin - 15;
-  pdf.setFontSize(7);
-  pdf.setTextColor(0, 0, 0);
-  pdf.text('Legend:', margin, legendY);
-
-  // 도어 범례
-  pdf.setFillColor(240, 240, 240);
-  pdf.setDrawColor(0, 0, 0);
-  pdf.setLineWidth(0.3);
-  pdf.rect(margin + 20, legendY - 5, 10, 6, 'FD');
-  pdf.text('Door', margin + 35, legendY);
-
-  // 서랍 범례
-  pdf.setFillColor(250, 250, 250);
-  pdf.rect(margin + 60, legendY - 5, 10, 6, 'FD');
-  pdf.line(margin + 63, legendY - 2, margin + 67, legendY - 2);
-  pdf.text('Drawer', margin + 75, legendY);
-
-  // 단위
-  pdf.text('All dimensions in mm', margin, legendY + 5);
 };
 
 // 뷰 제목 (jsPDF는 한글 미지원, 영문만 사용)
@@ -687,35 +373,22 @@ export const downloadDxfAsPdf = async (
         renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, slotIndex + 1);
       }
     }
-    // 도어 입면도 (가구 없이 도어/서랍만)
+    // 도어 입면도 (DOOR 레이어만 표시 - 2D 뷰어에서 가구 필터 끈 것과 동일)
     else if (viewDirection === 'door-only') {
       if (!isFirstPage) pdf.addPage();
       isFirstPage = false;
 
       console.log(`📐 door-only: 도어 입면도 렌더링 시작...`);
-      console.log(`📐 door-only: placedModules 개수: ${placedModules.length}`);
 
-      // 내부 공간 계산 (getModuleById에 필요)
-      const wallThickness = spaceInfo.wallConfig?.thickness || 18;
-      const internalSpace = {
-        width: spaceInfo.width - wallThickness * 2,
-        height: spaceInfo.height - wallThickness * 2,
-        depth: spaceInfo.depth - wallThickness
-      };
+      // front 뷰 DXF 데이터 생성 후 DOOR 레이어만 필터링
+      const dxfViewDirection = pdfViewToViewDirection(viewDirection);
+      const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
 
-      // 가구에서 도어/서랍 정보 추출
-      const doorItems: DoorDrawingItem[] = [];
-      for (const placedModule of placedModules) {
-        console.log(`📐 door-only: 처리 중 - ${placedModule.moduleId}, hasDoor=${placedModule.hasDoor}`);
-        const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
-        const doorInfo = extractDoorInfo(placedModule, moduleData, spaceInfo);
-        if (doorInfo) {
-          doorItems.push(doorInfo);
-        }
-      }
+      // DOOR 레이어만 필터링 (2D 뷰어에서 가구 필터 끈 것과 동일)
+      const doorOnlyLines = lines.filter(line => line.layer === 'DOOR');
 
-      console.log(`📐 door-only: ${doorItems.length}개 가구에서 도어/서랍 추출됨`);
-      renderDoorDrawingToPdf(pdf, doorItems, spaceInfo, pageWidth, pageHeight);
+      console.log(`📐 door-only: 원본 ${lines.length}개 라인 → DOOR 레이어만 ${doorOnlyLines.length}개 라인`);
+      renderToPdf(pdf, doorOnlyLines, texts, spaceInfo, viewDirection, pageWidth, pageHeight);
     }
     // 입면도 (도어 없음) - DOOR 레이어 필터링하여 렌더링
     else if (viewDirection === 'front-no-door') {
