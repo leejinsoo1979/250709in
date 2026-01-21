@@ -3120,8 +3120,7 @@ export const generateDxfFromData = (
     // 씬에서 추출한 내부 치수선(DIMENSIONS 레이어)과 텍스트는 모두 제외
     // 조절발(ACCESSORIES)도 측면뷰에서는 제외 (2D UI와 동일하게)
 
-    // 씬에서 추출한 라인 중 내부 치수선, 환기캡, SPACE_FRAME 제외 (가구 형상 + 조절발 유지)
-    // SPACE_FRAME은 Room.tsx에서 조건부 렌더링되어 씬에서 누락될 수 있으므로 데이터 기반으로 별도 생성
+    // 씬에서 추출한 라인 중 내부 치수선과 환기캡 제외 (가구 형상 + 조절발 유지)
     let filteredLines = extracted.lines.filter(line => {
       // DIMENSIONS 레이어 라인은 제외 (내부 치수선)
       if (line.layer === 'DIMENSIONS') {
@@ -3131,15 +3130,10 @@ export const generateDxfFromData = (
       if (line.layer === 'VENTILATION') {
         return false;
       }
-      // SPACE_FRAME 레이어(상부/하부 프레임)는 제외 - 데이터 기반으로 별도 생성
-      // Room.tsx에서 selectedSlotIndex에 따라 조건부 렌더링되어 씬에서 누락될 수 있음
-      if (line.layer === 'SPACE_FRAME') {
-        return false;
-      }
-      // ACCESSORIES 레이어(조절발)는 포함 - 씬에서 추출한 색상 유지
+      // ACCESSORIES 레이어(조절발)는 포함 - 측면뷰에서도 조절발 표시
       return true;
     });
-    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS, VENTILATION, SPACE_FRAME 제외, ACCESSORIES 포함)`);
+    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS, VENTILATION 제외, ACCESSORIES 포함)`);
 
     // ========================================
     // 핵심 수정: 씬에서 추출한 라인의 X 좌표를 0 기준으로 정규화 + 좌우 반전
@@ -3201,91 +3195,9 @@ export const generateDxfFromData = (
       actualFurnitureMaxX // 실제 가구 X 최대값
     );
 
-    // ========================================
-    // 상부/하부 프레임 데이터 기반 생성 (Room.tsx에서 조건부 렌더링되어 누락될 수 있음)
-    // ========================================
-    const frameLines: DxfLine[] = [];
-    const frameColor = 7; // 흰색
-
-    // spaceInfo에서 프레임 정보 가져오기
-    const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 10 };
-    const topFrameHeightMm = frameSize.top || 0;
-    const baseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65 };
-    const isFloating = baseConfig.type === 'stand' && baseConfig.placementType === 'float';
-    const isStandType = baseConfig.type === 'stand';
-    const railOrBaseHeightMm = isStandType
-      ? (isFloating ? 0 : (baseConfig.height || 0))
-      : (baseConfig.height || 65);
-    const baseFrameHeightMm = isFloating ? 0 : railOrBaseHeightMm;
-    const baseDepthMm = baseConfig.depth || 0;
-
-    // 가구 깊이 계산
-    let furnitureDepthMm = actualFurnitureWidth > 0 ? actualFurnitureWidth : 600;
-    if (placedModules.length > 0) {
-      // sideViewFilter에 따라 올바른 가구 선택
-      let targetModule: PlacedModule;
-      if (sideViewFilter === 'leftmost') {
-        targetModule = placedModules.reduce((prev, curr) => {
-          const prevX = prev.position?.x || 0;
-          const currX = curr.position?.x || 0;
-          return currX < prevX ? curr : prev;
-        });
-      } else if (sideViewFilter === 'rightmost') {
-        targetModule = placedModules.reduce((prev, curr) => {
-          const prevX = prev.position?.x || 0;
-          const currX = curr.position?.x || 0;
-          return currX > prevX ? curr : prev;
-        });
-      } else {
-        targetModule = placedModules[0];
-      }
-      const moduleDepth = targetModule.upperSectionDepth || targetModule.customDepth;
-      if (moduleDepth) {
-        furnitureDepthMm = moduleDepth;
-      }
-    }
-
-    // X 좌표 변환 함수 (좌측뷰/우측뷰에 따라)
-    const transformFrameX = (x: number): number => {
-      if (viewDirection === 'right') {
-        return furnitureDepthMm - x;
-      }
-      return x;
-    };
-
-    const minFrameX = Math.min(transformFrameX(0), transformFrameX(furnitureDepthMm));
-    const maxFrameX = Math.max(transformFrameX(0), transformFrameX(furnitureDepthMm));
-
-    // 상부 프레임 생성
-    if (topFrameHeightMm > 0) {
-      const topFrameBottom = height - topFrameHeightMm;
-      const topFrameTop = height;
-
-      frameLines.push({ x1: minFrameX, y1: topFrameBottom, x2: maxFrameX, y2: topFrameBottom, layer: 'SPACE_FRAME', color: frameColor });
-      frameLines.push({ x1: maxFrameX, y1: topFrameBottom, x2: maxFrameX, y2: topFrameTop, layer: 'SPACE_FRAME', color: frameColor });
-      frameLines.push({ x1: maxFrameX, y1: topFrameTop, x2: minFrameX, y2: topFrameTop, layer: 'SPACE_FRAME', color: frameColor });
-      frameLines.push({ x1: minFrameX, y1: topFrameTop, x2: minFrameX, y2: topFrameBottom, layer: 'SPACE_FRAME', color: frameColor });
-      console.log(`✅ 상부 프레임 생성: Y ${topFrameBottom}~${topFrameTop}, X ${minFrameX}~${maxFrameX}`);
-    }
-
-    // 하부 프레임/받침대 생성
-    if (baseFrameHeightMm > 0) {
-      const baseBottom = 0;
-      const baseTop = baseFrameHeightMm;
-      const actualBaseDepth = baseDepthMm > 0 ? baseDepthMm : furnitureDepthMm;
-      const baseMinX = Math.min(transformFrameX(0), transformFrameX(actualBaseDepth));
-      const baseMaxX = Math.max(transformFrameX(0), transformFrameX(actualBaseDepth));
-
-      frameLines.push({ x1: baseMinX, y1: baseBottom, x2: baseMaxX, y2: baseBottom, layer: 'SPACE_FRAME', color: frameColor });
-      frameLines.push({ x1: baseMaxX, y1: baseBottom, x2: baseMaxX, y2: baseTop, layer: 'SPACE_FRAME', color: frameColor });
-      frameLines.push({ x1: baseMaxX, y1: baseTop, x2: baseMinX, y2: baseTop, layer: 'SPACE_FRAME', color: frameColor });
-      frameLines.push({ x1: baseMinX, y1: baseTop, x2: baseMinX, y2: baseBottom, layer: 'SPACE_FRAME', color: frameColor });
-      console.log(`✅ 하부 프레임/받침대 생성: Y ${baseBottom}~${baseTop}, X ${baseMinX}~${baseMaxX}`);
-    }
-
-    lines = [...filteredLines, ...externalDimensions.lines, ...frameLines];
+    lines = [...filteredLines, ...externalDimensions.lines];
     texts = [...externalDimensions.texts];
-    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 가구형상 ${filteredLines.length}개 + 치수선 ${externalDimensions.lines.length}개 + 프레임 ${frameLines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
+    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 가구형상 ${filteredLines.length}개 + 치수선 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
   } else {
     // 정면뷰/탑뷰: 기존 방식대로 외부 치수선 생성 후 합치기
     const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection, sideViewFilter);
