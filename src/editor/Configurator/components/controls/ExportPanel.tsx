@@ -76,7 +76,7 @@ const ExportPanel: React.FC = () => {
   
   const [isExporting, setIsExporting] = useState(false);
   const [selectedDrawingTypes, setSelectedDrawingTypes] = useState<DrawingType[]>(['front', 'plan', 'sideLeft', 'sideRight']);
-  const [selectedPDFViews, setSelectedPDFViews] = useState<ViewType[]>(['3d-front', '2d-front']);
+  const [selectedPDFViews, setSelectedPDFViews] = useState<ViewType[]>(['2d-front', '2d-top', '2d-left', '2d-right']);
   const [pdfRenderMode, setPDFRenderMode] = useState<'solid' | 'wireframe'>('solid');
   const [activeTab, setActiveTab] = useState<'dxf' | 'pdf'>('dxf');
   const [lastExportResult, setLastExportResult] = useState<{
