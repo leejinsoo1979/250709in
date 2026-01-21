@@ -382,13 +382,14 @@ export const downloadDxfAsPdf = async (
 
       // front 뷰 DXF 데이터 생성 후 DOOR 레이어만 필터링
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
-      const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
+      const { lines } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
 
       // DOOR 레이어만 필터링 (2D 뷰어에서 가구 필터 끈 것과 동일)
+      // 치수선/텍스트는 제외 (도어 형상만 표시)
       const doorOnlyLines = lines.filter(line => line.layer === 'DOOR');
 
       console.log(`📐 door-only: 원본 ${lines.length}개 라인 → DOOR 레이어만 ${doorOnlyLines.length}개 라인`);
-      renderToPdf(pdf, doorOnlyLines, texts, spaceInfo, viewDirection, pageWidth, pageHeight);
+      renderToPdf(pdf, doorOnlyLines, [], spaceInfo, viewDirection, pageWidth, pageHeight);
     }
     // 입면도 (도어 없음) - DOOR 레이어 필터링하여 렌더링
     else if (viewDirection === 'front-no-door') {
