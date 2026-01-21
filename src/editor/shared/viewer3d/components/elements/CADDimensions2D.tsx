@@ -951,22 +951,47 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         })}
 
         {/* ===== 단내림 구간 선택 시 단내림 벽 표시 (빗금 패턴) ===== */}
-        {isSelectedSlotInDroppedZone && (() => {
+        {isSelectedSlotInDroppedZone && visibleFurniture.length > 0 && (() => {
+          // 보이는 가구의 깊이 가져오기
+          const visibleModule = visibleFurniture[0];
+          const visibleModuleData = getModuleById(
+            visibleModule.moduleId,
+            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            spaceInfo
+          );
+          // 상부섹션 깊이 우선 사용 (가구 치수 표시와 동일)
+          const actualFurnitureDepthMm = visibleModule.upperSectionDepth || visibleModule.customDepth || visibleModuleData?.dimensions.depth || 600;
+          const actualFurnitureDepth = mmToThreeUnits(actualFurnitureDepthMm);
+
           // 빗금 해칭 패턴 생성
           const hatchLines: JSX.Element[] = [];
           const hatchSpacing = mmToThreeUnits(40); // 40mm 간격
           const hatchColor = view2DTheme === 'dark' ? '#FFD700' : '#999999';
 
-          // 단내림 벽 영역: Z방향으로 spaceDepth, Y방향으로 dropHeight
-          const wallStartZ = -spaceDepth / 2;
-          const wallEndZ = spaceDepth / 2;
+          // 가구 Z 위치 계산 (가구 치수와 동일)
+          const panelDepthMm = spaceInfo.depth || 1500;
+          const baseFurnitureDepthMm = 600;
+          const panelDepth = mmToThreeUnits(panelDepthMm);
+          const baseFurnitureDepth = mmToThreeUnits(baseFurnitureDepthMm);
+          const doorThickness = mmToThreeUnits(20);
+          const zOffset = -panelDepth / 2;
+          const furnitureZOffset = zOffset + (panelDepth - baseFurnitureDepth) / 2;
+          // 가구 Z 위치 (가구 치수 표시와 동일한 방식)
+          const furnitureZ = furnitureZOffset + baseFurnitureDepth/2 - doorThickness - actualFurnitureDepth/2;
+          // 가구 뒷면과 앞면 Z 위치
+          const furnitureBackZ = furnitureZ - actualFurnitureDepth/2;
+          const furnitureFrontZ = furnitureZ + actualFurnitureDepth/2;
+
+          // 단내림 벽 영역: Z방향으로 가구 깊이만큼, Y방향으로 dropHeight
+          const wallStartZ = furnitureBackZ;
+          const wallEndZ = furnitureFrontZ;
+          const wallDepth = wallEndZ - wallStartZ;
           const wallStartY = displaySpaceHeight;
           const wallEndY = spaceHeight;
 
           // 대각선 빗금 생성 (좌하단에서 우상단으로)
-          const totalDiagonal = spaceDepth + dropHeight;
           const startOffset = -dropHeight;
-          const endOffset = spaceDepth;
+          const endOffset = wallDepth;
           const hatchCount = Math.ceil((endOffset - startOffset) / hatchSpacing) + 1;
 
           for (let i = 0; i <= hatchCount; i++) {
@@ -1017,7 +1042,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 rotation={[0, -Math.PI / 2, 0]}
                 renderOrder={99998}
               >
-                <planeGeometry args={[spaceDepth, dropHeight]} />
+                <planeGeometry args={[wallDepth, dropHeight]} />
                 <meshBasicMaterial color="#999999" transparent opacity={0.15} depthTest={false} />
               </mesh>
               {/* 단내림 벽 테두리 */}
@@ -1687,22 +1712,47 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         })}
 
         {/* ===== 단내림 구간 선택 시 단내림 벽 표시 (빗금 패턴) ===== */}
-        {isSelectedSlotInDroppedZone && (() => {
+        {isSelectedSlotInDroppedZone && visibleFurniture.length > 0 && (() => {
+          // 보이는 가구의 깊이 가져오기
+          const visibleModule = visibleFurniture[0];
+          const visibleModuleData = getModuleById(
+            visibleModule.moduleId,
+            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            spaceInfo
+          );
+          // 상부섹션 깊이 우선 사용 (가구 치수 표시와 동일)
+          const actualFurnitureDepthMm = visibleModule.upperSectionDepth || visibleModule.customDepth || visibleModuleData?.dimensions.depth || 600;
+          const actualFurnitureDepth = mmToThreeUnits(actualFurnitureDepthMm);
+
           // 빗금 해칭 패턴 생성
           const hatchLines: JSX.Element[] = [];
           const hatchSpacing = mmToThreeUnits(40); // 40mm 간격
           const hatchColor = view2DTheme === 'dark' ? '#FFD700' : '#999999';
 
-          // 단내림 벽 영역: Z방향으로 spaceDepth, Y방향으로 dropHeight
-          const wallStartZ = -spaceDepth / 2;
-          const wallEndZ = spaceDepth / 2;
+          // 가구 Z 위치 계산 (가구 치수와 동일)
+          const panelDepthMm = spaceInfo.depth || 1500;
+          const baseFurnitureDepthMm = 600;
+          const panelDepth = mmToThreeUnits(panelDepthMm);
+          const baseFurnitureDepth = mmToThreeUnits(baseFurnitureDepthMm);
+          const doorThickness = mmToThreeUnits(20);
+          const zOffset = -panelDepth / 2;
+          const furnitureZOffset = zOffset + (panelDepth - baseFurnitureDepth) / 2;
+          // 가구 Z 위치 (가구 치수 표시와 동일한 방식)
+          const furnitureZ = furnitureZOffset + baseFurnitureDepth/2 - doorThickness - actualFurnitureDepth/2;
+          // 가구 뒷면과 앞면 Z 위치
+          const furnitureBackZ = furnitureZ - actualFurnitureDepth/2;
+          const furnitureFrontZ = furnitureZ + actualFurnitureDepth/2;
+
+          // 단내림 벽 영역: Z방향으로 가구 깊이만큼, Y방향으로 dropHeight
+          const wallStartZ = furnitureBackZ;
+          const wallEndZ = furnitureFrontZ;
+          const wallDepth = wallEndZ - wallStartZ;
           const wallStartY = displaySpaceHeight;
           const wallEndY = spaceHeight;
 
           // 대각선 빗금 생성 (좌하단에서 우상단으로)
-          const totalDiagonal = spaceDepth + dropHeight;
           const startOffset = -dropHeight;
-          const endOffset = spaceDepth;
+          const endOffset = wallDepth;
           const hatchCount = Math.ceil((endOffset - startOffset) / hatchSpacing) + 1;
 
           for (let i = 0; i <= hatchCount; i++) {
@@ -1753,7 +1803,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
                 rotation={[0, Math.PI / 2, 0]}
                 renderOrder={99998}
               >
-                <planeGeometry args={[spaceDepth, dropHeight]} />
+                <planeGeometry args={[wallDepth, dropHeight]} />
                 <meshBasicMaterial color="#999999" transparent opacity={0.15} depthTest={false} />
               </mesh>
               {/* 단내림 벽 테두리 */}
