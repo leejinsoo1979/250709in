@@ -11,21 +11,20 @@ import { exportWithPersistence } from '@/services/exportService';
 import { getCurrentVersionId } from '@/services/designs.repo';
 import { auth } from '@/firebase/config';
 
-export type ViewType = '3d-front' | '2d-front' | '2d-top' | '2d-left' | '2d-right';
+export type ViewType = '3d-front' | '2d-front' | '2d-top' | '2d-left';
 
 interface ViewInfo {
   id: ViewType;
   name: string;
   viewMode: '2D' | '3D';
-  viewDirection?: 'front' | 'top' | 'left' | 'right';
+  viewDirection?: 'front' | 'top' | 'left';
 }
 
 const VIEW_TYPES: ViewInfo[] = [
-  { id: '3d-front', name: '3D 정면뷰', viewMode: '3D' },
-  { id: '2d-front', name: '2D 정면뷰 (치수)', viewMode: '2D', viewDirection: 'front' },
-  { id: '2d-top', name: '2D 상부뷰 (치수)', viewMode: '2D', viewDirection: 'top' },
-  { id: '2d-left', name: '2D 좌측뷰 (치수)', viewMode: '2D', viewDirection: 'left' },
-  { id: '2d-right', name: '2D 우측뷰 (치수)', viewMode: '2D', viewDirection: 'right' },
+  { id: '3d-front', name: '3D 투시도', viewMode: '3D' },
+  { id: '2d-front', name: '입면도 (치수)', viewMode: '2D', viewDirection: 'front' },
+  { id: '2d-top', name: '평면도 (치수)', viewMode: '2D', viewDirection: 'top' },
+  { id: '2d-left', name: '측면도 (치수)', viewMode: '2D', viewDirection: 'left' },
 ];
 
 export function usePDFExport() {
@@ -277,6 +276,7 @@ export function usePDFExport() {
       // 단내림 구간 정보
       const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
       const normalSlotCount = spaceInfo.customColumnCount || 4;
+      const droppedSlotCount = spaceInfo.droppedCeiling?.columnCount || 0;
       const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
       const droppedWidth = spaceInfo.droppedCeiling?.width || 0;
 
@@ -302,8 +302,14 @@ export function usePDFExport() {
         }
       };
 
-      // 고유 글로벌 슬롯 인덱스 추출 (단내림 구간 고려)
-      const uniqueSlotIndices = [...new Set(placedModules.map(m => {
+      // 전체 슬롯 인덱스 배열 생성 (가구 유무와 상관없이 공간 설정 기준)
+      // 일반 구간: 0 ~ (normalSlotCount - 1)
+      // 단내림 구간: normalSlotCount ~ (normalSlotCount + droppedSlotCount - 1)
+      const totalSlotCount = normalSlotCount + (hasDroppedCeiling ? droppedSlotCount : 0);
+      const allSlotIndices = Array.from({ length: totalSlotCount }, (_, i) => i);
+
+      // 가구가 있는 슬롯만 필터링 (측면도에서 가구가 있는 슬롯만 페이지 생성)
+      const slotsWithFurniture = [...new Set(placedModules.map(m => {
         if (m.slotIndex === undefined) return undefined;
 
         // 단내림 구간 가구면 글로벌 인덱스로 변환
@@ -313,28 +319,28 @@ export function usePDFExport() {
         return m.slotIndex;
       }))]
         .filter((idx): idx is number => idx !== undefined)
-        .sort((a, b) => a - b); // 글로벌 인덱스 순으로 정렬
+        .sort((a, b) => a - b);
 
-      const debugInfo = {
+      // 측면도 페이지용 슬롯 인덱스: 가구가 있는 슬롯만 (없으면 전체 슬롯 사용)
+      const uniqueSlotIndices = slotsWithFurniture.length > 0 ? slotsWithFurniture : allSlotIndices;
+
+      console.log('📋 PDF 내보내기 - 슬롯 정보:', {
         totalModules: placedModules.length,
         hasDroppedCeiling,
         normalSlotCount,
-        droppedPosition,
-        normalWidth,
-        droppedWidth,
+        droppedSlotCount,
+        totalSlotCount,
+        allSlotIndices,
+        slotsWithFurniture,
+        uniqueSlotIndices,
         modules: placedModules.map(m => ({
           id: m.id.slice(-8),
           slotIndex: m.slotIndex,
           zone: m.zone,
           posX: m.position.x.toFixed(2),
           isDropped: isModuleInDroppedZone(m)
-        })),
-        uniqueSlotIndices
-      };
-      console.log('📋 PDF 내보내기 - 가구 정보:', debugInfo);
-
-      // 디버그용 alert (콘솔이 안 보일 때)
-      alert(`PDF 디버그:\n총 가구: ${placedModules.length}개\n단내림: ${hasDroppedCeiling}\n일반슬롯수: ${normalSlotCount}\n글로벌슬롯: [${uniqueSlotIndices.join(', ')}]\n\n가구별 정보:\n${placedModules.map(m => `- slot${m.slotIndex} zone=${m.zone || 'undefined'} isDropped=${isModuleInDroppedZone(m)}`).join('\n')}`);
+        }))
+      });
 
       let pageIndex = 0;
 
@@ -736,9 +742,14 @@ export function usePDFExport() {
         pdf.text('FURNITURE POSITIONS REFER TO FLOOR PLAN', tableX, yPos + 20);
       }
       
-      // PDF 파일명 생성 (디버그: 슬롯 정보 포함)
-      const slotInfo = `slots${uniqueSlotIndices.length}_[${uniqueSlotIndices.join('-')}]`;
-      const filename = `도면_${currentDate.replace(/\./g, '-')}_${slotInfo}.pdf`;
+      // PDF 파일명 생성
+      const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+      const timeStr = new Date().toTimeString().slice(0, 5).replace(':', ''); // HHMM
+      const sideViewCount = selectedViews.filter(v => v === '2d-left' || v === '2d-right').length;
+      const slotPageCount = sideViewCount * uniqueSlotIndices.length;
+      const filename = `도면_${dateStr}_${timeStr}_측면${slotPageCount}p_총${pageIndex}p.pdf`;
+
+      console.log('📄 PDF 파일명 생성:', { filename, sideViewCount, uniqueSlotIndices, slotPageCount, pageIndex });
       
       // 직접 다운로드 (Storage 업로드 스킵)
       try {

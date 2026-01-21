@@ -127,8 +127,7 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
   const viewDirections = [
     { id: 'front' as ViewDirection, label: t('viewer.front') },
     { id: 'top' as ViewDirection, label: t('viewer.top') },
-    { id: 'left' as ViewDirection, label: t('viewer.left') },
-    { id: 'right' as ViewDirection, label: t('viewer.right') }
+    { id: 'left' as ViewDirection, label: t('viewer.left') }
   ];
 
   // 2D 모드에서 사용할 뷰 방향들 (all 포함)
@@ -204,10 +203,9 @@ const ViewerControls: React.FC<ViewerControlsProps> = ({
         {viewMode === '2D' && (
           <div className={styles.mobileViewDirections}>
             {[
-              { id: 'front' as ViewDirection, label: '정면' },
+              { id: 'front' as ViewDirection, label: '입면' },
               { id: 'top' as ViewDirection, label: '평면' },
-              { id: 'left' as ViewDirection, label: '좌측' },
-              { id: 'right' as ViewDirection, label: '우측' }
+              { id: 'left' as ViewDirection, label: '측면' }
             ].map((dir) => (
               <button
                 key={dir.id}
