@@ -2861,6 +2861,10 @@ export const generateExternalDimensions = (
       if (module.lowerSectionDepth !== undefined) {
         lowerSectionDepthMm = module.lowerSectionDepth;
         console.log(`📐 ${viewDirection}뷰 하부섹션 깊이: ${lowerSectionDepthMm}mm`);
+      } else {
+        // 1섹션 가구인 경우에도 하부에 깊이 표시 (상부 깊이와 동일)
+        lowerSectionDepthMm = module.upperSectionDepth || module.customDepth || furnitureDepthMm;
+        console.log(`📐 ${viewDirection}뷰 하부섹션 깊이 (1섹션 가구): ${lowerSectionDepthMm}mm`);
       }
     }
 
