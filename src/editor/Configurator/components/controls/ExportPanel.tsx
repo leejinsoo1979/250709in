@@ -256,6 +256,8 @@ const ExportPanel: React.FC = () => {
 
   // PDF 내보내기 실행
   const handleExportPDF = async () => {
+    alert(`PDF Export 시작!\n선택된 뷰: ${selectedPDFViews.join(', ')}\n가구 수: ${placedModules.length}`);
+
     console.log('PDF Export clicked', {
       spaceInfo: !!spaceInfo,
       canExport: spaceInfo ? canExportPDF(spaceInfo, placedModules) : false,
