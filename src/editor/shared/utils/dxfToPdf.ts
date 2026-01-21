@@ -183,7 +183,8 @@ const renderToPdf = (
   spaceInfo: SpaceInfo,
   viewDirection: PdfViewDirection,
   pageWidth: number,
-  pageHeight: number
+  pageHeight: number,
+  placedModules?: PlacedModule[]
 ) => {
   const margin = 20;
   const titleHeight = 15;
@@ -244,10 +245,16 @@ const renderToPdf = (
     pdf.text(text.text, toX(text.x), toY(text.y), { align: 'center' });
   });
 
-  // 하단 정보
+  // 하단 정보 - 가구 깊이 계산 (placedModules에서 최대 깊이 추출)
+  let furnitureDepth = 600; // 기본값
+  if (placedModules && placedModules.length > 0) {
+    const depths = placedModules.map(m => m.upperSectionDepth || m.customDepth || 600);
+    furnitureDepth = Math.max(...depths);
+  }
+
   pdf.setFontSize(8);
   pdf.setTextColor(128, 128, 128);
-  pdf.text(`${spaceInfo.width}mm × ${spaceInfo.height}mm × ${spaceInfo.depth}mm`, pageWidth / 2, pageHeight - margin / 2, { align: 'center' });
+  pdf.text(`${spaceInfo.width}mm × ${spaceInfo.height}mm × ${furnitureDepth}mm`, pageWidth / 2, pageHeight - margin / 2, { align: 'center' });
 };
 
 /**
@@ -370,7 +377,7 @@ export const downloadDxfAsPdf = async (
         console.log(`📐 left (slot ${slotIndex + 1}): ${lines.length}개 라인, ${texts.length}개 텍스트`);
 
         // 슬롯 번호를 제목에 포함
-        renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, slotIndex + 1);
+        renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, slotIndex + 1, slotModules);
       }
     }
     // 도어 입면도 (DOOR 레이어만 표시 - 2D 뷰어에서 가구 필터 끈 것과 동일)
@@ -389,7 +396,7 @@ export const downloadDxfAsPdf = async (
       const doorOnlyLines = lines.filter(line => line.layer === 'DOOR');
 
       console.log(`📐 door-only: 원본 ${lines.length}개 라인 → DOOR 레이어만 ${doorOnlyLines.length}개 라인`);
-      renderToPdf(pdf, doorOnlyLines, [], spaceInfo, viewDirection, pageWidth, pageHeight);
+      renderToPdf(pdf, doorOnlyLines, [], spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
     // 입면도 (도어 없음) - DOOR 레이어 필터링하여 렌더링
     else if (viewDirection === 'front-no-door') {
@@ -405,7 +412,7 @@ export const downloadDxfAsPdf = async (
       const filteredLines = lines.filter(line => line.layer !== 'DOOR');
 
       console.log(`📐 front-no-door: 원본 ${lines.length}개 라인 → 필터링 후 ${filteredLines.length}개 라인, ${texts.length}개 텍스트`);
-      renderToPdf(pdf, filteredLines, texts, spaceInfo, viewDirection, pageWidth, pageHeight);
+      renderToPdf(pdf, filteredLines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
     else {
       // 일반 뷰 (front, top)
@@ -415,7 +422,7 @@ export const downloadDxfAsPdf = async (
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
       const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
       console.log(`📐 ${viewDirection}: 최종 ${lines.length}개 라인, ${texts.length}개 텍스트`);
-      renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight);
+      renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
   }
 
@@ -434,7 +441,8 @@ const renderToPdfWithSlotInfo = (
   viewDirection: PdfViewDirection,
   pageWidth: number,
   pageHeight: number,
-  slotNumber: number
+  slotNumber: number,
+  slotModules?: PlacedModule[]
 ) => {
   const margin = 20;
   const titleHeight = 15;
@@ -498,8 +506,14 @@ const renderToPdfWithSlotInfo = (
     pdf.text(text.text, toX(text.x), toY(text.y), { align: 'center' });
   });
 
-  // 하단 정보
+  // 하단 정보 - 가구 깊이 계산 (slotModules에서 최대 깊이 추출)
+  let furnitureDepth = 600; // 기본값
+  if (slotModules && slotModules.length > 0) {
+    const depths = slotModules.map(m => m.upperSectionDepth || m.customDepth || 600);
+    furnitureDepth = Math.max(...depths);
+  }
+
   pdf.setFontSize(8);
   pdf.setTextColor(128, 128, 128);
-  pdf.text(`${spaceInfo.width}mm × ${spaceInfo.height}mm × ${spaceInfo.depth}mm`, pageWidth / 2, pageHeight - margin / 2, { align: 'center' });
+  pdf.text(`${spaceInfo.width}mm × ${spaceInfo.height}mm × ${furnitureDepth}mm`, pageWidth / 2, pageHeight - margin / 2, { align: 'center' });
 };
