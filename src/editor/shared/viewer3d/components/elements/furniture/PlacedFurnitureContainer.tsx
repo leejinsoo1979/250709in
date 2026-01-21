@@ -101,8 +101,10 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
       // zone이 명시적으로 'dropped'이거나, zone이 없지만 X 위치로 단내림 구간으로 판별
       let isInDroppedZone = module.zone === 'dropped';
 
+      console.log(`  🔍 모듈 zone 체크: zone="${module.zone}", typeof=${typeof module.zone}, isDropped=${isInDroppedZone}`);
+
       // zone이 설정되지 않은 경우 X 위치로 판별
-      if (hasDroppedCeiling && module.zone === undefined && zones?.dropped && zones?.normal) {
+      if (hasDroppedCeiling && !isInDroppedZone && zones?.dropped && zones?.normal) {
         const droppedPosition = spaceInfo.droppedCeiling?.position || 'right';
         const moduleXMm = module.position.x * 100; // Three.js 좌표를 mm로 변환
 
