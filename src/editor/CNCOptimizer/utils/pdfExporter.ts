@@ -284,27 +284,31 @@ export class PDFExporter {
 
             if (isRotated) {
               // ★★★ 시트가 90도 회전된 경우 ★★★
-              // 원본 패널 좌표계에서:
-              // - depthPosMm = X방향 (깊이, 0 ~ panel.width)
-              // - boringPosMm = Y방향 (높이, 0 ~ panel.height)
-              // PDF 변환 후:
-              // - PDF X = 패널의 Y방향 → boringPosMm
-              // - PDF Y = 패널의 X방향 (반전) → panel.width - depthPosMm
+              // 옵티마이저 시트 좌표 → PDF 좌표 변환 (90도 회전)
+              // 옵티마이저 X → PDF Y (반전)
+              // 옵티마이저 Y → PDF X
               if (isDrawerSidePanel || isDrawerFrontPanel) {
-                // 서랍: boringPosMm=높이방향, depthPosMm=깊이방향
-                boringX = x + boringPosMm * scale;
-                boringY = y + (originalWidth - depthPosMm) * scale;
+                // 서랍 측판/앞판:
+                // 옵티마이저: boringPosMm → 시트X, depthPosMm → 시트Y
+                // PDF 회전 후: depthPosMm → PDF X, (height - boringPosMm) → PDF Y
+                // 주의: PDF에서 width=originalHeight, height=originalWidth
+                boringX = x + depthPosMm * scale;
+                boringY = y + (originalHeight - boringPosMm) * scale;
               } else {
-                // 가구 측판: depthPosMm=깊이방향(X), boringPosMm=높이방향(Y)
+                // 가구 측판:
+                // 옵티마이저: depthPosMm → 시트X, boringPosMm → 시트Y
+                // PDF 회전 후: boringPosMm → PDF X, (width - depthPosMm) → PDF Y
                 boringX = x + boringPosMm * scale;
                 boringY = y + (originalWidth - depthPosMm) * scale;
               }
             } else {
-              // ★★★ 시트가 회전 안 된 경우 (기존 로직) ★★★
+              // ★★★ 시트가 회전 안 된 경우 - 옵티마이저와 동일 ★★★
               if (isDrawerSidePanel || isDrawerFrontPanel) {
+                // 서랍: boringPosMm → X, depthPosMm → Y
                 boringX = x + boringPosMm * scale;
                 boringY = y + depthPosMm * scale;
               } else {
+                // 가구 측판: depthPosMm → X, boringPosMm → Y
                 boringX = x + depthPosMm * scale;
                 boringY = y + boringPosMm * scale;
               }
