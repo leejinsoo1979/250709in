@@ -270,7 +270,7 @@ export const generateViewDataFromDxf = (
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
   const sideViewFilter = getSideViewFilter(viewDirection);
 
-  console.log(`📐 ${viewDirection}: generateDxfFromData 호출... (excludeDoor=${excludeDoor})`);
+  console.log(`[DXF] ${viewDirection}: generateDxfFromData 호출... (excludeDoor=${excludeDoor})`);
 
   try {
     // DXF 문자열 생성 (generateDXFFromScene과 동일한 방식)
@@ -286,7 +286,7 @@ export const generateViewDataFromDxf = (
     const lines = parseDxfLines(dxfString);
     const texts = parseDxfTexts(dxfString);
 
-    console.log(`📐 ${viewDirection}: DXF에서 ${lines.length}개 라인, ${texts.length}개 텍스트 파싱됨`);
+    console.log(`[DXF] ${viewDirection}: DXF에서 ${lines.length}개 라인, ${texts.length}개 텍스트 파싱됨`);
 
     return { lines, texts };
   } catch (error) {
@@ -311,7 +311,10 @@ export const downloadDxfAsPdf = async (
   views: PdfViewDirection[] = ['front', 'top', 'left', 'door']
 ): Promise<void> => {
   console.log('📄 DXF→PDF 변환 시작...');
-  console.log(`📊 변환할 뷰: ${views.join(', ')}`);
+  console.log(`📊 변환할 뷰: ${views.join(', ')}');
+
+  // 씬이 완전히 렌더링될 때까지 대기 (도어 대각선 등 동적 요소 포함)
+  await new Promise(resolve => setTimeout(resolve, 100));
 
   const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   const pageWidth = pdf.internal.pageSize.getWidth();
@@ -373,11 +376,11 @@ export const downloadDxfAsPdf = async (
           return globalSlotIndex === slotIndex;
         });
 
-        console.log(`📐 left (slot ${slotIndex + 1}): ${slotModules.length}개 가구`);
+        console.log(`[DXF] left (slot ${slotIndex + 1}): ${slotModules.length}개 가구`);
 
         const dxfViewDirection = pdfViewToViewDirection(viewDirection);
         const { lines, texts } = generateViewDataFromDxf(spaceInfo, slotModules, dxfViewDirection);
-        console.log(`📐 left (slot ${slotIndex + 1}): ${lines.length}개 라인, ${texts.length}개 텍스트`);
+        console.log(`[DXF] left (slot ${slotIndex + 1}): ${lines.length}개 라인, ${texts.length}개 텍스트`);
 
         // 슬롯 번호를 제목에 포함
         renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, slotIndex + 1, slotModules);
@@ -388,15 +391,15 @@ export const downloadDxfAsPdf = async (
       if (!isFirstPage) pdf.addPage();
       isFirstPage = false;
 
-      console.log(`📐 door-only: 도어 입면도 렌더링 시작...`);
+      console.log(`[DXF] door-only: 도어 입면도 렌더링 시작...`);
 
       // front 뷰 DXF 데이터 생성 후 DOOR 레이어만 필터링
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
       const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
 
       // 디버깅: 모든 텍스트의 레이어 정보 출력
-      console.log(`📐 door-only: 전체 텍스트 ${texts.length}개:`, texts.map(t => ({ text: t.text, layer: t.layer })));
-      console.log(`📐 door-only: 전체 라인 레이어:`, [...new Set(lines.map(l => l.layer))]);
+      console.log(`[DXF] door-only: 전체 텍스트 ${texts.length}개:`, texts.map(t => ({ text: t.text, layer: t.layer })));
+      console.log(`[DXF] door-only: 전체 라인 레이어:`, [...new Set(lines.map(l => l.layer))]);
 
       // DOOR 레이어만 필터링 (도어 형상 + 도어 치수선)
       const doorOnlyLines = lines.filter(line => line.layer === 'DOOR');
@@ -404,7 +407,7 @@ export const downloadDxfAsPdf = async (
       // 도어 치수 텍스트도 포함 (DOOR 레이어 또는 door-dimension 관련 텍스트)
       const doorTexts = texts.filter(text => text.layer === 'DOOR' || text.layer === 'DOOR_DIMENSIONS');
 
-      console.log(`📐 door-only: 원본 ${lines.length}개 라인 → DOOR 레이어 ${doorOnlyLines.length}개 라인, ${doorTexts.length}개 텍스트`);
+      console.log(`[DXF] door-only: 원본 ${lines.length}개 라인 → DOOR 레이어 ${doorOnlyLines.length}개 라인, ${doorTexts.length}개 텍스트`);
       renderToPdf(pdf, doorOnlyLines, doorTexts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
     // 입면도 (도어 없음) - DXF 생성 시 도어 제외
@@ -412,7 +415,7 @@ export const downloadDxfAsPdf = async (
       if (!isFirstPage) pdf.addPage();
       isFirstPage = false;
 
-      console.log(`📐 front-no-door: 도어 없는 입면도 렌더링 (excludeDoor=true)...`);
+      console.log(`[DXF] front-no-door: 도어 없는 입면도 렌더링 (excludeDoor=true)...`);
 
       // excludeDoor=true로 DXF 생성 시 도어 관련 객체 모두 제외
       // 'front'를 직접 전달하고 excludeDoor=true로 도어 필터링
@@ -421,8 +424,8 @@ export const downloadDxfAsPdf = async (
       // 디버깅: 라인 레이어 확인 (DOOR가 있으면 안됨)
       const doorLines = lines.filter(l => l.layer === 'DOOR');
       const doorTexts = texts.filter(t => t.layer === 'DOOR');
-      console.log(`📐 front-no-door: DOOR 레이어 라인 ${doorLines.length}개, 텍스트 ${doorTexts.length}개 (모두 0이어야 함)`);
-      console.log(`📐 front-no-door: ${lines.length}개 라인, ${texts.length}개 텍스트 (도어 제외됨)`);
+      console.log(`[DXF] front-no-door: DOOR 레이어 라인 ${doorLines.length}개, 텍스트 ${doorTexts.length}개 (모두 0이어야 함)`);
+      console.log(`[DXF] front-no-door: ${lines.length}개 라인, ${texts.length}개 텍스트 (도어 제외됨)`);
       renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
     else {
@@ -432,7 +435,7 @@ export const downloadDxfAsPdf = async (
 
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
       const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
-      console.log(`📐 ${viewDirection}: 최종 ${lines.length}개 라인, ${texts.length}개 텍스트`);
+      console.log(`[DXF] ${viewDirection}: 최종 ${lines.length}개 라인, ${texts.length}개 텍스트`);
       renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
   }
