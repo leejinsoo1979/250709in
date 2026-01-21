@@ -3179,13 +3179,13 @@ export const generateDxfFromData = (
     const actualFurnitureWidth = actualFurnitureMaxX - actualFurnitureMinX;
     console.log(`📐 측면뷰 실제 가구 깊이: ${actualFurnitureWidth.toFixed(1)}mm`);
 
-    // 외부 치수선만 생성 (프레임 형상은 씬에서 추출되므로 중복 방지)
+    // 외부 치수선 + 상부/하부 프레임 생성 (씬에서 조건부로 렌더링되어 누락될 수 있음)
     const externalDimensions = generateExternalDimensions(
       spaceInfo,
       placedModules,
       viewDirection,
       sideViewFilter,
-      true, // dimensionsOnly: true - 치수선만 생성 (프레임 형상은 씬에서 추출)
+      false, // dimensionsOnly: false - 가구형상(상부/하부 프레임) + 치수선 모두 생성
       actualFurnitureWidth, // 실제 가구 깊이 전달
       actualFurnitureMinX, // 실제 가구 X 최소값
       actualFurnitureMaxX // 실제 가구 X 최대값
