@@ -3183,26 +3183,19 @@ export const generateDxfFromData = (
     const actualFurnitureWidth = actualFurnitureMaxX - actualFurnitureMinX;
     console.log(`📐 측면뷰 실제 가구 깊이: ${actualFurnitureWidth.toFixed(1)}mm`);
 
-    // 씬에서 추출한 라인에서 프레임/조절발 레이어 제거 (데이터 기반 생성과 중복 방지)
-    // Room.tsx에서 조건부로 렌더링되어 누락될 수 있으므로 데이터 기반으로 생성
-    const sceneOnlyLines = filteredLines.filter(line =>
-      line.layer !== 'SPACE_FRAME' && line.layer !== 'ACCESSORIES'
-    );
-    console.log(`📐 측면뷰: 씬 라인 ${filteredLines.length}개 -> 프레임/조절발 제외 ${sceneOnlyLines.length}개`);
-
-    // 외부 치수선 + 상부/하부 프레임 + 조절발 생성 (데이터 기반)
+    // 외부 치수선 + 상부/하부 프레임 생성 (씬에서 조건부로 렌더링되어 누락될 수 있음)
     const externalDimensions = generateExternalDimensions(
       spaceInfo,
       placedModules,
       viewDirection,
       sideViewFilter,
-      false, // dimensionsOnly: false - 프레임/조절발 + 치수선 모두 생성
+      true, // dimensionsOnly: true - 치수선만 생성 (가구형상은 씬에서 추출)
       actualFurnitureWidth, // 실제 가구 깊이 전달
       actualFurnitureMinX, // 실제 가구 X 최소값
       actualFurnitureMaxX // 실제 가구 X 최대값
     );
 
-    lines = [...sceneOnlyLines, ...externalDimensions.lines];
+    lines = [...filteredLines, ...externalDimensions.lines];
     texts = [...externalDimensions.texts];
     console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 가구형상 ${filteredLines.length}개 + 치수선 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
   } else {
