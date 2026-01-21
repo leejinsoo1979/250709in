@@ -950,37 +950,87 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })}
 
-        {/* ===== 단내림 구간 선택 시 단내림 벽 표시 ===== */}
-        {isSelectedSlotInDroppedZone && (
-          <group>
-            {/* 단내림 벽 - 가구 위에 표시 */}
-            <mesh
-              position={[0, displaySpaceHeight + dropHeight / 2, 0]}
-              rotation={[0, -Math.PI / 2, 0]}
-              renderOrder={99999}
-            >
-              <planeGeometry args={[spaceDepth, dropHeight]} />
-              <meshBasicMaterial
-                color={view2DTheme === 'light' ? '#e0e0e0' : '#404040'}
-                transparent
-                opacity={0.7}
+        {/* ===== 단내림 구간 선택 시 단내림 벽 표시 (빗금 패턴) ===== */}
+        {isSelectedSlotInDroppedZone && (() => {
+          // 빗금 해칭 패턴 생성
+          const hatchLines: JSX.Element[] = [];
+          const hatchSpacing = mmToThreeUnits(40); // 40mm 간격
+          const hatchColor = view2DTheme === 'light' ? '#999999' : '#FFD700';
+
+          // 단내림 벽 영역: Z방향으로 spaceDepth, Y방향으로 dropHeight
+          const wallStartZ = -spaceDepth / 2;
+          const wallEndZ = spaceDepth / 2;
+          const wallStartY = displaySpaceHeight;
+          const wallEndY = spaceHeight;
+
+          // 대각선 빗금 생성 (좌하단에서 우상단으로)
+          const totalDiagonal = spaceDepth + dropHeight;
+          const startOffset = -dropHeight;
+          const endOffset = spaceDepth;
+          const hatchCount = Math.ceil((endOffset - startOffset) / hatchSpacing) + 1;
+
+          for (let i = 0; i <= hatchCount; i++) {
+            const offset = startOffset + i * hatchSpacing;
+
+            // 시작점과 끝점 계산 (Z-Y 평면에서)
+            let startZ = wallStartZ + offset;
+            let startY = wallStartY;
+            let endZ = startZ + dropHeight;
+            let endY = wallEndY;
+
+            // 클리핑
+            if (startZ < wallStartZ) {
+              const diff = wallStartZ - startZ;
+              startZ = wallStartZ;
+              startY = wallStartY + diff;
+            }
+            if (endZ > wallEndZ) {
+              const diff = endZ - wallEndZ;
+              endZ = wallEndZ;
+              endY = wallEndY - diff;
+            }
+
+            // 유효한 선분인지 확인
+            if (startZ < wallEndZ && endZ > wallStartZ && startY < wallEndY && endY > wallStartY) {
+              hatchLines.push(
+                <NativeLine
+                  key={`hatch-left-${i}`}
+                  name="hatch_line"
+                  points={[
+                    [0, startY, startZ],
+                    [0, endY, endZ]
+                  ]}
+                  color={hatchColor}
+                  lineWidth={0.5}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+              );
+            }
+          }
+
+          return (
+            <group>
+              {/* 단내림 벽 테두리 */}
+              <NativeLine
+                name="dropped_ceiling_border"
+                points={[
+                  [0, wallStartY, wallStartZ],
+                  [0, wallEndY, wallStartZ],
+                  [0, wallEndY, wallEndZ],
+                  [0, wallStartY, wallEndZ],
+                  [0, wallStartY, wallStartZ]
+                ]}
+                color={hatchColor}
+                lineWidth={1}
+                renderOrder={100000}
                 depthTest={false}
               />
-            </mesh>
-            {/* 단내림 벽 하단 라인 */}
-            <NativeLine
-              name="dropped_ceiling_line"
-              points={[
-                [0, displaySpaceHeight, -spaceDepth / 2],
-                [0, displaySpaceHeight, spaceDepth / 2]
-              ]}
-              color={dimensionColor}
-              lineWidth={2}
-              renderOrder={100000}
-              depthTest={false}
-            />
-          </group>
-        )}
+              {/* 빗금 패턴 */}
+              {hatchLines}
+            </group>
+          );
+        })()}
       </group>
     );
   }
@@ -1627,37 +1677,87 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           );
         })}
 
-        {/* ===== 단내림 구간 선택 시 단내림 벽 표시 ===== */}
-        {isSelectedSlotInDroppedZone && (
-          <group>
-            {/* 단내림 벽 - 가구 위에 표시 */}
-            <mesh
-              position={[0, displaySpaceHeight + dropHeight / 2, 0]}
-              rotation={[0, Math.PI / 2, 0]}
-              renderOrder={99999}
-            >
-              <planeGeometry args={[spaceDepth, dropHeight]} />
-              <meshBasicMaterial
-                color={view2DTheme === 'light' ? '#e0e0e0' : '#404040'}
-                transparent
-                opacity={0.7}
+        {/* ===== 단내림 구간 선택 시 단내림 벽 표시 (빗금 패턴) ===== */}
+        {isSelectedSlotInDroppedZone && (() => {
+          // 빗금 해칭 패턴 생성
+          const hatchLines: JSX.Element[] = [];
+          const hatchSpacing = mmToThreeUnits(40); // 40mm 간격
+          const hatchColor = view2DTheme === 'light' ? '#999999' : '#FFD700';
+
+          // 단내림 벽 영역: Z방향으로 spaceDepth, Y방향으로 dropHeight
+          const wallStartZ = -spaceDepth / 2;
+          const wallEndZ = spaceDepth / 2;
+          const wallStartY = displaySpaceHeight;
+          const wallEndY = spaceHeight;
+
+          // 대각선 빗금 생성 (좌하단에서 우상단으로)
+          const totalDiagonal = spaceDepth + dropHeight;
+          const startOffset = -dropHeight;
+          const endOffset = spaceDepth;
+          const hatchCount = Math.ceil((endOffset - startOffset) / hatchSpacing) + 1;
+
+          for (let i = 0; i <= hatchCount; i++) {
+            const offset = startOffset + i * hatchSpacing;
+
+            // 시작점과 끝점 계산 (Z-Y 평면에서)
+            let startZ = wallStartZ + offset;
+            let startY = wallStartY;
+            let endZ = startZ + dropHeight;
+            let endY = wallEndY;
+
+            // 클리핑
+            if (startZ < wallStartZ) {
+              const diff = wallStartZ - startZ;
+              startZ = wallStartZ;
+              startY = wallStartY + diff;
+            }
+            if (endZ > wallEndZ) {
+              const diff = endZ - wallEndZ;
+              endZ = wallEndZ;
+              endY = wallEndY - diff;
+            }
+
+            // 유효한 선분인지 확인
+            if (startZ < wallEndZ && endZ > wallStartZ && startY < wallEndY && endY > wallStartY) {
+              hatchLines.push(
+                <NativeLine
+                  key={`hatch-right-${i}`}
+                  name="hatch_line"
+                  points={[
+                    [0, startY, startZ],
+                    [0, endY, endZ]
+                  ]}
+                  color={hatchColor}
+                  lineWidth={0.5}
+                  renderOrder={100000}
+                  depthTest={false}
+                />
+              );
+            }
+          }
+
+          return (
+            <group>
+              {/* 단내림 벽 테두리 */}
+              <NativeLine
+                name="dropped_ceiling_border"
+                points={[
+                  [0, wallStartY, wallStartZ],
+                  [0, wallEndY, wallStartZ],
+                  [0, wallEndY, wallEndZ],
+                  [0, wallStartY, wallEndZ],
+                  [0, wallStartY, wallStartZ]
+                ]}
+                color={hatchColor}
+                lineWidth={1}
+                renderOrder={100000}
                 depthTest={false}
               />
-            </mesh>
-            {/* 단내림 벽 하단 라인 */}
-            <NativeLine
-              name="dropped_ceiling_line"
-              points={[
-                [0, displaySpaceHeight, -spaceDepth / 2],
-                [0, displaySpaceHeight, spaceDepth / 2]
-              ]}
-              color={dimensionColor}
-              lineWidth={2}
-              renderOrder={100000}
-              depthTest={false}
-            />
-          </group>
-        )}
+              {/* 빗금 패턴 */}
+              {hatchLines}
+            </group>
+          );
+        })()}
       </group>
     );
   }
