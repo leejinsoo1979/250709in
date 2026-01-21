@@ -2617,23 +2617,25 @@ const FurnitureItem: React.FC<FurnitureItemProps> = ({
 
   // 측면뷰에서 선택된 슬롯의 가구만 표시 (4분할 뷰 포함)
   // view2DDirection은 prop으로 전달받음 (4분할 뷰에서는 각 패널별로 'left'/'right' 전달)
+  // 중요: selectedSlotIndex는 전역 인덱스이므로 globalSlotIndex와 비교해야 함
   if (
     viewMode === '2D' &&
     (view2DDirection === 'left' || view2DDirection === 'right') &&
     selectedSlotIndex !== null
   ) {
-    const furnitureSlotIndex = normalizedSlotIndex;
-    if (furnitureSlotIndex !== undefined) {
+    // 전역 인덱스 사용 (단내림 가구도 정확히 비교)
+    const furnitureGlobalSlotIndex = globalSlotIndex ?? normalizedSlotIndex;
+    if (furnitureGlobalSlotIndex !== undefined) {
       // 듀얼 슬롯 가구인지 확인
       const isDual = isDualFurniture || placedModule.isDualSlot || moduleData?.id?.includes('dual-');
       if (isDual) {
         // 듀얼 슬롯 가구: 현재 슬롯 또는 다음 슬롯에 걸쳐있으면 표시
-        if (furnitureSlotIndex !== selectedSlotIndex && furnitureSlotIndex + 1 !== selectedSlotIndex) {
+        if (furnitureGlobalSlotIndex !== selectedSlotIndex && furnitureGlobalSlotIndex + 1 !== selectedSlotIndex) {
           return <group />;
         }
       } else {
         // 단일 슬롯 가구: 정확히 일치해야 표시
-        if (furnitureSlotIndex !== selectedSlotIndex) {
+        if (furnitureGlobalSlotIndex !== selectedSlotIndex) {
           return <group />;
         }
       }
