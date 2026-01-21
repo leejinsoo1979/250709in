@@ -1024,13 +1024,30 @@ export class PDFExporter {
         }
       }
       
-      // 3. 패널 목록 CSV 파일 추가 (보너스)
+      // 3. 패널 목록 CSV 파일 추가
       if (validPanels && validPanels.length > 0) {
         const csvContent = PDFExporter.generatePanelCSV(validPanels);
         zip.file(`패널_목록_${timestamp}.csv`, csvContent);
       }
-      
-      // 4. 최적화 결과 요약 텍스트 파일 추가
+
+      // 4. 보링(타공) 좌표 CSV 파일 추가
+      const allPanelsFromResults: Panel[] = [];
+      results.forEach(result => {
+        result.panels.forEach(panel => {
+          allPanelsFromResults.push(panel as Panel);
+        });
+      });
+
+      const panelsWithBoring = allPanelsFromResults.filter(
+        panel => panel.boringPositions && panel.boringPositions.length > 0
+      );
+
+      if (panelsWithBoring.length > 0) {
+        const boringCsvContent = PDFExporter.generateBoringCSV(panelsWithBoring);
+        zip.file(`보링_좌표_${timestamp}.csv`, boringCsvContent);
+      }
+
+      // 5. 최적화 결과 요약 텍스트 파일 추가
       const summaryContent = PDFExporter.generateSummary(results, furnitureData);
       zip.file(`최적화_요약_${timestamp}.txt`, summaryContent);
       
@@ -1079,7 +1096,35 @@ export class PDFExporter {
     });
     return csv;
   }
-  
+
+  // 보링(타공) CSV 생성 헬퍼 메서드
+  private static generateBoringCSV(panels: Panel[]): string {
+    let csv = '패널ID,패널이름,가구ID,가구이름,보링X(mm),보링Y(mm),직경(mm),깊이(mm)\n';
+
+    panels.forEach(panel => {
+      const panelName = panel.name || `Panel_${panel.id}`;
+      const furnitureId = (panel as any).furnitureId || '';
+      const furnitureName = (panel as any).furnitureName || '';
+
+      // boringPositions = Y위치 배열 (높이 방향)
+      // boringDepthPositions = X위치 배열 (깊이 방향)
+      const yPositions = panel.boringPositions || [];
+      const xPositions = (panel as any).boringDepthPositions || [];
+
+      // 기본 X위치 (depthPositions가 없는 경우)
+      const defaultXPositions = xPositions.length > 0 ? xPositions : [50, panel.width / 2, panel.width - 50];
+
+      // 각 Y위치 × X위치 조합으로 보링 좌표 출력
+      yPositions.forEach((yPos: number) => {
+        defaultXPositions.forEach((xPos: number) => {
+          csv += `${panel.id},"${panelName}","${furnitureId}","${furnitureName}",${xPos.toFixed(1)},${yPos.toFixed(1)},5,13\n`;
+        });
+      });
+    });
+
+    return csv;
+  }
+
   // 요약 정보 생성 헬퍼 메서드
   private static generateSummary(results: OptimizedResult[], furnitureData?: FurnitureData): string {
     const projectName = furnitureData?.projectName || 'Project';
