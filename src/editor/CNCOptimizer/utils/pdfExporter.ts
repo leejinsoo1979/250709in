@@ -272,46 +272,30 @@ export class PDFExporter {
         this.pdf.setFillColor(255, 255, 255);
         this.pdf.setLineWidth(0.1);
 
-        // ★★★ 보링 좌표 계산 - PDF 시트 회전 고려 ★★★
-        // PDF에서 isRotated=true일 때 시트 자체가 90도 회전되어 그려짐:
-        // - 패널의 panel.y → PDF X축
-        // - 패널의 panel.x → PDF Y축 (반전)
-        // - panel.height → PDF width
-        // - panel.width → PDF height
+        // ★★★ 보링 좌표 계산 - 옵티마이저와 동일 (isRotated 무관) ★★★
+        // PDF에서 x, y, width, height는 이미 isRotated에 따라 변환되어 있음
+        // 따라서 옵티마이저처럼 패널 내부 좌표만 계산하면 됨
+        //
+        // 단, isRotated일 때 PDF의 width/height가 원본과 바뀌어 있음:
+        // - PDF width = panel.height * scale
+        // - PDF height = panel.width * scale
+        // 따라서 보링 좌표 비율을 PDF width/height 기준으로 계산
+
         panel.boringPositions.forEach((boringPosMm: number) => {
           depthPositions.forEach((depthPosMm: number) => {
             let boringX: number, boringY: number;
 
-            if (isRotated) {
-              // ★★★ 시트가 90도 회전된 경우 ★★★
-              // 옵티마이저 시트 좌표 → PDF 좌표 변환 (90도 회전)
-              // 옵티마이저 X → PDF Y (반전)
-              // 옵티마이저 Y → PDF X
-              if (isDrawerSidePanel || isDrawerFrontPanel) {
-                // 서랍 측판/앞판:
-                // 옵티마이저: boringPosMm → 시트X, depthPosMm → 시트Y
-                // PDF 회전 후: depthPosMm → PDF X, (height - boringPosMm) → PDF Y
-                // 주의: PDF에서 width=originalHeight, height=originalWidth
-                boringX = x + depthPosMm * scale;
-                boringY = y + (originalHeight - boringPosMm) * scale;
-              } else {
-                // 가구 측판:
-                // 옵티마이저: depthPosMm → 시트X, boringPosMm → 시트Y
-                // PDF 회전 후: boringPosMm → PDF X, (width - depthPosMm) → PDF Y
-                boringX = x + boringPosMm * scale;
-                boringY = y + (originalWidth - depthPosMm) * scale;
-              }
+            if (isDrawerSidePanel || isDrawerFrontPanel) {
+              // 서랍 측판/앞판:
+              // 옵티마이저: boringPosMm(높이방향) → X, depthPosMm(깊이방향) → Y
+              // PDF에서도 동일하게: boringPosMm/height 비율 → width, depthPosMm/width 비율 → height
+              boringX = x + (boringPosMm / originalHeight) * width;
+              boringY = y + (depthPosMm / originalWidth) * height;
             } else {
-              // ★★★ 시트가 회전 안 된 경우 - 옵티마이저와 동일 ★★★
-              if (isDrawerSidePanel || isDrawerFrontPanel) {
-                // 서랍: boringPosMm → X, depthPosMm → Y
-                boringX = x + boringPosMm * scale;
-                boringY = y + depthPosMm * scale;
-              } else {
-                // 가구 측판: depthPosMm → X, boringPosMm → Y
-                boringX = x + depthPosMm * scale;
-                boringY = y + boringPosMm * scale;
-              }
+              // 가구 측판:
+              // 옵티마이저: depthPosMm(깊이방향) → X, boringPosMm(높이방향) → Y
+              boringX = x + (depthPosMm / originalWidth) * width;
+              boringY = y + (boringPosMm / originalHeight) * height;
             }
 
             // 원 그리기 (타공 홀)
