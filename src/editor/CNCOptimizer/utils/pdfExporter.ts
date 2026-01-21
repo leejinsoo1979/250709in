@@ -226,11 +226,15 @@ export class PDFExporter {
         }
       }
 
-      // ★★★ 타공(보링) 표시 - CuttingLayoutPreview2.tsx와 동일한 로직 ★★★
+      // ★★★ 타공(보링) 표시 - CuttingLayoutPreview2.tsx 완전 복사 ★★★
       const isDoorPanel = panel.name?.includes('도어') || panel.name?.includes('Door');
       if (panel.boringPositions && panel.boringPositions.length > 0 && !isDoorPanel) {
         const originalWidth = panel.width;
         const originalHeight = panel.height;
+
+        // 시트에 배치된 크기 (회전 고려)
+        const placedWidth = panel.rotated ? originalHeight : originalWidth;
+        const placedHeight = panel.rotated ? originalWidth : originalHeight;
 
         // 서랍 측판/앞판 여부 확인
         const isDrawerSidePanel = panel.name?.includes('서랍') &&
@@ -272,34 +276,45 @@ export class PDFExporter {
         this.pdf.setFillColor(255, 255, 255);
         this.pdf.setLineWidth(0.1);
 
-        // ★★★ 보링 좌표 계산 - 옵티마이저와 동일 (isRotated 무관) ★★★
-        // PDF에서 x, y, width, height는 이미 isRotated에 따라 변환되어 있음
-        // 따라서 옵티마이저처럼 패널 내부 좌표만 계산하면 됨
-        //
-        // 단, isRotated일 때 PDF의 width/height가 원본과 바뀌어 있음:
-        // - PDF width = panel.height * scale
-        // - PDF height = panel.width * scale
-        // 따라서 보링 좌표 비율을 PDF width/height 기준으로 계산
+        // ★★★ 옵티마이저와 완전 동일한 좌표 계산 ★★★
+        // 옵티마이저에서 패널 시트 좌표: x = panel.x, y = panel.y
+        // PDF에서는 isRotated에 따라 x, y가 변환되어 있음
+        // 따라서 원본 시트 좌표를 기준으로 보링 위치 계산 후 PDF 좌표로 변환
 
         panel.boringPositions.forEach((boringPosMm: number) => {
           depthPositions.forEach((depthPosMm: number) => {
-            let boringX: number, boringY: number;
+            // 옵티마이저와 동일하게 시트 좌표 계산
+            let sheetBoringX: number, sheetBoringY: number;
 
             if (isDrawerSidePanel || isDrawerFrontPanel) {
-              // 서랍 측판/앞판:
-              // 옵티마이저: boringPosMm(높이방향) → X, depthPosMm(깊이방향) → Y
-              // PDF에서도 동일하게: boringPosMm/height 비율 → width, depthPosMm/width 비율 → height
-              boringX = x + (boringPosMm / originalHeight) * width;
-              boringY = y + (depthPosMm / originalWidth) * height;
+              // 서랍 측판/앞판: boringPosMm → X, depthPosMm → Y
+              sheetBoringX = panel.x + boringPosMm;
+              sheetBoringY = panel.y + depthPosMm;
+            } else if (panel.rotated) {
+              // 가구 측판 (rotated=true)
+              const scaleX = placedWidth / originalWidth;
+              const scaleY = placedHeight / originalHeight;
+              sheetBoringX = panel.x + depthPosMm * scaleX;
+              sheetBoringY = panel.y + boringPosMm * scaleY;
             } else {
-              // 가구 측판:
-              // 옵티마이저: depthPosMm(깊이방향) → X, boringPosMm(높이방향) → Y
-              boringX = x + (depthPosMm / originalWidth) * width;
-              boringY = y + (boringPosMm / originalHeight) * height;
+              // 가구 측판 (rotated=false)
+              sheetBoringX = panel.x + depthPosMm;
+              sheetBoringY = panel.y + boringPosMm;
+            }
+
+            // 시트 좌표를 PDF 좌표로 변환
+            let pdfX: number, pdfY: number;
+            if (isRotated) {
+              // PDF 시트 회전: 시트Y → PDF X, (stockWidth - 시트X) → PDF Y
+              pdfX = offsetX + sheetBoringY * scale;
+              pdfY = offsetY + (result.stockPanel.width - sheetBoringX) * scale;
+            } else {
+              pdfX = offsetX + sheetBoringX * scale;
+              pdfY = offsetY + sheetBoringY * scale;
             }
 
             // 원 그리기 (타공 홀)
-            this.pdf.circle(boringX, boringY, holeRadius, 'FD');
+            this.pdf.circle(pdfX, pdfY, holeRadius, 'FD');
           });
         });
       }
@@ -338,14 +353,11 @@ export class PDFExporter {
         this.pdf.setLineDashPattern([], 0);
       }
 
-      // 서랍 패널 바닥판 홈 - 비율 기반으로 계산 (보링과 동일한 방식)
+      // 서랍 패널 바닥판 홈 - 시트 좌표 기반으로 계산 (보링과 동일한 방식)
       if (panel.groovePositions && panel.groovePositions.length > 0) {
         this.pdf.setDrawColor(100, 100, 100);
         this.pdf.setLineWidth(0.1);
         this.pdf.setLineDashPattern([1, 1], 0);
-
-        const originalWidth = panel.width;
-        const originalHeight = panel.height;
 
         panel.groovePositions.forEach((groove: { y: number; height: number; depth: number }) => {
           // 홈은 패널의 height 방향(Y축)에 있음
@@ -353,15 +365,26 @@ export class PDFExporter {
           // groove.height = 홈 높이
           // 홈은 패널 전체 width를 가로지름
 
-          // 비율 기반 계산 (PDF의 width/height는 이미 isRotated에 따라 변환됨)
-          const grooveYRatio = groove.y / originalHeight;
-          const grooveHeightRatio = groove.height / originalHeight;
+          // 시트 좌표 계산
+          const sheetGrooveX1 = panel.x;
+          const sheetGrooveX2 = panel.x + panel.width;
+          const sheetGrooveY1 = panel.y + groove.y;
+          const sheetGrooveY2 = panel.y + groove.y + groove.height;
 
-          // 홈은 가로 방향 전체를 차지하고, 세로 방향에서 특정 위치
-          const gx = x;
-          const gw = width;
-          const gy = y + grooveYRatio * height;
-          const gh = grooveHeightRatio * height;
+          let gx: number, gy: number, gw: number, gh: number;
+
+          if (isRotated) {
+            // PDF 시트 회전
+            gx = offsetX + sheetGrooveY1 * scale;
+            gy = offsetY + (result.stockPanel.width - sheetGrooveX2) * scale;
+            gw = groove.height * scale;
+            gh = panel.width * scale;
+          } else {
+            gx = offsetX + sheetGrooveX1 * scale;
+            gy = offsetY + sheetGrooveY1 * scale;
+            gw = panel.width * scale;
+            gh = groove.height * scale;
+          }
 
           this.pdf.rect(gx, gy, gw, gh, 'S');
         });
