@@ -34,6 +34,7 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
   const { spaceInfo } = useSpaceConfigStore();
   const storePlacedModules = useFurnitureStore(state => state.placedModules);
   const { activePopup, view2DDirection: contextView2DDirection, selectedSlotIndex } = useUIStore();
+  const { zones } = useDerivedSpaceStore();
 
   // 섹션 깊이 변경 감지용 로그
   React.useEffect(() => {
@@ -58,19 +59,29 @@ const PlacedFurnitureContainer: React.FC<PlacedFurnitureContainerProps> = ({
     (finalView2DDirection === 'left' || finalView2DDirection === 'right') &&
     selectedSlotIndex !== null
   ) {
+    // 단내림 구간 정보 - derivedSpaceStore에서 가져옴
+    const hasDroppedCeiling = spaceInfo.droppedCeiling?.enabled || false;
+    const normalSlotCount = zones?.normal?.columnCount || (spaceInfo.customColumnCount || 4);
+
     basePlacedModules = basePlacedModules.filter(module => {
       if (module.slotIndex === undefined) return false;
 
-      // selectedSlotIndex는 actualIndex (0~7)이고, module.slotIndex도 동일한 체계
-      // 따라서 직접 비교하면 됨
+      // module.slotIndex는 zone 내 로컬 인덱스
+      // selectedSlotIndex는 글로벌 인덱스
+      // 글로벌 인덱스로 변환하여 비교해야 함
+      let moduleGlobalSlotIndex = module.slotIndex;
+      if (hasDroppedCeiling && module.zone === 'dropped') {
+        // 단내림 구간 가구: 로컬 인덱스 + normalSlotCount = 글로벌 인덱스
+        moduleGlobalSlotIndex = normalSlotCount + module.slotIndex;
+      }
 
       // 듀얼 가구인 경우: 시작 슬롯 또는 다음 슬롯 확인
       if (module.isDualSlot) {
-        return module.slotIndex === selectedSlotIndex || module.slotIndex + 1 === selectedSlotIndex;
+        return moduleGlobalSlotIndex === selectedSlotIndex || moduleGlobalSlotIndex + 1 === selectedSlotIndex;
       }
 
       // 싱글 가구인 경우: 정확히 일치하는 슬롯만
-      return module.slotIndex === selectedSlotIndex;
+      return moduleGlobalSlotIndex === selectedSlotIndex;
     });
   }
 
