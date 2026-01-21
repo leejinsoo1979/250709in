@@ -260,15 +260,17 @@ const renderToPdf = (
 /**
  * 단일 뷰에 대한 DXF 생성 및 파싱
  * generateDxfFromData를 직접 호출하여 DXF 문자열 생성 후 파싱
+ * @param excludeDoor 도어 관련 객체 제외 여부 (front-no-door용)
  */
 export const generateViewDataFromDxf = (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
-  viewDirection: PdfViewDirection
+  viewDirection: PdfViewDirection,
+  excludeDoor: boolean = false
 ): { lines: ParsedLine[]; texts: ParsedText[] } => {
   const sideViewFilter = getSideViewFilter(viewDirection);
 
-  console.log(`📐 ${viewDirection}: generateDxfFromData 호출...`);
+  console.log(`📐 ${viewDirection}: generateDxfFromData 호출... (excludeDoor=${excludeDoor})`);
 
   try {
     // DXF 문자열 생성 (generateDXFFromScene과 동일한 방식)
@@ -276,7 +278,8 @@ export const generateViewDataFromDxf = (
       spaceInfo,
       placedModules,
       viewDirection as ViewDirection,
-      sideViewFilter
+      sideViewFilter,
+      excludeDoor
     );
 
     // DXF 파싱
@@ -398,21 +401,19 @@ export const downloadDxfAsPdf = async (
       console.log(`📐 door-only: 원본 ${lines.length}개 라인 → DOOR 레이어만 ${doorOnlyLines.length}개 라인`);
       renderToPdf(pdf, doorOnlyLines, [], spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
-    // 입면도 (도어 없음) - DOOR 레이어 필터링하여 렌더링
+    // 입면도 (도어 없음) - DXF 생성 시 도어 제외
     else if (viewDirection === 'front-no-door') {
       if (!isFirstPage) pdf.addPage();
       isFirstPage = false;
 
-      console.log(`📐 front-no-door: 도어 없는 입면도 렌더링...`);
+      console.log(`📐 front-no-door: 도어 없는 입면도 렌더링 (excludeDoor=true)...`);
 
       const dxfViewDirection = pdfViewToViewDirection(viewDirection);
-      const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
+      // excludeDoor=true로 DXF 생성 시 도어 관련 객체 모두 제외
+      const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection, true);
 
-      // DOOR 레이어 필터링 (도어 없는 정면도)
-      const filteredLines = lines.filter(line => line.layer !== 'DOOR');
-
-      console.log(`📐 front-no-door: 원본 ${lines.length}개 라인 → 필터링 후 ${filteredLines.length}개 라인, ${texts.length}개 텍스트`);
-      renderToPdf(pdf, filteredLines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
+      console.log(`📐 front-no-door: ${lines.length}개 라인, ${texts.length}개 텍스트 (도어 제외됨)`);
+      renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, placedModules);
     }
     else {
       // 일반 뷰 (front, top)

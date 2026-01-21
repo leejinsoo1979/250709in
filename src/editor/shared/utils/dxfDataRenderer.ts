@@ -883,11 +883,13 @@ const getColorFromObjectHierarchy = (object: THREE.Object3D): number | null => {
 /**
  * 씬에서 모든 Line 객체와 텍스트 추출
  * @param allowedXRange 측면뷰에서 허용되는 X 위치 범위 (null이면 필터링 안함)
+ * @param excludeDoor 도어 관련 객체 제외 여부 (front-no-door용)
  */
 export const extractFromScene = (
   scene: THREE.Scene,
   viewDirection: ViewDirection,
-  allowedXRange: { min: number; max: number } | null = null
+  allowedXRange: { min: number; max: number } | null = null,
+  excludeDoor: boolean = false
 ): ExtractedData => {
   const lines: DxfLine[] = [];
   const texts: DxfText[] = [];
@@ -961,6 +963,17 @@ export const extractFromScene = (
     if (viewDirection !== 'front' && name.toLowerCase().includes('door-diagonal')) {
       skippedByFilter++;
       return;
+    }
+
+    // excludeDoor 옵션이 true이면 도어 관련 객체 모두 제외 (front-no-door용)
+    if (excludeDoor) {
+      const lowerNameForDoor = name.toLowerCase();
+      if (lowerNameForDoor.includes('door') ||
+          lowerNameForDoor.includes('drawer-front') ||
+          lowerNameForDoor.includes('서랍')) {
+        skippedByFilter++;
+        return;
+      }
     }
 
     // 탑뷰에서만 치수선 제외 (정면뷰, 측면뷰는 치수선 표시)
@@ -2949,12 +2962,14 @@ export const generateExternalDimensions = (
 /**
  * DXF 생성 - 색상과 텍스트 포함
  * @param sideViewFilter 측면뷰 필터링 타입 (leftmost: 좌측 가구만, rightmost: 우측 가구만, all: 모두)
+ * @param excludeDoor 도어 관련 객체 제외 여부 (front-no-door용)
  */
 export const generateDxfFromData = (
   spaceInfo: SpaceInfo,
   placedModules: PlacedModule[],
   viewDirection: ViewDirection,
-  sideViewFilter: SideViewFilter = 'all'
+  sideViewFilter: SideViewFilter = 'all',
+  excludeDoor: boolean = false
 ): string => {
   const scene = sceneHolder.getScene();
 
@@ -3017,8 +3032,8 @@ export const generateDxfFromData = (
     }
   }
 
-  // 씬에서 Line과 Text 객체 추출 (X 필터링 범위 전달)
-  const extracted = extractFromScene(scene, viewDirection, allowedXRange);
+  // 씬에서 Line과 Text 객체 추출 (X 필터링 범위 전달, excludeDoor 옵션 전달)
+  const extracted = extractFromScene(scene, viewDirection, allowedXRange, excludeDoor);
 
   // 측면뷰(left/right)에서는 씬에서 추출한 데이터만 사용 (generateExternalDimensions 제외)
   // 이렇게 하면 현재 2D 화면에 보이는 대로 그대로 DXF로 변환됨
