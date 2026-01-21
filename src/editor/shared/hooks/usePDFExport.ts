@@ -21,10 +21,10 @@ interface ViewInfo {
 }
 
 const VIEW_TYPES: ViewInfo[] = [
-  { id: '3d-front', name: '3D 투시도', viewMode: '3D' },
-  { id: '2d-front', name: '입면도 (치수)', viewMode: '2D', viewDirection: 'front' },
-  { id: '2d-top', name: '평면도 (치수)', viewMode: '2D', viewDirection: 'top' },
-  { id: '2d-left', name: '측면도 (치수)', viewMode: '2D', viewDirection: 'left' },
+  { id: '3d-front', name: '3D 투시도 (Perspective)', viewMode: '3D' },
+  { id: '2d-front', name: '입면도 (Front View)', viewMode: '2D', viewDirection: 'front' },
+  { id: '2d-top', name: '평면도 (Top View)', viewMode: '2D', viewDirection: 'top' },
+  { id: '2d-left', name: '측면도 (Side View)', viewMode: '2D', viewDirection: 'left' },
 ];
 
 export function usePDFExport() {
@@ -87,10 +87,10 @@ export function usePDFExport() {
       }
 
       // 측면뷰에서 특정 슬롯을 지정한 경우, selectedSlotIndex 설정
-      if ((viewInfo.viewDirection === 'left' || viewInfo.viewDirection === 'right') && slotIndex !== undefined) {
+      if (viewInfo.viewDirection === 'left' && slotIndex !== undefined) {
         setSelectedSlotIndex(slotIndex);
         console.log(`📸 측면뷰 슬롯 ${slotIndex} 선택`);
-      } else if (viewInfo.viewDirection === 'left' || viewInfo.viewDirection === 'right') {
+      } else if (viewInfo.viewDirection === 'left') {
         // 측면뷰인데 슬롯 지정이 없으면 null로 리셋
         setSelectedSlotIndex(null);
       }
@@ -350,8 +350,8 @@ export function usePDFExport() {
 
         if (!viewInfo) continue;
 
-        // 측면뷰(left/right)의 경우 각 슬롯별로 페이지 생성
-        const isSideView = viewInfo.viewDirection === 'left' || viewInfo.viewDirection === 'right';
+        // 측면뷰(left)의 경우 각 슬롯별로 페이지 생성
+        const isSideView = viewInfo.viewDirection === 'left';
         const slotIndicesToRender = isSideView ? uniqueSlotIndices : [undefined as number | undefined];
 
         console.log(`📄 PDF 페이지 생성 시작: viewType=${viewType}, isSideView=${isSideView}, slotIndicesToRender=`, slotIndicesToRender);
@@ -426,11 +426,11 @@ export function usePDFExport() {
           // 총 페이지 수 계산
           const totalSideViewPages = selectedViews.filter(v => {
             const info = VIEW_TYPES.find(vi => vi.id === v);
-            return info?.viewDirection === 'left' || info?.viewDirection === 'right';
+            return info?.viewDirection === 'left';
           }).length * uniqueSlotIndices.length;
           const totalNonSideViewPages = selectedViews.filter(v => {
             const info = VIEW_TYPES.find(vi => vi.id === v);
-            return info?.viewDirection !== 'left' && info?.viewDirection !== 'right';
+            return info?.viewDirection !== 'left';
           }).length;
           const totalPages = totalSideViewPages + totalNonSideViewPages;
 
@@ -745,7 +745,7 @@ export function usePDFExport() {
       // PDF 파일명 생성
       const dateStr = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
       const timeStr = new Date().toTimeString().slice(0, 5).replace(':', ''); // HHMM
-      const sideViewCount = selectedViews.filter(v => v === '2d-left' || v === '2d-right').length;
+      const sideViewCount = selectedViews.filter(v => v === '2d-left').length;
       const slotPageCount = sideViewCount * uniqueSlotIndices.length;
       const filename = `도면_${dateStr}_${timeStr}_측면${slotPageCount}p_총${pageIndex}p.pdf`;
 
