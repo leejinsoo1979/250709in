@@ -884,8 +884,9 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const placedHeight = panel.rotated ? originalWidth : originalHeight;
 
         // ★★★ 보링 X 위치 계산 (깊이 방향) - 2D 뷰어와 동일 ★★★
-        // 서랍 측판 vs 가구 측판 구분
+        // 서랍 측판 vs 서랍 앞판 vs 가구 측판 구분
         const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
+        const isDrawerFrontPanel = panel.name.includes('서랍') && panel.name.includes('앞판');
 
         let depthPositions: number[];
 
@@ -905,6 +906,22 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             const sideThickness = 15;
             depthPositions = [sideThickness / 2, originalWidth - sideThickness / 2];
             console.log(`[BORING DEBUG] ${panel.name}: 사용 기본값 (2개)`);
+          }
+        } else if (isDrawerFrontPanel) {
+          // ★★★ 서랍 앞판 마이다 보링 위치 - calculatePanelDetails에서 계산된 값 사용 ★★★
+          //
+          // panel.boringDepthPositions: X위치 (width 기준, 좌 50mm, 중앙, 우 50mm = 3개)
+          // panel.boringPositions: Y위치 (height 기준, 상하 30mm = 2개)
+          //
+          console.log(`[BORING DEBUG] 서랍 앞판 ${panel.name}: boringDepthPositions=`, panel.boringDepthPositions);
+          if (panel.boringDepthPositions && panel.boringDepthPositions.length > 0) {
+            depthPositions = panel.boringDepthPositions;
+            console.log(`[BORING DEBUG] ${panel.name}: 사용 boringDepthPositions (3개)`);
+          } else {
+            // 기본값: 좌 50mm, 중앙, 우 50mm
+            const edgeOffset = 50;
+            depthPositions = [edgeOffset, originalWidth / 2, originalWidth - edgeOffset];
+            console.log(`[BORING DEBUG] ${panel.name}: 사용 기본값 (3개)`);
           }
         } else {
           // 가구 측판: 선반핀 보링 (3개)
@@ -956,7 +973,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // - 시트 X = depthPosMm (좌우 끝: 7.5, 527.5)
             // - 시트 Y = boringPosMm (상중하: 20, 112.5, 205)
 
-            // ★★★ 서랍 측판 vs 가구 측판 좌표 매핑 ★★★
+            // ★★★ 서랍 측판 vs 서랍 앞판 vs 가구 측판 좌표 매핑 ★★★
             //
             // 서랍 측판 (isDrawerSidePanel=true):
             // - 원본: width=535(깊이), height=225(높이)
@@ -964,7 +981,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             // - 보링: 좌우 양끝(boringPositions=X축)에 세로(depthPositions=Y축)로 3개씩
             // - 따라서: boringPosMm → X축, depthPosMm → Y축
             //
-            // 가구 측판 (isDrawerSidePanel=false):
+            // 서랍 앞판 (isDrawerFrontPanel=true):
+            // - 원본: width=앞판폭, height=서랍높이
+            // - 보링: 마이다 연결 (좌50/중앙/우50 × 상30/하30 = 6개)
+            // - rotated 여부에 따라 좌표 매핑
+            //
+            // 가구 측판 (isDrawerSidePanel=false && isDrawerFrontPanel=false):
             // - rotated 여부에 따라 좌표 매핑
 
             if (isDrawerSidePanel) {
@@ -974,6 +996,21 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               boringX = x + boringPosMm;
               boringY = y + depthPosMm;
               console.log(`[BORING CALC] 서랍측판: boringPosMm=${boringPosMm.toFixed(1)} → X, depthPosMm=${depthPosMm.toFixed(1)} → Y`);
+            } else if (isDrawerFrontPanel) {
+              // ★★★ 서랍 앞판: 마이다 보링 (6개) ★★★
+              // boringPositions(높이방향, Y) = 상30mm, 하30mm
+              // depthPositions(너비방향, X) = 좌50mm, 중앙, 우50mm
+              if (panel.rotated) {
+                // 회전된 경우: width → Y축, height → X축
+                boringX = x + boringPosMm;
+                boringY = y + depthPosMm;
+                console.log(`[BORING CALC] 서랍앞판(rotated): boringPosMm=${boringPosMm.toFixed(1)} → X, depthPosMm=${depthPosMm.toFixed(1)} → Y`);
+              } else {
+                // 회전 안된 경우: width → X축, height → Y축
+                boringX = x + depthPosMm;
+                boringY = y + boringPosMm;
+                console.log(`[BORING CALC] 서랍앞판: depthPosMm=${depthPosMm.toFixed(1)} → X, boringPosMm=${boringPosMm.toFixed(1)} → Y`);
+              }
             } else if (panel.rotated) {
               // 가구 측판 (rotated=true):
               const scaleX = placedWidth / originalWidth;

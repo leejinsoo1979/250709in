@@ -1121,6 +1121,11 @@ export const extractFromScene = (
         line2Color = 30; // ACI 30 = 오렌지 (가구패널과 동일, 투명도 10%는 CAD에서 별도 설정)
         line2Layer = 'BACK_PANEL';
         console.log(`📐 백패널(Line2): ${name}, 색상 ACI=30으로 강제 설정`);
+      } else if (lowerName.includes('door-diagonal') || lowerName.includes('door-edge') || lowerName.includes('door')) {
+        // 도어 관련 Line2 (대각선 열림방향 표시 포함)
+        line2Color = 3; // ACI 3 = 연두색
+        line2Layer = 'DOOR';
+        console.log(`📐 도어(Line2): ${name}, 색상 ACI=3으로 강제 설정`);
       } else if (lowerName.includes('dimension')) {
         console.log(`📏 치수선(Line2): ${name}, 추출된 색상 ACI=${line2Color}`);
       }
