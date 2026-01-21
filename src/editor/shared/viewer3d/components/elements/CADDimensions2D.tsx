@@ -949,6 +949,38 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             </group>
           );
         })}
+
+        {/* ===== 단내림 구간 선택 시 단내림 벽 표시 ===== */}
+        {isSelectedSlotInDroppedZone && (
+          <group>
+            {/* 단내림 벽 - 가구 위에 표시 */}
+            <mesh
+              position={[0, displaySpaceHeight + dropHeight / 2, 0]}
+              rotation={[0, -Math.PI / 2, 0]}
+              renderOrder={99999}
+            >
+              <planeGeometry args={[spaceDepth, dropHeight]} />
+              <meshBasicMaterial
+                color={view2DTheme === 'light' ? '#e0e0e0' : '#404040'}
+                transparent
+                opacity={0.7}
+                depthTest={false}
+              />
+            </mesh>
+            {/* 단내림 벽 하단 라인 */}
+            <NativeLine
+              name="dropped_ceiling_line"
+              points={[
+                [0, displaySpaceHeight, -spaceDepth / 2],
+                [0, displaySpaceHeight, spaceDepth / 2]
+              ]}
+              color={dimensionColor}
+              lineWidth={2}
+              renderOrder={100000}
+              depthTest={false}
+            />
+          </group>
+        )}
       </group>
     );
   }
@@ -1594,6 +1626,38 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             </group>
           );
         })}
+
+        {/* ===== 단내림 구간 선택 시 단내림 벽 표시 ===== */}
+        {isSelectedSlotInDroppedZone && (
+          <group>
+            {/* 단내림 벽 - 가구 위에 표시 */}
+            <mesh
+              position={[0, displaySpaceHeight + dropHeight / 2, 0]}
+              rotation={[0, Math.PI / 2, 0]}
+              renderOrder={99999}
+            >
+              <planeGeometry args={[spaceDepth, dropHeight]} />
+              <meshBasicMaterial
+                color={view2DTheme === 'light' ? '#e0e0e0' : '#404040'}
+                transparent
+                opacity={0.7}
+                depthTest={false}
+              />
+            </mesh>
+            {/* 단내림 벽 하단 라인 */}
+            <NativeLine
+              name="dropped_ceiling_line"
+              points={[
+                [0, displaySpaceHeight, -spaceDepth / 2],
+                [0, displaySpaceHeight, spaceDepth / 2]
+              ]}
+              color={dimensionColor}
+              lineWidth={2}
+              renderOrder={100000}
+              depthTest={false}
+            />
+          </group>
+        )}
       </group>
     );
   }
