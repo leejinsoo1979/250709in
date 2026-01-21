@@ -951,16 +951,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         })}
 
         {/* ===== 단내림 구간 선택 시 단내림 벽 표시 (빗금 패턴) ===== */}
-        {isSelectedSlotInDroppedZone && visibleFurniture.length > 0 && (() => {
-          // 보이는 가구의 깊이 가져오기
-          const visibleModule = visibleFurniture[0];
-          const visibleModuleData = getModuleById(
-            visibleModule.moduleId,
-            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
-            spaceInfo
-          );
-          // 상부섹션 깊이 우선 사용 (가구 치수 표시와 동일)
-          const actualFurnitureDepthMm = visibleModule.upperSectionDepth || visibleModule.customDepth || visibleModuleData?.dimensions.depth || 600;
+        {isSelectedSlotInDroppedZone && (() => {
+          // 보이는 가구의 깊이 가져오기 (가구가 없으면 기본값 600mm 사용)
+          let actualFurnitureDepthMm = 600;
+          if (visibleFurniture.length > 0) {
+            const visibleModule = visibleFurniture[0];
+            const visibleModuleData = getModuleById(
+              visibleModule.moduleId,
+              { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+              spaceInfo
+            );
+            // 상부섹션 깊이 우선 사용 (가구 치수 표시와 동일)
+            actualFurnitureDepthMm = visibleModule.upperSectionDepth || visibleModule.customDepth || visibleModuleData?.dimensions.depth || 600;
+          }
           const actualFurnitureDepth = mmToThreeUnits(actualFurnitureDepthMm);
 
           // 빗금 해칭 패턴 생성
@@ -1712,16 +1715,19 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         })}
 
         {/* ===== 단내림 구간 선택 시 단내림 벽 표시 (빗금 패턴) ===== */}
-        {isSelectedSlotInDroppedZone && visibleFurniture.length > 0 && (() => {
-          // 보이는 가구의 깊이 가져오기
-          const visibleModule = visibleFurniture[0];
-          const visibleModuleData = getModuleById(
-            visibleModule.moduleId,
-            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
-            spaceInfo
-          );
-          // 상부섹션 깊이 우선 사용 (가구 치수 표시와 동일)
-          const actualFurnitureDepthMm = visibleModule.upperSectionDepth || visibleModule.customDepth || visibleModuleData?.dimensions.depth || 600;
+        {isSelectedSlotInDroppedZone && (() => {
+          // 보이는 가구의 깊이 가져오기 (가구가 없으면 기본값 600mm 사용)
+          let actualFurnitureDepthMm = 600;
+          if (visibleFurniture.length > 0) {
+            const visibleModule = visibleFurniture[0];
+            const visibleModuleData = getModuleById(
+              visibleModule.moduleId,
+              { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+              spaceInfo
+            );
+            // 상부섹션 깊이 우선 사용 (가구 치수 표시와 동일)
+            actualFurnitureDepthMm = visibleModule.upperSectionDepth || visibleModule.customDepth || visibleModuleData?.dimensions.depth || 600;
+          }
           const actualFurnitureDepth = mmToThreeUnits(actualFurnitureDepthMm);
 
           // 빗금 해칭 패턴 생성
