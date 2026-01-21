@@ -112,6 +112,7 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   }, [diameter, thickness]);
 
   const isFrontView = viewMode === '2D' && view2DDirection === 'front';
+  const isSideView = viewMode === '2D' && (view2DDirection === 'left' || view2DDirection === 'right');
   const is3DMode = viewMode === '3D';
   const requestedRenderMode = _renderMode === '2d' || _renderMode === '3d' ? _renderMode : null;
   const renderAs3D = requestedRenderMode ? requestedRenderMode === '3d' : is3DMode;
@@ -120,6 +121,11 @@ export const VentilationCap: React.FC<VentilationCapProps> = ({
   // Hook 규칙: 조건부 렌더링 전에 모든 Hook 호출
   const rimEdges = useMemo(() => new EdgesGeometry(rimGeometry, 30), [rimGeometry]);
   const perforatedEdges = useMemo(() => new EdgesGeometry(perforatedGeometry, 15), [perforatedGeometry]);
+
+  // 측면뷰에서는 환기캡을 숨김 (정면에만 보이는 요소)
+  if (isSideView) {
+    return null;
+  }
 
   if (!renderAs3D && !renderAs2D) {
     return null;

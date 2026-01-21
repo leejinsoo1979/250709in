@@ -781,7 +781,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
       {/* 단내림 구간 표시 (기둥처럼) - 2D 모드에서만 */}
       {spaceInfo.droppedCeiling?.enabled && currentViewDirection !== '3D' && (() => {
         const droppedWidth = mmToThreeUnits(spaceInfo.droppedCeiling.width || 900);
-        const droppedHeight = mmToThreeUnits(spaceInfo.droppedCeiling.height || 200);
+        const droppedHeight = mmToThreeUnits(spaceInfo.droppedCeiling.dropHeight || 200);
         const totalHeight = mmToThreeUnits(spaceInfo.height);
         const normalHeight = totalHeight - droppedHeight;
 
