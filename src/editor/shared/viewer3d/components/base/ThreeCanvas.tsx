@@ -764,7 +764,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
         quaternion: controls.object.quaternion.toArray()
       });
     }
-  }, [viewMode, view2DDirection]);
+  }, [viewMode, view2DDirection, cameraPosition, cameraTarget, cameraUp]);
 
   // OrbitControls 팬 범위 제한 (그리드 영역)
   useEffect(() => {
