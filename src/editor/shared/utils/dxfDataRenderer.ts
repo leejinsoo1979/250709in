@@ -747,13 +747,6 @@ const determineLayerWithParent = (obj: THREE.Object3D): string => {
     return 'SPACE_FRAME';
   }
 
-  // 도어 (도어 패널, 대각선 열림방향 표시 포함)
-  if (combinedNames.includes('door-diagonal') || combinedNames.includes('door-edge') ||
-      combinedNames.includes('door-panel') || combinedNames.includes('door-dimension') ||
-      (combinedNames.includes('door') && !combinedNames.includes('drawer'))) {
-    return 'DOOR';
-  }
-
   // 백패널
   if (combinedNames.includes('back-panel') || combinedNames.includes('backpanel') || combinedNames.includes('백패널')) {
     return 'BACK_PANEL';
@@ -811,13 +804,6 @@ const determineLayer = (name: string): string => {
   if (lowerName.includes('space-frame') || lowerName.includes('space_frame') ||
       lowerName.includes('top-frame') || lowerName.includes('base-frame')) {
     return 'SPACE_FRAME';
-  }
-
-  // 도어 (도어 패널, 대각선 열림방향 표시 포함)
-  if (lowerName.includes('door-diagonal') || lowerName.includes('door-edge') ||
-      lowerName.includes('door-panel') || lowerName.includes('door-dimension') ||
-      (lowerName.includes('door') && !lowerName.includes('drawer'))) {
-    return 'DOOR';
   }
 
   // 백패널
@@ -2699,58 +2685,73 @@ export const generateExternalDimensions = (
         lines.push({ x1: baseMinX, y1: baseTop, x2: baseMinX, y2: baseBottom, layer: 'SPACE_FRAME', color: lineColor });
       }
 
+      // ========================================
+      // 5. 조절발 (floor 타입이고 받침대가 있는 경우)
+      // AdjustableFootsRenderer와 동일한 위치에 2개 (앞쪽, 뒤쪽)
+      // 조절발: 플레이트 64x7mm, 원통 지름 56mm
+      // ========================================
+      if (!isStandType && baseFrameHeightMm > 0) {
+        const footPlateSize = 64; // 조절발 플레이트 크기 (mm)
+        const footPlateThickness = 7; // 조절발 플레이트 두께 (mm)
+        const footDiameter = 56; // 조절발 지름 (mm)
+        const footCylinderHeight = Math.max(baseFrameHeightMm - footPlateThickness, 0); // 원통 높이
+
+        // AdjustableFootsRenderer와 동일한 Z축 위치 계산
+        // 앞쪽: 앞면에서 20mm 안쪽 + 받침대 깊이
+        // 뒤쪽: 뒷면에서 plateHalf(32mm) 안쪽
+        const plateHalfMm = footPlateSize / 2; // 32mm
+        const actualBaseDepthForFoot = baseDepthMm > 0 ? baseDepthMm : 0;
+
+        // 측면뷰에서 Z 위치를 DXF X 좌표로 변환
+        // furnitureDepthMm = 600mm 기준
+        // Z+ = 앞면, Z- = 뒷면
+        // DXF에서: 좌측뷰 X=0이 앞면, X=깊이가 뒷면
+
+        // 앞쪽 조절발: Z = furnitureDepth/2 - plateHalf - 20 - baseDepthOffset
+        // DXF X = (가구깊이/2 - Z) = plateHalf + 20 + baseDepthOffset (좌측뷰)
+        const frontFootDepth = plateHalfMm + 20 + actualBaseDepthForFoot;
+
+        // 뒤쪽 조절발: Z = -furnitureDepth/2 + plateHalf
+        // DXF X = (가구깊이/2 - Z) = furnitureDepthMm - plateHalf (좌측뷰)
+        const backFootDepth = furnitureDepthMm - plateHalfMm;
+
+        // 조절발 그리기 함수
+        const drawFoot = (footCenterDepth: number) => {
+          // 조절발 플레이트 (상단 사각형) - 받침대 바로 아래
+          const plateLeft = transformX(footCenterDepth - footPlateSize / 2);
+          const plateRight = transformX(footCenterDepth + footPlateSize / 2);
+          const plateMinX = Math.min(plateLeft, plateRight);
+          const plateMaxX = Math.max(plateLeft, plateRight);
+          const plateTop = 0; // 받침대 바닥
+          const plateBottom = -footPlateThickness;
+
+          lines.push({ x1: plateMinX, y1: plateBottom, x2: plateMaxX, y2: plateBottom, layer: 'ACCESSORIES', color: lineColor });
+          lines.push({ x1: plateMaxX, y1: plateBottom, x2: plateMaxX, y2: plateTop, layer: 'ACCESSORIES', color: lineColor });
+          lines.push({ x1: plateMaxX, y1: plateTop, x2: plateMinX, y2: plateTop, layer: 'ACCESSORIES', color: lineColor });
+          lines.push({ x1: plateMinX, y1: plateTop, x2: plateMinX, y2: plateBottom, layer: 'ACCESSORIES', color: lineColor });
+
+          // 조절발 원통 (플레이트 아래)
+          const cylLeft = transformX(footCenterDepth - footDiameter / 2);
+          const cylRight = transformX(footCenterDepth + footDiameter / 2);
+          const cylMinX = Math.min(cylLeft, cylRight);
+          const cylMaxX = Math.max(cylLeft, cylRight);
+          const cylTop = plateBottom;
+          const cylBottom = plateBottom - footCylinderHeight;
+
+          lines.push({ x1: cylMinX, y1: cylTop, x2: cylMinX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
+          lines.push({ x1: cylMaxX, y1: cylTop, x2: cylMaxX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
+          lines.push({ x1: cylMinX, y1: cylBottom, x2: cylMaxX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
+        };
+
+        // 앞쪽 조절발 그리기
+        drawFoot(frontFootDepth);
+        // 뒤쪽 조절발 그리기
+        drawFoot(backFootDepth);
+
+        console.log(`🦶 조절발 위치 (${viewDirection}뷰): 앞쪽=${frontFootDepth}mm, 뒤쪽=${backFootDepth}mm`);
+      }
+
       console.log(`✅ ${viewDirection}뷰 가구 형상 생성 완료: ${lines.length}개 라인`);
-    }
-
-    // ========================================
-    // 조절발 그리기 (dimensionsOnly 여부와 관계없이 항상 그리기)
-    // 씬에서 추출한 조절발은 정규화 과정에서 좌표가 잘못되므로, 여기서 정확한 위치에 그림
-    // ========================================
-    if (!isStandType && baseFrameHeightMm > 0) {
-      const footPlateSize = 64; // 조절발 플레이트 크기 (mm)
-      const footPlateThickness = 7; // 조절발 플레이트 두께 (mm)
-      const footDiameter = 56; // 조절발 지름 (mm)
-      const footCylinderHeight = Math.max(baseFrameHeightMm - footPlateThickness, 0); // 원통 높이
-      const lineColor = 7; // ACI 7 = 흰색
-
-      const plateHalfMm = footPlateSize / 2; // 32mm
-      const actualBaseDepthForFoot = baseDepthMm > 0 ? baseDepthMm : 0;
-
-      // 앞쪽 조절발
-      const frontFootDepth = plateHalfMm + 20 + actualBaseDepthForFoot;
-      // 뒤쪽 조절발
-      const backFootDepth = furnitureDepthMm - plateHalfMm;
-
-      const drawFoot = (footCenterDepth: number) => {
-        // 조절발 플레이트 (상단 사각형) - 받침대 바로 아래
-        const plateLeft = transformX(footCenterDepth - footPlateSize / 2);
-        const plateRight = transformX(footCenterDepth + footPlateSize / 2);
-        const plateMinX = Math.min(plateLeft, plateRight);
-        const plateMaxX = Math.max(plateLeft, plateRight);
-        const plateTop = 0; // 받침대 바닥
-        const plateBottom = -footPlateThickness;
-
-        lines.push({ x1: plateMinX, y1: plateBottom, x2: plateMaxX, y2: plateBottom, layer: 'ACCESSORIES', color: lineColor });
-        lines.push({ x1: plateMaxX, y1: plateBottom, x2: plateMaxX, y2: plateTop, layer: 'ACCESSORIES', color: lineColor });
-        lines.push({ x1: plateMaxX, y1: plateTop, x2: plateMinX, y2: plateTop, layer: 'ACCESSORIES', color: lineColor });
-        lines.push({ x1: plateMinX, y1: plateTop, x2: plateMinX, y2: plateBottom, layer: 'ACCESSORIES', color: lineColor });
-
-        // 조절발 원통 (플레이트 아래)
-        const cylLeft = transformX(footCenterDepth - footDiameter / 2);
-        const cylRight = transformX(footCenterDepth + footDiameter / 2);
-        const cylMinX = Math.min(cylLeft, cylRight);
-        const cylMaxX = Math.max(cylLeft, cylRight);
-        const cylTop = plateBottom;
-        const cylBottom = plateBottom - footCylinderHeight;
-
-        lines.push({ x1: cylMinX, y1: cylTop, x2: cylMinX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
-        lines.push({ x1: cylMaxX, y1: cylTop, x2: cylMaxX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
-        lines.push({ x1: cylMinX, y1: cylBottom, x2: cylMaxX, y2: cylBottom, layer: 'ACCESSORIES', color: lineColor });
-      };
-
-      drawFoot(frontFootDepth);
-      drawFoot(backFootDepth);
-      console.log(`🦶 조절발 위치 (${viewDirection}뷰, dimensionsOnly=${dimensionsOnly}): 앞쪽=${frontFootDepth}mm, 뒤쪽=${backFootDepth}mm`);
     }
 
     // ========================================
@@ -3091,8 +3092,7 @@ export const generateDxfFromData = (
     // 씬에서 추출한 내부 치수선(DIMENSIONS 레이어)과 텍스트는 모두 제외
     // 조절발(ACCESSORIES)도 측면뷰에서는 제외 (2D UI와 동일하게)
 
-    // 씬에서 추출한 라인 중 내부 치수선, 환기캡, 조절발 제외 (가구 형상만 유지)
-    // 조절발은 generateExternalDimensions에서 정확한 위치에 그리도록 함
+    // 씬에서 추출한 라인 중 내부 치수선과 환기캡 제외 (가구 형상 + 조절발 유지)
     let filteredLines = extracted.lines.filter(line => {
       // DIMENSIONS 레이어 라인은 제외 (내부 치수선)
       if (line.layer === 'DIMENSIONS') {
@@ -3102,14 +3102,10 @@ export const generateDxfFromData = (
       if (line.layer === 'VENTILATION') {
         return false;
       }
-      // ACCESSORIES 레이어(조절발)는 제외 - 씬 추출 좌표가 정규화 과정에서 잘못됨
-      // 대신 generateExternalDimensions에서 정확한 위치에 조절발 그리기
-      if (line.layer === 'ACCESSORIES') {
-        return false;
-      }
+      // ACCESSORIES 레이어(조절발)는 포함 - 측면뷰에서도 조절발 표시
       return true;
     });
-    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS, VENTILATION, ACCESSORIES 제외)`);
+    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS, VENTILATION 제외, ACCESSORIES 포함)`);
 
     // ========================================
     // 핵심 수정: 씬에서 추출한 라인의 X 좌표를 0 기준으로 정규화 + 좌우 반전

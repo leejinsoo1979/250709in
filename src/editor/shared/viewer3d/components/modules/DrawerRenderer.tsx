@@ -327,8 +327,23 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     return mat;
   }, []); // 한 번만 생성
 
+  // 서랍속장 디버깅용 초록색 material (2D 뷰에서 사용)
+  const drawerFrameDebugMaterial = React.useMemo(() => {
+    const mat = new THREE.MeshBasicMaterial({
+      color: new THREE.Color('#00ff00'),
+      transparent: true,
+      opacity: 0.8
+    });
+    mat.needsUpdate = true;
+    return mat;
+  }, []);
+
   // 패널용 material 결정 - useCallback로 최적화
   const getPanelMaterial = React.useCallback((panelName: string) => {
+    // 2D 모드에서 서랍속장 패널은 초록색으로 표시
+    if (viewMode === '2D' && panelName.includes('서랍속장')) {
+      return drawerFrameDebugMaterial;
+    }
 
     // 패널 ID 생성
     const panelId = `${furnitureId}-${panelName}`;
@@ -729,25 +744,21 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
     );
   };
   
-  // 서랍속장 프레임을 2D 정면뷰에서 숨길지 여부
-  const hideDrawerFrameInFrontView = viewMode === '2D' && view2DDirection === 'front';
-
   if (drawerHeights && drawerHeights.length === drawerCount && gapHeight > 0) {
     // 개별 서랍 높이 지정된 가구: 높이 + 공백 적용
-
+    
     // 서랍 위치 계산 (아래에서부터 쌓아올리기)
     let currentY = -innerHeight / 2; // 서랍장 하단 시작점
-
+    
     // 바닥 공백
     currentY += mmToThreeUnits(gapHeight);
-
+    
     return (
       <group position={[0, yOffset, drawerZOffset + zOffset]}>
         {/* === 서랍속장 ㄷ자 프레임 (좌/우 각각 3개 패널 = 총 6개) === */}
-        {/* 2D 정면도에서는 숨김 (서랍 뒤에 위치하므로 보이면 안됨) */}
 
         {/* 1. 좌측 수직 패널 (전체 높이, 측판에서 27mm 떨어짐) */}
-        {!hideDrawerFrameInFrontView && (() => {
+        {(() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌)` : `서랍속장(좌)`;
           const mat = getPanelMaterial(panelName);
           return (
