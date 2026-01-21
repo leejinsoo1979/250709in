@@ -3020,16 +3020,20 @@ export const generateDxfFromData = (
     // 씬에서 추출한 내부 치수선(DIMENSIONS 레이어)과 텍스트는 모두 제외
     // 조절발(ACCESSORIES)도 측면뷰에서는 제외 (2D UI와 동일하게)
 
-    // 씬에서 추출한 라인 중 내부 치수선만 제외 (가구 형상 + 조절발 유지)
+    // 씬에서 추출한 라인 중 내부 치수선과 환기캡 제외 (가구 형상 + 조절발 유지)
     let filteredLines = extracted.lines.filter(line => {
       // DIMENSIONS 레이어 라인은 제외 (내부 치수선)
       if (line.layer === 'DIMENSIONS') {
         return false;
       }
+      // VENTILATION 레이어(환기캡)는 제외 - 측면뷰에서 안 보이게
+      if (line.layer === 'VENTILATION') {
+        return false;
+      }
       // ACCESSORIES 레이어(조절발)는 포함 - 측면뷰에서도 조절발 표시
       return true;
     });
-    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS만 제외, ACCESSORIES 포함)`);
+    console.log(`📏 측면뷰: 씬 라인 필터링 - 원본 ${extracted.lines.length}개 → 필터링 후 ${filteredLines.length}개 (DIMENSIONS, VENTILATION 제외, ACCESSORIES 포함)`);
 
     // ========================================
     // 핵심 수정: 씬에서 추출한 라인의 X 좌표를 0 기준으로 정규화 + 좌우 반전

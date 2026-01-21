@@ -222,41 +222,10 @@ const extractDoorInfo = (
   const doorTopGap = placedModule.doorTopGap ?? 10;
   const doorBottomGap = placedModule.doorBottomGap ?? 65;
 
-  // 서랍 처리 - 모든 섹션 순회
-  let currentY = basicThickness; // 하판 위부터 시작
-
-  for (const section of allSections) {
-    if (section.type === 'drawer') {
-      const drawerHeights = section.drawerHeights || [];
-      const gapHeight = section.gapHeight || 24;
-
-      for (let i = 0; i < drawerHeights.length; i++) {
-        const drawerHeight = drawerHeights[i];
-
-        items.push({
-          type: 'drawer',
-          x: basicThickness, // 좌측판 두께
-          y: currentY,
-          width: furnitureWidth - basicThickness * 2, // 양쪽 측판 두께 제외
-          height: drawerHeight,
-          label: `Drawer ${i + 1}`
-        });
-
-        currentY += drawerHeight + gapHeight;
-      }
-    } else if (section.type === 'hanging' || section.type === 'shelf' || section.type === 'open') {
-      // 서랍이 아닌 섹션의 높이를 계산
-      if (section.heightType === 'absolute') {
-        currentY += section.height;
-      } else {
-        // 퍼센트 기반 높이 계산
-        currentY += (section.height / 100) * furnitureHeight;
-      }
-    }
-  }
-
-  // 도어 처리 (hasDoor가 true인 경우)
+  // 도어가 있는 경우: 도어만 표시 (서랍은 도어 뒤에 있으므로 제외)
+  // 도어가 없는 경우: 서랍만 표시
   if (hasDoor) {
+    // 도어 처리
     const doorX = basicThickness;
     const doorY = doorBottomGap;
     const doorWidth = furnitureWidth - basicThickness * 2;
@@ -273,6 +242,39 @@ const extractDoorInfo = (
         label: 'Door'
       });
       console.log(`  ✅ 도어 추가: ${doorWidth}x${doorHeight}mm`);
+    }
+  } else if (hasDrawer) {
+    // 도어가 없고 서랍만 있는 경우 - 서랍 처리
+    let currentY = basicThickness; // 하판 위부터 시작
+
+    for (const section of allSections) {
+      if (section.type === 'drawer') {
+        const drawerHeights = section.drawerHeights || [];
+        const gapHeight = section.gapHeight || 24;
+
+        for (let i = 0; i < drawerHeights.length; i++) {
+          const drawerHeight = drawerHeights[i];
+
+          items.push({
+            type: 'drawer',
+            x: basicThickness, // 좌측판 두께
+            y: currentY,
+            width: furnitureWidth - basicThickness * 2, // 양쪽 측판 두께 제외
+            height: drawerHeight,
+            label: `Drawer ${i + 1}`
+          });
+
+          currentY += drawerHeight + gapHeight;
+        }
+      } else if (section.type === 'hanging' || section.type === 'shelf' || section.type === 'open') {
+        // 서랍이 아닌 섹션의 높이를 계산
+        if (section.heightType === 'absolute') {
+          currentY += section.height;
+        } else {
+          // 퍼센트 기반 높이 계산
+          currentY += (section.height / 100) * furnitureHeight;
+        }
+      }
     }
   }
 
