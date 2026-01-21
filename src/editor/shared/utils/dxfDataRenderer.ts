@@ -746,9 +746,10 @@ const determineLayerWithParent = (obj: THREE.Object3D): string => {
     return 'DIMENSIONS';
   }
 
-  // 도어 (대각선, 엣지 등)
+  // 도어 (대각선, 엣지 등) 및 서랍 앞판(마이다)
   if (combinedNames.includes('door-diagonal') || combinedNames.includes('door-edge') ||
       combinedNames.includes('door_diagonal') || combinedNames.includes('door_edge') ||
+      combinedNames.includes('마이다') || combinedNames.includes('drawer-front') ||
       (lowerName.includes('door') && !combinedNames.includes('dimension'))) {
     return 'DOOR';
   }
@@ -816,9 +817,10 @@ const determineLayer = (name: string): string => {
     return 'DIMENSIONS';
   }
 
-  // 도어 (대각선, 엣지 등)
+  // 도어 (대각선, 엣지 등) 및 서랍 앞판(마이다)
   if (lowerName.includes('door-diagonal') || lowerName.includes('door-edge') ||
       lowerName.includes('door_diagonal') || lowerName.includes('door_edge') ||
+      lowerName.includes('마이다') || lowerName.includes('drawer-front') ||
       (lowerName.includes('door') && !lowerName.includes('dimension'))) {
     return 'DOOR';
   }
