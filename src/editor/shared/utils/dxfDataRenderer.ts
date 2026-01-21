@@ -741,9 +741,8 @@ const determineLayerWithParent = (obj: THREE.Object3D): string => {
     return 'DIMENSIONS';
   }
 
-  // 공간 프레임 (Room.tsx의 space-frame, top-frame, base-frame)
-  if (combinedNames.includes('space-frame') || combinedNames.includes('space_frame') ||
-      combinedNames.includes('top-frame') || combinedNames.includes('base-frame')) {
+  // 공간 프레임 (Room.tsx의 space-frame만 - 가구 프레임과 구분)
+  if (combinedNames.includes('space-frame') || combinedNames.includes('space_frame')) {
     return 'SPACE_FRAME';
   }
 
@@ -800,9 +799,8 @@ const determineLayer = (name: string): string => {
     return 'DIMENSIONS';
   }
 
-  // 공간 프레임 (Room.tsx의 space-frame, top-frame, base-frame)
-  if (lowerName.includes('space-frame') || lowerName.includes('space_frame') ||
-      lowerName.includes('top-frame') || lowerName.includes('base-frame')) {
+  // 공간 프레임 (Room.tsx의 space-frame만 - 가구 프레임과 구분)
+  if (lowerName.includes('space-frame') || lowerName.includes('space_frame')) {
     return 'SPACE_FRAME';
   }
 
