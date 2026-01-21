@@ -767,7 +767,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 2. 우측 수직 패널 (전체 높이, 측판에서 27mm 떨어짐) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우)` : `서랍속장(우)`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -787,7 +787,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 3. 좌측 후면 수평 패널 (상단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌) 후면` : `서랍속장(좌) 후면`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -807,7 +807,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 4. 우측 후면 수평 패널 (상단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우) 후면` : `서랍속장(우) 후면`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -827,7 +827,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 5. 좌측 전면 추가 프레임 (상단, 전면 수평 패널 앞에 붙음) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌) 전면추가` : `서랍속장(좌) 전면추가`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -847,7 +847,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 6. 우측 전면 추가 프레임 (상단, 전면 수평 패널 앞에 붙음) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우) 전면추가` : `서랍속장(우) 전면추가`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -867,7 +867,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 7. 좌측 전면 수평 패널 (하단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌) 전면` : `서랍속장(좌) 전면`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -887,7 +887,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 8. 우측 전면 수평 패널 (하단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우) 전면` : `서랍속장(우) 전면`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -956,7 +956,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 2. 우측 수직 패널 (전체 높이, 측판에서 27mm 떨어짐) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우)` : `서랍속장(우)`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -976,7 +976,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 3. 좌측 후면 수평 패널 (상단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌) 후면` : `서랍속장(좌) 후면`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -996,7 +996,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 4. 우측 후면 수평 패널 (상단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우) 후면` : `서랍속장(우) 후면`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -1016,7 +1016,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 5. 좌측 전면 추가 프레임 (상단, 전면 수평 패널 앞에 붙음) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌) 전면추가` : `서랍속장(좌) 전면추가`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -1036,7 +1036,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 6. 우측 전면 추가 프레임 (상단, 전면 수평 패널 앞에 붙음) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우) 전면추가` : `서랍속장(우) 전면추가`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -1056,7 +1056,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 7. 좌측 전면 수평 패널 (하단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(좌) 전면` : `서랍속장(좌) 전면`;
           const mat = getPanelMaterial(panelName);
           return (
@@ -1076,7 +1076,7 @@ export const DrawerRenderer: React.FC<DrawerRendererProps> = ({
         })()}
 
         {/* 8. 우측 전면 수평 패널 (하단, 측판과 수직패널 사이 - 바깥쪽 돌출) */}
-        {(() => {
+        {!hideDrawerFrameInFrontView && (() => {
           const panelName = sectionName ? `${sectionName}서랍속장(우) 전면` : `서랍속장(우) 전면`;
           const mat = getPanelMaterial(panelName);
           return (
