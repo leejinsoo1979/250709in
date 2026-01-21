@@ -869,8 +869,10 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
 
       // ★★★ 보링 표시 (panel.boringPositions 직접 사용 - 2D 뷰어와 동일한 데이터) ★★★
       // 패널에 boringPositions가 있으면 해당 측판에 선반핀 보링 표시
-      console.log(`[PANEL CHECK] ${panel.name}: width=${panel.width}, height=${panel.height}, rotated=${panel.rotated}, boringPositions=`, panel.boringPositions, 'boringDepthPositions=', panel.boringDepthPositions);
-      if (showBorings && panel.boringPositions && panel.boringPositions.length > 0) {
+      // 도어는 보링 대상이 아님 (힌지홀은 별도 처리)
+      const isDoorPanel = panel.name.includes('도어') || panel.name.includes('Door');
+      console.log(`[PANEL CHECK] ${panel.name}: width=${panel.width}, height=${panel.height}, rotated=${panel.rotated}, isDoor=${isDoorPanel}, boringPositions=`, panel.boringPositions, 'boringDepthPositions=', panel.boringDepthPositions);
+      if (showBorings && panel.boringPositions && panel.boringPositions.length > 0 && !isDoorPanel) {
         ctx.save();
 
         // 측판 패널의 원래 치수 (배치 전)
