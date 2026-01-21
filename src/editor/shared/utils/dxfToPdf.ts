@@ -37,7 +37,12 @@ interface DoorDrawingItem {
 }
 
 // PDF 뷰 타입
-export type PdfViewDirection = 'front' | 'left' | 'top' | 'door';
+// - front: 입면도 (도어 있음) - 도어가 장착된 정면도
+// - front-no-door: 입면도 (도어 없음) - 도어 없이 내부가 보이는 정면도
+// - door-only: 도어 입면도 - 가구 없이 도어/서랍만 표시
+// - left: 측면도
+// - top: 평면도
+export type PdfViewDirection = 'front' | 'front-no-door' | 'left' | 'top' | 'door-only';
 
 // DXF에서 추출한 라인 정보
 interface ParsedLine {
@@ -456,10 +461,11 @@ const renderDoorDrawingToPdf = (
 // 뷰 제목 (jsPDF는 한글 미지원, 영문만 사용)
 const getViewTitle = (v: PdfViewDirection): string => {
   const titles: Record<string, string> = {
-    front: 'Front View (Elevation)',
-    left: 'Side View (Left)',
-    top: 'Top View (Plan)',
-    door: 'Door Drawing'
+    'front': 'Front View (With Doors)',
+    'front-no-door': 'Front View (Without Doors)',
+    'left': 'Side View',
+    'top': 'Top View (Plan)',
+    'door-only': 'Door Drawing (Doors Only)'
   };
   return titles[v] || 'Drawing';
 };
@@ -467,8 +473,15 @@ const getViewTitle = (v: PdfViewDirection): string => {
 // 측면뷰 필터
 const getSideViewFilter = (v: PdfViewDirection): SideViewFilter => {
   if (v === 'left') return 'leftmost';
-  if (v === 'door') return 'all'; // 도어도면은 모든 가구 표시
   return 'all';
+};
+
+// PDF 뷰 방향을 DXF 뷰 방향으로 변환
+const pdfViewToViewDirection = (v: PdfViewDirection): ViewDirection => {
+  if (v === 'front' || v === 'front-no-door') return 'front';
+  if (v === 'left') return 'left';
+  if (v === 'top') return 'top';
+  return 'front'; // door-only는 front로 처리 (별도 렌더링)
 };
 
 /**
@@ -651,20 +664,21 @@ export const downloadDxfAsPdf = async (
 
         console.log(`📐 left (slot ${slotIndex + 1}): ${slotModules.length}개 가구`);
 
-        const { lines, texts } = generateViewDataFromDxf(spaceInfo, slotModules, viewDirection);
+        const dxfViewDirection = pdfViewToViewDirection(viewDirection);
+        const { lines, texts } = generateViewDataFromDxf(spaceInfo, slotModules, dxfViewDirection);
         console.log(`📐 left (slot ${slotIndex + 1}): ${lines.length}개 라인, ${texts.length}개 텍스트`);
 
         // 슬롯 번호를 제목에 포함
         renderToPdfWithSlotInfo(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight, slotIndex + 1);
       }
     }
-    // 도어도면은 별도 렌더링 함수 사용
-    else if (viewDirection === 'door') {
+    // 도어 입면도 (가구 없이 도어/서랍만)
+    else if (viewDirection === 'door-only') {
       if (!isFirstPage) pdf.addPage();
       isFirstPage = false;
 
-      console.log(`📐 door: 도어도면 전용 렌더링 시작...`);
-      console.log(`📐 door: placedModules 개수: ${placedModules.length}`);
+      console.log(`📐 door-only: 도어 입면도 렌더링 시작...`);
+      console.log(`📐 door-only: placedModules 개수: ${placedModules.length}`);
 
       // 내부 공간 계산 (getModuleById에 필요)
       const wallThickness = spaceInfo.wallConfig?.thickness || 18;
@@ -677,7 +691,7 @@ export const downloadDxfAsPdf = async (
       // 가구에서 도어/서랍 정보 추출
       const doorItems: DoorDrawingItem[] = [];
       for (const placedModule of placedModules) {
-        console.log(`📐 door: 처리 중 - ${placedModule.moduleId}, hasDoor=${placedModule.hasDoor}`);
+        console.log(`📐 door-only: 처리 중 - ${placedModule.moduleId}, hasDoor=${placedModule.hasDoor}`);
         const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
         const doorInfo = extractDoorInfo(placedModule, moduleData, spaceInfo);
         if (doorInfo) {
@@ -685,14 +699,34 @@ export const downloadDxfAsPdf = async (
         }
       }
 
-      console.log(`📐 door: ${doorItems.length}개 가구에서 도어/서랍 추출됨`);
+      console.log(`📐 door-only: ${doorItems.length}개 가구에서 도어/서랍 추출됨`);
       renderDoorDrawingToPdf(pdf, doorItems, spaceInfo, pageWidth, pageHeight);
-    } else {
+    }
+    // 입면도 (도어 없음) - 가구의 hasDoor를 false로 설정하여 렌더링
+    else if (viewDirection === 'front-no-door') {
+      if (!isFirstPage) pdf.addPage();
+      isFirstPage = false;
+
+      console.log(`📐 front-no-door: 도어 없는 입면도 렌더링...`);
+
+      // 가구의 hasDoor를 임시로 false로 설정
+      const modulesWithoutDoor = placedModules.map(m => ({
+        ...m,
+        hasDoor: false
+      }));
+
+      const dxfViewDirection = pdfViewToViewDirection(viewDirection);
+      const { lines, texts } = generateViewDataFromDxf(spaceInfo, modulesWithoutDoor, dxfViewDirection);
+      console.log(`📐 front-no-door: ${lines.length}개 라인, ${texts.length}개 텍스트`);
+      renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight);
+    }
+    else {
       // 일반 뷰 (front, top)
       if (!isFirstPage) pdf.addPage();
       isFirstPage = false;
 
-      const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, viewDirection);
+      const dxfViewDirection = pdfViewToViewDirection(viewDirection);
+      const { lines, texts } = generateViewDataFromDxf(spaceInfo, placedModules, dxfViewDirection);
       console.log(`📐 ${viewDirection}: 최종 ${lines.length}개 라인, ${texts.length}개 텍스트`);
       renderToPdf(pdf, lines, texts, spaceInfo, viewDirection, pageWidth, pageHeight);
     }

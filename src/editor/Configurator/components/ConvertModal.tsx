@@ -34,10 +34,11 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
   // PDF는 무조건 와이어프레임(벡터 도면)으로 내보내기
   const [selectedViews, setSelectedViews] = useState({
     '3d': true,
-    '2d-front': true,
-    '2d-top': false,
-    '2d-left': false,
-    '2d-door': false
+    '2d-front': true,           // 입면도 (도어 있음)
+    '2d-front-no-door': false,  // 입면도 (도어 없음)
+    '2d-top': false,            // 평면도
+    '2d-left': false,           // 측면도
+    '2d-door-only': false       // 도어 입면도 (가구 없이 도어만)
   });
   const [selectedDXFTypes, setSelectedDXFTypes] = useState<DrawingType[]>(['front', 'plan', 'sideLeft', 'door']);
   
@@ -317,9 +318,10 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
       // 선택된 뷰를 PdfViewDirection으로 변환
       const pdfViews: PdfViewDirection[] = [];
       if (selectedViews['2d-front']) pdfViews.push('front');
+      if (selectedViews['2d-front-no-door']) pdfViews.push('front-no-door');
       if (selectedViews['2d-top']) pdfViews.push('top');
       if (selectedViews['2d-left']) pdfViews.push('left');
-      if (selectedViews['2d-door']) pdfViews.push('door');
+      if (selectedViews['2d-door-only']) pdfViews.push('door-only');
 
       // 2D 뷰가 선택되지 않았으면 입면도 기본 추가
       if (pdfViews.length === 0) {
@@ -458,7 +460,25 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
                         checked={selectedViews['2d-front']}
                         onChange={() => handleViewToggle('2d-front')}
                       />
-                      <span>입면도 (Front View)</span>
+                      <span>입면도 - 도어 있음 (With Doors)</span>
+                      <button className={styles.viewDetail}>치수 포함</button>
+                    </label>
+                    <label className={`${styles.viewOption} ${selectedViews['2d-front-no-door'] ? styles.selected : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedViews['2d-front-no-door']}
+                        onChange={() => handleViewToggle('2d-front-no-door')}
+                      />
+                      <span>입면도 - 도어 없음 (Without Doors)</span>
+                      <button className={styles.viewDetail}>치수 포함</button>
+                    </label>
+                    <label className={`${styles.viewOption} ${selectedViews['2d-door-only'] ? styles.selected : ''}`}>
+                      <input
+                        type="checkbox"
+                        checked={selectedViews['2d-door-only']}
+                        onChange={() => handleViewToggle('2d-door-only')}
+                      />
+                      <span>도어 입면도 (Doors Only)</span>
                       <button className={styles.viewDetail}>치수 포함</button>
                     </label>
                     <label className={`${styles.viewOption} ${selectedViews['2d-top'] ? styles.selected : ''}`}>
@@ -477,15 +497,6 @@ const ConvertModal: React.FC<ConvertModalProps> = ({ isOpen, onClose, showAll, s
                         onChange={() => handleViewToggle('2d-left')}
                       />
                       <span>측면도 (Side View)</span>
-                      <button className={styles.viewDetail}>치수 포함</button>
-                    </label>
-                    <label className={`${styles.viewOption} ${selectedViews['2d-door'] ? styles.selected : ''}`}>
-                      <input
-                        type="checkbox"
-                        checked={selectedViews['2d-door']}
-                        onChange={() => handleViewToggle('2d-door')}
-                      />
-                      <span>도어도면 (Door Drawing)</span>
                       <button className={styles.viewDetail}>치수 포함</button>
                     </label>
                   </div>
