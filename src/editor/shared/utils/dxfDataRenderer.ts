@@ -736,9 +736,21 @@ const determineLayerWithParent = (obj: THREE.Object3D): string => {
   const parentNames = getParentNamesChain(obj);
   const combinedNames = lowerName + parentNames;
 
+  // 도어 치수선 (일반 치수선보다 먼저 체크)
+  if (combinedNames.includes('door-dimension') || combinedNames.includes('door_dimension')) {
+    return 'DOOR_DIMENSIONS';
+  }
+
   // 치수선
   if (combinedNames.includes('dimension')) {
     return 'DIMENSIONS';
+  }
+
+  // 도어 (대각선, 엣지 등)
+  if (combinedNames.includes('door-diagonal') || combinedNames.includes('door-edge') ||
+      combinedNames.includes('door_diagonal') || combinedNames.includes('door_edge') ||
+      (lowerName.includes('door') && !combinedNames.includes('dimension'))) {
+    return 'DOOR';
   }
 
   // 공간 프레임 (Room.tsx의 space-frame만 - 가구 프레임과 구분)
@@ -794,9 +806,21 @@ const determineLayerWithParent = (obj: THREE.Object3D): string => {
 const determineLayer = (name: string): string => {
   const lowerName = name.toLowerCase();
 
+  // 도어 치수선 (일반 치수선보다 먼저 체크)
+  if (lowerName.includes('door-dimension') || lowerName.includes('door_dimension')) {
+    return 'DOOR_DIMENSIONS';
+  }
+
   // 치수선
   if (lowerName.includes('dimension')) {
     return 'DIMENSIONS';
+  }
+
+  // 도어 (대각선, 엣지 등)
+  if (lowerName.includes('door-diagonal') || lowerName.includes('door-edge') ||
+      lowerName.includes('door_diagonal') || lowerName.includes('door_edge') ||
+      (lowerName.includes('door') && !lowerName.includes('dimension'))) {
+    return 'DOOR';
   }
 
   // 공간 프레임 (Room.tsx의 space-frame만 - 가구 프레임과 구분)
