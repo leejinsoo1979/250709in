@@ -124,75 +124,207 @@ export default function LandingPage() {
       <Navbar1 {...navbarData} />
 
       <main>
-        {/* Hero Section */}
-        <section className="relative pt-32 pb-20 px-8">
-          <div className="max-w-[1400px] mx-auto text-center">
-            <div className="flex items-center justify-center gap-2 mb-6">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: primaryColor }} />
-              <span className="text-zinc-400 text-sm">Professional Furniture Design Tool</span>
-              <ChevronRight className="w-4 h-4 text-zinc-500" />
-            </div>
-
-            <h1
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-medium text-white mb-8 max-w-4xl mx-auto"
-              style={{
-                letterSpacing: "-0.0325em",
-                lineHeight: 1.1,
-              }}>
-              Design Your Perfect Furniture Space
-            </h1>
-
-            <p className="text-zinc-400 text-lg max-w-xl mb-12 mx-auto">
-              <span className="text-white font-medium">Create stunning 3D furniture layouts.</span>{' '}
-              Professional design tools for visualizing, customizing, and exporting production-ready furniture designs.
-            </p>
-
-            <div className="flex flex-wrap gap-6 justify-center">
-              <Button
-                size="lg"
-                className="text-white hover:opacity-90 rounded-full px-8"
-                style={{ backgroundColor: primaryColor }}
-                onClick={() => navigate('/dashboard')}>
-                Start Designing
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="hover:bg-zinc-800/50 rounded-full px-8"
-                style={{ border: `1px solid ${primaryColor}`, color: primaryColor }}
-                onClick={() => navigate('/configurator')}>
-                View Demo
-              </Button>
-            </div>
-          </div>
-
-          {/* Hero Video with 3D Effect */}
-          <div className="relative max-w-[1300px] mt-20 px-4 ml-auto mr-auto translate-x-[10%]">
-            <div style={{ perspective: "1200px" }}>
-              <div
-                className="overflow-hidden"
+        {/* Hero Section - Simplio3D Style */}
+        <section className="relative pt-24 pb-20 px-8 min-h-screen flex items-center">
+          <div className="max-w-[1400px] mx-auto w-full">
+            {/* Title Section */}
+            <div className="text-center mb-16">
+              <h1
+                className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6"
                 style={{
-                  transform: "rotateX(35deg) rotateY(14deg) rotateZ(-26deg)",
-                  transformOrigin: "center center",
-                  maskImage: "radial-gradient(ellipse 80% 75% at center, black 40%, transparent 90%)",
-                  WebkitMaskImage: "radial-gradient(ellipse 80% 75% at center, black 40%, transparent 90%)",
+                  color: primaryColor,
+                  letterSpacing: "-0.02em",
+                  lineHeight: 1.1,
                 }}>
-                <video
-                  className="w-full block"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline>
-                  <source src="/video/intro.mp4" type="video/mp4" />
-                </video>
+                Simplio3D로 옷장 디자인을 혁신하세요
+              </h1>
+              <p className="text-zinc-400 text-lg md:text-xl max-w-3xl mx-auto">
+                고객이 직접 옷장을 디자인하고 견적을 확인할 수 있는 <span className="text-white font-medium">혁신적인 3D 솔루션</span>으로
+                매장 경험을 한 단계 업그레이드하세요.
+              </p>
+            </div>
+
+            {/* Two Column Layout */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              {/* Left - Interactive Demo Preview */}
+              <div className="relative">
+                <div
+                  className="rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-900/80 shadow-2xl"
+                  style={{
+                    boxShadow: `0 0 60px ${primaryColor}20, 0 25px 50px -12px rgba(0, 0, 0, 0.8)`
+                  }}
+                >
+                  {/* Demo Header */}
+                  <div className="flex items-center gap-2 px-4 py-3 bg-zinc-900 border-b border-zinc-800">
+                    <div className="flex gap-1.5">
+                      <div className="w-3 h-3 rounded-full bg-red-500" />
+                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                    </div>
+                    <span className="text-zinc-500 text-sm ml-2">Simplio3D Editor</span>
+                  </div>
+
+                  {/* Demo Content - 3D Wardrobe Preview */}
+                  <div className="aspect-[4/3] relative bg-gradient-to-br from-zinc-900 to-zinc-950">
+                    <video
+                      className="w-full h-full object-cover"
+                      autoPlay
+                      loop
+                      muted
+                      playsInline>
+                      <source src="/video/intro.mp4" type="video/mp4" />
+                    </video>
+
+                    {/* Overlay UI Elements */}
+                    <div className="absolute bottom-4 left-4 right-4 flex gap-2">
+                      <div className="flex-1 bg-zinc-800/90 backdrop-blur-sm rounded-lg p-3 border border-zinc-700">
+                        <div className="text-zinc-400 text-xs mb-1">총 견적</div>
+                        <div className="text-white font-bold text-lg">₩2,450,000</div>
+                      </div>
+                      <div className="flex-1 bg-zinc-800/90 backdrop-blur-sm rounded-lg p-3 border border-zinc-700">
+                        <div className="text-zinc-400 text-xs mb-1">구성</div>
+                        <div className="text-white font-bold text-lg">서랍 4 / 선반 6</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Floating Feature Cards */}
+                <div
+                  className="absolute -right-4 top-1/4 bg-zinc-900/95 backdrop-blur-sm rounded-xl p-4 border border-zinc-800 shadow-xl"
+                  style={{ transform: 'translateX(20%)' }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: `${primaryColor}20` }}
+                    >
+                      <Box className="w-5 h-5" style={{ color: primaryColor }} />
+                    </div>
+                    <div>
+                      <div className="text-white text-sm font-medium">실시간 3D 렌더링</div>
+                      <div className="text-zinc-500 text-xs">즉각적인 시각화</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  className="absolute -left-4 bottom-1/4 bg-zinc-900/95 backdrop-blur-sm rounded-xl p-4 border border-zinc-800 shadow-xl"
+                  style={{ transform: 'translateX(-20%)' }}
+                >
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-10 h-10 rounded-lg flex items-center justify-center"
+                      style={{ backgroundColor: `${primaryColor}20` }}
+                    >
+                      <Download className="w-5 h-5" style={{ color: primaryColor }} />
+                    </div>
+                    <div>
+                      <div className="text-white text-sm font-medium">DXF 자동 출력</div>
+                      <div className="text-zinc-500 text-xs">제작용 도면 생성</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right - Description */}
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                    고객 경험의 새로운 기준
+                  </h2>
+                  <p className="text-zinc-400 text-lg leading-relaxed">
+                    태블릿 하나로 매장에서 바로 옷장을 디자인하세요.
+                    고객이 직접 참여하는 인터랙티브한 설계 경험으로
+                    상담 시간은 줄이고, 계약 전환율은 높이세요.
+                  </p>
+                </div>
+
+                {/* Feature List */}
+                <div className="space-y-4">
+                  <div className="flex items-start gap-4">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                      style={{ backgroundColor: `${primaryColor}20` }}
+                    >
+                      <CheckIcon color={primaryColor} />
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">직관적인 드래그 앤 드롭</div>
+                      <div className="text-zinc-500 text-sm">전문 지식 없이도 누구나 쉽게 사용</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                      style={{ backgroundColor: `${primaryColor}20` }}
+                    >
+                      <CheckIcon color={primaryColor} />
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">실시간 견적 계산</div>
+                      <div className="text-zinc-500 text-sm">디자인 변경 시 즉시 가격 업데이트</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-4">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
+                      style={{ backgroundColor: `${primaryColor}20` }}
+                    >
+                      <CheckIcon color={primaryColor} />
+                    </div>
+                    <div>
+                      <div className="text-white font-medium">CNC 제작 도면 자동 생성</div>
+                      <div className="text-zinc-500 text-sm">설계부터 생산까지 원스톱 워크플로우</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-wrap gap-4 pt-4">
+                  <Button
+                    size="lg"
+                    className="text-white hover:opacity-90 rounded-full px-8 py-6 text-lg"
+                    style={{ backgroundColor: primaryColor }}
+                    onClick={() => navigate('/dashboard')}>
+                    무료로 시작하기
+                    <ChevronRight className="w-5 h-5 ml-2" />
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="hover:bg-zinc-800/50 rounded-full px-8 py-6 text-lg"
+                    style={{ border: `1px solid ${primaryColor}`, color: primaryColor }}
+                    onClick={() => navigate('/configurator')}>
+                    데모 체험하기
+                  </Button>
+                </div>
+
+                {/* Trust Badges */}
+                <div className="flex items-center gap-6 pt-4">
+                  <div className="text-zinc-500 text-sm">
+                    <span className="text-white font-bold">500+</span> 매장 도입
+                  </div>
+                  <div className="w-px h-4 bg-zinc-700" />
+                  <div className="text-zinc-500 text-sm">
+                    <span className="text-white font-bold">98%</span> 고객 만족도
+                  </div>
+                  <div className="w-px h-4 bg-zinc-700" />
+                  <div className="text-zinc-500 text-sm">
+                    <span className="text-white font-bold">30%</span> 상담 시간 단축
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          {/* Video bottom fade - full width transition to Features section */}
+
+          {/* Background Gradient */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-72 pointer-events-none"
+            className="absolute inset-0 pointer-events-none"
             style={{
-              background: "linear-gradient(to bottom, transparent, rgb(9, 9, 11))"
+              background: `radial-gradient(ellipse 80% 50% at 50% 20%, ${primaryColor}10 0%, transparent 50%)`
             }}
           />
         </section>
