@@ -315,7 +315,7 @@ export function usePDFExport() {
         .filter((idx): idx is number => idx !== undefined)
         .sort((a, b) => a - b); // 글로벌 인덱스 순으로 정렬
 
-      console.log('📋 PDF 내보내기 - 가구 정보:', {
+      const debugInfo = {
         totalModules: placedModules.length,
         hasDroppedCeiling,
         normalSlotCount,
@@ -324,14 +324,17 @@ export function usePDFExport() {
         droppedWidth,
         modules: placedModules.map(m => ({
           id: m.id.slice(-8),
-          moduleId: m.moduleId,
           slotIndex: m.slotIndex,
           zone: m.zone,
-          positionX: m.position.x.toFixed(3),
+          posX: m.position.x.toFixed(2),
           isDropped: isModuleInDroppedZone(m)
         })),
         uniqueSlotIndices
-      });
+      };
+      console.log('📋 PDF 내보내기 - 가구 정보:', debugInfo);
+
+      // 디버그용 alert (콘솔이 안 보일 때)
+      alert(`PDF 디버그:\n총 가구: ${placedModules.length}개\n단내림: ${hasDroppedCeiling}\n일반슬롯수: ${normalSlotCount}\n글로벌슬롯: [${uniqueSlotIndices.join(', ')}]\n\n가구별 정보:\n${placedModules.map(m => `- slot${m.slotIndex} zone=${m.zone || 'undefined'} isDropped=${isModuleInDroppedZone(m)}`).join('\n')}`);
 
       let pageIndex = 0;
 
