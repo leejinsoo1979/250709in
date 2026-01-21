@@ -117,6 +117,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const controlsRef = useRef<any>(null);
 
   // 초기 카메라 설정 저장 (2D와 3D 각각)
+  // 이 값은 props가 변경될 때마다 업데이트되어야 함 (스페이스바 리셋용)
   const initialCameraSetup = useRef<{
     position0: THREE.Vector3 | null;
     target0: THREE.Vector3 | null;
@@ -135,6 +136,9 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     up2D: null,
     zoom2D: null
   });
+
+  // 이전 cameraPosition을 추적하여 변경 감지
+  const prevCameraPositionRef = useRef<string>('');
 
 
   // 뷰모드 변경 시 전환 애니메이션 처리
@@ -184,6 +188,39 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   // 클린 아키텍처: 각 책임을 전용 훅으로 위임
   const camera = useCameraManager(viewMode, cameraPosition, view2DDirection, cameraTarget, cameraUp, isSplitView, zoomMultiplier);
   const controlsConfig = useOrbitControlsConfig(camera.target, viewMode, camera.spaceWidth, camera.spaceHeight, isMobile);
+
+  // cameraPosition/cameraTarget이 변경될 때 초기 상태 업데이트 (스페이스바 리셋용)
+  useEffect(() => {
+    const currentCameraKey = JSON.stringify({
+      position: camera.position,
+      target: camera.target,
+      zoom: camera.zoom,
+      viewMode
+    });
+
+    // 카메라 설정이 변경되었으면 초기 상태 업데이트
+    if (prevCameraPositionRef.current !== currentCameraKey) {
+      canvasLog('📸 카메라 설정 변경 감지 - 초기 상태 업데이트', {
+        viewMode,
+        position: camera.position,
+        target: camera.target,
+        zoom: camera.zoom
+      });
+
+      if (viewMode === '2D') {
+        initialCameraSetup.current.position2D = new THREE.Vector3(...camera.position);
+        initialCameraSetup.current.target2D = new THREE.Vector3(...camera.target);
+        initialCameraSetup.current.up2D = new THREE.Vector3(...(camera.up || [0, 1, 0]));
+        initialCameraSetup.current.zoom2D = camera.zoom;
+      } else {
+        initialCameraSetup.current.position0 = new THREE.Vector3(...camera.position);
+        initialCameraSetup.current.target0 = new THREE.Vector3(...camera.target);
+        initialCameraSetup.current.zoom0 = camera.zoom;
+      }
+
+      prevCameraPositionRef.current = currentCameraKey;
+    }
+  }, [camera.position, camera.target, camera.zoom, camera.up, viewMode]);
 
   // 기본: 한 손가락 회전, 두 손가락 줌+팬
 
@@ -1121,41 +1158,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           <OrbitControls
             ref={(ref) => {
               controlsRef.current = ref;
-              // OrbitControls가 처음 생성될 때 초기 상태 저장
-              if (ref) {
-                // 2D 모드일 때 2D 초기 상태 저장
-                if (viewMode === '2D' && !initialCameraSetup.current.position2D) {
-                  setTimeout(() => {
-                    if (ref && ref.object) {
-                      canvasLog('📸 2D 모드 초기 상태 저장', {
-                        position: ref.object.position.toArray(),
-                        target: ref.target.toArray(),
-                        up: ref.object.up.toArray(),
-                        zoom: ref.object.zoom
-                      });
-                      initialCameraSetup.current.position2D = ref.object.position.clone();
-                      initialCameraSetup.current.target2D = ref.target.clone();
-                      initialCameraSetup.current.up2D = ref.object.up.clone();
-                      initialCameraSetup.current.zoom2D = ref.object.zoom;
-                    }
-                  }, 100);
-                }
-                // 3D 모드 초기 상태 저장
-                else if (viewMode === '3D' && !initialCameraSetup.current.position0) {
-                  setTimeout(() => {
-                    if (ref && ref.object) {
-                      canvasLog('📸 3D 모드 초기 상태 저장', {
-                        position: ref.object.position.toArray(),
-                        target: ref.target.toArray(),
-                        zoom: ref.object.zoom
-                      });
-                      initialCameraSetup.current.position0 = ref.object.position.clone();
-                      initialCameraSetup.current.target0 = ref.target.clone();
-                      initialCameraSetup.current.zoom0 = ref.object.zoom;
-                    }
-                  }, 100);
-                }
-              }
+              // 초기 상태 저장은 useEffect에서 camera props 변경 시 자동 처리됨
             }}
             enabled={controlsConfig.enabled && !isFurnitureDragging && !isDraggingColumn && !isSlotDragging}
             target={controlsConfig.target}
