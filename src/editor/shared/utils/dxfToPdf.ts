@@ -611,11 +611,21 @@ export const downloadDxfAsPdf = async (
     // 도어도면은 별도 렌더링 함수 사용
     if (viewDirection === 'door') {
       console.log(`📐 door: 도어도면 전용 렌더링 시작...`);
+      console.log(`📐 door: placedModules 개수: ${placedModules.length}`);
+
+      // 내부 공간 계산 (getModuleById에 필요)
+      const wallThickness = spaceInfo.wallConfig?.thickness || 18;
+      const internalSpace = {
+        width: spaceInfo.width - wallThickness * 2,
+        height: spaceInfo.height - wallThickness * 2,
+        depth: spaceInfo.depth - wallThickness
+      };
 
       // 가구에서 도어/서랍 정보 추출
       const doorItems: DoorDrawingItem[] = [];
       for (const placedModule of placedModules) {
-        const moduleData = getModuleById(placedModule.moduleId);
+        console.log(`📐 door: 처리 중 - ${placedModule.moduleId}, hasDoor=${placedModule.hasDoor}`);
+        const moduleData = getModuleById(placedModule.moduleId, internalSpace, spaceInfo);
         const doorInfo = extractDoorInfo(placedModule, moduleData, spaceInfo);
         if (doorInfo) {
           doorItems.push(doorInfo);
