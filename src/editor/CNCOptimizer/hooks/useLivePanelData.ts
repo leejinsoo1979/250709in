@@ -164,6 +164,8 @@ export function useLivePanelData() {
           // 가구 측판: "(하)좌측", "(상)우측", "좌측판", "우측판" 등 - 가구 본체의 좌우 측판
           // 서랍 측판: "서랍1 좌측판", "서랍1 우측판" 등 - 서랍 본체의 좌우측 패널
           const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
+          // 서랍 앞판: "서랍1 앞판" 등 - 마이다 보링 대상
+          const isDrawerFrontPanel = panel.name.includes('서랍') && panel.name.includes('앞판');
           const isFurnitureSidePanel = (
             panel.name.includes('좌측') ||
             panel.name.includes('우측') ||
@@ -176,7 +178,7 @@ export function useLivePanelData() {
           // 가구 측판 또는 서랍 측판 모두 보링 대상
           const isSidePanel = isFurnitureSidePanel;
 
-          console.log(`[BORING CHECK] Panel "${panel.name}": isDrawerSidePanel=${isDrawerSidePanel}, isSidePanel=${isSidePanel}, panel=`, panel);
+          console.log(`[BORING CHECK] Panel "${panel.name}": isDrawerSidePanel=${isDrawerSidePanel}, isDrawerFrontPanel=${isDrawerFrontPanel}, isSidePanel=${isSidePanel}, panel=`, panel);
 
           // 측판의 보링 위치 결정
           let panelBoringPositions: number[] | undefined = undefined;
@@ -278,6 +280,18 @@ export function useLivePanelData() {
             }
 
             console.log(`  [BORING FINAL] "${panel.name}" - boringPositions:`, panelBoringPositions);
+            }
+          }
+
+          // ★★★ 서랍 앞판 마이다 보링 처리 ★★★
+          // calculatePanelDetails에서 이미 계산된 boringPositions/boringDepthPositions 사용
+          if (isDrawerFrontPanel) {
+            if (panel.boringPositions && panel.boringPositions.length > 0) {
+              panelBoringPositions = panel.boringPositions;
+              console.log(`[BORING] ★ 서랍 앞판 감지! "${panel.name}" - boringPositions:`, panelBoringPositions);
+              console.log(`[BORING]   boringDepthPositions:`, panel.boringDepthPositions);
+            } else {
+              console.log(`[BORING] 서랍 앞판 "${panel.name}": boringPositions 없음 (calculatePanelDetails에서 계산 안됨)`);
             }
           }
 
@@ -482,6 +496,8 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
         // 측판인지 확인 (가구 측판 + 서랍 본체 측판 모두 포함)
         const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
+        // 서랍 앞판: "서랍1 앞판" 등 - 마이다 보링 대상
+        const isDrawerFrontPanel = panel.name.includes('서랍') && panel.name.includes('앞판');
         const isFurnitureSidePanel = (
           panel.name.includes('좌측') ||
           panel.name.includes('우측') ||
@@ -492,7 +508,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
         // 가구 측판 또는 서랍 측판 모두 보링 대상
         const isSidePanel = isFurnitureSidePanel;
 
-        console.log(`[OPT PANEL CHECK] "${panel.name}": isDrawerSidePanel=${isDrawerSidePanel}, isSidePanel=${isSidePanel}, panel=`, panel);
+        console.log(`[OPT PANEL CHECK] "${panel.name}": isDrawerSidePanel=${isDrawerSidePanel}, isDrawerFrontPanel=${isDrawerFrontPanel}, isSidePanel=${isSidePanel}, panel=`, panel);
 
         // 측판의 보링 위치 결정
         let panelBoringPositions: number[] | undefined = undefined;
@@ -577,6 +593,18 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           }
 
           console.log(`[OPT BORING FINAL] "${panel.name}" - boringPositions:`, panelBoringPositions);
+          }
+        }
+
+        // ★★★ 서랍 앞판 마이다 보링 처리 ★★★
+        // calculatePanelDetails에서 이미 계산된 boringPositions/boringDepthPositions 사용
+        if (isDrawerFrontPanel) {
+          if (panel.boringPositions && panel.boringPositions.length > 0) {
+            panelBoringPositions = panel.boringPositions;
+            console.log(`[OPT BORING] ★ 서랍 앞판 감지! "${panel.name}" - boringPositions:`, panelBoringPositions);
+            console.log(`[OPT BORING]   boringDepthPositions:`, panel.boringDepthPositions);
+          } else {
+            console.log(`[OPT BORING] 서랍 앞판 "${panel.name}": boringPositions 없음`);
           }
         }
 
