@@ -1077,8 +1077,10 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           {/* <fog attach="fog" args={[CANVAS_SETTINGS.FOG_COLOR, CANVAS_SETTINGS.FOG_NEAR, CANVAS_SETTINGS.FOG_FAR]} /> */}
 
           {/* 카메라 설정 - UI 스토어의 카메라 모드 사용 */}
+          {/* key를 사용하여 viewMode 변경 시 카메라 컴포넌트 즉시 재생성 */}
           {camera.is2DMode || (viewMode === '3D' && cameraMode === 'orthographic') ? (
             <OrthographicCamera
+              key={`ortho-${viewMode}-${view2DDirection}`}
               makeDefault
               position={camera.position}
               zoom={camera.zoom}
@@ -1094,6 +1096,7 @@ const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
             />
           ) : (
             <PerspectiveCamera
+              key={`persp-${viewMode}`}
               makeDefault
               position={camera.position}
               fov={cameraFov || camera.fov}
