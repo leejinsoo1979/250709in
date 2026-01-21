@@ -285,14 +285,20 @@ export function useLivePanelData() {
 
           // ★★★ 서랍 앞판 마이다 보링 처리 ★★★
           // calculatePanelDetails에서 이미 계산된 boringPositions/boringDepthPositions 사용
+          let panelBoringDepthPositions: number[] | undefined = undefined;
+
           if (isDrawerFrontPanel) {
             if (panel.boringPositions && panel.boringPositions.length > 0) {
               panelBoringPositions = panel.boringPositions;
+              panelBoringDepthPositions = panel.boringDepthPositions;
               console.log(`[BORING] ★ 서랍 앞판 감지! "${panel.name}" - boringPositions:`, panelBoringPositions);
-              console.log(`[BORING]   boringDepthPositions:`, panel.boringDepthPositions);
+              console.log(`[BORING]   boringDepthPositions:`, panelBoringDepthPositions);
             } else {
               console.log(`[BORING] 서랍 앞판 "${panel.name}": boringPositions 없음 (calculatePanelDetails에서 계산 안됨)`);
             }
+          } else if (isDrawerSidePanel) {
+            // 서랍 측판은 이미 위에서 panelBoringPositions 처리됨
+            panelBoringDepthPositions = panel.boringDepthPositions;
           }
 
           console.log(`  Panel ${panelIndex}: "${panel.name}" - grain: ${grainDirection} -> ${grainValue}`);
@@ -308,7 +314,7 @@ export function useLivePanelData() {
             quantity: 1,
             grain: grainValue,
             boringPositions: panelBoringPositions,
-            boringDepthPositions: panel.boringDepthPositions, // 서랍 측판 보링 X위치
+            boringDepthPositions: panelBoringDepthPositions, // 서랍 측판/앞판만
             groovePositions: panel.groovePositions // 서랍 앞판/뒷판 바닥판 홈
           };
         });
@@ -598,14 +604,20 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
 
         // ★★★ 서랍 앞판 마이다 보링 처리 ★★★
         // calculatePanelDetails에서 이미 계산된 boringPositions/boringDepthPositions 사용
+        let panelBoringDepthPositions: number[] | undefined = undefined;
+
         if (isDrawerFrontPanel) {
           if (panel.boringPositions && panel.boringPositions.length > 0) {
             panelBoringPositions = panel.boringPositions;
+            panelBoringDepthPositions = panel.boringDepthPositions;
             console.log(`[OPT BORING] ★ 서랍 앞판 감지! "${panel.name}" - boringPositions:`, panelBoringPositions);
-            console.log(`[OPT BORING]   boringDepthPositions:`, panel.boringDepthPositions);
+            console.log(`[OPT BORING]   boringDepthPositions:`, panelBoringDepthPositions);
           } else {
             console.log(`[OPT BORING] 서랍 앞판 "${panel.name}": boringPositions 없음`);
           }
+        } else if (isDrawerSidePanel) {
+          // 서랍 측판은 이미 위에서 panelBoringPositions 처리됨
+          panelBoringDepthPositions = panel.boringDepthPositions;
         }
 
         return {
@@ -619,7 +631,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           quantity: 1,
           grain: grainValue,
           boringPositions: panelBoringPositions,
-          boringDepthPositions: panel.boringDepthPositions, // 서랍 측판 보링 X위치
+          boringDepthPositions: panelBoringDepthPositions, // 서랍 측판/앞판만
           groovePositions: panel.groovePositions // 서랍 앞판/뒷판 바닥판 홈
         };
       });
