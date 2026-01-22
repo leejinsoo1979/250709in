@@ -1116,10 +1116,15 @@ export const extractFromScene = (
                                 lowerNameForFilter.includes('back-panel') ||
                                 lowerNameForFilter.includes('clothing-rod') ||
                                 lowerNameForFilter.includes('ventilation') ||
+                                lowerNameForFilter.includes('door') ||
+                                lowerNameForFilter.includes('drawer') ||
+                                lowerNameForFilter.includes('보강대') ||
                                 lowerNameForFilter.includes('선반') ||
                                 lowerNameForFilter.includes('패널') ||
                                 lowerNameForFilter.includes('옷봉') ||
-                                lowerNameForFilter.includes('환기');
+                                lowerNameForFilter.includes('환기') ||
+                                lowerNameForFilter.includes('서랍') ||
+                                lowerNameForFilter.includes('도어');
 
       // 가구 내부 치수선만 X 위치 필터링 적용
       // CADDimensions2D 치수선(dimension_line)은 X=0에 있으므로 필터링 제외
