@@ -228,6 +228,7 @@ const DualType1: React.FC<FurnitureTypeProps> = ({
         lowerSectionDepthMm={lowerSectionDepth}
         upperSectionDepthMm={upperSectionDepth}
         lowerSectionTopOffsetMm={lowerSectionTopOffset}
+        renderMode={renderMode}
       >
         {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
         {!isDragging && (

@@ -202,6 +202,7 @@ const SingleType1: React.FC<FurnitureTypeProps> = ({
           lowerSectionTopOffsetMm={lowerSectionTopOffset}
           textureUrl={spaceInfo.materialConfig?.doorTexture}
           panelGrainDirections={panelGrainDirections}
+          renderMode={renderMode}
         >
           {!isDragging && (
             <>

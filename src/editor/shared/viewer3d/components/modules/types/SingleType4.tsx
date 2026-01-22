@@ -112,7 +112,7 @@ const SingleType4: React.FC<FurnitureTypeProps> = ({
       
       {/* 가구 본체는 showFurniture가 true일 때만 렌더링 */}
       {showFurniture && (
-        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} lowerSectionDepthMm={lowerSectionDepth} upperSectionDepthMm={upperSectionDepth} lowerSectionTopOffsetMm={lowerSectionTopOffset} textureUrl={spaceInfo.materialConfig?.doorTexture} panelGrainDirections={panelGrainDirections}>
+        <BaseFurnitureShell {...baseFurniture} isDragging={isDragging} isEditMode={isEditMode} spaceInfo={spaceInfo} moduleData={moduleData} placedFurnitureId={placedFurnitureId} lowerSectionDepthMm={lowerSectionDepth} upperSectionDepthMm={upperSectionDepth} lowerSectionTopOffsetMm={lowerSectionTopOffset} textureUrl={spaceInfo.materialConfig?.doorTexture} panelGrainDirections={panelGrainDirections} renderMode={renderMode}>
           {/* 드래그 중이 아닐 때만 내부 구조 렌더링 */}
           {!isDragging && (
             <>

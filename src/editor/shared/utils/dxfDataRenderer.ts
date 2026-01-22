@@ -3333,9 +3333,10 @@ export const generateDxfFromData = (
         console.log(`  ✅ 조절발: 뒷면 X=${backFootX.toFixed(1)}, 앞면 X=${frontFootX.toFixed(1)}`);
       }
 
-      // 후면 보강대 생성 (백패널 뒤에 위치)
-      // 보강대: 60mm 높이, 15mm 깊이, 백패널 뒤쪽(X < 0)에 배치
-      // 측면뷰에서 X=0이 백패널 위치, X < 0이 백패널 뒤쪽
+      // 후면 보강대 생성 (백패널에 붙어서 위치)
+      // 보강대: 60mm 높이, 15mm 깊이
+      // 3D 코드 기준: 백패널은 depth/2 - backPanelThickness/2 - 17mm 에 위치
+      // 보강대는 백패널 뒤쪽(더 뒤)에 붙어서 위치
       const reinforcementHeight = 60; // mm
       const reinforcementDepth = 15; // mm
 
@@ -3344,10 +3345,18 @@ export const generateDxfFromData = (
       const innerTop = height - topFrameHeightMm;
       const innerHeight = innerTop - innerBottom;
 
-      // 보강대 X 위치: 백패널 뒤쪽 (음수 좌표)
-      // X=0이 백패널 위치이므로, 보강대는 X=-15 ~ X=0 사이에 배치
-      const reinforcementXStart = -reinforcementDepth; // -15mm
-      const reinforcementXEnd = 0; // 백패널 위치
+      // 백패널 및 보강대 X 위치 계산
+      // 측면뷰에서 X=0이 가구 앞면, X=furnitureDepthMm이 가구 뒷면(외곽)
+      // 백패널은 뒷면 외곽에서 17mm 안쪽에 중심이 위치
+      // 보강대는 백패널 뒷면(벽 방향)에 붙어서 벽 쪽으로 15mm 연장
+      const backPanelOffset = 17; // mm, 백패널 중심이 뒷면 외곽에서 안쪽으로 들어간 거리
+      const backPanelThicknessMm = 9; // mm
+      const backPanelXCenter = furnitureDepthMm - backPanelOffset; // 백패널 중심 X
+      const backPanelXBack = backPanelXCenter + backPanelThicknessMm / 2; // 백패널 뒷면(벽 방향) X
+
+      // 보강대 앞면이 백패널 뒷면에 붙고, 벽 방향으로 15mm 연장
+      const reinforcementXStart = backPanelXBack; // 보강대 앞면(백패널에 닿는 면)
+      const reinforcementXEnd = backPanelXBack + reinforcementDepth; // 보강대 뒷면(벽 방향)
 
       // 보강대 색상 (회색 계열)
       const reinforcementColor = 8;
