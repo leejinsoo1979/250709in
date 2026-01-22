@@ -398,9 +398,21 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             transparent={true}
             opacity={0}
           />
+        ) : shouldMakeTransparent ? (
+          // 2D 솔리드 모드: 강제 투명 처리
+          <meshStandardMaterial
+            transparent={true}
+            opacity={0.1}
+            depthWrite={false}
+            color={panelSpecificMaterial instanceof THREE.MeshStandardMaterial ? panelSpecificMaterial.color : '#E0E0E0'}
+            map={panelSpecificMaterial instanceof THREE.MeshStandardMaterial ? panelSpecificMaterial.map : null}
+            roughness={panelSpecificMaterial instanceof THREE.MeshStandardMaterial ? panelSpecificMaterial.roughness : 0.8}
+            metalness={panelSpecificMaterial instanceof THREE.MeshStandardMaterial ? panelSpecificMaterial.metalness : 0.1}
+          />
         ) : (
+          // 3D 모드 또는 옷봉 등: 원래 material 사용
           <primitive
-            key={`${panelSpecificMaterial.uuid}-${viewMode}-${panelSpecificMaterial.transparent}-${panelSpecificMaterial.opacity}`}
+            key={`${panelSpecificMaterial.uuid}-${viewMode}`}
             object={panelSpecificMaterial}
             attach="material"
           />
