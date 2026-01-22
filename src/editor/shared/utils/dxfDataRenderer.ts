@@ -3283,21 +3283,27 @@ export const generateDxfFromData = (
     }
 
     // 외부 치수선 생성
+    // 씬에서 가구 형상을 추출하지 못하면 데이터 기반으로 가구 형상도 생성
+    const needsDataBasedFurniture = filteredLines.length === 0;
+    if (needsDataBasedFurniture) {
+      console.log(`⚠️ 측면뷰: 씬에서 가구 형상 추출 실패 - 데이터 기반으로 생성`);
+    }
+
     const externalDimensions = generateExternalDimensions(
       spaceInfo,
       placedModules,
       viewDirection,
       sideViewFilter,
-      true, // dimensionsOnly: true - 치수선만 생성 (가구형상은 씬에서 추출)
-      actualFurnitureWidth, // 실제 가구 깊이 전달
-      actualFurnitureMinX, // 실제 가구 X 최소값
-      actualFurnitureMaxX // 실제 가구 X 최대값
+      !needsDataBasedFurniture, // dimensionsOnly: 씬 추출 성공 시 true, 실패 시 false (가구형상도 생성)
+      actualFurnitureWidth > 0 ? actualFurnitureWidth : undefined, // 씬 추출 실패 시 undefined로 전달
+      actualFurnitureMinX !== Infinity ? actualFurnitureMinX : undefined,
+      actualFurnitureMaxX !== -Infinity ? actualFurnitureMaxX : undefined
     );
 
-    // 가구 형상(씬 추출) + 프레임(데이터 생성) + 치수선 합치기
+    // 가구 형상(씬 추출 또는 데이터 생성) + 프레임(데이터 생성) + 치수선 합치기
     lines = [...filteredLines, ...frameLines, ...externalDimensions.lines];
     texts = [...externalDimensions.texts];
-    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 ${filteredLines.length}개 + 프레임 ${frameLines.length}개 + 치수선 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
+    console.log(`📐 측면뷰 (${viewDirection}): 씬 추출 ${filteredLines.length}개 + 프레임 ${frameLines.length}개 + 치수/형상 ${externalDimensions.lines.length}개 = 총 ${lines.length}개 라인, ${texts.length}개 텍스트`);
   } else {
     // 정면뷰/탑뷰: 기존 방식대로 외부 치수선 생성 후 합치기
     const externalDimensions = generateExternalDimensions(spaceInfo, placedModules, viewDirection, sideViewFilter);
