@@ -3065,6 +3065,9 @@ export const generateDxfFromData = (
   console.log(`📊 공간 정보: ${spaceInfo.width}mm x ${spaceInfo.height}mm x ${spaceInfo.depth}mm`);
   console.log(`📊 배치된 가구 수: ${placedModules.length}`);
 
+  // spaceInfo에서 width, height, depth 추출 (프레임 생성에 필요)
+  const { width, height, depth } = spaceInfo;
+
   // 측면뷰용 공간 깊이 설정 (projectTo2D에서 사용)
   currentSpaceDepthMm = spaceInfo.depth || 600;
 
