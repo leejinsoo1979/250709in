@@ -3286,6 +3286,7 @@ export const generateDxfFromData = (
       }
 
       // 조절발 생성 (floor 타입이고 받침대가 있는 경우)
+      // 정면뷰와 동일한 형태: 플레이트(상단) + 원통(하단)
       if (!isStandType && baseFrameHeightMm > 0) {
         const footPlateSize = 64;
         const footPlateThickness = 7;
@@ -3293,31 +3294,42 @@ export const generateDxfFromData = (
         const footCylinderHeight = Math.max(baseFrameHeightMm - footPlateThickness, 0);
         const actualBaseDepthForFoot = baseDepthMm > 0 ? baseDepthMm : 0;
 
-        // 뒷면 조절발 X 위치
+        // 뒷면 조절발 X 위치 (깊이 방향)
         const backFootX = furnitureDepthMm - 32; // 뒷면에서 32mm (플레이트 반)
         // 앞면 조절발 X 위치
         const frontFootX = 20 + actualBaseDepthForFoot + 32; // 앞면에서 20mm + 받침대 깊이 + 플레이트 반
 
-        // 플레이트 Y는 0 (바닥)
-        const plateY = 0;
-        const plateHalfSize = footPlateSize / 2;
+        // 조절발 그리기 함수 (정면뷰와 동일한 형태)
+        const drawFoot = (footCenterX: number) => {
+          // 플레이트 (상단 사각형) - 받침대 바로 아래
+          const plateTop = 0; // 받침대 바닥
+          const plateBottom = -footPlateThickness;
+          const plateHalfSize = footPlateSize / 2;
 
-        // 조절발 플레이트 (뒷면)
+          frameLines.push({ x1: footCenterX - plateHalfSize, y1: plateBottom, x2: footCenterX + plateHalfSize, y2: plateBottom, layer: 'ACCESSORIES', color: 8 });
+          frameLines.push({ x1: footCenterX + plateHalfSize, y1: plateBottom, x2: footCenterX + plateHalfSize, y2: plateTop, layer: 'ACCESSORIES', color: 8 });
+          frameLines.push({ x1: footCenterX + plateHalfSize, y1: plateTop, x2: footCenterX - plateHalfSize, y2: plateTop, layer: 'ACCESSORIES', color: 8 });
+          frameLines.push({ x1: footCenterX - plateHalfSize, y1: plateTop, x2: footCenterX - plateHalfSize, y2: plateBottom, layer: 'ACCESSORIES', color: 8 });
+
+          // 원통 (플레이트 아래) - 정면뷰와 동일
+          const cylHalfSize = footDiameter / 2;
+          const cylTop = plateBottom;
+          const cylBottom = plateBottom - footCylinderHeight;
+
+          frameLines.push({ x1: footCenterX - cylHalfSize, y1: cylTop, x2: footCenterX - cylHalfSize, y2: cylBottom, layer: 'ACCESSORIES', color: 8 });
+          frameLines.push({ x1: footCenterX + cylHalfSize, y1: cylTop, x2: footCenterX + cylHalfSize, y2: cylBottom, layer: 'ACCESSORIES', color: 8 });
+          frameLines.push({ x1: footCenterX - cylHalfSize, y1: cylBottom, x2: footCenterX + cylHalfSize, y2: cylBottom, layer: 'ACCESSORIES', color: 8 });
+        };
+
+        // 뒷면 조절발 그리기
         if (backFootX > 0) {
-          frameLines.push({ x1: backFootX - plateHalfSize, y1: plateY, x2: backFootX + plateHalfSize, y2: plateY, layer: 'ACCESSORIES', color: 8 });
-          frameLines.push({ x1: backFootX + plateHalfSize, y1: plateY, x2: backFootX + plateHalfSize, y2: plateY + footPlateThickness, layer: 'ACCESSORIES', color: 8 });
-          frameLines.push({ x1: backFootX + plateHalfSize, y1: plateY + footPlateThickness, x2: backFootX - plateHalfSize, y2: plateY + footPlateThickness, layer: 'ACCESSORIES', color: 8 });
-          frameLines.push({ x1: backFootX - plateHalfSize, y1: plateY + footPlateThickness, x2: backFootX - plateHalfSize, y2: plateY, layer: 'ACCESSORIES', color: 8 });
+          drawFoot(backFootX);
         }
-
-        // 조절발 플레이트 (앞면)
+        // 앞면 조절발 그리기
         if (frontFootX > 0 && frontFootX < furnitureDepthMm) {
-          frameLines.push({ x1: frontFootX - plateHalfSize, y1: plateY, x2: frontFootX + plateHalfSize, y2: plateY, layer: 'ACCESSORIES', color: 8 });
-          frameLines.push({ x1: frontFootX + plateHalfSize, y1: plateY, x2: frontFootX + plateHalfSize, y2: plateY + footPlateThickness, layer: 'ACCESSORIES', color: 8 });
-          frameLines.push({ x1: frontFootX + plateHalfSize, y1: plateY + footPlateThickness, x2: frontFootX - plateHalfSize, y2: plateY + footPlateThickness, layer: 'ACCESSORIES', color: 8 });
-          frameLines.push({ x1: frontFootX - plateHalfSize, y1: plateY + footPlateThickness, x2: frontFootX - plateHalfSize, y2: plateY, layer: 'ACCESSORIES', color: 8 });
+          drawFoot(frontFootX);
         }
-        console.log(`  ✅ 조절발: 뒷면 X=${backFootX.toFixed(1)}, 앞면 X=${frontFootX.toFixed(1)}`);
+        console.log(`  ✅ 조절발: 뒷면 X=${backFootX.toFixed(1)}, 앞면 X=${frontFootX.toFixed(1)}, 원통높이=${footCylinderHeight}mm`);
       }
 
       // 후면 보강대는 씬에서 추출 (데이터 기반 생성 제거)
