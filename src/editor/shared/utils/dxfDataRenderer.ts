@@ -746,10 +746,15 @@ const determineLayerWithParent = (obj: THREE.Object3D): string => {
     return 'DIMENSIONS';
   }
 
-  // 도어 (대각선, 엣지 등) 및 서랍 앞판(마이다)
+  // 서랍 (앞판, 마이다 등) - DOOR보다 먼저 체크해서 별도 레이어로 분류
+  if (combinedNames.includes('마이다') || combinedNames.includes('drawer-front') ||
+      combinedNames.includes('서랍') || combinedNames.includes('drawer')) {
+    return 'DRAWER';
+  }
+
+  // 도어 (대각선, 엣지 등) - 서랍 제외
   if (combinedNames.includes('door-diagonal') || combinedNames.includes('door-edge') ||
       combinedNames.includes('door_diagonal') || combinedNames.includes('door_edge') ||
-      combinedNames.includes('마이다') || combinedNames.includes('drawer-front') ||
       (lowerName.includes('door') && !combinedNames.includes('dimension'))) {
     return 'DOOR';
   }
@@ -817,10 +822,15 @@ const determineLayer = (name: string): string => {
     return 'DIMENSIONS';
   }
 
-  // 도어 (대각선, 엣지 등) 및 서랍 앞판(마이다)
+  // 서랍 (앞판, 마이다 등) - DOOR보다 먼저 체크해서 별도 레이어로 분류
+  if (lowerName.includes('마이다') || lowerName.includes('drawer-front') ||
+      lowerName.includes('서랍') || lowerName.includes('drawer')) {
+    return 'DRAWER';
+  }
+
+  // 도어 (대각선, 엣지 등) - 서랍 제외
   if (lowerName.includes('door-diagonal') || lowerName.includes('door-edge') ||
       lowerName.includes('door_diagonal') || lowerName.includes('door_edge') ||
-      lowerName.includes('마이다') || lowerName.includes('drawer-front') ||
       (lowerName.includes('door') && !lowerName.includes('dimension'))) {
     return 'DOOR';
   }
@@ -993,30 +1003,34 @@ export const extractFromScene = (
 
     // excludeDoor 옵션이 true이면 도어 관련 객체 모두 제외 (front-no-door용)
     // 자신의 이름뿐만 아니라 부모 계층의 이름도 확인해서 door 관련 객체의 자식도 모두 제외
+    // 단, 서랍(drawer)은 제외하지 않음 - 서랍은 별도 DRAWER 레이어로 처리
     if (excludeDoor) {
       const lowerNameForDoor = name.toLowerCase();
-      // 자신의 이름 확인
-      if (lowerNameForDoor.includes('door') ||
-          lowerNameForDoor.includes('drawer-front') ||
-          lowerNameForDoor.includes('서랍')) {
-        console.log(`🚫 excludeDoor: 자신의 이름으로 제외 - ${name}`);
-        skippedByFilter++;
-        return;
-      }
-      // 부모 계층에서 door 관련 이름 확인 (door-diagonal, door-dimension 등의 자식 요소)
-      let currentParent: THREE.Object3D | null = object.parent;
-      while (currentParent) {
-        if (currentParent.name) {
-          const parentName = currentParent.name.toLowerCase();
-          if (parentName.includes('door') ||
-              parentName.includes('drawer-front') ||
-              parentName.includes('서랍')) {
-            console.log(`🚫 excludeDoor: 부모 이름으로 제외 - ${name} (부모: ${currentParent.name})`);
-            skippedByFilter++;
-            return;
-          }
+      // 서랍 관련은 제외하지 않음 (drawer, 서랍, 마이다)
+      const isDrawerRelated = lowerNameForDoor.includes('drawer') ||
+                              lowerNameForDoor.includes('서랍') ||
+                              lowerNameForDoor.includes('마이다');
+      if (!isDrawerRelated) {
+        // 자신의 이름 확인 (door만)
+        if (lowerNameForDoor.includes('door')) {
+          console.log(`🚫 excludeDoor: 자신의 이름으로 제외 - ${name}`);
+          skippedByFilter++;
+          return;
         }
-        currentParent = currentParent.parent;
+        // 부모 계층에서 door 관련 이름 확인 (door-diagonal, door-dimension 등의 자식 요소)
+        let currentParent: THREE.Object3D | null = object.parent;
+        while (currentParent) {
+          if (currentParent.name) {
+            const parentName = currentParent.name.toLowerCase();
+            // 부모가 door이면서 drawer가 아닌 경우만 제외
+            if (parentName.includes('door') && !parentName.includes('drawer')) {
+              console.log(`🚫 excludeDoor: 부모 이름으로 제외 - ${name} (부모: ${currentParent.name})`);
+              skippedByFilter++;
+              return;
+            }
+          }
+          currentParent = currentParent.parent;
+        }
       }
     }
 

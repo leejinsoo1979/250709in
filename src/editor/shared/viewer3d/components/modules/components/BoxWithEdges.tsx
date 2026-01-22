@@ -128,6 +128,18 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
                                    baseMaterial instanceof THREE.MeshStandardMaterial &&
                                    !isClothingRod;
 
+    // 디버그: 서랍 패널에서 투명 처리 조건 확인
+    if (panelName && panelName.includes('서랍')) {
+      console.log('🔴 BoxWithEdges 서랍 투명 체크:', {
+        panelName,
+        viewMode,
+        renderMode,
+        isMeshStandard: baseMaterial instanceof THREE.MeshStandardMaterial,
+        isClothingRod,
+        shouldMakeTransparent
+      });
+    }
+
     if (shouldMakeTransparent) {
       // baseMaterial을 직접 수정하지 않고 clone
       const transparentMaterial = baseMaterial.clone();
