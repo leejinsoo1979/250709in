@@ -3214,13 +3214,17 @@ export const generateDxfFromData = (
       console.log(`📐 측면뷰: 씬에서 프레임 미추출 - 데이터 기반 프레임 생성`);
 
       // spaceInfo에서 프레임 정보 가져오기
+      // 기본값을 명시적으로 처리하여 0과 undefined를 구분
       const frameSize = spaceInfo.frameSize || { left: 50, right: 50, top: 10 };
-      const topFrameHeightMm = frameSize.top || 0;
+      const topFrameHeightMm = frameSize.top !== undefined ? frameSize.top : 10; // 기본 상부 프레임 10mm
       const baseConfig = spaceInfo.baseConfig || { type: 'floor', height: 65, depth: 0 };
       const isFloating = baseConfig.type === 'stand' && baseConfig.placementType === 'float';
       const isStandType = baseConfig.type === 'stand';
-      const baseFrameHeightMm = isFloating ? 0 : (baseConfig.height || 0);
+      // 바닥레일/받침대가 있으면 높이 사용, 없으면 floor 타입의 경우 기본 65mm
+      const baseFrameHeightMm = isFloating ? 0 : (baseConfig.height !== undefined ? baseConfig.height : 65);
       const baseDepthMm = baseConfig.depth || 0;
+
+      console.log(`📐 측면뷰 프레임 생성 조건: topFrameHeightMm=${topFrameHeightMm}, baseFrameHeightMm=${baseFrameHeightMm}, isFloating=${isFloating}, isStandType=${isStandType}`);
 
       const frameColor = 7; // ACI 7 = 흰색
 
