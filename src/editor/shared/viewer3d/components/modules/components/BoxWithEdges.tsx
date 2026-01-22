@@ -130,14 +130,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
 
     // 디버그: 서랍 패널에서 투명 처리 조건 확인
     if (panelName && panelName.includes('서랍')) {
-      console.log('🔴 BoxWithEdges 서랍 투명 체크:', {
-        panelName,
-        viewMode,
-        renderMode,
-        isMeshStandard: baseMaterial instanceof THREE.MeshStandardMaterial,
-        isClothingRod,
-        shouldMakeTransparent
-      });
+      console.log(`🔴 서랍 투명: panelName=${panelName}, viewMode=${viewMode}, renderMode=${renderMode}, shouldMakeTransparent=${shouldMakeTransparent}`);
     }
 
     if (shouldMakeTransparent) {
@@ -232,7 +225,12 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     const grainDirectionsChanged = prevGrainDirectionsRef.current !== activePanelGrainDirectionsStr;
     const textureChanged = prevTextureSignatureRef.current !== textureSignature;
 
-    if (!grainDirectionsChanged && !textureChanged && panelMaterialRef.current instanceof THREE.MeshStandardMaterial && panelMaterialRef.current.map) {
+    // 투명도 변경 여부 체크 (2D/3D 모드 전환 시 중요)
+    const transparencyChanged = panelMaterialRef.current instanceof THREE.MeshStandardMaterial &&
+      (panelMaterialRef.current.transparent !== processedMaterial.transparent ||
+       panelMaterialRef.current.opacity !== processedMaterial.opacity);
+
+    if (!grainDirectionsChanged && !textureChanged && !transparencyChanged && panelMaterialRef.current instanceof THREE.MeshStandardMaterial && panelMaterialRef.current.map) {
       const existingTexture = panelMaterialRef.current.map;
       if (existingTexture.rotation !== targetRotation) {
         existingTexture.rotation = targetRotation;
@@ -244,6 +242,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       panelMaterialRef.current.transparent = processedMaterial.transparent;
       panelMaterialRef.current.opacity = processedMaterial.opacity;
       panelMaterialRef.current.depthWrite = processedMaterial.depthWrite;
+      panelMaterialRef.current.needsUpdate = true;
 
       if (isDragging) {
         panelMaterialRef.current.color = processedMaterial.color.clone();
