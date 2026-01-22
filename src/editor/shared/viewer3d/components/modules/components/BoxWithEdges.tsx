@@ -112,7 +112,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 실제 사용할 material (prop이 없으면 기본값 사용)
   const baseMaterial = material || defaultMaterial;
 
+  // 2D 모드 투명 처리 여부 결정 (useMemo 외부에서 계산하여 안정적인 조건 확인)
+  const shouldMakeTransparent = viewMode === '2D' &&
+                                 renderMode !== 'wireframe' &&
+                                 baseMaterial instanceof THREE.MeshStandardMaterial &&
+                                 !isClothingRod;
+
   // 드래그 중일 때만 고스트 효과 적용 (편집 모드는 제외)
+  // 중요: 2D 모드 투명 처리는 매번 새로 계산 (캐싱하면 공유 material 문제 발생)
   const processedMaterial = React.useMemo(() => {
     // MeshBasicMaterial인 경우
     // - 패널 하이라이팅용 highlightMaterial은 그대로 사용 (투명 처리 안 함)
@@ -121,20 +128,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return baseMaterial;
     }
 
-    // 2D 모드에서 캐비넷을 투명하게 처리 (옷봉 제외, highlightMaterial 제외)
-    // renderMode가 'solid'이거나 undefined/falsy인 경우 모두 투명 처리 (wireframe만 제외)
-    const shouldMakeTransparent = viewMode === '2D' &&
-                                   renderMode !== 'wireframe' &&
-                                   baseMaterial instanceof THREE.MeshStandardMaterial &&
-                                   !isClothingRod;
-
-    // 디버그: 서랍 패널에서 투명 처리 조건 확인
-    if (panelName && panelName.includes('서랍')) {
-      console.log(`🔴 서랍 투명: panelName=${panelName}, viewMode=${viewMode}, renderMode=${renderMode}, shouldMakeTransparent=${shouldMakeTransparent}`);
-    }
-
     if (shouldMakeTransparent) {
-      // baseMaterial을 직접 수정하지 않고 clone
+      // baseMaterial을 직접 수정하지 않고 clone - 매번 새로 생성
       const transparentMaterial = baseMaterial.clone();
       transparentMaterial.transparent = true;
       transparentMaterial.opacity = 0.1;  // 매우 투명하게 (10% 불투명도)
@@ -172,7 +167,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
     // 편집 모드에서는 원래 재질 그대로 사용
     return baseMaterial;
-  }, [baseMaterial, isDragging, viewMode, renderMode, isClothingRod]);
+  }, [baseMaterial, isDragging, shouldMakeTransparent, isClothingRod]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
