@@ -2790,7 +2790,7 @@ export const generateExternalDimensions = (
     // 측면뷰 치수선 생성 (CADDimensions2D와 동일)
     // ========================================
     const dimColor = 7; // 흰색/검정
-    const dimOffset = 400; // 치수선 오프셋 (mm)
+    const dimOffset = 80; // 치수선 오프셋 (mm) - 측면뷰에 적합한 작은 오프셋
     const extLength = 50; // 연장선 길이 (mm)
 
     // CADDimensions2D와 동일하게 calculateInternalSpace 사용
