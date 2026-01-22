@@ -404,7 +404,11 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             opacity={0}
           />
         ) : (
-          <primitive key={panelSpecificMaterial.uuid} object={panelSpecificMaterial} attach="material" />
+          <primitive
+            key={`${panelSpecificMaterial.uuid}-${viewMode}-${panelSpecificMaterial.transparent}-${panelSpecificMaterial.opacity}`}
+            object={panelSpecificMaterial}
+            attach="material"
+          />
         )}
       </mesh>
       {/* 윤곽선 렌더링 */}
