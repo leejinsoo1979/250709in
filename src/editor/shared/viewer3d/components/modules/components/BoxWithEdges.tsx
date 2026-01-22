@@ -121,8 +121,14 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return baseMaterial;
     }
 
-    // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (옷봉 제외, highlightMaterial 제외)
-    if (viewMode === '2D' && renderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial && !isClothingRod) {
+    // 2D 모드에서 캐비넷을 투명하게 처리 (옷봉 제외, highlightMaterial 제외)
+    // renderMode가 'solid'이거나 undefined/falsy인 경우 모두 투명 처리 (wireframe만 제외)
+    const shouldMakeTransparent = viewMode === '2D' &&
+                                   renderMode !== 'wireframe' &&
+                                   baseMaterial instanceof THREE.MeshStandardMaterial &&
+                                   !isClothingRod;
+
+    if (shouldMakeTransparent) {
       // baseMaterial을 직접 수정하지 않고 clone
       const transparentMaterial = baseMaterial.clone();
       transparentMaterial.transparent = true;
