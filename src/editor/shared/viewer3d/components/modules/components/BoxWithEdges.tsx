@@ -112,14 +112,8 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
   // 실제 사용할 material (prop이 없으면 기본값 사용)
   const baseMaterial = material || defaultMaterial;
 
-  // 2D 모드 투명 처리 여부 결정 (useMemo 외부에서 계산하여 안정적인 조건 확인)
-  const shouldMakeTransparent = viewMode === '2D' &&
-                                 renderMode !== 'wireframe' &&
-                                 baseMaterial instanceof THREE.MeshStandardMaterial &&
-                                 !isClothingRod;
-
   // 드래그 중일 때만 고스트 효과 적용 (편집 모드는 제외)
-  // 중요: 2D 모드 투명 처리는 매번 새로 계산 (캐싱하면 공유 material 문제 발생)
+  // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (옷봉 제외)
   const processedMaterial = React.useMemo(() => {
     // MeshBasicMaterial인 경우
     // - 패널 하이라이팅용 highlightMaterial은 그대로 사용 (투명 처리 안 함)
@@ -128,8 +122,9 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
       return baseMaterial;
     }
 
-    if (shouldMakeTransparent) {
-      // baseMaterial을 직접 수정하지 않고 clone - 매번 새로 생성
+    // 2D 솔리드 모드에서 캐비넷을 투명하게 처리 (옷봉 제외, highlightMaterial 제외)
+    if (viewMode === '2D' && renderMode === 'solid' && baseMaterial instanceof THREE.MeshStandardMaterial && !isClothingRod) {
+      // baseMaterial을 직접 수정하지 않고 clone
       const transparentMaterial = baseMaterial.clone();
       transparentMaterial.transparent = true;
       transparentMaterial.opacity = 0.1;  // 매우 투명하게 (10% 불투명도)
@@ -167,7 +162,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     }
     // 편집 모드에서는 원래 재질 그대로 사용
     return baseMaterial;
-  }, [baseMaterial, isDragging, shouldMakeTransparent, isClothingRod]);
+  }, [baseMaterial, isDragging, viewMode, renderMode, isClothingRod]);
 
   // activePanelGrainDirections를 JSON 문자열로 변환하여 값 변경 감지
   const activePanelGrainDirectionsStr = activePanelGrainDirections ? JSON.stringify(activePanelGrainDirections) : '';
@@ -266,7 +261,7 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
     panelMaterialRef.current = panelMaterial;
 
     return panelMaterial;
-  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, textureSignature]);
+  }, [processedMaterial, panelName, activePanelGrainDirectionsStr, isDragging, textureSignature, viewMode, renderMode]);
 
   // useEffect 제거: useMemo에서 이미 모든 회전 로직을 처리하므로 중복 실행 방지
 
@@ -398,21 +393,10 @@ const BoxWithEdges: React.FC<BoxWithEdgesProps> = ({
             transparent={true}
             opacity={0}
           />
-        ) : shouldMakeTransparent ? (
-          // 2D 솔리드 모드: 강제 투명 처리
-          <meshStandardMaterial
-            transparent={true}
-            opacity={0.1}
-            depthWrite={false}
-            color={panelSpecificMaterial instanceof THREE.MeshStandardMaterial ? panelSpecificMaterial.color : '#E0E0E0'}
-            map={panelSpecificMaterial instanceof THREE.MeshStandardMaterial ? panelSpecificMaterial.map : null}
-            roughness={panelSpecificMaterial instanceof THREE.MeshStandardMaterial ? panelSpecificMaterial.roughness : 0.8}
-            metalness={panelSpecificMaterial instanceof THREE.MeshStandardMaterial ? panelSpecificMaterial.metalness : 0.1}
-          />
         ) : (
-          // 3D 모드 또는 옷봉 등: 원래 material 사용
+          // 솔리드 모드: processedMaterial에서 이미 2D 투명 처리 완료
           <primitive
-            key={`${panelSpecificMaterial.uuid}-${viewMode}`}
+            key={`${panelSpecificMaterial.uuid}-${viewMode}-${renderMode}`}
             object={panelSpecificMaterial}
             attach="material"
           />
