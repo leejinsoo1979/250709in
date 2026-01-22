@@ -233,6 +233,16 @@ const Configurator: React.FC = () => {
   const [showAll, setShowAll] = useState(true);
   const [isConvertPanelOpen, setIsConvertPanelOpen] = useState(false); // 컨버팅 패널 상태
 
+  // viewMode 변경 시 renderMode 자동 동기화
+  // (Header, 단축키 등 외부에서 viewMode가 변경될 때 renderMode도 함께 업데이트)
+  useEffect(() => {
+    if (viewMode === '2D') {
+      setRenderMode('wireframe');
+    } else if (viewMode === '3D') {
+      setRenderMode('solid');
+    }
+  }, [viewMode]);
+
   // 프레임 입력을 위한 로컬 상태 (문자열로 관리하여 입력 중 백스페이스 허용)
   const [frameInputLeft, setFrameInputLeft] = useState<string>(String(spaceInfo.frameSize?.left || 50));
   const [frameInputRight, setFrameInputRight] = useState<string>(String(spaceInfo.frameSize?.right || 50));
