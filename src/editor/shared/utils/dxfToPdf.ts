@@ -336,7 +336,9 @@ export const downloadDxfAsPdf = async (
   const occupiedSlotIndices = new Set<number>();
   const slotWidth = spaceInfo.width / normalSlotCount;
 
-  placedModules.forEach(m => {
+  console.log('📐 슬롯 계산 시작:', { slotWidth, normalSlotCount, moduleCount: placedModules.length });
+
+  placedModules.forEach((m, idx) => {
     let globalSlotIndex: number;
 
     if (m.slotIndex !== undefined) {
@@ -345,15 +347,24 @@ export const downloadDxfAsPdf = async (
       if (hasDroppedCeiling && m.zone === 'dropped') {
         globalSlotIndex = normalSlotCount + m.slotIndex;
       }
+      console.log(`  가구 ${idx}: slotIndex=${m.slotIndex} → globalSlot=${globalSlotIndex}`);
     } else {
       // slotIndex가 없는 경우 X 위치로 슬롯 계산
       const moduleX = m.position?.x ?? 0;
       globalSlotIndex = Math.floor(moduleX / slotWidth);
       globalSlotIndex = Math.max(0, Math.min(globalSlotIndex, normalSlotCount - 1));
+      console.log(`  가구 ${idx}: position.x=${moduleX} → globalSlot=${globalSlotIndex}`);
     }
 
     occupiedSlotIndices.add(globalSlotIndex);
   });
+
+  // 가구가 있는데 슬롯이 비어있으면 기본 슬롯 0 추가
+  if (placedModules.length > 0 && occupiedSlotIndices.size === 0) {
+    console.log('⚠️ 가구가 있지만 슬롯 계산 실패 - 기본 슬롯 0 사용');
+    occupiedSlotIndices.add(0);
+  }
+
   const sortedOccupiedSlots = Array.from(occupiedSlotIndices).sort((a, b) => a - b);
 
   console.log('📊 슬롯 정보:', {
@@ -377,7 +388,10 @@ export const downloadDxfAsPdf = async (
         isFirstPage = false;
 
         // 해당 슬롯의 가구만 필터링 (slotIndex 없으면 X 위치로 계산)
-        const slotModules = placedModules.filter(m => {
+        // 슬롯 계산이 불가능한 경우(기본 슬롯 0) 모든 가구 포함
+        const useAllModules = sortedOccupiedSlots.length === 1 && sortedOccupiedSlots[0] === 0;
+
+        const slotModules = useAllModules ? placedModules : placedModules.filter(m => {
           let globalSlotIndex: number;
 
           if (m.slotIndex !== undefined) {
