@@ -332,15 +332,27 @@ export const downloadDxfAsPdf = async (
     : 0;
 
   // 가구가 있는 슬롯만 추출 (측면도는 가구가 있는 슬롯만 페이지 생성)
+  // slotIndex가 없는 가구는 X 위치로 슬롯 계산
   const occupiedSlotIndices = new Set<number>();
+  const slotWidth = spaceInfo.width / normalSlotCount;
+
   placedModules.forEach(m => {
+    let globalSlotIndex: number;
+
     if (m.slotIndex !== undefined) {
-      let globalSlotIndex = m.slotIndex;
+      // slotIndex가 있는 경우
+      globalSlotIndex = m.slotIndex;
       if (hasDroppedCeiling && m.zone === 'dropped') {
         globalSlotIndex = normalSlotCount + m.slotIndex;
       }
-      occupiedSlotIndices.add(globalSlotIndex);
+    } else {
+      // slotIndex가 없는 경우 X 위치로 슬롯 계산
+      const moduleX = m.position?.x ?? 0;
+      globalSlotIndex = Math.floor(moduleX / slotWidth);
+      globalSlotIndex = Math.max(0, Math.min(globalSlotIndex, normalSlotCount - 1));
     }
+
+    occupiedSlotIndices.add(globalSlotIndex);
   });
   const sortedOccupiedSlots = Array.from(occupiedSlotIndices).sort((a, b) => a - b);
 
@@ -364,13 +376,20 @@ export const downloadDxfAsPdf = async (
         if (!isFirstPage) pdf.addPage();
         isFirstPage = false;
 
-        // 해당 슬롯의 가구만 필터링
+        // 해당 슬롯의 가구만 필터링 (slotIndex 없으면 X 위치로 계산)
         const slotModules = placedModules.filter(m => {
-          if (m.slotIndex === undefined) return false;
+          let globalSlotIndex: number;
 
-          let globalSlotIndex = m.slotIndex;
-          if (hasDroppedCeiling && m.zone === 'dropped') {
-            globalSlotIndex = normalSlotCount + m.slotIndex;
+          if (m.slotIndex !== undefined) {
+            globalSlotIndex = m.slotIndex;
+            if (hasDroppedCeiling && m.zone === 'dropped') {
+              globalSlotIndex = normalSlotCount + m.slotIndex;
+            }
+          } else {
+            // slotIndex가 없는 경우 X 위치로 슬롯 계산
+            const moduleX = m.position?.x ?? 0;
+            globalSlotIndex = Math.floor(moduleX / slotWidth);
+            globalSlotIndex = Math.max(0, Math.min(globalSlotIndex, normalSlotCount - 1));
           }
 
           return globalSlotIndex === slotIndex;
