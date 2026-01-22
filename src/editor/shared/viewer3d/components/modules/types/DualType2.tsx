@@ -663,24 +663,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
         )}
 
         {/* 조절발통 (네 모서리) - 띄움 배치 시에는 렌더링하지 않음 */}
-        {(() => {
-          const shouldHide = lowerSectionTopOffset && lowerSectionTopOffset > 0;
-          console.log('🦶 [DualType2] 조절발 렌더링 체크:');
-          console.log('  moduleId:', moduleData.id);
-          console.log('  lowerSectionTopOffset:', lowerSectionTopOffset);
-          console.log('  shouldHide:', shouldHide);
-          console.log('  shouldRender:', !shouldHide);
-          console.log('  spaceConfigPlacementType:', spaceInfo?.baseConfig?.placementType);
-          console.log('  spaceConfigFloatHeight:', spaceInfo?.baseConfig?.floatHeight);
-
-          if (shouldHide) {
-            console.log('  ✅ 조절발 숨김 (띄움 배치)');
-            return null;
-          }
-
-          console.log('  ❌ 조절발 렌더링 (바닥 배치)');
-
-          return (
+        {!isFloating && (
             <AdjustableFootsRenderer
               width={width}
               depth={depth}
@@ -694,8 +677,7 @@ const DualType2: React.FC<FurnitureTypeProps> = ({
               viewMode={viewMode}
               view2DDirection={view2DDirection}
             />
-          );
-        })()}
+        )}
         </group>
       )}
 

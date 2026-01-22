@@ -697,7 +697,7 @@ const DualType4: React.FC<FurnitureTypeProps> = ({
       )}
 
         {/* 조절발통 (네 모서리) - 띄움 배치 시에는 렌더링하지 않음 */}
-        {!isFloating && !(lowerSectionTopOffset && lowerSectionTopOffset > 0) && (
+        {!isFloating && (
           <AdjustableFootsRenderer
             width={width}
             depth={depth}
