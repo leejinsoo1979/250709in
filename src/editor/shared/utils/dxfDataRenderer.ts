@@ -2576,42 +2576,10 @@ export const generateExternalDimensions = (
     }
 
     // ========================================
-    // 6. 탑뷰 백패널 보강대 - 백패널 뒤쪽(Y 방향 높은 값)에 가로로 배치
-    // 탑뷰에서 Y=furnitureBackY가 백패널 위치, 그 뒤쪽(Y+)에 보강대 배치
+    // 6. 탑뷰 백패널 보강대 - 씬에서 추출
+    // 데이터 기반 생성 제거 - 3D 씬에서 보강대가 이미 렌더링되어 있으므로 씬 추출에 의존
     // ========================================
-    const reinforcementDepthMm = 15; // 보강대 깊이 (15mm)
-    const reinforcementColor = 8; // 회색 (조절발과 동일)
-
-    // 보강대 Y 위치: 백패널 뒤쪽
-    const reinforcementFrontY = furnitureBackY;
-    const reinforcementBackY = furnitureBackY + reinforcementDepthMm;
-
-    // 보강대 X 위치: 좌우 프레임 안쪽 (가구 영역 전체 너비)
-    const reinforcementLeftX = -halfWidth + leftFrameWidth;
-    const reinforcementRightX = halfWidth - rightFrameWidth;
-
-    // 보강대 사각형 (4개 변)
-    lines.push({
-      x1: reinforcementLeftX, y1: reinforcementFrontY,
-      x2: reinforcementRightX, y2: reinforcementFrontY,
-      layer: 'BACK_PANEL', color: reinforcementColor
-    });
-    lines.push({
-      x1: reinforcementRightX, y1: reinforcementFrontY,
-      x2: reinforcementRightX, y2: reinforcementBackY,
-      layer: 'BACK_PANEL', color: reinforcementColor
-    });
-    lines.push({
-      x1: reinforcementRightX, y1: reinforcementBackY,
-      x2: reinforcementLeftX, y2: reinforcementBackY,
-      layer: 'BACK_PANEL', color: reinforcementColor
-    });
-    lines.push({
-      x1: reinforcementLeftX, y1: reinforcementBackY,
-      x2: reinforcementLeftX, y2: reinforcementFrontY,
-      layer: 'BACK_PANEL', color: reinforcementColor
-    });
-    console.log(`  ✅ 탑뷰 보강대: X ${reinforcementLeftX.toFixed(1)}~${reinforcementRightX.toFixed(1)}, Y ${reinforcementFrontY.toFixed(1)}~${reinforcementBackY.toFixed(1)}`);
+    // 보강대는 씬 추출 라인에서 표시됨
 
   } else if (viewDirection === 'left' || viewDirection === 'right') {
     // ========================================
@@ -3347,81 +3315,8 @@ export const generateDxfFromData = (
         console.log(`  ✅ 조절발: 뒷면 X=${backFootX.toFixed(1)}, 앞면 X=${frontFootX.toFixed(1)}`);
       }
 
-      // 후면 보강대 생성 (백패널에 붙어서 위치)
-      // 보강대: 60mm 높이, 15mm 깊이
-      // 3D 코드 기준: 백패널은 depth/2 - backPanelThickness/2 - 17mm 에 위치
-      // 보강대는 백패널 뒤쪽(더 뒤)에 붙어서 위치
-      const reinforcementHeight = 60; // mm
-      const reinforcementDepth = 15; // mm
-
-      // 가구 내부 높이 (프레임 제외)
-      const innerBottom = baseFrameHeightMm;
-      const innerTop = height - topFrameHeightMm;
-      const innerHeight = innerTop - innerBottom;
-
-      // 백패널 및 보강대 X 위치 계산
-      // 측면뷰에서 X=0이 가구 앞면, X=furnitureDepthMm이 가구 뒷면(외곽)
-      // 백패널은 뒷면 외곽에서 17mm 안쪽에 중심이 위치
-      // 보강대는 백패널 뒷면(벽 방향)에 붙어서 벽 쪽으로 15mm 연장
-      const backPanelOffset = 17; // mm, 백패널 중심이 뒷면 외곽에서 안쪽으로 들어간 거리
-      const backPanelThicknessMm = 9; // mm
-      const backPanelXCenter = furnitureDepthMm - backPanelOffset; // 백패널 중심 X
-      const backPanelXBack = backPanelXCenter + backPanelThicknessMm / 2; // 백패널 뒷면(벽 방향) X
-
-      // 보강대 앞면이 백패널 뒷면에 붙고, 벽 방향으로 15mm 연장
-      const reinforcementXStart = backPanelXBack; // 보강대 앞면(백패널에 닿는 면)
-      const reinforcementXEnd = backPanelXBack + reinforcementDepth; // 보강대 뒷면(벽 방향)
-
-      // 보강대 색상 (회색 계열)
-      const reinforcementColor = 8;
-
-      // 2섹션 가구인지 확인 (placedModules에서 sectionHeights 확인)
-      let lowerSectionTopY = innerBottom + (innerHeight / 2); // 기본값: 중간
-      let is2Section = false;
-
-      if (placedModules && placedModules.length > 0) {
-        const targetModule = placedModules[0];
-        if (targetModule.moduleId?.includes('dual') || targetModule.moduleId?.includes('2-section')) {
-          is2Section = true;
-          // 하부섹션 높이 계산
-          const moduleData = getModuleById(targetModule.moduleId);
-          if (moduleData?.sectionHeights && moduleData.sectionHeights.length > 1) {
-            const lowerRatio = moduleData.sectionHeights[0] / moduleData.sectionHeights.reduce((a: number, b: number) => a + b, 0);
-            lowerSectionTopY = innerBottom + (innerHeight * lowerRatio);
-          }
-        }
-      }
-
-      // 보강대 4개 위치 계산
-      // 1. 하부섹션 하단 (innerBottom)
-      // 2. 하부섹션 상단 (lowerSectionTopY) - 2섹션 가구만
-      // 3. 상부섹션 하단 (lowerSectionTopY) - 2섹션 가구만
-      // 4. 상부섹션 상단 (innerTop)
-
-      const drawReinforcement = (y1: number, y2: number, label: string) => {
-        frameLines.push({ x1: reinforcementXStart, y1: y1, x2: reinforcementXEnd, y2: y1, layer: 'BACK_PANEL', color: reinforcementColor });
-        frameLines.push({ x1: reinforcementXEnd, y1: y1, x2: reinforcementXEnd, y2: y2, layer: 'BACK_PANEL', color: reinforcementColor });
-        frameLines.push({ x1: reinforcementXEnd, y1: y2, x2: reinforcementXStart, y2: y2, layer: 'BACK_PANEL', color: reinforcementColor });
-        frameLines.push({ x1: reinforcementXStart, y1: y2, x2: reinforcementXStart, y2: y1, layer: 'BACK_PANEL', color: reinforcementColor });
-        console.log(`  ✅ 보강대 ${label}: X ${reinforcementXStart}~${reinforcementXEnd}, Y ${y1.toFixed(1)}~${y2.toFixed(1)}`);
-      };
-
-      if (innerHeight > reinforcementHeight * 2) {
-        // 1. 하부섹션 하단 보강대
-        drawReinforcement(innerBottom, innerBottom + reinforcementHeight, '하부하단');
-
-        // 4. 상부섹션 상단 보강대
-        drawReinforcement(innerTop - reinforcementHeight, innerTop, '상부상단');
-
-        // 2섹션 가구인 경우 중간 보강대 2개 추가
-        if (is2Section && innerHeight > reinforcementHeight * 4) {
-          // 2. 하부섹션 상단 보강대
-          drawReinforcement(lowerSectionTopY - reinforcementHeight, lowerSectionTopY, '하부상단');
-
-          // 3. 상부섹션 하단 보강대
-          drawReinforcement(lowerSectionTopY, lowerSectionTopY + reinforcementHeight, '상부하단');
-        }
-      }
+      // 후면 보강대는 씬에서 추출 (데이터 기반 생성 제거)
+      // 3D 씬에서 보강대가 이미 렌더링되어 있으므로 씬 추출 라인에서 표시됨
     }
 
     // 외부 치수선 생성
