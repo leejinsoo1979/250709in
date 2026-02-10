@@ -78,7 +78,8 @@ const computeSectionHeightsInfo = (
 
     heightsMm = rawSections.map(section => {
       if (section.heightType === 'absolute') {
-        return Math.min(section.height ?? 0, availableHeightMm);
+        // 절대 높이 섹션은 정의된 높이를 그대로 사용 (availableHeight 기준 축소 없음)
+        return section.height ?? 0;
       }
 
       if (totalPercentage > 0) {
@@ -88,10 +89,15 @@ const computeSectionHeightsInfo = (
       return percentageCount > 0 ? remainingMm / percentageCount : remainingMm;
     });
 
-    const assignedMm = heightsMm.reduce((sum, value) => sum + value, 0);
-    const diffMm = availableHeightMm - assignedMm;
-    if (Math.abs(diffMm) > 0.01 && heightsMm.length > 0) {
-      heightsMm[heightsMm.length - 1] = Math.max(heightsMm[heightsMm.length - 1] + diffMm, 0);
+    // 나머지 보정: percentage/fill 섹션이 있는 경우에만 적용
+    // 모든 섹션이 absolute인 경우 정의된 높이를 그대로 사용 (2단 옷장 등)
+    const hasNonAbsoluteSections = rawSections.some(section => section.heightType !== 'absolute');
+    if (hasNonAbsoluteSections) {
+      const assignedMm = heightsMm.reduce((sum, value) => sum + value, 0);
+      const diffMm = availableHeightMm - assignedMm;
+      if (Math.abs(diffMm) > 0.01 && heightsMm.length > 0) {
+        heightsMm[heightsMm.length - 1] = Math.max(heightsMm[heightsMm.length - 1] + diffMm, 0);
+      }
     }
   }
 
