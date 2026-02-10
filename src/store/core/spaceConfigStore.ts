@@ -315,19 +315,27 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
         processedInfo.wallConfig !== undefined ||
         processedInfo.gapConfig !== undefined;
       
-      if (shouldAdjust) {
+      // gapConfig만 변경한 경우에는 SpaceCalculator에서 gapConfig을 덮어쓰지 않도록 보존
+      const isGapConfigOnly = processedInfo.gapConfig !== undefined &&
+        processedInfo.width === undefined &&
+        processedInfo.customColumnCount === undefined &&
+        processedInfo.installType === undefined &&
+        processedInfo.surroundType === undefined &&
+        processedInfo.wallConfig === undefined;
+
+      if (shouldAdjust && !isGapConfigOnly) {
         const adjustmentResult = SpaceCalculator.adjustForIntegerSlotWidth(tempSpaceInfo);
-        
+
         if (adjustmentResult.adjustmentMade) {
           // 조정된 값을 tempSpaceInfo에 반영하되, customColumnCount는 보존
           const preservedCustomColumnCount = tempSpaceInfo.customColumnCount;
           tempSpaceInfo = adjustmentResult.adjustedSpaceInfo;
-          
+
           // customColumnCount가 명시적으로 설정된 경우 보존
           if (preservedCustomColumnCount !== undefined) {
             tempSpaceInfo.customColumnCount = preservedCustomColumnCount;
           }
-          
+
           console.log('🎯 슬롯 정수화 자동 조정 완료:', {
             슬롯너비: adjustmentResult.slotWidth,
             프레임크기: tempSpaceInfo.frameSize,
