@@ -231,7 +231,7 @@ export class SpaceCalculator {
         }
 
         // 2단계: 현재 값으로 안 되면 대칭 이격거리 탐색 (0.5 단위)
-        for (let gap = 1.5; gap <= 5; gap += 0.5) {
+        for (let gap = 0; gap <= 5; gap += 0.5) {
           const internalWidth = baseWidth - (gap * 2);
           const slotWidth = internalWidth / columnCount;
           
@@ -261,7 +261,7 @@ export class SpaceCalculator {
         
         // 대칭으로 안되면 비대칭 이격거리 시도 (0.5 단위)
         for (let diff = 0.5; diff <= 3.5; diff += 0.5) {
-          for (let leftGap = 1.5; leftGap <= 5; leftGap += 0.5) {
+          for (let leftGap = 0; leftGap <= 5; leftGap += 0.5) {
             const rightGap = Math.round((leftGap + diff) * 10) / 10;
             if (rightGap > 5) continue;
             
