@@ -617,13 +617,14 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       });
 
                       if (is2HangingUpperSection && isDualFurniture) {
-                        // 듀얼 가구만: sectionTopY가 측판 상단 (전체 가구 상판 아래)
-                        // 내경은 상판 하단까지 (상판 두께를 빼야 함)
-                        topY = sectionTopY - basicThickness + floatingAdjustment;
+                        // 듀얼 2단 옷장: 원래 정의된 섹션 높이 사용 (availableHeight 기반 계산이 아닌 실제 섹션 높이)
+                        const originalSectionHeight = (section.heightType === 'absolute' && section.height) ? mmToThreeUnits(section.height) : sectionHeight;
+                        topY = bottomY + originalSectionHeight + floatingAdjustment;
                         console.log('🟡 듀얼 가구 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       } else if (is2HangingUpperSection) {
-                        // 싱글 가구: bottomY + sectionHeight (원래 로직)
-                        topY = bottomY + sectionHeight + floatingAdjustment;
+                        // 싱글 2단 옷장: 원래 정의된 섹션 높이 사용 (availableHeight 기반 계산이 아닌 실제 섹션 높이)
+                        const originalSectionHeight = (section.heightType === 'absolute' && section.height) ? mmToThreeUnits(section.height) : sectionHeight;
+                        topY = bottomY + originalSectionHeight + floatingAdjustment;
                         console.log('🟡 싱글 가구 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       } else {
                         // 일반 케이스: 상부 프레임 하단까지
