@@ -226,7 +226,7 @@ export class SpaceCalculator {
               gapConfig: { left: currentLeft, right: currentRight }
             },
             slotWidth: Math.round(currentSlotWidth * 100) / 100,
-            adjustmentMade: currentIsInteger
+            adjustmentMade: true
           };
         }
 
