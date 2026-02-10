@@ -701,6 +701,11 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       />
                       <span className={styles.unitText}>mm</span>
                     </div>
+                    {((spaceInfo.gapConfig?.left ?? 1.5) < 1.5 || (spaceInfo.gapConfig?.right ?? 1.5) < 1.5) && (
+                      <p style={{ color: '#e53e3e', fontSize: '11px', margin: '4px 0 0', fontWeight: 500 }}>
+                        이격거리 1.5mm 이상을 권장
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

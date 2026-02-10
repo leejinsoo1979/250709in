@@ -184,6 +184,11 @@ const GapControls: React.FC<GapControlsProps> = ({ spaceInfo, onUpdate }) => {
             </div>
           </div>
         </div>
+        {(leftGap < 1.5 || rightGap < 1.5) && (
+          <p style={{ color: '#e53e3e', fontSize: '11px', margin: '6px 0 0', fontWeight: 500 }}>
+            이격거리 1.5mm 이상을 권장
+          </p>
+        )}
       </div>
     </div>
   );
