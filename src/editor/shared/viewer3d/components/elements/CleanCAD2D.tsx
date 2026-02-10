@@ -2500,10 +2500,10 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               renderOrder={1000000}
               depthTest={false}
             >
-              {Math.round(actualWidth)}
+              {Number.isInteger(actualWidth) ? actualWidth : Math.round(actualWidth * 10) / 10}
             </Text>
-            
-            
+
+
             {/* 연장선 - 가구 상단에서 내부너비 치수선(columnDimensionY)까지 */}
             <NativeLine name="dimension_line"
               points={[[leftX, spaceHeight, 0.001], [leftX, columnDimensionY, 0.001]]}
@@ -5446,7 +5446,7 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                 anchorY="middle"
                 rotation={[-Math.PI / 2, 0, 0]}
               >
-                {Math.round(actualWidth)}
+                {Number.isInteger(actualWidth) ? actualWidth : Math.round(actualWidth * 10) / 10}
               </Text>
 
               {/* 연장선들 - 가구 앞단에서 치수선까지 */}
