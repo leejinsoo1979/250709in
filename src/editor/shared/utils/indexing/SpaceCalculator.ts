@@ -207,12 +207,30 @@ export class SpaceCalculator {
     if (spaceInfo.surroundType === 'no-surround') {
       // 노서라운드 모드
       if (spaceInfo.installType === 'builtin' || spaceInfo.installType === 'built-in') {
-        // 빌트인: 이격거리 조정하여 균등분할
+        // 빌트인: 현재 이격거리를 먼저 존중하고, 안 되면 조정
         const baseWidth = spaceInfo.width;
         let bestConfig = null;
         let bestSlotWidth = null;
-        
-        // 먼저 대칭 이격거리로 시도 (0.5 단위)
+
+        // 1단계: 현재 설정된 gapConfig를 먼저 시도
+        const currentLeft = spaceInfo.gapConfig?.left ?? 1.5;
+        const currentRight = spaceInfo.gapConfig?.right ?? 1.5;
+        const currentInternalWidth = baseWidth - currentLeft - currentRight;
+        const currentSlotWidth = currentInternalWidth / columnCount;
+        const currentIsInteger = Math.abs(currentSlotWidth - Math.round(currentSlotWidth)) < 0.001;
+
+        if (currentSlotWidth >= 400 && currentSlotWidth <= 600) {
+          return {
+            adjustedSpaceInfo: {
+              ...spaceInfo,
+              gapConfig: { left: currentLeft, right: currentRight }
+            },
+            slotWidth: Math.round(currentSlotWidth * 100) / 100,
+            adjustmentMade: currentIsInteger
+          };
+        }
+
+        // 2단계: 현재 값으로 안 되면 대칭 이격거리 탐색 (0.5 단위)
         for (let gap = 1.5; gap <= 5; gap += 0.5) {
           const internalWidth = baseWidth - (gap * 2);
           const slotWidth = internalWidth / columnCount;
