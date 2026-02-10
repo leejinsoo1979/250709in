@@ -430,7 +430,9 @@ export const calculatePanelDetails = (
         }
       } else if (section.type === 'hanging') {
         // 옷장 섹션 - 안전선반이 있으면 추가 (하나만)
-        if (section.shelfPositions && section.shelfPositions.length > 0) {
+        // 2단 옷장 하부장의 shelfPositions: [0]은 치수 표시용이므로 제외
+        const is2HangingLower = (moduleData.id.includes('single-2hanging') || moduleData.id.includes('dual-2hanging')) && sectionIndex === 0;
+        if (section.shelfPositions && section.shelfPositions.length > 0 && !is2HangingLower) {
           targetPanel.push({
             name: `${sectionPrefix}선반 1`,
             width: horizontalPanelWidth, // 좌우 0.5mm씩 갭
