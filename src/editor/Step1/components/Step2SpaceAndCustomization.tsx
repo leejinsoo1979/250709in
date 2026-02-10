@@ -335,7 +335,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                         installType: 'builtin' as InstallType,
                       };
                       updates.wallConfig = { left: true, right: true };
-                      updates.gapConfig = { left: 2, right: 2 };
+                      updates.gapConfig = { left: 1.5, right: 1.5 };
                       handleUpdate(updates);
                     }}
                     title={t('space.builtinDesc')}
@@ -349,7 +349,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                         installType: 'semistanding' as InstallType,
                       };
                       updates.wallConfig = { left: true, right: false };
-                      updates.gapConfig = { left: 2, right: 18 };
+                      updates.gapConfig = { left: 1.5, right: 18 };
                       handleUpdate(updates);
                     }}
                     title={t('space.semistandingDesc')}
@@ -363,7 +363,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                         installType: 'freestanding' as InstallType,
                       };
                       updates.wallConfig = { left: false, right: false };
-                      updates.gapConfig = { left: 18, right: 18 };
+                      updates.gapConfig = { left: 0, right: 0 };
                       handleUpdate(updates);
                     }}
                     title={t('space.freestandingDesc')}
@@ -382,7 +382,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       className={`${styles.toggleButton} ${spaceInfo.wallConfig?.left ? styles.active : ''}`}
                       onClick={() => handleUpdate({ 
                         wallConfig: { left: true, right: false },
-                        gapConfig: { left: 2, right: 18 }
+                        gapConfig: { left: 1.5, right: 18 }
                       })}
                     >
                       {t('furniture.left')}
@@ -391,7 +391,7 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       className={`${styles.toggleButton} ${spaceInfo.wallConfig?.right ? styles.active : ''}`}
                       onClick={() => handleUpdate({ 
                         wallConfig: { left: false, right: true },
-                        gapConfig: { left: 18, right: 2 }
+                        gapConfig: { left: 18, right: 1.5 }
                       })}
                     >
                       {t('furniture.right')}
@@ -595,10 +595,10 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       surroundType: 'no-surround',
                       frameSize: { left: 0, right: 0, top: 10 },
                       gapConfig: {
-                        left: spaceInfo.installType === 'builtin' ? 2 : 
-                              (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? 2 : 20,
-                        right: spaceInfo.installType === 'builtin' ? 2 : 
-                               (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right) ? 2 : 20
+                        left: spaceInfo.installType === 'builtin' ? 1.5 :
+                              (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left) ? 1.5 : 20,
+                        right: spaceInfo.installType === 'builtin' ? 1.5 :
+                               (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right) ? 1.5 : 20
                       }
                     })}
                   >
@@ -671,31 +671,33 @@ const Step2SpaceAndCustomization: React.FC<Step2SpaceAndCustomizationProps> = ({
                       <input
                         type="number"
                         className={styles.inputField}
-                        value={spaceInfo.gapConfig?.left || 2}
+                        value={spaceInfo.gapConfig?.left ?? 1.5}
                         onChange={(e) => handleUpdate({
                           gapConfig: {
                             ...spaceInfo.gapConfig,
-                            left: parseInt(e.target.value) || 2
+                            left: parseFloat(e.target.value) || 0
                           }
                         })}
-                        min="2"
-                        max="50"
-                        disabled={spaceInfo.installType === 'builtin' || (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.left)}
+                        min="0"
+                        max="5"
+                        step="0.5"
+                        disabled={spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.left}
                       />
                       <span className={styles.labelText}>우</span>
                       <input
                         type="number"
                         className={styles.inputField}
-                        value={spaceInfo.gapConfig?.right || 2}
+                        value={spaceInfo.gapConfig?.right ?? 1.5}
                         onChange={(e) => handleUpdate({
                           gapConfig: {
                             ...spaceInfo.gapConfig,
-                            right: parseInt(e.target.value) || 2
+                            right: parseFloat(e.target.value) || 0
                           }
                         })}
-                        min="2"
-                        max="50"
-                        disabled={spaceInfo.installType === 'builtin' || (spaceInfo.installType === 'semistanding' && spaceInfo.wallConfig?.right)}
+                        min="0"
+                        max="5"
+                        step="0.5"
+                        disabled={spaceInfo.installType === 'semistanding' && !spaceInfo.wallConfig?.right}
                       />
                       <span className={styles.unitText}>mm</span>
                     </div>
