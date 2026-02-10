@@ -307,12 +307,13 @@ export const useSpaceConfigStore = create<SpaceConfigState>()((set) => ({
       };
       
       // 슬롯 개수나 공간 크기가 변경된 경우 정수 슬롯 너비를 위한 자동 조정
-      const shouldAdjust = 
+      const shouldAdjust =
         processedInfo.width !== undefined ||
         processedInfo.customColumnCount !== undefined ||
         processedInfo.installType !== undefined ||
         processedInfo.surroundType !== undefined ||
-        processedInfo.wallConfig !== undefined;
+        processedInfo.wallConfig !== undefined ||
+        processedInfo.gapConfig !== undefined;
       
       if (shouldAdjust) {
         const adjustmentResult = SpaceCalculator.adjustForIntegerSlotWidth(tempSpaceInfo);

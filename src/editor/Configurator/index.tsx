@@ -2249,8 +2249,8 @@ const Configurator: React.FC = () => {
 
         // 노서라운드일 때 gapConfig 설정
         finalUpdates.gapConfig = {
-          left: currentWallConfig.left ? 2 : 0,
-          right: currentWallConfig.right ? 2 : 0
+          left: currentWallConfig.left ? 1.5 : 0,
+          right: currentWallConfig.right ? 1.5 : 0
         };
       }
 
