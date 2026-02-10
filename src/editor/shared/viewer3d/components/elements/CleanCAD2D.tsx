@@ -1006,14 +1006,17 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         
         if (hasLeftWall) {
           // 왼쪽 벽이 있으면 이격거리 표시
-          leftValue = spaceInfo.gapConfig?.left || 2;
+          leftValue = spaceInfo.gapConfig?.left ?? 1.5;
           leftText = `이격 ${leftValue}`;
         } else {
           // 왼쪽 벽이 없으면 엔드패널 표시
           leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
           leftText = `${leftValue}`;
         }
-        
+
+        // 이격거리가 0이면 표시하지 않음
+        if (leftValue === 0) return null;
+
         return (
           <group>
             {/* 치수선 */}
@@ -1078,16 +1081,19 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
         
         if (hasRightWall) {
           // 오른쪽 벽이 있으면 이격거리 표시
-          rightValue = spaceInfo.gapConfig?.right || 2;
+          rightValue = spaceInfo.gapConfig?.right ?? 1.5;
           rightText = `이격 ${rightValue}`;
         } else {
           // 오른쪽 벽이 없으면 엔드패널 표시
           rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
           rightText = `${rightValue}`;
         }
-        
+
+        // 이격거리가 0이면 표시하지 않음
+        if (rightValue === 0) return null;
+
         const rightEdge = mmToThreeUnits(spaceInfo.width) + leftOffset;
-        
+
         return (
           <group>
             {/* 치수선 */}
@@ -1212,15 +1218,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
                           // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left || 2;
-                          rightReduction = spaceInfo.gapConfig?.right || 2;
+                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
+                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right || 2;
+                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
                           // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
@@ -1270,15 +1276,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
                           // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left || 2;
-                          rightReduction = spaceInfo.gapConfig?.right || 2;
+                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
+                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right || 2;
+                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
                           // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
@@ -1432,7 +1438,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             if (hasLeftWall) {
               // 왼쪽 벽이 있으면 이격거리 표시
-              leftValue = spaceInfo.gapConfig?.left || 2;
+              leftValue = spaceInfo.gapConfig?.left ?? 1.5;
+              if (leftValue === 0) return null;
               leftText = `이격 ${leftValue}`;
             } else if (leftmostFurnitureX !== null) {
               // 왼쪽 벽이 없고 가구가 있으면 엔드패널 표시
@@ -1597,7 +1604,8 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
             
             if (hasRightWall) {
               // 오른쪽 벽이 있으면 이격거리 표시
-              rightValue = spaceInfo.gapConfig?.right || 2;
+              rightValue = spaceInfo.gapConfig?.right ?? 1.5;
+              if (rightValue === 0) return null;
               rightText = `이격 ${rightValue}`;
             } else if (rightmostFurnitureX !== null) {
               // 오른쪽 벽이 없고 가구가 있으면 엔드패널 표시
@@ -2673,15 +2681,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
                           // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left || 2;
-                          rightReduction = spaceInfo.gapConfig?.right || 2;
+                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
+                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right || 2;
+                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
                           // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
@@ -2732,15 +2740,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
                           // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left || 2;
-                          rightReduction = spaceInfo.gapConfig?.right || 2;
+                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
+                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right || 2;
+                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
                           // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
@@ -4476,12 +4484,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               
               if (hasLeftWall) {
                 // 왼쪽 벽이 있으면 이격거리 표시
-                leftValue = spaceInfo.gapConfig?.left || 2;
+                leftValue = spaceInfo.gapConfig?.left ?? 1.5;
+                if (leftValue === 0) return null;
                 leftText = `이격 ${leftValue}`;
               } else {
                 // 왼쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-                
+
                 leftValue = frameThickness.left > 0 ? frameThickness.left : END_PANEL_THICKNESS;
                 leftText = `${leftValue}`;
               }
@@ -4586,12 +4595,13 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
               
               if (hasRightWall) {
                 // 오른쪽 벽이 있으면 이격거리 표시
-                rightValue = spaceInfo.gapConfig?.right || 2;
+                rightValue = spaceInfo.gapConfig?.right ?? 1.5;
+                if (rightValue === 0) return null;
                 rightText = `이격 ${rightValue}`;
               } else {
                 // 오른쪽 벽이 없으면 엔드패널 표시
                 const frameThickness = calculateFrameThickness(spaceInfo, hasLeftFurniture, hasRightFurniture);
-                
+
                 rightValue = frameThickness.right > 0 ? frameThickness.right : END_PANEL_THICKNESS;
                 rightText = `${rightValue}`;
               }
@@ -4749,15 +4759,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
                           // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left || 2;
-                          rightReduction = spaceInfo.gapConfig?.right || 2;
+                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
+                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right || 2;
+                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
                           // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
@@ -4806,15 +4816,15 @@ const CleanCAD2D: React.FC<CleanCAD2DProps> = ({ viewDirection, showDimensions: 
                       if (spaceInfo.surroundType === 'no-surround') {
                         if (spaceInfo.installType === 'builtin') {
                           // 양쪽벽: 설정된 이격거리 사용
-                          leftReduction = spaceInfo.gapConfig?.left || 2;
-                          rightReduction = spaceInfo.gapConfig?.right || 2;
+                          leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
+                          rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                         } else if (spaceInfo.installType === 'semistanding') {
                           if (spaceInfo.wallConfig?.left) {
-                            leftReduction = spaceInfo.gapConfig?.left || 2;
+                            leftReduction = spaceInfo.gapConfig?.left ?? 1.5;
                             rightReduction = 20;
                           } else {
                             leftReduction = 20;
-                            rightReduction = spaceInfo.gapConfig?.right || 2;
+                            rightReduction = spaceInfo.gapConfig?.right ?? 1.5;
                           }
                         } else if (spaceInfo.installType === 'freestanding') {
                           // 벽없음: 슬롯은 엔드패널 포함, reduction 없음
