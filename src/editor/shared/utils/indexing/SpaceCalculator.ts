@@ -212,8 +212,8 @@ export class SpaceCalculator {
         let bestConfig = null;
         let bestSlotWidth = null;
         
-        // 먼저 대칭 이격거리로 시도 (이격 합이 짝수인 경우)
-        for (let gap = 2; gap <= 5; gap++) {
+        // 먼저 대칭 이격거리로 시도 (0.5 단위)
+        for (let gap = 1.5; gap <= 5; gap += 0.5) {
           const internalWidth = baseWidth - (gap * 2);
           const slotWidth = internalWidth / columnCount;
           
@@ -241,11 +241,10 @@ export class SpaceCalculator {
           }
         }
         
-        // 대칭으로 안되면 비대칭 이격거리 시도 (이격 합이 홀수인 경우)
-        // 차이가 작은 것부터 시도 (예: 3,4 먼저 시도하고 그 다음 2,5)
-        for (let diff = 1; diff <= 3; diff++) {
-          for (let leftGap = 2; leftGap <= 5; leftGap++) {
-            const rightGap = leftGap + diff;
+        // 대칭으로 안되면 비대칭 이격거리 시도 (0.5 단위)
+        for (let diff = 0.5; diff <= 3.5; diff += 0.5) {
+          for (let leftGap = 1.5; leftGap <= 5; leftGap += 0.5) {
+            const rightGap = Math.round((leftGap + diff) * 10) / 10;
             if (rightGap > 5) continue;
             
             // 두 가지 경우 모두 시도: (left, right) 및 (right, left)
@@ -296,8 +295,8 @@ export class SpaceCalculator {
           };
         }
         
-        // 정수로 안 떨어지면 기본 2mm 사용
-        const gap = 2;
+        // 정수로 안 떨어지면 기본 1.5mm 사용
+        const gap = 1.5;
         const internalWidth = baseWidth - (gap * 2);
         const slotWidth = Math.round((internalWidth / columnCount) * 100) / 100;
         
