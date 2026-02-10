@@ -450,7 +450,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {visibleFurniture.map((module, moduleIndex) => {
           const moduleData = getModuleById(
             module.moduleId,
-            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
             spaceInfo
           );
 
@@ -470,7 +470,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const moduleDepth = mmToThreeUnits(moduleData.dimensions.depth);
           const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
 
-          // 가구의 실제 높이 사용 (공간 높이가 아닌 모듈 높이 기반으로 섹션 계산)
+          // 가구의 실제 높이 사용 (FurnitureItem과 동일한 방식)
           const moduleHeightMm = (module as PlacedModule).customHeight ?? moduleData.dimensions.height;
           const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, moduleHeightMm, 'left');
           if (sectionConfigs.length === 0) {
@@ -1242,7 +1242,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {visibleFurniture.map((module, moduleIndex) => {
           const moduleData = getModuleById(
             module.moduleId,
-            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
             spaceInfo
           );
 
@@ -1261,7 +1261,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const moduleDepth = mmToThreeUnits(moduleData.dimensions.depth);
           const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
 
-          // 가구의 실제 높이 사용 (공간 높이가 아닌 모듈 높이 기반으로 섹션 계산)
+          // 가구의 실제 높이 사용 (FurnitureItem과 동일한 방식)
           const moduleHeightMm = (module as PlacedModule).customHeight ?? moduleData.dimensions.height;
           const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, moduleHeightMm, 'right');
           if (sectionConfigs.length === 0) {
