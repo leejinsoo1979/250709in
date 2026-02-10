@@ -78,7 +78,7 @@ const computeSectionHeightsInfo = (
 
     heightsMm = rawSections.map(section => {
       if (section.heightType === 'absolute') {
-        // 절대 높이 섹션은 정의된 높이를 그대로 사용 (availableHeight 기준 축소 없음)
+        // 절대 높이 섹션: 측판 높이와 동일하게 section.height 그대로 사용
         return section.height ?? 0;
       }
 
@@ -88,17 +88,6 @@ const computeSectionHeightsInfo = (
 
       return percentageCount > 0 ? remainingMm / percentageCount : remainingMm;
     });
-
-    // 나머지 보정: percentage/fill 섹션이 있는 경우에만 적용
-    // 모든 섹션이 absolute인 경우 정의된 높이를 그대로 사용 (2단 옷장 등)
-    const hasNonAbsoluteSections = rawSections.some(section => section.heightType !== 'absolute');
-    if (hasNonAbsoluteSections) {
-      const assignedMm = heightsMm.reduce((sum, value) => sum + value, 0);
-      const diffMm = availableHeightMm - assignedMm;
-      if (Math.abs(diffMm) > 0.01 && heightsMm.length > 0) {
-        heightsMm[heightsMm.length - 1] = Math.max(heightsMm[heightsMm.length - 1] + diffMm, 0);
-      }
-    }
   }
 
   return {
@@ -481,7 +470,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const moduleDepth = mmToThreeUnits(moduleData.dimensions.depth);
           const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
 
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, internalSpace.height, 'left');
+          // 가구의 실제 높이 사용 (공간 높이가 아닌 모듈 높이 기반으로 섹션 계산)
+          const moduleHeightMm = (module as PlacedModule).customHeight ?? moduleData.dimensions.height;
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, moduleHeightMm, 'left');
           if (sectionConfigs.length === 0) {
             return null;
           }
@@ -1270,7 +1261,9 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
           const moduleDepth = mmToThreeUnits(moduleData.dimensions.depth);
           const furnitureZ = furnitureZOffset + furnitureDepth/2 - doorThickness - moduleDepth/2;
 
-          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, internalSpace.height, 'right');
+          // 가구의 실제 높이 사용 (공간 높이가 아닌 모듈 높이 기반으로 섹션 계산)
+          const moduleHeightMm = (module as PlacedModule).customHeight ?? moduleData.dimensions.height;
+          const { sections: sectionConfigs, heightsMm: sectionHeightsMm } = computeSectionHeightsInfo(module as PlacedModule, moduleData, moduleHeightMm, 'right');
           if (sectionConfigs.length === 0) {
             return null;
           }
