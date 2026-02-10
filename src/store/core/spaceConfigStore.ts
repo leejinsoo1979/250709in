@@ -207,8 +207,8 @@ const createDefaultSpaceConfig = (): SpaceInfo => {
       top: 10
     },
     gapConfig: {
-      left: 2, // 기본 이격거리 2mm
-      right: 2, // 기본 이격거리 2mm
+      left: 1.5, // 기본 이격거리 1.5mm
+      right: 1.5, // 기본 이격거리 1.5mm
     },
     baseConfig: {
       type: 'floor',
