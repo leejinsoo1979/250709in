@@ -617,14 +617,12 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                       });
 
                       if (is2HangingUpperSection && isDualFurniture) {
-                        // 듀얼 2단 옷장: 원래 정의된 섹션 높이 사용 (availableHeight 기반 계산이 아닌 실제 섹션 높이)
-                        const originalSectionHeight = (section.heightType === 'absolute' && section.height) ? mmToThreeUnits(section.height) : sectionHeight;
-                        topY = bottomY + originalSectionHeight + floatingAdjustment;
+                        // 듀얼 가구: sectionTopY가 측판 상단
+                        topY = sectionTopY - basicThickness + floatingAdjustment;
                         console.log('🟡 듀얼 가구 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       } else if (is2HangingUpperSection) {
-                        // 싱글 2단 옷장: 원래 정의된 섹션 높이 사용 (availableHeight 기반 계산이 아닌 실제 섹션 높이)
-                        const originalSectionHeight = (section.heightType === 'absolute' && section.height) ? mmToThreeUnits(section.height) : sectionHeight;
-                        topY = bottomY + originalSectionHeight + floatingAdjustment;
+                        // 싱글 가구: bottomY + sectionHeight
+                        topY = bottomY + sectionHeight + floatingAdjustment;
                         console.log('🟡 싱글 가구 케이스 - topY:', topY, 'topY_mm:', topY * 100);
                       } else {
                         // 일반 케이스: 상부 프레임 하단까지
@@ -637,6 +635,13 @@ const SectionsRenderer: React.FC<SectionsRendererProps> = ({
                     // 섹션 높이에서 상하판 두께만 빼면 내경
                     // topY = bottomY + (sectionHeight - basicThickness * 2)
                     topY = bottomY + (sectionHeight - basicThickness * 2);
+                  }
+
+                  // 2단 옷장 상부 섹션 (안전선반 없는 경우): calculatedHeight가 availableHeight 기반 나머지로 계산되므로
+                  // 원래 정의된 절대 높이를 치수 표시 및 가이드선에 사용
+                  const is2HangingUpperForDisplay = (furnitureId?.includes('2hanging')) && index > 0 && !hasSafetyShelf;
+                  if (is2HangingUpperForDisplay && section.heightType === 'absolute' && section.height) {
+                    topY = bottomY + mmToThreeUnits(section.height);
                   }
 
                   // 실제 내경 계산 (가이드선 사이의 거리)
