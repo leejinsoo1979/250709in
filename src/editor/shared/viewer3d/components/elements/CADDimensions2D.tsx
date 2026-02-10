@@ -732,7 +732,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {visibleFurniture.map((module, index) => {
           const moduleData = getModuleById(
             module.moduleId,
-            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
             spaceInfo
           );
 
@@ -955,7 +955,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const visibleModule = visibleFurniture[0];
             const visibleModuleData = getModuleById(
               visibleModule.moduleId,
-              { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+              { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
               spaceInfo
             );
             // 상부섹션 깊이 우선 사용 (가구 치수 표시와 동일)
@@ -1516,7 +1516,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
         {visibleFurniture.map((module, index) => {
           const moduleData = getModuleById(
             module.moduleId,
-            { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+            { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
             spaceInfo
           );
 
@@ -1721,7 +1721,7 @@ const CADDimensions2D: React.FC<CADDimensions2DProps> = ({ viewDirection, showDi
             const visibleModule = visibleFurniture[0];
             const visibleModuleData = getModuleById(
               visibleModule.moduleId,
-              { width: spaceInfo.width, height: spaceInfo.height, depth: spaceInfo.depth },
+              { width: internalSpace.width, height: internalSpace.height, depth: internalSpace.depth },
               spaceInfo
             );
             // 상부섹션 깊이 우선 사용 (가구 치수 표시와 동일)
