@@ -148,18 +148,8 @@ export const calculatePanelDetails = (
         moduleData.id.includes('2drawer-hanging') ||
         moduleData.id.includes('2hanging');
 
-      // BaseFurnitureShell의 측판 높이 조정 로직 적용
-      let adjustedSectionHeight = sectionHeightMm;
-      if (isSplitSidePanelFurniture && sections.length === 2) {
-        const is4Drawer = moduleData.id.includes('4drawer-hanging');
-        if (sectionIndex === 0) {
-          // 하부 측판: 4drawer는 조정 없음, 2drawer/2hanging은 +18mm
-          adjustedSectionHeight = is4Drawer ? sectionHeightMm : sectionHeightMm + basicThickness;
-        } else {
-          // 상부 측판: 4drawer는 조정 없음, 2drawer/2hanging은 -18mm
-          adjustedSectionHeight = is4Drawer ? sectionHeightMm : sectionHeightMm - basicThickness;
-        }
-      }
+      // 측판 높이는 섹션 높이 그대로 사용 (3D 렌더링의 getSectionHeights와 동일)
+      const adjustedSectionHeight = sectionHeightMm;
 
       // 다중 섹션이고 상하 분리 측판 가구인 경우만 섹션별로 추가
       // 그 외는 통짜로 첫 번째 섹션에만 추가
