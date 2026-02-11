@@ -31,19 +31,19 @@ export const SYSTEM_32MM = {
 // ============================================
 
 export const DEFAULT_HINGE_SETTINGS: BlumClipTopSettings = {
-  // 컵홀 설정
+  // 컵홀 설정 (INSERTA 타입 기준)
   cupDiameter: 35,
   cupDepth: 13,
-  cupEdgeDistance: 3,
+  cupEdgeDistance: 22.5,  // 도어 가장자리에서 힌지컵 중심까지
 
-  // 마운팅 플레이트 나사홀 설정
-  screwDiameter: 2.5,
+  // 마운팅 나사홀 설정 (힌지컵 상하 2개)
+  screwDiameter: 8,       // 나사홀 직경
   screwDepth: 12,
-  screwHoleSpacing: 32,
-  screwRowDistance: 37,
+  screwHoleSpacing: 45,   // 나사홀 간격 (힌지컵 중심에서 상하 22.5mm씩)
+  screwRowDistance: 9.5,   // 도어 가장자리에서 나사홀 중심까지
 
   // 힌지 위치 설정
-  topBottomMargin: 100,
+  topBottomMargin: 120,   // 도어 상단/하단에서 힌지 중심까지
 
   // 문 높이별 힌지 개수 기준
   minDoorHeightFor3Hinges: 1400,
@@ -265,7 +265,7 @@ export const DXF_LAYERS = {
 
 export const BORING_DIAMETERS = {
   'hinge-cup': 35,
-  'hinge-screw': 2.5,
+  'hinge-screw': 8,
   'cam-housing': 15,
   'cam-bolt': 5,
   'shelf-pin': 5,
