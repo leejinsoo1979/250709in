@@ -608,6 +608,7 @@ export const calculatePanelDetails = (
         }
       });
     }
+
   }
 
   // 플랫 배열로 변환하여 반환

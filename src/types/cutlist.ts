@@ -20,6 +20,16 @@ export interface Panel {
   boringPositions?: number[];  // 측판 보링 Y위치 (패널 기준 mm)
   boringDepthPositions?: number[];  // 측판 보링 X위치 (패널 기준 mm, 서랍 측판용)
   groovePositions?: GroovePosition[];  // 바닥판 끼우는 홈 위치 (서랍 앞판/뒷판용)
+  // 도어 힌지 보링 전용 필드
+  screwPositions?: number[];
+  screwDepthPositions?: number[];
+  isDoor?: boolean;
+  isLeftHinge?: boolean;
+  screwHoleSpacing?: number;
+  // 측판 힌지 브라켓 타공 전용 필드
+  bracketBoringPositions?: number[];
+  bracketBoringDepthPositions?: number[];
+  isBracketSide?: boolean;
 }
 
 export interface StockSheet {

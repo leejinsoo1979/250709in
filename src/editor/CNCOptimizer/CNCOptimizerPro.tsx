@@ -383,10 +383,20 @@ function PageInner(){
             canRotate: true, // CNC 최적화에서는 기본적으로 회전 가능 (나중에 설정에 따라 조정됨)
             boringPositions: p.boringPositions, // 보링 Y위치 유지
             boringDepthPositions: p.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
-            groovePositions: p.groovePositions // 홈 위치 유지 (서랍 앞판/뒷판)
+            groovePositions: p.groovePositions, // 홈 위치 유지 (서랍 앞판/뒷판)
+            // 도어 힌지 보링 필드
+            screwPositions: p.screwPositions,
+            screwDepthPositions: p.screwDepthPositions,
+            isDoor: p.isDoor,
+            isLeftHinge: p.isLeftHinge,
+            screwHoleSpacing: p.screwHoleSpacing,
+            // 측판 힌지 브라켓 타공 필드
+            bracketBoringPositions: p.bracketBoringPositions,
+            bracketBoringDepthPositions: p.bracketBoringDepthPositions,
+            isBracketSide: p.isBracketSide,
           };
         });
-        
+
         console.log('[CNCOptimizerPro] Setting panels from livePanels:');
         cutlistPanels.forEach(p => {
           if (p.label.includes('서랍') && (p.label.includes('좌측판') || p.label.includes('우측판'))) {
@@ -523,7 +533,17 @@ function PageInner(){
           canRotate: true,
           boringPositions: p.boringPositions,
           boringDepthPositions: p.boringDepthPositions,
-          groovePositions: p.groovePositions
+          groovePositions: p.groovePositions,
+          // 도어 힌지 보링 필드
+          screwPositions: p.screwPositions,
+          screwDepthPositions: p.screwDepthPositions,
+          isDoor: p.isDoor,
+          isLeftHinge: p.isLeftHinge,
+          screwHoleSpacing: p.screwHoleSpacing,
+          // 측판 힌지 브라켓 타공 필드
+          bracketBoringPositions: p.bracketBoringPositions,
+          bracketBoringDepthPositions: p.bracketBoringDepthPositions,
+          isBracketSide: p.isBracketSide,
         };
       });
 
@@ -729,7 +749,17 @@ function PageInner(){
               canRotate: p.canRotate,
               boringPositions: p.boringPositions, // 보링 위치 유지
               boringDepthPositions: p.boringDepthPositions, // 보링 X 위치
-              groovePositions: p.groovePositions // 홈 위치
+              groovePositions: p.groovePositions, // 홈 위치
+              // 도어 힌지 보링 필드
+              screwPositions: p.screwPositions,
+              screwDepthPositions: p.screwDepthPositions,
+              isDoor: p.isDoor,
+              isLeftHinge: p.isLeftHinge,
+              screwHoleSpacing: p.screwHoleSpacing,
+              // 측판 힌지 브라켓 타공 필드
+              bracketBoringPositions: p.bracketBoringPositions,
+              bracketBoringDepthPositions: p.bracketBoringDepthPositions,
+              isBracketSide: p.isBracketSide,
             };
           });
 
