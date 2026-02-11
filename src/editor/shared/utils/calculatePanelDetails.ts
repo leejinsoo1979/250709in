@@ -11,7 +11,11 @@ export const calculatePanelDetails = (
   t: any = (key: string) => key,
   originalWidth?: number, // 도어용 원래 너비 (기둥 조정 전)
   hingePosition?: 'left' | 'right', // 힌지 위치
-  hingeType?: 'A' | 'B' // 경첩 타입 (A: 45mm, B: 48mm)
+  hingeType?: 'A' | 'B', // 경첩 타입 (A: 45mm, B: 48mm)
+  spaceHeight?: number, // 공간 높이 (mm) - 도어 높이 계산용
+  doorTopGap?: number, // 천장에서 도어 상단까지 이격거리 (mm)
+  doorBottomGap?: number, // 바닥에서 도어 하단까지 이격거리 (mm)
+  baseHeight?: number // 받침대 높이 (mm) - 브라켓 보링 Y오프셋 계산용
 ) => {
   const panels = {
     upper: [],     // 상부장 패널
@@ -475,6 +479,11 @@ export const calculatePanelDetails = (
   // === 도어 패널 (커버도어이므로 원래 너비 사용) ===
   if (hasDoor) {
     const doorGap = 2;
+    // 도어 높이 = 공간높이 - 천장이격 - 바닥이격 (가구편집창 입력값)
+    // spaceHeight가 제공되면 실제 도어 높이 공식 사용, 아니면 기존 방식 fallback
+    const actualDoorH = spaceHeight
+      ? spaceHeight - (doorTopGap ?? 5) - (doorBottomGap ?? 25)
+      : height - doorGap * 2;
 
     // 도어 보링 데이터 생성 헬퍼
     const createDoorBoringData = (doorW: number, doorH: number, isLeftHinge: boolean) => {
@@ -507,7 +516,7 @@ export const calculatePanelDetails = (
 
     if (moduleData.id.includes('dual')) {
       const singleDoorWidth = Math.floor((doorWidth - doorGap * 3) / 2);
-      const doorH = height - doorGap * 2;
+      const doorH = actualDoorH;
       const leftDoorBoring = createDoorBoringData(singleDoorWidth, doorH, true);
       const rightDoorBoring = createDoorBoringData(singleDoorWidth, doorH, false);
 
@@ -541,7 +550,7 @@ export const calculatePanelDetails = (
       });
     } else {
       const doorW = doorWidth - doorGap * 2;
-      const doorH = height - doorGap * 2;
+      const doorH = actualDoorH;
       const isLeftHinge = (hingePosition ?? 'left') === 'left';
       const doorBoring = createDoorBoringData(doorW, doorH, isLeftHinge);
 
@@ -565,10 +574,15 @@ export const calculatePanelDetails = (
     // 도어는 상부+하부 섹션 전체를 한장으로 덮는 구조
     // → 상부+하부 합산 높이를 한몸통으로 계산하여 타공점 결정
     // → 분리 측판이면 각 측판의 Y범위에 해당하는 타공점을 상대좌표로 변환
-    const doorGapForBracket = 2;
-    const doorH = height - doorGapForBracket * 2;
-    const hingeYPositions = calculateHingePositions(doorH);
-    const bracketYPositions = hingeYPositions.map(y => y + doorGapForBracket);
+    // 브라켓 보링: 도어 힌지 Y위치를 측판 기준으로 변환
+    // 도어 높이 = actualDoorH (위에서 이미 계산됨)
+    const hingeYPositions = calculateHingePositions(actualDoorH);
+    // 도어 하단(바닥에서 doorBottomGap) → 측판 하단(바닥에서 baseHeight)
+    // 측판 기준 Y = 힌지Y + (doorBottomGap - baseHeight)
+    const bracketYOffset = spaceHeight
+      ? (doorBottomGap ?? 25) - (baseHeight ?? 65)
+      : 2; // fallback: 기존 doorGap
+    const bracketYPositions = hingeYPositions.map(y => y + bracketYOffset);
 
     const allSidePanels = [...panels.upper, ...panels.lower];
     const isLeftSidePanel = (name: string) =>

@@ -95,11 +95,13 @@ export function useLivePanelData() {
         const color = placedModule.color || 'MW';
         const moduleHingePosition = (placedModule as any).hingePosition || 'right';
         const moduleHingeType = (placedModule as any).hingeType || 'A';
+        const moduleDoorTopGap = (placedModule as any).doorTopGap ?? 5;
+        const moduleDoorBottomGap = (placedModule as any).doorBottomGap ?? 25;
 
 
         // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
         const t = (key: string) => key; // 간단한 번역 함수
-        const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType);
+        const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType, spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap, baseHeight);
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
         console.log(`Module ${moduleIndex}: Total panel count:`, allPanelsList.length);
@@ -492,10 +494,12 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const color = placedModule.color || 'MW';
       const moduleHingePosition = (placedModule as any).hingePosition || 'right';
       const moduleHingeType = (placedModule as any).hingeType || 'A';
+      const moduleDoorTopGap = (placedModule as any).doorTopGap ?? 5;
+      const moduleDoorBottomGap = (placedModule as any).doorBottomGap ?? 25;
 
       // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
       const t = (key: string) => key; // 간단한 번역 함수
-      const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType);
+      const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType, spaceInfo.height, moduleDoorTopGap, moduleDoorBottomGap, baseHeight2);
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
       // 섹션 헤더("=== xxx ===")를 제외하고 실제 패널만 필터링
