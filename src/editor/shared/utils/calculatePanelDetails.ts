@@ -1,4 +1,6 @@
 import { ModuleData } from '@/data/modules';
+import { calculateHingePositions, calculateHingeCount } from '@/domain/boring/calculators/hingeCalculator';
+import { DEFAULT_HINGE_SETTINGS } from '@/domain/boring/constants';
 
 // 패널 정보 계산 함수 - 상부장/하부장 구분하여 표시
 export const calculatePanelDetails = (
@@ -7,7 +9,8 @@ export const calculatePanelDetails = (
   customDepth: number,
   hasDoor: boolean = false,
   t: any = (key: string) => key,
-  originalWidth?: number // 도어용 원래 너비 (기둥 조정 전)
+  originalWidth?: number, // 도어용 원래 너비 (기둥 조정 전)
+  hingePosition?: 'left' | 'right' // 힌지 위치
 ) => {
   const panels = {
     upper: [],     // 상부장 패널
@@ -472,29 +475,83 @@ export const calculatePanelDetails = (
   if (hasDoor) {
     const doorGap = 2;
 
+    // 도어 보링 데이터 생성 헬퍼
+    const createDoorBoringData = (doorW: number, doorH: number, isLeftHinge: boolean) => {
+      const hingePositions = calculateHingePositions(doorH);
+      // 힌지컵 X 위치 (도어 가장자리에서 cupEdgeDistance)
+      const cupX = isLeftHinge
+        ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance
+        : doorW - DEFAULT_HINGE_SETTINGS.cupEdgeDistance;
+      // 나사홀 X 위치 (도어 가장자리에서 screwRowDistance)
+      const screwX = isLeftHinge
+        ? DEFAULT_HINGE_SETTINGS.screwRowDistance
+        : doorW - DEFAULT_HINGE_SETTINGS.screwRowDistance;
+      // 나사홀 Y 오프셋 (힌지컵 중심에서 상하)
+      const screwYOffset = DEFAULT_HINGE_SETTINGS.screwHoleSpacing / 2; // 22.5mm
+
+      return {
+        // boringPositions: 힌지컵 Y좌표 배열 (상단 기준)
+        boringPositions: hingePositions,
+        // boringDepthPositions: 힌지컵 X좌표
+        boringDepthPositions: [cupX],
+        // 나사홀 정보
+        screwPositions: hingePositions.flatMap(y => [y - screwYOffset, y + screwYOffset]),
+        screwDepthPositions: [screwX],
+        hingeCount: calculateHingeCount(doorH),
+        isLeftHinge,
+      };
+    };
+
     if (moduleData.id.includes('dual')) {
       const singleDoorWidth = Math.floor((doorWidth - doorGap * 3) / 2);
+      const doorH = height - doorGap * 2;
+      const leftDoorBoring = createDoorBoringData(singleDoorWidth, doorH, true);
+      const rightDoorBoring = createDoorBoringData(singleDoorWidth, doorH, false);
+
       panels.door.push({
         name: '좌측 도어',
         width: singleDoorWidth,
-        height: height - doorGap * 2,
+        height: doorH,
         thickness: basicThickness,
-        material: 'PET'  // 도어는 PET 재질
+        material: 'PET',
+        boringPositions: leftDoorBoring.boringPositions,
+        boringDepthPositions: leftDoorBoring.boringDepthPositions,
+        screwPositions: leftDoorBoring.screwPositions,
+        screwDepthPositions: leftDoorBoring.screwDepthPositions,
+        isDoor: true,
+        isLeftHinge: true,
       });
       panels.door.push({
         name: '우측 도어',
         width: singleDoorWidth,
-        height: height - doorGap * 2,
+        height: doorH,
         thickness: basicThickness,
-        material: 'PET'  // 도어는 PET 재질
+        material: 'PET',
+        boringPositions: rightDoorBoring.boringPositions,
+        boringDepthPositions: rightDoorBoring.boringDepthPositions,
+        screwPositions: rightDoorBoring.screwPositions,
+        screwDepthPositions: rightDoorBoring.screwDepthPositions,
+        isDoor: true,
+        isLeftHinge: false,
       });
     } else {
+      const doorW = doorWidth - doorGap * 2;
+      const doorH = height - doorGap * 2;
+      const isLeftHinge = (hingePosition ?? 'left') === 'left';
+      const doorBoring = createDoorBoringData(doorW, doorH, isLeftHinge);
+
       panels.door.push({
         name: '도어',
-        width: doorWidth - doorGap * 2,
-        height: height - doorGap * 2,
+        width: doorW,
+        height: doorH,
         thickness: basicThickness,
-        material: 'PET'  // 도어는 PET 재질
+        material: 'PET',
+        boringPositions: doorBoring.boringPositions,
+        boringDepthPositions: doorBoring.boringDepthPositions,
+        screwPositions: doorBoring.screwPositions,
+        screwDepthPositions: doorBoring.screwDepthPositions,
+        isDoor: true,
+        isLeftHinge,
       });
     }
   }
