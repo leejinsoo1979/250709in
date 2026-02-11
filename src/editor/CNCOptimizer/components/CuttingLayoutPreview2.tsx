@@ -1247,6 +1247,58 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         ctx.restore();
       }
 
+      // ★★★ 측판 힌지 브라켓 타공 표시 (Ø3mm) ★★★
+      if (showBorings && panel.isBracketSide && panel.bracketBoringPositions && panel.bracketBoringPositions.length > 0) {
+        ctx.save();
+
+        const originalWidth = panel.width;
+        const originalHeight = panel.height;
+
+        const bracketXPositions = panel.bracketBoringDepthPositions || [20, 52];
+        const bracketRadius = 3 / 2; // Ø3mm
+
+        // 좌표 변환 헬퍼 (도어 보링과 동일 패턴)
+        const toBracketCoords = (posMmX: number, posMmY: number): [number, number] => {
+          if (panel.rotated) {
+            const placedWidth = originalHeight;
+            const placedHeight = originalWidth;
+            const scaleX = placedWidth / originalWidth;
+            const scaleY = placedHeight / originalHeight;
+            return [x + posMmX * scaleX, y + posMmY * scaleY];
+          } else {
+            return [x + posMmX, y + posMmY];
+          }
+        };
+
+        panel.bracketBoringPositions.forEach((yPosMm: number) => {
+          bracketXPositions.forEach((xPosMm: number) => {
+            const [bx, by] = toBracketCoords(xPosMm, yPosMm);
+
+            // Ø3mm 원형
+            ctx.fillStyle = '#ffffff';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1 / (baseScale * scale);
+            ctx.beginPath();
+            ctx.arc(bx, by, bracketRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+
+            // 센터 십자
+            ctx.strokeStyle = '#666666';
+            ctx.lineWidth = 0.3 / (baseScale * scale);
+            const cs = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(bx - cs, by);
+            ctx.lineTo(bx + cs, by);
+            ctx.moveTo(bx, by - cs);
+            ctx.lineTo(bx, by + cs);
+            ctx.stroke();
+          });
+        });
+
+        ctx.restore();
+      }
+
       // ★★★ 백패널 홈 가공 표시 (가구 측판에만 - 서랍 측판, 도어 제외) ★★★
       // 가구 측판 패널에 백패널이 끼워지는 위치에 10mm 폭의 홈 가공 라인 표시
       // 서랍 측판은 바닥판 홈가공(groovePositions)으로 별도 처리
