@@ -245,30 +245,21 @@ export function useLivePanelData() {
               console.log(`  [BORING CALC] panelHeight=${panelHeight}, sectionInfo.height=${sectionInfo?.height}`);
 
               if (sectionInfo) {
-                // 패널 높이 기준으로 보링 위치 재계산
-                // 지판보링: 패널 하단에서 9mm (halfThickness)
-                // 상판보링: 패널 상단에서 9mm 아래 (panelHeight - halfThickness)
-                const bottomBoring = halfThickness; // 9mm
-                const topBoring = panelHeight - halfThickness; // panelHeight - 9mm
+                // sectionInfo.positions는 calculateSectionBoringPositions에서
+                // 이미 섹션 로컬 좌표로 변환된 전체 보링 위치 (바닥판/상판/선반/칸막이 포함)
+                // panelHeight와 sectionHeight가 다를 경우 비율 변환만 적용
+                const sectionHeight = sectionInfo.height || panelHeight;
+                const ratio = panelHeight / sectionHeight;
 
-                // 선반보링: sectionInfo.positions에서 지판/상판 제외한 중간 값들
-                // (sectionInfo.positions의 값들을 패널 높이 비율로 변환)
-                const shelfBorings: number[] = [];
-                if (sectionInfo.positions.length > 2) {
-                  // 선반이 있는 경우 (지판, 상판 외의 보링)
-                  const sectionHeight = sectionInfo.height || panelHeight;
-                  const ratio = panelHeight / sectionHeight;
-
-                  sectionInfo.positions.forEach(pos => {
-                    // 지판(약 9mm)이나 상판(약 sectionHeight-9mm) 근처가 아닌 중간 값
-                    if (pos > halfThickness + 5 && pos < sectionHeight - halfThickness - 5) {
-                      shelfBorings.push(Math.round(pos * ratio));
-                    }
-                  });
+                if (Math.abs(ratio - 1) < 0.001) {
+                  // 비율 차이 없으면 그대로 사용
+                  panelBoringPositions = [...sectionInfo.positions];
+                } else {
+                  // 비율 차이 있으면 변환
+                  panelBoringPositions = sectionInfo.positions.map(pos => Math.round(pos * ratio));
                 }
-
-                panelBoringPositions = [bottomBoring, ...shelfBorings, topBoring].sort((a, b) => a - b);
-                console.log(`  [BORING CALC] recalculated positions:`, panelBoringPositions);
+                panelBoringPositions.sort((a, b) => a - b);
+                console.log(`  [BORING CALC] sectionInfo.positions (${sectionInfo.positions.length}개) → panelBoringPositions:`, panelBoringPositions);
               }
             } else if (isSplitPanel) {
               // 상/하 분리 측판이지만 sectionPositions가 부족한 경우
@@ -606,27 +597,19 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
             console.log(`[OPT BORING] sectionInfo:`, sectionInfo);
 
             if (sectionInfo) {
-              // 패널 높이 기준으로 보링 위치 재계산
-              // 지판보링: 패널 하단에서 9mm (halfThickness)
-              // 상판보링: 패널 상단에서 9mm 아래 (panelHeight - halfThickness)
-              const bottomBoring = halfThickness; // 9mm
-              const topBoring = panelHeight - halfThickness; // panelHeight - 9mm
+              // sectionInfo.positions는 calculateSectionBoringPositions에서
+              // 이미 섹션 로컬 좌표로 변환된 전체 보링 위치 (바닥판/상판/선반/칸막이 포함)
+              // panelHeight와 sectionHeight가 다를 경우 비율 변환만 적용
+              const sectionHeight = sectionInfo.height || panelHeight;
+              const ratio = panelHeight / sectionHeight;
 
-              // 선반보링: sectionInfo.positions에서 지판/상판 제외한 중간 값들
-              const shelfBorings: number[] = [];
-              if (sectionInfo.positions.length > 2) {
-                const sectionHeight = sectionInfo.height || panelHeight;
-                const ratio = panelHeight / sectionHeight;
-
-                sectionInfo.positions.forEach(pos => {
-                  if (pos > halfThickness + 5 && pos < sectionHeight - halfThickness - 5) {
-                    shelfBorings.push(Math.round(pos * ratio));
-                  }
-                });
+              if (Math.abs(ratio - 1) < 0.001) {
+                panelBoringPositions = [...sectionInfo.positions];
+              } else {
+                panelBoringPositions = sectionInfo.positions.map(pos => Math.round(pos * ratio));
               }
-
-              panelBoringPositions = [bottomBoring, ...shelfBorings, topBoring].sort((a, b) => a - b);
-              console.log(`[OPT BORING] recalculated:`, panelBoringPositions);
+              panelBoringPositions.sort((a, b) => a - b);
+              console.log(`[OPT BORING] sectionInfo.positions (${sectionInfo.positions.length}개) → panelBoringPositions:`, panelBoringPositions);
             }
           } else if (isSplitPanel) {
             // 상/하 분리 측판이지만 sectionPositions가 부족한 경우
