@@ -24,6 +24,10 @@ export interface Panel {
   isDoor?: boolean; // 도어 패널 여부
   isLeftHinge?: boolean; // 힌지 방향 (left=true)
   screwHoleSpacing?: number; // 나사홀 간격 (45mm 또는 48mm)
+  // 측판 힌지 브라켓 타공 전용 필드
+  bracketBoringPositions?: number[];      // 브라켓 타공 Y좌표 (힌지 Y위치와 동일)
+  bracketBoringDepthPositions?: number[]; // 브라켓 타공 X좌표 [20, 52]
+  isBracketSide?: boolean;                // 브라켓 타공 대상 측판 여부
 }
 
 export interface StockPanel {
@@ -53,6 +57,10 @@ export interface PlacedPanel extends Panel {
   thickness?: number;
   label?: string;
   boringDepthPositions?: number[]; // 서랍 측판 보링 X위치 (width 기준)
+  // 측판 힌지 브라켓 타공 전용 필드
+  bracketBoringPositions?: number[];
+  bracketBoringDepthPositions?: number[];
+  isBracketSide?: boolean;
 }
 
 export interface CuttingGuide {
