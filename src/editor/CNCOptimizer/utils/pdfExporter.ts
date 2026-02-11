@@ -327,9 +327,20 @@ export class PDFExporter {
         // 힌지컵 좌표
         const cupYPositions = panel.boringPositions;
         const cupXPositions = (panel as any).boringDepthPositions || [];
-        // 나사홀 좌표
-        const screwYPositions = (panel as any).screwPositions || [];
-        const screwXPositions = (panel as any).screwDepthPositions || [];
+
+        // ★★★ 나사홀 좌표: screwPositions가 없으면 힌지컵에서 직접 계산 ★★★
+        const SCREW_ROW_DISTANCE = 9.5;
+        const SCREW_Y_OFFSET = 45 / 2; // 22.5mm
+        let screwYPositions: number[] = (panel as any).screwPositions || [];
+        let screwXPositions: number[] = (panel as any).screwDepthPositions || [];
+        if (screwYPositions.length === 0 && cupYPositions.length > 0) {
+          screwYPositions = cupYPositions.flatMap((cy: number) => [cy - SCREW_Y_OFFSET, cy + SCREW_Y_OFFSET]);
+        }
+        if (screwXPositions.length === 0 && cupXPositions.length > 0) {
+          const cupX = cupXPositions[0];
+          const isLeftHinge = cupX < originalWidth / 2;
+          screwXPositions = [isLeftHinge ? SCREW_ROW_DISTANCE : originalWidth - SCREW_ROW_DISTANCE];
+        }
 
         const cupRadiusPdf = (35 / 2) * scale; // Ø35mm
         const screwRadiusPdf = (8 / 2) * scale; // Ø8mm
