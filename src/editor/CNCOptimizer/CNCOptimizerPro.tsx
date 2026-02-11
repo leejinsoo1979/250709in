@@ -704,7 +704,8 @@ function PageInner(){
             material: matchingStock.material || 'PB',
             color: 'MW',
             price: 50000,
-            stock: matchingStock.quantity
+            stock: matchingStock.quantity,
+            thickness: thickness,
           };
 
           // 패널: width=W방향, height=L방향 (시트와 동일한 좌표계)
