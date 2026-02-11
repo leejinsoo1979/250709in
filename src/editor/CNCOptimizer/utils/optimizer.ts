@@ -228,7 +228,12 @@ export const optimizePanels = async (
         name: originalPanel.name,
         boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
         boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
-        groovePositions: originalPanel.groovePositions // 홈 위치 유지
+        groovePositions: originalPanel.groovePositions, // 홈 위치 유지
+        // 도어 힌지 보링 전용 필드
+        screwPositions: originalPanel.screwPositions,
+        screwDepthPositions: originalPanel.screwDepthPositions,
+        isDoor: originalPanel.isDoor,
+        isLeftHinge: originalPanel.isLeftHinge,
       });
     } else {
       unplacedPanels.push(rect);
@@ -314,7 +319,12 @@ export const optimizePanelsImproved = async (
         name: originalPanel.name,
         boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
         boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
-        groovePositions: originalPanel.groovePositions // 홈 위치 유지
+        groovePositions: originalPanel.groovePositions, // 홈 위치 유지
+        // 도어 힌지 보링 전용 필드
+        screwPositions: originalPanel.screwPositions,
+        screwDepthPositions: originalPanel.screwDepthPositions,
+        isDoor: originalPanel.isDoor,
+        isLeftHinge: originalPanel.isLeftHinge,
       });
     }
   }
@@ -458,7 +468,12 @@ export const optimizePanelsMultiple = async (
         name: originalPanel.name,
         boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
         boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
-        groovePositions: originalPanel.groovePositions // 홈 위치 유지
+        groovePositions: originalPanel.groovePositions, // 홈 위치 유지
+        // 도어 힌지 보링 전용 필드
+        screwPositions: originalPanel.screwPositions,
+        screwDepthPositions: originalPanel.screwDepthPositions,
+        isDoor: originalPanel.isDoor,
+        isLeftHinge: originalPanel.isLeftHinge,
       };
     });
 
@@ -562,7 +577,12 @@ export const optimizePanelsMultipleImproved = async (
         name: originalPanel.name,
         boringPositions: originalPanel.boringPositions, // 보링 Y위치 유지
         boringDepthPositions: originalPanel.boringDepthPositions, // 보링 X위치 유지 (서랍 측판)
-        groovePositions: originalPanel.groovePositions // 홈 위치 유지
+        groovePositions: originalPanel.groovePositions, // 홈 위치 유지
+        // 도어 힌지 보링 전용 필드
+        screwPositions: originalPanel.screwPositions,
+        screwDepthPositions: originalPanel.screwDepthPositions,
+        isDoor: originalPanel.isDoor,
+        isLeftHinge: originalPanel.isLeftHinge,
       };
     });
 
