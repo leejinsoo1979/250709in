@@ -415,7 +415,9 @@ export class PDFExporter {
         this.pdf.setLineWidth(0.1);
 
         // 시트→PDF 좌표 변환 헬퍼
+        // Y좌표: 패널 하단 기준(0=하단) → 캔버스 좌표(0=상단)로 변환
         const toBracketPdfCoords = (posMmX: number, posMmY: number): [number, number] => {
+          const flippedY = originalHeight - posMmY;
           let sheetX: number, sheetY: number;
           if (panel.rotated) {
             const placedWidth = originalHeight;
@@ -423,10 +425,10 @@ export class PDFExporter {
             const scaleX = placedWidth / originalWidth;
             const scaleY = placedHeight / originalHeight;
             sheetX = panel.x + posMmX * scaleX;
-            sheetY = panel.y + posMmY * scaleY;
+            sheetY = panel.y + flippedY * scaleY;
           } else {
             sheetX = panel.x + posMmX;
-            sheetY = panel.y + posMmY;
+            sheetY = panel.y + flippedY;
           }
           if (isRotated) {
             return [offsetX + sheetY * scale, offsetY + (result.stockPanel.width - sheetX) * scale];

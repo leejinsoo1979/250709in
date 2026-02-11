@@ -599,7 +599,12 @@ export const calculatePanelDetails = (
     }
 
     // 측판에 브라켓 타공 주입
+    // 앞 가장자리 = 패널 width(깊이) 기준 오른쪽 끝이므로 width에서 빼서 X좌표 계산
     const injectBracketBoring = (panel: any) => {
+      const panelWidth = panel.width || customDepth;
+      const bracketXFromFront = [20, 52]; // 앞 가장자리에서의 거리
+      const bracketXPositions = bracketXFromFront.map(d => panelWidth - d);
+
       if (isSplitSidePanelForBracket && sections.length >= 2) {
         // 분리 측판: 전체 기준 Y좌표를 해당 섹션 범위로 필터링 후 상대좌표 변환
         const isLowerPanel = panel.name.includes('(하)');
@@ -610,7 +615,7 @@ export const calculatePanelDetails = (
           const filtered = bracketYPositions.filter(y => y < lowerSectionHeight);
           if (filtered.length > 0) {
             panel.bracketBoringPositions = filtered;
-            panel.bracketBoringDepthPositions = [20, 52];
+            panel.bracketBoringDepthPositions = bracketXPositions;
             panel.isBracketSide = true;
           }
         } else if (isUpperPanel) {
@@ -620,14 +625,14 @@ export const calculatePanelDetails = (
             .map(y => y - lowerSectionHeight);
           if (filtered.length > 0) {
             panel.bracketBoringPositions = filtered;
-            panel.bracketBoringDepthPositions = [20, 52];
+            panel.bracketBoringDepthPositions = bracketXPositions;
             panel.isBracketSide = true;
           }
         }
       } else {
         // 통짜 측판: 전체 기준 Y좌표 그대로
         panel.bracketBoringPositions = bracketYPositions;
-        panel.bracketBoringDepthPositions = [20, 52];
+        panel.bracketBoringDepthPositions = bracketXPositions;
         panel.isBracketSide = true;
       }
     };

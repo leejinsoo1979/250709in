@@ -1257,16 +1257,19 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const bracketXPositions = panel.bracketBoringDepthPositions || [20, 52];
         const bracketRadius = 3 / 2; // Ø3mm
 
-        // 좌표 변환 헬퍼 (도어 보링과 동일 패턴)
+        // 좌표 변환 헬퍼
+        // Y좌표: 패널 하단 기준(0=하단) → 캔버스 좌표(0=상단)로 변환 필요
         const toBracketCoords = (posMmX: number, posMmY: number): [number, number] => {
+          // Y 뒤집기: 하단 기준 → 상단 기준
+          const flippedY = originalHeight - posMmY;
           if (panel.rotated) {
             const placedWidth = originalHeight;
             const placedHeight = originalWidth;
             const scaleX = placedWidth / originalWidth;
             const scaleY = placedHeight / originalHeight;
-            return [x + posMmX * scaleX, y + posMmY * scaleY];
+            return [x + posMmX * scaleX, y + flippedY * scaleY];
           } else {
-            return [x + posMmX, y + posMmY];
+            return [x + posMmX, y + flippedY];
           }
         };
 
