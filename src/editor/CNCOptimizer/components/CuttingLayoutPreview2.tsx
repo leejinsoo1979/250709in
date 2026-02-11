@@ -927,18 +927,26 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           }
         } else {
           // 가구 측판: 선반핀 보링 (3개)
-          // 패널 좌표계: X=0이 뒤(백패널 쪽), X=width가 앞(도어 쪽)
+          // 좌측판/우측판에 따라 앞/뒤 방향이 대칭
+          // 우측판: X=0이 뒤(백패널), X=width가 앞(도어)
+          // 좌측판: X=0이 앞(도어), X=width가 뒤(백패널)
+          const isLeftSidePanel = panel.name?.includes('좌측');
           const backPanelThickness = 18; // 백패널 두께
           const edgeOffset = 50; // 끝에서 50mm
 
-          // 깊이 방향 3개의 X 위치
-          const frontX = originalWidth - edgeOffset; // 앞쪽(width쪽)에서 50mm
-          const backX = backPanelThickness + edgeOffset; // 뒤쪽(0쪽)에서 50mm (백패널 18mm 고려)
+          let frontX: number, backX: number;
+          if (isLeftSidePanel) {
+            frontX = edgeOffset; // 좌측판: 앞=X=0쪽
+            backX = originalWidth - backPanelThickness - edgeOffset; // 뒤=X=width쪽
+          } else {
+            frontX = originalWidth - edgeOffset; // 우측판: 앞=X=width쪽
+            backX = backPanelThickness + edgeOffset; // 뒤=X=0쪽
+          }
 
           // 최소 간격 보장 (패널이 너무 작은 경우 대비)
-          const safeBackX = Math.min(backX, frontX - 40);
+          const safeBackX = isLeftSidePanel ? Math.max(backX, frontX + 40) : Math.min(backX, frontX - 40);
           const safeCenterX = (frontX + safeBackX) / 2;
-          depthPositions = [safeBackX, safeCenterX, frontX]; // 깊이 방향 위치들 (3개)
+          depthPositions = isLeftSidePanel ? [frontX, safeCenterX, safeBackX] : [safeBackX, safeCenterX, frontX];
         }
 
         console.log(`[BORING] ${panel.name}: isDrawer=${isDrawerSidePanel}, rotated=${panel.rotated}`);
@@ -1318,16 +1326,19 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const originalHeight = panel.height; // 측판의 높이 방향
 
         // 백패널 홈 위치 계산
-        // 패널 좌표계: X=0이 뒤(백패널 쪽), X=width가 앞(도어 쪽)
-        // 백패널 위치: 측판 뒤쪽(X=0)에서 17mm 안쪽
-        // 백패널 두께: 9mm
-        // 홈 폭: 10mm (백패널 9mm + 여유 1mm)
+        // 좌측판/우측판에 따라 백패널 방향이 대칭
+        // 우측판: 뒤=X=0, 앞=X=width → 홈은 X=0 쪽
+        // 좌측판: 뒤=X=width, 앞=X=0 → 홈은 X=width 쪽
+        const isLeftSidePanelForGroove = panel.name?.includes('좌측');
         const backPanelDepthOffset = 17; // mm (측판 뒤쪽 끝에서 백패널까지 거리)
         const grooveWidth = 10; // mm (홈 폭)
 
-        // 홈 시작 위치 (측판 뒤쪽=X=0 기준)
-        const grooveStartX = backPanelDepthOffset;
-        const grooveEndX = backPanelDepthOffset + grooveWidth;
+        let grooveStartX: number;
+        if (isLeftSidePanelForGroove) {
+          grooveStartX = originalWidth - backPanelDepthOffset - grooveWidth; // 좌측판: 뒤=X=width쪽
+        } else {
+          grooveStartX = backPanelDepthOffset; // 우측판: 뒤=X=0쪽
+        }
 
         // 홈 스타일 설정 (반턱 가공이므로 패널과 같은 색상)
         const groovePanelColor = materialColors[panel.material] || { fill: '#f3f4f6', stroke: '#9ca3af' };

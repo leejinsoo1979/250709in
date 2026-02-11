@@ -259,14 +259,22 @@ export class PDFExporter {
           }
         } else {
           // 가구 측판: 선반핀 보링 (3개)
-          // 패널 좌표계: X=0이 뒤(백패널 쪽), X=width가 앞(도어 쪽)
+          // 좌측판/우측판에 따라 앞/뒤 방향이 대칭
+          const isLeftSidePanel = panel.name?.includes('좌측');
           const backPanelThickness = 18;
           const edgeOffset = 50;
-          const frontX = originalWidth - edgeOffset; // 앞쪽(width쪽)에서 50mm
-          const backX = backPanelThickness + edgeOffset; // 뒤쪽(0쪽)에서 50mm
-          const safeBackX = Math.min(backX, frontX - 40);
+
+          let frontX: number, backX: number;
+          if (isLeftSidePanel) {
+            frontX = edgeOffset;
+            backX = originalWidth - backPanelThickness - edgeOffset;
+          } else {
+            frontX = originalWidth - edgeOffset;
+            backX = backPanelThickness + edgeOffset;
+          }
+          const safeBackX = isLeftSidePanel ? Math.max(backX, frontX + 40) : Math.min(backX, frontX - 40);
           const safeCenterX = (frontX + safeBackX) / 2;
-          depthPositions = [safeBackX, safeCenterX, frontX];
+          depthPositions = isLeftSidePanel ? [frontX, safeCenterX, safeBackX] : [safeBackX, safeCenterX, frontX];
         }
 
         // 보링 홀 그리기
@@ -461,10 +469,13 @@ export class PDFExporter {
       if (isFurnitureSidePanel) {
         const originalWidth = panel.width;   // 측판의 깊이 방향 (가구 깊이)
         const originalHeight = panel.height; // 측판의 높이 방향
-        // 패널 좌표계: X=0이 뒤(백패널 쪽), X=width가 앞(도어 쪽)
+        // 좌측판/우측판에 따라 백패널 방향이 대칭
+        const isLeftSidePanelForGroove = panel.name?.includes('좌측');
         const backPanelDepthOffset = 17;
         const grooveWidth = 10;
-        const grooveStartX = backPanelDepthOffset;
+        const grooveStartX = isLeftSidePanelForGroove
+          ? originalWidth - backPanelDepthOffset - grooveWidth // 좌측판: 뒤=X=width쪽
+          : backPanelDepthOffset; // 우측판: 뒤=X=0쪽
 
         this.pdf.setDrawColor(100, 100, 100);
         this.pdf.setLineWidth(0.1);

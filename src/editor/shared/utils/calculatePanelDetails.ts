@@ -599,11 +599,16 @@ export const calculatePanelDetails = (
     }
 
     // 측판에 브라켓 타공 주입
-    // 앞 가장자리 = 패널 width(깊이) 기준 오른쪽 끝이므로 width에서 빼서 X좌표 계산
+    // 좌측판/우측판에 따라 앞 가장자리 방향이 대칭
+    // 우측판: 앞=X=width → bracketX = width - distance
+    // 좌측판: 앞=X=0 → bracketX = distance
     const injectBracketBoring = (panel: any) => {
       const panelWidth = panel.width || customDepth;
       const bracketXFromFront = [20, 52]; // 앞 가장자리에서의 거리
-      const bracketXPositions = bracketXFromFront.map(d => panelWidth - d);
+      const isLeftPanel = panel.name.includes('좌측');
+      const bracketXPositions = isLeftPanel
+        ? bracketXFromFront // 좌측판: 앞=X=0, 그대로
+        : bracketXFromFront.map(d => panelWidth - d); // 우측판: 앞=X=width, 뒤집기
 
       if (isSplitSidePanelForBracket && sections.length >= 2) {
         // 분리 측판: 전체 기준 Y좌표를 해당 섹션 범위로 필터링 후 상대좌표 변환
