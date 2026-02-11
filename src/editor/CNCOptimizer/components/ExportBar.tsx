@@ -193,7 +193,7 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
       });
     }
 
-    // 3) 도어 나사홀 (Ø8mm, depth=10)
+    // 3) 도어 나사홀 (Ø8mm, depth=13)
     if (panel.isDoor && panel.screwPositions && panel.screwPositions.length > 0) {
       const screwXPositions = panel.screwDepthPositions || [];
       panel.screwPositions.forEach((yPos) => {
@@ -205,7 +205,7 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
             x: xPos,
             y: yPos,
             diameter: 8,
-            depth: 10,
+            depth: 13,
             angle: -90,
           });
         });
