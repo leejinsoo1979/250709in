@@ -1217,7 +1217,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           });
         });
 
-        // 나사홀 렌더링 (Ø8mm 원)
+        // 나사홀 렌더링 (Ø8mm 원 + 센터 십자)
         screwXPositions.forEach((screwX) => {
           screwYPositions.forEach((screwY) => {
             const [bx, by] = toSheetCoords(screwX, screwY);
@@ -1229,6 +1229,17 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
             ctx.beginPath();
             ctx.arc(bx, by, screwRadius, 0, Math.PI * 2);
             ctx.fill();
+            ctx.stroke();
+
+            // 중심 십자 표시
+            ctx.strokeStyle = '#666666';
+            ctx.lineWidth = 0.5 / (baseScale * scale);
+            const cs = 2;
+            ctx.beginPath();
+            ctx.moveTo(bx - cs, by);
+            ctx.lineTo(bx + cs, by);
+            ctx.moveTo(bx, by - cs);
+            ctx.lineTo(bx, by + cs);
             ctx.stroke();
           });
         });

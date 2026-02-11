@@ -385,11 +385,17 @@ export class PDFExporter {
           });
         });
 
-        // 나사홀 그리기 (Ø8)
+        // 나사홀 그리기 (Ø8 + 센터 십자)
         screwXPositions.forEach((sx: number) => {
           screwYPositions.forEach((sy: number) => {
             const [px, py] = toPdfCoords(sx, sy);
             this.pdf.circle(px, py, screwRadiusPdf, 'FD');
+            // 중심 십자
+            this.pdf.setLineWidth(0.05);
+            const cs = 1.5 * scale;
+            this.pdf.line(px - cs, py, px + cs, py);
+            this.pdf.line(px, py - cs, px, py + cs);
+            this.pdf.setLineWidth(0.15);
           });
         });
 
