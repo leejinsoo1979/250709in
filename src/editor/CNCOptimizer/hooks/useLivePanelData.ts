@@ -44,13 +44,17 @@ export function useLivePanelData() {
       const allPanels: Panel[] = [];
       
       // Internal space calculation
+      // 가구 배치 높이 = 공간 높이 - 상부프레임 - 하부프레임(받침대)
+      const frameTop = spaceInfo.frameSize?.top || 0;
+      const baseHeight = spaceInfo.baseConfig?.height || 0;
+      const furnitureHeight = spaceInfo.height - frameTop - baseHeight;
       const internalSpace = {
         width: spaceInfo.width - 36,
-        height: spaceInfo.height,
+        height: furnitureHeight,
         depth: spaceInfo.depth
       };
 
-      console.log('internalSpace:', internalSpace);
+      console.log('internalSpace:', internalSpace, `(공간 ${spaceInfo.height} - 상부프레임 ${frameTop} - 하부 ${baseHeight} = ${furnitureHeight})`);
 
       placedModules.forEach((placedModule, moduleIndex) => {
         // Get module ID
@@ -452,9 +456,13 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
     // Extract panels and call callback
     const allPanels: Panel[] = [];
     
+    // 가구 배치 높이 = 공간 높이 - 상부프레임 - 하부프레임(받침대)
+    const frameTop2 = spaceInfo.frameSize?.top || 0;
+    const baseHeight2 = spaceInfo.baseConfig?.height || 0;
+    const furnitureHeight2 = spaceInfo.height - frameTop2 - baseHeight2;
     const internalSpace = {
       width: spaceInfo.width - 36,
-      height: spaceInfo.height,
+      height: furnitureHeight2,
       depth: spaceInfo.depth
     };
 
