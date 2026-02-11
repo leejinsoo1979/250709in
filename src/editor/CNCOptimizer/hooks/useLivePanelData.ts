@@ -344,6 +344,10 @@ export function useLivePanelData() {
             isDoor: isDoorPanel || undefined,
             isLeftHinge: isDoorPanel ? panel.isLeftHinge : undefined,
             screwHoleSpacing: isDoorPanel ? panel.screwHoleSpacing : undefined,
+            // 측판 힌지 브라켓 타공 필드
+            bracketBoringPositions: panel.bracketBoringPositions,
+            bracketBoringDepthPositions: panel.bracketBoringDepthPositions,
+            isBracketSide: panel.isBracketSide,
           };
         });
 
@@ -689,6 +693,10 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           isDoor: isDoorPanel || undefined,
           isLeftHinge: isDoorPanel ? panel.isLeftHinge : undefined,
           screwHoleSpacing: isDoorPanel ? panel.screwHoleSpacing : undefined,
+          // 측판 힌지 브라켓 타공 필드
+          bracketBoringPositions: panel.bracketBoringPositions,
+          bracketBoringDepthPositions: panel.bracketBoringDepthPositions,
+          isBracketSide: panel.isBracketSide,
         };
       });
 
