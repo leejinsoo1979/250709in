@@ -402,6 +402,53 @@ export class PDFExporter {
         this.pdf.setLineDashPattern([], 0);
       }
 
+      // ★★★ 측판 힌지 브라켓 타공 표시 (Ø3mm) ★★★
+      if ((panel as any).isBracketSide && (panel as any).bracketBoringPositions && (panel as any).bracketBoringPositions.length > 0) {
+        const originalWidth = panel.width;
+        const originalHeight = panel.height;
+
+        const bracketXPositions: number[] = (panel as any).bracketBoringDepthPositions || [20, 52];
+        const bracketRadiusPdf = (3 / 2) * scale; // Ø3mm
+
+        this.pdf.setDrawColor(0, 0, 0);
+        this.pdf.setFillColor(255, 255, 255);
+        this.pdf.setLineWidth(0.1);
+
+        // 시트→PDF 좌표 변환 헬퍼
+        const toBracketPdfCoords = (posMmX: number, posMmY: number): [number, number] => {
+          let sheetX: number, sheetY: number;
+          if (panel.rotated) {
+            const placedWidth = originalHeight;
+            const placedHeight = originalWidth;
+            const scaleX = placedWidth / originalWidth;
+            const scaleY = placedHeight / originalHeight;
+            sheetX = panel.x + posMmX * scaleX;
+            sheetY = panel.y + posMmY * scaleY;
+          } else {
+            sheetX = panel.x + posMmX;
+            sheetY = panel.y + posMmY;
+          }
+          if (isRotated) {
+            return [offsetX + sheetY * scale, offsetY + (result.stockPanel.width - sheetX) * scale];
+          } else {
+            return [offsetX + sheetX * scale, offsetY + sheetY * scale];
+          }
+        };
+
+        ((panel as any).bracketBoringPositions as number[]).forEach((yPosMm: number) => {
+          bracketXPositions.forEach((xPosMm: number) => {
+            const [px, py] = toBracketPdfCoords(xPosMm, yPosMm);
+            this.pdf.circle(px, py, bracketRadiusPdf, 'FD');
+            // 센터 십자
+            this.pdf.setLineWidth(0.03);
+            const cs = 1 * scale;
+            this.pdf.line(px - cs, py, px + cs, py);
+            this.pdf.line(px, py - cs, px, py + cs);
+            this.pdf.setLineWidth(0.1);
+          });
+        });
+      }
+
       // ★★★ 홈가공 표시 ★★★
       // 가구 측판 백패널 홈
       const isFurnitureSidePanel = (panel.name?.includes('좌측') || panel.name?.includes('우측') || panel.name?.includes('측판'))
