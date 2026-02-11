@@ -426,8 +426,148 @@ export class SimpleDXFExporter {
         lines.push(String(panelY + displayHeight / 2));
         lines.push('31');
         lines.push('0');
+
+        // ★★★ 보링/홈가공 표시 ★★★
+        const origW = panel.width;
+        const origH = panel.height;
+        const isDoorPanel = panel.name?.includes('도어') || panel.name?.includes('Door');
+        const isDrawerSide = panel.name?.includes('서랍') && (panel.name?.includes('좌측판') || panel.name?.includes('우측판'));
+        const isDrawerFront = panel.name?.includes('서랍') && panel.name?.includes('앞판');
+        const isFurnitureSide = (panel.name?.includes('좌측') || panel.name?.includes('우측') || panel.name?.includes('측판'))
+          && !panel.name?.includes('서랍') && !isDoorPanel;
+        const isLeftSide = panel.name?.includes('좌측');
+
+        // DXF 좌표 헬퍼
+        const addDxfCircle = (cx: number, cy: number, r: number, color: number = 4) => {
+          lines.push('0'); lines.push('CIRCLE');
+          lines.push('8'); lines.push('0');
+          lines.push('62'); lines.push(String(color));
+          lines.push('10'); lines.push(cx.toFixed(2));
+          lines.push('20'); lines.push(cy.toFixed(2));
+          lines.push('40'); lines.push(r.toFixed(2));
+        };
+        const addDxfLine = (x1: number, y1: number, x2: number, y2: number, color: number = 4) => {
+          lines.push('0'); lines.push('LINE');
+          lines.push('8'); lines.push('0');
+          lines.push('62'); lines.push(String(color));
+          lines.push('10'); lines.push(x1.toFixed(2));
+          lines.push('20'); lines.push(y1.toFixed(2));
+          lines.push('11'); lines.push(x2.toFixed(2));
+          lines.push('21'); lines.push(y2.toFixed(2));
+        };
+        const addDxfBoring = (cx: number, cy: number, r: number, cs: number, color: number = 4) => {
+          addDxfCircle(cx, cy, r, color);
+          addDxfLine(cx - cs, cy, cx + cs, cy, color);
+          addDxfLine(cx, cy - cs, cx, cy + cs, color);
+        };
+
+        // 선반핀/서랍 보링
+        if ((panel as any).boringPositions && (panel as any).boringPositions.length > 0 && !isDoorPanel) {
+          let depthPos: number[] = [];
+          if (isDrawerSide) {
+            depthPos = (panel as any).boringDepthPositions?.length > 0
+              ? (panel as any).boringDepthPositions : [7.5, origW - 7.5];
+          } else if (isDrawerFront) {
+            depthPos = (panel as any).boringDepthPositions?.length > 0
+              ? (panel as any).boringDepthPositions : [50, origW / 2, origW - 50];
+          } else {
+            const bpt = 18, eo = 50;
+            let fX: number, bX: number;
+            if (isLeftSide) { fX = eo; bX = origW - bpt - eo; }
+            else { fX = origW - eo; bX = bpt + eo; }
+            const sBX = isLeftSide ? Math.max(bX, fX + 40) : Math.min(bX, fX - 40);
+            const cX = (fX + sBX) / 2;
+            depthPos = isLeftSide ? [fX, cX, sBX] : [sBX, cX, fX];
+          }
+
+          ((panel as any).boringPositions as number[]).forEach((bPosMm: number) => {
+            depthPos.forEach((dPosMm: number) => {
+              let sx: number, sy: number;
+              if (isDrawerSide || isDrawerFront) {
+                sx = panel.x + bPosMm; sy = panel.y + dPosMm;
+              } else if (panel.rotated) {
+                const fY = origH - bPosMm;
+                sx = panel.x + dPosMm * (origH / origW);
+                sy = panel.y + fY * (origW / origH);
+              } else {
+                sx = panel.x + dPosMm; sy = panel.y + (origH - bPosMm);
+              }
+              addDxfBoring(offsetX + sx, offsetY + sy, 1.5, 2, 4);
+            });
+          });
+        }
+
+        // 도어 힌지 보링
+        if (isDoorPanel && (panel as any).boringPositions?.length > 0) {
+          const cupR = 35 / 2;
+          const bDepthPos: number[] = (panel as any).boringDepthPositions || [];
+          const screwPos: number[] = (panel as any).screwPositions || [];
+          const screwDPos: number[] = (panel as any).screwDepthPositions || [];
+
+          ((panel as any).boringPositions as number[]).forEach((yP: number) => {
+            bDepthPos.forEach((xP: number) => {
+              addDxfBoring(offsetX + panel.x + xP, offsetY + panel.y + yP, cupR, 3, 4);
+            });
+          });
+          screwPos.forEach((yP: number) => {
+            screwDPos.forEach((xP: number) => {
+              addDxfBoring(offsetX + panel.x + xP, offsetY + panel.y + yP, 4, 2, 4);
+            });
+          });
+        }
+
+        // 브라켓 타공
+        if ((panel as any).isBracketSide && (panel as any).bracketBoringPositions?.length > 0) {
+          const bXPos: number[] = (panel as any).bracketBoringDepthPositions || [20, 52];
+          ((panel as any).bracketBoringPositions as number[]).forEach((yP: number) => {
+            const fY = origH - yP;
+            bXPos.forEach((xP: number) => {
+              let sx: number, sy: number;
+              if (panel.rotated) {
+                sx = panel.x + xP * (origH / origW);
+                sy = panel.y + fY * (origW / origH);
+              } else {
+                sx = panel.x + xP; sy = panel.y + fY;
+              }
+              addDxfBoring(offsetX + sx, offsetY + sy, 1.5, 1.5, 4);
+            });
+          });
+        }
+
+        // 백패널 홈 (가구 측판)
+        if (isFurnitureSide) {
+          const bpOff = 17, gw = 10;
+          const gsX = isLeftSide ? origW - bpOff - gw : bpOff;
+          let gx: number, gy: number, gWidth: number, gHeight: number;
+          if (panel.rotated) {
+            gx = panelX; gy = panelY + gsX;
+            gWidth = displayWidth; gHeight = gw;
+          } else {
+            gx = panelX + gsX; gy = panelY;
+            gWidth = gw; gHeight = displayHeight;
+          }
+          // 홈 사각형 (magenta=6)
+          addDxfLine(gx, gy, gx + gWidth, gy, 6);
+          addDxfLine(gx + gWidth, gy, gx + gWidth, gy + gHeight, 6);
+          addDxfLine(gx + gWidth, gy + gHeight, gx, gy + gHeight, 6);
+          addDxfLine(gx, gy + gHeight, gx, gy, 6);
+        }
+
+        // 서랍 바닥판 홈
+        if (panel.name?.includes('서랍') && (panel as any).groovePositions?.length > 0) {
+          ((panel as any).groovePositions as any[]).forEach((groove: any) => {
+            const gx = panelX;
+            const gy = panelY + groove.y;
+            const gWidth = displayWidth;
+            const gHeight = groove.height;
+            addDxfLine(gx, gy, gx + gWidth, gy, 6);
+            addDxfLine(gx + gWidth, gy, gx + gWidth, gy + gHeight, 6);
+            addDxfLine(gx + gWidth, gy + gHeight, gx, gy + gHeight, 6);
+            addDxfLine(gx, gy + gHeight, gx, gy, 6);
+          });
+        }
       });
-      
+
       // Sheet label
       lines.push('0');
       lines.push('TEXT');
