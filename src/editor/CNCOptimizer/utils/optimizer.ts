@@ -235,6 +235,10 @@ export const optimizePanels = async (
         isDoor: originalPanel.isDoor,
         isLeftHinge: originalPanel.isLeftHinge,
         screwHoleSpacing: originalPanel.screwHoleSpacing,
+        // 측판 힌지 브라켓 타공 필드
+        bracketBoringPositions: originalPanel.bracketBoringPositions,
+        bracketBoringDepthPositions: originalPanel.bracketBoringDepthPositions,
+        isBracketSide: originalPanel.isBracketSide,
       });
     } else {
       unplacedPanels.push(rect);
@@ -327,6 +331,10 @@ export const optimizePanelsImproved = async (
         isDoor: originalPanel.isDoor,
         isLeftHinge: originalPanel.isLeftHinge,
         screwHoleSpacing: originalPanel.screwHoleSpacing,
+        // 측판 힌지 브라켓 타공 필드
+        bracketBoringPositions: originalPanel.bracketBoringPositions,
+        bracketBoringDepthPositions: originalPanel.bracketBoringDepthPositions,
+        isBracketSide: originalPanel.isBracketSide,
       });
     }
   }
@@ -477,6 +485,10 @@ export const optimizePanelsMultiple = async (
         isDoor: originalPanel.isDoor,
         isLeftHinge: originalPanel.isLeftHinge,
         screwHoleSpacing: originalPanel.screwHoleSpacing,
+        // 측판 힌지 브라켓 타공 필드
+        bracketBoringPositions: originalPanel.bracketBoringPositions,
+        bracketBoringDepthPositions: originalPanel.bracketBoringDepthPositions,
+        isBracketSide: originalPanel.isBracketSide,
       };
     });
 
@@ -587,6 +599,10 @@ export const optimizePanelsMultipleImproved = async (
         isDoor: originalPanel.isDoor,
         isLeftHinge: originalPanel.isLeftHinge,
         screwHoleSpacing: originalPanel.screwHoleSpacing,
+        // 측판 힌지 브라켓 타공 필드
+        bracketBoringPositions: originalPanel.bracketBoringPositions,
+        bracketBoringDepthPositions: originalPanel.bracketBoringDepthPositions,
+        isBracketSide: originalPanel.isBracketSide,
       };
     });
 
