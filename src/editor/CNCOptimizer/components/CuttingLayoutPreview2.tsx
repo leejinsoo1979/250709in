@@ -927,17 +927,18 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           }
         } else {
           // 가구 측판: 선반핀 보링 (3개)
+          // 패널 좌표계: X=0이 뒤(백패널 쪽), X=width가 앞(도어 쪽)
           const backPanelThickness = 18; // 백패널 두께
           const edgeOffset = 50; // 끝에서 50mm
 
           // 깊이 방향 3개의 X 위치
-          const frontX = edgeOffset; // 앞쪽에서 50mm = 50
-          const backX = originalWidth - backPanelThickness - edgeOffset; // 뒤쪽에서 50mm (백패널 18mm 고려)
+          const frontX = originalWidth - edgeOffset; // 앞쪽(width쪽)에서 50mm
+          const backX = backPanelThickness + edgeOffset; // 뒤쪽(0쪽)에서 50mm (백패널 18mm 고려)
 
           // 최소 간격 보장 (패널이 너무 작은 경우 대비)
-          const safeBackX = Math.max(backX, frontX + 40);
+          const safeBackX = Math.min(backX, frontX - 40);
           const safeCenterX = (frontX + safeBackX) / 2;
-          depthPositions = [frontX, safeCenterX, safeBackX]; // 깊이 방향 위치들 (3개)
+          depthPositions = [safeBackX, safeCenterX, frontX]; // 깊이 방향 위치들 (3개)
         }
 
         console.log(`[BORING] ${panel.name}: isDrawer=${isDrawerSidePanel}, rotated=${panel.rotated}`);
@@ -1317,16 +1318,16 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const originalHeight = panel.height; // 측판의 높이 방향
 
         // 백패널 홈 위치 계산
-        // 백패널 위치: 측판 뒤쪽에서 17mm 앞 (depthOffset)
+        // 패널 좌표계: X=0이 뒤(백패널 쪽), X=width가 앞(도어 쪽)
+        // 백패널 위치: 측판 뒤쪽(X=0)에서 17mm 안쪽
         // 백패널 두께: 9mm
         // 홈 폭: 10mm (백패널 9mm + 여유 1mm)
         const backPanelDepthOffset = 17; // mm (측판 뒤쪽 끝에서 백패널까지 거리)
         const grooveWidth = 10; // mm (홈 폭)
 
-        // 홈 시작 위치 (측판 뒤쪽 기준) = 뒤쪽 끝에서 (depthOffset + grooveWidth/2) 앞
-        // 측판 좌표계에서: X = originalWidth - backPanelDepthOffset - grooveWidth/2
-        const grooveStartX = originalWidth - backPanelDepthOffset - grooveWidth;
-        const grooveEndX = originalWidth - backPanelDepthOffset;
+        // 홈 시작 위치 (측판 뒤쪽=X=0 기준)
+        const grooveStartX = backPanelDepthOffset;
+        const grooveEndX = backPanelDepthOffset + grooveWidth;
 
         // 홈 스타일 설정 (반턱 가공이므로 패널과 같은 색상)
         const groovePanelColor = materialColors[panel.material] || { fill: '#f3f4f6', stroke: '#9ca3af' };

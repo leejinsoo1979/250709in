@@ -259,13 +259,14 @@ export class PDFExporter {
           }
         } else {
           // 가구 측판: 선반핀 보링 (3개)
+          // 패널 좌표계: X=0이 뒤(백패널 쪽), X=width가 앞(도어 쪽)
           const backPanelThickness = 18;
           const edgeOffset = 50;
-          const frontX = edgeOffset;
-          const backX = originalWidth - backPanelThickness - edgeOffset;
-          const safeBackX = Math.max(backX, frontX + 40);
+          const frontX = originalWidth - edgeOffset; // 앞쪽(width쪽)에서 50mm
+          const backX = backPanelThickness + edgeOffset; // 뒤쪽(0쪽)에서 50mm
+          const safeBackX = Math.min(backX, frontX - 40);
           const safeCenterX = (frontX + safeBackX) / 2;
-          depthPositions = [frontX, safeCenterX, safeBackX];
+          depthPositions = [safeBackX, safeCenterX, frontX];
         }
 
         // 보링 홀 그리기
@@ -460,9 +461,10 @@ export class PDFExporter {
       if (isFurnitureSidePanel) {
         const originalWidth = panel.width;   // 측판의 깊이 방향 (가구 깊이)
         const originalHeight = panel.height; // 측판의 높이 방향
+        // 패널 좌표계: X=0이 뒤(백패널 쪽), X=width가 앞(도어 쪽)
         const backPanelDepthOffset = 17;
         const grooveWidth = 10;
-        const grooveStartX = originalWidth - backPanelDepthOffset - grooveWidth;
+        const grooveStartX = backPanelDepthOffset;
 
         this.pdf.setDrawColor(100, 100, 100);
         this.pdf.setLineWidth(0.1);
