@@ -93,7 +93,7 @@ export function useLivePanelData() {
         const hasDoor = placedModule.hasDoor || false;
         const material = placedModule.material || 'PB';
         const color = placedModule.color || 'MW';
-        const moduleHingePosition = (placedModule as any).hingePosition || 'left';
+        const moduleHingePosition = (placedModule as any).hingePosition || 'right';
         const moduleHingeType = (placedModule as any).hingeType || 'A';
 
 
@@ -490,7 +490,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const hasDoor = placedModule.hasDoor || false;
       const material = placedModule.material || 'PB';
       const color = placedModule.color || 'MW';
-      const moduleHingePosition = (placedModule as any).hingePosition || 'left';
+      const moduleHingePosition = (placedModule as any).hingePosition || 'right';
       const moduleHingeType = (placedModule as any).hingeType || 'A';
 
       // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
