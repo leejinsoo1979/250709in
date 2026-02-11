@@ -76,57 +76,54 @@ export const use3DExport = () => {
           return;
         }
 
-        // 5. 메쉬 추가 필터링
+        // 5. 메쉬 화이트리스트 필터링 - 가구 패널 메쉬만 유지
         if (child.isMesh) {
-          const mat = Array.isArray(child.material) ? child.material[0] : child.material;
-          const geo = child.geometry;
-
           // 5a. visible: false
           if (!child.visible) {
             childrenToRemove.push(child);
             return;
           }
 
-          // 5b. 투명도가 매우 낮은 메쉬 (클릭 영역 등)
-          if (mat && mat.transparent && mat.opacity < 0.1) {
-            childrenToRemove.push(child);
-            return;
-          }
+          // 5b. 화이트리스트: 가구 패널 메쉬만 유지
+          // BoxWithEdges가 생성하는 메쉬 이름 패턴만 허용
+          const allowedMeshPatterns = [
+            'furniture-mesh',   // 가구 패널 (측판, 선반, 상판, 하판, 보강대 등)
+            'back-panel-mesh',  // 백패널
+            'clothing-rod-mesh', // 옷봉
+          ];
 
-          // 5c. ShapeGeometry (텍스트 글리프 등)
-          if (geo && geo.type === 'ShapeGeometry') {
-            childrenToRemove.push(child);
-            return;
-          }
+          const isFurnitureMesh = allowedMeshPatterns.some(p => name.includes(p));
 
-          // 5d. PlaneGeometry (클릭 영역, 오버레이 등) - 매우 얇은 것
-          if (geo && geo.type === 'PlaneGeometry') {
-            childrenToRemove.push(child);
-            return;
+          // 부모 계층에서도 확인 (이름 없는 메쉬의 경우 부모가 가구 관련인지)
+          let parentName = '';
+          let current = child.parent;
+          while (current) {
+            if (current.name) {
+              parentName += ' ' + (current.name || '').toLowerCase();
+            }
+            current = current.parent;
           }
+          const isInsideDrawer = parentName.includes('drawer');
+          const isInsideAdjustableFoot = parentName.includes('adjustable-foot') || parentName.includes('조절발');
 
-          // 5e. troika Text mesh (drei Text 컴포넌트가 생성하는 특수 메쉬)
-          if (geo && (geo.type === 'TroikaTextBufferGeometry' || (geo as any)._isTroikaTextGeometry)) {
-            childrenToRemove.push(child);
-            return;
-          }
+          if (!isFurnitureMesh && !isInsideDrawer && !isInsideAdjustableFoot) {
+            // 이름이 없는 메쉬 중 BoxGeometry/CylinderGeometry만 허용 (구조물)
+            const geo = child.geometry;
+            const geoType = geo?.type || '';
+            const isStructuralGeometry = geoType === 'BoxGeometry' || geoType === 'BoxBufferGeometry' ||
+                                          geoType === 'CylinderGeometry' || geoType === 'CylinderBufferGeometry';
 
-          // 5f. SphereGeometry (치수선 양끝 점 등 인디케이터)
-          if (geo && (geo.type === 'SphereGeometry' || geo.type === 'SphereBufferGeometry')) {
-            childrenToRemove.push(child);
-            return;
-          }
+            if (!isStructuralGeometry) {
+              childrenToRemove.push(child);
+              return;
+            }
 
-          // 5g. RingGeometry (보링홀 인디케이터)
-          if (geo && (geo.type === 'RingGeometry' || geo.type === 'RingBufferGeometry')) {
-            childrenToRemove.push(child);
-            return;
-          }
-
-          // 5h. ExtrudeGeometry (환기캡 등 특수 형상)
-          if (geo && (geo.type === 'ExtrudeGeometry' || geo.type === 'ExtrudeBufferGeometry')) {
-            childrenToRemove.push(child);
-            return;
+            // BoxGeometry라도 투명 메쉬는 제거 (클릭 영역 등)
+            const mat = Array.isArray(child.material) ? child.material[0] : child.material;
+            if (mat && mat.transparent && mat.opacity < 0.5) {
+              childrenToRemove.push(child);
+              return;
+            }
           }
         }
       });
