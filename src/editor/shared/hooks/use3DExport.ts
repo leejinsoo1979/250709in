@@ -69,7 +69,7 @@ export const use3DExport = () => {
           'dimension', 'text', 'label', '치수', 'measure', '측정',
           'nativeline', 'ghost', 'preview', 'overlay', 'bounds', 'outline',
           'guide', 'indicator', 'grid', 'axis', 'boring', 'ventilation-cap-line',
-          'clothing-rod-line',
+          'clothing-rod-line', '보강대', 'reinforcement',
         ];
         if (excludeNamePatterns.some(p => name.includes(p))) {
           childrenToRemove.push(child);
