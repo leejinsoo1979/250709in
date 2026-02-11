@@ -158,7 +158,22 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
     if (!panel.isDoor && panel.boringPositions && panel.boringPositions.length > 0) {
       const yPositions = panel.boringPositions;
       const xPositions = panel.boringDepthPositions || [];
-      const defaultXPositions = xPositions.length > 0 ? xPositions : [50, panel.width - 50];
+      // 가구 측판(서랍 아닌)은 DXF와 동일하게 3열: 앞50mm, 중앙, 뒤(width-68)mm
+      const isDrawerPanel = panel.name?.includes('서랍');
+      let defaultXPositions: number[];
+      if (xPositions.length > 0) {
+        defaultXPositions = xPositions;
+      } else if (isDrawerPanel) {
+        defaultXPositions = [50, panel.width - 50];
+      } else {
+        // 가구 측판: DXF(simpleDxfExporter.ts)와 동일한 3열 계산
+        const bpt = 18; // 패널 두께 (백패널 쪽 오프셋)
+        const eo = 50;  // 앞뒤 가장자리 오프셋
+        const fX = eo;  // 앞에서 50mm
+        const sBX = Math.max(panel.width - bpt - eo, fX + 40); // 뒤에서 68mm (최소 간격 40mm 보장)
+        const cX = Math.round((fX + sBX) / 2); // 중앙
+        defaultXPositions = [fX, cX, sBX];
+      }
 
       yPositions.forEach((yPos) => {
         defaultXPositions.forEach((xPos) => {
