@@ -1153,8 +1153,8 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         const cupXPositions = panel.boringDepthPositions || []; // 힌지컵 X좌표 (1개)
 
         // ★★★ 나사홀 좌표: screwPositions가 없으면 힌지컵 좌표에서 직접 계산 ★★★
-        // INSERTA 힌지 스펙: screwRowDistance=9.5mm, screwHoleSpacing=45mm (중심에서 ±22.5mm)
-        const SCREW_ROW_DISTANCE = 9.5; // 나사홀 X: 가장자리에서 9.5mm
+        // INSERTA 힌지 스펙: screwRowDistance=9.5mm (컵 중심에서 나사열까지), screwHoleSpacing=45mm (중심에서 ±22.5mm)
+        const SCREW_ROW_DISTANCE = 9.5; // 힌지컵 중심에서 나사열까지 거리 (도어 안쪽 방향)
         const SCREW_Y_OFFSET = 45 / 2;  // 나사홀 Y: 힌지컵 중심에서 ±22.5mm
 
         let screwYPositions = panel.screwPositions || [];
@@ -1165,10 +1165,12 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
           screwYPositions = cupYPositions.flatMap(cupY => [cupY - SCREW_Y_OFFSET, cupY + SCREW_Y_OFFSET]);
         }
         if (screwXPositions.length === 0 && cupXPositions.length > 0) {
-          // cupX가 22.5mm(왼쪽 힌지)면 screwX는 9.5mm, cupX가 큰 값(오른쪽)이면 반대쪽
+          // 나사홀은 힌지컵보다 도어 안쪽(중심 방향)에 위치
+          // 왼쪽 힌지: cupX=22.5, screwX=22.5+9.5=32 (오른쪽으로)
+          // 오른쪽 힌지: cupX=width-22.5, screwX=width-22.5-9.5 (왼쪽으로)
           const cupX = cupXPositions[0];
           const isLeftHinge = cupX < originalWidth / 2;
-          const screwX = isLeftHinge ? SCREW_ROW_DISTANCE : originalWidth - SCREW_ROW_DISTANCE;
+          const screwX = isLeftHinge ? cupX + SCREW_ROW_DISTANCE : cupX - SCREW_ROW_DISTANCE;
           screwXPositions = [screwX];
         }
 

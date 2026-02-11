@@ -482,10 +482,10 @@ export const calculatePanelDetails = (
       const cupX = isLeftHinge
         ? DEFAULT_HINGE_SETTINGS.cupEdgeDistance
         : doorW - DEFAULT_HINGE_SETTINGS.cupEdgeDistance;
-      // 나사홀 X 위치 (도어 가장자리에서 screwRowDistance)
+      // 나사홀 X 위치 (힌지컵 중심에서 도어 안쪽으로 screwRowDistance만큼)
       const screwX = isLeftHinge
-        ? DEFAULT_HINGE_SETTINGS.screwRowDistance
-        : doorW - DEFAULT_HINGE_SETTINGS.screwRowDistance;
+        ? cupX + DEFAULT_HINGE_SETTINGS.screwRowDistance
+        : cupX - DEFAULT_HINGE_SETTINGS.screwRowDistance;
       // 나사홀 Y 오프셋 (힌지컵 중심에서 상하)
       const screwYOffset = DEFAULT_HINGE_SETTINGS.screwHoleSpacing / 2; // 22.5mm
 

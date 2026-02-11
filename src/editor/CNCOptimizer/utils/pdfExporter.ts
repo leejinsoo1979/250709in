@@ -329,7 +329,7 @@ export class PDFExporter {
         const cupXPositions = (panel as any).boringDepthPositions || [];
 
         // ★★★ 나사홀 좌표: screwPositions가 없으면 힌지컵에서 직접 계산 ★★★
-        const SCREW_ROW_DISTANCE = 9.5;
+        const SCREW_ROW_DISTANCE = 9.5; // 힌지컵 중심에서 나사열까지 (도어 안쪽 방향)
         const SCREW_Y_OFFSET = 45 / 2; // 22.5mm
         let screwYPositions: number[] = (panel as any).screwPositions || [];
         let screwXPositions: number[] = (panel as any).screwDepthPositions || [];
@@ -339,7 +339,8 @@ export class PDFExporter {
         if (screwXPositions.length === 0 && cupXPositions.length > 0) {
           const cupX = cupXPositions[0];
           const isLeftHinge = cupX < originalWidth / 2;
-          screwXPositions = [isLeftHinge ? SCREW_ROW_DISTANCE : originalWidth - SCREW_ROW_DISTANCE];
+          // 나사홀은 힌지컵보다 도어 안쪽(중심 방향)에 위치
+          screwXPositions = [isLeftHinge ? cupX + SCREW_ROW_DISTANCE : cupX - SCREW_ROW_DISTANCE];
         }
 
         const cupRadiusPdf = (35 / 2) * scale; // Ø35mm
