@@ -560,8 +560,56 @@ export const calculatePanelDetails = (
         isLeftHinge,
       });
     }
+
+    // === 측판에 힌지 브라켓 타공 데이터 주입 ===
+    const doorGapForBracket = 2;
+    const allSidePanels = [...panels.upper, ...panels.lower];
+
+    // 측판 이름 패턴으로 좌/우 측판 식별하는 헬퍼
+    const isLeftSidePanel = (name: string) =>
+      (name.includes('좌측') || name.includes('좌측판')) && !name.includes('서랍');
+    const isRightSidePanel = (name: string) =>
+      (name.includes('우측') || name.includes('우측판')) && !name.includes('서랍');
+
+    if (moduleData.id.includes('dual')) {
+      // 듀얼 도어: 좌측 도어(left hinge) → 좌측판, 우측 도어(right hinge) → 우측판
+      const doorH = height - doorGapForBracket * 2;
+      const hingeYPositions = calculateHingePositions(doorH);
+      // 측판 기준 Y = 힌지Y + doorGap
+      const bracketYPositions = hingeYPositions.map(y => y + doorGapForBracket);
+
+      allSidePanels.forEach((panel: any) => {
+        if (isLeftSidePanel(panel.name)) {
+          panel.bracketBoringPositions = bracketYPositions;
+          panel.bracketBoringDepthPositions = [20, 52];
+          panel.isBracketSide = true;
+        } else if (isRightSidePanel(panel.name)) {
+          panel.bracketBoringPositions = bracketYPositions;
+          panel.bracketBoringDepthPositions = [20, 52];
+          panel.isBracketSide = true;
+        }
+      });
+    } else {
+      // 싱글 도어: hingePosition에 따라 한쪽만
+      const isLeftHinge = (hingePosition ?? 'left') === 'left';
+      const doorH = height - doorGapForBracket * 2;
+      const hingeYPositions = calculateHingePositions(doorH);
+      const bracketYPositions = hingeYPositions.map(y => y + doorGapForBracket);
+
+      allSidePanels.forEach((panel: any) => {
+        if (isLeftHinge && isLeftSidePanel(panel.name)) {
+          panel.bracketBoringPositions = bracketYPositions;
+          panel.bracketBoringDepthPositions = [20, 52];
+          panel.isBracketSide = true;
+        } else if (!isLeftHinge && isRightSidePanel(panel.name)) {
+          panel.bracketBoringPositions = bracketYPositions;
+          panel.bracketBoringDepthPositions = [20, 52];
+          panel.isBracketSide = true;
+        }
+      });
+    }
   }
-  
+
   // 플랫 배열로 변환하여 반환
   const result = [];
 
