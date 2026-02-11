@@ -22,7 +22,7 @@ export {
   downloadDXF,
 } from './dxfExporter';
 
-// MPR 내보내기 (HOMAG woodWOP)
+// MPR 내보내기 (imos 포맷)
 export {
   generateSinglePanelMPR,
   exportToMPR,
@@ -124,9 +124,9 @@ export const SUPPORTED_EXPORT_FORMATS: Array<{
   {
     format: 'mpr',
     name: 'MPR',
-    description: 'HOMAG woodWOP 네이티브 형식',
+    description: 'imos CNC 프로그램 형식',
     extension: '.mpr',
-    software: ['HOMAG woodWOP'],
+    software: ['imos', 'HOMAG woodWOP'],
   },
   {
     format: 'cix',

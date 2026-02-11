@@ -149,60 +149,131 @@ export default function ExportBar({ optimizationResults, shelfBoringPositions = 
     setIsOpen(false);
   };
 
-  // 패널 데이터를 PanelBoringData 형식으로 변환
+  // PlacedPanel → PanelBoringData 변환 (모든 보링 타입 포함)
   const convertToPanelBoringData = (panel: PlacedPanel): PanelBoringData => {
-    // boringPositions = Y위치 배열 (높이 방향)
-    // boringDepthPositions = X위치 배열 (깊이 방향)
-    const yPositions = panel.boringPositions || [];
-    const xPositions = panel.boringDepthPositions || [];
-
-    // 기본 X위치 (depthPositions가 없는 경우)
-    const defaultXPositions = xPositions.length > 0 ? xPositions : [50, panel.width / 2, panel.width - 50];
-
-    // 각 Y위치 × X위치 조합으로 Boring 생성
     const borings: Boring[] = [];
-    yPositions.forEach((yPos, yIdx) => {
-      defaultXPositions.forEach((xPos, xIdx) => {
-        borings.push({
-          id: `boring-${panel.id}-${yIdx}-${xIdx}`,
-          type: 'shelf-pin' as const,
-          face: 'front' as const,
-          x: xPos,
-          y: yPos,
-          diameter: 5,
-          depth: 13,
+    let boringIdx = 0;
+
+    // 1) 선반핀 보링 (측판: Ø5mm, depth=12)
+    if (!panel.isDoor && panel.boringPositions && panel.boringPositions.length > 0) {
+      const yPositions = panel.boringPositions;
+      const xPositions = panel.boringDepthPositions || [];
+      const defaultXPositions = xPositions.length > 0 ? xPositions : [50, panel.width - 50];
+
+      yPositions.forEach((yPos) => {
+        defaultXPositions.forEach((xPos) => {
+          borings.push({
+            id: `shelf-${boringIdx++}`,
+            type: 'shelf-pin',
+            face: 'top',
+            x: xPos,
+            y: yPos,
+            diameter: 5,
+            depth: 12,
+          });
         });
       });
-    });
+    }
+
+    // 2) 도어 힌지컵 보링 (Ø35mm, depth=13)
+    if (panel.isDoor && panel.boringPositions && panel.boringPositions.length > 0) {
+      const cupXPositions = panel.boringDepthPositions || [];
+      panel.boringPositions.forEach((yPos) => {
+        cupXPositions.forEach((xPos) => {
+          borings.push({
+            id: `hinge-cup-${boringIdx++}`,
+            type: 'hinge-cup',
+            face: 'top',
+            x: xPos,
+            y: yPos,
+            diameter: 35,
+            depth: 13,
+          });
+        });
+      });
+    }
+
+    // 3) 도어 나사홀 (Ø8mm, depth=10)
+    if (panel.isDoor && panel.screwPositions && panel.screwPositions.length > 0) {
+      const screwXPositions = panel.screwDepthPositions || [];
+      panel.screwPositions.forEach((yPos) => {
+        screwXPositions.forEach((xPos) => {
+          borings.push({
+            id: `hinge-screw-${boringIdx++}`,
+            type: 'hinge-screw',
+            face: 'top',
+            x: xPos,
+            y: yPos,
+            diameter: 8,
+            depth: 10,
+            angle: -90,
+          });
+        });
+      });
+    }
+
+    // 4) 브라켓 타공 (측판: Ø5mm, depth=12)
+    if (panel.isBracketSide && panel.bracketBoringPositions && panel.bracketBoringPositions.length > 0) {
+      const bracketXPositions = panel.bracketBoringDepthPositions || [20, 52];
+      panel.bracketBoringPositions.forEach((yPos) => {
+        bracketXPositions.forEach((xPos) => {
+          borings.push({
+            id: `bracket-${boringIdx++}`,
+            type: 'shelf-pin',
+            face: 'top',
+            x: xPos,
+            y: yPos,
+            diameter: 5,
+            depth: 12,
+          });
+        });
+      });
+    }
+
+    // 패널 타입 판별
+    let panelType: PanelBoringData['panelType'] = 'side-left';
+    if (panel.isDoor) panelType = 'door';
+    else if (panel.name?.includes('우측')) panelType = 'side-right';
+    else if (panel.name?.includes('상판')) panelType = 'top';
+    else if (panel.name?.includes('하판')) panelType = 'bottom';
+    else if (panel.name?.includes('선반')) panelType = 'shelf';
+    else if (panel.name?.includes('서랍')) panelType = 'drawer-front';
+    else if (panel.name?.includes('뒷판') || panel.name?.includes('백패널')) panelType = 'back-panel';
 
     return {
       panelId: panel.id,
       furnitureId: panel.furnitureId || '',
       furnitureName: panel.furnitureName || '',
-      panelType: 'side-left',
+      panelType,
       panelName: panel.name,
       width: panel.width,
       height: panel.height,
       thickness: panel.thickness || 18,
-      material: panel.material || 'MDF',
-      grain: panel.grain || 'none',
+      material: panel.material || 'PB',
+      grain: panel.grain === 'HORIZONTAL' ? 'H' : panel.grain === 'VERTICAL' ? 'V' : 'N',
       borings,
     };
   };
 
-  // HOMAG MPR 내보내기
+  // imos MPR 내보내기
   const handleExportMPR = async () => {
-    if (panelsWithBoring.length === 0) {
-      alert('내보낼 보링 데이터가 없습니다. 측판이 있는 가구를 배치하세요.');
+    // 모든 패널 수집 (보링 유무와 무관하게 재단 데이터 필요)
+    const allPanels: PlacedPanel[] = [];
+    optimizationResults.forEach(result => {
+      result.panels.forEach(panel => allPanels.push(panel));
+    });
+
+    if (allPanels.length === 0) {
+      alert('내보낼 패널 데이터가 없습니다.');
       return;
     }
 
-    const panelBoringData = panelsWithBoring.map(convertToPanelBoringData);
+    const panelBoringData = allPanels.map(convertToPanelBoringData);
     const projectName = basicInfo?.title || 'project';
     const timestamp = new Date().toISOString().slice(0, 10);
 
-    // exportToMPR로 MPR 콘텐츠 생성
-    const result = exportToMPR(panelBoringData);
+    // exportToMPR로 imos MPR 콘텐츠 생성
+    const result = exportToMPR(panelBoringData, undefined, projectName);
 
     if (!result.success || result.files.length === 0) {
       alert('MPR 파일 생성에 실패했습니다: ' + (result.error || '보링 데이터 없음'));

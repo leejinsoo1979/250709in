@@ -1,6 +1,6 @@
 /**
- * MPR 내보내기 (HOMAG woodWOP)
- * 네이티브 CNC 프로그램 형식
+ * MPR 내보내기 (imos 포맷)
+ * imos CNC 프로그램 형식 (.mpr)
  */
 
 import type {
@@ -9,239 +9,166 @@ import type {
   MPRExportSettings,
   BoringExportResult,
   BoringType,
-  BoringFace,
 } from '../types';
 import { DEFAULT_MPR_EXPORT_SETTINGS } from '../constants';
 
 // ============================================
-// MPR 좌표계 변환
+// imos MPR 블록 생성
 // ============================================
 
 /**
- * 내부 면(face)을 woodWOP KA 코드로 변환
- * KA="1": 전면 (Front)
- * KA="2": 후면 (Back)
- * KA="3": 좌측 (Left)
- * KA="4": 우측 (Right)
+ * [H 헤더 블록 생성
  */
-function faceToKA(face: BoringFace): number | null {
-  switch (face) {
-    case 'front':
-      return 1;
-    case 'back':
-      return 2;
-    case 'left':
-      return 3;
-    case 'right':
-      return 4;
-    default:
-      return null;  // 상면/하면은 수평 보링이 아님
-  }
-}
-
-/**
- * 내부 면(face)을 woodWOP BO 코드로 변환
- * BO="0": 상면 (Top)
- * BO="1": 하면 (Bottom)
- */
-function faceToBO(face: BoringFace): number | null {
-  switch (face) {
-    case 'top':
-      return 0;
-    case 'bottom':
-      return 1;
-    default:
-      return null;  // 측면은 수직 보링이 아님
-  }
-}
-
-/**
- * 보링 타입에 따른 공구 번호 반환
- */
-function getToolNumber(type: BoringType, toolMapping: MPRExportSettings['toolMapping']): number {
-  switch (type) {
-    case 'hinge-cup':
-      return toolMapping.hingeCup;
-    case 'hinge-screw':
-      return toolMapping.hingeScrew;
-    case 'cam-housing':
-      return toolMapping.camHousing;
-    case 'cam-bolt':
-      return toolMapping.camBolt;
-    case 'shelf-pin':
-      return toolMapping.shelfPin;
-    case 'drawer-rail':
-    case 'drawer-rail-slot':
-      return toolMapping.drawerRail;
-    case 'adjustable-foot':
-      return toolMapping.adjustableFoot;
-    default:
-      return 4;  // 기본값
-  }
-}
-
-// ============================================
-// MPR 생성
-// ============================================
-
-/**
- * MPR 헤더 생성
- */
-function generateMPRHeader(version: string = '4.0'): string {
+function generateIMOSHeader(panel: PanelBoringData, version: string = '4.0 Alpha'): string {
   return `[H
 VERSION="${version}"
-HP="1"
-]
-
+UP="0"
+DW="0"
+OP="2"
+INCH="0"
+_BSX=${panel.width.toFixed(4)}
+_BSY=${panel.height.toFixed(4)}
+_BSZ=${panel.thickness.toFixed(4)}
 `;
 }
 
 /**
- * MPR 패널 정보 생성
+ * [001 패널 변수 블록 생성
  */
-function generateMPRPanelInfo(panel: PanelBoringData): string {
+function generateIMOSVariables(panel: PanelBoringData): string {
   return `[001
-LA="${panel.panelName}"
 L="${panel.width}"
+KM="길이 (X)"
 B="${panel.height}"
-D="${panel.thickness}"
-MAT="${panel.material}"
-]
+KM="폭 (Y)"
+T="${panel.thickness}"
+KM="두께 (Z)"
+RL_VAR="L"
+KM=""
+RB_VAR="B"
+KM=""
+FNX_EXP="0"
+KM=""
+FNY_EXP="0"
+KM=""
+RNX_VAR="0"
+KM=""
+RNY_VAR="0"
+KM=""
+RNZ_VAR="0"
+KM=""
+bohrver="1"
+KM=""
+bohrhor="1"
+KM=""
+bohruni="1"
+KM=""
+bohren="1"
+KM=""
+fraesen="1"
+KM=""
+fsaegen="1"
+KM=""
+saegen="1"
+KM=""
+nuten="1"
+KM=""
+ktasche="1"
+KM=""
+rtasche="1"
+KM=""
+abblas="1"
+KM=""
+leimen="1"
+KM=""
+kappen="1"
+KM=""
+bfraesen="1"
+KM=""
+runden="1"
+KM=""
+ziehkl="1"
+KM=""
+`;
+}
+
+/**
+ * <100 \Werkstck\ 워크피스 블록 생성
+ */
+function generateWerkstck(): string {
+  return `
+<100 \\Werkstck\\
+LA="L"
+BR="B"
+DI="T"
+FNX="FNX_EXP"
+FNY="FNY_EXP"
+
+RL="RL_VAR"
+RB="RB_VAR"
+RNX="RNX_VAR"
+RNY="RNY_VAR"
+RNZ="RNZ_VAR"
 
 `;
 }
 
 /**
- * 수직 보링 명령 생성 (\BO\)
+ * <101 \Kommentar\ 주석 블록 생성
  */
-function generateVerticalBoring(
-  id: number,
-  boring: Boring,
-  toolNumber: number,
-  includeComments: boolean
-): string {
-  const bo = faceToBO(boring.face);
-  if (bo === null) return '';
+function generateKommentar(panel: PanelBoringData, projectName: string = ''): string {
+  const now = new Date();
+  const dateStr = now.toISOString().replace('T', ' ').slice(0, 19);
 
-  let mpr = `<${id} \\BO\\
-XA="${boring.x.toFixed(2)}"
-YA="${boring.y.toFixed(2)}"
-DU="${boring.diameter.toFixed(1)}"
-TI="${boring.depth.toFixed(1)}"
-TNO="${toolNumber}"
-BO="${bo}"
-AN="0"
-]
+  const materialName = panel.material || 'PB_18T';
+
+  return `<101 \\Kommentar\\
+KM="오더:   ${projectName}"
+KM="조각:   ${panel.panelName}"
+KM="측정 단위:   mm"
+KM="마감 치수:   ${panel.width} x ${panel.height} x ${panel.thickness}"
+KM="자재:   ${materialName}"
+KM="바코드:   ${panel.panelId}"
+KM="생성 시간:   ${dateStr}"
+KAT="Kommentar"
+MNM="파트 정보"
+ORI=""
+
 `;
-
-  if (includeComments && boring.note) {
-    mpr = `// ${boring.note}\n` + mpr;
-  }
-
-  return mpr + '\n';
 }
 
 /**
- * 수평 보링 명령 생성 (\HO\)
+ * <102 \BohrVert\ 수직 보링 블록 생성
  */
-function generateHorizontalBoring(
-  id: number,
-  boring: Boring,
-  toolNumber: number,
-  panelThickness: number,
-  includeComments: boolean
-): string {
-  const ka = faceToKA(boring.face);
-  if (ka === null) return '';
+function generateBohrVert(boring: Boring): string {
+  // 보링 타입별 기본값 설정
+  let ti = boring.depth;        // 깊이
+  let bm = 'LS';                // 보링 모드 (LS=단일)
+  let wi = '';                  // 각도 (생략 가능)
 
-  // Z 위치: 패널 두께 방향 중심
-  const z = panelThickness / 2;
+  // 관통 보링 (depth >= thickness 또는 cam-bolt 등)
+  if (boring.type === 'cam-bolt') {
+    bm = 'LSL';  // 관통
+  }
 
-  // Y 시작점: 음수로 측면 진입
-  const ys = -boring.depth;
+  // 각도 설정
+  if (boring.angle !== undefined) {
+    wi = `\nWI="${boring.angle}"`;
+  }
 
-  let mpr = `<${id} \\HO\\
-XA="${boring.x.toFixed(2)}"
-ZA="${z.toFixed(2)}"
-YS="${ys.toFixed(2)}"
-DU="${boring.diameter.toFixed(1)}"
-TI="${boring.depth.toFixed(1)}"
-KA="${ka}"
-TNO="${toolNumber}"
-]
+  return `<102 \\BohrVert\\
+XA="${boring.x.toFixed(1)}"
+YA="${boring.y.toFixed(1)}"
+ZA="T"
+TI="${ti}"
+AB="32"
+BM="${bm}"
+DU="${boring.diameter}"
+AN="1"
+MI="0"${wi}
+??="bohrver=1  "
+
 `;
-
-  if (includeComments && boring.note) {
-    mpr = `// ${boring.note}\n` + mpr;
-  }
-
-  return mpr + '\n';
-}
-
-/**
- * 슬롯 가공 명령 생성 (\SL\)
- */
-function generateSlotBoring(
-  id: number,
-  boring: Boring,
-  toolNumber: number,
-  panelThickness: number,
-  includeComments: boolean
-): string {
-  if (!boring.slotWidth || !boring.slotHeight) return '';
-
-  const ka = faceToKA(boring.face);
-  if (ka === null) return '';
-
-  // 슬롯 시작점과 끝점 계산
-  const halfWidth = (boring.slotWidth - boring.diameter) / 2;
-  const xStart = boring.x - halfWidth;
-  const xEnd = boring.x + halfWidth;
-  const z = panelThickness / 2;
-
-  let mpr = `<${id} \\SL\\
-XA="${xStart.toFixed(2)}"
-YA="${boring.y.toFixed(2)}"
-XE="${xEnd.toFixed(2)}"
-YE="${boring.y.toFixed(2)}"
-ZA="${z.toFixed(2)}"
-DU="${boring.diameter.toFixed(1)}"
-TI="${boring.depth.toFixed(1)}"
-KA="${ka}"
-TNO="${toolNumber}"
-]
-`;
-
-  if (includeComments && boring.note) {
-    mpr = `// ${boring.note}\n` + mpr;
-  }
-
-  return mpr + '\n';
-}
-
-/**
- * 보링을 MPR 명령으로 변환
- */
-function boringToMPR(
-  id: number,
-  boring: Boring,
-  settings: MPRExportSettings,
-  panelThickness: number
-): string {
-  const toolNumber = getToolNumber(boring.type, settings.toolMapping);
-
-  // 장공인 경우
-  if (boring.type === 'drawer-rail-slot') {
-    return generateSlotBoring(id, boring, toolNumber, panelThickness, settings.includeComments);
-  }
-
-  // 수직 보링 (상면/하면)
-  if (boring.face === 'top' || boring.face === 'bottom') {
-    return generateVerticalBoring(id, boring, toolNumber, settings.includeComments);
-  }
-
-  // 수평 보링 (측면)
-  return generateHorizontalBoring(id, boring, toolNumber, panelThickness, settings.includeComments);
 }
 
 // ============================================
@@ -249,46 +176,58 @@ function boringToMPR(
 // ============================================
 
 /**
- * 단일 패널 MPR 생성
+ * 단일 패널 imos MPR 생성
  */
 export function generateSinglePanelMPR(
   panel: PanelBoringData,
-  settings: MPRExportSettings = DEFAULT_MPR_EXPORT_SETTINGS
+  settings: MPRExportSettings = DEFAULT_MPR_EXPORT_SETTINGS,
+  projectName: string = ''
 ): string {
   let mpr = '';
 
-  // 헤더
-  mpr += generateMPRHeader(settings.version);
+  // [H 헤더
+  mpr += generateIMOSHeader(panel, settings.version || '4.0 Alpha');
 
-  // 패널 정보
-  mpr += generateMPRPanelInfo(panel);
+  // [001 변수
+  mpr += generateIMOSVariables(panel);
 
-  // 보링들
-  panel.borings.forEach((boring, index) => {
-    const id = 100 + index;
-    mpr += boringToMPR(id, boring, settings, panel.thickness);
+  // <100 워크피스
+  mpr += generateWerkstck();
+
+  // <101 주석
+  mpr += generateKommentar(panel, projectName);
+
+  // <102 보링들
+  panel.borings.forEach((boring) => {
+    mpr += generateBohrVert(boring);
   });
+
+  // 파일 끝 마커
+  mpr += '!\n';
 
   return mpr;
 }
 
 /**
- * MPR 내보내기 실행
+ * imos MPR 내보내기 실행
  */
 export function exportToMPR(
   panels: PanelBoringData[],
-  settings?: Partial<MPRExportSettings>
+  settings?: Partial<MPRExportSettings>,
+  projectName?: string
 ): BoringExportResult {
   const finalSettings = { ...DEFAULT_MPR_EXPORT_SETTINGS, ...settings };
 
   try {
     const files: Array<{ filename: string; content: string; size: number }> = [];
 
-    // MPR은 항상 패널별 개별 파일
+    // MPR은 패널별 개별 파일
     panels.forEach((panel) => {
-      const content = generateSinglePanelMPR(panel, finalSettings);
+      const content = generateSinglePanelMPR(panel, finalSettings, projectName);
+      // 파일명: panelName으로 (특수문자 제거)
+      const safeName = panel.panelName.replace(/[\/\\:*?"<>|]/g, '_');
       files.push({
-        filename: `${panel.panelId}.mpr`,
+        filename: `${safeName}.mpr`,
         content,
         size: new Blob([content]).size,
       });
