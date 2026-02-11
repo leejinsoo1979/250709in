@@ -32,70 +32,94 @@ export const use3DExport = () => {
   };
 
   /**
-   * 복제된 객체에서 치수/텍스트/조명 요소 제거
+   * 복제된 객체에서 비가구 요소(치수/텍스트/조명/투명메쉬 등) 제거
    */
   const removeUnwantedFromClone = (obj: THREE.Object3D): void => {
-    const childrenToRemove: THREE.Object3D[] = [];
+    // traverse 중 제거하면 순회가 꼬이므로, 반복적으로 수집→제거
+    let removed = true;
+    while (removed) {
+      removed = false;
+      const childrenToRemove: THREE.Object3D[] = [];
 
-    obj.traverse((child: any) => {
-      const name = (child.name || '').toLowerCase();
-      const type = child.type || '';
+      obj.traverse((child: any) => {
+        const name = (child.name || '').toLowerCase();
+        const type = child.type || '';
 
-      // 조명 관련 요소 식별
-      const isLight =
-        child.isLight ||
-        type.includes('Light') ||
-        name.includes('light') ||
-        type === 'SpotLight' ||
-        type === 'PointLight' ||
-        type === 'DirectionalLight' ||
-        type === 'AmbientLight' ||
-        type === 'HemisphereLight' ||
-        type === 'RectAreaLight';
+        // 1. 조명
+        if (child.isLight || type.includes('Light') || name.includes('light')) {
+          childrenToRemove.push(child);
+          return;
+        }
 
-      // 치수 관련 요소 식별
-      const isDimension =
-        name.includes('dimension') ||
-        name.includes('text') ||
-        name.includes('label') ||
-        name.includes('치수') ||
-        name.includes('space') ||
-        name.includes('공간') ||
-        name.includes('measure') ||
-        name.includes('nativeline') ||
-        name.includes('ghost') ||
-        name.includes('preview') ||
-        name.includes('overlay') ||
-        name.includes('bounds') ||
-        name.includes('outline') ||
-        type === 'Sprite' ||
-        type === 'Line' ||
-        type === 'LineSegments' ||
-        type === 'Line2' ||
-        (child.isMesh && child.geometry && child.geometry.type === 'ShapeGeometry') ||
-        (child.isMesh && child.material && child.material.type === 'MeshBasicMaterial' &&
-         child.geometry && child.geometry.boundingSphere &&
-         child.geometry.boundingSphere.radius < 1);
+        // 2. 라인 계열 (치수선, 가이드선 등)
+        if (type === 'Line' || type === 'LineSegments' || type === 'Line2' || type === 'Sprite') {
+          childrenToRemove.push(child);
+          return;
+        }
 
-      // 헬퍼/카메라 요소 식별
-      const isHelper =
-        name.includes('helper') ||
-        name.includes('camera') ||
-        type.includes('Helper') ||
-        type === 'Camera' ||
-        type === 'PerspectiveCamera' ||
-        type === 'OrthographicCamera';
+        // 3. 헬퍼/카메라
+        if (type.includes('Helper') || type.includes('Camera') ||
+            name.includes('helper') || name.includes('camera')) {
+          childrenToRemove.push(child);
+          return;
+        }
 
-      if (isLight || isDimension || isHelper) {
-        childrenToRemove.push(child);
-      }
-    });
+        // 4. 이름 기반 제외 (치수, 텍스트, 가이드 등)
+        const excludeNamePatterns = [
+          'dimension', 'text', 'label', '치수', 'measure', '측정',
+          'nativeline', 'ghost', 'preview', 'overlay', 'bounds', 'outline',
+          'guide', 'indicator', 'grid', 'axis', 'boring', 'ventilation-cap-line',
+          'clothing-rod-line',
+        ];
+        if (excludeNamePatterns.some(p => name.includes(p))) {
+          childrenToRemove.push(child);
+          return;
+        }
 
-    childrenToRemove.forEach(child => {
-      if (child.parent) {
-        child.parent.remove(child);
-      }
-    });
+        // 5. 메쉬 추가 필터링
+        if (child.isMesh) {
+          const mat = Array.isArray(child.material) ? child.material[0] : child.material;
+          const geo = child.geometry;
+
+          // 5a. visible: false
+          if (!child.visible) {
+            childrenToRemove.push(child);
+            return;
+          }
+
+          // 5b. 투명도가 매우 낮은 메쉬 (클릭 영역 등)
+          if (mat && mat.transparent && mat.opacity < 0.1) {
+            childrenToRemove.push(child);
+            return;
+          }
+
+          // 5c. ShapeGeometry (텍스트 글리프 등)
+          if (geo && geo.type === 'ShapeGeometry') {
+            childrenToRemove.push(child);
+            return;
+          }
+
+          // 5d. PlaneGeometry (클릭 영역, 오버레이 등) - 매우 얇은 것
+          if (geo && geo.type === 'PlaneGeometry') {
+            childrenToRemove.push(child);
+            return;
+          }
+
+          // 5e. troika Text mesh (drei Text 컴포넌트가 생성하는 특수 메쉬)
+          if (geo && (geo.type === 'TroikaTextBufferGeometry' || (geo as any)._isTroikaTextGeometry)) {
+            childrenToRemove.push(child);
+            return;
+          }
+        }
+      });
+
+      childrenToRemove.forEach(child => {
+        if (child.parent) {
+          child.parent.remove(child);
+          removed = true;
+        }
+      });
+    }
   };
 
   /**
