@@ -20,81 +20,15 @@ interface ExportResult {
  */
 export const use3DExport = () => {
   /**
-   * 메쉬가 벽/바닥/천장인지 확인
+   * 객체가 FurnitureContainer의 하위 요소인지 확인
    */
-  const isWallOrFloorMesh = (mesh: THREE.Mesh): boolean => {
-    const geometry = mesh.geometry;
-    if (geometry.type === 'PlaneGeometry') {
-      const params = (geometry as THREE.PlaneGeometry).parameters;
-      if (params && (params.width > 10 || params.height > 10)) {
-        return true;
-      }
+  const isInsideFurnitureContainer = (obj: THREE.Object3D): boolean => {
+    let current = obj.parent;
+    while (current) {
+      if (current.name === 'FurnitureContainer') return true;
+      current = current.parent;
     }
     return false;
-  };
-
-  /**
-   * 객체가 내보내기에서 제외되어야 하는지 확인
-   */
-  const shouldExclude = (obj: THREE.Object3D): boolean => {
-    const name = obj.name || '';
-    const type = obj.type || '';
-
-    const excludePatterns = [
-      'Wall', 'Floor', 'Ceiling', 'Room', 'Grid', 'Axis', 'Helper',
-      'Light', 'Camera', 'Text', 'Dimension', 'Label', 'Html', 'Guide',
-      'Arrow', 'Marker', 'Placement', 'Environment', 'Sky', 'space-frame',
-      'SlotDrop', 'Indicator', 'CAD', 'Gradient', 'Background',
-      // 추가 제외 패턴
-      'dimension_line', 'space', 'Space', 'measure', 'Measure',
-      '치수', '공간', '측정', 'NativeLine', 'DimensionText',
-      'ghost', 'Ghost', 'preview', 'Preview', 'overlay', 'Overlay',
-      'bounds', 'Bounds', 'outline', 'Outline', 'wireframe', 'Wireframe',
-    ];
-
-    // 제외 패턴에 해당하면 제외
-    if (excludePatterns.some(pattern =>
-      name.toLowerCase().includes(pattern.toLowerCase()) ||
-      type.toLowerCase().includes(pattern.toLowerCase())
-    )) {
-      return true;
-    }
-
-    // 조명 제외
-    if ((obj as any).isLight) return true;
-
-    // Sprite 제외
-    if (type === 'Sprite') return true;
-
-    // Line 제외 (치수선 등)
-    if (type === 'Line' || type === 'LineSegments' || type === 'Line2') return true;
-
-    // 벽/바닥 메쉬 제외
-    if ((obj as any).isMesh && isWallOrFloorMesh(obj as THREE.Mesh)) {
-      return true;
-    }
-
-    return false;
-  };
-
-  /**
-   * 그룹 또는 메쉬가 내보내기에 포함되어야 하는지 확인 (FurnitureContainer 또는 Column 등)
-   */
-  const shouldIncludeTopLevel = (obj: THREE.Object3D): boolean => {
-    const name = obj.name || '';
-
-    const includePatterns = [
-      'FurnitureContainer', 'Furniture', 'Frame', 'Door', 'Cabinet',
-      'Shelf', 'Drawer', 'Panel', 'EndPanel', 'BackPanel', 'Hinge',
-      'Column', // 기둥 포함
-      // 한글 패턴
-      '프레임', '상부프레임', '하부프레임', '가구', '도어', '캐비넷',
-      '선반', '서랍', '패널', '엔드패널', '백패널', '힌지', '기둥',
-    ];
-
-    return includePatterns.some(pattern =>
-      name.toLowerCase().includes(pattern.toLowerCase())
-    );
   };
 
   /**
@@ -165,21 +99,15 @@ export const use3DExport = () => {
   };
 
   /**
-   * 씬에서 내보낼 객체 찾기 (가구 + 프레임)
-   * 새로운 접근: 제외 목록에 없는 모든 메쉬 포함
+   * 씬에서 내보낼 객체 찾기
+   * 화이트리스트 방식: FurnitureContainer와 Column만 포함
+   * Room의 top-frame, base-frame 등 공간 구조물은 제외
    */
   const findExportableObjects = (scene: Scene | Group): THREE.Object3D[] => {
     const result: THREE.Object3D[] = [];
     const addedUuids = new Set<string>();
 
-    console.log('🔍 내보낼 객체 탐색 시작...');
-
-    // 씬 전체 구조 로깅
-    scene.traverse((child: any) => {
-      if (child.isMesh || child.isGroup) {
-        console.log(`  📦 ${child.name || '(unnamed)'} [${child.type}]`);
-      }
-    });
+    console.log('🔍 내보낼 객체 탐색 시작 (화이트리스트 방식)...');
 
     const traverse = (obj: THREE.Object3D, depth: number = 0) => {
       const indent = '  '.repeat(depth);
@@ -187,7 +115,7 @@ export const use3DExport = () => {
       // 이미 추가된 객체는 건너뛰기
       if (addedUuids.has(obj.uuid)) return;
 
-      // FurnitureContainer는 전체 포함
+      // FurnitureContainer는 전체 포함 (가구 메쉬 전체)
       if (obj.name === 'FurnitureContainer') {
         result.push(obj);
         addedUuids.add(obj.uuid);
@@ -195,46 +123,18 @@ export const use3DExport = () => {
         return; // 하위 요소는 이미 포함됨
       }
 
-      // Column (기둥)은 전체 포함
-      if (obj.name && obj.name.toLowerCase().includes('column') && !obj.name.toLowerCase().includes('columnguide')) {
-        result.push(obj);
-        addedUuids.add(obj.uuid);
-        console.log(`${indent}✅ Column 포함: ${obj.name}`);
-        return;
-      }
-
-      // 명시적 포함 패턴에 매칭되면 포함
-      if (shouldIncludeTopLevel(obj)) {
-        result.push(obj);
-        addedUuids.add(obj.uuid);
-        console.log(`${indent}✅ 패턴 매칭으로 포함: ${obj.name || '(unnamed)'} (${obj.type})`);
-        return;
-      }
-
-      // 메쉬인 경우 - 제외 대상이 아니면 포함
-      if ((obj as any).isMesh) {
-        const mesh = obj as THREE.Mesh;
-
-        // 제외 대상 확인
-        if (shouldExclude(obj)) {
-          console.log(`${indent}❌ 제외: ${obj.name || '(unnamed)'} (${obj.type})`);
+      // Column (기둥)은 전체 포함 - ColumnGuide 등 가이드 요소 제외
+      if (obj.name && obj.name.toLowerCase().includes('column') &&
+          !obj.name.toLowerCase().includes('columnguide') &&
+          !obj.name.toLowerCase().includes('columndistance') &&
+          !obj.name.toLowerCase().includes('columncreation') &&
+          !obj.name.toLowerCase().includes('columnghost')) {
+        // Column이 FurnitureContainer 안에 있지 않은 독립 기둥인 경우만 별도 포함
+        if (!isInsideFurnitureContainer(obj)) {
+          result.push(obj);
+          addedUuids.add(obj.uuid);
+          console.log(`${indent}✅ Column 포함: ${obj.name}`);
           return;
-        }
-
-        // BoxGeometry 메쉬는 프레임일 가능성이 높음 - 포함
-        if (mesh.geometry && mesh.geometry.type === 'BoxGeometry') {
-          // 크기 확인 - 너무 큰 것은 벽일 수 있음
-          const params = (mesh.geometry as THREE.BoxGeometry).parameters;
-          if (params) {
-            const maxDim = Math.max(params.width, params.height, params.depth);
-            // 50 단위 (5000mm = 5m) 이하면 가구/프레임으로 간주
-            if (maxDim <= 50) {
-              result.push(obj);
-              addedUuids.add(obj.uuid);
-              console.log(`${indent}✅ BoxGeometry 메쉬 포함: ${obj.name || '(unnamed)'} (${params.width.toFixed(1)} x ${params.height.toFixed(1)} x ${params.depth.toFixed(1)})`);
-              return;
-            }
-          }
         }
       }
 
