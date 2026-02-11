@@ -75,8 +75,10 @@ export const calculatePanelDetails = (
     const dividerCount = sections.length > 1 ? (sections.length - 1) : 0;
     const dividerThickness = dividerCount * basicThickness;
 
-    // 나머지 높이 계산 (전체 - 고정높이)
-    const remainingHeight = height - totalFixedHeight;
+    // 나머지 높이 계산 (전체 - 상판·하판 두께 - 고정높이)
+    // 3D 렌더링의 getSectionHeights와 동일하게 상하판 두께를 빼야 함
+    const availableHeight = height - basicThickness * 2;
+    const remainingHeight = availableHeight - totalFixedHeight;
 
     // 각 섹션별 내부 구조 처리
     sections.forEach((section, sectionIndex) => {
