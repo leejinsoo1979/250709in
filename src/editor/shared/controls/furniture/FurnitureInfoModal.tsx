@@ -60,7 +60,7 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
     // 실제 3D 렌더링과 동일한 두께 값들
     const basicThickness = moduleData.modelConfig?.basicThickness || 18;
     const backPanelThickness = 9;
-    const drawerHandleThickness = 18;
+    const drawerHandleThickness = 15;
     const drawerSideThickness = 15;
     const drawerBottomThickness = 5;
     
@@ -180,13 +180,13 @@ const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
               individualDrawerHeight = Math.floor((sectionHeightMm - basicThickness * (section.count - 1)) / section.count);
             }
             
-            // 서랍 손잡이판
+            // 서랍 손잡이판 (마이다) - PB 15mm
             targetPanel.push({
               name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.handlePlate')}`,
               width: customWidth,
               height: individualDrawerHeight,
               thickness: drawerHandleThickness,
-              material: 'PET'
+              material: 'PB'
             });
             
             // 서랍 본체 크기 계산 (DrawerRenderer 참조)

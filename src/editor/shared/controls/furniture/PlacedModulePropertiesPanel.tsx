@@ -51,7 +51,7 @@ const getFurnitureImagePath = (moduleId: string) => {
   // 실제 3D 렌더링과 동일한 두께 값들 (BaseFurnitureShell.tsx와 DrawerRenderer.tsx 참조)
   const basicThickness = moduleData.modelConfig?.basicThickness || 18;
   const backPanelThickness = 9; // 백패널 두께
-  const drawerHandleThickness = 18; // 서랍 손잡이판 두께 (SPECIAL_PANEL_THICKNESS)
+  const drawerHandleThickness = 15; // 서랍 손잡이판(마이다) 두께
   const drawerSideThickness = 15; // 서랍 측면 두께 (DRAWER_SIDE_THICKNESS) 
   const drawerBottomThickness = 5; // 서랍 바닥판 두께
   
@@ -279,13 +279,13 @@ const getFurnitureImagePath = (moduleId: string) => {
             individualDrawerHeight = Math.floor((sectionHeightMm - basicThickness * (section.count - 1)) / section.count);
           }
           
-          // 서랍 손잡이판 (DrawerRenderer의 HANDLE_PLATE) - PET 재질
+          // 서랍 손잡이판 (마이다) - PB 15mm
           targetPanel.push({
             name: `${sectionName} ${t('furniture.drawer')}${drawerNum} ${t('furniture.handlePlate')}`,
             width: customWidth,
             height: individualDrawerHeight,
             thickness: drawerHandleThickness,
-            material: 'PET'  // 서랍 손잡이판은 PET 재질
+            material: 'PB'
           });
           
           // 서랍 본체 크기 계산 (DrawerRenderer 참조)

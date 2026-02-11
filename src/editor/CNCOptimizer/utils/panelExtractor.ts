@@ -14,7 +14,7 @@ export const calculatePanelDetails = (
   // 실제 3D 렌더링과 동일한 두께 값들
   const basicThickness = moduleData.modelConfig?.basicThickness || 18;
   const backPanelThickness = 9;
-  const drawerHandleThickness = 18;
+  const drawerHandleThickness = 15;
   const drawerSideThickness = 15;
   const drawerBottomThickness = 5;
   
@@ -183,8 +183,8 @@ export const calculatePanelDetails = (
             name: `${moduleData.name} - 서랍${drawerNum} 손잡이판`,
             width: customWidth,
             height: individualDrawerHeight,
-            thickness: drawerHandleThickness,  // 18mm
-            material: 'PET',  // 서랍 손잡이판은 PET 재질
+            thickness: drawerHandleThickness,  // 15mm
+            material: 'PB',  // 서랍 손잡이판(마이다)
             color: 'MW',
             quantity: 1,
             grain: 'VERTICAL'  // 서랍도 세로 결방향
