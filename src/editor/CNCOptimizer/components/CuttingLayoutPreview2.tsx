@@ -1155,7 +1155,7 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
         // ★★★ 나사홀 좌표: screwPositions가 없으면 힌지컵 좌표에서 직접 계산 ★★★
         // INSERTA 힌지 스펙: screwRowDistance=9.5mm (컵 중심에서 나사열까지), screwHoleSpacing=45mm (중심에서 ±22.5mm)
         const SCREW_ROW_DISTANCE = 9.5; // 힌지컵 중심에서 나사열까지 거리 (도어 안쪽 방향)
-        const SCREW_Y_OFFSET = 45 / 2;  // 나사홀 Y: 힌지컵 중심에서 ±22.5mm
+        const SCREW_Y_OFFSET = (panel.screwHoleSpacing || 45) / 2;  // 나사홀 Y: 힌지컵 중심에서 ±22.5mm (A-type) 또는 ±24mm (B-type)
 
         let screwYPositions = panel.screwPositions || [];
         let screwXPositions = panel.screwDepthPositions || [];

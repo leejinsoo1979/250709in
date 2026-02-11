@@ -49,6 +49,7 @@ export interface PlacedModule {
   adjustedWidth?: number; // 기둥 침범으로 조정된 폭 (mm)
   adjustedPosition?: { x: number; y: number; z: number }; // 기둥 침범으로 조정된 위치
   hingePosition?: 'left' | 'right'; // 힌지 위치 (기본값: 'right')
+  hingeType?: 'A' | 'B'; // 경첩 타입 (A: 45mm, B: 48mm, 기본값: 'A')
   isSplit?: boolean; // 기둥 C 분할 배치 여부
   
   // 공간 변경 시 가구 보존을 위한 추가 속성들

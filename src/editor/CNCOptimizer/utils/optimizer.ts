@@ -234,6 +234,7 @@ export const optimizePanels = async (
         screwDepthPositions: originalPanel.screwDepthPositions,
         isDoor: originalPanel.isDoor,
         isLeftHinge: originalPanel.isLeftHinge,
+        screwHoleSpacing: originalPanel.screwHoleSpacing,
       });
     } else {
       unplacedPanels.push(rect);
@@ -325,6 +326,7 @@ export const optimizePanelsImproved = async (
         screwDepthPositions: originalPanel.screwDepthPositions,
         isDoor: originalPanel.isDoor,
         isLeftHinge: originalPanel.isLeftHinge,
+        screwHoleSpacing: originalPanel.screwHoleSpacing,
       });
     }
   }
@@ -474,6 +476,7 @@ export const optimizePanelsMultiple = async (
         screwDepthPositions: originalPanel.screwDepthPositions,
         isDoor: originalPanel.isDoor,
         isLeftHinge: originalPanel.isLeftHinge,
+        screwHoleSpacing: originalPanel.screwHoleSpacing,
       };
     });
 
@@ -583,6 +586,7 @@ export const optimizePanelsMultipleImproved = async (
         screwDepthPositions: originalPanel.screwDepthPositions,
         isDoor: originalPanel.isDoor,
         isLeftHinge: originalPanel.isLeftHinge,
+        screwHoleSpacing: originalPanel.screwHoleSpacing,
       };
     });
 

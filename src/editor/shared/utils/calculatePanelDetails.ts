@@ -10,7 +10,8 @@ export const calculatePanelDetails = (
   hasDoor: boolean = false,
   t: any = (key: string) => key,
   originalWidth?: number, // 도어용 원래 너비 (기둥 조정 전)
-  hingePosition?: 'left' | 'right' // 힌지 위치
+  hingePosition?: 'left' | 'right', // 힌지 위치
+  hingeType?: 'A' | 'B' // 경첩 타입 (A: 45mm, B: 48mm)
 ) => {
   const panels = {
     upper: [],     // 상부장 패널
@@ -487,7 +488,8 @@ export const calculatePanelDetails = (
         ? cupX + DEFAULT_HINGE_SETTINGS.screwRowDistance
         : cupX - DEFAULT_HINGE_SETTINGS.screwRowDistance;
       // 나사홀 Y 오프셋 (힌지컵 중심에서 상하)
-      const screwYOffset = DEFAULT_HINGE_SETTINGS.screwHoleSpacing / 2; // 22.5mm
+      const screwHoleSpacing = hingeType === 'B' ? 48 : 45;
+      const screwYOffset = screwHoleSpacing / 2; // A: 22.5mm, B: 24mm
 
       return {
         // boringPositions: 힌지컵 Y좌표 배열 (상단 기준)
@@ -497,6 +499,7 @@ export const calculatePanelDetails = (
         // 나사홀 정보
         screwPositions: hingePositions.flatMap(y => [y - screwYOffset, y + screwYOffset]),
         screwDepthPositions: [screwX],
+        screwHoleSpacing,
         hingeCount: calculateHingeCount(doorH),
         isLeftHinge,
       };
@@ -518,6 +521,7 @@ export const calculatePanelDetails = (
         boringDepthPositions: leftDoorBoring.boringDepthPositions,
         screwPositions: leftDoorBoring.screwPositions,
         screwDepthPositions: leftDoorBoring.screwDepthPositions,
+        screwHoleSpacing: leftDoorBoring.screwHoleSpacing,
         isDoor: true,
         isLeftHinge: true,
       });
@@ -531,6 +535,7 @@ export const calculatePanelDetails = (
         boringDepthPositions: rightDoorBoring.boringDepthPositions,
         screwPositions: rightDoorBoring.screwPositions,
         screwDepthPositions: rightDoorBoring.screwDepthPositions,
+        screwHoleSpacing: rightDoorBoring.screwHoleSpacing,
         isDoor: true,
         isLeftHinge: false,
       });
@@ -550,6 +555,7 @@ export const calculatePanelDetails = (
         boringDepthPositions: doorBoring.boringDepthPositions,
         screwPositions: doorBoring.screwPositions,
         screwDepthPositions: doorBoring.screwDepthPositions,
+        screwHoleSpacing: doorBoring.screwHoleSpacing,
         isDoor: true,
         isLeftHinge,
       });

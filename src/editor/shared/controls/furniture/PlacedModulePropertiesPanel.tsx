@@ -574,6 +574,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [widthInputValue, setWidthInputValue] = useState<string>('600');
   const [widthError, setWidthError] = useState<string>('');
   const [hingePosition, setHingePosition] = useState<'left' | 'right'>('right');
+  const [hingeType, setHingeType] = useState<'A' | 'B'>('A');
   const [hasDoor, setHasDoor] = useState<boolean>(false);
   const [doorSplit, setDoorSplit] = useState<boolean>(false);
   const [hasGapBackPanel, setHasGapBackPanel] = useState<boolean>(false); // 상하부장 사이 갭 백패널 상태
@@ -607,6 +608,7 @@ const PlacedModulePropertiesPanel: React.FC = () => {
   const [originalUpperSectionDepth, setOriginalUpperSectionDepth] = useState<number | undefined>(undefined);
   const [originalLowerTopOffset, setOriginalLowerTopOffset] = useState<number>(0);
   const [originalHingePosition, setOriginalHingePosition] = useState<'left' | 'right'>('right');
+  const [originalHingeType, setOriginalHingeType] = useState<'A' | 'B'>('A');
   const [originalHasDoor, setOriginalHasDoor] = useState<boolean>(false);
   const [originalDoorSplit, setOriginalDoorSplit] = useState<boolean>(false);
   const [originalHasGapBackPanel, setOriginalHasGapBackPanel] = useState<boolean>(false);
@@ -807,14 +809,17 @@ const PlacedModulePropertiesPanel: React.FC = () => {
         setOriginalCustomWidth(initialWidth); // 원래 값 저장
       }
       const hingePos = currentPlacedModule.hingePosition || 'right';
+      const hingeTypeVal = currentPlacedModule.hingeType || 'A';
       const hasDoorVal = currentPlacedModule.hasDoor ?? moduleData.hasDoor ?? false;
       const doorSplitVal = currentPlacedModule.doorSplit ?? false;
       const hasGapVal = currentPlacedModule.hasGapBackPanel ?? false;
       setHingePosition(hingePos);
+      setHingeType(hingeTypeVal);
       setHasDoor(hasDoorVal);
       setDoorSplit(doorSplitVal);
       setHasGapBackPanel(hasGapVal);
       setOriginalHingePosition(hingePos); // 원래 값 저장
+      setOriginalHingeType(hingeTypeVal); // 원래 값 저장
       setOriginalHasDoor(hasDoorVal); // 원래 값 저장
       setOriginalDoorSplit(doorSplitVal); // 원래 값 저장
       setOriginalHasGapBackPanel(hasGapVal); // 원래 값 저장
@@ -1342,6 +1347,13 @@ const PlacedModulePropertiesPanel: React.FC = () => {
     setHingePosition(position);
     if (activePopup.id) {
       updatePlacedModule(activePopup.id, { hingePosition: position });
+    }
+  };
+
+  const handleHingeTypeChange = (type: 'A' | 'B') => {
+    setHingeType(type);
+    if (activePopup.id) {
+      updatePlacedModule(activePopup.id, { hingeType: type });
     }
   };
 
@@ -1989,6 +2001,26 @@ const PlacedModulePropertiesPanel: React.FC = () => {
                   )}
                 </div>
               )}
+              {/* 경첩 타입 선택 (A-type 45mm / B-type 48mm) */}
+              <div className={styles.hingeSubSection}>
+                <h6 className={styles.subSectionTitle}>경첩 타입</h6>
+                <div className={styles.hingeTabSelector}>
+                  <button
+                    className={`${styles.hingeTab} ${hingeType === 'A' ? styles.activeHingeTab : ''}`}
+                    onClick={() => handleHingeTypeChange('A')}
+                  >
+                    A-type
+                    <span className={styles.hingeTabSubtitle}>45mm</span>
+                  </button>
+                  <button
+                    className={`${styles.hingeTab} ${hingeType === 'B' ? styles.activeHingeTab : ''}`}
+                    onClick={() => handleHingeTypeChange('B')}
+                  >
+                    B-type
+                    <span className={styles.hingeTabSubtitle}>48mm</span>
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 

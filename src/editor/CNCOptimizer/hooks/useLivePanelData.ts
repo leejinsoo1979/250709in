@@ -90,11 +90,12 @@ export function useLivePanelData() {
         const material = placedModule.material || 'PB';
         const color = placedModule.color || 'MW';
         const moduleHingePosition = (placedModule as any).hingePosition || 'left';
+        const moduleHingeType = (placedModule as any).hingeType || 'A';
 
 
         // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
         const t = (key: string) => key; // 간단한 번역 함수
-        const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition);
+        const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType);
 
         console.log(`Module ${moduleIndex}: All panels list received:`, allPanelsList);
         console.log(`Module ${moduleIndex}: Total panel count:`, allPanelsList.length);
@@ -342,6 +343,7 @@ export function useLivePanelData() {
             screwDepthPositions: isDoorPanel ? screwDepthPositions : undefined,
             isDoor: isDoorPanel || undefined,
             isLeftHinge: isDoorPanel ? panel.isLeftHinge : undefined,
+            screwHoleSpacing: isDoorPanel ? panel.screwHoleSpacing : undefined,
           };
         });
 
@@ -477,10 +479,11 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
       const material = placedModule.material || 'PB';
       const color = placedModule.color || 'MW';
       const moduleHingePosition = (placedModule as any).hingePosition || 'left';
+      const moduleHingeType = (placedModule as any).hingeType || 'A';
 
       // Extract panel details using shared calculatePanelDetails (same as PlacedModulePropertiesPanel)
       const t = (key: string) => key; // 간단한 번역 함수
-      const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition);
+      const allPanelsList = calculatePanelDetailsShared(moduleData, width, depth, hasDoor, t, undefined, moduleHingePosition, moduleHingeType);
 
       // calculatePanelDetailsShared는 평면 배열을 반환함 (섹션 헤더 포함)
       // 섹션 헤더("=== xxx ===")를 제외하고 실제 패널만 필터링
@@ -685,6 +688,7 @@ export function usePanelSubscription(callback: (panels: Panel[]) => void) {
           screwDepthPositions: isDoorPanel ? screwDepthPositions : undefined,
           isDoor: isDoorPanel || undefined,
           isLeftHinge: isDoorPanel ? panel.isLeftHinge : undefined,
+          screwHoleSpacing: isDoorPanel ? panel.screwHoleSpacing : undefined,
         };
       });
 

@@ -330,7 +330,7 @@ export class PDFExporter {
 
         // ★★★ 나사홀 좌표: screwPositions가 없으면 힌지컵에서 직접 계산 ★★★
         const SCREW_ROW_DISTANCE = 9.5; // 힌지컵 중심에서 나사열까지 (도어 안쪽 방향)
-        const SCREW_Y_OFFSET = 45 / 2; // 22.5mm
+        const SCREW_Y_OFFSET = ((panel as any).screwHoleSpacing || 45) / 2; // A-type: 22.5mm, B-type: 24mm
         let screwYPositions: number[] = (panel as any).screwPositions || [];
         let screwXPositions: number[] = (panel as any).screwDepthPositions || [];
         if (screwYPositions.length === 0 && cupYPositions.length > 0) {

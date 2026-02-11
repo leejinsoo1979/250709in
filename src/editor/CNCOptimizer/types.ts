@@ -23,6 +23,7 @@ export interface Panel {
   screwDepthPositions?: number[]; // 나사홀 X위치
   isDoor?: boolean; // 도어 패널 여부
   isLeftHinge?: boolean; // 힌지 방향 (left=true)
+  screwHoleSpacing?: number; // 나사홀 간격 (45mm 또는 48mm)
 }
 
 export interface StockPanel {
