@@ -300,15 +300,17 @@ export class PDFExporter {
               sheetBoringX = panel.x + boringPosMm;
               sheetBoringY = panel.y + depthPosMm;
             } else if (panel.rotated) {
-              // 가구 측판 (rotated=true)
+              // 가구 측판 (rotated=true) - Y좌표 뒤집기: 하단 기준 → 상단 기준
+              const flippedBoringY = originalHeight - boringPosMm;
               const scaleX = placedWidth / originalWidth;
               const scaleY = placedHeight / originalHeight;
               sheetBoringX = panel.x + depthPosMm * scaleX;
-              sheetBoringY = panel.y + boringPosMm * scaleY;
+              sheetBoringY = panel.y + flippedBoringY * scaleY;
             } else {
-              // 가구 측판 (rotated=false)
+              // 가구 측판 (rotated=false) - Y좌표 뒤집기: 하단 기준 → 상단 기준
+              const flippedBoringY = originalHeight - boringPosMm;
               sheetBoringX = panel.x + depthPosMm;
-              sheetBoringY = panel.y + boringPosMm;
+              sheetBoringY = panel.y + flippedBoringY;
             }
 
             // 시트 좌표를 PDF 좌표로 변환

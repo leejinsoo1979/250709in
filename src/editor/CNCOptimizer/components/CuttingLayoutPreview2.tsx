@@ -1017,16 +1017,20 @@ const CuttingLayoutPreview2: React.FC<CuttingLayoutPreview2Props> = ({
               console.log(`[BORING CALC] 서랍앞판: boringPosMm=${boringPosMm.toFixed(1)} → X, depthPosMm=${depthPosMm.toFixed(1)} → Y`);
             } else if (panel.rotated) {
               // 가구 측판 (rotated=true):
+              // Y좌표 뒤집기: 하단 기준 → 상단 기준
+              const flippedBoringY = originalHeight - boringPosMm;
               const scaleX = placedWidth / originalWidth;
               const scaleY = placedHeight / originalHeight;
               boringX = x + depthPosMm * scaleX;
-              boringY = y + boringPosMm * scaleY;
-              console.log(`[BORING CALC] rotated=true: depthPosMm=${depthPosMm.toFixed(1)} * ${scaleX.toFixed(3)} = X=${(depthPosMm * scaleX).toFixed(1)}, boringPosMm=${boringPosMm.toFixed(1)} * ${scaleY.toFixed(3)} = Y=${(boringPosMm * scaleY).toFixed(1)}`);
+              boringY = y + flippedBoringY * scaleY;
+              console.log(`[BORING CALC] rotated=true: depthPosMm=${depthPosMm.toFixed(1)} * ${scaleX.toFixed(3)} = X=${(depthPosMm * scaleX).toFixed(1)}, flippedY=${flippedBoringY.toFixed(1)} * ${scaleY.toFixed(3)} = Y=${(flippedBoringY * scaleY).toFixed(1)}`);
             } else {
               // 가구 측판 (rotated=false):
+              // Y좌표 뒤집기: 하단 기준 → 상단 기준
+              const flippedBoringY = originalHeight - boringPosMm;
               boringX = x + depthPosMm;
-              boringY = y + boringPosMm;
-              console.log(`[BORING CALC] rotated=false: depthPosMm=${depthPosMm.toFixed(1)} → X, boringPosMm=${boringPosMm.toFixed(1)} → Y`);
+              boringY = y + flippedBoringY;
+              console.log(`[BORING CALC] rotated=false: depthPosMm=${depthPosMm.toFixed(1)} → X, flippedY=${flippedBoringY.toFixed(1)} → Y`);
             }
 
             // 호버/선택 상태 확인
