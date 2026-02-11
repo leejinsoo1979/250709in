@@ -69,7 +69,7 @@ export const use3DExport = () => {
           'dimension', 'text', 'label', '치수', 'measure', '측정',
           'nativeline', 'ghost', 'preview', 'overlay', 'bounds', 'outline',
           'guide', 'indicator', 'grid', 'axis', 'boring', 'ventilation-cap-line',
-          'clothing-rod-line', '보강대', 'reinforcement',
+          'clothing-rod-line', 'ventilation-cap', '환기',
         ];
         if (excludeNamePatterns.some(p => name.includes(p))) {
           childrenToRemove.push(child);
@@ -107,6 +107,24 @@ export const use3DExport = () => {
 
           // 5e. troika Text mesh (drei Text 컴포넌트가 생성하는 특수 메쉬)
           if (geo && (geo.type === 'TroikaTextBufferGeometry' || (geo as any)._isTroikaTextGeometry)) {
+            childrenToRemove.push(child);
+            return;
+          }
+
+          // 5f. SphereGeometry (치수선 양끝 점 등 인디케이터)
+          if (geo && (geo.type === 'SphereGeometry' || geo.type === 'SphereBufferGeometry')) {
+            childrenToRemove.push(child);
+            return;
+          }
+
+          // 5g. RingGeometry (보링홀 인디케이터)
+          if (geo && (geo.type === 'RingGeometry' || geo.type === 'RingBufferGeometry')) {
+            childrenToRemove.push(child);
+            return;
+          }
+
+          // 5h. ExtrudeGeometry (환기캡 등 특수 형상)
+          if (geo && (geo.type === 'ExtrudeGeometry' || geo.type === 'ExtrudeBufferGeometry')) {
             childrenToRemove.push(child);
             return;
           }
