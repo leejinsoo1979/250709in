@@ -167,6 +167,8 @@ export function useLivePanelData() {
           const isDrawerSidePanel = panel.name.includes('서랍') && (panel.name.includes('좌측판') || panel.name.includes('우측판'));
           // 서랍 앞판: "서랍1 앞판" 등 - 마이다 보링 대상
           const isDrawerFrontPanel = panel.name.includes('서랍') && panel.name.includes('앞판');
+          // 도어 패널 여부
+          const isDoorPanel = panel.isDoor === true || panel.name.includes('도어') || panel.name.includes('Door');
           const isFurnitureSidePanel = (
             panel.name.includes('좌측') ||
             panel.name.includes('우측') ||
@@ -302,6 +304,24 @@ export function useLivePanelData() {
             panelBoringDepthPositions = panel.boringDepthPositions;
           }
 
+          // ★★★ 도어 패널 보링 처리 ★★★
+          let screwPositions: number[] | undefined = undefined;
+          let screwDepthPositions: number[] | undefined = undefined;
+
+          if (isDoorPanel) {
+            // 도어 패널: 힌지컵 보링 + 나사홀
+            if (panel.boringPositions && panel.boringPositions.length > 0) {
+              panelBoringPositions = panel.boringPositions;
+              panelBoringDepthPositions = panel.boringDepthPositions;
+              console.log(`[BORING] ★ 도어 패널 감지! "${panel.name}" - 힌지컵 boringPositions:`, panelBoringPositions);
+            }
+            if (panel.screwPositions && panel.screwPositions.length > 0) {
+              screwPositions = panel.screwPositions;
+              screwDepthPositions = panel.screwDepthPositions;
+              console.log(`[BORING]   나사홀 screwPositions:`, screwPositions);
+            }
+          }
+
           console.log(`  Panel ${panelIndex}: "${panel.name}" - grain: ${grainDirection} -> ${grainValue}`);
 
           return {
@@ -316,7 +336,12 @@ export function useLivePanelData() {
             grain: grainValue,
             boringPositions: panelBoringPositions,
             boringDepthPositions: panelBoringDepthPositions, // 서랍 측판/앞판만
-            groovePositions: panel.groovePositions // 서랍 앞판/뒷판 바닥판 홈
+            groovePositions: panel.groovePositions, // 서랍 앞판/뒷판 바닥판 홈
+            // 도어 전용 필드
+            screwPositions: isDoorPanel ? screwPositions : undefined,
+            screwDepthPositions: isDoorPanel ? screwDepthPositions : undefined,
+            isDoor: isDoorPanel || undefined,
+            isLeftHinge: isDoorPanel ? panel.isLeftHinge : undefined,
           };
         });
 
